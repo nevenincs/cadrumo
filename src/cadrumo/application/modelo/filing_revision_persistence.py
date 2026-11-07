@@ -412,17 +412,33 @@ def supersede_prior_current_filing(
         update["confirmation"] = AeatConfirmationState.DESCARTADA
     superseded_prior = prior_current.model_copy(update=update)
     updated_filing_catalogue = upsert_filing_record(filing_catalogue, superseded_prior)
-    prior_revision = revisions.get(prior_current.calculation_revision_id)
-    if prior_revision is not None and prior_revision.state is CalculationRevisionState.PRESENTADO:
-        superseded_revision = prior_revision.model_copy(
+    return updated_filing_catalogue, supersede_filed_revision(revisions, prior_current, now=now)
+
+
+def supersede_filed_revision(
+    revisions: CalculationRevisionCatalogue,
+    superseded: ModeloRecord,
+    *,
+    now: datetime,
+) -> CalculationRevisionCatalogue:
+    """Advance the still-``PRESENTADO`` revision of a superseded filing record.
+
+    The record's local filing state and its revision's lifecycle state stay
+    paired; the AEAT confirmation of either is not read or changed.
+    """
+    prior_revision = revisions.get(superseded.calculation_revision_id)
+    if prior_revision is None or prior_revision.state is not CalculationRevisionState.PRESENTADO:
+        return revisions
+    return upsert_calculation_revision(
+        revisions,
+        prior_revision.model_copy(
             update={
                 "state": CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
                 "superseded_at": now,
                 "updated_at": now,
             },
-        )
-        revisions = upsert_calculation_revision(revisions, superseded_revision)
-    return updated_filing_catalogue, revisions
+        ),
+    )
 
 
 def prior_domiciliation_payload(

@@ -119,7 +119,7 @@ from .calculation_helpers import (
 from .calculation_modelo_adjustments import detail_row_declaration_modelos
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .filed_revision_observation import filed_revision_observation_writes, prepare_filed_revision_observation
-from .filing_revision_persistence import filed_calculation_revision
+from .filing_revision_persistence import filed_calculation_revision, supersede_filed_revision
 from .ledger_anchor_capture import capture_revision_ledger_evidence
 from .lifecycle_clock_gate import (
     ModeloLifecycleClockOperation,
@@ -678,6 +678,10 @@ def _finalize_amendment(
 
     filed_amendment = filed_calculation_revision(target=verified_amendment, actor=actor, now=now)
     revisions = upsert_calculation_revision(revisions, filed_amendment, aggregate_context=aggregate_context)
+    # Each record the correction takes out of force keeps its calculation paired with it.
+    for superseded in {baseline.filing_record_id: baseline, in_force.filing_record_id: in_force}.values():
+        if updated_filing_catalogue.records[superseded.filing_record_id].status is ModeloRecordStatus.SUPERSEDIDO:
+            revisions = supersede_filed_revision(revisions, superseded, now=now)
     prepared_observation = prepare_filed_revision_observation(
         revision=filed_amendment,
         work_unit=work_unit,

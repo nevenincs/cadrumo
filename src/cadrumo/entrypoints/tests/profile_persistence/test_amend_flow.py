@@ -659,6 +659,14 @@ def _expected_pago_fraccionado(snapshot: RegistrySnapshot, *, income: Decimal, e
     return (net * rate / 100).quantize(_CENT, ROUND_HALF_UP)
 
 
+def _assert_saved_content_kept(revision: CalculationRevision, saved: dict[str, object]) -> None:
+    """A correction leaves the corrected calculation's content alone; only its lifecycle moves to superseded."""
+    lifecycle = {"state", "superseded_at", "updated_at"}
+    assert revision.state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO
+    kept = {key: value for key, value in revision.model_dump(mode="json").items() if key not in lifecycle}
+    assert kept == {key: value for key, value in saved.items() if key not in lifecycle}
+
+
 def test_operation_backed_130_successive_confirmed_corrections_recompute_and_guard_decreases(
     repos: _Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
@@ -764,7 +772,7 @@ def test_operation_backed_130_successive_confirmed_corrections_recompute_and_gua
     assert second_revision.casilla_values[validated_casilla_id("04")] == expected_second_04
     assert second_revision.casilla_values[validated_casilla_id("18")] == expected_first_17
     assert second_revision.casilla_values[validated_casilla_id("19")] == expected_second_17 - expected_first_17
-    assert cr_repo.load().revisions[original_revision.calculation_revision_id].model_dump(mode="json") == original_saved
+    _assert_saved_content_kept(cr_repo.load().revisions[original_revision.calculation_revision_id], original_saved)
 
     records_before_decrease = fr_repo.load().model_dump(mode="json")
     with pytest.raises(AmendmentComplementariaLiabilityDecreaseError):
@@ -779,7 +787,7 @@ def test_operation_backed_130_successive_confirmed_corrections_recompute_and_gua
             operation=operation,
         )
     assert fr_repo.load().model_dump(mode="json") == records_before_decrease
-    assert cr_repo.load().revisions[original_revision.calculation_revision_id].model_dump(mode="json") == original_saved
+    _assert_saved_content_kept(cr_repo.load().revisions[original_revision.calculation_revision_id], original_saved)
 
 
 def test_amend_new_filing_is_current_complementaria_record(

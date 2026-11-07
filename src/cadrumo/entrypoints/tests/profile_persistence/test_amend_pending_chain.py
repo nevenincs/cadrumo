@@ -10,6 +10,12 @@ from cadrumo.adapters.persistence.profile.calculation_observations import Calcul
 from cadrumo.application.calculations.observations_repository import ObservationSourceKind
 from cadrumo.application.modelo.action_errors import AmendmentEvidenceMissingError
 from cadrumo.application.modelo.amendment_actions import amend_modelo_revision
+from cadrumo.application.modelo.declarations_workspace import project_declarations_workspace
+from cadrumo.application.modelo.declarations_workspace_contracts import (
+    DeclarationsWorkspaceAvailability,
+    DeclarationsWorkspaceZone,
+    DeclarationsWorkspaceZoneObservationV1,
+)
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
@@ -232,3 +238,36 @@ def test_amending_without_a_confirmed_declaration_is_refused(
 
     with pytest.raises(AmendmentEvidenceMissingError):
         _amend(work_unit.bucket_id, pending.filing_record_id, "1700", operation=operation, clock=T3)
+
+
+def test_a_saved_correction_chain_projects_in_the_declarations_workspace(
+    repos: Repos, *, operation: PinnedAuthorityOperation
+) -> None:
+    wu_repo, cr_repo, fr_repo, _, _bv_repo = repos
+    work_unit, imported = _seed_operation_backed_original(repos, operation=operation)
+    first = _amend(work_unit.bucket_id, imported.filing_record_id, "1600", operation=operation, clock=T2)
+    _amend(work_unit.bucket_id, first.filing_record_id, "1700", operation=operation, clock=T3)
+
+    catalogue = fr_repo.load()
+    revisions = cr_repo.load()
+    for superseded in (imported, first):
+        revision = revisions.get(catalogue.records[superseded.filing_record_id].calculation_revision_id)
+        assert revision is not None
+        assert revision.state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO
+    project_declarations_workspace(
+        operation=operation,
+        bucket_id=work_unit.bucket_id,
+        work_units=wu_repo.load(),
+        calculation_revisions=revisions,
+        filing_records=catalogue,
+        lifecycle_facts=(),
+        zone_observations=tuple(
+            DeclarationsWorkspaceZoneObservationV1(
+                zone=zone,
+                availability=DeclarationsWorkspaceAvailability.AVAILABLE,
+                observed_at=T3,
+                reason_code=None,
+            )
+            for zone in DeclarationsWorkspaceZone
+        ),
+    )
