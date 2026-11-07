@@ -969,7 +969,8 @@ def test_the_command_line_renders_every_successors_export_bytes_from_the_canonic
     """
     successors = sorted(str(revision.id) for revision in ordered_revisions(pilot_before)[1:])
     assert all(pilot_before.revisions[revision_id].export_layouts for revision_id in successors)
-    assert set(successors) <= set(edition_export_scenarios(_PILOT))
+    first_edition = str(ordered_revisions(pilot_before)[0].id)
+    assert set(edition_export_scenarios(_PILOT)) == {first_edition, *successors}
     registry = registry_copy(tmp_path / "input", _PILOT)
 
     exit_code = main(["--registry-root", str(registry), "--modelo", _PILOT, "--work-dir", str(tmp_path / "work")])
