@@ -21,37 +21,42 @@ from .test_register import NAME, full_year, register_operations, register_revisi
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_FIRST = register_revision().in_service_date.year
+
 
 def test_the_two_boundary_helpers_are_inverse() -> None:
-    boundary = date(2027, 1, 1)
+    boundary = date(_FIRST + 2, 1, 1)
 
-    assert last_day_covered(boundary) == date(2026, 12, 31)
+    assert last_day_covered(boundary) == date(_FIRST + 1, 12, 31)
     assert covered_until_after(last_day_covered(boundary)) == boundary
 
 
 def test_an_elapsed_period_states_the_day_it_ended_and_the_boundary_after_it() -> None:
-    operations, _ = register_operations(today=date(2037, 12, 31))
+    operations, _ = register_operations(today=date(_FIRST + 12, 12, 31))
     operations.create(register_revision(), NAME)
 
     with pytest.raises(ActividadAssetPeriodElapsedError) as refused:
-        full_year(operations, 2036)
+        full_year(operations, _FIRST + 11)
 
     facts = {name: str(value) for name, value in (refused.value.context or {}).items()}
-    assert facts == {"ended_on": "2034-12-31", "ended_before": "2035-01-01"}
+    assert facts == {
+        "ended_on": date(_FIRST + 9, 12, 31).isoformat(),
+        "ended_before": date(_FIRST + 10, 1, 1).isoformat(),
+    }
     assert refused.value.translated_message is not None
     rendered = tr(refused.value.translated_message, **facts)
-    assert "2034-12-31" in rendered
-    assert "2035-01-01" not in rendered
+    assert date(_FIRST + 9, 12, 31).isoformat() in rendered
+    assert date(_FIRST + 10, 1, 1).isoformat() not in rendered
 
 
 def test_a_claim_past_the_baja_states_the_last_days_beside_the_boundaries() -> None:
     _, repository, _ = disposed()
-    shortened = next(claim for claim in effective_claims(repository.history.claims) if claim.tax_year == 2026)
+    shortened = next(claim for claim in effective_claims(repository.history.claims) if claim.tax_year == _FIRST + 1)
     later = shortened.model_copy(
         update={
-            "tax_year": 2028,
-            "covered_from": date(2028, 1, 1),
-            "covered_until": date(2029, 1, 1),
+            "tax_year": _FIRST + 3,
+            "covered_from": date(_FIRST + 3, 1, 1),
+            "covered_until": date(_FIRST + 4, 1, 1),
             "amount": Decimal("10.00"),
             "supersedes_claim_id": None,
             "disposal_revision_id": None,
@@ -63,15 +68,15 @@ def test_a_claim_past_the_baja_states_the_last_days_beside_the_boundaries() -> N
 
     facts = {name: str(value) for name, value in (refused.value.context or {}).items()}
     assert facts == {
-        "covered_until": "2029-01-01",
-        "covered_through": "2028-12-31",
-        "boundary": "2026-07-01",
-        "boundary_through": "2026-06-30",
+        "covered_until": date(_FIRST + 4, 1, 1).isoformat(),
+        "covered_through": date(_FIRST + 3, 12, 31).isoformat(),
+        "boundary": date(_FIRST + 1, 7, 1).isoformat(),
+        "boundary_through": date(_FIRST + 1, 6, 30).isoformat(),
     }
     assert refused.value.translated_message is not None
     rendered = tr(refused.value.translated_message, **facts)
-    assert "2028-12-31" in rendered
-    assert "2026-06-30" in rendered
+    assert date(_FIRST + 3, 12, 31).isoformat() in rendered
+    assert date(_FIRST + 1, 6, 30).isoformat() in rendered
 
 
 def test_the_election_limits_state_the_last_day_of_the_period_beside_the_boundary() -> None:
@@ -80,19 +85,19 @@ def test_the_election_limits_state_the_last_day_of_the_period_beside_the_boundar
 
     limits = operations.plan_limits("laptop-1")
 
-    assert limits.maximum_period_ends_on == date(2035, 1, 1)
-    assert limits.maximum_period_last_day == date(2034, 12, 31)
+    assert limits.maximum_period_ends_on == date(_FIRST + 10, 1, 1)
+    assert limits.maximum_period_last_day == date(_FIRST + 9, 12, 31)
 
 
 @pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])
 def test_the_baja_sentence_fills_in_every_placeholder_in_each_locale(locale: str) -> None:
     _, repository, _ = disposed()
-    shortened = next(claim for claim in effective_claims(repository.history.claims) if claim.tax_year == 2026)
+    shortened = next(claim for claim in effective_claims(repository.history.claims) if claim.tax_year == _FIRST + 1)
     later = shortened.model_copy(
         update={
-            "tax_year": 2028,
-            "covered_from": date(2028, 1, 1),
-            "covered_until": date(2029, 1, 1),
+            "tax_year": _FIRST + 3,
+            "covered_from": date(_FIRST + 3, 1, 1),
+            "covered_until": date(_FIRST + 4, 1, 1),
             "amount": Decimal("10.00"),
             "supersedes_claim_id": None,
             "disposal_revision_id": None,
@@ -105,7 +110,7 @@ def test_the_baja_sentence_fills_in_every_placeholder_in_each_locale(locale: str
         assert refused.value.translated_message is not None
         rendered = tr(refused.value.translated_message, **dict(refused.value.context or {}))
 
-    assert "2028-12-31" in rendered
-    assert "2026-06-30" in rendered
+    assert date(_FIRST + 3, 12, 31).isoformat() in rendered
+    assert date(_FIRST + 1, 6, 30).isoformat() in rendered
     assert "%{" not in rendered
     assert "{" not in rendered

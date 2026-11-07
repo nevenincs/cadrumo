@@ -6,17 +6,22 @@
 # Entries:
 # - filing_extension: "same_days", art. 3.2.b: when the last day of the filing
 #   period is inhábil, the domiciliación period is extended by the same days.
-# - margin_rule: "none", or "business_or_calendar_days", the minimum the Orden
-#   requires between the end of the domiciliación period and the end of the
-#   voluntary period, met by either margin_min_business_days días hábiles or
-#   margin_min_calendar_days días naturales.
+# - margin_rule: "none"; "business_days", a minimum of margin_min_business_days
+#   días hábiles; or "business_or_calendar_days", the minimum the Orden requires
+#   since Orden HAC/241/2025 between the end of the domiciliación period and the
+#   end of the voluntary period, met by either margin_min_business_days días
+#   hábiles or margin_min_calendar_days días naturales. Business days are counted
+#   after the domiciliación end up to and including the voluntary close, natural
+#   days strictly between the two ends, as AEAT's calendars apply the margin.
 # - business_day_territory: the calendar territory whose holidays make a day
 #   inhábil for the margin. The Orden names the municipality of AEAT's
 #   Departamento de Informática, in the Comunidad de Madrid; municipal holidays
 #   have no registry source, so derivations report that layer as unverified.
 # - inhabil_base: "keep" leaves an Anexo II day that falls on an inhábil day where
-#   it is; "latest_margin_compliant_business_day" replaces it with the latest
-#   business day that still meets the margin.
+#   it is, subject to the margin; "weekend_to_latest_margin_compliant_business_day"
+#   replaces a Saturday or Sunday with the latest business day that still meets
+#   the margin and keeps a holiday, subject to the margin;
+#   "latest_margin_compliant_business_day" replaces any inhábil day so.
 # - inhabil_base_authority: what grounds inhabil_base. "orden_text" is the Orden
 #   itself; "aeat_administrative_practice" is AEAT's published domiciliación
 #   calendar, because the Orden contains no rule that moves an inhábil Anexo II
@@ -26,12 +31,14 @@
 fact_id = "deadlines.domiciliation-procedure"
 family = "mapping"
 
-# Art. 3.2 as worded by Orden HAC/350/2019 and until Orden HAC/241/2025: the Anexo
-# II period and its extension, with no minimum margin before the voluntary close.
+# Art. 3.2 as worded by Orden HAC/350/2019: the Anexo II period and its
+# extension, with no minimum margin before the voluntary close. The calendars
+# through 2023 publish an Anexo II day on a weekend as it stands (Modelo 111,
+# septiembre 2023: domiciliación to Sunday 15 October, no exception listed).
 [[fact.variants]]
 variant_id = "domiciliation-procedure:orden-text-pre-margin"
 date_axis = "submission_date"
-valid_to = 2025-03-14
+valid_to = 2023-12-31
 legal_refs = ["orden-eha-1658-2009:art-3"]
 source_refs = ["boe-orden-eha-1658-2009-consolidada"]
 review_status = "agent_reviewed"
@@ -52,22 +59,77 @@ entries = [
   { key = "inhabil_base_authority", value = "orden_text" },
 ]
 
+# AEAT administrative practice, not the Orden, from the 2024 calendar until Orden
+# HAC/241/2025: three business days before the voluntary close, and an Anexo II
+# day on a weekend replaced by the latest business day meeting them. Mayo 2024,
+# Saturday 15 June before Thursday 20 June, is published as Monday 17; agosto
+# 2024, Sunday 15 September before Friday 20, as Tuesday 17; Modelo 303 febrero
+# 2024, 27 March after the extension, before Monday 1 April with Jueves and
+# Viernes Santo between, as Monday 25 March. A holiday Anexo II day stands:
+# julio 2024 keeps Thursday 15 August.
+[[fact.variants]]
+variant_id = "domiciliation-procedure:aeat-practice-2024"
+date_axis = "submission_date"
+valid_from = 2024-01-01
+valid_to = 2025-03-14
+legal_refs = ["orden-eha-1658-2009:art-3"]
+source_refs = ["boe-orden-eha-1658-2009-consolidada", "aeat-calendario-contribuyente-2024", "aeat-calendario-contribuyente-2025"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-orden-eha-1658-2009-consolidada"
+required_text = [
+  "se ampliará el mismo número de días que resulte ampliado el plazo de presentación de la autoliquidación correspondiente.",
+]
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2024"
+required_text = [
+  "mayo: 1 al 17 de junio",
+  "agosto: 1 al 17 de septiembre",
+  "noviembre: 1 al 17 de diciembre",
+  "febrero: 1 al 25 de marzo",
+]
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2025"
+required_text = ["enero 25: 1 al 17 de febrero"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "filing_extension", value = "same_days" },
+  { key = "margin_rule", value = "business_days" },
+  { key = "margin_min_business_days", value = 3 },
+  { key = "business_day_territory", value = "ES-MD" },
+  { key = "inhabil_base", value = "weekend_to_latest_margin_compliant_business_day" },
+  { key = "inhabil_base_authority", value = "aeat_administrative_practice" },
+]
+
 # Art. 3.2 as rewritten by Orden HAC/241/2025, art. segundo.Dos, in force from
-# 15 March 2025 with no transitional regime.
+# 15 March 2025 with no transitional regime, with AEAT's practice of replacing a
+# weekend Anexo II day continued by the 2025 calendar (febrero 25, Saturday 15
+# March, published as Monday 17). A holiday still stands (julio 25 keeps Friday
+# 15 August; Modelo 303 noviembre 25 keeps Thursday 25 December). The natural-day
+# count is strictly between the two ends: 1T 25, Wednesday 16 April before
+# Monday 21 April, leaves four and is published as Tuesday 15 April.
 [[fact.variants]]
 variant_id = "domiciliation-procedure:hac-241-2025"
 date_axis = "submission_date"
 valid_from = 2025-03-15
 valid_to = 2025-12-31
 legal_refs = ["orden-eha-1658-2009:art-3", "orden-hac-241-2025:art-2"]
-source_refs = ["boe-orden-hac-241-2025"]
-review_status = "agent_reviewed"
+source_refs = ["boe-orden-hac-241-2025", "aeat-calendario-contribuyente-2025"]
+review_status = "pending_review"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "boe-orden-hac-241-2025"
 required_text = [
   "deberá existir un mínimo de tres días hábiles o cinco naturales.",
   "las festividades autonómicas o locales que afecten al municipio en el que radique el Departamento de Informática de la Agencia Tributaria.",
+]
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2025"
+required_text = [
+  "febrero 25: 1 al 17 de marzo",
+  "1t 25: 1 al 15 de abril",
 ]
 [fact.variants.payload]
 kind = "mapping"
@@ -77,17 +139,18 @@ entries = [
   { key = "margin_min_business_days", value = 3 },
   { key = "margin_min_calendar_days", value = 5 },
   { key = "business_day_territory", value = "ES-MD" },
-  { key = "inhabil_base", value = "keep" },
-  { key = "inhabil_base_authority", value = "orden_text" },
+  { key = "inhabil_base", value = "weekend_to_latest_margin_compliant_business_day" },
+  { key = "inhabil_base_authority", value = "aeat_administrative_practice" },
 ]
 
 # AEAT administrative practice, not the Orden: the 2026 domiciliación calendar
-# replaces every Anexo II day that falls on an inhábil day with the latest business
-# day that still meets the margin (3M 26, 25 April, a Saturday, published as 27
-# April; 11M 26, 25 December, published as 24 December; 12M 25 and 4T 25,
-# 25 January 2026, a Sunday, published as 27 January). The 2025 calendar did not
-# do so (11M 25 was published as 25 December), so the practice starts with the
-# calendar that shows it.
+# replaces every Anexo II day that falls on an inhábil day, holidays included,
+# with the latest business day that still meets the margin (3M 26, 25 April, a
+# Saturday, published as 27 April; 11M 26, 25 December, published as 24
+# December; 12M 25 and 4T 25, 25 January 2026, a Sunday, published as 27
+# January). The 2024 and 2025 calendars kept a holiday Anexo II day (11M 25 was
+# published as 25 December), so the holiday part starts with the calendar that
+# shows it.
 [[fact.variants]]
 variant_id = "domiciliation-procedure:aeat-practice-2026"
 date_axis = "submission_date"

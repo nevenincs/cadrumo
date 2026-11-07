@@ -13,27 +13,31 @@ from cadrumo.application.operations.registry_schema_validation import strict_mod
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetValidationError
 
+from .operations_support import build_revision
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_FIRST = build_revision().in_service_date.year
 
 
 def test_direct_construction_normalizes_both_interval_forms() -> None:
     profile_id = uuid4()
     inclusive = ActivityAssetForecastRequest(
-        profile_id=profile_id, asset_id="laptop-1", covered_from=date(2025, 1, 1), covered_through=date(2025, 6, 30)
+        profile_id=profile_id, asset_id="laptop-1", covered_from=date(_FIRST, 1, 1), covered_through=date(_FIRST, 6, 30)
     )
     exclusive = ActivityAssetForecastRequest(
-        profile_id=profile_id, asset_id="laptop-1", covered_from=date(2025, 1, 1), covered_until=date(2025, 7, 1)
+        profile_id=profile_id, asset_id="laptop-1", covered_from=date(_FIRST, 1, 1), covered_until=date(_FIRST, 7, 1)
     )
     validated = ActivityAssetForecastRequest.model_validate(
         {
             "profile_id": profile_id,
             "asset_id": "laptop-1",
-            "covered_from": date(2025, 1, 1),
-            "covered_through": date(2025, 6, 30),
+            "covered_from": date(_FIRST, 1, 1),
+            "covered_through": date(_FIRST, 6, 30),
         }
     )
 
-    assert inclusive.exclusive_end() == date(2025, 7, 1)
+    assert inclusive.exclusive_end() == date(_FIRST, 7, 1)
     assert inclusive.model_dump() == exclusive.model_dump() == validated.model_dump()
     assert inclusive.model_dump_json() == exclusive.model_dump_json() == validated.model_dump_json()
 
