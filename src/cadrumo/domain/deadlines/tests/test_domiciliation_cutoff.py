@@ -35,6 +35,7 @@ from ...calculations.registry.authority import PinnedAuthorityOperation, bundled
 from ...calculations.registry.calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
 from ...calculations.registry.schema_deadlines import DeadlineWindowDefinition
 from ...calculations.registry.schema_references import TemporalProjectionDirection
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...calculations.registry.tests.published_authority import published_source_reference
 from ..domiciliation_cutoff import (
     AuthoredPaymentCutoff,
@@ -129,11 +130,13 @@ def _window(modelo: str, year: int, code: str, operation: PinnedAuthorityOperati
 # ---------------------------------------------------------------------------
 
 
-def test_the_margin_is_met_by_five_natural_days_even_with_fewer_than_three_business_days() -> None:
+def test_natural_days_are_counted_strictly_between_the_domiciliation_end_and_the_close() -> None:
     # 1T 2025: 20 April is a Sunday, so filing closes Monday 21 April and the
     # Anexo II day 15 moves one day to Wednesday 16. Jueves Santo (17, Madrid)
-    # and Viernes Santo (18, national) leave one business day after the 16th,
-    # but five natural days, which the "o" of the Orden accepts.
+    # and Viernes Santo (18, national) leave one business day after the 16th and
+    # four natural days strictly before the close, so the 16th fails both counts.
+    # Tuesday 15 leaves five natural days, the "o" of the Orden, and AEAT's 2025
+    # calendar publishes "1T 25: 1 al 15 de abril".
     arithmetic = derive_domiciliation_cutoff(
         clause=_QUARTERLY,
         procedure=_ORDEN_MARGIN,
@@ -144,8 +147,8 @@ def test_the_margin_is_met_by_five_natural_days_even_with_fewer_than_three_busin
 
     assert arithmetic.extension_days == 1
     assert arithmetic.base_on == date(2025, 4, 16)
-    assert arithmetic.margin_cap_on == date(2025, 4, 16)
-    assert arithmetic.cutoff_on == date(2025, 4, 16)
+    assert arithmetic.margin_cap_on == date(2025, 4, 15)
+    assert arithmetic.cutoff_on == date(2025, 4, 15)
 
 
 def test_the_margin_is_met_by_three_business_days_with_fewer_than_five_natural_days() -> None:
@@ -214,11 +217,93 @@ def test_january_autoliquidacion_uses_the_leap_year_day(period_end: date, closes
     assert arithmetic.cutoff_on == expected
 
 
+_WEEKEND_PRACTICE = DomiciliationProcedure(
+    margin=_MARGIN,
+    inhabil_base=InhabilBasePolicy.WEEKEND_TO_LATEST_MARGIN_COMPLIANT_BUSINESS_DAY,
+    inhabil_base_authority=InhabilBaseAuthority.AEAT_ADMINISTRATIVE_PRACTICE,
+)
+_BUSINESS_ONLY_PRACTICE = DomiciliationProcedure(
+    margin=DomiciliationMargin(min_business_days=3, min_calendar_days=None, territory="ES-MD"),
+    inhabil_base=InhabilBasePolicy.WEEKEND_TO_LATEST_MARGIN_COMPLIANT_BUSINESS_DAY,
+    inhabil_base_authority=InhabilBaseAuthority.AEAT_ADMINISTRATIVE_PRACTICE,
+)
+
+
+def _quarter_with_fifteenth_on(weekday: int) -> tuple[date, date]:
+    """The end of a quarter whose following Anexo II day 15 falls on ``weekday``, and that day.
+
+    The month is found from the support horizon forward, so no year is written here.
+    """
+    year = filing_year_envelope().horizon
+    for month_index in range(year * 12, year * 12 + 120):
+        month = month_index % 12 + 1
+        if month not in {1, 4, 7, 10}:
+            continue
+        anexo_on = date(month_index // 12, month, 15)
+        if anexo_on.weekday() == weekday:
+            return anexo_on.replace(day=1) - timedelta(days=1), anexo_on
+    raise AssertionError(f"no quarter in ten years has its fifteenth on weekday {weekday}")
+
+
+def test_the_weekend_practice_moves_a_saturday_anexo_day_forward_to_the_latest_compliant_business_day() -> None:
+    # Saturday 15 before a Thursday 20 close: Monday 17 leaves 18, 19 and 20,
+    # as the 2024 and 2025 calendars publish ("mayo: 1 al 17 de junio").
+    period_end, anexo_on = _quarter_with_fifteenth_on(5)
+    arithmetic = derive_domiciliation_cutoff(
+        clause=_QUARTERLY,
+        procedure=_WEEKEND_PRACTICE,
+        period_end=period_end,
+        closes_on=anexo_on + timedelta(days=5),
+        business_day=_weekdays_except(),
+    )
+
+    assert arithmetic.cutoff_on == anexo_on + timedelta(days=2)
+
+
+def test_the_weekend_practice_keeps_a_holiday_anexo_day_that_meets_the_margin() -> None:
+    # A holiday Friday 15 before a Wednesday 20 close leaves 18, 19 and 20, so it
+    # stands, as the 2025 calendar keeps 15 August; the 2026 practice, which
+    # replaces any inhábil day, takes Thursday 14 instead.
+    period_end, anexo_on = _quarter_with_fifteenth_on(4)
+    common = {
+        "clause": _QUARTERLY,
+        "period_end": period_end,
+        "closes_on": anexo_on + timedelta(days=5),
+        "business_day": _weekdays_except(anexo_on),
+    }
+
+    assert derive_domiciliation_cutoff(procedure=_WEEKEND_PRACTICE, **common).cutoff_on == anexo_on
+    assert derive_domiciliation_cutoff(procedure=_PRACTICE, **common).cutoff_on == anexo_on - timedelta(days=1)
+
+
+def test_a_business_day_only_margin_ignores_natural_days() -> None:
+    # Anexo II day Tuesday 15: the close on Sunday 20 moves to Monday 21 and the
+    # Anexo day by one day to Wednesday 16. With Thursday 17 and Friday 18
+    # inhábil, the business-only margin needs Monday 14 (15, 16 and 21), while the
+    # Orden's natural-day alternative accepts Tuesday 15, as Modelo 303 febrero
+    # 2024 (published 25 March) and 1T 25 (published 15 April) show.
+    period_end, anexo_on = _quarter_with_fifteenth_on(1)
+    common = {
+        "clause": _QUARTERLY,
+        "period_end": period_end,
+        "closes_on": anexo_on + timedelta(days=6),
+        "business_day": _weekdays_except(anexo_on + timedelta(days=2), anexo_on + timedelta(days=3)),
+    }
+
+    business_only = derive_domiciliation_cutoff(procedure=_BUSINESS_ONLY_PRACTICE, **common)
+    with_natural_days = derive_domiciliation_cutoff(procedure=_WEEKEND_PRACTICE, **common)
+
+    assert business_only.base_on == anexo_on + timedelta(days=1)
+    assert business_only.cutoff_on == anexo_on - timedelta(days=1)
+    assert with_natural_days.cutoff_on == anexo_on
+
+
 def test_the_margin_walk_crosses_into_the_previous_year() -> None:
     # A clause closing on Wednesday 3 January 2029 with an Anexo day of Monday
     # 1 January (a holiday): Tuesday 2 January leaves too little, 30 and 31
-    # December are a weekend, and Friday 29 December of the year before leaves
-    # five natural days, so it is the cap.
+    # December are a weekend, Friday 29 December of the year before leaves two
+    # business days and four natural days strictly before the close, and
+    # Thursday 28 December leaves three business days, so it is the cap.
     clause = DomiciliationClause(deadline_month_offset=1, filing_last_day=3, domiciliation_last_day=1)
     arithmetic = derive_domiciliation_cutoff(
         clause=clause,
@@ -228,8 +313,8 @@ def test_the_margin_walk_crosses_into_the_previous_year() -> None:
         business_day=_weekdays_except(date(2029, 1, 1)),
     )
 
-    assert arithmetic.margin_cap_on == date(2028, 12, 29)
-    assert arithmetic.cutoff_on == date(2028, 12, 29)
+    assert arithmetic.margin_cap_on == date(2028, 12, 28)
+    assert arithmetic.cutoff_on == date(2028, 12, 28)
 
 
 def test_a_window_closing_before_its_nominal_close_is_a_registry_inconsistency() -> None:
@@ -313,30 +398,33 @@ def test_2026_quarters_without_an_authored_cutoff_resolve_a_derived_one(
 
 
 def test_an_authored_cutoff_wins_over_a_different_derived_one(operation: PinnedAuthorityOperation) -> None:
-    # 1T 2025: AEAT published 15 April; the rule gives the 16th (see the margin
-    # test above). The authored date is an explicit override.
-    window = _window("303", 2025, "1T", operation)
+    # Modelo 111 2M 26: AEAT publishes 16 March; the rule gives Tuesday 17, which
+    # leaves 18, 19 and 20 before the Friday close with no Madrid holiday between
+    # (the expected discrepancy of the calendar-backed retention census). The
+    # authored date is an explicit override.
+    window = _window("111", 2026, "02", operation)
 
-    resolved = resolve_payment_cutoff("303", window, operation=operation)
-    derived = derive_payment_cutoff("303", window, operation=operation)
+    resolved = resolve_payment_cutoff("111", window, operation=operation)
+    derived = derive_payment_cutoff("111", window, operation=operation)
 
     assert isinstance(resolved, AuthoredPaymentCutoff)
-    assert resolved.cutoff_on == date(2025, 4, 15)
+    assert resolved.cutoff_on == date(2026, 3, 16)
     assert resolved.legal_refs == tuple(window.legal_refs)
-    assert derived.cutoff_on == date(2025, 4, 16)
+    assert derived.cutoff_on == date(2026, 3, 17)
 
 
 def test_a_past_period_under_the_orden_margin_derives_against_its_published_calendar(
     operation: PinnedAuthorityOperation,
 ) -> None:
     # 3T 2025: Anexo day Wednesday 15 October, filing closes Monday 20 October;
-    # 16, 17 and 20 are business days in Madrid, so the 15th stands.
+    # 16, 17 and 20 are business days in Madrid, so the 15th stands. The margin is
+    # the Orden's; the weekend replacement the variant carries is AEAT's practice.
     derived = derive_payment_cutoff("303", _window("303", 2025, "3T", operation), operation=operation)
 
     assert isinstance(derived, DerivedPaymentCutoff)
     assert derived.cutoff_on == date(2025, 10, 15)
     assert derived.procedure.variant_id == "domiciliation-procedure:hac-241-2025"
-    assert derived.inhabil_base_authority is InhabilBaseAuthority.ORDEN_TEXT
+    assert derived.inhabil_base_authority is InhabilBaseAuthority.AEAT_ADMINISTRATIVE_PRACTICE
     assert derived.procedure.projection_direction is TemporalProjectionDirection.AUTHORED
 
 
