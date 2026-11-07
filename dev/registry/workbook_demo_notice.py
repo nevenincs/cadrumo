@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from .workbook_demo_cases import edition_id, has_differentiated_sectors, newest_edition_id
+
 if TYPE_CHECKING:
     from .workbook_demo_cases import DemoCase
 
@@ -29,7 +31,7 @@ def _notice_base(case: DemoCase) -> str:
             "de hechos guardados del ejemplo "
             "y no se recalculan al editar las cifras. Este documento no está listo para presentar."
         )
-    if case.modelo == "390" and case.revision in {"2024", "2025"}:
+    if case.modelo == "390" and has_differentiated_sectors(case.modelo, case.revision):
         notice += (
             " Ejemplo ficticio de actividades con regímenes de deducción diferenciados: "
             "las nueve cuotas de cada grupo se han fijado en 100, 200 y 300 euros respectivamente. "
@@ -104,7 +106,8 @@ def _notice_part_1(case: DemoCase, notice: str) -> str:
         )
     if case.modelo == "181":
         notice = (
-            "EJEMPLO FICTICIO PARA EL EJERCICIO 2025. Hoja resumen y una operación de préstamo inventada. "
+            f"EJEMPLO FICTICIO PARA EL EJERCICIO {case.filing_year}. "
+            "Hoja resumen y una operación de préstamo inventada. "
             "Las casillas 01 a 05 siguen la hoja resumen oficial; el detalle adapta el diseño electrónico de 2022. "
             "Los totales y los importes del préstamo son datos declarados independientes: no se recalculan entre sí. "
             "Los datos no aportados permanecen sin dato. "
@@ -114,7 +117,7 @@ def _notice_part_1(case: DemoCase, notice: str) -> str:
         )
     if case.modelo == "185":
         notice = (
-            "EJEMPLO FICTICIO DE MARZO DE 2026. Una afiliada inventada, con datos del mes declarado, "
+            f"EJEMPLO FICTICIO DE MARZO DE {case.filing_year}. Una afiliada inventada, con datos del mes declarado, "
             "febrero y enero. Ejemplo de información de la Seguridad Social: no corresponde a una mutualidad. "
             "A significa alta; G, régimen general; jornada 1, completa; pluriactividad N, un solo régimen. "
             "Los días 31, 28 y 15 y el total de un registro son datos declarados, no resultados calculados. "
@@ -163,7 +166,7 @@ def _notice_part_2(case: DemoCase, notice: str) -> str:
     if case.modelo == "193":
         source_notice = (
             "Los totales proceden de los importes anuales del modelo 123. "
-            if case.revision == "2024"
+            if case.revision == edition_id("193", 2)
             else "Los totales proceden de los importes agregados de los perceptores. "
         )
         notice = (
@@ -180,7 +183,7 @@ def _notice_part_2(case: DemoCase, notice: str) -> str:
     if case.modelo == "190":
         source_notice = (
             "El resumen usa los totales anuales de origen del modelo 111: 42.000 y 4.200 euros. "
-            if case.revision == "2025-y-siguientes"
+            if case.revision == newest_edition_id("190")
             else "El resumen suma los importes agregados por concepto del detalle: 42.000 y 4.200 euros. "
         )
         notice = (
@@ -237,12 +240,12 @@ def _notice_part_2(case: DemoCase, notice: str) -> str:
 
 def _notice_part_3(case: DemoCase, notice: str) -> str:
     if case.modelo in {"202", "222"}:
-        rate_count = "cuatro" if case.revision == "2025-y-siguientes" else "dos"
+        rate_count = "cuatro" if case.revision == newest_edition_id(case.modelo) else "dos"
         notice += (
             f" Los {rate_count} porcentajes son ficticios para comprobar las filas de la tabla; "
             "no determinan el tipo que corresponde a una empresa. "
         )
-        if case.modelo == "222" and case.revision != "2025-y-siguientes":
+        if case.modelo == "222" and case.revision != newest_edition_id(case.modelo):
             notice += (
                 "La base total de la casilla 19 y la segunda base de la casilla 23 se calculan desde las entradas. "
             )

@@ -228,7 +228,12 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--output-dir", required=True, type=Path)
     parser.add_argument("--receipt", required=True, type=Path)
     parser.add_argument("--year", type=int, default=SUPPORTED_YEAR)
-    parser.add_argument("--as-of", type=date.fromisoformat, default=date(2026, 9, 21))
+    parser.add_argument(
+        "--as-of",
+        type=date.fromisoformat,
+        default=None,
+        help="Observation date; default: 21 September of the year after the filing year.",
+    )
     parser.add_argument("--source-identity", required=True)
     parser.add_argument("--package-identity", required=True)
     parser.add_argument(
@@ -286,6 +291,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Run the installed acceptance journey and persist a sanitized receipt."""
     parser = _parser()
     args = parser.parse_args(argv)
+    if args.as_of is None:
+        args.as_of = date(args.year + 1, 9, 21)
     if args.annual and args.slice_ids:
         parser.error("--slice is periodic-only; use --annual-slice with --annual")
     if not args.annual and args.annual_slice_ids:
