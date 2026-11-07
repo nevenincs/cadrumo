@@ -1,12 +1,12 @@
 //! The local AI item: the program that runs models, installed from its pinned portable
 //! archive, the one server run from it on the installation's fixed loopback address, and
-//! the model the person selected for each local role, pulled through that server.
+//! the model the person selected for each local role, fetched by the engine itself.
 //!
 //! `program` installs, checks, starts, stops and removes the program, records where it
 //! is, and reports a copy installed outside Cadrumo without touching it. `supervision`
 //! is the runtime manager's part: it keeps the server running while the program is set
 //! up. `lease` keeps that server and a change of the program apart across processes.
-//! `models` pulls and checks each selected model through the running server.
+//! `models` fetches each selected model into the store and checks it on the running server.
 //! `registry` fetches a model from its registry into the models folder without one, and
 //! `huggingface` fetches a model's declared files from Hugging Face into the same store.
 //! `hardware` decides whether this computer can hold a model of a given size. `loopback` is the
@@ -95,8 +95,6 @@ pub enum NotRunningCause {
 pub enum ServerCall {
     /// Listing the models the server holds.
     ListModels,
-    /// Pulling a model through the server.
-    PullModel,
     /// Generating one token to check a model loads.
     Generate,
 }
@@ -271,8 +269,6 @@ impl NotRunningCause {
             Self::Request { call, failure } => match (call, failure.phase) {
                 (ServerCall::ListModels, ExchangePhase::Connect) => "model_list_connect_failed",
                 (ServerCall::ListModels, ExchangePhase::Exchange) => "model_list_request_failed",
-                (ServerCall::PullModel, ExchangePhase::Connect) => "model_pull_connect_failed",
-                (ServerCall::PullModel, ExchangePhase::Exchange) => "model_pull_request_failed",
                 (ServerCall::Generate, ExchangePhase::Connect) => "generate_connect_failed",
                 (ServerCall::Generate, ExchangePhase::Exchange) => "generate_request_failed",
             },
@@ -337,7 +333,6 @@ impl fmt::Display for ServerCall {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
             Self::ListModels => "model list",
-            Self::PullModel => "model pull",
             Self::Generate => "generate",
         })
     }

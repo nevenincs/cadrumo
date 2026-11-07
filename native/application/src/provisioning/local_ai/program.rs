@@ -899,6 +899,9 @@ impl Program {
         };
         set("OLLAMA_HOST", OsStr::new(&address.to_string()));
         set("OLLAMA_MODELS", self.locations.models.as_os_str());
+        // The engine writes a model's blobs before its manifest into the store this server
+        // reads, so the server must not clear blobs no manifest names yet when it starts.
+        set("OLLAMA_NOPRUNE", OsStr::new("1"));
         set("OLLAMA_HOME", home.as_os_str());
         set("HOME", home.as_os_str());
         set("USERPROFILE", home.as_os_str());

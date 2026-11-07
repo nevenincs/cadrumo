@@ -5,7 +5,7 @@ tags:
 date: '2026-11-07'
 modified: '2026-11-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:fb99d08ccc38249fc664304c84a6a17a60e2b3a9d36c86c51f9f490b5df814ec'
+body_hash: 'sha256:8154158b6713f983dd1be0ea2956faa4e50a0f66db3d4069ec96bf90cd447d7c'
 related:
   - "[[2026-11-07-local-inference-engine-plan]]"
 ---
@@ -111,6 +111,21 @@ related:
 - `S13` `verify:` `ctest --preset debug -R application.(rust|fmt|clippy|features.clippy)` -> `pass`
 - `S15` `verify:` `ctest --preset debug -R application.(rust|fmt|clippy|features.clippy)` -> `pass`
 - `S11` `verify:` `pytest S11 packaging focus (156)` -> `pass`
+- `S16` `M` `native/application/src/provisioning/transfer.rs`
+- `S16` `M` `native/application/src/provisioning/engine.rs`
+- `S16` `M` `native/application/src/provisioning/engine/tests.rs`
+- `S16` `M` `native/application/src/provisioning/local_ai/mod.rs`
+- `S16` `M` `native/application/src/provisioning/local_ai/models.rs`
+- `S16` `M` `native/application/src/provisioning/local_ai/models/tests.rs`
+- `S16` `M` `native/application/src/provisioning/local_ai/registry.rs`
+- `S16` `M` `native/application/src/provisioning/local_ai/registry/tests.rs`
+- `S16` `M` `native/application/src/provisioning/local_ai/huggingface.rs`
+- `S16` `M` `native/application/src/provisioning/local_ai/huggingface/tests.rs`
+- `S16` `M` `native/application/src/provisioning/local_ai/program.rs`
+- `S16` `M` `native/application/src/provisioning/local_ai/program/tests.rs`
+- `S16` `M` `native/application/src/provisioning/local_ai/fake_ollama.rs`
+- `S16` `verify:` `rustfmt --edition 2024 --check` -> `pass`
+- `S16` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -130,6 +145,7 @@ related:
 - `S11` Pending in the root build slot: CMake configure resolves the redistributable, then bundle build and test-native-bundle
 - `S15` cargo test and clippy for native/application are pending the root build slot; not run in the worktree
 - `S11` configure, bundle and test-native-bundle owed in the DESKTOP proving cycle; Step stays open until it passes
+- `S16` cargo build, clippy and tests not run here; Rust verification is deferred to a root slot
 
 ## Notes
 

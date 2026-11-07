@@ -20,11 +20,15 @@
 //! The partial file belongs to the caller, who holds the item's writer lock. Its bytes
 //! survive an interruption and are resumed with a `Range` request; a server that ignores
 //! the range is read from the start again.
+//!
+//! The hop policy and the retry schedule have one owner here: `request_chain` follows a
+//! request's hops and `Transfer::retrying` runs attempts under the schedule, for a
+//! pinned archive and for any other fetch, such as a model registry's manifest.
 
 use super::{
-    connection::{ConnectFailure, Network, Stage},
+    connection::{ConnectFailure, Network, Stage, TlsStream},
     failure::{FailureCategory, TransferFailure},
-    http::{self, Body, Framing},
+    http::{self, Body, Framing, ResponseHead},
     url::HttpsUrl,
 };
 use crate::{
@@ -169,7 +173,113 @@ enum Attempt {
     Failed(TransferFailure),
 }
 
+/// What one round of attempts came to under the retry schedule.
+pub(crate) enum Round<T> {
+    Done(T),
+    /// No other attempt can cure the failure.
+    Final(TransferFailure),
+    /// Another attempt may cure the failure; the schedule decides whether one is made.
+    Retry(TransferFailure),
+}
+
+/// The answer a request chain ended at: the first head that is no redirect, and the
+/// connection its body is read from.
+pub(crate) struct Answer {
+    pub head: ResponseHead,
+    pub reader: BufReader<TlsStream>,
+}
+
+/// Sends one `GET` for `source` with `headers` and follows its redirects under the hop
+/// policy: every hop HTTPS on the default port to a host in `hosts`, at most
+/// [`MAX_REDIRECTS`] of them. The inner `Err` is every network outcome; the outer one is
+/// only a cancellation, which also ends a name lookup at once.
+pub(crate) fn request_chain(
+    network: &Network,
+    hosts: &BTreeSet<HostName>,
+    source: &HttpsUrl,
+    headers: &[(&str, &str)],
+    cancellation: &Cancellation,
+) -> Result<Result<Answer, TransferFailure>, Error> {
+    let stop = move || cancellation.is_cancelled();
+    let mut url = source.clone();
+    let mut redirects = 0;
+    loop {
+        cancellation.check()?;
+        if !(url.default_port() && hosts.contains(url.host())) {
+            return Ok(Err(TransferFailure::final_(
+                FailureCategory::BlockedByNetwork,
+            )));
+        }
+        let mut stream = match network.open_unless_cancelled(&url, None, Some(cancellation)) {
+            Ok(stream) => stream,
+            Err(failure) => {
+                cancellation.check()?;
+                return Ok(Err(connect_failure(&failure)));
+            }
+        };
+        if let Err(error) =
+            http::write_request(&mut stream, "GET", url.target(), &url.authority(), headers)
+        {
+            return Ok(Err(network_failure(&error)));
+        }
+        let mut reader = BufReader::with_capacity(CHUNK_BYTES, stream);
+        let head = http::read_head(&mut reader, &stop);
+        cancellation.check()?;
+        let head = match head {
+            Ok(head) => head,
+            Err(error) => return Ok(Err(network_failure(&error))),
+        };
+        if !head.redirect() {
+            return Ok(Ok(Answer { head, reader }));
+        }
+        redirects += 1;
+        match head
+            .header("location")
+            .map(|location| url.redirect(location))
+        {
+            Some(Ok(next)) if redirects <= MAX_REDIRECTS => url = next,
+            _ => {
+                return Ok(Err(TransferFailure::final_(
+                    FailureCategory::BlockedByNetwork,
+                )
+                .with_status(head.status)));
+            }
+        }
+    }
+}
+
 impl Transfer<'_> {
+    /// Runs `round` under the retry schedule until it is done, its failure is final, or
+    /// the schedule's attempts or window run out. A failure that ends the schedule is
+    /// returned final, with the attempts made. Each wait is announced before it starts
+    /// and observes cancellation.
+    pub(crate) fn retrying<T, E: From<Error>>(
+        &mut self,
+        mut round: impl FnMut(&mut Self) -> Result<Round<T>, E>,
+    ) -> Result<T, E> {
+        for attempt in 1..=self.policy.max_attempts {
+            self.cancellation.check()?;
+            let failure = match round(&mut *self)? {
+                Round::Done(value) => return Ok(value),
+                Round::Final(failure) => return Err(final_failure(failure, attempt).into()),
+                Round::Retry(failure) => failure,
+            };
+            if attempt == self.policy.max_attempts {
+                return Err(final_failure(failure, attempt).into());
+            }
+            let delay = self.policy.delay(attempt, self.pacing.jitter());
+            if self.pacing.elapsed() + delay > self.policy.window {
+                return Err(final_failure(failure, attempt).into());
+            }
+            (self.events)(TransferEvent::Retrying {
+                attempt: attempt + 1,
+                delay,
+            });
+            self.pacing.wait(delay, self.cancellation)?;
+        }
+        Err(Error::Download(TransferFailure::final_(FailureCategory::Unexpected)).into())
+    }
+
     /// Fetches `pinned` into `partial`, which holds exactly the pinned bytes on success.
     /// A failure leaves resumable bytes in place, except damaged bytes, which are removed.
     pub fn fetch(&mut self, pinned: Pinned<'_>, partial: &Path) -> Result<(), Error> {
@@ -181,17 +291,16 @@ impl Transfer<'_> {
         // A source whose failure was final is not asked again; the others are retried.
         let mut exhausted = vec![false; pinned.sources.len()];
         let mut last = None;
-        for attempt in 1..=self.policy.max_attempts {
-            self.cancellation.check()?;
+        self.retrying(|transfer| -> Result<Round<()>, Error> {
             let mut retryable = false;
             for (source, done) in pinned.sources.iter().zip(exhausted.iter_mut()) {
                 if *done {
                     continue;
                 }
-                match self.attempt(source, pinned, partial)? {
-                    Attempt::Done => return Ok(()),
+                match transfer.attempt(source, pinned, partial)? {
+                    Attempt::Done => return Ok(Round::Done(())),
                     Attempt::Failed(found) if stops_every_source(found.category) => {
-                        return Err(final_failure(found, attempt));
+                        return Ok(Round::Final(found));
                     }
                     Attempt::Failed(found) => {
                         retryable |= found.transient;
@@ -202,22 +311,12 @@ impl Transfer<'_> {
             }
             let failure =
                 last.unwrap_or_else(|| TransferFailure::final_(FailureCategory::Unexpected));
-            if !retryable || attempt == self.policy.max_attempts {
-                return Err(final_failure(failure, attempt));
-            }
-            let delay = self.policy.delay(attempt, self.pacing.jitter());
-            if self.pacing.elapsed() + delay > self.policy.window {
-                return Err(final_failure(failure, attempt));
-            }
-            (self.events)(TransferEvent::Retrying {
-                attempt: attempt + 1,
-                delay,
-            });
-            self.pacing.wait(delay, self.cancellation)?;
-        }
-        Err(Error::Download(TransferFailure::final_(
-            FailureCategory::Unexpected,
-        )))
+            Ok(if retryable {
+                Round::Retry(failure)
+            } else {
+                Round::Final(failure)
+            })
+        })
     }
 
     /// One request chain against one source. `Err` is only cancellation or a final local
@@ -257,97 +356,54 @@ impl Transfer<'_> {
         }
         let cancellation = self.cancellation;
         let stop = move || cancellation.check().is_err();
-        let mut url = source.clone();
-        let mut redirects = 0;
-        loop {
-            self.cancellation.check()?;
-            if !self.admitted(&url) {
-                return Ok(Attempt::Failed(TransferFailure::final_(
-                    FailureCategory::BlockedByNetwork,
-                )));
-            }
-            let mut stream = match self.network.open(&url, None) {
-                Ok(stream) => stream,
-                Err(failure) => return Ok(Attempt::Failed(connect_failure(&failure))),
+        let range = format!("bytes={held}-");
+        let headers: &[(&str, &str)] = if held > 0 { &[("Range", &range)] } else { &[] };
+        let Answer { head, reader } =
+            match request_chain(self.network, self.hosts, source, headers, cancellation)? {
+                Ok(answer) => answer,
+                Err(failure) => return Ok(Attempt::Failed(failure)),
             };
-            let range = format!("bytes={held}-");
-            let headers: &[(&str, &str)] = if held > 0 { &[("Range", &range)] } else { &[] };
-            if let Err(error) =
-                http::write_request(&mut stream, "GET", url.target(), &url.authority(), headers)
+        if let Some(failure) = TransferFailure::of_status(head.status) {
+            return Ok(Attempt::Failed(failure));
+        }
+        let framing = match Framing::of(&head) {
+            Ok(framing) => framing,
+            Err(error) => return Ok(Attempt::Failed(network_failure(&error))),
+        };
+        let expected_range = format!("bytes {held}-{}/{}", pinned.size - 1, pinned.size);
+        let resumed =
+            head.status == 206 && head.header("content-range") == Some(expected_range.as_str());
+        if (head.status == 206 && !resumed) || !matches!(head.status, 200 | 206) {
+            return Ok(Attempt::Failed(
+                TransferFailure::final_(FailureCategory::Unexpected).with_status(head.status),
+            ));
+        }
+        if !resumed && held > 0 {
+            // The server sent the whole archive: start over from its first byte.
+            if let Err(error) = file
+                .set_len(0)
+                .and_then(|()| file.seek(SeekFrom::Start(0)).map(|_| ()))
             {
-                return Ok(Attempt::Failed(network_failure(&error)));
-            }
-            let mut reader = BufReader::with_capacity(CHUNK_BYTES, stream);
-            let head = http::read_head(&mut reader, &stop);
-            self.cancellation.check()?;
-            let head = match head {
-                Ok(head) => head,
-                Err(error) => return Ok(Attempt::Failed(network_failure(&error))),
-            };
-            if head.redirect() {
-                redirects += 1;
-                let next = head
-                    .header("location")
-                    .map(|location| url.redirect(location));
-                match next {
-                    Some(Ok(next)) if redirects <= MAX_REDIRECTS => {
-                        url = next;
-                        continue;
-                    }
-                    _ => {
-                        return Ok(Attempt::Failed(
-                            TransferFailure::final_(FailureCategory::BlockedByNetwork)
-                                .with_status(head.status),
-                        ));
-                    }
-                }
-            }
-            if let Some(failure) = TransferFailure::of_status(head.status) {
-                return Ok(Attempt::Failed(failure));
-            }
-            let framing = match Framing::of(&head) {
-                Ok(framing) => framing,
-                Err(error) => return Ok(Attempt::Failed(network_failure(&error))),
-            };
-            let expected_range = format!("bytes {held}-{}/{}", pinned.size - 1, pinned.size);
-            let resumed =
-                head.status == 206 && head.header("content-range") == Some(expected_range.as_str());
-            if (head.status == 206 && !resumed) || !matches!(head.status, 200 | 206) {
-                return Ok(Attempt::Failed(
-                    TransferFailure::final_(FailureCategory::Unexpected).with_status(head.status),
-                ));
-            }
-            if !resumed && held > 0 {
-                // The server sent the whole archive: start over from its first byte.
-                if let Err(error) = file
-                    .set_len(0)
-                    .and_then(|()| file.seek(SeekFrom::Start(0)).map(|_| ()))
-                {
-                    return Ok(Attempt::Failed(file_failure(&error)));
-                }
-                held = 0;
-                hash = Sha256::new();
-            }
-            if let Framing::Length(length) = framing
-                && held.checked_add(length) != Some(pinned.size)
-            {
-                return Ok(Attempt::Failed(TransferFailure::final_(
-                    FailureCategory::DamagedDownload,
-                )));
-            }
-            if let Err(error) = file.seek(SeekFrom::End(0)) {
                 return Ok(Attempt::Failed(file_failure(&error)));
             }
-            let mut body = Body::new(reader, framing, &stop);
-            match self.stream(&mut body, &mut file, &mut hash, held, pinned.size)? {
-                Some(failure) => return Ok(Attempt::Failed(failure)),
-                None => return finish(file, hash, pinned, partial),
-            }
+            held = 0;
+            hash = Sha256::new();
         }
-    }
-
-    fn admitted(&self, url: &HttpsUrl) -> bool {
-        url.default_port() && self.hosts.contains(url.host())
+        if let Framing::Length(length) = framing
+            && held.checked_add(length) != Some(pinned.size)
+        {
+            return Ok(Attempt::Failed(TransferFailure::final_(
+                FailureCategory::DamagedDownload,
+            )));
+        }
+        if let Err(error) = file.seek(SeekFrom::End(0)) {
+            return Ok(Attempt::Failed(file_failure(&error)));
+        }
+        let mut body = Body::new(reader, framing, &stop);
+        match self.stream(&mut body, &mut file, &mut hash, held, pinned.size)? {
+            Some(failure) => Ok(Attempt::Failed(failure)),
+            None => finish(file, hash, pinned, partial),
+        }
     }
 
     /// Copies the body into the partial file, hashing and reporting as it goes.
