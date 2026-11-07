@@ -17,6 +17,7 @@ from textual.events import Mount
 from textual.widgets import Collapsible, DataTable, Input, Select
 
 from cadrumo.core.operations import OperationEffect
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.ledger.controller import LedgerWorkspaceController
 from cadrumo.entrypoints.tui.ledger.entries_add import LedgerEntryAddScreen
@@ -184,8 +185,14 @@ async def _add_refused(host: EntriesCaptureHost) -> None:
     host.show("#entries-add-summary")
 
 
+def _fixture_year() -> int:
+    """Return the published support horizon, the year these synthetic captures are staged in."""
+    with bundled_indexed_authority().operation() as operation:
+        return operation.supported_filing_years().horizon
+
+
 async def _export_review(host: EntriesCaptureHost) -> None:
-    host.type({"#entries-export-path": _EXPORT_PATH, "#entries-export-year": "2026"})
+    host.type({"#entries-export-path": _EXPORT_PATH, "#entries-export-year": str(_fixture_year())})
     cast("Select[str]", host.tool_screen.query_one("#entries-export-period", Select)).value = "1T"
     await host.press("entries-export-review")
     host.show("#entries-export-summary")
@@ -198,7 +205,7 @@ async def _export_written(host: EntriesCaptureHost) -> None:
 
 
 async def _health_read(host: EntriesCaptureHost) -> None:
-    host.type({"#entries-health-year": "2026"})
+    host.type({"#entries-health-year": str(_fixture_year())})
     cast("Select[str]", host.tool_screen.query_one("#entries-health-period", Select)).value = "1T"
     await host.press("entries-health-read")
 
