@@ -102,7 +102,7 @@ def test_the_last_design_year_is_authored_on_its_own_design_below_the_unreviewed
     assert _selected(year + 1).effective_authority_grade is RegistryAuthorityGrade.FILING
     assert _DESIGN in revision.source_refs
     assert _NEXT_DESIGN not in revision.source_refs
-    assert not any("2023" in ref for ref in revision.legal_refs)
+    assert not any(str(year + 1) in ref for ref in revision.legal_refs)
     (window,) = revision.deadline_windows
     assert (window.filing_year, window.opens_on, window.closes_on) == (
         year,

@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import re
 from datetime import date
 from decimal import Decimal
 from functools import lru_cache
+from html import unescape
 
 import pytest
 
@@ -20,6 +22,11 @@ from cadrumo.domain.calculations.registry.relations import (
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    open_ended_revision,
+)
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..compiler.legal_grounding import verify_legal_catalogue
@@ -29,7 +36,7 @@ from .profile_schema_support import committed_registry_validator
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 # The only revision that carries the B2 casos especificos tipo-3/tipo-4 tramos.
-_B2_BANDS_REVISION = "2025-y-siguientes"
+_B2_BANDS_REVISION = str(open_ended_revision("202").id)
 
 _M202_BASE_ORDER_REF = "orden-hfp-227-2017:art-1"
 _M202_2018_ORDER_REF = "orden-hac-941-2018:art-primero-5-anexo-i"
@@ -48,44 +55,62 @@ _M202_SOURCE_EXPECTATIONS = {
         "corpus/normatives/html/orden-hfp-227-2017.html",
         "497ce0a6cdbf7deb19c3bee0839861325c14a2fbfe7714eb47722c2084b9cef7",
         130975,
-        date(2017, 3, 16),
     ),
     "boe-modelo-202-2018-amendment": (
         "corpus/normatives/html/orden-hac-941-2018.html",
         "05180686f258df500d76f300801b8896e8b086e15870d8ca7bf40ad61b104778",
         58193,
-        date(2018, 9, 15),
     ),
     "boe-modelo-202-2023-amendment": (
         "corpus/normatives/html/orden-hfp-312-2023.html",
         "261ac0000942e4ea0fb428fc9a4ab94ee5f0b8d9a21a77317c7f5cea4ddda2b0",
         42907,
-        date(2023, 4, 1),
     ),
     "boe-modelo-202-2025-amendment": (
         "corpus/normatives/html/orden-hac-262-2025.html",
         "aba2815c04843d892cceea488b81643f614fddaa0f524e4c7fbdf1e7784b9b41",
         39598,
-        date(2025, 3, 20),
     ),
 }
-_M202_REVISION_IDS = ("2019-2022", "2023-2024", "2025-y-siguientes")
-_M202_CLOSED_REVISION_SOURCE_CASES = (
-    (
-        "2019-2022",
-        "aeat-modelo-202-instructions-2018-2022",
-        date(2018, 1, 1),
-        date(2022, 12, 31),
-        ("aeat-modelo-202-instructions", "aeat-modelo-202-instructions-2023-2024"),
-    ),
-    (
-        "2023-2024",
-        "aeat-modelo-202-instructions-2023-2024",
-        date(2023, 1, 1),
-        date(2024, 12, 31),
-        ("aeat-modelo-202-instructions", "aeat-modelo-202-instructions-2018-2022"),
-    ),
+_M202_REVISION_IDS = tuple(str(revision.id) for revision in authored_revisions("202"))
+_M202_CLOSED_REVISION_IDS = tuple(
+    str(revision.id) for revision in authored_revisions("202") if revision.valid_to is not None
 )
+# The instruction source each closed revision is filed on, in revision order.
+_M202_CLOSED_REVISION_INSTRUCTION_SOURCES = (
+    "aeat-modelo-202-instructions-2018-2022",
+    "aeat-modelo-202-instructions-2023-2024",
+)
+
+
+def _boe_dates(source_text: str, pattern: str) -> list[date]:
+    return [date(int(year), int(month), int(day)) for day, month, year in re.findall(pattern, unescape(source_text))]
+
+
+def _entry_into_force(source_text: str) -> date:
+    """Return the date the order's own BOE page states it entered into force."""
+    dates = _boe_dates(source_text, r"Fecha de entrada en vigor: (\d{2})/(\d{2})/(\d{4})") or _boe_dates(
+        source_text, r"Texto original, publicado el \d{2}/\d{2}/\d{4}, en vigor a partir del (\d{2})/(\d{2})/(\d{4})"
+    )
+    assert len(set(dates)) == 1, dates
+    return dates[0]
+
+
+def _last_consolidated_update(source_text: str) -> date:
+    """Return the latest consolidation date the order's BOE page states."""
+    return max(_boe_dates(source_text, r"ltima actualización,? publicada el (\d{2})/(\d{2})/(\d{4})"))
+
+
+def _corpus_text(source_id: str) -> str:
+    _modelo, catalogues = _load_modelo_202()
+    return (bundled_path() / catalogues.sources[source_id].corpus_path).read_text(encoding="utf-8")
+
+
+def _instruction_window(source_id: str) -> tuple[date, date]:
+    """Return the first and last day of the exercises an instruction source's id names."""
+    match = re.search(r"-(\d{4})-(\d{4})$", source_id)
+    assert match is not None, source_id
+    return date(int(match.group(1)), 1, 1), date(int(match.group(2)), 12, 31)
 
 
 @lru_cache
@@ -98,7 +123,7 @@ def test_committed_modelo_202_validates_against_catalogues() -> None:
 
     committed_registry_validator(catalogues).validate_modelo(modelo)
 
-    assert set(modelo.revisions) == {"2019-2022", "2023-2024", "2025-y-siguientes"}
+    assert set(modelo.revisions) == set(_M202_REVISION_IDS)
 
 
 def test_committed_modelo_202_order_chain_is_boe_corpus_backed() -> None:
@@ -110,20 +135,27 @@ def test_committed_modelo_202_order_chain_is_boe_corpus_backed() -> None:
     assert set(_M202_ORDER_REFS).issubset(modelo.legal_refs)
     assert set(_M202_SOURCE_EXPECTATIONS).issubset(modelo.source_refs)
 
-    expected_by_revision = {
-        "2019-2022": (
-            (_M202_BASE_ORDER_REF, _M202_2018_ORDER_REF),
-            ("boe-modelo-202-base-order", "boe-modelo-202-2018-amendment"),
-        ),
-        "2023-2024": (
-            (_M202_BASE_ORDER_REF, _M202_2023_ORDER_REF),
-            ("boe-modelo-202-base-order", "boe-modelo-202-2023-amendment"),
-        ),
-        "2025-y-siguientes": (
-            (_M202_BASE_ORDER_REF, _M202_2025_ORDER_REF),
-            ("boe-modelo-202-base-order", "boe-modelo-202-2025-amendment"),
-        ),
-    }
+    # The orders and sources each authored revision is filed on, in revision order.
+    expected_by_revision = dict(
+        zip(
+            _M202_REVISION_IDS,
+            (
+                (
+                    (_M202_BASE_ORDER_REF, _M202_2018_ORDER_REF),
+                    ("boe-modelo-202-base-order", "boe-modelo-202-2018-amendment"),
+                ),
+                (
+                    (_M202_BASE_ORDER_REF, _M202_2023_ORDER_REF),
+                    ("boe-modelo-202-base-order", "boe-modelo-202-2023-amendment"),
+                ),
+                (
+                    (_M202_BASE_ORDER_REF, _M202_2025_ORDER_REF),
+                    ("boe-modelo-202-base-order", "boe-modelo-202-2025-amendment"),
+                ),
+            ),
+            strict=True,
+        )
+    )
     for revision_id, (order_refs, source_refs) in expected_by_revision.items():
         revision = modelo.revisions[revision_id]
         assert revision.orden_aplicabilidad == order_refs
@@ -141,45 +173,47 @@ def test_committed_modelo_202_order_chain_is_boe_corpus_backed() -> None:
     base = legal[_M202_BASE_ORDER_REF]
     assert base.document_id == "BOE-A-2017-2778"
     assert base.article == "1"
-    assert base.consolidated_as_of == date(2025, 3, 19)
+    assert base.consolidated_as_of == _last_consolidated_update(_corpus_text("boe-modelo-202-base-order"))
     assert "Se aprueba el modelo 202" in base.required_text
 
     # The first-application clause ("aplicable por primera vez... octubre de
     # 2018" etc.) lives in each order's disposición final, outside the
     # articulo-primero/unico anchor these references are deliberately scoped
     # to (commit d07696cc73), so it is no longer part of required_text here.
+    # Each order's entry into force is the one its own BOE page states.
     amendment_expectations = {
-        _M202_2018_ORDER_REF: ("BOE-A-2018-12515", date(2018, 9, 15)),
-        _M202_2023_ORDER_REF: ("BOE-A-2023-8120", date(2023, 4, 1)),
-        _M202_2025_ORDER_REF: ("BOE-A-2025-5407", date(2025, 3, 20)),
+        _M202_2018_ORDER_REF: ("BOE-A-2018-12515", "boe-modelo-202-2018-amendment"),
+        _M202_2023_ORDER_REF: ("BOE-A-2023-8120", "boe-modelo-202-2023-amendment"),
+        _M202_2025_ORDER_REF: ("BOE-A-2025-5407", "boe-modelo-202-2025-amendment"),
     }
-    for ref_id, (document_id, effective_from) in amendment_expectations.items():
+    for ref_id, (document_id, source_id) in amendment_expectations.items():
         reference = legal[ref_id]
         assert reference.document_id == document_id
         assert reference.article in {"primero.5", "unico.1"}
-        assert reference.effective_from == effective_from
+        assert reference.effective_from == _entry_into_force(_corpus_text(source_id))
 
-    for source_id, (corpus_path, sha256, byte_count, applies_from) in _M202_SOURCE_EXPECTATIONS.items():
+    for source_id, (corpus_path, sha256, byte_count) in _M202_SOURCE_EXPECTATIONS.items():
         source = catalogues.sources[source_id]
         assert source.evidence_tier == "layout_authority"
         assert source.corpus_path == corpus_path
         assert source.sha256 == sha256
         assert source.bytes == byte_count
-        assert source.applies_from == applies_from
         source_text = (bundled_path() / source.corpus_path).read_text(encoding="utf-8")
+        assert source.applies_from == _entry_into_force(source_text)
         assert source.source_url.startswith("https://www.boe.es/")
         assert "modelo 202" in source_text or "Modelo 202" in source_text
 
 
 def test_committed_modelo_202_closed_revisions_use_period_matching_instruction_sources() -> None:
     modelo, catalogues = _load_modelo_202()
-    for (
-        revision_id,
-        expected_source_ref,
-        applies_from,
-        applies_to,
-        forbidden_source_refs,
-    ) in _M202_CLOSED_REVISION_SOURCE_CASES:
+    for revision_id, expected_source_ref in zip(
+        _M202_CLOSED_REVISION_IDS, _M202_CLOSED_REVISION_INSTRUCTION_SOURCES, strict=True
+    ):
+        applies_from, applies_to = _instruction_window(expected_source_ref)
+        forbidden_source_refs = (
+            "aeat-modelo-202-instructions",
+            *(other for other in _M202_CLOSED_REVISION_INSTRUCTION_SOURCES if other != expected_source_ref),
+        )
         revision = modelo.revisions[revision_id]
         instruction_source = catalogues.sources[expected_source_ref]
 
@@ -211,7 +245,7 @@ def test_committed_modelo_202_static_cross_reference_and_construct_are_declared(
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2026,
+        filing_year=filing_year_envelope().horizon,
         period="2P",
     )
     decision = snapshot.live_cross_references["modelo-202-static-documentation"]
@@ -231,7 +265,7 @@ def test_committed_modelo_202_static_cross_reference_and_construct_are_declared(
 
 def test_committed_modelo_202_cuota_base_relation_periods_and_year_offsets_are_declared() -> None:
     modelo, _catalogues = _load_modelo_202()
-    revision = modelo.revisions["2025-y-siguientes"]
+    revision = modelo.revisions[_B2_BANDS_REVISION]
     binding, provider = next(
         item
         for item in relation_prefill_bindings_for_period(revision)
@@ -247,9 +281,11 @@ def test_committed_modelo_202_cuota_base_relation_periods_and_year_offsets_are_d
     assert isinstance(binding.applicability, TargetPeriods)
     assert binding.applicability.periods == ("1P", "2P", "3P")
 
-    expected_source_years = {"1P": 2023, "2P": 2024, "3P": 2024}
+    # The offsets asserted above, applied to the filing year the requirements are resolved for.
+    filing_year = filing_year_envelope().horizon
+    expected_source_years = {"1P": filing_year - 2, "2P": filing_year - 1, "3P": filing_year - 1}
     for target_period, expected_source_year in expected_source_years.items():
-        requirements = relation_source_requirements(revision, filing_year=2025, period=target_period)
+        requirements = relation_source_requirements(revision, filing_year=filing_year, period=target_period)
         # 2P and 3P also require this year's earlier pagos fraccionados, so the
         # requirement under test is selected by its binding rather than by being
         # the only one.

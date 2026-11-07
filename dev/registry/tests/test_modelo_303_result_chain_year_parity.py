@@ -26,6 +26,7 @@ from cadrumo.domain.calculations.registry.formula_runtime import calculate_regis
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 from cadrumo.domain.calculations.registry.tests.modelo_303_registry_constants import (
     M303_RECORD_DESIGN_SOURCE_BY_REVISION,
 )
@@ -36,6 +37,12 @@ from ..compiler.authority import compiled_bundled_authority
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 
 _REVISIONS = tuple(M303_RECORD_DESIGN_SOURCE_BY_REVISION)
+#: A filing coordinate that selects each edition by its annual period: its first exercise and "4T".
+_ANNUAL_COORDINATES = [
+    (revision.valid_from.year, str(revision.id))
+    for revision in authored_revisions("303")
+    if str(revision.id) in _REVISIONS and "4T" in revision.period_selector.periods_for_year(revision.valid_from.year)
+]
 
 # The AEAT box each semantic carrier stands for where the registry sums a
 # carrier instead of the printed box. The pairs are read off the design labels:
@@ -95,9 +102,9 @@ def _formula_for(revision: ModeloRevision, casilla_id: str) -> FormulaExpression
 
 
 def test_the_design_comparison_detects_a_missing_summand() -> None:
-    revision = _revision("2022")
+    revision = _revision(_REVISIONS[0])
     terms = _signed_terms(_formula_for(revision, "iva.cuota-devengada-total"))
-    design = set(_design_expression("2022", "27"))
+    design = set(_design_expression(_REVISIONS[0], "27"))
     assert _as_design_terms(terms) == design
     without_box_26 = [term for term in terms if term != (1, "26")]
     assert design - _as_design_terms(without_box_26) == {(1, "26")}
@@ -148,13 +155,8 @@ def test_boxes_64_to_66_are_declared_identically_in_every_year() -> None:
         assert declaration(revision_id) == first, revision_id
 
 
-@pytest.mark.parametrize(
-    ("filing_year", "revision_id", "result"),
-    [(2022, "2022", "130"), (2023, "2023", "130"), (2025, "2025", "150"), (2026, "2026-y-siguientes", "150")],
-)
-def test_the_result_chain_computes_each_years_design_arithmetic(
-    filing_year: int, revision_id: str, result: str
-) -> None:
+@pytest.mark.parametrize(("filing_year", "revision_id"), _ANNUAL_COORDINATES)
+def test_the_result_chain_computes_each_years_design_arithmetic(filing_year: int, revision_id: str) -> None:
     """A foral taxpayer with IVA modifications, import IVA deferral, an annual regularisation and other adjustments.
 
     Expected amounts are the designs' own arithmetic on these inputs: [27] =
@@ -166,6 +168,8 @@ def test_the_result_chain_computes_each_years_design_arithmetic(
     authority = compiled_bundled_authority()
     snapshot = authority.snapshot("303", filing_year=filing_year, period="4T")
     assert snapshot.revision.id == revision_id
+    # [69] = 90 + 25 + 15 = 130 on these inputs, plus the 20 of [108] where the design adds it.
+    result = "150" if any(box == "108" for _sign, box in _design_expression(revision_id, "69")) else "130"
     declared_bindings = {binding.id for binding in snapshot.revision.bindings}
     binding_values = {
         binding_id: value

@@ -32,7 +32,7 @@ from cadrumo.domain.calculations.registry.invoice_bindings import (
 from cadrumo.domain.calculations.registry.queries import RegistryQueryService
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
-from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, revision_last_exercise
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus, invoice_class_rectificativa
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
@@ -49,7 +49,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 _AUTHORED = authored_revisions("347")
 _EARLIER_ID, _LATER_ID = (str(revision.id) for revision in _AUTHORED)
 # The last exercise the earlier design governs and the first the later one does.
-_EARLIER_LAST = _AUTHORED[0].valid_to.year
+_EARLIER_LAST = revision_last_exercise("347", _EARLIER_ID)
 _LATER_FIRST = _AUTHORED[1].valid_from.year
 _COUNT = "modelo-347-declarante-numero-personas-entidades"
 _TOTAL = "modelo-347-declarante-importe-total-anual-operaciones"

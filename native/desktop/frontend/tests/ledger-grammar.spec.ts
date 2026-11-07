@@ -41,8 +41,19 @@ import {
   servedSupport,
   servedYearBounds,
 } from "../src/dev/servedYearAuthority";
+import { fixtureDay, fixtureYear } from "../src/dev/fixtureDates";
 
 // The ledger's input grammar at its boundaries. No page is opened.
+
+/** The first year from the fixtures' own on that has, or lacks, a 29th of February. */
+const yearWithFebruary29 = (leap: boolean): number => {
+  let year = fixtureYear;
+  while ((new Date(Date.UTC(year, 1, 29)).getUTCMonth() === 1) !== leap)
+    year += 1;
+  return year;
+};
+const LEAP_YEAR = yearWithFebruary29(true);
+const COMMON_YEAR = yearWithFebruary29(false);
 
 type Expected = string | GrammarRefusalKey | null;
 /** A value, a refusal key, or null for nothing typed. */
@@ -199,27 +210,27 @@ test("decimal text compares by value, whatever its spelling", () => {
 
 test("dates are calendar days written year-month-day", () => {
   const cases: [string, Expected][] = [
-    ["2026-10-21", "2026-10-21"],
-    ["2024-02-29", "2024-02-29"],
-    ["2026-02-29", "date_not_in_calendar"],
-    ["2026-13-01", "date_not_in_calendar"],
-    ["21/10/2026", "date_not_iso"],
-    ["2026-1-5", "date_not_iso"],
-    ["2026/10/21", "date_not_iso"],
-    ["31/02/2026", "date_not_in_calendar"],
+    [fixtureDay(10, 21), fixtureDay(10, 21)],
+    [`${LEAP_YEAR}-02-29`, `${LEAP_YEAR}-02-29`],
+    [`${COMMON_YEAR}-02-29`, "date_not_in_calendar"],
+    [`${fixtureYear}-13-01`, "date_not_in_calendar"],
+    [`21/10/${fixtureYear}`, "date_not_iso"],
+    [`${fixtureYear}-1-5`, "date_not_iso"],
+    [`${fixtureYear}/10/21`, "date_not_iso"],
+    [`31/02/${fixtureYear}`, "date_not_in_calendar"],
     ["yesterday", "not_a_date"],
     ["", null],
   ];
   for (const [raw, expected] of cases)
     expect(verdict(parseIsoDate(raw)), raw).toBe(expected);
   // Day first, the Spanish way, gets the same day back in ISO.
-  const spanish = parseIsoDate("21/10/2026");
+  const spanish = parseIsoDate(`21/10/${fixtureYear}`);
   expect(spanish.kind === "refused" && spanish.refusal.suggestion).toBe(
-    "2026-10-21",
+    fixtureDay(10, 21),
   );
-  const loose = parseIsoDate("2026-1-5");
+  const loose = parseIsoDate(`${fixtureYear}-1-5`);
   expect(loose.kind === "refused" && loose.refusal.suggestion).toBe(
-    "2026-01-05",
+    fixtureDay(1, 5),
   );
 });
 
@@ -260,7 +271,7 @@ test("a text limit is the one served, and none is assumed", () => {
 
 test("a year is four digits, whichever it is, and period tokens are the product's", () => {
   const years: [string, Expected][] = [
-    ["2026", "2026"],
+    [String(fixtureYear), String(fixtureYear)],
     ["1000", "1000"],
     ["1979", "1979"],
     ["2201", "2201"],
@@ -297,12 +308,12 @@ test("the periods held are the ones served, with their neighbours across year en
     }
     expect(checked).toBeGreaterThan(100);
     // A quarter's neighbour in the next year is the one the backend names.
-    expect(neighbourPeriod({ year: 2026, code: "4T" }, 1)).toEqual({
-      year: 2027,
+    expect(neighbourPeriod({ year: fixtureYear, code: "4T" }, 1)).toEqual({
+      year: fixtureYear + 1,
       code: "1T",
     });
-    expect(neighbourPeriod({ year: 2026, code: "01" }, -1)).toEqual({
-      year: 2025,
+    expect(neighbourPeriod({ year: fixtureYear, code: "01" }, -1)).toEqual({
+      year: fixtureYear - 1,
       code: "12",
     });
   } finally {
@@ -324,8 +335,8 @@ test("a period that was not served is unknown, never made up", () => {
       periodHoldingSpan({ from: `${unserved}-07-01`, to: `${unserved}-07-31` }),
     ).toBeNull();
     // Words served in one language are not shown in another.
-    expect(periodWords({ year: 2026, code: "3T" }, "es")).toBeNull();
-    expect(periodWords({ year: 2026, code: "3T" }, "en")).not.toBeNull();
+    expect(periodWords({ year: fixtureYear, code: "3T" }, "es")).toBeNull();
+    expect(periodWords({ year: fixtureYear, code: "3T" }, "en")).not.toBeNull();
   } finally {
     holdLedgerPeriods(null, null);
   }
@@ -360,9 +371,12 @@ test("the periods that hold a day and a span are the ones the backend answered",
       ).toEqual({ period: ledgerPeriod(probe.period) });
     }
     // A span that crosses a year end has no period: served as none.
-    expect(periodHoldingSpan({ from: "2025-12-30", to: "2026-01-02" })).toEqual(
-      { period: null },
-    );
+    expect(
+      periodHoldingSpan({
+        from: fixtureDay(12, 30, -1),
+        to: fixtureDay(1, 2),
+      }),
+    ).toEqual({ period: null });
   } finally {
     holdLedgerPeriods(null, null);
   }
@@ -393,9 +407,9 @@ test("the year field steps by one and by ten and stays on years that can be writ
 });
 
 test("a period's list clauses are its token and its year", () => {
-  expect(periodFilters({ year: 2026, code: "3T" })).toEqual([
+  expect(periodFilters({ year: fixtureYear, code: "3T" })).toEqual([
     "period=3T",
-    "year=2026",
+    `year=${fixtureYear}`,
   ]);
 });
 
@@ -431,7 +445,7 @@ test("with no limits served a typed number is not taken and what it says is kept
     // Nothing typed needs no limit, and a date none.
     expect(parseDecimal("", AMOUNT_RULE)).toEqual({ kind: "empty" });
     expect(parsePercent("").kind).toBe("empty");
-    expect(parseIsoDate("2026-02-01").kind).toBe("value");
+    expect(parseIsoDate(fixtureDay(2, 1)).kind).toBe("value");
   } finally {
     holdLedgerLimits(servedLimits);
   }

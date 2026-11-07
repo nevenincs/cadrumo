@@ -19,6 +19,7 @@ from cadrumo.application.actividad_asset.schedule_walk import (
     free_base_remains,
     m130_register_accruals,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.renta.actividad_asset.election import (
     AcquiredCondition,
     ActivityAssetAmortizationElection,
@@ -54,6 +55,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _ACQUISITION = acquisition_transaction()
 _ASSET = "tablet-1"
+_FIRST_YEAR = filing_year_envelope().horizon - 3
 
 
 def _revision() -> ActivityAssetRevision:
@@ -73,7 +75,7 @@ def _revision() -> ActivityAssetRevision:
             non_deductible_iva=Decimal("0"),
             business_use_share=Decimal("0.35"),
         ),
-        in_service_date=date(2020, 1, 1),
+        in_service_date=date(_FIRST_YEAR, 1, 1),
         opening_history=OpeningAmortizationHistory(status=OpeningHistoryStatus.KNOWN, accumulated_amount=Decimal("0")),
         acquired_condition=AcquiredCondition.NEW,
         amortization=ActivityAssetAmortizationElection(
@@ -102,7 +104,7 @@ def _forecast(
             annual_rate=Decimal("0.50"),
             authority_generation="sub-cent-test",
             source_reference="sub-cent test table",
-            maximum_period_ends_on=date(2040, 1, 1),
+            maximum_period_ends_on=date(_FIRST_YEAR + 20, 1, 1),
         ),
         covered_from=covered_from,
         covered_until=covered_until,
@@ -118,10 +120,10 @@ def _claimed_two_years() -> tuple[ActivityAssetOperations, MemoryRepository]:
         ledger=MemoryLedger(_ACQUISITION),
         forecast_operation=_forecast,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
-        register_authority=memory_register_authority(today=date(2023, 12, 31)),
+        register_authority=memory_register_authority(today=date(_FIRST_YEAR + 3, 12, 31)),
     )
     operations.create(_revision(), ActivityAssetDescriptorFacts(name="Tablet"))
-    for year in (2020, 2021):
+    for year in range(_FIRST_YEAR, _FIRST_YEAR + 2):
         charge = operations.forecast(asset_id=_ASSET, covered_from=date(year, 1, 1), covered_until=date(year + 1, 1, 1))
         assert charge.amount == Decimal("216.05")
         operations.record_claim(charge, creating_operation=f"test.{year}")
@@ -131,10 +133,14 @@ def _claimed_two_years() -> tuple[ActivityAssetOperations, MemoryRepository]:
 def test_the_year_after_charges_totalling_the_basis_in_cents_forecasts_zero() -> None:
     operations, _ = _claimed_two_years()
 
-    charge = operations.forecast(asset_id=_ASSET, covered_from=date(2022, 1, 1), covered_until=date(2023, 1, 1))
+    charge = operations.forecast(
+        asset_id=_ASSET, covered_from=date(_FIRST_YEAR + 2, 1, 1), covered_until=date(_FIRST_YEAR + 3, 1, 1)
+    )
 
     assert charge.amount == Decimal("0.00")
-    assert {row.tax_year: row.absence for row in operations.plan(_ASSET)}[2022] is PlanFigureAbsence.BASIS_EXHAUSTED
+    assert {row.tax_year: row.absence for row in operations.plan(_ASSET)}[
+        _FIRST_YEAR + 2
+    ] is PlanFigureAbsence.BASIS_EXHAUSTED
     (listed,) = operations.list_elements()
     assert listed.pending is not None
     assert Decimal(listed.pending.decimal) == Decimal("0")
@@ -146,7 +152,7 @@ def test_the_later_modelo_130_has_nothing_to_accrue_and_is_not_unavailable() -> 
     (accrual,) = m130_register_accruals(
         repository.history,
         forecast=_forecast,
-        period_end=date(2023, 12, 31),
+        period_end=date(_FIRST_YEAR + 3, 12, 31),
         activities={_ASSET: None},
         agrarian=frozenset(),
     )
@@ -159,7 +165,12 @@ def test_claims_above_the_basis_in_cents_are_still_refused() -> None:
     history = AssetScheduleHistory(accumulated_before_tax_year=Decimal("432.11"))
 
     with pytest.raises(ActividadAssetValidationError, match="claims_exceed_amortizable_basis"):
-        _forecast(_revision(), covered_from=date(2022, 1, 1), covered_until=date(2023, 1, 1), history=history)
+        _forecast(
+            _revision(),
+            covered_from=date(_FIRST_YEAR + 2, 1, 1),
+            covered_until=date(_FIRST_YEAR + 3, 1, 1),
+            history=history,
+        )
 
 
 def test_the_history_write_refuses_one_cent_past_the_ceiling() -> None:
@@ -167,9 +178,9 @@ def test_the_history_write_refuses_one_cent_past_the_ceiling() -> None:
     (first, *_) = repository.history.claims
     excess = first.model_copy(
         update={
-            "tax_year": 2022,
-            "covered_from": date(2022, 1, 1),
-            "covered_until": date(2023, 1, 1),
+            "tax_year": _FIRST_YEAR + 2,
+            "covered_from": date(_FIRST_YEAR + 2, 1, 1),
+            "covered_until": date(_FIRST_YEAR + 3, 1, 1),
             "amount": Decimal("0.01"),
         },
     )
@@ -182,4 +193,4 @@ def test_a_free_method_test_of_remaining_base_uses_the_same_ceiling() -> None:
     _, repository = _claimed_two_years()
     history = repository.history
 
-    assert free_base_remains(history.revisions[0], history, tax_year=2022) is False
+    assert free_base_remains(history.revisions[0], history, tax_year=_FIRST_YEAR + 2) is False

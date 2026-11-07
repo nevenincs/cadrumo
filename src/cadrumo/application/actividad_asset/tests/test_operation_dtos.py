@@ -19,6 +19,7 @@ from cadrumo.application.actividad_asset.operations import (
     M130AccrualProjection,
     M130Contribution,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.renta.actividad_asset.claims import (
     AmortizationClaim,
     ClaimProjection,
@@ -46,6 +47,8 @@ from cadrumo.domain.renta.actividad_asset.schedule import ScheduleAuthority, sch
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_FILING_YEAR = filing_year_envelope().horizon
+
 
 def _revision() -> ActivityAssetRevision:
     return ActivityAssetRevision(
@@ -64,7 +67,7 @@ def _revision() -> ActivityAssetRevision:
             non_deductible_iva=Decimal("0"),
             prior_allocation_provenance="reviewed test allocation",
         ),
-        in_service_date=date(2025, 1, 1),
+        in_service_date=date(_FILING_YEAR, 1, 1),
         opening_history=OpeningAmortizationHistory(
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal("0"),
@@ -83,18 +86,18 @@ def test_public_asset_snapshots_roundtrip_every_decimal_bearing_history_fact() -
     schedule = schedule_charge(
         revision,
         ScheduleAuthority(
-            tax_year=2025,
+            tax_year=_FILING_YEAR,
             asset_kind=AssetKind.MATERIAL,
             method=AmortizationMethod.LINEAR,
             election_fingerprint=revision.amortization.fingerprint,
             annual_rate=Decimal("0.26"),
-            maximum_period_ends_on=date(2035, 1, 1),
+            maximum_period_ends_on=date(_FILING_YEAR + 10, 1, 1),
             authority_generation="test-pinned-generation",
             source_reference="test-pinned-m100-2025",
         ),
-        covered_from=date(2025, 1, 1),
-        covered_until=date(2026, 1, 1),
-        history=asset_schedule_history((), (revision,), asset_id=revision.asset_id, tax_year=2025),
+        covered_from=date(_FILING_YEAR, 1, 1),
+        covered_until=date(_FILING_YEAR + 1, 1, 1),
+        history=asset_schedule_history((), (revision,), asset_id=revision.asset_id, tax_year=_FILING_YEAR),
     )
     claim = AmortizationClaim.from_schedule(
         schedule,
@@ -145,7 +148,7 @@ def test_a_used_assets_original_price_election_roundtrips_as_a_public_decimal() 
 def test_filing_handoff_snapshots_preserve_decimal_claim_projections() -> None:
     projection = ClaimProjection(
         target_casilla_id="0208",
-        tax_year=2025,
+        tax_year=_FILING_YEAR,
         claim_ids=("c" * 64,),
         amount=Decimal("78.00"),
     )
@@ -154,7 +157,7 @@ def test_filing_handoff_snapshots_preserve_decimal_claim_projections() -> None:
         intangible_m100=projection.model_copy(update={"target_casilla_id": "0227", "amount": Decimal("0.00")}),
         material_m130=M130AccrualProjection(
             target_casilla_id="02",
-            tax_year=2025,
+            tax_year=_FILING_YEAR,
             amount=Decimal("78.00"),
             contributions=(
                 M130Contribution(asset_id="asset-1", amount=Decimal("40.00"), claim_id="c" * 64),
@@ -162,7 +165,7 @@ def test_filing_handoff_snapshots_preserve_decimal_claim_projections() -> None:
             ),
             unavailable_asset_ids=("asset-3",),
         ),
-        intangible_m130=M130AccrualProjection(target_casilla_id="02", tax_year=2025, amount=Decimal("0.00")),
+        intangible_m130=M130AccrualProjection(target_casilla_id="02", tax_year=_FILING_YEAR, amount=Decimal("0.00")),
     )
 
     snapshot = ActivityAssetFilingHandoffSnapshot.from_domain(handoff)

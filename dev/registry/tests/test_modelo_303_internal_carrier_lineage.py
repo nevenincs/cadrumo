@@ -20,6 +20,11 @@ from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageO
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    revision_covering,
+)
 
 from ..compiler.loader import load_modelo_directory
 from ..compiler.validate_cross_revision_lineage_origin import lineage_origin_continuity_failures
@@ -27,8 +32,10 @@ from ..compiler.validate_cross_revision_lineage_origin import lineage_origin_con
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _MODELO = "303"
-_STATING_EDITION = "2022"
-_CONTINUING_EDITION = "2023"
+# The edition covering the support floor states the carriers; the edition authored after it continues them.
+_AUTHORED_EDITIONS = tuple(str(revision.id) for revision in authored_revisions(_MODELO))
+_STATING_EDITION = str(revision_covering(_MODELO, filing_year_envelope().floor).id)
+_CONTINUING_EDITION = _AUTHORED_EDITIONS[_AUTHORED_EDITIONS.index(_STATING_EDITION) + 1]
 # Carrier casilla -> the printed boxes its grounding must find on each cited design line.
 _CARRIER_BOXES = {
     "iva.autorepercutido.intracomunitaria.devengado.base": ("[10]",),
@@ -100,7 +107,7 @@ def test_the_grounded_claim_speaks_only_for_its_own_edge(casilla_id: str) -> Non
         and str(revision.predecessor.revision_id) == _CONTINUING_EDITION
     ]
 
-    assert later, "an edition must continue the 2023 edition for this edge to be observable"
+    assert later, "an edition must continue the continuing edition for this edge to be observable"
     for revision in later:
         assert _row(revision, casilla_id).continuidad_evidence != claim, revision.id
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from datetime import date, timedelta
 
 import pytest
@@ -11,6 +12,13 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    open_ended_revision,
+    revision_covering,
+    split_exercise_revisions,
+)
 from cadrumo.domain.calculations.registry.tests.modelo_303_registry_constants import (
     M303_ANNUAL_ORDEN_SOURCE_BY_REVISION,
     M303_EXPLICIT_RECORD_DESIGN_REVISIONS,
@@ -26,6 +34,17 @@ from .modelo_303_registry_support import load_modelo_303
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
+
+_FLOOR_REVISION_ID = str(revision_covering("303", filing_year_envelope().floor).id)
+_NEWEST = open_ended_revision("303")
+# The two exercises whose forms were re-laid mid-year: the early and later revision of each.
+_SPLIT_2T_3T = split_exercise_revisions("303", early_period="2T", late_period="3T")
+_SPLIT_1T_2T = split_exercise_revisions("303", early_period="1T", late_period="2T")
+_SPLIT_IDS = {str(revision.id) for pair in (_SPLIT_2T_3T, _SPLIT_1T_2T) for revision in pair}
+#: The editions authored for exactly one whole exercise, oldest first.
+_WHOLE_YEAR_REVISIONS = tuple(revision for revision in authored_revisions("303") if str(revision.id) not in _SPLIT_IDS)
+_LAST_WHOLE_YEAR = _WHOLE_YEAR_REVISIONS[-1]
+_ALL_PERIODS = ("1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")
 
 
 def test_modelo_303_registry_validator_accepts_committed_definition() -> None:
@@ -45,7 +64,7 @@ def test_modelo_303_metadata_matches_orden_eha_3786_2008() -> None:
     assert modelo.jurisdiction == "ES-AEAT"
     assert "orden-eha-3786-2008:art-1" in modelo.legal_refs
     assert "orden-eha-3786-2008:art-7" in modelo.legal_refs
-    assert "aeat-dr-303-2025" in modelo.source_refs
+    assert M303_RECORD_DESIGN_SOURCE_BY_REVISION[str(_LAST_WHOLE_YEAR.id)] in modelo.source_refs
     assert "aeat-modelo-303-procedure" in modelo.source_refs
     assert catalogues.sources["aeat-modelo-303-procedure"].evidence_tier == "official_source_guidance"
     assert catalogues.sources["boe-modelo-303-2008-form"].evidence_tier == "layout_authority"
@@ -72,71 +91,61 @@ def test_modelo_303_revision_period_selectors_cover_the_supported_span() -> None
     """
     modelo, _ = load_modelo_303()
 
-    rev_old = modelo.revisions["2022"]
-    assert rev_old.valid_from == date(2022, 1, 1)
-    assert rev_old.valid_to == date(2022, 12, 31)
-    assert rev_old.period_selector.year_from == 2022
-    assert rev_old.period_selector.year_to == 2022
+    floor_revision = modelo.revisions[_FLOOR_REVISION_ID]
+    floor = filing_year_envelope().floor
+    assert floor_revision.valid_from == date(floor, 1, 1)
+    assert floor_revision.valid_to == date(floor, 12, 31)
+    assert floor_revision.period_selector.year_from == floor
+    assert floor_revision.period_selector.year_to == floor
     # The edition admits both cadences: its quarterly and monthly filing
     # schedules together are exactly what the selector claims.
-    assert rev_old.period_selector.periods == _scheduled_periods(rev_old)
+    assert floor_revision.period_selector.periods == _scheduled_periods(floor_revision)
+
+    for metadata in _WHOLE_YEAR_REVISIONS:
+        revision = modelo.revisions[str(metadata.id)]
+        year = metadata.valid_from.year
+        assert revision.valid_from == date(year, 1, 1), revision.id
+        assert revision.valid_to == date(year, 12, 31), revision.id
+        assert revision.period_selector.year_from == year, revision.id
+        assert revision.period_selector.year_to == year, revision.id
+        if str(metadata.id) != _FLOOR_REVISION_ID:
+            assert revision.period_selector.periods == _ALL_PERIODS, revision.id
 
     # The span is carried per revision rather than assumed to run January to
-    # December. The 2024 pair is a MID-YEAR split -- AEAT re-laid the form from
+    # December. The first split exercise is a MID-YEAR split -- AEAT re-laid the form from
     # period 09 / 3T -- so its two revisions meet at 31 August / 1 September, and
     # that boundary is the whole content of the split. Asserting a uniform
     # 1 January - 31 December span erased it and reddened on the revision the
     # split created.
-    expected_selectors = {
-        "2023": (
-            date(2023, 1, 1),
-            date(2023, 12, 31),
-            2023,
-            ("1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"),
-        ),
-        "2024-hasta-08-y-2t": (
-            date(2024, 1, 1),
-            date(2024, 8, 31),
-            2024,
-            ("1T", "2T", "01", "02", "03", "04", "05", "06", "07", "08"),
-        ),
-        "2024-desde-09-y-3t": (
-            date(2024, 9, 1),
-            date(2024, 12, 31),
-            2024,
-            ("3T", "4T", "09", "10", "11", "12"),
-        ),
-        "2025": (
-            date(2025, 1, 1),
-            date(2025, 12, 31),
-            2025,
-            ("1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"),
-        ),
-    }
-    for revision_id, (valid_from, valid_to, year, periods) in expected_selectors.items():
-        revision = modelo.revisions[revision_id]
-        assert revision.valid_from == valid_from
-        assert revision.valid_to == valid_to
-        assert revision.period_selector.year_from == year
-        assert revision.period_selector.year_to == year
+    early_metadata, late_metadata = _SPLIT_2T_3T
+    early = modelo.revisions[str(early_metadata.id)]
+    late = modelo.revisions[str(late_metadata.id)]
+    split_year = early_metadata.valid_from.year
+    assert (early.valid_from, early.valid_to) == (date(split_year, 1, 1), date(split_year, 8, 31))
+    assert (late.valid_from, late.valid_to) == (date(split_year, 9, 1), date(split_year, 12, 31))
+    for revision, periods in (
+        (early, ("1T", "2T", "01", "02", "03", "04", "05", "06", "07", "08")),
+        (late, ("3T", "4T", "09", "10", "11", "12")),
+    ):
+        assert revision.period_selector.year_from == split_year
+        assert revision.period_selector.year_to == split_year
         assert revision.period_selector.periods == periods
 
-    # The two 2024 revisions must MEET, with no gap and no overlap: the day one
+    # The two split revisions must MEET, with no gap and no overlap: the day one
     # ends is the day before the other begins.
-    early = modelo.revisions["2024-hasta-08-y-2t"]
-    late = modelo.revisions["2024-desde-09-y-3t"]
-    assert early.valid_to is not None
-    assert late.valid_from - early.valid_to == timedelta(days=1)
+    assert early.valid_to == late.valid_from - timedelta(days=1)
 
-    rev_current = modelo.revisions["2026-y-siguientes"]
-    rev_early = modelo.revisions["2026-hasta-01-y-1t"]
-    assert rev_early.valid_from == date(2026, 1, 1)
-    assert rev_early.valid_to == date(2026, 3, 31)
-    assert rev_early.period_selector.periods_for_year(2026) == ("01", "1T")
-    assert rev_current.valid_from == date(2026, 2, 1)
-    assert rev_current.period_selector.year_from == 2026
+    rev_early_metadata, rev_current_metadata = _SPLIT_1T_2T
+    rev_current = modelo.revisions[str(rev_current_metadata.id)]
+    rev_early = modelo.revisions[str(rev_early_metadata.id)]
+    year = rev_early_metadata.valid_from.year
+    assert rev_early.valid_from == date(year, 1, 1)
+    assert rev_early.valid_to == date(year, 3, 31)
+    assert rev_early.period_selector.periods_for_year(year) == ("01", "1T")
+    assert rev_current.valid_from == date(year, 2, 1)
+    assert rev_current.period_selector.year_from == year
     assert rev_current.period_selector.year_to is None
-    assert rev_current.period_selector.periods_for_year(2026) == (
+    assert rev_current.period_selector.periods_for_year(year) == (
         "02",
         "03",
         "04",
@@ -152,75 +161,64 @@ def test_modelo_303_revision_period_selectors_cover_the_supported_span() -> None
         "3T",
         "4T",
     )
-    assert rev_current.period_selector.periods_for_year(2027) == rev_current.period_selector.periods
-    assert {"01", "1T", "12", "4T"} <= set(rev_current.period_selector.periods_for_year(2027))
+    assert rev_current.period_selector.periods_for_year(year + 1) == rev_current.period_selector.periods
+    assert {"01", "1T", "12", "4T"} <= set(rev_current.period_selector.periods_for_year(year + 1))
 
 
 def test_modelo_303_snapshot_builds_for_each_quarter() -> None:
     modelo, catalogues = load_modelo_303()
 
-    for period in ("1T", "2T", "3T", "4T"):
-        snapshot = build_snapshot(
-            modelo,
-            catalogues,
-            source_root=bundled_path(),
-            filing_year=2025,
-            period=period,
-        )
-        assert snapshot.revision.id == "2025"
+    for metadata in _WHOLE_YEAR_REVISIONS:
+        for period in ("1T", "2T", "3T", "4T"):
+            snapshot = build_snapshot(
+                modelo,
+                catalogues,
+                source_root=bundled_path(),
+                filing_year=metadata.valid_from.year,
+                period=period,
+            )
+            assert snapshot.revision.id == str(metadata.id)
 
-    expected_2024_revisions = {
-        "1T": "2024-hasta-08-y-2t",
-        "2T": "2024-hasta-08-y-2t",
-        "3T": "2024-desde-09-y-3t",
-        "4T": "2024-desde-09-y-3t",
-        "01": "2024-hasta-08-y-2t",
-        "08": "2024-hasta-08-y-2t",
-        "09": "2024-desde-09-y-3t",
-        "12": "2024-desde-09-y-3t",
+    early_metadata, late_metadata = _SPLIT_2T_3T
+    expected_split_revisions = {
+        "1T": early_metadata,
+        "2T": early_metadata,
+        "3T": late_metadata,
+        "4T": late_metadata,
+        "01": early_metadata,
+        "08": early_metadata,
+        "09": late_metadata,
+        "12": late_metadata,
     }
-    for period, expected_revision_id in expected_2024_revisions.items():
+    for period, expected_revision in expected_split_revisions.items():
         snapshot = build_snapshot(
             modelo,
             catalogues,
             source_root=bundled_path(),
-            filing_year=2024,
+            filing_year=early_metadata.valid_from.year,
             period=period,
         )
-        assert snapshot.revision.id == expected_revision_id
+        assert snapshot.revision.id == str(expected_revision.id)
 
+    rev_early_metadata, rev_current_metadata = _SPLIT_1T_2T
     for period in ("1T", "2T", "3T", "4T"):
         snapshot = build_snapshot(
             modelo,
             catalogues,
             source_root=bundled_path(),
-            filing_year=2026,
+            filing_year=rev_current_metadata.valid_from.year,
             period=period,
         )
-        assert snapshot.revision.id == ("2026-hasta-01-y-1t" if period == "1T" else "2026-y-siguientes")
+        assert snapshot.revision.id == str(rev_early_metadata.id if period == "1T" else rev_current_metadata.id)
 
-    # Filing year 2022 resolves to the `2022` revision. This asked for 2021,
-    # which the retired pre-window span used to cover and nothing covers now, so
-    # it raised NoRevisionForPeriodError rather than asserting anything.
-    for period in ("1T", "2T", "3T", "4T"):
-        snapshot = build_snapshot(
-            modelo,
-            catalogues,
-            source_root=bundled_path(),
-            filing_year=2022,
-            period=period,
-        )
-        assert snapshot.revision.id == "2022"
-
-    # And the retirement is asserted, not merely worked around: the floor
-    # refuses rather than silently resolving a 2021 filing under 2022's norms.
-    # The refusal names the floor, because that is what turned 2021 away.
+    # The retirement of the span below the floor is asserted, not merely worked around: the floor
+    # refuses rather than silently resolving an earlier filing under the floor edition's norms.
     with pytest.raises(FilingYearOutsideSupportEnvelopeError):
         build_snapshot(
             modelo,
             catalogues,
             source_root=bundled_path(),
-            filing_year=2021,
+            filing_year=filing_year_envelope().floor - 1,
             period="1T",
         )
 
@@ -252,12 +250,14 @@ def test_modelo_303_explicit_record_design_revisions_have_one_exact_source() -> 
 
 def test_modelo_303_snapshot_carries_legal_authority_and_record_design() -> None:
     modelo, catalogues = load_modelo_303()
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="1T")
+    snapshot = build_snapshot(
+        modelo, catalogues, source_root=bundled_path(), filing_year=_LAST_WHOLE_YEAR.valid_from.year, period="1T"
+    )
 
     assert "orden-eha-3786-2008:art-1" in snapshot.legal
     assert "orden-eha-3786-2008:art-7" in snapshot.legal
     assert snapshot.legal["orden-eha-3786-2008:art-7"].article == "7"
-    assert "aeat-dr-303-2025" in snapshot.sources
+    assert M303_RECORD_DESIGN_SOURCE_BY_REVISION[str(_LAST_WHOLE_YEAR.id)] in snapshot.sources
     assert "aeat-modelo-303-procedure" in snapshot.sources
     assert "boe-modelo-303-2008-form" in snapshot.sources
 
@@ -288,15 +288,18 @@ def test_modelo_303_layout_modification_authority_starts_only_with_the_late_spli
     authority = catalogues.legal[M303_RECORD_DESIGN_LAYOUT_MODIFICATION_LEGAL_REF]
     assert authority.document_id == "BOE-A-2024-16129"
     assert authority.article == "único"
-    assert authority.effective_from == date(2024, 8, 6)
+    order_page = (bundled_path() / authority.corpus_ref.partition("#")[0]).read_text(encoding="utf-8")
+    ((day, month, year),) = re.findall(r"Fecha de entrada en vigor: (\d{2})/(\d{2})/(\d{4})", order_page)
+    assert authority.effective_from == date(int(year), int(month), int(day))
 
-    for revision_id in ("2023", "2024-hasta-08-y-2t"):
+    split_at = M303_EXPLICIT_RECORD_DESIGN_REVISIONS.index(str(_SPLIT_2T_3T[1].id))
+    for revision_id in M303_EXPLICIT_RECORD_DESIGN_REVISIONS[:split_at]:
         construct = next(
             item for item in modelo.revisions[revision_id].constructs if item.id == "modelo-303-iva-autoliquidacion"
         )
         assert M303_RECORD_DESIGN_LAYOUT_MODIFICATION_LEGAL_REF not in construct.legal_refs
 
-    for revision_id in ("2024-desde-09-y-3t", "2025", "2026-y-siguientes"):
+    for revision_id in M303_EXPLICIT_RECORD_DESIGN_REVISIONS[split_at:]:
         construct = next(
             item for item in modelo.revisions[revision_id].constructs if item.id == "modelo-303-iva-autoliquidacion"
         )
@@ -306,26 +309,27 @@ def test_modelo_303_layout_modification_authority_starts_only_with_the_late_spli
 def test_modelo_303_quarterly_deadlines_match_orden_eha_3786_2008_art_7() -> None:
     """1T-3T close on day 20; 4T closes on day 30 of January following."""
     modelo, _ = load_modelo_303()
-    prior_windows = {w.id: w for w in modelo.revisions["2025"].deadline_windows}
-    prior_expected = {
-        "modelo-303-2025-1t": (date(2025, 4, 1), date(2025, 4, 21)),
-        "modelo-303-2025-2t": (date(2025, 7, 1), date(2025, 7, 21)),
-        "modelo-303-2025-3t": (date(2025, 10, 1), date(2025, 10, 20)),
-        "modelo-303-2025-4t": (date(2026, 1, 1), date(2026, 1, 30)),
-    }
-    current_expected = {
-        "modelo-303-2026-1t": (date(2026, 4, 1), date(2026, 4, 20)),
-        "modelo-303-2026-2t": (date(2026, 7, 1), date(2026, 7, 20)),
-        "modelo-303-2026-3t": (date(2026, 10, 1), date(2026, 10, 20)),
-        "modelo-303-2026-4t": (date(2027, 1, 1), date(2027, 2, 1)),
-    }
+    prior_year = _LAST_WHOLE_YEAR.valid_from.year
+    current_year = _NEWEST.valid_from.year
+    prior_windows = {w.id: w for w in modelo.revisions[str(_LAST_WHOLE_YEAR.id)].deadline_windows}
+    # (month, day) each quarter opens and closes; the fourth quarter falls in the following year.
+    prior_days = (((4, 1), (4, 21)), ((7, 1), (7, 21)), ((10, 1), (10, 20)), ((1, 1), (1, 30)))
+    current_days = (((4, 1), (4, 20)), ((7, 1), (7, 20)), ((10, 1), (10, 20)), ((1, 1), (2, 1)))
 
-    for window_id, (opens, closes) in prior_expected.items():
+    def expected_windows(year, days):
+        return {
+            f"modelo-303-{year}-{quarter}t": tuple(
+                date(year + (quarter == 4), *month_day) for month_day in quarter_days
+            )
+            for quarter, quarter_days in enumerate(days, start=1)
+        }
+
+    for window_id, (opens, closes) in expected_windows(prior_year, prior_days).items():
         assert prior_windows[window_id].opens_on == opens
         assert prior_windows[window_id].closes_on == closes
-    for window_id, (opens, closes) in current_expected.items():
+    for window_id, (opens, closes) in expected_windows(current_year, current_days).items():
         period = window_id.rsplit("-", 1)[1].upper()
-        owner = select_revision(modelo, filing_year=2026, period=period)
+        owner = select_revision(modelo, filing_year=current_year, period=period)
         window = next(window for window in owner.deadline_windows if window.id == window_id)
         assert window.opens_on == opens
         assert window.closes_on == closes
@@ -400,51 +404,63 @@ def test_modelo_303_calendar_exercise_deadline_coordinates_have_only_the_canonic
 
 
 def test_modelo_303_historical_deadline_census_is_exact_and_canonically_owned() -> None:
-    """Every published 2022/2024/2025 coordinate has one selected owner and exact dates."""
+    """Every published coordinate of the exercises the calendar tests do not ground has one owner and exact dates."""
     modelo, _ = load_modelo_303()
+    # (year offset, month, day) of each period's opening, close and domiciled-payment cutoff, for the
+    # supported exercises the calendar-exercise tests below do not ground, in envelope order.
+    census_days = (
+        {
+            "1T": ((0, 4, 1), (0, 4, 20), (0, 4, 15)),
+            "2T": ((0, 7, 1), (0, 7, 20), (0, 7, 15)),
+            "3T": ((0, 10, 1), (0, 10, 20), (0, 10, 15)),
+            "4T": ((1, 1, 1), (1, 1, 30), (1, 1, 25)),
+        },
+        {
+            "1T": ((0, 4, 1), (0, 4, 22), (0, 4, 17)),
+            "2T": ((0, 7, 1), (0, 7, 22), (0, 7, 17)),
+            "3T": ((0, 10, 1), (0, 10, 21), (0, 10, 16)),
+            "4T": ((1, 1, 1), (1, 1, 30), (1, 1, 27)),
+            "01": ((0, 2, 1), (0, 2, 29), (0, 2, 26)),
+            "02": ((0, 3, 1), (0, 4, 1), (0, 3, 25)),
+            "03": ((0, 4, 1), (0, 4, 30), (0, 4, 25)),
+            "04": ((0, 5, 1), (0, 5, 30), (0, 5, 27)),
+            "05": ((0, 6, 1), (0, 7, 1), (0, 6, 26)),
+            "06": ((0, 7, 1), (0, 7, 30), (0, 7, 25)),
+            "07": ((0, 8, 1), (0, 8, 30), (0, 8, 27)),
+            "08": ((0, 9, 1), (0, 9, 30), (0, 9, 25)),
+            "09": ((0, 10, 1), (0, 10, 30), (0, 10, 25)),
+            "10": ((0, 11, 1), (0, 12, 2), (0, 11, 27)),
+            "11": ((0, 12, 1), (0, 12, 30), (0, 12, 25)),
+            "12": ((1, 1, 1), (1, 1, 30), (1, 1, 27)),
+        },
+        {
+            "1T": ((0, 4, 1), (0, 4, 21), (0, 4, 15)),
+            "2T": ((0, 7, 1), (0, 7, 21), (0, 7, 16)),
+            "3T": ((0, 10, 1), (0, 10, 20), (0, 10, 15)),
+            "4T": ((1, 1, 1), (1, 1, 30), (1, 1, 27)),
+            "01": ((0, 2, 1), (0, 2, 28), (0, 2, 25)),
+            "02": ((0, 3, 1), (0, 3, 31), (0, 3, 26)),
+            "03": ((0, 4, 1), (0, 4, 30), (0, 4, 25)),
+            "04": ((0, 5, 1), (0, 5, 30), (0, 5, 27)),
+            "05": ((0, 6, 1), (0, 6, 30), (0, 6, 25)),
+            "06": ((0, 7, 1), (0, 7, 30), (0, 7, 25)),
+            "07": ((0, 8, 1), (0, 9, 1), (0, 8, 27)),
+            "08": ((0, 9, 1), (0, 9, 30), (0, 9, 25)),
+            "09": ((0, 10, 1), (0, 10, 30), (0, 10, 27)),
+            "10": ((0, 11, 1), (0, 12, 1), (0, 11, 26)),
+            "11": ((0, 12, 1), (0, 12, 30), (0, 12, 25)),
+            "12": ((1, 1, 1), (1, 1, 30), (1, 1, 27)),
+        },
+    )
+    census_years = tuple(
+        year for year in filing_year_envelope().years if year not in {_CALENDAR_EXERCISE, _SII_CALENDAR_EXERCISE}
+    )
     expected = {
-        2022: {
-            "1T": (date(2022, 4, 1), date(2022, 4, 20), date(2022, 4, 15)),
-            "2T": (date(2022, 7, 1), date(2022, 7, 20), date(2022, 7, 15)),
-            "3T": (date(2022, 10, 1), date(2022, 10, 20), date(2022, 10, 15)),
-            "4T": (date(2023, 1, 1), date(2023, 1, 30), date(2023, 1, 25)),
-        },
-        2024: {
-            "1T": (date(2024, 4, 1), date(2024, 4, 22), date(2024, 4, 17)),
-            "2T": (date(2024, 7, 1), date(2024, 7, 22), date(2024, 7, 17)),
-            "3T": (date(2024, 10, 1), date(2024, 10, 21), date(2024, 10, 16)),
-            "4T": (date(2025, 1, 1), date(2025, 1, 30), date(2025, 1, 27)),
-            "01": (date(2024, 2, 1), date(2024, 2, 29), date(2024, 2, 26)),
-            "02": (date(2024, 3, 1), date(2024, 4, 1), date(2024, 3, 25)),
-            "03": (date(2024, 4, 1), date(2024, 4, 30), date(2024, 4, 25)),
-            "04": (date(2024, 5, 1), date(2024, 5, 30), date(2024, 5, 27)),
-            "05": (date(2024, 6, 1), date(2024, 7, 1), date(2024, 6, 26)),
-            "06": (date(2024, 7, 1), date(2024, 7, 30), date(2024, 7, 25)),
-            "07": (date(2024, 8, 1), date(2024, 8, 30), date(2024, 8, 27)),
-            "08": (date(2024, 9, 1), date(2024, 9, 30), date(2024, 9, 25)),
-            "09": (date(2024, 10, 1), date(2024, 10, 30), date(2024, 10, 25)),
-            "10": (date(2024, 11, 1), date(2024, 12, 2), date(2024, 11, 27)),
-            "11": (date(2024, 12, 1), date(2024, 12, 30), date(2024, 12, 25)),
-            "12": (date(2025, 1, 1), date(2025, 1, 30), date(2025, 1, 27)),
-        },
-        2025: {
-            "1T": (date(2025, 4, 1), date(2025, 4, 21), date(2025, 4, 15)),
-            "2T": (date(2025, 7, 1), date(2025, 7, 21), date(2025, 7, 16)),
-            "3T": (date(2025, 10, 1), date(2025, 10, 20), date(2025, 10, 15)),
-            "4T": (date(2026, 1, 1), date(2026, 1, 30), date(2026, 1, 27)),
-            "01": (date(2025, 2, 1), date(2025, 2, 28), date(2025, 2, 25)),
-            "02": (date(2025, 3, 1), date(2025, 3, 31), date(2025, 3, 26)),
-            "03": (date(2025, 4, 1), date(2025, 4, 30), date(2025, 4, 25)),
-            "04": (date(2025, 5, 1), date(2025, 5, 30), date(2025, 5, 27)),
-            "05": (date(2025, 6, 1), date(2025, 6, 30), date(2025, 6, 25)),
-            "06": (date(2025, 7, 1), date(2025, 7, 30), date(2025, 7, 25)),
-            "07": (date(2025, 8, 1), date(2025, 9, 1), date(2025, 8, 27)),
-            "08": (date(2025, 9, 1), date(2025, 9, 30), date(2025, 9, 25)),
-            "09": (date(2025, 10, 1), date(2025, 10, 30), date(2025, 10, 27)),
-            "10": (date(2025, 11, 1), date(2025, 12, 1), date(2025, 11, 26)),
-            "11": (date(2025, 12, 1), date(2025, 12, 30), date(2025, 12, 25)),
-            "12": (date(2026, 1, 1), date(2026, 1, 30), date(2026, 1, 27)),
-        },
+        filing_year: {
+            period: tuple(date(filing_year + offset, month, day) for offset, month, day in triple)
+            for period, triple in days.items()
+        }
+        for filing_year, days in zip(census_years, census_days, strict=True)
     }
 
     for filing_year, expected_by_period in expected.items():
@@ -473,7 +489,7 @@ def test_modelo_303_historical_deadline_census_is_exact_and_canonically_owned() 
 
 def test_modelo_303_open_ended_revision_supported_periods_are_fully_materialised() -> None:
     modelo, _ = load_modelo_303()
-    revision = modelo.revisions["2026-y-siguientes"]
+    revision = modelo.revisions[str(_NEWEST.id)]
     opening_year = revision.valid_from.year
     authored = {
         window.period.registry_token for window in revision.deadline_windows if window.filing_year == opening_year

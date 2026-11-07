@@ -10,6 +10,7 @@ import {
   openAssets,
   area,
 } from "../support/ledgerSetup";
+import { fixtureYear } from "../../src/dev/fixtureDates";
 
 // The Ledger page's Setup sections over the scenario host's made-up ledger: an own capital good named from its year, and a prorrata election the register refuses until its reference is given.
 
@@ -24,7 +25,7 @@ test("a capital good names its purchase from the year typed", async ({
   const description = field(form, "desktop.ledger.capital.description");
   const year = field(form, "desktop.ledger.capital.year");
   const cuota = field(form, "desktop.ledger.capital.cuota");
-  await year.fill("2026");
+  await year.fill(String(fixtureYear));
   await form.locator(".ledger-capital-movement").click();
   const options = target.getByRole("listbox").getByRole("option");
   await expect(options.first()).toBeVisible();
@@ -34,10 +35,10 @@ test("a capital good names its purchase from the year typed", async ({
     picked.split("\n")[0]!.slice(0, 12),
   );
   await expect(description).not.toHaveValue("");
-  await expect(year).toHaveValue("2026");
+  await expect(year).toHaveValue(String(fixtureYear));
   // Nothing states that a movement's IVA is the good's cuota soportada.
   await expect(cuota).toHaveValue("");
-  await year.fill("2025");
+  await year.fill(String(fixtureYear - 1));
   await expect(form.locator(".ledger-capital-movement")).toContainText(
     label("desktop.ledger.form.choose"),
   );
@@ -76,14 +77,18 @@ test("a prorrata election is refused until it names its document", async ({
   await expect(target.locator(".setup-call-line")).toContainText(
     prorrataRefused("reference_required"),
   );
-  await field(form, "desktop.ledger.prorrata.reference").fill("AEAT-2026-0117");
+  await field(form, "desktop.ledger.prorrata.reference").fill(
+    `AEAT-${fixtureYear}-0117`,
+  );
   await form
     .getByRole("button", {
       name: label("desktop.ledger.prorrata.action.elect_especial"),
     })
     .click();
   await expect(form).toBeHidden();
-  const row = target.locator(".ledger-prorrata-table tr", { hasText: "2026" });
+  const row = target.locator(".ledger-prorrata-table tr", {
+    hasText: String(fixtureYear),
+  });
   await expect(row).toContainText(
     label("desktop.ledger.prorrata.regime.especial"),
   );
@@ -110,16 +115,16 @@ test("the prorrata register lists a declared gross cuota and removes it once con
   await area(target, "desktop.ledger.registers.area.prorrata");
   const gross = target.locator(".ledger-prorrata-gross");
   const row = gross.locator(".ledger-prorrata-gross-table tr", {
-    hasText: "LIQ-2026-1T",
+    hasText: `LIQ-${fixtureYear}-1T`,
   });
   // The period, the cuota as the register serves it and its document.
-  await expect(row).toContainText("2026");
+  await expect(row).toContainText(String(fixtureYear));
   await expect(row).toContainText("1T");
   await expect(row).toContainText("1,234.56");
   await row
     .getByRole("button", {
       name: label("desktop.ledger.prorrata.gross.remove_of", {
-        liquidation: "2026 · 1T",
+        liquidation: `${fixtureYear} · 1T`,
       }),
     })
     .click();
@@ -127,7 +132,7 @@ test("the prorrata register lists a declared gross cuota and removes it once con
   const confirmation = gross.locator(".ledger-prorrata-gross-removing");
   await expect(confirmation).toContainText(
     label("desktop.ledger.prorrata.gross.remove_what", {
-      liquidation: "2026 · 1T",
+      liquidation: `${fixtureYear} · 1T`,
     }),
   );
   await expect(row).toBeVisible();
@@ -162,7 +167,7 @@ test("a gross cuota is declared, refused while one stands and replaced when aske
     );
     await field(form, "desktop.ledger.prorrata.gross.gross_cuota").fill(amount);
     await field(form, "desktop.ledger.prorrata.gross.evidence").fill(
-      `LIQ-2026-${period}`,
+      `LIQ-${fixtureYear}-${period}`,
     );
     const replacing = field(form, "desktop.ledger.prorrata.gross.replace");
     if ((await replacing.isChecked()) !== replace)
@@ -178,7 +183,7 @@ test("a gross cuota is declared, refused while one stands and replaced when aske
 
   const form = await declare("2T", "500");
   await expect(form).toBeHidden();
-  const row = table.locator("tr", { hasText: "LIQ-2026-2T" });
+  const row = table.locator("tr", { hasText: `LIQ-${fixtureYear}-2T` });
   await expect(row).toContainText("500.00");
 
   // The register keeps the cuota it holds until the person asks to replace it.
@@ -191,7 +196,9 @@ test("a gross cuota is declared, refused while one stands and replaced when aske
   await expect(target.locator(".ledger-prorrata-form")).toBeHidden();
   await expect(row).toContainText("600.00");
   await expect(row).not.toContainText("500.00");
-  await expect(table.locator("tr", { hasText: "LIQ-2026-2T" })).toHaveCount(1);
+  await expect(
+    table.locator("tr", { hasText: `LIQ-${fixtureYear}-2T` }),
+  ).toHaveCount(1);
 });
 
 for (const language of ["en", "es", "ca", "hu"]) {

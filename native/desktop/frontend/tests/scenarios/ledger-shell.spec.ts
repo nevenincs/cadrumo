@@ -1,14 +1,18 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import {
-  fixtureLedger,
-  LEDGER_FIXTURE_TODAY,
-} from "../../src/dev/fixtures/ledger";
+import { fixtureYear, fixtureYearFrom } from "../../src/dev/fixtureDates";
+import { fixtureLedger } from "../../src/dev/fixtures/ledger";
 import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
 import { servedPeriodName, servedYearName } from "../support/servedPeriods";
 
 /** The year of the scenario ledger's date, whose periods the scenarios open. */
-const scenarioYear = Number(LEDGER_FIXTURE_TODAY.slice(0, 4));
+const scenarioYear = fixtureYear;
+
+/** The years the scenario ledger holds movements in, oldest first: the fixture
+ * dates its movements these many years from its own. */
+const MOVEMENT_YEARS = [-23, -15, -7, -2, -1, 0].map((from) =>
+  String(fixtureYearFrom(from)),
+);
 
 // The Ledger page as the shell holds it: reached from the rail, its sections
 // and setup menu, the period selector, the states a read can end in, and what
@@ -196,7 +200,7 @@ test("the period steps across a year's end and its dropdown moves between years"
 }) => {
   await openLedger(target);
   await choosePeriod(target, scenarioYear, "1T");
-  await expect(trigger(target)).toHaveText("2026 · 1T");
+  await expect(trigger(target)).toHaveText(`${scenarioYear} · 1T`);
   const group = head(target).getByRole("group", {
     name: label("desktop.ledger.period.label"),
   });
@@ -209,22 +213,22 @@ test("the period steps across a year's end and its dropdown moves between years"
     exact: true,
   });
   await previous.click();
-  await expect(trigger(target)).toHaveText("2025 · 4T");
+  await expect(trigger(target)).toHaveText(`${scenarioYear - 1} · 4T`);
   await next.click();
   await next.click();
-  await expect(trigger(target)).toHaveText("2026 · 2T");
+  await expect(trigger(target)).toHaveText(`${scenarioYear} · 2T`);
   await expect(trigger(target)).toHaveAccessibleName(
     label("desktop.ledger.period.named", {
       label: label("desktop.ledger.period.label"),
-      period: "2026 · 2T",
+      period: `${scenarioYear} · 2T`,
     }),
   );
 
   // A whole year steps by years.
   await choosePeriod(target, scenarioYear - 1, "0A");
-  await expect(trigger(target)).toHaveText("2025");
+  await expect(trigger(target)).toHaveText(String(scenarioYear - 1));
   await next.click();
-  await expect(trigger(target)).toHaveText("2026");
+  await expect(trigger(target)).toHaveText(String(scenarioYear));
 
   // Inside, the year moves with no field to type in, and the chosen item
   // takes focus; the arrow keys move along the grid.
@@ -264,17 +268,14 @@ test("the years with movements come from the ledger and jump the dropdown", asyn
   const years = periods.getByRole("group", {
     name: label("desktop.ledger.period.years_with_movements"),
   });
-  await expect(years.getByRole("button")).toHaveText([
-    "2003",
-    "2011",
-    "2019",
-    "2024",
-    "2025",
-    "2026",
-  ]);
-  await years.getByRole("button", { name: "2003", exact: true }).click();
+  await expect(years.getByRole("button")).toHaveText(MOVEMENT_YEARS);
+  await years
+    .getByRole("button", { name: MOVEMENT_YEARS[0]!, exact: true })
+    .click();
   // Choosing a year moves the dropdown, which stays open for the period.
-  await expect(periods.locator("[aria-live=polite]")).toHaveText("2003");
+  await expect(periods.locator("[aria-live=polite]")).toHaveText(
+    MOVEMENT_YEARS[0]!,
+  );
   await expect(menu(target)).toBeVisible();
   await periods
     .getByRole("button", {
@@ -282,7 +283,7 @@ test("the years with movements come from the ledger and jump the dropdown", asyn
       exact: true,
     })
     .click();
-  await expect(trigger(target)).toHaveText("2003");
+  await expect(trigger(target)).toHaveText(MOVEMENT_YEARS[0]!);
   await expect(page(target).locator(".ledger-movements")).toContainText(
     label("desktop.ledger.movements_count", { count: 1 }),
   );
@@ -386,7 +387,7 @@ test("no taxpayer value reaches storage or the log, and sign-out drops the page'
     "TRANSFERENCIA",
     "Coworking Ribera",
     "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-    "2026-0",
+    `${scenarioYear}-0`,
   ])
     expect(original).not.toContain(value);
   const layout = JSON.parse(
@@ -613,7 +614,7 @@ test("the years with movements are read with the page, so the period list does n
   expect((await periods.boundingBox())!.height).toBe(height);
   await periods
     .getByRole("group", {
-      name: label("desktop.ledger.period.of_year", { year: 2026 }),
+      name: label("desktop.ledger.period.of_year", { year: scenarioYear }),
     })
     .getByRole("button", { name: "3T", exact: true })
     .click();

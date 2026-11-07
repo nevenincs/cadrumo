@@ -23,11 +23,13 @@ from cadrumo.domain.calculations.registry.schema_references import TemporalProje
 from cadrumo.domain.calculations.registry.temporal import revision_temporal_resolution, select_revision
 
 from ..conformance.registry_schema_support import committed_modelo
+from .authored_edition_support import sources_where
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_EARLY = "aeat-dr-210-2022-hasta-05"
-_LATE = "aeat-dr-210-2022"
+# The two designs that split one exercise, oldest first: the earlier serves devengos up to the
+# end of May, the later from June.
+_EARLY, _LATE = (source.id for source in sources_where(lambda source: source.id.startswith("aeat-dr-210-"))[:2])
 _RESERVED = "Reservado para la Administración"
 
 

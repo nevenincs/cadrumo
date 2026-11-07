@@ -14,6 +14,7 @@ import pytest
 from cadrumo.application.actividad_asset.activity_asset_read_models import ActivityAssetPlanAdvisoryKind
 from cadrumo.application.actividad_asset.operations import ActivityAssetOperations
 from cadrumo.core.i18n.render import tr
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.renta.actividad_asset.election import (
     AcquiredCondition,
     ActivityAssetAmortizationElection,
@@ -26,7 +27,7 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 
 from .ledger_support import MemoryLedger
 from .register_support import MemoryRepository, memory_register_authority, published_authority
-from .test_register import ACQUISITION, NAME, register_forecast, register_revision
+from .test_register import ACQUISITION, FIRST_YEAR, NAME, register_forecast, register_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -84,7 +85,8 @@ def test_the_warning_changes_no_figure() -> None:
     operations.plan_advisories(_ASSET)
 
     assert operations.plan(_ASSET) == before
-    assert published_authority(revision, 2025).annual_rate == Decimal("0.24")
+    for tax_year in filing_year_envelope().years:
+        assert published_authority(revision, tax_year).annual_rate == Decimal("0.24")
 
 
 def test_a_coefficient_above_the_ordinary_maximum_is_warned() -> None:
@@ -128,13 +130,13 @@ def test_a_modality_without_the_multiplier_is_not_warned() -> None:
 
 
 def test_a_building_under_the_minimum_age_counts_as_new_and_is_not_warned() -> None:
-    _, kinds = _advisories(_element(class_key="edificio-industrial", built=date(2020, 1, 1)))
+    _, kinds = _advisories(_element(class_key="edificio-industrial", built=date(FIRST_YEAR - 5, 1, 1)))
 
     assert kinds == ()
 
 
 def test_a_building_of_the_minimum_age_is_used_and_is_warned() -> None:
-    _, kinds = _advisories(_element(class_key="edificio-industrial", built=date(2000, 1, 1)))
+    _, kinds = _advisories(_element(class_key="edificio-industrial", built=date(FIRST_YEAR - 25, 1, 1)))
 
     assert kinds == (ActivityAssetPlanAdvisoryKind.USED_ELEMENT_GROUP_LIMIT,)
 

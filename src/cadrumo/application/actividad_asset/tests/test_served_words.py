@@ -45,6 +45,7 @@ from cadrumo.application.actividad_asset.served_words import (
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.contribuyente.tax_residence import ResidenceTerritory
 from cadrumo.domain.renta.actividad_asset.disposal import ActivityAssetDisposalFindingKind
 from cadrumo.domain.renta.actividad_asset.election import DirectEstimationRegime
@@ -52,7 +53,7 @@ from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetValidation
 
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from .ledger_support import MemoryLedger
-from .operations_support import build_operations
+from .operations_support import build_operations, build_revision
 from .register_support import MemoryRepository, memory_register_authority
 from .test_baja_correction import low_value_forecast, low_value_revision
 from .test_method_without_table_minimum import KEY
@@ -61,6 +62,7 @@ from .test_register import ACQUISITION, NAME, register_operations, register_revi
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _LANGUAGES = list(OutputLanguage)
+_TAX_YEAR = build_revision().in_service_date.year
 _PLACEHOLDER = re.compile(r"%\{|\{|\}")
 _OPTION = re.compile(r"(?<!\w)--[a-z]")
 _TOKEN = re.compile(r"\b[a-z]+_[a-z_]+\b")
@@ -104,10 +106,14 @@ def test_the_used_element_advisory_is_served_in_every_language() -> None:
 
 @pytest.mark.parametrize("language", _LANGUAGES)
 def test_a_reason_is_filled_with_its_facts_as_the_language_writes_them(language: OutputLanguage) -> None:
-    facts = (ActivityAssetReasonFact(key="tax_year", value="2030", kind=ActivityAssetReasonFactKind.COUNT),)
+    facts = (
+        ActivityAssetReasonFact(
+            key="tax_year", value=str(filing_year_envelope().horizon), kind=ActivityAssetReasonFactKind.COUNT
+        ),
+    )
     said = _finished(reason_words("ledger.actividad_asset.errors.tax_year_without_edition", facts, language))
     # A tax year is a count, so it carries no thousands mark in any language.
-    assert "2030" in said
+    assert str(filing_year_envelope().horizon) in said
 
 
 def test_a_reason_lacking_a_fact_it_needs_is_not_served_half_filled() -> None:
@@ -123,7 +129,7 @@ def test_the_plan_serves_the_no_table_minimum_as_a_flag_and_a_sentence(language:
         ledger=MemoryLedger(ACQUISITION),
         forecast_operation=low_value_forecast,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
-        register_authority=memory_register_authority(today=date(2026, 12, 31)),
+        register_authority=memory_register_authority(today=date(low_value_revision().in_service_date.year + 1, 12, 31)),
     )
     operations.create(low_value_revision(), NAME)
     executor = ActivityAssetPlanExecutor(_no_ports)
@@ -151,7 +157,7 @@ def test_a_table_method_minimum_is_not_flagged_and_has_no_sentence() -> None:
 
 @pytest.mark.parametrize("language", _LANGUAGES)
 def test_the_handoff_names_each_interval_by_the_registers_name_for_the_element(language: OutputLanguage) -> None:
-    handoff = build_operations().filing_handoff(tax_year=2025, language=language)
+    handoff = build_operations().filing_handoff(tax_year=_TAX_YEAR, language=language)
     snapshot = ActivityAssetFilingHandoffSnapshot.from_domain(handoff)
     (gap,) = snapshot.m100_gaps
     assert gap.words_language is language
@@ -169,8 +175,8 @@ def test_the_handoff_gap_sentences_differ_by_kind_and_language() -> None:
                 m100_gap_words(
                     kind,
                     name="Office laptop",
-                    covered_from=date(2025, 1, 1),
-                    covered_through=date(2025, 12, 31),
+                    covered_from=date(_TAX_YEAR, 1, 1),
+                    covered_through=date(_TAX_YEAR, 12, 31),
                     accrued=None if kind is not M100GapKind.ACCRUED else Decimal("520"),
                     language=language,
                 )
@@ -186,8 +192,8 @@ def test_an_element_without_a_name_is_said_so_and_never_by_its_identifier() -> N
             m100_gap_words(
                 M100GapKind.FREE_METHOD,
                 name=None,
-                covered_from=date(2025, 1, 1),
-                covered_through=date(2025, 12, 31),
+                covered_from=date(_TAX_YEAR, 1, 1),
+                covered_through=date(_TAX_YEAR, 12, 31),
                 accrued=None,
                 language=language,
             )
@@ -220,7 +226,7 @@ def test_the_partial_sentence_counts_the_elements_left_out() -> None:
 
 def test_the_handoff_for_a_period_with_nothing_left_out_serves_no_left_out_entry() -> None:
     handoff = build_operations().filing_handoff(
-        tax_year=2025, m130_period=Period.from_year_and_code(2025, "4T"), language=OutputLanguage.ES
+        tax_year=_TAX_YEAR, m130_period=Period.from_year_and_code(_TAX_YEAR, "4T"), language=OutputLanguage.ES
     )
     assert handoff.left_out == ()
     assert handoff.material_m130 is not None and handoff.material_m130.partial_words is None
@@ -230,7 +236,7 @@ def test_the_handoff_for_a_period_with_nothing_left_out_serves_no_left_out_entry
 def test_a_refusal_is_served_as_a_sentence_in_the_language_the_request_asked(language: OutputLanguage) -> None:
     operations = build_operations(territory=ResidenceTerritory.FORAL)
     with pytest.raises(ActividadAssetValidationError) as caught:
-        operations.filing_handoff(tax_year=2025, language=language)
+        operations.filing_handoff(tax_year=_TAX_YEAR, language=language)
 
     refusal = activity_asset_executors_refusal(caught.value, language)
 

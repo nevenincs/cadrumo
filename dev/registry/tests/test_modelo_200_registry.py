@@ -39,9 +39,20 @@ from dev.registry.edition_export_periods import M200_SCENARIO_PERIODS
 from dev.registry.edition_export_scenarios import m200_export_scenario
 from dev.registry.edition_round_trip import SYNTHETIC_TAX_ID
 
-from .authored_edition_support import source_first_exercise, source_with_sha256, sources_where
+from .authored_edition_support import (
+    newest_authored_editions,
+    revision_covering,
+    source_first_exercise,
+    source_with_sha256,
+    sources_where,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+# The two newest Modelo 200 editions the registry authors. The AEAT manual worked examples the
+# calculation oracles reproduce are the earlier edition's, which the newest edition's design
+# continues.
+_ORACLE_EXERCISE, _CURRENT_EXERCISE = newest_authored_editions("200", 2)
 
 
 @pytest.fixture(autouse=True)
@@ -138,13 +149,13 @@ def test_modelo_200_validates_with_deadline_and_schedule_catalogue_refs() -> Non
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2024,
+        filing_year=_ORACLE_EXERCISE,
         period="0A",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
     construct = snapshot.revision.constructs[0]
     assert construct.filing_schedules == ("modelo-200-anual",)
-    assert construct.deadline_windows == ("modelo-200-2024-0a",)
+    assert construct.deadline_windows == (f"modelo-200-{_ORACLE_EXERCISE}-0a",)
     linked_surfaces = {
         link.surface for link in snapshot.revision.application_links if link.id in construct.application_links
     }
@@ -226,7 +237,7 @@ def test_modelo_200_calendar_year_deadline_matches_boe_order(source_id: str) -> 
 
 def test_modelo_200_form_order_is_boe_corpus_backed() -> None:
     modelo, catalogues = _load_modelo_200()
-    revision = modelo.revisions["2024"]
+    revision = modelo.revisions[revision_covering("200", _ORACLE_EXERCISE).id]
     legal = {_M200_FORM_ORDER_REF: catalogues.legal[_M200_FORM_ORDER_REF]}
 
     # Grounding is proved against the bundled corpus itself: the evidence
@@ -237,8 +248,16 @@ def test_modelo_200_form_order_is_boe_corpus_backed() -> None:
     assert _M200_FORM_ORDER_REF in modelo.legal_refs
     assert _M200_FORM_ORDER_REF in revision.legal_refs
     assert revision.orden_aplicabilidad == (_M200_FORM_ORDER_REF,)
-    assert catalogues.sources["aeat-modelo-200-manual-2024"].evidence_tier == "official_source_guidance"
-    assert catalogues.sources["boe-modelo-200-2025-form"].evidence_tier == "official_source_guidance"
+    assert catalogues.sources[f"aeat-modelo-200-manual-{_ORACLE_EXERCISE}"].evidence_tier == "official_source_guidance"
+    (order_form,) = sources_where(
+        lambda source: (
+            source.id.startswith("boe-modelo-200-")
+            and source.id.endswith("-form")
+            and source.applies_from is not None
+            and source.applies_from.year == _ORACLE_EXERCISE
+        )
+    )
+    assert order_form.evidence_tier == "official_source_guidance"
     reference = legal[_M200_FORM_ORDER_REF]
     assert reference.document_id == "BOE-A-2025-12818"
     assert reference.kind == "orden"
@@ -252,7 +271,7 @@ def test_modelo_200_schedule_is_annual_for_calendar_year_entities() -> None:
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=_CURRENT_EXERCISE,
         period="0A",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
@@ -276,7 +295,7 @@ def test_modelo_200_projection_endpoints_keep_design_derived_slot_caps_and_no_ca
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=_CURRENT_EXERCISE,
         period="0A",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
@@ -325,7 +344,7 @@ def test_modelo_200_liquidacion_cuota_chain_casillas_resolve_under_their_segment
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=_CURRENT_EXERCISE,
         period="0A",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
@@ -360,7 +379,7 @@ def test_modelo_200_liquidacion_014_014b_formulas_use_segment_identities() -> No
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=_CURRENT_EXERCISE,
         period="0A",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
@@ -485,7 +504,7 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=_CURRENT_EXERCISE,
         period="0A",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
@@ -506,7 +525,7 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
             "modelo-200-pagos-fraccionados-anuales": Decimal("10000"),
             "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
         },
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": date(_ORACLE_EXERCISE, 12, 31)},
     )
 
     assert result.values[_M200_CUOTA_EJERCICIO_CASILLA] == Decimal("-20000.00"), (
@@ -541,7 +560,7 @@ def test_modelo_200_carries_manual_handoff_under_declaration_advisory_predicates
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=_CURRENT_EXERCISE,
         period="0A",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
@@ -577,7 +596,7 @@ def test_modelo_200_cuota_liquida_is_computed_and_rejects_direct_input() -> None
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=_CURRENT_EXERCISE,
         period="0A",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
@@ -600,7 +619,7 @@ def test_modelo_200_cuota_liquida_is_computed_and_rejects_direct_input() -> None
                 "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
                 "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
             },
-            date_context={"filing_period": date(2024, 12, 31)},
+            date_context={"filing_period": date(_ORACLE_EXERCISE, 12, 31)},
         )
 
 
@@ -632,7 +651,7 @@ def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelaci
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=_CURRENT_EXERCISE,
         period="0A",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
@@ -659,7 +678,7 @@ def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelaci
             "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
             "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
         },
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": date(_ORACLE_EXERCISE, 12, 31)},
     )
 
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("25"), (
@@ -702,7 +721,7 @@ def test_modelo_200_scenario_renders_its_projection_pages_and_page_21_incn_nif(r
     288, 297, 306, 315 and 324, each nine characters, alfanumérico.  One
     supplied row fills slot 1 and leaves slots 2-5 to blancos.
     """
-    period = M200_SCENARIO_PERIODS["2025-y-siguientes"]
+    period = M200_SCENARIO_PERIODS[revision_covering("200", _CURRENT_EXERCISE).id]
     scenario = m200_export_scenario(period)
     registry_root = bundled_path("registry", "aeat")
     payload, profile = _render_scenario_payload(

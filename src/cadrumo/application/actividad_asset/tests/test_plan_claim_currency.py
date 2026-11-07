@@ -32,8 +32,10 @@ from .register_support import MemoryRepository, memory_register_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_FIRST_YEAR = build_revision().in_service_date.year
 
-def _recorded_claim(operations: ActivityAssetOperations, *, year: int = 2025) -> str:
+
+def _recorded_claim(operations: ActivityAssetOperations, *, year: int = _FIRST_YEAR) -> str:
     return operations.record_claim(
         operations.forecast(asset_id="laptop-1", covered_from=date(year, 1, 1), covered_until=date(year + 1, 1, 1)),
         creating_operation="test.plan-claim",
@@ -82,8 +84,8 @@ def test_a_claim_recorded_under_an_earlier_revision_is_stale_with_the_timelines_
 
 def test_the_plan_and_the_timeline_agree_on_every_claim_of_the_element() -> None:
     operations = build_operations()
-    first_year = _recorded_claim(operations, year=2025)
-    second_year = _recorded_claim(operations, year=2026)
+    first_year = _recorded_claim(operations, year=_FIRST_YEAR)
+    second_year = _recorded_claim(operations, year=_FIRST_YEAR + 1)
     operations.correct(
         build_revision(number=2, supersedes=operations.inspect("laptop-1")[0].revision_id, basis="1500"),
         origin="test.correct",
@@ -133,7 +135,7 @@ class _Authority:
                 annual_rate=self.rate,
                 authority_generation="plan-claim-test",
                 source_reference="plan claim test table",
-                maximum_period_ends_on=date(2035, 1, 1),
+                maximum_period_ends_on=date(_FIRST_YEAR + 10, 1, 1),
             ),
             covered_from=covered_from,
             covered_until=covered_until,

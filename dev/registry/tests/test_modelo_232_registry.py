@@ -12,6 +12,12 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_exports import ExportRecordDefinition
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    open_ended_revision,
+    revision_last_exercise,
+)
 
 from ..conformance.registry_schema_support import committed_modelo
 from .modelo_registry_surface_support import (
@@ -24,6 +30,12 @@ from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
+# Modelo 232 is authored as two designs: a closed one for its first exercises and an open-ended one after.
+_FIRST_REVISION, _OPEN_ENDED_REVISION = (str(revision.id) for revision in authored_revisions("232"))
+_FIRST_REVISION_FIRST_EXERCISE = authored_revisions("232")[0].valid_from.year
+_FIRST_REVISION_LAST_EXERCISE = revision_last_exercise("232", _FIRST_REVISION)
+_OPEN_ENDED_FIRST_EXERCISE = open_ended_revision("232").valid_from.year
+
 
 def _load_modelo_232():
     return committed_modelo("232")
@@ -32,16 +44,16 @@ def _load_modelo_232():
 def test_committed_modelo_232_validates_against_catalogues() -> None:
     modelo, catalogues = _load_modelo_232()
     committed_registry_validator(catalogues).validate_modelo(modelo)
-    assert set(modelo.revisions) == {"2018-y-siguientes", "2016-2017"}
+    assert set(modelo.revisions) == {_FIRST_REVISION, _OPEN_ENDED_REVISION}
 
 
 def test_committed_modelo_232_resolves_revision_by_filing_year() -> None:
     modelo, _ = _load_modelo_232()
     cases = (
-        (2016, "2016-2017"),
-        (2017, "2016-2017"),
-        (2018, "2018-y-siguientes"),
-        (2024, "2018-y-siguientes"),
+        (_FIRST_REVISION_FIRST_EXERCISE, _FIRST_REVISION),
+        (_FIRST_REVISION_LAST_EXERCISE, _FIRST_REVISION),
+        (_OPEN_ENDED_FIRST_EXERCISE, _OPEN_ENDED_REVISION),
+        (filing_year_envelope().horizon, _OPEN_ENDED_REVISION),
     )
     for filing_year, expected_revision in cases:
         selected = select_revision(modelo, filing_year=filing_year, period="0A")
@@ -79,8 +91,8 @@ def test_committed_modelo_232_workbook_parity_resolves_to_corpus_artefact() -> N
     assert catalogues.sources["aeat-modelo-232-procedure"].evidence_tier == "official_source_guidance"
     assert catalogues.sources["boe-modelo-232-2017-form"].evidence_tier == "layout_authority"
     expected_sources = {
-        "2018-y-siguientes": "aeat-dr-232-2018",
-        "2016-2017": "aeat-dr-232-2016",
+        _OPEN_ENDED_REVISION: "aeat-dr-232-2018",
+        _FIRST_REVISION: "aeat-dr-232-2016",
     }
     for revision_id, expected_source in expected_sources.items():
         revision = modelo.revisions[revision_id]
@@ -181,16 +193,14 @@ def test_committed_modelo_232_deadline_window_is_november_following_ejercicio() 
     windows_by_year = {
         window.filing_year: window for revision in modelo.revisions.values() for window in revision.deadline_windows
     }
-    cases = (
-        (2016, date(2017, 11, 1), date(2017, 11, 30)),
-        (2017, date(2018, 11, 1), date(2018, 11, 30)),
-        (2018, date(2019, 11, 1), date(2019, 11, 30)),
-        (2023, date(2024, 11, 1), date(2024, 11, 30)),
-        (2025, date(2026, 11, 1), date(2026, 11, 30)),
-        (2026, date(2027, 11, 1), date(2027, 11, 30)),
-    )
-    for filing_year, expected_open, expected_close in cases:
-        window = windows_by_year[filing_year]
+    # Every exercise either design governs, and every supported one, has its window.
+    required = {
+        *range(_FIRST_REVISION_FIRST_EXERCISE, _FIRST_REVISION_LAST_EXERCISE + 1),
+        *filing_year_envelope().years,
+    }
+    assert required <= set(windows_by_year)
+    for filing_year, window in windows_by_year.items():
+        expected_open, expected_close = date(filing_year + 1, 11, 1), date(filing_year + 1, 11, 30)
         assert window.period_kind == "annual"
         assert window.opens_on == expected_open
         assert window.closes_on == expected_close
@@ -204,10 +214,10 @@ def test_committed_modelo_232_deadline_windows_are_unique_by_filing_year() -> No
         for window in revision.deadline_windows:
             assert window.filing_year not in seen, f"duplicate deadline window for filing_year {window.filing_year}"
             seen.add(window.filing_year)
-    # Modelo 232 was created by Orden HFP/816/2017 effective for ejercicio 2016 onwards;
-    # both revision boundaries (2016-2017 and 2018+) must have at least one window.
-    assert any(year <= 2017 for year in seen)
-    assert any(year >= 2018 for year in seen)
+    # Modelo 232 was created by Orden HFP/816/2017 effective for its first ejercicio onwards;
+    # both revision boundaries (the closed design and the open-ended one) must have at least one window.
+    assert any(year <= _FIRST_REVISION_LAST_EXERCISE for year in seen)
+    assert any(year >= _OPEN_ENDED_FIRST_EXERCISE for year in seen)
 
 
 def test_committed_modelo_232_filing_schedule_is_annual() -> None:
@@ -263,7 +273,7 @@ def test_committed_modelo_232_layout_declares_the_dr23200_variable_envelope() ->
         assert envelope.record_identity == "DR23200", revision.id
         assert envelope.prefix_extent == 328, revision.id
         assert envelope.body_record_ids == tuple(record.id for record in layout.records), revision.id
-        assert envelope.record_terminator == ("crlf" if revision.id == "2016-2017" else None), revision.id
+        assert envelope.record_terminator == ("crlf" if revision.id == _FIRST_REVISION else None), revision.id
         roles = tuple(field.role.value for field in envelope.prefix_fields)
         assert roles == _EXPECTED_ENVELOPE_PREFIX_ROLES, (revision.id, roles)
         assert sum(field.length for field in envelope.prefix_fields) == 328, revision.id
