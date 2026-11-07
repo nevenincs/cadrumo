@@ -9,6 +9,7 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..conformance.registry_schema_support import committed_modelo
@@ -16,7 +17,7 @@ from ..conformance.registry_schema_support import committed_modelo
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
-@pytest.mark.parametrize("year", (2022, 2025))
+@pytest.mark.parametrize("year", (filing_year_envelope().floor, filing_year_envelope().horizon))
 def test_compensation_total_adds_the_three_independently_stated_rates(year: int) -> None:
     modelo, catalogues = committed_modelo("341")
     snapshot = build_snapshot(

@@ -19,6 +19,11 @@ from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    open_ended_revision,
+    revision_first_exercise,
+)
 from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
     DECL_IMPORTE_OPERACIONES_CASILLA,
     DECL_IMPORTE_RECTIFICACIONES_CASILLA,
@@ -59,6 +64,8 @@ from .profile_schema_support import committed_registry_validator, committed_supp
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
+_REVISION_ID = str(open_ended_revision("349").id)
+
 
 @cache
 def _snapshot_349(filing_year: int, period: str) -> RegistrySnapshot:
@@ -77,7 +84,7 @@ def test_committed_modelo_349_validates_against_catalogues() -> None:
 
     committed_registry_validator(catalogues).validate_modelo(modelo)
 
-    assert set(modelo.revisions) == {"2020-y-siguientes"}
+    assert set(modelo.revisions) == {_REVISION_ID}
 
 
 def test_committed_modelo_349_resolves_revision_for_monthly_and_quarterly_periods() -> None:
@@ -93,7 +100,7 @@ def test_committed_modelo_349_resolves_revision_for_monthly_and_quarterly_period
     ):
         snapshot = _snapshot_349(filing_year, period)
 
-        assert snapshot.revision.id == "2020-y-siguientes", (filing_year, period)
+        assert snapshot.revision.id == _REVISION_ID, (filing_year, period)
         assert snapshot.revision.orden_aplicabilidad == (
             "orden-eha-769-2010:art-1",
             "orden-hac-174-2020:art-1",
@@ -102,7 +109,7 @@ def test_committed_modelo_349_resolves_revision_for_monthly_and_quarterly_period
 
 def test_committed_modelo_349_is_informative_static_documentation_only() -> None:
     modelo, _ = load_modelo_349()
-    snapshot = _snapshot_349(2026, "01")
+    snapshot = _snapshot_349(filing_year_envelope().horizon, "01")
     decision = snapshot.live_cross_references["modelo-349-static-documentation"]
     construct = snapshot.constructs["modelo-349-informative"]
 
@@ -230,7 +237,7 @@ def test_committed_modelo_349_authenticated_read_surface_contract() -> None:
 
 def test_committed_modelo_349_workbook_parity_resolves_to_corpus_artefact() -> None:
     modelo, catalogues = load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = modelo.revisions[_REVISION_ID]
 
     assert len(revision.workbook_parity_refs) == 1
     ref = revision.workbook_parity_refs[0]
@@ -246,7 +253,7 @@ def test_committed_modelo_349_workbook_parity_resolves_to_corpus_artefact() -> N
 
 def test_committed_modelo_349_gb_xi_country_prefix_rules_are_cited_to_aeat_instructions() -> None:
     modelo, catalogues = load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = modelo.revisions[_REVISION_ID]
     source = catalogues.sources[M349_GB_XI_SOURCE_REF]
     layout_source = catalogues.sources["boe-modelo-349-form-2010"]
 
@@ -281,14 +288,14 @@ def test_committed_modelo_349_gb_xi_country_prefix_rules_are_cited_to_aeat_instr
 
 def test_committed_modelo_349_cadence_threshold_links_to_riva_art_81_corpus() -> None:
     modelo, catalogues = load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = modelo.revisions[_REVISION_ID]
     reference = catalogues.legal[M349_CADENCE_LEGAL_REF]
 
     assert M349_CADENCE_LEGAL_REF in modelo.legal_refs
     assert M349_CADENCE_LEGAL_REF in revision.legal_refs
     assert M349_CADENCE_LEGAL_REF in revision.constructs[0].legal_refs
     assert reference.corpus_ref == "corpus/normatives/html/rd-1624-1992-art-81.html#a81"
-    assert reference.effective_from == date(2020, 3, 1)
+    assert reference.effective_from == date(revision_first_exercise("349", _REVISION_ID), 3, 1)
     assert reference.required_text == M349_CADENCE_REQUIRED_TEXT
 
     verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
@@ -348,8 +355,8 @@ def test_committed_modelo_349_deadline_windows_cover_every_supported_period_per_
     for window in revision.deadline_windows:
         by_year.setdefault(window.filing_year, set()).add(window.period.registry_token)
 
-    assert len(revision.deadline_windows) == 80
-    assert set(by_year) == {2022, 2023, 2024, 2025, 2026}
+    assert len(revision.deadline_windows) == 16 * len(filing_year_envelope().years)
+    assert set(by_year) == set(filing_year_envelope().years)
     for filing_year, periods in by_year.items():
         missing = expected_periods - periods
         assert not missing, f"filing_year {filing_year} unexpected period coverage gap: {missing}"
@@ -359,97 +366,105 @@ def test_committed_modelo_349_deadline_windows_match_official_plazo_rules() -> N
     # These are explicit AEAT-calendar close facts, not a nominal-day
     # calculation.  In particular, they preserve every published weekend or
     # holiday shift.  December and 4T use the following physical calendar year.
+    # Each exercise's rows are recorded in the order of the supported exercises, as
+    # (period, closing year offset, closing month, closing day).
+    expected_closes_by_exercise = (
+        (
+            ("01", 0, 2, 21),
+            ("02", 0, 3, 21),
+            ("03", 0, 4, 20),
+            ("04", 0, 5, 20),
+            ("05", 0, 6, 20),
+            ("06", 0, 7, 20),
+            ("07", 0, 9, 20),
+            ("08", 0, 9, 20),
+            ("09", 0, 10, 20),
+            ("10", 0, 11, 21),
+            ("11", 0, 12, 20),
+            ("12", 1, 1, 30),
+            ("1T", 0, 4, 20),
+            ("2T", 0, 7, 20),
+            ("3T", 0, 10, 20),
+            ("4T", 1, 1, 30),
+        ),
+        (
+            ("01", 0, 2, 20),
+            ("02", 0, 3, 20),
+            ("03", 0, 4, 20),
+            ("04", 0, 5, 22),
+            ("05", 0, 6, 20),
+            ("06", 0, 7, 20),
+            ("07", 0, 9, 20),
+            ("08", 0, 9, 20),
+            ("09", 0, 10, 20),
+            ("10", 0, 11, 20),
+            ("11", 0, 12, 20),
+            ("12", 1, 1, 30),
+            ("1T", 0, 4, 20),
+            ("2T", 0, 7, 20),
+            ("3T", 0, 10, 20),
+            ("4T", 1, 1, 30),
+        ),
+        (
+            ("01", 0, 2, 20),
+            ("02", 0, 3, 20),
+            ("03", 0, 4, 22),
+            ("04", 0, 5, 20),
+            ("05", 0, 6, 20),
+            ("06", 0, 7, 22),
+            ("07", 0, 9, 20),
+            ("08", 0, 9, 20),
+            ("09", 0, 10, 21),
+            ("10", 0, 11, 20),
+            ("11", 0, 12, 20),
+            ("12", 1, 1, 30),
+            ("1T", 0, 4, 22),
+            ("2T", 0, 7, 22),
+            ("3T", 0, 10, 21),
+            ("4T", 1, 1, 30),
+        ),
+        (
+            ("01", 0, 2, 20),
+            ("02", 0, 3, 20),
+            ("03", 0, 4, 21),
+            ("04", 0, 5, 20),
+            ("05", 0, 6, 20),
+            ("06", 0, 7, 21),
+            ("07", 0, 9, 22),
+            ("08", 0, 9, 22),
+            ("09", 0, 10, 20),
+            ("10", 0, 11, 20),
+            ("11", 0, 12, 22),
+            ("12", 1, 1, 30),
+            ("1T", 0, 4, 21),
+            ("2T", 0, 7, 21),
+            ("3T", 0, 10, 20),
+            ("4T", 1, 1, 30),
+        ),
+        (
+            ("01", 0, 2, 20),
+            ("02", 0, 3, 20),
+            ("03", 0, 4, 20),
+            ("04", 0, 5, 20),
+            ("05", 0, 6, 22),
+            ("06", 0, 7, 20),
+            ("07", 0, 9, 21),
+            ("08", 0, 9, 21),
+            ("09", 0, 10, 20),
+            ("10", 0, 11, 20),
+            ("11", 0, 12, 21),
+            ("12", 1, 2, 1),
+            ("1T", 0, 4, 20),
+            ("2T", 0, 7, 20),
+            ("3T", 0, 10, 20),
+            ("4T", 1, 2, 1),
+        ),
+    )
+    years = filing_year_envelope().years
+    assert len(years) == len(expected_closes_by_exercise)
     expected_closes_by_year = {
-        2022: (
-            ("01", date(2022, 2, 21)),
-            ("02", date(2022, 3, 21)),
-            ("03", date(2022, 4, 20)),
-            ("04", date(2022, 5, 20)),
-            ("05", date(2022, 6, 20)),
-            ("06", date(2022, 7, 20)),
-            ("07", date(2022, 9, 20)),
-            ("08", date(2022, 9, 20)),
-            ("09", date(2022, 10, 20)),
-            ("10", date(2022, 11, 21)),
-            ("11", date(2022, 12, 20)),
-            ("12", date(2023, 1, 30)),
-            ("1T", date(2022, 4, 20)),
-            ("2T", date(2022, 7, 20)),
-            ("3T", date(2022, 10, 20)),
-            ("4T", date(2023, 1, 30)),
-        ),
-        2023: (
-            ("01", date(2023, 2, 20)),
-            ("02", date(2023, 3, 20)),
-            ("03", date(2023, 4, 20)),
-            ("04", date(2023, 5, 22)),
-            ("05", date(2023, 6, 20)),
-            ("06", date(2023, 7, 20)),
-            ("07", date(2023, 9, 20)),
-            ("08", date(2023, 9, 20)),
-            ("09", date(2023, 10, 20)),
-            ("10", date(2023, 11, 20)),
-            ("11", date(2023, 12, 20)),
-            ("12", date(2024, 1, 30)),
-            ("1T", date(2023, 4, 20)),
-            ("2T", date(2023, 7, 20)),
-            ("3T", date(2023, 10, 20)),
-            ("4T", date(2024, 1, 30)),
-        ),
-        2024: (
-            ("01", date(2024, 2, 20)),
-            ("02", date(2024, 3, 20)),
-            ("03", date(2024, 4, 22)),
-            ("04", date(2024, 5, 20)),
-            ("05", date(2024, 6, 20)),
-            ("06", date(2024, 7, 22)),
-            ("07", date(2024, 9, 20)),
-            ("08", date(2024, 9, 20)),
-            ("09", date(2024, 10, 21)),
-            ("10", date(2024, 11, 20)),
-            ("11", date(2024, 12, 20)),
-            ("12", date(2025, 1, 30)),
-            ("1T", date(2024, 4, 22)),
-            ("2T", date(2024, 7, 22)),
-            ("3T", date(2024, 10, 21)),
-            ("4T", date(2025, 1, 30)),
-        ),
-        2025: (
-            ("01", date(2025, 2, 20)),
-            ("02", date(2025, 3, 20)),
-            ("03", date(2025, 4, 21)),
-            ("04", date(2025, 5, 20)),
-            ("05", date(2025, 6, 20)),
-            ("06", date(2025, 7, 21)),
-            ("07", date(2025, 9, 22)),
-            ("08", date(2025, 9, 22)),
-            ("09", date(2025, 10, 20)),
-            ("10", date(2025, 11, 20)),
-            ("11", date(2025, 12, 22)),
-            ("12", date(2026, 1, 30)),
-            ("1T", date(2025, 4, 21)),
-            ("2T", date(2025, 7, 21)),
-            ("3T", date(2025, 10, 20)),
-            ("4T", date(2026, 1, 30)),
-        ),
-        2026: (
-            ("01", date(2026, 2, 20)),
-            ("02", date(2026, 3, 20)),
-            ("03", date(2026, 4, 20)),
-            ("04", date(2026, 5, 20)),
-            ("05", date(2026, 6, 22)),
-            ("06", date(2026, 7, 20)),
-            ("07", date(2026, 9, 21)),
-            ("08", date(2026, 9, 21)),
-            ("09", date(2026, 10, 20)),
-            ("10", date(2026, 11, 20)),
-            ("11", date(2026, 12, 21)),
-            ("12", date(2027, 2, 1)),
-            ("1T", date(2026, 4, 20)),
-            ("2T", date(2026, 7, 20)),
-            ("3T", date(2026, 10, 20)),
-            ("4T", date(2027, 2, 1)),
-        ),
+        year: tuple((period, date(year + offset, month, day)) for period, offset, month, day in rows)
+        for year, rows in zip(years, expected_closes_by_exercise, strict=True)
     }
     revision = modelo_349_revision()
 
@@ -469,10 +484,10 @@ def test_committed_modelo_349_deadline_windows_match_official_plazo_rules() -> N
 
 def test_committed_modelo_349_deadlines_have_calendar_provenance_and_canonical_projection() -> None:
     modelo, _ = load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = modelo.revisions[_REVISION_ID]
     expected_periods = {f"{month:02d}" for month in range(1, 13)} | {f"{quarter}T" for quarter in range(1, 5)}
 
-    for filing_year in range(2022, 2027):
+    for filing_year in filing_year_envelope().years:
         windows = tuple(window for window in revision.deadline_windows if window.filing_year == filing_year)
         assert len(windows) == 16
         assert {window.period.registry_token for window in windows} == expected_periods
@@ -486,7 +501,7 @@ def test_committed_modelo_349_deadlines_have_calendar_provenance_and_canonical_p
                 ).id
                 == revision.id
             )
-            if window.closes_on.year <= 2026:
+            if window.closes_on.year <= filing_year_envelope().horizon:
                 assert f"aeat-calendario-contribuyente-{window.closes_on.year}" in window.source_refs
 
         projected = compiled_bundled_authority().deadline_windows(filing_year, modelos=("349",))
@@ -496,7 +511,7 @@ def test_committed_modelo_349_deadlines_have_calendar_provenance_and_canonical_p
 
     construct = revision.constructs[0]
     assert set(construct.deadline_windows) == {window.id for window in revision.deadline_windows}
-    calendar_refs = {f"aeat-calendario-contribuyente-{year}" for year in range(2022, 2027)}
+    calendar_refs = {f"aeat-calendario-contribuyente-{year}" for year in filing_year_envelope().years}
     assert calendar_refs <= set(revision.source_refs)
     assert calendar_refs <= set(construct.source_refs)
 
@@ -629,7 +644,7 @@ def test_committed_modelo_349_construct_includes_extraction_profiles() -> None:
 
 
 def test_committed_modelo_349_record_design_round_trips_declarante_operador_rectificacion() -> None:
-    snapshot = _snapshot_349(2026, "1T")
+    snapshot = _snapshot_349(filing_year_envelope().horizon, "1T")
     layout = resolve_export_layout(snapshot).layout
 
     declarante = fixed_width_record(
@@ -637,7 +652,7 @@ def test_committed_modelo_349_record_design_round_trips_declarante_operador_rect
         {
             (1, 1): "1",
             (2, 4): "349",
-            (5, 8): "2026",
+            (5, 8): str(filing_year_envelope().horizon),
             (9, 17): "B12345678",
             # Razon social of the declarante. The layout declares this slot
             # required, and the parse path re-renders every value_policy-free
@@ -658,7 +673,7 @@ def test_committed_modelo_349_record_design_round_trips_declarante_operador_rect
         {
             (1, 1): "2",
             (2, 4): "349",
-            (5, 8): "2026",
+            (5, 8): str(filing_year_envelope().horizon),
             (9, 17): "B12345678",
             (76, 77): "DE",
             (78, 92): "123456789012345",
@@ -672,13 +687,13 @@ def test_committed_modelo_349_record_design_round_trips_declarante_operador_rect
         {
             (1, 1): "2",
             (2, 4): "349",
-            (5, 8): "2026",
+            (5, 8): str(filing_year_envelope().horizon),
             (9, 17): "B12345678",
             (76, 77): "FR",
             (78, 92): "FR12345678901".ljust(15),
             (93, 132): "FRANCE SARL".ljust(40),
             (133, 133): "A",
-            (147, 150): "2024",
+            (147, 150): str(filing_year_envelope().horizon - 2),
             (151, 152): "1T",
             (153, 165): "10000".zfill(13),
             (166, 178): "8000".zfill(13),
@@ -712,7 +727,9 @@ def test_committed_modelo_349_record_design_round_trips_declarante_operador_rect
 
     assert by_record_binding[(rect, "iva-349-rectificacion-row-codigo-pais")] == "FR"
     assert by_record_binding[(rect, "iva-349-rectificacion-row-clave")] == "A"
-    assert by_record_binding[(rect, "iva-349-rectificacion-row-ejercicio")] == Decimal("2024")
+    assert by_record_binding[(rect, "iva-349-rectificacion-row-ejercicio")] == Decimal(
+        filing_year_envelope().horizon - 2
+    )
     assert by_record_binding[(rect, "iva-349-rectificacion-row-periodo")] == "1T"
     assert by_record_binding[(rect, "iva-349-rectificacion-row-base-rectificada")] == Decimal("100.00")
     assert by_record_binding[(rect, "iva-349-rectificacion-row-base-anterior")] == Decimal("80.00")

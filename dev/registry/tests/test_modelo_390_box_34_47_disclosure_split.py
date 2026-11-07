@@ -40,6 +40,7 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import revision_covering, supported_authored_exercises
 
 from ..compiler.loader import load_registry_tree
 from .gate_support import mutate_declaration, scratch_registry_tree
@@ -49,19 +50,23 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 _CASILLA_BOX_34 = "iva.anual.total-bases-cuotas-iva"
 _CASILLA_BOX_47 = "iva.anual.cuota-devengada-total"
 _FORMULA_BOX_34 = "modelo-390-iva-anual-total-bases-cuotas-iva"
+# The two designs printed with the earlier layout: the first two supported exercises.
+_EARLY_DESIGN_IDS = frozenset(
+    str(revision_covering("390", exercise).id) for exercise in supported_authored_exercises("390")[:2]
+)
 # Independently transcribed quota columns from the applicable printed forms.
-_QUOTAS_2022 = (
+_QUOTAS_EARLY = (
     "701 02 703 04 06 705 501 707 503 505 709 644 711 646 648 "
     "713 08 715 10 12 14 717 22 719 24 26 721 546 723 548 552 28 30 650 32"
 )
-_QUOTAS_2024 = (
+_QUOTAS_LATER = (
     "701 668 02 703 670 04 06 705 672 501 707 674 503 505 709 676 644 711 678 646 648 "
     "713 680 08 715 682 10 12 14 717 684 22 719 686 24 26 721 688 546 723 690 548 552 28 30 650 32"
 )
 
 
 def _non_recargo_terms(revision: ModeloRevision) -> frozenset[str]:
-    printed = _QUOTAS_2022 if revision.id in {"2022", "2023"} else _QUOTAS_2024
+    printed = _QUOTAS_EARLY if revision.id in _EARLY_DESIGN_IDS else _QUOTAS_LATER
     owners = {
         p.box_number: p.casilla_id
         for p in revision.form_layouts[0].placements

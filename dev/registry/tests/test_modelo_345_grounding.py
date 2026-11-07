@@ -141,7 +141,7 @@ def test_modelo_345_current_registry_uses_current_edition_sources_without_fake_c
 
 
 def test_modelo_345_additional_data_subfields_follow_official_record_design() -> None:
-    revision = compiled_bundled_authority().modelo("345").revisions["2025"]
+    revision = compiled_bundled_authority().modelo("345").revisions[str(_CURRENT_EDITION)]
     casillas = {str(casilla.id): casilla for casilla in revision.casillas}
 
     expected = (

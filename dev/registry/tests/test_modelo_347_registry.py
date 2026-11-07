@@ -9,6 +9,7 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..conformance.registry_schema_support import committed_modelo
@@ -21,6 +22,12 @@ from .profile_schema_support import committed_registry_validator, committed_supp
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
+_AUTHORED = authored_revisions("347")
+_EARLIER_ID, _LATER_ID = (str(revision.id) for revision in _AUTHORED)
+# The last exercise the earlier design governs and the first the later one does.
+_EARLIER_LAST = _AUTHORED[0].valid_to.year
+_LATER_FIRST = _AUTHORED[1].valid_from.year
+
 
 def _load_modelo_347():
     return committed_modelo("347")
@@ -29,13 +36,15 @@ def _load_modelo_347():
 def test_committed_modelo_347_validates_against_catalogues() -> None:
     modelo, catalogues = _load_modelo_347()
     committed_registry_validator(catalogues).validate_modelo(modelo)
-    assert set(modelo.revisions) == {"2011-2024", "2025-y-siguientes"}
+    assert set(modelo.revisions) == {_EARLIER_ID, _LATER_ID}
 
 
 _SUPPORT = committed_supported_filing_years()
-# The envelope ends plus the legal 2024/2025 edition split that falls inside it.
+# The envelope ends plus the legal edition split that falls inside it.
 _RESOLVED_YEARS = sorted(
-    year for year in {_SUPPORT.floor, 2024, 2025, _SUPPORT.horizon} if _SUPPORT.floor <= year <= _SUPPORT.horizon
+    year
+    for year in {_SUPPORT.floor, _EARLIER_LAST, _LATER_FIRST, _SUPPORT.horizon}
+    if _SUPPORT.floor <= year <= _SUPPORT.horizon
 )
 
 
@@ -53,13 +62,13 @@ def test_committed_modelo_347_resolves_revision_by_filing_year(filing_year: int)
     # that is the fact worth pinning: the two carry different byte layouts, so a
     # year resolving to the wrong one would build cleanly and file at the wrong
     # offsets.
-    assert snapshot.revision.id == ("2025-y-siguientes" if filing_year >= 2025 else "2011-2024")
+    assert snapshot.revision.id == (_LATER_ID if filing_year >= _LATER_FIRST else _EARLIER_ID)
     # Orden HAC/1431/2025 takes effect in December 2025, so it applies to the
     # later half only. Asserting both on every year would credit the earlier
     # revision with an orden that post-dates every filing it governs.
     assert snapshot.revision.orden_aplicabilidad == (
         ("orden-eha-3012-2008:art-1", "orden-hac-1431-2025:art-1")
-        if filing_year >= 2025
+        if filing_year >= _LATER_FIRST
         else ("orden-eha-3012-2008:art-1",)
     )
 
@@ -171,22 +180,33 @@ def test_committed_modelo_347_filing_schedule_is_annual() -> None:
 
 
 @pytest.mark.parametrize(
-    ("filing_year", "expected_open", "expected_close"),
+    ("sample", "close_month", "close_day"),
     [
         # Plazo per Orden EHA/3012/2008 art. 10: durante el mes de febrero,
         # shifted by the AEAT annual calendar when February ends on a non-working day.
-        (2018, date(2019, 2, 1), date(2019, 2, 28)),
-        (2019, date(2020, 2, 1), date(2020, 2, 29)),
-        (2024, date(2025, 2, 1), date(2025, 2, 28)),
-        (2025, date(2026, 2, 1), date(2026, 3, 2)),
+        ("first", 2, 28),
+        ("second", 2, 29),
+        ("earlier_last", 2, 28),
+        ("later_first", 3, 2),
     ],
 )
 def test_committed_modelo_347_deadline_window_matches_official_calendar(
-    filing_year: int,
-    expected_open: date,
-    expected_close: date,
+    sample: str,
+    close_month: int,
+    close_day: int,
 ) -> None:
     modelo, _ = _load_modelo_347()
+    authored_exercises = sorted(
+        {window.filing_year for revision in modelo.revisions.values() for window in revision.deadline_windows}
+    )
+    filing_year = {
+        "first": authored_exercises[0],
+        "second": authored_exercises[1],
+        "earlier_last": _EARLIER_LAST,
+        "later_first": _LATER_FIRST,
+    }[sample]
+    expected_open = date(filing_year + 1, 2, 1)
+    expected_close = date(filing_year + 1, close_month, close_day)
     windows = [
         window
         for revision in modelo.revisions.values()
@@ -199,8 +219,8 @@ def test_committed_modelo_347_deadline_window_matches_official_calendar(
     assert window.opens_on == expected_open
     assert window.closes_on == expected_close
     assert "aeat-modelo-347-procedure" in window.source_refs
-    if filing_year == 2025:
-        assert "aeat-calendario-contribuyente-2026-hasta-2-marzo" in window.source_refs
+    if sample == "later_first":
+        assert f"aeat-calendario-contribuyente-{filing_year + 1}-hasta-2-marzo" in window.source_refs
 
 
 def test_committed_modelo_347_construct_includes_revision_members() -> None:
