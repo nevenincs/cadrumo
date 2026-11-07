@@ -190,6 +190,19 @@ pin-browser-archives *args:
 pin-local-ai-program *args:
     uv run --no-sync python -m dev.env.local_ai_pins {{args}}
 
+# Regenerate the llama.cpp program pins (native/llamacpp-pins.json): the address,
+# format, backend, executable, size and SHA-256 of the official llama.cpp
+# archive per build target of one numbered build tag, each downloaded once. The
+# package build stages no other bytes. The program is bundled with the package
+# and never provisioned on a machine; models are not bundled.
+# `--tag` names the build (default: the newest build with every archive).
+# `--check` validates the committed file and its declared hosts without
+# downloading, and fails on drift.
+[doc('Pin the llama.cpp program archives the package build stages.')]
+[group('setup')]
+pin-llamacpp-program *args:
+    uv run --no-sync python -m dev.env.llamacpp_pins {{args}}
+
 # Verify the managed browser the test lanes share: one headless launch through
 # the bundled Playwright driver, whose reported version must match the driver's
 # manifest. Prints the exact remediation command on failure.

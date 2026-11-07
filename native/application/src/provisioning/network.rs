@@ -18,7 +18,7 @@ use super::{
     connection::{Network, Stage},
     failure::FailureCategory,
     http,
-    pins::ComponentPins,
+    pins::{ComponentPins, ProgramIdentity},
     url::HttpsUrl,
 };
 use crate::{component::Cancellation, value::HostName};
@@ -92,7 +92,9 @@ impl NetworkReport {
 pub fn item_hosts(pins: &ComponentPins, item: &str) -> Option<BTreeSet<HostName>> {
     match item {
         "browser" => pins.browser.as_ref().map(|browser| browser.hosts.clone()),
-        "local_ai" => pins.program.as_ref().map(|program| program.hosts.clone()),
+        "local_ai" => pins
+            .program(ProgramIdentity::Ollama)
+            .map(|program| program.hosts.clone()),
         _ => None,
     }
 }
@@ -203,6 +205,7 @@ mod tests {
         },
     };
     use std::{
+        collections::BTreeMap,
         net::{SocketAddr, TcpListener},
         sync::{Arc, Mutex, mpsc},
     };
@@ -606,7 +609,7 @@ X-Slow: "
         assert_eq!(item_hosts(&pins, "google"), None);
         let none = ComponentPins {
             browser: pins.browser.clone(),
-            program: None,
+            programs: BTreeMap::new(),
         };
         assert_eq!(item_hosts(&none, "local_ai"), None);
     }

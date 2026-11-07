@@ -470,6 +470,7 @@
         "dev.env.dotenv",
         "dev.env.environment_state",
         "dev.env.install",
+        "dev.env.llamacpp_pins",
         "dev.env.local_ai_pins",
         "dev.env.playwright_doctor",
         "dev.env.playwright_setup",

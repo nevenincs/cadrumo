@@ -1,0 +1,56 @@
+{
+  "program": "llama-server",
+  "repository": "ggml-org/llama.cpp",
+  "tag": "b12184",
+  "hosts": [
+    "github.com",
+    "release-assets.githubusercontent.com"
+  ],
+  "archives": [
+    {
+      "target": "linux-aarch64",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12184/llama-b12184-bin-ubuntu-vulkan-arm64.tar.gz",
+      "format": "tar.gz",
+      "backend": "vulkan",
+      "executable": "llama-b12184/llama-server",
+      "download_bytes": 29181897,
+      "sha256": "e8c1a7ec0a5f5268033424dd6466260bd32103982650d5b51501507923d6835b"
+    },
+    {
+      "target": "linux-x86-64",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12184/llama-b12184-bin-ubuntu-vulkan-x64.tar.gz",
+      "format": "tar.gz",
+      "backend": "vulkan",
+      "executable": "llama-b12184/llama-server",
+      "download_bytes": 35869581,
+      "sha256": "14892046c17f0883e3604fca862b01ae69133870babda74a6cbddf364010da8c"
+    },
+    {
+      "target": "macos-arm64",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12184/llama-b12184-bin-macos-arm64.tar.gz",
+      "format": "tar.gz",
+      "backend": "metal",
+      "executable": "llama-b12184/llama-server",
+      "download_bytes": 16698628,
+      "sha256": "b6de984035928daab27ea407284aea62d0ea82fbd1ebc058f1ac6de90f4fd8ba"
+    },
+    {
+      "target": "macos-x86-64",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12184/llama-b12184-bin-macos-x64.tar.gz",
+      "format": "tar.gz",
+      "backend": "cpu",
+      "executable": "llama-b12184/llama-server",
+      "download_bytes": 12437205,
+      "sha256": "d4b3369107006bedcf17473156e86b1b348f865dd2cd11e40747528ec3381780"
+    },
+    {
+      "target": "windows-x86-64",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12184/llama-b12184-bin-win-vulkan-x64.zip",
+      "format": "zip",
+      "backend": "vulkan",
+      "executable": "llama-server.exe",
+      "download_bytes": 37709845,
+      "sha256": "39c5acfaf9b9b9d24c73bbebd9d46b0bf84d889a9ea82cbb352764d5227f9d11"
+    }
+  ]
+}

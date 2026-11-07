@@ -824,7 +824,7 @@ fn a_wait_that_runs_out_reports_the_latest_failed_start_of_the_server() {
     let world = World::local_ai(&text, &vision);
     let pins = ComponentPins::load(&world.directory.path().join("pins")).unwrap();
     let program = Program::new(
-        pins.program.as_ref().unwrap(),
+        pins.program(ProgramIdentity::Ollama).unwrap(),
         Platform::current().unwrap(),
         Locations::under(&world.root()),
     )

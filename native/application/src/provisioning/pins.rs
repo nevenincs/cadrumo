@@ -5,10 +5,13 @@
 //!
 //! - `browser_archives.toml`: every archive the bundled Playwright driver's Chromium builds
 //!   need, per platform, with its build directory, sources, size and SHA-256.
-//! - `local_ai_program.toml`: the local AI program's official standalone archive per
+//! - `local_ai_program.toml`: the Ollama program's official standalone archive per
 //!   platform, with its format, executable, size and SHA-256.
+//! - `llamacpp_program.toml`: the same shape for the llama.cpp server program, should a
+//!   build carry one. The package builds that program in as a staged input pinned
+//!   elsewhere, so a build ordinarily has no such table.
 //!
-//! The program is pinned; the models it runs are not. Which model a role reads with is
+//! A program is pinned; the models it runs are not. Which model a role reads with is
 //! the person's selection, which the caller supplies, and the program verifies each
 //! model it pulls against the model's own content-addressed manifest.
 //!
@@ -22,10 +25,14 @@ use crate::{
     value::{HostName, RelativePath, Sha256Digest},
 };
 use serde::{Deserialize, Serialize};
-use std::{collections::BTreeSet, path::Path};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    path::Path,
+};
 
 pub const BROWSER_ARCHIVES: &str = "browser_archives.toml";
 pub const LOCAL_AI_PROGRAM: &str = "local_ai_program.toml";
+pub const LLAMACPP_PROGRAM: &str = "llamacpp_program.toml";
 
 /// The pin tables of this checkout, which the package stages as they are.
 #[cfg(test)]
@@ -217,10 +224,46 @@ struct RawProgramArchive {
     sha256: String,
 }
 
+/// The local AI programs a pin table can name. Each has its own table file and spells its
+/// version its own way.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub enum ProgramIdentity {
+    #[serde(rename = "ollama")]
+    Ollama,
+    #[serde(rename = "llama-server")]
+    LlamaServer,
+}
+
+impl ProgramIdentity {
+    /// Every program identity, in the order their tables are read.
+    pub const ALL: [Self; 2] = [Self::Ollama, Self::LlamaServer];
+
+    /// The file under the pin folder that holds this program's table.
+    pub fn table(self) -> &'static str {
+        match self {
+            Self::Ollama => LOCAL_AI_PROGRAM,
+            Self::LlamaServer => LLAMACPP_PROGRAM,
+        }
+    }
+
+    /// Whether `version` is spelled the way this program's releases are: three dotted
+    /// numbers for Ollama, a `b` and the build number for llama.cpp.
+    fn accepts_version(self, version: &str) -> bool {
+        let digits = |part: &str| !part.is_empty() && part.bytes().all(|c| c.is_ascii_digit());
+        match self {
+            Self::Ollama => {
+                let numeric = version.split('.').collect::<Vec<_>>();
+                numeric.len() == 3 && numeric.iter().copied().all(digits)
+            }
+            Self::LlamaServer => version.strip_prefix('b').is_some_and(digits),
+        }
+    }
+}
+
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct RawProgramTable {
-    program: String,
+    program: ProgramIdentity,
     version: String,
     hosts: Vec<HostName>,
     archives: Vec<RawProgramArchive>,
@@ -238,7 +281,7 @@ pub struct ProgramArchivePin {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ProgramPins {
-    pub program: String,
+    pub program: ProgramIdentity,
     pub version: String,
     pub hosts: BTreeSet<HostName>,
     pub archives: Vec<ProgramArchivePin>,
@@ -248,13 +291,7 @@ impl ProgramPins {
     pub fn parse(text: &str) -> Result<Self, Error> {
         let raw: RawProgramTable = parse_table(text)?;
         let hosts = unique_hosts(raw.hosts)?;
-        let numeric = raw.version.split('.').collect::<Vec<_>>();
-        if raw.program != "ollama"
-            || numeric.len() != 3
-            || numeric
-                .iter()
-                .any(|part| part.is_empty() || !part.bytes().all(|c| c.is_ascii_digit()))
-        {
+        if !raw.program.accepts_version(&raw.version) {
             return Err(invalid("program identity"));
         }
         let mut platforms = BTreeSet::new();
@@ -297,18 +334,34 @@ impl ProgramPins {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ComponentPins {
     pub browser: Option<BrowserArchivePins>,
-    pub program: Option<ProgramPins>,
+    /// The program tables this build carries, by the program each names.
+    pub programs: BTreeMap<ProgramIdentity, ProgramPins>,
 }
 
 impl ComponentPins {
     /// Reads the tables under `directory`, an owner-resolved absolute path. A missing table
-    /// reads as `None`; a present table that cannot be read or validated is an error.
+    /// reads as not carried; a present table that cannot be read or validated is an error,
+    /// and so is a program table that names another program than its file holds.
     pub fn load(directory: &Path) -> Result<Self, Error> {
         filesystem::absolute_root(directory)?;
-        Ok(Self {
-            browser: read_optional(&directory.join(BROWSER_ARCHIVES), BrowserArchivePins::parse)?,
-            program: read_optional(&directory.join(LOCAL_AI_PROGRAM), ProgramPins::parse)?,
-        })
+        let browser = read_optional(&directory.join(BROWSER_ARCHIVES), BrowserArchivePins::parse)?;
+        let mut programs = BTreeMap::new();
+        for identity in ProgramIdentity::ALL {
+            if let Some(pins) =
+                read_optional(&directory.join(identity.table()), ProgramPins::parse)?
+            {
+                if pins.program != identity {
+                    return Err(invalid("program identity"));
+                }
+                programs.insert(identity, pins);
+            }
+        }
+        Ok(Self { browser, programs })
+    }
+
+    /// The table of `identity`, when this build carries one.
+    pub fn program(&self, identity: ProgramIdentity) -> Option<&ProgramPins> {
+        self.programs.get(&identity)
     }
 }
 
@@ -390,8 +443,8 @@ mod tests {
     #[test]
     fn the_committed_tables_load_and_pin_every_supported_platform() {
         let pins = ComponentPins::load(&committed_tables()).unwrap();
-        let browser = pins.browser.unwrap();
-        let program = pins.program.unwrap();
+        let browser = pins.browser.clone().unwrap();
+        let program = pins.program(ProgramIdentity::Ollama).unwrap();
         for platform in [
             Platform::WinX64,
             Platform::LinuxX64,
@@ -418,7 +471,7 @@ mod tests {
             pins,
             ComponentPins {
                 browser: None,
-                program: None
+                programs: BTreeMap::new()
             }
         );
         assert!(ComponentPins::load(Path::new("relative")).is_err());
@@ -455,6 +508,76 @@ mod tests {
                 .covering(Platform::WinX64, &driver, &["chromium-1"])
                 .is_none()
         );
+    }
+
+    /// A llama.cpp program table naming one archive for Windows.
+    fn llamacpp_table(version: &str) -> String {
+        format!(
+            "program = \"llama-server\"\nversion = \"{version}\"\nhosts = [\"github.com\"]\n\n\
+             [[archives]]\nplatform = \"win-x64\"\n\
+             url = \"https://github.com/ggml-org/llama.cpp/releases/download/{version}/server.zip\"\n\
+             format = \"zip\"\nexecutable = \"llama-server.exe\"\ndownload_bytes = 1000\n\
+             sha256 = \"39c5acfaf9b9b9d24c73bbebd9d46b0bf84d889a9ea82cbb352764d5227f9d11\"\n"
+        )
+    }
+
+    #[test]
+    fn a_table_names_its_program_and_each_program_spells_its_version_its_own_way() {
+        let llama = ProgramPins::parse(&llamacpp_table("b12184")).unwrap();
+        assert_eq!(llama.program, ProgramIdentity::LlamaServer);
+        assert_eq!(llama.version, "b12184");
+        assert!(llama.for_platform(Platform::WinX64).is_some());
+        for version in ["12184", "b", "b12x", "0.40.10", "v12184"] {
+            assert!(
+                ProgramPins::parse(&llamacpp_table(version)).is_err(),
+                "{version}"
+            );
+        }
+        let ollama = ProgramPins::parse(&committed_text(LOCAL_AI_PROGRAM)).unwrap();
+        assert_eq!(ollama.program, ProgramIdentity::Ollama);
+        let swapped = committed_text(LOCAL_AI_PROGRAM).replacen(
+            &format!("version = \"{}\"", ollama.version),
+            "version = \"b12184\"",
+            1,
+        );
+        assert!(ProgramPins::parse(&swapped).is_err());
+    }
+
+    #[test]
+    fn program_tables_are_held_by_identity_and_a_file_holds_only_its_own_program() {
+        let directory = tempfile::tempdir().unwrap();
+        let write =
+            |name: &str, text: &str| std::fs::write(directory.path().join(name), text).unwrap();
+        write(LOCAL_AI_PROGRAM, &committed_text(LOCAL_AI_PROGRAM));
+        write(LLAMACPP_PROGRAM, &llamacpp_table("b12184"));
+        let pins = ComponentPins::load(directory.path()).unwrap();
+        assert_eq!(pins.browser, None);
+        assert_eq!(pins.programs.len(), 2);
+        assert_eq!(
+            pins.program(ProgramIdentity::Ollama).unwrap().program,
+            ProgramIdentity::Ollama
+        );
+        assert_eq!(
+            pins.program(ProgramIdentity::LlamaServer).unwrap().version,
+            "b12184"
+        );
+
+        // A table in the other program's file is refused, not read as that program.
+        write(LOCAL_AI_PROGRAM, &llamacpp_table("b12184"));
+        assert!(ComponentPins::load(directory.path()).is_err());
+    }
+
+    #[test]
+    fn a_build_without_a_program_table_does_not_carry_that_program() {
+        let directory = tempfile::tempdir().unwrap();
+        std::fs::write(
+            directory.path().join(LOCAL_AI_PROGRAM),
+            committed_text(LOCAL_AI_PROGRAM),
+        )
+        .unwrap();
+        let pins = ComponentPins::load(directory.path()).unwrap();
+        assert!(pins.program(ProgramIdentity::Ollama).is_some());
+        assert!(pins.program(ProgramIdentity::LlamaServer).is_none());
     }
 
     fn mutated(name: &str, old: &str, new: &str) -> String {
