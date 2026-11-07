@@ -1,7 +1,8 @@
 //! The engine driven end to end the way the desktop drives it: engines built over a
-//! storage root, the publisher's archives served over TLS, the stand-in browser, and the
-//! stand-in local AI server. Everything after the configuration is the production code
-//! path; the tests assert what the engines report, record and leave on disk.
+//! storage root, the publisher's archives and the model registry served over TLS, the
+//! stand-in browser, and the stand-in local AI server. Everything after the configuration
+//! is the production code path; the tests assert what the engines report, record and
+//! leave on disk.
 
 use super::*;
 use crate::provisioning::{
@@ -18,6 +19,7 @@ use crate::provisioning::{
         program::{
             Program, SERVER_RECORD, SERVER_RECORD_SCHEMA, START_FAILURE_RECORD, ServerRecord,
         },
+        registry,
     },
     state::RecoveryAction,
     test_servers::{Released, Reply, Request, TestCertificate, TlsServer, network_to, response},
@@ -105,7 +107,8 @@ fn publisher(
     })
 }
 
-/// One model as the program stores it: its manifest and each layer by digest.
+/// One model as its registry serves it and the store keeps it: its manifest and each
+/// layer by digest.
 struct StoredModel {
     manifest: Vec<u8>,
     blobs: Vec<(String, Vec<u8>)>,
@@ -117,12 +120,12 @@ impl StoredModel {
             .into_iter()
             .map(|bytes| (format!("sha256:{}", Sha256Digest::of(&bytes)), bytes))
             .collect();
-        let layer =
-            |(digest, bytes): &(String, Vec<u8>)| json!({"digest": digest, "size": bytes.len()});
+        let layer = |media_type: &str, (digest, bytes): &(String, Vec<u8>)| json!({"mediaType": media_type, "digest": digest, "size": bytes.len()});
         let manifest = json!({
             "schemaVersion": 2,
-            "config": layer(&blobs[0]),
-            "layers": [layer(&blobs[1])],
+            "mediaType": registry::MANIFEST_MEDIA_TYPE,
+            "config": layer("application/vnd.docker.container.image.v1+json", &blobs[0]),
+            "layers": [layer("application/vnd.ollama.image.model", &blobs[1])],
         })
         .to_string()
         .into_bytes();
@@ -149,7 +152,7 @@ impl StoredModel {
         files
     }
 
-    /// Stores the model in `models`, as the program does once a pull succeeds.
+    /// Stores the model in `models`, as a fetch does once every layer is verified.
     fn store(&self, models: &Path, name: &str) {
         for (path, bytes) in self.files(models, name) {
             fs::create_dir_all(path.parent().unwrap()).unwrap();
@@ -164,15 +167,21 @@ impl StoredModel {
             .count()
     }
 
-    /// What the program answers while it pulls this model, ending in success.
-    fn pull_lines(&self) -> Vec<Value> {
-        let mut lines = vec![json!({"status": "pulling manifest"})];
-        for (digest, bytes) in &self.blobs {
-            lines.push(json!({"status": "pulling", "digest": digest, "total": bytes.len(), "completed": bytes.len()}));
-        }
-        lines.push(json!({"status": "success"}));
-        lines
+    /// The registry's routes for this model under `name`: its manifest and each blob.
+    fn routes(&self, name: &str) -> Vec<(String, Vec<u8>)> {
+        let (model, _) = name.split_once(':').unwrap();
+        std::iter::once((manifest_route(name), self.manifest.clone()))
+            .chain(self.blobs.iter().map(|(digest, bytes)| {
+                (format!("/v2/library/{model}/blobs/{digest}"), bytes.clone())
+            }))
+            .collect()
     }
+}
+
+/// Where the registry serves the manifest of `name`.
+fn manifest_route(name: &str) -> String {
+    let (model, tag) = name.split_once(':').unwrap();
+    format!("/v2/library/{model}/manifests/{tag}")
 }
 
 /// A local AI archive for this platform: the program's layout in miniature, stored
@@ -242,25 +251,19 @@ impl World {
             ),
         )
         .unwrap();
-        let models = directory.path().join("storage/models/ollama");
         let fake = FakeOllama::start(PROGRAM_VERSION);
         {
+            // The server lists what the store holds once the engine fetched it.
             let mut state = fake.state.lock().unwrap();
-            // Roles pull in role order: the text model once, then the vision model.
-            state.pulls = VecDeque::from([text.pull_lines(), vision.pull_lines()]);
-            for (name, model) in [(VISION, vision), (TEXT, text)] {
-                state
-                    .installs
-                    .insert(name.into(), model.files(&models, name));
+            for name in [VISION, TEXT] {
                 state.tags.insert(name.into());
             }
         }
-        let mut world = Self::serving(
-            directory,
-            [(PROGRAM_PATH.to_owned(), archive)].into(),
-            false,
-            Some(fake),
-        );
+        let served: BTreeMap<String, Vec<u8>> = std::iter::once((PROGRAM_PATH.to_owned(), archive))
+            .chain(text.routes(TEXT))
+            .chain(vision.routes(VISION))
+            .collect();
+        let mut world = Self::serving(directory, served, false, Some(fake));
         world.selection = [
             ("vision_transcription", VISION, vision.size()),
             ("text_extraction", TEXT, text.size()),
@@ -279,7 +282,16 @@ impl World {
         driver: bool,
         ollama: Option<FakeOllama>,
     ) -> Self {
-        let certificate = TestCertificate::new(&[HOST, "github.com", "registry.ollama.ai"]);
+        // Every host a model fetch may reach answers here, as the publisher does.
+        let model_hosts: Vec<String> = registry::source_hosts(&ModelName::parse(TEXT).unwrap())
+            .iter()
+            .map(|host| host.as_str().to_owned())
+            .collect();
+        let hosts: Vec<&str> = [HOST, "github.com"]
+            .into_iter()
+            .chain(model_hosts.iter().map(String::as_str))
+            .collect();
+        let certificate = TestCertificate::new(&hosts);
         let gates = Arc::new(Mutex::new(VecDeque::new()));
         let server = publisher(&certificate, served, gates.clone());
         Self {
@@ -486,12 +498,30 @@ impl World {
             .clone()
     }
 
+    /// How many archive requests the publisher was sent, preflights and the model
+    /// registry's routes aside.
     fn archive_requests(&self) -> usize {
         self.server
             .targets()
             .iter()
-            .filter(|target| target.as_str() != "/")
+            .filter(|target| target.as_str() != "/" && !target.starts_with("/v2/"))
             .count()
+    }
+
+    /// Every request the model registry was sent, in order.
+    fn registry_requests(&self) -> Vec<String> {
+        self.server
+            .targets()
+            .into_iter()
+            .filter(|target| target.starts_with("/v2/"))
+            .collect()
+    }
+
+    /// Whether anything asked the stand-in local AI server to pull a model.
+    fn pulled_through_the_server(&self) -> bool {
+        self.ollama_requests()
+            .iter()
+            .any(|line| line.contains("/api/pull"))
     }
 }
 
@@ -759,62 +789,64 @@ fn a_cancel_stops_a_setup_at_its_next_chunk_from_its_owner_or_another_engine() {
 }
 
 #[test]
-fn a_server_started_under_another_proxy_setting_is_never_pulled_through() {
+fn a_server_started_under_another_proxy_setting_checks_the_models_the_engine_fetched() {
     let text = StoredModel::new(1);
     let vision = StoredModel::new(9);
     let world = World::local_ai(&text, &vision);
 
     // The supervisor's server is recorded as started under a setting that is not this
-    // engine's. Its environment is its own and this engine cannot change it, so the
-    // refusal names the restart that can instead of asking for one.
+    // engine's. It fetches nothing: the engine fetches every model through its own
+    // network, so the server's setting does not hold the setup back.
     let done =
         world.set_up_local_ai_serving(Some(&Sha256Digest::of(b"another setting").to_string()));
 
-    assert_eq!(
-        (done.report.outcome, done.report.failure),
-        (Outcome::Failed, Some(FailureCategory::ProgramProxyDiffers)),
-        "{:?}",
-        done.report
-    );
-    let requests = world.ollama_requests();
+    assert_eq!(done.report.outcome, Outcome::Completed, "{:?}", done.report);
     assert!(
-        !requests
-            .iter()
-            .any(|line| line.starts_with("POST /api/pull")),
-        "no model is pulled through it: {requests:?}"
+        !world.pulled_through_the_server(),
+        "no model is pulled through it: {:?}",
+        world.ollama_requests()
     );
+    assert_eq!(text.stored(&world.models(), TEXT), 3);
+    assert_eq!(vision.stored(&world.models(), VISION), 3);
 }
 
 #[test]
-fn a_tag_the_registry_moved_is_the_model_the_program_verified() {
+fn a_tag_the_registry_moved_is_the_model_the_engine_verified() {
     let text = StoredModel::new(1);
     let vision = StoredModel::new(9);
-    let world = World::local_ai(&text, &vision);
+    let mut world = World::local_ai(&text, &vision);
     // The registry answers with a manifest other than the one it served before, which is
-    // what a moved tag looks like. The program verified what it pulled, and the engine
-    // pins no digest, so the setup completes with it.
+    // what a moved tag looks like. The engine verifies every layer against the manifest it
+    // fetched and pins no digest of its own, so the setup completes with it.
     let moved = StoredModel::new(5);
-    {
-        let mut state = world.ollama.as_ref().unwrap().state.lock().unwrap();
-        state
-            .installs
-            .insert(VISION.into(), moved.files(&world.models(), VISION));
-        state.tags.insert(VISION.into());
-    }
+    let served: BTreeMap<String, Vec<u8>> = [(PROGRAM_PATH.to_owned(), program_archive())]
+        .into_iter()
+        .chain(text.routes(TEXT))
+        .chain(moved.routes(VISION))
+        .collect();
+    world.server = publisher(&world.certificate, served, world.gates.clone());
 
     let done = world.set_up_local_ai_serving(None);
 
     assert_eq!(done.report.outcome, Outcome::Completed, "{:?}", done.report);
     assert_eq!(row(&done.report, ItemId::LocalAi).state, ItemState::Ready);
-    let requests = world.ollama_requests();
+    assert_eq!(moved.stored(&world.models(), VISION), 3);
     assert_eq!(
-        requests
-            .iter()
-            .filter(|line| line.starts_with("POST /api/pull"))
-            .count(),
-        2,
-        "each model is pulled once: {requests:?}"
+        fs::read(&moved.files(&world.models(), VISION)[0].0).unwrap(),
+        moved.manifest,
+        "the store keeps the manifest the registry served"
     );
+    let manifests: Vec<String> = world
+        .registry_requests()
+        .into_iter()
+        .filter(|target| target.contains("/manifests/"))
+        .collect();
+    assert_eq!(
+        manifests,
+        [manifest_route(TEXT), manifest_route(VISION)],
+        "each model's manifest is fetched once"
+    );
+    assert!(!world.pulled_through_the_server());
 }
 
 #[test]
@@ -910,16 +942,14 @@ fn a_setup_whose_check_the_server_drops_reports_the_request_that_failed() {
         done.report.failure_cause
     );
     assert!(
-        world
-            .ollama_requests()
-            .iter()
-            .any(|line| line.starts_with("POST /api/pull")),
-        "the models were pulled before the check failed"
+        !world.registry_requests().is_empty() && !world.pulled_through_the_server(),
+        "the engine fetched the models itself before the check failed"
     );
+    assert_eq!(text.stored(&world.models(), TEXT), 3);
 }
 
 #[test]
-fn the_local_ai_installs_its_program_pulls_each_model_once_and_checks_every_role() {
+fn the_local_ai_installs_its_program_fetches_each_model_once_and_checks_every_role() {
     let text = StoredModel::new(1);
     let vision = StoredModel::new(9);
     let kept = StoredModel::new(5);
@@ -962,6 +992,44 @@ fn the_local_ai_installs_its_program_pulls_each_model_once_and_checks_every_role
         &Cancellation::default(),
     );
     let plan = reviewed.expect("the setup asked for a review");
+    let registry_hosts: Vec<String> = registry::source_hosts(&ModelName::parse(TEXT).unwrap())
+        .iter()
+        .map(|host| host.as_str().to_owned())
+        .collect();
+    for part in &plan.entries[0].parts[1..] {
+        let mut hosts: Vec<String> = part
+            .source_hosts
+            .iter()
+            .map(|host| host.as_str().to_owned())
+            .collect();
+        assert_eq!(
+            hosts[0], "registry.ollama.ai",
+            "the registry is listed first"
+        );
+        hosts.sort_unstable();
+        assert_eq!(
+            hosts, registry_hosts,
+            "the person approves every host the fetch of {} may reach",
+            part.part_id
+        );
+    }
+    for host in &registry_hosts {
+        assert!(
+            plan.entries[0]
+                .source_hosts
+                .iter()
+                .any(|listed| listed.as_str() == host),
+            "the entry lists {host}"
+        );
+        assert!(
+            plan.digest_document()["entries"][0]["source_hosts"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|listed| listed == host.as_str()),
+            "the approval binds {host}"
+        );
+    }
     assert_eq!(
         parts(&plan),
         [
@@ -1042,8 +1110,24 @@ fn the_local_ai_installs_its_program_pulls_each_model_once_and_checks_every_role
             .filter(|line| line.starts_with(prefix))
             .count()
     };
-    assert_eq!(count("POST /api/pull"), 2, "{requests:?}");
+    assert!(!world.pulled_through_the_server(), "{requests:?}");
     assert_eq!(count("POST /api/generate"), 4, "one token for each role");
+    let fetched = world.registry_requests();
+    assert_eq!(
+        fetched
+            .iter()
+            .filter(|target| target.contains("/manifests/"))
+            .count(),
+        2,
+        "roles that share a model fetch it once: {fetched:?}"
+    );
+    assert_eq!(
+        fetched.len(),
+        2 + text.blobs.len() + vision.blobs.len(),
+        "{fetched:?}"
+    );
+    assert_eq!(text.stored(&world.models(), TEXT), 3);
+    assert_eq!(vision.stored(&world.models(), VISION), 3);
 
     // The quick check of an installation that measures this computer itself. How long
     // that takes depends on the machine, so only what it does and does not do is
@@ -1059,6 +1143,7 @@ fn the_local_ai_installs_its_program_pulls_each_model_once_and_checks_every_role
         "a quick check loads no model and asks the server nothing"
     );
     assert_eq!(world.archive_requests(), 1, "nor does it reach the network");
+    assert_eq!(world.registry_requests(), fetched);
     world.measure_hardware = false;
 
     let verified = world.verify(&[ItemId::LocalAi]);

@@ -1,27 +1,29 @@
-//! The local AI's models: the models its caller admits, pulled through the server the
-//! engine's manager runs and checked against what that server holds.
+//! The local AI's models: the models its caller admits, fetched by the engine itself into
+//! the one store both engines read, and checked against what the store and the selected
+//! engine's server hold.
 //!
-//! The engine defines no model. Its caller supplies the admitted models as part, model
-//! name and download size triples, the size as a catalogue entry states it or unknown
-//! when none does, and the engine plans, pulls and checks exactly those. A model of
-//! unknown size is planned with an unknown download, passes no hardware floor check
-//! before it is pulled, and reports progress against the totals the program streams. Integrity is the program's: it verifies
-//! every layer it pulls against the model's content-addressed manifest, so the engine
-//! compares no digest of its own.
+//! The engine defines no model. Its caller supplies the admitted models as part, artefact
+//! and download size triples, the size as a catalogue entry states it or unknown when
+//! none does, and the engine plans, fetches and checks exactly those. An artefact is a
+//! name its registry serves, or files the catalogue declares on Hugging Face with their
+//! digests and sizes; a plain name is the registry form. A model of unknown size is
+//! planned with an unknown download, passes no hardware floor check before it is
+//! fetched, and reports progress against the sizes its fetched manifest declares.
 //!
-//! The program keeps a model as a manifest under
+//! No local model server runs to acquire a model. The [`registry`] client fetches a
+//! registry model's manifest and every layer it names, and the [`huggingface`] source a
+//! declared model's files, each verified by Rust against its content digest, the
+//! manifest's or the catalogue's, before it enters the store. A fetch that fails in a way
+//! that may pass is retried under the setup's retry schedule, and resumes the partial
+//! bytes an earlier one left.
+//!
+//! The store keeps a model as a manifest under
 //! `manifests/<host>/<namespace>/<model>/<tag>` in the models folder and its layers as
 //! `blobs/sha256-<hex>`. So the quick check reads files only: a manifest whose every layer
 //! is stored at its size is present, and a missing manifest or layer is absent. There is
-//! no stale model: a manifest other than the one pulled before is the model the program
-//! verified under that name. The full check, and the check after a pull, look the model
-//! up in the server's own list of installed models; the full check then generates one
-//! token with it.
-//!
-//! A pull streams the program's progress lines into byte progress for the whole model.
-//! The program resumes a model's partial layers by itself, so a pull that was cut off is
-//! simply pulled again. A pull that fails in a way that may pass is retried under the
-//! setup's retry schedule; every other failure is final at once.
+//! no stale model: a manifest other than the one fetched before is the model verified
+//! under that name. The full check looks the model up in the server's own list of
+//! installed models and then generates one token with it.
 //!
 //! Role fitness, how well a model answers for its role, is no part of this state: it
 //! is the consumer's admission check.
@@ -32,10 +34,9 @@ use super::{
     huggingface::{self, HuggingFaceFile, HuggingFaceModel},
     loopback::Loopback,
     program::Server,
-    registry,
+    registry::{self, Registry, RegistryManifest},
 };
 use crate::{
-    component::Cancellation,
     error::Error,
     filesystem,
     provisioning::{
@@ -43,13 +44,13 @@ use crate::{
         items::{Destination, FULL_CHECK_BUDGET, PROGRAM_PART},
         plan::PlanPart,
         state::{BlockedReason, Observation},
-        transfer::{Pacing, RetryPolicy, TransferEvent},
+        transfer::{Transfer, TransferEvent},
     },
     value::{HostName, Sha256Digest},
 };
 use serde::Deserialize;
 use std::{
-    collections::{BTreeMap, BTreeSet},
+    collections::BTreeSet,
     fmt, io,
     path::{Path, PathBuf},
 };
@@ -184,19 +185,32 @@ impl fmt::Display for ModelName {
     }
 }
 
-/// One admitted local model: the plan part it is pulled as, its name and its download
+/// One admitted local model: the plan part it is fetched as, its artefact and its download
 /// size as its catalogue entry states it, or `None` when no entry states one.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SelectedModel {
     pub role: String,
-    pub name: ModelName,
+    pub artefact: ModelArtefact,
     pub size_bytes: Option<u64>,
 }
 
 impl SelectedModel {
-    /// One admitted triple; refuses a part that is not a plain identifier, an empty or
-    /// malformed name, and a stated zero size.
+    /// One admitted triple of a model its registry serves under `name`; refuses a part that
+    /// is not a plain identifier, an empty or malformed name, and a stated zero size.
     pub fn new(role: &str, name: &str, size_bytes: Option<u64>) -> Result<Self, Error> {
+        Self::of_artefact(
+            role,
+            ModelArtefact::Registry(ModelName::parse(name)?),
+            size_bytes,
+        )
+    }
+
+    /// One admitted triple of any artefact, under the same refusals as [`Self::new`].
+    pub fn of_artefact(
+        role: &str,
+        artefact: ModelArtefact,
+        size_bytes: Option<u64>,
+    ) -> Result<Self, Error> {
         let mut bytes = role.bytes();
         let identifier = role.len() <= ROLE_LIMIT
             && bytes.next().is_some_and(|c| c.is_ascii_lowercase())
@@ -209,9 +223,21 @@ impl SelectedModel {
         }
         Ok(Self {
             role: role.to_owned(),
-            name: ModelName::parse(name)?,
+            artefact,
             size_bytes,
         })
+    }
+
+    /// The name the store keeps the model under.
+    pub fn name(&self) -> &ModelName {
+        self.artefact.name()
+    }
+
+    /// The bytes the model downloads as far as is known before it is fetched: the size its
+    /// catalogue entry states, else the sizes a Hugging Face declaration pins; `None` for
+    /// a registry model no entry sizes.
+    pub fn stated_bytes(&self) -> Option<u64> {
+        self.size_bytes.or_else(|| self.artefact.declared_bytes())
     }
 }
 
@@ -245,6 +271,36 @@ impl ModelArtefact {
         match self {
             Self::Registry(name) => registry::source_hosts(name),
             Self::HuggingFace(_) => huggingface::source_hosts(),
+        }
+    }
+
+    /// The source hosts as a plan lists them: the host the model is addressed at first,
+    /// then the hosts it may be redirected to.
+    pub fn plan_hosts(&self) -> Vec<HostName> {
+        let addressed = self.name().host().clone();
+        let redirected = self
+            .source_hosts()
+            .into_iter()
+            .filter(|host| *host != addressed);
+        std::iter::once(addressed).chain(redirected).collect()
+    }
+
+    /// The bytes the artefact's own declaration pins: a Hugging Face model's files. A
+    /// registry model's sizes are known only once its manifest is fetched.
+    pub fn declared_bytes(&self) -> Option<u64> {
+        match self {
+            Self::Registry(_) => None,
+            Self::HuggingFace(model) => Some(model.download_bytes()),
+        }
+    }
+
+    /// Whether `other` is the same artefact: the same registry name regardless of case,
+    /// or the same Hugging Face declaration.
+    pub fn same(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Registry(name), Self::Registry(other)) => name.same(other),
+            (Self::HuggingFace(model), Self::HuggingFace(other)) => model == other,
+            _ => false,
         }
     }
 }
@@ -302,24 +358,25 @@ impl TryFrom<ArtefactDocument> for ModelArtefact {
 }
 
 /// The local models the person selected, at most one per role, in role order. Empty
-/// when no local role has a selection: then there is nothing to pull, and no fallback.
+/// when no local role has a selection: then there is nothing to fetch, and no fallback.
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct LocalModels(Vec<SelectedModel>);
 
 impl LocalModels {
     /// Refuses a role selected twice, and a model selected for two roles under two
-    /// different sizes, which no one catalogue entry can state.
+    /// different sizes or artefacts, which no one catalogue entry can state.
     pub fn new(mut models: Vec<SelectedModel>) -> Result<Self, Error> {
         models.sort_by(|a, b| a.role.cmp(&b.role));
         if models.windows(2).any(|pair| pair[0].role == pair[1].role) {
             return Err(invalid("a role is selected once"));
         }
         for (index, model) in models.iter().enumerate() {
-            if models[..index]
-                .iter()
-                .any(|other| other.name.same(&model.name) && other.size_bytes != model.size_bytes)
-            {
-                return Err(invalid("a model has one size"));
+            if models[..index].iter().any(|other| {
+                other.name().same(model.name())
+                    && (other.size_bytes != model.size_bytes
+                        || !other.artefact.same(&model.artefact))
+            }) {
+                return Err(invalid("a model has one size and one source"));
             }
         }
         Ok(Self(models))
@@ -338,11 +395,11 @@ impl LocalModels {
         self.0.iter().find(|model| model.role == role)
     }
 
-    /// The registries the selected models are pulled from.
+    /// Every host fetching the selected models may reach.
     pub fn hosts(&self) -> BTreeSet<HostName> {
         self.0
             .iter()
-            .map(|model| model.name.host().clone())
+            .flat_map(|model| model.artefact.source_hosts())
             .collect()
     }
 }
@@ -352,19 +409,6 @@ impl LocalModels {
 pub struct Models {
     selection: LocalModels,
     root: PathBuf,
-}
-
-/// The retry schedule, event sink and cancellation one pull runs under.
-pub struct Pull<'a> {
-    pub policy: RetryPolicy,
-    pub pacing: &'a mut dyn Pacing,
-    pub events: &'a mut dyn FnMut(TransferEvent),
-    pub cancellation: &'a Cancellation,
-}
-
-enum Attempt {
-    Done,
-    Failed(FailureCategory),
 }
 
 impl Models {
@@ -378,20 +422,21 @@ impl Models {
         &self.selection
     }
 
-    /// One plan part per selected role, in role order: the selected model, from its
-    /// registry, into the models folder, at the size the caller stated. Roles that share
-    /// a model share its target, so the plan counts the download once.
+    /// One plan part per selected role, in role order: the selected model, from every host
+    /// its fetch may reach, into the models folder, at the size stated before it is
+    /// fetched. Roles that share a model share its target, so the plan counts the
+    /// download once.
     pub fn plan_parts(&self) -> Vec<PlanPart> {
         self.selection
             .as_slice()
             .iter()
             .map(|model| PlanPart {
                 part_id: model.role.clone(),
-                download_bytes: model.size_bytes,
-                source_hosts: vec![model.name.host().clone()],
+                download_bytes: model.stated_bytes(),
+                source_hosts: model.artefact.plan_hosts(),
                 destination: Some(Destination::OllamaModels),
                 installs_outside_program: false,
-                target_version: Some(model.name.to_string()),
+                target_version: Some(model.name().to_string()),
             })
             .collect()
     }
@@ -406,7 +451,7 @@ impl Models {
         {
             return Observation::Blocked(BlockedReason::Hardware);
         }
-        self.installed(&model.name)
+        self.installed(model.name())
     }
 
     /// The full check of `model` on `server`: the quick check, the server's own list of
@@ -433,66 +478,50 @@ impl Models {
         if quick != Observation::Present {
             return Ok(quick);
         }
-        if !listed(server, &model.name)? {
+        if !listed(server, model.name())? {
             return Ok(Observation::Absent);
         }
-        Ok(if generate_one_token(server, &model.name)? {
+        Ok(if generate_one_token(server, model.name())? {
             Observation::Present
         } else {
             Observation::Absent
         })
     }
 
-    /// Pulls `model` through `server` unless it is already present, then reads it back as
-    /// the quick check does and in the server's list of installed models.
+    /// Fetches `model` into the models folder unless its manifest is already there whole,
+    /// through `transfer`, whose hosts are the plan's approved ones; then reads it back
+    /// as the quick check does. No server is asked: the registry client or the Hugging
+    /// Face source fetches and verifies every byte. Progress counts against the sizes the
+    /// fetched manifest or the declaration states.
     pub fn pull(
         &self,
-        server: &Server,
         model: &SelectedModel,
-        pull: &mut Pull<'_>,
+        transfer: &mut Transfer<'_>,
     ) -> Result<Observation, LocalAiError> {
-        if self.installed(&model.name) == Observation::Present {
+        if self.installed(model.name()) == Observation::Present {
             if let Some(size) = self.download_bytes(model) {
-                (pull.events)(TransferEvent::Progress {
+                (transfer.events)(TransferEvent::Progress {
                     completed: size,
                     total: size,
                 });
             }
             return Ok(Observation::Present);
         }
-        for attempt in 1..=pull.policy.max_attempts {
-            pull.cancellation.check()?;
-            match pull_once(server, model, pull)? {
-                Attempt::Done => {
-                    // The program said it has the model; one it did not store whole, or
-                    // does not list, is not the model the plan named.
-                    if self.installed(&model.name) != Observation::Present {
-                        return Err(LocalAiError::Failed(FailureCategory::DamagedDownload));
-                    }
-                    if !listed(server, &model.name)? {
-                        return Err(LocalAiError::Failed(FailureCategory::DamagedDownload));
-                    }
-                    return Ok(Observation::Present);
-                }
-                Attempt::Failed(category) if !retried(category) => {
-                    return Err(LocalAiError::Failed(category));
-                }
-                Attempt::Failed(category) => {
-                    let delay = pull.policy.delay(attempt, pull.pacing.jitter());
-                    if attempt == pull.policy.max_attempts
-                        || pull.pacing.elapsed() + delay > pull.policy.window
-                    {
-                        return Err(LocalAiError::Failed(category));
-                    }
-                    (pull.events)(TransferEvent::Retrying {
-                        attempt: attempt + 1,
-                        delay,
-                    });
-                    pull.pacing.wait(delay, pull.cancellation)?;
-                }
+        transfer.cancellation.check()?;
+        let registry = Registry::new(self.root.clone());
+        match &model.artefact {
+            ModelArtefact::Registry(name) => {
+                registry.pull(name, transfer)?;
+            }
+            ModelArtefact::HuggingFace(declared) => {
+                registry.pull_hugging_face(declared, transfer)?;
             }
         }
-        Err(LocalAiError::Failed(FailureCategory::HostUnreachable))
+        // A manifest the store does not hold whole is not the model the plan named.
+        if self.installed(model.name()) != Observation::Present {
+            return Err(LocalAiError::Failed(FailureCategory::DamagedDownload));
+        }
+        Ok(Observation::Present)
     }
 
     /// Removes every selected model the models folder holds: its manifest, then each
@@ -504,7 +533,7 @@ impl Models {
                 .selection
                 .as_slice()
                 .iter()
-                .map(|model| model.name.manifest_path(&self.root))
+                .map(|model| model.name().manifest_path(&self.root))
                 .collect(),
         )
     }
@@ -572,18 +601,14 @@ impl Models {
         Ok(())
     }
 
-    /// The bytes `model` downloads: the size its caller stated, else the layers the
-    /// models folder holds for it; `None` when neither says.
+    /// The bytes `model` downloads: the size stated before it is fetched, else the
+    /// distinct blobs the manifest the models folder holds for it names; `None` when
+    /// neither says.
     pub fn download_bytes(&self, model: &SelectedModel) -> Option<u64> {
-        model.size_bytes.or_else(|| {
-            let path = model.name.manifest_path(&self.root);
+        model.stated_bytes().or_else(|| {
+            let path = model.name().manifest_path(&self.root);
             let bytes = filesystem::bounded_bytes(&path, MANIFEST_BYTES_LIMIT).ok()?;
-            let manifest = serde_json::from_slice::<Manifest>(&bytes).ok()?;
-            Some(
-                std::iter::once(&manifest.config)
-                    .chain(&manifest.layers)
-                    .fold(0u64, |sum, layer| sum.saturating_add(layer.size)),
-            )
+            Some(RegistryManifest::parse(bytes).ok()?.total_bytes())
         })
     }
 
@@ -621,162 +646,6 @@ fn blob_stored(root: &Path, layer: &Layer) -> bool {
     let path = root.join("blobs").join(format!("sha256-{hex}"));
     filesystem::refuse_links(&path).is_ok()
         && std::fs::metadata(&path).is_ok_and(|meta| meta.is_file() && meta.len() == layer.size)
-}
-
-/// Failures another pull may cure; every other one is final at once.
-fn retried(category: FailureCategory) -> bool {
-    matches!(
-        category,
-        FailureCategory::HostUnreachable | FailureCategory::Offline
-    )
-}
-
-/// One `POST /api/pull` through `server`, its progress lines folded into byte progress
-/// for the whole model and its error line into a closed category.
-fn pull_once(
-    server: &Server,
-    model: &SelectedModel,
-    pull: &mut Pull<'_>,
-) -> Result<Attempt, LocalAiError> {
-    let request = serde_json::json!({ "model": model.name.to_string(), "stream": true });
-    let mut layers: BTreeMap<String, u64> = BTreeMap::new();
-    // The size of each layer as the program streams it, the whole model's download when
-    // the caller stated none.
-    let mut totals: BTreeMap<String, u64> = BTreeMap::new();
-    let mut succeeded = false;
-    let mut failed = None;
-    let cancellation = pull.cancellation;
-    let stop = || cancellation.check().is_err();
-    let events = &mut *pull.events;
-    let loopback = server.loopback().with_io_timeout(FULL_CHECK_BUDGET);
-    let answer = loopback.post_lines(
-        "/api/pull",
-        request.to_string().as_bytes(),
-        &stop,
-        &mut |line| {
-            let Ok(value) = serde_json::from_slice::<serde_json::Value>(line) else {
-                return Ok(());
-            };
-            if let Some(error) = value["error"].as_str() {
-                failed = Some(pull_error_category(error));
-                return Ok(());
-            }
-            if value["status"] == "success" {
-                succeeded = true;
-            }
-            if let (Some(digest), Some(total)) = (value["digest"].as_str(), value["total"].as_u64())
-            {
-                totals.insert(digest.to_owned(), total);
-            }
-            if let (Some(digest), Some(completed)) =
-                (value["digest"].as_str(), value["completed"].as_u64())
-            {
-                let held = layers.entry(digest.to_owned()).or_default();
-                *held = (*held).max(completed);
-                let completed = layers
-                    .values()
-                    .fold(0u64, |sum, bytes| sum.saturating_add(*bytes));
-                let total = model.size_bytes.unwrap_or_else(|| {
-                    totals
-                        .values()
-                        .fold(0u64, |sum, bytes| sum.saturating_add(*bytes))
-                });
-                events(TransferEvent::Progress {
-                    completed: completed.min(total),
-                    total,
-                });
-            }
-            Ok(())
-        },
-    );
-    cancellation.check()?;
-    let (status, body) = match answer {
-        Ok(answer) => answer,
-        // The engine's own connection to the program broke: the program, not the
-        // registry, is the problem, and it is not retried.
-        Err(error) => return Err(request_failed(&loopback, ServerCall::PullModel, &error)),
-    };
-    if !(200..300).contains(&status) {
-        let error = serde_json::from_slice::<serde_json::Value>(&body)
-            .ok()
-            .and_then(|value| value["error"].as_str().map(pull_error_category));
-        return Ok(Attempt::Failed(
-            error.unwrap_or(FailureCategory::Unexpected),
-        ));
-    }
-    Ok(match (succeeded, failed) {
-        (_, Some(category)) => Attempt::Failed(category),
-        (true, None) => {
-            let total = model.size_bytes.unwrap_or_else(|| {
-                totals
-                    .values()
-                    .fold(0u64, |sum, bytes| sum.saturating_add(*bytes))
-            });
-            events(TransferEvent::Progress {
-                completed: total,
-                total,
-            });
-            Attempt::Done
-        }
-        // The answer ended before the program said it had the model: a pull cut off.
-        (false, None) => Attempt::Failed(FailureCategory::HostUnreachable),
-    })
-}
-
-/// The program words a registry failure as its HTTP and TLS libraries do; each phrase
-/// names the closed category it means, most specific first. Anything else is
-/// unexpected and never retried.
-const PULL_ERRORS: &[(&str, FailureCategory)] = &[
-    ("no space left on device", FailureCategory::DiskFull),
-    ("not enough space", FailureCategory::DiskFull),
-    ("disk full", FailureCategory::DiskFull),
-    ("permission denied", FailureCategory::NoPermission),
-    ("access is denied", FailureCategory::NoPermission),
-    ("digest mismatch", FailureCategory::DamagedDownload),
-    ("tls handshake timeout", FailureCategory::HostUnreachable),
-    ("x509", FailureCategory::SecureConnectionFailed),
-    ("certificate", FailureCategory::SecureConnectionFailed),
-    ("tls:", FailureCategory::SecureConnectionFailed),
-    (
-        "proxy authentication required",
-        FailureCategory::BlockedByNetwork,
-    ),
-    ("forbidden", FailureCategory::BlockedByNetwork),
-    ("407", FailureCategory::BlockedByNetwork),
-    ("403", FailureCategory::BlockedByNetwork),
-    ("file does not exist", FailureCategory::Unexpected),
-    ("manifest unknown", FailureCategory::Unexpected),
-    ("no such host", FailureCategory::Offline),
-    (
-        "temporary failure in name resolution",
-        FailureCategory::Offline,
-    ),
-    ("server misbehaving", FailureCategory::Offline),
-    ("connection reset", FailureCategory::HostUnreachable),
-    ("connection refused", FailureCategory::HostUnreachable),
-    ("i/o timeout", FailureCategory::HostUnreachable),
-    ("timeout", FailureCategory::HostUnreachable),
-    ("unexpected eof", FailureCategory::HostUnreachable),
-    ("max retries exceeded", FailureCategory::HostUnreachable),
-    ("too many requests", FailureCategory::HostUnreachable),
-    ("service unavailable", FailureCategory::HostUnreachable),
-    ("bad gateway", FailureCategory::HostUnreachable),
-    ("gateway timeout", FailureCategory::HostUnreachable),
-    ("internal server error", FailureCategory::HostUnreachable),
-    ("429", FailureCategory::HostUnreachable),
-    ("500", FailureCategory::HostUnreachable),
-    ("502", FailureCategory::HostUnreachable),
-    ("503", FailureCategory::HostUnreachable),
-    ("504", FailureCategory::HostUnreachable),
-];
-
-/// The closed category of the program's own error text for a pull.
-pub fn pull_error_category(message: &str) -> FailureCategory {
-    let text = message.to_lowercase();
-    PULL_ERRORS
-        .iter()
-        .find(|(phrase, _)| text.contains(phrase))
-        .map_or(FailureCategory::Unexpected, |(_, category)| *category)
 }
 
 /// The program is not running as far as `call` could tell: the exchange over `loopback`

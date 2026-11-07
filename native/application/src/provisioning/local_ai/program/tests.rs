@@ -390,6 +390,10 @@ fn a_pinned_archive_installs_runs_as_the_engines_child_and_is_stopped_before_it_
     for name in ["OLLAMA_HOME", "HOME", "USERPROFILE"] {
         assert_eq!(environment[name], home, "{name}");
     }
+    assert_eq!(
+        environment["OLLAMA_NOPRUNE"], "1",
+        "the server never clears blobs the engine has stored before their manifest"
+    );
     assert!(
         environment
             .keys()

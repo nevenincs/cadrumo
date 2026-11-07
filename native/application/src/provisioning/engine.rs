@@ -33,15 +33,17 @@
 //! The engine never runs the local AI server: the runtime manager runs the one server of
 //! the installation on its fixed address while the program is set up. A local AI setup
 //! installs the program, which waits for the manager to stop any server it runs from the
-//! old version, records the program with the fixed address, and then waits, within
-//! [`SERVER_WAIT`], for the manager to start the server before it pulls and checks each
-//! selected model through it. Without a manager the server never comes, and the models
-//! fail as `program_not_running`.
+//! old version, and records the program with the fixed address. It then fetches each
+//! selected model into the store itself, through this engine's own network and only from
+//! the hosts the approved plan names, with no server running for it. Only the check that
+//! follows needs the server: the setup waits, within [`SERVER_WAIT`], for the manager to
+//! start it, and checks each selected model on it. Without a manager the server never
+//! comes, and the check fails as `program_not_running`.
 //!
 //! The owner hands the engine the person's local model selection with
-//! [`Engine::select_local_models`]: role, model name and download size, as the selected
-//! catalogue entries state them. The engine names no model itself, so with an empty
-//! selection the local AI is its program alone.
+//! [`Engine::select_local_models`]: role, model artefact and download size, as the
+//! selected catalogue entries state them. The engine names no model itself, so with an
+//! empty selection the local AI is its program alone.
 
 use super::{
     activity::{
@@ -56,7 +58,7 @@ use super::{
     local_ai::{
         self, LocalAiError, NotRunningCause,
         hardware::Hardware,
-        models::{LocalModels, ModelName, Models, Pull},
+        models::{LocalModels, ModelName, Models},
         program::{Program, START_BUDGET, Server},
     },
     network::{self, HOST_TIMEOUT, Reachability},
@@ -1616,34 +1618,29 @@ impl Engine {
                 )?;
             }
             writer.step(SetupStep::Download)?;
-            let server = server_under_this_proxy(
-                &self.config.network,
-                &program,
-                &mut pacing,
-                cancellation,
-                sink,
-                &writer,
-            )?;
             let mut pulled = BTreeSet::new();
             for part in &entry.parts {
                 let Some(model) = models.selection().for_role(&part.part_id) else {
                     continue;
                 };
-                if !pulled.insert(model.name.to_string()) {
+                if !pulled.insert(model.name().to_string()) {
                     continue;
                 }
                 sink.emit(Event::Part {
                     item,
                     part: part.part_id.clone(),
-                    model: Some(model.name.to_string()),
+                    model: Some(model.name().to_string()),
                     step: SetupStep::Download,
                 });
                 reporter.part = Some(part.part_id.clone());
+                // The model is fetched only from the hosts the person approved for it.
+                let hosts: BTreeSet<HostName> = part.source_hosts.iter().cloned().collect();
                 let mut on_event = |event| reporter.transfer(event);
                 let observation = models.pull(
-                    &server,
                     model,
-                    &mut Pull {
+                    &mut Transfer {
+                        network: &self.config.network,
+                        hosts: &hosts,
                         policy: self.config.policy,
                         pacing: &mut pacing,
                         events: &mut on_event,
@@ -1657,6 +1654,7 @@ impl Engine {
             }
             reporter.part = None;
             writer.step(SetupStep::Verify)?;
+            let server = wait_for_server(&program, &mut pacing, cancellation, sink, &writer)?;
             for model in models.selection().as_slice() {
                 let observation = models.check_full(&server, model, &hardware)?;
                 if !observation.usable() {
@@ -1707,33 +1705,12 @@ impl Engine {
     }
 }
 
-/// The server the models are pulled through, once it answers, and only while it runs
-/// under the proxy setting this engine downloads under.
+/// The manager's server, once it answers, for the check of the fetched models.
 ///
 /// Looks for the manager's server at once, then at growing intervals within
 /// [`SERVER_WAIT`], reporting the wait once; without a server by then the local AI is
-/// `program_not_running`, which carries the local AI's setup action.
-///
-/// The server fetches the model bytes itself, so a server started under another proxy
-/// setting would fetch them through that one. The supervisor reads its setting from its
-/// own environment at its start, which nothing outside that process can change, so this
-/// engine cannot bring the server onto its setting: it refuses at once with
-/// `program_proxy_differs`, whose sentence names the restart that can.
-fn server_under_this_proxy(
-    network: &Network,
-    program: &Program,
-    pacing: &mut dyn Pacing,
-    cancellation: &Cancellation,
-    sink: &Sink<'_>,
-    writer: &ItemWriter<'_>,
-) -> Result<Server, Stop> {
-    let server = wait_for_server(program, pacing, cancellation, sink, writer)?;
-    if server.proxy_fingerprint() == network.proxy_fingerprint() {
-        return Ok(server);
-    }
-    Err(Stop::Failed(FailureCategory::ProgramProxyDiffers))
-}
-
+/// `program_not_running`, which carries the local AI's setup action. The server fetches
+/// nothing, so the proxy setting it was started under does not matter here.
 fn wait_for_server(
     program: &Program,
     pacing: &mut dyn Pacing,
