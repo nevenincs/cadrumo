@@ -59,13 +59,16 @@ from cadrumo.domain.user_profile.values import (
     create_user_profile_record,
 )
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context,
 )
 
+_FILING_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
-_NOW = datetime(2026, 6, 15, 10, 0, tzinfo=UTC)
+_NOW = datetime(_FILING_YEAR, 6, 15, 10, 0, tzinfo=UTC)
 _MINTER = "mint_evidence_consent_token"
 _RESOLVER = "cloud_evidence_upload_eligible_for_active_profile"
 _PRODUCTION_ROOT = Path(__file__).resolve().parents[3]

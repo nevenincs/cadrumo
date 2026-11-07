@@ -50,6 +50,7 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.field_grounding import FieldGroundingOutcome
 from .....core.field_origin import FieldOrigin
 from .....core.period import Period
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.published_authority import published_snapshot
 from .....domain.iva.rates import load_iva_rate_table
 from .....domain.iva.schema import EUMemberState
@@ -73,11 +74,13 @@ from ..invoice_field_grounding import (
     parse_invoice_extraction_response,
 )
 from .prompt_support import build_invoice_extraction_prompt
+from .transitional_rate_support import TRANSITIONAL_RATE_ANNUAL
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_ANNUAL_2024 = Period.from_year_and_code(2024, "0A")
-_ANNUAL_2026 = Period.from_year_and_code(2026, "0A")
+_FILING_YEAR = filing_year_envelope().horizon
+_TRANSITIONAL_ANNUAL = TRANSITIONAL_RATE_ANNUAL
+_HORIZON_ANNUAL = Period.from_year_and_code(_FILING_YEAR, "0A")
 
 # AEAT-checksum-valid Spanish CIF, so the identifier field survives grounding and
 # its envelope is about a value rather than about a drop.
@@ -110,8 +113,8 @@ _SPANISH_INVOICE: dict[str, str | None] = {
     "customer_name": "Talleres Mayor S.A.",
     "customer_postal_code": "28013",
     "customer_country": "España",
-    "invoice_number": "2026-0142",
-    "invoice_date": "10/03/2026",
+    "invoice_number": f"{_FILING_YEAR}-0142",
+    "invoice_date": f"10/03/{_FILING_YEAR}",
     "taxable_base": "1.200,00",
     "iva_rate": "21",
     "iva_amount": "252,00",
@@ -135,8 +138,8 @@ _SPANISH_ANCHORS: dict[str, str | None] = {
     "customer_name": "Cliente: Talleres Mayor S.A.",
     "customer_postal_code": "Calle Mayor 3, 28013 Madrid",
     "customer_country": "Calle Mayor 3, 28013 Madrid, España",
-    "invoice_number": "Factura n.º 2026-0142",
-    "invoice_date": "10/03/2026",
+    "invoice_number": f"Factura n.º {_FILING_YEAR}-0142",
+    "invoice_date": f"10/03/{_FILING_YEAR}",
     "taxable_base": "1.200,00 €",
     "iva_rate": "21%",
     "iva_amount": "252,00 €",
@@ -185,7 +188,7 @@ class TestThePromptAsksForEveryValueAndItsAnchor:
         with its anchor and its role evidence most reliably when they are
         written together.
         """
-        text = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation).text
+        text = build_invoice_extraction_prompt(period=_HORIZON_ANNUAL, operation=operation).text
         skeleton = text[text.index("{") : text.rindex("}") + 1]
 
         as_json = re.sub(r"<[^>]*>", "null", skeleton, flags=re.DOTALL)
@@ -205,7 +208,7 @@ class TestThePromptAsksForEveryValueAndItsAnchor:
         self, *, operation: PinnedAuthorityOperation
     ) -> None:
         """The one instruction that makes anchor and value distinct rather than duplicated."""
-        text = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation).text
+        text = build_invoice_extraction_prompt(period=_HORIZON_ANNUAL, operation=operation).text
 
         assert "EXACTLY as printed" in text
         assert "the field's own rule told you to drop" in text
@@ -215,7 +218,7 @@ class TestThePromptAsksForEveryValueAndItsAnchor:
         self, *, operation: PinnedAuthorityOperation
     ) -> None:
         """One declaration, two derivations: a suffix spelled twice fails silently."""
-        text = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation).text
+        text = build_invoice_extraction_prompt(period=_HORIZON_ANNUAL, operation=operation).text
 
         for contract in INVOICE_FIELD_CONTRACTS:
             assert f'"{contract.field_name}{ANCHOR_KEY_SUFFIX}"' in text
@@ -414,8 +417,8 @@ class TestAForeignRateSurvivesTheSpanishEnumeration:
 
     _GERMAN_INVOICE: ClassVar[dict[str, str | None]] = {
         "supplier_tax_id": "DE811907980",
-        "invoice_number": "RE-2026-88",
-        "invoice_date": "14/04/2026",
+        "invoice_number": f"RE-{_FILING_YEAR}-88",
+        "invoice_date": f"14/04/{_FILING_YEAR}",
         "taxable_base": "1.000,00",
         "iva_rate": "19",
         "iva_amount": "190,00",
@@ -424,8 +427,8 @@ class TestAForeignRateSurvivesTheSpanishEnumeration:
     }
     _GERMAN_ANCHORS: ClassVar[dict[str, str | None]] = {
         "supplier_tax_id": "USt-IdNr. DE811907980",
-        "invoice_number": "Rechnung RE-2026-88",
-        "invoice_date": "14/04/2026",
+        "invoice_number": f"Rechnung RE-{_FILING_YEAR}-88",
+        "invoice_date": f"14/04/{_FILING_YEAR}",
         "taxable_base": "1.000,00 €",
         "iva_rate": "19 %",
         "iva_amount": "190,00 €",
@@ -450,7 +453,7 @@ class TestAForeignRateSurvivesTheSpanishEnumeration:
 
     def test_the_rate_is_not_on_the_spanish_enumeration(self, *, operation: PinnedAuthorityOperation) -> None:
         """Anchors the premise: a fixture whose rate WAS Spanish would prove nothing."""
-        compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation)
+        compiled = build_invoice_extraction_prompt(period=_HORIZON_ANNUAL, operation=operation)
 
         assert Decimal("19") not in compiled.iva_rate_pcts
 
@@ -468,7 +471,7 @@ class TestAForeignRateSurvivesTheSpanishEnumeration:
         *,
         operation: PinnedAuthorityOperation,
     ) -> None:
-        compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation)
+        compiled = build_invoice_extraction_prompt(period=_HORIZON_ANNUAL, operation=operation)
         draft = self._german_draft(operation=operation)
 
         assert draft.iva_rate not in set(compiled.iva_rate_pcts)
@@ -570,7 +573,7 @@ class TestTheTwoRateAuthoritiesAgreeForSpain:
         operation: PinnedAuthorityOperation,
     ) -> None:
         """The load-bearing direction: an in-force rate with no box under-declares."""
-        for period in (_ANNUAL_2024, _ANNUAL_2026):
+        for period in (_TRANSITIONAL_ANNUAL, _HORIZON_ANNUAL):
             eu_rates = self._eu_table_rates(period, operation=operation)
             registry_rates = self._registry_rates(period)
 
@@ -584,14 +587,16 @@ class TestTheTwoRateAuthoritiesAgreeForSpain:
         *,
         operation: PinnedAuthorityOperation,
     ) -> None:
-        """2024 is the discriminating year: every transitional tier is live in it.
+        """The year the transitional tiers are introduced is the discriminating one: every transitional tier is live in it.
 
         A containment assertion alone would pass against a registry that declared
-        every conceivable rate. In 2024 the RD-ley 4/2024 transitional tiers put
+        every conceivable rate. In that year the RD-ley 4/2024 transitional tiers put
         all seven rates in force at once, so the EU table and the rate-box layer
         must match exactly -- there is no slack left for one to drift into.
         """
-        assert self._eu_table_rates(_ANNUAL_2024, operation=operation) == self._registry_rates(_ANNUAL_2024)
+        assert self._eu_table_rates(_TRANSITIONAL_ANNUAL, operation=operation) == self._registry_rates(
+            _TRANSITIONAL_ANNUAL
+        )
 
     def test_the_agreement_is_asserted_over_a_non_trivial_rate_set(
         self,
@@ -599,10 +604,10 @@ class TestTheTwoRateAuthoritiesAgreeForSpain:
         operation: PinnedAuthorityOperation,
     ) -> None:
         """Guards the two assertions above from passing vacuously on a thin table."""
-        rates_2024 = self._eu_table_rates(_ANNUAL_2024, operation=operation)
+        transitional_rates = self._eu_table_rates(_TRANSITIONAL_ANNUAL, operation=operation)
 
-        assert len(rates_2024) >= len(self._eu_table_rates(_ANNUAL_2026, operation=operation))
-        assert {Decimal("4"), Decimal("10"), Decimal("21")} <= rates_2024
+        assert len(transitional_rates) >= len(self._eu_table_rates(_HORIZON_ANNUAL, operation=operation))
+        assert {Decimal("4"), Decimal("10"), Decimal("21")} <= transitional_rates
 
     def test_the_prompt_enumerates_exactly_the_eu_table_rates_it_resolved(
         self,
@@ -610,9 +615,9 @@ class TestTheTwoRateAuthoritiesAgreeForSpain:
         operation: PinnedAuthorityOperation,
     ) -> None:
         """Closes the loop: the agreement above is about the numbers the model is shown."""
-        compiled = build_invoice_extraction_prompt(period=_ANNUAL_2024, operation=operation)
+        compiled = build_invoice_extraction_prompt(period=_TRANSITIONAL_ANNUAL, operation=operation)
 
-        assert set(compiled.iva_rate_pcts) == self._eu_table_rates(_ANNUAL_2024, operation=operation)
+        assert set(compiled.iva_rate_pcts) == self._eu_table_rates(_TRANSITIONAL_ANNUAL, operation=operation)
 
 
 class TestTheAnchorModelStaysBoundToTheOneDeclaration:
@@ -669,7 +674,7 @@ class TestTheTemplateIsRegisteredRatherThanOnlyAConstant:
     def test_the_compiler_consumes_the_registered_template(self, *, operation: PinnedAuthorityOperation) -> None:
         """Asserted by substituting the registered template by hand and comparing."""
         definition = invoice_extraction_prompt_registry().get(INVOICE_EXTRACTION_PROMPT_ID)
-        compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation)
+        compiled = build_invoice_extraction_prompt(period=_HORIZON_ANNUAL, operation=operation)
 
         assert compiled.text.startswith(definition.template[: definition.template.index("{")])
         assert compiled.template_version == definition.version
@@ -681,8 +686,8 @@ class TestTheTemplateIsRegisteredRatherThanOnlyAConstant:
         instructions were identical, the compiled text was not, and only one of
         the two axes can say so.
         """
-        annual = build_invoice_extraction_prompt(period=_ANNUAL_2024, operation=operation)
-        later = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation)
+        annual = build_invoice_extraction_prompt(period=_TRANSITIONAL_ANNUAL, operation=operation)
+        later = build_invoice_extraction_prompt(period=_HORIZON_ANNUAL, operation=operation)
 
         assert annual.template_version == later.template_version
         assert annual.fingerprint != later.fingerprint

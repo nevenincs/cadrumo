@@ -18,6 +18,7 @@ from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunMediaKind,
 
 from .....core.image_media_type import ImageMediaType
 from .....core.model_roles import ModelRole
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.categories.spending_category import SpendingCategory
 from .....domain.iva.schema import IvaCategory
 from .....domain.transactions.enums import BusinessClassification
@@ -62,7 +63,7 @@ def _images() -> tuple[MultimodalImageInput, ...]:
 
 
 def _spec(operation: PinnedAuthorityOperation) -> PromptSpec:
-    return prompt_spec_with_saturation_fields(year=2025, operation=operation)
+    return prompt_spec_with_saturation_fields(year=filing_year_envelope().horizon, operation=operation)
 
 
 def _classifier(

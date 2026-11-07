@@ -24,12 +24,15 @@ from .....core.config_support import LLMProvider, RetiredLLMProvider
 from .....core.directory_scan import scan_directory
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_location
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....persistence.llm.cache import LLMCache
 from ..models import LLMRequest, LLMResponse, RecordedLLMProvider
 
+_FILING_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_CREATED_AT = datetime(2026, 5, 28, 12, 20, 0, tzinfo=UTC)
+_CREATED_AT = datetime(_FILING_YEAR, 5, 28, 12, 20, 0, tzinfo=UTC)
 
 
 def _response() -> LLMResponse:
