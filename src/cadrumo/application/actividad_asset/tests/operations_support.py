@@ -33,7 +33,10 @@ from cadrumo.domain.renta.actividad_asset.schedule import (
 
 from .ledger_support import MemoryLedger, acquisition_transaction
 from .register_support import MemoryRepository, memory_register_authority
+from .test_register import register_revision
 
+# The register tests own the first year; this builder follows the revision they build by default.
+_YEAR = register_revision().in_service_date.year
 ACQUISITION = acquisition_transaction()
 
 
@@ -41,7 +44,7 @@ def build_revision(
     *,
     number: int = 1,
     supersedes: str | None = None,
-    basis: str = "2000",
+    basis: Decimal | str = Decimal("2000"),
     class_key: str = "equipo-informacion-software",
 ) -> ActivityAssetRevision:
     return ActivityAssetRevision(
@@ -61,7 +64,7 @@ def build_revision(
             non_deductible_iva=Decimal("0"),
             prior_allocation_provenance="ledger allocation allocation-1",
         ),
-        in_service_date=date(2025, 1, 1),
+        in_service_date=date(_YEAR, 1, 1),
         opening_history=OpeningAmortizationHistory(status=OpeningHistoryStatus.KNOWN, accumulated_amount=Decimal("0")),
         acquired_condition=AcquiredCondition.NEW,
         amortization=ActivityAssetAmortizationElection(
@@ -90,7 +93,7 @@ def build_forecast(
             annual_rate=Decimal("0.26"),
             authority_generation="handoff-test-v1",
             source_reference="handoff test table",
-            maximum_period_ends_on=date(2035, 1, 1),
+            maximum_period_ends_on=date(_YEAR + 10, 1, 1),
         ),
         covered_from=covered_from,
         covered_until=covered_until,

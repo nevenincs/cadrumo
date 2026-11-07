@@ -15,6 +15,7 @@ import pytest
 
 from cadrumo.application.actividad_asset.activity_asset_read_models import ActivityAssetMethodFact
 from cadrumo.application.actividad_asset.register_reads import method_facts_view
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.renta.actividad_asset.election import (
     ELECTION_REQUIRED_FACTS,
     ActivityAssetAmortizationElection,
@@ -29,9 +30,11 @@ from .test_register import register_operations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
+
 _SAMPLES: dict[FactKind, Any] = {
     FactKind.TEXT: "reference-1",
-    FactKind.DATE: date(2025, 3, 1).isoformat(),
+    FactKind.DATE: date(_YEAR, 3, 1).isoformat(),
     FactKind.AMOUNT: "100.00",
     FactKind.SHARE: "0.5",
     FactKind.WHOLE: 4,
@@ -114,7 +117,7 @@ def test_an_optional_group_requires_its_own_facts_only_once_stated() -> None:
 def test_the_form_options_offer_only_methods_with_facts_a_form_can_state() -> None:
     operations, _ = register_operations()
 
-    options = operations.form_options(asset_kind=AssetKind.MATERIAL, tax_year=2025)
+    options = operations.form_options(asset_kind=AssetKind.MATERIAL, tax_year=_YEAR)
 
     assert AmortizationMethod.APPROVED_PLAN not in options.methods
     assert AmortizationMethod.ELECTRIC_VEHICLE_FREE in options.methods

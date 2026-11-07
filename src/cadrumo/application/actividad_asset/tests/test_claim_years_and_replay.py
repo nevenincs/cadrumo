@@ -44,6 +44,8 @@ from .test_register import ACQUISITION, NAME, full_year, register_forecast, regi
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_FIRST = register_revision().in_service_date.year
+
 
 @pytest.fixture(autouse=True)
 def _pinned_authority() -> Iterator[None]:
@@ -56,7 +58,7 @@ _ASSET = "laptop-1"
 
 
 def _bounded(
-    last_admitted_year: int, *, today: date = date(2025, 12, 31)
+    last_admitted_year: int, *, today: date = date(_FIRST, 12, 31)
 ) -> tuple[ActivityAssetOperations, MemoryRepository]:
     repository = MemoryRepository()
     return (
@@ -71,7 +73,7 @@ def _bounded(
     )
 
 
-def _sale(on: date = date(2026, 6, 30), *, later_affectation_on: date | None = None) -> ActivityAssetDisposal:
+def _sale(on: date = date(_FIRST + 1, 6, 30), *, later_affectation_on: date | None = None) -> ActivityAssetDisposal:
     return ActivityAssetDisposal(
         disposal_date=on,
         reason=ActivityAssetDisposalReason.SALE,
@@ -82,15 +84,15 @@ def _sale(on: date = date(2026, 6, 30), *, later_affectation_on: date | None = N
 
 
 def test_a_later_claim_moves_neither_the_forecast_nor_the_walk_of_an_earlier_year() -> None:
-    operations, repository = register_operations(today=date(2031, 12, 31), last_admitted_year=2030)
+    operations, repository = register_operations(today=date(_FIRST + 6, 12, 31), last_admitted_year=_FIRST + 5)
     operations.create(register_revision(basis="1000"), NAME)
-    before = full_year(operations, 2025)
-    for year in (2028, 2029, 2030):
+    before = full_year(operations, _FIRST)
+    for year in (_FIRST + 3, _FIRST + 4, _FIRST + 5):
         operations.record_claim(full_year(operations, year), creating_operation=f"test.{year}")
 
-    forecast = full_year(operations, 2025)
+    forecast = full_year(operations, _FIRST)
     walked = walk_element(
-        repository.history.revisions[-1], repository.history, forecast=register_forecast, through_year=2025
+        repository.history.revisions[-1], repository.history, forecast=register_forecast, through_year=_FIRST
     )[0]
 
     # Three later years at 260.00 leave 220.00, but the year's own charge stays 260.00 on both routes.
@@ -102,14 +104,14 @@ def test_a_later_claim_moves_neither_the_forecast_nor_the_walk_of_an_earlier_yea
 
 
 def test_a_claim_behind_later_ones_that_consumed_the_basis_is_refused_at_the_write() -> None:
-    operations, repository = register_operations(today=date(2031, 12, 31), last_admitted_year=2030)
+    operations, repository = register_operations(today=date(_FIRST + 6, 12, 31), last_admitted_year=_FIRST + 5)
     operations.create(register_revision(basis="1000"), NAME)
-    for year in (2028, 2029, 2030):
+    for year in (_FIRST + 3, _FIRST + 4, _FIRST + 5):
         operations.record_claim(full_year(operations, year), creating_operation=f"test.{year}")
     before = repository.history
 
     with pytest.raises(ActividadAssetClaimConflictError, match="claims_exceed_amortizable_basis"):
-        operations.record_claim(full_year(operations, 2025), creating_operation="test.2025")
+        operations.record_claim(full_year(operations, _FIRST), creating_operation=f"test.{_FIRST}")
 
     assert repository.history == before
 
@@ -132,7 +134,7 @@ def constant_forecast(
             annual_rate=Decimal("0.26"),
             authority_generation="replay-test",
             source_reference="replay test table",
-            useful_life_ends_on=date(2035, 1, 1),
+            useful_life_ends_on=date(_FIRST + 10, 1, 1),
         ),
         covered_from=covered_from,
         covered_until=covered_until,
@@ -147,43 +149,44 @@ def test_a_later_claim_still_refuses_a_method_that_follows_the_pending_value() -
         ledger=MemoryLedger(ACQUISITION),
         forecast_operation=constant_forecast,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
-        register_authority=memory_register_authority(today=date(2031, 12, 31), last_admitted_year=2030),
+        register_authority=memory_register_authority(today=date(_FIRST + 6, 12, 31), last_admitted_year=_FIRST + 5),
     )
     operations.create(register_revision(method=AmortizationMethod.CONSTANT_PERCENTAGE), NAME)
-    operations.record_claim(full_year(operations, 2027), creating_operation="test.2027")
+    operations.record_claim(full_year(operations, _FIRST + 2), creating_operation=f"test.{_FIRST + 2}")
 
     with pytest.raises(ActividadAssetUnsupportedError, match="earlier_year_depends_on_pending_value"):
-        full_year(operations, 2025)
+        full_year(operations, _FIRST)
 
 
 def test_the_last_admitted_year_takes_a_claim_and_the_next_is_refused_with_its_reason() -> None:
-    operations, repository = _bounded(2026)
+    operations, repository = _bounded(_FIRST + 1)
     operations.create(register_revision(), NAME)
-    assert operations.record_claim(full_year(operations, 2026), creating_operation="test.2026").claim.amount == Decimal(
-        "520.00"
-    )
+    assert operations.record_claim(
+        full_year(operations, _FIRST + 1), creating_operation=f"test.{_FIRST + 1}"
+    ).claim.amount == Decimal("520.00")
     before = repository.history
-    beyond = full_year(operations, 2027)
+    beyond = full_year(operations, _FIRST + 2)
 
     with pytest.raises(ActividadAssetUnsupportedError, match="claim_year_beyond_registry") as refused:
-        operations.record_claim(beyond, creating_operation="test.2027")
+        operations.record_claim(beyond, creating_operation=f"test.{_FIRST + 2}")
 
-    assert refused.value.context == {"tax_year": 2027, "last_admitted_year": 2026}
+    assert refused.value.context == {"tax_year": _FIRST + 2, "last_admitted_year": _FIRST + 1}
     assert beyond.amount == Decimal("520.00")
     assert repository.history == before
 
 
 def test_the_list_offers_admitted_years_and_marks_later_ones_as_projection() -> None:
-    operations, _ = _bounded(2026)
+    operations, _ = _bounded(_FIRST + 1)
     operations.create(register_revision(), NAME)
 
     (row,) = operations.list_elements()
     plan = {item.tax_year: item for item in operations.plan(_ASSET)}
 
-    assert row.years == (2025, 2026)
-    assert row.projected_years == (2027, 2028, 2029)
-    assert plan[2027].edition is not None
-    assert plan[2027].edition.projected is True
+    assert row.years == (_FIRST, _FIRST + 1)
+    assert row.projected_years == (_FIRST + 2, _FIRST + 3, _FIRST + 4)
+    edition = plan[_FIRST + 2].edition
+    assert edition is not None
+    assert edition.projected is True
 
 
 def test_an_identical_create_retry_returns_the_recorded_history() -> None:
@@ -199,7 +202,7 @@ def test_an_identical_create_retry_returns_the_recorded_history() -> None:
     ("revision_basis", "descriptor"),
     [
         ("2100", NAME),
-        ("2000", ActivityAssetDescriptorFacts(name="Another name")),
+        (str(register_revision().basis.basis_amount), ActivityAssetDescriptorFacts(name="Another name")),
     ],
 )
 def test_a_differing_create_retry_is_refused(revision_basis: str, descriptor: ActivityAssetDescriptorFacts) -> None:
@@ -216,7 +219,7 @@ def test_a_differing_create_retry_is_refused(revision_basis: str, descriptor: Ac
 def test_a_replayed_effective_claim_is_reused() -> None:
     operations, repository = register_operations()
     operations.create(register_revision(), NAME)
-    charge = full_year(operations, 2025)
+    charge = full_year(operations, _FIRST)
     first = operations.record_claim(charge, creating_operation="test.claim")
     before = repository.history
 
@@ -230,7 +233,7 @@ def test_a_replayed_effective_claim_is_reused() -> None:
 def test_a_replayed_superseded_claim_is_refused_and_never_reported_as_reused() -> None:
     operations, repository = register_operations()
     operations.create(register_revision(), NAME)
-    charge = full_year(operations, 2025)
+    charge = full_year(operations, _FIRST)
     first = operations.record_claim(charge, creating_operation="test.claim").claim
     repository.record_claim(
         first.model_copy(
@@ -255,8 +258,8 @@ def test_a_useful_life_ending_on_entry_gives_no_minimum_rather_than_dividing_by_
     assert (
         year_minimum(
             revision,
-            tax_year=2025,
-            boundary=date(2026, 1, 1),
+            tax_year=_FIRST,
+            boundary=date(_FIRST + 1, 1, 1),
             bounds=ActivityAssetDisposalBounds(useful_life_ends_on=revision.in_service_date),
         )
         is None
@@ -270,19 +273,19 @@ def test_a_zero_baja_claim_accrues_nothing_in_modelo_130() -> None:
         ledger=MemoryLedger(ACQUISITION),
         forecast_operation=low_value_forecast,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
-        register_authority=memory_register_authority(today=date(2026, 12, 31)),
+        register_authority=memory_register_authority(today=date(_FIRST + 1, 12, 31)),
     )
     operations.create(low_value_revision(), NAME)
     elected = operations.forecast(
         asset_id=_ASSET,
-        covered_from=date(2025, 7, 1),
-        covered_until=date(2026, 1, 1),
+        covered_from=date(_FIRST, 7, 1),
+        covered_until=date(_FIRST + 1, 1, 1),
         requested_free_amount=Decimal("180.00"),
     )
     operations.record_claim(elected, creating_operation="test.free")
-    operations.dispose(_ASSET, _sale(date(2025, 3, 31)))
+    operations.dispose(_ASSET, _sale(date(_FIRST, 3, 31)))
 
-    handoff = operations.filing_handoff(tax_year=2025, m130_period=Period.from_year_and_code(2025, "4T"))
+    handoff = operations.filing_handoff(tax_year=_FIRST, m130_period=Period.from_year_and_code(_FIRST, "4T"))
 
     assert handoff.material_m130 is not None
     assert handoff.material_m130.amount == Decimal("0.00")
@@ -302,20 +305,20 @@ def test_a_reason_fact_is_bounded_and_its_projection_stays_within_the_bound() ->
 
 
 def test_a_later_affectation_after_entry_into_service_is_refused() -> None:
-    operations, repository = register_operations(today=date(2026, 12, 31))
-    operations.create(register_revision(in_service=date(2025, 1, 1)), NAME)
+    operations, repository = register_operations(today=date(_FIRST + 1, 12, 31))
+    operations.create(register_revision(in_service=date(_FIRST, 1, 1)), NAME)
     before = repository.history
 
     with pytest.raises(ActividadAssetValidationError, match="later_affectation_out_of_order"):
-        operations.dispose(_ASSET, _sale(later_affectation_on=date(2025, 1, 2)))
+        operations.dispose(_ASSET, _sale(later_affectation_on=date(_FIRST, 1, 2)))
 
     assert repository.history == before
 
 
-@pytest.mark.parametrize("affected", [date(2024, 6, 1), date(2025, 1, 1)])
+@pytest.mark.parametrize("affected", [date(_FIRST - 1, 6, 1), date(_FIRST, 1, 1)])
 def test_a_later_affectation_up_to_entry_into_service_is_admitted(affected: date) -> None:
-    operations, _ = register_operations(today=date(2026, 12, 31))
-    operations.create(register_revision(in_service=date(2025, 1, 1)), NAME)
+    operations, _ = register_operations(today=date(_FIRST + 1, 12, 31))
+    operations.create(register_revision(in_service=date(_FIRST, 1, 1)), NAME)
 
     after = operations.dispose(_ASSET, _sale(later_affectation_on=affected))
 

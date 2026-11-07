@@ -13,6 +13,7 @@ from cadrumo.application.actividad_asset.activity_asset_read_models import (
 from cadrumo.application.actividad_asset.fact_wording import token_family
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.i18n.render import I18N_STRICT_MISSING_KEYS, tr
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.renta.actividad_asset.disposal import (
     ADMITTED_DISPOSAL_REASONS,
     REFUSED_DISPOSAL_REASONS,
@@ -26,6 +27,8 @@ from .operations_support import build_operations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
+
 
 def _accepts(reason: ActivityAssetDisposalReason) -> bool:
     try:
@@ -36,7 +39,7 @@ def _accepts(reason: ActivityAssetDisposalReason) -> bool:
 
 
 def _options(asset_kind: AssetKind = AssetKind.MATERIAL) -> ActivityAssetFormOptionsView:
-    return build_operations().form_options(asset_kind=asset_kind, tax_year=2025)
+    return build_operations().form_options(asset_kind=asset_kind, tax_year=_YEAR)
 
 
 @pytest.mark.parametrize("asset_kind", list(AssetKind))

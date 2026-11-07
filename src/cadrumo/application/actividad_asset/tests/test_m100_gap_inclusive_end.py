@@ -15,9 +15,11 @@ from cadrumo.application.actividad_asset.operation_dtos import (
 )
 
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from .operations_support import build_operations
+from .operations_support import build_operations, build_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_FIRST = build_revision().in_service_date.year
 
 
 @pytest.fixture(autouse=True)
@@ -28,7 +30,7 @@ def _pinned_authority() -> Iterator[None]:
 
 
 def _gap_wire() -> dict[str, Any]:
-    handoff = build_operations().filing_handoff(tax_year=2025)
+    handoff = build_operations().filing_handoff(tax_year=_FIRST)
     snapshot = ActivityAssetFilingHandoffSnapshot.from_domain(handoff)
     (gap,) = snapshot.m100_gaps
     return gap.model_dump()
@@ -37,13 +39,13 @@ def _gap_wire() -> dict[str, Any]:
 def test_the_gap_serves_the_inclusive_end_beside_the_exclusive_one() -> None:
     gap = _gap_wire()
 
-    assert gap["covered_until"] == date(2026, 1, 1)
-    assert gap["covered_through"] == date(2025, 12, 31)
+    assert gap["covered_until"] == date(_FIRST + 1, 1, 1)
+    assert gap["covered_through"] == date(_FIRST, 12, 31)
 
 
 def test_an_inclusive_end_that_is_not_the_day_before_the_boundary_is_refused() -> None:
     wire = _gap_wire()
-    wire["covered_through"] = date(2026, 1, 1) + timedelta(days=1)
+    wire["covered_through"] = date(_FIRST + 1, 1, 1) + timedelta(days=1)
 
     with pytest.raises(ValidationError, match="day before covered_until"):
         ActivityAssetM100GapSnapshot.model_validate(wire)

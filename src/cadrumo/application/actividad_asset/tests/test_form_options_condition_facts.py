@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.renta.actividad_asset.election import ACQUIRED_CONDITION_FACTS, AcquiredCondition
 from cadrumo.domain.renta.actividad_asset.lifecycle import (
     FURTHER_ACQUISITION_SHAPES,
@@ -16,6 +17,8 @@ from .test_form_options_stage_facts import form_options_stage_facts_options
 from .test_register import NAME, register_operations, register_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def test_each_condition_serves_the_facts_only_it_carries() -> None:
@@ -47,6 +50,6 @@ def test_the_further_acquisition_shapes_stand_apart_from_the_registerable_ones()
 def test_the_served_shapes_do_not_depend_on_the_asset_kind() -> None:
     operations, _ = register_operations()
     operations.create(register_revision(), NAME)
-    intangible = operations.form_options(asset_kind=AssetKind.INTANGIBLE, tax_year=2025)
+    intangible = operations.form_options(asset_kind=AssetKind.INTANGIBLE, tax_year=_YEAR)
 
     assert intangible.further_acquisition_shapes == FURTHER_ACQUISITION_SHAPES
