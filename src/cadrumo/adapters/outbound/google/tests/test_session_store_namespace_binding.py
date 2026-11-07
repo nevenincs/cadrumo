@@ -24,6 +24,7 @@ from pathlib import Path
 import pytest
 from sqlalchemy import select
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....persistence.storage.secure_object_namespaces import (
     GOOGLE_DRIVE_CONFIG_NAMESPACE,
     GOOGLE_OAUTH_METADATA_NAMESPACE,
@@ -37,10 +38,11 @@ from .. import session_store
 from ..records import REQUIRED_SCOPES, DriveConfig, OAuthMetadata, OAuthToken
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_YEAR = filing_year_envelope().horizon
 
 _BUCKET_ID = "c638b552-05ee-427e-82e4-21e5f4936157"  # was 'google-session-namespace-binding'
 _PROFILE = _BUCKET_ID
-_ISSUED_AT = datetime(2026, 5, 26, 9, 0, 0, tzinfo=UTC)
+_ISSUED_AT = datetime(_YEAR, 5, 26, 9, 0, 0, tzinfo=UTC)
 
 
 def test_session_store_rows_carry_registry_declared_metadata(tmp_path: Path) -> None:

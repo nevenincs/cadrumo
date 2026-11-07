@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..conformance.registry_schema_support import committed_modelo
@@ -29,7 +30,7 @@ if TYPE_CHECKING:
 #: The filing year both oracles pin. Shared because the revision resolved below
 #: is law-determined by it: a year that drifted between the two modules would
 #: silently point them at different redacciones of the same modelo.
-ORACLE_FILING_YEAR = 2026
+ORACLE_FILING_YEAR = filing_year_envelope().horizon
 
 #: The period both oracles pin, derived from the year rather than restated.
 ORACLE_PERIOD = Period.from_year_and_code(ORACLE_FILING_YEAR, "1T")

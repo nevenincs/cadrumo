@@ -29,6 +29,7 @@ from .....application.storage.calc_sheets.records import (
 )
 from .....application.storage.calc_sheets.theme import StyleRole
 from .....core.period import Period
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from ...workbook.calc_sheets_xlsx import materialize_export_plan
 from ..calc_sheets_apply_formatting import (
     build_base_font_requests,
@@ -40,6 +41,7 @@ from ..calc_sheets_apply_formatting import (
 from ..calc_sheets_apply_values import build_value_data
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_YEAR = filing_year_envelope().horizon
 
 
 def _plan() -> SheetExportPlan[SheetReviewMetadata]:
@@ -49,7 +51,7 @@ def _plan() -> SheetExportPlan[SheetReviewMetadata]:
             snapshot_digest="a" * 64,
             publication_id=UUID(int=1),
             title="Ejemplo",
-            exported_at=datetime(2026, 10, 5, tzinfo=UTC),
+            exported_at=datetime(_YEAR, 10, 5, tzinfo=UTC),
         ),
         tabs=(TabName.FORM, TabName.GUIDE),
         guide=SheetGuideContent(title="Guía", paragraphs=("Ejemplo de diseño.",)),
@@ -211,12 +213,12 @@ def test_derived_guide_content_cannot_be_erased_by_a_merge() -> None:
     data = dict(_plan())
     data["metadata"] = SheetExportMetadata(
         modelo_id="130",
-        revision_id="2019-y-siguientes",
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "4T"),
+        revision_id=revision_covering("130", _YEAR).id,
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "4T"),
         engine_version="test",
         registry_sha="a" * 64,
-        exported_at=datetime(2026, 10, 5, tzinfo=UTC),
+        exported_at=datetime(_YEAR, 10, 5, tzinfo=UTC),
     )
     data["merged_ranges"] = (SheetMergedRange(tab=TabName.GUIDE, start_row=1, end_row=3, start_column=1, end_column=2),)
     plan = SheetExportPlan.model_validate(data)

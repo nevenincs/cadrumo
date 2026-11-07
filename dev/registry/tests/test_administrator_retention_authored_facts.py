@@ -62,21 +62,20 @@ def test_administrator_facts_are_authored_once() -> None:
     assert authored_ids == _FACT_IDS
 
 
+def _redaction_boundaries(fact_id: str) -> tuple[date, ...]:
+    """Every BOE redaction boundary the catalogue authors for one fact, oldest first."""
+    return tuple(
+        sorted(variant.valid_from for variant in _catalogue().facts[fact_id].variants if variant.valid_from is not None)
+    )
+
+
 @pytest.mark.parametrize(
-    ("effective_date", "variant_suffix"),
-    (
-        (date(2015, 1, 1), "2015-01-01"),
-        (date(2015, 7, 12), "2015-07-12"),
-        (date(2018, 7, 5), "2018-07-05"),
-        (date(2018, 12, 29), "2018-12-29"),
-        (date(2021, 1, 1), "2021-01-01"),
-        (date(2023, 1, 1), "2023-01-01"),
-    ),
+    "effective_date",
+    _redaction_boundaries("lirpf-art-101:retencion-administrador-reducida"),
+    ids=date.isoformat,
 )
-def test_each_boe_redaction_boundary_selects_the_exact_variant(
-    effective_date: date,
-    variant_suffix: str,
-) -> None:
+def test_each_boe_redaction_boundary_selects_the_exact_variant(effective_date: date) -> None:
+    variant_suffix = effective_date.isoformat()
     resolved = _resolve("lirpf-art-101:retencion-administrador-reducida", effective_date)
 
     assert resolved.variant_id.endswith(variant_suffix)

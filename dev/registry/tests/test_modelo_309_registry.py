@@ -13,6 +13,12 @@ from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    open_ended_revision,
+    revision_first_exercise,
+)
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.iva.schema import IvaLedgerObservationRole
 
@@ -24,6 +30,9 @@ from .ledger_iva_aggregation_support import ledger_iva_aggregation_deduction_pro
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
+
+_OPEN_ENDED_ID = str(open_ended_revision("309").id)
+_DESIGN_IDS = tuple(str(revision.id) for revision in authored_revisions("309"))
 
 
 @cache
@@ -60,12 +69,12 @@ def test_modelo_309_metadata_matches_orden_hac_3625_2003() -> None:
     ("revision_id", "periods"),
     [
         # aeat-dr-309-2004 field 7 "Periodo": 1T, 2T, 3T, 4T.
-        ("2004-2015", ("1T", "2T", "3T", "4T")),
+        (_DESIGN_IDS[0], ("1T", "2T", "3T", "4T")),
         # aeat-dr-309-2016 field 11: "1T".."4T", "01".."12" o "0A".
-        ("2016-2017", ("1T", "2T", "3T", "4T", *(f"{month:02d}" for month in range(1, 13)), "0A")),
+        (_DESIGN_IDS[1], ("1T", "2T", "3T", "4T", *(f"{month:02d}" for month in range(1, 13)), "0A")),
         # aeat-dr-309-2018 and aeat-dr-309-2023 field 11: "1T".."4T" o "0A".
-        ("2018-2022", ("1T", "2T", "3T", "4T", "0A")),
-        ("2023-y-siguientes", ("1T", "2T", "3T", "4T", "0A")),
+        (_DESIGN_IDS[2], ("1T", "2T", "3T", "4T", "0A")),
+        (_OPEN_ENDED_ID, ("1T", "2T", "3T", "4T", "0A")),
     ],
 )
 def test_modelo_309_period_selector_is_the_record_design_period_field(
@@ -77,16 +86,18 @@ def test_modelo_309_period_selector_is_the_record_design_period_field(
 
 def test_modelo_309_revision_metadata() -> None:
     modelo, _ = _load_modelo_309()
-    revision = modelo.revisions["2023-y-siguientes"]
-    assert revision.period_selector.year_from == 2023
+    revision = modelo.revisions[_OPEN_ENDED_ID]
+    assert revision.period_selector.year_from == revision_first_exercise("309", _OPEN_ENDED_ID)
     assert revision.orden_aplicabilidad == ("orden-hfp-1245-2022:art-unico",)
 
 
 @pytest.mark.parametrize("period", ["3T", "0A"])
 def test_modelo_309_snapshot_builds_for_a_design_period(period: str) -> None:
     modelo, catalogues = _load_modelo_309()
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period=period)
-    assert snapshot.revision.id == "2023-y-siguientes"
+    snapshot = build_snapshot(
+        modelo, catalogues, source_root=bundled_path(), filing_year=filing_year_envelope().horizon, period=period
+    )
+    assert snapshot.revision.id == _OPEN_ENDED_ID
     assert snapshot.revision.orden_aplicabilidad == ("orden-hfp-1245-2022:art-unico",)
     assert "orden-hfp-1245-2022:art-unico" in snapshot.legal
     assert "orden-hac-3625-2003:apartado-1" in snapshot.legal
@@ -98,12 +109,12 @@ def test_modelo_309_snapshot_builds_for_a_design_period(period: str) -> None:
 def test_modelo_309_selects_no_revision_for_a_month_the_2023_design_does_not_admit() -> None:
     modelo, _ = _load_modelo_309()
     with pytest.raises(NoRevisionForPeriodError):
-        select_revision(modelo, filing_year=2025, period="03")
+        select_revision(modelo, filing_year=filing_year_envelope().horizon, period="03")
 
 
 def test_modelo_309_filing_schedule_is_event_triggered_over_the_design_periods() -> None:
     modelo, _ = _load_modelo_309()
-    revision = modelo.revisions["2023-y-siguientes"]
+    revision = modelo.revisions[_OPEN_ENDED_ID]
     schedule = next(s for s in revision.filing_schedules if s.id == "modelo-309-no-periodica")
     assert schedule.period_kind == "event"
     assert schedule.periods == ("1T", "2T", "3T", "4T", "0A")
@@ -111,7 +122,7 @@ def test_modelo_309_filing_schedule_is_event_triggered_over_the_design_periods()
 
 def test_modelo_309_live_cross_references_forbid_writes() -> None:
     modelo, _ = _load_modelo_309()
-    revision = modelo.revisions["2023-y-siguientes"]
+    revision = modelo.revisions[_OPEN_ENDED_ID]
     cross_refs = {ref.id: ref for ref in revision.live_cross_references}
     filed_ref = cross_refs["modelo-309-filed-declarations-read"]
     assert filed_ref.requires_authentication is True
@@ -121,7 +132,7 @@ def test_modelo_309_live_cross_references_forbid_writes() -> None:
 
 def test_modelo_309_construct_links_workbook_parity() -> None:
     modelo, _ = _load_modelo_309()
-    revision = modelo.revisions["2023-y-siguientes"]
+    revision = modelo.revisions[_OPEN_ENDED_ID]
     construct = next(c for c in revision.constructs if c.id == "modelo-309-iva-no-periodica")
     assert "modelo-309-dr" in construct.workbook_parity_refs
     assert construct.filing_schedules == ("modelo-309-no-periodica",)
@@ -132,7 +143,7 @@ def test_modelo_309_declares_autorepercutido_and_recargo_soportado_bindings() ->
     intra-community acquisition reverse charge (medios de transporte
     nuevos) and recargo de equivalencia retailers' devoluciones."""
     modelo, _ = _load_modelo_309()
-    revision = modelo.revisions["2023-y-siguientes"]
+    revision = modelo.revisions[_OPEN_ENDED_ID]
     iva_binding_ids = {binding.id for binding in revision.bindings if binding.source == "ledger_iva_aggregation"}
     assert iva_binding_ids == {
         "modelo-309-iva-autorepercutido-intracomunitaria-cuota",
@@ -151,11 +162,11 @@ def test_modelo_309_autorepercutido_binding_resolves_against_substrate() -> None
     from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind
 
     modelo, _ = _load_modelo_309()
-    revision = modelo.revisions["2023-y-siguientes"]
+    revision = modelo.revisions[_OPEN_ENDED_ID]
     observations = [
         IvaLedgerObservation(
             ledger_id="vehicle-acquisition",
-            transaction_date=date(2025, 6, 1),
+            transaction_date=date(filing_year_envelope().horizon, 6, 1),
             category=IvaCategory("intra_community_acquisition_reverse_charge"),
             rate_kind=IvaRateKind("general"),
             flow_direction=IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
@@ -170,7 +181,7 @@ def test_modelo_309_autorepercutido_binding_resolves_against_substrate() -> None
         ),
         IvaLedgerObservation(
             ledger_id="recargo-devolucion",
-            transaction_date=date(2025, 6, 5),
+            transaction_date=date(filing_year_envelope().horizon, 6, 5),
             category=IvaCategory("recargo_equivalencia"),
             rate_kind=IvaRateKind("general"),
             flow_direction=IvaFlowDirection.from_registry("soportado"),

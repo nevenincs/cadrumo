@@ -5,11 +5,16 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Final
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 MODELO_ID: Final = "999"
 LEGAL_REF: Final = "ley-58-2003:art-29"
 SOURCE_REF: Final = "aeat-manual"
-PREDECESSOR_EDITION: Final = "2024"
-SUCCESSOR_EDITION: Final = "2025"
+SUCCESSOR_EDITION_YEAR: Final = filing_year_envelope().horizon - 1
+"""The exercise of the successor edition: below the horizon, so it is no open edge of the envelope."""
+PREDECESSOR_EDITION_YEAR: Final = SUCCESSOR_EDITION_YEAR - 1
+PREDECESSOR_EDITION: Final = str(PREDECESSOR_EDITION_YEAR)
+SUCCESSOR_EDITION: Final = str(SUCCESSOR_EDITION_YEAR)
 
 
 def delta_casilla(revision_id: str, casilla_id: str, *, number: str, lineage: str) -> str:

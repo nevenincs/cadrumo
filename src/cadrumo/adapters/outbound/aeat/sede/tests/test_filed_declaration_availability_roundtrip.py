@@ -29,19 +29,23 @@ from pydantic import ValidationError
 
 from ......core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ......core.filing_year import FOUR_DIGIT_YEAR_FIRST
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..schema import FiledDeclarationAvailability, FiledDeclarationAvailabilityReport
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+_YEAR = filing_year_envelope().horizon
+_DISCOVERED_AT = datetime(_YEAR, 8, 7, 9, 30, 15, tzinfo=UTC)
 
 
 def _populated_report() -> FiledDeclarationAvailabilityReport:
     """Build a report with every defaultable field set to a non-default value."""
     return FiledDeclarationAvailabilityReport(
         items=(
-            FiledDeclarationAvailability(modelo="303", ejercicios=(2026, 2025, 2024)),
-            FiledDeclarationAvailability(modelo="100", ejercicios=(2025,)),
+            FiledDeclarationAvailability(modelo="303", ejercicios=(_YEAR, _YEAR - 1, _YEAR - 2)),
+            FiledDeclarationAvailability(modelo="100", ejercicios=(_YEAR - 1,)),
         ),
-        discovered_at=datetime(2026, 8, 7, 9, 30, 15, tzinfo=UTC),
+        discovered_at=_DISCOVERED_AT,
         signal=FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,
         mode="read",
     )
@@ -56,10 +60,10 @@ def test_report_survives_a_strict_json_roundtrip() -> None:
 def test_offered_pairs_flattens_every_modelo_ejercicio_combination() -> None:
     report = _populated_report()
     assert report.offered_pairs == (
-        ("303", 2026),
-        ("303", 2025),
-        ("303", 2024),
-        ("100", 2025),
+        ("303", _YEAR),
+        ("303", _YEAR - 1),
+        ("303", _YEAR - 2),
+        ("100", _YEAR - 1),
     )
 
 
@@ -79,7 +83,7 @@ def test_report_refuses_the_taxpayer_specific_signal() -> None:
 
 def test_report_refuses_a_naive_discovered_at() -> None:
     corrupted = json.loads(_populated_report().model_dump_json())
-    corrupted["discovered_at"] = "2026-08-07T09:30:15"
+    corrupted["discovered_at"] = _DISCOVERED_AT.replace(tzinfo=None).isoformat()
     with pytest.raises(ValidationError, match="discovered_at"):
         FiledDeclarationAvailabilityReport.model_validate_json(json.dumps(corrupted))
 

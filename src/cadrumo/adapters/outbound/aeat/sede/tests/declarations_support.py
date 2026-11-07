@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -23,6 +24,7 @@ from ......domain.calculations.registry.bindings_previous_filing import resolve_
 from ......domain.calculations.registry.ids import BindingId, RelationId
 from ......domain.calculations.registry.schema import RegistrySnapshot
 from ......domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......domain.calculations.registry.tests.relation_fixture import resolve_relation_values_from_observations
 from ......tests.inventory import FIXTURES_DIR
 from ..declarations_capture import declarations_capture_select_authoritative_declaration
@@ -46,9 +48,10 @@ __all__ = [
     "filed_observation",
     "modelo_130_snapshot",
     "modelo_snapshot",
-    "renta_2025_relation_observations",
+    "renta_relation_observations",
     "resolve_previous_filing_from_observations",
     "resolve_relations_from_observations",
+    "specimen_exercise",
     "submitted_file_payload",
     "value_valid_m100_submitted_payload",
     "whitespace_nif_session",
@@ -116,9 +119,27 @@ def resolve_relations_from_observations(
     )
 
 
-_SUBMITTED_FILE_130_2026_1T = FIXTURE_ROOT / "submitted-files" / "modelo-130-2026-1T-redacted.txt"
+SUBMITTED_FILE_130_2026_1T = FIXTURE_ROOT / "submitted-files" / "modelo-130-2026-1T-redacted.txt"
 
 SUBMITTED_FILE_100_2023_0A = FIXTURE_ROOT / "submitted-files" / "modelo-100-2023-0A-redacted.xml"
+
+_SPECIMEN_HEADER_EXERCISE = re.compile(rb"<T\d{3}0(\d{4})")
+_SPECIMEN_ATTRIBUTE_EXERCISE = re.compile(rb'<Declaracion [^>]*\bejercicio="(\d{4})"')
+
+
+def specimen_exercise(path: Path) -> int:
+    """Return the exercise a submitted-file specimen prints in its own header.
+
+    A fixed-width envelope opens ``<T{modelo}0{ejercicio}{periodo}...>`` and an XML
+    declaration carries an ``ejercicio`` attribute, so a test that reads the
+    specimen asks the specimen which exercise it belongs to.
+    """
+    head = path.read_bytes()[:2048]
+    printed = _SPECIMEN_HEADER_EXERCISE.match(head) or _SPECIMEN_ATTRIBUTE_EXERCISE.search(head)
+    if printed is None:
+        raise LookupError(f"{path.name} prints no exercise in its header")
+    return int(printed.group(1))
+
 
 _M111_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("28", surface="_M111_RETENCIONES_CASILLA")
 _M115_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("03", surface="_M115_RETENCIONES_CASILLA")
@@ -207,7 +228,7 @@ def declaration_row(
     expediente_id: str,
     presented_at: datetime,
     estado: str = "ALTA",
-    ejercicio: int = 2024,
+    ejercicio: int,
     period: str = "3T",
 ) -> ExpedientesDeclaration:
     return ExpedientesDeclaration(
@@ -233,7 +254,9 @@ def modelo_snapshot(
 
 
 def modelo_130_snapshot(operation: PinnedAuthorityOperation) -> RegistrySnapshot:
-    return modelo_snapshot("130", filing_year=2026, period="1T", operation=operation)
+    return modelo_snapshot(
+        "130", filing_year=specimen_exercise(SUBMITTED_FILE_130_2026_1T), period="1T", operation=operation
+    )
 
 
 def _modelo_snapshot_ref(*, modelo: str, filing_year: int, period: str) -> RegistrySnapshotRef:
@@ -242,7 +265,7 @@ def _modelo_snapshot_ref(*, modelo: str, filing_year: int, period: str) -> Regis
         return modelo_snapshot(modelo, filing_year=filing_year, period=period, operation=operation).snapshot_ref
 
 
-def submitted_file_payload(path: Path = _SUBMITTED_FILE_130_2026_1T) -> bytes:
+def submitted_file_payload(path: Path = SUBMITTED_FILE_130_2026_1T) -> bytes:
     """Remove the editor newline from the two compact fixed-width text fixtures.
 
     Their published filing envelopes have no record terminator. The redacted
@@ -284,11 +307,14 @@ def declaration_pdf_payload(
     values: Mapping[CasillaId, Decimal],
     *,
     modelo: str = "130",
-    ejercicio: int = 2026,
+    ejercicio: int | None = None,
     period: str = "1T",
     profile=None,
 ) -> bytes:
     from io import BytesIO
+
+    if ejercicio is None:
+        ejercicio = specimen_exercise(SUBMITTED_FILE_130_2026_1T)
 
     buffer = BytesIO()
     pdf = canvas.Canvas(buffer, pagesize=A4)
@@ -394,12 +420,13 @@ def filed_observation(
     )
 
 
-def renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ...]:
+def renta_relation_observations(ejercicio: int) -> tuple[FiledDeclaracionObservation, ...]:
+    """Return the filed observations feeding the Modelo 100 cross-model relations of one exercise."""
     observations: list[FiledDeclaracionObservation] = []
     observations.extend(
         filed_observation(
             modelo="111",
-            ejercicio=2025,
+            ejercicio=ejercicio,
             period=period,
             casilla_values={_M111_RETENCIONES_CASILLA: value},
         )
@@ -413,7 +440,7 @@ def renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ...
     observations.extend(
         filed_observation(
             modelo="115",
-            ejercicio=2025,
+            ejercicio=ejercicio,
             period=period,
             casilla_values={_M115_RETENCIONES_CASILLA: value},
         )
@@ -427,7 +454,7 @@ def renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ...
     observations.extend(
         filed_observation(
             modelo="123",
-            ejercicio=2025,
+            ejercicio=ejercicio,
             period=period,
             casilla_values={_M123_RETENCIONES_CASILLA: value},
         )
@@ -441,7 +468,7 @@ def renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ...
     observations.extend(
         filed_observation(
             modelo="130",
-            ejercicio=2025,
+            ejercicio=ejercicio,
             period=period,
             casilla_values={_M130_RESULTADO_FINAL_CASILLA: value, _M130_PRIOR_RESULT_CASILLA: Decimal("0")},
         )
@@ -455,7 +482,7 @@ def renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ...
     observations.extend(
         filed_observation(
             modelo="131",
-            ejercicio=2025,
+            ejercicio=ejercicio,
             period=period,
             casilla_values={_M131_RESULTADO_CASILLA: value, _M131_PRIOR_RESULT_CASILLA: Decimal("0")},
         )
@@ -469,7 +496,7 @@ def renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ...
     observations.append(
         filed_observation(
             modelo="180",
-            ejercicio=2025,
+            ejercicio=ejercicio,
             period="0A",
             casilla_values={_DECL_RETENCIONES_TOTAL_CASILLA: Decimal("90")},
         ),
@@ -477,7 +504,7 @@ def renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ...
     observations.append(
         filed_observation(
             modelo="190",
-            ejercicio=2025,
+            ejercicio=ejercicio,
             period="0A",
             casilla_values={_DECL_RETENCIONES_TOTAL_CASILLA: Decimal("178")},
         ),
@@ -485,7 +512,7 @@ def renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ...
     observations.append(
         filed_observation(
             modelo="193",
-            ejercicio=2025,
+            ejercicio=ejercicio,
             period="0A",
             casilla_values={_DECL_RETENCIONES_TOTAL_CASILLA: Decimal("60")},
         ),
@@ -493,7 +520,7 @@ def renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ...
     observations.append(
         filed_observation(
             modelo="184",
-            ejercicio=2025,
+            ejercicio=ejercicio,
             period="0A",
             casilla_values={_M184_RENTA_ATRIBUIBLE_IMPORTE_CASILLA: Decimal("77")},
         ),
@@ -512,7 +539,7 @@ def whitespace_nif_session() -> AeatSession:
 
     from ......application.auth.session_types import AeatSession, CertificateSessionDetail
 
-    now = datetime(2026, 5, 28, 12, 0, 0, tzinfo=UTC)
+    now = datetime(filing_year_envelope().horizon, 5, 28, 12, 0, 0, tzinfo=UTC)
     return AeatSession(
         authenticated_at=now,
         idle_deadline=now + timedelta(hours=8),

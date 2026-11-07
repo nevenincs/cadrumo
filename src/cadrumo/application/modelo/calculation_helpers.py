@@ -341,7 +341,10 @@ def amendment_prior_paid_values(
     """
     if amendment_kind is not FilingDeclarationKind.COMPLEMENTARIA:
         return {}
-    if snapshot.modelo.id != "130":
+    prior_paid_casillas = tuple(
+        casilla for casilla in snapshot.revision.casillas if casilla.complementaria_only is not None
+    )
+    if not prior_paid_casillas:
         return {}
     result_ids = result_disposition_casilla_ids(snapshot.modelo.id)
     if result_ids is None:
@@ -357,8 +360,7 @@ def amendment_prior_paid_values(
             ((result, baseline_revision.casilla_values.get(casilla.id, Decimal("0"))),),
             subject=f"{snapshot.modelo.id} amendment",
         )
-        for casilla in snapshot.revision.casillas
-        if casilla.complementaria_only is not None
+        for casilla in prior_paid_casillas
     }
 
 
@@ -368,6 +370,7 @@ def calculate_amendment(
     overrides: Mapping[CasillaId, Decimal],
     prior_paid_values: Mapping[CasillaId, Decimal],
     snapshot: RegistrySnapshot,
+    binding_overrides: Mapping[BindingId, str] | None = None,
 ) -> AmendmentCalculation:
     """Re-evaluate affected saved formula outputs with the canonical expression runtime.
 
@@ -381,6 +384,11 @@ def calculate_amendment(
         overrides: Operator-authored casilla amounts replacing the filed ones.
         prior_paid_values: Confirmed prior payments carried into the correction.
         snapshot: The :class:`RegistrySnapshot` that supplies the formulas and bindings.
+        binding_overrides: Explicit binding values the corrected declaration states beside
+            those the filing recorded, such as the estimación directa modality a figure
+            reached by the correction depends on. A historical correction never reads
+            today's profile, so a binding the filing did not record stays unresolved
+            unless it is named here.
     """
     values = dict(source_revision.casilla_values)
     for key, value in prior_paid_values.items():
@@ -403,7 +411,7 @@ def calculate_amendment(
                 authored[observation.casilla_id] = canonical_decimal_string(observation.value)
     authored.update({key: canonical_decimal_string(value) for key, value in overrides.items()})
     explicit = set(authored)
-    bindings = dict(source_revision.binding_overrides)
+    bindings = {**source_revision.binding_overrides, **(binding_overrides or {})}
     for casilla in snapshot.revision.casillas:
         binding_ids = bound_casilla_binding_ids(casilla)
         if casilla.id in overrides and len(binding_ids) == 1:

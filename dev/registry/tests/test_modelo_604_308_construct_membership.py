@@ -13,6 +13,7 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_revision_members import ConstructDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ..compiler.loader import load_modelo_directory
 
@@ -41,6 +42,10 @@ def _missing_members(revision: ModeloRevision, construct: ConstructDefinition) -
     return missing
 
 
+_OPEN_ENDED_604 = str(open_ended_revision("604").id)
+_OPEN_ENDED_308 = str(open_ended_revision("308").id)
+
+
 def _sole_construct(modelo_id: str, revision_id: str) -> tuple[ModeloRevision, ConstructDefinition]:
     modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", modelo_id))
     revision = modelo.revisions[revision_id]
@@ -50,7 +55,7 @@ def _sole_construct(modelo_id: str, revision_id: str) -> tuple[ModeloRevision, C
 
 @pytest.mark.parametrize(
     ("modelo_id", "revision_id"),
-    [("604", "2024-y-siguientes"), ("308", "2019-y-siguientes")],
+    [("604", _OPEN_ENDED_604), ("308", _OPEN_ENDED_308)],
 )
 def test_the_return_construct_joins_every_member_of_its_edition(modelo_id: str, revision_id: str) -> None:
     revision, construct = _sole_construct(modelo_id, revision_id)
@@ -60,7 +65,7 @@ def test_the_return_construct_joins_every_member_of_its_edition(modelo_id: str, 
 
 
 def test_a_member_left_out_of_the_construct_is_reported() -> None:
-    revision, construct = _sole_construct("604", "2024-y-siguientes")
+    revision, construct = _sole_construct("604", _OPEN_ENDED_604)
     windows = construct.deadline_windows
     truncated = construct.model_copy(update={"deadline_windows": windows[1:], "export_layouts": ()})
 

@@ -16,15 +16,24 @@ import pytest
 
 from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.loader import load_catalogue_file
 from ..pipeline.record_design_intermediate import load_record_design_intermediate
+from .authored_edition_support import source_first_exercise, sources_where
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_MODELO_210_DESIGNS = (
-    ("aeat-dr-210-2022", 2025, "2022"),
-    ("aeat-dr-210-2026", 2026, "2026"),
+# Each whole-year design (source, a filing year it governs, the exercise it opens), oldest first.
+# The design that serves devengos for part of one exercise only is a separate source, measured
+# by its own test.
+_MODELO_210_DESIGNS = tuple(
+    (
+        source.id,
+        source.applies_to.year if source.applies_to is not None else filing_year_envelope().horizon,
+        str(source_first_exercise(source)),
+    )
+    for source in sources_where(lambda source: source.id.startswith("aeat-dr-210-") and "-hasta-" not in source.id)
 )
 
 #: AEAT's own Contenido prefix for each party block, mapped to the producer-key

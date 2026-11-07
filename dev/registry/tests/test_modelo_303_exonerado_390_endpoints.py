@@ -11,6 +11,7 @@ from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.bindings import binding_source_casilla_ids
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, split_exercise_revisions
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..compiler.loader import load_catalogue_file
@@ -50,12 +51,33 @@ _ENDPOINTS = frozenset(
 )
 _TERRITORY_RATIOS = frozenset({"89", "90", "91", "92", "107"})
 _LEGAL_REFS = frozenset({"rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"})
-_DESIGNS = (
-    ("2023", "aeat-dr-303-2023", 2023, "2023", "4T"),
-    ("2024-hasta-08-y-2t", "aeat-dr-303-2024-early", 2024, "2024-early", "2T"),
-    ("2024-desde-09-y-3t", "aeat-dr-303-2024-late", 2024, "2024-late", "4T"),
-    ("2025", "aeat-dr-303-2025", 2025, "2025", "4T"),
-    ("2026-y-siguientes", "aeat-dr-303-2026", 2026, "2026", "4T"),
+# Every authored revision that carries the exonerado endpoints: all but the support-floor revision and
+# the early revision of the exercise whose first months split off, which shares its design's endpoints.
+_SPLIT_EARLY_REVISION, _ = split_exercise_revisions("303", early_period="1T", late_period="2T")
+_DESIGN_REVISIONS = tuple(
+    revision for revision in authored_revisions("303")[1:] if revision.id != _SPLIT_EARLY_REVISION.id
+)
+# The official design each of those revisions is filed on, in revision order.
+_DESIGN_SOURCES = (
+    "aeat-dr-303-2023",
+    "aeat-dr-303-2024-early",
+    "aeat-dr-303-2024-late",
+    "aeat-dr-303-2025",
+    "aeat-dr-303-2026",
+)
+_DESIGNS = tuple(
+    (
+        str(revision.id),
+        source_ref,
+        revision.valid_from.year,
+        source_ref.removeprefix("aeat-dr-303-"),
+        [
+            period
+            for period in revision.period_selector.periods_for_year(revision.valid_from.year)
+            if period.endswith("T")
+        ][-1],
+    )
+    for revision, source_ref in zip(_DESIGN_REVISIONS, _DESIGN_SOURCES, strict=True)
 )
 _CASILLA_TAG = re.compile(r"\[(\d{1,3})\]")
 

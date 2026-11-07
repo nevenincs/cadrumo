@@ -102,6 +102,10 @@ errors:
       assignat (requerida per l'operador {op}).
     formula_override_target_invalid: Les caselles {casilla_ids} no poden rebre un
       valor conservat o substituït perquè no són caselles de fórmula d'aquesta revisió.
+    formula_recalculation_binding_unrecorded: El recàlcul de la rectificació arriba
+      a caselles de fórmula ({casilla_ids}) que depenen de {binding_ids}. La presentació
+      mai no ho va registrar; indica-ho com a substitució explícita d'enllaç a la
+      rectificació.
     formula_recalculation_unresolved: 'El recàlcul de la rectificació ha deixat sense
       resoldre caselles de fórmula obligatòries: {casilla_ids}.'
     lookup_dispatch_arg_count: L'operador {op} de la fórmula espera {expected} arguments.

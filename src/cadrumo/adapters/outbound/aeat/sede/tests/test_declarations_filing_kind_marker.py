@@ -29,6 +29,11 @@ from ......domain.calculations.registry.authority import PinnedAuthorityOperatio
 from ......domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ......domain.calculations.registry.export import resolve_export_layout
 from ......domain.calculations.registry.filing_kind_marker import FilingKindMarkerRole, filing_kind_marker_role
+from ......domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    authored_revisions_where,
+    filing_year_envelope,
+)
 from ......domain.filing.software_identity import development_mock_software_identity
 from ......domain.modelos.filing_kind_evidence import (
     FilingKindEvidenceBasis,
@@ -44,6 +49,8 @@ from ..schema import FiledDeclaracionObservation
 from .declarations_support import filed_observation, modelo_130_snapshot, submitted_file_payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+_YEAR = filing_year_envelope().horizon
 
 _C18 = validated_casilla_id("18", surface="test_declarations_filing_kind_marker.casilla")
 _C19 = validated_casilla_id("19", surface="test_declarations_filing_kind_marker.casilla")
@@ -118,7 +125,7 @@ def test_an_unparseable_fichero_reads_no_marker_and_the_capture_kind_is_unknown(
         body=body[: len(body) // 2],
         operation=operation,
     )
-    observation = filed_observation(modelo="130", ejercicio=2026, period="1T", casilla_values={})
+    observation = filed_observation(modelo="130", ejercicio=_YEAR, period="1T", casilla_values={})
 
     assert marker is None
     filing_kind = filed_observation_filing_kind(observation.model_copy(update={"filing_kind_marker": marker}))
@@ -137,7 +144,7 @@ def _m130_quarter(
 ) -> FiledDeclaracionObservation:
     observation = filed_observation(
         modelo="130",
-        ejercicio=2025,
+        ejercicio=_YEAR,
         period="2T",
         casilla_values={validated_casilla_id(key, surface="test.casilla"): value for key, value in values.items()},
     )
@@ -195,9 +202,7 @@ _M131_CASILLA_03 = validated_casilla_id("03", surface="test_declarations_filing_
 _M131_CASILLA_05 = validated_casilla_id("05", surface="test_declarations_filing_kind_marker.casilla")
 
 
-def _m131_multi_activity_file(
-    tmp_path: Path, *, complementaria: bool, filing_year: int = 2026, period: str = "1T"
-) -> bytes:
+def _m131_multi_activity_file(tmp_path: Path, *, complementaria: bool, filing_year: int, period: str = "1T") -> bytes:
     """Export a two-activity Modelo 131 fichero through the real renderer."""
     template = typed_producer_snapshot(complementaria=complementaria)
     producer_snapshot = build_filing_producer_snapshot(
@@ -247,7 +252,7 @@ def _m131_multi_activity_file(
 def test_a_modelo_131_continuation_page_indicator_never_disagrees_with_the_page_01_marker(
     operation: PinnedAuthorityOperation, tmp_path: Path, complementaria: bool, kind: FilingDeclarationKind
 ) -> None:
-    body = _m131_multi_activity_file(tmp_path, complementaria=complementaria)
+    body = _m131_multi_activity_file(tmp_path, complementaria=complementaria, filing_year=_YEAR)
     page_one = body.index(_M131_PAGE_01_OPEN_TAG) + _M131_MARKER_OFFSET - 1
     assert body[page_one : page_one + 1] == (b"X" if complementaria else b" ")
     starts = [index for index in range(len(body)) if body.startswith(_M131_DPA_OPEN_TAG, index)]
@@ -255,11 +260,11 @@ def test_a_modelo_131_continuation_page_indicator_never_disagrees_with_the_page_
     assert [body[start + position - 1 : start + position] for start in starts] == [b" ", b"C"]
 
     marker = observed_filing_kind_marker_from_submitted_file(
-        snapshot=operation.snapshot("131", filing_year=2026, period="1T"),
+        snapshot=operation.snapshot("131", filing_year=_YEAR, period="1T"),
         body=body,
         operation=operation,
     )
-    observation = filed_observation(modelo="131", ejercicio=2026, period="1T", casilla_values={})
+    observation = filed_observation(modelo="131", ejercicio=_YEAR, period="1T", casilla_values={})
 
     assert marker is not None
     assert marker.declaration_marker.token == ("X" if complementaria else "")
@@ -271,10 +276,38 @@ def test_a_modelo_131_continuation_page_indicator_never_disagrees_with_the_page_
     assert [reading.token for reading in filing_kind.readings] == [marker.declaration_marker.token]
 
 
+_M131_DPA_INPUT_KEYS = frozenset({"modelo-131.dpa.epigrafe-iae", "modelo-131.did.iban"})
+
+
+def _authored_edition_probes() -> list[object]:
+    """One probe per authored Modelo 131 edition in the envelope that declares the multi-activity export inputs.
+
+    Each probe is the edition's first supported exercise and the first period
+    its selector serves in it, so a split exercise yields one probe per design.
+    """
+    envelope = filing_year_envelope()
+    declaring = {
+        str(revision.id)
+        for revision in authored_revisions_where(
+            "131",
+            lambda revision: (
+                {str(item.id) for item in revision.casillas} | {str(item.id) for item in revision.bindings}
+                >= _M131_DPA_INPUT_KEYS
+            ),
+        )
+    }
+    return [
+        pytest.param(year, revision.period_selector.periods_for_year(year)[0], id=str(revision.id))
+        for revision in authored_revisions("131")
+        if str(revision.id) in declaring
+        and (year := max(revision.valid_from.year, envelope.floor))
+        <= (revision.valid_to.year if revision.valid_to is not None else envelope.horizon)
+    ]
+
+
 @pytest.mark.parametrize(
     ("filing_year", "period"),
-    [(2024, "1T"), (2025, "1T"), (2026, "1T"), (2026, "3T")],
-    ids=("2024", "2025", "2026", "2026-3t-4t"),
+    _authored_edition_probes(),
 )
 @pytest.mark.parametrize(
     ("complementaria", "kind"),

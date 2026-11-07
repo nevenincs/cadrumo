@@ -97,6 +97,9 @@ errors:
     formula_override_target_invalid: Formula casilla(s) {casilla_ids} cannot take
       a retained or overridden value because they are not formula targets of this
       revision.
+    formula_recalculation_binding_unrecorded: The amendment recalculation reaches
+      formula casilla(s) {casilla_ids}, which depend on {binding_ids}. The filing
+      never recorded it; supply it as an explicit binding override on the amendment.
     formula_recalculation_unresolved: 'The amendment recalculation left required formula
       casilla(s) unresolved: {casilla_ids}.'
     lookup_dispatch_arg_count: Formula op {op} expects {expected} arguments.

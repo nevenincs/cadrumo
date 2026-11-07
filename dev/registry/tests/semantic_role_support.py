@@ -11,6 +11,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaAlias, CasillaConstraints, CasillaDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..maintenance_support import load_modelo_path
 from .authored_edition_support import authored_revisions
@@ -68,8 +69,8 @@ def registry_modelo(modelo_id: str, revision_id: str, casillas: Iterable[Casilla
         {
             "id": revision_id,
             "localization_key": f"test.schema.revision.{revision_id}.label",
-            "valid_from": date(2025, 1, 1),
-            "period_selector": PeriodSelector(years=(2025,), periods=("0A",)),
+            "valid_from": date(filing_year_envelope().horizon, 1, 1),
+            "period_selector": PeriodSelector(years=(filing_year_envelope().horizon,), periods=("0A",)),
             "legal_refs": ("ley-58-2003:art-29",),
             "source_refs": ("aeat-manual",),
             "casillas": tuple(casillas),

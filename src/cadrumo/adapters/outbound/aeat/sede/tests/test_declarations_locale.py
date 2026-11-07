@@ -12,6 +12,7 @@ from __future__ import annotations
 import pytest
 
 from ......core.i18n.render import tr
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..declarations_listbox import parse_listbox
 from ..errors import SedeNavigationError, SedeParseError
 
@@ -25,7 +26,7 @@ class TestParseListboxTranslation:
         # HTML with no .z-listbox element triggers the listbox_missing raise.
         html_no_listbox = "<html><body><p>No table here</p></body></html>"
         with pytest.raises(SedeParseError) as exc_info:
-            parse_listbox(html_no_listbox, modelo="303", ejercicio=2023)
+            parse_listbox(html_no_listbox, modelo="303", ejercicio=filing_year_envelope().horizon)
         err = exc_info.value
         expected = tr("adapters.sede.errors.listbox_missing")
         assert err.translated_message == expected, (
@@ -72,7 +73,7 @@ class TestParseListboxTranslation:
         # The function may return the default (justificante_index=7) when
         # no header is detected, so check what actually happens.
         try:
-            parse_listbox(html_no_justificante, modelo="303", ejercicio=2023)
+            parse_listbox(html_no_justificante, modelo="303", ejercicio=filing_year_envelope().horizon)
             # If no error was raised the listbox had no items and
             # fell into the empty-tuple return — still valid behaviour.
         except SedeParseError as exc:

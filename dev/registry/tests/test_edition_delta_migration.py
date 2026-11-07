@@ -41,6 +41,7 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
 )
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, filing_year_envelope
 from dev.locales.manager import LocaleManager
 from dev.paths import REPO_ROOT
 from dev.test_runs.paths import test_log_root as development_log_root
@@ -62,6 +63,11 @@ from ..edition_export_scenarios import edition_export_scenarios
 from ..edition_round_trip import RoundTripFindingKind, copy_registry_tree, edition_round_trip_report
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_THIRD_YEAR = filing_year_envelope().horizon
+_SECOND_YEAR = _THIRD_YEAR - 1
+_FIRST_YEAR = _SECOND_YEAR - 1
+_FIRST, _SECOND, _THIRD = str(_FIRST_YEAR), str(_SECOND_YEAR), str(_THIRD_YEAR)
 
 _BUNDLED = bundled_path("registry", "aeat")
 _PILOT = "303"
@@ -605,7 +611,7 @@ def test_unannotated_rows_do_not_block_and_a_changed_same_id_uses_a_storage_over
             + (
                 f'constraints = {{ min_value = "1", max_value = "9", legal_refs = ["{legal_ref}"], '
                 'source_refs = ["aeat-manual"] }\n\n'
-                if revision_id == "2024"
+                if revision_id == _SECOND
                 else f'constraints = {{ max_value = "9", legal_refs = ["{legal_ref}"], '
                 'source_refs = ["aeat-manual"] }\n\n'
             )
@@ -615,17 +621,17 @@ def test_unannotated_rows_do_not_block_and_a_changed_same_id_uses_a_storage_over
         )
         (revision_dir / "casillas" / "c0001__c0002.toml").write_text(rows, encoding="utf-8", newline="\n")
 
-    write_revision("2024", 2024, changed_number="1")
-    write_revision("2025", 2025, changed_number="11", insert_local=True)
+    write_revision(_SECOND, _SECOND_YEAR, changed_number="1")
+    write_revision(_THIRD, _THIRD_YEAR, changed_number="11", insert_local=True)
     plan = plan_migration(modelo_dir, load_modelo_directory(modelo_dir))
 
-    successor = next(item for item in plan.editions if item.revision_id == "2025")
+    successor = next(item for item in plan.editions if item.revision_id == _THIRD)
     assert successor.blocked == ()
     assert successor.stated_ids == ("0003",)
     assert successor.inherited_ids == ("0002",)
     assert successor.casilla_overrides == (
         {
-            "selector": {"revision": "2024", "id": "0001"},
+            "selector": {"revision": _SECOND, "id": "0001"},
             "fields": {"number": "11"},
             "removed_fields": ["constraints.min_value"],
         },
@@ -672,11 +678,11 @@ def test_a_constraints_override_never_leaves_both_source_reference_forms(tmp_pat
         )
 
     write_revision(
-        "2024", 2024, number="1", default="", constraint_sources='source_refs = ["aeat-manual", "aeat-form"]'
+        _SECOND, _SECOND_YEAR, number="1", default="", constraint_sources='source_refs = ["aeat-manual", "aeat-form"]'
     )
     write_revision(
-        "2025",
-        2025,
+        _THIRD,
+        _THIRD_YEAR,
         number="11",
         default='casilla_source_refs = ["aeat-manual"]\n',
         constraint_sources='additional_source_refs = ["aeat-design"]',
@@ -685,7 +691,7 @@ def test_a_constraints_override_never_leaves_both_source_reference_forms(tmp_pat
 
     plan = plan_migration(modelo_dir, definition)
 
-    successor = next(item for item in plan.editions if item.revision_id == "2025")
+    successor = next(item for item in plan.editions if item.revision_id == _THIRD)
     assert successor.blocked == (), successor.blocked_detail
     (override,) = successor.casilla_overrides
     assert override["fields"] == {"number": "11", "constraints": {"additional_source_refs": ["aeat-design"]}}
@@ -695,8 +701,8 @@ def test_a_constraints_override_never_leaves_both_source_reference_forms(tmp_pat
 
     assert outcome.source_findings == ()
     assert outcome.staged_registry is not None
-    staged = _load(outcome.staged_registry, "999").revisions["2025"].casillas[0]
-    loaded = definition.revisions["2025"].casillas[0]
+    staged = _load(outcome.staged_registry, "999").revisions[_THIRD].casillas[0]
+    loaded = definition.revisions[_THIRD].casillas[0]
     assert staged.constraints == loaded.constraints
     assert loaded.constraints is not None
     assert tuple(loaded.constraints.source_refs) == ("aeat-manual", "aeat-design")
@@ -717,9 +723,10 @@ def test_storage_baseline_removes_lineage_members_without_asserting_legal_predec
         assert [str(row.id) for row in after.revisions[revision_id].casillas] == [
             str(row.id) for row in revision.casillas
         ]
-    successor = after.revisions["2025"]
+    *_, previous, newest = authored_revisions("345")
+    successor = after.revisions[str(newest.id)]
     assert successor.predecessor is None
-    assert str(successor.casilla_storage_baseline) == "2024"
+    assert str(successor.casilla_storage_baseline) == str(previous.id)
 
 
 def _semantic_withdrawal_fixture(root: Path) -> Path:
@@ -757,16 +764,16 @@ def _semantic_withdrawal_fixture(root: Path) -> Path:
             )
         (revision_dir / "casillas" / "c0001__c0002.toml").write_text(rows, encoding="utf-8", newline="\n")
 
-    write_revision("2023", 2023)
-    write_revision("2024", 2024, include_second=False)
-    write_revision("2025", 2025, include_second=False)
+    write_revision(_FIRST, _FIRST_YEAR)
+    write_revision(_SECOND, _SECOND_YEAR, include_second=False)
+    write_revision(_THIRD, _THIRD_YEAR, include_second=False)
     return root
 
 
 def test_semantic_predecessor_withdrawal_without_retirement_is_refused(tmp_path: Path) -> None:
     registry = _semantic_withdrawal_fixture(tmp_path / "registry")
     definition = _load(registry, "999")
-    source = read_edition(registry / "modelos" / "999", "2024")
+    source = read_edition(registry / "modelos" / "999", _SECOND)
     predecessor: dict[str, object] = {
         "id": "0002",
         "number": "2",
@@ -777,9 +784,9 @@ def test_semantic_predecessor_withdrawal_without_retirement_is_refused(tmp_path:
 
     causes, *_ = choose_drops(
         definition=definition,
-        revision_id="2024",
-        predecessor="2023",
-        inherited=[Placed(predecessor, "2023")],
+        revision_id=_SECOND,
+        predecessor=_FIRST,
+        inherited=[Placed(predecessor, _FIRST)],
         full_rows=[],
         lifts={},
         source=source,
@@ -808,20 +815,20 @@ def test_blocked_semantic_edition_remains_readable_for_independent_later_work(
         reconsider_technical_roots: bool = False,
     ) -> tuple[str | None, PredecessorBasis, list[BlockedCause]]:
         if position == 1:
-            return "2023", PredecessorBasis.DECLARED, []
+            return _FIRST, PredecessorBasis.DECLARED, []
         return original(position, revisions, source, reconsider_technical_roots=reconsider_technical_roots)
 
     monkeypatch.setattr(predecessor_policy, "choose_predecessor", semantic_middle)
 
     plan = plan_migration(registry / "modelos" / "999", definition)
 
-    middle = next(edition for edition in plan.editions if edition.revision_id == "2024")
-    later = next(edition for edition in plan.editions if edition.revision_id == "2025")
+    middle = next(edition for edition in plan.editions if edition.revision_id == _SECOND)
+    later = next(edition for edition in plan.editions if edition.revision_id == _THIRD)
     assert middle.blocked == (BlockedCause.UNRETIRED_WITHDRAWAL,)
     assert middle.basis is PredecessorBasis.BLOCKED
     assert later.blocked == ()
     assert later.is_delta
-    assert later.dependencies == ("2024",)
+    assert later.dependencies == (_SECOND,)
 
 
 def _rewrite_row_sources(edition_dir: Path, sources: list[list[str]]) -> None:
@@ -962,7 +969,8 @@ def test_the_command_line_renders_every_successors_export_bytes_from_the_canonic
     """
     successors = sorted(str(revision.id) for revision in ordered_revisions(pilot_before)[1:])
     assert all(pilot_before.revisions[revision_id].export_layouts for revision_id in successors)
-    assert set(edition_export_scenarios(_PILOT)) == set(successors)
+    first_edition = str(ordered_revisions(pilot_before)[0].id)
+    assert set(edition_export_scenarios(_PILOT)) == {first_edition, *successors}
     registry = registry_copy(tmp_path / "input", _PILOT)
 
     exit_code = main(["--registry-root", str(registry), "--modelo", _PILOT, "--work-dir", str(tmp_path / "work")])

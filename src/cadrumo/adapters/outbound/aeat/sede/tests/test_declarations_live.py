@@ -30,6 +30,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 
 from ......application.live.expedientes_ports import ExpedientesDeclaration
 from ......core.aeat_csv import is_aeat_csv
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......tests.live_gate import requires_live_enabled
 from ..declarations import open_declarations_register, walk_declarations_register
 from ..declarations_remote import extract_csv_from_url
@@ -37,6 +38,8 @@ from ..errors import SedeError
 from ..schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
+
+_EJERCICIO = filing_year_envelope().floor
 
 pytestmark = [
     pytest.mark.aeat_live,
@@ -91,19 +94,19 @@ async def test_walk_modelo_100_returns_at_least_one_declaration() -> None:
         declarations = await walk_declarations_register(
             session,
             modelo="100",
-            ejercicio=2022,
+            ejercicio=_EJERCICIO,
         )
     except SedeError as exc:
         pytest.fail(f"live walk failed after live opt-in: {exc}")
 
-    # Ejercicio 2022 is the year operator's M100 fixture was captured;
-    # the live account should still expose it.
+    # The oldest supported exercise is the one the operator's M100 fixture was
+    # captured for; the live account should still expose it.
     assert isinstance(declarations, tuple)
     assert all(isinstance(d, ExpedientesDeclaration) for d in declarations)
-    assert declarations, "expected at least one Modelo 100 / 2022 declaration on the live account"
+    assert declarations, f"expected at least one Modelo 100 / {_EJERCICIO} declaration on the live account"
     first = declarations[0]
     assert first.modelo == "100"
-    assert first.ejercicio == 2022
+    assert first.ejercicio == _EJERCICIO
     assert first.expediente_id  # non-empty
     assert first.estado  # non-empty
     # The declared-shape marker only; it is not read in production and is
@@ -116,7 +119,7 @@ async def test_walk_modelo_100_returns_at_least_one_declaration() -> None:
 async def test_register_session_capture_observation_returns_pdf_bytes() -> None:
     """The normalized register capture path lands a valid PDF body.
 
-    Drives the same Modelo 100 / 2022 surface as the walker test and captures
+    Drives the same Modelo 100 / oldest-supported-exercise surface as the walker test and captures
     the first row through the production session owner. The sink observes the
     exact bytes handed to persistence without adding a second fetch path.
     """
@@ -126,12 +129,14 @@ async def test_register_session_capture_observation_returns_pdf_bytes() -> None:
         declarations = await walk_declarations_register(
             session,
             modelo="100",
-            ejercicio=2022,
+            ejercicio=_EJERCICIO,
         )
     except SedeError as exc:
         pytest.fail(f"live walk failed after live opt-in: {exc}")
 
-    assert declarations, "no Modelo 100 / 2022 declaration on this account; capture cannot run without a live row"
+    assert declarations, (
+        f"no Modelo 100 / {_EJERCICIO} declaration on this account; capture cannot run without a live row"
+    )
 
     bodies: dict[str, bytes] = {}
 

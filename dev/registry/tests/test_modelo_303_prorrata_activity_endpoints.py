@@ -21,6 +21,11 @@ from cadrumo.domain.calculations.registry.export import clasificar_casillas_ofic
 from cadrumo.domain.calculations.registry.formula_initial_values import initial_value_casilla_ids, initial_values
 from cadrumo.domain.calculations.registry.m303_prorrata_activity_projection import project_m303_prorrata_activity_rows
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    open_ended_revision,
+    split_exercise_revisions,
+)
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.prorrata_register.register import ProrrataActivityRow, ProrrataRegister, ProrrataRegisterEntry
 
@@ -33,12 +38,36 @@ from .profile_schema_support import committed_registry_validator
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _ENDPOINTS = frozenset(str(number) for number in range(500, 525))
-_DESIGNS = (
-    ("2023", "aeat-dr-303-2023", 2023, "2023", "4T", 3),
-    ("2024-hasta-08-y-2t", "aeat-dr-303-2024-early", 2024, "2024-early", "2T", 3),
-    ("2024-desde-09-y-3t", "aeat-dr-303-2024-late", 2024, "2024-late", "4T", 3),
-    ("2025", "aeat-dr-303-2025", 2025, "2025", "4T", 3),
-    ("2026-y-siguientes", "aeat-dr-303-2026", 2026, "2026", "4T", 4),
+_NEWEST = open_ended_revision("303")
+_EXERCISE = _NEWEST.valid_from.year
+# Every authored revision that carries the endpoints: all but the support-floor revision and the early
+# revision of the exercise whose first months split off.
+_SPLIT_EARLY_REVISION, _ = split_exercise_revisions("303", early_period="1T", late_period="2T")
+_DESIGN_REVISIONS = tuple(
+    revision for revision in authored_revisions("303")[1:] if revision.id != _SPLIT_EARLY_REVISION.id
+)
+# The official design each of those revisions is filed on, with the number of activity slots it prints.
+_DESIGN_SOURCES = (
+    ("aeat-dr-303-2023", 3),
+    ("aeat-dr-303-2024-early", 3),
+    ("aeat-dr-303-2024-late", 3),
+    ("aeat-dr-303-2025", 3),
+    ("aeat-dr-303-2026", 4),
+)
+_DESIGNS = tuple(
+    (
+        str(revision.id),
+        source_ref,
+        revision.valid_from.year,
+        source_ref.removeprefix("aeat-dr-303-"),
+        [
+            period
+            for period in revision.period_selector.periods_for_year(revision.valid_from.year)
+            if period.endswith("T")
+        ][-1],
+        slots,
+    )
+    for revision, (source_ref, slots) in zip(_DESIGN_REVISIONS, _DESIGN_SOURCES, strict=True)
 )
 _FIELD_NAMES = (
     "cnae",
@@ -219,7 +248,7 @@ def test_projection_only_endpoints_reject_direct_input_and_are_not_zero_seeded()
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=_EXERCISE,
         period="4T",
     ).revision
     assert _ENDPOINTS.isdisjoint(set(initial_value_casilla_ids(revision)))
@@ -307,16 +336,16 @@ def test_real_m303_revision_owns_the_complete_grounded_projection_declaration_ma
 
 
 def test_m303_projection_declaration_refuses_a_foreign_revision_record_design_source() -> None:
-    """A mutation cannot transplant a 2025 endpoint declaration into the 2026 revision."""
+    """A mutation cannot transplant the previous design's endpoint declaration into the newest revision."""
     modelo, catalogues = committed_modelo("303")
     revision = build_snapshot(
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2026,
+        filing_year=_EXERCISE,
         period="4T",
     ).revision
-    foreign = revision.projection_endpoints[0].model_copy(update={"source_refs": ("aeat-dr-303-2025",)})
+    foreign = revision.projection_endpoints[0].model_copy(update={"source_refs": (_DESIGN_SOURCES[-2][0],)})
     revised = revision.model_copy(update={"projection_endpoints": (foreign, *revision.projection_endpoints[1:])})
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: revised}})
 
@@ -325,7 +354,7 @@ def test_m303_projection_declaration_refuses_a_foreign_revision_record_design_so
 
 
 def test_m303_projection_declaration_matrix_cannot_be_deleted() -> None:
-    """All real 2025 projection-only casillas require their revision declaration matrix.
+    """All real projection-only casillas require their revision declaration matrix.
 
     Registry validation owns the refusal; a published snapshot is built only from
     authority that already passed it.
@@ -335,12 +364,12 @@ def test_m303_projection_declaration_matrix_cannot_be_deleted() -> None:
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=_EXERCISE,
         period="4T",
     ).revision
     # Non-empty, not a tally: this gate's value is the REFUSAL below, and the
     # only thing the pre-state must establish is that there is a matrix to
-    # delete. The pinned 108 was a moment -- the 2025 revision declares 216 now.
+    # delete. The pinned 108 was a moment -- the revision declares 216 now.
     assert revision.projection_endpoints
     deleted = revision.model_copy(update={"projection_endpoints": ()})
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: deleted}})
@@ -354,7 +383,7 @@ def test_m303_projection_declaration_matrix_cannot_be_deleted() -> None:
 def test_real_layoutless_revision_without_projection_only_casillas_needs_no_declarations() -> None:
     """The completeness gate is scoped to the canonical projection-only capability."""
     modelo, catalogues = committed_modelo("130")
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions[str(open_ended_revision("130").id)]
 
     # The claim is about PROJECTION-ONLY capability, not about layouts: a
     # revision with no projection-only casilla needs no declarations whether or
@@ -370,7 +399,7 @@ def test_typed_register_rows_project_to_only_their_deterministic_fixed_slots() -
     """The canonical child collection is the sole value authority for 500-524."""
     rows = tuple(
         ProrrataActivityRow(
-            ejercicio=2025,
+            ejercicio=_EXERCISE,
             activity_id=f"activity-{slot}",
             slot=slot,
             cnae_code=f"{470 + slot}",
@@ -385,7 +414,7 @@ def test_typed_register_rows_project_to_only_their_deterministic_fixed_slots() -
     register = ProrrataRegister(
         entries=(
             ProrrataRegisterEntry(
-                ejercicio=2025,
+                ejercicio=_EXERCISE,
                 regime=ProrrataRegisterRegime.from_registry("general"),
                 especial_transition=None,
                 source_registry_snapshot_refs=(),
@@ -397,7 +426,7 @@ def test_typed_register_rows_project_to_only_their_deterministic_fixed_slots() -
     projection = project_m303_prorrata_activity_rows(
         projection_refs=_projection_refs(),
         register=register,
-        ejercicio=2025,
+        ejercicio=_EXERCISE,
     )
 
     assert tuple(item.slot for item in projection) == (1, 2, 3, 4, 5)
@@ -453,20 +482,20 @@ def test_incomplete_ejercicio_refuses_with_the_typed_localised_operator_facing_r
     so the live export-path projector must refuse rather than silently
     emit a thin endpoint set.
     """
-    register = _general_register(2025, slots=(1, 2, 3))
+    register = _general_register(_EXERCISE, slots=(1, 2, 3))
 
     with pytest.raises(RegistryValidationError) as excinfo:
         project_m303_prorrata_activity_rows(
             projection_refs=_projection_refs(),
             register=register,
-            ejercicio=2025,
+            ejercicio=_EXERCISE,
         )
 
     error = excinfo.value
     assert error.translated_message == "application.filing.m303_prorrata_activity_rows.errors.activity_rows_incomplete"
     assert error.context == {
         "modelo": "303",
-        "filing_year": 2025,
+        "filing_year": _EXERCISE,
         "required_slot_first": 1,
         "required_slot_last": 5,
     }
@@ -480,12 +509,12 @@ def test_incomplete_ejercicio_refuses_with_the_typed_localised_operator_facing_r
 
 def test_complete_ejercicio_is_not_refused_by_the_activity_rows_completeness_gate() -> None:
     """Five recorded slots project cleanly -- a guard that refuses everything is broken too."""
-    register = _general_register(2025, slots=(1, 2, 3, 4, 5))
+    register = _general_register(_EXERCISE, slots=(1, 2, 3, 4, 5))
 
     projection = project_m303_prorrata_activity_rows(
         projection_refs=_projection_refs(),
         register=register,
-        ejercicio=2025,
+        ejercicio=_EXERCISE,
     )
 
     assert tuple(item.slot for item in projection) == (1, 2, 3, 4, 5)

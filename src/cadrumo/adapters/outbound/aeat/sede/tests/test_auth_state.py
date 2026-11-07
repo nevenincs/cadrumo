@@ -26,6 +26,7 @@ import pytest
 from ......application.auth.session_types import AeatSession, CertificateSessionDetail
 from ......core.i18n.render import tr
 from ......core.period import Period
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..auth_state import storage_state_for_session
 from ..errors import SedeNavigationError
 
@@ -35,7 +36,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 # Helpers
 # ---------------------------------------------------------------------------
 
-_NOW = datetime(2026, 5, 28, 14, 40, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_NOW = datetime(_YEAR, 5, 28, 14, 40, 0, tzinfo=UTC)
 _DEADLINE = _NOW + timedelta(hours=8)
 
 
@@ -132,8 +134,8 @@ def test_fetch_iva_compensation_wallet_carries_translated_message_on_none_path()
             fetch_iva_compensation_wallet(
                 session,
                 taxpayer_nif="12345678Z",
-                target_year=2025,
-                target_period=Period.from_year_and_code(2025, "4T"),
+                target_year=_YEAR,
+                target_period=Period.from_year_and_code(_YEAR, "4T"),
             ),
         )
 

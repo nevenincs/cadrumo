@@ -1,9 +1,9 @@
-"""Real-source resolution of 2025 activity-asset amortization elections.
+"""Real-source resolution of activity-asset amortization elections.
 
 Every expected amount is an independent hand calculation from the cited
 provision, written out beside the assertion; none is copied from a run of the
 code under test.  Proration follows the accepted day-count contract (service
-days over 365 for 2025).
+days over 365 for the tax year).
 """
 
 from __future__ import annotations
@@ -45,6 +45,7 @@ from cadrumo.domain.renta.actividad_asset.schedule import (
 )
 
 from .activity_asset_schedule_support import (
+    TAX_YEAR,
     YEAR_START,
     activity_asset_schedule_asset,
     activity_asset_schedule_charge,
@@ -63,9 +64,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def test_linear_table_resolves_each_modality_maximum_from_source() -> None:
     normal = resolve_activity_asset_schedule_authority(
         modelo_100(),
-        tax_year=2025,
+        tax_year=TAX_YEAR,
         asset_revision=activity_asset_schedule_asset(
-            activity_asset_schedule_linear("equipo-proceso-informacion"), basis="2000"
+            activity_asset_schedule_linear("equipo-proceso-informacion"), basis="2000.00"
         ),
         authority_generation="candidate-source",
         workforce=(),
@@ -73,10 +74,10 @@ def test_linear_table_resolves_each_modality_maximum_from_source() -> None:
     )
     simplified = resolve_activity_asset_schedule_authority(
         modelo_100(),
-        tax_year=2025,
+        tax_year=TAX_YEAR,
         asset_revision=activity_asset_schedule_asset(
             activity_asset_schedule_linear("equipo-informacion-software", DirectEstimationRegime.SIMPLIFIED),
-            basis="2000",
+            basis="2000.00",
             kind=AssetKind.INTANGIBLE,
         ),
         authority_generation="candidate-source",
@@ -95,7 +96,7 @@ def test_two_thousand_euro_computer_forecasts_permitted_charge_not_purchase_cost
         activity_asset_schedule_asset(activity_asset_schedule_linear("equipo-proceso-informacion"), basis="2000.00")
     )
 
-    # 2,000 x 25% for a full 2025 service year.
+    # 2,000 x 25% for a full service year.
     assert charge.amount == Decimal("500.00")
 
 
@@ -104,13 +105,13 @@ def test_elected_linear_coefficient_is_bounded_by_the_maximum_and_the_maximum_pe
     elected = activity_asset_schedule_charge(
         activity_asset_schedule_asset(
             activity_asset_schedule_linear("equipo-proceso-informacion", linear_coefficient=Decimal("0.20")),
-            basis="2000",
+            basis="2000.00",
         )
     )
     floor = activity_asset_schedule_charge(
         activity_asset_schedule_asset(
             activity_asset_schedule_linear("equipo-proceso-informacion", linear_coefficient=Decimal("0.125")),
-            basis="2000",
+            basis="2000.00",
         )
     )
 
@@ -121,7 +122,7 @@ def test_elected_linear_coefficient_is_bounded_by_the_maximum_and_the_maximum_pe
             activity_asset_schedule_charge(
                 activity_asset_schedule_asset(
                     activity_asset_schedule_linear("equipo-proceso-informacion", linear_coefficient=Decimal(outside)),
-                    basis="2000",
+                    basis="2000.00",
                 )
             )
 
@@ -129,12 +130,14 @@ def test_elected_linear_coefficient_is_bounded_by_the_maximum_and_the_maximum_pe
 def test_first_partial_year_and_residual_value_use_the_amortizable_basis() -> None:
     partial = activity_asset_schedule_charge(
         activity_asset_schedule_asset(
-            activity_asset_schedule_linear("equipo-proceso-informacion"), basis="2000", in_service=date(2025, 7, 1)
+            activity_asset_schedule_linear("equipo-proceso-informacion"),
+            basis="2000.00",
+            in_service=date(TAX_YEAR, 7, 1),
         )
     )
     residual = activity_asset_schedule_charge(
         activity_asset_schedule_asset(
-            activity_asset_schedule_linear("equipo-proceso-informacion"), basis="2000", residual="400"
+            activity_asset_schedule_linear("equipo-proceso-informacion"), basis="2000.00", residual="400"
         )
     )
 
@@ -167,7 +170,7 @@ def test_a_building_under_ten_years_old_is_not_a_used_asset() -> None:
             activity_asset_schedule_linear("edificio-industrial"),
             basis="100000",
             condition=AcquiredCondition.USED,
-            built=date(2020, 1, 1),
+            built=date(TAX_YEAR - 5, 1, 1),
         ),
     )
     old = activity_asset_schedule_charge(
@@ -175,7 +178,7 @@ def test_a_building_under_ten_years_old_is_not_a_used_asset() -> None:
             activity_asset_schedule_linear("edificio-industrial"),
             basis="100000",
             condition=AcquiredCondition.USED,
-            built=date(2015, 1, 1),
+            built=date(TAX_YEAR - 10, 1, 1),
         ),
     )
 
@@ -219,7 +222,7 @@ def test_a_known_original_price_is_the_base_of_the_single_maximum_coefficient() 
     asset = _used_machine()
     authority = resolve_activity_asset_schedule_authority(
         modelo_100(),
-        tax_year=2025,
+        tax_year=TAX_YEAR,
         asset_revision=asset,
         authority_generation="candidate-source",
         workforce=(),
@@ -330,10 +333,10 @@ def test_the_original_price_route_follows_the_ten_year_building_rule() -> None:
         )
 
     # Exactly ten years old on the in-service date: used, so 150,000 x 3%.
-    assert activity_asset_schedule_charge(building(date(2015, 1, 1))).amount == Decimal("4500.00")
+    assert activity_asset_schedule_charge(building(date(TAX_YEAR - 10, 1, 1))).amount == Decimal("4500.00")
     # One day short of ten years: not a used element, so the route does not apply.
     with activity_asset_schedule_refused(ActividadAssetUnsupportedError, "used_original_price_requires_used_asset"):
-        activity_asset_schedule_charge(building(date(2015, 1, 2)))
+        activity_asset_schedule_charge(building(date(TAX_YEAR - 10, 1, 2)))
     with activity_asset_schedule_refused(ActividadAssetIncompleteError, "used_building_requires_construction_date"):
         activity_asset_schedule_charge(building(None))
 
@@ -372,7 +375,7 @@ def test_multi_shift_coefficient_follows_the_hours_formula() -> None:
 
 
 def test_reduced_size_acceleration_doubles_the_maximum_for_a_new_element() -> None:
-    # The AEAT 2025 manual's LIS art. 103 example: a EUR 36,000 machine in service on
+    # The AEAT manual's LIS art. 103 example: a EUR 36,000 machine in service on
     # 1 December. The manual illustrates with a month fraction (x 1/12 = EUR 720); the
     # only official unit, binding DGT consulta V1978-24, prorates by days in service over
     # the days of the year: 36,000 x 24% x 31/365 = 733.8082.
@@ -380,7 +383,7 @@ def test_reduced_size_acceleration_doubles_the_maximum_for_a_new_element() -> No
         activity_asset_schedule_asset(
             activity_asset_schedule_linear("maquinaria", small_enterprise=small_enterprise("2800000")),
             basis="36000",
-            in_service=date(2025, 12, 1),
+            in_service=date(TAX_YEAR, 12, 1),
         ),
     )
 
@@ -462,14 +465,14 @@ def test_constant_percentage_weights_the_elected_coefficient_by_period_band() ->
 def test_constant_percentage_applies_to_the_value_pending_at_the_start_of_the_year() -> None:
     first_partial = activity_asset_schedule_charge(
         activity_asset_schedule_asset(
-            activity_asset_schedule_constant("maquinaria"), basis="10000", in_service=date(2025, 7, 1)
+            activity_asset_schedule_constant("maquinaria"), basis="10000", in_service=date(TAX_YEAR, 7, 1)
         )
     )
     second_year = activity_asset_schedule_charge(
         activity_asset_schedule_asset(
             activity_asset_schedule_constant("maquinaria"),
             basis="10000",
-            in_service=date(2024, 1, 1),
+            in_service=date(TAX_YEAR - 1, 1, 1),
             opening="3000",
             opening_method=AmortizationMethod.CONSTANT_PERCENTAGE,
         ),
@@ -479,8 +482,8 @@ def test_constant_percentage_applies_to_the_value_pending_at_the_start_of_the_ye
     )
     quarter_after_claim = activity_asset_schedule_charge(
         activity_asset_schedule_asset(activity_asset_schedule_constant("maquinaria"), basis="10000"),
-        covered_from=date(2025, 4, 1),
-        covered_until=date(2025, 7, 1),
+        covered_from=date(TAX_YEAR, 4, 1),
+        covered_until=date(TAX_YEAR, 7, 1),
         history=AssetScheduleHistory(accumulated_in_tax_year=Decimal("739.73")),
     )
 
@@ -493,34 +496,34 @@ def test_constant_percentage_applies_to_the_value_pending_at_the_start_of_the_ye
 
 
 def test_constant_percentage_amortizes_everything_pending_in_the_final_year() -> None:
-    # 25% elected -> 4-year life from 1 July 2021, concluding on 1 July 2025.
+    # 25% elected -> 4-year life from 1 July four years earlier, concluding on 1 July of the tax year.
     asset = activity_asset_schedule_asset(
         activity_asset_schedule_constant("equipo-proceso-informacion", "0.25"),
         basis="10000",
-        in_service=date(2021, 7, 1),
+        in_service=date(TAX_YEAR - 4, 7, 1),
         opening="8000",
         opening_method=AmortizationMethod.CONSTANT_PERCENTAGE,
     )
 
     whole_year = activity_asset_schedule_charge(asset)
-    first_quarter = activity_asset_schedule_charge(asset, covered_until=date(2025, 4, 1))
+    first_quarter = activity_asset_schedule_charge(asset, covered_until=date(TAX_YEAR, 4, 1))
 
-    assert whole_year.covered_until == date(2025, 7, 1)
+    assert whole_year.covered_until == date(TAX_YEAR, 7, 1)
     assert whole_year.amount == Decimal("2000.00")  # the whole pending value
     assert first_quarter.amount == Decimal("994.48")  # 2,000 x 90/181 = 994.4751
     with pytest.raises(ActividadAssetPeriodElapsedError, match="amortization_period_elapsed"):
-        activity_asset_schedule_charge(asset, covered_from=date(2025, 8, 1))
+        activity_asset_schedule_charge(asset, covered_from=date(TAX_YEAR, 8, 1))
 
 
 def test_constant_percentage_final_year_intervals_telescope_to_the_pending_value() -> None:
     asset = activity_asset_schedule_asset(
         activity_asset_schedule_constant("equipo-proceso-informacion", "0.25"),
         basis="10000",
-        in_service=date(2021, 7, 1),
+        in_service=date(TAX_YEAR - 4, 7, 1),
         opening="9000",
         opening_method=AmortizationMethod.CONSTANT_PERCENTAGE,
     )
-    boundaries = (date(2025, 1, 1), date(2025, 1, 2), date(2025, 1, 3), date(2025, 7, 1))
+    boundaries = (date(TAX_YEAR, 1, 1), date(TAX_YEAR, 1, 2), date(TAX_YEAR, 1, 3), date(TAX_YEAR, 7, 1))
 
     amounts = [
         activity_asset_schedule_charge(asset, covered_from=start, covered_until=end).amount
@@ -534,12 +537,15 @@ def test_constant_percentage_final_year_intervals_telescope_to_the_pending_value
 
 def test_a_from_start_method_refuses_an_unattested_opening_amount() -> None:
     unattested = activity_asset_schedule_asset(
-        activity_asset_schedule_constant("maquinaria"), basis="10000", in_service=date(2024, 1, 1), opening="3000"
+        activity_asset_schedule_constant("maquinaria"),
+        basis="10000",
+        in_service=date(TAX_YEAR - 1, 1, 1),
+        opening="3000",
     )
     other_method = activity_asset_schedule_asset(
         activity_asset_schedule_constant("maquinaria"),
         basis="10000",
-        in_service=date(2024, 1, 1),
+        in_service=date(TAX_YEAR - 1, 1, 1),
         opening="1200",
         opening_method=AmortizationMethod.LINEAR,
     )
@@ -622,7 +628,7 @@ def test_sum_of_digits_allocates_quota_per_digit_in_either_order() -> None:
         activity_asset_schedule_asset(_digits("maquinaria", 9, DigitOrder.ASCENDING), basis="45000")
     )
     mid_year = activity_asset_schedule_charge(
-        activity_asset_schedule_asset(_digits("maquinaria", 9), basis="45000", in_service=date(2025, 7, 1))
+        activity_asset_schedule_asset(_digits("maquinaria", 9), basis="45000", in_service=date(TAX_YEAR, 7, 1))
     )
 
     assert descending.amount == Decimal("9000.00")  # digit 9
@@ -644,12 +650,12 @@ def test_sum_of_digits_final_life_year_reaches_exactly_the_basis() -> None:
     asset = activity_asset_schedule_asset(
         _digits("maquinaria", 9),
         basis="45000",
-        in_service=date(2017, 1, 1),
+        in_service=date(TAX_YEAR - 8, 1, 1),
         opening="44000",
         opening_method=AmortizationMethod.SUM_OF_DIGITS,
     )
 
-    # 2025 is the ninth life year, digit 1: 1,000, which leaves nothing pending.
+    # The tax year is the ninth life year, digit 1: 1,000, which leaves nothing pending.
     assert activity_asset_schedule_charge(asset).amount == Decimal("1000.00")
 
 
@@ -661,7 +667,7 @@ def test_sum_of_digits_excludes_buildings_and_furniture() -> None:
             activity_asset_schedule_charge(activity_asset_schedule_asset(_digits(class_key, 20), basis="1000"))
 
 
-def _plan(submitted: date = date(2024, 11, 1), amounts: tuple[tuple[int, str], ...] = ((2025, "5000"),)):
+def _plan(submitted: date = date(TAX_YEAR - 1, 11, 1), amounts: tuple[tuple[int, str], ...] = ((TAX_YEAR, "5000"),)):
     return activity_asset_schedule_election(
         AmortizationMethod.APPROVED_PLAN,
         approved_plan=ApprovedAmortizationPlan(
@@ -675,13 +681,13 @@ def _plan(submitted: date = date(2024, 11, 1), amounts: tuple[tuple[int, str], .
 
 
 def test_approved_plan_charges_its_annual_distribution_over_service_days() -> None:
-    plan = _plan(amounts=((2025, "5000"), (2026, "4000"), (2027, "3000")))
+    plan = _plan(amounts=((TAX_YEAR, "5000"), (TAX_YEAR + 1, "4000"), (TAX_YEAR + 2, "3000")))
 
     assert activity_asset_schedule_charge(activity_asset_schedule_asset(plan, basis="12000")).amount == Decimal(
         "5000.00"
     )
     assert activity_asset_schedule_charge(
-        activity_asset_schedule_asset(plan, basis="12000"), covered_until=date(2025, 4, 1)
+        activity_asset_schedule_asset(plan, basis="12000"), covered_until=date(TAX_YEAR, 4, 1)
     ).amount == Decimal(
         "1232.88",
     )  # 5,000 x 90/365 = 1,232.8767
@@ -691,13 +697,17 @@ def test_approved_plan_refusals() -> None:
     with activity_asset_schedule_refused(
         ActividadAssetUnsupportedError, "approved_plan_not_yet_effective", rendered=re.escape("RIS art. 7.8")
     ):
-        activity_asset_schedule_charge(activity_asset_schedule_asset(_plan(submitted=date(2026, 1, 10)), basis="12000"))
+        activity_asset_schedule_charge(
+            activity_asset_schedule_asset(_plan(submitted=date(TAX_YEAR + 1, 1, 10)), basis="12000")
+        )
     with pytest.raises(ActividadAssetValidationError, match="approved_plan_exceeds_basis"):
         activity_asset_schedule_charge(
-            activity_asset_schedule_asset(_plan(amounts=((2025, "5000"), (2026, "8000"))), basis="12000")
+            activity_asset_schedule_asset(_plan(amounts=((TAX_YEAR, "5000"), (TAX_YEAR + 1, "8000"))), basis="12000")
         )
     with activity_asset_schedule_refused(ActividadAssetUnsupportedError, "approved_plan_without_distribution"):
-        activity_asset_schedule_charge(activity_asset_schedule_asset(_plan(amounts=((2026, "5000"),)), basis="12000"))
+        activity_asset_schedule_charge(
+            activity_asset_schedule_asset(_plan(amounts=((TAX_YEAR + 1, "5000"),)), basis="12000")
+        )
     simplified_plan = _plan().model_copy(update={"regime": DirectEstimationRegime.SIMPLIFIED})
     with activity_asset_schedule_refused(ActividadAssetUnsupportedError, "method_excluded_by_law"):
         activity_asset_schedule_charge(activity_asset_schedule_asset(simplified_plan, basis="12000"))
@@ -706,12 +716,12 @@ def test_approved_plan_refusals() -> None:
 def test_definite_life_intangible_amortizes_over_its_evidenced_life() -> None:
     licence = activity_asset_schedule_election(
         AmortizationMethod.INTANGIBLE_USEFUL_LIFE,
-        useful_life=DefiniteUsefulLife(ends_on=date(2027, 1, 1), evidence_reference="licence-term"),
+        useful_life=DefiniteUsefulLife(ends_on=date(TAX_YEAR + 2, 1, 1), evidence_reference="licence-term"),
     )
     asset = activity_asset_schedule_asset(licence, basis="3650", kind=AssetKind.INTANGIBLE)
 
     assert activity_asset_schedule_charge(asset).amount == Decimal("1825.00")  # 3,650 x 365/730
-    assert activity_asset_schedule_charge(asset, covered_until=date(2025, 4, 1)).amount == Decimal(
+    assert activity_asset_schedule_charge(asset, covered_until=date(TAX_YEAR, 4, 1)).amount == Decimal(
         "450.00"
     )  # 3,650 x 90/730
     with activity_asset_schedule_refused(ActividadAssetValidationError, "useful_life_must_end_after_service"):

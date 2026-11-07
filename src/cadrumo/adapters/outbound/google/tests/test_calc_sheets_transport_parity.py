@@ -30,6 +30,7 @@ from .....application.storage.calc_sheets.records import (
     SheetValueCell,
     TabName,
 )
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from .....domain.calculations.registry.tests.published_authority import published_snapshot
 from ...workbook.calc_sheets_xlsx import materialize_export_plan
 from ..calc_sheets_apply import developer_metadata_pairs, plan_value_payload
@@ -40,7 +41,8 @@ from ..calc_sheets_apply_values import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 
-_COVERED = [("130", 2025, "1T", date(2025, 4, 1)), ("303", 2025, "1T", date(2025, 4, 1))]
+_YEAR = filing_year_envelope().horizon
+_COVERED = [("130", _YEAR, "1T", date(_YEAR, 4, 1)), ("303", _YEAR, "1T", date(_YEAR, 4, 1))]
 
 
 def test_human_template_preview_preserves_zero_and_blank_without_technical_metadata() -> None:
@@ -48,13 +50,13 @@ def test_human_template_preview_preserves_zero_and_blank_without_technical_metad
         metadata=SheetTemplatePreviewMetadata(
             kind="template_preview",
             modelo_id="232",
-            revision_id="2016-2017",
-            preview_year=2017,
+            revision_id=revision_covering("232", _YEAR).id,
+            preview_year=_YEAR,
             preview_period="0A",
             template_digest="a" * 64,
             engine_version="test",
-            title="Modelo 232 · Ejemplo ficticio 2017",
-            exported_at=datetime(2026, 10, 6, tzinfo=UTC),
+            title=f"Modelo 232 · Ejemplo ficticio {_YEAR}",
+            exported_at=datetime(_YEAR, 10, 6, tzinfo=UTC),
         ),
         human_presentation=True,
         tabs=(TabName.FORM,),

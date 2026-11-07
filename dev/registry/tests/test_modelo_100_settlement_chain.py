@@ -71,25 +71,25 @@ from cadrumo.domain.calculations.registry.tests import modelo_100_settlement_cha
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def test_0587_cuota_liquida_total_is_computed(m100_2024_snapshot: RegistrySnapshot) -> None:
-    scenarios.check_0587_cuota_liquida_total_is_computed(m100_2024_snapshot)
+def test_0587_cuota_liquida_total_is_computed(m100_second_newest_snapshot: RegistrySnapshot) -> None:
+    scenarios.check_0587_cuota_liquida_total_is_computed(m100_second_newest_snapshot)
 
 
-def test_0609_total_pagos_a_cuenta_computed_from_0598(m100_2024_snapshot: RegistrySnapshot) -> None:
-    scenarios.check_0609_total_pagos_a_cuenta_computed_from_0598(m100_2024_snapshot)
+def test_0609_total_pagos_a_cuenta_computed_from_0598(m100_second_newest_snapshot: RegistrySnapshot) -> None:
+    scenarios.check_0609_total_pagos_a_cuenta_computed_from_0598(m100_second_newest_snapshot)
 
 
-def test_0610_cuota_diferencial_computed(m100_2024_snapshot: RegistrySnapshot) -> None:
-    scenarios.check_0610_cuota_diferencial_computed(m100_2024_snapshot)
+def test_0610_cuota_diferencial_computed(m100_second_newest_snapshot: RegistrySnapshot) -> None:
+    scenarios.check_0610_cuota_diferencial_computed(m100_second_newest_snapshot)
 
 
-def test_0670_resultado_declaracion_computed(m100_2024_snapshot: RegistrySnapshot) -> None:
-    scenarios.check_0670_resultado_declaracion_computed(m100_2024_snapshot)
+def test_0670_resultado_declaracion_computed(m100_second_newest_snapshot: RegistrySnapshot) -> None:
+    scenarios.check_0670_resultado_declaracion_computed(m100_second_newest_snapshot)
 
 
-def test_settlement_chain_not_zero_for_non_zero_base(m100_2024_snapshot: RegistrySnapshot) -> None:
-    scenarios.check_settlement_chain_not_zero_for_non_zero_base(m100_2024_snapshot)
+def test_settlement_chain_not_zero_for_non_zero_base(m100_second_newest_snapshot: RegistrySnapshot) -> None:
+    scenarios.check_settlement_chain_not_zero_for_non_zero_base(m100_second_newest_snapshot)
 
 
-def test_anti_tautology_retenciones_change_affects_chain(m100_2024_snapshot: RegistrySnapshot) -> None:
-    scenarios.check_anti_tautology_retenciones_change_affects_chain(m100_2024_snapshot)
+def test_anti_tautology_retenciones_change_affects_chain(m100_second_newest_snapshot: RegistrySnapshot) -> None:
+    scenarios.check_anti_tautology_retenciones_change_affects_chain(m100_second_newest_snapshot)

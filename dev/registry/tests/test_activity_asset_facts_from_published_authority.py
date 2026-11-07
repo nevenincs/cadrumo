@@ -27,23 +27,23 @@ from cadrumo.domain.renta.actividad_asset.disposal import (
 )
 from cadrumo.domain.renta.actividad_asset.lifecycle import AssetKind
 
-from .activity_asset_schedule_support import activity_asset_schedule_asset, activity_asset_schedule_linear
+from .activity_asset_schedule_support import TAX_YEAR, activity_asset_schedule_asset, activity_asset_schedule_linear
 from .test_activity_asset_schedule_authority_methods import GROWING, employment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def test_the_published_2025_edition_supplies_the_boxes_and_the_workforce_cap() -> None:
+def test_the_newest_published_edition_supplies_the_boxes_and_the_workforce_cap() -> None:
     with bundled_indexed_authority().operation() as operation:
-        modelo_100 = operation.revision_for_context("100", filing_year=2025, period="0A")
-        modelo_130 = operation.revision_for_context("130", filing_year=2025, period="1T")
+        modelo_100 = operation.revision_for_context("100", filing_year=TAX_YEAR, period="0A")
+        modelo_130 = operation.revision_for_context("130", filing_year=TAX_YEAR, period="1T")
         boxes = activity_asset_amortization_casillas(modelo_100)
         amortization_box = renta_gastos_pago_fraccionado_target_casilla(modelo_130, modelo="130")
         income_box = renta_income_target_casilla(modelo_130, modelo="130")
         authority = resolve_activity_asset_schedule_authority(
             modelo_100,
-            tax_year=2025,
-            asset_revision=activity_asset_schedule_asset(employment(), basis="200000", in_service=date(2025, 3, 1)),
+            tax_year=TAX_YEAR,
+            asset_revision=activity_asset_schedule_asset(employment(), basis="200000", in_service=date(TAX_YEAR, 3, 1)),
             authority_generation=operation.pin().logical_generation,
             workforce=GROWING,
             legal_reference=operation.legal_reference,
@@ -58,7 +58,7 @@ def test_the_published_2025_edition_supplies_the_boxes_and_the_workforce_cap() -
 
 @pytest.mark.parametrize(
     ("later_affectation_on", "route_changed"),
-    [(date(2022, 7, 1), True), (date(2022, 6, 30), False)],
+    [(date(TAX_YEAR - 3, 7, 1), True), (date(TAX_YEAR - 3, 6, 30), False)],
 )
 def test_the_published_period_decides_a_sale_after_a_later_affectation(
     later_affectation_on: date,
@@ -66,18 +66,18 @@ def test_the_published_period_decides_a_sale_after_a_later_affectation(
 ) -> None:
     with bundled_indexed_authority().operation() as operation:
         bounds = resolve_activity_asset_disposal_bounds(
-            operation.revision_for_context("100", filing_year=2025, period="0A"),
-            tax_year=2025,
+            operation.revision_for_context("100", filing_year=TAX_YEAR, period="0A"),
+            tax_year=TAX_YEAR,
             asset_revision=activity_asset_schedule_asset(activity_asset_schedule_linear("maquinaria"), basis="1000"),
         )
 
-    # Three years from the affectation end on the same day of 2025: the sale of 30 June 2025 is within
-    # a period that began on 1 July 2022 and past one that ran out on 30 June 2025.
+    # Three years from the affectation end on the same day of the tax year: the sale of 30 June is within
+    # a period that began on 1 July three years earlier and past one that ran out on 30 June.
     assert bounds.later_affectation_period_years == 3
     calculation = calculate_disposal(
         ActivityAssetDisposalFacts(
             disposal=ActivityAssetDisposal(
-                disposal_date=date(2025, 6, 30),
+                disposal_date=date(TAX_YEAR, 6, 30),
                 reason=ActivityAssetDisposalReason.SALE,
                 proceeds=Decimal("1.00"),
                 transmission_costs=Decimal("0.00"),

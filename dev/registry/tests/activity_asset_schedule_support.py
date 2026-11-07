@@ -18,6 +18,7 @@ from cadrumo.core.errors.error_codes import resolve_error_message
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 from cadrumo.domain.renta.actividad_asset.election import (
     AcquiredCondition,
     ActivityAssetAmortizationElection,
@@ -88,17 +89,22 @@ def acquisition() -> Transaction:
     return acquisition_transaction(amount=Decimal("10000000.00"), taxable_base=None, iva_amount=None)
 
 
-YEAR_START = date(2025, 1, 1)
+TAX_YEAR = newest_authored_edition("100")
+"""The tax year the schedules are built for: the newest exercise Modelo 100 authors its own edition for."""
+
+YEAR_START = date(TAX_YEAR, 1, 1)
 
 
-YEAR_END = date(2026, 1, 1)
+YEAR_END = date(TAX_YEAR + 1, 1, 1)
 
 
 DESCRIPTOR = ActivityAssetDescriptorFacts(name="Published-authority element")
 
 
 def modelo_100() -> ModeloRevision:
-    return load_modelo_directory(bundled_path("registry", "aeat", "modelos", "100")).revisions["2025"]
+    return load_modelo_directory(bundled_path("registry", "aeat", "modelos", "100")).revisions[
+        revision_covering("100", TAX_YEAR).id
+    ]
 
 
 def legal_reference(reference_id: str) -> LegalReference:
@@ -187,7 +193,7 @@ def activity_asset_schedule_linear(
     return activity_asset_schedule_election(AmortizationMethod.LINEAR, regime, authority_class_key=class_key, **facts)
 
 
-def small_enterprise(turnover: str, made_available: date = date(2025, 11, 15)) -> SmallEnterpriseEvidence:
+def small_enterprise(turnover: str, made_available: date = date(TAX_YEAR, 11, 15)) -> SmallEnterpriseEvidence:
     return SmallEnterpriseEvidence(
         evidence_reference="prior-year-accounts",
         made_available_on=made_available,
