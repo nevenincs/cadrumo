@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import html
+import re
 import shutil
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -24,6 +27,12 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    open_ended_revision,
+    revision_covering,
+    split_exercise_revisions,
+)
 from cadrumo.domain.iva.regimen_simplificado_rows import ActividadNoAgricolaSimplificado
 
 from ..compiler.loader import load_modelo_directory, load_shared_catalogues, modelo_fact_scope
@@ -42,21 +51,36 @@ from ..edition_export_scenarios import (
     edition_export_scenarios,
     supported_scenario_periods,
 )
+from .modelo_100_registry_support import loaded_registry, source_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def test_enrollment_scenarios_select_their_supported_edition() -> None:
-    cases = (
-        ("123", "2019-2023", M123_SCENARIO_PERIODS["2019-2023"]),
-        ("200", "2025-y-siguientes", M200_SCENARIO_PERIODS["2025-y-siguientes"]),
-        ("222", "2025-y-siguientes", M222_SCENARIO_PERIODS["2025-y-siguientes"]),
-        ("296", "2024-2025", M296_SCENARIO_PERIODS["2024-2025"]),
-        ("308", "2019-y-siguientes", M308_SCENARIO_PERIODS["2019-y-siguientes"]),
-        ("309", "2018-2022", M309_SCENARIO_PERIODS["2018-2022"]),
-        ("604", "2021-2023", M604_SCENARIO_PERIODS["2021-2023"]),
+def _scenario_editions() -> tuple[tuple[str, str, Period], ...]:
+    """The enrolled scenario editions inside product support, each with the period its table declares.
+
+    The floor edition of Modelos 123, 309 and 604 straddles the support floor,
+    Modelo 296 declares one closed edition spanning two exercises inside
+    support, and Modelos 200, 222 and 308 are rendered from their open-ended
+    edition.
+    """
+    envelope = filing_year_envelope()
+    floor_edition = {modelo_id: revision_covering(modelo_id, envelope.floor).id for modelo_id in ("123", "309", "604")}
+    closed_edition = revision_covering("296", envelope.horizon - 1).id
+    open_edition = {modelo_id: open_ended_revision(modelo_id).id for modelo_id in ("200", "222", "308")}
+    return (
+        ("123", floor_edition["123"], M123_SCENARIO_PERIODS[floor_edition["123"]]),
+        ("200", open_edition["200"], M200_SCENARIO_PERIODS[open_edition["200"]]),
+        ("222", open_edition["222"], M222_SCENARIO_PERIODS[open_edition["222"]]),
+        ("296", closed_edition, M296_SCENARIO_PERIODS[closed_edition]),
+        ("308", open_edition["308"], M308_SCENARIO_PERIODS[open_edition["308"]]),
+        ("309", floor_edition["309"], M309_SCENARIO_PERIODS[floor_edition["309"]]),
+        ("604", floor_edition["604"], M604_SCENARIO_PERIODS[floor_edition["604"]]),
     )
-    for modelo_id, revision_id, period in cases:
+
+
+def test_enrollment_scenarios_select_their_supported_edition() -> None:
+    for modelo_id, revision_id, period in _scenario_editions():
         modelo, catalogues = committed_modelo(modelo_id)
         revision = select_revision(
             modelo,
@@ -71,12 +95,14 @@ def test_enrollment_scenarios_select_their_supported_edition() -> None:
 def test_the_retired_below_floor_period_still_refuses() -> None:
     modelo, catalogues = committed_modelo("123")
     with pytest.raises(FilingYearOutsideSupportEnvelopeError):
-        select_revision(modelo, filing_year=2019, period="1T", support=catalogues.supported_filing_years)
+        select_revision(
+            modelo, filing_year=filing_year_envelope().floor - 1, period="1T", support=catalogues.supported_filing_years
+        )
 
 
 def test_modelo296_scenario_supplies_every_required_detail_family() -> None:
     with modelo_fact_scope(bundled_path("registry", "aeat", "modelos", "296")):
-        scenario = edition_export_scenarios("296")["2024-2025"]
+        scenario = edition_export_scenarios("296")[revision_covering("296", filing_year_envelope().horizon - 1).id]
         profile = scenario.producer_snapshot().model_profile
     assert isinstance(profile, Modelo296ProfileFacts)
     assert profile.ejercicio == str(scenario.period.filing_year)
@@ -88,7 +114,7 @@ def test_modelo296_scenario_supplies_every_required_detail_family() -> None:
 
 @pytest.mark.parametrize("modelo_id", ("200", "222"))
 def test_corporate_scenario_defers_software_identity_until_candidate_fact_scope(modelo_id: str) -> None:
-    scenario = edition_export_scenarios(modelo_id)["2025-y-siguientes"]
+    scenario = edition_export_scenarios(modelo_id)[open_ended_revision(modelo_id).id]
     assert scenario.product_software_identity_factory is not None
     with modelo_fact_scope(bundled_path("registry", "aeat", "modelos", modelo_id)):
         software = scenario.product_software_identity_factory()
@@ -207,11 +233,13 @@ def test_every_declared_scenario_renders_inside_the_support_envelope() -> None:
             assert selected.id == revision_id, (modelo_id, revision_id, period)
 
 
-@pytest.mark.parametrize(("revision_id", "period_code"), (("2026-hasta-01-y-1t", "1T"), ("2026-y-siguientes", "2T")))
-def test_m303_scenarios_select_both_2026_form_editions(revision_id: str, period_code: str) -> None:
-    """Each 2026 paper edition's scenario selects its actual applicable quarter."""
+@pytest.mark.parametrize(("position", "period_code"), ((0, "1T"), (1, "2T")))
+def test_m303_scenarios_select_both_form_editions_of_the_split_exercise(position: int, period_code: str) -> None:
+    """Each paper edition of the exercise split at the first quarter has a scenario in its applicable quarter."""
+    revision = split_exercise_revisions("303", early_period="1T", late_period="2T")[position]
+    revision_id = str(revision.id)
     scenario = edition_export_scenarios("303")[revision_id]
-    assert scenario.period == Period.from_year_and_code(2026, period_code)
+    assert scenario.period == Period.from_year_and_code(revision.valid_from.year, period_code)
     modelo, catalogues = committed_modelo("303")
     selected = select_revision(
         modelo,
@@ -222,7 +250,66 @@ def test_m303_scenarios_select_both_2026_form_editions(revision_id: str, period_
     assert selected.id == revision_id
 
 
-@pytest.mark.parametrize("revision_id", ("2023", "2024-hasta-08-y-2t", "2024-desde-09-y-3t"))
+_ORDEN_LORCA_GRANT = re.compile(
+    r"en el término municipal de Lorca y estén acogidos al régimen especial simplificado, "
+    r"podrán reducir en un (\d+) por ciento"
+)
+
+
+def _annual_orden_grants_lorca(exercise: int) -> bool | None:
+    """Whether the bundled official annual Orden of one exercise grants the Lorca reduction.
+
+    Read from the Orden's own published text, not from the registry's pinned
+    fact. ``None`` when the corpus holds no single annual Orden for the exercise.
+    """
+    _, catalogues = loaded_registry()
+    first_day, last_day = date(exercise, 1, 1), date(exercise, 12, 31)
+    ordenes = [
+        source
+        for source_id, source in catalogues.sources.items()
+        if source_id.startswith("boe-orden-")
+        and source_id.endswith("-iva-authority")
+        and source.applies_from == first_day
+        and source.applies_to == last_day
+    ]
+    if len(ordenes) != 1:
+        return None
+    text = html.unescape(re.sub(r"<[^>]+>", " ", (source_root() / ordenes[0].corpus_path).read_text(encoding="utf-8")))
+    return _ORDEN_LORCA_GRANT.search(re.sub(r"\s+", " ", text)) is not None
+
+
+def _scenario_editions_decided_by_their_orden(*, grants: bool) -> tuple[str, ...]:
+    """The Modelo 303 scenario editions whose annual Orden text decides Lorca as ``grants``."""
+    return tuple(
+        revision_id
+        for revision_id, scenario in edition_export_scenarios("303").items()
+        if _annual_orden_grants_lorca(scenario.period.filing_year) is grants
+    )
+
+
+def test_the_year_before_the_floor_is_refused_for_modelo_303_whatever_a_scenario_would_carry() -> None:
+    """A snapshot below the floor is outside the envelope, so no scenario may reach it."""
+    with bundled_indexed_authority().operation() as operation, pytest.raises(FilingYearOutsideSupportEnvelopeError):
+        operation.snapshot("303", filing_year=filing_year_envelope().floor - 1, period="4T")
+
+
+@pytest.mark.parametrize("revision_id", tuple(edition_export_scenarios("303")))
+def test_m303_scenario_carries_the_lorca_reduction_exactly_when_the_official_orden_grants_it(
+    revision_id: str,
+) -> None:
+    """Both directions: a granting Orden is pinned by the registry, and a silent one is not."""
+    scenario = edition_export_scenarios("303")[revision_id]
+    granted = _annual_orden_grants_lorca(scenario.period.filing_year)
+    if granted is None:
+        pytest.fail(f"the corpus holds no single annual Orden for edition {revision_id}; list it as undecidable")
+    with bundled_indexed_authority().operation():
+        facts = scenario.producer_snapshot().m303_filing_facts
+        assert facts is not None
+        carried = facts.regimen_simplificado.regimen_snapshot.orden.lorca_reduction is not None
+    assert carried is granted
+
+
+@pytest.mark.parametrize("revision_id", _scenario_editions_decided_by_their_orden(grants=True))
 def test_m303_scenario_evidences_no_lorca_relief_and_missing_evidence_still_refuses(revision_id: str) -> None:
     """Synthetic non-Lorca activities render, while missing required evidence still fails."""
     scenario = edition_export_scenarios("303")[revision_id]

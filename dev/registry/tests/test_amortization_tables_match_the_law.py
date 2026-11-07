@@ -21,6 +21,7 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 
 from ..compiler.loader import load_shared_catalogues
 from .authored_edition_support import reachable_grade_snapshot
@@ -153,7 +154,9 @@ def _printed_normal_rows() -> dict[str, tuple[Decimal, Decimal]]:
 
 @cache
 def _printed_simplified_rows() -> dict[str, tuple[Decimal, Decimal]]:
-    return _parse_simplified_rows(_lines("corpus", "manuals", "renta", "2025", "part1", "source.pdf.extracted.md"))
+    return _parse_simplified_rows(
+        _lines("corpus", "manuals", "renta", str(newest_authored_edition("100")), "part1", "source.pdf.extracted.md")
+    )
 
 
 def _printed_normal() -> Pairs:

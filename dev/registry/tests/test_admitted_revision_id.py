@@ -17,10 +17,17 @@ import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions_where, filing_year_envelope
 
 from ..compiler.authority import admitted_revision_id, compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_HORIZON = filing_year_envelope().horizon
+_CALCULATION_GRADE_YEAR = authored_revisions_where(
+    "200", lambda revision: revision.authority_grade is RegistryAuthorityGrade.CALCULATION
+)[0].valid_from.year
+"""An exercise whose Modelo 200 revision declares calculation grade, so filing grade cannot be demanded of it."""
 
 
 @pytest.fixture(scope="module")
@@ -30,7 +37,7 @@ def authority():
 
 @pytest.mark.parametrize(
     ("modelo", "filing_year", "period"),
-    [("111", 2026, "1T"), ("303", 2026, "1T"), ("390", 2025, "0A"), ("151", 2025, "0A")],
+    [("111", _HORIZON, "1T"), ("303", _HORIZON, "1T"), ("390", _HORIZON - 1, "0A"), ("151", _HORIZON - 1, "0A")],
 )
 def test_it_returns_the_revision_the_snapshot_boundary_admits(authority, modelo, filing_year, period) -> None:
     """The identifier equals the one the isolated snapshot carries, across unlike modelos."""
@@ -42,16 +49,18 @@ def test_it_returns_the_revision_the_snapshot_boundary_admits(authority, modelo,
 def test_it_refuses_exactly_where_the_snapshot_boundary_refuses(authority) -> None:
     """A grade the revision cannot satisfy is refused identically by both accessors.
 
-    Modelo 200's 2024 revision declares calculation grade, so demanding filing
+    A Modelo 200 revision declares calculation grade, so demanding filing
     grade from it is a refusal the shipped registry really makes rather than a
     contrived one. Refusing identically is the whole safety argument: an accessor
     that skipped the copy but also skipped a refusal would hand back an
     identifier the boundary never admitted.
     """
     with pytest.raises(RegistryValidationError) as snapshot_refusal:
-        authority.snapshot("200", filing_year=2024, period="0A", grade=RegistryAuthorityGrade.FILING)
+        authority.snapshot("200", filing_year=_CALCULATION_GRADE_YEAR, period="0A", grade=RegistryAuthorityGrade.FILING)
     with pytest.raises(RegistryValidationError) as identifier_refusal:
-        admitted_revision_id(authority, "200", filing_year=2024, period="0A", grade=RegistryAuthorityGrade.FILING)
+        admitted_revision_id(
+            authority, "200", filing_year=_CALCULATION_GRADE_YEAR, period="0A", grade=RegistryAuthorityGrade.FILING
+        )
 
     assert str(identifier_refusal.value) == str(snapshot_refusal.value)
 
@@ -63,6 +72,6 @@ def test_it_hands_out_a_plain_string_and_not_registry_state(authority) -> None:
     can skip it only for as long as it returns nothing a caller could mutate, so
     that is asserted rather than assumed from the annotation.
     """
-    admitted = admitted_revision_id(authority, "303", filing_year=2026, period="1T")
+    admitted = admitted_revision_id(authority, "303", filing_year=_HORIZON, period="1T")
 
     assert type(admitted) is str

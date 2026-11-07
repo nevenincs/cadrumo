@@ -9,6 +9,7 @@ from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageO
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..analysis.casilla_lineage_seed_design import DesignOracle
 from ..analysis.casilla_lineage_seed_types import Ruling
@@ -30,6 +31,15 @@ def planted_casilla(**updates: object) -> CasillaDefinition:
 
 
 PLANTED_MODELO = "999"
+
+PLANTED_SECOND_YEAR = filing_year_envelope().horizon
+"""The exercise of the successor edition the planted modelos declare: the registry's support horizon."""
+
+PLANTED_FIRST_YEAR = PLANTED_SECOND_YEAR - 1
+"""The exercise of the predecessor edition the planted modelos declare."""
+
+PLANTED_FIRST_EDITION = str(PLANTED_FIRST_YEAR)
+PLANTED_SECOND_EDITION = str(PLANTED_SECOND_YEAR)
 
 
 def design_oracle() -> DesignOracle:
@@ -94,7 +104,29 @@ HELD_ROW = f"{HELD_STEM}-02"
 HELD_REASON = "a positional convention the record design cannot settle"
 
 
-NEW_EVIDENCE = "disenos_registro/modelo_999/files/2024.txt:12 box [02] first printed in the successor design"
+NEW_EVIDENCE = (
+    f"disenos_registro/modelo_999/files/{PLANTED_SECOND_YEAR}.txt:12 box [02] first printed in the successor design"
+)
+
+
+def _planted_first_edition() -> ModeloRevision:
+    return planted_revision(
+        PLANTED_FIRST_EDITION,
+        date(PLANTED_FIRST_YEAR, 1, 1),
+        date(PLANTED_FIRST_YEAR, 12, 31),
+        (PLANTED_FIRST_YEAR,),
+        (planted_casilla(),),
+    )
+
+
+def _planted_second_edition(*casillas: CasillaDefinition) -> ModeloRevision:
+    return planted_revision(
+        PLANTED_SECOND_EDITION,
+        date(PLANTED_SECOND_YEAR, 1, 1),
+        date(PLANTED_SECOND_YEAR, 12, 31),
+        (PLANTED_SECOND_YEAR,),
+        casillas,
+    )
 
 
 def held_modelo(*, origin: CasillaLineageOrigin | None) -> ModeloDefinition:
@@ -104,10 +136,8 @@ def held_modelo(*, origin: CasillaLineageOrigin | None) -> ModeloDefinition:
         updates["continuidad_origin"] = origin.value
         updates["continuidad_evidence"] = NEW_EVIDENCE
     return planted_modelo(
-        planted_revision("2023", date(2023, 1, 1), date(2023, 12, 31), (2023,), (planted_casilla(),)),
-        planted_revision(
-            "2024", date(2024, 1, 1), date(2024, 12, 31), (2024,), (planted_casilla(), planted_casilla(**updates))
-        ),
+        _planted_first_edition(),
+        _planted_second_edition(planted_casilla(), planted_casilla(**updates)),
     )
 
 
@@ -136,7 +166,10 @@ def held_pair_ruling(predecessor: str, successor: str) -> Ruling:
 ABSENT_ROW = "planted-absent"
 
 
-ABSENT_EVIDENCE = "disenos_registro/modelo_999/files/2023.txt:7 box [02] printed; the 2023 edition declares no row"
+ABSENT_EVIDENCE = (
+    f"disenos_registro/modelo_999/files/{PLANTED_FIRST_YEAR}.txt:7 box [02] printed; "
+    f"the {PLANTED_FIRST_YEAR} edition declares no row"
+)
 
 
 def absence_modelo(*, origin: CasillaLineageOrigin | None) -> ModeloDefinition:
@@ -151,8 +184,6 @@ def absence_modelo(*, origin: CasillaLineageOrigin | None) -> ModeloDefinition:
         updates["continuidad_origin"] = origin.value
         updates["continuidad_evidence"] = ABSENT_EVIDENCE
     return planted_modelo(
-        planted_revision("2023", date(2023, 1, 1), date(2023, 12, 31), (2023,), (planted_casilla(),)),
-        planted_revision(
-            "2024", date(2024, 1, 1), date(2024, 12, 31), (2024,), (planted_casilla(), planted_casilla(**updates))
-        ),
+        _planted_first_edition(),
+        _planted_second_edition(planted_casilla(), planted_casilla(**updates)),
     )

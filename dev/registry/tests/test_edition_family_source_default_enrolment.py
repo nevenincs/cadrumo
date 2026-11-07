@@ -34,11 +34,16 @@ from cadrumo.domain.calculations.registry.keyed_families import (
     inline_family_source_default,
 )
 from cadrumo.domain.calculations.registry.schema import REVISION_MANIFEST_ONLY_FIELDS, ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import write_standard_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_SUCCESSOR_YEAR = filing_year_envelope().horizon
+_PREDECESSOR_YEAR = _SUCCESSOR_YEAR - 1
+_PREDECESSOR, _SUCCESSOR = str(_PREDECESSOR_YEAR), str(_SUCCESSOR_YEAR)
 
 _MODELO_ID: Final = "999"
 _ARTICLE: Final = "ley-58-2003:art-29"
@@ -128,13 +133,13 @@ def test_every_enrolled_family_default_reaches_the_typed_revision(tmp_path: Path
     modelo_dir = _modelo(tmp_path)
     _write_edition(
         modelo_dir,
-        "2025",
-        year=2025,
+        _SUCCESSOR,
+        year=_SUCCESSOR_YEAR,
         defaults="".join(_stated(key, refs) for key, refs in _DECLARED.items()),
         casilla_ids=("01",),
     )
 
-    revision = load_modelo_directory(modelo_dir).revisions["2025"]
+    revision = load_modelo_directory(modelo_dir).revisions[_SUCCESSOR]
 
     assert {key: tuple(str(ref) for ref in getattr(revision, key)) for key in _DECLARED} == _DECLARED
 
@@ -144,8 +149,8 @@ def test_a_manifest_key_outside_the_enrolment_is_still_refused(tmp_path: Path) -
     modelo_dir = _modelo(tmp_path)
     _write_edition(
         modelo_dir,
-        "2025",
-        year=2025,
+        _SUCCESSOR,
+        year=_SUCCESSOR_YEAR,
         defaults=_stated("deadline_window_source_refs", ("aeat-plazos",)),
         casilla_ids=("01",),
     )
@@ -173,22 +178,22 @@ def test_an_inherited_member_keeps_the_grounding_effective_at_its_origin(tmp_pat
     successor_default = ("aeat-procedimiento-2025",)
     _write_edition(
         modelo_dir,
-        "2024",
-        year=2024,
+        _PREDECESSOR,
+        year=_PREDECESSOR_YEAR,
         defaults=_stated(_APPLICATION_LINK_DEFAULT, predecessor_default),
         casilla_ids=("01",),
         application_links=(_application_link("enlace-filing", ""),),
     )
     _write_edition(
         modelo_dir,
-        "2025",
-        year=2025,
+        _SUCCESSOR,
+        year=_SUCCESSOR_YEAR,
         defaults=_stated(_APPLICATION_LINK_DEFAULT, successor_default),
         casilla_ids=("01",),
-        extra='predecessor = "2024"\n',
+        extra=f'predecessor = "{_PREDECESSOR}"\n',
     )
 
-    revision = load_modelo_directory(modelo_dir).revisions["2025"]
+    revision = load_modelo_directory(modelo_dir).revisions[_SUCCESSOR]
 
     (inherited,) = revision.application_links
     assert str(inherited.id) == "enlace-filing"
@@ -210,24 +215,26 @@ def test_a_member_no_edition_ever_grounded_is_refused(tmp_path: Path) -> None:
     modelo_dir = _modelo(tmp_path)
     _write_edition(
         modelo_dir,
-        "2024",
-        year=2024,
+        _PREDECESSOR,
+        year=_PREDECESSOR_YEAR,
         defaults="",
         casilla_ids=("01",),
         application_links=(_application_link("enlace-filing", ""),),
     )
     _write_edition(
         modelo_dir,
-        "2025",
-        year=2025,
+        _SUCCESSOR,
+        year=_SUCCESSOR_YEAR,
         defaults="",
         casilla_ids=("01",),
-        extra='predecessor = "2024"\n',
+        extra=f'predecessor = "{_PREDECESSOR}"\n',
     )
 
-    # Refused on 2024, where the ungrounded row is stated, rather than on the
+    # Refused on the predecessor, where the ungrounded row is stated, rather than on the
     # edition that inherits it: the defect is the statement, not the inheritance.
-    with pytest.raises(RegistryLoadError, match=r"(?s)invalid revision '2024'.*application_links\.0\.source_refs"):
+    with pytest.raises(
+        RegistryLoadError, match=rf"(?s)invalid revision '{_PREDECESSOR}'.*application_links\.0\.source_refs"
+    ):
         load_modelo_directory(modelo_dir)
 
 

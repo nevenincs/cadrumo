@@ -9,6 +9,7 @@ from typing import Literal, cast
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.filing_projection_ref import (
@@ -34,6 +35,7 @@ from cadrumo.domain.calculations.registry.schema_exports import (
 )
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.snapshot import validate_materialized_export_record_families
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions_where, filing_year_envelope
 
 from ..author_family_identities import derive_projection_endpoint_id
 from ..compiler.authority import compiled_bundled_authority
@@ -49,6 +51,15 @@ from ..compiler.validate_exports import (
 from ..compiler.validate_projection_endpoints import validate_projection_endpoint_declarations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_EXERCISE = filing_year_envelope().horizon
+#: Modelo 390's newest edition at filing grade; its horizon edition is applicability grade only.
+_M390_FILING_EXERCISE = max(
+    revision.valid_from.year
+    for revision in authored_revisions_where(
+        "390", lambda revision: revision.authority_grade is RegistryAuthorityGrade.FILING
+    )
+)
 
 _LEGAL_REF = "ley-58-2003:art-98"
 _SOURCE_REF = "aeat-dr-303-2025"
@@ -123,8 +134,8 @@ def _revision(
     return ModeloRevision(
         id="projection-test",
         localization_key="test.projection.label",
-        valid_from=date(2026, 1, 1),
-        period_selector=PeriodSelector(years=(2026,), periods=("1T",)),
+        valid_from=date(_EXERCISE, 1, 1),
+        period_selector=PeriodSelector(years=(_EXERCISE,), periods=("1T",)),
         legal_refs=(_LEGAL_REF,),
         source_refs=(_SOURCE_REF,),
         projection_endpoints=projection_endpoints,
@@ -357,20 +368,19 @@ def test_materialized_snapshot_boundary_refuses_unresolved_binding_record() -> N
 
 
 @pytest.mark.parametrize(
-    ("modelo_id", "filing_year", "period", "record_type", "repeat"),
+    ("modelo_id", "period", "record_type", "repeat"),
     [
-        ("131", 2024, "1T", "DPA", "binding_rows"),
-        ("720", 2024, "0A", "type_1", None),
+        ("131", "1T", "DPA", "binding_rows"),
+        ("720", "0A", "type_1", None),
     ],
 )
 def test_active_snapshots_materialize_repeated_and_fixed_binding_records(
     modelo_id: str,
-    filing_year: int,
     period: str,
     record_type: str,
     repeat: Literal["binding_rows"] | None,
 ) -> None:
-    snapshot = compiled_bundled_authority().snapshot(modelo_id, filing_year=filing_year, period=period)
+    snapshot = compiled_bundled_authority().snapshot(modelo_id, filing_year=_EXERCISE, period=period)
     record = next(record for record in snapshot.revision.export_layouts[0].records if record.record_type == record_type)
 
     assert record.repeat == repeat
@@ -441,14 +451,16 @@ def test_generated_projection_fields_must_biject_revision_owned_declarations() -
 )
 def test_m390_undeclared_positive_references_cannot_enter_an_export(payload: dict[str, object]) -> None:
     """A structural reference does not enroll a row the revision does not declare."""
-    revision = compiled_bundled_authority().snapshot("390", filing_year=2025, period="0A").revision
+    revision = compiled_bundled_authority().snapshot("390", filing_year=_M390_FILING_EXERCISE, period="0A").revision
     assert revision.projection_endpoints == ()
     assert all(record.repeat != "projection_rows" for layout in revision.export_layouts for record in layout.records)
     reference = compile_filing_projection_ref(payload)
     proposed_layout = _revision(_field(projection_ref=reference)).export_layouts
     proposed = revision.model_copy(update={"export_layouts": proposed_layout})
     failures: list[str] = []
-    validate_generated_projection_layout_bijection(failures, prefix="modelo 390 revision 2025", revision=proposed)
+    validate_generated_projection_layout_bijection(
+        failures, prefix=f"modelo 390 revision {revision.id}", revision=proposed
+    )
     assert any("undeclared generated refs" in failure for failure in failures)
 
 

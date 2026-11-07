@@ -25,6 +25,7 @@ from cadrumo.domain.calculations.registry.static_inspection import (
     RegistryRevisionInspection,
     StaticGeneratedArtifactInspection,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 
 from .. import filing_export_proof_authority
 from ..compiler.authority import compiled_bundled_authority
@@ -174,11 +175,11 @@ def test_canonical_authority_maps_configured_custody_storage_failure_to_typed_re
     assessment = authority.assess_for(
         FilingExportProofCoordinate(
             modelo="111",
-            revision="2019-y-siguientes",
+            revision=str(open_ended_revision("111").id),
             snapshot_ref=RegistrySnapshotRef(
                 modelo="111",
-                revision_id="2019-y-siguientes",
-                modelo_year=2025,
+                revision_id=str(open_ended_revision("111").id),
+                modelo_year=filing_year_envelope().horizon,
                 period="1T",
             ),
             layout_ids=("test-layout",),

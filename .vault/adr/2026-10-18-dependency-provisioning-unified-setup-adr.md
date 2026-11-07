@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#dependency-provisioning'
 date: '2026-10-18'
-modified: '2026-10-29'
+modified: '2026-11-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:529b2be8e09fb7dd57aaab37844209d42988de1eba61d5009509d3899150433d'
+body_hash: 'sha256:8364dedadfb6de573faf9480a10f3b9026e52e85c520b084914c53574cdae9cb'
 related:
   - "[[2026-10-18-dependency-provisioning-mechanisms-reference]]"
   - "[[2026-06-15-dependency-provisioning-adr]]"
@@ -30,7 +30,7 @@ The browser that the tax agency reads need and the local AI that the document re
 
 - Component state is read only by the native engine's probes, which are read-only and return a typed status. Python holds no probe, no readiness report and no hardware measurement. A Python consumer that reaches a missing component refuses at the point of use and names the component alone (`2026-06-15-dependency-provisioning-adr`).
 - Component setup is a desktop capability driven by the native engine of `native/application` (`2026-10-24-rust-component-provisioning-adr`). The desktop host links the engine in process, so setup needs no runtime connection and no signed-in profile (`2026-10-04-desktop-shell-adr`).
-- Browsers, models and the model runtime are not package data. The model runtime is an external program with its own process tree (`2026-10-04-application-distribution-adr`, `2026-10-17-single-binary-process-tree-adr` constraint 7). Playwright's Python package and driver ship in the native bundle and launch the browser at use time.
+- Browsers, models and the model runtime are not package data. (Note 2026-11-07: since `2026-11-07-local-inference-engine-adr`, the llama-server runtime is package data; Ollama, browsers and models are not.) The model runtime is an external program with its own process tree (`2026-10-04-application-distribution-adr`, `2026-10-17-single-binary-process-tree-adr` constraint 7). Playwright's Python package and driver ship in the native bundle and launch the browser at use time.
 - Ollama verifies layer digests and resumes partial pulls itself. Playwright installs per build and publishes no content hashes, and the Chrome for Testing builds carry no code signature. Cadrumo therefore pins the size and SHA-256 of every browser archive itself.
 - Cadrumo defines no AI model name, digest, size, licence, default or ranking. cadrumo-agent's provider catalogue is the sole source of providers and models, local ones included (`2026-10-25-agent-owned-models-adr`).
 
@@ -49,7 +49,7 @@ Accepted 2026-10-18 on the owner's advance authorization: "Good, I forgo approva
 ### D1. One typed dependency registry
 
 - `native/application` holds the setup items. Each declares its identity, plain display key, required version source, network hosts, storage category, quick probe, full verification, provisioner, size estimate and recovery actions. Items and sizes are enumerated from the declarations and the pins the installation stages; no surface lists items, kinds, sizes or states of its own.
-- The items are `browser` (the Chromium builds named by the bundled Playwright package) and `local_ai`. `local_ai` is the Ollama program plus the one model a desktop download names from the person's local model list; the program and that model are its parts, never items of their own. The item's state is the worst of its parts' readings: a computer below the model floor decides first, then a part that could not be read, a failure, a block, anything missing, and last anything that differs from what was tested.
+- The items are `browser` (the Chromium builds named by the bundled Playwright package) and `local_ai`. `local_ai` is the selected local engine's program plus the one model a desktop download names from the person's local model list; the program and that model are its parts, never items of their own. The packaged llama-server program is part of the installation and is never downloaded (`2026-11-07-local-inference-engine-adr` D2). (Amended 2026-11-07 under `2026-11-07-local-inference-engine-adr`; before that this read: "`local_ai` is the Ollama program plus the one model a desktop download names from the person's local model list; the program and that model are its parts, never items of their own.") The item's state is the worst of its parts' readings: a computer below the model floor decides first, then a part that could not be read, a failure, a block, anything missing, and last anything that differs from what was tested.
 - The engine's status rows are the only component state. The desktop host relays them and the window renders whatever rows the snapshot carries. Item names come from the canonical catalogues, keyed by the row's item. A row's size is the engine's figure; an unknown size is shown as unknown, never as zero.
 - Reason for one registry: it is the only way the states, wording and recovery actions stay the same everywhere. A new external dependency must enrol here with a probe, verification and wording.
 
@@ -192,3 +192,11 @@ The registry is what makes "the same everywhere" checkable: the panel either ren
 - Readiness is only as current as the last check. Nothing watches the network, so an offline change shows at the next action or check.
 - The authenticity of model bytes still rests on HTTPS to the publisher and Ollama's own layer checks. Browser archives must match the digests this release pins, which proves they are the bytes the release was built against, not that the publisher's copy was genuine when it was pinned. The receipt detects later damage.
 - Reconsider if Playwright publishes hashes or signatures, which would replace the pinned table as the browser's trust anchor, or if the model runtime becomes a Cadrumo binary.
+
+## Amendment 2026-11-07: the local engine's program
+
+Basis: the operator's first-hand ruling to the orchestrating session on 2026-11-07, recorded in `2026-11-07-local-inference-engine-adr`: llama.cpp's `llama-server` is the prebundled default local engine, Ollama remains a selectable second engine, and model acquisition changes internally while the experience stays identical. With llama.cpp selected, nothing downloads, starts or requires Ollama. The status of this record is unchanged.
+
+- **D1, second bullet.** `local_ai` is the selected local engine's program, not the Ollama program, and the packaged llama-server is never downloaded. Without this change the D11 hard requirement would require the Ollama program under the default engine. The changed sentence carries its earlier text inline.
+- **Considerations, context note.** A dated note records that the llama-server runtime is package data. It is not binding text.
+- **Unchanged.** The rejected options on bundling model weights and on a Cadrumo-built model runtime, and D14's matching exclusions, stand: llama-server is a pinned upstream release, not a model and not a Cadrumo build. D14's Linux runtime instruction still governs Ollama.

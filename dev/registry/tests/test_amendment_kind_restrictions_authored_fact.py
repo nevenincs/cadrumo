@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import date
+import json
+from datetime import date, datetime
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -21,6 +23,7 @@ from cadrumo.domain.calculations.registry.facts.payloads import MappingFactPaylo
 from cadrumo.domain.calculations.registry.facts.resolution import reading_dated_facts_below_support
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision, revision_covering
 from cadrumo.domain.modelos.filing_record import FilingDeclarationKind
 
 from ..compiler.fact_loader import load_governed_fact_file
@@ -36,22 +39,50 @@ def _candidate() -> CandidateFactAuthority:
     return CandidateFactAuthority(GovernedFactCatalogue(facts={fact.fact_id: fact}), support)
 
 
+def _policy_dates() -> dict[str, date]:
+    """Every dated entry the authored amendment-regime policy declares, by its key."""
+    variant = _candidate().catalogue.facts["amendment-regime-policy"].variants[0]
+    assert isinstance(variant.payload, MappingFactPayload)
+    dated: dict[str, date] = {}
+    for entry in variant.payload.entries:
+        if isinstance(entry.key, str) and entry.key.endswith(".date"):
+            dated[entry.key] = entry.value if isinstance(entry.value, date) else date.fromisoformat(str(entry.value))
+    return dated
+
+
+def _quarter_of(day: date) -> int:
+    return (day.month - 1) // 3 + 1
+
+
+_POLICY_DATES = _policy_dates()
+_BOUNDARY_303 = _POLICY_DATES["boundary.303.date"]
+_BOUNDARY_100 = _POLICY_DATES["boundary.100.date"]
+_BOUNDARY_200 = _POLICY_DATES["boundary.200.date"]
+_RESTRICTED_FROM_130 = _POLICY_DATES["restriction.130.date"]
+_LATER_PERIOD_369 = _POLICY_DATES["later_period_adjustment.369.date"]
+_PRE = frozenset({"complementaria", "sustitutiva"})
+_POST = frozenset({"rectificativa"})
+
+
 def test_only_the_evidenced_modelos_have_dated_restrictions() -> None:
     with validating_governed_facts(_candidate()), reading_dated_facts_below_support():
-        policy = resolve_amendment_regime_policy(effective_date=date(2019, 1, 1))
+        policy = resolve_amendment_regime_policy(effective_date=_RESTRICTED_FROM_130)
         assert set(policy.kind_restrictions) == {"130", "131", "303", "100", "200"}
-        for modelo, boundary in (("303", date(2024, 9, 30)), ("100", date(2024, 12, 31)), ("200", date(2024, 12, 31))):
+        for modelo, boundary in (("303", _BOUNDARY_303), ("100", _BOUNDARY_100), ("200", _BOUNDARY_200)):
             assert policy.rectificativa_effective_from[modelo] == boundary
             assert policy.kind_restrictions[modelo].effective_from == boundary
             assert policy.kind_restrictions[modelo].permitted_kinds == frozenset({"rectificativa"})
+        quarter = _quarter_of(_RESTRICTED_FROM_130)
+        before = (
+            Period.from_year_and_code(_RESTRICTED_FROM_130.year, f"{quarter - 1}T")
+            if quarter > 1
+            else Period.from_year_and_code(_RESTRICTED_FROM_130.year - 1, "4T")
+        )
+        first = Period.from_year_and_code(_RESTRICTED_FROM_130.year, f"{quarter}T")
         for modelo in ("130", "131"):
-            assert policy.kind_restrictions[modelo].effective_from == date(2019, 1, 1)
-            assert permitted_amendment_kind_values_for_period(
-                modelo, Period.from_year_and_code(2018, "4T")
-            ) == frozenset({"complementaria", "sustitutiva"})
-            assert permitted_amendment_kind_values_for_period(
-                modelo, Period.from_year_and_code(2019, "1T")
-            ) == frozenset({"complementaria"})
+            assert policy.kind_restrictions[modelo].effective_from == _RESTRICTED_FROM_130
+            assert permitted_amendment_kind_values_for_period(modelo, before) == _PRE
+            assert permitted_amendment_kind_values_for_period(modelo, first) == frozenset({"complementaria"})
 
 
 def test_every_supported_year_keeps_only_complementaria_for_m130_and_m131() -> None:
@@ -86,35 +117,33 @@ def test_existing_application_guard_refuses_unsupported_kinds_in_the_candidate_s
 @pytest.mark.parametrize(
     ("modelo", "year", "code", "expected"),
     [
-        ("303", 2024, "2T", {"complementaria", "sustitutiva"}),
-        ("303", 2024, "08", {"complementaria", "sustitutiva"}),
-        ("303", 2024, "3T", {"rectificativa"}),
-        ("303", 2024, "09", {"rectificativa"}),
-        ("303", 2024, "4T", {"rectificativa"}),
-        ("100", 2023, "0A", {"complementaria", "sustitutiva"}),
-        ("100", 2024, "0A", {"rectificativa"}),
-        ("200", 2023, "0A", {"complementaria", "sustitutiva"}),
-        ("200", 2024, "0A", {"rectificativa"}),
-        ("200", 2025, "0A", {"rectificativa"}),
-        ("349", 2024, "1T", {"complementaria", "sustitutiva"}),
-        ("390", 2024, "0A", {"complementaria", "sustitutiva"}),
-        ("369", 2021, "2T", {"complementaria", "sustitutiva"}),
-        ("369", 2021, "3T", set()),
+        ("303", _BOUNDARY_303.year, f"{_quarter_of(_BOUNDARY_303) - 1}T", _PRE),
+        ("303", _BOUNDARY_303.year, f"{_BOUNDARY_303.month - 1:02d}", _PRE),
+        ("303", _BOUNDARY_303.year, f"{_quarter_of(_BOUNDARY_303)}T", _POST),
+        ("303", _BOUNDARY_303.year, f"{_BOUNDARY_303.month:02d}", _POST),
+        ("303", _BOUNDARY_303.year, f"{_quarter_of(_BOUNDARY_303) + 1}T", _POST),
+        ("100", _BOUNDARY_100.year - 1, "0A", _PRE),
+        ("100", _BOUNDARY_100.year, "0A", _POST),
+        ("200", _BOUNDARY_200.year - 1, "0A", _PRE),
+        ("200", _BOUNDARY_200.year, "0A", _POST),
+        ("200", _BOUNDARY_200.year + 1, "0A", _POST),
+        ("349", _BOUNDARY_303.year, "1T", _PRE),
+        ("390", _BOUNDARY_303.year, "0A", _PRE),
+        ("369", _LATER_PERIOD_369.year, f"{_quarter_of(_LATER_PERIOD_369) - 1}T", _PRE),
+        ("369", _LATER_PERIOD_369.year, f"{_quarter_of(_LATER_PERIOD_369)}T", frozenset()),
     ],
 )
 def test_candidate_restricts_post_boundary_periods_and_preserves_other_procedures(
-    modelo: str, year: int, code: str, expected: set[str]
+    modelo: str, year: int, code: str, expected: frozenset[str]
 ) -> None:
     with validating_governed_facts(_candidate()), reading_dated_facts_below_support():
-        assert permitted_amendment_kind_values_for_period(modelo, Period.from_year_and_code(year, code)) == frozenset(
-            expected
-        )
+        assert permitted_amendment_kind_values_for_period(modelo, Period.from_year_and_code(year, code)) == expected
 
 
 def test_every_supported_year_intersects_the_dated_rectificativa_regime() -> None:
     candidate = _candidate()
-    pre = frozenset({"complementaria", "sustitutiva"})
-    post = frozenset({"rectificativa"})
+    pre = _PRE
+    post = _POST
     with validating_governed_facts(candidate):
         for year in range(candidate.support.floor, candidate.support.horizon + 1):
             for code in (
@@ -136,57 +165,38 @@ def test_every_supported_year_intersects_the_dated_rectificativa_regime() -> Non
                 "4T",
             ):
                 period = Period.from_year_and_code(year, code)
-                expected = post if period.end_date >= date(2024, 9, 30) else pre
+                expected = post if period.end_date >= _BOUNDARY_303 else pre
                 assert permitted_amendment_kind_values_for_period("303", period) == expected, (year, code)
-            for modelo in ("100", "200"):
-                expected = post if year >= 2024 else pre
-                assert (
-                    permitted_amendment_kind_values_for_period(modelo, Period.from_year_and_code(year, "0A"))
-                    == expected
-                ), (modelo, year)
+            for modelo, boundary in (("100", _BOUNDARY_100), ("200", _BOUNDARY_200)):
+                period = Period.from_year_and_code(year, "0A")
+                expected = post if period.end_date >= boundary else pre
+                assert permitted_amendment_kind_values_for_period(modelo, period) == expected, (modelo, year)
 
 
-def test_sociedades_procedure_evidence_does_not_promote_the_2024_revision() -> None:
+def test_sociedades_procedure_evidence_does_not_promote_the_boundary_year_revision() -> None:
     modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "200"))
-    assert modelo.revisions["2024"].authority_grade is RegistryAuthorityGrade.CALCULATION
-    assert modelo.revisions["2025-y-siguientes"].authority_grade is RegistryAuthorityGrade.FILING
+    boundary_revision = revision_covering("200", _BOUNDARY_200.year)
+    assert modelo.revisions[boundary_revision.id].authority_grade is RegistryAuthorityGrade.CALCULATION
+    assert modelo.revisions[open_ended_revision("200").id].authority_grade is RegistryAuthorityGrade.FILING
 
 
 @pytest.mark.parametrize(
-    ("modelo", "source_id", "corpus_path", "digest", "retrieved_at", "source_url", "edition"),
+    ("modelo", "source_id", "corpus_path"),
     [
-        (
-            "303",
-            "aeat-manual-iva-2025",
-            "corpus/manuals/iva/2025/source.pdf",
-            "e4f800972e06466ac39f893ed6a4118bf9594b0bad52301bc763eacb92db18a3",
-            date(2026, 6, 8),
-            "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2025.pdf",
-            2025,
-        ),
-        (
-            "100",
-            "aeat-renta-2025-manual-parte1",
-            "corpus/manuals/renta/2025/part1/source.pdf",
-            "02c6e8300a7f56c8c24aa947d4c39c5657c9a9eda6f5d727d44b4112d7de15d4",
-            date(2026, 7, 22),
-            "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf",
-            2025,
-        ),
-        (
-            "200",
-            "aeat-modelo-200-manual-2024",
-            "corpus/manuals/sociedades/2024/source.pdf",
-            "ad02f914246632dcd7ab30f3e7280daf3501be6ee3938237e2ebfe7328ff8179",
-            date(2026, 5, 6),
-            "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/Sociedades/Manual_Sociedades_2024.pdf",
-            2024,
-        ),
+        ("303", "aeat-manual-iva-2025", "corpus/manuals/iva/2025/source.pdf"),
+        ("100", "aeat-renta-2025-manual-parte1", "corpus/manuals/renta/2025/part1/source.pdf"),
+        ("200", "aeat-modelo-200-manual-2024", "corpus/manuals/sociedades/2024/source.pdf"),
     ],
 )
 def test_rectificativa_restrictions_cite_exact_pinned_affirmative_procedure_guidance(
-    modelo: str, source_id: str, corpus_path: str, digest: str, retrieved_at: date, source_url: str, edition: int
+    modelo: str, source_id: str, corpus_path: str
 ) -> None:
+    # The digest, publisher URL, fetch instant and edition are what the corpus manifest beside the pdf recorded.
+    manifest = json.loads(bundled_path(corpus_path).with_name("manifest.json").read_text(encoding="utf-8"))
+    digest = manifest["sha256"]
+    source_url = manifest["source_pdf_url"]
+    retrieved_at = datetime.fromisoformat(manifest["fetched_at"]).astimezone(ZoneInfo("Europe/Madrid")).date()
+    edition = manifest["year"]
     variant = _candidate().catalogue.facts["amendment-regime-policy"].variants[0]
     assert isinstance(variant.payload, MappingFactPayload)
     entries = {entry.key: entry.value for entry in variant.payload.entries}
