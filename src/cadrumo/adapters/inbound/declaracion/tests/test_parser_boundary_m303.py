@@ -23,9 +23,12 @@ from .parser_boundary_support import (
     MODELO_303_SYNTHETIC_FIXTURE,
     expected_casilla_values,
     expected_period,
+    specimen_period,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
+
+_SPECIMEN_PERIOD = specimen_period(MODELO_303_SYNTHETIC_FIXTURE)
 
 
 def test_parser_extracts_modelo_303_targets_from_synthetic_fixture() -> None:
@@ -42,12 +45,12 @@ def test_parser_extracts_modelo_303_targets_from_synthetic_fixture() -> None:
     filing = parse_declaracion(
         MODELO_303_SYNTHETIC_FIXTURE,
         modelo_override="303",
-        año_override=2024,
+        año_override=_SPECIMEN_PERIOD.filing_year,
         period_override="1T",
     )
 
     assert filing.modelo == "303"
-    assert filing.period == expected_period(2024, "1T")
+    assert filing.period == expected_period(_SPECIMEN_PERIOD.filing_year, "1T")
     assert filing.tax_id == "Y0001006P"
     values = {value.casilla_id: value.printed_value for value in filing.values}
     assert set(values.keys()) == M303_CURRENT_PROFILE_CASILLAS
@@ -70,5 +73,5 @@ def test_parser_extracts_modelo_303_targets_from_synthetic_fixture() -> None:
         assert values[casilla_id] == expected_value
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "303"
-    assert filing.registry_snapshot_ref.modelo_year == 2024
+    assert filing.registry_snapshot_ref.modelo_year == _SPECIMEN_PERIOD.filing_year
     assert filing.registry_snapshot_ref.period == "1T"

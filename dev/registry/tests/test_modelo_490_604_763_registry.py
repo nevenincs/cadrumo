@@ -31,12 +31,14 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from _pytest.mark import ParameterSet
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.tax_domain import TaxDomain
 from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError, NoRevisionForPeriodError
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..conformance.registry_schema_support import committed_modelo
@@ -122,7 +124,7 @@ def test_committed_definition_legal_authority_and_deadline_windows(
     if mid == "763":
         # The tax opened mid-2012: its first quarter has no filing window,
         # and Orden EHA/1881/2011 art. 4 dates the second through fourth.
-        expected_periods_by_year[2012] = ("2T", "3T", "4T")
+        expected_periods_by_year[_OPENING_EXERCISE_763] = ("2T", "3T", "4T")
     for year, found in sorted(by_year.items()):
         assert sorted(found) == sorted(expected_periods_by_year[year]), (
             f"modelo {mid} filing year {year} declares periods {sorted(found)}, "
@@ -131,37 +133,57 @@ def test_committed_definition_legal_authority_and_deadline_windows(
         )
 
 
+_REVISIONS_763 = authored_revisions("763")
+_OPENING_EXERCISE_763 = _REVISIONS_763[0].valid_from.year
+
+
+def _design_763(revision_index: int | None) -> str:
+    """The design source a revision cites: the one its own first exercise names, or the enrolled layout."""
+    if revision_index is None:
+        return "enrolled-modelo-763-layout"
+    return f"aeat-dr-763-{_REVISIONS_763[revision_index].valid_from.year}"
+
+
+def _case_763(
+    revision_index: int,
+    exercise_offset: int,
+    period: str,
+    design_index: int | None,
+    opens: tuple[int, int, int],
+    closes: tuple[int, int, int],
+) -> ParameterSet:
+    """One evidenced coordinate: its revision, its exercise counted from that revision's first, and its window.
+
+    ``opens`` and ``closes`` are (year offset from the filing year, month, day).
+    """
+    revision = _REVISIONS_763[revision_index]
+    filing_year = revision.valid_from.year + exercise_offset
+    return pytest.param(
+        filing_year,
+        period,
+        str(revision.id),
+        _design_763(design_index),
+        f"modelo-763-{filing_year}-{period.lower()}",
+        date(filing_year + opens[0], opens[1], opens[2]),
+        date(filing_year + closes[0], closes[1], closes[2]),
+    )
+
+
 @pytest.mark.parametrize(
     ("filing_year", "period", "revision_id", "layout_source", "deadline_id", "opens_on", "closes_on"),
     [
-        (2012, "2T", "2012-2014", "aeat-dr-763-2012", "modelo-763-2012-2t", date(2012, 7, 1), date(2012, 7, 31)),
-        (2012, "3T", "2012-2014", "aeat-dr-763-2012", "modelo-763-2012-3t", date(2012, 10, 1), date(2012, 10, 31)),
-        # The trimestre the former 2012-2t-3t / 2013-2014 split served from neither
-        # side. Orden EHA/1881/2011 art. 4 puts it in the month after the quarter.
-        (2012, "4T", "2012-2014", "aeat-dr-763-2012", "modelo-763-2012-4t", date(2013, 1, 1), date(2013, 1, 31)),
-        (2013, "1T", "2012-2014", "aeat-dr-763-2012", "modelo-763-2013-1t", date(2013, 4, 1), date(2013, 4, 30)),
-        (2014, "4T", "2012-2014", "aeat-dr-763-2012", "modelo-763-2014-4t", date(2015, 1, 1), date(2015, 1, 31)),
-        (2015, "1T", "2015-2017", "aeat-dr-763-2015", "modelo-763-2015-1t", date(2015, 4, 1), date(2015, 4, 30)),
-        (2017, "4T", "2015-2017", "aeat-dr-763-2015", "modelo-763-2017-4t", date(2018, 1, 1), date(2018, 1, 31)),
-        (2018, "3T", "2018-1t-3t", "aeat-dr-763-2015", "modelo-763-2018-3t", date(2018, 10, 1), date(2018, 10, 31)),
-        (
-            2018,
-            "4T",
-            "2018-4t",
-            "enrolled-modelo-763-layout",
-            "modelo-763-2018-4t",
-            date(2019, 1, 1),
-            date(2019, 1, 31),
-        ),
-        (
-            2019,
-            "1T",
-            "2019-y-siguientes",
-            "enrolled-modelo-763-layout",
-            "modelo-763-2019-1t",
-            date(2019, 4, 1),
-            date(2019, 4, 30),
-        ),
+        _case_763(0, 0, "2T", 0, (0, 7, 1), (0, 7, 31)),
+        _case_763(0, 0, "3T", 0, (0, 10, 1), (0, 10, 31)),
+        # The trimestre the former split served from neither side. Orden EHA/1881/2011 art. 4 puts it
+        # in the month after the quarter.
+        _case_763(0, 0, "4T", 0, (1, 1, 1), (1, 1, 31)),
+        _case_763(0, 1, "1T", 0, (0, 4, 1), (0, 4, 30)),
+        _case_763(0, 2, "4T", 0, (1, 1, 1), (1, 1, 31)),
+        _case_763(1, 0, "1T", 1, (0, 4, 1), (0, 4, 30)),
+        _case_763(1, 2, "4T", 1, (1, 1, 1), (1, 1, 31)),
+        _case_763(2, 0, "3T", 1, (0, 10, 1), (0, 10, 31)),
+        _case_763(3, 0, "4T", None, (1, 1, 1), (1, 1, 31)),
+        _case_763(4, 0, "1T", None, (0, 4, 1), (0, 4, 30)),
     ],
 )
 def test_modelo_763_selects_each_evidenced_design_era_with_its_deadline(
@@ -225,7 +247,7 @@ def test_modelo_763_projects_the_current_design_through_every_supported_year() -
             }
 
 
-@pytest.mark.parametrize("filing_year,period", [(2011, "4T"), (2012, "1T")])
+@pytest.mark.parametrize("filing_year,period", [(_OPENING_EXERCISE_763 - 1, "4T"), (_OPENING_EXERCISE_763, "1T")])
 def test_modelo_763_refuses_the_unevidenced_opening_coordinates(filing_year: int, period: str) -> None:
     """The tax had no filing window before its second 2012 quarter; no cadence inference fills one."""
     modelo, _catalogues = committed_modelo("763")

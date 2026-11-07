@@ -24,6 +24,7 @@ from ......domain.calculations.registry.export_parse import parse_export_payload
 from ......domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ......domain.calculations.registry.schema import RegistrySnapshot
 from ......domain.calculations.registry.schema_input_kind import InputKind
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from .....persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..declarations_fetch import assert_declarations_read_browser_action, assert_declarations_read_http
 from ..declarations_observations import (
@@ -45,11 +46,14 @@ from .declarations_support import (
     FIXTURE_ROOT,
     MODELO_130_COMPUTED_CASILLAS,
     REGISTER_DOWNLOAD_URL,
+    SUBMITTED_FILE_100_2023_0A,
+    SUBMITTED_FILE_130_2026_1T,
     declaration_pdf_payload,
     filed_observation,
     modelo_130_snapshot,
     modelo_snapshot,
     resolve_previous_filing_from_observations,
+    specimen_exercise,
     submitted_file_payload,
     value_valid_m100_submitted_payload,
 )
@@ -86,6 +90,12 @@ _M130_SALDO_NEGATIVO_FIN_PERIODO_CASILLA: CasillaId = validated_casilla_id(
     surface="_M130_SALDO_NEGATIVO_FIN_PERIODO_CASILLA",
 )
 _SUBMITTED_FILE_111_2025_1T = FIXTURE_ROOT / "submitted-files" / "modelo-111-2025-1T-redacted.txt"
+_YEAR = filing_year_envelope().horizon
+# The redacted specimens are filings of fixed exercises, which each prints in its own header.
+_M100_EJERCICIO = specimen_exercise(SUBMITTED_FILE_100_2023_0A)
+_M111_EJERCICIO = specimen_exercise(_SUBMITTED_FILE_111_2025_1T)
+_M130_EJERCICIO = specimen_exercise(SUBMITTED_FILE_130_2026_1T)
+_M100_NEWEST = newest_authored_edition("100")
 _M111_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("28", surface="_M111_RETENCIONES_CASILLA")
 _M111_RESULTADO_CASILLA: CasillaId = validated_casilla_id("30", surface="_M111_RESULTADO_CASILLA")
 
@@ -101,7 +111,7 @@ def _submitted_file_artefact(body: bytes) -> FiledDeclaracionArtefact:
         content_type="application/octet-stream",
         byte_count=len(body),
         sha256=hashlib.sha256(body).hexdigest(),
-        captured_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+        captured_at=datetime(_YEAR, 4, 20, 10, 0, 0, tzinfo=UTC),
     )
 
 
@@ -122,11 +132,11 @@ def _previous_net_income_source(snapshot: RegistrySnapshot):
 def _m130_submitted_file_record(body: bytes) -> tuple[ExpedientesDeclaration, FiledDeclaracionArtefact]:
     declaration = ExpedientesDeclaration(
         modelo="130",
-        ejercicio=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        expediente_id="202610013522222A",
+        ejercicio=_M130_EJERCICIO,
+        period=Period.from_year_and_code(_M130_EJERCICIO, "1T"),
+        expediente_id=f"{_M130_EJERCICIO}10013522222A",
         estado="ALTA",
-        presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+        presented_at=datetime(_M130_EJERCICIO, 4, 20, 10, 0, 0, tzinfo=UTC),
         justificante_link_text="Ver",
         archive_link_text="Ver",
     )
@@ -137,11 +147,11 @@ def _m130_submitted_file_record(body: bytes) -> tuple[ExpedientesDeclaration, Fi
 def _m100_submitted_file_record(body: bytes) -> tuple[ExpedientesDeclaration, FiledDeclaracionArtefact]:
     declaration = ExpedientesDeclaration(
         modelo="100",
-        ejercicio=2023,
-        period=Period.from_year_and_code(2023, "0A"),
-        expediente_id="202310013522222A",
+        ejercicio=_M100_EJERCICIO,
+        period=Period.from_year_and_code(_M100_EJERCICIO, "0A"),
+        expediente_id=f"{_M100_EJERCICIO}10013522222A",
         estado="ALTA",
-        presented_at=datetime(2024, 2, 1, 19, 15, 34, tzinfo=UTC),
+        presented_at=datetime(_M100_EJERCICIO + 1, 2, 1, 19, 15, 34, tzinfo=UTC),
         justificante_link_text="Ver",
         archive_link_text="Ver",
     )
@@ -151,7 +161,7 @@ def _m100_submitted_file_record(body: bytes) -> tuple[ExpedientesDeclaration, Fi
         content_type="application/xml",
         byte_count=len(body),
         sha256=hashlib.sha256(body).hexdigest(),
-        captured_at=datetime(2026, 5, 5, 10, 0, 0, tzinfo=UTC),
+        captured_at=datetime(_YEAR, 5, 5, 10, 0, 0, tzinfo=UTC),
     )
     return declaration, artefact
 
@@ -205,11 +215,11 @@ class TestSubmittedFileObservation:
         text, including their significant leading zeros.
         """
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
-            snapshot = modelo_snapshot("180", filing_year=2026, period="0A", operation=_authority_operation_for_test)
+            snapshot = modelo_snapshot("180", filing_year=_YEAR, period="0A", operation=_authority_operation_for_test)
             declarante_fields: dict[tuple[int, int], str] = {
                 (1, 1): "1",
                 (2, 4): "180",
-                (5, 8): "2026",
+                (5, 8): str(_YEAR),
                 (9, 17): "00011111Z",
                 (18, 57): "DECLARANTE EJEMPLO".ljust(40),
                 (58, 58): "T",
@@ -220,7 +230,7 @@ class TestSubmittedFileObservation:
             perceptor_fields: dict[tuple[int, int], str] = {
                 (1, 1): "2",
                 (2, 4): "180",
-                (5, 8): "2026",
+                (5, 8): str(_YEAR),
                 (9, 17): "00011111Z",
                 (18, 26): "00098765Z",
                 (27, 35): "00087654X",
@@ -230,7 +240,7 @@ class TestSubmittedFileObservation:
                 (79, 92): "N" + "2500".zfill(13),
                 (93, 96): "0000",
                 (97, 109): "475".zfill(13),
-                (110, 113): "2025",
+                (110, 113): str(_YEAR - 1),
                 (114, 114): "1",
                 (115, 134): "1234567VK4713C0001XY",
                 (135, 139): "CL".ljust(5),
@@ -260,11 +270,11 @@ class TestSubmittedFileObservation:
             body = (_record(500, declarante_fields) + _record(500, perceptor_fields)).encode("latin-1")
             declaration = ExpedientesDeclaration(
                 modelo="180",
-                ejercicio=2026,
-                period=Period.from_year_and_code(2026, "0A"),
-                expediente_id="202610013522223B",
+                ejercicio=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "0A"),
+                expediente_id=f"{_YEAR}10013522222B",
                 estado="ALTA",
-                presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+                presented_at=datetime(_YEAR, 4, 20, 10, 0, 0, tzinfo=UTC),
                 justificante_link_text="Ver",
                 archive_link_text="Ver",
             )
@@ -356,13 +366,13 @@ class TestSubmittedFileObservation:
                 (
                     filed_observation(
                         modelo=source_reference.source_modelo,
-                        ejercicio=2025,
+                        ejercicio=_M130_EJERCICIO - 1,
                         period=source_reference.required_periods[0],
                         casilla_values=previous_year_values,
                     ),
                 ),
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
+                filing_year=_M130_EJERCICIO,
+                period=Period.from_year_and_code(_M130_EJERCICIO, "1T"),
                 operation=_authority_operation_for_test,
             )
             binding_values["modelo-130-pagos-fraccionados-anteriores"] = prior_payments_value
@@ -378,7 +388,7 @@ class TestSubmittedFileObservation:
             calculated = calculate_registry_snapshot(
                 snapshot,
                 inputs=input_values,
-                date_context={"filing_period": date(2026, 3, 31)},
+                date_context={"filing_period": date(_M130_EJERCICIO, 3, 31)},
                 binding_values=binding_values,
                 enum_binding_values={"modelo-130-estimacion-directa-modalidad": "directa_normal"},
             )
@@ -422,16 +432,18 @@ class TestSubmittedFileObservation:
 
     def test_modelo_111_live_redacted_submitted_file_values_become_observed_casillas(self) -> None:
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
-            snapshot = modelo_snapshot("111", filing_year=2025, period="1T", operation=_authority_operation_for_test)
+            snapshot = modelo_snapshot(
+                "111", filing_year=_M111_EJERCICIO, period="1T", operation=_authority_operation_for_test
+            )
             resolved = resolve_export_layout(snapshot)
             body = submitted_file_payload(_SUBMITTED_FILE_111_2025_1T)
             declaration = ExpedientesDeclaration(
                 modelo="111",
-                ejercicio=2025,
-                period=Period.from_year_and_code(2025, "1T"),
-                expediente_id="202511113520436S",
+                ejercicio=_M111_EJERCICIO,
+                period=Period.from_year_and_code(_M111_EJERCICIO, "1T"),
+                expediente_id=f"{_M111_EJERCICIO}11113520436S",
                 estado="ALTA",
-                presented_at=datetime(2025, 7, 21, 20, 15, 9, tzinfo=UTC),
+                presented_at=datetime(_M111_EJERCICIO, 7, 21, 20, 15, 9, tzinfo=UTC),
                 justificante_link_text="Ver",
                 archive_link_text="Ver",
             )
@@ -441,7 +453,7 @@ class TestSubmittedFileObservation:
                 content_type="application/octet-stream",
                 byte_count=len(body),
                 sha256=hashlib.sha256(body).hexdigest(),
-                captured_at=datetime(2026, 5, 5, 6, 9, 7, tzinfo=UTC),
+                captured_at=datetime(_YEAR, 5, 5, 6, 9, 7, tzinfo=UTC),
             )
 
             observed = observed_casillas_from_submitted_file(
@@ -477,7 +489,9 @@ class TestSubmittedFileObservation:
 
     def test_modelo_100_redacted_xml_dictionary_values_become_observed_casillas(self) -> None:
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
-            snapshot = modelo_snapshot("100", filing_year=2023, period="0A", operation=_authority_operation_for_test)
+            snapshot = modelo_snapshot(
+                "100", filing_year=_M100_EJERCICIO, period="0A", operation=_authority_operation_for_test
+            )
             body = value_valid_m100_submitted_payload()
             declaration, artefact = _m100_submitted_file_record(body)
 
@@ -517,7 +531,9 @@ class TestSubmittedFileObservation:
 
     def test_modelo_100_redacted_xml_observation_roundtrips_through_encrypted_store(self, tmp_path: Path) -> None:
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
-            snapshot = modelo_snapshot("100", filing_year=2023, period="0A", operation=_authority_operation_for_test)
+            snapshot = modelo_snapshot(
+                "100", filing_year=_M100_EJERCICIO, period="0A", operation=_authority_operation_for_test
+            )
             body = value_valid_m100_submitted_payload()
             declaration, artefact = _m100_submitted_file_record(body)
             store = FiledDeclaracionObservationStore(
@@ -575,11 +591,11 @@ class TestDeclaracionPdfObservation:
             }
             declaration = ExpedientesDeclaration(
                 modelo="130",
-                ejercicio=2026,
-                period=Period.from_year_and_code(2026, "1T"),
-                expediente_id="202610013522222A",
+                ejercicio=_M130_EJERCICIO,
+                period=Period.from_year_and_code(_M130_EJERCICIO, "1T"),
+                expediente_id=f"{_M130_EJERCICIO}10013522222A",
                 estado="ALTA",
-                presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+                presented_at=datetime(_M130_EJERCICIO, 4, 20, 10, 0, 0, tzinfo=UTC),
                 justificante_link_text="Ver",
                 declaration_copy_link_text="Ver",
             )
@@ -597,11 +613,11 @@ class TestDeclaracionPdfObservation:
             snapshot = modelo_130_snapshot(operation=_authority_operation_for_test)
             declaration = ExpedientesDeclaration(
                 modelo="130",
-                ejercicio=2026,
-                period=Period.from_year_and_code(2026, "1T"),
-                expediente_id="20269999CANARY123",
+                ejercicio=_M130_EJERCICIO,
+                period=Period.from_year_and_code(_M130_EJERCICIO, "1T"),
+                expediente_id=f"{_M130_EJERCICIO}9999CANARY123",
                 estado="ALTA",
-                presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+                presented_at=datetime(_M130_EJERCICIO, 4, 20, 10, 0, 0, tzinfo=UTC),
                 justificante_link_text="Ver",
                 declaration_copy_link_text="Ver",
             )
@@ -616,12 +632,14 @@ class TestDeclaracionPdfObservation:
             err = exc_info.value
             assert err.__cause__ is None
             assert err.__context__ is None
-            assert "20269999CANARY123" not in str(err)
-            assert "20269999CANARY123" not in str(getattr(err, "context", {}))
+            assert f"{_M130_EJERCICIO}9999CANARY123" not in str(err)
+            assert f"{_M130_EJERCICIO}9999CANARY123" not in str(getattr(err, "context", {}))
 
     def test_modelo_111_declaration_pdf_values_become_observed_casillas(self) -> None:
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
-            snapshot = modelo_snapshot("111", filing_year=2025, period="1T", operation=_authority_operation_for_test)
+            snapshot = modelo_snapshot(
+                "111", filing_year=_M111_EJERCICIO, period="1T", operation=_authority_operation_for_test
+            )
             profile = snapshot.extraction_profiles["modelo-111-declaracion-pdf"]
             values = {
                 target.casilla_id: Decimal(index).quantize(Decimal("0.01"))
@@ -629,11 +647,11 @@ class TestDeclaracionPdfObservation:
             }
             declaration = ExpedientesDeclaration(
                 modelo="111",
-                ejercicio=2025,
-                period=Period.from_year_and_code(2025, "1T"),
-                expediente_id="202511113520436S",
+                ejercicio=_M111_EJERCICIO,
+                period=Period.from_year_and_code(_M111_EJERCICIO, "1T"),
+                expediente_id=f"{_M111_EJERCICIO}11113520436S",
                 estado="ALTA",
-                presented_at=datetime(2025, 7, 21, 20, 15, 9, tzinfo=UTC),
+                presented_at=datetime(_M111_EJERCICIO, 7, 21, 20, 15, 9, tzinfo=UTC),
                 justificante_link_text="Ver",
                 declaration_copy_link_text="Ver",
             )
@@ -641,7 +659,7 @@ class TestDeclaracionPdfObservation:
             observed = observed_casillas_from_declaration_pdf(
                 snapshot=snapshot,
                 declaration=declaration,
-                body=declaration_pdf_payload(values, modelo="111", ejercicio=2025, profile=profile),
+                body=declaration_pdf_payload(values, modelo="111", ejercicio=_M111_EJERCICIO, profile=profile),
             )
 
             assert {item.casilla_id: Decimal(item.value) for item in observed} == values
@@ -652,7 +670,9 @@ class TestReadOperationGuard:
 
     def test_modelo_100_declaration_reader_uses_snapshot_guard(self) -> None:
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
-            snapshot = modelo_snapshot("100", filing_year=2025, period="0A", operation=_authority_operation_for_test)
+            snapshot = modelo_snapshot(
+                "100", filing_year=_M100_NEWEST, period="0A", operation=_authority_operation_for_test
+            )
             policy = read_guard_policy_from_snapshot(snapshot)
 
             assert policy.classification == "authenticated_read_surface"
@@ -720,13 +740,13 @@ class TestFiledObservationBindings:
                 (
                     filed_observation(
                         modelo=source_reference.source_modelo,
-                        ejercicio=2025,
+                        ejercicio=_M130_EJERCICIO - 1,
                         period=source_reference.required_periods[0],
                         casilla_values=casilla_values,
                     ),
                 ),
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
+                filing_year=_M130_EJERCICIO,
+                period=Period.from_year_and_code(_M130_EJERCICIO, "1T"),
                 operation=_authority_operation_for_test,
             )
 
@@ -743,7 +763,7 @@ class TestFiledObservationBindings:
             )
             observation = filed_observation(
                 modelo=source_reference.source_modelo,
-                ejercicio=2025,
+                ejercicio=_M130_EJERCICIO - 1,
                 period=source_reference.required_periods[0],
                 casilla_values=casilla_values,
             )
@@ -753,8 +773,8 @@ class TestFiledObservationBindings:
             resolved = resolve_previous_filing_from_observations(
                 snapshot.revision,
                 (loaded,),
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
+                filing_year=_M130_EJERCICIO,
+                period=Period.from_year_and_code(_M130_EJERCICIO, "1T"),
                 operation=_authority_operation_for_test,
             )
 
@@ -766,7 +786,7 @@ class TestFiledObservationBindings:
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
             observation = filed_observation(
                 modelo="100",
-                ejercicio=2025,
+                ejercicio=_M100_NEWEST,
                 period="0A",
                 casilla_values={_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: Decimal("1")},
                 source_artefact_kind="justificante_pdf",
@@ -789,8 +809,8 @@ class TestFiledObservationBindings:
             resolved = resolve_previous_filing_from_observations(
                 snapshot.revision,
                 (),
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
+                filing_year=_M130_EJERCICIO,
+                period=Period.from_year_and_code(_M130_EJERCICIO, "1T"),
                 operation=_authority_operation_for_test,
             )
 
@@ -807,7 +827,7 @@ class TestFiledObservationBindings:
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
             observation = filed_observation(
                 modelo="100",
-                ejercicio=2025,
+                ejercicio=_M100_NEWEST,
                 period="0A",
                 casilla_values={_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: "no-decimal"},
             )
@@ -825,7 +845,7 @@ class TestFiledObservationBindings:
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
             observation = filed_observation(
                 modelo="100",
-                ejercicio=2025,
+                ejercicio=_M100_NEWEST,
                 period="0A",
                 casilla_values={
                     _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: Decimal("1234.56"),
@@ -849,7 +869,7 @@ class TestFiledObservationBindings:
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
             observation = filed_observation(
                 modelo="100",
-                ejercicio=2025,
+                ejercicio=_M100_NEWEST,
                 period="0A",
                 casilla_values={_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: Decimal("1")},
             ).model_copy(
@@ -882,7 +902,7 @@ class TestFiledObservationBindings:
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
             observation = filed_observation(
                 modelo="100",
-                ejercicio=2025,
+                ejercicio=_M100_NEWEST,
                 period="0A",
                 casilla_values={_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: Decimal("1")},
                 extraction_coverage={"submitted_file": 0.5},

@@ -25,6 +25,7 @@ from cadrumo.core.filing_timeliness import FilingTimeliness
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind, FilingDeclarationKind, ModeloRecordStatus
 from cadrumo.entrypoints.adapter_composition_work_ports import (
@@ -37,6 +38,7 @@ from cadrumo.entrypoints.tests.filing_record_read_support import persisted_filin
 from cadrumo.entrypoints.tests.profile_persistence.import_flow_support import (
     IMPORT_EXPENSE_CASILLA,
     IMPORT_INCOME_CASILLA,
+    IMPORT_UNRECORDED_BINDINGS,
     PROFILE_ID,
     T1,
     T2,
@@ -298,6 +300,43 @@ def test_import_after_a_confirmed_filing_without_a_declared_kind_is_refused(
     assert fr_repo.load() == before
 
 
+def test_amending_a_figure_that_reaches_an_unrecorded_modality_refuses_and_names_it(
+    repos: Repos, *, operation: PinnedAuthorityOperation
+) -> None:
+    """Box 01 feeds box 02 through the RIRPF art. 30.2.4a provision, which depends on the estimación directa modality.
+
+    An import records casilla values only, so the correction reaches a fact the filing never stated. A historical
+    correction does not read today's profile: the refusal is a catalogued one that names the missing fact.
+    """
+
+    wu_repo, _cr_repo, _fr_repo, _, bv_repo = repos
+    work_unit = seed_work_unit(wu_repo, bv_repo, operation=operation)
+    persist_matching_justificante("JUSTBASELINE2", work_unit, captured_at=T1)
+    imported = import_external_filing(
+        repos,
+        work_unit,
+        casilla_values={IMPORT_INCOME_CASILLA: Decimal("1500"), IMPORT_EXPENSE_CASILLA: Decimal("300")},
+        evidence_reference_id="JUSTBASELINE2",
+        expected_tax_id=TAX_ID,
+        clock=T1,
+    )
+
+    with bundled_indexed_authority().operation() as amend_operation, pytest.raises(RegistryValidationError) as raised:
+        amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=work_unit.bucket_id, operation=amend_operation),
+            from_filing_record_id=imported.filing_record_id,
+            overrides={IMPORT_INCOME_CASILLA: Decimal("1650")},
+            amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
+            reason="the modality was not stated",
+            actor="operator-A",
+            clock=T2,
+        )
+
+    assert raised.value.translated_message == "errors.calc.formula_recalculation_binding_unrecorded"
+    assert raised.value.context is not None
+    assert "modelo-130-estimacion-directa-modalidad" in str(raised.value.context["binding_ids"])
+
+
 def test_import_then_amend_unlocks_amendment_path(repos: Repos, *, operation: PinnedAuthorityOperation) -> None:
     """The import path produces a baseline the amend path accepts.
     This is the canonical production flow for correcting an
@@ -327,6 +366,7 @@ def test_import_then_amend_unlocks_amendment_path(repos: Repos, *, operation: Pi
             ports=build_amendment_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             from_filing_record_id=imported.filing_record_id,
             overrides={IMPORT_INCOME_CASILLA: Decimal("1650")},
+            binding_overrides=IMPORT_UNRECORDED_BINDINGS,
             amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
             reason="under-reported revenue discovered in subsequent audit",
             actor="operator-A",

@@ -20,6 +20,7 @@ from .....application.export.review_snapshot import ReviewSnapshotContent, seal_
 from .....application.storage.calc_sheets.records import SheetExportPlan, SheetReviewMetadata
 from .....application.storage.calc_sheets.review_workbook import build_review_workbook
 from .....application.storage.calc_sheets.tests.review_fixture import review_label, review_snapshot
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...storage.errors import OutboundStorageConflictError, OutboundStorageNetworkError
 from ..artifact_admission import GoogleArtifactAdmission
@@ -31,6 +32,7 @@ from .drive_files_server import DriveFilesEndpoint, drive_files_endpoint
 from .review_sheets_server import ReviewSheetsEndpoint, review_sheets_endpoint
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_outbound_adapter]
+_YEAR = filing_year_envelope().horizon
 
 
 @dataclass
@@ -87,7 +89,7 @@ def _publication_world(tmp_path: Path, failure_case: str) -> Generator[_Publicat
         plan = build_review_workbook(
             snapshot,
             publication_id=publication.publication_id,
-            exported_at=datetime(2026, 10, 5, tzinfo=UTC),
+            exported_at=datetime(_YEAR, 10, 5, tzinfo=UTC),
             label=review_label,
         )
         sheets.fail_values = failure_case == "population"
@@ -177,7 +179,7 @@ def test_publication_is_receipted_literal_and_a_republish_preserves_external_not
         identifier = published.artifacts[0].artifact_id
         assert world.drive.created_bodies[-1]["name"] == world.plan.metadata.document_title
         assert str(world.publication.publication_id) not in world.plan.metadata.document_title
-        assert "2026-10-05 00:00 UTC" in world.plan.metadata.document_title
+        assert f"{_YEAR}-10-05 00:00 UTC" in world.plan.metadata.document_title
         assert tuple(world.sheets.tabs[identifier]) == tuple(tab.value for tab in world.plan.tabs)
         assert world.sheets.value_bodies[0]["valueInputOption"] == "RAW"
         assert world.sheets.cells[identifier][("Detalle", 5, 11)] == '=IMPORTXML("https://example.invalid", "x")'

@@ -16,12 +16,15 @@ from .....core.config import override_settings
 from .....core.config_support import LLMProvider
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_location
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....persistence.llm.usage import UsageRecorder
 from ..models import LLMResponse
 
+_FILING_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_CREATED_AT = datetime(2026, 5, 28, 12, 35, 0, tzinfo=UTC)
+_CREATED_AT = datetime(_FILING_YEAR, 5, 28, 12, 35, 0, tzinfo=UTC)
 
 
 def test_usage_recorder_round_trip(tmp_path: Path) -> None:

@@ -6,13 +6,15 @@ import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..parser import parse_declaracion
-from .parser_boundary_support import MODELO_347_SYNTHETIC_FIXTURE, expected_period
+from .parser_boundary_support import MODELO_347_SYNTHETIC_FIXTURE, expected_period, specimen_period
 
 pytestmark = [
     pytest.mark.unit,
     pytest.mark.hex_inbound_adapter,
     pytest.mark.usefixtures("operation"),
 ]
+
+_SPECIMEN_PERIOD = specimen_period(MODELO_347_SYNTHETIC_FIXTURE)
 
 _DECL_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
     "decl.ejercicio", surface="declaracion_parser_boundary.casilla"
@@ -50,16 +52,16 @@ def test_parser_extracts_modelo_347_synthetic_fixture_targets() -> None:
     filing = parse_declaracion(
         MODELO_347_SYNTHETIC_FIXTURE,
         modelo_override="347",
-        año_override=2024,
+        año_override=_SPECIMEN_PERIOD.filing_year,
         period_override="0A",
     )
 
     assert filing.modelo == "347"
-    assert filing.period == expected_period(2024, "0A")
+    assert filing.period == expected_period(_SPECIMEN_PERIOD.filing_year, "0A")
     assert filing.tax_id == "Y0001006P"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "347"
-    assert filing.registry_snapshot_ref.modelo_year == 2024
+    assert filing.registry_snapshot_ref.modelo_year == _SPECIMEN_PERIOD.filing_year
     assert filing.registry_snapshot_ref.period == "0A"
 
     values = {v.casilla_id: v.printed_value for v in filing.values}
@@ -73,6 +75,6 @@ def test_parser_extracts_modelo_347_synthetic_fixture_targets() -> None:
     # decl.ejercicio: fixture prints "Ejercicio: 2024";
     # parse_spanish_decimal("2024") = Decimal("2024").
     # Ground truth: AEAT DR positions 5-8 field name "EJERCICIO" (Orden HAC/1431/2025 p.1).
-    assert values[_DECL_EJERCICIO_CASILLA] == "2024", (
-        f"decl.ejercicio: expected '2024' from AEAT-grounded fixture, got {values[_DECL_EJERCICIO_CASILLA]!r}"
+    assert values[_DECL_EJERCICIO_CASILLA] == str(_SPECIMEN_PERIOD.filing_year), (
+        f"decl.ejercicio: expected {_SPECIMEN_PERIOD.filing_year} from AEAT-grounded fixture, got {values[_DECL_EJERCICIO_CASILLA]!r}"
     )

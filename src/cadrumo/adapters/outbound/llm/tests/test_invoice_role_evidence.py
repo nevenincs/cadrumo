@@ -32,6 +32,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from .....core.period import Period
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..invoice_field_contract import (
     ANCHOR_KEY_SUFFIX,
     INVOICE_FIELD_CONTRACTS,
@@ -49,7 +50,7 @@ from .prompt_support import build_invoice_extraction_prompt
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_ANNUAL_2026 = Period.from_year_and_code(2026, "0A")
+_HORIZON_ANNUAL = Period.from_year_and_code(filing_year_envelope().horizon, "0A")
 
 
 def _identity_field_names() -> tuple[str, ...]:
@@ -113,7 +114,7 @@ class TestThePromptAsksForPrintedEvidenceRatherThanAConclusion:
     def test_the_prompt_asks_for_the_role_evidence_key_of_every_identity_field(
         self, *, operation: PinnedAuthorityOperation
     ) -> None:
-        text = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation).text
+        text = build_invoice_extraction_prompt(period=_HORIZON_ANNUAL, operation=operation).text
 
         for field_name in _identity_field_names():
             assert f'"{role_evidence_key_for_field(field_name)}"' in text
@@ -121,7 +122,7 @@ class TestThePromptAsksForPrintedEvidenceRatherThanAConclusion:
     def test_the_prompt_never_asks_a_non_identity_field_to_evidence_a_role(
         self, *, operation: PinnedAuthorityOperation
     ) -> None:
-        text = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation).text
+        text = build_invoice_extraction_prompt(period=_HORIZON_ANNUAL, operation=operation).text
         identity = set(_identity_field_names())
 
         for contract in INVOICE_FIELD_CONTRACTS:
@@ -138,7 +139,7 @@ class TestThePromptAsksForPrintedEvidenceRatherThanAConclusion:
         reader told to copy what is printed writes something the document can
         contradict. Only the second can ever be dropped.
         """
-        text = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation).text
+        text = build_invoice_extraction_prompt(period=_HORIZON_ANNUAL, operation=operation).text
 
         assert "Never write what you decided; write what the document shows." in text
         assert "copy the printed heading, label or line" in text
@@ -152,7 +153,7 @@ class TestThePromptAsksForPrintedEvidenceRatherThanAConclusion:
         indistinguishable from a model that returned nothing for it, so the
         counterparty path would simply stop working with no error anywhere.
         """
-        text = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation).text
+        text = build_invoice_extraction_prompt(period=_HORIZON_ANNUAL, operation=operation).text
         assert ROLE_EVIDENCE_KEY_SUFFIX in text
 
         parsed = parse_invoice_extraction_response(

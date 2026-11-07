@@ -9,6 +9,7 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..conformance.registry_schema_support import committed_modelo
@@ -18,6 +19,7 @@ from .profile_schema_support import committed_registry_validator, committed_supp
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _SUPPORT = committed_supported_filing_years()
+_REVISION_ID = str(open_ended_revision("360").id)
 # The day Orden EHA/789/2010 makes the Modelo 360 form applicable, as the catalogued
 # approving article is in force from.
 _APPROVING_ORDEN_APPLIES_FROM = legal_reference("orden-eha-789-2010:art-1").effective_from
@@ -71,15 +73,17 @@ def test_modelo_360_september_30_deadline_matches_its_approving_orden_art_4(ejer
 
 def test_modelo_360_snapshot_builds_for_the_annual_period() -> None:
     modelo, catalogues = _load_modelo_360()
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="0A")
-    assert snapshot.revision.id == "2010-y-siguientes"
+    snapshot = build_snapshot(
+        modelo, catalogues, source_root=bundled_path(), filing_year=filing_year_envelope().horizon, period="0A"
+    )
+    assert snapshot.revision.id == _REVISION_ID
     assert snapshot.revision.orden_aplicabilidad == ("orden-eha-789-2010:art-1",)
     assert "orden-eha-789-2010:art-1" in snapshot.legal
 
 
 def test_modelo_360_live_cross_references_forbid_writes() -> None:
     modelo, _ = _load_modelo_360()
-    revision = modelo.revisions["2010-y-siguientes"]
+    revision = modelo.revisions[_REVISION_ID]
     cross_refs = {ref.id: ref for ref in revision.live_cross_references}
     filed_ref = cross_refs["modelo-360-filed-declarations-read"]
     assert filed_ref.requires_authentication is True
@@ -88,7 +92,7 @@ def test_modelo_360_live_cross_references_forbid_writes() -> None:
 
 def test_modelo_360_construct_links_workbook_parity() -> None:
     modelo, _ = _load_modelo_360()
-    revision = modelo.revisions["2010-y-siguientes"]
+    revision = modelo.revisions[_REVISION_ID]
     construct = next(c for c in revision.constructs if c.id == "modelo-360-iva-devolucion-ue")
     assert "modelo-360-dr" in construct.workbook_parity_refs
     assert construct.filing_schedules == ("modelo-360-anual",)

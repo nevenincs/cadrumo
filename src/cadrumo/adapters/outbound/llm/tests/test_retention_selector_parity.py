@@ -29,13 +29,16 @@ from decimal import Decimal
 import pytest
 
 from .....core.config_support import LLMProvider
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....persistence.llm.run_records import LLMRunRecord
 from ..models import CachedEntry, LLMResponse, UsageRecord
 from ..retention import select_retention_removal_keys
 
+_FILING_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_CUTOFF = datetime(2026, 6, 1, tzinfo=UTC)
+_CUTOFF = datetime(_FILING_YEAR, 6, 1, tzinfo=UTC)
 _PROVIDER = LLMProvider.AGENT
 _MODEL = "claude-sonnet-4-6"
 

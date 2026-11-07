@@ -28,6 +28,7 @@ from ......core.casilla_id import CasillaId, validated_casilla_id
 from ......core.casilla_value_kind import CasillaValueKind
 from ......core.config import Settings
 from ......core.period import Period
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ......domain.calculations.registry.tests.published_authority import published_snapshot
 from .....persistence.storage.secure_object_namespaces import AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE
 from .....persistence.storage.tests.secure_sql import (
@@ -43,6 +44,7 @@ from ..schema import (
 from .observation_store_support import pending_wallet_observation
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_EJERCICIO = newest_authored_edition("100")
 _BUCKET_ID = "83a88c7e-9334-477e-83a8-40856124b522"  # was 'sede-observation'
 _AEAT = Settings.external_constants().aeat
 _COTEJO_DOCUMENT_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.cotejo_document}"
@@ -52,11 +54,11 @@ _M100_BASE_LIQUIDABLE_CASILLA: CasillaId = validated_casilla_id("0500", surface=
 def _populated_observation(artefact: FiledDeclaracionArtefact) -> FiledDeclaracionObservation:
     return FiledDeclaracionObservation(
         modelo="100",
-        ejercicio=2023,
-        period=Period.from_year_and_code(2023, "0A"),
+        ejercicio=_EJERCICIO,
+        period=Period.from_year_and_code(_EJERCICIO, "0A"),
         expediente_id="202310013522456T",
         status="PRESENTADA",
-        presented_at=datetime(2024, 6, 30, 12, 34, 56, tzinfo=UTC),
+        presented_at=datetime(_EJERCICIO + 1, 6, 30, 12, 34, 56, tzinfo=UTC),
         authenticated_identity="12345678Z",
         artefacts=(artefact,),
         casillas=(
@@ -71,7 +73,7 @@ def _populated_observation(artefact: FiledDeclaracionArtefact) -> FiledDeclaraci
         ),
         metadata={"capture_session": "sede-2024-06-30-A"},
         extraction_coverage={"declaration_pdf": 0.95},
-        registry_snapshot_ref=published_snapshot("100", filing_year=2023, period="0A").snapshot_ref,
+        registry_snapshot_ref=published_snapshot("100", filing_year=_EJERCICIO, period="0A").snapshot_ref,
     )
 
 
@@ -90,12 +92,12 @@ def test_filed_declaration_observation_roundtrips_through_encrypted_store(
             content_type="application/pdf",
             byte_count=len(body),
             sha256=hashlib.sha256(body).hexdigest(),
-            captured_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
+            captured_at=datetime(_EJERCICIO + 1, 7, 1, 9, 0, 0, tzinfo=UTC),
         )
         observation_key = (
             "100",
-            2023,
-            Period.from_year_and_code(2023, "0A"),
+            _EJERCICIO,
+            Period.from_year_and_code(_EJERCICIO, "0A"),
             "202310013522456T",
         )
 
@@ -164,9 +166,9 @@ def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
             content_type="application/pdf",
             byte_count=len(body),
             sha256=hashlib.sha256(body).hexdigest(),
-            captured_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
+            captured_at=datetime(_EJERCICIO + 1, 7, 1, 9, 0, 0, tzinfo=UTC),
         )
-        observation_key = ("100", 2023, Period.from_year_and_code(2023, "0A"), "202310013522456T")
+        observation_key = ("100", _EJERCICIO, Period.from_year_and_code(_EJERCICIO, "0A"), "202310013522456T")
         persisted_artefact = store.persist_artefact(observation_key, artefact, body)
         observation = _populated_observation(persisted_artefact)
         logical_path = store.persist_observation(observation)
@@ -208,13 +210,13 @@ def test_iva_wallet_observation_roundtrips_through_encrypted_store(
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
-        captured_at = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
+        captured_at = datetime(filing_year_envelope().horizon, 5, 19, 12, 0, 0, tzinfo=UTC)
         observation = pending_wallet_observation(captured_at)
 
         logical_path = store.persist_iva_wallet_observation(observation)
         loaded = store.load_iva_wallet_observation(logical_path)
 
         assert loaded == observation
-        assert loaded.rows[0].generation_period == Period.from_year_and_code(2026, "1T")
+        assert loaded.rows[0].generation_period == Period.from_year_and_code(filing_year_envelope().horizon, "1T")
         assert loaded.total_pending == Decimal("1200")
         assert loaded.raw_sha256 == "b" * 64

@@ -20,6 +20,7 @@ from pathlib import Path
 import pytest
 
 from .....domain.calculations.registry.schema_extraction import ExtractionProfileDefinition
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from .....domain.calculations.registry.tests.published_authority import published_snapshot
 from .....tests.fixtures.external_layout_candidates.models import (
     external_layout_source_class_is_non_authoritative,
@@ -78,13 +79,13 @@ def test_m130_external_blank_layout_discovers_every_box_without_fabricating_valu
     assert adjudication.artifact_authenticity.verdict == "third_party_sample"
     assert adjudication.official_base_derivation.verdict == "verified_official_base_derivative"
     assert adjudication.registry_applicability.verdict == "current_authored_revision"
-    assert adjudication.registry_applicability.revision_id == "2019-y-siguientes"
+    assert adjudication.registry_applicability.revision_id == str(open_ended_revision("130").id)
     assert external_layout_source_class_is_non_authoritative()
 
     pdf_path = sidecar_path.with_suffix(".pdf")
     assert pdf_path.is_file(), f"{pdf_path} is missing, so the external-layout regression proves nothing"
 
-    snapshot = published_snapshot("130", filing_year=2026, period="1T")
+    snapshot = published_snapshot("130", filing_year=filing_year_envelope().horizon, period="1T")
     profile = select_extraction_profile(snapshot, extraction_profile_id=None)
     assert tuple(str(target.casilla_id) for target in profile.target_casillas) == _EXPECTED_BOX_IDS
 

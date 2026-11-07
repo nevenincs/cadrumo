@@ -17,12 +17,15 @@ import pytest
 from playwright.async_api import Route, async_playwright
 
 from ......core.config import override_settings
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......tests.aeat_literal_fixtures import SEDE_LOGIN_WALL_URL_FIXTURE
 from ...playwright import PlaywrightTimeoutError
 from ..declarations import LISTING_URL, drive_search
 from ..errors import SedeFailureMode, SedeNavigationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+_EJERCICIO = filing_year_envelope().floor
 
 
 async def _stall_navigation(route: Route) -> None:
@@ -43,7 +46,7 @@ async def test_navigation_timeout_raises_typed_navigation_error() -> None:
                 override_settings(cadrumo_browser_navigation_timeout_ms=50),
                 pytest.raises(SedeNavigationError) as exc_info,
             ):
-                await drive_search(page, modelo="100", ejercicio=2022)
+                await drive_search(page, modelo="100", ejercicio=_EJERCICIO)
         finally:
             await browser.close()
 
@@ -51,7 +54,7 @@ async def test_navigation_timeout_raises_typed_navigation_error() -> None:
     assert exc_info.value.context is not None
     assert exc_info.value.context["stage"] == "listing_goto"
     assert exc_info.value.context["modelo"] == "100"
-    assert exc_info.value.context["ejercicio"] == 2022
+    assert exc_info.value.context["ejercicio"] == _EJERCICIO
     # The raw Playwright exception is chained, never swallowed silently.
     assert isinstance(exc_info.value.__cause__, PlaywrightTimeoutError)
 
@@ -73,7 +76,7 @@ async def test_login_wall_redirect_is_reported_as_an_ended_session() -> None:
             page = await browser.new_page()
             await page.route("**/*", _redirect_listing_to_login_wall)
             with pytest.raises(SedeNavigationError) as exc_info:
-                await drive_search(page, modelo="100", ejercicio=2022)
+                await drive_search(page, modelo="100", ejercicio=_EJERCICIO)
         finally:
             await browser.close()
 
