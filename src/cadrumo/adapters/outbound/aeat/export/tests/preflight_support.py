@@ -16,10 +16,16 @@ from ......core.auth_provider import AuthProviderKind
 from ......core.config import Settings
 from ......core.period import Period
 from ......domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ......domain.deadlines.engine import DeadlineEngine
 from ......domain.contribuyente.entity_type import EntityType
 from ......domain.contribuyente.renta_codes import FiscalResidency
-from ......domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, ModeloEnrollment, TaxpayerProfile
+from ......domain.deadlines.engine import DeadlineEngine
+from ......domain.deadlines.models import (
+    IrpfEstimationRegime,
+    IrpfIncomeCategory,
+    IVARegime,
+    ModeloEnrollment,
+    TaxpayerProfile,
+)
 from ......domain.filing.schema import ModeloDraft, ModeloValidationFinding
 from ......domain.submission.models import ModeloDraftStatus
 from ......domain.submission.protocols import DeadlineWindowChecker
