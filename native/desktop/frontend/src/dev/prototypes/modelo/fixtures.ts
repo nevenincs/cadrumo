@@ -67,7 +67,7 @@ export function envelope(modelo: string, locale: string): FormEnvelope {
           if (b.id.includes("periodo") && /^[1-4]T$/.test(b.value.text))
             b.value = { ...b.value, text: "3T" };
           if (b.id.includes("ejercicio"))
-            b.value = { ...b.value, text: "2026" };
+            b.value = { ...b.value, text: String(FIXTURE_FILING_YEAR) };
         }
   if (f.deadline)
     f.deadline = {
@@ -139,7 +139,10 @@ export function filled130(locale: string): FormEnvelope {
   const carried = fieldsOf(f).find((x) => x.box === "05");
   if (carried?.source)
     carried.source.earlier_filings = [
-      { modelo: "130", period: { filing_year: 2026, code: "2T" } },
+      {
+        modelo: "130",
+        period: { filing_year: FIXTURE_FILING_YEAR, code: "2T" },
+      },
     ];
   f.counts = { ...f.counts, needs_input: 1, entered: 1, blocked: 0 };
   for (const page of f.pages)

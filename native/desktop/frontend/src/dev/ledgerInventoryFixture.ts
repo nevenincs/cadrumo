@@ -7,6 +7,7 @@ import type {
   JsonValue,
   LedgerDefinitionId,
 } from "../shell/ledger";
+import { SCENARIO_TODAY } from "./assetsRegister";
 import {
   DATE,
   SetupStopped,
@@ -20,6 +21,11 @@ import {
   type Handler,
   type Tools,
 } from "./ledgerSetupSupport";
+
+/** The year the scenario stands in, and the one before it: the two years the
+ * books are kept for. */
+const SCENARIO_YEAR = Number(SCENARIO_TODAY.slice(0, 4));
+const PRIOR_YEAR = SCENARIO_YEAR - 1;
 
 /** Reasons the catalogue names otherwise than the typed reason is. */
 const REASON_KEY_NAMES: Record<string, string> = {
@@ -113,7 +119,7 @@ export function inventoryOperations(tools: Tools) {
   const books: Book[] = [
     {
       actividad_id: "Papelería y reprografía",
-      year: 2026,
+      year: SCENARIO_YEAR,
       valuation_method: "fifo",
       opening_stock: "410",
       movements: [
@@ -135,7 +141,7 @@ export function inventoryOperations(tools: Tools) {
     },
     {
       actividad_id: "Venta en línea de material de dibujo",
-      year: 2026,
+      year: SCENARIO_YEAR,
       valuation_method: "pmp",
       opening_stock: "0",
       movements: [
@@ -212,7 +218,7 @@ export function inventoryOperations(tools: Tools) {
     },
     {
       actividad_id: "Papelería y reprografía",
-      year: 2025,
+      year: PRIOR_YEAR,
       valuation_method: "fifo",
       opening_stock: "380",
       movements: [
@@ -291,7 +297,7 @@ export function inventoryOperations(tools: Tools) {
     },
     {
       actividad_id: "Taller de enmarcado",
-      year: 2025,
+      year: PRIOR_YEAR,
       valuation_method: "coste_medio",
       opening_stock: "90",
       movements: [],

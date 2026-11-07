@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { EditorSpecimens } from "@/dev/catalogue/EditorSpecimens";
+import { servedSupport } from "@/dev/servedYearAuthority";
 
 const meta = {
   title: "Editors/Year",
@@ -13,7 +14,7 @@ export const States: Story = {
     <EditorSpecimens
       field={{ kind: "year" }}
       label="Year"
-      filled="2026"
+      filled={String(servedSupport.horizon)}
       invalid="20x6"
       error="Not a year."
     />

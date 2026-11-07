@@ -13,6 +13,9 @@ import type {
 
 export const FIXTURE_TODAY = "2026-10-06";
 
+/** The year of `FIXTURE_TODAY`, which its annual obligations belong to. */
+const FIXTURE_YEAR = FIXTURE_TODAY.slice(0, 4);
+
 /** The deadline status a fixture row carries with each reading, unless the
  * row names its own. A reading the product could not place is reported as
  * not applicable; a close it could not work out is set row by row. */
@@ -103,11 +106,11 @@ export const FIXTURE_CALENDAR: FilingCalendar = {
       adjusted_closes_on: "2027-02-01",
       shift_reason: "weekend",
     }),
-    entry("390", "2026", "2027-01-01", "2027-01-30", {
+    entry("390", FIXTURE_YEAR, "2027-01-01", "2027-01-30", {
       adjusted_closes_on: "2027-02-01",
       shift_reason: "weekend",
     }),
-    entry("100", "2026", "2027-04-07", "2027-06-30", {
+    entry("100", FIXTURE_YEAR, "2027-04-07", "2027-06-30", {
       payment_cutoff_on: "2027-06-25",
     }),
   ],
