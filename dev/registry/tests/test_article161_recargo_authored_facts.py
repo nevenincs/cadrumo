@@ -16,6 +16,7 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
 )
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
 
 from ..compiler.fact_loader import load_governed_facts
@@ -55,7 +56,7 @@ _SOURCES = {
 
 
 @cache
-def _shared():
+def _shared() -> RegistryCatalogues:
     return load_shared_catalogues(bundled_path() / "registry" / "aeat")
 
 

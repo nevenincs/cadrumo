@@ -16,13 +16,13 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
 )
 
 from .test_form_options_stage_facts import form_options_stage_facts_options
-from .test_register import NAME, register_operations, register_revision
+from .test_register import FIRST_YEAR, NAME, register_operations, register_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_exactly_one_stage_serves_the_facts_that_state_a_wholly_business_purchase() -> None:
-    options = form_options_stage_facts_options()
+    options = form_options_stage_facts_options(FIRST_YEAR)
 
     served = {item.stage: item.wholly_business_facts for item in options.basis_stages if item.wholly_business_facts}
     assert set(served) == set(WHOLLY_BUSINESS_STAGE_FACTS)
@@ -36,9 +36,9 @@ def test_exactly_one_stage_serves_the_facts_that_state_a_wholly_business_purchas
 
 
 def test_an_element_stated_from_the_served_facts_registers_and_amortizes_its_whole_cost() -> None:
-    options = form_options_stage_facts_options()
+    options = form_options_stage_facts_options(FIRST_YEAR)
     option = next(item for item in options.basis_stages if item.wholly_business_facts)
-    base = register_revision(basis="2000")
+    base = register_revision()
     basis = ActivityAssetBasisSnapshot.from_domain(base.basis).model_dump(mode="python")
     basis.update(
         stage=option.stage,
@@ -53,4 +53,6 @@ def test_an_element_stated_from_the_served_facts_registers_and_amortizes_its_who
 
     (listed,) = operations.list_elements()
     assert listed.basis.decimal == "2000.00"
-    assert operations.form_options(asset_kind=AssetKind.MATERIAL, tax_year=2025).basis_stages == options.basis_stages
+    assert (
+        operations.form_options(asset_kind=AssetKind.MATERIAL, tax_year=FIRST_YEAR).basis_stages == options.basis_stages
+    )

@@ -3,6 +3,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
 import { showTui } from "../support/tui";
+import { fixtureMonth, fixtureYear } from "../../src/dev/fixtureDates";
+import { BUSY_DAY } from "../support/scenarioCalendar";
 
 // The shell on a small touch screen: a phone-sized viewport with a coarse
 // pointer and no hover. Controls grow to finger size through the density
@@ -136,7 +138,7 @@ for (const language of ["en", "hu"])
     };
     await expect(page.locator(".calendar-months")).toBeVisible();
     await expect(
-      page.locator('.calendar-bar[data-entry="349:2026-3T"]'),
+      page.locator(`.calendar-bar[data-entry="349:${fixtureYear}-3T"]`),
     ).toHaveCount(1);
     await fits("months");
     // The choice of face stays in reach wherever the page is scrolled to.
@@ -189,7 +191,7 @@ for (const language of ["en", "hu"])
 test("a crowded month's controls fit a finger, and its count opens it", async ({
   page: target,
 }) => {
-  await target.clock.setFixedTime(new Date(2027, 0, 12, 12));
+  await target.clock.setFixedTime(BUSY_DAY);
   await target.goto(
     "/scenarios.html?scenario=signed-in&latency=0&bar=off&calendar=busy",
   );
@@ -197,7 +199,9 @@ test("a crowded month's controls fit a finger, and its count opens it", async ({
     .getByRole("button", { name: label("desktop.calendar.title"), exact: true })
     .tap();
   const page = target.locator(".calendar-page");
-  const january = page.locator('.calendar-month[data-month="2027-01"]');
+  const january = page.locator(
+    `.calendar-month[data-month="${fixtureMonth(1, 1)}"]`,
+  );
   const whole = january.locator(".calendar-whole");
   await expect(whole).toBeVisible();
   for (const control of [

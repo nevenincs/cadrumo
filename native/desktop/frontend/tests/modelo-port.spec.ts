@@ -24,6 +24,13 @@ import {
   type ModeloShape,
 } from "../src/dev/modeloFixture";
 import { MODELO_FIXTURES } from "./support/windowFixtures";
+import { servedEditionOf, servedSupport } from "../src/dev/servedYearAuthority";
+
+// The edition the register serves for the supported horizon; the adapter only
+// carries it.
+const served = servedEditionOf(servedSupport.horizon);
+if (served === null) throw new Error("the horizon has no served edition");
+const REVISION = served.revision_id;
 
 // The modelo port: the Tauri adapter's command lines, and the scenario
 // host's answers from the envelopes the application's read path produced.
@@ -59,7 +66,7 @@ test("the adapter names the host's commands and its argument names", async () =>
   await port.casillaHelp({
     workUnitId: unit,
     casillaId: "03",
-    registryRevisionId: "2019-y-siguientes",
+    registryRevisionId: REVISION,
     calculationRevisionId: null,
     language: "ca",
   });
@@ -86,7 +93,7 @@ test("the adapter names the host's commands and its argument names", async () =>
       args: {
         workUnitId: unit,
         casillaId: "03",
-        registryRevisionId: "2019-y-siguientes",
+        registryRevisionId: REVISION,
         calculationRevisionId: null,
         outputLanguage: "ca",
       },

@@ -6,16 +6,19 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 
+from .authored_edition_support import newest_authored_editions, revision_covering
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_modelo_200_revision_fragments_never_cite_another_years_annual_manual() -> None:
     """Every M200 fragment keeps annual guidance inside its own ejercicio."""
 
-    for revision_id, allowed_manual, forbidden_manual in (
-        ("2024", "aeat-modelo-200-manual-2024", "aeat-modelo-200-manual-2025"),
-        ("2025-y-siguientes", "aeat-modelo-200-manual-2025", "aeat-modelo-200-manual-2024"),
-    ):
+    earlier, later = newest_authored_editions("200", 2)
+    for edition, other_edition in ((earlier, later), (later, earlier)):
+        revision_id = revision_covering("200", edition).id
+        allowed_manual = f"aeat-modelo-200-manual-{edition}"
+        forbidden_manual = f"aeat-modelo-200-manual-{other_edition}"
         revision_root = bundled_path("registry", "aeat", "modelos", "200", "revisions", revision_id)
         fragments = tuple(revision_root.rglob("*.toml"))
         assert fragments, f"expected authored Modelo 200 revision fragments for {revision_id}"

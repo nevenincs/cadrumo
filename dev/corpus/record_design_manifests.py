@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Final, NotRequired, TypedDict
+
+from pydantic import TypeAdapter
 
 #: The bundled record-design corpus: one directory per modelo, each holding its manifest and payloads.
 DESIGN_CORPUS: Final = Path(__file__).resolve().parents[2] / "src/cadrumo/_data/corpus/aeat_official/disenos_registro"
@@ -39,6 +40,12 @@ class Manifest(TypedDict):
     source_pages: list[str]
     artefact_count: int
     artefacts: list[Artifact]
+    #: Present where the index offered no design to record for the modelo.
+    not_found_note: NotRequired[str]
+
+
+#: Validates a manifest read from disk against its declared shape.
+_MANIFEST_ADAPTER: Final = TypeAdapter(Manifest)
 
 
 class ModeloRow(TypedDict):
@@ -75,7 +82,9 @@ def recorded_artifact(modelo: str, *, relative_url: str | None = None, sha256: s
     """
     if (relative_url is None) == (sha256 is None):
         raise ValueError("select a recorded artefact by exactly one of its URL tail or its digest")
-    manifest: Manifest = json.loads((DESIGN_CORPUS / f"modelo_{modelo}" / "manifest.json").read_text(encoding="utf-8"))
+    manifest = _MANIFEST_ADAPTER.validate_json(
+        (DESIGN_CORPUS / f"modelo_{modelo}" / "manifest.json").read_text(encoding="utf-8")
+    )
     matches = [
         artifact
         for artifact in manifest["artefacts"]

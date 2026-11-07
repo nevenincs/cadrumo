@@ -44,6 +44,12 @@ from cadrumo.domain.calculations.registry.schema_verification import (
     VerificationPredicateOperator,
     parse_verification_predicate_expression,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    open_ended_revision,
+    revision_covering,
+)
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind
 
@@ -68,8 +74,22 @@ _TOTAL_FORMULA = 'id = "modelo-303-iva-cuota-devengada-total"'
 _DESIGN_TOTAL_ROW = re.compile(r"Total cuota devengada\s*\((?P<addends>[^)]*)\)\s*\[27\]")
 _DESIGN_BOX = re.compile(r"\[(\d+)\]")
 
-#: The editions that state the printed-total predicate; every other edition inherits it.
-_DECLARING_EDITIONS = ("2022", "2023", "2024-desde-09-y-3t")
+_PRINTED_TOTAL_PREDICATE_ID = "equals-sum:dr303-27-equals-printed-summands"
+
+
+def _declares_printed_total(revision_id: str) -> bool:
+    directory = bundled_path("registry", "aeat", "modelos", "303", "revisions", revision_id)
+    return any(_PRINTED_TOTAL_PREDICATE_ID in path.read_text(encoding="utf-8") for path in directory.rglob("*.toml"))
+
+
+#: The editions that state the printed-total predicate in their own fragments; every other edition inherits it.
+_DECLARING_EDITIONS = tuple(
+    str(revision.id) for revision in authored_revisions("303") if _declares_printed_total(str(revision.id))
+)
+#: The edition covering the support floor, where the printed-total formula is first stated.
+_FLOOR_EDITION = str(revision_covering("303", filing_year_envelope().floor).id)
+#: The newest edition, which inherits the declaration.
+_NEWEST = open_ended_revision("303")
 
 _GENERAL_CUOTA = Decimal("2100.00")
 _AUTOCONSUMO_BASE = Decimal("1000.00")
@@ -261,12 +281,12 @@ def _add_unprinted_amount_to_total(modelo_directory: Path) -> None:
     """
     mutate_declaration(
         modelo_directory,
-        revision_id="2022",
+        revision_id=_FLOOR_EDITION,
         section="formulas",
         member=_TOTAL_FORMULA,
-        find='[[revisions.2022.formulas.expression.args]]\ncasilla_id = "iva.cuota-devengada.general"\n',
+        find=f'[[revisions.{_FLOOR_EDITION}.formulas.expression.args]]\ncasilla_id = "iva.cuota-devengada.general"\n',
         replace=(
-            "[[revisions.2022.formulas.expression.args]]\n"
+            f"[[revisions.{_FLOOR_EDITION}.formulas.expression.args]]\n"
             'op = "add"\n'
             f'args = [{{ casilla_id = "iva.cuota-devengada.general" }}, {{ literal = "{_UNPRINTED_AMOUNT}" }}]\n'
         ),
@@ -403,14 +423,19 @@ def test_the_same_declaration_without_autoconsumo_raises_no_blocking_finding(fil
     assert _blocking(findings) == [], revision_id
 
 
-def test_the_check_is_general_and_refuses_an_untranscribed_2022_box() -> None:
-    """2022 prints [09] as a manual box, so a ledger cuota left untranscribed is unprinted too."""
+def test_the_check_is_general_and_refuses_an_untranscribed_floor_edition_box() -> None:
+    """The support-floor edition prints [09] as a manual box, so a ledger cuota left untranscribed is unprinted too."""
     modelo, catalogues = load_modelo_303()
 
     revision_id, values, findings = _calculated_findings(
-        modelo, catalogues, filing_year=2022, period="1T", general_cuota=_GENERAL_CUOTA, autoconsumo_base=None
+        modelo,
+        catalogues,
+        filing_year=filing_year_envelope().floor,
+        period="1T",
+        general_cuota=_GENERAL_CUOTA,
+        autoconsumo_base=None,
     )
-    assert revision_id == "2022"
+    assert revision_id == _FLOOR_EDITION
     assert values[_TOTAL_BOX] == _GENERAL_CUOTA
     assert [(f.message_locale_key, f.message_facts["printed_sum"]) for f in _blocking(findings)] == [
         (_PRINTED_TOTAL_MISMATCH, Decimal("0")),
@@ -419,7 +444,7 @@ def test_the_check_is_general_and_refuses_an_untranscribed_2022_box() -> None:
     _, _, transcribed = _calculated_findings(
         modelo,
         catalogues,
-        filing_year=2022,
+        filing_year=filing_year_envelope().floor,
         period="1T",
         general_cuota=_GENERAL_CUOTA,
         autoconsumo_base=None,
@@ -467,14 +492,14 @@ def test_mutation_removing_the_predicate_lets_the_unprinted_total_through(tmp_pa
     revision_id, values, findings = _calculated_findings(
         mutant,
         catalogues,
-        filing_year=2025,
-        period="1T",
+        filing_year=_NEWEST.valid_from.year,
+        period="2T",
         general_cuota=_GENERAL_CUOTA,
         autoconsumo_base=Decimal("0"),
     )
     # The defect is still there, and with the predicate gone nothing refuses it:
     # the binary [27] == iva.cuota-devengada-total predicate holds by construction.
-    assert revision_id == "2025"
+    assert revision_id == str(_NEWEST.id)
     assert values[_TOTAL_BOX] == _GENERAL_CUOTA + _UNPRINTED_AMOUNT
     assert values[_GENERAL_CUOTA_BOX] == _GENERAL_CUOTA
     assert _blocking(findings) == []
@@ -484,11 +509,11 @@ def test_mutation_dropping_a_design_addend_breaks_design_parity(tmp_path: Path) 
     original, original_catalogues = load_modelo_303()
     assert _design_parity_failures(original, original_catalogues) == []
     scratch_root = scratch_registry_tree(tmp_path, "303")
-    directory = scratch_root / "modelos" / "303" / "revisions" / "2024-desde-09-y-3t"
+    directory = scratch_root / "modelos" / "303" / "revisions" / _DECLARING_EDITIONS[-1]
     mutated = 0
     for path in directory.rglob("*.toml"):
         payload = tomllib.loads(path.read_text(encoding="utf-8"))
-        table = payload["revisions"]["2024-desde-09-y-3t"]
+        table = payload["revisions"][_DECLARING_EDITIONS[-1]]
         rows = [
             *table.get("verification_predicates", []),
             *[

@@ -15,8 +15,70 @@ import {
   STATE_ORDER,
 } from "../src/shell/calendarEntries";
 import type { CalendarEntry } from "../src/shell/views";
+import { fixtureDay, fixtureYear } from "../src/dev/fixtureDates";
 
 // The calendar's pure rules, checked at their boundaries. No page is opened.
+
+// Where a case depends on a weekday, its month is found by that shape from the
+// fixtures' year on, never assumed: a fixed date does not keep its weekday
+// from one year to the next.
+type Month = { year: number; month: number };
+const monthAfter = (from: Month, by = 1): Month => {
+  const at = from.year * 12 + from.month - 1 + by;
+  return { year: Math.floor(at / 12), month: (at % 12) + 1 };
+};
+const lengthOf = ({ year, month }: Month) =>
+  new Date(Date.UTC(year, month, 0)).getUTCDate();
+/** The weekday its first day falls on, 0 being Sunday. */
+const startsOn = ({ year, month }: Month) =>
+  new Date(Date.UTC(year, month - 1, 1)).getUTCDay();
+const monthKey = ({ year, month }: Month) =>
+  `${year}-${String(month).padStart(2, "0")}`;
+/** ISO text of a day of the month; a day past its end falls in the months
+ * after it, and one before its first in the months before. */
+const isoDay = ({ year, month }: Month, day: number) =>
+  new Date(Date.UTC(year, month - 1, day)).toISOString().slice(0, 10);
+/** The first month from `from` on, every `step` months, of the shape. */
+const monthLike = (
+  accepts: (month: Month) => boolean,
+  from: Month,
+  step = 1,
+): Month => {
+  for (let tries = 0; tries < 400; tries += 1) {
+    const month = monthAfter(from, tries * step);
+    if (accepts(month)) return month;
+  }
+  throw new Error("no month of that shape");
+};
+const THURSDAY = 4;
+const FRIDAY = 5;
+const TUESDAY = 2;
+
+/** A month of 31 days that begins on a Thursday, from October of the
+ * fixtures' year on. */
+const MONTH = monthLike(
+  (month) => startsOn(month) === THURSDAY && lengthOf(month) === 31,
+  { year: fixtureYear, month: 10 },
+);
+const NEXT = monthAfter(MONTH);
+const PRIOR = monthAfter(MONTH, -1);
+const day = (number: number) => isoDay(MONTH, number);
+/** A December that begins on a Tuesday: its 28th is a Monday and the 1st of
+ * the next January a Friday. */
+const DECEMBER = monthLike(
+  (month) => startsOn(month) === TUESDAY,
+  { year: fixtureYear, month: 12 },
+  12,
+);
+const YEAR_START = monthAfter(DECEMBER);
+/** A month of 31 days that begins on a Friday, from the January after the
+ * fixtures' year on: the first day of the month after it is a Monday. */
+const CROWDED = monthLike(
+  (month) => startsOn(month) === FRIDAY && lengthOf(month) === 31,
+  { year: fixtureYear + 1, month: 1 },
+);
+const AFTER_CROWDED = monthAfter(CROWDED);
+const PERIOD = `${fixtureYear}-3T`;
 
 test("a deadline is said in days up to sixty, then in whole months never rounded up", () => {
   const cases: [number, boolean, number, "day" | "month"][] = [
@@ -47,18 +109,23 @@ test("lateness stays in days however long", () => {
 });
 
 test("the range asked for is a year of whole months around today", () => {
-  expect(calendarRange(new Date(2026, 9, 6))).toEqual({
-    from: "2026-07-01",
-    to: "2027-06-30",
+  expect(calendarRange(new Date(fixtureYear, 9, 6))).toEqual({
+    from: fixtureDay(7, 1),
+    to: fixtureDay(6, 30, 1),
   });
   // Across a year's end, and into a leap February.
-  expect(calendarRange(new Date(2027, 5, 15))).toEqual({
-    from: "2027-03-01",
-    to: "2028-02-29",
+  const leap = monthLike(
+    (month) => lengthOf(month) === 29,
+    { year: fixtureYear + 1, month: 2 },
+    12,
+  );
+  expect(calendarRange(new Date(leap.year - 1, 5, 15))).toEqual({
+    from: isoDay({ year: leap.year - 1, month: 3 }, 1),
+    to: isoDay(leap, 29),
   });
-  expect(calendarRange(new Date(2026, 0, 31))).toEqual({
-    from: "2025-10-01",
-    to: "2026-09-30",
+  expect(calendarRange(new Date(fixtureYear, 0, 31))).toEqual({
+    from: fixtureDay(10, 1, -1),
+    to: fixtureDay(9, 30),
   });
 });
 
@@ -71,13 +138,13 @@ const obligation = (
   adjusted = closes,
 ): CalendarEntry => ({
   modelo,
-  period: "2026-3T",
+  period: PERIOD,
   opens_on: opens,
   closes_on: closes,
   adjusted_closes_on: adjusted,
   shift_reason: "none",
   payment_cutoff_on: null,
-  evaluated_on: "2026-10-06",
+  evaluated_on: day(6),
   days_overdue: null,
   status: "UPCOMING",
   user_state: "due",
@@ -98,38 +165,34 @@ const unknownClose = (
   user_state: "unknown",
 });
 
-const OCTOBER = { from_date: "2026-10-01", to_date: "2026-10-31" };
+const RANGE = { from_date: day(1), to_date: day(31) };
 
 test("only the product's unknown status makes a close unknown, never a reading or a date", () => {
-  expect(closeUnknown(unknownClose("303", "2026-10-01", "2026-10-20"))).toBe(
-    true,
-  );
+  expect(closeUnknown(unknownClose("303", day(1), day(20)))).toBe(true);
   // A reading the product could not place is not a close it could not
   // work out.
   expect(
     closeUnknown({
-      ...obligation("349", null, "2026-10-20"),
+      ...obligation("349", null, day(20)),
       status: "NOT_APPLICABLE",
       user_state: "unknown",
     }),
   ).toBe(false);
-  expect(closeUnknown(obligation("130", "2026-10-01", "2026-10-20"))).toBe(
-    false,
-  );
+  expect(closeUnknown(obligation("130", day(1), day(20)))).toBe(false);
 });
 
 test("a close that is not known follows the known ones, in its reading and in its month", () => {
   const entries = [
-    unknownClose("111", "2026-10-01", "2026-10-02"),
+    unknownClose("111", day(1), day(2)),
     {
-      ...obligation("349", null, "2026-10-25"),
+      ...obligation("349", null, day(25)),
       status: "NOT_APPLICABLE" as const,
       user_state: "unknown" as const,
     },
-    obligation("303", null, "2026-10-30"),
-    unknownClose("123", "2026-09-01", "2026-09-20"),
-    obligation("130", null, "2026-10-20"),
-    obligation("202", null, "2026-09-25"),
+    obligation("303", null, day(30)),
+    unknownClose("123", isoDay(PRIOR, 1), isoDay(PRIOR, 20)),
+    obligation("130", null, day(20)),
+    obligation("202", null, isoDay(PRIOR, 25)),
   ];
   // Among what needs the person, by reading: the known closes of the
   // unknown reading first, by date; the closes not known after them.
@@ -144,18 +207,18 @@ test("a close that is not known follows the known ones, in its reading and in it
 });
 
 test("a window whose close is not known runs to its earliest close and is never drawn closing", () => {
-  const unknown = unknownClose("303", "2026-10-01", "2026-10-20");
-  expect(entrySpan(unknown)).toEqual({ from: "2026-10-01", to: "2026-10-20" });
+  const unknown = unknownClose("303", day(1), day(20));
+  expect(entrySpan(unknown)).toEqual({ from: day(1), to: day(20) });
   const [month] = calendarMonths(
-    OCTOBER,
-    [unknown, obligation("130", "2026-10-01", "2026-10-20")],
+    RANGE,
+    [unknown, obligation("130", day(1), day(20))],
     [],
     null,
     1,
   );
   const ends = month?.weeks
     .flatMap((week) => week.bars)
-    .filter((bar) => bar.to === 1 && bar.entry.closes_on === "2026-10-20")
+    .filter((bar) => bar.to === 1 && bar.entry.closes_on === day(20))
     .map((bar) => [bar.entry.modelo, bar.opens, bar.closes]);
   // The week of the 20th: the known window closes there, the other does not.
   expect(ends).toEqual([
@@ -173,15 +236,15 @@ test("a window whose close is not known runs to its earliest close and is never 
 
 test("calendar faces share urgency ordering with deterministic date and identity ties", () => {
   const entries = [
-    { ...obligation("303", null, "2026-10-20"), user_state: "filed" as const },
+    { ...obligation("303", null, day(20)), user_state: "filed" as const },
     {
-      ...obligation("130", null, "2026-10-19"),
+      ...obligation("130", null, day(19)),
       user_state: "unknown" as const,
     },
-    obligation("349", null, "2026-10-20"),
-    obligation("303", null, "2026-10-20"),
-    obligation("130", null, "2026-10-19"),
-    { ...obligation("303", null, "2026-10-30"), user_state: "late" as const },
+    obligation("349", null, day(20)),
+    obligation("303", null, day(20)),
+    obligation("130", null, day(19)),
+    { ...obligation("303", null, day(30)), user_state: "late" as const },
   ];
   expect(STATE_ORDER).toEqual(["late", "due", "unknown", "filed"]);
   expect(
@@ -199,9 +262,9 @@ test("calendar faces share urgency ordering with deterministic date and identity
 });
 
 test("a month is weeks from the locale's first day, blank outside the month", () => {
-  // 1 October 2026 is a Thursday.
-  const [monday] = calendarMonths(OCTOBER, [], [], "2026-10-06", 1);
-  expect(monday?.key).toBe("2026-10");
+  // The month begins on a Thursday.
+  const [monday] = calendarMonths(RANGE, [], [], day(6), 1);
+  expect(monday?.key).toBe(monthKey(MONTH));
   expect(monday?.weeks).toHaveLength(5);
   expect(monday?.weeks[0]?.days.map((day) => day?.day ?? null)).toEqual([
     null,
@@ -225,9 +288,9 @@ test("a month is weeks from the locale's first day, blank outside the month", ()
   const todays = monday?.weeks.flatMap((week) =>
     week.days.filter((day) => day?.today).map((day) => day?.iso),
   );
-  expect(todays).toEqual(["2026-10-06"]);
+  expect(todays).toEqual([day(6)]);
   // From Sunday, the same month begins a column later.
-  const [sunday] = calendarMonths(OCTOBER, [], [], null, 0);
+  const [sunday] = calendarMonths(RANGE, [], [], null, 0);
   expect(sunday?.weeks[0]?.days.map((day) => day?.day ?? null)).toEqual([
     null,
     null,
@@ -241,8 +304,8 @@ test("a month is weeks from the locale's first day, blank outside the month", ()
 
 test("a filing window is drawn across every week it crosses", () => {
   const [month] = calendarMonths(
-    OCTOBER,
-    [obligation("303", "2026-10-01", "2026-10-20")],
+    RANGE,
+    [obligation("303", day(1), day(20))],
     [],
     null,
     1,
@@ -261,22 +324,23 @@ test("a filing window is drawn across every week it crosses", () => {
 
 test("the window ends on the day that binds, and an unknown opening is not guessed", () => {
   const [month] = calendarMonths(
-    OCTOBER,
+    RANGE,
     [
       // Closes on a Saturday, moved to the Monday.
-      obligation("130", "2026-10-01", "2026-10-17", "2026-10-19"),
-      obligation("349", null, "2026-10-20"),
+      obligation("130", day(1), day(17), day(19)),
+      obligation("349", null, day(20)),
     ],
     [],
     null,
     1,
   );
-  expect(
-    entrySpan(obligation("130", "2026-10-01", "2026-10-17", "2026-10-19")),
-  ).toEqual({ from: "2026-10-01", to: "2026-10-19" });
-  expect(entrySpan(obligation("349", null, "2026-10-20"))).toEqual({
-    from: "2026-10-20",
-    to: "2026-10-20",
+  expect(entrySpan(obligation("130", day(1), day(17), day(19)))).toEqual({
+    from: day(1),
+    to: day(19),
+  });
+  expect(entrySpan(obligation("349", null, day(20)))).toEqual({
+    from: day(20),
+    to: day(20),
   });
   // Week of the 19th: the moved window ends on Monday, the other is one day.
   const week = month?.weeks[3];
@@ -291,12 +355,12 @@ test("the window ends on the day that binds, and an unknown opening is not guess
 
 test("windows that overlap take rows of their own, the nearer deadline keeping the first", () => {
   const [month] = calendarMonths(
-    OCTOBER,
+    RANGE,
     [
-      obligation("111", "2026-10-01", "2026-10-20"),
-      obligation("303", "2026-10-01", "2026-10-20"),
-      obligation("100", "2026-10-01", "2026-10-30"),
-      obligation("216", "2026-10-26", "2026-10-28"),
+      obligation("111", day(1), day(20)),
+      obligation("303", day(1), day(20)),
+      obligation("100", day(1), day(30)),
+      obligation("216", day(26), day(28)),
     ],
     [],
     null,
@@ -325,13 +389,16 @@ test("windows that overlap take rows of their own, the nearer deadline keeping t
 
 test("a window across months is drawn in each, open at the edge it continues from", () => {
   const months = calendarMonths(
-    { from_date: "2026-12-01", to_date: "2027-01-31" },
-    [obligation("390", "2026-12-28", "2027-01-05")],
+    { from_date: isoDay(DECEMBER, 1), to_date: isoDay(YEAR_START, 31) },
+    [obligation("390", isoDay(DECEMBER, 28), isoDay(YEAR_START, 5))],
     [],
     null,
     1,
   );
-  expect(months.map((month) => month.key)).toEqual(["2026-12", "2027-01"]);
+  expect(months.map((month) => month.key)).toEqual([
+    monthKey(DECEMBER),
+    monthKey(YEAR_START),
+  ]);
   const bars = months.map((month) =>
     month.weeks.flatMap((week) =>
       week.bars.map((bar) => [bar.from, bar.to, bar.opens, bar.closes]),
@@ -351,21 +418,21 @@ test("a window across months is drawn in each, open at the edge it continues fro
 test("what was observed stands on its own day", () => {
   const event = {
     event_type: "filing" as const,
-    event_date: "2026-10-02",
+    event_date: day(2),
     source: "filed_declarations",
-    summary: "Modelo 111 2026-3T filed",
+    summary: `Modelo 111 ${PERIOD} filed`,
     reference_id: "ref-1",
     status: "presentado",
     aeat_submission_state: "submitted_observed" as const,
-    aeat_submitted_at: "2026-10-02T08:15:00Z",
+    aeat_submitted_at: `${day(2)}T08:15:00Z`,
     justificante_verified: false,
   };
-  const [month] = calendarMonths(OCTOBER, [], [event], null, 1);
+  const [month] = calendarMonths(RANGE, [], [event], null, 1);
   const withEvents = month?.weeks.flatMap((week) =>
     week.days.filter((day) => day && day.events.length > 0),
   );
   expect(withEvents?.map((day) => [day?.iso, day?.events.length])).toEqual([
-    ["2026-10-02", 1],
+    [day(2), 1],
   ]);
 });
 
@@ -395,17 +462,17 @@ const bars = (months: ReturnType<typeof calendarMonths>) => {
 test("a window that crosses the year's end is drawn in both years, and is first once", () => {
   const drawn = bars(
     calendarMonths(
-      { from_date: "2026-12-01", to_date: "2027-01-31" },
-      [obligation("303", "2026-12-28", "2027-01-05")],
+      { from_date: isoDay(DECEMBER, 1), to_date: isoDay(YEAR_START, 31) },
+      [obligation("303", isoDay(DECEMBER, 28), isoDay(YEAR_START, 5))],
       [],
       null,
       1,
     ),
   );
-  // 28 December 2026 is a Monday; 1 January 2027 a Friday.
+  // The 28th of December is a Monday; the 1st of January a Friday.
   expect(drawn).toEqual([
     {
-      month: "2026-12",
+      month: monthKey(DECEMBER),
       days: [28, 31],
       lane: 0,
       opens: true,
@@ -414,7 +481,7 @@ test("a window that crosses the year's end is drawn in both years, and is first 
       modelo: "303",
     },
     {
-      month: "2027-01",
+      month: monthKey(YEAR_START),
       days: [1, 3],
       lane: 0,
       opens: false,
@@ -423,7 +490,7 @@ test("a window that crosses the year's end is drawn in both years, and is first 
       modelo: "303",
     },
     {
-      month: "2027-01",
+      month: monthKey(YEAR_START),
       days: [4, 5],
       lane: 0,
       opens: false,
@@ -436,11 +503,15 @@ test("a window that crosses the year's end is drawn in both years, and is first 
 
 test("a window wider than the range is drawn through to its closing day, and no window stretches the months without bound", () => {
   const months = calendarMonths(
-    OCTOBER,
+    RANGE,
     [
-      obligation("100", "2026-09-15", "2026-11-10"),
+      obligation("100", isoDay(PRIOR, 15), isoDay(NEXT, 10)),
       // Closed before the range began.
-      obligation("111", "2026-08-01", "2026-08-20"),
+      obligation(
+        "111",
+        isoDay(monthAfter(MONTH, -2), 1),
+        isoDay(monthAfter(MONTH, -2), 20),
+      ),
     ],
     [],
     null,
@@ -448,20 +519,23 @@ test("a window wider than the range is drawn through to its closing day, and no 
   );
   // The month the window closes in is drawn after the range's own: the
   // closing day is what the calendar is for.
-  expect(months.map((month) => month.key)).toEqual(["2026-10", "2026-11"]);
+  expect(months.map((month) => month.key)).toEqual([
+    monthKey(MONTH),
+    monthKey(NEXT),
+  ]);
   const drawn = bars(months);
   // One segment for each week it crosses, from the first of October, where
   // it was already open, to the tenth of November, where it closes. The
-  // first of November 2026 is a Sunday.
+  // first of the next month is a Sunday.
   expect(drawn.map((bar) => [bar.month, ...bar.days])).toEqual([
-    ["2026-10", 1, 4],
-    ["2026-10", 5, 11],
-    ["2026-10", 12, 18],
-    ["2026-10", 19, 25],
-    ["2026-10", 26, 31],
-    ["2026-11", 1, 1],
-    ["2026-11", 2, 8],
-    ["2026-11", 9, 10],
+    [monthKey(MONTH), 1, 4],
+    [monthKey(MONTH), 5, 11],
+    [monthKey(MONTH), 12, 18],
+    [monthKey(MONTH), 19, 25],
+    [monthKey(MONTH), 26, 31],
+    [monthKey(NEXT), 1, 1],
+    [monthKey(NEXT), 2, 8],
+    [monthKey(NEXT), 9, 10],
   ]);
   expect(drawn.every((bar) => bar.modelo === "100")).toBe(true);
   expect(drawn.some((bar) => bar.opens)).toBe(false);
@@ -480,32 +554,40 @@ test("a window wider than the range is drawn through to its closing day, and no 
   // A window that is not open in the range does not stretch it.
   expect(
     calendarMonths(
-      OCTOBER,
-      [obligation("115", "2026-11-02", "2026-12-20")],
+      RANGE,
+      [obligation("115", isoDay(NEXT, 2), isoDay(monthAfter(MONTH, 2), 20))],
       [],
       null,
       1,
     ).map((month) => month.key),
-  ).toEqual(["2026-10"]);
+  ).toEqual([monthKey(MONTH)]);
   // Nor does a closing date years away draw years of months: a year past
   // the range at most.
   const far = calendarMonths(
-    OCTOBER,
-    [obligation("100", "2026-10-01", "2031-01-01")],
+    RANGE,
+    [obligation("100", day(1), isoDay(monthAfter(MONTH, 51), 1))],
     [],
     null,
     1,
   );
-  expect(far).toHaveLength(14);
-  expect(far.at(-1)?.key).toBe("2027-11");
+  // A year is at most 366 days past the range's last day.
+  const latest = new Date(Date.parse(day(31)) + 366 * 24 * 60 * 60 * 1000);
+  const lastMonth = {
+    year: latest.getUTCFullYear(),
+    month: latest.getUTCMonth() + 1,
+  };
+  expect(far).toHaveLength(
+    (lastMonth.year - MONTH.year) * 12 + lastMonth.month - MONTH.month + 1,
+  );
+  expect(far.at(-1)?.key).toBe(monthKey(lastMonth));
 });
 
 test("an opening after its close is not believed: the closing day alone is drawn", () => {
-  const entry = obligation("130", "2026-10-25", "2026-10-20");
-  expect(entrySpan(entry)).toEqual({ from: "2026-10-20", to: "2026-10-20" });
-  expect(bars(calendarMonths(OCTOBER, [entry], [], null, 1))).toEqual([
+  const entry = obligation("130", day(25), day(20));
+  expect(entrySpan(entry)).toEqual({ from: day(20), to: day(20) });
+  expect(bars(calendarMonths(RANGE, [entry], [], null, 1))).toEqual([
     {
-      month: "2026-10",
+      month: monthKey(MONTH),
       days: [20, 20],
       lane: 0,
       opens: true,
@@ -518,13 +600,13 @@ test("an opening after its close is not believed: the closing day alone is drawn
 
 test("many windows over the same days each keep a row, and a row is taken again once free", () => {
   const months = calendarMonths(
-    OCTOBER,
+    RANGE,
     [
       ...["111", "115", "123", "130", "303", "349"].map((modelo) =>
-        obligation(modelo, "2026-10-05", "2026-10-07"),
+        obligation(modelo, day(5), day(7)),
       ),
       // After the six have closed, in the same week.
-      obligation("216", "2026-10-09", "2026-10-11"),
+      obligation("216", day(9), day(11)),
     ],
     [],
     null,
@@ -555,9 +637,15 @@ test("many windows over the same days each keep a row, and a row is taken again 
   }
 });
 
+const LEAP_FEBRUARY = monthLike(
+  (month) => lengthOf(month) === 29,
+  { year: fixtureYear, month: 2 },
+  12,
+);
+
 test("a leap February has its twenty-ninth day", () => {
   const [february] = calendarMonths(
-    { from_date: "2028-02-01", to_date: "2028-02-29" },
+    { from_date: isoDay(LEAP_FEBRUARY, 1), to_date: isoDay(LEAP_FEBRUARY, 29) },
     [],
     [],
     null,
@@ -568,14 +656,18 @@ test("a leap February has its twenty-ninth day", () => {
   );
   expect(days).toHaveLength(29);
   expect(days?.at(-1)).toBe(29);
-  // 29 February 2028 is a Tuesday.
-  expect(february?.weeks.at(-1)?.days[1]?.iso).toBe("2028-02-29");
+  // The 29th stands in the column of its weekday, the week beginning on Monday.
+  const column =
+    (new Date(Date.UTC(LEAP_FEBRUARY.year, 1, 29)).getUTCDay() + 6) % 7;
+  expect(february?.weeks.at(-1)?.days[column]?.iso).toBe(
+    isoDay(LEAP_FEBRUARY, 29),
+  );
 });
 
 test("what was observed with a time of day stands on its date", () => {
   const event = {
     event_type: "filing" as const,
-    event_date: "2026-10-02T08:15:00Z",
+    event_date: `${day(2)}T08:15:00Z`,
     source: "filed_declarations",
     summary: "Filed",
     reference_id: "a",
@@ -584,11 +676,11 @@ test("what was observed with a time of day stands on its date", () => {
     aeat_submitted_at: null,
     justificante_verified: null,
   };
-  const [october] = calendarMonths(OCTOBER, [], [event], null, 1);
+  const [october] = calendarMonths(RANGE, [], [event], null, 1);
   const on = october?.weeks.flatMap((week) =>
     week.days.filter((day) => (day?.events.length ?? 0) > 0),
   );
-  expect(on?.map((day) => day?.iso)).toEqual(["2026-10-02"]);
+  expect(on?.map((day) => day?.iso)).toEqual([day(2)]);
 });
 
 test("the week begins on the day the language begins it, and on Monday where it cannot say", () => {
@@ -601,20 +693,23 @@ test("the week begins on the day the language begins it, and on Monday where it 
 });
 
 // A crowded week shows its nearest deadlines and counts the rest.
-const JANUARY = { from_date: "2027-01-01", to_date: "2027-02-28" };
+const CROWD_RANGE = {
+  from_date: isoDay(CROWDED, 1),
+  to_date: isoDay(AFTER_CROWDED, lengthOf(AFTER_CROWDED)),
+};
 const crowd = () =>
   calendarMonths(
-    JANUARY,
+    CROWD_RANGE,
     [
       // Three that close on the twentieth, three on the first of February,
       // and one that opens in the month's second week.
-      obligation("111", "2027-01-04", "2027-01-20"),
-      obligation("115", "2027-01-04", "2027-01-20"),
-      obligation("123", "2027-01-04", "2027-01-20"),
-      obligation("130", "2027-01-04", "2027-02-01"),
-      obligation("303", "2027-01-04", "2027-02-01"),
-      obligation("390", "2027-01-04", "2027-02-01"),
-      obligation("349", "2027-01-11", "2027-01-13"),
+      obligation("111", isoDay(CROWDED, 4), isoDay(CROWDED, 20)),
+      obligation("115", isoDay(CROWDED, 4), isoDay(CROWDED, 20)),
+      obligation("123", isoDay(CROWDED, 4), isoDay(CROWDED, 20)),
+      obligation("130", isoDay(CROWDED, 4), isoDay(AFTER_CROWDED, 1)),
+      obligation("303", isoDay(CROWDED, 4), isoDay(AFTER_CROWDED, 1)),
+      obligation("390", isoDay(CROWDED, 4), isoDay(AFTER_CROWDED, 1)),
+      obligation("349", isoDay(CROWDED, 11), isoDay(CROWDED, 13)),
     ],
     [],
     null,
@@ -670,23 +765,23 @@ test("an obligation's one stop is the first of it that is drawn, not the first t
   // window of three days in the month's second week closes soonest of all
   // that cross it, and is drawn there.
   expect(stops(false)).toEqual([
-    ["111", "2027-01", 1],
-    ["115", "2027-01", 1],
-    ["123", "2027-01", 1],
-    ["349", "2027-01", 2],
-    ["130", "2027-01", 4],
-    ["303", "2027-01", 4],
-    ["390", "2027-01", 4],
+    ["111", monthKey(CROWDED), 1],
+    ["115", monthKey(CROWDED), 1],
+    ["123", monthKey(CROWDED), 1],
+    ["349", monthKey(CROWDED), 2],
+    ["130", monthKey(CROWDED), 4],
+    ["303", monthKey(CROWDED), 4],
+    ["390", monthKey(CROWDED), 4],
   ]);
   // Drawn whole, every obligation stops where it opens.
   expect(stops(true)).toEqual([
-    ["111", "2027-01", 1],
-    ["115", "2027-01", 1],
-    ["123", "2027-01", 1],
-    ["130", "2027-01", 1],
-    ["303", "2027-01", 1],
-    ["390", "2027-01", 1],
-    ["349", "2027-01", 2],
+    ["111", monthKey(CROWDED), 1],
+    ["115", monthKey(CROWDED), 1],
+    ["123", monthKey(CROWDED), 1],
+    ["130", monthKey(CROWDED), 1],
+    ["303", monthKey(CROWDED), 1],
+    ["390", monthKey(CROWDED), 1],
+    ["349", monthKey(CROWDED), 2],
   ]);
   // Every obligation has exactly one stop, counted or whole.
   for (const open of [false, true])
@@ -705,17 +800,17 @@ const reading = (
 });
 const staggered = () =>
   calendarMonths(
-    { from_date: "2027-01-01", to_date: "2027-01-31" },
+    { from_date: isoDay(CROWDED, 1), to_date: isoDay(CROWDED, 31) },
     [
       // Three that opened first and close last, one late that opened after
       // them, one due sooner than they are, and one already filed that
       // closes soonest of all.
-      reading("180", "2027-01-01", "2027-01-30", "due"),
-      reading("190", "2027-01-01", "2027-01-30", "due"),
-      reading("390", "2027-01-01", "2027-01-30", "due"),
-      reading("111", "2027-01-04", "2027-01-15", "late"),
-      reading("303", "2027-01-04", "2027-01-20", "due"),
-      reading("115", "2027-01-04", "2027-01-08", "filed"),
+      reading("180", isoDay(CROWDED, 1), isoDay(CROWDED, 30), "due"),
+      reading("190", isoDay(CROWDED, 1), isoDay(CROWDED, 30), "due"),
+      reading("390", isoDay(CROWDED, 1), isoDay(CROWDED, 30), "due"),
+      reading("111", isoDay(CROWDED, 4), isoDay(CROWDED, 15), "late"),
+      reading("303", isoDay(CROWDED, 4), isoDay(CROWDED, 20), "due"),
+      reading("115", isoDay(CROWDED, 4), isoDay(CROWDED, 8), "filed"),
     ],
     [],
     null,
@@ -776,7 +871,7 @@ test("what is chosen is always drawn, in place of what the week would keep last,
   // Chosen, the obligation due on the thirtieth that the week left out is
   // drawn, and the one of its kind that was kept is counted instead. The
   // late one and the nearer deadline stay.
-  const chosen = shownIn(months, 1, "390:2026-3T");
+  const chosen = shownIn(months, 1, `390:${PERIOD}`);
   expect(chosen.shown.map(([modelo]) => modelo).sort()).toEqual([
     "111",
     "303",
@@ -786,15 +881,15 @@ test("what is chosen is always drawn, in place of what the week would keep last,
   // Its stop is still where it is drawn anyway, the week before: choosing
   // does not move the keyboard's place to a part drawn only for the choice.
   expect(chosen.stops).not.toContain("390");
-  expect(shownIn(months, 0, "390:2026-3T").stops).toContain("390");
+  expect(shownIn(months, 0, `390:${PERIOD}`).stops).toContain("390");
   // One that is drawn nowhere unless chosen has its stop where it is
   // first drawn for the choice.
   expect(shownIn(months, 1).hidden).toContain("115");
-  const filed = shownIn(months, 1, "115:2026-3T");
+  const filed = shownIn(months, 1, `115:${PERIOD}`);
   expect(filed.shown.map(([modelo]) => modelo)).toContain("115");
   expect(filed.stops).toContain("115");
   // A window kept before it was chosen stays in its row when it is.
-  expect(shownIn(months, 1, "303:2026-3T").shown).toEqual(
+  expect(shownIn(months, 1, `303:${PERIOD}`).shown).toEqual(
     shownIn(months, 1).shown,
   );
 });
@@ -803,15 +898,15 @@ test("choosing a window a crowded week already keeps changes nothing of the week
   // Seven windows of every reading and length in one week: four begin on
   // its Monday, one in the middle, one on its last day.
   const months = calendarMonths(
-    OCTOBER,
+    RANGE,
     [
-      reading("112", "2026-10-05", "2026-10-10", "unknown"),
-      reading("103", "2026-10-05", "2026-10-11", "unknown"),
-      reading("104", "2026-10-05", "2026-10-11", "filed"),
-      reading("100", "2026-10-05", "2026-10-05", "late"),
-      reading("106", "2026-10-05", "2026-10-05", "filed"),
-      reading("110", "2026-10-07", "2026-10-11", "due"),
-      reading("101", "2026-10-11", "2026-10-11", "unknown"),
+      reading("112", day(5), day(10), "unknown"),
+      reading("103", day(5), day(11), "unknown"),
+      reading("104", day(5), day(11), "filed"),
+      reading("100", day(5), day(5), "late"),
+      reading("106", day(5), day(5), "filed"),
+      reading("110", day(7), day(11), "due"),
+      reading("101", day(11), day(11), "unknown"),
     ],
     [],
     null,
@@ -831,12 +926,12 @@ test("choosing a window a crowded week already keeps changes nothing of the week
   // Choosing any window that is already drawn hides nothing more urgent
   // and moves no window to another row.
   for (const [modelo] of plain.shown)
-    expect(shownIn(months, 1, `${modelo}:2026-3T`), String(modelo)).toEqual(
+    expect(shownIn(months, 1, `${modelo}:${PERIOD}`), String(modelo)).toEqual(
       plain,
     );
   // Choosing one that was counted draws it and counts one fewer of the
   // rest; what was late, due and nearest stays.
-  const filed = shownIn(months, 1, "106:2026-3T");
+  const filed = shownIn(months, 1, `106:${PERIOD}`);
   expect(filed.shown.map(([modelo]) => modelo)).toContain("106");
   for (const urgent of ["100", "110", "112"])
     expect(filed.shown.map(([modelo]) => modelo)).toContain(urgent);
@@ -844,12 +939,12 @@ test("choosing a window a crowded week already keeps changes nothing of the week
 
 test("windows that do not share a day share a row of what a crowded week keeps", () => {
   const months = calendarMonths(
-    OCTOBER,
+    RANGE,
     [
-      obligation("111", "2026-10-05", "2026-10-06"),
-      obligation("115", "2026-10-08", "2026-10-09"),
+      obligation("111", day(5), day(6)),
+      obligation("115", day(8), day(9)),
       ...["130", "303", "349", "390"].map((modelo) =>
-        obligation(modelo, "2026-10-05", "2026-10-11"),
+        obligation(modelo, day(5), day(11)),
       ),
     ],
     [],
@@ -872,21 +967,21 @@ test("windows that do not share a day share a row of what a crowded week keeps",
 
 test("a window whose opening is not known and that closes after the range is drawn on its closing day", () => {
   const months = calendarMonths(
-    { from_date: "2027-01-01", to_date: "2027-01-31" },
-    [obligation("349", null, "2027-03-30")],
+    { from_date: isoDay(CROWDED, 1), to_date: isoDay(CROWDED, 31) },
+    [obligation("349", null, isoDay(monthAfter(CROWDED, 2), 28))],
     [],
     null,
     1,
   );
   expect(months.map((month) => month.key)).toEqual([
-    "2027-01",
-    "2027-02",
-    "2027-03",
+    monthKey(CROWDED),
+    monthKey(AFTER_CROWDED),
+    monthKey(monthAfter(CROWDED, 2)),
   ]);
   expect(bars(months)).toEqual([
     {
-      month: "2027-03",
-      days: [30, 30],
+      month: monthKey(monthAfter(CROWDED, 2)),
+      days: [28, 28],
       lane: 0,
       opens: true,
       closes: true,
@@ -898,9 +993,9 @@ test("a window whose opening is not known and that closes after the range is dra
 
 test("a week with exactly as many windows as it shows leaves none out", () => {
   const months = calendarMonths(
-    OCTOBER,
+    RANGE,
     ["111", "115", "123", "130"].map((modelo) =>
-      obligation(modelo, "2026-10-05", "2026-10-07"),
+      obligation(modelo, day(5), day(7)),
     ),
     [],
     null,

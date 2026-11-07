@@ -7,12 +7,17 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
+
 from ..compiler.loader import load_modelo_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _MODELO_DIR = Path(__file__).resolve().parents[3] / "src/cadrumo/_data/registry/aeat/modelos/303"
 _SUPER = "modelo-303-recargo-equivalencia-super-reducido-cuota"
+# The support-floor design leaves the recargo tier a free field; the next one enumerates its tiers.
+_FREE_RATE_REVISION, _FIXED_TIER_REVISION = authored_revisions("303")[:2]
+_FREE_RATE_ID, _FIXED_TIER_ID = str(_FREE_RATE_REVISION.id), str(_FIXED_TIER_REVISION.id)
 
 
 @cache
@@ -22,16 +27,16 @@ def _modelo():
 
 def test_fixed_tier_recargo_binding_cites_its_2023_design() -> None:
     """The 2023 design supplies the fixed 0.5 percent rung's bound source."""
-    revision = _modelo().revisions["2023"]
+    revision = _modelo().revisions[_FIXED_TIER_ID]
     binding = next(binding for binding in revision.bindings if str(binding.id) == _SUPER)
 
     assert binding.provider.fact == "recargo_amount_sum"
-    assert binding.source_refs[0] == "aeat-dr-303-2023"
+    assert binding.source_refs[0] == f"aeat-dr-303-{_FIXED_TIER_REVISION.valid_from.year}"
 
 
 def test_free_2022_rate_does_not_enroll_an_unused_fixed_tier_binding() -> None:
     """2022 binds the legal population's cuota without asserting the free wire rate."""
-    revision = _modelo().revisions["2022"]
+    revision = _modelo().revisions[_FREE_RATE_ID]
     binding = next(binding for binding in revision.bindings if str(binding.id) == _SUPER)
     assert binding.provider.categories == ("domestic_super_reduced",)
     assert not binding.provider.applied_rates
@@ -41,7 +46,7 @@ def test_free_2022_rate_does_not_enroll_an_unused_fixed_tier_binding() -> None:
     assert tuple(str(item) for item in construct.bindings).count(_SUPER) == 1
 
 
-@pytest.mark.parametrize(("revision_id", "bound"), (("2022", True), ("2023", True)))
+@pytest.mark.parametrize(("revision_id", "bound"), ((_FREE_RATE_ID, True), (_FIXED_TIER_ID, True)))
 def test_casilla_18_carries_the_binding_only_where_its_design_pins_the_tier(revision_id: str, bound: bool) -> None:
     """The 2022 design leaves Tipo % [17] a free field; 2023 enumerates its tiers."""
     revision = _modelo().revisions[revision_id]
@@ -53,7 +58,7 @@ def test_casilla_18_carries_the_binding_only_where_its_design_pins_the_tier(revi
 
 def test_2023_construct_keeps_the_three_recargo_cuotas_without_retired_sources() -> None:
     """Inherited binding registration must not reintroduce retired 59/60 slots."""
-    revision = _modelo().revisions["2023"]
+    revision = _modelo().revisions[_FIXED_TIER_ID]
     construct = next(item for item in revision.constructs if str(item.id) == "modelo-303-iva-autoliquidacion")
     members = tuple(str(binding_id) for binding_id in construct.bindings)
 

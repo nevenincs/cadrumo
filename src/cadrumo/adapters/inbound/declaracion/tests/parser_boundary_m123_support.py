@@ -10,6 +10,7 @@ from .....domain.calculations.registry.tests.authored_editions import (
     authored_revisions,
     filing_year_envelope,
     revision_covering,
+    revision_last_exercise,
 )
 from .parser_boundary_support import (
     MODELO_123_2023_SYNTHETIC_FIXTURE,
@@ -22,7 +23,7 @@ from .parser_boundary_support import (
 
 _CURRENT_EXERCISE = filing_year_envelope().horizon
 (_CLOSED_REVISION,) = (revision for revision in authored_revisions("123") if revision.valid_to is not None)
-_CLOSED_REVISION_LAST_EXERCISE = _CLOSED_REVISION.valid_to.year
+_CLOSED_REVISION_LAST_EXERCISE = revision_last_exercise("123", str(_CLOSED_REVISION.id))
 _FIXTURE_2024_EXERCISE = specimen_period(MODELO_123_2024_SYNTHETIC_FIXTURE).filing_year
 _FIXTURE_2023_EXERCISE = specimen_period(MODELO_123_2023_SYNTHETIC_FIXTURE).filing_year
 _FIXTURE_2024_REVISION = str(revision_covering("123", _FIXTURE_2024_EXERCISE).id)

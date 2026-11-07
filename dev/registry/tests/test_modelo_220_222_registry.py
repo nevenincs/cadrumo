@@ -30,7 +30,7 @@ from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo
-from .authored_edition_support import authored_revisions_where
+from .authored_edition_support import authored_revisions_where, newest_authored_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -38,9 +38,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 class _ModeloCase(NamedTuple):
     """One modelo's approval and plazo expectations.
 
-    ``revision_id`` names the era these expectations were authored against. It is
-    NOT used to look a revision up: this test pinned an id, and modelo 220's id
-    stopped existing the moment its span was split at the 2024/2025 re-layout --
+    No revision id is pinned: this test once looked a revision up by id, and
+    modelo 220's id stopped existing the moment its span was split at a re-layout --
     the windows neither moved nor changed, but the lookup raised ``KeyError`` and
     the modelo went unchecked. That is the same failure the sibling
     ``test_modelo_490_604_763_registry`` module already recorded for modelos 490
@@ -49,7 +48,6 @@ class _ModeloCase(NamedTuple):
     """
 
     modelo_id: str
-    revision_id: str
     approval_ref: str
     plazo_ref: str
     approval_document_id: str
@@ -60,7 +58,6 @@ class _ModeloCase(NamedTuple):
 _CASES = (
     _ModeloCase(
         modelo_id="220",
-        revision_id="2024-y-siguientes",
         approval_ref="orden-hac-657-2025:art-3",
         plazo_ref="ley-27-2014:art-124",
         approval_document_id="BOE-A-2025-12818",
@@ -69,7 +66,6 @@ _CASES = (
     ),
     _ModeloCase(
         modelo_id="222",
-        revision_id="2025-y-siguientes",
         approval_ref="orden-hfp-227-2017:art-2",
         plazo_ref="orden-hfp-227-2017:art-5",
         approval_document_id="BOE-A-2017-2778",
@@ -120,11 +116,12 @@ def test_modelo_220_222_deadline_provision_is_cited_by_every_window(case: _Model
 def test_modelo_220_annual_window_opens_july_and_closes_after_25_natural_days() -> None:
     """LIS art. 124.1: 25 natural days after six months from period close."""
     authority = compiled_bundled_authority()
-    windows = {w.id: w for _, _, w in authority.deadline_windows(2024, modelos=("220",))}
-    assert "modelo-220-2024-0a" in windows
-    window = windows["modelo-220-2024-0a"]
-    assert window.opens_on == date(2025, 7, 1)
-    assert window.closes_on == date(2025, 7, 25)
+    exercise = newest_authored_edition("220")
+    windows = {w.id: w for _, _, w in authority.deadline_windows(exercise, modelos=("220",))}
+    assert f"modelo-220-{exercise}-0a" in windows
+    window = windows[f"modelo-220-{exercise}-0a"]
+    assert window.opens_on == date(exercise + 1, 7, 1)
+    assert window.closes_on == date(exercise + 1, 7, 25)
 
 
 # The Modelo 220 revisions that cite a bundled approving form order beside their
@@ -176,11 +173,12 @@ def test_modelo_220_evidenced_revision_sources_match_the_revision_window(exercis
 def test_modelo_222_trimestral_windows_open_and_close_on_day_20() -> None:
     """Orden HFP/227/2017 art. 5.2: first 20 natural days of Apr/Oct/Dec."""
     authority = compiled_bundled_authority()
-    windows = {w.id: w for _, _, w in authority.deadline_windows(2025, modelos=("222",))}
+    exercise = newest_authored_edition("222")
+    windows = {w.id: w for _, _, w in authority.deadline_windows(exercise, modelos=("222",))}
     expected = {
-        "modelo-222-2025-1p": (date(2025, 4, 1), date(2025, 4, 20)),
-        "modelo-222-2025-2p": (date(2025, 10, 1), date(2025, 10, 20)),
-        "modelo-222-2025-3p": (date(2025, 12, 1), date(2025, 12, 20)),
+        f"modelo-222-{exercise}-1p": (date(exercise, 4, 1), date(exercise, 4, 20)),
+        f"modelo-222-{exercise}-2p": (date(exercise, 10, 1), date(exercise, 10, 20)),
+        f"modelo-222-{exercise}-3p": (date(exercise, 12, 1), date(exercise, 12, 20)),
     }
     assert set(expected) <= set(windows)
     for window_id, (opens, closes) in expected.items():

@@ -33,6 +33,8 @@ import {
 } from "../src/components/ledger/invoices/invoiceModel";
 import { findingText } from "../src/components/ledger/invoices/invoiceWords";
 import { SERVED } from "./support/servedVocabulary";
+import { fixtureDay, fixtureYear } from "../src/dev/fixtureDates";
+import { servedSupport } from "../src/dev/servedYearAuthority";
 
 const CORRECTIVE = SERVED.correctiveClass;
 
@@ -62,8 +64,8 @@ function invoice(facts: Partial<CatalogueInvoice> = {}): CatalogueInvoice {
     invoice_id: "a".repeat(64),
     bucket_id: null,
     kind: "issued",
-    invoice_number: "F-2026-001",
-    issued_at: "2026-03-02",
+    invoice_number: `F-${fixtureYear}-001`,
+    issued_at: fixtureDay(3, 2),
     counterparty_name: "Talleres Ondara, S.L.",
     counterparty_tax_id: "B00000017",
     counterparty_country: "ES",
@@ -121,8 +123,8 @@ function filled(
     ...emptyDraft("line-1", SERVED.defaultClass),
     kind: "issued",
     series: "F",
-    number: "F-2026-021",
-    issuedAt: "2026-10-23",
+    number: `F-${fixtureYear}-021`,
+    issuedAt: fixtureDay(10, 23),
     counterpartyName: "Norte Digital S. Coop.",
     taxId: RECORDED_TAX_ID,
     country: "es",
@@ -173,8 +175,8 @@ function ledger() {
   );
   return { asked, session };
 }
-const draftA: InvoicePreviewRequest = { issued_at: "2026-10-23" };
-const draftB: InvoicePreviewRequest = { issued_at: "2023-03-01" };
+const draftA: InvoicePreviewRequest = { issued_at: fixtureDay(10, 23) };
+const draftB: InvoicePreviewRequest = { issued_at: fixtureDay(3, 1, -3) };
 const said = (name: string): PreviewReply => ({
   kind: "answer",
   result: answer(name),
@@ -317,8 +319,8 @@ test("an add carries the answer's figures, and only with an answer to this very 
     counterparty_tax_id: RECORDED_TAX_ID,
     counterparty_country: "ES",
     series: "F",
-    invoice_number: "F-2026-021",
-    issued_at: "2026-10-23",
+    invoice_number: `F-${fixtureYear}-021`,
+    issued_at: fixtureDay(10, 23),
     currency: "EUR",
     notes: "",
     invoice_class: "ORDINARIA",
@@ -459,7 +461,10 @@ test("a date that strands a rate is a finding on that line", () => {
 });
 
 test("before the registry's rates, the nearest rates are served and the projection is a warning", () => {
-  const check = checked(filled({ issuedAt: "2020-12-31" }), "before_registry");
+  const check = checked(
+    filled({ issuedAt: `${servedSupport.floor - 2}-12-31` }),
+    "before_registry",
+  );
   expect(answer("before_registry").rate_slots.length).toBeGreaterThan(0);
   expect(check.request).not.toBeNull();
   expect(check.findings.general.map(({ code }) => code)).toEqual([
@@ -562,7 +567,7 @@ test("a finding is worded by its served key with its served values", () => {
   const refused = answer("rate_not_in_force");
   findingText(t, refused.findings[0]!, refused.rate_slots);
   expect(words.at(-1)?.key).toBe(refused.findings[0]!.label_key);
-  expect(words.at(-1)?.values?.on_date).toContain("2026");
+  expect(words.at(-1)?.values?.on_date).toContain(String(fixtureYear));
   const differs = answer("printed_differs");
   findingText(t, differs.findings[0]!, differs.rate_slots);
   expect(words.at(-1)?.values).toEqual({
@@ -593,47 +598,48 @@ test("the next number follows the highest in its series, class and year", () => 
   const catalogue = [
     invoice({
       invoice_id: "1".repeat(64),
-      invoice_number: "F-2026-018",
-      issued_at: "2026-09-12",
+      invoice_number: `F-${fixtureYear}-018`,
+      issued_at: fixtureDay(9, 12),
     }),
     invoice({
       invoice_id: "2".repeat(64),
-      invoice_number: "F-2026-020",
-      issued_at: "2026-10-10",
+      invoice_number: `F-${fixtureYear}-020`,
+      issued_at: fixtureDay(10, 10),
     }),
     invoice({
       invoice_id: "3".repeat(64),
-      invoice_number: "F-2025-099",
-      issued_at: "2025-12-18",
+      invoice_number: `F-${fixtureYear - 1}-099`,
+      issued_at: fixtureDay(12, 18, -1),
     }),
-    ...["2026-007", "2026-031", "2026-009"].map((number, at) =>
-      invoice({
-        invoice_id: String(4 + at).repeat(64),
-        invoice_number: number,
-        series: "2026",
-        issued_at: "2026-05-01",
-      }),
+    ...[`${fixtureYear}-007`, `${fixtureYear}-031`, `${fixtureYear}-009`].map(
+      (number, at) =>
+        invoice({
+          invoice_id: String(4 + at).repeat(64),
+          invoice_number: number,
+          series: String(fixtureYear),
+          issued_at: fixtureDay(5, 1),
+        }),
     ),
     invoice({
       invoice_id: "8".repeat(64),
-      invoice_number: "T-2026-0007",
+      invoice_number: `T-${fixtureYear}-0007`,
       series: "T",
       invoice_class: "SIMPLIFICADA",
     }),
     invoice({
       invoice_id: "9".repeat(64),
-      invoice_number: "R-2026-02",
+      invoice_number: `R-${fixtureYear}-02`,
       series: "R",
       invoice_class: "RECTIFICATIVA",
     }),
     invoice({
       invoice_id: "c".repeat(64),
       kind: "received",
-      invoice_number: "F-2026-500",
+      invoice_number: `F-${fixtureYear}-500`,
     }),
   ];
   // The numbers are counted within the calendar year the first invoice was issued in.
-  const issuedYear = Number(catalogue[0]!.issued_at!.slice(0, 4));
+  const issuedYear = fixtureYear;
   const ask = (
     series: string,
     invoiceClass: "ORDINARIA" | "SIMPLIFICADA" | "RECTIFICATIVA" = "ORDINARIA",
@@ -646,21 +652,24 @@ test("the next number follows the highest in its series, class and year", () => 
       series,
       year,
     });
-  expect(ask("F")).toEqual({ series: "F", number: "F-2026-021" });
+  expect(ask("F")).toEqual({ series: "F", number: `F-${fixtureYear}-021` });
   // With no series typed, the class's most used series that year.
-  expect(ask("")).toEqual({ series: "2026", number: "2026-032" });
+  expect(ask("")).toEqual({
+    series: String(fixtureYear),
+    number: `${fixtureYear}-032`,
+  });
   expect(ask("", "SIMPLIFICADA")).toEqual({
     series: "T",
-    number: "T-2026-0008",
+    number: `T-${fixtureYear}-0008`,
   });
   expect(ask("", "RECTIFICATIVA")).toBeNull();
   expect(ask("R", "RECTIFICATIVA")).toEqual({
     series: "R",
-    number: "R-2026-03",
+    number: `R-${fixtureYear}-03`,
   });
   expect(ask("F", "ORDINARIA", issuedYear - 1)).toEqual({
     series: "F",
-    number: "F-2025-100",
+    number: `F-${fixtureYear - 1}-100`,
   });
   // Nothing to follow: no suggestion is made up.
   expect(ask("Z")).toBeNull();
@@ -727,7 +736,7 @@ test("a correction sends only the changed fields the update accepts", () => {
   const stored = invoice({
     retention_rate: { decimal: "0.15" },
     retention_amount: { decimal: "150.00" },
-    operation_date: "2026-03-01",
+    operation_date: fixtureDay(3, 1),
     operation_date_role: "OPERATION_PERFORMED",
   });
   const draft = correctionOf(stored);
@@ -764,7 +773,7 @@ test("a correction sends only the changed fields the update accepts", () => {
   // has answered the change.
   const rectified = invoice({
     invoice_class: "RECTIFICATIVA",
-    rectifies_invoice_number: "F-2026-001",
+    rectifies_invoice_number: `F-${fixtureYear}-001`,
   });
   expect(
     checkCorrection(
@@ -791,7 +800,7 @@ test("a correction sends only the changed fields the update accepts", () => {
 
 test("a stored date, series and rectified number take the ledger's verdict", () => {
   const dated = invoice({
-    operation_date: "2026-03-01",
+    operation_date: fixtureDay(3, 1),
     operation_date_role: "OPERATION_PERFORMED",
   });
   const taken = checkCorrection(
@@ -807,7 +816,7 @@ test("a stored date, series and rectified number take the ledger's verdict", () 
   const plain = invoice();
   const added = checkCorrection(
     plain,
-    { ...correctionOf(plain), operationDate: "2026-03-01" },
+    { ...correctionOf(plain), operationDate: fixtureDay(3, 1) },
     answer("correction_date_added"),
     CORRECTIVE,
   );
@@ -919,22 +928,22 @@ test("the catalogue filters by kind, class, payment, links, period and words", (
   const catalogue = [
     invoice({
       invoice_id: "1".repeat(64),
-      invoice_number: "F-2026-001",
-      issued_at: "2026-02-01",
+      invoice_number: `F-${fixtureYear}-001`,
+      issued_at: fixtureDay(2, 1),
     }),
     invoice({
       invoice_id: "2".repeat(64),
       kind: "received",
       invoice_number: "A-1093",
       counterparty_name: "Papelería Trazo",
-      issued_at: "2026-10-14",
+      issued_at: fixtureDay(10, 14),
       payment_status: "CANCELLED",
       grand_total: { decimal: "93.17" },
     }),
     invoice({
       invoice_id: "3".repeat(64),
-      invoice_number: "F-2026-002",
-      issued_at: "2026-08-01",
+      invoice_number: `F-${fixtureYear}-002`,
+      issued_at: fixtureDay(8, 1),
       linked_transaction_ids: ["f".repeat(64)],
     }),
   ];
@@ -945,13 +954,13 @@ test("the catalogue filters by kind, class, payment, links, period and words", (
   ).toEqual(["A-1093"]);
   expect(
     ids(filterCatalogue(catalogue, { ...NO_FILTER, unmatched: true })),
-  ).toEqual(["F-2026-001", "A-1093"]);
+  ).toEqual([`F-${fixtureYear}-001`, "A-1093"]);
   expect(
     ids(filterCatalogue(catalogue, { ...NO_FILTER, payment: "CANCELLED" })),
   ).toEqual(["A-1093"]);
   // A period filters by the days the backend served for it, and keeps nothing
   // while they are not served.
-  const third = { year: 2026, code: "3T" } as const;
+  const third = { year: fixtureYear, code: "3T" } as const;
   expect(
     ids(filterCatalogue(catalogue, { ...NO_FILTER, period: third })),
   ).toEqual([]);
@@ -959,7 +968,7 @@ test("the catalogue filters by kind, class, payment, links, period and words", (
   try {
     expect(
       ids(filterCatalogue(catalogue, { ...NO_FILTER, period: third })),
-    ).toEqual(["F-2026-002"]);
+    ).toEqual([`F-${fixtureYear}-002`]);
   } finally {
     holdLedgerPeriods(null, null);
   }
@@ -970,10 +979,10 @@ test("the catalogue filters by kind, class, payment, links, period and words", (
   ).toEqual(["A-1093"]);
   expect(
     ids(sortCatalogue(catalogue, { key: "total", direction: "asc" })),
-  ).toEqual(["A-1093", "F-2026-002", "F-2026-001"]);
+  ).toEqual(["A-1093", `F-${fixtureYear}-002`, `F-${fixtureYear}-001`]);
   expect(
     ids(sortCatalogue(catalogue, { key: "date", direction: "desc" })),
-  ).toEqual(["A-1093", "F-2026-002", "F-2026-001"]);
+  ).toEqual(["A-1093", `F-${fixtureYear}-002`, `F-${fixtureYear}-001`]);
 });
 
 test("a payment id is read against the shape the ledger serves, and not at all while it serves none", () => {

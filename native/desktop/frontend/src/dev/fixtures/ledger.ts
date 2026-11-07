@@ -7,14 +7,14 @@ import type { CatalogueInvoice } from "../../shell/ledgerInvoiceOperations";
 import type { LedgerTransaction, PublicDecimal } from "../../shell/ledger";
 import { exampleInvoices } from "./ledgerInvoices";
 import { settlementOf } from "../ledgerSettlement";
-import { fixtureDay, fixtureInstant } from "@/dev/fixtureDates";
+import { fixtureDay, fixtureInstant, fixtureYear } from "@/dev/fixtureDates";
 
 /** The profile the fixture ledger belongs to: the profile fixture's own. */
 export const LEDGER_FIXTURE_PROFILE_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 /** The fixture's today: movements reach up to this day. */
 export const LEDGER_FIXTURE_TODAY = fixtureDay(10, 23);
 /** The year of the fixture's today, which the ledger is made for. */
-const FIXTURE_YEAR = LEDGER_FIXTURE_TODAY.slice(0, 4);
+const FIXTURE_YEAR = String(fixtureYear);
 /** The quarter a finalized Modelo 303 revision cites: its rows are sealed. */
 export const SEALED_PERIOD = {
   filing_year: Number(FIXTURE_YEAR),
@@ -578,7 +578,7 @@ export function fixtureLedger(): FixtureLedger {
       transaction,
       group_label: extra.group_label ?? null,
       own_account_id: account,
-      import_batch_id: `import-2026-${String(month).padStart(2, "0")}`,
+      import_batch_id: `import-${FIXTURE_YEAR}-${String(month).padStart(2, "0")}`,
       issue: extra.issue ?? null,
       sealed: month <= 3,
       llm_rejected: extra.llm_rejected ?? false,
@@ -599,7 +599,7 @@ export function fixtureLedger(): FixtureLedger {
       const ivaCents = Math.round(baseCents * 0.21);
       const retentionCents = Math.round(baseCents * 0.15);
       const issued = day(month, random.between(1, Math.min(10, last)));
-      const number = `2026-${String(invoices.length + 1).padStart(3, "0")}`;
+      const number = `${FIXTURE_YEAR}-${String(invoices.length + 1).padStart(3, "0")}`;
       const invoiceId = hex64(`invoice:${number}`);
       const paid = day(month, random.between(Math.min(15, last), last));
       const paidCents = baseCents + ivaCents - retentionCents;
@@ -721,7 +721,7 @@ export function fixtureLedger(): FixtureLedger {
           attachment_id: hex64(`evidence-bytes:${month}`),
           media_kind: scanned ? "image" : "pdf",
           supplier: "Coworking Ribera, S.L.",
-          invoice_number: `CR-2026-${String(month).padStart(4, "0")}`,
+          invoice_number: `CR-${FIXTURE_YEAR}-${String(month).padStart(4, "0")}`,
           invoice_date: day(month, 1),
           taxable_base: money(base),
           iva_rate: "21",
@@ -729,7 +729,7 @@ export function fixtureLedger(): FixtureLedger {
           notes: "",
           created_at: stamp(day(month, 2), 30),
           updated_at: stamp(day(month, 2), 30),
-          source_path: `coworking-ribera-2026-${String(month).padStart(2, "0")}.${scanned ? "jpg" : "pdf"}`,
+          source_path: `coworking-ribera-${FIXTURE_YEAR}-${String(month).padStart(2, "0")}.${scanned ? "jpg" : "pdf"}`,
         });
       }
       const paid = push(kind, date, amount, {
@@ -739,7 +739,7 @@ export function fixtureLedger(): FixtureLedger {
       if (evidenceId) {
         // The coworking's monthly invoice, received and linked to its payment.
         const base = Math.round((amount * 100) / 121);
-        const number = `CR-2026-${String(month).padStart(4, "0")}`;
+        const number = `CR-${FIXTURE_YEAR}-${String(month).padStart(4, "0")}`;
         const invoiceId = hex64(`invoice:${number}`);
         paid.invoice_id = invoiceId;
         invoices.push(
@@ -941,7 +941,7 @@ export const LARGE_LEDGER_EXTRA = 5_000;
  * 2026, generated the same way on every run. */
 export function ledgerOfRows(rows: number): FixtureLedger {
   const held = fixtureLedger().movements.filter((movement) =>
-    /^2026-1[0-2]-/.test(movement.transaction.date),
+    new RegExp(`^${FIXTURE_YEAR}-1[0-2]-`).test(movement.transaction.date),
   ).length;
   return largeLedger(Math.max(0, rows - held));
 }
@@ -952,7 +952,7 @@ export function ledgerOfRows(rows: number): FixtureLedger {
 export function largeLedger(extra = LARGE_LEDGER_EXTRA): FixtureLedger {
   const ledger = fixtureLedger();
   const october = ledger.movements.filter((movement) =>
-    movement.transaction.date.startsWith("2026-10-"),
+    movement.transaction.date.startsWith(`${FIXTURE_YEAR}-10-`),
   );
   for (let at = 0; at < extra; at += 1) {
     const source = october[at % october.length]!;

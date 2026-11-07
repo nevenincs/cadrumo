@@ -38,6 +38,7 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     LedgerIvaProvider,
     resolve_ledger_iva_aggregation_binding_values,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
@@ -47,7 +48,9 @@ from .gate_support import mutate_declaration, scratch_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
-_REVISION_ID = "2025"
+_REVISION = open_ended_revision("303")
+_REVISION_ID = str(_REVISION.id)
+_EXERCISE = _REVISION.valid_from.year
 _CASILLA_BASE = "iva.autorepercutido.intracomunitaria.devengado.base"
 _BINDING_BASE = "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base"
 _FORMULA_BOX_10 = "modelo-303-dr303-10-projection"
@@ -72,7 +75,7 @@ def _aic_goods_zero_row(ledger_id: str) -> IvaLedgerObservation:
     """An intra-community acquisition at the zero rate whose base is non-zero and whose cuota is zero."""
     return IvaLedgerObservation(
         ledger_id=ledger_id,
-        transaction_date=date(2025, 5, 10),
+        transaction_date=date(_EXERCISE, 5, 10),
         category=IvaCategory("intra_community_acquisition_reverse_charge"),
         rate_kind=IvaRateKind("zero"),
         applied_rate=Decimal("0.00"),
@@ -118,7 +121,7 @@ def test_aic_row_feeds_box_10_base_and_box_11_cuota_from_the_same_row() -> None:
 
     aic_row = IvaLedgerObservation(
         ledger_id="aic-goods-1",
-        transaction_date=date(2025, 5, 10),
+        transaction_date=date(_EXERCISE, 5, 10),
         category=IvaCategory("intra_community_acquisition_reverse_charge"),
         rate_kind=IvaRateKind("general"),
         applied_rate=Decimal("0.21"),
