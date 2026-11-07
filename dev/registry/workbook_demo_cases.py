@@ -8,15 +8,88 @@ covers; nothing here writes a revision id or a year.
 
 from dataclasses import dataclass, field
 from decimal import Decimal
+from functools import cache
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
+from .compiler.authority import compiled_bundled_authority
 
-def _horizon_year() -> int:
+
+def supported_horizon_year() -> int:
     """The newest filing year the pinned authority supports."""
     with bundled_indexed_authority().operation() as operation:
         return operation.supported_filing_years().horizon
+
+
+@cache
+def edition_ids(modelo_id: str) -> tuple[str, ...]:
+    """Every edition (revision id) the pinned authority carries for ``modelo_id``, oldest first."""
+    with bundled_indexed_authority().operation() as operation:
+        editions = operation.modelo_directory(modelo_id).revisions
+        return tuple(str(item.id) for item in sorted(editions, key=lambda item: (item.valid_from, str(item.id))))
+
+
+def edition_id(modelo_id: str, position: int) -> str:
+    """The edition at ``position`` among the Modelo's editions, oldest first."""
+    return edition_ids(modelo_id)[position]
+
+
+def oldest_edition_id(modelo_id: str) -> str:
+    """The Modelo's oldest edition."""
+    return edition_ids(modelo_id)[0]
+
+
+def newest_edition_id(modelo_id: str) -> str:
+    """The Modelo's newest edition."""
+    return edition_ids(modelo_id)[-1]
+
+
+def edition_declares(modelo_id: str, revision_id: str, casilla_id: str) -> bool:
+    """Whether the edition's design declares the casilla."""
+    with bundled_indexed_authority().operation() as operation:
+        return any(str(item.id) == casilla_id for item in operation.revision(modelo_id, revision_id).casillas)
+
+
+def has_differentiated_sectors(modelo_id: str, revision_id: str) -> bool:
+    """Whether the edition's design carries the annual summary of deductions by differentiated sector."""
+    return edition_declares(modelo_id, revision_id, "iva.anual.sector-diferenciado-1.suma-deducciones")
+
+
+@dataclass(frozen=True)
+class TemplateEdition:
+    """The edition a fictional template preview is built from."""
+
+    revision_id: str
+    source_ref: str
+    period: str
+
+
+def template_edition(modelo_id: str, year: int, *, preferred_period: str = "0A") -> TemplateEdition:
+    """The edition whose period selector serves ``year``, with its design source and a period it serves.
+
+    The year may lie below the support floor: the registry's own sources carry
+    those editions, and no filing-year admission is involved.
+    """
+    modelo = compiled_bundled_authority().modelo(modelo_id)
+    (revision,) = (item for item in modelo.revisions.values() if item.period_selector.includes_year(year))
+    (source_ref,) = (str(ref) for ref in revision.source_refs if str(ref).startswith(f"aeat-dr-{modelo_id}-"))
+    served = tuple(str(token) for token in revision.period_selector.periods_for_year(year))
+    period = preferred_period if preferred_period in served else served[0]
+    return TemplateEdition(revision_id=str(revision.id), source_ref=source_ref, period=period)
+
+
+def newest_historical_year(modelo_id: str) -> int:
+    """The last year of the Modelo's newest edition that ended before the support floor."""
+    with bundled_indexed_authority().operation() as operation:
+        floor = operation.supported_filing_years().floor
+    modelo = compiled_bundled_authority().modelo(modelo_id)
+    ended = [
+        item.period_selector.year_to
+        for item in modelo.revisions.values()
+        if item.period_selector.year_to is not None and item.period_selector.year_to < floor
+    ]
+    return max(ended)
 
 
 @dataclass(frozen=True)
@@ -27,7 +100,7 @@ class DemoCase:
     revision: str
     result_casilla: str | None
     expected_result: Decimal | None
-    filing_year: int = field(default_factory=_horizon_year)
+    filing_year: int = field(default_factory=supported_horizon_year)
     authority_grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING
     period: str = "4T"
 
@@ -128,10 +201,7 @@ def _demo_cases(specs: tuple[_Spec, ...]) -> tuple[DemoCase, ...]:
     with bundled_indexed_authority().operation() as operation:
         support = operation.supported_filing_years()
         for spec in specs:
-            editions = sorted(
-                operation.modelo_directory(spec.modelo).revisions, key=lambda item: (item.valid_from, str(item.id))
-            )
-            revision_id = str(editions[spec.edition].id)
+            revision_id = edition_id(spec.modelo, spec.edition)
             revision = operation.revision(spec.modelo, revision_id)
             year = next(year for year in reversed(support.years) if revision.period_selector.includes_year(year))
             cases.append(
