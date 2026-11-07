@@ -1,4 +1,5 @@
 import { buildPath } from "../../../scripts/build-paths.mjs";
+import { writeAliasProject } from "../../scripts/fixture-alias.mjs";
 import { defineConfig } from "@playwright/test";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -11,17 +12,24 @@ import { fileURLToPath } from "node:url";
 // `--ledger-privacy` option.
 //
 // The tsconfig beside this file resolves "@playwright/test" to the live
-// fixture, so the specs receive the desktop's window as their page. Checks
-// only the scenario host can satisfy read `metadata.agentHost`, which is
-// "live" here and absent on the scenario project.
+// fixture, so the specs receive the desktop's window as their page. The shared
+// specs also import the window projections through @fixtures, which that file
+// cannot bind to a build tree, so a project file written into the build tree
+// extends it and adds the alias. Checks only the scenario host can satisfy
+// read `metadata.agentHost`, which is "live" here and absent on the scenario
+// project.
 const here = fileURLToPath(new URL(".", import.meta.url));
 const results =
   process.env.CADRUMO_DEV_DESKTOP_LIVE_RESULTS ||
   resolve(buildPath("desktop_results"), "agent-live");
+const tsconfig = writeAliasProject(
+  resolve(buildPath("desktop_testing"), "playwright-live-tsconfig.json"),
+  { project: resolve(here, "tsconfig.json") },
+);
 
 export default defineConfig({
   testDir: resolve(here, ".."),
-  tsconfig: resolve(here, "tsconfig.json"),
+  tsconfig,
   // Playwright empties this directory when a run starts. The lane scans it,
   // traces and screenshots included, for provider keys after the run.
   outputDir: resolve(results, "browser"),
