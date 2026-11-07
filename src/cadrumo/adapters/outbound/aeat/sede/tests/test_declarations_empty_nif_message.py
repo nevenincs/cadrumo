@@ -13,16 +13,19 @@ from ......core.casilla_id import CasillaId, validated_casilla_id
 from ......core.period import Period
 from ......domain.calculations.registry.errors import RegistryValidationError
 from ......domain.calculations.registry.relations import relation_source_requirements
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ..errors import SedeParseError
 from .declarations_support import (
     filed_observation,
     modelo_snapshot,
-    renta_2025_relation_observations,
+    renta_relation_observations,
     resolve_relations_from_observations,
     whitespace_nif_session,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_YEAR = filing_year_envelope().horizon
+_RENTA_YEAR = newest_authored_edition("100")
 _M115_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("01", surface="_M115_PERCEPTORES_CASILLA")
 _M115_BASE_CASILLA: CasillaId = validated_casilla_id("02", surface="_M115_BASE_CASILLA")
 _M115_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("03", surface="_M115_RETENCIONES_CASILLA")
@@ -37,8 +40,10 @@ class TestFiledObservationRelations:
 
     def test_modelo_100_relation_fixture_covers_registry_source_requirements(self) -> None:
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
-            snapshot = modelo_snapshot("100", filing_year=2025, period="0A", operation=_authority_operation_for_test)
-            observations = renta_2025_relation_observations()
+            snapshot = modelo_snapshot(
+                "100", filing_year=_RENTA_YEAR, period="0A", operation=_authority_operation_for_test
+            )
+            observations = renta_relation_observations(_RENTA_YEAR)
             available = {
                 (observation.modelo, observation.ejercicio, observation.period.registry_token, casilla.casilla_id)
                 for observation in observations
@@ -46,12 +51,12 @@ class TestFiledObservationRelations:
             }
             missing = [
                 (requirement.source_modelo, requirement.filing_year, period, requirement.source_casilla_ids[0])
-                for requirement in relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
+                for requirement in relation_source_requirements(snapshot.revision, filing_year=_RENTA_YEAR, period="0A")
                 for period in requirement.periods
                 # A source declared over alternative cadences is filed under
                 # one of them; the fixture files the first declared cadence.
-                if Period.from_year_and_code(2025, period).kind
-                == Period.from_year_and_code(2025, requirement.periods[0]).kind
+                if Period.from_year_and_code(_RENTA_YEAR, period).kind
+                == Period.from_year_and_code(_RENTA_YEAR, requirement.periods[0]).kind
                 and (
                     requirement.source_modelo,
                     requirement.filing_year,
@@ -65,14 +70,16 @@ class TestFiledObservationRelations:
 
     def test_modelo_100_relations_resolve_from_standardized_filed_observations(self) -> None:
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
-            snapshot = modelo_snapshot("100", filing_year=2025, period="0A", operation=_authority_operation_for_test)
-            observations = renta_2025_relation_observations()
+            snapshot = modelo_snapshot(
+                "100", filing_year=_RENTA_YEAR, period="0A", operation=_authority_operation_for_test
+            )
+            observations = renta_relation_observations(_RENTA_YEAR)
 
             resolved = resolve_relations_from_observations(
                 snapshot.revision,
                 observations,
-                filing_year=2025,
-                period=Period.from_year_and_code(2025, "0A"),
+                filing_year=_RENTA_YEAR,
+                period=Period.from_year_and_code(_RENTA_YEAR, "0A"),
                 operation=_authority_operation_for_test,
             )
 
@@ -103,19 +110,21 @@ class TestFiledObservationRelations:
             without_m184 = resolve_relations_from_observations(
                 snapshot.revision,
                 tuple(observation for observation in observations if observation.modelo != "184"),
-                filing_year=2025,
-                period=Period.from_year_and_code(2025, "0A"),
+                filing_year=_RENTA_YEAR,
+                period=Period.from_year_and_code(_RENTA_YEAR, "0A"),
                 operation=_authority_operation_for_test,
             )
             assert resolved == without_m184
 
     def test_modelo_100_relation_resolution_requires_each_source_period(self) -> None:
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
-            snapshot = modelo_snapshot("100", filing_year=2025, period="0A", operation=_authority_operation_for_test)
-            missing_period = Period.from_year_and_code(2025, "4T")
+            snapshot = modelo_snapshot(
+                "100", filing_year=_RENTA_YEAR, period="0A", operation=_authority_operation_for_test
+            )
+            missing_period = Period.from_year_and_code(_RENTA_YEAR, "4T")
             observations = tuple(
                 observation
-                for observation in renta_2025_relation_observations()
+                for observation in renta_relation_observations(_RENTA_YEAR)
                 if not (observation.modelo == "131" and observation.period == missing_period)
             )
 
@@ -123,18 +132,20 @@ class TestFiledObservationRelations:
                 resolve_relations_from_observations(
                     snapshot.revision,
                     observations,
-                    filing_year=2025,
-                    period=Period.from_year_and_code(2025, "0A"),
+                    filing_year=_RENTA_YEAR,
+                    period=Period.from_year_and_code(_RENTA_YEAR, "0A"),
                     operation=_authority_operation_for_test,
                 )
 
     def test_modelo_100_relation_resolution_rejects_duplicate_source_periods(self) -> None:
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
-            snapshot = modelo_snapshot("100", filing_year=2025, period="0A", operation=_authority_operation_for_test)
-            observations = renta_2025_relation_observations()
+            snapshot = modelo_snapshot(
+                "100", filing_year=_RENTA_YEAR, period="0A", operation=_authority_operation_for_test
+            )
+            observations = renta_relation_observations(_RENTA_YEAR)
             duplicate = filed_observation(
                 modelo="130",
-                ejercicio=2025,
+                ejercicio=_RENTA_YEAR,
                 period="1T",
                 casilla_values={_M130_RESULTADO_FINAL_CASILLA: Decimal("1")},
             )
@@ -143,12 +154,12 @@ class TestFiledObservationRelations:
                 resolve_relations_from_observations(
                     snapshot.revision,
                     (*observations, duplicate),
-                    filing_year=2025,
-                    period=Period.from_year_and_code(2025, "0A"),
+                    filing_year=_RENTA_YEAR,
+                    period=Period.from_year_and_code(_RENTA_YEAR, "0A"),
                     operation=_authority_operation_for_test,
                 )
 
-    @pytest.mark.parametrize("filing_year", (2022, 2026))
+    @pytest.mark.parametrize("filing_year", (filing_year_envelope().floor, filing_year_envelope().horizon))
     def test_annual_summary_relations_resolve_from_quarterly_filed_observations(self, filing_year: int) -> None:
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
             snapshot = modelo_snapshot(
@@ -202,7 +213,7 @@ class TestFiledObservationRelations:
 
     def test_modelo_193_relations_resolve_from_quarterly_filed_observations(self) -> None:
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
-            snapshot = modelo_snapshot("193", filing_year=2026, period="0A", operation=_authority_operation_for_test)
+            snapshot = modelo_snapshot("193", filing_year=_YEAR, period="0A", operation=_authority_operation_for_test)
             quarterly_values = {
                 "1T": {
                     _M123_PERCEPTORES_CASILLA: Decimal("5"),
@@ -231,14 +242,14 @@ class TestFiledObservationRelations:
                 tuple(
                     filed_observation(
                         modelo="123",
-                        ejercicio=2026,
+                        ejercicio=_YEAR,
                         period=period,
                         casilla_values=casilla_values,
                     )
                     for period, casilla_values in quarterly_values.items()
                 ),
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "0A"),
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "0A"),
                 operation=_authority_operation_for_test,
             )
 
@@ -251,11 +262,11 @@ class TestFiledObservationRelations:
 
     def test_missing_relation_source_filing_is_rejected(self) -> None:
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
-            snapshot = modelo_snapshot("180", filing_year=2026, period="0A", operation=_authority_operation_for_test)
+            snapshot = modelo_snapshot("180", filing_year=_YEAR, period="0A", operation=_authority_operation_for_test)
             observations = tuple(
                 filed_observation(
                     modelo="115",
-                    ejercicio=2026,
+                    ejercicio=_YEAR,
                     period=period,
                     casilla_values={
                         _M115_PERCEPTORES_CASILLA: Decimal("1"),
@@ -270,18 +281,18 @@ class TestFiledObservationRelations:
                 resolve_relations_from_observations(
                     snapshot.revision,
                     observations,
-                    filing_year=2026,
-                    period=Period.from_year_and_code(2026, "0A"),
+                    filing_year=_YEAR,
+                    period=Period.from_year_and_code(_YEAR, "0A"),
                     operation=_authority_operation_for_test,
                 )
 
     def test_incomplete_relation_source_observation_is_rejected(self) -> None:
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
-            snapshot = modelo_snapshot("180", filing_year=2026, period="0A", operation=_authority_operation_for_test)
+            snapshot = modelo_snapshot("180", filing_year=_YEAR, period="0A", operation=_authority_operation_for_test)
             observations = tuple(
                 filed_observation(
                     modelo="115",
-                    ejercicio=2026,
+                    ejercicio=_YEAR,
                     period=period,
                     casilla_values={
                         _M115_PERCEPTORES_CASILLA: Decimal("1"),
@@ -297,8 +308,8 @@ class TestFiledObservationRelations:
                 resolve_relations_from_observations(
                     snapshot.revision,
                     observations,
-                    filing_year=2026,
-                    period=Period.from_year_and_code(2026, "0A"),
+                    filing_year=_YEAR,
+                    period=Period.from_year_and_code(_YEAR, "0A"),
                     operation=_authority_operation_for_test,
                 )
 
@@ -316,13 +327,13 @@ def test_register_capture_empty_nif_carries_translated_message() -> None:
     session = whitespace_nif_session()
     declaration = ExpedientesDeclaration(
         modelo="130",
-        ejercicio=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        expediente_id="202600000000001E",
+        ejercicio=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        expediente_id=f"{_YEAR}00000000001E",
         estado="ALTA",
         tipo_solicitud=None,
         observaciones=None,
-        presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+        presented_at=datetime(_YEAR, 4, 20, 10, 0, 0, tzinfo=UTC),
         justificante_link_text="Ver",
         archive_link_text=None,
         declaration_copy_link_text=None,

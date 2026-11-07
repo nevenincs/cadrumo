@@ -28,6 +28,7 @@ from sqlalchemy import select
 
 from ......core.config import Settings
 from ......core.period import Period
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from .....persistence.storage.secure_object_namespaces import (
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
     AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
@@ -45,6 +46,7 @@ from .observation_store_support import (
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+_EJERCICIO = newest_authored_edition("100")
 _BUCKET_ID = "7303a2b7-83c8-4937-99f7-8259455fafe4"  # was 'sede-namespace-binding'
 _AEAT = Settings.external_constants().aeat
 _COTEJO_DOCUMENT_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.cotejo_document}"
@@ -60,12 +62,14 @@ def test_persisted_rows_carry_registry_declared_classification_and_version(
 
         body = b"%PDF-1.7 sede declaration body for namespace-binding proof"
         artefact = store.persist_artefact(
-            ("100", 2023, Period.from_year_and_code(2023, "0A"), "202310013522456T"),
+            ("100", _EJERCICIO, Period.from_year_and_code(_EJERCICIO, "0A"), "202310013522456T"),
             declaration_pdf_artefact(body),
             body,
         )
         store.persist_observation(filed_declaration_observation(artefact))
-        store.persist_iva_wallet_observation(pending_wallet_observation(datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)))
+        store.persist_iva_wallet_observation(
+            pending_wallet_observation(datetime(filing_year_envelope().horizon, 5, 19, 12, 0, 0, tzinfo=UTC))
+        )
 
         expected_by_namespace = {
             AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE.namespace: AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,

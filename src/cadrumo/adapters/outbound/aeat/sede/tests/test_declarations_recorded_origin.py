@@ -30,6 +30,7 @@ from __future__ import annotations
 import pytest
 
 from ......core.config import Settings
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..declarations_fetch import (
     SEDE_BASE,
     cotejo_document_url,
@@ -121,10 +122,10 @@ class TestRecordedUrlsUseTheLandedOrigin:
     @pytest.mark.parametrize("origin", _DISPATCH_ORIGINS)
     def test_listing_url_uses_the_given_origin(self, origin: str) -> None:
         """The listing URL recorded on an observation names the landed host."""
-        built = listing_url_for(origin, modelo="303", ejercicio=2024)
+        built = listing_url_for(origin, modelo="303", ejercicio=filing_year_envelope().horizon)
         assert built.startswith(origin)
         assert "MODELO=303" in built
-        assert "EJERCICIO=2024" in built
+        assert f"EJERCICIO={filing_year_envelope().horizon}" in built
 
     @pytest.mark.parametrize("origin", _DISPATCH_ORIGINS)
     def test_cotejo_document_url_uses_the_given_origin(self, origin: str) -> None:
@@ -142,7 +143,7 @@ class TestRecordedUrlsUseTheLandedOrigin:
         foreign = _DOMAINS.www12
         assert foreign != SEDE_BASE, "the discriminating origin must differ from the pinned one"
         for built in (
-            listing_url_for(foreign, modelo="130", ejercicio=2025),
+            listing_url_for(foreign, modelo="130", ejercicio=filing_year_envelope().horizon),
             cotejo_document_url(foreign, "FIXTURECSV1234X7"),
         ):
             assert not built.startswith(SEDE_BASE)
