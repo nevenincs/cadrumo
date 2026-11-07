@@ -47,7 +47,7 @@ from cadrumo.domain.renta.actividad_asset.register_records import (
 
 from ..register_timeline import flatten
 from .register_support import published_class_labels
-from .test_register import NAME, register_operations, register_revision
+from .test_register import FIRST_YEAR, NAME, register_operations, register_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -132,7 +132,7 @@ def test_a_share_reads_as_a_percentage() -> None:
 
 
 def test_the_timeline_words_a_changed_class_share_method_order_and_opening_method() -> None:
-    labels = published_class_labels(DirectEstimationRegime.SIMPLIFIED, 2025)
+    labels = published_class_labels(DirectEstimationRegime.SIMPLIFIED, FIRST_YEAR)
     before_class = "equipo-informacion-software"
     after_class = next(key for key in sorted(labels) if key != before_class)
     operations, _ = register_operations()
@@ -154,7 +154,7 @@ def test_the_timeline_words_a_changed_class_share_method_order_and_opening_metho
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal("100"),
             amortization_method=AmortizationMethod.LINEAR,
-            covered_through_tax_year=2025,
+            covered_through_tax_year=FIRST_YEAR,
         ).model_dump(),
         amortization={
             **first.amortization.model_dump(),

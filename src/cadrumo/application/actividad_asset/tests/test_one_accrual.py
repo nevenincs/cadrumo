@@ -1,8 +1,9 @@
 """Plan, forecast, Modelo 130 accrual and claim read one deductible pending value.
 
-Hand-worked: a 10,000.00 basis at 10%, in service 1 January 2020, no opening amount and
-no claim until 2025.  Each full year charges 1,000.00.  The value pending on 1 January
-2025 is 10,000.00, because a year nobody claimed takes nothing from later years.
+Hand-worked: a 10,000.00 basis at 10%, in service on 1 January five years before the filing
+year, no opening amount and no claim until the filing year.  Each full year charges 1,000.00.
+The value pending on 1 January of the filing year is 10,000.00, because a year nobody claimed
+takes nothing from later years.
 """
 
 from __future__ import annotations
@@ -22,6 +23,7 @@ from cadrumo.application.actividad_asset.schedule_walk import (
     m130_register_accruals,
 )
 from cadrumo.domain.calculations.registry.actividad_asset_bindings import ActivityAssetDisposalBounds
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.renta.actividad_asset.election import (
     AcquiredCondition,
     ActivityAssetAmortizationElection,
@@ -56,6 +58,7 @@ _ACQUISITION = acquisition_transaction(
     amount=Decimal("12100.00"), taxable_base=Decimal("10000.00"), iva_amount=Decimal("2100.00")
 )
 _ASSET = "machine-1"
+_FILING_YEAR = filing_year_envelope().horizon
 
 
 def _revision(*, method: AmortizationMethod = AmortizationMethod.LINEAR, opening: str = "0") -> ActivityAssetRevision:
@@ -75,11 +78,11 @@ def _revision(*, method: AmortizationMethod = AmortizationMethod.LINEAR, opening
             non_deductible_iva=Decimal("0"),
             prior_allocation_provenance="ledger allocation allocation-1",
         ),
-        in_service_date=date(2020, 1, 1),
+        in_service_date=date(_FILING_YEAR - 5, 1, 1),
         opening_history=OpeningAmortizationHistory(
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal(opening),
-            covered_through_tax_year=2022 if opening != "0" else None,
+            covered_through_tax_year=_FILING_YEAR - 3 if opening != "0" else None,
         ),
         acquired_condition=AcquiredCondition.NEW,
         amortization=ActivityAssetAmortizationElection(
@@ -109,8 +112,8 @@ def _forecast(
             annual_rate=Decimal("0.10"),
             authority_generation="accrual-test-v1",
             source_reference="accrual test table",
-            useful_life_ends_on=date(2050, 1, 1) if constant else None,
-            maximum_period_ends_on=None if constant else date(2038, 1, 1),
+            useful_life_ends_on=date(_FILING_YEAR + 25, 1, 1) if constant else None,
+            maximum_period_ends_on=None if constant else date(_FILING_YEAR + 13, 1, 1),
         ),
         covered_from=covered_from,
         covered_until=covered_until,
@@ -126,7 +129,7 @@ def _one_eighteenth(_revision: ActivityAssetRevision, _tax_year: int) -> Activit
 def _operations(
     *,
     revision: ActivityAssetRevision,
-    today: date = date(2025, 6, 30),
+    today: date = date(_FILING_YEAR, 6, 30),
     bounds: DisposalBoundsReader = _one_eighteenth,
     last_admitted_year: int | None = None,
 ) -> ActivityAssetOperations:
@@ -155,11 +158,11 @@ def test_plan_and_forecast_agree_on_the_charge_and_pending_value_after_unclaimed
     operations = _operations(revision=_revision())
 
     rows = {row.tax_year: row for row in operations.plan(_ASSET)}
-    forecast = _year(operations, 2025)
+    forecast = _year(operations, _FILING_YEAR)
     (listed,) = operations.list_elements()
 
     assert forecast.amount == Decimal("1000.00")
-    planned = rows[2025].planned
+    planned = rows[_FILING_YEAR].planned
     assert planned is not None
     assert planned.decimal == "1000.00"
     assert listed.pending is not None
@@ -173,53 +176,55 @@ def test_the_minimum_to_date_is_shown_apart_and_never_lowers_the_value_pending()
     (listed,) = operations.list_elements()
 
     # 10,000 / 18 = 555.5555 a full year; five years sum to 2,777.78, rounded once.
-    assert rows[2024].minimum_through is not None
-    assert rows[2024].minimum_through.decimal == "2777.78"
-    assert rows[2024].minimum_complete is True
+    minimum = rows[_FILING_YEAR - 1].minimum_through
+    assert minimum is not None
+    assert minimum.decimal == "2777.78"
+    assert rows[_FILING_YEAR - 1].minimum_complete is True
     assert listed.pending is not None
     assert listed.pending.decimal == "10000.00"
-    assert _year(operations, 2025).amount == Decimal("1000.00")
+    assert _year(operations, _FILING_YEAR).amount == Decimal("1000.00")
 
 
 def test_a_year_no_edition_covers_serves_no_figure_and_says_so() -> None:
-    def from_2022(revision: ActivityAssetRevision, tax_year: int) -> ActivityAssetDisposalBounds:
+    def from_edition_start(revision: ActivityAssetRevision, tax_year: int) -> ActivityAssetDisposalBounds:
         return (
             _one_eighteenth(revision, tax_year)
-            if tax_year >= 2022
+            if tax_year >= _FILING_YEAR - 3
             else ActivityAssetDisposalBounds(edition_available=False)
         )
 
-    rows = {row.tax_year: row for row in _operations(revision=_revision(), bounds=from_2022).plan(_ASSET)}
+    rows = {row.tax_year: row for row in _operations(revision=_revision(), bounds=from_edition_start).plan(_ASSET)}
 
-    assert rows[2024].minimum_complete is False
-    assert rows[2024].minimum_through is None
-    assert rows[2024].minimum_reason_key == "ledger.actividad_asset.disposal_finding.minimum_unresolved"
-    assert rows[2030].minimum_through is None
+    assert rows[_FILING_YEAR - 1].minimum_complete is False
+    assert rows[_FILING_YEAR - 1].minimum_through is None
+    assert rows[_FILING_YEAR - 1].minimum_reason_key == "ledger.actividad_asset.disposal_finding.minimum_unresolved"
+    assert rows[_FILING_YEAR + 5].minimum_through is None
 
 
 def test_a_year_with_an_edition_but_no_table_minimum_says_the_method_has_none() -> None:
-    def from_2022(revision: ActivityAssetRevision, tax_year: int) -> ActivityAssetDisposalBounds:
-        return _one_eighteenth(revision, tax_year) if tax_year >= 2022 else ActivityAssetDisposalBounds()
+    def from_edition_start(revision: ActivityAssetRevision, tax_year: int) -> ActivityAssetDisposalBounds:
+        return _one_eighteenth(revision, tax_year) if tax_year >= _FILING_YEAR - 3 else ActivityAssetDisposalBounds()
 
-    rows = {row.tax_year: row for row in _operations(revision=_revision(), bounds=from_2022).plan(_ASSET)}
+    rows = {row.tax_year: row for row in _operations(revision=_revision(), bounds=from_edition_start).plan(_ASSET)}
 
-    assert rows[2024].minimum_complete is False
-    assert rows[2024].minimum_through is None
-    assert rows[2024].minimum_reason_key == "ledger.actividad_asset.disposal_finding.method_has_no_minimum"
+    assert rows[_FILING_YEAR - 1].minimum_complete is False
+    assert rows[_FILING_YEAR - 1].minimum_through is None
+    assert rows[_FILING_YEAR - 1].minimum_reason_key == "ledger.actividad_asset.disposal_finding.method_has_no_minimum"
 
 
 def test_the_minimum_to_date_stops_at_the_basis() -> None:
-    rows = _operations(revision=_revision(), today=date(2039, 1, 1)).plan(_ASSET)
+    rows = _operations(revision=_revision(), today=date(_FILING_YEAR + 14, 1, 1)).plan(_ASSET)
 
     figures = {row.tax_year: row.minimum_through for row in rows}
-    assert figures[2038] is not None
-    assert figures[2038].decimal == "10000.00"
+    last = figures[_FILING_YEAR + 13]
+    assert last is not None
+    assert last.decimal == "10000.00"
 
 
 def test_an_unclaimed_past_year_shows_as_missing_with_its_figure_and_takes_nothing() -> None:
     rows = {row.tax_year: row for row in _operations(revision=_revision()).plan(_ASSET)}
 
-    for year in range(2020, 2025):
+    for year in range(_FILING_YEAR - 5, _FILING_YEAR):
         planned = rows[year].planned
         assert planned is not None
         assert planned.decimal == "1000.00"
@@ -232,31 +237,33 @@ def test_the_charge_of_a_pending_value_method_ignores_unclaimed_years() -> None:
     operations = _operations(revision=_revision(method=AmortizationMethod.CONSTANT_PERCENTAGE))
 
     rows = {row.tax_year: row for row in operations.plan(_ASSET)}
-    forecast = _year(operations, 2025)
+    forecast = _year(operations, _FILING_YEAR)
 
     assert forecast.amount == Decimal("1000.00")
-    planned = rows[2025].planned
+    planned = rows[_FILING_YEAR].planned
     assert planned is not None
     assert planned.decimal == forecast.amount.to_eng_string()
 
 
 def test_opening_and_claims_lower_the_pending_value_in_every_view() -> None:
     operations = _operations(revision=_revision(opening="3000"))
-    _claim(operations, 2023)
+    _claim(operations, _FILING_YEAR - 2)
 
     (listed,) = operations.list_elements()
 
     assert listed.pending is not None
     assert listed.pending.decimal == "6000.00"
-    assert _year(operations, 2025).amount == Decimal("1000.00")
+    assert _year(operations, _FILING_YEAR).amount == Decimal("1000.00")
 
 
 def test_claims_and_plan_never_exceed_the_basis_and_stop_when_it_is_exhausted() -> None:
-    operations = _operations(revision=_revision(), today=date(2034, 12, 31), last_admitted_year=2034)
-    for year in range(2025, 2035):
+    operations = _operations(
+        revision=_revision(), today=date(_FILING_YEAR + 9, 12, 31), last_admitted_year=_FILING_YEAR + 9
+    )
+    for year in range(_FILING_YEAR, _FILING_YEAR + 10):
         _claim(operations, year)
 
-    assert _year(operations, 2035).amount == Decimal("0.00")
+    assert _year(operations, _FILING_YEAR + 10).amount == Decimal("0.00")
     rows = operations.plan(_ASSET)
     claimed = sum((Decimal(row.claimed.decimal) for row in rows), Decimal("0"))
     assert claimed == Decimal("10000.00")
@@ -268,19 +275,19 @@ def test_claims_and_plan_never_exceed_the_basis_and_stop_when_it_is_exhausted() 
 def test_the_future_plan_projects_within_the_value_pending() -> None:
     rows = _operations(revision=_revision()).plan(_ASSET)
 
-    future = [Decimal(row.planned.decimal) for row in rows if row.tax_year >= 2025 and row.planned is not None]
+    future = [Decimal(row.planned.decimal) for row in rows if row.tax_year >= _FILING_YEAR and row.planned is not None]
 
     assert sum(future, Decimal("0")) == Decimal("10000.00")
     assert rows[-1].planned is None
 
 
 def test_the_maximum_period_stops_the_charge_with_value_still_pending() -> None:
-    operations = _operations(revision=_revision(), today=date(2039, 1, 1))
+    operations = _operations(revision=_revision(), today=date(_FILING_YEAR + 14, 1, 1))
 
     with pytest.raises(ActividadAssetPeriodElapsedError, match="amortization_period_elapsed"):
-        _year(operations, 2038)
+        _year(operations, _FILING_YEAR + 13)
 
-    assert _year(operations, 2037).amount == Decimal("1000.00")
+    assert _year(operations, _FILING_YEAR + 12).amount == Decimal("1000.00")
 
 
 def test_the_modelo_130_accrual_reads_the_same_figure() -> None:
@@ -291,7 +298,7 @@ def test_the_modelo_130_accrual_reads_the_same_figure() -> None:
     (accrual,) = m130_register_accruals(
         history,
         forecast=_forecast,
-        period_end=date(2025, 12, 31),
+        period_end=date(_FILING_YEAR, 12, 31),
         activities={_ASSET: None},
         agrarian=frozenset(),
     )
@@ -301,17 +308,17 @@ def test_the_modelo_130_accrual_reads_the_same_figure() -> None:
 
 
 def test_the_plan_projection_is_display_only_and_forecast_and_claim_never_read_it() -> None:
-    """The plan projects 2025 to 2034 onto later rows; 2035 still forecasts on the real pending value."""
+    """The plan projects ten years from the filing year onto later rows; the next year still forecasts on the real pending value."""
     operations = _operations(revision=_revision())
 
     rows = {row.tax_year: row for row in operations.plan(_ASSET)}
 
-    assert rows[2035].planned is None
-    assert rows[2035].absence is PlanFigureAbsence.BASIS_EXHAUSTED
-    late = _year(operations, 2035)
+    assert rows[_FILING_YEAR + 10].planned is None
+    assert rows[_FILING_YEAR + 10].absence is PlanFigureAbsence.BASIS_EXHAUSTED
+    late = _year(operations, _FILING_YEAR + 10)
     assert late.amount == Decimal("1000.00")
     with pytest.raises(ActividadAssetUnsupportedError, match="claim_year_beyond_registry"):
-        operations.record_claim(late, creating_operation="test.2035")
+        operations.record_claim(late, creating_operation="test.late")
     (listed,) = operations.list_elements()
     assert listed.pending is not None
     assert listed.pending.decimal == "10000.00"

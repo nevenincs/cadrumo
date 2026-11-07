@@ -10,6 +10,7 @@ from cadrumo.application.actividad_asset.activity_asset_contracts import Activit
 from cadrumo.application.actividad_asset.activity_asset_read_models import project_reason_facts
 from cadrumo.application.actividad_asset.registered_operations import project_refusal
 from cadrumo.core.errors.error_codes import get_registered_error_code_by_code
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.renta.actividad_asset.errors import (
     ActividadAssetAcceleratedDa18DepreciationError,
     ActividadAssetClaimConflictError,
@@ -77,7 +78,7 @@ def test_an_incomplete_refusal_without_a_verdict_carries_no_recovery_verdict() -
 _DA18_FACTS = {
     "asset_id": "van-2023",
     "method": "electric_vehicle_free",
-    "tax_year": 2023,
+    "tax_year": filing_year_envelope().horizon,
     "legal_reference": "ley-27-2014:da-18",
 }
 
