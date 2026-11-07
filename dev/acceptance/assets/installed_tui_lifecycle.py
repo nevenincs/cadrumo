@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
+from dev.acceptance.iva.filing_year import newest_journey_year
+
 from .installed_method_fixture import (
     METHOD_ASSET_ID,
     METHOD_CORRECTED_FORECAST_AMOUNT,
@@ -21,6 +23,11 @@ from .installed_tui_controls import (
 
 if TYPE_CHECKING:
     from textual.pilot import Pilot
+
+
+def _method_filing_year() -> int:
+    """The newest filing year the installed authority authors for the Modelo 130 and 100 the handoff names."""
+    return newest_journey_year(coordinates=(("130", "4T"), ("100", "0A"))).year
 
 
 def _claim_result_reused(*, rendered: str, expected: bool, stage: str) -> None:
@@ -129,13 +136,13 @@ async def exercise_method_asset_lifecycle(
     await set_public_input(
         pilot=pilot,
         selector="#asset-covered-from",
-        value="2025-01-01",
+        value=f"{_method_filing_year()}-01-01",
         stage="asset_forecast",
     )
     await set_public_input(
         pilot=pilot,
         selector="#asset-covered-until",
-        value="2026-01-01",
+        value=f"{_method_filing_year() + 1}-01-01",
         stage="asset_forecast",
     )
     forecast_action = await activate_public_button(pilot=pilot, selector="#asset-forecast", stage="asset_forecast")
@@ -243,7 +250,7 @@ async def _prove_method_filing_handoff[T](pilot: Pilot[T], progress: Callable[[s
     await set_public_input(
         pilot=pilot,
         selector="#asset-filing-tax-year",
-        value="2025",
+        value=str(_method_filing_year()),
         stage="asset_filing_handoff",
     )
     await set_public_input(

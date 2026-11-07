@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Any, Final, cast
 
 from dev.acceptance.installed_cli import CommandEvidence, InstalledCli, InstalledCliError, authority_generation
+from dev.acceptance.iva.filing_year import require_journey_year
 
 from .scenario import (
     BRIEF_REVISION,
@@ -407,6 +408,12 @@ def _m130_expected(oracle: QuarterlyOracle) -> dict[str, str]:
     }
 
 
+def _m130_revision_id(cli: InstalledCli, *, year: int, period: str) -> str:
+    """The Modelo 130 revision the installed authority authors for ``year`` and ``period``."""
+    journey_year = require_journey_year(authority_root=cli.authority_root, year=year, coordinates=(("130", period),))
+    return journey_year.revision("130", period)
+
+
 def create_m130_work(cli: InstalledCli, *, year: int, period: str) -> str:
     """Create one Modelo 130 work unit for the quarter and return its public identity."""
     create = command_result(
@@ -423,7 +430,7 @@ def create_m130_work(cli: InstalledCli, *, year: int, period: str) -> str:
                 "--period",
                 period,
                 "--revision",
-                "2019-y-siguientes",
+                _m130_revision_id(cli, year=year, period=period),
                 "--by",
                 "income-acceptance",
             )
