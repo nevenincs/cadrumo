@@ -91,3 +91,297 @@ closes_on = 2024-01-22
 payment_cutoff_on = 2024-01-17
 legal_refs = ["orden-eha-3290-2008:art-4"]
 source_refs = ["aeat-calendario-contribuyente-2024"]
+
+# The monthly gran-empresa cadence of Orden EHA/3290/2008 art. 4, paragraph
+# two: "No obstante, la declaracion e ingreso a que se refiere el parrafo
+# anterior se efectuara en los veinte primeros dias naturales de cada mes, en
+# relacion con las cantidades retenidas y los ingresos a cuenta efectuados que
+# correspondan por el mes inmediato anterior, cuando se trate de retenedores u
+# obligados que tengan la consideracion de grandes empresas por concurrir
+# alguna de las circunstancias a que se refieren los numeros 1 y 2 del apartado
+# 3 del articulo 71 del Reglamento del Impuesto sobre el Valor Anadido" -- the
+# volumen de operaciones that enrollment.large_company carries. The article
+# grounds this cadence on RIRNR art. 15.1.
+#
+# Each close and domiciliacion cutoff below is READ from the bundled Calendario
+# del Contribuyente of the year it falls in, never derived from the twenty-day
+# rule: the published day moves for weekends and holidays, and a filing
+# deadline written from the rule rather than the calendar is a filing-grade
+# harm. The calendar names this modelo in the monthly population every month --
+# "<mes> <ejercicio>. Grandes empresas: 111, 115, 117, 123, 124, 126, 128, 216,
+# 230" -- under its own "Hasta el <dia> de <mes>" heading, which is the close
+# taken here. Because that one published entry covers Modelo 111 too, every
+# close and cutoff was cross-checked against 111's own authored window for the
+# same entry; all fifty-nine calendar-grounded windows of both editions agree
+# with no mismatch.
+#
+# The July period closes in August, as the calendar publishes it for this whole
+# population. The bundled art. 4 excerpt is the 2008 published text and carries
+# a further exception moving the July declaration to "el mes de agosto y los
+# veinte primeros dias naturales del mes de septiembre"; no bundled calendar
+# from 2022 to 2026 reproduces that extension for this population, so the
+# calendar is followed and the divergence is left to re-grounding rather than
+# settled here.
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2022-01"
+filing_year = 2022
+period = "2022 01"
+period_kind = "monthly"
+opens_on = 2022-02-01
+closes_on = 2022-02-21
+payment_cutoff_on = 2022-02-16
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2022"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2022-02"
+filing_year = 2022
+period = "2022 02"
+period_kind = "monthly"
+opens_on = 2022-03-01
+closes_on = 2022-03-21
+payment_cutoff_on = 2022-03-16
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2022"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2022-03"
+filing_year = 2022
+period = "2022 03"
+period_kind = "monthly"
+opens_on = 2022-04-01
+closes_on = 2022-04-20
+payment_cutoff_on = 2022-04-15
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2022"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2022-04"
+filing_year = 2022
+period = "2022 04"
+period_kind = "monthly"
+opens_on = 2022-05-01
+closes_on = 2022-05-20
+payment_cutoff_on = 2022-05-15
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2022"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2022-05"
+filing_year = 2022
+period = "2022 05"
+period_kind = "monthly"
+opens_on = 2022-06-01
+closes_on = 2022-06-20
+payment_cutoff_on = 2022-06-15
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2022"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2022-06"
+filing_year = 2022
+period = "2022 06"
+period_kind = "monthly"
+opens_on = 2022-07-01
+closes_on = 2022-07-20
+payment_cutoff_on = 2022-07-15
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2022"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2022-07"
+filing_year = 2022
+period = "2022 07"
+period_kind = "monthly"
+opens_on = 2022-08-01
+closes_on = 2022-08-22
+payment_cutoff_on = 2022-08-17
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2022"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2022-08"
+filing_year = 2022
+period = "2022 08"
+period_kind = "monthly"
+opens_on = 2022-09-01
+closes_on = 2022-09-20
+payment_cutoff_on = 2022-09-15
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2022"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2022-09"
+filing_year = 2022
+period = "2022 09"
+period_kind = "monthly"
+opens_on = 2022-10-01
+closes_on = 2022-10-20
+payment_cutoff_on = 2022-10-15
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2022"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2022-10"
+filing_year = 2022
+period = "2022 10"
+period_kind = "monthly"
+opens_on = 2022-11-01
+closes_on = 2022-11-21
+payment_cutoff_on = 2022-11-16
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2022"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2022-11"
+filing_year = 2022
+period = "2022 11"
+period_kind = "monthly"
+opens_on = 2022-12-01
+closes_on = 2022-12-20
+payment_cutoff_on = 2022-12-15
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2022"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2022-12"
+filing_year = 2022
+period = "2022 12"
+period_kind = "monthly"
+opens_on = 2023-01-01
+closes_on = 2023-01-20
+payment_cutoff_on = 2023-01-15
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2023-01"
+filing_year = 2023
+period = "2023 01"
+period_kind = "monthly"
+opens_on = 2023-02-01
+closes_on = 2023-02-20
+payment_cutoff_on = 2023-02-15
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2023-02"
+filing_year = 2023
+period = "2023 02"
+period_kind = "monthly"
+opens_on = 2023-03-01
+closes_on = 2023-03-20
+payment_cutoff_on = 2023-03-15
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2023-03"
+filing_year = 2023
+period = "2023 03"
+period_kind = "monthly"
+opens_on = 2023-04-01
+closes_on = 2023-04-20
+payment_cutoff_on = 2023-04-15
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2023-04"
+filing_year = 2023
+period = "2023 04"
+period_kind = "monthly"
+opens_on = 2023-05-01
+closes_on = 2023-05-22
+payment_cutoff_on = 2023-05-17
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2023-05"
+filing_year = 2023
+period = "2023 05"
+period_kind = "monthly"
+opens_on = 2023-06-01
+closes_on = 2023-06-20
+payment_cutoff_on = 2023-06-15
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2023-06"
+filing_year = 2023
+period = "2023 06"
+period_kind = "monthly"
+opens_on = 2023-07-01
+closes_on = 2023-07-20
+payment_cutoff_on = 2023-07-15
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2023-07"
+filing_year = 2023
+period = "2023 07"
+period_kind = "monthly"
+opens_on = 2023-08-01
+closes_on = 2023-08-21
+payment_cutoff_on = 2023-08-16
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2023-08"
+filing_year = 2023
+period = "2023 08"
+period_kind = "monthly"
+opens_on = 2023-09-01
+closes_on = 2023-09-20
+payment_cutoff_on = 2023-09-15
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2023-09"
+filing_year = 2023
+period = "2023 09"
+period_kind = "monthly"
+opens_on = 2023-10-01
+closes_on = 2023-10-20
+payment_cutoff_on = 2023-10-15
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2023-10"
+filing_year = 2023
+period = "2023 10"
+period_kind = "monthly"
+opens_on = 2023-11-01
+closes_on = 2023-11-20
+payment_cutoff_on = 2023-11-15
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2023-11"
+filing_year = 2023
+period = "2023 11"
+period_kind = "monthly"
+opens_on = 2023-12-01
+closes_on = 2023-12-20
+payment_cutoff_on = 2023-12-15
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2023-12"
+filing_year = 2023
+period = "2023 12"
+period_kind = "monthly"
+opens_on = 2024-01-01
+closes_on = 2024-01-22
+payment_cutoff_on = 2024-01-17
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2024"]
