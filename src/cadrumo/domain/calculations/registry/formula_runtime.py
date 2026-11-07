@@ -718,10 +718,10 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
                 translated_message="errors.calc.formula_override_target_invalid",
                 context={"casilla_ids": target},
             )
-        if observation.value is not None:
+        if isinstance(observation.value, Decimal):
             state.values[target] = observation.value
             state.computed_provenance[target] = observation
-    if formula_overrides:
+    if formula_overrides is not None:
         formula_targets = {formula.target_casilla_id for formula in resolved.revision.formulas}
         invalid = set(formula_overrides).difference(formula_targets)
         if invalid:
@@ -739,6 +739,12 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
                 )
             formula = state.formulas[target]
             value = observation.value
+            if not isinstance(value, Decimal):
+                raise RegistryValidationError(
+                    f"formula override for {target!r} must carry a Decimal value",
+                    translated_message="errors.calc.formula_override_target_invalid",
+                    context={"casilla_id": target},
+                )
             _validate_formula_target_constraint(target, value, formula, state.casillas_by_id)
             state.values[target] = value
             state.computed_provenance[target] = observation

@@ -387,7 +387,7 @@ def calculate_amendment(
             if observation.formula_id is not None or observation.casilla_id not in formula_targets:
                 continue
             raw = source_revision.input_values_by_casilla_id.get(observation.casilla_id)
-            if raw is None or Decimal(raw) != observation.value:
+            if isinstance(observation.value, Decimal) and (raw is None or Decimal(raw) != observation.value):
                 authored[observation.casilla_id] = canonical_decimal_string(observation.value)
     authored.update({key: canonical_decimal_string(value) for key, value in overrides.items()})
     explicit = set(authored)
@@ -471,7 +471,9 @@ def calculate_amendment(
         ),
     )
     recalculated = {observation.casilla_id: observation for observation in result.observations}
-    values = {key: observation.value for key, observation in recalculated.items() if observation.value is not None}
+    values = {
+        key: observation.value for key, observation in recalculated.items() if isinstance(observation.value, Decimal)
+    }
     observations = amendment_observations(
         corrected_values=values,
         overrides={**overrides, **prior_paid_values},
