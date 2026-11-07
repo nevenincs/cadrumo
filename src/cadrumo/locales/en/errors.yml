@@ -94,6 +94,11 @@ errors:
     empty_expression: Empty formula expression.
     enum_binding_value_missing: Enum binding {binding_id} has no supplied value (required
       by op {op}).
+    formula_override_target_invalid: Formula casilla(s) {casilla_ids} cannot take
+      a retained or overridden value because they are not formula targets of this
+      revision.
+    formula_recalculation_unresolved: 'The amendment recalculation left required formula
+      casilla(s) unresolved: {casilla_ids}.'
     lookup_dispatch_arg_count: Formula op {op} expects {expected} arguments.
     lookup_dispatch_arg_kind: Formula op {op} requires {position} to be a {expected_kind}
       leaf.

@@ -26,7 +26,7 @@ from .test_filing_record_view_operation import PROFILE, filing_record_view_opera
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _chain(*, branched: bool = True):
+def related_filing_chain(*, branched: bool = True):
     unit, original = source()
     base = original.model_copy(
         update={
@@ -88,7 +88,7 @@ def _chain(*, branched: bool = True):
 
 @pytest.mark.parametrize("language", tuple(OutputLanguage))
 def test_list_serves_the_entire_coordinate_in_time_order_with_distinct_links(language: OutputLanguage) -> None:
-    unit, records, _catalogue = _chain()
+    unit, records, _catalogue = related_filing_chain()
     base, discarded, pending = records
     refs = tuple(DeclarationsWorkspaceFilingRefV1.from_record(item) for item in reversed(records))
     other_period = refs[0].model_copy(update={"period": Period.from_year_and_code(unit.filing_year, "2T")})
@@ -122,7 +122,7 @@ def test_list_serves_the_entire_coordinate_in_time_order_with_distinct_links(lan
 
 @pytest.mark.parametrize("branched", (True, False))
 def test_view_navigation_returns_the_selected_immutable_receipt_and_both_branches(branched: bool) -> None:
-    unit, records, catalogue = _chain(branched=branched)
+    unit, records, catalogue = related_filing_chain(branched=branched)
     bundle = filing_record_view_operation_bundle(unit=unit, filing_catalogue=catalogue)
 
     for record in records:

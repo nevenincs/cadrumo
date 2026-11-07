@@ -100,6 +100,10 @@ errors:
     empty_expression: Expressió de fórmula buida.
     enum_binding_value_missing: La vinculació enumerada {binding_id} no té cap valor
       assignat (requerida per l'operador {op}).
+    formula_override_target_invalid: Les caselles {casilla_ids} no poden rebre un
+      valor conservat o substituït perquè no són caselles de fórmula d'aquesta revisió.
+    formula_recalculation_unresolved: 'El recàlcul de la rectificació ha deixat sense
+      resoldre caselles de fórmula obligatòries: {casilla_ids}.'
     lookup_dispatch_arg_count: L'operador {op} de la fórmula espera {expected} arguments.
     lookup_dispatch_arg_kind: L'operador {op} de la fórmula requereix que {position}
       sigui una fulla de tipus {expected_kind}.

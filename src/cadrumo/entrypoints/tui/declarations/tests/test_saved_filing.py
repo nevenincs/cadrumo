@@ -9,7 +9,7 @@ from textual.widgets import DataTable, Select, Static
 
 from .....application.modelo.filing_record_view_operation import ModeloFilingRecordViewRequest, capture
 from .....application.modelo.tests.test_filing_record_view_operation import PROFILE, filing_record_view_operation_bundle
-from .....application.modelo.tests.test_related_filing_projection import _chain
+from .....application.modelo.tests.test_related_filing_projection import related_filing_chain
 from .....core.external_constants import OutputLanguage
 from ...components.host import ScreenHostApp
 from ...tests.frame import geometry_band
@@ -20,7 +20,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def _views():
-    unit, records, catalogue = _chain(branched=False)
+    unit, records, catalogue = related_filing_chain(branched=False)
     bundle = filing_record_view_operation_bundle(unit=unit, filing_catalogue=catalogue)
     views = {
         record.filing_record_id: capture(

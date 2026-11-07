@@ -302,14 +302,16 @@ def capture(
         observation_layers=ModeloFilingObservationLayersProjection.from_layers(layers),
         historical_content=historical_content,
         related_filings=related,
-        historical_display_words=tr(
-            "workspace.declarations.related_filings."
-            + (
-                "historical_display_unavailable"
-                if historical_content.availability == "available"
-                else "historical_content_missing"
-            ),
-            locale=payload.output_language.value,
+        historical_display_words=(
+            tr(
+                "workspace.declarations.related_filings.historical_display_unavailable",
+                locale=payload.output_language.value,
+            )
+            if historical_content.availability == "available"
+            else tr(
+                "workspace.declarations.related_filings.historical_content_missing",
+                locale=payload.output_language.value,
+            )
         ),
         comparison=compare_historical_filing_content(
             historical_content,

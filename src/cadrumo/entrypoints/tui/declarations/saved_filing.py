@@ -118,8 +118,9 @@ class SavedFilingScreen(ModalScreen[None]):
         table.add_column(tr("workspace.declarations.related_filings.field"))
         comparison = view.comparison
         if comparison is not None and comparison.availability == "available":
-            for key in ("before", "after", "change"):
-                table.add_column(tr("workspace.declarations.related_filings." + key))
+            table.add_column(tr("workspace.declarations.related_filings.before"))
+            table.add_column(tr("workspace.declarations.related_filings.after"))
+            table.add_column(tr("workspace.declarations.related_filings.change"))
             absent = tr("workspace.declarations.related_filings.absent")
             for row in comparison.rows:
                 table.add_row(

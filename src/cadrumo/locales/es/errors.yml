@@ -98,6 +98,10 @@ errors:
     empty_expression: Expresión de fórmula vacía.
     enum_binding_value_missing: La vinculación enumerada {binding_id} no tiene valor
       asignado (requerida por el operador {op}).
+    formula_override_target_invalid: Las casillas {casilla_ids} no pueden recibir
+      un valor conservado o sustituido porque no son casillas de fórmula de esta revisión.
+    formula_recalculation_unresolved: 'El recálculo de la rectificación dejó sin resolver
+      casillas de fórmula obligatorias: {casilla_ids}.'
     lookup_dispatch_arg_count: El operador {op} de la fórmula espera {expected} argumentos.
     lookup_dispatch_arg_kind: El operador {op} de la fórmula requiere que {position}
       sea una hoja de tipo {expected_kind}.

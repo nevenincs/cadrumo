@@ -716,7 +716,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
             raise RegistryValidationError(
                 f"retained observation does not match target {target!r}",
                 translated_message="errors.calc.formula_override_target_invalid",
-                context={"casilla_id": target},
+                context={"casilla_ids": target},
             )
         if observation.value is not None:
             state.values[target] = observation.value
@@ -735,7 +735,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
                 raise RegistryValidationError(
                     f"formula override observation does not match target {target!r}",
                     translated_message="errors.calc.formula_override_target_invalid",
-                    context={"casilla_id": target},
+                    context={"casilla_ids": target},
                 )
             formula = state.formulas[target]
             value = observation.value

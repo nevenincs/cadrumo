@@ -100,6 +100,10 @@ errors:
     empty_expression: Üres képletkifejezés.
     enum_binding_value_missing: A(z) {binding_id} felsorolás-kötésnek nincs megadott
       értéke (a(z) {op} művelet igényli).
+    formula_override_target_invalid: A(z) {casilla_ids} mezők nem kaphatnak megőrzött
+      vagy felülírt értéket, mert nem ennek a változatnak a képletmezői.
+    formula_recalculation_unresolved: 'A javítás újraszámítása után kötelező képletmezők
+      maradtak feloldatlanul: {casilla_ids}.'
     lookup_dispatch_arg_count: A(z) {op} képletoperátor {expected} argumentumot vár.
     lookup_dispatch_arg_kind: A(z) {op} képletoperátornál a(z) {position}. pozíciónak
       {expected_kind} levélnek kell lennie.
