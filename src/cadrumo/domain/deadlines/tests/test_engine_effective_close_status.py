@@ -31,7 +31,7 @@ from ..models import IVARegime, ModeloDeadline, ObligationStatus, TaxpayerProfil
 from .effective_close_scan import (
     ScannedObligation,
     obligation_with_a_shifted_close,
-    obligation_with_an_unresolvable_shift,
+    obligations_with_an_unresolvable_shift,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
@@ -120,23 +120,20 @@ def test_the_day_after_the_shifted_close_is_overdue(
     assert row.recovery is not None, "the band is resolved from the effective close"
 
 
-def test_a_window_whose_shift_calendar_is_unpublished_is_unknown_not_overdue(
+def test_every_supported_year_resolves_the_shift_calendar_of_each_dated_obligation(
     taxpayer: TaxpayerProfile,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """An unknown effective close judges nothing after the nominal date.
+    """Whichever year is filed, a dated obligation's effective close is known.
 
-    A filing year whose holiday calendar is not bundled cannot resolve the
-    shift, so the obligation reports its calendar unavailable. It is never
-    called due or overdue against the nominal close, and carries no payment
-    cutoff and no recargo.
+    The registry authors the holiday calendar of every year a supported filing
+    year's windows reach, so no obligation is left with an unverified nominal
+    close that would be judged differently from the same obligation in another
+    year.
     """
-    scanned = obligation_with_an_unresolvable_shift(taxpayer, operation=operation)
-    long_after = scanned.nominal_closes_on + timedelta(days=400)
-    row = _recomputed(scanned, today=long_after, taxpayer=taxpayer, operation=operation)
+    unresolved = obligations_with_an_unresolvable_shift(taxpayer, operation=operation)
 
-    assert row.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
-    assert row.status is ObligationStatus.UNKNOWN
-    assert row.adjusted_closes_on == row.closes_on
-    assert row.payment_cutoff_on is None
-    assert row.recovery is None
+    assert not unresolved, [
+        (scanned.filing_year, scanned.obligation.modelo, scanned.obligation.period.registry_token)
+        for scanned in unresolved
+    ]
