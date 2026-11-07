@@ -9508,6 +9508,34 @@ workspace:
             taxpayer_profile_incomplete: A bevallási naptár nem számítható ki, amíg
               a profil kötelező válaszai hiányoznak. Töltsd ki őket a Profil részben.
       source: Ez a forrás jelenleg nem érhető el.
+    related_filings:
+      absent: Nincs rögzítve
+      after: Kiválasztott bevallás
+      base: Javított bevallás
+      before: Előző bevallás
+      change: Változás
+      changed: Módosult
+      comparison_unavailable: 'A mentett értékek nem hasonlíthatók össze: hiányzik
+        az előző bevallás vagy annak számítása, vagy eltérnek a nyilvántartási verziók.'
+      corrections: Későbbi javítások
+      current_labels: A címkék és a formázás az elérhető nyilvántartási verzióból
+        származnak. Ez nem az eredeti nyomtatvány helyreállítása.
+      failed: A mentett bevallást nem sikerült betölteni.
+      field: Mezőazonosító
+      historical_content_missing: A bevallás mentett számítása nem érhető el.
+      historical_display_unavailable: A bevallás mentett értékei megmaradtak, de az
+        eredeti feliratok és formázás itt nem érhetők el.
+      labels_unavailable: A címkézett mentett értékek nem érhetők el. Ha az összehasonlítás
+        lehetséges, a pontos mentett mezők alább láthatók.
+      loading: A mentett bevallás betöltése…
+      open: Kapcsolódó bevallások megtekintése
+      open_work: Munkabevallás megnyitása
+      retry: Újraolvasás
+      saved_values: Mentett értékek
+      select: Válassz bevallást
+      technical_values: Mentett mezőértékek
+      title: Kapcsolódó bevallások
+      unchanged: Változatlan
     revision_state:
       borrador: Piszkozat
       descartado: Elvetve
@@ -9631,7 +9659,9 @@ workspace:
       lead: A benyújtott bevallás sosem módosul helyben. A Cadrumo helyesbítést készít
         belőle; kijavítod, ami hibás volt, majd exportálod a fájlját, és benyújtod
         az AEAT-nál, mint bármely másikat.
+      loading: Javítási lehetőségek betöltése…
       title: Helyesbítés előkészítése
+      unavailable: Ehhez a bevalláshoz nem érhetők el javítási lehetőségek.
     details:
       card_unavailable: A rovat magyarázatát nem sikerült beolvasni.
       choose_box: Válassz egy rovatot, hogy lásd, honnan származik az értéke és mit

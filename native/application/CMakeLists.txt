@@ -65,9 +65,9 @@ if(BUILD_TESTING)
       --target "${CADRUMO_PIN_rust_target}" --profile "${application_profile}"
       --features platform,diagnostics-test-support
       ${application_test_arguments})
-  # The live runtime tests read the generated Modelo 303 envelope from the build tree's projections.
+  # The live runtime tests read the generated Modelo 303 envelope from this build tree's window projections.
   set_tests_properties(application.rust PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 600
-    ENVIRONMENT "CADRUMO_WINDOW_FIXTURES=${CADRUMO_WINDOW_FIXTURES}")
+    ENVIRONMENT "CADRUMO_WINDOW_FIXTURES=${CADRUMO_PATH_WINDOW_FIXTURES}")
   # The package test reads the complete application package: the staged one, which only a
   # payload graph assembles, or a separately supplied artifact root.
   if(CADRUMO_CONFIGURE_PAYLOAD

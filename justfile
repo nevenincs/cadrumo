@@ -399,9 +399,10 @@ check-operation-contract-manifest:
 # Every family is declared once in dev/fixture_projections/registry.py. A digest
 # stamp records the content each family's outputs were produced from, so
 # freshness never reads a modification time. Test processes never seed. The
-# window's Modelo envelopes are generated into build/<preset>/fixtures/window,
-# which the frontend resolves through the @fixtures alias and CMake hands to the
-# Rust tests; they are never committed.
+# window projections are generated into build/<preset>/fixtures/window of the
+# host's own configure preset, the same directory that preset's CMake build
+# seeds, binds to the frontend's @fixtures alias and hands to the Rust tests;
+# they are never committed.
 
 [doc('Produce the fixture projections that are not fresh, adopting unstamped outputs their check proves; FAMILY narrows to one.')]
 [group('generate')]
@@ -1188,7 +1189,7 @@ _test-registry-calculations-parallel:
 # they read first. A current family is left unchanged.
 [private]
 _test-registry-seed:
-    @uv run --no-sync python -m dev.fixture_projections seed assets-served-words desktop-year-authority
+    @uv run --no-sync python -m dev.fixture_projections seed assets-served-words desktop-year-authority assets-register
 
 [private]
 _test-registry-conformance: _test-registry-seed
@@ -1610,6 +1611,11 @@ audit-complexity:
 [group('check')]
 complexity-gate:
     @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label complexity-gate -- uv run --no-sync python -m dev.audit.complexity --gate
+
+[doc('Reject any TypeScript module in the repository over the module bound in physical lines; read-only and blocking.')]
+[group('check')]
+check-module-size:
+    @uv run --no-sync python -m dev.quality.typescript_module_size
 
 [doc('Reject rank E/F callables and modules over the line limit in src test files; dev test files are reported only. Slow: about two minutes.')]
 [group('check')]

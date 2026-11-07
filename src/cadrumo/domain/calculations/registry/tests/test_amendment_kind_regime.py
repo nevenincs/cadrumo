@@ -109,13 +109,13 @@ def test_post_rectificativa_permits_only_rectificativa_and_sustitutiva() -> None
     assert _COMPLEMENTARIA not in permitted
 
 
-def test_modelo_with_no_codified_regime_never_permits_rectificativa() -> None:
-    """M130 has zero bundled rectificativa grounding at any period tested."""
+def test_modelo_130_only_permits_the_evidenced_complementaria() -> None:
+    """The 2019-onward instructions and designs admit only complementaria corrections."""
     for year, code in ((2024, "1T"), (2026, "4T"), (2030, "0A")):
         period = Period.from_year_and_code(year, code)
         permitted = resolve_amendment_kind_regime(Modelo("130"), period, policy=_policy(period)).permitted_kinds
         assert _RECTIFICATIVA not in permitted, f"{year} {code}"
-        assert permitted == frozenset({_COMPLEMENTARIA, _SUSTITUTIVA})
+        assert permitted == frozenset({_COMPLEMENTARIA})
 
 
 def test_uncodified_modelo_defaults_to_pre_rectificativa_never_asserted() -> None:

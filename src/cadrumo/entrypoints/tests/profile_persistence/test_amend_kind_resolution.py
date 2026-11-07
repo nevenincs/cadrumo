@@ -357,8 +357,8 @@ def test_complementaria_refused_for_pre_boundary_liability_decrease(
             clock=_T4,
         )
     assert exc_info.value.context is not None
-    assert exc_info.value.context.get("baseline_result") == "100.00"
-    assert exc_info.value.context.get("corrected_result") == "40.00"
+    assert Decimal(str(exc_info.value.context.get("baseline_result"))) == Decimal("100")
+    assert Decimal(str(exc_info.value.context.get("corrected_result"))) == Decimal("40")
 
 
 def test_complementaria_kind_refused_for_post_boundary_period(

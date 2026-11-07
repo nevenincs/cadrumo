@@ -68,7 +68,7 @@ from .ids import (
     SourceRefId,
 )
 from .relations import relation_prefill_bindings_for_period
-from .runtime_graph import formula_evaluation_order
+from .runtime_graph import expression_binding_refs, expression_casilla_refs, formula_evaluation_order
 from .schema import FormulaDefinition, ModeloRevision, RegistrySnapshot
 from .schema_formula import ParameterDefinition
 from .schema_surfaces import CasillaDefinition
@@ -522,6 +522,8 @@ def _merge_relation_values_into_bindings(
 def _prepare_calculation_state(
     snapshot: RegistrySnapshot,
     resolved: _ResolvedCalculationInputs,
+    *,
+    unresolved_observation_backed_casilla_ids: frozenset[CasillaId] = frozenset(),
 ) -> _CalculationState:
     """Build registry maps and mutable accumulators after channel validation."""
     _validate_external_value_ids(
@@ -542,6 +544,7 @@ def _prepare_calculation_state(
         # rows -- not because the source failed: its bound casilla keeps the
         # unsupplied-input reading.
         unresolved_binding_ids=resolved.resolved_unresolved_bindings.difference(resolved.settled_bindings),
+        unresolved_observation_backed_casilla_ids=unresolved_observation_backed_casilla_ids,
     )
     formulas = {formula.target_casilla_id: formula for formula in resolved.revision.formulas}
     parameters = {parameter.id: parameter for parameter in resolved.revision.parameters}
@@ -579,6 +582,11 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
     boolean_binding_values: Mapping[BindingId, bool] | None = None,
     text_inputs: Mapping[TextInputKey, TextInputValue] | None = None,
     closed_record_row_sets: tuple[ClosedRecordRowSet, ...] = (),
+    formula_overrides: Mapping[CasillaId, CasillaObservation] | None = None,
+    retained_formula_observations: Mapping[CasillaId, CasillaObservation] | None = None,
+    recalculate_from_casilla_ids: frozenset[CasillaId] = frozenset(),
+    recalculate_from_binding_ids: frozenset[BindingId] = frozenset(),
+    unresolved_observation_backed_casilla_ids: frozenset[CasillaId] = frozenset(),
 ) -> RegistryCalculationResult:
     """Evaluate all computed formulas for a registry snapshot.
 
@@ -658,6 +666,21 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
         closed_record_row_sets: Admitted source evidence for complete fixed
             record tables. Only its positively unused rows can make the
             record_row_unused predicate true; absent evidence remains unknown.
+        formula_overrides: Optional saved, explicitly authored formula
+            observations. They are installed before formula traversal so their
+            dependent formulas use the saved value; unknown or non-formula
+            targets are rejected. Normal calculations omit this channel.
+        retained_formula_observations: Optional prior formula observations
+            used as seeds when an amendment only reevaluates a dependency
+            closure. Omit this channel for a full calculation.
+        recalculate_from_casilla_ids: Casilla values changed by the amendment;
+            their formula descendants are reevaluated when retained observations
+            are supplied.
+        recalculate_from_binding_ids: Binding values changed by the amendment;
+            direct formula consumers and their descendants are reevaluated.
+        unresolved_observation_backed_casilla_ids: Bound observation casillas
+            whose missing value may be carried as unresolved by a saved
+            amendment replay. Ordinary calculation callers leave this empty.
     """
     resolved = _resolve_calculation_inputs(
         snapshot,
@@ -674,8 +697,73 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
         text_inputs=text_inputs,
         closed_record_row_sets=closed_record_row_sets,
     )
-    state = _prepare_calculation_state(snapshot, resolved)
-    _evaluate_formulas(snapshot, resolved, state)
+    state = _prepare_calculation_state(
+        snapshot,
+        resolved,
+        unresolved_observation_backed_casilla_ids=unresolved_observation_backed_casilla_ids,
+    )
+    retained = retained_formula_observations or {}
+    formula_targets = {formula.target_casilla_id for formula in resolved.revision.formulas}
+    invalid_retained = set(retained).difference(formula_targets)
+    if invalid_retained:
+        raise RegistryValidationError(
+            f"retained observation target(s) are not formula casillas: {', '.join(sorted(invalid_retained))}",
+            translated_message="errors.calc.formula_override_target_invalid",
+            context={"casilla_ids": ", ".join(sorted(invalid_retained))},
+        )
+    for target, observation in retained.items():
+        if observation.casilla_id != target:
+            raise RegistryValidationError(
+                f"retained observation does not match target {target!r}",
+                translated_message="errors.calc.formula_override_target_invalid",
+                context={"casilla_id": target},
+            )
+        if observation.value is not None:
+            state.values[target] = observation.value
+            state.computed_provenance[target] = observation
+    if formula_overrides:
+        formula_targets = {formula.target_casilla_id for formula in resolved.revision.formulas}
+        invalid = set(formula_overrides).difference(formula_targets)
+        if invalid:
+            raise RegistryValidationError(
+                f"formula override target(s) are not formula casillas: {', '.join(sorted(invalid))}",
+                translated_message="errors.calc.formula_override_target_invalid",
+                context={"casilla_ids": ", ".join(sorted(invalid))},
+            )
+        for target, observation in formula_overrides.items():
+            if observation.casilla_id != target:
+                raise RegistryValidationError(
+                    f"formula override observation does not match target {target!r}",
+                    translated_message="errors.calc.formula_override_target_invalid",
+                    context={"casilla_id": target},
+                )
+            formula = state.formulas[target]
+            value = observation.value
+            _validate_formula_target_constraint(target, value, formula, state.casillas_by_id)
+            state.values[target] = value
+            state.computed_provenance[target] = observation
+    recalculated_targets = _affected_formula_targets(
+        resolved.revision,
+        casilla_ids=recalculate_from_casilla_ids,
+        binding_ids=recalculate_from_binding_ids,
+    )
+    if retained and (recalculate_from_casilla_ids or recalculate_from_binding_ids):
+        _evaluate_formulas(
+            snapshot,
+            resolved,
+            state,
+            selected_targets=recalculated_targets,
+            skipped_targets=frozenset(formula_overrides or {}),
+        )
+        unresolved = set(recalculated_targets).intersection(state.unresolved_casilla_ids)
+        if unresolved:
+            raise RegistryValidationError(
+                f"amendment recalculation has unresolved required formula(s): {', '.join(sorted(unresolved))}",
+                translated_message="errors.calc.formula_recalculation_unresolved",
+                context={"casilla_ids": ", ".join(sorted(unresolved))},
+            )
+    else:
+        _evaluate_formulas(snapshot, resolved, state, skipped_targets=frozenset(formula_overrides or {}))
     return _materialise_calculation_result(snapshot, resolved, state)
 
 
@@ -683,12 +771,41 @@ def _evaluate_formulas(
     snapshot: RegistrySnapshot,
     resolved: _ResolvedCalculationInputs,
     state: _CalculationState,
+    *,
+    skipped_targets: frozenset[CasillaId] = frozenset(),
+    selected_targets: frozenset[CasillaId] | None = None,
 ) -> None:
     """Evaluate each formula in the graph's dependency order at Decimal precision."""
     with localcontext() as ctx:
         ctx.prec = 28
         for target in formula_evaluation_order(resolved.revision):
+            if target in skipped_targets:
+                continue
+            if selected_targets is not None and target not in selected_targets:
+                continue
+            state.values.pop(target, None)
+            state.computed_provenance.pop(target, None)
+            state.unresolved_casilla_ids.discard(target)
             _evaluate_formula_target(snapshot, resolved, state, target)
+
+
+def _affected_formula_targets(
+    revision: ModeloRevision,
+    *,
+    casilla_ids: frozenset[CasillaId],
+    binding_ids: frozenset[BindingId],
+) -> frozenset[CasillaId]:
+    """Find the formula dependency closure of changed casilla and binding values."""
+    affected = set(casilla_ids)
+    targets: set[CasillaId] = set()
+    for target in formula_evaluation_order(revision):
+        formula = next(item for item in revision.formulas if item.target_casilla_id == target)
+        if affected.intersection(expression_casilla_refs(formula.expression)) or binding_ids.intersection(
+            expression_binding_refs(formula.expression)
+        ):
+            targets.add(target)
+            affected.add(target)
+    return frozenset(targets)
 
 
 def _evaluate_formula_target(

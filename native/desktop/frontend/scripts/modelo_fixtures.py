@@ -39,7 +39,6 @@ import hashlib
 import json
 import re
 import sys
-import tempfile
 import textwrap
 from collections.abc import AsyncGenerator, Generator, Iterable, Iterator, Mapping
 from contextlib import asynccontextmanager, contextmanager
@@ -51,9 +50,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
 
-from dev.fixture_projections.location import family_directory
+from dev.fixture_projections.location import family_directory, scratch_tree
 from dev.quality.typescript_module_size import MAX_PHYSICAL_LINES
-from dev.temporary_output import prepare_temp_root
 from pydantic import BaseModel
 from pydantic.json_schema import models_json_schema
 
@@ -67,8 +65,8 @@ if TYPE_CHECKING:
     from cadrumo.tests.personas import Persona, WithholdingCertificate, YearEnvelope
 
 FRONTEND = Path(__file__).resolve().parents[1]
-#: The scenario envelopes are build output in the host's build tree, never committed.
-FIXTURES = family_directory("modelo")
+#: The scenario envelopes' folder in the window projections, build output that is never committed.
+ENVELOPE_FAMILY = "modelo"
 
 #: The host's closed list of admitted definitions, which the generated mirror is pinned to.
 ADMITTED = FRONTEND.parent / "src-tauri" / "src" / "shell" / "modelo" / "admitted.rs"
@@ -131,7 +129,7 @@ UNREGIMED: tuple[tuple[str, object], ...] = (("irpf.estimation_regime", None),)
 #: The value the edit scenarios type over a Modelo 130 box, as the desktop stages it.
 EDIT_130: tuple[tuple[str, str], ...] = (("06", "1234.56"),)
 #: The box and figure the correction of the recorded 130 states, as the filer types it.
-CORRECTED_130 = ("06", "150.00")
+CORRECTED_130 = ("01", "10000.00")
 #: The Modelo 303 box the edit scenarios type over, as the filer types it and as the desktop stages it.
 TYPED_303: tuple[tuple[str, str], ...] = (("42", "1234.56"),)
 EDIT_303: tuple[tuple[str, str], ...] = (("42", "1234.56"),)
@@ -165,7 +163,7 @@ UNVERIFIED_EXPORT = ("165", "0A")
 #: An entry the typed-entry path cannot read as a figure.
 UNREADABLE_ENTRY = "doce"
 #: Why the correction is made, as the filer says it.
-CORRECTION_REASON = "A deductible expense was left out."
+CORRECTION_REASON = "Income was understated in the recorded declaration."
 #: A synthetic AEAT justificante specimen for a Modelo 130 of a first quarter.
 JUSTIFICANTE_130 = ("tests", "fixtures", "justificantes", "modelo_130_2026Q1.pdf")
 HELP_BOXES: Mapping[str, tuple[str, ...]] = {
@@ -895,10 +893,11 @@ def _write(directory: Path, name: str, model: BaseModel) -> None:
 
     The written envelope is what the host hands the window. Once every envelope is written, the opaque ids a run
     mints afresh are named stably across them (see ``_name_minted_ids``); the calculations an envelope names are
-    read for that here, while their profile is open.
+    read for that here, while their profile is open, and the profile it was written in is recorded.
     """
     shown = _host_view(json.loads(model.model_dump_json()), _result_path_keys(), _FILE_FOLDERS)
     _name_calculations(shown)
+    _ENVELOPE_PROFILES[name] = _open_profile()
     text = json.dumps(shown, ensure_ascii=False, separators=(",", ":"))
     (directory / name).write_text(text, "utf-8", newline="\n")
     sys.stdout.write(f"{name}\n")
@@ -916,6 +915,45 @@ _MINTED_IDS: dict[str, str] = {}
 
 #: What each name was stated by, so two ids stated alike can be told apart in the refusal.
 _STATED: dict[str, Any] = {}
+#: The profile each envelope was written in, by its file name; one written outside every profile has none.
+_ENVELOPE_PROFILES: dict[str, str | None] = {}
+
+
+def _open_profile() -> str | None:
+    """The profile open now, as its own storage root, or ``None`` outside every profile.
+
+    Each scenario opens its own copy of a persona's profile, and every copy carries the same profile id; the
+    storage root the copy was opened in is what tells two scenarios' profiles apart.
+    """
+    from cadrumo.adapters.persistence.storage.master_key.active_session import current_active_bucket_session
+    from cadrumo.core.config import load_settings
+
+    if current_active_bucket_session() is None:
+        return None
+    return str(load_settings().cadrumo_storage_root)
+
+
+def _profiles_holding(envelopes: Mapping[str, Any], raws: Iterable[str]) -> dict[str, set[str | None]]:
+    """The profiles whose envelopes hold each of ``raws``; ``None`` stands for an envelope of no known profile."""
+    wanted = set(raws)
+    holding: dict[str, set[str | None]] = {raw: set() for raw in wanted}
+    for name, envelope in envelopes.items():
+        for found in wanted.intersection(_all_strings(envelope)):
+            holding[found].add(_ENVELOPE_PROFILES.get(name))
+    return {raw: profiles or {None} for raw, profiles in holding.items()}
+
+
+def _all_strings(value: Any) -> Generator[str]:
+    """Every string ``value`` holds as a key or a value, at any depth."""
+    if isinstance(value, str):
+        yield value
+    elif isinstance(value, list):
+        for item in value:
+            yield from _all_strings(item)
+    elif isinstance(value, dict):
+        for key, item in value.items():
+            yield str(key)
+            yield from _all_strings(item)
 
 
 def _token(kind: str, stated: Any) -> str:
@@ -1106,6 +1144,11 @@ def _name_minted_ids(directory: Path, names: Iterable[str]) -> None:
     A name is a digest of what its own row states, never of where the id was met first, so each id is named the
     same wherever it recurs and whatever order the envelopes are read in; an id another row cites, or the window
     hands back as the one it read, is replaced by the same name.
+
+    Two ids may share a name only where no one profile holds both. Each scenario reads its own copy of a persona's
+    profile, whose keyed references differ, so one calculation read alike in two scenarios mints two ids that state
+    the same row; no envelope of either profile can tell them apart, so they share its name. Within one profile, or
+    where an envelope's profile is not known, two ids stated alike would merge under one name, and are refused.
     """
     envelopes = {name: json.loads((directory / name).read_text("utf-8")) for name in names}
     for envelope in envelopes.values():
@@ -1115,12 +1158,21 @@ def _name_minted_ids(directory: Path, names: Iterable[str]) -> None:
     derived: dict[str, str] = {}
     for envelope in envelopes.values():
         _derived_names(envelope, derived)
-    named: dict[str, str] = {}
+    named: dict[str, list[str]] = {}
     for raw, token in [*_MINTED_IDS.items(), *derived.items()]:
-        if named.setdefault(token, raw) != raw:
-            raise SystemExit(
-                f"{named[token]} and {raw} state the same row, so their names would merge them: {_STATED.get(token)}"
-            )
+        if raw not in named.setdefault(token, []):
+            named[token].append(raw)
+    shared = [raw for raws in named.values() if len(raws) > 1 for raw in raws]
+    profiles = _profiles_holding(envelopes, shared)
+    for token, raws in named.items():
+        for position, raw in enumerate(raws):
+            for other in raws[:position]:
+                common = profiles[other] & profiles[raw]
+                if common or None in profiles[other] | profiles[raw]:
+                    raise SystemExit(
+                        f"{other} and {raw} state the same row in one profile, so their names would merge them: "
+                        f"{_STATED.get(token)}"
+                    )
     _MINTED_IDS.update(derived)
     for name, envelope in envelopes.items():
         text = json.dumps(_with_minted_names(envelope), ensure_ascii=False, separators=(",", ":"))
@@ -2110,7 +2162,7 @@ def _write_projection_steps(directory: Path) -> None:
     projected = next(filer for filer in RENTA_FILERS if filer.envelope == "projected")
     filer = replace(projected, quarter_130=False)
     with (
-        tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
+        scratch_tree() as tmp,
         _renta_seeded(Path(tmp), filer) as (_, work),
     ):
         created = _operate(
@@ -2148,7 +2200,7 @@ def _write_renta_filer(directory: Path, filer: RentaFiler, *, first: bool) -> No
     The first filer is also the one whose declarations list, help cards and refused projection are read.
     """
     with (
-        tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
+        scratch_tree() as tmp,
         _renta_seeded(Path(tmp), filer, read_on=filer.read_on) as (persona, work),
     ):
         _record_certificate(persona, filer)
@@ -2320,7 +2372,7 @@ def _borrador_chain(directory: Path | None, results: Mapping[str, Decimal]) -> d
     """
     # Read within the filing period, after the drafts were imported.
     with (
-        tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
+        scratch_tree() as tmp,
         _renta_seeded(Path(tmp), BORRADOR_FILER, read_on=RENTA_FILING_PERIOD_DAY) as (persona, work),
     ):
         _record_certificate(persona, BORRADOR_FILER)
@@ -3073,15 +3125,24 @@ def _write_receipt_import(directory: Path, work: Any) -> None:
     _write(directory, f"reconcile-{work.work_unit.modelo}.json", imported)
 
 
-def _write_correction(directory: Path, work: Any, filing_record_id: str) -> None:
+def _write_correction(
+    directory: Path,
+    work: Any,
+    filing_record_id: str,
+    *,
+    name: str | None = None,
+    form: str = "130-1T-receipt",
+    corrected: tuple[str, str] = CORRECTED_130,
+) -> str:
     """Read what correcting the recorded, receipt-confirmed 130 offers, check a corrected figure, and correct it.
 
     The corrected figure is checked through the canonical typed-entry path as
     the desktop sends it, once as a figure and once as words it cannot read.
     """
+    from cadrumo.application.modelo.amendment_projection import ModeloWorkAmendPublicResultV2
     from cadrumo.application.modelo.workbench_operations import MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID
 
-    modelo = str(work.work_unit.modelo)
+    name = str(work.work_unit.modelo) if name is None else name
     definition_id = "modelo.work.amendment_context"
     context = _operate(
         work,
@@ -3092,16 +3153,17 @@ def _write_correction(directory: Path, work: Any, filing_record_id: str) -> None
         ),
         subject_ref=_profile_subject(work),
     )
-    _write(directory, f"amendment-context-{modelo}.json", context)
+    _write(directory, f"amendment-context-{name}.json", context)
     if not isinstance(context, ModeloWorkAmendmentContextProjection):
         raise SystemExit("the amendment context read did not publish its projection")
     correction = context.correction
     if correction is None or not correction.rows or not correction.kinds:
         raise SystemExit("the recorded 130 offers no correction")
-    row = next((row for row in correction.rows if row.casilla_id == CORRECTED_130[0]), correction.rows[0])
-    form = "130-1T-receipt"
+    row = next((row for row in correction.rows if row.casilla_id == corrected[0]), None)
+    if row is None:
+        raise SystemExit(f"the recorded 130 offers no correction of box {corrected[0]}")
     baseline = _form_baseline(directory, form).model_dump(mode="json")
-    for suffix, lexeme in (("", CORRECTED_130[1]), ("-refused", UNREADABLE_ENTRY)):
+    for suffix, lexeme in (("", corrected[1]), ("-refused", UNREADABLE_ENTRY)):
         document = {
             "input_version": 2,
             "output_language": "en",
@@ -3132,7 +3194,164 @@ def _write_correction(directory: Path, work: Any, filing_record_id: str) -> None
             },
         ),
     )
-    _write(directory, f"amend-{modelo}.json", amended)
+    if not isinstance(amended, ModeloWorkAmendPublicResultV2):
+        raise SystemExit("the amendment did not publish its saved filing")
+    _write(directory, f"amend-{name}.json", amended)
+    return amended.filing_record_id
+
+
+def _correction_filing_view(work: Any, filing_record_id: str, language: str) -> Any:
+    """Read an exact saved filing through the registered profile operation."""
+    definition_id = "modelo.filing_record.view"
+    return _operate(
+        work,
+        definition_id,
+        _request(
+            definition_id,
+            {
+                "profile_id": work.work_unit.bucket_id,
+                "filing_record_id": filing_record_id,
+                "output_language": language,
+            },
+        ),
+        subject_ref=_profile_subject(work),
+        effect=OperationEffect.NONE,
+    )
+
+
+def _write_related_correction(directory: Path, work: Any, filing_record_id: str, name: str) -> Any:
+    """Save each language's exact receipt, saved comparison and labeled correction context."""
+    first = None
+    for language in LANGUAGES:
+        view = _correction_filing_view(work, filing_record_id, language)
+        _write(directory, f"filing-view-{name}-{language}.json", view)
+        definition_id = "modelo.work.amendment_context"
+        context = _operate(
+            work,
+            definition_id,
+            _request(
+                definition_id,
+                {
+                    "profile_id": work.work_unit.bucket_id,
+                    "filing_record_id": filing_record_id,
+                    "output_language": language,
+                },
+            ),
+            subject_ref=_profile_subject(work),
+            effect=OperationEffect.NONE,
+        )
+        _write(directory, f"amendment-context-{name}-{language}.json", context)
+        if first is None:
+            first = view
+    return first
+
+
+def _confirm_correction_receipt(work: Any, filing_record_id: str) -> None:
+    """Confirm the pending correction through the same synthetic receipt door as the original."""
+    from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+    from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
+    from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
+    from cadrumo.core.time.clock import now
+    from cadrumo.domain.modelos.filing_record import AeatConfirmationState, ExternalEvidenceKind
+    from cadrumo.entrypoints.adapter_composition_work_ports import build_filing_action_ports
+
+    unit = work.work_unit
+    ports = build_filing_action_ports(bucket_id=unit.bucket_id, operation=work.operation)
+    record = ports.filing_repository.load().get(filing_record_id)
+    if record is None:
+        raise SystemExit("the pending correction has no saved filing")
+    revision = ports.calculation_repository.load().get(record.calculation_revision_id)
+    if revision is None:
+        raise SystemExit("the pending correction has no saved calculation")
+    received = now()
+    tax_id = _taxpayer_tax_id(ACTIVITY_PERSONA)
+    reference = f"CSV{unit.modelo}{unit.filing_year}{unit.period.registry_token}CORRECTION1"
+    persist_justificante_metadata(
+        reference,
+        modelo=str(unit.modelo),
+        filing_year=unit.filing_year,
+        period=unit.period.registry_token,
+        captured_at=received,
+        tax_id=tax_id,
+    )
+    imported = import_external_filing_evidence(
+        work_unit_id=work.work_unit_id,
+        casilla_values=revision.casilla_values,
+        evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+        evidence_reference_id=reference,
+        declared_kind=record.declaration_kind,
+        actor=ACTOR,
+        work_unit_repository=ports.work_unit_repository,
+        calculation_repository=ports.calculation_repository,
+        filing_repository=ports.filing_repository,
+        bucket_event_repository=ports.bucket_event_repository,
+        observation_repository=CalculationObservationRepository(),
+        expected_tax_id=tax_id,
+        clock=received,
+        operation=work.operation,
+    )
+    confirmed = imported.filing_record
+    if confirmed.filing_record_id != filing_record_id or confirmed.confirmation is not AeatConfirmationState.CONFIRMADA:
+        raise SystemExit("the correction receipt did not confirm the exact pending filing")
+
+
+def _write_correction_chain(directory: Path, work: Any, original_id: str) -> None:
+    """Produce a saved original and two successive corrections, with one awaiting confirmation."""
+    from cadrumo.core.time.clock import frozen_clock, now
+    from cadrumo.domain.modelos.filing_record import AeatConfirmationState
+
+    original = _correction_filing_view(work, original_id, "en")
+    started = max(now(), _in_declarations_year(RECEIPT_ON)) + timedelta(minutes=1)
+    with frozen_clock(started):
+        _write_form(directory, work, "modelo-130-1T-receipt")
+        first_id = _write_correction(directory, work, original_id)
+        pending = _write_related_correction(directory, work, first_id, "130-correction-1-pending")
+        _write_form(directory, work, "modelo-130-1T-correction-1-pending")
+        _write_filing_reads(directory, work, "130-correction-1-pending")
+        _write_list(directory, work, "declarations-correction-pending")
+    with frozen_clock(started + timedelta(minutes=1)):
+        _confirm_correction_receipt(work, first_id)
+        _write_form(directory, work, "modelo-130-1T-correction-1")
+    with frozen_clock(started + timedelta(minutes=2)):
+        second_id = _write_correction(
+            directory,
+            work,
+            first_id,
+            name="130-correction-2",
+            form="130-1T-correction-1",
+            corrected=(CORRECTED_130[0], "11000.00"),
+        )
+        saved_original = _write_related_correction(directory, work, original_id, "130-original")
+        first = _write_related_correction(directory, work, first_id, "130-correction-1")
+        second = _write_related_correction(directory, work, second_id, "130-correction-2")
+        _write_list(directory, work, "declarations-corrections")
+    if saved_original.historical_content != original.historical_content:
+        raise SystemExit("correcting the 130 changed the original's saved content")
+    if first.historical_content != pending.historical_content:
+        raise SystemExit("the successive correction changed the first correction's saved content")
+    # Independent hand calculation from the pinned 130 rules: expenses4982,
+    # simplified provision5%, payment20%, minor deduction100. Confirmed prior
+    # payments are deducted once; the newest pending correction is not paid.
+    for view, expected in (
+        (saved_original, {"01": "8840", "17": "633.02", "18": "0", "19": "633.02"}),
+        (first, {"01": "10000", "02": "5232.90", "07": "953.42", "17": "853.42", "18": "633.02", "19": "220.40"}),
+        (second, {"01": "11000", "02": "5282.90", "07": "1143.42", "17": "1043.42", "18": "853.42", "19": "190.00"}),
+    ):
+        saved = {row.casilla_id: row.value for row in view.historical_content.observations}
+        if any(key not in saved or Decimal(saved[key]) != Decimal(value) for key, value in expected.items()):
+            raise SystemExit("the saved 130 correction did not recompute the grounded liability and prior payment")
+    if len({item.record.calculation_revision_id for item in (saved_original, first, second)}) != 3:
+        raise SystemExit("the correction chain did not save three distinct calculations")
+    if (
+        saved_original.record.superseded_by_filing_record_id != first_id
+        or first.record.amends_filing_record_id != original_id
+        or first.record.superseded_by_filing_record_id != second_id
+        or second.record.amends_filing_record_id != first_id
+        or saved_original.record.confirmation is not AeatConfirmationState.CONFIRMADA
+        or first.record.confirmation is not AeatConfirmationState.CONFIRMADA
+        or second.record.confirmation is not AeatConfirmationState.PENDIENTE
+    ):
+        raise SystemExit("the saved correction chain lost its exact links or confirmation states")
 
 
 def checked_entries(directory: Path, form: str) -> list[dict[str, Any]]:
@@ -3317,7 +3536,7 @@ def _write_iva_wallet(directory: Path) -> None:
     )
     from cadrumo.application.operations.public_period import PublicPeriod
 
-    with tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp, _seeded(Path(tmp)) as work:
+    with scratch_tree() as tmp, _seeded(Path(tmp)) as work:
         iva = _other_declaration(work, "303", "1T")
         _write_list(directory, work, "declarations-wallet")
         profile_id = UUID(work.work_unit.bucket_id)
@@ -3391,7 +3610,7 @@ def _write_scenarios(directory: Path) -> None:
     write_refusals(directory)
     _write_iva_wallet(directory)
     with (
-        tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
+        scratch_tree() as tmp,
         _seeded(Path(tmp)) as first,
     ):
         works = {DECLARATIONS[0][0]: first}
@@ -3420,7 +3639,7 @@ def _write_scenarios(directory: Path) -> None:
         _write_unverified_export(directory, first, Path(tmp) / "modelo-165.txt")
     # Its own profile: recording needs the earlier Renta filed under the persona's tax id.
     with (
-        tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
+        scratch_tree() as tmp,
         _seeded(Path(tmp)) as filed,
     ):
         _write(directory, "file-130.json", _record_filed(filed))
@@ -3431,11 +3650,11 @@ def _write_scenarios(directory: Path) -> None:
         _import_receipt(filed)
         _write_form(directory, filed, "modelo-130-1T-receipt")
         unit = _write_filing_reads(directory, filed, "130-receipt")
-        _write_correction(directory, filed, unit.current_filing_record_id)
+        _write_correction_chain(directory, filed, unit.current_filing_record_id)
     # Its own profile: the persona's ledger carries the quarter's income and the declaration is calculated, never
     # checked or filed. It records no estimation regime, so its form shows what that leaves it waiting on.
     with (
-        tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
+        scratch_tree() as tmp,
         _seeded(Path(tmp), stated=UNREGIMED) as booked,
     ):
         booked.recalculate()
@@ -3443,7 +3662,7 @@ def _write_scenarios(directory: Path) -> None:
     # Its own profile, on a frozen timeline: calculated now, a review half an hour after the form was read, and its
     # renewal, forty minutes on.
     with (
-        tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
+        scratch_tree() as tmp,
         _seeded(Path(tmp)) as renewing,
     ):
         started = now() + timedelta(minutes=40)
@@ -3452,7 +3671,7 @@ def _write_scenarios(directory: Path) -> None:
         _write_renewal_flow(directory, renewing, started)
     # Its own profile: the file is written, then a conflicting edit makes it stale and blocks verification.
     with (
-        tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
+        scratch_tree() as tmp,
         _seeded(Path(tmp)) as stale,
     ):
         _check_clean(stale)
@@ -3631,6 +3850,7 @@ _WRITE_ENVELOPES: tuple[tuple[str, str], ...] = (
     ("file-*.json", "modelo.work.file"),
     ("reconcile-*.json", "modelo.reconcile.import"),
     ("metadata-*.json", "modelo.work.metadata"),
+    ("filing-view-*.json", "modelo.filing_record.view"),
     ("amendment-context-*.json", "modelo.work.amendment_context"),
     ("amend-[0-9]*.json", "modelo.work.amend"),
     ("disagreements-*.json", "modelo.work.disagreements"),
@@ -3648,8 +3868,10 @@ def _result_model(definition_id: str) -> type[BaseModel]:
     return registry.lookup_public_schema_binding(schema).model_type
 
 
-def validate(*, envelopes: bool = True) -> int:
+def validate(directory: Path | None, *, envelopes: bool = True) -> int:
     """Whether the host's admitted list and, unless ``envelopes`` is false, every stored envelope match the models.
+
+    The envelopes are read from ``directory``, or from the window projections when it is ``None``.
 
     Raises:
         SystemExit: When envelopes are asked for and none has been seeded, naming the command that seeds them.
@@ -3662,10 +3884,11 @@ def validate(*, envelopes: bool = True) -> int:
             f"unadmitted {sorted(set(registered) - set(admitted))}, "
             f"unregistered {sorted(set(admitted) - set(registered))}"
         )
-    if envelopes and not any(FIXTURES.glob("*.json")):
-        raise SystemExit(f"No modelo envelope is seeded in {FIXTURES}; run `just fixtures-seed modelo-envelopes`")
+    stored = directory if directory is not None else family_directory(ENVELOPE_FAMILY)
+    if envelopes and not any(stored.glob("*.json")):
+        raise SystemExit(f"No modelo envelope is seeded in {stored}; run `just fixtures-seed modelo-envelopes`")
     for pattern, model in _fixture_models() if envelopes else ():
-        paths = sorted(FIXTURES.glob(pattern))
+        paths = sorted(stored.glob(pattern))
         if not paths:
             failures.append(f"no fixture matches {pattern}")
         for path in paths:
@@ -3684,7 +3907,10 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("step", choices=("contract", "bounds", "envelopes", "pack", "validate"))
     parser.add_argument(
-        "directory", nargs="?", type=Path, default=FIXTURES, help="Where `envelopes` writes and `pack` stores."
+        "directory",
+        nargs="?",
+        type=Path,
+        help="Where `envelopes` writes, `pack` stores and `validate` reads; by default the window projections.",
     )
     parser.add_argument(
         "--definitions", action="store_true", help="With `validate`, check the host's admitted list and no envelope."
@@ -3696,13 +3922,14 @@ def main() -> int:
     if args.step == "bounds":
         sys.stdout.write(render_bounds())
         return 0
+    if args.step == "validate":
+        return validate(None if args.definitions else args.directory, envelopes=not args.definitions)
+    directory = args.directory if args.directory is not None else family_directory(ENVELOPE_FAMILY)
     if args.step == "envelopes":
-        write_envelopes(args.directory)
+        write_envelopes(directory)
         return 0
-    if args.step == "pack":
-        pack_envelopes(args.directory)
-        return 0
-    return validate(envelopes=not args.definitions)
+    pack_envelopes(directory)
+    return 0
 
 
 if __name__ == "__main__":

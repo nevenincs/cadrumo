@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Final
 
 from ....core.amendment_kind_regime import (
     AmendmentKindRegime,
+    AmendmentKindRestriction,
     AmendmentRegimePolicy,
     resolve_amendment_kind_regime,
 )
@@ -36,6 +37,7 @@ _PRE_ORDER_KEY = "regime.pre_order"
 _POST_ORDER_KEY = "regime.post_order"
 _BOUNDARY_ORDER_KEY = "boundary.order"
 _LATER_PERIOD_ADJUSTMENT_ORDER_KEY = "later_period_adjustment.order"
+_RESTRICTION_ORDER_KEY = "restriction.order"
 
 
 _ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.STRIP)
@@ -121,6 +123,48 @@ def _later_period_adjustments(entries: Mapping[str, str]) -> dict[str, date]:
     return adjustments
 
 
+def _restriction_tokens(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
+    value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT)
+    if any(not token.strip() for token in value.split(",")):
+        raise RegistryValidationError(f"amendment-regime-policy {key!r} contains an empty token")
+    return unique_mapping_tokens(entries, key, subject=_ENTRY_SUBJECT)
+
+
+def _kind_restrictions(entries: Mapping[str, str]) -> dict[str, AmendmentKindRestriction]:
+    """Validate optional dated restrictions, including their complete rows and evidence."""
+    restriction_entries = {key for key in entries if key.startswith("restriction.")}
+    if not restriction_entries:
+        return {}
+    models = _restriction_tokens(entries, _RESTRICTION_ORDER_KEY)
+    expected = {_RESTRICTION_ORDER_KEY}
+    for modelo in models:
+        _boundary_model(modelo)
+        expected.update(f"restriction.{modelo}.{field}" for field in ("date", "kinds", "source"))
+    if restriction_entries != expected:
+        raise RegistryValidationError(
+            "amendment-regime-policy restriction rows must match restriction.order and fields"
+        )
+    procedures = frozenset(unique_mapping_tokens(entries, _PROCEDURE_ORDER_KEY, subject=_ENTRY_SUBJECT))
+    restrictions: dict[str, AmendmentKindRestriction] = {}
+    for modelo in models:
+        prefix = f"restriction.{modelo}"
+        required_mapping_entry(entries, f"{prefix}.source", subject=_ENTRY_SUBJECT)
+        raw_date = required_mapping_entry(entries, f"{prefix}.date", subject=_ENTRY_SUBJECT)
+        try:
+            effective_from = date.fromisoformat(raw_date)
+            if effective_from.isoformat() != raw_date:
+                raise ValueError("noncanonical date")
+        except ValueError as exc:
+            raise RegistryValidationError(
+                f"amendment-regime-policy restriction for {modelo!r} must be an ISO date",
+            ) from exc
+        kinds = frozenset(_restriction_tokens(entries, f"{prefix}.kinds"))
+        if not kinds.issubset(procedures):
+            raise RegistryValidationError("amendment-regime-policy restriction uses an undeclared procedure")
+        restrictions[modelo] = AmendmentKindRestriction(effective_from=effective_from, permitted_kinds=kinds)
+    return restrictions
+
+
 def amendment_regime_policy(entries: Mapping[str, str]) -> AmendmentRegimePolicy:
     """Build the amendment regime policy from the governed fact entries."""
     pre_kinds, post_kinds = _procedure_kinds(entries)
@@ -130,6 +174,7 @@ def amendment_regime_policy(entries: Mapping[str, str]) -> AmendmentRegimePolicy
         pre_rectificativa_kinds=pre_kinds,
         post_rectificativa_kinds=post_kinds,
         later_period_adjustment_from=MappingProxyType(_later_period_adjustments(entries)),
+        kind_restrictions=MappingProxyType(_kind_restrictions(entries)),
     )
 
 

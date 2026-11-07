@@ -166,7 +166,7 @@ def project_declarations_list(
             result_version=1,
             profile_id=payload.profile_id,
             output_language=language,
-            rows=tuple(worded_list_row(row, language) for row in rows),
+            rows=tuple(worded_list_row(row, language, workspace.filings) for row in rows),
             zones=zone_states(workspace, language),
             sources=calendar_sources(calendar, language),
             notices=source_notices(workspace, calendar, language),

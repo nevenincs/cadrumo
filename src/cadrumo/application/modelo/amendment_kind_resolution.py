@@ -66,11 +66,10 @@ def assert_amendment_kind_permitted(
     Reads the declared regime from
     :func:`~domain.calculations.registry.amendment_regime_policy.resolve_amendment_kind_regime_for_period`
     for ``modelo`` and ``period`` and checks ``amendment_kind`` against the permitted set. A
-    modelo with no declared rectificativa-adoption boundary (e.g. M130/M131,
-    which carry no bundled rectificativa grounding) always resolves to the
-    pre-rectificativa complementaria/sustitutiva pair, so requesting
-    ``rectificativa`` for such a modelo is refused at every period until a
-    bundled AEAT source grounds an effective date.
+    modelo with no declared rectificativa-adoption boundary selects the
+    pre-rectificativa vocabulary, narrowed by any dated registry restriction.
+    M130/M131 permit only complementaria from their evidenced 2019 editions;
+    neither sustitutiva nor rectificativa is admitted for those periods.
 
     Raises:
         AmendmentKindNotPermittedError: When ``amendment_kind`` is outside the
@@ -129,7 +128,11 @@ def liability_direction_for_amendment(
     )
 
 
-def _summed_result(modelo: str, casilla_values: Mapping[CasillaId, Decimal]) -> Decimal | None:
+def _summed_result(
+    modelo: str,
+    casilla_values: Mapping[CasillaId, Decimal],
+    prior_paid_casilla_ids: tuple[CasillaId, ...],
+) -> Decimal | None:
     """Sum the modelo's declared final-result casilla(s) from a casilla-value map.
 
     Returns ``None`` when the modelo has no declared result-disposition spec
@@ -140,10 +143,15 @@ def _summed_result(modelo: str, casilla_values: Mapping[CasillaId, Decimal]) -> 
     result_ids = result_disposition_casilla_ids(modelo)
     if result_ids is None:
         return None
-    return canonical_result_amount(
+    result = canonical_result_amount(
         modelo,
         {casilla_id: casilla_values[casilla_id] for casilla_id in result_ids if casilla_id in casilla_values},
     )
+    if result is None:
+        return None
+    if modelo != "130":
+        return result
+    return result + sum((casilla_values.get(key, Decimal("0")) for key in prior_paid_casilla_ids), Decimal("0"))
 
 
 def assert_complementaria_liability_direction_permitted(
@@ -153,6 +161,7 @@ def assert_complementaria_liability_direction_permitted(
     amendment_kind: FilingDeclarationKind,
     baseline_casilla_values: Mapping[CasillaId, Decimal],
     corrected_casilla_values: Mapping[CasillaId, Decimal],
+    prior_paid_casilla_ids: tuple[CasillaId, ...] = (),
 ) -> None:
     """Refuse a pre-rectificativa ``complementaria`` that decreases liability.
 
@@ -181,8 +190,10 @@ def assert_complementaria_liability_direction_permitted(
     if resolve_amendment_kind_regime_for_period(modelo, period).rectificativa_effective:
         return
 
-    baseline_result = _summed_result(modelo, baseline_casilla_values)
-    corrected_result = _summed_result(modelo, corrected_casilla_values)
+    # A complementaria's result is the additional payment. Compare total
+    # liability, including the registry-declared earlier same-period payments.
+    baseline_result = _summed_result(modelo, baseline_casilla_values, prior_paid_casilla_ids)
+    corrected_result = _summed_result(modelo, corrected_casilla_values, prior_paid_casilla_ids)
     if baseline_result is None or corrected_result is None:
         return
 

@@ -9567,6 +9567,35 @@ workspace:
               hasta completar las respuestas obligatorias del perfil. Complétalas
               en la sección Perfil.
       source: Este origen no está disponible actualmente.
+    related_filings:
+      absent: No registrado
+      after: Declaración seleccionada
+      base: Corrige
+      before: Declaración anterior
+      change: Cambio
+      changed: Modificado
+      comparison_unavailable: 'No se pueden comparar los valores guardados: falta
+        la declaración anterior o su cálculo, o las revisiones del registro son distintas.'
+      corrections: Correcciones posteriores
+      current_labels: Las etiquetas y el formato usan la revisión disponible del registro.
+        No se reconstruye el formulario original.
+      failed: No se ha podido leer la declaración guardada.
+      field: Identificador del campo
+      historical_content_missing: El cálculo guardado de esta declaración no está
+        disponible.
+      historical_display_unavailable: Los valores de la declaración se conservan,
+        pero aquí no están disponibles sus etiquetas y formato originales.
+      labels_unavailable: Los valores guardados con etiquetas no están disponibles.
+        Puedes consultar los campos exactos más abajo cuando sea posible compararlos.
+      loading: Leyendo la declaración guardada…
+      open: Ver declaraciones relacionadas
+      open_work: Abrir la declaración de trabajo
+      retry: Volver a leer
+      saved_values: Valores guardados
+      select: Selecciona una declaración
+      technical_values: Valores guardados de los campos
+      title: Declaraciones relacionadas
+      unchanged: Sin cambios
     revision_state:
       borrador: Borrador
       descartado: Descartado
@@ -9694,7 +9723,9 @@ workspace:
       lead: Una declaración presentada nunca se cambia directamente. Cadrumo prepara
         una corrección a partir de ella; cambias lo que estaba mal, exportas su fichero
         y lo presentas en la AEAT como cualquier otro.
+      loading: Leyendo las opciones de corrección…
       title: Preparar una corrección
+      unavailable: Las opciones de corrección no están disponibles para esta declaración.
     details:
       card_unavailable: No se ha podido leer la explicación de esta casilla.
       choose_box: Elige una casilla para ver de dónde sale su valor y qué significa.

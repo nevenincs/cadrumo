@@ -3,6 +3,7 @@
 // a period. Everything it answers is synthetic.
 
 import { recordedSpan } from "./periodRecording";
+import { SCENARIO_LEDGER_PAYMENTS } from "./assetsRegister";
 import { isClassification, isDirection } from "../shell/ledgerContract";
 import type {
   JsonObject,
@@ -25,12 +26,15 @@ export function reviewStatus(classification: string): LedgerReviewStatus {
   if (classification === "REVIEWED_EXCLUDED") return "excluded";
   return "reviewed";
 }
-/** The purchases the seeded elements own, which the scenario's rows do not
- * hold: the assets register has a ledger of its own. */
-export const OWNED_PURCHASES: Readonly<Record<string, string>> = {
-  "60f7b87f3cacddd83f50355df93b77d31348798f565db35b4edf4328985c967e":
-    "Compra de la furgoneta",
-};
+/** The purchases the recorded elements own, which the scenario's rows do not
+ * hold: the assets register has a ledger of its own, and the identifier each
+ * payment answers under is the one the register's recording minted for it. */
+export const OWNED_PURCHASES: Readonly<Record<string, string>> =
+  Object.fromEntries(
+    SCENARIO_LEDGER_PAYMENTS.filter((payment) => payment.asset_id !== null).map(
+      (payment) => [payment.transaction_id, payment.description],
+    ),
+  );
 
 /** What the scenario's records state only outside anything the page draws. */
 export const KNOWN_ONLY = {

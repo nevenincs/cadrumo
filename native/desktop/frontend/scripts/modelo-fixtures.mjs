@@ -5,8 +5,9 @@
 // (the modules under src/shell/modeloContract/ and relayBounds.ts,
 // committed), and the module bound the producer reports, written to
 // src/shell/moduleBound.json for the lint rule; `--envelopes`
-// selects the scenario envelopes, which are build output in the host's build
-// tree (see fixture-paths.mjs) and never committed; with neither, both. The
+// selects the scenario envelopes, which are build output in the window
+// projections of the selected build tree and never committed, the directory
+// `--fixtures DIR` names; with neither, both. The
 // envelopes are stored as the producer writes them, compact and the Modelo 100
 // forms as patches; `--pack` stores the ones already on disk that way.
 // The wire types are refused, none written or compared, when a formatted
@@ -35,8 +36,8 @@ import { basename, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { format, resolveConfig } from "prettier";
-import { windowFixtures } from "./fixture-paths.mjs";
 import { refuseOversizedModules } from "./generated-module-bound.mjs";
+import { producerEnvironment } from "./producer-environment.mjs";
 
 const { values } = parseArgs({
   options: {
@@ -45,6 +46,7 @@ const { values } = parseArgs({
     envelopes: { type: "boolean", default: false },
     pack: { type: "boolean", default: false },
     output: { type: "string" },
+    fixtures: { type: "string" },
   },
 });
 const wireTypes = values.contract || !values.envelopes;
@@ -96,13 +98,22 @@ const contractDirectory = resolve(frontend, "src/shell/modeloContract");
 const bounds = resolve(frontend, "src/shell/relayBounds.ts");
 // The module bound as the producer reported it, for the lint rule to read.
 const moduleBound = resolve(frontend, "src/shell/moduleBound.json");
-const fixtures = resolve(windowFixtures(), "modelo");
+// The fixture projection seeder names the window projections' directory, the
+// one place the envelopes are stored, so this driver resolves no build tree.
+const storedEnvelopes =
+  values.pack || (scenarios && (values.check || !values.output));
+if (storedEnvelopes && !values.fixtures) {
+  console.error(
+    "Name the window projections' directory with --fixtures; run just fixtures-seed modelo-envelopes",
+  );
+  process.exit(1);
+}
+const fixtures = values.fixtures ? resolve(values.fixtures, "modelo") : "";
 const producer = resolve(frontend, "scripts/modelo_fixtures.py");
 // Every envelope the producer wrote into its own scratch directory.
 const ENVELOPE = /^[A-Za-z0-9-]+\.json$/;
 
-const environment = { ...process.env };
-environment.PYTHONPATH = repository;
+const environment = producerEnvironment(repository);
 const authority = resolve(repository, ".authority");
 if (!environment.CADRUMO_AUTHORITY_ROOT && existsSync(authority))
   environment.CADRUMO_AUTHORITY_ROOT = authority;
@@ -262,7 +273,7 @@ if (scenarios && values.check) {
     console.log(
       "No modelo envelope is seeded, so none is checked; run just fixtures-seed modelo-envelopes",
     );
-  } else if (python("validate").status !== 0) {
+  } else if (python("validate", fixtures).status !== 0) {
     console.error(
       "The modelo envelopes are stale; run just fixtures-seed modelo-envelopes",
     );
@@ -286,7 +297,7 @@ if (scenarios) {
       "python",
       "-B",
       "-c",
-      "from dev.temporary_output import prepare_temp_root; print(prepare_temp_root())",
+      "from dev.fixture_projections.location import producer_scratch; print(producer_scratch())",
     ],
     { cwd: repository, env: environment, encoding: "utf8", windowsHide: true },
   );
@@ -296,22 +307,27 @@ if (scenarios) {
   const scratch = mkdtempSync(
     resolve(temporary.stdout.trim(), "modelo-envelopes-"),
   );
+  // A failed read sets the exit code rather than exiting, so the scratch is
+  // still removed; a reader killed by a signal has no status and still fails.
   try {
     const read = python("envelopes", scratch);
-    if (read.status !== 0) process.exit(read.status);
-    const names = readdirSync(scratch).filter((name) => ENVELOPE.test(name));
-    // A seed leaves exactly the envelopes this read produced: one an earlier
-    // read wrote and this one does not is gone, not left to be mistaken for current.
-    for (const name of readdirSync(target))
-      if (ENVELOPE.test(name) && !names.includes(name))
-        rmSync(resolve(target, name));
-    for (const name of names) {
-      await written(
-        resolve(target, name),
-        readFileSync(resolve(scratch, name), "utf8"),
-      );
+    if (read.status !== 0) {
+      process.exitCode = read.status ?? 1;
+    } else {
+      const names = readdirSync(scratch).filter((name) => ENVELOPE.test(name));
+      // A seed leaves exactly the envelopes this read produced: one an earlier
+      // read wrote and this one does not is gone, not left to be mistaken for current.
+      for (const name of readdirSync(target))
+        if (ENVELOPE.test(name) && !names.includes(name))
+          rmSync(resolve(target, name));
+      for (const name of names) {
+        await written(
+          resolve(target, name),
+          readFileSync(resolve(scratch, name), "utf8"),
+        );
+      }
+      console.log(`wrote ${names.length} envelopes`);
     }
-    console.log(`wrote ${names.length} envelopes`);
   } finally {
     rmSync(scratch, { recursive: true, force: true });
   }

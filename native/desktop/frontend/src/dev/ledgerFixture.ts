@@ -67,6 +67,7 @@ import { setupOperations } from "./ledgerSetupFixture";
 import {
   SetupKeptInPart,
   SetupRequestInvalid,
+  SetupRequestUnrecorded,
   SetupStopped,
 } from "./ledgerSetupSupport";
 import {
@@ -87,6 +88,7 @@ import {
   OWN_ACCOUNT_SECRETS,
   reject,
   text,
+  unrecorded,
 } from "./ledgerRequestFixture";
 import { entryOperations } from "./ledgerEntryFixture";
 import { importOperations } from "./ledgerImportFixture";
@@ -932,6 +934,7 @@ export function ledgerFixture(options: Options): LedgerPort {
       )
         return invalid();
       if (error instanceof SetupRequestInvalid) return invalid();
+      if (error instanceof SetupRequestUnrecorded) return unrecorded();
       if (error instanceof SetupKeptInPart) {
         // The refusal settled with a partial effect, which the host reports
         // as a write that stopped, not as a refusal that wrote nothing.

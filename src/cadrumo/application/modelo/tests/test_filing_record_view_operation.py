@@ -158,6 +158,7 @@ def filing_record_view_operation_bundle(
     work_bucket_id: str | None = None,
     observation_repository: _ObservationRepository | None = None,
     include_record: bool = True,
+    filing_catalogue: ModeloRecordCatalogue | None = None,
 ) -> VerificationRepositoryBundle:
     source_unit, source_record = source()
     selected_unit = unit or source_unit
@@ -169,7 +170,8 @@ def filing_record_view_operation_bundle(
             SimpleNamespace(
                 filing=Repository(
                     filing_bucket_id or str(PROFILE),
-                    ModeloRecordCatalogue(
+                    filing_catalogue
+                    or ModeloRecordCatalogue(
                         records={selected_record.filing_record_id: selected_record} if include_record else {}
                     ),
                 ),
