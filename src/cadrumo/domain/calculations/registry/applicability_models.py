@@ -326,10 +326,10 @@ class ModeloApplicabilityRule(BaseModel):
             regime.
         applicable_fiscal_residencies: The fiscal residency categories
             the modelo applies to. Empty means the modelo does not gate
-            on fiscal residency. An undeclared residency is kept on the
-            resident-IRPF default path described by ``TaxpayerProfile``;
-            a declared residency outside this set is a positive
-            exclusion.
+            on fiscal residency. An undeclared residency is
+            ``INCOMPLETE``, never the resident reading, because habitual
+            residence in Spain is what selects the tax; a declared
+            residency outside this set is a positive exclusion.
         applicable_iva_regimes: The IVA regimes that positively keep a
             modelo in scope. Empty means the modelo does not gate on IVA
             regime. Non-empty means a profile outside those regimes gets
@@ -339,11 +339,11 @@ class ModeloApplicabilityRule(BaseModel):
             entities.
         required_payer_fact: The :class:`PayerFactValue` the modelo's
             applicability depends on, or ``None`` when the modelo does
-            not gate on a payer fact. When set, a profile that
-            positively declares the fact gets ``APPLICABLE``; a profile
-            that does not gets ``INCOMPLETE`` — the underlying boolean
-            has no tri-state, so the engine cannot positively justify a
-            ``NOT_APPLICABLE`` (see :class:`PayerFactValue`).
+            not gate on a payer fact. When set, a declared yes gets
+            ``APPLICABLE`` and a declared no ``NOT_APPLICABLE``. An
+            unanswered fact gets ``INCOMPLETE``, as does a declared
+            ``False`` the fact's own field cannot tell apart from
+            silence (see :class:`PayerFactValue`).
         applicable_reason: Operator-facing prose for the
             ``APPLICABLE`` verdict.
         not_applicable_reason: Operator-facing prose for the
