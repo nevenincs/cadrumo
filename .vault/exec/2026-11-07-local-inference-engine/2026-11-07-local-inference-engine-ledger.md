@@ -5,7 +5,7 @@ tags:
 date: '2026-11-07'
 modified: '2026-11-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:2a4f42df086bca1fb8fc64664075a616c18736eb9be92bb6d2665ebb54f31740'
+body_hash: 'sha256:6a50377cdabc1a6157bc00ea2eb5964b342bbe14d11021f6ff5aaa6d1b0accc0'
 related:
   - "[[2026-11-07-local-inference-engine-plan]]"
 ---
@@ -59,6 +59,14 @@ related:
 - `S28` `verify:` `npm run check (90 node tests, tsc, eslint, prettier)` -> `pass`
 - `S28` `verify:` `npx playwright test tests/agent-live.spec.ts (38 tests)` -> `pass`
 - `S28` `by:` `vaultspec-high-executor`
+- `S15` `A` `native/application/src/provisioning/local_ai/huggingface.rs`
+- `S15` `A` `native/application/src/provisioning/local_ai/huggingface/tests.rs`
+- `S15` `M` `native/application/src/provisioning/local_ai/registry.rs`
+- `S15` `M` `native/application/src/provisioning/local_ai/models.rs`
+- `S15` `M` `native/application/src/provisioning/local_ai/mod.rs`
+- `S15` `verify:` `rustfmt --edition 2024 --check local_ai sources` -> `pass`
+- `S15` `verify:` `pytest dev/quality/tests/test_no_model_definitions.py dev/quality/tests/test_no_git_cli.py` -> `pass`
+- `S15` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -73,6 +81,7 @@ related:
 - `S14` `by:` `vaultspec-high-executor`
 - `S14` Root build slot fixed two registry progress tests that unwrapped run.result by value before borrowing run; fix committed as e972b40632
 - `S28` Full npm test: 4 `desktop-*.spec.ts` files do not load on tui since a8ebeaaa9d (desktopShell.ts bridge path resolves to native/docs); remaining 2473 tests: 2454 passed, 9 skipped, 10 failed in calendar-place, modelo-related-filings, touch and ledger-invoice-match specs, none importing P06 modules, while concurrent fixture-date commits landed
+- `S15` cargo test and clippy for native/application are pending the root build slot; not run in the worktree
 
 ## Notes
 

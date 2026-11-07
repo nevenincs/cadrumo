@@ -62,7 +62,7 @@ const DEFAULT_REGISTRY_BLOB_HOSTS: &[&str] =
 
 /// The folder beside the store that holds blobs still arriving and manifests not yet
 /// published.
-const PARTIAL: &str = "partial";
+pub(super) const PARTIAL: &str = "partial";
 /// The most layers one manifest may name.
 const LAYERS_LIMIT: usize = 256;
 const DIGEST_PREFIX: &str = "sha256:";
@@ -172,12 +172,12 @@ pub struct Blob {
 
 impl Blob {
     /// The blob's file name in the store and in the partial folder.
-    fn file_name(&self) -> String {
+    pub(super) fn file_name(&self) -> String {
         format!("sha256-{}", self.digest)
     }
 
-    /// The blob's digest as the registry addresses it.
-    fn reference(&self) -> String {
+    /// The blob's digest as the registry addresses it and a manifest names it.
+    pub(super) fn reference(&self) -> String {
         format!("{DIGEST_PREFIX}{}", self.digest)
     }
 }
@@ -362,39 +362,100 @@ impl Registry {
     ) -> Result<RegistryManifest, RegistryError> {
         let hosts = admitted_hosts(name, transfer.hosts);
         let manifest = fetch_manifest(name, &hosts, transfer)?;
+        let sources = |blob: &Blob| -> Result<Vec<HttpsUrl>, RegistryError> {
+            Ok(vec![repository_url(
+                name,
+                &format!("blobs/{}", blob.reference()),
+            )?])
+        };
+        self.store(&manifest.blobs(), &hosts, transfer, &sources)?;
+        self.publish(name, &manifest)?;
+        Ok(manifest)
+    }
+
+    /// Stores each of `blobs` the store does not already hold whole, fetched from the
+    /// addresses `sources` names for it and only through `hosts`. Progress counts the
+    /// bytes held out of the sum of their sizes. A failure leaves resumable partial
+    /// bytes, never damaged ones.
+    pub(super) fn store(
+        &self,
+        blobs: &[&Blob],
+        hosts: &BTreeSet<HostName>,
+        transfer: &mut Transfer<'_>,
+        sources: &dyn Fn(&Blob) -> Result<Vec<HttpsUrl>, RegistryError>,
+    ) -> Result<(), RegistryError> {
+        let (stored_blobs, partials) = self.folders()?;
+        let mut tally = Tally {
+            done: 0,
+            total: blobs
+                .iter()
+                .fold(0u64, |sum, blob| sum.saturating_add(blob.size)),
+            reported: 0,
+        };
+        tally.report(&mut *transfer.events, 0);
+        for &blob in blobs {
+            transfer.cancellation.check()?;
+            let stored = stored_blobs.join(blob.file_name());
+            if !verified(&stored, blob, transfer.cancellation)? {
+                let partial = partials.join(blob.file_name());
+                fetch_blob(&sources(blob)?, blob, hosts, transfer, &partial, &mut tally)?;
+                filesystem::refuse_links(&stored)?;
+                fs::rename(&partial, &stored)?;
+                sync_folder(&stored_blobs)?;
+            }
+            tally.done = tally.done.saturating_add(blob.size);
+            let done = tally.done;
+            tally.report(&mut *transfer.events, done);
+        }
+        Ok(())
+    }
+
+    /// Stores `bytes`, which the engine wrote itself, as `blob`, unless the store already
+    /// holds it whole. Bytes that are not the blob's size and digest are refused.
+    pub(super) fn store_local(
+        &self,
+        blob: &Blob,
+        bytes: &[u8],
+        cancellation: &Cancellation,
+    ) -> Result<(), RegistryError> {
+        if bytes.len() as u64 != blob.size || Sha256Digest::of(bytes) != blob.digest {
+            return Err(RegistryError::Damaged);
+        }
+        let (stored_blobs, partials) = self.folders()?;
+        let stored = stored_blobs.join(blob.file_name());
+        if verified(&stored, blob, cancellation)? {
+            return Ok(());
+        }
+        let partial = partials.join(blob.file_name());
+        filesystem::refuse_links(&partial)?;
+        filesystem::refuse_links(&stored)?;
+        let written = write_synced(&partial, bytes).and_then(|()| fs::rename(&partial, &stored));
+        if written.is_err() {
+            let _ = fs::remove_file(&partial);
+        }
+        written?;
+        sync_folder(&stored_blobs)?;
+        Ok(())
+    }
+
+    /// The store's blob folder and the partial folder beside it, both created.
+    fn folders(&self) -> Result<(PathBuf, PathBuf), RegistryError> {
         let blobs = self.root.join("blobs");
         let partials = self.root.join(PARTIAL);
         for folder in [&blobs, &partials] {
             filesystem::refuse_links(folder)?;
             fs::create_dir_all(folder)?;
         }
-        let mut tally = Tally {
-            done: 0,
-            total: manifest.total_bytes(),
-            reported: 0,
-        };
-        tally.report(&mut *transfer.events, 0);
-        for blob in manifest.blobs() {
-            transfer.cancellation.check()?;
-            let stored = blobs.join(blob.file_name());
-            if !verified(&stored, blob, transfer.cancellation)? {
-                let partial = partials.join(blob.file_name());
-                fetch_blob(name, blob, &hosts, transfer, &partial, &mut tally)?;
-                filesystem::refuse_links(&stored)?;
-                fs::rename(&partial, &stored)?;
-                sync_folder(&blobs)?;
-            }
-            tally.done = tally.done.saturating_add(blob.size);
-            let done = tally.done;
-            tally.report(&mut *transfer.events, done);
-        }
-        self.publish(name, &manifest)?;
-        Ok(manifest)
+        Ok((blobs, partials))
     }
 
     /// Writes `manifest` as `name`'s, atomically: it is staged in the partial folder and
     /// renamed into place, so the manifests folder never holds a partial document.
-    fn publish(&self, name: &ModelName, manifest: &RegistryManifest) -> Result<(), RegistryError> {
+    pub(super) fn publish(
+        &self,
+        name: &ModelName,
+        manifest: &RegistryManifest,
+    ) -> Result<(), RegistryError> {
         static WRITES: AtomicU64 = AtomicU64::new(0);
         let path = name.manifest_path(&self.root);
         let folder = path
@@ -554,10 +615,10 @@ fn get_manifest(
     }
 }
 
-/// Fetches `blob` into `partial`, which holds exactly its bytes on success. Damaged
-/// bytes are deleted; any other failure leaves resumable bytes in place.
+/// Fetches `blob` from `sources` into `partial`, which holds exactly its bytes on
+/// success. Damaged bytes are deleted; any other failure leaves resumable bytes in place.
 fn fetch_blob(
-    name: &ModelName,
+    sources: &[HttpsUrl],
     blob: &Blob,
     hosts: &BTreeSet<HostName>,
     transfer: &mut Transfer<'_>,
@@ -573,10 +634,6 @@ fn fetch_blob(
         File::create(partial)?.sync_all()?;
         return Ok(());
     }
-    let sources = [repository_url(
-        name,
-        &format!("blobs/{}", blob.reference()),
-    )?];
     let before = tally.done;
     let outer = &mut *transfer.events;
     let mut sink = |event: TransferEvent| match event {
@@ -595,7 +652,7 @@ fn fetch_blob(
     }
     .fetch(
         Pinned {
-            sources: &sources,
+            sources,
             size: blob.size,
             sha256: &blob.digest,
         },
