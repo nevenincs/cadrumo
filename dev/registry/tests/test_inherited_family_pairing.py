@@ -22,6 +22,7 @@ from typing import Final
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.loader import load_modelo_directory
 from ..compiler.validate_inherited_family_pairing import inherited_family_pairing_failures
@@ -29,6 +30,10 @@ from ..conformance.loader_directory_mode_support import write_standard_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+#: Two consecutive supported years name the synthetic predecessor and successor editions.
+_PREVIOUS, _CURRENT = filing_year_envelope().years[-2:]
+_PREVIOUS_ID: Final = str(_PREVIOUS)
+_CURRENT_ID: Final = str(_CURRENT)
 _MODELO_ID: Final = "999"
 _ARTICLE: Final = "ley-58-2003:art-29"
 _ORDEN: Final = "orden-hac-200-2024:art-1"
@@ -74,7 +79,7 @@ _CLEARED_CROSS_REFERENCES: Final = (
 )
 
 _DISPOSITION: Final = (
-    '[revisions."2025".family_dispositions.live_cross_references]\n'
+    f'[revisions."{_CURRENT_ID}".family_dispositions.live_cross_references]\n'
     'reason = "The edition claims the law requires no live cross-reference of any kind."\n'
     f'legal_refs = ["{_ARTICLE}"]\n'
     f'source_refs = ["{_SOURCE}"]\n'
@@ -132,8 +137,8 @@ def _modelo(tmp_path: Path, *, successor_extra: str) -> Path:
     modelo_dir = tmp_path / _MODELO_ID
     modelo_dir.mkdir()
     write_standard_manifest(modelo_dir, "Test")
-    _write_edition(modelo_dir, "2024", year=2024, cross_references=(_CROSS_REFERENCE,))
-    _write_edition(modelo_dir, "2025", year=2025, extra='predecessor = "2024"\n' + successor_extra)
+    _write_edition(modelo_dir, _PREVIOUS_ID, year=_PREVIOUS, cross_references=(_CROSS_REFERENCE,))
+    _write_edition(modelo_dir, _CURRENT_ID, year=_CURRENT, extra=f'predecessor = "{_PREVIOUS_ID}"\n' + successor_extra)
     return modelo_dir
 
 
@@ -145,7 +150,7 @@ def test_an_intact_pair_crosses_the_edge_without_a_finding(tmp_path: Path) -> No
     """
     definition = load_modelo_directory(_modelo(tmp_path, successor_extra=""))
 
-    successor = definition.revisions["2025"]
+    successor = definition.revisions[_CURRENT_ID]
     assert [str(reference.id) for reference in successor.live_cross_references] == [_CROSS_REFERENCE_ID]
     assert {link.surface for link in successor.application_links} == {"portal"}
     assert inherited_family_pairing_failures(definition) == ()
@@ -164,7 +169,7 @@ def test_a_cleared_family_under_a_surviving_surface_is_refused(tmp_path: Path) -
         _modelo(tmp_path, successor_extra=_CLEARED_CROSS_REFERENCES),
     )
 
-    successor = definition.revisions["2025"]
+    successor = definition.revisions[_CURRENT_ID]
     assert successor.live_cross_references == ()
     assert {link.surface for link in successor.application_links} == {"portal"}
     (failure,) = inherited_family_pairing_failures(definition)
@@ -219,7 +224,7 @@ def test_an_inapplicability_claim_its_predecessor_contradicts_is_refused(tmp_pat
         ),
     )
 
-    assert set(definition.revisions["2025"].family_dispositions) == {"live_cross_references"}
+    assert set(definition.revisions[_CURRENT_ID].family_dispositions) == {"live_cross_references"}
     failures = inherited_family_pairing_failures(definition)
     assert any("not applicable" in failure for failure in failures)
 
@@ -235,12 +240,12 @@ def test_a_disposition_over_a_family_no_predecessor_declares_stands(tmp_path: Pa
     modelo_dir = tmp_path / _MODELO_ID
     modelo_dir.mkdir()
     write_standard_manifest(modelo_dir, "Test")
-    _write_edition(modelo_dir, "2024", year=2024)
-    _write_edition(modelo_dir, "2025", year=2025, extra='predecessor = "2024"\n\n' + _DISPOSITION)
+    _write_edition(modelo_dir, _PREVIOUS_ID, year=_PREVIOUS)
+    _write_edition(modelo_dir, _CURRENT_ID, year=_CURRENT, extra=f'predecessor = "{_PREVIOUS_ID}"\n\n' + _DISPOSITION)
 
     definition = load_modelo_directory(modelo_dir)
 
-    assert set(definition.revisions["2025"].family_dispositions) == {"live_cross_references"}
+    assert set(definition.revisions[_CURRENT_ID].family_dispositions) == {"live_cross_references"}
     assert inherited_family_pairing_failures(definition) == ()
 
 
@@ -257,12 +262,12 @@ def test_a_scoped_family_the_edition_states_itself_needs_no_assertion(tmp_path: 
     modelo_dir = tmp_path / _MODELO_ID
     modelo_dir.mkdir()
     write_standard_manifest(modelo_dir, "Test")
-    for revision_id, year in (("2024", 2024), ("2025", 2025)):
+    for revision_id, year in tuple((str(year), year) for year in (_PREVIOUS, _CURRENT)):
         _write_edition(
             modelo_dir,
             revision_id,
             year=year,
-            extra='predecessor = "2024"\n' if revision_id == "2025" else "",
+            extra=f'predecessor = "{_PREVIOUS_ID}"\n' if revision_id == _CURRENT_ID else "",
         )
         _write_section(
             modelo_dir / "revisions" / revision_id,
@@ -279,9 +284,9 @@ def test_a_scoped_family_the_edition_states_itself_needs_no_assertion(tmp_path: 
             ),
         )
 
-    successor = load_modelo_directory(modelo_dir).revisions["2025"]
+    successor = load_modelo_directory(modelo_dir).revisions[_CURRENT_ID]
 
-    assert [str(reference.id) for reference in successor.workbook_parity_refs] == ["referencia-libro-2025"]
+    assert [str(reference.id) for reference in successor.workbook_parity_refs] == [f"referencia-libro-{_CURRENT_ID}"]
 
 
 _EXPORT_LINK: Final = (
@@ -309,12 +314,12 @@ def _owed_layout_modelo(tmp_path: Path, *, cause: str) -> Path:
         f'cleared_families = [{{ family = "export_layouts", cause = "{cause}", '
         'reason = "This edition generates its own layout from its record design." }]\n'
     )
-    _write_edition(modelo_dir, "2024", year=2024)
-    _write_edition(modelo_dir, "2025", year=2025, extra='predecessor = "2024"\n' + clearance)
-    predecessor_dir = modelo_dir / "revisions" / "2024"
+    _write_edition(modelo_dir, _PREVIOUS_ID, year=_PREVIOUS)
+    _write_edition(modelo_dir, _CURRENT_ID, year=_CURRENT, extra=f'predecessor = "{_PREVIOUS_ID}"\n' + clearance)
+    predecessor_dir = modelo_dir / "revisions" / _PREVIOUS_ID
     shutil.rmtree(predecessor_dir / "application_links")
-    _write_section(predecessor_dir, "2024", "application_links", (_PORTAL_LINK, _EXPORT_LINK))
-    _write_section(predecessor_dir, "2024", "export_layouts", (_EXPORT_LAYOUT,))
+    _write_section(predecessor_dir, _PREVIOUS_ID, "application_links", (_PORTAL_LINK, _EXPORT_LINK))
+    _write_section(predecessor_dir, _PREVIOUS_ID, "export_layouts", (_EXPORT_LAYOUT,))
     return modelo_dir
 
 
@@ -328,7 +333,7 @@ def test_a_scoped_layout_owed_by_its_edition_keeps_the_inherited_export_link(tmp
     """
     definition = load_modelo_directory(_owed_layout_modelo(tmp_path, cause="not_authored_for_this_edition"))
 
-    successor = definition.revisions["2025"]
+    successor = definition.revisions[_CURRENT_ID]
     assert successor.export_layouts == ()
     assert "export" in {link.surface for link in successor.application_links}
     assert inherited_family_pairing_failures(definition) == ()
@@ -343,12 +348,12 @@ def test_a_layout_the_official_structure_withdraws_still_breaks_the_pair(tmp_pat
     assert "'export'" in failure
 
 
-_OWN_EXPORT_LAYOUT: Final = f'id = "fichero-2025"\nlegal_refs = ["{_ARTICLE}"]\nsource_refs = ["{_SOURCE}"]\n'
+_OWN_EXPORT_LAYOUT: Final = f'id = "fichero-{_CURRENT_ID}"\nlegal_refs = ["{_ARTICLE}"]\nsource_refs = ["{_SOURCE}"]\n'
 
 
 def _state_own_layout(modelo_dir: Path) -> None:
     """Give the successor the layout generated from its own design, as publishing its tree does."""
-    _write_section(modelo_dir / "revisions" / "2025", "2025", "export_layouts", (_OWN_EXPORT_LAYOUT,))
+    _write_section(modelo_dir / "revisions" / _CURRENT_ID, _CURRENT_ID, "export_layouts", (_OWN_EXPORT_LAYOUT,))
 
 
 def test_a_clearance_left_beside_the_layout_it_owed_is_refused(tmp_path: Path) -> None:
@@ -362,7 +367,7 @@ def test_a_clearance_left_beside_the_layout_it_owed_is_refused(tmp_path: Path) -
     _state_own_layout(modelo_dir)
     definition = load_modelo_directory(modelo_dir)
 
-    assert [str(layout.id) for layout in definition.revisions["2025"].export_layouts] == ["fichero-2025"]
+    assert [str(layout.id) for layout in definition.revisions[_CURRENT_ID].export_layouts] == [f"fichero-{_CURRENT_ID}"]
     (failure,) = inherited_family_pairing_failures(definition)
     assert "clears scoped family 'export_layouts'" in failure
     assert "not_authored_for_this_edition" in failure
@@ -372,7 +377,7 @@ def test_the_stated_layout_without_its_clearance_is_accepted(tmp_path: Path) -> 
     """The normal path: with the clearance retired, the edition's own layout stands alone."""
     modelo_dir = _owed_layout_modelo(tmp_path, cause="not_authored_for_this_edition")
     _state_own_layout(modelo_dir)
-    manifest = modelo_dir / "revisions" / "2025" / "revision.toml"
+    manifest = modelo_dir / "revisions" / _CURRENT_ID / "revision.toml"
     lines = manifest.read_text("utf-8").splitlines(keepends=True)
     manifest.write_text(
         "".join(line for line in lines if not line.startswith("cleared_families")),
@@ -381,6 +386,6 @@ def test_the_stated_layout_without_its_clearance_is_accepted(tmp_path: Path) -> 
     )
     definition = load_modelo_directory(modelo_dir)
 
-    assert definition.revisions["2025"].cleared_families == ()
-    assert [str(layout.id) for layout in definition.revisions["2025"].export_layouts] == ["fichero-2025"]
+    assert definition.revisions[_CURRENT_ID].cleared_families == ()
+    assert [str(layout.id) for layout in definition.revisions[_CURRENT_ID].export_layouts] == [f"fichero-{_CURRENT_ID}"]
     assert inherited_family_pairing_failures(definition) == ()

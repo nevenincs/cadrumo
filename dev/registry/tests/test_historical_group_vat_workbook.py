@@ -5,13 +5,20 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.application.storage.calc_sheets.records import TabName
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ..workbook_demo_group_vat_historical import build_historical_group_vat_plan
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 
-@pytest.mark.parametrize("year", [2022, 2023, 2025])
+#: The last exercise of every closed authored edition of the group-VAT return, which is what the example is built for.
+_EXAMPLE_YEARS = tuple(
+    revision.valid_to.year for revision in authored_revisions("322") if revision.valid_to is not None
+)
+
+
+@pytest.mark.parametrize("year", _EXAMPLE_YEARS)
 def test_historical_322_example_compiles_every_printed_total_without_future_boxes(year: int) -> None:
     source, plan = build_historical_group_vat_plan(year=year)
     assert plan.metadata.template_digest == source.template_digest
@@ -33,7 +40,7 @@ def test_historical_322_example_compiles_every_printed_total_without_future_boxe
     assert "Entidad ficticia del grupo Ejemplo" in text
     assert "B00015016" in text
     assert source.template_digest not in text
-    if year == 2022:
+    if year == _EXAMPLE_YEARS[0]:
         assert inputs["73"].value is None
         assert "73" in mirrors
         assert "150" not in inputs

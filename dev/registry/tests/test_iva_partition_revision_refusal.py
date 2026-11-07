@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from cadrumo.domain.calculations.registry.bindings import validate_iva_compensation_annual_partition_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ..compiler.loader import load_modelo_directory
 
@@ -29,7 +30,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 
 _MODELOS_ROOT = Path(__file__).resolve().parents[3] / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
 
-_M390_REVISION = "2025"
+_M390_REVISION = str(authored_revisions("390")[-1].id)
 _PLANTED_ID = "modelo-390-prev-303-compensacion-planted-duplicate"
 
 
