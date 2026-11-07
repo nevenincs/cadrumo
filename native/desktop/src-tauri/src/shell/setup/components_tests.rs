@@ -2095,3 +2095,103 @@ fn a_setup_that_stops_in_a_part_fails_that_part_alone() {
         "a completed setup set up every part, including one sharing a model"
     );
 }
+
+/// What each part of `track` shows once settled: changed, failure and bytes.
+fn part_results(track: &SetupTrack) -> Vec<Option<(bool, Option<wire::Failure>, u64)>> {
+    let shown = run(track);
+    progress(&shown)
+        .parts
+        .iter()
+        .map(|part| {
+            part.result
+                .as_ref()
+                .map(|result| (result.changed, result.failure, result.transferred_bytes))
+        })
+        .collect()
+}
+
+/// The events the engine reports once the program is installed and the setup begins
+/// to wait for the server, before any model part begins.
+fn program_then_server_wait() -> Vec<Event> {
+    let item = ItemId::LocalAi;
+    let mut events: Vec<Event> = program_then_model().into_iter().take(5).collect();
+    events.push(Event::Phase {
+        item,
+        step: SetupStep::Download,
+    });
+    events.push(Event::WaitingForServer { item });
+    events
+}
+
+#[test]
+fn a_setup_that_stops_waiting_for_the_server_fails_the_model_parts_that_waited() {
+    let mut track = local_ai_track();
+    for event in program_then_server_wait() {
+        take_event(&mut track, event);
+    }
+    settle(
+        &mut track,
+        &ended(
+            Ended::Failed,
+            Some(ItemId::LocalAi),
+            Some(FailureCategory::ProgramNotRunning),
+        ),
+    );
+    // On the previous attribution the program part carried the failure and the model
+    // parts showed no result at all.
+    assert_eq!(
+        part_results(&track),
+        [
+            Some((true, None, 100)),
+            Some((false, Some(wire::Failure::ProgramNotRunning), 0)),
+            Some((false, Some(wire::Failure::ProgramNotRunning), 0)),
+        ]
+    );
+}
+
+#[test]
+fn a_failure_outside_the_server_wait_keeps_its_own_part() {
+    let mut downloading = local_ai_track();
+    for event in program_then_server_wait().into_iter().take(4) {
+        take_event(&mut downloading, event);
+    }
+    settle(
+        &mut downloading,
+        &ended(
+            Ended::Failed,
+            Some(ItemId::LocalAi),
+            Some(FailureCategory::HostUnreachable),
+        ),
+    );
+    assert_eq!(
+        part_results(&downloading),
+        [
+            Some((false, Some(wire::Failure::HostUnreachable), 100)),
+            None,
+            None,
+        ]
+    );
+
+    let mut pulling = local_ai_track();
+    let mut events = program_then_server_wait();
+    events.extend(program_then_model().into_iter().skip(5));
+    for event in events {
+        take_event(&mut pulling, event);
+    }
+    settle(
+        &mut pulling,
+        &ended(
+            Ended::Failed,
+            Some(ItemId::LocalAi),
+            Some(FailureCategory::HostUnreachable),
+        ),
+    );
+    assert_eq!(
+        part_results(&pulling),
+        [
+            Some((true, None, 100)),
+            Some((false, Some(wire::Failure::HostUnreachable), 150)),
+            None,
+        ]
+    );
+}
