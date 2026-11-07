@@ -59,6 +59,7 @@ from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.contribuyente.entity_type import EntityType
+from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
 from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
@@ -224,6 +225,8 @@ def workflow_profile(persona: Persona) -> TaxpayerProfile:
         iva_regime=IVARegime("GENERAL"),
         has_employees=False,
         pays_professionals_with_retencion=False,
+        art109_activity_income_withholding_ge_70pct=False,
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
         pays_rent_with_retencion=False,
         pays_capital_income_with_retencion=False,
         does_intracomunitario=False,
