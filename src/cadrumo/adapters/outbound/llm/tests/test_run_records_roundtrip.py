@@ -20,11 +20,14 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
+
+_FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_TODAY = datetime(2026, 5, 28, 12, 40, 0, tzinfo=UTC)
+_TODAY = datetime(_FILING_YEAR, 5, 28, 12, 40, 0, tzinfo=UTC)
 
 
 def _record(
@@ -52,8 +55,8 @@ def _record(
 @pytest.mark.parametrize(
     ("started_at", "message"),
     (
-        (datetime(2026, 5, 28, 12, 40, 0), "timezone-aware UTC"),
-        (datetime(2026, 5, 28, 13, 40, 0, tzinfo=timezone(timedelta(hours=1))), "must be in UTC"),
+        (datetime(_FILING_YEAR, 5, 28, 12, 40, 0), "timezone-aware UTC"),
+        (datetime(_FILING_YEAR, 5, 28, 13, 40, 0, tzinfo=timezone(timedelta(hours=1))), "must be in UTC"),
     ),
     ids=("naive", "plus-one-offset"),
 )
@@ -125,7 +128,7 @@ def test_llm_run_record_preserves_provider_outcome_and_duration(tmp_path: Path) 
         _record(_TODAY, run_id="d", caller="c", provider="codex", duration_ms=500, succeeded=True),
     )
 
-    rows = recorder.load_records(since=date(2000, 1, 1))
+    rows = recorder.load_records(since=date(filing_year_envelope().floor, 1, 1))
     assert tuple((row.provider, row.duration_ms, row.succeeded, row.error_kind) for row in rows) == (
         ("claude", 1000, True, ""),
         ("claude", 3000, False, "X"),

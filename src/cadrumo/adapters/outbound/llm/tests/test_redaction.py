@@ -24,6 +24,7 @@ from pathlib import Path
 import pytest
 
 from .....core.config_support import LLMProvider
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....persistence.llm.cache import LLMCache
 from ....persistence.llm.usage import UsageRecorder
 from ....persistence.storage.tests.secure_sql import TestRuntimeProfile, read_db_at_rest_bytes
@@ -33,6 +34,8 @@ from ..models import (
     LLMResponse,
     UsageRecord,
 )
+
+_FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 
@@ -63,7 +66,7 @@ def _make_response(text: str) -> LLMResponse:
         output_tokens=20,
         cost_estimate_usd=Decimal("0.001"),
         cache_hit=False,
-        created_at=datetime(2026, 4, 30, 12, 0, tzinfo=UTC),
+        created_at=datetime(_FILING_YEAR, 4, 30, 12, 0, tzinfo=UTC),
         request_id="req-test-001",
     )
 
@@ -150,7 +153,7 @@ class TestUsageRedaction:
             output_tokens=20,
             cost_estimate_usd=Decimal("0.001"),
             cache_hit=False,
-            created_at=datetime(2026, 4, 30, 12, 0, tzinfo=UTC),
+            created_at=datetime(_FILING_YEAR, 4, 30, 12, 0, tzinfo=UTC),
             request_id="req-test-001",
         )
 

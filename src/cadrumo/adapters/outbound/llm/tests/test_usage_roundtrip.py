@@ -20,12 +20,15 @@ from pathlib import Path
 import pytest
 
 from .....core.config_support import LLMProvider
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....persistence.llm.usage import UsageRecorder
 from ..models import UsageRecord
 
+_FILING_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_TODAY = datetime(2026, 5, 28, 12, 40, 0, tzinfo=UTC)
+_TODAY = datetime(_FILING_YEAR, 5, 28, 12, 40, 0, tzinfo=UTC)
 
 
 def _record(when: datetime, *, caller: str, prompt_id: str, request_id: str) -> UsageRecord:
@@ -84,7 +87,7 @@ def test_llm_usage_records_survive_encrypted_storage_roundtrip(
     )
     assert only_yesterday == (record_yesterday,)
 
-    selected = recorder.load_records(since=date(2000, 1, 1))
+    selected = recorder.load_records(since=date(filing_year_envelope().floor, 1, 1))
     assert len(selected) == 2
     assert sum(record.input_tokens for record in selected) == 274
     assert sum(record.output_tokens for record in selected) == 128
