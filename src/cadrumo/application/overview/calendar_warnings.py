@@ -53,12 +53,17 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.schema import ModeloRevision
     from ...domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
+    from ...domain.calculations.registry.schema_live_verification import ProfilePredicateDefinition
     from ...domain.user_profile.schema import ProfileSchemaDefinition
 
 #: Every profile-fact gap this module reports is answered by one surface, so the
-#: warnings name that surface's catalogue action rather than nine copies of a
-#: command string.
+#: warnings name that surface's catalogue action rather than a copy of a
+#: command string per field.
 _PROFILE_EDIT_ACTION_ID = "operator.profile.edit"
+
+#: The residency axis is not a payer fact: a rule names the residencies it
+#: applies to, so the gating key is the profile's own residency selector.
+_FISCAL_RESIDENCY_PROFILE_KEY = "taxpayer.fiscal_residency"
 
 PROFILE_FIELD_WARNING_LOCALE_KEYS: MappingProxyType[str, str] = MappingProxyType(
     {
@@ -71,10 +76,35 @@ PROFILE_FIELD_WARNING_LOCALE_KEYS: MappingProxyType[str, str] = MappingProxyType
         "pays_capital_income_with_retencion": "cli.overview.warning.retencion_capital_unset",
         "does_intracomunitario": "cli.overview.warning.intracomunitario_unset",
         "third_party_transactions_above_347_threshold": "cli.overview.warning.terceros_threshold_unset",
+        "bienes_extranjero_above_threshold": "cli.overview.warning.bienes_extranjero_unset",
+        "monedas_virtuales_extranjero_above_threshold": "cli.overview.warning.monedas_virtuales_extranjero_unset",
+        "premio_loteria_gravamen_especial_sin_retencion": "cli.overview.warning.premio_loteria_unset",
+        "premio_loteria_gravamen_especial_trimestres": "cli.overview.warning.premio_loteria_trimestres_unset",
         "irpf.estimation_regime": "cli.overview.warning.estimacion_objetiva_unset",
         "iva.regime": "cli.overview.warning.iva_regime_unset",
+        "iva.oss_enrolled": "cli.overview.warning.oss_unset",
+        "iva.sii_enrolled": "cli.overview.warning.sii_unset",
+        "iva.voluntary_sii_enrolled": "cli.overview.warning.sii_voluntario_unset",
+        "iva.redeme_enrolled": "cli.overview.warning.redeme_unset",
+        "iva.group_member_enrolled": "cli.overview.warning.grupo_entidades_dependiente_unset",
+        "iva.group_dominant_entity_enrolled": "cli.overview.warning.grupo_entidades_dominante_unset",
+        "iva.intracommunity_operations_exceed_50000_eur": "cli.overview.warning.intracomunitario_umbral_unset",
+        "enrollment.large_company": "cli.overview.warning.gran_empresa_unset",
+        "enrollment.public_administration_budget_gt_6000000": "cli.overview.warning.administracion_publica_unset",
+        "taxpayer.entity_type": "cli.overview.warning.tipo_entidad_unset",
+        _FISCAL_RESIDENCY_PROFILE_KEY: "cli.overview.warning.residencia_fiscal_unset",
     },
 )
+"""The named unset warning for every profile key that can gate an obligation.
+
+Keyed by the selector token the registry names the fact under, which is what
+:func:`_gating_field_raw_value` resolves against either projection shape. The
+mapping must stay complete: a gating key with no entry is dropped silently by
+:func:`_record_gating_field`, so the operator would be left with an obligation
+the projection could not scope and no statement of which answer is missing.
+``tests/test_calendar_payer_fact_warnings.py`` derives the reachable keys from
+the registry and fails when one is unnamed.
+"""
 
 
 def _estimation_regime_profile_key(operation: PinnedAuthorityOperation) -> Mapping[str, tuple[str, str]]:
@@ -119,16 +149,24 @@ def _record_gating_field(
     key_to_meta[profile_key] = (message_key, _PROFILE_EDIT_ACTION_ID)
 
 
+def _collect_condition_profile_keys(
+    conditions_by_modelo: Iterable[tuple[str, Iterable[ProfilePredicateDefinition]]],
+) -> MappingProxyType[str, tuple[str, ...]]:
+    """Group the named profile keys a registry predicate tuple reads, by modelo."""
+    keys_by_modelo: dict[str, set[str]] = {}
+    for modelo, conditions in conditions_by_modelo:
+        for condition in conditions:
+            if condition.field in PROFILE_FIELD_WARNING_LOCALE_KEYS:
+                keys_by_modelo.setdefault(modelo, set()).add(condition.field)
+    return MappingProxyType({modelo: tuple(sorted(keys)) for modelo, keys in sorted(keys_by_modelo.items())})
+
+
 def _collect_deadline_window_profile_keys(
     windows_by_modelo: Iterable[tuple[str, Iterable[DeadlineWindowDefinition]]],
 ) -> MappingProxyType[str, tuple[str, ...]]:
-    keys_by_modelo: dict[str, set[str]] = {}
-    for modelo, windows in windows_by_modelo:
-        for window in windows:
-            for condition in window.applicability_conditions:
-                if condition.field in PROFILE_FIELD_WARNING_LOCALE_KEYS:
-                    keys_by_modelo.setdefault(modelo, set()).add(condition.field)
-    return MappingProxyType({modelo: tuple(sorted(keys)) for modelo, keys in sorted(keys_by_modelo.items())})
+    return _collect_condition_profile_keys(
+        (modelo, window.applicability_conditions) for modelo, windows in windows_by_modelo for window in windows
+    )
 
 
 def deadline_window_profile_keys_by_modelo(
@@ -162,6 +200,24 @@ def _operation_deadline_windows(
     for modelo in modelos:
         for metadata in operation.modelo_directory(modelo).revisions:
             yield modelo, metadata.deadline_windows
+
+
+def _operation_filing_schedule_conditions(
+    operation: PinnedAuthorityOperation,
+    modelos: Iterable[str],
+) -> Iterable[tuple[str, tuple[ProfilePredicateDefinition, ...]]]:
+    """Enumerate each revision's filing-schedule predicates from the directory metadata alone.
+
+    A filing schedule is the third way a profile fact decides what the
+    operator is shown, beside an applicability rule and a deadline window:
+    an unmatched schedule removes the modelo's windows for the period, so an
+    unanswered schedule fact silently produces no obligation rather than a
+    cadence. Its keys are reported as gaps for exactly that reason.
+    """
+    for modelo in modelos:
+        for metadata in operation.modelo_directory(modelo).revisions:
+            for schedule in metadata.filing_schedules:
+                yield modelo, schedule.profile_conditions
 
 
 _GATING_FIELDS_CACHE_SIZE = 4
@@ -223,6 +279,13 @@ def derive_gating_fields(
         key_to_modelos=key_to_modelos,
         key_to_meta=key_to_meta,
     )
+    _record_filing_schedule_gating_fields(
+        operation=operation,
+        revision_inventory=revision_inventory,
+        modelos=modelos,
+        key_to_modelos=key_to_modelos,
+        key_to_meta=key_to_meta,
+    )
     return _freeze_gating_fields(key_to_modelos=key_to_modelos, key_to_meta=key_to_meta)
 
 
@@ -252,6 +315,13 @@ def _record_applicability_gating_fields(
                 key_to_modelos=key_to_modelos,
                 key_to_meta=key_to_meta,
             )
+    if rule.applicable_fiscal_residencies:
+        _record_gating_field(
+            profile_key=_FISCAL_RESIDENCY_PROFILE_KEY,
+            modelo=rule.modelo,
+            key_to_modelos=key_to_modelos,
+            key_to_meta=key_to_meta,
+        )
     if rule.applicable_iva_regimes:
         _record_gating_field(
             profile_key="iva.regime",
@@ -278,6 +348,35 @@ def _record_deadline_gating_fields(
         windows_by_modelo = ((modelo, revision.deadline_windows) for modelo, revision in revision_inventory)
     deadline_keys = _collect_deadline_window_profile_keys(windows_by_modelo)
     for modelo, profile_keys in deadline_keys.items():
+        for profile_key in profile_keys:
+            _record_gating_field(
+                profile_key=profile_key,
+                modelo=modelo,
+                key_to_modelos=key_to_modelos,
+                key_to_meta=key_to_meta,
+            )
+
+
+def _record_filing_schedule_gating_fields(
+    *,
+    operation: PinnedAuthorityOperation,
+    revision_inventory: Iterable[tuple[str, ModeloRevision]] | None,
+    modelos: Iterable[str] | None,
+    key_to_modelos: dict[str, set[str]],
+    key_to_meta: dict[str, tuple[str, str]],
+) -> None:
+    if revision_inventory is None:
+        conditions_by_modelo = _operation_filing_schedule_conditions(
+            operation,
+            operation.modelo_ids() if modelos is None else modelos,
+        )
+    else:
+        conditions_by_modelo = (
+            (modelo, schedule.profile_conditions)
+            for modelo, revision in revision_inventory
+            for schedule in revision.filing_schedules
+        )
+    for modelo, profile_keys in _collect_condition_profile_keys(conditions_by_modelo).items():
         for profile_key in profile_keys:
             _record_gating_field(
                 profile_key=profile_key,
