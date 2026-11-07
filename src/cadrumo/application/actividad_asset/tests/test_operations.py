@@ -11,6 +11,7 @@ from cadrumo.application.actividad_asset.modality import direct_estimation_modal
 from cadrumo.application.actividad_asset.operations import ActivityAssetOperations
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.renta.actividad_asset.election import (
     AcquiredCondition,
     ActivityAssetAmortizationElection,
@@ -47,6 +48,8 @@ from .ledger_support import MemoryLedger, acquisition_transaction
 from .register_support import MemoryRepository, describing, memory_register_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_FILING_YEAR = filing_year_envelope().horizon - 1
 
 
 @pytest.fixture(autouse=True)
@@ -107,7 +110,7 @@ def operations_revision(
             non_deductible_iva=non_deductible_iva,
             prior_allocation_provenance="ledger allocation allocation-1",
         ),
-        in_service_date=date(2025, 1, 1),
+        in_service_date=date(_FILING_YEAR, 1, 1),
         opening_history=OpeningAmortizationHistory(status=OpeningHistoryStatus.KNOWN, accumulated_amount=Decimal("0")),
         acquired_condition=AcquiredCondition.NEW,
         amortization=election,
@@ -125,12 +128,12 @@ def linear_forecast(
     return schedule_charge(
         revision,
         ScheduleAuthority(
-            tax_year=2025,
+            tax_year=_FILING_YEAR,
             asset_kind=AssetKind.MATERIAL,
             method=AmortizationMethod.LINEAR,
             election_fingerprint=revision.amortization.fingerprint,
             annual_rate=Decimal("0.26"),
-            maximum_period_ends_on=date(2035, 1, 1),
+            maximum_period_ends_on=date(_FILING_YEAR + 10, 1, 1),
             authority_generation="irpf-2025-assets-test-v1",
             source_reference="AEAT simplified direct-estimation table 2025",
         ),
@@ -155,8 +158,8 @@ def test_frontend_operations_share_one_create_forecast_claim_and_projection_path
     operations.create(revision, describing(revision))
     forecast = operations.forecast(
         asset_id=revision.asset_id,
-        covered_from=date(2025, 1, 1),
-        covered_until=date(2026, 1, 1),
+        covered_from=date(_FILING_YEAR, 1, 1),
+        covered_until=date(_FILING_YEAR + 1, 1, 1),
     )
     assert forecast.amount == Decimal("520.00")
     assert repository.history.claims == ()
@@ -168,8 +171,8 @@ def test_frontend_operations_share_one_create_forecast_claim_and_projection_path
     assert len(repository.history.claims) == 1
 
     handoff = operations.filing_handoff(
-        tax_year=2025,
-        m130_period=Period.from_year_and_code(2025, "4T"),
+        tax_year=_FILING_YEAR,
+        m130_period=Period.from_year_and_code(_FILING_YEAR, "4T"),
     )
     assert handoff.material_m100 is not None
     assert handoff.material_m100.amount == Decimal("520.00")
@@ -214,10 +217,12 @@ def test_forecast_passes_effective_history_split_at_the_tax_year() -> None:
     revision = operations_revision()
     operations.create(revision, describing(revision))
     first_quarter = operations.forecast(
-        asset_id=revision.asset_id, covered_from=date(2025, 1, 1), covered_until=date(2025, 4, 1)
+        asset_id=revision.asset_id, covered_from=date(_FILING_YEAR, 1, 1), covered_until=date(_FILING_YEAR, 4, 1)
     )
     operations.record_claim(first_quarter, creating_operation="test.q1")
-    operations.forecast(asset_id=revision.asset_id, covered_from=date(2025, 4, 1), covered_until=date(2025, 7, 1))
+    operations.forecast(
+        asset_id=revision.asset_id, covered_from=date(_FILING_YEAR, 4, 1), covered_until=date(_FILING_YEAR, 7, 1)
+    )
 
     assert seen[-1].accumulated_in_tax_year == first_quarter.amount
     assert seen[-1].accumulated_before_tax_year == Decimal("0")
@@ -258,7 +263,7 @@ def test_operations_use_effective_profile_history_for_the_free_depreciation_cap_
         return schedule_charge(
             revision,
             ScheduleAuthority(
-                tax_year=2025,
+                tax_year=_FILING_YEAR,
                 asset_kind=AssetKind.MATERIAL,
                 method=AmortizationMethod.LOW_VALUE_FREE,
                 election_fingerprint=revision.amortization.fingerprint,
@@ -303,8 +308,8 @@ def test_operations_use_effective_profile_history_for_the_free_depreciation_cap_
 
     forecast = operations.forecast(
         asset_id=first_asset.asset_id,
-        covered_from=date(2025, 1, 1),
-        covered_until=date(2026, 1, 1),
+        covered_from=date(_FILING_YEAR, 1, 1),
+        covered_until=date(_FILING_YEAR + 1, 1, 1),
         requested_free_amount=Decimal("300.00"),
     )
     assert repository.history.claims == ()
@@ -313,14 +318,14 @@ def test_operations_use_effective_profile_history_for_the_free_depreciation_cap_
     with pytest.raises(ActividadAssetUnsupportedError, match="free_amount_exceeds_annual_cap"):
         operations.forecast(
             asset_id=second_asset.asset_id,
-            covered_from=date(2025, 1, 1),
-            covered_until=date(2026, 1, 1),
+            covered_from=date(_FILING_YEAR, 1, 1),
+            covered_until=date(_FILING_YEAR + 1, 1, 1),
             requested_free_amount=Decimal("300.00"),
         )
     exact_cap_forecast = operations.forecast(
         asset_id=second_asset.asset_id,
-        covered_from=date(2025, 1, 1),
-        covered_until=date(2026, 1, 1),
+        covered_from=date(_FILING_YEAR, 1, 1),
+        covered_until=date(_FILING_YEAR + 1, 1, 1),
         requested_free_amount=Decimal("200.00"),
     )
     operations.record_claim(exact_cap_forecast, creating_operation="test.free-depreciation")
@@ -339,7 +344,11 @@ def test_forecast_refuses_an_election_the_taxpayer_modality_does_not_declare() -
     operations.create(revision, describing(revision))
 
     with pytest.raises(ActividadAssetValidationError, match="profile_modality_mismatch"):
-        operations.forecast(asset_id=revision.asset_id, covered_from=date(2025, 1, 1), covered_until=date(2026, 1, 1))
+        operations.forecast(
+            asset_id=revision.asset_id,
+            covered_from=date(_FILING_YEAR, 1, 1),
+            covered_until=date(_FILING_YEAR + 1, 1, 1),
+        )
 
 
 @pytest.mark.parametrize(

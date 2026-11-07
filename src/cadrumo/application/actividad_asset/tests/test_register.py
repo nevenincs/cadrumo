@@ -1,14 +1,15 @@
 """The register's descriptor, event order, reads, atomic correction and one accrual route.
 
 Figures are hand-worked from a fixed 26% linear charge on a 2,000.00 basis in service
-from 1 January 2025: 520.00 a full year, so 2,000 / 520 = 3.85 years of charge.
+from 1 January of the year before the support horizon: 520.00 a full year, so 2,000 / 520 = 3.85 years of charge.
 """
 
 from __future__ import annotations
 
+import calendar
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from enum import StrEnum
 
 import pytest
@@ -34,6 +35,11 @@ from cadrumo.core.i18n.render import I18N_STRICT_MISSING_KEYS, tr
 from cadrumo.core.period import Period
 from cadrumo.core.tipos_actividad import TipoActividad
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    newest_authored_edition,
+    supported_authored_exercises,
+)
 from cadrumo.domain.contribuyente.tax_residence import ResidenceTerritory
 from cadrumo.domain.renta.actividad_asset.disposal import (
     ActivityAssetDisposal,
@@ -89,15 +95,16 @@ def _pinned_authority() -> Iterator[None]:
 
 ACQUISITION = acquisition_transaction()
 NAME = ActivityAssetDescriptorFacts(name="Office laptop", serial_number="SN-1")
-_AT = datetime(2025, 3, 1, 9, 0, tzinfo=UTC)
+FIRST_YEAR = filing_year_envelope().horizon - 1
+_AT = datetime(FIRST_YEAR, 3, 1, 9, 0, tzinfo=UTC)
 
 
 def register_revision(
     *,
     number: int = 1,
     supersedes: str | None = None,
-    basis: str = "2000",
-    in_service: date = date(2025, 1, 1),
+    basis: str = "2000.00",
+    in_service: date = date(FIRST_YEAR, 1, 1),
     method: AmortizationMethod = AmortizationMethod.LINEAR,
 ) -> ActivityAssetRevision:
     return ActivityAssetRevision(
@@ -146,7 +153,7 @@ def register_forecast(
             annual_rate=Decimal("0.26"),
             authority_generation="register-test-v1",
             source_reference="register test table",
-            maximum_period_ends_on=date(2035, 1, 1),
+            maximum_period_ends_on=date(FIRST_YEAR + 10, 1, 1),
         ),
         covered_from=covered_from,
         covered_until=covered_until,
@@ -157,7 +164,7 @@ def register_forecast(
 
 def register_operations(
     *,
-    today: date = date(2025, 12, 31),
+    today: date = date(FIRST_YEAR, 12, 31),
     consumers: dict[str, tuple[str, ...]] | None = None,
     last_admitted_year: int | None = None,
 ) -> tuple[ActivityAssetOperations, MemoryRepository]:
@@ -188,7 +195,7 @@ def test_a_descriptor_changes_no_revision_claim_or_fingerprint() -> None:
     operations, repository = register_operations()
     revision = register_revision()
     operations.create(revision, NAME, recorded_at=_AT, origin="test.create")
-    charge = full_year(operations, 2025)
+    charge = full_year(operations, FIRST_YEAR)
     operations.record_claim(charge, creating_operation="test.claim")
     before = repository.history
 
@@ -200,7 +207,7 @@ def test_a_descriptor_changes_no_revision_claim_or_fingerprint() -> None:
 
     assert after.same_tax_facts(before)
     assert after.revisions[0].revision_id == revision.revision_id
-    assert full_year(operations, 2025).schedule_fingerprint == charge.schedule_fingerprint
+    assert full_year(operations, FIRST_YEAR).schedule_fingerprint == charge.schedule_fingerprint
     descriptor = after.current_descriptor("laptop-1")
     assert descriptor is not None
     assert (descriptor.descriptor_number, descriptor.facts.name) == (2, "Renamed laptop")
@@ -229,7 +236,7 @@ def test_events_keep_history_order_with_nullable_time_outside_identity() -> None
     operations, repository = register_operations()
     revision = register_revision()
     operations.create(revision, NAME, recorded_at=_AT, origin="test.create")
-    operations.record_claim(full_year(operations, 2025), creating_operation="test.claim")
+    operations.record_claim(full_year(operations, FIRST_YEAR), creating_operation="test.claim")
 
     events = repository.history.ordered_events()
 
@@ -248,7 +255,7 @@ def test_a_correction_and_its_superseding_claim_land_together() -> None:
     operations, repository = register_operations()
     first = register_revision()
     operations.create(first, NAME)
-    claim = operations.record_claim(full_year(operations, 2025), creating_operation="test.claim").claim
+    claim = operations.record_claim(full_year(operations, FIRST_YEAR), creating_operation="test.claim").claim
     assert claim.amount == Decimal("520.00")
     corrected = register_revision(number=2, supersedes=first.revision_id, basis="400")
     before = repository.history
@@ -281,7 +288,7 @@ def test_a_correction_exactly_at_the_claimed_basis_needs_no_superseding_claim() 
     operations, _ = register_operations()
     first = register_revision()
     operations.create(first, NAME)
-    operations.record_claim(full_year(operations, 2025), creating_operation="test.claim")
+    operations.record_claim(full_year(operations, FIRST_YEAR), creating_operation="test.claim")
 
     assert (
         operations.correct(register_revision(number=2, supersedes=first.revision_id, basis="520")).revisions[-1].basis
@@ -289,14 +296,14 @@ def test_a_correction_exactly_at_the_claimed_basis_needs_no_superseding_claim() 
 
 
 def test_an_earlier_year_is_claimable_at_a_rate_method_up_to_its_maximum() -> None:
-    operations, _ = register_operations(today=date(2026, 12, 31))
+    operations, _ = register_operations(today=date(FIRST_YEAR + 1, 12, 31))
     operations.create(register_revision(), NAME)
-    operations.record_claim(full_year(operations, 2026), creating_operation="test.2026")
+    operations.record_claim(full_year(operations, FIRST_YEAR + 1), creating_operation="test.later")
 
-    earlier = full_year(operations, 2025)
+    earlier = full_year(operations, FIRST_YEAR)
 
     assert earlier.amount == Decimal("520.00")
-    assert operations.record_claim(earlier, creating_operation="test.2025").claim.tax_year == 2025
+    assert operations.record_claim(earlier, creating_operation="test.earlier").claim.tax_year == FIRST_YEAR
 
 
 @pytest.mark.parametrize(
@@ -322,11 +329,11 @@ def test_an_earlier_year_behind_a_later_claim_is_refused_with_its_typed_reason(
 def test_the_plan_lists_each_year_until_the_basis_runs_out() -> None:
     operations, _ = register_operations()
     operations.create(register_revision(), NAME)
-    claim = operations.record_claim(full_year(operations, 2025), creating_operation="test.claim").claim
+    claim = operations.record_claim(full_year(operations, FIRST_YEAR), creating_operation="test.claim").claim
 
     rows = operations.plan("laptop-1")
 
-    assert [row.tax_year for row in rows] == [2025, 2026, 2027, 2028, 2029]
+    assert [row.tax_year for row in rows] == list(range(FIRST_YEAR, FIRST_YEAR + 5))
     assert [None if row.planned is None else row.planned.decimal for row in rows] == [
         "520.00",
         "520.00",
@@ -338,31 +345,36 @@ def test_the_plan_lists_each_year_until_the_basis_runs_out() -> None:
     assert rows[0].claimed.decimal == "520.00"
     assert rows[0].claims[0].claim_id == claim.claim_id
     assert rows[1].claim_state is ActivityAssetClaimState.NOT_DUE
-    assert rows[1].claimable_intervals[0].covered_from == date(2026, 1, 1)
+    assert rows[1].claimable_intervals[0].covered_from == date(FIRST_YEAR + 1, 1, 1)
     assert rows[4].absence is PlanFigureAbsence.BASIS_EXHAUSTED
     assert rows[0].edition is not None
-    assert (rows[0].edition.projected, rows[1].edition is not None and rows[1].edition.projected) == (False, True)
+    authored = supported_authored_exercises("100")
+    for row in rows[:2]:
+        assert row.edition is not None
+        assert row.edition.projected is (row.tax_year not in authored)
 
 
 def test_a_past_unclaimed_year_is_missing_and_a_partial_one_is_partial() -> None:
-    operations, _ = register_operations(today=date(2026, 6, 30))
+    operations, _ = register_operations(today=date(FIRST_YEAR + 1, 6, 30))
     operations.create(register_revision(), NAME)
     operations.record_claim(
-        operations.forecast(asset_id="laptop-1", covered_from=date(2026, 1, 1), covered_until=date(2026, 4, 1)),
+        operations.forecast(
+            asset_id="laptop-1", covered_from=date(FIRST_YEAR + 1, 1, 1), covered_until=date(FIRST_YEAR + 1, 4, 1)
+        ),
         creating_operation="test.q1",
     )
 
     rows = {row.tax_year: row for row in operations.plan("laptop-1")}
 
-    assert rows[2025].claim_state is ActivityAssetClaimState.MISSING
-    assert rows[2026].claim_state is ActivityAssetClaimState.PARTIAL
-    assert rows[2026].claimable_intervals[0].covered_from == date(2026, 4, 1)
+    assert rows[FIRST_YEAR].claim_state is ActivityAssetClaimState.MISSING
+    assert rows[FIRST_YEAR + 1].claim_state is ActivityAssetClaimState.PARTIAL
+    assert rows[FIRST_YEAR + 1].claimable_intervals[0].covered_from == date(FIRST_YEAR + 1, 4, 1)
 
 
 def test_the_list_row_reports_name_figures_and_findings() -> None:
     operations, _ = register_operations()
     operations.create(register_revision(), NAME)
-    operations.record_claim(full_year(operations, 2025), creating_operation="test.claim")
+    operations.record_claim(full_year(operations, FIRST_YEAR), creating_operation="test.claim")
 
     row = operations.list_elements()[0]
 
@@ -385,7 +397,7 @@ def test_the_timeline_says_what_changed_what_used_a_claim_and_why_it_is_stale() 
     operations, _ = register_operations(consumers=claim_consumers)
     first = register_revision()
     operations.create(first, NAME, origin="test.create")
-    claim = operations.record_claim(full_year(operations, 2025), creating_operation="test.claim").claim
+    claim = operations.record_claim(full_year(operations, FIRST_YEAR), creating_operation="test.claim").claim
     claim_consumers[claim.claim_id] = ("calculation-1",)
 
     current = operations.timeline("laptop-1")[-1]
@@ -440,13 +452,14 @@ def test_an_acquisition_an_element_names_is_no_longer_a_candidate() -> None:
 def test_form_options_come_from_the_published_registry() -> None:
     operations, _ = register_operations()
 
-    options = operations.form_options(asset_kind=AssetKind.MATERIAL, tax_year=2025)
+    tax_year = newest_authored_edition("100")
+    options = operations.form_options(asset_kind=AssetKind.MATERIAL, tax_year=tax_year)
 
     groups = {group.class_key: group for group in options.table_groups}
     computers = groups["equipo-informacion-software"]
     assert Decimal(computers.maximum_coefficient.decimal) == Decimal("0.26")
     assert AmortizationMethod.LINEAR in options.methods
-    assert options.edition.authored_filing_year == 2025
+    assert options.edition.authored_filing_year == tax_year
     assert set(options.acquisition_shapes) == {
         AcquisitionShape.PRIMARY_PURCHASE,
         AcquisitionShape.ACQUIRED_OUTSIDE_LEDGER,
@@ -457,27 +470,32 @@ def test_form_options_come_from_the_published_registry() -> None:
 def test_the_handoff_reads_the_accrual_route_with_or_without_claims() -> None:
     operations, _ = register_operations()
     operations.create(register_revision(), NAME)
-    period = Period.from_year_and_code(2025, "2T")
-
-    # 2,000.00 x 26% x 181/365 = 257.86 through 30 June, with nothing recorded.
-    unclaimed = operations.filing_handoff(tax_year=2025, m130_period=period)
+    period = Period.from_year_and_code(FIRST_YEAR, "2T")
+    # 520.00 a full year, charged by calendar days through 30 June, with nothing recorded.
+    year_days = 366 if calendar.isleap(FIRST_YEAR) else 365
+    first_half = (Decimal("520.00") * (date(FIRST_YEAR, 7, 1) - date(FIRST_YEAR, 1, 1)).days / year_days).quantize(
+        Decimal("0.01"), rounding=ROUND_HALF_UP
+    )
+    unclaimed = operations.filing_handoff(tax_year=FIRST_YEAR, m130_period=period)
     assert unclaimed.material_m130 is not None
-    assert unclaimed.material_m130.amount == Decimal("257.86")
+    assert unclaimed.material_m130.amount == first_half
     assert unclaimed.material_m100 is not None
     assert unclaimed.material_m100.amount == Decimal("0.00")
     assert unclaimed.material_m100.claim_ids == ()
 
     claim = operations.record_claim(
-        operations.forecast(asset_id="laptop-1", covered_from=date(2025, 1, 1), covered_until=date(2025, 7, 1)),
+        operations.forecast(
+            asset_id="laptop-1", covered_from=date(FIRST_YEAR, 1, 1), covered_until=date(FIRST_YEAR, 7, 1)
+        ),
         creating_operation="test.h1",
     ).claim
-    claimed = operations.filing_handoff(tax_year=2025, m130_period=period)
+    claimed = operations.filing_handoff(tax_year=FIRST_YEAR, m130_period=period)
 
     assert claimed.material_m130 is not None
-    assert claimed.material_m130.amount == Decimal("257.86")
+    assert claimed.material_m130.amount == first_half
     assert claimed.material_m100 is not None
     assert claimed.material_m100.claim_ids == (claim.claim_id,)
-    assert claimed.material_m100.amount == Decimal("257.86")
+    assert claimed.material_m100.amount == first_half
 
 
 def test_the_handoff_refuses_a_foral_profile() -> None:
@@ -492,11 +510,11 @@ def test_the_handoff_refuses_a_foral_profile() -> None:
     operations.create(register_revision(), NAME)
 
     with pytest.raises(ActividadAssetValidationError, match="foral_territory"):
-        operations.filing_handoff(tax_year=2025, m130_period=Period.from_year_and_code(2025, "4T"))
+        operations.filing_handoff(tax_year=FIRST_YEAR, m130_period=Period.from_year_and_code(FIRST_YEAR, "4T"))
 
 
 def test_an_elapsed_period_counts_as_amortized_in_the_plan_and_m130() -> None:
-    def elapsed_after_2026(
+    def elapsed_after_second_year(
         revision: ActivityAssetRevision,
         *,
         covered_from: date,
@@ -504,9 +522,9 @@ def test_an_elapsed_period_counts_as_amortized_in_the_plan_and_m130() -> None:
         history: AssetScheduleHistory,
         requested_free_amount: Decimal | None = None,
     ) -> ScheduledAmortizationCharge:
-        if covered_from.year > 2026:
+        if covered_from.year > FIRST_YEAR + 1:
             raise ActividadAssetPeriodElapsedError(
-                context={"ended_on": "2027-01-01"},
+                context={"ended_on": date(FIRST_YEAR + 2, 1, 1).isoformat()},
                 translated_message="ledger.actividad_asset.errors.amortization_period_elapsed",
             )
         return register_forecast(
@@ -521,27 +539,31 @@ def test_an_elapsed_period_counts_as_amortized_in_the_plan_and_m130() -> None:
     operations = ActivityAssetOperations(
         repository=repository,
         ledger=MemoryLedger(ACQUISITION),
-        forecast_operation=elapsed_after_2026,
+        forecast_operation=elapsed_after_second_year,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
-        register_authority=memory_register_authority(today=date(2028, 6, 30)),
+        register_authority=memory_register_authority(today=date(FIRST_YEAR + 3, 6, 30)),
     )
     operations.create(register_revision(), NAME)
 
     rows = {row.tax_year: row for row in operations.plan("laptop-1")}
-    assert rows[2027].absence is PlanFigureAbsence.PERIOD_ELAPSED
-    assert rows[2027].planned is None
-    assert rows[2027].claim_state is ActivityAssetClaimState.NOT_DUE
-    assert rows[2026].planned is not None
+    assert rows[FIRST_YEAR + 2].absence is PlanFigureAbsence.PERIOD_ELAPSED
+    assert rows[FIRST_YEAR + 2].planned is None
+    assert rows[FIRST_YEAR + 2].claim_state is ActivityAssetClaimState.NOT_DUE
+    assert rows[FIRST_YEAR + 1].planned is not None
 
-    within = operations.filing_handoff(tax_year=2026, m130_period=Period.from_year_and_code(2026, "4T"))
-    beyond = operations.filing_handoff(tax_year=2027, m130_period=Period.from_year_and_code(2027, "4T"))
+    within = operations.filing_handoff(
+        tax_year=FIRST_YEAR + 1, m130_period=Period.from_year_and_code(FIRST_YEAR + 1, "4T")
+    )
+    beyond = operations.filing_handoff(
+        tax_year=FIRST_YEAR + 2, m130_period=Period.from_year_and_code(FIRST_YEAR + 2, "4T")
+    )
     assert within.material_m130 is not None
     assert within.material_m130.amount == Decimal("520.00")
     assert beyond.material_m130 is not None
     assert beyond.material_m130.amount == Decimal("0.00")
     assert beyond.material_m130.unavailable_asset_ids == ()
 
-    # 2025 and 2026 were never claimed, so nothing is amortized and the whole basis stays pending.
+    # The first two years were never claimed, so nothing is amortized and the whole basis stays pending.
     row = operations.list_elements()[0]
     assert row.state is ActivityAssetRegisterState.IN_SERVICE
     assert row.pending is not None
@@ -566,23 +588,13 @@ def _slow_rate_forecast(
             annual_rate=Decimal("0.02"),
             authority_generation="register-test-v1",
             source_reference="register test table",
-            maximum_period_ends_on=date(2095, 1, 1),
+            maximum_period_ends_on=date(FIRST_YEAR + 70, 1, 1),
         ),
         covered_from=covered_from,
         covered_until=covered_until,
         history=history,
         requested_free_amount=requested_free_amount,
     )
-
-
-def _published_horizon() -> int:
-    with bundled_indexed_authority().operation() as operation:
-        return operation.supported_filing_years().horizon
-
-
-def _supported_floor() -> int:
-    with bundled_indexed_authority().operation() as operation:
-        return operation.supported_filing_years().floor
 
 
 def test_the_years_of_an_element_are_its_service_window_inside_the_registry_support() -> None:
@@ -592,8 +604,8 @@ def test_the_years_of_an_element_are_its_service_window_inside_the_registry_supp
     row = operations.list_elements()[0]
 
     assert (*row.years, *row.projected_years) == tuple(plan_row.tax_year for plan_row in operations.plan("laptop-1"))
-    assert row.years == (2025, 2026)
-    assert row.projected_years == (2027, 2028, 2029)
+    assert row.years == tuple(range(FIRST_YEAR, filing_year_envelope().horizon + 1))
+    assert row.projected_years == tuple(range(filing_year_envelope().horizon + 1, FIRST_YEAR + 5))
     assert register_years([row]) == row.years
 
 
@@ -603,17 +615,19 @@ def test_a_decades_old_element_is_offered_only_the_years_the_registry_supports()
         ledger=MemoryLedger(ACQUISITION),
         forecast_operation=_slow_rate_forecast,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
-        register_authority=memory_register_authority(today=date(2025, 12, 31)),
+        register_authority=memory_register_authority(today=date(FIRST_YEAR, 12, 31)),
     )
-    operations.create(register_revision(in_service=date(2001, 1, 1)), NAME)
+    decades_old = filing_year_envelope().floor - 21
+    operations.create(register_revision(in_service=date(decades_old, 1, 1)), NAME)
 
     row = operations.list_elements()[0]
 
-    # 2,000.00 at 2% charges 40.00 a year, so 50 projected years from 2025 run to 2074 and 2075 is exhausted.
-    floor = _supported_floor()
-    assert min(plan_row.tax_year for plan_row in operations.plan("laptop-1")) == 2001 < floor
-    assert row.years == tuple(range(floor, _published_horizon() + 1))
-    assert row.projected_years == tuple(range(_published_horizon() + 1, 2025 + 50 + 1))
+    # 2,000.00 at 2% charges 40.00 a year, so the charge runs 50 years from the year of today.
+    floor = filing_year_envelope().floor
+    horizon = filing_year_envelope().horizon
+    assert min(plan_row.tax_year for plan_row in operations.plan("laptop-1")) == decades_old < floor
+    assert row.years == tuple(range(floor, horizon + 1))
+    assert row.projected_years == tuple(range(horizon + 1, FIRST_YEAR + 50 + 1))
     assert register_years([row]) == row.years
 
 
@@ -621,9 +635,9 @@ def test_the_register_years_merge_every_element_once_in_ascending_order() -> Non
     operations, _ = register_operations()
     operations.create(register_revision(), NAME)
     row = operations.list_elements()[0]
-    other: ActivityAssetListRow = row.model_copy(update={"years": (2024, 2025)})
+    other: ActivityAssetListRow = row.model_copy(update={"years": (FIRST_YEAR - 1, FIRST_YEAR)})
 
-    assert register_years([other, row]) == (2024, 2025, 2026)
+    assert register_years([other, row]) == (FIRST_YEAR - 1, FIRST_YEAR, FIRST_YEAR + 1)
     assert register_years([]) == ()
 
 
@@ -680,7 +694,7 @@ def test_a_candidate_serves_the_key_of_its_non_deductible_iva_state() -> None:
     assert candidate.non_deductible_iva_state_key == "ledger.actividad_asset.non_deductible_iva_state.unknown"
 
 
-def _elapsed_after_2026(
+def _elapsed_after_second_year(
     revision: ActivityAssetRevision,
     *,
     covered_from: date,
@@ -688,9 +702,9 @@ def _elapsed_after_2026(
     history: AssetScheduleHistory,
     requested_free_amount: Decimal | None = None,
 ) -> ScheduledAmortizationCharge:
-    if covered_from.year > 2026:
+    if covered_from.year > FIRST_YEAR + 1:
         raise ActividadAssetPeriodElapsedError(
-            context={"ended_on": "2027-01-01"},
+            context={"ended_on": date(FIRST_YEAR + 2, 1, 1).isoformat()},
             translated_message="ledger.actividad_asset.errors.amortization_period_elapsed",
         )
     return register_forecast(
@@ -706,9 +720,9 @@ def _elapsed_operations() -> ActivityAssetOperations:
     operations = ActivityAssetOperations(
         repository=MemoryRepository(),
         ledger=MemoryLedger(ACQUISITION),
-        forecast_operation=_elapsed_after_2026,
+        forecast_operation=_elapsed_after_second_year,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
-        register_authority=memory_register_authority(today=date(2028, 6, 30)),
+        register_authority=memory_register_authority(today=date(FIRST_YEAR + 3, 6, 30)),
     )
     operations.create(register_revision(), NAME)
     return operations
@@ -716,11 +730,11 @@ def _elapsed_operations() -> ActivityAssetOperations:
 
 def test_a_period_that_ended_over_unclaimed_years_keeps_the_value_pending() -> None:
     operations = _elapsed_operations()
-    operations.record_claim(full_year(operations, 2025), creating_operation="test.2025")
+    operations.record_claim(full_year(operations, FIRST_YEAR), creating_operation="test.first")
 
     row = operations.list_elements()[0]
 
-    # 2,000.00 basis less the 520.00 of 2025; 2026 was never claimed.
+    # 2,000.00 basis less the 520.00 of the first year; the second was never claimed.
     assert row.pending is not None
     assert Decimal(row.pending.decimal) == Decimal("1480.00")
     assert row.state is ActivityAssetRegisterState.IN_SERVICE
@@ -729,7 +743,7 @@ def test_a_period_that_ended_over_unclaimed_years_keeps_the_value_pending() -> N
 
 def test_a_period_that_ended_with_every_year_claimed_is_fully_amortized_and_shows_the_rest() -> None:
     operations = _elapsed_operations()
-    for year in (2025, 2026):
+    for year in range(FIRST_YEAR, FIRST_YEAR + 2):
         operations.record_claim(full_year(operations, year), creating_operation=f"test.{year}")
 
     row = operations.list_elements()[0]
@@ -741,13 +755,13 @@ def test_a_period_that_ended_with_every_year_claimed_is_fully_amortized_and_show
 
 
 def test_a_baja_keeps_the_formula_value_pending() -> None:
-    operations, _ = register_operations(today=date(2026, 12, 31))
+    operations, _ = register_operations(today=date(FIRST_YEAR + 1, 12, 31))
     operations.create(register_revision(), NAME)
-    operations.record_claim(full_year(operations, 2025), creating_operation="test.2025")
+    operations.record_claim(full_year(operations, FIRST_YEAR), creating_operation="test.first")
     operations.dispose(
         "laptop-1",
         ActivityAssetDisposal(
-            disposal_date=date(2025, 12, 31),
+            disposal_date=date(FIRST_YEAR, 12, 31),
             reason=ActivityAssetDisposalReason.SCRAPPING,
             proceeds=Decimal("0.00"),
             transmission_costs=Decimal("0.00"),
