@@ -40,7 +40,7 @@ use cadrumo_application::provisioning::{
         LocalEngine,
         llama_server::{LOAD_CONTEXT, LlamaServer, LlamaServerUnavailable},
         program::{Containment, Program},
-        supervision::{Environment, ServerState, ServerSupervisor, Supervised},
+        supervision::{EngineProgram, Environment, ServerState, ServerSupervisor, Supervised},
     },
     pins::{ComponentPins, Platform, ProgramIdentity},
 };
@@ -130,30 +130,30 @@ impl LocalAiHost {
         // manager's next start, and one the engine cannot use runs no server that
         // fetches through it.
         let environment: Environment = Box::new(|name: &str| std::env::var_os(name));
-        match engine {
-            LocalEngine::Ollama => {
+        let program = EngineProgram::select(
+            engine,
+            || {
                 let platform = Platform::current().ok_or(Unavailable::Platform)?;
                 let tables = ComponentPins::load(&package_root.join(COMPONENT_PINS))
                     .map_err(|_| Unavailable::OllamaNotPinned)?;
                 let pins = tables
                     .program(ProgramIdentity::Ollama)
                     .ok_or(Unavailable::OllamaNotPinned)?;
-                let program = Program::new(pins, platform, locations)
+                Program::new(pins, platform, locations.clone())
                     .map_err(|_| Unavailable::Supervision)?
-                    .ok_or(Unavailable::OllamaNotPinned)?;
-                Self::run_server(program, address, environment)
-            }
-            LocalEngine::LlamaCpp => {
-                let program = LlamaServer::packaged(
+                    .ok_or(Unavailable::OllamaNotPinned)
+            },
+            || {
+                LlamaServer::packaged(
                     &package_root.join(LLAMA_SERVER),
                     LLAMA_SERVER_BUILD,
                     &locations,
                     LOAD_CONTEXT,
                 )
-                .map_err(Unavailable::LlamaServer)?;
-                Self::run_server(program, address, environment)
-            }
-        }
+                .map_err(Unavailable::LlamaServer)
+            },
+        )?;
+        Self::run_server(program, address, environment)
     }
 
     fn run_server<P: Supervised + Send + 'static>(

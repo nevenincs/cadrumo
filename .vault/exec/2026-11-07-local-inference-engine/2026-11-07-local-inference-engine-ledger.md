@@ -5,8 +5,7 @@ tags:
 date: '2026-11-07'
 modified: '2026-11-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:2e381bce86f5d10791557d3c73d4df35d1db6055542c6d70674764d21d1f6e89'
-body_hash: 'sha256:2efecd273bb0f3a262a956d94375b9ff909e9b0949c03f713e8a3159a3ed6b35'
+body_hash: 'sha256:ca880e983c9504276110158037f8c75ff090b7681c80d9b443c12724dac72aa3'
 related:
   - "[[2026-11-07-local-inference-engine-plan]]"
 ---
@@ -162,6 +161,16 @@ related:
 - `S16` `verify:` `ruff check and ruff format --check` -> `pass`
 - `S16` `verify:` `ty check` -> `pass`
 - `S16` `verify:` `pytest test_sign_in_failures.py` -> `pass`
+- `S17` `M` `native/application/src/diagnostics/lifecycle.rs`
+- `S17` `M` `native/application/src/provisioning/local_ai/fake_llamacpp.rs`
+- `S17` `M` `native/application/src/provisioning/local_ai/fake_ollama.rs`
+- `S17` `M` `native/application/src/provisioning/local_ai/llama_server.rs`
+- `S17` `M` `native/application/src/provisioning/local_ai/llama_server/tests.rs`
+- `S17` `M` `native/application/src/provisioning/local_ai/supervision/tests.rs`
+- `S17` `M` `native/desktop/src-tauri/src/logs/manager.rs`
+- `S17` `M` `native/desktop/src-tauri/src/logs/severity.rs`
+- `S17` `M` `native/manager/src/diagnostics.rs`
+- `S17` `verify:` `rustfmt --edition 2024 --check on every touched Rust file` -> `pass`
 
 ## Notes
 
@@ -184,6 +193,7 @@ related:
 - `S17` Rust not compiled under root quiet; cargo check, clippy and test owed in a root slot. 12 pytest errors are environmental: no published authority in the worktree.
 - `S16` cargo build, clippy and tests not run here; Rust verification is deferred to a root slot
 - `S16` `program_proxy_differs` retired; dev/locales audit, parity, chrome and signal tests need a published authority, absent in this worktree, and are owed in a root slot with cargo and the frontend typecheck
+- `S17` Review fixes: llama-server restart drains with typed retryable load refusals, argv host and port, local AI unavailability diagnostic, engine-selection launch proofs. Rust not compiled under root quiet; cargo check, clippy and test owed in a root slot.
 
 ## Notes
 

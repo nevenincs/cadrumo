@@ -19,8 +19,16 @@
 //! the store's manifests before each start: one section per whole model, named as the
 //! model's own name reads, with its model layer as `model`, its projector layer as
 //! `mmproj`, and an explicit `ctx-size`, so a load never takes the model's full
-//! training context. Each start writes the preset afresh, and a running server whose
-//! preset no longer matches the store is started again once it holds no model.
+//! training context. Each start writes the preset afresh.
+//!
+//! A running server whose preset no longer matches the store drains: from that look on
+//! the `restarting` file in its folder makes every [`load`] refuse with
+//! [`LoadRefused::Restarting`], which its caller retries, and the server is started again
+//! at the first look that finds it holding no model. A model in use is never unloaded
+//! for it, and no load through [`load`] can take the router again before the restart,
+//! so a model new in the store waits at most for the model already held to be let go.
+//! A load that a restart overtakes on its way is reported `Restarting` too, never as
+//! done, and [`presentation`] tells whether the running router presents a model.
 //!
 //! It is ready once `/health` answers `200`, and it is the pinned build once the
 //! `build_info` of `/props` is the pinned build tag, alone or followed by its commit.
@@ -60,8 +68,15 @@ pub const HEALTH: &str = "/health";
 pub const PROPERTIES: &str = "/props";
 /// The router's models and their statuses.
 const MODELS: &str = "/models";
+/// The router's load of one model by its id.
+const LOAD: &str = "/models/load";
 /// The router's unload of one model by its id.
 const UNLOAD: &str = "/models/unload";
+/// The file in the server's folder that is there while the running server drains for a
+/// restart: no load is started while it is there.
+pub const RESTARTING: &str = "restarting";
+/// Bound of the preset file a presentation question reads.
+const PRESET_BYTES_LIMIT: u64 = 4 * 1024 * 1024;
 /// The server's folder under the components folder.
 pub const FOLDER: &str = "llama-server";
 /// The preset file in the server's folder.
@@ -84,6 +99,47 @@ pub enum LlamaServerUnavailable {
     /// The build the package declares is not a llama.cpp build tag, the load context is
     /// zero, or the storage folders are not absolute.
     Invalid,
+}
+
+/// Whether a model can be loaded from the running router now.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Presentation {
+    /// The running router presents the model and takes loads.
+    Presented,
+    /// The router drains for a restart, or is being started again: ask again shortly.
+    Restarting,
+    /// The running router does not present the model: it is not whole in the store, or
+    /// arrived after the router started and waits for its restart.
+    NotPresented,
+    /// No router runs.
+    NotRunning,
+}
+
+/// Why a [`load`] did not leave its model loaded.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum LoadRefused {
+    /// No router runs.
+    NotRunning,
+    /// The router drains for a restart, or stopped or was started again while the load
+    /// was on its way; nothing of this load stays loaded.
+    Restarting,
+    /// The running router does not present the model.
+    NotPresented,
+    /// The router answered the load with this status, or not at all.
+    Failed { status: Option<u16> },
+}
+
+impl LoadRefused {
+    /// Whether the same load can succeed once the router has moved on, so the caller
+    /// asks again rather than reporting a failure.
+    pub fn retryable(self) -> bool {
+        !matches!(self, Self::Failed { .. })
+    }
+}
+
+/// `components/llama-server` under the storage `locations`.
+pub fn server_folder(locations: &Locations) -> Option<PathBuf> {
+    Some(locations.programs.parent()?.join(FOLDER))
 }
 
 /// The packaged llama-server and the server run from it.
@@ -119,11 +175,7 @@ impl LlamaServer {
         if filesystem::require_executable(&executable).is_err() {
             return Err(LlamaServerUnavailable::NotPackaged);
         }
-        let folder = locations
-            .programs
-            .parent()
-            .ok_or(LlamaServerUnavailable::Invalid)?
-            .join(FOLDER);
+        let folder = server_folder(locations).ok_or(LlamaServerUnavailable::Invalid)?;
         let leases = Leases::new(folder.clone()).map_err(|_| LlamaServerUnavailable::Invalid)?;
         Ok(Self {
             executable,
@@ -158,7 +210,9 @@ impl LlamaServer {
     }
 
     /// The command a start runs: the router on `address`, with the preset, and the
-    /// home, cache and temporary folders under the server's folder.
+    /// home, cache and temporary folders under the server's folder. The address is on
+    /// the command line, never in the environment, so the model instances the router
+    /// starts, which inherit its environment, never read it as their own.
     fn serve_command(
         &self,
         address: SocketAddr,
@@ -175,8 +229,6 @@ impl LlamaServer {
         let mut set = |name: &str, value: &OsStr| {
             environment.insert(OsString::from(name), value.to_owned());
         };
-        set("LLAMA_ARG_HOST", OsStr::new(&address.ip().to_string()));
-        set("LLAMA_ARG_PORT", OsStr::new(&address.port().to_string()));
         set("LLAMA_CACHE", home.join("cache").as_os_str());
         set("HOME", home.as_os_str());
         set("USERPROFILE", home.as_os_str());
@@ -189,7 +241,7 @@ impl LlamaServer {
         for name in ["TEMP", "TMP", "TMPDIR"] {
             set(name, temporary.as_os_str());
         }
-        let arguments = self.serve_arguments(&mut environment);
+        let arguments = self.serve_arguments(address, &mut environment);
         Ok(ServeCommand {
             executable: self.executable.clone(),
             arguments,
@@ -200,18 +252,32 @@ impl LlamaServer {
     }
 
     #[cfg(not(test))]
-    fn serve_arguments(&self, _: &mut BTreeMap<OsString, OsString>) -> Vec<OsString> {
-        router_arguments(&self.folder.join(PRESET))
+    fn serve_arguments(
+        &self,
+        address: SocketAddr,
+        _: &mut BTreeMap<OsString, OsString>,
+    ) -> Vec<OsString> {
+        router_arguments(address, &self.folder.join(PRESET))
     }
 
     #[cfg(test)]
-    fn serve_arguments(&self, environment: &mut BTreeMap<OsString, OsString>) -> Vec<OsString> {
+    fn serve_arguments(
+        &self,
+        address: SocketAddr,
+        environment: &mut BTreeMap<OsString, OsString>,
+    ) -> Vec<OsString> {
+        let router = router_arguments(address, &self.folder.join(PRESET));
         match &self.serve_override {
             Some(stand_in) => {
                 environment.extend(stand_in.environment.iter().cloned());
-                stand_in.arguments.clone()
+                // The stand-in is a test binary: after `--` the router's own arguments
+                // are test name filters that match nothing, and the stand-in reads them.
+                let mut arguments = stand_in.arguments.clone();
+                arguments.push(OsString::from("--"));
+                arguments.extend(router);
+                arguments
             }
-            None => router_arguments(&self.folder.join(PRESET)),
+            None => router,
         }
     }
 }
@@ -235,12 +301,24 @@ impl Supervised for LlamaServer {
     }
 
     /// Due once the store presents other models than the running server was started
-    /// with, and the server holds none: a model in use is never unloaded for it.
+    /// with, and the server holds none: a model in use is never unloaded for it. From
+    /// the first look that finds the preset stale the server drains: the `restarting`
+    /// file is written before the router is asked what it holds, so a load through
+    /// [`load`] either reached the router before that question and keeps the restart
+    /// off, or finds the file and reports that it was overtaken.
     fn restart_due(&mut self) -> bool {
         let Some(server) = &self.server else {
             return false;
         };
+        let marker = self.folder.join(RESTARTING);
         if self.served_preset.as_deref() == Some(preset(&self.models, self.context).as_str()) {
+            // The store is back to what the server presents: nothing to drain for.
+            let _ = fs::remove_file(&marker);
+            return false;
+        }
+        if filesystem::refuse_links(&marker).is_err() || fs::write(&marker, b"").is_err() {
+            // Without the file a load could start under the restart: wait for a look
+            // that can write it.
             return false;
         }
         held(server.loopback()).is_some_and(|held| held.is_empty())
@@ -267,8 +345,10 @@ impl Supervised for LlamaServer {
         let Some(lease) = self.leases.try_serve()? else {
             return Err(LocalAiError::Engine(Error::Busy));
         };
-        // A new attempt begins: an earlier failure no longer says why no server runs.
+        // A new attempt begins: an earlier failure no longer says why no server runs,
+        // and a drain an earlier supervisor left unfinished is over.
         program::clear_start_failure(&self.folder);
+        let _ = fs::remove_file(self.folder.join(RESTARTING));
         let home = self.folder.join("home");
         for folder in [
             home.join("AppData").join("Roaming"),
@@ -319,16 +399,22 @@ impl Supervised for LlamaServer {
     }
 
     fn halt(&mut self) {
-        // Dropping the server unloads its models, ends it and gives the lease up.
+        // Dropping the server unloads its models, ends it and gives the lease up; a
+        // load overtaken by it finds the record gone or another process in it.
         drop(self.server.take());
         self.served_preset = None;
+        let _ = fs::remove_file(self.folder.join(RESTARTING));
     }
 }
 
-/// The router's arguments: the models from `preset`, none loaded until asked for, and
-/// at most one held at a time.
-fn router_arguments(preset: &Path) -> Vec<OsString> {
+/// The router's arguments: listening on `address`, the models from `preset`, none
+/// loaded until asked for, and at most one held at a time.
+fn router_arguments(address: SocketAddr, preset: &Path) -> Vec<OsString> {
     vec![
+        OsString::from("--host"),
+        OsString::from(address.ip().to_string()),
+        OsString::from("--port"),
+        OsString::from(address.port().to_string()),
         OsString::from("--models-preset"),
         preset.as_os_str().to_owned(),
         OsString::from("--models-max"),
@@ -374,6 +460,89 @@ fn held(loopback: Loopback) -> Option<Vec<String>> {
             .filter_map(|model| model["id"].as_str().map(str::to_owned))
             .collect(),
     )
+}
+
+/// The running router in the server's `folder`, unless it drains for a restart.
+struct Running {
+    loopback: Loopback,
+    process_id: u32,
+}
+
+fn running(folder: &Path) -> Result<Running, LoadRefused> {
+    if draining(folder) {
+        return Err(LoadRefused::Restarting);
+    }
+    let record = ServerRecord::read(folder).ok_or(LoadRefused::NotRunning)?;
+    let address = record
+        .address
+        .parse::<SocketAddr>()
+        .map_err(|_| LoadRefused::NotRunning)?;
+    let loopback = Loopback::new(address).map_err(|_| LoadRefused::NotRunning)?;
+    Ok(Running {
+        loopback,
+        process_id: record.process_id,
+    })
+}
+
+fn draining(folder: &Path) -> bool {
+    fs::symlink_metadata(folder.join(RESTARTING)).is_ok()
+}
+
+/// Whether the preset the running router was started with presents the model `id`.
+fn presents(folder: &Path, id: &str) -> bool {
+    let Ok(bytes) = filesystem::bounded_bytes(&folder.join(PRESET), PRESET_BYTES_LIMIT) else {
+        return false;
+    };
+    let section = format!("[{id}]");
+    String::from_utf8_lossy(&bytes)
+        .lines()
+        .any(|line| line == section)
+}
+
+/// Whether the router running from the server's `folder` presents `model` and takes
+/// loads now. The preset in the folder is the running router's own: each start writes
+/// it before the process starts and the record after.
+pub fn presentation(folder: &Path, model: &ModelName) -> Presentation {
+    match running(folder) {
+        Err(LoadRefused::Restarting) => Presentation::Restarting,
+        Err(_) => Presentation::NotRunning,
+        Ok(_) if presents(folder, &model.to_string()) => Presentation::Presented,
+        Ok(_) => Presentation::NotPresented,
+    }
+}
+
+/// Loads `model` into the router running from the server's `folder`.
+///
+/// A load that a restart overtakes is [`LoadRefused::Restarting`], never success: the
+/// record is read again once the router has answered, and a drain begun meanwhile, or
+/// another process or none in the record, means the load did not stay. A load the
+/// router took during a drain is let go again unless the model was held before it, so
+/// the drain is not kept waiting for a model nobody uses; a model another caller holds
+/// is never unloaded.
+pub fn load(folder: &Path, model: &ModelName) -> Result<(), LoadRefused> {
+    let before = running(folder)?;
+    let id = model.to_string();
+    if !presents(folder, &id) {
+        return Err(LoadRefused::NotPresented);
+    }
+    let held_before = held(before.loopback).is_some_and(|held| held.contains(&id));
+    let request = serde_json::json!({ "model": id }).to_string();
+    let answered = before.loopback.post(LOAD, request.as_bytes());
+    let same =
+        ServerRecord::read(folder).is_some_and(|after| after.process_id == before.process_id);
+    if !same || draining(folder) {
+        if same && !held_before && matches!(answered, Ok((200, _))) {
+            let _ = before.loopback.post(UNLOAD, request.as_bytes());
+        }
+        return Err(LoadRefused::Restarting);
+    }
+    match answered {
+        Ok((200, _)) => Ok(()),
+        Ok((status, _)) => Err(LoadRefused::Failed {
+            status: Some(status),
+        }),
+        Err(_) => Err(LoadRefused::Failed { status: None }),
+    }
 }
 
 /// Unloads every model the router holds; a server that does not answer is left to the
@@ -512,4 +681,4 @@ fn write_preset(path: &Path, text: &str) -> Result<(), Error> {
 }
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

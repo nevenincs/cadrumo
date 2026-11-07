@@ -4,8 +4,8 @@ use crate::{
         local_ai::{
             ServerStartFailure, StartFailureKind, VersionFailure,
             fake_llamacpp::{
-                HELPER_ARGUMENTS, HELPER_BUILD, HELPER_LOG, HELPER_MODE, HELPER_MODELS,
-                HELPER_READY_GATE,
+                FakeLlamaCpp, HELPER_ARGUMENTS, HELPER_BUILD, HELPER_LOG, HELPER_MODE,
+                HELPER_MODELS, HELPER_READY_GATE, ModelStatus, Scripted,
             },
             program::{
                 Uncontained, announcement, announces, latest_start_failure,
@@ -19,6 +19,7 @@ use crate::{
 };
 use serde_json::json;
 use std::{
+    fmt::Write as _,
     path::Path,
     time::{Duration, Instant},
 };
@@ -27,14 +28,14 @@ const BUILD: &str = "b12184";
 const BUILD_INFO: &str = "b12184-c0ab6e5c0";
 
 /// A package whose `llama_server` folder holds the test binary as the program.
-fn package(root: &Path) -> PathBuf {
+pub(crate) fn package(root: &Path) -> PathBuf {
     let folder = root.join("package").join("bin").join("llama");
     fs::create_dir_all(&folder).unwrap();
     fs::copy(std::env::current_exe().unwrap(), folder.join(EXECUTABLE)).unwrap();
     folder
 }
 
-fn packaged(root: &Path) -> (LlamaServer, Locations) {
+pub(crate) fn packaged(root: &Path) -> (LlamaServer, Locations) {
     let locations = Locations::under(&root.join("storage"));
     let server = LlamaServer::packaged(&package(root), BUILD, &locations, LOAD_CONTEXT).unwrap();
     (server, locations)
@@ -42,7 +43,7 @@ fn packaged(root: &Path) -> (LlamaServer, Locations) {
 
 /// Runs the fake router in the program's place, reporting `build_info` and adding
 /// `environment`.
-fn stand_in(server: &mut LlamaServer, build_info: &str, environment: &[(&str, &OsStr)]) {
+pub(crate) fn stand_in(server: &mut LlamaServer, build_info: &str, environment: &[(&str, &OsStr)]) {
     let mut added = vec![
         (OsString::from(HELPER_MODE), OsString::from("serve")),
         (OsString::from(HELPER_BUILD), OsString::from(build_info)),
@@ -59,7 +60,7 @@ fn stand_in(server: &mut LlamaServer, build_info: &str, environment: &[(&str, &O
 }
 
 /// Writes `bytes` into the store as a blob and returns its manifest descriptor.
-fn blob(models: &Path, media_type: &str, bytes: &[u8]) -> serde_json::Value {
+pub(crate) fn blob(models: &Path, media_type: &str, bytes: &[u8]) -> serde_json::Value {
     let digest = Sha256Digest::of(bytes);
     let blobs = models.join("blobs");
     fs::create_dir_all(&blobs).unwrap();
@@ -68,7 +69,7 @@ fn blob(models: &Path, media_type: &str, bytes: &[u8]) -> serde_json::Value {
 }
 
 /// Writes a manifest naming `layers` under `host/namespace/model/tag`.
-fn manifest(models: &Path, path: [&str; 4], layers: &[serde_json::Value]) {
+pub(crate) fn manifest(models: &Path, path: [&str; 4], layers: &[serde_json::Value]) {
     let config = blob(
         models,
         "application/vnd.docker.container.image.v1+json",
@@ -209,6 +210,10 @@ fn the_router_runs_from_the_preset_on_its_address_with_no_model_loaded_or_evicte
     assert_eq!(
         command.arguments,
         [
+            OsString::from("--host"),
+            OsString::from("127.0.0.1"),
+            OsString::from("--port"),
+            OsString::from(address.port().to_string()),
             OsString::from("--models-preset"),
             folder.join(PRESET).into_os_string(),
             OsString::from("--models-max"),
@@ -217,13 +222,15 @@ fn the_router_runs_from_the_preset_on_its_address_with_no_model_loaded_or_evicte
         ]
     );
     let environment = |name: &str| command.environment.get(OsStr::new(name)).cloned();
-    assert_eq!(
-        environment("LLAMA_ARG_HOST"),
-        Some(OsString::from("127.0.0.1"))
-    );
-    assert_eq!(
-        environment("LLAMA_ARG_PORT"),
-        Some(OsString::from(address.port().to_string()))
+    // The address is the router's alone: the model instances it starts inherit its
+    // environment and must not read it as theirs.
+    assert!(
+        command
+            .environment
+            .keys()
+            .all(|name| !name.to_string_lossy().starts_with("LLAMA_ARG_")),
+        "{:?}",
+        command.environment
     );
     assert_eq!(
         environment("LLAMA_CACHE"),
@@ -339,13 +346,25 @@ fn a_router_that_listens_is_waited_for_until_ready_and_then_its_build_is_confirm
     assert_eq!(record.models, locations.models);
     assert_eq!(record.proxy, None);
     assert!(folder.join(PRESET).is_file());
-    // It was started on the address the engine gave it.
+    // It was started on the address the engine gave it, on its command line.
+    let (_, body) = Loopback::new(address)
+        .unwrap()
+        .get("/fake/arguments")
+        .unwrap();
+    let arguments: Vec<String> = serde_json::from_slice(&body).unwrap();
+    let port = address.port().to_string();
+    assert!(
+        arguments
+            .windows(2)
+            .any(|pair| pair[0] == "--port" && pair[1] == port),
+        "{arguments:?}"
+    );
     let (_, body) = Loopback::new(address)
         .unwrap()
         .get("/fake/environment")
         .unwrap();
     let environment: serde_json::Value = serde_json::from_slice(&body).unwrap();
-    assert_eq!(environment["LLAMA_ARG_PORT"], address.port().to_string());
+    assert!(environment.get("LLAMA_ARG_PORT").is_none(), "{environment}");
 
     server.halt();
     assert!(!answers(address));
@@ -381,7 +400,10 @@ fn a_router_of_another_build_is_ended_and_not_running() {
     assert!(!answers(address));
 }
 
-fn supervisor(server: LlamaServer, address: SocketAddr) -> ServerSupervisor<LlamaServer> {
+pub(crate) fn supervisor(
+    server: LlamaServer,
+    address: SocketAddr,
+) -> ServerSupervisor<LlamaServer> {
     // A proxy setting the engine cannot use keeps no llama-server from running: it
     // downloads nothing.
     let environment = |name: &str| {
@@ -447,28 +469,30 @@ fn the_supervisor_restarts_a_crashed_router_on_its_address() {
     assert!(!answers(address));
 }
 
+fn name(text: &str) -> ModelName {
+    ModelName::parse(text).unwrap()
+}
+
 #[test]
-fn a_model_new_in_the_store_restarts_an_idle_router_and_never_one_that_holds_a_model() {
+fn a_model_new_in_the_store_restarts_an_idle_router_and_waits_for_a_held_one_to_be_let_go() {
     let root = tempfile::tempdir().unwrap();
     let (mut server, locations) = packaged(root.path());
-    // The stand-in lists the model the store is about to present.
+    // The stand-in lists the models the store is about to present.
     stand_in(
         &mut server,
         BUILD_INFO,
-        &[(HELPER_MODELS, OsStr::new("qwen3:1.7b"))],
+        &[(HELPER_MODELS, OsStr::new("qwen3:1.7b,qwen3:4b"))],
     );
     let address = free_address();
     let mut supervisor = supervisor(server, address);
     let now = Instant::now();
     assert_running(&mut supervisor, now);
     let idle = process_id(&supervisor);
-    let preset_file = locations
-        .programs
-        .parent()
-        .unwrap()
-        .join(FOLDER)
-        .join(PRESET);
+    let folder = server_folder(&locations).unwrap();
+    let preset_file = folder.join(PRESET);
     assert_eq!(fs::read_to_string(&preset_file).unwrap(), "");
+    let (small, large) = (name("qwen3:1.7b"), name("qwen3:4b"));
+    assert_eq!(presentation(&folder, &small), Presentation::NotPresented);
 
     // Nothing changed: the same server keeps running.
     assert_running(&mut supervisor, now);
@@ -480,6 +504,8 @@ fn a_model_new_in_the_store_restarts_an_idle_router_and_never_one_that_holds_a_m
         ["registry.ollama.ai", "library", "qwen3", "1.7b"],
         &[blob(&locations.models, MODEL_MEDIA_TYPE, b"text weights")],
     );
+    // Until the next look the running router does not present it, and says so.
+    assert_eq!(load(&folder, &small), Err(LoadRefused::NotPresented));
     assert_running(&mut supervisor, now);
     let restarted = process_id(&supervisor);
     assert_ne!(restarted, idle);
@@ -493,18 +519,169 @@ fn a_model_new_in_the_store_restarts_an_idle_router_and_never_one_that_holds_a_m
         None,
         "a fresh start is no crash and schedules nothing"
     );
+    assert_eq!(presentation(&folder, &small), Presentation::Presented);
+    assert_eq!(load(&folder, &small), Ok(()));
 
-    // Another arrives while the router holds a model: it keeps running as it is.
-    let router = supervisor.program().server().unwrap().loopback();
-    let (status, _) = router
-        .post("/models/load", br#"{"model":"qwen3:1.7b"}"#)
-        .unwrap();
-    assert_eq!(status, 200);
+    // Another arrives while the router holds a model: the model in use is never
+    // unloaded for it, and the router drains, refusing every new load for a retry.
     manifest(
         &locations.models,
         ["registry.ollama.ai", "library", "qwen3", "4b"],
         &[blob(&locations.models, MODEL_MEDIA_TYPE, b"more weights")],
     );
+    for _ in 0..3 {
+        assert_running(&mut supervisor, now);
+        assert_eq!(process_id(&supervisor), restarted);
+    }
+    assert!(folder.join(RESTARTING).exists());
+    assert_eq!(presentation(&folder, &large), Presentation::Restarting);
+    assert_eq!(presentation(&folder, &small), Presentation::Restarting);
+    let refused = load(&folder, &small).unwrap_err();
+    assert_eq!(refused, LoadRefused::Restarting);
+    assert!(refused.retryable());
+    let router = supervisor.program().server().unwrap().loopback();
+    let (_, body) = router.get("/models").unwrap();
+    let models: serde_json::Value = serde_json::from_slice(&body).unwrap();
+    assert!(
+        models["data"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|model| model["id"] == "qwen3:1.7b" && model["status"]["value"] == "loaded"),
+        "the held model stays loaded: {models}"
+    );
+
+    // Once its holder lets it go, the next look starts the router again with both.
+    let (status, _) = router
+        .post("/models/unload", br#"{"model":"qwen3:1.7b"}"#)
+        .unwrap();
+    assert_eq!(status, 200);
     assert_running(&mut supervisor, now);
-    assert_eq!(process_id(&supervisor), restarted);
+    assert_ne!(process_id(&supervisor), restarted);
+    assert!(!folder.join(RESTARTING).exists());
+    assert_eq!(presentation(&folder, &large), Presentation::Presented);
+    assert_eq!(load(&folder, &large), Ok(()));
+}
+
+/// A router answered from the test process, recorded in `folder` as the running server
+/// of process `process_id`, presenting `models`.
+fn recorded_router(folder: &Path, fake: &FakeLlamaCpp, process_id: u32, models: &[&str]) {
+    fs::create_dir_all(folder).unwrap();
+    filesystem::replace_json(
+        &folder.join(SERVER_RECORD),
+        &ServerRecord {
+            schema: SERVER_RECORD_SCHEMA,
+            address: fake.address().to_string(),
+            version: BUILD.to_owned(),
+            executable: folder.join(EXECUTABLE),
+            models: folder.join("models"),
+            process_id,
+            proxy: None,
+        },
+    )
+    .unwrap();
+    let mut preset = String::new();
+    let mut state = fake.state.lock().unwrap();
+    for model in models {
+        let _ = write!(preset, "[{model}]\nmodel = /m\nctx-size = 8192\n\n");
+        state
+            .models
+            .insert((*model).to_owned(), ModelStatus::Unloaded);
+    }
+    fs::write(folder.join(PRESET), preset).unwrap();
+}
+
+#[test]
+fn a_load_says_whether_it_stayed_and_a_restart_that_overtakes_it_is_retried_not_failed() {
+    let root = tempfile::tempdir().unwrap();
+    let folder = root.path().join(FOLDER);
+    let model = name("qwen3:1.7b");
+    assert_eq!(load(&folder, &model), Err(LoadRefused::NotRunning));
+    assert_eq!(presentation(&folder, &model), Presentation::NotRunning);
+
+    let fake = FakeLlamaCpp::start(BUILD_INFO);
+    recorded_router(&folder, &fake, 7, &["qwen3:1.7b"]);
+    let status = |fake: &FakeLlamaCpp| fake.state.lock().unwrap().models["qwen3:1.7b"];
+    let loads = |fake: &FakeLlamaCpp| -> Vec<String> {
+        fake.state
+            .lock()
+            .unwrap()
+            .requests
+            .iter()
+            .filter(|line| line.starts_with("POST /models/"))
+            .cloned()
+            .collect()
+    };
+    assert_eq!(presentation(&folder, &model), Presentation::Presented);
+    assert_eq!(
+        load(&folder, &name("qwen3:4b")),
+        Err(LoadRefused::NotPresented)
+    );
+
+    // A drain begun before the load: nothing is asked of the router.
+    let marker = folder.join(RESTARTING);
+    fs::write(&marker, b"").unwrap();
+    assert_eq!(load(&folder, &model), Err(LoadRefused::Restarting));
+    assert!(loads(&fake).is_empty());
+    fs::remove_file(&marker).unwrap();
+
+    // A drain begun while the load was on its way: the model it loaded is let go again,
+    // so the restart is not kept waiting for it, and the caller retries.
+    fake.state.lock().unwrap().on_load = Some(Box::new({
+        let marker = marker.clone();
+        move || fs::write(&marker, b"").unwrap()
+    }));
+    assert_eq!(load(&folder, &model), Err(LoadRefused::Restarting));
+    assert_eq!(status(&fake), ModelStatus::Unloaded);
+    assert_eq!(
+        loads(&fake),
+        ["POST /models/load HTTP/1.1", "POST /models/unload HTTP/1.1"]
+    );
+    fs::remove_file(&marker).unwrap();
+
+    // Held before the load, it is another caller's: it is never unloaded.
+    fake.state
+        .lock()
+        .unwrap()
+        .models
+        .insert("qwen3:1.7b".into(), ModelStatus::Loaded);
+    assert_eq!(load(&folder, &model), Err(LoadRefused::Restarting));
+    assert_eq!(status(&fake), ModelStatus::Loaded);
+    assert_eq!(loads(&fake).len(), 3, "no unload: {:?}", loads(&fake));
+    fs::remove_file(&marker).unwrap();
+
+    // The router was started again under the load: another process is in the record.
+    fake.state.lock().unwrap().on_load = Some(Box::new({
+        let folder = folder.clone();
+        move || {
+            let mut record = ServerRecord::read(&folder).unwrap();
+            record.process_id = 8;
+            filesystem::replace_json(&folder.join(SERVER_RECORD), &record).unwrap();
+        }
+    }));
+    assert_eq!(load(&folder, &model), Err(LoadRefused::Restarting));
+    fake.state.lock().unwrap().on_load = None;
+
+    // A router that refuses the load is a failure to report, not to retry.
+    fake.state.lock().unwrap().failures.insert(
+        "/models/load".into(),
+        Scripted {
+            status: "500 Internal Server Error".into(),
+            body: json!({ "error": { "message": "out of memory" } }),
+        },
+    );
+    let failed = load(&folder, &model).unwrap_err();
+    assert_eq!(failed, LoadRefused::Failed { status: Some(500) });
+    assert!(!failed.retryable());
+    fake.state.lock().unwrap().failures.clear();
+
+    // Otherwise the load stays.
+    fake.state
+        .lock()
+        .unwrap()
+        .models
+        .insert("qwen3:1.7b".into(), ModelStatus::Unloaded);
+    assert_eq!(load(&folder, &model), Ok(()));
+    assert_eq!(status(&fake), ModelStatus::Loaded);
+    assert_eq!(presentation(&folder, &model), Presentation::Presented);
 }

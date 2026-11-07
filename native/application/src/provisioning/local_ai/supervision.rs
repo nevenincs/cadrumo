@@ -1,7 +1,9 @@
 //! Supervision of the one local AI server: the runtime manager's part of the local AI.
 //!
 //! The supervisor runs the server of one [`Supervised`] program: the Ollama program the
-//! engine installs, or the llama-server the package carries. While that program is set
+//! engine installs, or the llama-server the package carries. An [`EngineProgram`] holds
+//! only the selected engine's program, so the other engine's server is never started.
+//! While that program is set
 //! up, the supervisor keeps a server running from it on its fixed address. A server that
 //! ends without being asked to, or fails to start, is started again after a backoff that
 //! doubles up to a ceiling, until too many restarts fall inside one window and
@@ -17,7 +19,8 @@
 //! the owner's monotonic clock, passed in.
 
 use super::{
-    LocalAiError,
+    LocalAiError, LocalEngine,
+    llama_server::LlamaServer,
     program::{Containment, Program, Server},
 };
 use crate::{
@@ -171,6 +174,90 @@ impl Supervised for Program {
 
     fn halt(&mut self) {
         self.stop();
+    }
+}
+
+/// The program of the one selected engine, whose server is the only one supervised: the
+/// other engine's program is never built, so nothing can start its server.
+pub enum EngineProgram {
+    Ollama(Box<Program>),
+    LlamaCpp(Box<LlamaServer>),
+}
+
+impl EngineProgram {
+    /// The program of `engine`: `ollama` or `llama` builds it, and only the selected
+    /// one is ever called.
+    pub fn select<E>(
+        engine: LocalEngine,
+        ollama: impl FnOnce() -> Result<Program, E>,
+        llama: impl FnOnce() -> Result<LlamaServer, E>,
+    ) -> Result<Self, E> {
+        Ok(match engine {
+            LocalEngine::Ollama => Self::Ollama(Box::new(ollama()?)),
+            LocalEngine::LlamaCpp => Self::LlamaCpp(Box::new(llama()?)),
+        })
+    }
+
+    pub fn engine(&self) -> LocalEngine {
+        match self {
+            Self::Ollama(_) => LocalEngine::Ollama,
+            Self::LlamaCpp(_) => LocalEngine::LlamaCpp,
+        }
+    }
+
+    fn program(&self) -> &dyn Supervised {
+        match self {
+            Self::Ollama(program) => &**program,
+            Self::LlamaCpp(program) => &**program,
+        }
+    }
+
+    fn program_mut(&mut self) -> &mut dyn Supervised {
+        match self {
+            Self::Ollama(program) => &mut **program,
+            Self::LlamaCpp(program) => &mut **program,
+        }
+    }
+}
+
+impl Supervised for EngineProgram {
+    fn is_set_up(&self) -> bool {
+        self.program().is_set_up()
+    }
+
+    fn set_up_stamp(&self) -> SetUpStamp {
+        self.program().set_up_stamp()
+    }
+
+    fn running_mut(&mut self) -> Option<&mut Server> {
+        self.program_mut().running_mut()
+    }
+
+    fn change_requested(&self) -> bool {
+        self.program().change_requested()
+    }
+
+    fn restart_due(&mut self) -> bool {
+        self.program_mut().restart_due()
+    }
+
+    fn uses_proxy(&self) -> bool {
+        self.program().uses_proxy()
+    }
+
+    fn serve(
+        &mut self,
+        address: SocketAddr,
+        containment: &dyn Containment,
+        ambient: &dyn Fn(&str) -> Option<OsString>,
+        proxy: Option<&ProxySettings>,
+    ) -> Result<(), LocalAiError> {
+        self.program_mut()
+            .serve(address, containment, ambient, proxy)
+    }
+
+    fn halt(&mut self) {
+        self.program_mut().halt();
     }
 }
 

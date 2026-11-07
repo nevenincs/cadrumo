@@ -77,13 +77,13 @@ impl Background {
     ) -> io::Result<Self> {
         // The person's engine selection does not reach the manager yet, so the default
         // engine's server runs.
+        let engine = LocalEngine::default();
         let local_ai = installed.target.package_root().and_then(|package| {
-            LocalAiHost::for_package(
-                package,
-                installed.target.storage_root(),
-                LocalEngine::default(),
-            )
-            .ok()
+            LocalAiHost::for_package(package, installed.target.storage_root(), engine)
+                .inspect_err(|reason| {
+                    diagnostics::local_ai_unavailable(&diagnostics, engine, *reason);
+                })
+                .ok()
         });
         let ownership = Ownership::new(
             installed.target.storage_root().to_path_buf(),

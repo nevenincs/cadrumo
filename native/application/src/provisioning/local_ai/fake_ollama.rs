@@ -27,6 +27,11 @@ pub(crate) const HELPER_MODE: &str = "CADRUMO_FAKE_OLLAMA";
 pub(crate) const HELPER_GATE: &str = "CADRUMO_FAKE_OLLAMA_GATE";
 /// The version the helper reports.
 pub(crate) const HELPER_VERSION: &str = "CADRUMO_FAKE_OLLAMA_VERSION";
+/// A file the helper appends a line to each time it starts, shared with the fake
+/// llama-server, so a test counts the servers of each kind that were ever started.
+pub(crate) const HELPER_LAUNCHES: &str = "CADRUMO_FAKE_OLLAMA_LAUNCHES";
+/// The line the helper appends to [`HELPER_LAUNCHES`].
+pub(crate) const LAUNCHED: &str = "ollama";
 /// The arguments that run only the helper in a child test binary.
 pub(crate) const HELPER_ARGUMENTS: [&str; 4] = [
     "--exact",
@@ -288,6 +293,14 @@ fn serve_helper() {
         return;
     }
     let host = std::env::var("OLLAMA_HOST").unwrap();
+    if let Some(launches) = std::env::var_os(HELPER_LAUNCHES) {
+        let mut file = std::fs::File::options()
+            .create(true)
+            .append(true)
+            .open(launches)
+            .unwrap();
+        writeln!(file, "{LAUNCHED}").unwrap();
+    }
     let listener = TcpListener::bind(&host).unwrap();
     let state: Shared = Arc::new(Mutex::new(FakeState {
         version: std::env::var(HELPER_VERSION).unwrap(),
