@@ -5172,6 +5172,7 @@
         "dev.registry.compiler.fact_validation",
         "dev.registry.compiler.family_disposition_inheritance",
         "dev.registry.compiler.form_layout_integrity",
+        "dev.registry.compiler.holiday_calendar_coverage",
         "dev.registry.compiler.identifier_lineage",
         "dev.registry.compiler.identity",
         "dev.registry.compiler.inherited_label_localization",

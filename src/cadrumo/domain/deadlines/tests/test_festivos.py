@@ -42,6 +42,7 @@ from ..festivos import (
     load_holiday_calendar,
     shift_deadline,
 )
+from .effective_close_scan import first_unpublished_calendar_year
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -515,17 +516,21 @@ def test_a_year_end_shift_is_judged_against_the_next_years_calendar() -> None:
 
 
 def test_a_year_end_shift_into_an_unpublished_year_is_refused() -> None:
-    """Without the next year's calendar the moved date cannot be verified, so it is never guessed."""
-    with (
-        bundled_indexed_authority().operation() as operation,
-        pytest.raises(DeadlineValidationError, match="2023"),
-    ):
-        shift_deadline(
-            _SATURDAY_YEAR_END,
-            modelo="303",
-            calendars=(_year_end_calendar(),),
-            operation=operation,
+    """Without the next year's calendar the moved date cannot be verified, so it is never guessed.
+
+    The last day of the year before the first unpublished one is declared
+    inhábil, so its shift must cross into a year the authority has no calendar for.
+    """
+    with bundled_indexed_authority().operation() as operation:
+        unpublished = first_unpublished_calendar_year(operation)
+        year_end = date(unpublished - 1, 12, 31)
+        last_calendar = HolidayCalendar(
+            year=year_end.year,
+            boe_ref=f"synthetic-{year_end.year}",
+            national=(Holiday(holiday_date=year_end, jurisdiction=HolidayJurisdiction.NATIONAL, name="Inhábil"),),
         )
+        with pytest.raises(DeadlineValidationError, match=str(unpublished)):
+            shift_deadline(year_end, modelo="303", calendars=(last_calendar,), operation=operation)
 
 
 def test_a_single_year_calendar_refuses_to_classify_another_year() -> None:
