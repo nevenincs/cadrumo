@@ -13,10 +13,13 @@ from cadrumo.domain.calculations.registry.authority import (
     bundled_indexed_authority,
 )
 from cadrumo.domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.schema import IvaCatalogue, IvaCategory
 from dev.registry.conformance.iva_regulation_catalogue import resolve_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 
 @pytest.fixture(scope="module")
@@ -29,14 +32,14 @@ def operation() -> Iterator[PinnedAuthorityOperation]:
 @pytest.fixture(scope="module")
 def catalogue(operation: PinnedAuthorityOperation) -> IvaCatalogue:
     """Resolve the IVA rules against the registry's explicit filing-year projection."""
-    return resolve_catalogue(on=date(2025, 1, 1), operation=operation, projected_year=2025)
+    return resolve_catalogue(on=date(_YEAR, 1, 1), operation=operation, projected_year=_YEAR)
 
 
 def test_catalogue_covers_every_iva_category(
     catalogue: IvaCatalogue,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    categories = resolve_iva_category_catalogue(effective_date=date(2025, 1, 1), authority=operation).all_categories
+    categories = resolve_iva_category_catalogue(effective_date=date(_YEAR, 1, 1), authority=operation).all_categories
     assert set(catalogue.regulations.keys()) == set(categories)
 
 

@@ -32,6 +32,11 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
 )
 from cadrumo.domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from cadrumo.domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    open_ended_revision,
+)
 
 from ...compiler.validate_export_field_widths import (
     DRAFT_ATTRIBUTE_CANONICAL_WIDTHS,
@@ -61,10 +66,12 @@ from .registry_schema_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+FILING_YEAR = filing_year_envelope().horizon
+
 
 def test_validator_rejects_invalid_invoice_binding_shapes() -> None:
     modelo, catalogues = committed_modelo("349")
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = modelo.revisions[str(open_ended_revision("349").id)]
     binding = next(item for item in revision.bindings if item.id == "iva-349-declarante-numero-operadores")
     committed = binding.provider
     assert isinstance(committed, M349IntracommunityOperationProvider)
@@ -127,7 +134,7 @@ def test_validator_rejects_invalid_invoice_binding_shapes() -> None:
 
 def test_validator_rejects_profile_binding_selector_missing_from_user_profile_schema() -> None:
     modelo, catalogues = committed_modelo("100")
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[str(authored_revisions("100")[-1].id)]
     binding = next(
         item
         for item in revision.bindings
@@ -149,7 +156,7 @@ def test_validator_rejects_profile_binding_selector_missing_from_user_profile_sc
 
 def test_export_fields_can_reference_structured_bindings() -> None:
     modelo, catalogues = committed_modelo("131")
-    revision = modelo.revisions["2026"]
+    revision = modelo.revisions[str(open_ended_revision("131").id)]
     bound_revision = with_first_export_field(
         revision,
         ExportFieldDefinition.model_validate(
@@ -179,7 +186,7 @@ def test_export_fields_can_reference_structured_bindings() -> None:
 
 def test_validator_rejects_export_field_with_unknown_binding() -> None:
     modelo, catalogues = committed_modelo("131")
-    revision = modelo.revisions["2026"]
+    revision = modelo.revisions[str(open_ended_revision("131").id)]
     bound_revision = with_first_export_field(
         revision,
         ExportFieldDefinition.model_validate(
@@ -207,7 +214,7 @@ def test_validator_rejects_export_field_with_unknown_binding() -> None:
 
 def test_validator_rejects_literal_export_field_longer_than_declared_length() -> None:
     modelo, catalogues = committed_modelo("131")
-    revision = modelo.revisions["2026"]
+    revision = modelo.revisions[str(open_ended_revision("131").id)]
     layout = revision.export_layouts[0]
     record = layout.records[0]
     field = next(item for item in record.fields if item.kind == "literal" and item.length is not None)
@@ -330,7 +337,7 @@ def test_draft_attribute_width_ruling_covers_every_declarable_attribute() -> Non
 def test_validator_rejects_declarant_nif_draft_field_bound_to_a_wider_slot() -> None:
     """Deleted profile draft authority cannot be restored at any slot width."""
     modelo, catalogues = committed_modelo("131")
-    revision = modelo.revisions["2026"]
+    revision = modelo.revisions[str(open_ended_revision("131").id)]
     field = (
         revision.export_layouts[0]
         .records[0]
@@ -349,7 +356,7 @@ def test_validator_rejects_declarant_nif_draft_field_bound_to_a_wider_slot() -> 
 def test_validator_accepts_declarant_nif_draft_field_at_the_identifier_width() -> None:
     """Deleted profile draft authority is refused even at the identifier width."""
     modelo, catalogues = committed_modelo("131")
-    revision = modelo.revisions["2026"]
+    revision = modelo.revisions[str(open_ended_revision("131").id)]
     field = (
         revision.export_layouts[0]
         .records[0]
@@ -407,7 +414,7 @@ def test_validator_rejects_the_modelo_200_envelope_open_tag_collapsed_onto_one_d
     defect can no longer occur proves nothing.
     """
     modelo, _catalogues = committed_modelo("200")
-    revision = modelo.revisions["2025-y-siguientes"]
+    revision = modelo.revisions[str(open_ended_revision("200").id)]
 
     composed = tuple(
         prefix
@@ -441,7 +448,7 @@ def test_validator_rejects_the_modelo_200_envelope_open_tag_collapsed_onto_one_d
             "length": 17,
         },
     )
-    failures = validate_draft_field_slot_width(prefix="modelo 200 revision 2025-y-siguientes", field=collapsed)
+    failures = validate_draft_field_slot_width(prefix=f"modelo 200 revision {revision.id}", field=collapsed)
     assert any("to a slot of length 17" in failure for failure in failures), failures
 
 
@@ -470,7 +477,7 @@ def test_validator_rejects_the_grupo_mercantil_parent_tin_slot_rebound_to_the_de
     contradiction the detector reports.
     """
     modelo, _catalogues = committed_modelo("200")
-    revision = modelo.revisions["2025-y-siguientes"]
+    revision = modelo.revisions[str(open_ended_revision("200").id)]
 
     assert set(DRAFT_ATTRIBUTE_CANONICAL_WIDTHS) == set(ExportDraftAttribute), (
         "the width ruling must stay total over the declarable attributes, or a "
@@ -499,7 +506,7 @@ def test_validator_rejects_the_grupo_mercantil_parent_tin_slot_rebound_to_the_de
             "length": runtime_tax_id_format().width,
         },
     )
-    failures = validate_draft_field_slot_width(prefix="modelo 200 revision 2025-y-siguientes", field=misbound)
+    failures = validate_draft_field_slot_width(prefix=f"modelo 200 revision {revision.id}", field=misbound)
     width = runtime_tax_id_format().width
     assert any(f"to a slot of length {width}" in failure for failure in failures), failures
 
@@ -725,10 +732,10 @@ def test_casilla_continuidad_id_uses_registry_id_shape() -> None:
 def test_casilla_continuidad_evolution_rejects_same_revision_pair() -> None:
     with pytest.raises(ValidationError, match="must span two different revisions"):
         CasillaContinuidadEvolutionDefinition(
-            id="renta-2024-self-evolution",
+            id="renta-self-evolution",
             continuidad_id="renta-base-liquidacion-general",
-            from_revision="2024",
-            to_revision="2024",
+            from_revision=str(FILING_YEAR),
+            to_revision=str(FILING_YEAR),
             evolution_kind="label_evolved",
             legal_refs=("ley-35-2006:art-48",),
             source_refs=("aeat-manual",),
@@ -738,10 +745,10 @@ def test_casilla_continuidad_evolution_rejects_same_revision_pair() -> None:
 def test_modelo_revision_defaults_to_advisory_continuidad_validation() -> None:
     revision = ModeloRevision.model_validate(
         {
-            "id": "2024",
+            "id": str(FILING_YEAR),
             "localization_key": "test.schema.revision.label",
-            "valid_from": date(2024, 1, 1),
-            "period_selector": {"years": (2024,), "periods": ("0A",)},
+            "valid_from": date(FILING_YEAR, 1, 1),
+            "period_selector": {"years": (FILING_YEAR,), "periods": ("0A",)},
             "legal_refs": ("ley-35-2006:art-48",),
             "source_refs": ("aeat-manual",),
         },

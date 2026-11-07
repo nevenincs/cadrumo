@@ -12,6 +12,7 @@ from pydantic import ValidationError
 from typer.testing import CliRunner
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ...compiler.authority import compiled_bundled_authority
 from ...export_proof import FilingExportProofAssessment
@@ -42,7 +43,9 @@ from ..filing_export_coverage import FilingExportCoverageReport
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_AS_OF = date(2026, 8, 24)
+_YEAR = filing_year_envelope().horizon
+_REVISION = str(_YEAR)
+_AS_OF = date(_YEAR, 8, 24)
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 
 
@@ -101,12 +104,12 @@ class _TemporalCoverageBase(TypedDict):
     declared_authority_grade: RegistryAuthorityGrade
 
 
-def _temporal(*, modelo: str = "303", revision: str = "2026", refused: bool = False) -> TemporalRevisionCoverage:
+def _temporal(*, modelo: str = "303", revision: str = _REVISION, refused: bool = False) -> TemporalRevisionCoverage:
     """Build one exact temporal limb fixture without weakening its model contract."""
     base: _TemporalCoverageBase = {
         "modelo": modelo,
         "revision": revision,
-        "filing_year": 2026,
+        "filing_year": _YEAR,
         "period": "1T",
         "selected_revision": revision,
         "declared_authority_grade": RegistryAuthorityGrade.FILING,
@@ -124,7 +127,7 @@ def _temporal(*, modelo: str = "303", revision: str = "2026", refused: bool = Fa
 def _limb(
     *,
     modelo: str = "303",
-    revision: str = "2026",
+    revision: str = _REVISION,
     name: Literal["filing_export"],
 ) -> RegistryClosureLimb:
     """Build one real satisfied app-limb shape for deterministic join tests."""
@@ -165,19 +168,19 @@ def test_exact_temporal_and_filing_join_satisfies_the_blocking_release_predicate
     assert report.refused_revision_count == 0
     rendered = render_registry_closure_report(report)
     assert "release_eligible=true" in rendered
-    assert "closure_row modelo=303 revision=2026 predicate_outcome=satisfied" in rendered
+    assert f"closure_row modelo=303 revision={_REVISION} predicate_outcome=satisfied" in rendered
 
 
 def test_renderer_revision_denominator_follows_its_temporal_rows() -> None:
     """A second temporal coordinate must change the rendered revision denominator."""
     report = _report(
         temporal=(
-            _temporal(modelo="303", revision="2026"),
-            _temporal(modelo="304", revision="2026"),
+            _temporal(modelo="303", revision=_REVISION),
+            _temporal(modelo="304", revision=_REVISION),
         ),
         filing=(
-            _limb(modelo="303", revision="2026", name="filing_export"),
-            _limb(modelo="304", revision="2026", name="filing_export"),
+            _limb(modelo="303", revision=_REVISION, name="filing_export"),
+            _limb(modelo="304", revision=_REVISION, name="filing_export"),
         ),
     )
 
@@ -227,8 +230,8 @@ def test_missing_and_extra_filing_coordinates_remain_visible_as_join_disagreemen
     assert row.predicate_outcome == "refused"
     assert row.refusals[0].reason == "cross_limb_disagreement"
     assert [(item.modelo, item.revision, item.limb, item.kind) for item in report.join_disagreements] == [
-        ("100", "2026", "filing_export", "unexpected_limb_coordinate"),
-        ("999", "2026", "filing_export", "missing_from_limb"),
+        ("100", _REVISION, "filing_export", "unexpected_limb_coordinate"),
+        ("999", _REVISION, "filing_export", "missing_from_limb"),
     ]
     assert not report.release_eligible
 
