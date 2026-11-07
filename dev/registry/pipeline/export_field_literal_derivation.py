@@ -11,6 +11,7 @@ from .export_field_derivation import (
     OFFICIAL_ALTERNATIVE_LITERALS_RE,
     OFFICIAL_BARE_CELL_LITERAL_RE,
     OFFICIAL_BARE_RECORD_TAG_RE,
+    OFFICIAL_CRLF_CONSTANT_RE,
     OFFICIAL_LABELLED_LITERAL_RE,
     OFFICIAL_LITERAL_RE,
     OFFICIAL_QUOTED_TOKEN_RE,
@@ -216,6 +217,8 @@ def _parse_official_literal(joined_field: JoinedRecordDesignField, official_cont
     match = OFFICIAL_LITERAL_RE.fullmatch(folded_content)
     if match is not None:
         return str(match.group("literal")), False
+    if OFFICIAL_CRLF_CONSTANT_RE.fullmatch(folded_content) is not None:
+        return "\r\n", False
     if OFFICIAL_BARE_RECORD_TAG_RE.fullmatch(folded_content) is not None:
         return folded_content, False
     quoted_token = OFFICIAL_QUOTED_TOKEN_RE.fullmatch(folded_content)
