@@ -1,11 +1,15 @@
 """Notices naming payer facts a profile schema migration cleared.
 
-A migration that drops a stored ``false`` must never read as a new obligation
+A migration that drops a stored default must never read as a new obligation
 appearing from nothing, so each cleared fact is named together with the exact
-flags that answer it, and the notice's typed action resolves to the profile
-edit verb that carries them. The notice is delivered once by the invocation
-that ran the migration, and again by explain and the calendar for as long as
-the fact stays unanswered.
+flags that answer it, and the typed action on the notice resolves to the
+profile edit verb that carries them. The notice is delivered once by the
+invocation that ran the migration, and again by explain and the calendar for
+as long as the fact stays unanswered.
+
+A yes/no fact is answered by one of two flags and a select by one flag and a
+value, so the two carry different wording: naming ``--no-fiscal-residency``
+would send the operator to a flag the command does not have.
 """
 
 from __future__ import annotations
@@ -19,24 +23,37 @@ from ..core.i18n.render import tr
 from ..core.json_contract import Notice, NoticeSeverity
 
 if TYPE_CHECKING:
+    from ..application.wizard.models import WizardQuestion
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
     from ..domain.user_profile.values import UserProfileRecord
 
 NOTICE_CODE = "config.profile.payer_fact_cleared"
 _PROFILE_EDIT_ACTION_ID = "operator.profile.edit"
+_CLEARED_BOOL_MESSAGE_KEY = "cli.config.profile.notices.payer_fact_cleared"
+_CLEARED_SELECT_MESSAGE_KEY = "cli.config.profile.notices.payer_fact_cleared_select"
 
 
-def _edit_flag_by_path(operation: PinnedAuthorityOperation) -> dict[str, str]:
-    """Map each setup-flow profile path to the question id its CLI flag carries."""
+def _edit_question_by_path(operation: PinnedAuthorityOperation) -> dict[str, WizardQuestion]:
+    """Map each setup-flow profile path to the question whose CLI flag answers it."""
     from ..application.wizard.catalogue import build_setup_flow
 
     flow = build_setup_flow(operation)
     return {
-        question.profile_key: question.id
+        question.profile_key: question
         for section in flow.sections
         for question in section.questions
         if question.profile_key is not None
     }
+
+
+def _cleared_fact_message(question: WizardQuestion, *, fact: str) -> str:
+    """Render the notice naming the flags that answer one cleared fact."""
+    from ..application.wizard.models import WizardWidget
+
+    flag = f"--{question.id}"
+    if question.widget is WizardWidget.CONFIRM:
+        return tr(_CLEARED_BOOL_MESSAGE_KEY, fact=fact, yes_flag=flag, no_flag=f"--no-{question.id}")
+    return tr(_CLEARED_SELECT_MESSAGE_KEY, fact=fact, flag=flag)
 
 
 def payer_fact_cleared_notices(
@@ -47,23 +64,21 @@ def payer_fact_cleared_notices(
     """Return one localized notice per cleared payer-fact path."""
     from ..domain.user_profile.labels import profile_field_label
 
-    flags = _edit_flag_by_path(operation)
+    questions = _edit_question_by_path(operation)
     schema = operation.profile_decode_context().schema
     notices: list[Notice] = []
     for path in sorted(set(paths)):
-        flag = flags[path]
+        question = questions[path]
         notices.append(
             Notice(
                 severity=NoticeSeverity.WARNING,
                 code=NOTICE_CODE,
-                message=tr(
-                    "cli.config.profile.notices.payer_fact_cleared",
+                message=_cleared_fact_message(
+                    question,
                     fact=profile_field_label(path.split(".", 1)[0], schema.field(path)),
-                    yes_flag=f"--{flag}",
-                    no_flag=f"--no-{flag}",
                 ),
                 action=next_action(_PROFILE_EDIT_ACTION_ID),
-                context={"path": path, "flag": f"--{flag}"},
+                context={"path": path, "flag": f"--{question.id}"},
             ),
         )
     return tuple(notices)

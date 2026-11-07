@@ -306,7 +306,9 @@ required_text = [
 # register of art. 30 (3.o, iva.redeme_enrolled) and the grupo de entidades (4.o,
 # iva.group_member_enrolled, iva.group_dominant_entity_enrolled). The fact is unanswered while
 # the profile carries no IVA block, and a declared no needs that block with every key no.
-# enrollment.large_company is read as answered, as the Modelo 303 monthly schedules read it.
+# enrollment.large_company is three-state as well, so the annual declaration is unanswered
+# while the volumen de operaciones condition is unstated, which is the same silence that
+# leaves the Modelo 303 cadence unselected.
 # What is NOT claimed: the art. 71.3 2.o and 5.o triggers (patrimony acquisition, hydrocarbon
 # tax deposits), which the profile does not state, and the year the enrolment covers -- the
 # profile states it undated, so an enrolment for part of a year is the taxpayer's to qualify.

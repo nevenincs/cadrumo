@@ -91,7 +91,7 @@ def build_identity_section(
 
 
 def build_residence_section(
-    _fiscal_residency_default: str,
+    _resident_irpf: WizardCondition,
     _non_resident_irnr: WizardCondition,
     default_ccaa: Callable[[], CCAA],
     wizard_ccaa_choices: tuple[WizardChoice, ...],
@@ -109,7 +109,6 @@ def build_residence_section(
                 widget=WizardWidget.SELECT,
                 prompt=tr("wizard.setup.residence.fiscal-residency.prompt"),
                 choices=wizard_fiscal_residency_choices,
-                default=_fiscal_residency_default,
                 required=False,
                 answer_type=str,
             ),
@@ -161,10 +160,7 @@ def build_residence_section(
                 choices=wizard_ccaa_choices,
                 default=default_ccaa().value,
                 required=False,
-                visible_when=WizardCondition(
-                    question_id="fiscal-residency",
-                    equals=_fiscal_residency_default,
-                ),
+                visible_when=_resident_irpf,
                 answer_type=str,
             ),
             WizardQuestion(

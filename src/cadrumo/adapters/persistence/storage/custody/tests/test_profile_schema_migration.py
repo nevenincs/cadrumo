@@ -7,10 +7,11 @@ versions are exercised, so a profile that was never opened across a release
 still opens: schema 6 crosses both transitions in one write and schema 7
 crosses one.
 
-The migration must keep every stored ``true``, drop every stored ``false`` on
-the payer-fact paths its own transitions clear and only those, leave every
-other fact untouched, record what it cleared as typed history, run once, and
-leave a current record alone.
+The migration must keep every stored value its transitions cannot prove is a
+default, drop exactly the default each cleared path carried -- ``false`` for a
+yes/no fact and the old ``resident_irpf`` token for the one select -- leave
+every other fact untouched, record what it cleared as typed history, run once,
+and leave a current record alone.
 """
 
 from __future__ import annotations
@@ -72,19 +73,66 @@ _HAS_EMPLOYEES = "withholding.has_employees"
 _ART109 = "irpf.art109_activity_income_withholding_ge_70pct"
 _PAYS_CAPITAL = "withholding.pays_capital_income_with_retencion"
 _CAPITAL_GATED_MODELOS = ("117", "123", "126", "128", "187", "188", "193", "194")
+_LARGE_COMPANY = "censo.large_company"
+_RESIDENCY = "taxpayer_type.fiscal_residency"
+_RESIDENT_CATEGORY = "resident_irpf"
+_NON_RESIDENT_CATEGORY = "non_resident_irnr"
+_RESIDENCY_DECIDED_MODELOS = ("100", "210")
+_GROUP_MEMBER = "iva.group_member_enrolled"
+_OSS = "iva.oss_enrolled"
+_SII = "iva.sii_enrolled"
+_INTRA_50000 = "iva.intracommunity_operations_exceed_50000_eur"
 _MIGRATED_AT = datetime(2026, 9, 1, 10, 0, 0, tzinfo=UTC)
 
-_CLEARED_FROM_V7 = (_ART109, _INTRACOMUNITARIO, _PAYS_CAPITAL, _PAYS_PROFESSIONALS, _PAYS_RENT)
-_CLEARED_FROM_V6 = (_ART109, _INTRACOMUNITARIO, _M347, _PAYS_CAPITAL, _PAYS_PROFESSIONALS, _PAYS_RENT)
+_CLEARED_FROM_V7 = (
+    _LARGE_COMPANY,
+    _ART109,
+    _INTRACOMUNITARIO,
+    _INTRA_50000,
+    _OSS,
+    _SII,
+    _RESIDENCY,
+    _PAYS_CAPITAL,
+    _PAYS_PROFESSIONALS,
+    _PAYS_RENT,
+)
+_CLEARED_FROM_V6 = (
+    _LARGE_COMPANY,
+    _ART109,
+    _INTRACOMUNITARIO,
+    _INTRA_50000,
+    _OSS,
+    _SII,
+    _M347,
+    _RESIDENCY,
+    _PAYS_CAPITAL,
+    _PAYS_PROFESSIONALS,
+    _PAYS_RENT,
+)
 _EXPECTED_CLEARED = {6: _CLEARED_FROM_V6, 7: _CLEARED_FROM_V7}
 
 _UNTOUCHED_FACTS = (
     UserProfileFact(path="identity.tax_id", value="X0001500M"),
     UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
     UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="censo.large_company", value=False),
+    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+    UserProfileFact(path="iva.regime", value="GENERAL"),
+    UserProfileFact(path="iva.m303_regime_composition", value="general"),
+    UserProfileFact(path="iva.redeme_enrolled", value=False),
+    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+    UserProfileFact(path="censo.public_administration_budget_gt_6000000", value=False),
 )
-"""Facts no transition touches: the identity axes and a filing-cadence predicate."""
+"""Facts no transition touches: the identity axes and the hard-required IVA block.
+
+A stored IVA enrolment claims the Modelo IVA block, and a claimed block must
+state its four required booleans and its composition either way, so those
+travel with the untouched facts. The public-administration budget predicate is
+the remaining stored ``false`` no transition clears: it cannot turn an
+unanswered question into a not-applicable verdict, so its value keeps its
+meaning.
+"""
 
 _STORED_PAYER_FACTS = (
     UserProfileFact(path=_HAS_EMPLOYEES, value=True),
@@ -94,10 +142,44 @@ _STORED_PAYER_FACTS = (
     UserProfileFact(path=_ART109, value=False),
     UserProfileFact(path=_PAYS_CAPITAL, value=False),
     UserProfileFact(path=_PAYS_PROFESSIONALS, value=False),
+    UserProfileFact(path=_LARGE_COMPANY, value=False),
+    UserProfileFact(path=_RESIDENCY, value=_RESIDENT_CATEGORY),
+    UserProfileFact(path=_GROUP_MEMBER, value=True),
+    UserProfileFact(path=_OSS, value=False),
+    UserProfileFact(path=_SII, value=False),
+    UserProfileFact(path=_INTRA_50000, value=False),
     UserProfileFact(path=_PAYS_RENT, value=False, valid_from=date(2024, 1, 1), valid_to=date(2024, 12, 31)),
     UserProfileFact(path=_PAYS_RENT, value=False, valid_from=date(2025, 1, 1)),
 )
-"""Both supported stored versions could hold every one of these paths."""
+"""Both supported stored versions could hold every one of these paths.
+
+``_GROUP_MEMBER`` is stored ``true`` and ``_RESIDENCY`` stores the token that
+was the old default, so one cleared path proves a stated yes survives and the
+other proves the select clears on its default alone.
+"""
+
+
+def _answer_residency(
+    repository: ProfileRecordRepository,
+    record: UserProfileRecord,
+    *,
+    token: str = _RESIDENT_CATEGORY,
+) -> UserProfileRecord:
+    """Re-answer the residency the migration cleared, as the operator must.
+
+    Modelo 130 names the residencies it applies to, so its verdict stays
+    INCOMPLETE until the category is stated again. A test about another fact
+    states it first, so the verdict it asserts turns on the fact under test.
+    """
+    return repository.apply_fact_changes(
+        PROFILE_ID,
+        facts=(*record.facts, UserProfileFact(path=_RESIDENCY, value=token)),
+        expected_revision=record.record_revision,
+        expected_content_digest=record.content_digest,
+        event_type=BucketEventType.PROFILE_VALUES_UPDATED,
+        event_payload={},
+        now=_MIGRATED_AT,
+    )
 
 
 def _expected_kept(version: int) -> tuple[UserProfileFact, ...]:
@@ -376,15 +458,16 @@ def test_the_cleared_art109_coverage_fact_reopens_modelo_130_until_it_is_answere
     assert _ART109 in _EXPECTED_CLEARED[version]
     assert not [fact for fact in migrated.facts if fact.path == _ART109]
     assert _ART109 in repository.pending_cleared_payer_fact_paths(PROFILE_ID)
+    resident = _answer_residency(repository, migrated)
     with bundled_indexed_authority().operation():
-        undeclared = derive_modelo_applicability(projection_for_taxpayer(migrated, schema=schema), "130")
+        undeclared = derive_modelo_applicability(projection_for_taxpayer(resident, schema=schema), "130")
     assert undeclared.verdict is ApplicabilityVerdict.INCOMPLETE
 
     answered = repository.apply_fact_changes(
         PROFILE_ID,
-        facts=(*migrated.facts, UserProfileFact(path=_ART109, value=False)),
-        expected_revision=migrated.record_revision,
-        expected_content_digest=migrated.content_digest,
+        facts=(*resident.facts, UserProfileFact(path=_ART109, value=False)),
+        expected_revision=resident.record_revision,
+        expected_content_digest=resident.content_digest,
         event_type=BucketEventType.PROFILE_VALUES_UPDATED,
         event_payload={},
         now=_MIGRATED_AT,
@@ -406,10 +489,12 @@ def test_a_stored_art109_yes_survives_every_transition(
     _publish_legacy(tmp_path, contexts, (*_UNTOUCHED_FACTS, UserProfileFact(path=_ART109, value=True)), version=version)
     session = _session(contexts[1])
     try:
-        migrated = ProfileRecordRepository(session=session, root=tmp_path).load(PROFILE_ID)
+        repository = ProfileRecordRepository(session=session, root=tmp_path)
+        migrated = repository.load(PROFILE_ID)
+        resident = _answer_residency(repository, migrated)
         with bundled_indexed_authority().operation():
             verdict = derive_modelo_applicability(
-                projection_for_taxpayer(migrated, schema=contexts[1].schema),
+                projection_for_taxpayer(resident, schema=contexts[1].schema),
                 "130",
             )
     finally:
@@ -493,6 +578,108 @@ def test_a_stored_capital_income_yes_survives_every_transition(
         UserProfileFact(path=_PAYS_CAPITAL, value=True),
     ]
     assert verdicts == (ApplicabilityVerdict.APPLICABLE,) * len(_CAPITAL_GATED_MODELOS)
+
+
+def test_the_cleared_residency_reopens_the_residency_gated_modelos_until_it_is_answered(
+    legacy_capsule: tuple[ProfileRecordSession, UserProfileRecord, Path, int],
+    contexts: tuple[ProfileCreateContext, ProfileDecodeContext],
+) -> None:
+    """The one select here: a stored ``resident_irpf`` is exactly what the wizard wrote unasked."""
+    session, _stored, root, version = legacy_capsule
+    repository = ProfileRecordRepository(session=session, root=root)
+    migrated = repository.load(PROFILE_ID)
+    schema = contexts[1].schema
+
+    assert _RESIDENCY in _EXPECTED_CLEARED[version]
+    assert not [fact for fact in migrated.facts if fact.path == _RESIDENCY]
+    assert _RESIDENCY in repository.pending_cleared_payer_fact_paths(PROFILE_ID)
+    with bundled_indexed_authority().operation():
+        undeclared = tuple(
+            derive_modelo_applicability(projection_for_taxpayer(migrated, schema=schema), modelo).verdict
+            for modelo in _RESIDENCY_DECIDED_MODELOS
+        )
+    assert undeclared == (ApplicabilityVerdict.INCOMPLETE,) * len(_RESIDENCY_DECIDED_MODELOS)
+
+    answered = repository.apply_fact_changes(
+        PROFILE_ID,
+        facts=(*migrated.facts, UserProfileFact(path=_RESIDENCY, value=_RESIDENT_CATEGORY)),
+        expected_revision=migrated.record_revision,
+        expected_content_digest=migrated.content_digest,
+        event_type=BucketEventType.PROFILE_VALUES_UPDATED,
+        event_payload={},
+        now=_MIGRATED_AT,
+    )
+
+    assert _RESIDENCY not in repository.pending_cleared_payer_fact_paths(PROFILE_ID)
+    with bundled_indexed_authority().operation():
+        declared = {
+            modelo: derive_modelo_applicability(projection_for_taxpayer(answered, schema=schema), modelo).verdict
+            for modelo in _RESIDENCY_DECIDED_MODELOS
+        }
+    assert declared["100"] is ApplicabilityVerdict.APPLICABLE
+    assert declared["210"] is ApplicabilityVerdict.NOT_APPLICABLE
+
+
+@pytest.mark.parametrize("version", SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS)
+def test_a_stored_non_resident_residency_survives_every_transition(
+    version: int,
+    tmp_path: Path,
+    contexts: tuple[ProfileCreateContext, ProfileDecodeContext],
+) -> None:
+    """Only the old default token is unprovable; the other category was never written unasked."""
+    _publish_legacy(
+        tmp_path,
+        contexts,
+        (
+            *_UNTOUCHED_FACTS,
+            UserProfileFact(path=_RESIDENCY, value=_NON_RESIDENT_CATEGORY),
+            UserProfileFact(path="taxpayer_type.country_of_fiscal_residence", value="FR"),
+        ),
+        version=version,
+    )
+    session = _session(contexts[1])
+    try:
+        migrated = ProfileRecordRepository(session=session, root=tmp_path).load(PROFILE_ID)
+        with bundled_indexed_authority().operation():
+            verdicts = {
+                modelo: derive_modelo_applicability(
+                    projection_for_taxpayer(migrated, schema=contexts[1].schema),
+                    modelo,
+                ).verdict
+                for modelo in _RESIDENCY_DECIDED_MODELOS
+            }
+    finally:
+        session.close()
+        drain_migration_cleared_paths()
+
+    assert [fact for fact in migrated.facts if fact.path == _RESIDENCY] == [
+        UserProfileFact(path=_RESIDENCY, value=_NON_RESIDENT_CATEGORY),
+    ]
+    assert verdicts["210"] is ApplicabilityVerdict.APPLICABLE
+    assert verdicts["100"] is ApplicabilityVerdict.NOT_APPLICABLE
+
+
+@pytest.mark.parametrize("version", SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS)
+def test_a_stored_iva_enrolment_yes_survives_every_transition(
+    version: int,
+    tmp_path: Path,
+    contexts: tuple[ProfileCreateContext, ProfileDecodeContext],
+) -> None:
+    """A stated enrolment is the taxpayer's own opt-in and is never dropped."""
+    _publish_legacy(
+        tmp_path,
+        contexts,
+        (*_UNTOUCHED_FACTS, UserProfileFact(path=_OSS, value=True)),
+        version=version,
+    )
+    session = _session(contexts[1])
+    try:
+        migrated = ProfileRecordRepository(session=session, root=tmp_path).load(PROFILE_ID)
+    finally:
+        session.close()
+        drain_migration_cleared_paths()
+
+    assert [fact for fact in migrated.facts if fact.path == _OSS] == [UserProfileFact(path=_OSS, value=True)]
 
 
 def test_a_restored_legacy_capsule_is_accepted_and_migrates_on_first_open(

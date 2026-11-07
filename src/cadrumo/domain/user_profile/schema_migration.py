@@ -6,18 +6,25 @@ source, so a profile that was not opened across one release still opens across
 two.
 
 - Schema 7 reads the dated payer facts (Modelos 347, 720, 721) as three-state.
-- Schema 8 reads the withholding, capital-income, intracommunity and Art. 109
-  coverage payer facts the same way: an absent fact is unanswered, ``True`` is
-  a declared yes and ``False`` is a declared no.
+- Schema 8 reads the withholding, capital-income, intracommunity, Art. 109
+  coverage, IVA enrolment, large-company and fiscal-residency facts the same
+  way: an absent fact is unanswered, and a stated value is the answer the
+  taxpayer gave.
 
-Before each of those bumps the setup wizard defaulted the affected questions
-to ``false`` and wrote the default as an ordinary ``manual_cli`` fact, so a
-stored ``false`` cannot be told apart from a question nobody answered. The
-migration therefore drops every stored ``false`` on exactly those paths, keeps
-every stored ``true`` and leaves every other fact untouched. A record stored at
-schema 6 crosses both transitions in one run and has both sets of negatives
-dropped. The cleared paths travel with the migration as typed data so the
-operator can be asked to answer them again.
+Before each of those bumps the setup wizard pre-answered the affected
+questions and wrote its default as an ordinary ``manual_cli`` fact, so the
+stored default cannot be told apart from a question nobody answered. The
+migration therefore drops exactly the stored value each path defaulted to --
+``false`` for a yes/no fact and the old default token for the one select --
+keeps every other stored value, and leaves every other fact untouched. A
+record stored at schema 6 crosses both transitions in one run and has both
+sets of defaults dropped. The cleared paths travel with the migration as
+typed data so the operator can be asked to answer them again.
+
+Dropping a real answer that happened to equal the default is the accepted
+cost: the two are indistinguishable in storage, and re-asking a question
+already answered is recoverable while reading a default as an answer silently
+decides an obligation.
 
 The transform is pure and deterministic: the same stored facts and the same
 stored version always yield the same kept facts and the same cleared paths,
@@ -41,50 +48,85 @@ from .values import UserProfileFact, UserProfileRecord, section_field_key
 MIGRATED_PROFILE_SCHEMA_VERSION: Final[int] = 8
 """The profile schema version the migration writes."""
 
-PAYER_FACT_PATHS_CLEARED_FROM_V6: Final[frozenset[str]] = frozenset(
+_UNPROVEN_FALSE: Final[bool] = False
+"""The stored value a defaulted yes/no question left behind."""
+
+_DEFAULTED_VALUES_FROM_V6: Final[Mapping[str, object]] = MappingProxyType(
     {
-        "obligations.third_party_transactions_above_347_threshold",
-        "obligations.bienes_extranjero_above_threshold",
-        "obligations.monedas_virtuales_extranjero_above_threshold",
+        "obligations.third_party_transactions_above_347_threshold": _UNPROVEN_FALSE,
+        "obligations.bienes_extranjero_above_threshold": _UNPROVEN_FALSE,
+        "obligations.monedas_virtuales_extranjero_above_threshold": _UNPROVEN_FALSE,
     },
 )
-"""Schema-6 payer-fact paths whose stored ``false`` is not a proven answer.
+"""Schema-6 payer-fact paths mapped to the stored value that is not a proven answer.
 
 Frozen with the transition it describes: a later schema that adds payer facts
 does not rewrite what schema 6 stored.
 """
 
-PAYER_FACT_PATHS_CLEARED_FROM_V7: Final[frozenset[str]] = frozenset(
+_DEFAULTED_VALUES_FROM_V7: Final[Mapping[str, object]] = MappingProxyType(
     {
-        "irpf.art109_activity_income_withholding_ge_70pct",
-        "iva.does_intracomunitario",
-        "withholding.has_employees",
-        "withholding.pays_capital_income_with_retencion",
-        "withholding.pays_professionals_with_retencion",
-        "withholding.pays_rent_with_retencion",
+        "censo.large_company": _UNPROVEN_FALSE,
+        "irpf.art109_activity_income_withholding_ge_70pct": _UNPROVEN_FALSE,
+        "iva.does_intracomunitario": _UNPROVEN_FALSE,
+        "iva.group_dominant_entity_enrolled": _UNPROVEN_FALSE,
+        "iva.group_member_enrolled": _UNPROVEN_FALSE,
+        "iva.intracommunity_operations_exceed_50000_eur": _UNPROVEN_FALSE,
+        "iva.oss_enrolled": _UNPROVEN_FALSE,
+        "iva.roi_enrolled": _UNPROVEN_FALSE,
+        "iva.sii_enrolled": _UNPROVEN_FALSE,
+        "taxpayer_type.fiscal_residency": "resident_irpf",
+        "withholding.has_employees": _UNPROVEN_FALSE,
+        "withholding.pays_capital_income_with_retencion": _UNPROVEN_FALSE,
+        "withholding.pays_professionals_with_retencion": _UNPROVEN_FALSE,
+        "withholding.pays_rent_with_retencion": _UNPROVEN_FALSE,
     },
 )
-"""Schema-7 payer-fact paths whose stored ``false`` is not a proven answer.
+"""Schema-7 paths mapped to the stored value that is not a proven answer.
 
-These six gate Modelos 111, 115, 117, 123, 126, 128, 130, 180, 187, 188, 190,
-193, 194, 216, 296 and 349 through the three-state payer facts, and schema 7
-still defaulted each question to ``false``. The Art. 109 RIRPF coverage fact is
-the Modelo 130 exclusion: a stored ``false`` says the exception does not hold
-and leaves the pago fraccionado due, so it must be the taxpayer's own answer.
-The capital-income fact is what the Modelo 117, 123, 126, 128, 187, 188, 193
-and 194 rules require, so a stored ``false`` is what rules all eight out. The
-remaining two-state withholding facts and the cadence-only censo enrolments
-keep their stored values: neither can turn an unanswered question into a
-not-applicable verdict.
+These gate Modelos 100, 111, 115, 117, 123, 126, 128, 130, 151, 180, 187, 188,
+190, 193, 194, 200, 202, 210, 216, 296, 322, 347, 349, 353, 369 and 840 through
+a three-state fact, and schema 7 pre-answered every one of them.
+
+- The withholding and intracommunity facts are what a rule requires, so the
+  stored ``false`` is what rules its modelos out.
+- The Art. 109 RIRPF coverage fact is the Modelo 130 exclusion: a stored
+  ``false`` says the exception does not hold and leaves the pago fraccionado
+  due, so it has to be an answer the taxpayer gave.
+- The IVA enrolments decide Modelos 322, 353 and 369 and the Modelo 349
+  cadence, and together with ``censo.large_company`` they answer whether the
+  IVA ledgers are kept through the SII, which decides Modelo 347 and the
+  monthly cadence of Modelos 111, 115, 123, 216 and 303.
+- ``taxpayer_type.fiscal_residency`` is the one select here. Habitual
+  residence in Spain selects the tax itself, so its old ``resident_irpf``
+  default admitted the resident declarations and ruled out Modelo 210 for a
+  taxpayer nobody had asked. A stored ``resident_irpf`` is indistinguishable
+  from that default and is dropped; ``non_resident_irnr`` was never the
+  default and keeps its value.
+
+The remaining two-state withholding facts and the censo enrolments schema 7
+still pre-answers keep their stored values: neither can turn an unanswered
+question into a not-applicable verdict.
 """
 
-_CLEARED_PATHS_BY_TRANSITION: Final[Mapping[int, frozenset[str]]] = MappingProxyType(
+PAYER_FACT_PATHS_CLEARED_FROM_V6: Final[frozenset[str]] = frozenset(_DEFAULTED_VALUES_FROM_V6)
+"""Schema-6 payer-fact paths whose stored default is not a proven answer."""
+
+PAYER_FACT_PATHS_CLEARED_FROM_V7: Final[frozenset[str]] = frozenset(_DEFAULTED_VALUES_FROM_V7)
+"""Schema-7 payer-fact paths whose stored default is not a proven answer."""
+
+_DEFAULTED_VALUES_BY_TRANSITION: Final[Mapping[int, Mapping[str, object]]] = MappingProxyType(
     {
-        6: PAYER_FACT_PATHS_CLEARED_FROM_V6,
-        7: PAYER_FACT_PATHS_CLEARED_FROM_V7,
+        6: _DEFAULTED_VALUES_FROM_V6,
+        7: _DEFAULTED_VALUES_FROM_V7,
     },
 )
 """What the transition that LEAVES each version clears, keyed by that version."""
+
+_CLEARED_PATHS_BY_TRANSITION: Final[Mapping[int, frozenset[str]]] = MappingProxyType(
+    {version: frozenset(paths) for version, paths in _DEFAULTED_VALUES_BY_TRANSITION.items()},
+)
+"""The same transitions as path sets, for the callers that only need the names."""
 
 PATHS_INTRODUCED_IN_V7: Final[frozenset[str]] = frozenset(
     {
@@ -105,7 +147,7 @@ _PATHS_INTRODUCED_BY_VERSION: Final[Mapping[int, frozenset[str]]] = MappingProxy
         MIGRATED_PROFILE_SCHEMA_VERSION: frozenset[str](),
     },
 )
-"""Fields each version ADDED. Schema 8 adds none; it only re-reads five values."""
+"""Fields each version ADDED. Schema 8 adds none; it only re-reads stored values."""
 
 SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS: Final[tuple[int, ...]] = tuple(sorted(_CLEARED_PATHS_BY_TRANSITION))
 """Every stored profile schema version this build still migrates forward.
@@ -138,6 +180,32 @@ def cleared_payer_fact_paths_between(from_version: int, to_version: int) -> froz
     return frozenset(
         path for version in range(from_version, to_version) for path in _CLEARED_PATHS_BY_TRANSITION[version]
     )
+
+
+def _defaulted_values_between(from_version: int, to_version: int) -> Mapping[str, object]:
+    """Return each clearable path mapped to the stored value that is not an answer.
+
+    A path named by two crossed transitions keeps the value the EARLIER one
+    declared, because that is the default the record was stored under.
+    """
+    cleared_payer_fact_paths_between(from_version, to_version)
+    defaulted: dict[str, object] = {}
+    for version in range(from_version, to_version):
+        for path, value in _DEFAULTED_VALUES_BY_TRANSITION[version].items():
+            defaulted.setdefault(path, value)
+    return defaulted
+
+
+def _is_stored_default(fact: UserProfileFact, defaulted: Mapping[str, object]) -> bool:
+    """Report whether ``fact`` holds exactly the default its transition pre-answered.
+
+    Compared by type and value so a boolean path never clears on the integer
+    ``0`` and the residency path never clears on an unrelated token.
+    """
+    if fact.path not in defaulted:
+        return False
+    unproven = defaulted[fact.path]
+    return type(fact.value) is type(unproven) and fact.value == unproven
 
 
 def _paths_introduced_after(version: int) -> frozenset[str]:
@@ -244,11 +312,11 @@ def migrate_profile_facts(
         raise UserProfileValidationError(
             f"schema-{from_version} profile record carries later-schema paths {introduced!r}",
         )
-    clearable = cleared_payer_fact_paths_between(from_version, MIGRATED_PROFILE_SCHEMA_VERSION)
+    defaulted = _defaulted_values_between(from_version, MIGRATED_PROFILE_SCHEMA_VERSION)
     kept: list[UserProfileFact] = []
     cleared: set[str] = set()
     for fact in stored:
-        if fact.path in clearable and fact.value is False:
+        if _is_stored_default(fact, defaulted):
             cleared.add(fact.path)
             continue
         kept.append(fact)

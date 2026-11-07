@@ -168,18 +168,6 @@ def fiscal_residency_choices(
     ).choices
 
 
-def default_fiscal_residency(
-    *,
-    effective_date: date | None = None,
-    authority: GovernedFactSource | None = None,
-) -> FiscalResidency:
-    """Return the registry-declared default residency token."""
-    return resolve_fiscal_residency_catalogue(
-        effective_date=effective_date,
-        authority=authority,
-    ).default_token
-
-
 def fiscal_residency_requires_country(
     value: FiscalResidency | str | None,
     *,
@@ -247,7 +235,6 @@ def is_ue_eea_country_code(
 __all__ = [
     "FiscalResidencyCatalogue",
     "FiscalResidencyDefinition",
-    "default_fiscal_residency",
     "fiscal_residency_choices",
     "fiscal_residency_requires_country",
     "is_ue_eea_country_code",

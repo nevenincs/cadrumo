@@ -467,6 +467,27 @@ class ModeloApplicabilityRule(BaseModel):
             )
         return self._not_applicable()
 
+    def _fiscal_residency_result(self, profile: TaxpayerProfile) -> ModeloApplicability | None:
+        """Decide the residency axis, or return ``None`` to leave it open.
+
+        Habitual residence in Spain is what selects the tax: a resident
+        tributa por el IRPF (LIRPF art. 9) and a non-resident por el IRNR
+        (TRLIRNR art. 2), so a rule that names its residencies decides
+        nothing until the taxpayer has stated theirs. An unanswered residency
+        is ``INCOMPLETE``, never the resident reading, because assuming
+        residence both refuses the non-resident their Modelo 210 and asks the
+        non-resident for the resident declarations.
+        """
+        if not self.applicable_fiscal_residencies:
+            return None
+        if profile.fiscal_residency is None:
+            # Reached only once the caller's own `profile.entity_type is None`
+            # guard has returned, so the entity type is always declared here.
+            return incomplete_applicability(self.modelo, entity_type_declared=True)
+        if profile.fiscal_residency not in self.applicable_fiscal_residencies:
+            return self._not_applicable()
+        return None
+
     def _natural_person_axes_result(self, profile: TaxpayerProfile) -> ModeloApplicability | None:
         if profile.entity_type != entity_type_natural_person_token():
             return None
@@ -616,12 +637,8 @@ class ModeloApplicabilityRule(BaseModel):
             return incomplete_applicability(self.modelo, entity_type_declared=False)
         if (result := self._entity_type_result(profile, operation)) is not None:
             return result
-        if (
-            self.applicable_fiscal_residencies
-            and profile.fiscal_residency is not None
-            and profile.fiscal_residency not in self.applicable_fiscal_residencies
-        ):
-            return self._not_applicable()
+        if (result := self._fiscal_residency_result(profile)) is not None:
+            return result
         if self.applicable_iva_regimes and profile.iva_regime not in self.applicable_iva_regimes:
             return self._not_applicable()
         return self._natural_person_axes_result(profile)

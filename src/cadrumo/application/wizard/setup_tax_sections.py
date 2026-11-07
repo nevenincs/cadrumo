@@ -129,7 +129,16 @@ def build_enrollment_section() -> WizardSection:
         id="enrollment",
         title=tr("wizard.setup.enrollment.title"),
         questions=(
-            confirmation_question("enrollment-large-company", "censo.large_company", suffix="enrollment"),
+            # The large-company condition decides the filing cadence of
+            # Modelos 111, 115, 123, 216 and 303 and whether Modelo 347 is
+            # owed, so it carries no default: an unanswered question stays
+            # absent and reads as undeclared rather than as a "no".
+            confirmation_question(
+                "enrollment-large-company",
+                "censo.large_company",
+                suffix="enrollment",
+                default=None,
+            ),
             confirmation_question(
                 "enrollment-public-administration-budget-gt-6000000",
                 "censo.public_administration_budget_gt_6000000",

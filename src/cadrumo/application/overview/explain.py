@@ -290,9 +290,12 @@ def _iva_enrollment_profile_facts(profile: TaxpayerProfile) -> dict[str, _Profil
     # The nested IVA + enrolment sub-models also gate applicability.
     # An undeclared IVA sub-model surfaces each fact as an explicit empty
     # string, like the undeclared axes above, rather than dropping the keys.
+    # A declared block whose enrolment is unanswered reads the same way: the
+    # enrolments are three-state, so the gap is a value the payload must
+    # carry rather than a scalar it refuses.
     iva = getattr(profile, "iva", None)
     return {
-        f"iva.{iva_field}": "" if iva is None else getattr(iva, iva_field)
+        f"iva.{iva_field}": _profile_fact_value(None if iva is None else getattr(iva, iva_field))
         for iva_field in (
             "roi_enrolled",
             "oss_enrolled",

@@ -242,7 +242,8 @@ class SetupAnswers(BaseModel):
     iva_hydrocarbon_deposit_advance_payment_deduction_entitled: OptionalWizardBool = ""
 
     # ── enrollment ───────────────────────────────────────────────────────
-    enrollment_large_company: bool = False
+    enrollment_large_company: OptionalWizardBool = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
     enrollment_public_administration_budget_gt_6000000: bool = False
 
     # ── retencion / modelo obligation booleans ───────────────────────────
@@ -357,6 +358,7 @@ class SetupAnswers(BaseModel):
         "bienes_extranjero_above_threshold",
         "monedas_virtuales_extranjero_above_threshold",
         "premio_loteria_gravamen_especial_sin_retencion",
+        "enrollment_large_company",
         mode="before",
     )
     @classmethod

@@ -139,11 +139,24 @@ class ObligationStatus(StrEnum):
 
 
 class ModeloEnrollment(BaseModel):
-    """AEAT enrollment facts used by registry filing schedules."""
+    """AEAT enrollment facts used by registry filing schedules.
+
+    Attributes:
+        large_company: Whether the volumen de operaciones of the immediately
+            prior calendar year exceeded the LIVA art. 121 threshold, which
+            RIVA art. 71 answers with monthly IVA liquidation. ``None`` when
+            unanswered: the condition decides the filing cadence of Modelos
+            111, 115, 123, 216 and 303 and whether Modelo 347 is owed at all,
+            and neither cadence may be guessed from silence, so no filing
+            schedule matches until the taxpayer has stated it.
+        public_administration_budget_gt_6000000: Whether the declarante is a
+            public administration whose annual budget exceeds the Modelo 111
+            monthly-cadence threshold.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
-    large_company: bool = False
+    large_company: bool | None = None
     public_administration_budget_gt_6000000: bool = False
 
 
@@ -345,7 +358,8 @@ class ModeloIVAProfile(BaseModel):
             154-163), so there is no composition to state.
         roi_enrolled: Registered on the Registro de Operadores
             Intracomunitarios (ROI / VIES).
-        oss_enrolled: Enrolled in the OSS / IOSS one-stop-shop regime.
+        oss_enrolled: Enrolled in the OSS / IOSS one-stop-shop regime;
+            this is the Modelo 369 role.
         group_member_enrolled: Enrolled as a member entity in the IVA
             group-of-entities special regime; this is the Modelo 322
             role.
@@ -363,18 +377,26 @@ class ModeloIVAProfile(BaseModel):
             status, not by voluntary SII alone.
         redeme_enrolled: Registered in REDEME (Registro de Devolución
             Mensual del IVA) — one of the mandatory-SII triggers.
+
+    Every enrolment above except ``redeme_enrolled`` is three-state:
+    ``None`` when the taxpayer has not answered, ``False`` when they have
+    stated they are not enrolled. Each selects an obligation of its own, so
+    reading an unanswered enrolment as a no would rule a taxpayer out of
+    Modelo 322, 353, 369 or the Modelo 349 monthly cadence without their
+    ever having been asked. ``redeme_enrolled`` stays a required boolean: a
+    claimed IVA block must state it either way.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     tax_territory: M303TaxTerritory
     regime_composition: M303RegimeComposition | None = None
-    roi_enrolled: bool = False
-    oss_enrolled: bool = False
-    group_member_enrolled: bool = False
-    group_dominant_entity_enrolled: bool = False
-    intracommunity_operations_exceed_50000_eur: bool = False
-    sii_enrolled: bool = False
+    roi_enrolled: bool | None = None
+    oss_enrolled: bool | None = None
+    group_member_enrolled: bool | None = None
+    group_dominant_entity_enrolled: bool | None = None
+    intracommunity_operations_exceed_50000_eur: bool | None = None
+    sii_enrolled: bool | None = None
     redeme_enrolled: bool
     cash_accounting_regime_enrolled: bool
     voluntary_sii_enrolled: bool
@@ -573,8 +595,10 @@ class TaxpayerProfile(BaseModel):
             the special regime. Required to compute the six-year window
             for ``IMPATRIADO`` (RIRPF Art. 116). ``None`` when
             undeclared or when ``irpf_special_regime`` is ``GENERAL``.
-        fiscal_residency: Fiscal residency category. ``None`` treated as
-            ``RESIDENT_IRPF`` by engine consumers. ``NON_RESIDENT_IRNR``
+        fiscal_residency: Fiscal residency category. ``None`` when
+            unanswered, which leaves every residency-gated modelo
+            incomplete rather than reading as residence in Spain.
+            ``NON_RESIDENT_IRNR``
             routes the taxpayer to IRNR (TRLIRNR RDLeg 5/2004 Art. 2):
             the engine suppresses IRPF-resident deadlines and will
             activate IRNR obligations (Modelos 210/216/247) when
