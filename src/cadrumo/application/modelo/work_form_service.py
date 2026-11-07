@@ -192,8 +192,9 @@ def modelo_form_deadline(
     deadline = resolve_effective_filing_deadline(str(modelo), period.filing_year, period, operation=operation)
     if deadline is None:
         return None
-    days_remaining = deadline.days_remaining_on(reference_on)
-    days_overdue = deadline.days_overdue_on(reference_on)
+    posture = deadline.posture_on(reference_on)
+    days_remaining = posture.days_remaining
+    days_overdue = posture.days_overdue
     if days_remaining is None and days_overdue is None:
         # The window's close is unknown and its nominal close has passed, so
         # neither posture can be stated.

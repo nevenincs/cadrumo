@@ -15,10 +15,12 @@ facts, resolved through canonical governed-fact temporal selection:
 
 A window is projected only where the law-selected revision's filing schedule
 declares the period: the schedule decides that an obligation exists, the clause
-only supplies its dates. A projection whose shift needs a holiday calendar the
-registry has not published is close-unavailable: its opening and nominal close
-are known facts of law, but its close is unknown and is never computed against
-a holiday-free calendar nor reported as absent.
+only supplies its dates. A projected window is a dated window like an authored
+one, and every consumer judges it the same way. When its shift needs a holiday
+calendar the registry has not published, it keeps its nominal close with
+``CALENDAR_UNAVAILABLE`` coverage -- the same state an authored window whose
+shift calendar is unpublished reaches -- so its close is unknown, never
+computed against a holiday-free calendar nor reported as absent.
 
 Window matching stays with :func:`~cadrumo.domain.deadlines.plazo.resolve_filing_window`;
 this module projects one coordinate and enumerates a year's unauthored ones.
@@ -46,10 +48,16 @@ from ..calculations.registry.errors import (
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.facts.variants import FactSelector
 from ..calculations.registry.schema_base import DateAxis
-from ..calculations.registry.schema_deadlines import DeadlineWindowDefinition, FilingCadenceField
+from ..calculations.registry.schema_deadlines import DeadlineWindowDefinition
 from ..calculations.registry.schema_references import TemporalProjectionDirection
 from .errors import DeadlineValidationError
-from .festivos import DeadlineHolidayCoverage, HolidayCalendar, load_holiday_calendar, shift_deadline
+from .festivos import (
+    CALENDAR_UNAVAILABLE_SHIFT_REASON,
+    DeadlineHolidayCoverage,
+    HolidayCalendar,
+    load_holiday_calendar,
+    shift_deadline,
+)
 
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
@@ -72,17 +80,6 @@ class FilingWindowSource(StrEnum):
 
     AUTHORED = "authored"
     PROJECTED = "projected"
-    PROJECTED_CLOSE_UNAVAILABLE = "projected_close_unavailable"
-
-
-class FilingWindowCloseUnavailableReason(StrEnum):
-    """Why a projected window's close is unknown.
-
-    * ``HOLIDAY_CALENDAR_UNAVAILABLE`` -- a year the inhábil-day shift consults
-      has no published holiday calendar in the registry.
-    """
-
-    HOLIDAY_CALENDAR_UNAVAILABLE = "holiday_calendar_unavailable"
 
 
 class FilingWindowOpening(StrEnum):
@@ -327,11 +324,14 @@ class AuthoredFilingWindow(BaseModel):
 
 
 class ProjectedFilingWindow(BaseModel):
-    """A window projected from the governed rule, with a known close and its provenance.
+    """A window projected from the governed rule, with its provenance.
 
-    ``window`` is the projection materialised as a deadline window so thin
-    consumers read it as they read an authored one; it never authors a payment
-    cutoff, which the domiciliación resolver derives.
+    ``window`` is the projection materialised as a deadline window so every
+    consumer reads it as it reads an authored one; it never authors a payment
+    cutoff, which the domiciliación resolver derives. Its ``closes_on`` is the
+    close after the national inhábil-day shift, or the nominal close when the
+    shift's holiday calendar is unpublished (``holiday_coverage`` is then
+    ``CALENDAR_UNAVAILABLE``).
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -377,59 +377,10 @@ class ProjectedFilingWindow(BaseModel):
         return self.clause.projection_direction
 
 
-class ProjectedFilingWindowCloseUnavailable(BaseModel):
-    """A projected window whose close is unknown; it is never open-ended and never absent.
-
-    Its opening and nominal close are facts of law. The effective close is no
-    earlier than the nominal one, and nothing may be classified against the
-    nominal date.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    source: Literal[FilingWindowSource.PROJECTED_CLOSE_UNAVAILABLE] = FilingWindowSource.PROJECTED_CLOSE_UNAVAILABLE
-    window_id: str = Field(min_length=1)
-    modelo: str = Field(min_length=1)
-    period: Period
-    period_kind: FilingCadenceField
-    opens_on: date
-    nominal_closes_on: date
-    reason: FilingWindowCloseUnavailableReason
-    clause: FilingWindowRuleEvidence
-    shift: FilingWindowRuleEvidence
-
-    @property
-    def dated_window(self) -> None:
-        """A close-unavailable projection has no dated window."""
-        return None
-
-    @property
-    def closes_on(self) -> None:
-        """The close is unknown."""
-        return None
-
-    @property
-    def legal_refs(self) -> tuple[str, ...]:
-        """Every legal reference of both rule parts, in order and without repetition."""
-        return tuple(dict.fromkeys((*self.clause.legal_refs, *self.shift.legal_refs)))
-
-    @property
-    def source_refs(self) -> tuple[str, ...]:
-        """Every source reference of both rule parts, in order and without repetition."""
-        return tuple(dict.fromkeys((*self.clause.source_refs, *self.shift.source_refs)))
-
-    @property
-    def projection_direction(self) -> TemporalProjectionDirection:
-        """How the clause variant reached this coordinate."""
-        return self.clause.projection_direction
-
-
 FilingWindowResolution = Annotated[
-    AuthoredFilingWindow | ProjectedFilingWindow | ProjectedFilingWindowCloseUnavailable,
+    AuthoredFilingWindow | ProjectedFilingWindow,
     Field(discriminator="source"),
 ]
-
-type ProjectedFilingWindowResolution = ProjectedFilingWindow | ProjectedFilingWindowCloseUnavailable
 
 
 # ---------------------------------------------------------------------------
@@ -465,7 +416,7 @@ def project_scheduled_window(
     period: Period,
     schedule: ModeloScheduleDefinition,
     calendars: tuple[HolidayCalendar, ...],
-) -> ProjectedFilingWindowResolution | None:
+) -> ProjectedFilingWindow | None:
     """Project the filing window of a scheduled modelo period from its registry clause."""
     clause_resolution = resolve_filing_window_clause(operation, modelo=modelo, period=period)
     if clause_resolution is None:
@@ -485,18 +436,46 @@ def project_scheduled_window(
     procedure = filing_close_shift_from_fact(shift_fact)
     clause_evidence = FilingWindowRuleEvidence.from_fact(clause_fact)
     shift_evidence = FilingWindowRuleEvidence.from_fact(shift_fact)
-    window_id = projected_window_id(modelo, period)
-    unavailable = ProjectedFilingWindowCloseUnavailable(
-        window_id=window_id,
-        modelo=modelo,
+    closes_on, holiday_coverage, shift_reason, holiday_refs = _shifted_close(
+        nominal, modelo=modelo, calendars=calendars, operation=operation
+    )
+    window = DeadlineWindowDefinition(
+        id=projected_window_id(modelo, period),
+        filing_year=period.filing_year,
         period=period,
         period_kind=schedule.period_kind,
         opens_on=opens_on,
+        closes_on=closes_on,
+        legal_refs=tuple(dict.fromkeys((*clause_evidence.legal_refs, *shift_evidence.legal_refs))),
+        source_refs=tuple(dict.fromkeys((*clause_evidence.source_refs, *shift_evidence.source_refs))),
+    )
+    return ProjectedFilingWindow(
+        window=window,
         nominal_closes_on=nominal,
-        reason=FilingWindowCloseUnavailableReason.HOLIDAY_CALENDAR_UNAVAILABLE,
+        shift_reason=shift_reason,
+        holiday_refs=holiday_refs,
+        holiday_coverage=holiday_coverage,
         clause=clause_evidence,
         shift=shift_evidence,
+        inhabil_basis=procedure.inhabil_basis,
     )
+
+
+def _shifted_close(
+    nominal: date,
+    *,
+    modelo: str,
+    calendars: tuple[HolidayCalendar, ...],
+    operation: PinnedAuthorityOperation,
+) -> tuple[date, DeadlineHolidayCoverage, str, tuple[str, ...]]:
+    """Return the close after the inhábil-day shift, its coverage, reason and moving holidays.
+
+    A close whose year, or the following year the walk enters, has no
+    published holiday calendar keeps its nominal date with
+    ``CALENDAR_UNAVAILABLE`` coverage: the close is unknown, and the nominal
+    date is only its lower bound.
+    """
+    unavailable = (nominal, DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE, CALENDAR_UNAVAILABLE_SHIFT_REASON, ())
     if not _calendar_available(nominal.year, calendars=calendars, operation=operation):
         return unavailable
     try:
@@ -507,26 +486,7 @@ def project_scheduled_window(
         if _calendar_available(nominal.year + 1, calendars=calendars, operation=operation):
             raise
         return unavailable
-    window = DeadlineWindowDefinition(
-        id=window_id,
-        filing_year=period.filing_year,
-        period=period,
-        period_kind=schedule.period_kind,
-        opens_on=opens_on,
-        closes_on=shift.adjusted_close_date,
-        legal_refs=unavailable.legal_refs,
-        source_refs=unavailable.source_refs,
-    )
-    return ProjectedFilingWindow(
-        window=window,
-        nominal_closes_on=nominal,
-        shift_reason=shift.shift_reason,
-        holiday_refs=shift.holiday_refs,
-        holiday_coverage=shift.coverage,
-        clause=clause_evidence,
-        shift=shift_evidence,
-        inhabil_basis=procedure.inhabil_basis,
-    )
+    return shift.adjusted_close_date, shift.coverage, shift.shift_reason, shift.holiday_refs
 
 
 def scheduled_coordinate(
@@ -555,7 +515,7 @@ class ProjectedWindowRow:
 
     modelo: str
     revision: RevisionSelectionMetadata
-    resolution: ProjectedFilingWindowResolution
+    resolution: ProjectedFilingWindow
 
 
 def _clause_modelos(operation: PinnedAuthorityOperation) -> tuple[str, ...]:
@@ -655,14 +615,11 @@ __all__ = (
     "FilingCloseShiftProcedure",
     "FilingCloseShiftRule",
     "FilingWindowClause",
-    "FilingWindowCloseUnavailableReason",
     "FilingWindowOpening",
     "FilingWindowResolution",
     "FilingWindowRuleEvidence",
     "FilingWindowSource",
     "ProjectedFilingWindow",
-    "ProjectedFilingWindowCloseUnavailable",
-    "ProjectedFilingWindowResolution",
     "ProjectedWindowRow",
     "filing_close_shift_from_fact",
     "filing_window_clause_from_fact",

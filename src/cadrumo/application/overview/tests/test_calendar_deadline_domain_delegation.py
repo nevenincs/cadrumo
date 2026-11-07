@@ -18,13 +18,14 @@ canonical owner — so that removing the delegation fails them.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
 
 from ....core.filing_year import FOUR_DIGIT_YEAR_FIRST
 from ....core.period import Period
-from ....domain.deadlines.engine import classify_obligation_status
+from ....domain.deadlines.effective_close import EffectiveFilingDeadline
+from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.deadlines.plazo import resolve_filing_window
 from ....domain.modelos.codes import ModeloCode
@@ -123,74 +124,70 @@ def test_overview_keeps_its_local_period_fallback_when_no_window_exists() -> Non
 
 
 # ---------------------------------------------------------------------------
-# F64 — one obligation status classifier
+# F64 — one deadline posture
 # ---------------------------------------------------------------------------
 
 
-def test_overview_status_calls_the_canonical_classifier() -> None:
+def _deadline(coverage: DeadlineHolidayCoverage, *, closes_on: date) -> EffectiveFilingDeadline:
+    return EffectiveFilingDeadline(
+        nominal_closes_on=closes_on,
+        closes_on=closes_on,
+        holiday_coverage=coverage,
+        shift_reason="no_shift",
+    )
+
+
+def test_overview_status_reads_the_canonical_posture() -> None:
     """DISCRIMINATING: overview must delegate its date boundaries.
 
-    The retired duplicate restated the four boundary comparisons inline and
-    returned identical statuses, so no outcome assertion can separate the two
-    implementations. The compiled name references can: a restated
-    implementation references ``ObligationStatus`` four times and never names
-    the classifier.
+    A restated implementation compares dates and names ``ObligationStatus``
+    members inline; the compiled name references show whether overview reads
+    the posture the deadline domain owns instead.
     """
     referenced = local_work_unit_status.__code__.co_names
 
-    assert "classify_obligation_status" in referenced, (
-        "overview.local_work_unit_status must delegate to "
-        "domain.deadlines.classify_obligation_status; referenced names were "
+    assert "posture_on" in referenced, (
+        f"overview.local_work_unit_status must read EffectiveFilingDeadline.posture_on; referenced names were "
         f"{referenced}"
     )
 
 
-def test_overview_filing_gate_short_circuits_before_the_classifier() -> None:
+def test_overview_filing_gate_short_circuits_before_the_posture() -> None:
     """DISCRIMINATING: the filed-pointer gate is the one intentional difference.
 
     A unit carrying a filing pointer must report FILED even on a date the
-    canonical classifier calls OVERDUE. Removing overview's gate — or moving it
-    after the delegation — makes this return OVERDUE and fails the test.
+    canonical posture calls OVERDUE.
     """
     unit = _work_unit().model_copy(update={"current_filing_record_id": "filing-record-1"})
-    closes_on = date(2026, 4, 20)
-    today = date(2026, 6, 1)
+    deadline = _deadline(DeadlineHolidayCoverage.NATIONAL_ONLY, closes_on=unit.period.end_date)
+    today = deadline.closes_on + timedelta(days=1)
 
-    assert classify_obligation_status(closes_on, today, _DUE_SOON_DAYS) is ObligationStatus.OVERDUE
-    assert local_work_unit_status(unit, closes_on, today, _DUE_SOON_DAYS) is ObligationStatus.FILED
+    assert deadline.posture_on(today, due_soon_days=_DUE_SOON_DAYS).status is ObligationStatus.OVERDUE
+    assert local_work_unit_status(unit, deadline, today, _DUE_SOON_DAYS) is ObligationStatus.FILED
 
 
 @pytest.mark.parametrize(
-    ("today", "expected", "expected_delta"),
-    (
-        (date(2026, 4, 21), ObligationStatus.OVERDUE, -1),
-        (date(2026, 4, 20), ObligationStatus.DUE_TODAY, 0),
-        (date(2026, 4, 19), ObligationStatus.DUE_SOON, 1),
-        (date(2026, 4, 6), ObligationStatus.DUE_SOON, 14),
-        (date(2026, 4, 5), ObligationStatus.UPCOMING, 15),
-    ),
+    "coverage",
+    [DeadlineHolidayCoverage.NATIONAL_ONLY, DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE],
+    ids=["known-close", "unknown-close"],
 )
-def test_unfiled_work_unit_matches_the_classifier_at_every_boundary(
-    today: date,
-    expected: ObligationStatus,
-    expected_delta: int,
+@pytest.mark.parametrize("offset_days", [-15, -14, -1, 0, 1], ids=lambda days: f"day{days:+d}")
+def test_unfiled_work_unit_reads_the_posture_at_every_boundary(
+    coverage: DeadlineHolidayCoverage,
+    offset_days: int,
 ) -> None:
-    """SUPPORTING: every boundary agrees across both surfaces.
+    """An unfiled work unit's status is exactly the posture, known close or not.
 
-    The retired duplicate produced these same statuses, so this parametrisation
-    passes under the mutation and is context, not proof. It is retained as the
-    boundary inventory the delegation must keep honouring: OVERDUE the day
-    after close, DUE_TODAY on it, DUE_SOON across the fourteen-day window
-    inclusive of its far edge, and UPCOMING beyond it.
-
-    ``expected_delta`` pins the GROUND of each verdict — the signed day
-    distance to ``closes_on`` that produced it — so a status that happens to be
-    right for an unrelated reason (a shifted close date, an off-by-one window)
-    cannot read as agreement.
+    Before the posture owned it, overview classified a work unit whose shift
+    calendar was unpublished against its nominal date and called it overdue
+    while the schedule called the same window unknown.
     """
     unit = _work_unit()
-    closes_on = date(2026, 4, 20)
-    assert (closes_on - today).days == expected_delta, "the case's stated ground must hold"
+    deadline = _deadline(coverage, closes_on=unit.period.end_date)
+    today = deadline.closes_on + timedelta(days=offset_days)
 
-    assert local_work_unit_status(unit, closes_on, today, _DUE_SOON_DAYS) is expected
-    assert classify_obligation_status(closes_on, today, _DUE_SOON_DAYS) is expected
+    expected = deadline.posture_on(today, due_soon_days=_DUE_SOON_DAYS).status
+
+    assert local_work_unit_status(unit, deadline, today, _DUE_SOON_DAYS) is expected
+    if coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE:
+        assert expected is ObligationStatus.UNKNOWN

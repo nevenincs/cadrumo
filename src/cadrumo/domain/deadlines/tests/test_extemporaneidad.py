@@ -28,7 +28,8 @@ from ...calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
     published_supported_filing_years,
 )
-from ..filing_window_projection import AuthoredFilingWindow, ProjectedFilingWindowCloseUnavailable
+from ..festivos import DeadlineHolidayCoverage
+from ..filing_window_projection import AuthoredFilingWindow, ProjectedFilingWindow
 from ..plazo import resolve_filing_window
 from ..recargo import (
     build_recovery_for_overdue,
@@ -250,14 +251,15 @@ def test_resolve_filing_window_m210_annual_0a_without_resultado_returns_none() -
 
 
 def test_resolve_filing_window_far_beyond_the_horizon_is_a_typed_projection() -> None:
-    """A year far ahead is not refused for being far ahead; its close is unknown without a calendar."""
+    """A year far ahead is not refused for being far ahead; it is a dated projection whose close is unknown."""
     supported_years = published_supported_filing_years()
     assert supported_years is not None
     far_ahead = supported_years.horizon + (FOUR_DIGIT_YEAR_LAST - supported_years.horizon) // 2
     answer = resolve_filing_window("303", far_ahead, Period.from_year_and_code(far_ahead, "1T"))
-    assert isinstance(answer, ProjectedFilingWindowCloseUnavailable)
+    assert isinstance(answer, ProjectedFilingWindow)
     assert answer.period.filing_year == far_ahead
-    assert answer.closes_on is None
+    assert answer.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
+    assert answer.closes_on == answer.nominal_closes_on
 
 
 def test_resolve_filing_window_on_the_last_writable_year_is_an_answer_not_a_crash() -> None:
