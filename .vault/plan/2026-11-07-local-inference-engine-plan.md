@@ -13,7 +13,7 @@ related:
   - '[[2026-10-25-agent-owned-models-adr]]'
 modified: '2026-11-07'
 body_schema: body-v2
-body_hash: 'sha256:54d9d62d0802ae6ba2b06884fa733c0c55688f3d3099f8b126787546f64371a3'
+body_hash: 'sha256:3be6f904211c9d940da9a0b37b76892c8ca60f40493d68328ef39fae33c16191'
 ---
 
 # `local-inference-engine` plan
@@ -89,6 +89,7 @@ Stage a pinned llama-server in every native package, generalise program pins, mo
 - [ ] `P03.S16` - Replace /api/pull in the model puller with the Rust registry and Hugging Face client for both engines, report absent from a missing store manifest, and keep remove_manifests removal and GC semantics (repo cadrumo, executor vaultspec-high-executor, lands in feature/tui once verified with tui compiling, the desktop app working and a root build slot from the coordinator); `native/application/src/provisioning/local_ai/models.rs, native/application/src/provisioning/local_ai/models/tests.rs, native/application/src/provisioning/engine/tests.rs`.
 - [ ] `P03.S17` - Add the llama-server program in router mode on 127.0.0.1:23744 with /health readiness and models presented from the store, reuse ServerSupervisor, containment and loopback, declare its local_ai_address with the generated contract constant, and make the manager run only the selected engine's server (repo cadrumo, executor vaultspec-high-executor, lands in feature/tui once verified with tui compiling, the desktop app working and a root build slot from the coordinator); `native/application/src/provisioning/local_ai/program.rs, native/application/src/provisioning/local_ai/supervision.rs, native/manager/src/supervision/local_ai.rs, native/application-environment.toml, generated contract.rs, dev/packaging/tests/test_native_local_ai_address.py`.
 - [ ] `P03.S18` - Change the local_ai setup item so the llama.cpp default needs no program download and the Ollama program is an item only when Ollama is selected (repo cadrumo, executor vaultspec-standard-executor, Opus review before the Step closes, lands in feature/tui once verified with tui compiling, the desktop app working and a root build slot from the coordinator); `native/application/src/provisioning/items.rs, native/application/src/provisioning/plan.rs`.
+- [ ] `P03.S31` - Build llama-server on Linux from the pinned b12184 upstream source tarball (size and SHA-256 pinned, unmodified) inside the Linux native build at the glibc 2.28 floor, CPU backend, no OpenSSL or curl, libgomp linked statically, stage it into bin/llama with the floor check passing; until this Step lands and passes the packaged smoke, Linux carries no llama-server and keeps ollama as its default engine (repo cadrumo, executor vaultspec-high-executor, lands in feature/tui once verified with tui compiling, the desktop app working and a root build slot from the coordinator); `native/llamacpp-pins.json, dev/env/llamacpp_pins.py, dev/packaging/native/llama_server.py, native/cmake/Packaging.cmake, native/cmake/platforms/Linux.cmake, native/package-layout.json`.
 
 ### Phase `P04` - Agent service and desktop engine selection (repo cadrumo)
 
