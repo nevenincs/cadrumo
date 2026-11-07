@@ -19,7 +19,6 @@ use crate::{
 };
 use serde_json::json;
 use std::{
-    fmt::Write as _,
     path::Path,
     time::{Duration, Instant},
 };

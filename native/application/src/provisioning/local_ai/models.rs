@@ -278,11 +278,13 @@ impl ModelArtefact {
     /// then the hosts it may be redirected to.
     pub fn plan_hosts(&self) -> Vec<HostName> {
         let addressed = self.name().host().clone();
-        let redirected = self
+        let mut hosts: Vec<HostName> = self
             .source_hosts()
             .into_iter()
-            .filter(|host| *host != addressed);
-        std::iter::once(addressed).chain(redirected).collect()
+            .filter(|host| *host != addressed)
+            .collect();
+        hosts.insert(0, addressed);
+        hosts
     }
 
     /// The bytes the artefact's own declaration pins: a Hugging Face model's files. A
