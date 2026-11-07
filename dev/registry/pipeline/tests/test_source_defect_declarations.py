@@ -38,8 +38,10 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import (
 )
 from cadrumo.domain.calculations.registry.fixed_width_parser import parse_fixed_width_export_field
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from cadrumo.domain.calculations.registry.tests.authored_editions import revision_covering
 
 from ...compiler.loader import load_registry_tree
+from ...tests.authored_edition_support import source_first_exercise, source_reference
 from ..export_field_literal_derivation import literal_derivation
 from ..export_field_numeric_derivation import numeric_derivation
 from ..export_tree import render_complete_export_tree
@@ -83,6 +85,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 #: The hash-pinned 2025 Modelo 390 design both adjudication mechanisms are read from.
 _M390_2025_SOURCE_REF: Final = "aeat-dr-390-2025"
+_M390_2025_EXERCISE: Final = source_first_exercise(source_reference(_M390_2025_SOURCE_REF))
+_M390_2025_EPOCH: Final = str(_M390_2025_EXERCISE)
+#: The design epoch of the synthetic 2022 design the unit cases below are built on.
+_M390_2022_EPOCH: Final = str(source_first_exercise(source_reference("aeat-dr-390-2022")))
 
 #: The real modelo 390 filing-year 2022 workbook digest this mechanism was built for.
 _SHA: Final = "7c6554f3182df51daaec37284dd891eb925e1f92df7e69bc01b8ccfb8e4f26fe"
@@ -156,7 +162,7 @@ def _intermediate(*, source_ref: str = "aeat-dr-390-2022", sha: str = _SHA) -> R
                 "source_ref": source_ref,
                 "source_sha256": sha,
                 "workbook_format": RecordDesignWorkbookFormat.XLSX,
-                "design_epoch": "2022",
+                "design_epoch": _M390_2022_EPOCH,
             },
             "sheets": (
                 {
@@ -208,7 +214,7 @@ def _profile() -> ExportTreeTransportProfile:
     return ExportTreeTransportProfile.model_validate(
         {
             "modelo": "390",
-            "design_epoch": "2022",
+            "design_epoch": _M390_2022_EPOCH,
             "source_ref": "aeat-dr-390-2022",
             "source_sha256": _SHA,
             "layout_id": "aeat-dr-390-2022",
@@ -277,7 +283,7 @@ def _literal_render_profile() -> RenderProfile:
         schema_version=1,
         design_identity=RenderProfileDesignIdentity(
             modelo="390",
-            design_epoch="2022",
+            design_epoch=_M390_2022_EPOCH,
             source_ref="aeat-dr-390-2022",
             source_sha256=_SHA,
         ),
@@ -793,14 +799,14 @@ def m390_2025_render_authorities():
     under test is that the renderer resolves its adjudication set from the
     PARSER-READ source, which a synthetic source could not prove.
     """
-    epoch = "2025"
+    epoch = _M390_2025_EPOCH
     semantic_map = load_semantic_map(Path("dev/registry/mappings/modelo_390") / epoch)
     render_profile = load_render_profile(Path("dev/registry/render_profiles/modelo_390") / epoch)
     modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(item for item in modelos if str(item.id) == "390")
     inspection = RegistryRevisionInspection.from_revision(
         modelo=modelo,
-        revision=modelo.revisions["2025"],
+        revision=modelo.revisions[str(revision_covering("390", _M390_2025_EXERCISE).id)],
         source_root=bundled_path(),
         sources=catalogues.sources,
         legal_ref_ids=frozenset(catalogues.legal),
@@ -809,7 +815,7 @@ def m390_2025_render_authorities():
         bundled_path(),
         catalogues.sources,
         source_ref=_M390_2025_SOURCE_REF,
-        filing_year=2025,
+        filing_year=_M390_2025_EXERCISE,
         design_epoch=epoch,
     )
     joined = join_record_design_semantics(semantic_map, intermediate, inspection)
@@ -818,7 +824,7 @@ def m390_2025_render_authorities():
         design_epoch=epoch,
         source_ref=_M390_2025_SOURCE_REF,
         source_sha256=intermediate.source.source_sha256,
-        layout_id="generated-modelo-390-2025-fichero",
+        layout_id=f"generated-modelo-390-{epoch}-fichero",
         format="fixed_width",
         encoding=ExportEncoding.ISO_8859_1,
         line_ending="crlf",
@@ -850,7 +856,7 @@ class TestNoteGovernedAmountsReachTheRenderer:
 
         rendered = render_complete_export_tree(
             tmp_path / "export",
-            revision_id="2025",
+            revision_id=str(revision_covering("390", _M390_2025_EXERCISE).id),
             joined=joined,
             semantic_map=semantic_map,
             transport_profile=transport,
@@ -896,7 +902,7 @@ class TestNoteGovernedAmountsReachTheRenderer:
         with pytest.raises(RegistryValidationError, match="not pinned to the parser"):
             render_complete_export_tree(
                 tmp_path / "export",
-                revision_id="2025",
+                revision_id=str(revision_covering("390", _M390_2025_EXERCISE).id),
                 joined=drifted,
                 semantic_map=semantic_map,
                 transport_profile=drifted_transport,

@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
+from functools import cache
 
 import pytest
 
@@ -31,7 +32,18 @@ _SELECTOR_IDS = frozenset(
 )
 _M036_TABLE_SOURCE = "aeat-m036-activity-code-table-2026-03-26"
 _ARTICLE_95_SOURCE = "boe-rirpf-art-95-2023-01-26"
-_FIRST_GROUNDED_DATE = date(2026, 3, 26)
+
+
+@cache
+def _shared():
+    return load_shared_catalogues(bundled_path() / "registry" / "aeat")
+
+
+def _first_grounded_date() -> date:
+    """Return the day the hash-pinned M036 table applies from, as its registry source declares it."""
+    first = _shared().sources[_M036_TABLE_SOURCE].applies_from
+    assert first is not None
+    return first
 
 
 def _catalogue() -> GovernedFactCatalogue:
@@ -61,20 +73,22 @@ def _resolve(fact_id: str, effective_date: date) -> ResolvedEntitySetFact:
 def test_article_95_activity_selectors_resolve_only_from_the_grounded_m036_table(
     fact_id: str, entities: frozenset[str]
 ) -> None:
-    resolved = _resolve(fact_id, _FIRST_GROUNDED_DATE)
+    resolved = _resolve(fact_id, _first_grounded_date())
 
     assert resolved.payload.entities == entities
-    assert resolved.variant_id.endswith(_FIRST_GROUNDED_DATE.isoformat())
+    assert resolved.variant_id.endswith(_first_grounded_date().isoformat())
     assert resolved.source_refs == (_M036_TABLE_SOURCE, _ARTICLE_95_SOURCE)
 
 
 def test_article_95_activity_selectors_reach_the_support_floor_before_the_first_citable_m036_table() -> None:
     """The first citable table's date is a coverage marker, so the selector reaches the registry floor."""
-    resolved = _resolve("rirpf-art-95:selector-m036-actividades-profesionales", date(2026, 3, 25))
+    resolved = _resolve(
+        "rirpf-art-95:selector-m036-actividades-profesionales", _first_grounded_date() - timedelta(days=1)
+    )
 
     assert resolved.projection_direction == "authored"
     assert resolved.authored_valid_from is None
-    assert resolved.variant_id.endswith(_FIRST_GROUNDED_DATE.isoformat())
+    assert resolved.variant_id.endswith(_first_grounded_date().isoformat())
     assert resolved.payload.entities == frozenset({"A04", "A05"})
     assert resolved.source_refs == (_M036_TABLE_SOURCE, _ARTICLE_95_SOURCE)
 
@@ -88,8 +102,11 @@ def test_article_95_activity_selectors_cite_the_hash_pinned_table_and_boe_redact
     assert table.sha256 == "a1c9cb40b1dbe78150421d5dd4575e1e12b0bae91c919bcabb60b5b8f012be39"
     assert table.bytes == 13893
     assert table.published_at is None
-    assert table.applies_from == _FIRST_GROUNDED_DATE
-    assert shared.sources[_ARTICLE_95_SOURCE].applies_from == date(2023, 1, 26)
+    assert table.applies_from is not None
+    assert table.applies_from.isoformat() == "2026-03-26"
+    article_95_from = shared.sources[_ARTICLE_95_SOURCE].applies_from
+    assert article_95_from is not None
+    assert article_95_from.isoformat() == "2023-01-26"
     assert all(variant.valid_from is None for fact in catalogue.facts.values() for variant in fact.variants)
     assert (
         governed_fact_catalogue_failures(

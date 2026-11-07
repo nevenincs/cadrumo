@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import date
-
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
@@ -29,7 +27,6 @@ def test_renta_economic_activity_legal_basis_links_to_corpus() -> None:
 
 def _assert_lirpf_reference_links_to_full_boe_corpus(
     ref_id: str,
-    effective_from: date,
     required_text: tuple[str, ...],
 ):
     catalogues = catalogue_verification_catalogues()
@@ -37,7 +34,6 @@ def _assert_lirpf_reference_links_to_full_boe_corpus(
     article = ref_id.rsplit("-", 1)[-1]
 
     assert reference.corpus_ref == f"corpus/normatives/html/ley-35-2006.html#a{article}", ref_id
-    assert reference.effective_from == effective_from, ref_id
     assert reference.required_text == required_text, ref_id
     verify_legal_catalogue_grounding({reference.id: reference}, source_root=bundled_path())
     return reference
@@ -47,7 +43,6 @@ def test_lirpf_work_and_capital_income_foundations_link_to_full_boe_corpus() -> 
     cases = (
         (
             "ley-35-2006:art-17",
-            date(2020, 2, 6),
             (
                 "Rendimientos íntegros del trabajo.",
                 "contraprestaciones o utilidades",
@@ -58,7 +53,6 @@ def test_lirpf_work_and_capital_income_foundations_link_to_full_boe_corpus() -> 
         ),
         (
             "ley-35-2006:art-18",
-            date(2015, 1, 1),
             (
                 "Porcentajes de reducción aplicables a determinados rendimientos del trabajo.",
                 "El 30 por ciento de reducción",
@@ -68,7 +62,6 @@ def test_lirpf_work_and_capital_income_foundations_link_to_full_boe_corpus() -> 
         ),
         (
             "ley-35-2006:art-19",
-            date(2015, 1, 1),
             (
                 "Rendimiento neto del trabajo.",
                 "disminuir el rendimiento íntegro en el importe de los gastos deducibles",
@@ -79,7 +72,6 @@ def test_lirpf_work_and_capital_income_foundations_link_to_full_boe_corpus() -> 
         ),
         (
             "ley-35-2006:art-20",
-            date(2024, 1, 1),
             (
                 "Reducción por obtención de rendimientos del trabajo.",
                 "rendimientos netos del trabajo inferiores a 19.747,5 euros",
@@ -92,7 +84,6 @@ def test_lirpf_work_and_capital_income_foundations_link_to_full_boe_corpus() -> 
         ),
         (
             "ley-35-2006:art-22",
-            date(2007, 1, 1),
             (
                 "Rendimientos íntegros del capital inmobiliario.",
                 "bienes inmuebles rústicos y urbanos",
@@ -102,7 +93,6 @@ def test_lirpf_work_and_capital_income_foundations_link_to_full_boe_corpus() -> 
         ),
         (
             "ley-35-2006:art-23",
-            date(2024, 1, 1),
             (
                 "Gastos deducibles y reducciones.",
                 "gastos necesarios para la obtención de los rendimientos",
@@ -116,7 +106,6 @@ def test_lirpf_work_and_capital_income_foundations_link_to_full_boe_corpus() -> 
         ),
         (
             "ley-35-2006:art-24",
-            date(2007, 1, 1),
             (
                 "Rendimiento en caso de parentesco.",
                 "sea el cónyuge o un pariente",
@@ -126,7 +115,6 @@ def test_lirpf_work_and_capital_income_foundations_link_to_full_boe_corpus() -> 
         ),
         (
             "ley-35-2006:art-25",
-            date(2015, 1, 1),
             (
                 "Rendimientos íntegros del capital mobiliario.",
                 "Rendimientos obtenidos por la participación en los fondos propios",
@@ -138,7 +126,6 @@ def test_lirpf_work_and_capital_income_foundations_link_to_full_boe_corpus() -> 
         ),
         (
             "ley-35-2006:art-26",
-            date(2015, 1, 1),
             (
                 "Gastos deducibles y reducciones.",
                 "gastos de administración y depósito de valores negociables",
@@ -148,8 +135,8 @@ def test_lirpf_work_and_capital_income_foundations_link_to_full_boe_corpus() -> 
             ),
         ),
     )
-    for ref_id, effective_from, required_text in cases:
-        reference = _assert_lirpf_reference_links_to_full_boe_corpus(ref_id, effective_from, required_text)
+    for ref_id, required_text in cases:
+        reference = _assert_lirpf_reference_links_to_full_boe_corpus(ref_id, required_text)
         if ref_id == "ley-35-2006:art-20":
             assert reference.notes is not None
             assert "effects from 2024-01-01" in reference.notes
@@ -159,7 +146,6 @@ def test_lirpf_economic_activity_chapter_links_to_full_boe_corpus() -> None:
     cases = (
         (
             "ley-35-2006:art-27",
-            date(2015, 1, 1),
             (
                 "Rendimientos íntegros de actividades económicas",
                 "ordenación por cuenta propia de medios de producción",
@@ -168,7 +154,6 @@ def test_lirpf_economic_activity_chapter_links_to_full_boe_corpus() -> None:
         ),
         (
             "ley-35-2006:art-28",
-            date(2007, 1, 1),
             (
                 "Reglas generales de cálculo del rendimiento neto",
                 "rendimiento neto de las actividades económicas",
@@ -178,7 +163,6 @@ def test_lirpf_economic_activity_chapter_links_to_full_boe_corpus() -> None:
         ),
         (
             "ley-35-2006:art-30",
-            date(2018, 1, 1),
             (
                 "Normas para la determinación del rendimiento neto en estimación directa",
                 "método de estimación directa",
@@ -188,7 +172,6 @@ def test_lirpf_economic_activity_chapter_links_to_full_boe_corpus() -> None:
         ),
         (
             "ley-35-2006:art-31",
-            date(2016, 1, 1),
             (
                 "Normas para la determinación del rendimiento neto en estimación objetiva",
                 "método de estimación objetiva",
@@ -198,7 +181,6 @@ def test_lirpf_economic_activity_chapter_links_to_full_boe_corpus() -> None:
         ),
         (
             "ley-35-2006:art-32",
-            date(2023, 1, 1),
             (
                 "Reducciones.",
                 "rendimientos netos con un período de generación superior a dos años",
@@ -208,15 +190,14 @@ def test_lirpf_economic_activity_chapter_links_to_full_boe_corpus() -> None:
             ),
         ),
     )
-    for ref_id, effective_from, required_text in cases:
-        _assert_lirpf_reference_links_to_full_boe_corpus(ref_id, effective_from, required_text)
+    for ref_id, required_text in cases:
+        _assert_lirpf_reference_links_to_full_boe_corpus(ref_id, required_text)
 
 
 def test_lirpf_capital_gains_foundation_links_to_full_boe_corpus() -> None:
     cases = (
         (
             "ley-35-2006:art-33",
-            date(2015, 1, 1),
             (
                 "Concepto.",
                 "Son ganancias y pérdidas patrimoniales",
@@ -232,7 +213,6 @@ def test_lirpf_capital_gains_foundation_links_to_full_boe_corpus() -> None:
         ),
         (
             "ley-35-2006:art-34",
-            date(2007, 1, 1),
             (
                 "Importe de las ganancias o pérdidas patrimoniales. Norma general",
                 "diferencia entre los valores de adquisición y transmisión",
@@ -242,7 +222,6 @@ def test_lirpf_capital_gains_foundation_links_to_full_boe_corpus() -> None:
         ),
         (
             "ley-35-2006:art-37",
-            date(2015, 1, 1),
             (
                 "Normas específicas de valoración",
                 # LIRPF art. 37.1.a is "valores admitidos a negociación". The
@@ -254,15 +233,14 @@ def test_lirpf_capital_gains_foundation_links_to_full_boe_corpus() -> None:
             ),
         ),
     )
-    for ref_id, effective_from, required_text in cases:
-        _assert_lirpf_reference_links_to_full_boe_corpus(ref_id, effective_from, required_text)
+    for ref_id, required_text in cases:
+        _assert_lirpf_reference_links_to_full_boe_corpus(ref_id, required_text)
 
 
 def test_lirpf_state_quota_chain_links_to_full_boe_corpus() -> None:
     cases = (
         (
             "ley-35-2006:art-62",
-            date(2007, 1, 1),
             (
                 "Cuota íntegra estatal.",
                 "La cuota íntegra estatal será la suma",
@@ -272,7 +250,6 @@ def test_lirpf_state_quota_chain_links_to_full_boe_corpus() -> None:
         ),
         (
             "ley-35-2006:art-63",
-            date(2021, 1, 1),
             (
                 "Escala general del Impuesto.",
                 "base liquidable general que exceda del importe del mínimo personal y familiar",
@@ -283,7 +260,6 @@ def test_lirpf_state_quota_chain_links_to_full_boe_corpus() -> None:
         ),
         (
             "ley-35-2006:art-66",
-            date(2024, 12, 22),
             (
                 "Tipos de gravamen del ahorro.",
                 "base liquidable del ahorro que exceda",
@@ -294,7 +270,6 @@ def test_lirpf_state_quota_chain_links_to_full_boe_corpus() -> None:
         ),
         (
             "ley-35-2006:art-67",
-            date(2015, 1, 1),
             (
                 "Cuota líquida estatal.",
                 "La cuota líquida estatal del Impuesto será el resultado de disminuir la cuota íntegra estatal",
@@ -304,15 +279,14 @@ def test_lirpf_state_quota_chain_links_to_full_boe_corpus() -> None:
             ),
         ),
     )
-    for ref_id, effective_from, required_text in cases:
-        _assert_lirpf_reference_links_to_full_boe_corpus(ref_id, effective_from, required_text)
+    for ref_id, required_text in cases:
+        _assert_lirpf_reference_links_to_full_boe_corpus(ref_id, required_text)
 
 
 def test_lirpf_autonomic_quota_chain_links_to_full_boe_corpus() -> None:
     cases = (
         (
             "ley-35-2006:art-73",
-            date(2007, 1, 1),
             (
                 "Cuota íntegra autonómica.",
                 "La cuota íntegra autonómica del Impuesto será la suma",
@@ -322,7 +296,6 @@ def test_lirpf_autonomic_quota_chain_links_to_full_boe_corpus() -> None:
         ),
         (
             "ley-35-2006:art-74",
-            date(2011, 1, 12),
             (
                 "Escala autonómica del Impuesto.",
                 "base liquidable general que exceda del importe del mínimo personal y familiar",
@@ -333,7 +306,6 @@ def test_lirpf_autonomic_quota_chain_links_to_full_boe_corpus() -> None:
         ),
         (
             "ley-35-2006:art-75",
-            date(2025, 4, 3),
             (
                 "Especialidades aplicables en los supuestos de anualidades por alimentos a favor de los hijos.",
                 "satisfagan las anualidades por alimentos a sus hijos",
@@ -345,7 +317,6 @@ def test_lirpf_autonomic_quota_chain_links_to_full_boe_corpus() -> None:
         ),
         (
             "ley-35-2006:art-76",
-            date(2024, 12, 22),
             (
                 "Tipo de gravamen del ahorro.",
                 "base liquidable del ahorro que exceda",
@@ -355,7 +326,6 @@ def test_lirpf_autonomic_quota_chain_links_to_full_boe_corpus() -> None:
         ),
         (
             "ley-35-2006:art-77",
-            date(2015, 1, 1),
             (
                 "Cuota líquida autonómica.",
                 "La cuota líquida autonómica será el resultado de disminuir",
@@ -365,8 +335,8 @@ def test_lirpf_autonomic_quota_chain_links_to_full_boe_corpus() -> None:
             ),
         ),
     )
-    for ref_id, effective_from, required_text in cases:
-        reference = _assert_lirpf_reference_links_to_full_boe_corpus(ref_id, effective_from, required_text)
+    for ref_id, required_text in cases:
+        reference = _assert_lirpf_reference_links_to_full_boe_corpus(ref_id, required_text)
         if ref_id == "ley-35-2006:art-75":
             assert reference.notes is not None
             assert "not the generic autonomic quota article" in reference.notes
@@ -376,7 +346,6 @@ def test_lirpf_minimum_and_broad_deduction_foundations_link_to_full_boe_corpus()
     cases = (
         (
             "ley-35-2006:art-56",
-            date(2010, 1, 1),
             (
                 "Mínimo personal y familiar.",
                 "constituye la parte de la base liquidable",
@@ -388,7 +357,6 @@ def test_lirpf_minimum_and_broad_deduction_foundations_link_to_full_boe_corpus()
         ),
         (
             "ley-35-2006:art-68",
-            date(2023, 1, 1),
             (
                 "Deducciones.",
                 "Deducción por inversión en empresas de nueva o reciente creación",
@@ -401,15 +369,14 @@ def test_lirpf_minimum_and_broad_deduction_foundations_link_to_full_boe_corpus()
             ),
         ),
     )
-    for ref_id, effective_from, required_text in cases:
-        _assert_lirpf_reference_links_to_full_boe_corpus(ref_id, effective_from, required_text)
+    for ref_id, required_text in cases:
+        _assert_lirpf_reference_links_to_full_boe_corpus(ref_id, required_text)
 
 
 def test_lirpf_family_joint_and_attribution_foundations_link_to_full_boe_corpus() -> None:
     cases = (
         (
             "ley-35-2006:art-82",
-            date(2007, 1, 1),
             (
                 "Tributación conjunta.",
                 "modalidades de unidad familiar",
@@ -421,7 +388,6 @@ def test_lirpf_family_joint_and_attribution_foundations_link_to_full_boe_corpus(
         ),
         (
             "ley-35-2006:art-83",
-            date(2007, 1, 1),
             (
                 "Opción por la tributación conjunta.",
                 "podrán optar, en cualquier período impositivo",
@@ -432,7 +398,6 @@ def test_lirpf_family_joint_and_attribution_foundations_link_to_full_boe_corpus(
         ),
         (
             "ley-35-2006:art-84",
-            date(2010, 1, 1),
             (
                 "Normas aplicables en la tributación conjunta.",
                 "idéntica cuantía en la tributación conjunta",
@@ -443,7 +408,6 @@ def test_lirpf_family_joint_and_attribution_foundations_link_to_full_boe_corpus(
         ),
         (
             "ley-35-2006:art-86",
-            date(2007, 1, 1),
             (
                 "Régimen de atribución de rentas.",
                 "se atribuirán a los socios, herederos, comuneros o partícipes",
@@ -452,7 +416,6 @@ def test_lirpf_family_joint_and_attribution_foundations_link_to_full_boe_corpus(
         ),
         (
             "ley-35-2006:art-87",
-            date(2022, 10, 20),
             (
                 "Entidades en régimen de atribución de rentas.",
                 "artículo 8.3 de esta Ley",
@@ -463,7 +426,6 @@ def test_lirpf_family_joint_and_attribution_foundations_link_to_full_boe_corpus(
         ),
         (
             "ley-35-2006:art-88",
-            date(2007, 1, 1),
             (
                 "Calificación de la renta atribuida.",
                 "tendrán la naturaleza derivada de la actividad o fuente",
@@ -472,7 +434,6 @@ def test_lirpf_family_joint_and_attribution_foundations_link_to_full_boe_corpus(
         ),
         (
             "ley-35-2006:art-89",
-            date(2007, 1, 1),
             (
                 "Cálculo de la renta atribuible y pagos a cuenta.",
                 "Para el cálculo de las rentas a atribuir",
@@ -484,11 +445,95 @@ def test_lirpf_family_joint_and_attribution_foundations_link_to_full_boe_corpus(
             ),
         ),
     )
-    for ref_id, effective_from, required_text in cases:
-        reference = _assert_lirpf_reference_links_to_full_boe_corpus(ref_id, effective_from, required_text)
+    for ref_id, required_text in cases:
+        reference = _assert_lirpf_reference_links_to_full_boe_corpus(ref_id, required_text)
         if ref_id == "ley-35-2006:art-84":
             assert reference.notes is not None
             assert "in force from 2010-01-01" in reference.notes
         if ref_id == "ley-35-2006:art-87":
             assert reference.notes is not None
             assert "in force from 2022-10-20" in reference.notes
+
+
+def test_lirpf_references_take_effect_on_the_dates_their_boe_redactions_do() -> None:
+    wanted = frozenset(
+        {
+            "ley-35-2006:art-17",
+            "ley-35-2006:art-18",
+            "ley-35-2006:art-19",
+            "ley-35-2006:art-20",
+            "ley-35-2006:art-22",
+            "ley-35-2006:art-23",
+            "ley-35-2006:art-24",
+            "ley-35-2006:art-25",
+            "ley-35-2006:art-26",
+            "ley-35-2006:art-27",
+            "ley-35-2006:art-28",
+            "ley-35-2006:art-30",
+            "ley-35-2006:art-31",
+            "ley-35-2006:art-32",
+            "ley-35-2006:art-33",
+            "ley-35-2006:art-34",
+            "ley-35-2006:art-37",
+            "ley-35-2006:art-62",
+            "ley-35-2006:art-63",
+            "ley-35-2006:art-66",
+            "ley-35-2006:art-67",
+            "ley-35-2006:art-73",
+            "ley-35-2006:art-74",
+            "ley-35-2006:art-75",
+            "ley-35-2006:art-76",
+            "ley-35-2006:art-77",
+            "ley-35-2006:art-56",
+            "ley-35-2006:art-68",
+            "ley-35-2006:art-82",
+            "ley-35-2006:art-83",
+            "ley-35-2006:art-84",
+            "ley-35-2006:art-86",
+            "ley-35-2006:art-87",
+            "ley-35-2006:art-88",
+            "ley-35-2006:art-89",
+        }
+    )
+    observed = {
+        ref_id: str(reference.effective_from)
+        for ref_id, reference in catalogue_verification_catalogues().legal.items()
+        if ref_id in wanted
+    }
+    assert observed == {
+        "ley-35-2006:art-17": "2020-02-06",
+        "ley-35-2006:art-18": "2015-01-01",
+        "ley-35-2006:art-19": "2015-01-01",
+        "ley-35-2006:art-20": "2024-01-01",
+        "ley-35-2006:art-22": "2007-01-01",
+        "ley-35-2006:art-23": "2024-01-01",
+        "ley-35-2006:art-24": "2007-01-01",
+        "ley-35-2006:art-25": "2015-01-01",
+        "ley-35-2006:art-26": "2015-01-01",
+        "ley-35-2006:art-27": "2015-01-01",
+        "ley-35-2006:art-28": "2007-01-01",
+        "ley-35-2006:art-30": "2018-01-01",
+        "ley-35-2006:art-31": "2016-01-01",
+        "ley-35-2006:art-32": "2023-01-01",
+        "ley-35-2006:art-33": "2015-01-01",
+        "ley-35-2006:art-34": "2007-01-01",
+        "ley-35-2006:art-37": "2015-01-01",
+        "ley-35-2006:art-62": "2007-01-01",
+        "ley-35-2006:art-63": "2021-01-01",
+        "ley-35-2006:art-66": "2024-12-22",
+        "ley-35-2006:art-67": "2015-01-01",
+        "ley-35-2006:art-73": "2007-01-01",
+        "ley-35-2006:art-74": "2011-01-12",
+        "ley-35-2006:art-75": "2025-04-03",
+        "ley-35-2006:art-76": "2024-12-22",
+        "ley-35-2006:art-77": "2015-01-01",
+        "ley-35-2006:art-56": "2010-01-01",
+        "ley-35-2006:art-68": "2023-01-01",
+        "ley-35-2006:art-82": "2007-01-01",
+        "ley-35-2006:art-83": "2007-01-01",
+        "ley-35-2006:art-84": "2010-01-01",
+        "ley-35-2006:art-86": "2007-01-01",
+        "ley-35-2006:art-87": "2022-10-20",
+        "ley-35-2006:art-88": "2007-01-01",
+        "ley-35-2006:art-89": "2007-01-01",
+    }

@@ -6,13 +6,17 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ..scenario import build_ledger_cli_scenario
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_YEAR = filing_year_envelope().horizon
+
 
 def test_lifecycle_fixture_preserves_manual_link_and_supported_metadata_update() -> None:
-    scenario = build_ledger_cli_scenario(2025)
+    scenario = build_ledger_cli_scenario(_YEAR)
 
     issued = scenario.manual_invoices[0]
     transaction = scenario.transactions[0]
@@ -30,7 +34,7 @@ def test_lifecycle_fixture_preserves_manual_link_and_supported_metadata_update()
 
 
 def test_structured_import_fixture_retains_row_provenance_and_replay_contract() -> None:
-    scenario = build_ledger_cli_scenario(2025)
+    scenario = build_ledger_cli_scenario(_YEAR)
 
     imported = scenario.structured_import
     row = imported.rows[0]
@@ -38,10 +42,10 @@ def test_structured_import_fixture_retains_row_provenance_and_replay_contract() 
     assert imported.filename == "ledger-received.csv"
     assert row.source_row == 2
     assert imported.row_values(row) == {
-        "counterparty_nif": "B00015016",
+        "counterparty_nif": "B12345674",
         "counterparty_name": "Synthetic supplier SL",
-        "invoice_number": "LEDGER-REC-2025-001",
-        "invoice_date": "2025-03-20",
+        "invoice_number": f"LEDGER-REC-{_YEAR}-001",
+        "invoice_date": f"{_YEAR}-03-20",
         "taxable_base": "50.00",
         "iva_rate": "21",
         "country_code": "ES",

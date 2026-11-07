@@ -346,6 +346,8 @@ _READY_PROFILE_FACTS = persona_facts_beneath(
         UserProfileFact(path="withholding.pays_rent_with_retencion", value=True),
         UserProfileFact(path="iva.does_intracomunitario", value=True),
         UserProfileFact(path="iva.roi_enrolled", value=True),
+        # Modelos 123 and 193 apply only to a payer of capital income subject to retención.
+        UserProfileFact(path="withholding.pays_capital_income_with_retencion", value=True),
     )
 )
 

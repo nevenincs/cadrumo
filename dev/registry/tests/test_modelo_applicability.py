@@ -192,6 +192,8 @@ def test_registry_rules_derive_per_entity_and_per_regime_verdicts() -> None:
         irpf_income_categories=frozenset({_ACTIVIDAD_ECONOMICA}),
         irpf_estimation_regime=_DIRECTA_SIMPLIFICADA,
         iva_regime=_IVA_GENERAL,
+        fiscal_residency=_RESIDENT_IRPF,
+        art109_activity_income_withholding_ge_70pct=False,
     )
     objetiva_autonomo = direct_autonomo.model_copy(update={"irpf_estimation_regime": _OBJETIVA})
     sociedad_limitada = TaxpayerProfile(
@@ -199,6 +201,7 @@ def test_registry_rules_derive_per_entity_and_per_regime_verdicts() -> None:
         entity_type=_LEGAL_ENTITY,
         legal_entity_form=_LEGAL_FORM_SL,
         iva_regime=_IVA_GENERAL,
+        fiscal_residency=_RESIDENT_IRPF,
     )
 
     assert derive_modelo_applicability(direct_autonomo, "130").verdict is (ApplicabilityVerdict.APPLICABLE)
@@ -353,10 +356,11 @@ def test_actividad_economica_without_declared_regime_defaults_to_directa_m130() 
         entity_type=_NATURAL_PERSON,
         irpf_income_categories=frozenset({_ACTIVIDAD_ECONOMICA}),
         iva_regime=_IVA_GENERAL,
+        fiscal_residency=_RESIDENT_IRPF,
+        art109_activity_income_withholding_ge_70pct=False,
     )
     # The undeclared regime defaults to directa (the LIRPF default method).
     assert autonomo_no_regime.irpf_estimation_regime is None
-    assert autonomo_no_regime.fiscal_residency is None
     assert derive_modelo_applicability(autonomo_no_regime, "130").verdict is ApplicabilityVerdict.APPLICABLE
     assert derive_modelo_applicability(autonomo_no_regime, "131").verdict is ApplicabilityVerdict.NOT_APPLICABLE
 

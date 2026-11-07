@@ -181,6 +181,18 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 
 
 @pytest.fixture
+def capital_payer_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
+    """Yield the repository of a profile that pays withheld capital income, so Modelos 123 and 193 apply."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label=_PROFILE_LABEL) as profile:
+        seed_ready_profile(
+            bucket_id=_BUCKET_ID,
+            at=_T0,
+            facts=(UserProfileFact(path="withholding.pays_capital_income_with_retencion", value=True),),
+        )
+        yield profile.repository
+
+
+@pytest.fixture
 def withholding_payer_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     """Yield the repository of a profile whose taxpayer pays withheld income, so Modelos 111 and 190 apply."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label=_PROFILE_LABEL) as profile:
@@ -894,7 +906,7 @@ _M193_RETENCION_PERCEPTOR_NIFS: tuple[str, ...] = ("00001502F", "00001503P", "00
 
 
 def test_m193_folds_in_four_m123_quarters_with_withholding_advisory(
-    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+    capital_payer_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """E2E: four filed M123 quarters fold into M193 annual totals; withholding advisory present.
 
@@ -911,7 +923,7 @@ def test_m193_folds_in_four_m123_quarters_with_withholding_advisory(
     expected_base = assert_distinct_positive(_M123_C06_BASE)
     expected_retenciones = assert_distinct_positive(_M123_C09_RETENCIONES)
     _seed_retencion_perceptors(
-        secure_objects,
+        capital_payer_objects,
         modelo="193",
         period_code=_ANNUAL_PERIOD,
         observations=tuple(
@@ -931,7 +943,7 @@ def test_m193_folds_in_four_m123_quarters_with_withholding_advisory(
             },
         )
 
-    result = _calculate_annual(secure_objects, modelo="193", operation=operation)
+    result = _calculate_annual(capital_payer_objects, modelo="193", operation=operation)
 
     values = result.revision.casilla_values
     assert Decimal(values[_DECL_PERCEPTORES]) == Decimal("0"), (

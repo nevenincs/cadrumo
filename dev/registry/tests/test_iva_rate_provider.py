@@ -24,6 +24,7 @@ from cadrumo.domain.calculations.registry.facts.schema import (
 )
 from cadrumo.domain.calculations.registry.facts.variants import FactSelector, GovernedFactVariant
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.rates import (
     IVA_RATE_FACT_ID,
     rate_record_from_fact,
@@ -54,6 +55,22 @@ def iva_rate_fact_query(
     )
 
 
+def _coexisting_super_reduced_opening() -> date:
+    """Return the first day of Spain's coexisting 2% super-reduced track, read off the authored schedule.
+
+    The temporary track is bounded by its own window, so the day a test asks about
+    comes from that window and not from a year of its own.
+    """
+    (variant,) = (
+        item
+        for item in _authored_fact().variants
+        if {(selector.name, selector.value) for selector in item.selectors}
+        >= {("member_state", "es"), ("kind", "super_reduced"), ("rate_role", "coexisting-2")}
+    )
+    assert variant.valid_from is not None
+    return variant.valid_from
+
+
 def _catalogue() -> GovernedFactCatalogue:
     fact = _authored_fact()
     return GovernedFactCatalogue(facts={fact.fact_id: fact})
@@ -77,7 +94,7 @@ def test_iva_rate_fact_is_directly_authored_without_legacy_provider_registration
 
 def test_iva_rate_schedule_is_a_complete_authored_fact() -> None:
     fact = _authored_fact()
-    projected: set[tuple[EUMemberState, IvaRateKind, date, Decimal, bool]] = set()
+    projected: set[tuple[EUMemberState, IvaRateKind, str, Decimal, bool]] = set()
     for variant in fact.variants:
         assert isinstance(variant.payload, MappingFactPayload)
         assert variant.valid_from is not None
@@ -94,7 +111,8 @@ def test_iva_rate_schedule_is_a_complete_authored_fact() -> None:
                 # a schedule cannot name a state the registry does not carry.
                 require_eu_member_state(str(selectors["member_state"])),
                 IvaRateKind(str(selectors["kind"])),
-                variant.valid_from,
+                # Compared as written: the opening day is the output under test, read as text.
+                variant.valid_from.isoformat(),
                 Decimal(str({str(item.key): item.value for item in variant.payload.entries}["pct"])),
                 bool({str(item.key): item.value for item in variant.payload.entries}["supersedes_tier_default"]),
             )
@@ -104,21 +122,21 @@ def test_iva_rate_schedule_is_a_complete_authored_fact() -> None:
     assert (
         require_eu_member_state("ES"),
         IvaRateKind("general"),
-        date(2012, 9, 1),
+        "2012-09-01",
         Decimal("21"),
         False,
     ) in projected
     assert (
         require_eu_member_state("ES"),
         IvaRateKind("reduced"),
-        date(2024, 7, 1),
+        "2024-07-01",
         Decimal("5"),
         True,
     ) in projected
     assert (
         require_eu_member_state("DE"),
         IvaRateKind("general"),
-        date(2025, 7, 1),
+        "2025-07-01",
         Decimal("19"),
         False,
     ) in projected
@@ -159,7 +177,9 @@ def test_iva_query_resolves_exact_date_selectors_and_provenance() -> None:
     authority = compiled_bundled_authority()
     resolved = resolve_governed_fact(
         _catalogue(),
-        iva_rate_fact_query(require_eu_member_state("ES"), IvaRateKind("general"), date(2025, 6, 1)),
+        iva_rate_fact_query(
+            require_eu_member_state("ES"), IvaRateKind("general"), date(filing_year_envelope().horizon, 6, 1)
+        ),
         authority_digest="a" * 64,
         support=committed_supported_filing_years(),
     )
@@ -176,7 +196,9 @@ def test_iva_query_resolves_exact_date_selectors_and_provenance() -> None:
     with pytest.raises(RegistryValidationError, match="no variant for the exact query context"):
         resolve_governed_fact(
             _catalogue(),
-            iva_rate_fact_query(require_eu_member_state("DE"), IvaRateKind("super_reduced"), date(2025, 6, 1)),
+            iva_rate_fact_query(
+                require_eu_member_state("DE"), IvaRateKind("super_reduced"), date(filing_year_envelope().horizon, 6, 1)
+            ),
             authority_digest="a" * 64,
             support=committed_supported_filing_years(),
         )
@@ -187,7 +209,9 @@ def test_iva_query_keeps_coexisting_rate_separate_from_ordinary_tier() -> None:
     catalogue = _catalogue()
     ordinary = resolve_governed_fact(
         catalogue,
-        iva_rate_fact_query(require_eu_member_state("ES"), IvaRateKind("super_reduced"), date(2024, 11, 1)),
+        iva_rate_fact_query(
+            require_eu_member_state("ES"), IvaRateKind("super_reduced"), _coexisting_super_reduced_opening()
+        ),
         authority_digest="b" * 64,
         support=committed_supported_filing_years(),
     )
@@ -196,7 +220,7 @@ def test_iva_query_keeps_coexisting_rate_separate_from_ordinary_tier() -> None:
         iva_rate_fact_query(
             require_eu_member_state("ES"),
             IvaRateKind("super_reduced"),
-            date(2024, 11, 1),
+            _coexisting_super_reduced_opening(),
             superseding_percentage=Decimal("2"),
         ),
         authority_digest="b" * 64,

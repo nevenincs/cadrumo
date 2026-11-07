@@ -27,6 +27,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_formula import BracketEntry, ParameterDefinition
 from cadrumo.domain.calculations.registry.temporal import select_revision_for_year
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.loader import load_modelo_directory, load_shared_catalogues
 
@@ -104,7 +105,7 @@ def _rung(lower: str, upper: str | None, fixed: str, rate: str, valid_from: date
 
 def test_a_scale_split_across_windows_with_a_broken_shape_is_detected() -> None:
     """The whole-table read catches a gap, a closed top and a late start between rungs keyed from different days."""
-    first = date(2020, 1, 1)
+    first = date(filing_year_envelope().horizon, 1, 1)
     second = first + timedelta(days=366)
     continuous = (_rung("0", "6000", "0", "0.095", first), _rung("6000", None, "570", "0.105", second))
     gapped = (_rung("0", "6000", "0", "0.095", first), _rung("6500", None, "617.50", "0.105", second))

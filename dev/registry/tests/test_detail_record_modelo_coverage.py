@@ -17,6 +17,7 @@ import pytest
 
 from cadrumo.application.storage.calc_sheets.row_sets import collect_row_sets
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ..conformance.registry_schema_support import committed_registry_tree
 
@@ -26,13 +27,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # Source kind → number of row-producer binding cohorts the engine should
 # collect per modelo (not every revision; the spec is per declared
 # revision-id below).
-_DETAIL_RECORD_MODELOS: tuple[tuple[str, str, str, int], ...] = (
-    # (modelo, revision_id, source_kind, expected_cohort_count)
-    ("190", "2025-y-siguientes", "withholding", 1),
-    ("193", "2025-y-siguientes", "withholding", 2),
-    ("720", "2013-y-siguientes", "foreign_asset", 1),
-    ("184", "2025-y-siguientes", "atribucion_member", 1),
-    ("349", "2020-y-siguientes", "m349_intracommunity_operation", 2),
+_DETAIL_RECORD_MODELOS: tuple[tuple[str, str, int], ...] = (
+    # (modelo, source_kind, expected_cohort_count)
+    ("190", "withholding", 1),
+    ("193", "withholding", 2),
+    ("720", "foreign_asset", 1),
+    ("184", "atribucion_member", 1),
+    ("349", "m349_intracommunity_operation", 2),
 )
 
 
@@ -42,17 +43,16 @@ def _modelos_by_id() -> Mapping[str, ModeloDefinition]:
     return {modelo.id: modelo for modelo in modelos}
 
 
-@pytest.mark.parametrize(("modelo_id", "revision_id", "source_kind", "expected_cohorts"), _DETAIL_RECORD_MODELOS)
+@pytest.mark.parametrize(("modelo_id", "source_kind", "expected_cohorts"), _DETAIL_RECORD_MODELOS)
 def test_detail_record_modelo_emits_row_sets_with_localized_headers(
     _modelos_by_id: Mapping[str, ModeloDefinition],
     modelo_id: str,
-    revision_id: str,
     source_kind: str,
     expected_cohorts: int,
 ) -> None:
     """Each detail-record modelo's row-producer bindings produce localized row-sets."""
 
-    revision = _modelos_by_id[modelo_id].revisions[revision_id]
+    revision = _modelos_by_id[modelo_id].revisions[str(open_ended_revision(modelo_id).id)]
     declared = [
         b
         for b in revision.bindings

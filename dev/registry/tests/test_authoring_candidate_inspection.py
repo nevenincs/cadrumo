@@ -8,6 +8,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry import authority as runtime_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ..compiler.authority import AuthoringCandidateInspection, inspect_authoring_candidate
 from ..compiler.validator import RegistryValidator
@@ -35,13 +36,14 @@ def test_unresolved_inspected_candidate_still_fails_publication_validation(
 ) -> None:
     components = inspected_live_candidate.components
     modelo = next(item for item in components.modelos if item.id == "100")
-    revision = modelo.revisions["2025"]
+    newest = str(authored_revisions("100")[-1].id)
+    revision = modelo.revisions[newest]
     casillas = tuple(
         item.model_copy(update={"continuidad_id": None}) if str(item.id) == "0456" else item
         for item in revision.casillas
     )
     revisions = dict(modelo.revisions)
-    revisions["2025"] = revision.model_copy(update={"casillas": casillas})
+    revisions[newest] = revision.model_copy(update={"casillas": casillas})
     mutated = modelo.model_copy(update={"revisions": revisions})
     modelos = tuple(mutated if item.id == "100" else item for item in components.modelos)
     validator = RegistryValidator(

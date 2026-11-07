@@ -225,8 +225,18 @@ def _simplified_fact_home(cohort: str, fact: str, slot: int, sub_index: int | No
     return f"projection:m303_regimen_simplificado_fact({payload})"
 
 
+def _discovered_design_epochs() -> tuple[str, ...]:
+    """Return every authored mapping epoch, in stable lexical order."""
+    return tuple(sorted(path.name for path in scan_directory(_MAPPING_ROOT, select=DirectoryEntryKind.DIRECTORIES)))
+
+
+_DESIGN_EPOCHS: Final[tuple[str, ...]] = _discovered_design_epochs()
+
+
+#: The reviewed expectations, keyed by the design epoch found at the same position
+#: in the oldest-first discovery order, so the table names no year.
 _EPOCH_SURFACES: Final[Mapping[str, _EpochSurfaceExpectation]] = {
-    "2022": _EpochSurfaceExpectation(
+    _DESIGN_EPOCHS[0]: _EpochSurfaceExpectation(
         # The 2022 semantic map was authored without a surface expectation, so
         # every epoch-scoped case refused with "no reviewed surface expectation".
         # 2022 precedes 2023, so it -- not 2023 -- is the root of the chain.
@@ -246,7 +256,7 @@ _EPOCH_SURFACES: Final[Mapping[str, _EpochSurfaceExpectation]] = {
         introduced_homes=(),
         retired_homes=(),
     ),
-    "2023": _EpochSurfaceExpectation(
+    _DESIGN_EPOCHS[1]: _EpochSurfaceExpectation(
         no_activity_marker_ordinal="28",
         amendment_evidence=(("DP30303", "29", "computed_key", ExportComputedKey.M303_COMPLEMENTARIA_MARKER),),
         general_rate_allowed_values=("0", "50", "62"),
@@ -262,7 +272,7 @@ _EPOCH_SURFACES: Final[Mapping[str, _EpochSurfaceExpectation]] = {
         #  - the REGIMEN SIMPLIFICADO actividad modules arrive on DP30302: 62 of
         #    the 82 introduced homes are simplified-regime projections, which is
         #    also why 2022 declares no pure-integer DP30302 slot at all.
-        predecessor="2022",
+        predecessor=_DESIGN_EPOCHS[0],
         introduced_homes=(
             ("DP30301", "25", "casilla:150"),
             ("DP30301", "26", "literal:'00000'@DP30301"),
@@ -603,11 +613,11 @@ _EPOCH_SURFACES: Final[Mapping[str, _EpochSurfaceExpectation]] = {
             ("DP30301", "47", "casilla:23"),
         ),
     ),
-    "2024-early": _EpochSurfaceExpectation(
+    _DESIGN_EPOCHS[2]: _EpochSurfaceExpectation(
         no_activity_marker_ordinal="28",
         amendment_evidence=(("DP30303", "29", "computed_key", ExportComputedKey.M303_COMPLEMENTARIA_MARKER),),
         general_rate_allowed_values=("0", "50", "62"),
-        predecessor="2023",
+        predecessor=_DESIGN_EPOCHS[1],
         # The 2024-early design is anchor-identical to 2023 and introduces no
         # new home at all: it only reserves four simplified-regime slots the
         # 2023 design carried as payload.
@@ -619,11 +629,11 @@ _EPOCH_SURFACES: Final[Mapping[str, _EpochSurfaceExpectation]] = {
             ("DP30302", "122", _simplified_fact_home("no_agricola", "max_asalariados_simultaneos", 2)),
         ),
     ),
-    "2024-late": _EpochSurfaceExpectation(
+    _DESIGN_EPOCHS[3]: _EpochSurfaceExpectation(
         no_activity_marker_ordinal="28",
         amendment_evidence=_M303_RECTIFICATIVA_EVIDENCE,
         general_rate_allowed_values=None,
-        predecessor="2024-early",
+        predecessor=_DESIGN_EPOCHS[2],
         introduced_homes=(
             # DP30301: the RDL 4/2024 transitional super-reducido rung -- base,
             # tipo and cuota -- and its recargo de equivalencia companion. The
@@ -650,7 +660,7 @@ _EPOCH_SURFACES: Final[Mapping[str, _EpochSurfaceExpectation]] = {
         ),
         retired_homes=(("DP30303", "29", "computed:m303_complementaria_marker"),),
     ),
-    "2025": _EpochSurfaceExpectation(
+    _DESIGN_EPOCHS[4]: _EpochSurfaceExpectation(
         no_activity_marker_ordinal="28",
         # DP30303 is anchor-identical to 2024-late and every one of its homes
         # carries over, so the rectificativa block is re-asserted here rather
@@ -659,7 +669,7 @@ _EPOCH_SURFACES: Final[Mapping[str, _EpochSurfaceExpectation]] = {
         # Ordinal 50 stops enumerating: the 2025 design mandates a plain
         # Constante there, so the slot states no closed domain of its own.
         general_rate_allowed_values=None,
-        predecessor="2024-late",
+        predecessor=_DESIGN_EPOCHS[3],
         introduced_homes=tuple(
             ("DP30302", str(ordinal), _simplified_fact_home(cohort, fact, slot, sub_index))
             for ordinal, cohort, fact, slot, sub_index in _M303_2025_SUPERFICIE_ADDITIONS
@@ -694,7 +704,7 @@ _EPOCH_SURFACES: Final[Mapping[str, _EpochSurfaceExpectation]] = {
             ("DP30302", "153", _simplified_fact_home("no_agricola", "superficie_horno_dias_cuarto_trimestre", 2)),
         ),
     ),
-    "2026": _EpochSurfaceExpectation(
+    _DESIGN_EPOCHS[5]: _EpochSurfaceExpectation(
         # DP30303 is re-laid out rather than re-vocabularised: box [112] is
         # inserted into the resultado block and [108] moves to its head, so
         # every later ordinal shifts. The block is re-derived from the 2026
@@ -712,7 +722,7 @@ _EPOCH_SURFACES: Final[Mapping[str, _EpochSurfaceExpectation]] = {
         ),
         general_rate_allowed_values=None,
         no_activity_marker_ordinal="30",
-        predecessor="2025",
+        predecessor=_DESIGN_EPOCHS[4],
         introduced_homes=(
             # Entitlement to deduct the advance payment on fuel deliveries
             # after the non-customs deposit regime ends. The producer key was
@@ -781,14 +791,6 @@ class _EpochAuthorities:
             line_ending="crlf",
             serializer_convention="rtoml-pretty-v1",
         )
-
-
-def _discovered_design_epochs() -> tuple[str, ...]:
-    """Return every authored mapping epoch, in stable lexical order."""
-    return tuple(sorted(path.name for path in scan_directory(_MAPPING_ROOT, select=DirectoryEntryKind.DIRECTORIES)))
-
-
-_DESIGN_EPOCHS: Final[tuple[str, ...]] = _discovered_design_epochs()
 
 
 #: These proofs verify AUTHORING artefacts -- semantic maps and render profiles --
@@ -1471,7 +1473,7 @@ def test_reviewed_literal_scales_preserve_the_exact_official_wire_bytes(epoch: _
     joined_by_anchor = {
         (field.parser_field.sheet, field.parser_field.source_row): field for field in epoch.joined.fields
     }
-    assert len(epoch.profile.literal_numeric_rules) == (0 if epoch.design_epoch == "2022" else 6)
+    assert len(epoch.profile.literal_numeric_rules) == (0 if epoch.design_epoch == _DESIGN_EPOCHS[0] else 6)
     assert all(rule.literal != "00000" for rule in epoch.profile.literal_numeric_rules)
     for rule in epoch.profile.literal_numeric_rules:
         joined = joined_by_anchor[(rule.anchor.sheet, rule.anchor.source_row)]

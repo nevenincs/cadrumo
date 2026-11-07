@@ -33,12 +33,12 @@ from ..smoke_core import assert_complete_wheel_cohort
 from ..smoke_sdist_core import assert_sdist_contains_expected_data
 from ..source_data_contract import (
     CORPUS_SOURCE_PREFIX,
-    MANUAL_PDF_PRESENCE_FLOOR,
     assert_wheel_contains_source_data,
     build_source_data_paths,
     configured_corpus_binary_suffixes,
     expected_wheel_data_paths,
     is_corpus_source_binary,
+    manual_pdf_presence_floor,
     source_data_paths,
     validated_source_data_inventory,
 )
@@ -203,7 +203,7 @@ def _seed_shipped_data_repository(origin: Path) -> set[str]:
         f"__pycache__/\n/src/cadrumo/_data/registry/aeat/.*.lock\n/{GOOGLE_OAUTH_RESOURCE}\n",
         encoding="utf-8",
     )
-    source_paths = {"src/cadrumo/_data/registry/aeat/modelos/036/manifest.toml", *MANUAL_PDF_PRESENCE_FLOOR}
+    source_paths = {"src/cadrumo/_data/registry/aeat/modelos/036/manifest.toml", *manual_pdf_presence_floor(_REPO_ROOT)}
     for relative in sorted(source_paths):
         path = origin / relative
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -293,7 +293,7 @@ def test_source_data_paths_refuses_a_missing_manual_pdf_floor_member(tmp_path: P
     origin = tmp_path / "origin"
     origin.mkdir()
     _seed_shipped_data_repository(origin)
-    removed = next(iter(sorted(MANUAL_PDF_PRESENCE_FLOOR)))
+    removed = next(iter(sorted(manual_pdf_presence_floor(_REPO_ROOT))))
     (origin / removed).unlink()
 
     with pytest.raises(SystemExit, match="missing required manual PDFs"):

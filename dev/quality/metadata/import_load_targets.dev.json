@@ -1331,7 +1331,6 @@
         "dev.registry.pipeline.generated_tree_inventory",
         "dev.registry.pipeline.historical_static_repair",
         "dev.registry.pipeline.joined_record_design",
-        "dev.registry.pipeline.m390_auxiliary_envelope",
         "dev.registry.pipeline.note_absent_fill",
         "dev.registry.pipeline.note_literals",
         "dev.registry.pipeline.note_negative_amount",

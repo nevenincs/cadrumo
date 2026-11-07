@@ -20,6 +20,7 @@ from cadrumo.application.aggregation.withholding_recognition import (
     WithholdingRecipientTaxStatus,
 )
 from cadrumo.core.link_safety import is_link_like
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from dev.packaging.command_execution import run_command
 from dev.paths import AUTHORITY_ROOT_ENV, REPO_ROOT, UTF_8
 from dev.product_environment import ambient_product_settings_removed
@@ -29,6 +30,16 @@ _UTF_8: Final[str] = UTF_8
 VAR_ROOT = REPO_ROOT / "var"
 DEMO_ROOT = VAR_ROOT / "readme-demo"
 DEMO_VALUE = "readme-demo-only-synthetic-passphrase-2026"
+
+
+def _demo_coordinate() -> tuple[int, str]:
+    """The demo's filing year and the Modelo 115 revision the pinned authority selects for its first quarter."""
+    with bundled_indexed_authority().operation() as operation:
+        year = operation.supported_filing_years().horizon
+        return year, str(operation.revision_for_context("115", filing_year=year, period="1T").id)
+
+
+DEMO_YEAR, DEMO_REVISION_ID = _demo_coordinate()
 CLI_BOOTSTRAP = "from cadrumo_runtime.host.frontend.cli.bootstrap import main; main()"
 
 
@@ -107,7 +118,7 @@ def _received_rent_invoice_id(stdout: str) -> str:
 
 
 def prepare_demo() -> None:
-    """Create the proven profile and one invoice-backed Modelo 115 2025 1T retención.
+    """Create the proven profile and one invoice-backed Modelo 115 1T retención.
 
     The received urban-rent invoice carries a 2700.00 base and a 19% retención
     of 513.00; its single paid allocation settles the invoice grand total
@@ -138,7 +149,7 @@ def prepare_demo() -> None:
         "--activity",
         "design",
         "--activity-start-date",
-        "2025-01-01",
+        f"{DEMO_YEAR}-01-01",
         "--tax-residence-jurisdiction-scope",
         "common_regime",
         "--tax-residence-ccaa",
@@ -178,7 +189,7 @@ def prepare_demo() -> None:
         environment=environment,
         secrets=profile_secrets,
     )  # fmt: skip
-    paid_on = date(2025, 3, 15)
+    paid_on = date(DEMO_YEAR, 3, 15)
     invoice_output = _run_cli(
         "rent invoice setup",
         "--format", "json", "--profile-secrets-stdin",
@@ -186,7 +197,7 @@ def prepare_demo() -> None:
         "--kind", "received",
         "--counterparty-name", "Arrendador Ejemplo SL",
         "--counterparty-nif", "B12345674",
-        "--invoice-number", "M115-RENT-2025-001",
+        "--invoice-number", f"M115-RENT-{DEMO_YEAR}-001",
         "--invoice-date", paid_on.isoformat(),
         "--country-code", "ES",
         "--taxable-base", "2700.00", "--iva-rate", "21",
@@ -201,7 +212,7 @@ def prepare_demo() -> None:
         scheme="arrendamiento_urbano",
         recipient_tax_status=WithholdingRecipientTaxStatus.RESIDENT,
         recipient_tax_regime=WithholdingRecipientTaxRegime.IRPF,
-        payment_event_id="readme-rent-payment-2025-03-15",
+        payment_event_id=f"readme-rent-payment-{paid_on.isoformat()}",
         payment_occurred_on=paid_on,
         allocation_id="readme-rent-allocation-1",
         allocated_base=Decimal("2700.00"),
@@ -225,7 +236,7 @@ def prepare_demo() -> None:
             ),
             recipient_province_code="28",
             modality="1",
-            accrual_year=2025,
+            accrual_year=DEMO_YEAR,
             withholding_percentage=Decimal("19.00"),
         ),
     )
@@ -233,7 +244,7 @@ def prepare_demo() -> None:
         "rent retencion setup",
         "--format", "json", "--profile-secrets-stdin",
         "app", "modelo", "aggregate",
-        "--modelo", "115", "--year", "2025", "--period", "1T",
+        "--modelo", "115", "--year", str(DEMO_YEAR), "--period", "1T",
         "--received-invoice-retencion", request.model_dump_json(),
         environment=environment,
         secrets=profile_secrets,

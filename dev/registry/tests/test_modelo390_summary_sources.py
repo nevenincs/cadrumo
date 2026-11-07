@@ -17,6 +17,11 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.manual_input_selector import ManualInputProvider
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_grade_exercises,
+    open_ended_revision,
+    revision_covering,
+)
 from cadrumo.domain.filing.schema import ModeloDraft, registry_schema_version
 from cadrumo.domain.submission.models import ModeloDraftStatus
 
@@ -26,19 +31,28 @@ from ..workbook_demo_cases import DemoCase
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
+_FILING_EXERCISES = filing_grade_exercises("390")
+#: The oldest filing-grade edition still carries the manual page-5 summary bindings the newer ones retire.
+_HISTORICAL_EXERCISE = _FILING_EXERCISES[0]
+_M130_EDITION = str(open_ended_revision("130").id)
+
+
+def _demo_case(year: int) -> DemoCase:
+    return DemoCase("390", str(revision_covering("390", year).id), None, None, filing_year=year, period="0A")
+
 
 @pytest.mark.usefixtures("governed_fact_scope")
-@pytest.mark.parametrize("year", (2024, 2025))
+@pytest.mark.parametrize("year", _FILING_EXERCISES[-2:])
 @pytest.mark.parametrize("amount", (Decimal("123.45"), Decimal("-67.89"), Decimal("0"), None))
 def test_printed_summary_and_filing_ignore_obsolete_manual_amounts(year, amount):
-    snapshot = demonstration_snapshot(DemoCase("390", str(year), None, None, filing_year=year, period="0A"))
+    snapshot = demonstration_snapshot(_demo_case(year))
     revision = snapshot.revision
     record = next(r for layout in revision.export_layouts for r in layout.records if str(r.id) == "modelo-390-page-05")
     offsets = (1033, 1050, 1067, 1084, 1101, 1118, 1135, 1152, 1169, 1186)
     fields = tuple(f for f in record.fields if f.offset in offsets)
     assert len(fields) == 10
     assert all(f.kind is CasillaFieldKind.CASILLA and f.casilla_id is not None for f in fields)
-    historical = demonstration_snapshot(DemoCase("390", "2022", None, None, filing_year=2022, period="0A"))
+    historical = demonstration_snapshot(_demo_case(_HISTORICAL_EXERCISE))
     old_bindings = tuple(
         b
         for b in historical.revision.bindings
@@ -81,7 +95,7 @@ def test_printed_summary_and_filing_ignore_obsolete_manual_amounts(year, amount)
             schema_version=registry_schema_version(modelo="390", revision_id=revision.id),
         )
         # Reuse fictional general-profile facts, validating them for the actual modelo.
-        producer = demonstration_producer(DemoCase("130", "2019-y-siguientes", None, None))
+        producer = demonstration_producer(DemoCase("130", _M130_EDITION, None, None, filing_year=year))
         assert producer is not None
         producer = FilingProducerSnapshot.model_validate({**producer.model_dump(), "modelo": Modelo("390")})
     wire = render_record(

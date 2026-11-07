@@ -18,6 +18,7 @@ from typing import TypeIs
 from cadrumo.core.toml import TomlDecodeError, parse_toml
 from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 
+from ..quality.year_literals import YEAR_SOURCE
 from ..registry.compiler.validate_below_floor_export_refs import SUPPORTED_FILING_YEARS_DECLARATION
 
 AUTHORITY = Path("src/cadrumo/_data/registry/aeat") / SUPPORTED_FILING_YEARS_DECLARATION
@@ -84,7 +85,7 @@ def _literal_years(node: ast.AST) -> tuple[int, ...]:
         if isinstance(child, ast.Constant)
         and isinstance(child.value, int)
         and not isinstance(child.value, bool)
-        and 2000 <= child.value <= 2099
+        and YEAR_SOURCE.match(str(child.value)) is not None
     )
 
 

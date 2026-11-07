@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from .authored_edition_support import newest_authored_edition
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+
+from .authored_edition_support import newest_authored_edition, newest_authored_editions
 from .modelo_100_registry_support import (
     AUTONOMIC_DEDUCTION_ART_77_REF,
     modelo_100_revision,
@@ -40,24 +42,30 @@ _LEGACY_MURCIA_GENERATED_PENDING_ROLES = frozenset(
         "irpf_deduccion_murcia_generado_2024_pendiente",
     }
 )
+
+
+def _casilla(number: int) -> CasillaId:
+    """Return the id of the casilla the official design numbers ``number``; a box number, not a year."""
+    return validated_casilla_id(f"{number:04d}", surface="casilla.id")
+
+
+_GENERADO_MU4_CASILLA, _PENDIENTE_MU4_CASILLA = _casilla(2038), _casilla(2039)
+_MU4_EDITIONS = newest_authored_editions("100", 2)
+_MU4_CASILLAS = {"1055", _GENERADO_MU4_CASILLA, _PENDIENTE_MU4_CASILLA}
 _EXPECTED_MURCIA_MU4_LABELS = {
-    2024: {
+    filing_year: {
         "1055": "Por inversión en instalaciones de recursos energéticos renovables",
-        "2038": "Importe generado en 2024",
-        "2039": "Importe generado en 2024 pendiente de aplicación",
-    },
-    2025: {
-        "1055": "Por inversión en instalaciones de recursos energéticos renovables",
-        "2038": "Importe generado en 2025",
-        "2039": "Importe generado en 2025 pendiente de aplicación",
-    },
+        _GENERADO_MU4_CASILLA: f"Importe generado en {filing_year}",
+        _PENDIENTE_MU4_CASILLA: f"Importe generado en {filing_year} pendiente de aplicación",
+    }
+    for filing_year in _MU4_EDITIONS
 }
 
 
-@pytest.mark.parametrize("filing_year", [2024, 2025])
+@pytest.mark.parametrize("filing_year", _MU4_EDITIONS)
 def test_modelo_100_murcia_mu4_recursos_energeticos_roles_are_family_specific(filing_year: int) -> None:
     revision = modelo_100_revision(filing_year)
-    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in {"1055", "2038", "2039"}}
+    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in _MU4_CASILLAS}
     legacy_roles = [
         casilla.semantic_role
         for casilla in casillas_by_id.values()
@@ -66,7 +74,7 @@ def test_modelo_100_murcia_mu4_recursos_energeticos_roles_are_family_specific(fi
     expected_labels = _EXPECTED_MURCIA_MU4_LABELS[filing_year]
 
     assert not legacy_roles
-    assert set(casillas_by_id) == {"1055", "2038", "2039"}
+    assert set(casillas_by_id) == _MU4_CASILLAS
 
     parent = casillas_by_id["1055"]
     assert parent.label.startswith(expected_labels["1055"])
@@ -74,14 +82,14 @@ def test_modelo_100_murcia_mu4_recursos_energeticos_roles_are_family_specific(fi
     assert parent.semantic_role == _MURCIA_RECURSOS_ENERGETICOS_ROLE
     assert AUTONOMIC_DEDUCTION_ART_77_REF in parent.legal_refs
 
-    generated = casillas_by_id["2038"]
-    assert generated.label == expected_labels["2038"]
+    generated = casillas_by_id[_GENERADO_MU4_CASILLA]
+    assert generated.label == expected_labels[_GENERADO_MU4_CASILLA]
     assert tuple(generated.section) == _MURCIA_DEDUCTION_SECTION
     assert generated.semantic_role == _MURCIA_RECURSOS_ENERGETICOS_GENERADO_ROLE
     assert AUTONOMIC_DEDUCTION_ART_77_REF in generated.legal_refs
 
-    pending = casillas_by_id["2039"]
-    assert pending.label == expected_labels["2039"]
+    pending = casillas_by_id[_PENDIENTE_MU4_CASILLA]
+    assert pending.label == expected_labels[_PENDIENTE_MU4_CASILLA]
     assert tuple(pending.section) == _MURCIA_DEDUCTION_SECTION
     assert pending.semantic_role == _MURCIA_RECURSOS_ENERGETICOS_PENDIENTE_ROLE
     assert AUTONOMIC_DEDUCTION_ART_77_REF in pending.legal_refs

@@ -7,7 +7,7 @@ refusing would turn a test red rather than leave it vacuously green.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import date
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
@@ -22,6 +22,11 @@ from cadrumo.domain.calculations.registry.casilla_lineage_totality import (
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_overlap
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    open_ended_revision,
+)
 from cadrumo.domain.calculations.registry.tests.lineage_totality import is_total
 
 from ..analysis import casilla_lineage_seed
@@ -65,6 +70,17 @@ from .casilla_lineage_planted_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
+# Three consecutive edition labels for the planted modelos, oldest first.
+_REV_A, _REV_B, _REV_C = (str(_YEAR - 2), str(_YEAR - 1), str(_YEAR))
+# The first three authored editions of Modelo 390, which each carry the one before's chains.
+_M390_FIRST, _M390_SECOND, _M390_THIRD = (str(revision.id) for revision in authored_revisions("390")[:3])
+_M151_OPEN = str(open_ended_revision("151").id)
+
+
+def _instant(month: int, day: int, hour: int) -> str:
+    return datetime(_YEAR, month, day, hour, tzinfo=UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 # --------------------------------------------------------------------------- design oracle
@@ -145,48 +161,48 @@ def test_the_general_number_field_is_never_read_for_identity() -> None:
 # --------------------------------------------------------------------------- writer
 
 _FILE = """\
-[[revisions."2024".casillas]]
+[[revisions."{older}".casillas]]
 id = "01"
 number = "01"
 
-[[revisions."2024".casillas]]
+[[revisions."{older}".casillas]]
 id = "02"
 continuidad_id = "base"
 number = "02"
 
-[[revisions."2025".casillas]]
+[[revisions."{newer}".casillas]]
 id = "01"
 number = "01"
-"""
+""".replace("{older}", _REV_B).replace("{newer}", _REV_C)
 
 
 def test_keys_are_inserted_into_the_named_revision_table_only() -> None:
     text, done = insert_lineage_keys(
-        _FILE, "2024", {"01": {"continuidad_origin": "new_on_form", "continuidad_evidence": "design.md:3 [01]"}}
+        _FILE, _REV_B, {"01": {"continuidad_origin": "new_on_form", "continuidad_evidence": "design.md:3 [01]"}}
     )
     assert done == {"01"}
     assert text.splitlines()[:5] == [
-        '[[revisions."2024".casillas]]',
+        f'[[revisions."{_REV_B}".casillas]]',
         'id = "01"',
         'continuidad_origin = "new_on_form"',
         'continuidad_evidence = "design.md:3 [01]"',
         'number = "01"',
     ]
-    assert text.endswith('[[revisions."2025".casillas]]\nid = "01"\nnumber = "01"\n')
+    assert text.endswith(f'[[revisions."{_REV_C}".casillas]]\nid = "01"\nnumber = "01"\n')
 
 
 def test_keys_follow_an_existing_chain_and_an_identical_value_is_left_alone() -> None:
-    text, done = insert_lineage_keys(_FILE, "2024", {"02": {"continuidad_id": "base", "continuidad_origin": "seeded"}})
+    text, done = insert_lineage_keys(_FILE, _REV_B, {"02": {"continuidad_id": "base", "continuidad_origin": "seeded"}})
     assert done == {"02"}
     assert 'continuidad_id = "base"\ncontinuidad_origin = "seeded"\nnumber = "02"' in text
     assert text.count('continuidad_id = "base"') == 1
-    again, _ = insert_lineage_keys(text, "2024", {"02": {"continuidad_id": "base", "continuidad_origin": "seeded"}})
+    again, _ = insert_lineage_keys(text, _REV_B, {"02": {"continuidad_id": "base", "continuidad_origin": "seeded"}})
     assert again == text
 
 
 def test_a_differing_value_already_present_is_never_overwritten() -> None:
     with pytest.raises(ValueError, match="already declares a different continuidad_id"):
-        insert_lineage_keys(_FILE, "2024", {"02": {"continuidad_id": "other"}})
+        insert_lineage_keys(_FILE, _REV_B, {"02": {"continuidad_id": "other"}})
 
 
 # --------------------------------------------------------------------------- self-check
@@ -211,14 +227,14 @@ def test_the_contradiction_check_catches_a_planted_absence_on_a_live_chain(
 ) -> None:
     """An absence written onto a row whose chain the predecessor carries is a contradiction."""
     modelo = modelos["390"]
-    predecessor, successor = modelo.revisions["2022"], modelo.revisions["2023"]
+    predecessor, successor = modelo.revisions[_M390_SECOND], modelo.revisions[_M390_THIRD]
     prior = {casilla.continuidad_id for casilla in predecessor.casillas} - {None}
     target = next(casilla for casilla in successor.casillas if casilla.continuidad_id in prior)
     assert contradictions(modelo, LineagePlan("390")) == []
     planted = LineagePlan("390")
-    planted.set_keys("2023", target.id, continuidad_origin="new_on_form", continuidad_evidence="design.md:1 [1]")
+    planted.set_keys(_M390_THIRD, target.id, continuidad_origin="new_on_form", continuidad_evidence="design.md:1 [1]")
     assert contradictions(modelo, planted) == [
-        f"2023/{target.id}: new_on_form but chain {target.continuidad_id!r} present in 2022"
+        f"{_M390_THIRD}/{target.id}: new_on_form but chain {target.continuidad_id!r} present in {_M390_SECOND}"
     ]
 
 
@@ -226,7 +242,7 @@ def test_the_contradiction_check_catches_a_continuation_with_no_chain_behind_it(
     modelos: Mapping[str, ModeloDefinition],
 ) -> None:
     modelo = modelos["390"]
-    first, second = modelo.revisions["2021"], modelo.revisions["2022"]
+    first, second = modelo.revisions[_M390_FIRST], modelo.revisions[_M390_SECOND]
     prior = {casilla.continuidad_id for casilla in first.casillas} - {None}
     target = next(
         casilla
@@ -234,9 +250,9 @@ def test_the_contradiction_check_catches_a_continuation_with_no_chain_behind_it(
         if casilla.continuidad_id is not None and casilla.continuidad_id not in prior
     )
     planted = LineagePlan("390")
-    planted.set_keys("2022", target.id, continuidad_origin="seeded")
+    planted.set_keys(_M390_SECOND, target.id, continuidad_origin="seeded")
     assert contradictions(modelo, planted) == [
-        f"2022/{target.id}: seeded but chain {target.continuidad_id!r} absent from 2021"
+        f"{_M390_SECOND}/{target.id}: seeded but chain {target.continuidad_id!r} absent from {_M390_FIRST}"
     ]
 
 
@@ -247,14 +263,14 @@ def test_the_registry_gate_refuses_a_roleless_chain_unless_every_link_is_grounde
     modelo = modelos["151"]
     successor = next(
         casilla
-        for casilla in modelo.revisions["2025-y-siguientes"].casillas
+        for casilla in modelo.revisions[_M151_OPEN].casillas
         if casilla.continuidad_origin is not None
         and casilla.continuidad_origin.value == "grounded"
         and casilla.semantic_role is None
     )
     assert gate_regressions(modelo, LineagePlan("151")) == []
     demoted = LineagePlan("151")
-    demoted.set_keys("2025-y-siguientes", successor.id, continuidad_origin="seeded")
+    demoted.set_keys(_M151_OPEN, successor.id, continuidad_origin="seeded")
     regressions = gate_regressions(modelo, demoted)
     assert any(f"casilla {successor.id!r} has no semantic_role" in failure for failure in regressions), regressions
 
@@ -489,8 +505,8 @@ def test_a_partly_stamped_modelo_with_nothing_to_carry_names_no_row(tmp_path: Pa
         modelo=PLANTED_MODELO,
         casilla=_PLANTED_ROW,
         chain="dr999-23",
-        stamped=("2023", "2024"),
-        unstamped=("2022",),
+        stamped=(_REV_B, _REV_C),
+        unstamped=(_REV_A,),
     )
     path = tmp_path / "ledger.toml"
     path.write_text(render_ledger([plan], {_UNRESOLVED: []}, (), (record,)) + "\n", encoding="utf-8")
@@ -501,8 +517,8 @@ def test_a_partly_stamped_modelo_with_nothing_to_carry_names_no_row(tmp_path: Pa
             "modelo": PLANTED_MODELO,
             "casilla": _PLANTED_ROW,
             "chain": "dr999-23",
-            "stamped": ["2023", "2024"],
-            "unstamped": ["2022"],
+            "stamped": [_REV_B, _REV_C],
+            "unstamped": [_REV_A],
         }
     ]
     assert all(entry["modelo"] != PLANTED_MODELO for entry in document["refusal"])
@@ -517,7 +533,7 @@ def test_a_partly_stamped_modelo_with_nothing_to_carry_names_no_row(tmp_path: Pa
 # --------------------------------------------------------------------------- carrying forward
 
 
-_PREVIOUS_RUN = "2026-09-01T08:00:00Z"
+_PREVIOUS_RUN = _instant(9, 1, 8)
 _SKIPPED = {PLANTED_MODELO: "modelo could not be compiled this run: no revisions found in revisions/"}
 
 
@@ -552,7 +568,7 @@ def test_a_skipped_modelos_previous_refusals_are_carried_forward_rather_than_dro
     for key in unresolved:
         plan.refuse(key.revision, key.casilla, LineageRefusalCategory.NOT_EXAMINED, "planted for this gate")
 
-    rows = (("2023", "01"), ("2024", "02"))
+    rows = ((_REV_B, "01"), (_REV_C, "02"))
     previous = load_previous_ledger(_previous_ledger(tmp_path, plan, rows))
     assert previous.judged_at == _PREVIOUS_RUN
     assert {(entry["revision"], entry["casilla"]) for entry in previous.refusals[PLANTED_MODELO]} == set(rows)
@@ -591,14 +607,14 @@ def test_a_skipped_modelos_previous_refusals_are_carried_forward_rather_than_dro
 def test_a_carried_refusal_records_when_it_was_last_actually_judged(tmp_path: Path) -> None:
     """Carrying twice keeps the original judgement and counts the carries, so staleness stays visible."""
     plan = LineagePlan(_LOADABLE)
-    plan.refuse("2024", "01", LineageRefusalCategory.NOT_EXAMINED, "judged by the previous run")
-    rows = (("2023", "01"),)
+    plan.refuse(_REV_C, "01", LineageRefusalCategory.NOT_EXAMINED, "judged by the previous run")
+    rows = ((_REV_B, "01"),)
     first = carried_refusals(load_previous_ledger(_previous_ledger(tmp_path, plan, rows)), _SKIPPED)
     assert [(entry.last_judged, entry.carried_runs) for entry in first] == [(_PREVIOUS_RUN, 1)]
 
     second_run = tmp_path / "second.toml"
     second_run.write_text(
-        render_ledger([plan], {_LOADABLE: []}, (), (), carried=first, judged_at="2026-09-05T09:00:00Z") + "\n",
+        render_ledger([plan], {_LOADABLE: []}, (), (), carried=first, judged_at=_instant(9, 5, 9)) + "\n",
         encoding="utf-8",
     )
     second = carried_refusals(load_previous_ledger(second_run), _SKIPPED)
@@ -608,7 +624,7 @@ def test_a_carried_refusal_records_when_it_was_last_actually_judged(tmp_path: Pa
 
     third_run = tmp_path / "third.toml"
     third_run.write_text(
-        render_ledger([plan], {_LOADABLE: []}, (), (), carried=second, judged_at="2026-09-09T09:00:00Z") + "\n",
+        render_ledger([plan], {_LOADABLE: []}, (), (), carried=second, judged_at=_instant(9, 9, 9)) + "\n",
         encoding="utf-8",
     )
     third = carried_refusals(load_previous_ledger(third_run), _SKIPPED)
@@ -618,10 +634,10 @@ def test_a_carried_refusal_records_when_it_was_last_actually_judged(tmp_path: Pa
 def test_a_carried_refusal_never_collides_with_one_this_run_judged(tmp_path: Path) -> None:
     """Judging and carrying the same row would name it twice; that is this tooling contradicting itself."""
     plan = LineagePlan(_LOADABLE)
-    plan.refuse("2024", "01", LineageRefusalCategory.NOT_EXAMINED, "judged this run")
+    plan.refuse(_REV_C, "01", LineageRefusalCategory.NOT_EXAMINED, "judged this run")
     collision = CarriedRefusal(
         modelo=_LOADABLE,
-        revision="2024",
+        revision=_REV_C,
         casilla="01",
         category="not_examined",
         reason="judged by the previous run",
@@ -652,9 +668,16 @@ def test_lineage_command_rejects_unknown_arguments_before_loading_or_writing(cap
 
 def test_editions_whose_selectors_overlap_but_whose_validity_succeeds_are_paired() -> None:
     """The live 308 shape: one edition closes before the next opens, and both name the same year."""
-    closed = planted_revision("2009-2011-junio", date(2009, 1, 1), date(2011, 6, 30), (2011,), (planted_casilla(),))
+    closed = planted_revision(
+        f"{_YEAR - 2}-{_YEAR}-junio", date(_YEAR - 2, 1, 1), date(_YEAR, 6, 30), (_YEAR,), (planted_casilla(),)
+    )
     successor = planted_revision(
-        "2011-julio-2015", date(2011, 7, 1), date(2015, 12, 31), (2011,), (planted_casilla(),), no_predecessor=True
+        f"{_YEAR}-julio-{_YEAR + 4}",
+        date(_YEAR, 7, 1),
+        date(_YEAR + 4, 12, 31),
+        (_YEAR,),
+        (planted_casilla(),),
+        no_predecessor=True,
     )
     modelo = planted_modelo(closed, successor)
 
@@ -668,9 +691,11 @@ def test_editions_whose_selectors_overlap_but_whose_validity_succeeds_are_paired
 
 def test_concurrent_scheme_variants_sharing_a_validity_window_are_not_paired() -> None:
     """The live 369 shape: siblings that take effect together and never close continue nothing."""
-    start = date(2021, 7, 1)
-    first = planted_revision("esquema-union", start, None, (2021,), (planted_casilla(),), no_predecessor=True)
-    second = planted_revision("esquema-importacion", start, None, (2022,), (planted_casilla(),), no_predecessor=True)
+    start = date(_YEAR, 7, 1)
+    first = planted_revision("esquema-union", start, None, (_YEAR,), (planted_casilla(),), no_predecessor=True)
+    second = planted_revision(
+        "esquema-importacion", start, None, (_YEAR + 1,), (planted_casilla(),), no_predecessor=True
+    )
     modelo = planted_modelo(first, second)
 
     # Their selectors do NOT overlap, so selector-reading would have paired them; the dates must not.
@@ -679,6 +704,12 @@ def test_concurrent_scheme_variants_sharing_a_validity_window_are_not_paired() -
 
 
 # --------------------------------------------------------------------------- held stems
+
+
+def _held_boundary() -> tuple[str, str]:
+    """Return the two editions of the planted held modelo, which its rulings name as their boundary."""
+    predecessor, successor = (str(revision.id) for revision in ordered_revisions(held_modelo(origin=None)))
+    return predecessor, successor
 
 
 def _held_ruling(predecessor: str, successor: str) -> Ruling:
@@ -718,13 +749,13 @@ def _assert_held_row_with_declared_absence_is_dispositioned(rulings: dict[str, l
 
 def test_a_held_stem_row_that_already_declares_its_absence_is_not_refused_again() -> None:
     """A row whose kind of none is already written is dispositioned; re-refusing it makes the ledger stale."""
-    rulings = {PLANTED_MODELO: [_held_ruling("2023", "2024")]}
+    rulings = {PLANTED_MODELO: [_held_ruling(*_held_boundary())]}
     _assert_held_row_with_declared_absence_is_dispositioned(rulings)
 
 
 def test_a_held_pair_row_that_already_declares_its_absence_is_not_refused_again() -> None:
     """A row an adjudicated pair holds is dispositioned by its own declared origin, like a held stem."""
-    rulings = {PLANTED_MODELO: [held_pair_ruling("2023", "2024")]}
+    rulings = {PLANTED_MODELO: [held_pair_ruling(*_held_boundary())]}
     _assert_held_row_with_declared_absence_is_dispositioned(rulings)
 
 
@@ -758,16 +789,16 @@ def test_evidence_within_the_schema_cap_is_written_and_reported_rather_than_refu
     long_evidence = "x" * 700
     assert len(long_evidence) < SCHEMA_EVIDENCE_LIMIT, "the planted evidence no longer fits; this gate is vacuous"
 
-    assert plan.record_evidence("2024", "01", long_evidence) == long_evidence
-    assert [(entry.revision, entry.casilla, entry.length) for entry in plan.long_evidence] == [("2024", "01", 700)]
+    assert plan.record_evidence(_REV_C, "01", long_evidence) == long_evidence
+    assert [(entry.revision, entry.casilla, entry.length) for entry in plan.long_evidence] == [(_REV_C, "01", 700)]
 
     # A routine-length citation is written without a report, so the report above is the length's doing.
-    assert plan.record_evidence("2024", "02", "short citation") == "short citation"
+    assert plan.record_evidence(_REV_C, "02", "short citation") == "short citation"
     assert [entry.casilla for entry in plan.long_evidence] == ["01"]
 
 
 def test_evidence_over_the_schema_cap_refuses() -> None:
     plan = LineagePlan(PLANTED_MODELO)
     with pytest.raises(ValueError, match="exceeds the schema"):
-        plan.record_evidence("2024", "01", "x" * (SCHEMA_EVIDENCE_LIMIT + 1))
+        plan.record_evidence(_REV_C, "01", "x" * (SCHEMA_EVIDENCE_LIMIT + 1))
     assert plan.long_evidence == []

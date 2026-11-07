@@ -18,21 +18,20 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import validating_
 
 from .compiler.authority import compiled_bundled_authority
 from .workbook_demo import demonstration_producer
-from .workbook_demo_cases import DemoCase
+from .workbook_demo_cases import DemoCase, newest_historical_year, template_edition
 from .workbook_demo_nonperiodic import nonperiodic_vat_inputs
 from .workbook_template_source import load_workbook_template_source
 
 
 def build_historical_nonperiodic_plan(
-    *, year: int = 2016
+    *, year: int | None = None
 ) -> tuple[WorkbookTemplateSource, SheetExportPlan[SheetTemplatePreviewMetadata]]:
     """Build fictional historical facts without extending the filing support envelope."""
-    revision_id, source_ref, period = {
-        2015: ("2004-2015", "aeat-dr-309-2004", "1T"),
-        2016: ("2016-2017", "aeat-dr-309-2016", "0A"),
-    }[year]
+    year = newest_historical_year("309") if year is None else year
+    edition = template_edition("309", year)
+    revision_id, period = edition.revision_id, edition.period
     source = load_workbook_template_source(
-        "309", revision_id=revision_id, source_ref=source_ref, preview_year=year, preview_period=period
+        "309", revision_id=revision_id, source_ref=edition.source_ref, preview_year=year, preview_period=period
     )
     case = DemoCase(
         "309",
@@ -44,7 +43,7 @@ def build_historical_nonperiodic_plan(
         period=period,
     )
     inputs = nonperiodic_vat_inputs(year, additional_rate_row=False)
-    if year == 2015:
+    if period != "0A":
         # The original record has independent X-or-blank fields, not numeric selectors.
         values = {item.casilla_id: item.value for item in inputs.values}
         for cid in (
@@ -58,7 +57,7 @@ def build_historical_nonperiodic_plan(
             del values[cid]
         values.update(
             {
-                "decl.periodo": "1T",
+                "decl.periodo": period,
                 "papel-nombre-completo": "Ana Ejemplo",
                 "papel-complementaria": False,
                 "wire.transmitente-apellidos-nombre-razon-social": "Vehículos Ejemplo",

@@ -101,6 +101,11 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    open_ended_revision,
+    revision_covering,
+)
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 from ..compiler.authority import compile_validated_authority
@@ -368,20 +373,22 @@ def test_presentation_calendar_years_reads_the_declared_deadline_window() -> Non
     which is what makes it a legitimate match for a design whose applicability
     starts in calendar year 2013.
     """
-    windows = {2012: (date(2013, 2, 1), date(2013, 4, 30))}
-    assert _presentation_calendar_years(2012, windows) == {2013}
+    ejercicio = filing_year_envelope().floor
+    windows = {ejercicio: (date(ejercicio + 1, 2, 1), date(ejercicio + 1, 4, 30))}
+    assert _presentation_calendar_years(ejercicio, windows) == {ejercicio + 1}
 
 
 def test_presentation_calendar_years_falls_back_to_the_claimed_year_when_undeclared() -> None:
     """No declared window means no axis shift -- the prior, unshifted comparison."""
-    assert _presentation_calendar_years(2019, {}) == {2019}
+    ejercicio = filing_year_envelope().horizon
+    assert _presentation_calendar_years(ejercicio, {}) == {ejercicio}
 
 
 def test_supported_window_excludes_historical_gaps_and_detects_a_current_gap() -> None:
     authority = _authority()
     floor = coverage_assessment_floor(authority.catalogues)
     modelo = authority.modelo("126")
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions[str(open_ended_revision("126").id)]
     windows = _record_design_windows()
     scoped = _ejercicio_scoped_designs()
     start = windows["aeat-dr-126-2020"][0]
@@ -399,8 +406,9 @@ def test_supported_window_excludes_historical_gaps_and_detects_a_current_gap() -
 
 def test_presentation_calendar_years_spans_a_window_crossing_a_calendar_boundary() -> None:
     """A window straddling New Year's reports both years, not just the open date's."""
-    windows = {2020: (date(2020, 12, 15), date(2021, 1, 10))}
-    assert _presentation_calendar_years(2020, windows) == {2020, 2021}
+    ejercicio = filing_year_envelope().floor
+    windows = {ejercicio: (date(ejercicio, 12, 15), date(ejercicio + 1, 1, 10))}
+    assert _presentation_calendar_years(ejercicio, windows) == {ejercicio, ejercicio + 1}
 
 
 def test_modelo_720_first_ejercicio_is_covered_once_the_presentation_lag_is_read() -> None:
@@ -438,8 +446,12 @@ def test_a_genuine_presentation_span_violation_is_still_detected() -> None:
     revision_id, revision = next(iter(modelo.revisions.items()))
     real_windows = _record_design_windows()
     start, end = real_windows["aeat-dr-720"]
-    assert start == 2013, "the control assumes the real design starts in 2013; re-check the fixture if this moves"
-    shrunk_windows = {**real_windows, "aeat-dr-720": (2014, end)}
+    first_ejercicio = revision.valid_from.year
+    assert start == first_ejercicio + 1, (
+        "the control assumes the real design starts the calendar year after its first ejercicio; "
+        "re-check the fixture if this moves"
+    )
+    shrunk_windows = {**real_windows, "aeat-dr-720": (start + 1, end)}
 
     compared, divergences = _revision_divergences(
         modelo.id, revision_id, revision, shrunk_windows, _ejercicio_scoped_designs()
@@ -447,7 +459,7 @@ def test_a_genuine_presentation_span_violation_is_still_detected() -> None:
 
     assert compared
     assert divergences
-    assert "2012" in divergences[0]
+    assert str(first_ejercicio) in divergences[0]
 
 
 def test_modelo_720_design_is_read_as_legal_effect_scoped_not_ejercicio_scoped() -> None:
@@ -463,23 +475,29 @@ def test_modelo_720_design_is_read_as_legal_effect_scoped_not_ejercicio_scoped()
     """
     assert "aeat-dr-720" not in _ejercicio_scoped_designs()
 
+    modelo = next(candidate for candidate in _authority().modelos if candidate.id == "720")
+    first_ejercicio = next(iter(modelo.revisions.values())).valid_from.year
     start, _end = _record_design_windows()["aeat-dr-720"]
-    assert start == 2013, "the reasoning above depends on the design starting a year after ejercicio 2012"
+    assert start == first_ejercicio + 1, (
+        "the reasoning above depends on the design starting a year after its first ejercicio"
+    )
 
 
 def test_modelo_210_midyear_design_declares_and_uses_the_filing_period_axis() -> None:
     """A long refund window must not turn a devengo design into presentation authority."""
     modelo = next(candidate for candidate in _authority().modelos if candidate.id == "210")
-    revision = modelo.revisions["2025"]
     _modelos, catalogues = bundled_registry_tree()
     design = catalogues.sources["aeat-dr-210-2022"]
+    assert design.applies_to is not None
+    revision = modelo.revisions[str(revision_covering("210", design.applies_to.year).id)]
 
-    assert design.applies_from == date(2022, 6, 1)
-    assert design.applies_to == date(2025, 12, 31)
+    assert design.applies_from is not None
+    assert design.applies_from.isoformat() == "2022-06-01"
+    assert design.applies_to.isoformat() == "2025-12-31"
     assert design.period_selector is not None
-    assert design.period_selector.includes_year(2025)
+    assert design.period_selector.includes_year(design.applies_to.year)
     assert set(design.period_selector.periods) == {"EVENT-N", "0A"}
-    assert max(window.closes_on for window in revision.deadline_windows) == date(2030, 2, 1)
+    assert max(window.closes_on for window in revision.deadline_windows).isoformat() == "2030-02-01"
     assert design.id in _ejercicio_scoped_designs()
 
     compared, divergences = _revision_divergences(
@@ -496,7 +514,10 @@ def test_modelo_210_midyear_design_declares_and_uses_the_filing_period_axis() ->
 def test_modelo_210_midyear_design_axis_gate_bites_without_its_declared_selector() -> None:
     """Removing the explicit devengo-axis declaration restores the real divergence."""
     modelo = next(candidate for candidate in _authority().modelos if candidate.id == "210")
-    revision = modelo.revisions["2025"]
+    _modelos, catalogues = bundled_registry_tree()
+    design_end = catalogues.sources["aeat-dr-210-2022"].applies_to
+    assert design_end is not None
+    revision = modelo.revisions[str(revision_covering("210", design_end.year).id)]
     ejercicio_scoped = _ejercicio_scoped_designs() - {"aeat-dr-210-2022"}
 
     compared, divergences = _revision_divergences(

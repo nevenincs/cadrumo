@@ -9,6 +9,7 @@ import tomlkit
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ...compiler.loader import load_modelo_directory, load_shared_catalogues
 from ..export_field_literal_derivation import literal_derivation
@@ -20,8 +21,12 @@ from ..source_stated_composites import source_stated_composite_integer_digits_fo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_REVISIONS = authored_revisions("194")
+_EPOCHS = tuple(str(revision.id) for revision in _REVISIONS)
+_FIRST_EXERCISE = {str(revision.id): revision.valid_from.year for revision in _REVISIONS}
 
-@pytest.fixture(params=["2019", "2023", "2024"])
+
+@pytest.fixture(params=_EPOCHS)
 def inputs(request: pytest.FixtureRequest) -> RevisionRenderInputs:
     epoch = str(request.param)
     root = Path("src/cadrumo/_data")
@@ -38,7 +43,7 @@ def inputs(request: pytest.FixtureRequest) -> RevisionRenderInputs:
             source_ref=mapping.source_ref,
             source_sha256=mapping.source_sha256,
         ),
-        filing_year=int(epoch),
+        filing_year=_FIRST_EXERCISE[epoch],
         period="0A",
         source_root=root,
     )
@@ -71,19 +76,19 @@ def test_complete_render_preserves_actual_field_values(inputs: RevisionRenderInp
     assert render_fixed_width_export_field(fields[170], Decimal("7.60")) == "07"
     assert render_fixed_width_export_field(fields[172], Decimal("7.60")) == "60"
     assert fields[170].binding == fields[172].binding
-    if inputs.transport_profile.design_epoch != "2019":
+    if inputs.transport_profile.design_epoch != _EPOCHS[0]:
         assert render_fixed_width_export_field(fields[188], 2) == "2"
         with pytest.raises(RegistryValidationError):
             render_fixed_width_export_field(fields[188], 3)
 
 
-@pytest.mark.parametrize("inputs", ["2019"], indirect=True)
+@pytest.mark.parametrize("inputs", [_EPOCHS[0]], indirect=True)
 def test_installing_old_design_does_not_adopt_it_for_later_editions(
     inputs: RevisionRenderInputs, tmp_path: Path
 ) -> None:
     modelo_root = tmp_path / "194"
     copytree(Path("src/cadrumo/_data/registry/aeat/modelos/194"), modelo_root, ignore=ignore_patterns("export"))
-    for revision in ("2023", "2024"):
+    for revision in _EPOCHS[1:]:
         path = modelo_root / "revisions" / revision / "revision.toml"
         document = tomlkit.parse(path.read_text("utf-8"))
         document["revisions"][revision]["cleared_families"] = [
@@ -95,8 +100,8 @@ def test_installing_old_design_does_not_adopt_it_for_later_editions(
         ]
         path.write_text(tomlkit.dumps(document), encoding="utf-8")
     rendered = render_complete_export_tree(
-        modelo_root / "revisions/2019/export",
-        revision_id="2019",
+        modelo_root / "revisions" / _EPOCHS[0] / "export",
+        revision_id=_EPOCHS[0],
         joined=inputs.joined,
         semantic_map=inputs.semantic_map,
         transport_profile=inputs.transport_profile,
@@ -104,8 +109,8 @@ def test_installing_old_design_does_not_adopt_it_for_later_editions(
         render_profile_source_evidence=inputs.render_profile_source_evidence,
     )
     loaded = load_modelo_directory(modelo_root)
-    assert loaded.revisions["2019"].export_layouts == (rendered.layout,)
-    for revision in ("2023", "2024"):
+    assert loaded.revisions[_EPOCHS[0]].export_layouts == (rendered.layout,)
+    for revision in _EPOCHS[1:]:
         assert loaded.revisions[revision].export_layouts == ()
         assert any(
             binding.id == "modelo-194-perceptor-row-ceuta-melilla" for binding in loaded.revisions[revision].bindings

@@ -25,9 +25,11 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.handoffs import relation_consumption_channels, relation_consumption_index
 from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions_where
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..conformance.registry_schema_support import committed_registry_tree
@@ -47,7 +49,13 @@ _EVIDENCE_ROLE = "factual_evidence"
 
 
 def test_relation_consumption_includes_real_alternate_binding_channel() -> None:
-    snapshot = compiled_bundled_authority().snapshot("390", filing_year=2025, period="0A")
+    # The newest edition authored to filing grade: a newer applicability-only edition cannot build the filing snapshot.
+    (*_, newest_filing_grade) = authored_revisions_where(
+        "390", lambda revision: revision.effective_authority_grade is RegistryAuthorityGrade.FILING
+    )
+    snapshot = compiled_bundled_authority().snapshot(
+        "390", filing_year=newest_filing_grade.valid_from.year, period="0A"
+    )
     binding = next(
         item
         for item, _provider in relation_prefill_bindings_for_period(snapshot.revision)

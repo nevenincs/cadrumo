@@ -1,8 +1,7 @@
 """Deterministic SHA-256 fingerprints of corpus, db, and certificate state.
 
-Used by :func:`run_context` to stamp a recorded :class:`RunTrace` with the
-configuration, application-state, and certificate identity observed at the
-time of the run.
+Identifies the configuration, application-state, and certificate identity
+observed at the time of a run, for determinism comparisons.
 
 ``db_sha256`` fingerprints :attr:`~cadrumo.core.config.Settings.cadrumo_storage_root`
 — the single canonical application data root every persisted category
@@ -234,7 +233,7 @@ def read_cert_fingerprint() -> str:
 
     The empty string is the canonical "no certificate bound" sentinel —
     most CLI paths run without a cert (lookups and planning) and
-    must still produce a valid :class:`RunTrace`.
+    must still produce a valid fingerprint.
 
     Reading the certificate without unlocking it is intentional: the
     observability layer never asks the operator for a passphrase, so

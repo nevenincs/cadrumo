@@ -11,7 +11,7 @@ from __future__ import annotations
 import argparse
 import sys
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
@@ -28,7 +28,7 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
     ResolvedGovernedFact,
     ScalarFactQuery,
 )
-from cadrumo.domain.calculations.registry.facts.variants import FactSelector
+from cadrumo.domain.calculations.registry.facts.variants import FactSelector, GovernedFactVariant
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 
 from ..compiler.authority import compiled_bundled_authority
@@ -36,11 +36,11 @@ from ..compiler.legal_grounding import verify_legal_reference_grounding
 from ..compiler.validate_evidence import EvidenceValidator
 
 __all__ = [
-    "CROSS_DOMAIN_FACT_PROBES",
     "CrossDomainFactFinding",
     "CrossDomainFactFindingKind",
     "CrossDomainFactProbe",
     "cross_domain_fact_findings",
+    "cross_domain_fact_probes",
     "main",
 ]
 
@@ -76,149 +76,218 @@ class CrossDomainFactProbe:
     unsupported_query: GovernedFactQuery
 
 
-#: A filing-period coordinate inside the product's supported span, used where a
-#: fact's own window opens below the floor. Stated rather than derived, because
-#: deriving it would compile the registry at import time; the screen checks it
-#: against the live envelope before probing, so a floor that moves past it fails
-#: loudly instead of turning every probe below into an out-of-support refusal.
-_SUPPORTED_PROBE_DATE = date(2025, 12, 31)
+def cross_domain_fact_probes(authority: ValidatedRegistryAuthority) -> tuple[CrossDomainFactProbe, ...]:
+    """Return one authority coordinate per migrated legal domain, read from the authority.
 
-CROSS_DOMAIN_FACT_PROBES = (
-    CrossDomainFactProbe(
-        domain="modelo-347-threshold",
-        query=ScalarFactQuery(
-            fact_id="m347-counterparty-declaration-threshold",
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date(2025, 12, 31),
-        ),
-        unsupported_query=ScalarFactQuery(
-            fact_id="m347-counterparty-declaration-threshold",
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date(1900, 1, 1),
-        ),
-    ),
-    CrossDomainFactProbe(
-        domain="renta-family-window",
-        query=ScalarFactQuery(
-            fact_id="lirpf-art-58-descendant-ordinary-maximum-age",
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date(2025, 12, 31),
-        ),
-        unsupported_query=ScalarFactQuery(
-            fact_id="lirpf-art-58-descendant-ordinary-maximum-age",
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date(2006, 12, 31),
-        ),
-    ),
-    CrossDomainFactProbe(
-        domain="iva-rate",
-        query=MappingFactQuery(
-            fact_id="iva-rate-schedule",
-            date_axis=DateAxis.DEVENGO_DATE,
-            effective_date=date(2025, 1, 1),
-            selectors=(
-                FactSelector(name="member_state", value="es"),
-                FactSelector(name="kind", value="general"),
-                FactSelector(name="rate_role", value="ordinary"),
+    Each positive coordinate sits inside the supported envelope and inside the
+    window of the variant it probes. Each negative coordinate is intentionally
+    not a nearest-match query: it is the day just outside an authored variant
+    window, or a selector no variant declares, so it proves that a coordinate
+    outside the legally authored surface cannot silently resolve through a
+    neighbouring variant.
+    """
+    support = authority.catalogues.require_supported_filing_years()
+    supported_date = date(support.horizon, 12, 31)
+    floor_date = date(support.floor, 1, 1)
+    m347 = _earliest_variant_reaching(authority, "m347-counterparty-declaration-threshold", (), supported_date)
+    family = _earliest_variant_reaching(authority, "lirpf-art-58-descendant-ordinary-maximum-age", (), supported_date)
+    iva_rate_track = (
+        FactSelector(name="member_state", value="es"),
+        FactSelector(name="kind", value="general"),
+    )
+    recargo_track = (FactSelector(name="applied_rate", value=Decimal("0.05")),)
+    recargo = _only_variant(authority, "iva-recargo-by-applied-rate", recargo_track)
+    convenio_track = (
+        FactSelector(name="country_code", value="DE"),
+        FactSelector(name="tipo_renta", value="dividend"),
+    )
+    convenio = _only_variant(authority, "irnr.convenio.override", convenio_track)
+    holiday_track = (FactSelector(name="jurisdiction", value="national"),)
+    holiday, working_day = _first_event_and_next_working_day(
+        authority, "deadlines.public-holiday", holiday_track, support.horizon
+    )
+    return (
+        CrossDomainFactProbe(
+            domain="modelo-347-threshold",
+            query=ScalarFactQuery(
+                fact_id="m347-counterparty-declaration-threshold",
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=supported_date,
+            ),
+            unsupported_query=ScalarFactQuery(
+                fact_id="m347-counterparty-declaration-threshold",
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=_eve_of(m347),
             ),
         ),
-        unsupported_query=MappingFactQuery(
-            fact_id="iva-rate-schedule",
-            date_axis=DateAxis.DEVENGO_DATE,
-            effective_date=date(2025, 1, 1),
-            selectors=(
-                FactSelector(name="member_state", value="es"),
-                FactSelector(name="kind", value="general"),
-                FactSelector(name="rate_role", value="unsupported-role"),
+        CrossDomainFactProbe(
+            domain="renta-family-window",
+            query=ScalarFactQuery(
+                fact_id="lirpf-art-58-descendant-ordinary-maximum-age",
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=supported_date,
+            ),
+            unsupported_query=ScalarFactQuery(
+                fact_id="lirpf-art-58-descendant-ordinary-maximum-age",
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=_eve_of(family),
             ),
         ),
-    ),
-    CrossDomainFactProbe(
-        domain="iva-recargo",
-        query=MappingFactQuery(
-            fact_id="iva-recargo-by-applied-rate",
-            date_axis=DateAxis.DEVENGO_DATE,
-            effective_date=date(2024, 5, 1),
-            selectors=(FactSelector(name="applied_rate", value=Decimal("0.05")),),
-        ),
-        unsupported_query=MappingFactQuery(
-            fact_id="iva-recargo-by-applied-rate",
-            date_axis=DateAxis.DEVENGO_DATE,
-            effective_date=date(2025, 1, 1),
-            selectors=(FactSelector(name="applied_rate", value=Decimal("0.05")),),
-        ),
-    ),
-    CrossDomainFactProbe(
-        domain="irnr-convenio",
-        query=OverrideFactQuery(
-            fact_id="irnr.convenio.override",
-            date_axis=DateAxis.DEVENGO_DATE,
-            effective_date=date(2025, 1, 1),
-            selectors=(
-                FactSelector(name="country_code", value="DE"),
-                FactSelector(name="tipo_renta", value="dividend"),
+        CrossDomainFactProbe(
+            domain="iva-rate",
+            query=MappingFactQuery(
+                fact_id="iva-rate-schedule",
+                date_axis=DateAxis.DEVENGO_DATE,
+                effective_date=supported_date,
+                selectors=(*iva_rate_track, FactSelector(name="rate_role", value="ordinary")),
+            ),
+            unsupported_query=MappingFactQuery(
+                fact_id="iva-rate-schedule",
+                date_axis=DateAxis.DEVENGO_DATE,
+                effective_date=supported_date,
+                selectors=(*iva_rate_track, FactSelector(name="rate_role", value="unsupported-role")),
             ),
         ),
-        unsupported_query=OverrideFactQuery(
-            fact_id="irnr.convenio.override",
-            date_axis=DateAxis.DEVENGO_DATE,
-            effective_date=date(2024, 12, 31),
-            selectors=(
-                FactSelector(name="country_code", value="DE"),
-                FactSelector(name="tipo_renta", value="dividend"),
+        CrossDomainFactProbe(
+            domain="iva-recargo",
+            query=MappingFactQuery(
+                fact_id="iva-recargo-by-applied-rate",
+                date_axis=DateAxis.DEVENGO_DATE,
+                effective_date=max(recargo.valid_from or floor_date, floor_date),
+                selectors=recargo_track,
+            ),
+            unsupported_query=MappingFactQuery(
+                fact_id="iva-recargo-by-applied-rate",
+                date_axis=DateAxis.DEVENGO_DATE,
+                effective_date=_morrow_of(recargo),
+                selectors=recargo_track,
             ),
         ),
-    ),
-    CrossDomainFactProbe(
-        domain="deadline-holiday",
-        query=EventFactQuery(
-            fact_id="deadlines.public-holiday",
-            date_axis=DateAxis.SUBMISSION_DATE,
-            effective_date=date(2025, 1, 1),
-            selectors=(FactSelector(name="jurisdiction", value="national"),),
+        CrossDomainFactProbe(
+            domain="irnr-convenio",
+            query=OverrideFactQuery(
+                fact_id="irnr.convenio.override",
+                date_axis=DateAxis.DEVENGO_DATE,
+                effective_date=max(convenio.valid_from or floor_date, floor_date),
+                selectors=convenio_track,
+            ),
+            unsupported_query=OverrideFactQuery(
+                fact_id="irnr.convenio.override",
+                date_axis=DateAxis.DEVENGO_DATE,
+                effective_date=_eve_of(convenio),
+                selectors=convenio_track,
+            ),
         ),
-        unsupported_query=EventFactQuery(
-            fact_id="deadlines.public-holiday",
-            date_axis=DateAxis.SUBMISSION_DATE,
-            effective_date=date(2025, 1, 2),
-            selectors=(FactSelector(name="jurisdiction", value="national"),),
+        CrossDomainFactProbe(
+            domain="deadline-holiday",
+            query=EventFactQuery(
+                fact_id="deadlines.public-holiday",
+                date_axis=DateAxis.SUBMISSION_DATE,
+                effective_date=holiday,
+                selectors=holiday_track,
+            ),
+            unsupported_query=EventFactQuery(
+                fact_id="deadlines.public-holiday",
+                date_axis=DateAxis.SUBMISSION_DATE,
+                effective_date=working_day,
+                selectors=holiday_track,
+            ),
         ),
-    ),
-    CrossDomainFactProbe(
-        domain="modelo-131-income-exclusion",
-        # The authored variant opens on 2018-12-23 and never closes, so the
-        # coordinate that reaches it has to sit inside the SUPPORTED span: a
-        # query below the floor is refused for being out of support, which says
-        # nothing about the fact. The negative therefore cannot be "one day
-        # earlier" here -- that date is below the floor too -- so it is a
-        # selector the variant does not declare, which is the other half of what
-        # this table proves.
-        query=EntitySetFactQuery(
-            fact_id="rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario",
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=_SUPPORTED_PROBE_DATE,
+        CrossDomainFactProbe(
+            domain="modelo-131-income-exclusion",
+            # The authored variant opens below the floor and never closes, so the
+            # coordinate that reaches it has to sit inside the SUPPORTED span: a
+            # query below the floor is refused for being out of support, which says
+            # nothing about the fact. The negative therefore cannot be "one day
+            # earlier" here -- that date is below the floor too -- so it is a
+            # selector the variant does not declare, which is the other half of what
+            # this table proves.
+            query=EntitySetFactQuery(
+                fact_id="rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario",
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=supported_date,
+            ),
+            unsupported_query=EntitySetFactQuery(
+                fact_id="rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario",
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=supported_date,
+                selectors=(FactSelector(name="jurisdiction", value="no-such-jurisdiction"),),
+            ),
         ),
-        unsupported_query=EntitySetFactQuery(
-            fact_id="rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario",
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=_SUPPORTED_PROBE_DATE,
-            selectors=(FactSelector(name="jurisdiction", value="no-such-jurisdiction"),),
-        ),
-    ),
-)
-"""One exact authority coordinate per migrated legal domain.
+    )
 
-Each negative coordinate is intentionally not a nearest-match query.  It
-proves that a source window or selector outside the legally authored surface
-cannot silently resolve through a neighbouring variant.
-"""
+
+def _track_variants(
+    authority: ValidatedRegistryAuthority, fact_id: str, track: tuple[FactSelector, ...]
+) -> tuple[GovernedFactVariant, ...]:
+    """Return the authored variants whose selectors are exactly ``track``."""
+    wanted = {(selector.name, selector.value) for selector in track}
+    return tuple(
+        variant
+        for variant in authority.catalogues.facts.facts[fact_id].variants
+        if {(selector.name, selector.value) for selector in variant.selectors} == wanted
+    )
+
+
+def _only_variant(
+    authority: ValidatedRegistryAuthority, fact_id: str, track: tuple[FactSelector, ...]
+) -> GovernedFactVariant:
+    variants = _track_variants(authority, fact_id, track)
+    if len(variants) != 1:
+        raise RegistryValidationError(
+            f"cross-domain probe for {fact_id!r} expects one authored variant on its track, found {len(variants)}"
+        )
+    return variants[0]
+
+
+def _earliest_variant_reaching(
+    authority: ValidatedRegistryAuthority, fact_id: str, track: tuple[FactSelector, ...], on: date
+) -> GovernedFactVariant:
+    """Return a track's earliest variant, refusing a track that does not reach ``on``."""
+    variants = sorted(_track_variants(authority, fact_id, track), key=lambda variant: variant.valid_from or date.min)
+    if not any(_covers(variant, on) for variant in variants):
+        raise RegistryValidationError(f"cross-domain probe for {fact_id!r} has no authored variant covering {on}")
+    return variants[0]
+
+
+def _covers(variant: GovernedFactVariant, on: date) -> bool:
+    opens = variant.valid_from is None or variant.valid_from <= on
+    return opens and (variant.valid_to is None or on <= variant.valid_to)
+
+
+def _eve_of(variant: GovernedFactVariant) -> date:
+    """Return the day before a variant's authored opening."""
+    if variant.valid_from is None:
+        raise RegistryValidationError(f"variant {variant.variant_id!r} authors no opening to probe before")
+    return variant.valid_from - timedelta(days=1)
+
+
+def _morrow_of(variant: GovernedFactVariant) -> date:
+    """Return the day after a variant's authored closing."""
+    if variant.valid_to is None:
+        raise RegistryValidationError(f"variant {variant.variant_id!r} authors no closing to probe after")
+    return variant.valid_to + timedelta(days=1)
+
+
+def _first_event_and_next_working_day(
+    authority: ValidatedRegistryAuthority, fact_id: str, track: tuple[FactSelector, ...], year: int
+) -> tuple[date, date]:
+    """Return the first authored event of ``year`` and the first later day that is no event."""
+    events = {variant.valid_from for variant in _track_variants(authority, fact_id, track) if variant.valid_from}
+    in_year = sorted(day for day in events if day.year == year)
+    if not in_year:
+        raise RegistryValidationError(f"cross-domain probe for {fact_id!r} finds no authored event in {year}")
+    following = in_year[0] + timedelta(days=1)
+    while following in events:
+        following += timedelta(days=1)
+    return in_year[0], following
 
 
 def cross_domain_fact_findings(
     authority: ValidatedRegistryAuthority,
     *,
     source_root: Path,
-    probes: tuple[CrossDomainFactProbe, ...] = CROSS_DOMAIN_FACT_PROBES,
+    probes: tuple[CrossDomainFactProbe, ...] | None = None,
 ) -> tuple[CrossDomainFactFinding, ...]:
     """Return every cross-domain authority, evidence, or refusal defect."""
     evidence = EvidenceValidator(
@@ -226,24 +295,12 @@ def cross_domain_fact_findings(
         source_refs=authority.catalogues.sources,
         source_root=source_root,
     )
-    _require_supported_probe_coordinate(authority)
     findings = (
         finding
-        for probe in probes
+        for probe in (cross_domain_fact_probes(authority) if probes is None else probes)
         for finding in _probe_findings(probe, authority=authority, evidence=evidence, source_root=source_root)
     )
     return tuple(findings)
-
-
-def _require_supported_probe_coordinate(authority: ValidatedRegistryAuthority) -> None:
-    """Refuse if the fixed filing-period probe lies outside the authority span."""
-    supported = authority.catalogues.supported_filing_years
-    if supported is not None and not supported.admits_filing_year(_SUPPORTED_PROBE_DATE.year):
-        raise RegistryValidationError(
-            f"the cross-domain probe coordinate {_SUPPORTED_PROBE_DATE} lies outside the supported span; "
-            "move it inside, or every probe below reports an out-of-support refusal rather than the "
-            "authority behaviour it exists to measure"
-        )
 
 
 def _probe_findings(

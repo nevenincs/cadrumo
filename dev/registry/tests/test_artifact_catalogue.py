@@ -19,6 +19,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.corpus.artifact_catalogue import (
     ArtifactDiagnosticKind,
     ArtifactDisposition,
@@ -42,6 +43,7 @@ _DISPOSITION_PATH = PurePosixPath("corpus/official/historical_exclusions.json")
 _FIXTURE_PATH = PurePosixPath("tests/fixtures/synthetic-source.pdf")
 _UNCLASSIFIED_PATH = PurePosixPath("corpus/official/unclassified.txt")
 _SOURCE_DIGEST = "a" * 64
+_RETRIEVED = date(filing_year_envelope().horizon, 9, 10)
 
 
 def _temporary_bundled_paths(tmp_path: Path, *additional_paths: PurePosixPath) -> tuple[PurePosixPath, ...]:
@@ -75,7 +77,7 @@ def test_compiler_assigns_exactly_one_declared_role_to_every_bounded_temp_artifa
         bytes=14,
         source_url="https://www.example.test/official/source.pdf",
         publisher="Example authority",
-        retrieved_at=date(2026, 9, 10),
+        retrieved_at=_RETRIEVED,
     )
 
     catalogue = compile_artifact_catalogue(
@@ -121,7 +123,7 @@ def test_compiler_reports_distinct_conflict_orphan_and_unknown_file_diagnostics(
         bytes=14,
         source_url="https://www.example.test/official/source.pdf",
         publisher="Example authority",
-        retrieved_at=date(2026, 9, 10),
+        retrieved_at=_RETRIEVED,
     )
     conflicting_official = ArtifactIdentity(
         path=_OFFICIAL_PATH,
@@ -129,7 +131,7 @@ def test_compiler_reports_distinct_conflict_orphan_and_unknown_file_diagnostics(
         bytes=14,
         source_url="https://www.example.test/official/source.pdf",
         publisher="Example authority",
-        retrieved_at=date(2026, 9, 10),
+        retrieved_at=_RETRIEVED,
     )
 
     catalogue = compile_artifact_catalogue(
@@ -179,7 +181,7 @@ def test_compiler_reports_a_malformed_official_identity_claim(tmp_path: Path) ->
                 bytes=14,
                 source_url="https://www.example.test/official/source.pdf",
                 publisher="Example authority",
-                retrieved_at=date(2026, 9, 10),
+                retrieved_at=_RETRIEVED,
             ),
         ),
     )
@@ -201,7 +203,7 @@ def test_compiler_reports_a_raw_claim_with_an_invalid_retrieval_date(tmp_path: P
                 bytes=14,
                 source_url="https://www.example.test/official/source.pdf",
                 publisher="Example authority",
-                retrieved_at=datetime(2026, 9, 10, 12, 0),
+                retrieved_at=datetime(_RETRIEVED.year, 9, 10, 12, 0),
             ),
         ),
     )
@@ -221,7 +223,7 @@ def test_identity_model_still_rejects_malformed_values_at_construction() -> None
             bytes=14,
             source_url="https://www.example.test/official/source.pdf",
             publisher="Example authority",
-            retrieved_at=date(2026, 9, 10),
+            retrieved_at=_RETRIEVED,
         )
 
 
@@ -233,7 +235,7 @@ def test_compiler_reports_a_derivative_when_its_input_digest_has_changed(tmp_pat
         bytes=14,
         source_url="https://www.example.test/official/source.pdf",
         publisher="Example authority",
-        retrieved_at=date(2026, 9, 10),
+        retrieved_at=_RETRIEVED,
     )
 
     catalogue = compile_artifact_catalogue(
@@ -271,7 +273,7 @@ def test_compiler_reports_a_registry_identity_that_diverges_from_catalogue(tmp_p
         bytes=14,
         source_url="https://www.example.test/official/source.pdf",
         publisher="Example authority",
-        retrieved_at=date(2026, 9, 10),
+        retrieved_at=_RETRIEVED,
     )
     divergent_registry_identity = ArtifactIdentity(
         path=_OFFICIAL_PATH,
@@ -279,7 +281,7 @@ def test_compiler_reports_a_registry_identity_that_diverges_from_catalogue(tmp_p
         bytes=14,
         source_url="https://www.example.test/official/source.pdf",
         publisher="Example authority",
-        retrieved_at=date(2026, 9, 10),
+        retrieved_at=_RETRIEVED,
     )
 
     catalogue = compile_artifact_catalogue(
@@ -333,7 +335,7 @@ def test_registry_validator_rejects_a_conflicting_record_design_manifest_identit
         json.dumps(
             {
                 "source": "AEAT",
-                "retrieved_at": "2026-09-10",
+                "retrieved_at": _RETRIEVED.isoformat(),
                 "artefacts": [
                     {
                         "stored_path": stored_path,

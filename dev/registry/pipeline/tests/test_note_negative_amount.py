@@ -10,6 +10,7 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportSignPosition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ...form_layout.reconciliation import admit_note_signed_amount
@@ -53,7 +54,9 @@ def test_a_reading_refuses_a_design_other_than_the_reviewed_bytes() -> None:
     ],
 )
 def test_only_the_correction_amounts_of_a_revision_are_signed(revision: str, period: str, record: str) -> None:
-    layout = published_snapshot("369", filing_year=2026, period=period, revision_id=revision).revision.export_layouts[0]
+    layout = published_snapshot(
+        "369", filing_year=filing_year_envelope().horizon, period=period, revision_id=revision
+    ).revision.export_layouts[0]
     signed = [(item.id, field) for item in layout.records for field in item.fields if field.signed]
     assert len(signed) == 28
     assert all(record_id.startswith(record) for record_id, _ in signed)

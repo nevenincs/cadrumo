@@ -61,7 +61,7 @@ from .shared_cohort import shared_cohort
 DEFAULT_COHORT_VERSION = "0.2.1"
 DEFAULT_COHORT_SOURCE_DIGEST = "c" * 64
 DEFAULT_COHORT_BUILD_CONSTRAINTS_SHA256 = "d" * 64
-DEFAULT_COHORT_CREATED_AT = datetime(2026, 1, 1, tzinfo=UTC)
+DEFAULT_COHORT_CREATED_AT = datetime.fromtimestamp(0, tz=UTC)
 
 
 def uv_executable() -> str:

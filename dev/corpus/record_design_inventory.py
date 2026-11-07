@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import UTC, datetime
 
-RETRIEVED_AT = "2026-08-26"
+from .record_design_manifests import recorded_artifact
+
+#: The day this run retrieves the designs, which the manifests it writes record.
+RETRIEVED_AT = datetime.now(UTC).date().isoformat()
 
 
 STATIC = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro"
@@ -34,6 +38,11 @@ HISTORICAL_PAGE_KEYS = ("h01", "h100", "h200", "h300", "hresto")
 
 
 RECORD_DESIGN_SUFFIXES = frozenset({".pdf", ".xls", ".xlsx", ".xlsm", ".xsd"})
+
+
+def _recorded_title(modelo: str, relative_url: str) -> str:
+    """Return the index-link title the bundled manifest recorded for an already stored design."""
+    return recorded_artifact(modelo, relative_url=relative_url)["title"]
 
 
 @dataclass(frozen=True)
@@ -952,7 +961,7 @@ REQUIRED = (
     ),
     RequiredArtifact(
         "308",
-        "308 - 01-308-ejercicios-2019-y-siguientes-v13.xls",
+        _recorded_title("308", "DR_300_399/archivos/dr308e16v13.xls"),
         "DR_300_399/archivos/dr308e16v13.xls",
         "100",
     ),
@@ -982,7 +991,7 @@ REQUIRED = (
     ),
     RequiredArtifact(
         "309",
-        "309 - 01-309-ejercicios-2023-y-siguientes.xls",
+        _recorded_title("309", "DR_300_399/archivos_23/dr309e23.xls"),
         "DR_300_399/archivos_23/dr309e23.xls",
         "100",
     ),
@@ -1008,7 +1017,7 @@ REQUIRED = (
     ),
     RequiredArtifact(
         "322",
-        "322 - 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx",
+        _recorded_title("322", "DR_300_399/archivos_26/DR322e26v11.xlsx"),
         "DR_300_399/archivos_26/DR322e26v11.xlsx",
         "100",
     ),
@@ -1073,7 +1082,7 @@ REQUIRED = (
     RequiredArtifact("353", "353 - Ejercicios 2021 a 2025", "DR_300_399/archivos_17/DR353e21v21.xls", "h300"),
     RequiredArtifact(
         "353",
-        "353 - 01-353-ejercicio-2026-y-siguientes-actualizado-03-02-26.xlsx",
+        _recorded_title("353", "DR_300_399/archivos_26/DR353e26v12.xlsx"),
         "DR_300_399/archivos_26/DR353e26v12.xlsx",
         "100",
     ),

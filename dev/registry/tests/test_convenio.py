@@ -28,12 +28,14 @@ from cadrumo.domain.calculations.registry.convenio import (
     resolve_convenio_override,
 )
 from cadrumo.domain.calculations.registry.irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_EFFECTIVE_DATE = date(2025, 1, 1)
+_YEAR = filing_year_envelope().horizon
+_EFFECTIVE_DATE = date(_YEAR, 1, 1)
 
 
 @cache
@@ -71,7 +73,7 @@ def _row(
         rate=rate,
         legal_ref_anchor=legal_ref_anchor,
         legal_refs=legal_refs,
-        valid_from=date(2025, 1, 1),
+        valid_from=_EFFECTIVE_DATE,
     )
 
 
@@ -162,7 +164,7 @@ def test_override_row_projects_registry_tokens_from_plain_strings() -> None:
             "kind": "exempt",
             "legal_ref_anchor": "convenio-es-de-2011:art-11",
             "legal_refs": ("convenio-es-de-2011:art-11",),
-            "valid_from": date(2025, 1, 1),
+            "valid_from": _EFFECTIVE_DATE,
         }
     )
     assert row.tipo_renta == _tipo_renta("interest")
@@ -188,16 +190,16 @@ def test_authority_resolve_filters_by_year_window_and_returns_none_off_window() 
         rate="0.10",
         legal_ref_anchor="convenio-es-ma-1978:art-11",
         legal_refs=("convenio-es-ma-1978:art-11",),
-        valid_from=date(2025, 1, 1),
-        valid_to=date(2025, 12, 31),
+        valid_from=_EFFECTIVE_DATE,
+        valid_to=date(_YEAR, 12, 31),
     )
     authority = ConvenioAuthority(
         treaties={"MA": ConvenioTreaty(country_code="MA", document_id="BOE-A-1985-9280", overrides=(row,))},
     )
 
     interest = _tipo_renta("interest")
-    assert authority.resolve("MA", interest, 2025) is not None
-    assert authority.resolve("ma", interest, 2025) is not None  # case-insensitive
-    assert authority.resolve("MA", interest, 2026) is None  # after valid_to
-    assert authority.resolve("MA", _tipo_renta("general"), 2025) is None  # wrong income type
-    assert authority.resolve("ZW", interest, 2025) is None  # no treaty
+    assert authority.resolve("MA", interest, _YEAR) is not None
+    assert authority.resolve("ma", interest, _YEAR) is not None  # case-insensitive
+    assert authority.resolve("MA", interest, _YEAR + 1) is None  # after valid_to
+    assert authority.resolve("MA", _tipo_renta("general"), _YEAR) is None  # wrong income type
+    assert authority.resolve("ZW", interest, _YEAR) is None  # no treaty

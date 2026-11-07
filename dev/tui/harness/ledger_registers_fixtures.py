@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from datetime import date
 from enum import StrEnum
 from typing import cast, override
 
@@ -20,6 +21,7 @@ from cadrumo.application.prorrata_register.projection_contracts import (
     ProrrataRefusalProjection,
     ProrrataSectorDefinitionProjection,
 )
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.ledger.controller import LedgerWorkspaceController
 from cadrumo.entrypoints.tui.ledger.registers_capital_goods import LedgerCapitalGoodsDoorV1, LedgerCapitalGoodsScreen
@@ -119,14 +121,20 @@ class RegisterCaptureHost(ScreenHostApp[None]):
         self.register_screen.query_one(selector).scroll_visible(top=True, animate=False, immediate=True)
 
 
+def _fixture_year() -> int:
+    """Return the published support horizon, the year these synthetic captures are staged in."""
+    with bundled_indexed_authority().operation() as operation:
+        return operation.supported_filing_years().horizon
+
+
 def _prorrata_door(*, empty: bool) -> MemoryProrrataRegisterDoor:
     if empty:
         return MemoryProrrataRegisterDoor()
     return MemoryProrrataRegisterDoor(
         entries=(
-            synthetic_prorrata_entry(2024, definitive="78"),
-            synthetic_prorrata_entry(2025, provisional="78"),
-            synthetic_prorrata_entry(2025, sector_id="S1", regime="especial", provisional="64.5"),
+            synthetic_prorrata_entry(_fixture_year() - 2, definitive="78"),
+            synthetic_prorrata_entry(_fixture_year() - 1, provisional="78"),
+            synthetic_prorrata_entry(_fixture_year() - 1, sector_id="S1", regime="especial", provisional="64.5"),
         ),
         sectors=(ProrrataSectorDefinitionProjection(sector_id="S1", letra="a", member_activity_codes=("A01", "A02")),),
     )
@@ -134,7 +142,11 @@ def _prorrata_door(*, empty: bool) -> MemoryProrrataRegisterDoor:
 
 async def _stage_election(host: RegisterCaptureHost) -> None:
     await host.choose("prorrata-action", "elect_general")
-    host.fill(prorrata_ejercicio="2026", prorrata_percentage="82", prorrata_provenance="synthetic_operator_estimate")
+    host.fill(
+        prorrata_ejercicio=str(_fixture_year()),
+        prorrata_percentage="82",
+        prorrata_provenance="synthetic_operator_estimate",
+    )
     await host.press("register-review")
     host.show("#register-staged")
 
@@ -148,7 +160,7 @@ async def _refuse_election(host: RegisterCaptureHost) -> None:
 async def _settle_sector(host: RegisterCaptureHost) -> None:
     await host.choose("prorrata-action", "settle_sector")
     host.fill(
-        prorrata_ejercicio="2025",
+        prorrata_ejercicio=str(_fixture_year() - 1),
         prorrata_sector="S1",
         prorrata_con_derecho="7500.00",
         prorrata_sin_derecho="2500.00",
@@ -162,7 +174,7 @@ async def _stage_declaration(host: RegisterCaptureHost, identifier: str) -> None
     host.fill(
         capital_identifier=identifier,
         capital_description="Synthetic delivery van",
-        capital_year="2025",
+        capital_year=str(_fixture_year() - 1),
         capital_ledger_id="tx-synthetic-02",
         capital_cuota="4200.00",
         capital_prorrata="80",
@@ -183,9 +195,9 @@ async def _stage_movement(host: RegisterCaptureHost) -> None:
     await host.choose("inventory-movement-kind", "purchase")
     host.fill(
         inventory_actividad="act-01",
-        inventory_year="2026",
+        inventory_year=str(_fixture_year()),
         inventory_movement_id="mv-01",
-        inventory_movement_date="2026-03-01",
+        inventory_movement_date=date(_fixture_year(), 3, 1).isoformat(),
         inventory_quantity="5",
         inventory_unit_cost="11.00",
         inventory_taxable_base="55.00",
@@ -197,7 +209,7 @@ async def _stage_movement(host: RegisterCaptureHost) -> None:
 
 async def _preview_valuation(host: RegisterCaptureHost) -> None:
     await host.choose("inventory-action", "valuation_preview")
-    host.fill(inventory_actividad="act-01", inventory_year="2026")
+    host.fill(inventory_actividad="act-01", inventory_year=str(_fixture_year()))
     await host.press("register-review")
     await host.press("register-confirm")
     host.show("#register-result")
@@ -216,7 +228,7 @@ def build_register_fixture(state: RegisterFixtureState) -> RegisterCaptureHost:
                 code="REFUSED_PRORRATA_ELECTION",
                 reason="provenance_not_electable",
                 detail="The provisional provenance named is not one an operator can elect.",
-                ejercicio=2026,
+                ejercicio=_fixture_year(),
                 accepted_provenances=("synthetic_operator_estimate",),
             )
         drives: dict[RegisterFixtureState, Callable[[RegisterCaptureHost], object]] = {

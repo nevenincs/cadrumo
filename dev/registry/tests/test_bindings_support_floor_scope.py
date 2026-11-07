@@ -19,18 +19,22 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ..binding_signal.common import required_mapping
 from ..bindings import audit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_SUPPORT = """[supported_filing_years]
-floor = 2022
-horizon = 2022
+# The synthetic registry declares an envelope of its own, one year wide, at the shipped floor.
+_FLOOR = filing_year_envelope().floor
+_SUPPORT = f"""[supported_filing_years]
+floor = {_FLOOR}
+horizon = {_FLOOR}
 
 [sociedades_annual_manual_coverage]
 [[sociedades_annual_manual_coverage.dispositions]]
-year = 2022
+year = {_FLOOR}
 status = "unpublished"
 official_locator = "https://sede.agenciatributaria.gob.es/Sede/manuales-practicos.html"
 observed_at = 2026-09-10
@@ -104,8 +108,12 @@ def _scope(payload: dict[str, object]) -> Mapping[str, object]:
     return required_mapping(payload["scope"], context="audit scope")
 
 
-_EARLY = ("2016-2017", 2016, 'valid_to = 2017-12-31\nperiod_selector = { years = [2016, 2017], periods = ["0A"] }')
-_AT_FLOOR = ("2022-y-siguientes", 2022, 'period_selector = { year_from = 2022, periods = ["0A"] }')
+_EARLY = (
+    f"{_FLOOR - 6}-{_FLOOR - 5}",
+    _FLOOR - 6,
+    f'valid_to = {_FLOOR - 5}-12-31\nperiod_selector = {{ years = [{_FLOOR - 6}, {_FLOOR - 5}], periods = ["0A"] }}',
+)
+_AT_FLOOR = (f"{_FLOOR}-y-siguientes", _FLOOR, f'period_selector = {{ year_from = {_FLOOR}, periods = ["0A"] }}')
 
 
 def test_an_unconsumed_binding_below_the_floor_is_not_counted_and_one_at_the_floor_is(
@@ -122,17 +130,17 @@ def test_an_unconsumed_binding_below_the_floor_is_not_counted_and_one_at_the_flo
 
     summary = _summary(payload)
     assert summary["classification"] == "measured"
-    assert _unconsumed(payload) == [("999", "2022-y-siguientes", "m999-profile-current")]
+    assert _unconsumed(payload) == [("999", _AT_FLOOR[0], "m999-profile-current")]
     assert summary["unreferenced_bindings"] == 1
     assert summary["bindings"] == 1
     assert summary["revisions"] == 1
     assert summary["revisions_below_support_floor"] == 1
     scope = _scope(payload)
-    assert scope["revisions_below_support_floor"] == ["999/2016-2017"]
+    assert scope["revisions_below_support_floor"] == [f"999/{_EARLY[0]}"]
     assert scope["support_envelope"] == {
         "authority": "supported_filing_years",
-        "floor": 2022,
-        "horizon": 2022,
+        "floor": _FLOOR,
+        "horizon": _FLOOR,
     }
 
 
@@ -152,10 +160,10 @@ def test_a_binding_an_in_scope_edition_inherits_from_below_the_floor_is_measured
 
     assert _summary(payload)["classification"] == "measured"
     assert _unconsumed(payload) == [
-        ("999", "2022-y-siguientes", "m999-profile-current"),
-        ("999", "2022-y-siguientes", "m999-profile-early"),
+        ("999", _AT_FLOOR[0], "m999-profile-current"),
+        ("999", _AT_FLOOR[0], "m999-profile-early"),
     ]
-    assert _scope(payload)["revisions_below_support_floor"] == ["999/2016-2017"]
+    assert _scope(payload)["revisions_below_support_floor"] == [f"999/{_EARLY[0]}"]
     findings = payload["findings"]
     assert isinstance(findings, list)
     # The successor still names a predecessor that is declared on disk.
@@ -169,14 +177,15 @@ def test_a_pre_floor_revision_projected_onto_a_supported_year_stays_measured(
     """Projection answers the floor year from the nearest edition, so that edition is in scope."""
     monkeypatch.setattr(sys, "path", list(sys.path))
     projected = (
-        "2019-2020",
-        2019,
-        'valid_to = 2020-12-31\nperiod_selector = { years = [2019, 2020], periods = ["0A"] }',
+        f"{_FLOOR - 3}-{_FLOOR - 2}",
+        _FLOOR - 3,
+        f"valid_to = {_FLOOR - 2}-12-31\n"
+        f'period_selector = {{ years = [{_FLOOR - 3}, {_FLOOR - 2}], periods = ["0A"] }}',
     )
     root = _registry(tmp_path, {"998": ((*projected, "m998-profile-projected"),)})
 
     payload = audit(root)
 
     assert _summary(payload)["classification"] == "measured"
-    assert _unconsumed(payload) == [("998", "2019-2020", "m998-profile-projected")]
+    assert _unconsumed(payload) == [("998", projected[0], "m998-profile-projected")]
     assert _scope(payload)["revisions_below_support_floor"] == []

@@ -8,6 +8,7 @@ import pytest
 
 from ......core.errors.severity import BaseSeverity
 from ......core.i18n.translatable import Translatable as tr
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......domain.filing.schema import ModeloValidationFinding
 from ......domain.submission.errors import SubmissionPreflightError
 from ......domain.submission.models import ModeloDraftStatus
@@ -15,9 +16,10 @@ from ......domain.submission.preflight import Preflight
 from .preflight_support import clave_movil_provider, deadline_checker, modelo_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
+_YEAR = filing_year_envelope().horizon
 
-_OPEN_DAY = date(2026, 4, 10)
-_CLOSED_DAY = date(2026, 6, 10)
+_OPEN_DAY = date(_YEAR, 4, 10)
+_CLOSED_DAY = date(_YEAR, 6, 10)
 
 
 def _preflight(*, identity: str | None = "12345678Z") -> Preflight:

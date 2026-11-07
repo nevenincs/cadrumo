@@ -16,16 +16,18 @@ from cadrumo.core.config import override_settings
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 
 from .compiler.authority import compiled_bundled_authority
+from .workbook_demo_cases import supported_horizon_year, template_edition
 from .workbook_template_source import load_workbook_template_source
 
 
 def build_eu_refund_plan(
-    *, year: int = 2025
+    *, year: int | None = None
 ) -> tuple[WorkbookTemplateSource, SheetExportPlan[SheetTemplatePreviewMetadata]]:
     """Declare two invoices without inventing refund eligibility or a bank account."""
+    year = supported_horizon_year() if year is None else year
     source = load_workbook_template_source(
         "360",
-        revision_id="2010-y-siguientes",
+        revision_id=template_edition("360", year).revision_id,
         source_ref="boe-modelo-360-2010-original-form-pdf",
         preview_year=year,
         preview_period="0A",

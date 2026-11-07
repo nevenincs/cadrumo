@@ -1112,3 +1112,43 @@ def test_an_obligatory_casilla_whose_contenido_admits_blank_keeps_a_blank_repres
     assert is_required_admitting_blank_text("obligatorio", '"C" (compl.)') is True
     assert is_required_admitting_blank_text("obligatorio", "Blanquear") is True
     assert is_required_admitting_blank_text(None, 'blanco o "C"') is False
+
+
+@pytest.mark.parametrize(
+    ("official_content", "expected"),
+    (
+        ('"<T840010>"', "<T840010>"),
+        ("'</T840010>'", "</T840010>"),
+        ("<T840010>", "<T840010>"),
+    ),
+)
+def test_record_tag_printed_quoted_without_a_label_is_the_literal(official_content: str, expected: str) -> None:
+    """Modelo 840 prints its opening tag quoted and unlabelled; the reader returns the bare tag."""
+    from types import SimpleNamespace
+
+    from dev.registry.pipeline.export_field_literal_derivation import _parse_official_literal
+
+    field = SimpleNamespace(
+        semantic_entry=SimpleNamespace(export_field_id="m840-2003.pagina01.f001"),
+        parser_field=SimpleNamespace(content_in_contenido_column=False),
+    )
+
+    assert _parse_official_literal(field, official_content) == (expected, False)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize(
+    "official_content", ('"<T840010', '"<T840010>', '"ZZ"', '"<T840010>" o "<T840020>"', '"<T 840010>"')
+)
+def test_quoted_unlabelled_text_that_is_not_one_record_tag_stays_refused(official_content: str) -> None:
+    """Quotes alone make no constant: only a single complete record tag is admitted."""
+    from types import SimpleNamespace
+
+    from dev.registry.pipeline.export_field_literal_derivation import _parse_official_literal
+
+    field = SimpleNamespace(
+        semantic_entry=SimpleNamespace(export_field_id="m840-2003.pagina01.f001"),
+        parser_field=SimpleNamespace(content_in_contenido_column=False),
+    )
+
+    with pytest.raises(RegistryValidationError, match="ambiguous official constant"):
+        _parse_official_literal(field, official_content)  # type: ignore[arg-type]

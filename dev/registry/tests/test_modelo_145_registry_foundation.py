@@ -32,13 +32,14 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_
 from cadrumo.domain.calculations.registry.fixed_width_parser import parse_fixed_width_export_field
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
 from cadrumo.domain.calculations.registry.support_matrix import build_support_matrix
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REVISION_ID = "2012-01-31-y-siguientes"
+_REVISION_ID = str(open_ended_revision("145").id)
 _FORBIDDEN_M145_SURFACES = frozenset(
     {
         "aeat_electronic_tramite",
@@ -174,7 +175,7 @@ def test_modelo_145_export_layout_is_grounded_in_dr145_record_design() -> None:
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2026,
+        filing_year=filing_year_envelope().horizon,
         period="comunicacion",
     )
     resolved_layout = resolve_export_layout(snapshot)
@@ -260,7 +261,13 @@ def test_modelo_145_page_indicator_admits_exactly_blank_or_c() -> None:
     modelo, catalogues = _modelo_145()
     revision = modelo.revisions[_REVISION_ID]
     casilla = next(item for item in revision.casillas if item.id == "comunicacion.pagina-complementaria")
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2026, period="comunicacion")
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=filing_year_envelope().horizon,
+        period="comunicacion",
+    )
     field = resolve_export_layout(snapshot).fields_by_id["modelo-145-dr-02-page-complementaria"]
     official_offset, official_length, official_text = _official_dr145_rows()[2]
 

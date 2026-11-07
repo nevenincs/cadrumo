@@ -11,6 +11,7 @@ from pydantic import ValidationError
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
 from cadrumo.domain.calculations.registry.fixed_width_parser import parse_fixed_width_export_field
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ...compiler.authority import compiled_bundled_authority
 from ..export_tree import render_complete_export_tree
@@ -23,7 +24,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 @pytest.fixture(scope="module")
 def signed_singleton_inputs() -> RevisionRenderInputs:
-    return revision_render_inputs(compiled_bundled_authority(), modelo="360", revision="2010-y-siguientes")
+    return revision_render_inputs(
+        compiled_bundled_authority(), modelo="360", revision=str(open_ended_revision("360").id)
+    )
 
 
 def test_official_signed_singletons_round_trip_positive_zero_and_negative_amounts(

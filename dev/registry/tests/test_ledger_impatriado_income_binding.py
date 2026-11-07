@@ -34,6 +34,7 @@ from cadrumo.domain.calculations.registry.ledger_impatriado_bindings import (
     resolve_ledger_impatriado_income_aggregation_binding_values,
     unsupported_ledger_impatriado_income_observations,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..conformance.registry_schema_support import committed_modelo
@@ -67,7 +68,7 @@ def _modelo_151_snapshot():
         catalogues,
         source_root=bundled_path(),
         # The 2015-2022 design, at the first ejercicio inside the supported floor.
-        filing_year=2022,
+        filing_year=filing_year_envelope().floor,
         period="0A",
     )
 
