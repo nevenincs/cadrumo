@@ -423,8 +423,9 @@ def supersede_filed_revision(
 ) -> CalculationRevisionCatalogue:
     """Advance the still-``PRESENTADO`` revision of a superseded filing record.
 
-    The record's local filing state and its revision's lifecycle state stay
-    paired; the AEAT confirmation of either is not read or changed.
+    Takes ``superseded`` as a :class:`ModeloRecord`. The record's local filing
+    state and its revision's lifecycle state stay paired; the AEAT confirmation
+    of either is not read or changed.
     """
     prior_revision = revisions.get(superseded.calculation_revision_id)
     if prior_revision is None or prior_revision.state is not CalculationRevisionState.PRESENTADO:
