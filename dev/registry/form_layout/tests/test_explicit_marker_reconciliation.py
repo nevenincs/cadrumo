@@ -8,6 +8,7 @@ from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_field_casilla import derive_casilla_export_refs
 from cadrumo.domain.calculations.registry.export_semantics import ExportComputedKey
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ...compiler.form_layout_integrity import form_layout_failures, form_layout_source_digest
 from ...compiler.loader import load_modelo_directory
@@ -48,7 +49,9 @@ def _field_owner(revision, **updates):
 
 @pytest.fixture
 def before():
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/322")).revisions["2026-y-siguientes"]
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/322")).revisions[
+        str(open_ended_revision("322").id)
+    ]
     revision = _field_owner(
         revision,
         kind=CasillaFieldKind.COMPUTED,

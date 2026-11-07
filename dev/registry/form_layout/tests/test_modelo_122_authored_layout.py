@@ -10,6 +10,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormLayoutSeedSource,
     FormPlacementKind,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ...compiler.form_layout_integrity import form_layout_failures
 from ...compiler.loader import load_modelo_directory
@@ -18,7 +19,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_122_groups_dependants_and_keeps_transport_markers_off_the_form() -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/122")).revisions["2017-y-siguientes"]
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/122")).revisions[
+        str(open_ended_revision("122").id)
+    ]
     layout = revision.form_layouts[0]
     assert layout.seed_source is FormLayoutSeedSource.AUTHORED
     assert form_layout_failures(revision) == ()
