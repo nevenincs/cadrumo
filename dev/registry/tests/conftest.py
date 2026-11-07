@@ -99,7 +99,7 @@ def committed_modelo_180_snapshot(
 
 
 @pytest.fixture
-def m100_2024_snapshot(
+def m100_second_newest_snapshot(
     registry_snapshot: Callable[..., RegistrySnapshot],
 ) -> RegistrySnapshot:
     """M100 at its second-newest authored edition, at calculation grade.
@@ -110,14 +110,4 @@ def m100_2024_snapshot(
     """
     return registry_snapshot(
         "100", newest_authored_editions("100", 2)[0], "0A", grade=RegistryAuthorityGrade.CALCULATION
-    )
-
-
-@pytest.fixture
-def m100_2025_snapshot(
-    registry_snapshot: Callable[..., RegistrySnapshot],
-) -> RegistrySnapshot:
-    """M100 at its newest authored edition, at calculation grade."""
-    return registry_snapshot(
-        "100", newest_authored_editions("100", 2)[1], "0A", grade=RegistryAuthorityGrade.CALCULATION
     )

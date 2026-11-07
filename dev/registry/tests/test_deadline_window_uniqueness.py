@@ -14,9 +14,12 @@ from cadrumo.domain.calculations.registry.schema_references import PeriodSelecto
 
 from ..compiler.validate_revision_rules import validate_deadline_window_uniqueness
 from .profile_schema_support import committed_registry_validator
-from .referential_integrity_support import minimal_catalogues, minimal_modelo, minimal_revision
+from .referential_integrity_support import FIXTURE_EDITION_YEAR, minimal_catalogues, minimal_modelo, minimal_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_EARLIER_YEAR = FIXTURE_EDITION_YEAR
+_LATER_YEAR = _EARLIER_YEAR + 1
 
 
 def _window(
@@ -26,11 +29,11 @@ def _window(
 ) -> DeadlineWindowDefinition:
     return DeadlineWindowDefinition(
         id=window_id,
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "0A"),
+        filing_year=_LATER_YEAR,
+        period=Period.from_year_and_code(_LATER_YEAR, "0A"),
         period_kind="annual",
-        opens_on=date(2026, 1, 1),
-        closes_on=date(2026, 1, 20),
+        opens_on=date(_LATER_YEAR + 1, 1, 1),
+        closes_on=date(_LATER_YEAR + 1, 1, 20),
         resultado_scope=resultado_scope,
         legal_refs=("ley-58-2003:art-29",),
         source_refs=("aeat-manual-modelo",),
@@ -44,16 +47,16 @@ def _two_revision_modelo(
     earlier = minimal_revision(deadline_windows=(first,)).model_copy(
         update={
             "id": "earlier",
-            "valid_from": date(2024, 1, 1),
-            "valid_to": date(2024, 12, 31),
-            "period_selector": PeriodSelector(year_from=2024, year_to=2024, periods=("0A",)),
+            "valid_from": date(_EARLIER_YEAR, 1, 1),
+            "valid_to": date(_EARLIER_YEAR, 12, 31),
+            "period_selector": PeriodSelector(year_from=_EARLIER_YEAR, year_to=_EARLIER_YEAR, periods=("0A",)),
         },
     )
     later = minimal_revision(deadline_windows=(second,)).model_copy(
         update={
             "id": "later",
-            "valid_from": date(2025, 1, 1),
-            "period_selector": PeriodSelector(year_from=2025, periods=("0A",)),
+            "valid_from": date(_LATER_YEAR, 1, 1),
+            "period_selector": PeriodSelector(year_from=_LATER_YEAR, periods=("0A",)),
         },
     )
     return minimal_modelo(minimal_revision()).model_copy(

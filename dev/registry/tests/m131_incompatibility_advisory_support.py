@@ -25,7 +25,7 @@ def taxpayer_profile() -> TaxpayerProfile:
 
 
 @cache
-def m131_2025_revision() -> ModeloRevision:
+def m131_newest_whole_year_revision() -> ModeloRevision:
     """The newest Modelo 131 revision that governs one whole calendar year and nothing beyond it."""
     whole_year = tuple(
         revision
@@ -40,13 +40,13 @@ def m131_2025_revision() -> ModeloRevision:
 
 
 def predicate_by_id(predicate_id: str) -> VerificationPredicateDefinition:
-    revision = m131_2025_revision()
+    revision = m131_newest_whole_year_revision()
     return next(p for p in revision.verification_predicates if p.predicate_id == predicate_id)
 
 
 def assert_incompatibility_predicates_ship(predicate_ids: tuple[str, ...]) -> None:
     """Every predicate exists on the 2025 revision, is ADVISORY, and cites the Anexo II grounding."""
-    revision = m131_2025_revision()
+    revision = m131_newest_whole_year_revision()
     predicates_by_id = {p.predicate_id: p for p in revision.verification_predicates}
 
     for predicate_id in predicate_ids:

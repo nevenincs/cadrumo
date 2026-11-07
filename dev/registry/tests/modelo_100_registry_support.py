@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-import json
+import re
+import unicodedata
 from collections.abc import Mapping
 from decimal import Decimal
 from functools import cache
 from pathlib import Path
-from typing import Any
+from typing import NamedTuple
 
 import pytest
 
@@ -19,6 +20,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Modelo
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.snapshot import legal_window_covers_devengo
 from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
     newest_authored_edition,
     newest_authored_editions,
     revision_covering,
@@ -38,7 +40,7 @@ _UNKNOWN_CONSTRUCT_MEMBER_CASILLA: CasillaId = validated_casilla_id(
 )
 
 
-def m100_2024_deduccion_maternidad_bindings() -> Mapping[str, Decimal]:
+def m100_second_newest_deduccion_maternidad_bindings() -> Mapping[str, Decimal]:
     """Return the empty-descendant maternity binding of the second-newest Modelo 100 edition from domain law."""
     return {
         "renta-profile-deduccion-maternidad": Decimal(
@@ -51,15 +53,73 @@ def m100_2024_deduccion_maternidad_bindings() -> Mapping[str, Decimal]:
     }
 
 
-@cache
-def _edition_oracle(table: str) -> dict[str, Any]:
-    """Return one per-edition expectation table of the Modelo 100 layout, keyed by edition exercise text.
+class OfficialRow(NamedTuple):
+    """One casilla row of the AEAT record-design dictionary printed for an exercise."""
 
-    The rows are what each edition's printed design shows, so they are kept as
-    data beside the tests rather than as code that names the exercises.
+    name: str
+    section: tuple[str, ...]
+    box: str
+    label: str
+
+
+_OFFICIAL_ROW = re.compile(r"^(?P<name>[^=\[]+)=\[(?P<path>[^\]]*)\]\[[^\]]*\]\[(?P<box>[^\]]*)\]\[(?P<label>.*)\]\s*$")
+_CAMEL_BOUNDARY = re.compile(r"(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])")
+
+
+def _snake(part: str) -> str:
+    return _CAMEL_BOUNDARY.sub("_", part).lower()
+
+
+@cache
+def official_rows(filing_year: int) -> tuple[OfficialRow, ...]:
+    """Read the official Modelo 100 declaration dictionary the AEAT published for one exercise.
+
+    The section is the dictionary path between the economic-data root and the
+    variable, in the registry's snake-case spelling. Nothing here is read from
+    the registry under test.
     """
-    path = Path(__file__).with_name("modelo_100_edition_oracles.json")
-    return json.loads(path.read_text(encoding="utf-8"))[table]
+    directory = bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_100", "files")
+    (dictionary,) = directory.glob(f"*-100-diccionario-declaracion-individual-ejercicio-{filing_year}-*.properties")
+    rows: list[OfficialRow] = []
+    for line in dictionary.read_text(encoding="cp1252", errors="replace").splitlines():
+        matched = _OFFICIAL_ROW.match(line)
+        if matched is None:
+            continue
+        parts = matched["path"].strip("/").split("/")
+        rows.append(
+            OfficialRow(matched["name"], tuple(_snake(part) for part in parts[1:-1]), matched["box"], matched["label"])
+        )
+    return tuple(rows)
+
+
+def official_dictionary_years() -> tuple[int, ...]:
+    """Every authored Modelo 100 exercise the AEAT published a declaration dictionary for."""
+    directory = bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_100", "files")
+    return tuple(
+        revision.valid_from.year
+        for revision in authored_revisions("100")
+        if any(
+            directory.glob(
+                f"*-100-diccionario-declaracion-individual-ejercicio-{revision.valid_from.year}-*.properties"
+            )
+        )
+    )
+
+
+def same_printed_label(registry_label: str, printed_label: str) -> bool:
+    """Whether a registry label is the one the dictionary prints, ignoring the accents some dictionaries drop."""
+
+    def fold(label: str) -> str:
+        return "".join(
+            char for char in unicodedata.normalize("NFKD", label) if not unicodedata.combining(char)
+        ).casefold()
+
+    return fold(registry_label) == fold(printed_label)
+
+
+def official_row(filing_year: int, name: str) -> OfficialRow | None:
+    """Return the dictionary row of one variable name in one exercise, if the exercise prints it."""
+    return next((row for row in official_rows(filing_year) if row.name == name), None)
 
 
 @cache
@@ -238,7 +298,7 @@ SOURCE_FOUNDATION_APPLICATION_LINKS: frozenset[str] = frozenset(
 )
 
 
-def modelo_100_revision_2025() -> tuple[ModeloDefinition, ModeloRevision]:
+def modelo_100_newest_authored_revision() -> tuple[ModeloDefinition, ModeloRevision]:
     modelos_by_id, _catalogues = loaded_registry()
     modelo = modelos_by_id["100"]
     return modelo, modelo.revisions[revision_covering("100", newest_authored_edition("100")).id]
@@ -359,9 +419,7 @@ ANEXO_B_IMPORTE_ANUAL_SATISFECHO_SECTIONS = frozenset(
 )
 ANEXO_B_OTROS_GASTOS_IMPORTE_ANUAL_ROLE = "irpf_anexo_b_otros_gastos_importe_anual"
 ANEXO_B_OTROS_GASTOS_SECTION = "an_b_inf_adc_aia"
-ANEXO_B_OTROS_GASTOS_LABELS = {
-    int(edition): label for edition, label in _edition_oracle("anexo_b_otros_gastos_labels").items()
-}
+ANEXO_B_OTROS_GASTOS_VARIABLE = "CANTAIAOG"
 ANEXO_B_AAV_SECTION = "an_b_inf_adc_aav"
 _ANEXO_B_AAV_IMPORTE_SATISFECHO_ROLE = "irpf_anexo_b_aav_importe_satisfecho"
 _ANEXO_B_AAV_IMPORTE_APLICADO_ROLE = "irpf_anexo_b_aav_importe_aplicado"
@@ -434,21 +492,92 @@ _LEGACY_ANEXO_B_NACIMIENTO_VIVIENDA_IMPORTE_PENDIENTE_ROLE = "irpf_anexo_b_nacim
 _LEGACY_ANEXO_B_ENERGIA_SATISFECHO_APLICADO_ROLE = "irpf_anexo_b_energia_satisfecho_aplicado"
 _LEGACY_ANEXO_B_ENERGIA_SATISFECHO_PENDIENTE_ROLE = "irpf_anexo_b_energia_satisfecho_pendiente"
 _LEGACY_ANEXO_B_VIVIENDA_REINVERSION_PENDIENTE_ROLE = "irpf_anexo_b_vivienda_reinversion_pendiente"
-CARRY_FORWARD_PENDING_OUTLIERS = {
-    int(edition): {casilla_id: (label, tuple(section), role) for casilla_id, (label, section, role) in rows.items()}
-    for edition, rows in _edition_oracle("carry_forward_pending_outliers").items()
+_PENDING_OUTLIER_SECTIONS_AND_ROLES = {
+    "1115": (MADRID_DEDUCTION_SECTION, "irpf_deduccion_madrid_cuidado_ascendientes"),
+    "1118": (MADRID_DEDUCTION_SECTION, "irpf_deduccion_madrid_intereses_prestamos_estudios"),
+    "1078": (GALICIA_DEDUCTION_SECTION, GALICIA_INMUEBLE_VACIO_ADECUACION_ROLE),
 }
-MADRID_REUSED_ID_DEDUCTION_ROWS = {
-    int(edition): {casilla_id: (label, role) for casilla_id, (label, role) in rows.items()}
-    for edition, rows in _edition_oracle("madrid_reused_id_deduction_rows").items()
+_MADRID_REUSED_ID_ROLES = {
+    ("1116", "Por gastos derivados de arrendamiento de vivienda"): "irpf_deduccion_madrid_gastos_arrendamiento",
+    (
+        "1117",
+        "Por el pago de intereses de préstamos para adquisición de vivienda por jóvenes menores de 30 años",
+    ): "irpf_deduccion_madrid_intereses_prestamos_vivienda",
+    (
+        "1119",
+        "Por adquisición de vivienda habitual por nacimiento o adopción de hijos",
+    ): "irpf_deduccion_madrid_vivienda_nacimiento_adopcion",
+    ("1120", "Por la obtención de la condición de familia numerosa"): "irpf_deduccion_madrid_familia_numerosa",
+    ("1120", "Importe de la deducción"): "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_importe",
 }
-MADRID_VIVIENDA_ACQUISITION_DETAIL_ROWS = {
-    int(edition): {casilla_id: (label, role) for casilla_id, (label, role) in rows.items()}
-    for edition, rows in _edition_oracle("madrid_vivienda_acquisition_detail_rows").items()
+_MADRID_VIVIENDA_PARENT_ROLES = {
+    "Por adquisición de vivienda habitual por nacimiento o adopción de hijos": (
+        "irpf_deduccion_madrid_vivienda_nacimiento_adopcion"
+    ),
+    "Por adquisición de vivienda habitual en municipios en riesgo de despoblación": (
+        "irpf_deduccion_madrid_vivienda_municipio_riesgo"
+    ),
 }
-CARRY_FORWARD_REMAINING_INST_AUTO_ROWS = {
-    int(edition): dict(rows) for edition, rows in _edition_oracle("carry_forward_remaining_inst_auto_rows").items()
-}
+_MADRID_VIVIENDA_PRECIO_LABEL = "Precio de adquisición/cantidades invertidas"
+_MADRID_VIVIENDA_ANIO_LABEL = "Año de adquisición"
+_INST_AUTO_REMAINING_BOXES = ("1117", "1120", "1186", "1709")
+_INST_AUTO_REMAINING_LABEL = re.compile(r"^Importe satisfecho en .* pendiente de aplicación en ejercicios futuros$")
+
+
+def carry_forward_pending_outliers(filing_year: int) -> dict[str, tuple[str, tuple[str, ...], str]]:
+    """Pending carry-forward boxes the exercise prints in a regional-deduction section: box to label, section, role."""
+    return {
+        row.box: (row.label, row.section, _PENDING_OUTLIER_SECTIONS_AND_ROLES[row.box][1])
+        for row in official_rows(filing_year)
+        if row.box in _PENDING_OUTLIER_SECTIONS_AND_ROLES
+        and row.section == _PENDING_OUTLIER_SECTIONS_AND_ROLES[row.box][0]
+    }
+
+
+def madrid_reused_id_deduction_rows(filing_year: int) -> dict[str, tuple[str, str]]:
+    """Madrid deduction boxes whose number an earlier layout used for another row: box to label and role."""
+    rows: dict[str, tuple[str, str]] = {}
+    for row in official_rows(filing_year):
+        role = _MADRID_REUSED_ID_ROLES.get((row.box, row.label))
+        if role is not None and row.section == MADRID_DEDUCTION_SECTION:
+            rows[row.box] = (row.label, role)
+    return rows
+
+
+def madrid_vivienda_acquisition_detail_rows(filing_year: int) -> dict[str, tuple[str, str]]:
+    """The acquisition detail rows that follow a Madrid vivienda deduction: box to label and role.
+
+    A detail block is the deduction's own row followed, in the printed order, by
+    the purchase price and the year of acquisition.
+    """
+    rows = official_rows(filing_year)
+    detail: dict[str, tuple[str, str]] = {}
+    for index, row in enumerate(rows[:-2]):
+        role = _MADRID_VIVIENDA_PARENT_ROLES.get(row.label)
+        price, acquired = rows[index + 1], rows[index + 2]
+        if (
+            role is not None
+            and (row.box, row.label) not in _MADRID_REUSED_ID_ROLES
+            and row.section == MADRID_DEDUCTION_SECTION
+            and (price.label, acquired.label) == (_MADRID_VIVIENDA_PRECIO_LABEL, _MADRID_VIVIENDA_ANIO_LABEL)
+        ):
+            detail[row.box] = (row.label, role)
+            detail[price.box] = (price.label, f"{role}_precio")
+            detail[acquired.box] = (acquired.label, f"{role}_anio")
+    return detail
+
+
+def carry_forward_remaining_inst_auto_rows(filing_year: int) -> dict[str, str]:
+    """Remaining-amount boxes the exercise prints in the installation-and-automation block: box to label."""
+    return {
+        row.box: row.label
+        for row in official_rows(filing_year)
+        if row.box in _INST_AUTO_REMAINING_BOXES
+        and row.section == ANEXO_B_INST_AUTO_SECTION
+        and _INST_AUTO_REMAINING_LABEL.match(row.label)
+    }
+
+
 LEGACY_CARRY_FORWARD_PENDING_OUTLIER_ROLES = frozenset(
     {
         _ANEXO_B_CARRY_FORWARD_PENDING_ROLE,

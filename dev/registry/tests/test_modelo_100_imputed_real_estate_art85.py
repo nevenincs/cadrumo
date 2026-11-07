@@ -13,13 +13,17 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .modelo_100_registry_support import (
-    m100_2024_deduccion_maternidad_bindings,
+    m100_second_newest_deduccion_maternidad_bindings,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_NEWEST = newest_authored_edition("100")
+_PREVIOUS = _NEWEST - 1
 
 
 @cache
@@ -54,7 +58,7 @@ def _binding_values(year: int) -> dict[str, Decimal]:
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
     }
-    if year == 2025:
+    if year == _NEWEST:
         # The production profile resolver supplies this predicate as 1/0 from
         # taxpayer_type.irpf_income_categories; the scenario models a directa filer.
         values["renta-profile-has-economic-activity"] = Decimal("1")
@@ -71,8 +75,8 @@ def _binding_values(year: int) -> dict[str, Decimal]:
         values["renta-maritime-qualifying-days"] = Decimal("0")
         # The 2025 edition computes the maternity deducción as well; neutral
         # zero for the same reason as in 2024 below.
-        values.update(m100_2024_deduccion_maternidad_bindings())
-    if year == 2024:
+        values.update(m100_second_newest_deduccion_maternidad_bindings())
+    if year == _PREVIOUS:
         values.update(
             {
                 "renta-profile-incremento-guarderia": Decimal("0"),
@@ -82,7 +86,7 @@ def _binding_values(year: int) -> dict[str, Decimal]:
                 # an art. 85 imputed-real-estate example and claims no
                 # maternity deducción. It joined the 2024 closure after the
                 # others and was the only one left unsupplied.
-                **m100_2024_deduccion_maternidad_bindings(),
+                **m100_second_newest_deduccion_maternidad_bindings(),
             },
         )
     return values
@@ -97,7 +101,7 @@ def _boolean_binding_values(year: int) -> dict[str, bool]:
     binding is a refusal, not a false: the registry keeps "not claimed" and "no
     answer" apart, and this scenario is claiming nothing.
     """
-    if year < 2025:
+    if year < _NEWEST:
         return {}
     return {"renta-maritime-path-rebeca": False}
 
@@ -128,16 +132,24 @@ def _calculate(
     ("year", "expected_formula", "expected_legal_refs", "expected_source_refs"),
     (
         (
-            2025,
+            _NEWEST,
             "renta-inmobiliario-renta-imputada-art-85",
             ("ley-35-2006:art-22", "ley-35-2006:art-85", "orden-hac-277-2026:art-3"),
-            ("aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"),
+            (
+                f"aeat-dr-100-{_NEWEST}-dictionary",
+                f"aeat-renta-{_NEWEST}-manual-parte1",
+                f"boe-modelo-100-{_NEWEST}-form",
+            ),
         ),
         (
-            2024,
+            _PREVIOUS,
             "renta-inmobiliario-renta-imputada-art-85",
             ("ley-35-2006:art-22", "ley-35-2006:art-85"),
-            ("aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"),
+            (
+                f"aeat-dr-100-{_PREVIOUS}-dictionary",
+                f"aeat-renta-{_PREVIOUS}-manual-parte1",
+                f"boe-modelo-100-{_PREVIOUS}-form",
+            ),
         ),
     ),
 )
@@ -176,13 +188,13 @@ def test_m100_art85_computes_manual_cadastral_example_for_revised_value(
 
 def test_m100_art85_rejects_no_catastral_branch_until_substitute_base_exists() -> None:
     with pytest.raises(RegistryValidationError, match="substitute-base casillas"):
-        _calculate(2025, inputs={"0085": Decimal("62")}, text_inputs={"0084": "X"})
+        _calculate(_NEWEST, inputs={"0085": Decimal("62")}, text_inputs={"0084": "X"})
 
 
 def test_m100_art85_rejects_non_official_revision_checkbox_value() -> None:
     with pytest.raises(RegistryValidationError, match="official X checkbox"):
         _calculate(
-            2025,
+            _NEWEST,
             inputs={"0083": Decimal("40800.00"), "0085": Decimal("365")},
             text_inputs={"0084": "SI"},
         )
@@ -191,7 +203,7 @@ def test_m100_art85_rejects_non_official_revision_checkbox_value() -> None:
 def test_m100_art85_casilla_0089_is_no_longer_manual_input() -> None:
     with pytest.raises(RegistryValidationError, match="computed registry casillas cannot be supplied"):
         calculate_registry_snapshot(
-            _snapshot(2025),
+            _snapshot(_NEWEST),
             inputs={"0089": Decimal("448.80")},
-            date_context={"filing_period": date(2025, 12, 31)},
+            date_context={"filing_period": date(_NEWEST, 12, 31)},
         )

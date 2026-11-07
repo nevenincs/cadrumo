@@ -2,20 +2,29 @@
 
 from __future__ import annotations
 
-from datetime import date
+from typing import TYPE_CHECKING
 
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..conformance.registry_schema_support import committed_modelo
-from .monthly_deadline_support import MONTHLY_RETENCION_DEADLINES
-from .quarterly_deadline_support import QUARTERLY_RETENCION_DEADLINES
+from .retencion_deadline_support import (
+    RETENCION_PERIODS,
+    calendar_is_bundled,
+    expected_close,
+    expected_cutoff,
+)
+
+if TYPE_CHECKING:
+    from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -48,7 +57,7 @@ def test_modelo_111_validated_snapshot_owns_workflow_surfaces(
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2026,
+        filing_year=filing_year_envelope().horizon,
         period=period,
     )
 
@@ -63,41 +72,41 @@ def test_modelo_111_validated_snapshot_owns_workflow_surfaces(
 def test_modelo_111_supported_year_deadline_census_dates_sources_and_ownership(
     modelo_111_registry: tuple[ModeloDefinition, RegistryCatalogues],
 ) -> None:
+    with bundled_indexed_authority().operation() as operation:
+        _check_supported_year_deadlines(modelo_111_registry, operation)
+
+
+def _check_supported_year_deadlines(
+    modelo_111_registry: tuple[ModeloDefinition, RegistryCatalogues],
+    operation: PinnedAuthorityOperation,
+) -> None:
     modelo, _ = modelo_111_registry
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions[open_ended_revision("111").id]
     windows = {(window.filing_year, window.period.registry_token): window for window in revision.deadline_windows}
 
-    assert len(revision.deadline_windows) == len(windows) == 80
+    assert len(revision.deadline_windows) == len(windows) == len(RETENCION_PERIODS) * len(filing_year_envelope().years)
     assert set(revision.constructs[0].deadline_windows) == {window.id for window in revision.deadline_windows}
 
-    for filing_year in range(2022, 2027):
-        expected_periods = (*tuple(f"{month:02d}" for month in range(1, 13)), "1T", "2T", "3T", "4T")
+    for filing_year in filing_year_envelope().years:
+        expected_periods = RETENCION_PERIODS
         assert {period for year, period in windows if year == filing_year} == set(expected_periods)
         projected = compiled_bundled_authority().deadline_windows(filing_year, modelos=("111",))
         assert len(projected) == 16
         assert {window.period.registry_token for _, _, window in projected} == set(expected_periods)
-        assert {selected.id for _, selected, _ in projected} == {"2019-y-siguientes"}
+        assert {selected.id for _, selected, _ in projected} == {revision.id}
 
-        expected = {
-            **{
-                f"{month:02d}": values for month, values in enumerate(MONTHLY_RETENCION_DEADLINES[filing_year], start=1)
-            },
-            **{
-                f"{quarter}T": values
-                for quarter, values in enumerate(QUARTERLY_RETENCION_DEADLINES[filing_year], start=1)
-            },
-        }
-        for period, (close_text, payment_text) in expected.items():
+        for period in RETENCION_PERIODS:
             window = windows[(filing_year, period)]
             assert select_revision(modelo, filing_year=filing_year, period=period) is revision
             assert window.id == f"modelo-111-{filing_year}-{period.lower()}"
             assert window.filing_year == window.period.filing_year == filing_year
-            assert window.closes_on == date.fromisoformat(close_text)
-            assert window.payment_cutoff_on == (None if payment_text is None else date.fromisoformat(payment_text))
+            assert window.closes_on == expected_close(operation, "111", filing_year, period)
+            assert window.payment_cutoff_on == expected_cutoff(filing_year, period)
             expected_sources = {"aeat-modelo-111-instructions"}
-            if window.closes_on.year <= 2026:
+            if calendar_is_bundled(window.closes_on.year):
                 expected_sources.add(f"aeat-calendario-contribuyente-{window.closes_on.year}")
             assert set(window.source_refs) == expected_sources
 
-    assert windows[(2026, "12")].payment_cutoff_on is None
-    assert windows[(2026, "4T")].payment_cutoff_on is None
+    horizon = filing_year_envelope().horizon
+    assert windows[(horizon, "12")].payment_cutoff_on is None
+    assert windows[(horizon, "4T")].payment_cutoff_on is None

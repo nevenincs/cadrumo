@@ -18,19 +18,21 @@ from ..compiler.validate_revision_rules import (
     validate_periodic_deadline_completeness,
 )
 from .profile_schema_support import committed_registry_validator
-from .referential_integrity_support import minimal_catalogues, minimal_modelo, minimal_revision
+from .referential_integrity_support import FIXTURE_EDITION_YEAR, minimal_catalogues, minimal_modelo, minimal_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = FIXTURE_EDITION_YEAR
 
 
 def _window(window_id: str, period: str) -> DeadlineWindowDefinition:
     return DeadlineWindowDefinition(
         id=window_id,
-        filing_year=2024,
-        period=Period.from_year_and_code(2024, period),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, period),
         period_kind="monthly" if period.isdigit() else "quarterly",
-        opens_on=date(2024, 1, 1),
-        closes_on=date(2024, 1, 20),
+        opens_on=date(_YEAR, 1, 1),
+        closes_on=date(_YEAR, 1, 20),
         legal_refs=("ley-58-2003:art-29",),
         source_refs=("aeat-manual-modelo",),
     )
@@ -46,15 +48,15 @@ def _cutover_modelo(*, quarter_in_monthly_revision: bool):
     monthly = minimal_revision(deadline_windows=monthly_windows).model_copy(
         update={
             "id": "monthly",
-            "valid_from": date(2024, 1, 1),
-            "period_selector": PeriodSelector(year_from=2024, year_to=2024, periods=("01",)),
+            "valid_from": date(_YEAR, 1, 1),
+            "period_selector": PeriodSelector(year_from=_YEAR, year_to=_YEAR, periods=("01",)),
         },
     )
     quarterly = minimal_revision(deadline_windows=quarterly_windows).model_copy(
         update={
             "id": "quarterly",
-            "valid_from": date(2024, 1, 1),
-            "period_selector": PeriodSelector(year_from=2024, year_to=2024, periods=("1T",)),
+            "valid_from": date(_YEAR, 1, 1),
+            "period_selector": PeriodSelector(year_from=_YEAR, year_to=_YEAR, periods=("1T",)),
         },
     )
     return minimal_modelo(minimal_revision()).model_copy(
@@ -93,8 +95,8 @@ def test_registry_build_rejects_deadline_cadence_that_contradicts_canonical_peri
     contradictory = _window("contradictory-window", "01").model_copy(update={"period_kind": "quarterly"})
     revision = minimal_revision(deadline_windows=(contradictory,)).model_copy(
         update={
-            "valid_from": date(2024, 1, 1),
-            "period_selector": PeriodSelector(year_from=2024, year_to=2024, periods=("01",)),
+            "valid_from": date(_YEAR, 1, 1),
+            "period_selector": PeriodSelector(year_from=_YEAR, year_to=_YEAR, periods=("01",)),
         },
     )
     modelo = minimal_modelo(revision)
@@ -113,15 +115,15 @@ def test_registry_build_accumulates_missing_and_ambiguous_canonical_owners() -> 
     first = minimal_revision(deadline_windows=(ambiguous_window, missing_window)).model_copy(
         update={
             "id": "first",
-            "valid_from": date(2024, 1, 1),
-            "period_selector": PeriodSelector(year_from=2024, year_to=2024, periods=("1T",)),
+            "valid_from": date(_YEAR, 1, 1),
+            "period_selector": PeriodSelector(year_from=_YEAR, year_to=_YEAR, periods=("1T",)),
         },
     )
     second = minimal_revision().model_copy(
         update={
             "id": "second",
-            "valid_from": date(2024, 1, 1),
-            "period_selector": PeriodSelector(year_from=2024, year_to=2024, periods=("1T",)),
+            "valid_from": date(_YEAR, 1, 1),
+            "period_selector": PeriodSelector(year_from=_YEAR, year_to=_YEAR, periods=("1T",)),
         },
     )
     modelo = minimal_modelo(minimal_revision()).model_copy(
@@ -135,7 +137,7 @@ def test_registry_build_accumulates_missing_and_ambiguous_canonical_owners() -> 
     assert "deadline window 'ambiguous-window' has no unique canonical owner" in message
     assert "ambiguous revision selection" in message
     assert "deadline window 'missing-window' has no unique canonical owner" in message
-    assert "modelo 130: no revision for year=2024 period='0A' revision=None" in message
+    assert f"modelo 130: no revision for year={_YEAR} period='0A' revision=None" in message
 
 
 def test_periodic_deadline_completeness_bites_on_one_planted_missing_cell() -> None:
@@ -148,20 +150,21 @@ def test_periodic_deadline_completeness_bites_on_one_planted_missing_cell() -> N
     )
     revision = minimal_revision(deadline_windows=(_window("january", "01"),)).model_copy(
         update={
-            "valid_from": date(2024, 1, 1),
-            "valid_to": date(2024, 12, 31),
-            "period_selector": PeriodSelector(year_from=2024, year_to=2024, periods=("01", "02")),
+            "valid_from": date(_YEAR, 1, 1),
+            "valid_to": date(_YEAR, 12, 31),
+            "period_selector": PeriodSelector(year_from=_YEAR, year_to=_YEAR, periods=("01", "02")),
             "filing_schedules": (schedule,),
         },
     )
     modelo = minimal_modelo(revision)
 
-    assert validate_periodic_deadline_completeness(modelo, supported_filing_years=(2024,)) == [
-        "modelo 130 revision test-revision: periodic filing schedule coordinate (2024, '02') has no deadline window",
+    assert validate_periodic_deadline_completeness(modelo, supported_filing_years=(_YEAR,)) == [
+        "modelo 130 revision test-revision: periodic filing schedule coordinate "
+        f"({_YEAR}, '02') has no deadline window",
     ]
 
     catalogues = minimal_catalogues().model_copy(
-        update={"supported_filing_years": SupportedFilingYearsCatalogue(floor=2024, horizon=2024)},
+        update={"supported_filing_years": SupportedFilingYearsCatalogue(floor=_YEAR, horizon=_YEAR)},
     )
-    with pytest.raises(RegistryValidationError, match=r"coordinate \(2024, '02'\) has no deadline window"):
+    with pytest.raises(RegistryValidationError, match=rf"coordinate \({_YEAR}, '02'\) has no deadline window"):
         committed_registry_validator(catalogues).validate_modelo(modelo)

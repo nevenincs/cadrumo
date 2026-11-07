@@ -53,7 +53,7 @@ from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding
 
 from .m131_incompatibility_advisory_support import (
     assert_incompatibility_predicates_ship,
-    m131_2025_revision,
+    m131_newest_whole_year_revision,
     predicate_by_id,
     taxpayer_profile,
 )
@@ -137,7 +137,7 @@ def test_emits_single_advisory_warning_finding_when_temporada_inicio_conflict() 
 
 
 def test_no_findings_when_neither_flag_fires() -> None:
-    revision = m131_2025_revision()
+    revision = m131_newest_whole_year_revision()
     predicates = tuple(p for p in revision.verification_predicates if p.predicate_id in _ALL_PREDICATE_IDS)
     values: dict[CasillaId, Decimal] = {
         _CASILLA_PEQUENA_DIMENSION_FLAG: Decimal("0"),

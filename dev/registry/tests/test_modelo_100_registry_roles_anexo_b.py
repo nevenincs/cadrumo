@@ -4,6 +4,11 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    newest_authored_editions,
+)
+
 from .modelo_100_registry_support import (
     ANEXO_B_AAV_AMOUNT_ROWS,
     ANEXO_B_AAV_SECTION,
@@ -28,8 +33,8 @@ from .modelo_100_registry_support import (
     ANEXO_B_INVERSION_TOTAL_ROLE,
     ANEXO_B_INVERSION_TOTAL_SECTIONS,
     ANEXO_B_OTROS_GASTOS_IMPORTE_ANUAL_ROLE,
-    ANEXO_B_OTROS_GASTOS_LABELS,
     ANEXO_B_OTROS_GASTOS_SECTION,
+    ANEXO_B_OTROS_GASTOS_VARIABLE,
     ANEXO_B_PRIMA_SEGURO_CREDITO_ROLE,
     ANEXO_B_PRIMA_SEGURO_LABEL,
     ANEXO_B_PRIMAS_SEGURO_TOTAL_ROLE,
@@ -41,9 +46,14 @@ from .modelo_100_registry_support import (
     AUTONOMIC_DEDUCTION_ART_77_REF,
     modelo_100_revision,
     modelo_100_snapshot,
+    official_dictionary_years,
+    official_row,
+    same_printed_label,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_AUTHORED_EXERCISES = tuple(revision.valid_from.year for revision in authored_revisions("100"))
 
 
 def test_modelo_100_anexo_b_importe_satisfecho_role_is_not_rental_specific() -> None:
@@ -91,14 +101,22 @@ def test_modelo_100_anexo_b_importe_anual_satisfecho_role_is_not_service_fee() -
 
 
 def test_modelo_100_anexo_b_other_service_amount_role_is_otros_gastos_importe_anual() -> None:
-    for filing_year in (2024, 2025):
+    checked_years = 0
+    for filing_year in official_dictionary_years():
+        printed = official_row(filing_year, ANEXO_B_OTROS_GASTOS_VARIABLE)
+        if printed is None:
+            continue
+        checked_years += 1
         revision = modelo_100_revision(filing_year)
-        casilla = next(casilla for casilla in revision.casillas if casilla.id == "2140")
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == printed.box)
 
-        assert casilla.label == ANEXO_B_OTROS_GASTOS_LABELS[filing_year]
-        assert tuple(casilla.section) == ("resultados", "datos_adicionales_anexo_b", ANEXO_B_OTROS_GASTOS_SECTION)
+        assert same_printed_label(casilla.label, printed.label)
+        assert tuple(casilla.section) == printed.section
+        assert casilla.section[-1] == ANEXO_B_OTROS_GASTOS_SECTION
         assert casilla.semantic_role == ANEXO_B_OTROS_GASTOS_IMPORTE_ANUAL_ROLE
         assert AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
+
+    assert checked_years
 
 
 def test_modelo_100_anexo_b_aav_amount_roles_are_grounded_in_official_labels() -> None:
@@ -128,7 +146,7 @@ def test_modelo_100_anexo_b_account_holder_role_is_cm_vivienda_habitual() -> Non
 
 
 def test_modelo_100_anexo_b_baleares_birth_roles_are_spanish_and_label_grounded() -> None:
-    for filing_year in (2023, 2024, 2025):
+    for filing_year in newest_authored_editions("100", 3):
         revision = modelo_100_revision(filing_year)
         casillas_by_id = {
             casilla.id: casilla for casilla in revision.casillas if casilla.id in ANEXO_B_BALEARES_NACIMIENTO_ROWS
@@ -236,7 +254,7 @@ def test_modelo_100_anexo_b_investment_total_role_is_total_by_deduction_type() -
 
 
 def test_modelo_100_anexo_b_insurance_premium_role_is_credit_insurance() -> None:
-    for filing_year in range(2020, 2026):
+    for filing_year in _AUTHORED_EXERCISES:
         revision = modelo_100_revision(filing_year)
         checked = [
             casilla
@@ -255,7 +273,7 @@ def test_modelo_100_anexo_b_insurance_premium_role_is_credit_insurance() -> None
 
 
 def test_modelo_100_anexo_b_insurance_premium_total_role_is_spanish_eps_total() -> None:
-    for filing_year in range(2020, 2026):
+    for filing_year in _AUTHORED_EXERCISES:
         revision = modelo_100_revision(filing_year)
         checked = [
             casilla
