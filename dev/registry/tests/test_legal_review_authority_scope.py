@@ -11,9 +11,13 @@ from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
 from cadrumo.domain.calculations.registry.snapshot import check_snapshot_filing_capability
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_validated_snapshot
 
 from ..conformance.registry_schema_support import committed_registry_tree
+
+_YEAR = filing_year_envelope().horizon
+_REVISION_ID = str(open_ended_revision("182").id)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -49,7 +53,7 @@ def test_authority_refuses_real_m182_through_the_public_accessor(registry_author
     earns today.
     """
     authority = registry_authority
-    revision = authority.modelo("182").revisions["2025"]
+    revision = authority.modelo("182").revisions[_REVISION_ID]
     assert revision.review_status is RevisionReviewStatus.AUTOMATION_REVIEWED
     assert revision.authority_grade is RegistryAuthorityGrade.APPLICABILITY
     legal_review_statuses = {str(ref): authority.catalogues.legal[ref].review_status for ref in revision.legal_refs}
@@ -73,9 +77,9 @@ def test_authority_refuses_real_m182_through_the_public_accessor(registry_author
     # grade deliberately where the later gates are the subject.
     with pytest.raises(
         RegistryValidationError,
-        match=r"modelo 182 revision 2025 declares .applicability. authority grade",
+        match=rf"modelo 182 revision {_REVISION_ID} declares .applicability. authority grade",
     ):
-        authority.snapshot("182", filing_year=2025, period="0A")
+        authority.snapshot("182", filing_year=_YEAR, period="0A")
 
 
 @pytest.mark.parametrize(
@@ -85,7 +89,7 @@ def test_authority_refuses_real_m182_through_the_public_accessor(registry_author
         # Agent review CLEARS the review gate -- see the sibling gate's docstring
         # for why demanding operator_reviewed was unreachable -- so M182 is
         # refused one gate later, for the reason that is actually true of it.
-        (RevisionReviewStatus.AUTOMATION_REVIEWED, "agent-review", date(2026, 8, 1), r"declares no export layout"),
+        (RevisionReviewStatus.AUTOMATION_REVIEWED, "agent-review", date(_YEAR, 8, 1), r"declares no export layout"),
     ),
 )
 def test_build_validated_snapshot_refuses_real_m182_non_operator_revision(
@@ -103,7 +107,7 @@ def test_build_validated_snapshot_refuses_real_m182_non_operator_revision(
     """
     authority = registry_authority
     modelo = authority.modelo("182")
-    revision = modelo.revisions["2025"].model_copy(
+    revision = modelo.revisions[_REVISION_ID].model_copy(
         update={
             "review_status": review_status,
             "reviewed_by": reviewed_by,
@@ -122,14 +126,14 @@ def test_build_validated_snapshot_refuses_real_m182_non_operator_revision(
 
     with pytest.raises(
         RegistryValidationError,
-        match=rf"modelo 182 revision 2025 {refusal}",
+        match=rf"modelo 182 revision {_REVISION_ID} {refusal}",
     ):
         build_validated_snapshot(
             mutated_modelo,
             authority.catalogues,
-            filing_year=2025,
+            filing_year=_YEAR,
             period="0A",
-            revision_id="2025",
+            revision_id=_REVISION_ID,
         )
 
 
@@ -155,13 +159,13 @@ def test_filing_grade_snapshot_refuses_a_reviewed_revision_that_declares_no_expo
     """
     modelos, catalogues = _committed_registry()
     modelo = next(candidate for candidate in modelos if candidate.id == "182")
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[_REVISION_ID]
     assert not revision.export_layouts, "fixture drift: M182 gained an export layout, pick another subject"
     reviewed = revision.model_copy(
         update={
             "review_status": RevisionReviewStatus.OPERATOR_REVIEWED,
             "reviewed_by": "operator",
-            "reviewed_at": date(2026, 5, 5),
+            "reviewed_at": date(_YEAR, 5, 5),
             # A newer gate refuses an applicability-grade revision before the
             # filing-capability check runs. This test is ABOUT that later check,
             # so the fixture clears the grade gate deliberately rather than
@@ -173,14 +177,14 @@ def test_filing_grade_snapshot_refuses_a_reviewed_revision_that_declares_no_expo
 
     with pytest.raises(
         RegistryValidationError,
-        match=r"modelo 182 revision 2025 declares no export layout",
+        match=rf"modelo 182 revision {_REVISION_ID} declares no export layout",
     ):
         build_validated_snapshot(
             mutated,
             catalogues,
-            filing_year=2025,
+            filing_year=_YEAR,
             period="0A",
-            revision_id="2025",
+            revision_id=_REVISION_ID,
         )
 
 

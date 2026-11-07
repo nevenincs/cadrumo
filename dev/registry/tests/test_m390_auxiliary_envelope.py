@@ -11,6 +11,7 @@ from pydantic import ValidationError
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 
 from ..compiler.authority import compiled_bundled_authority
@@ -29,12 +30,19 @@ from ..pipeline.record_design_intermediate import RecordDesignIntermediate, load
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("governed_fact_scope")]
 
-_M390_DESIGNS = (
-    ("aeat-dr-390-2022", "2022", "2022", 2022),
-    ("aeat-dr-390-2023", "2023", "2023", 2023),
-    ("aeat-dr-390-2024", "2024", "2024", 2024),
-    ("aeat-dr-390-2025", "2025", "2025-y-siguientes", 2025),
+# The reviewed source bindings the pipeline owns, oldest first. The newest is the design the refusal cases
+# below perturb; the one before it is a design that does not apply to the newest exercise.
+_M390_DESIGNS = tuple(
+    (target.source_ref, target.design_epoch, target.target.revision_id, target.filing_year_from)
+    for target in M390_AUXILIARY_ENVELOPE_TARGETS
 )
+_PREVIOUS, _LATEST = M390_AUXILIARY_ENVELOPE_TARGETS[-2:]
+_LATEST_SOURCE = _LATEST.source_ref
+_LATEST_EPOCH = _LATEST.design_epoch
+_LATEST_YEAR = _LATEST.filing_year_from
+_LATEST_REVISION = _LATEST.target.revision_id
+# A design edition past the support horizon, to prove the target accepts any four-digit edition.
+_FAR = filing_year_envelope().horizon + 5
 
 
 def _product_identity() -> AeatProductSoftwareIdentity:
@@ -124,11 +132,11 @@ def test_renders_each_real_modelo_390_header_once_before_parser_ordered_pages(
 
     assert intermediate.source.source_ref == source_ref
     assert intermediate.source.design_epoch == design_epoch
-    assert tuple(target.target.revision_id for target in M390_AUXILIARY_ENVELOPE_TARGETS) == (
-        "2022",
-        "2023",
-        "2024",
-        "2025-y-siguientes",
+    assert all(
+        target.source_ref == f"aeat-dr-390-{target.design_epoch}"
+        and target.design_epoch == str(target.filing_year_from)
+        and target.target.revision_id.startswith(target.design_epoch)
+        for target in M390_AUXILIARY_ENVELOPE_TARGETS
     )
     assert len(rendered.header) == 328
     assert rendered.header[:22] == f"<T3900{filing_year:04d}0A0000><AUX>".encode("ascii")
@@ -145,29 +153,29 @@ def test_renders_each_real_modelo_390_header_once_before_parser_ordered_pages(
 
 
 def test_refuses_prospective_target_source_cross_epoch() -> None:
-    intermediate = _intermediate("aeat-dr-390-2025", 2025, "2025")
+    intermediate = _intermediate(_LATEST_SOURCE, _LATEST_YEAR, _LATEST_EPOCH)
 
     with pytest.raises(RegistryValidationError, match="does not apply to filing year"):
         _render(
             intermediate,
-            _input(intermediate, "2024", "2024", 2025),
+            _input(intermediate, _PREVIOUS.target.revision_id, _PREVIOUS.design_epoch, _LATEST_YEAR),
         )
 
 
 def test_refuses_source_hash_drift_after_parser_projection() -> None:
-    intermediate = _intermediate("aeat-dr-390-2025", 2025, "2025")
+    intermediate = _intermediate(_LATEST_SOURCE, _LATEST_YEAR, _LATEST_EPOCH)
     drifting_source = intermediate.source.model_copy(update={"source_sha256": "0" * 64})
 
     with pytest.raises(RegistryValidationError, match="does not match its reviewed prospective target"):
         _render(
             intermediate.model_copy(update={"source": drifting_source}),
-            _input(intermediate, "2025-y-siguientes", "2025", 2025),
+            _input(intermediate, _LATEST_REVISION, _LATEST_EPOCH, _LATEST_YEAR),
         )
 
 
 def test_refuses_reordered_numbered_pages() -> None:
-    intermediate = _intermediate("aeat-dr-390-2025", 2025, "2025")
-    generation_input = _input(intermediate, "2025-y-siguientes", "2025", 2025)
+    intermediate = _intermediate(_LATEST_SOURCE, _LATEST_YEAR, _LATEST_EPOCH)
+    generation_input = _input(intermediate, _LATEST_REVISION, _LATEST_EPOCH, _LATEST_YEAR)
     reordered = generation_input.model_copy(update={"numbered_pages": tuple(reversed(generation_input.numbered_pages))})
 
     with pytest.raises(RegistryValidationError, match="must exactly match the parser-owned source order"):
@@ -175,7 +183,7 @@ def test_refuses_reordered_numbered_pages() -> None:
 
 
 def test_refuses_mutated_header_geometry_and_literal() -> None:
-    intermediate = _intermediate("aeat-dr-390-2025", 2025, "2025")
+    intermediate = _intermediate(_LATEST_SOURCE, _LATEST_YEAR, _LATEST_EPOCH)
     (envelope,) = intermediate.variable_envelopes
     fields = envelope.prefix_fields
     malformed_geometry = envelope.model_copy(
@@ -187,7 +195,7 @@ def test_refuses_mutated_header_geometry_and_literal() -> None:
     malformed_anchor = envelope.model_copy(
         update={"prefix_fields": (fields[0], fields[1].model_copy(update={"source_row": 8}), *fields[2:])},
     )
-    generation_input = _input(intermediate, "2025-y-siguientes", "2025", 2025)
+    generation_input = _input(intermediate, _LATEST_REVISION, _LATEST_EPOCH, _LATEST_YEAR)
     for malformed, message in (
         (malformed_geometry, "source anchors must be contiguous"),
         (malformed_literal, "literals conflict"),
@@ -198,8 +206,8 @@ def test_refuses_mutated_header_geometry_and_literal() -> None:
 
 
 def test_refuses_missing_product_software_identity_and_non_annual_period() -> None:
-    intermediate = _intermediate("aeat-dr-390-2025", 2025, "2025")
-    generation_input = _input(intermediate, "2025-y-siguientes", "2025", 2025)
+    intermediate = _intermediate(_LATEST_SOURCE, _LATEST_YEAR, _LATEST_EPOCH)
+    generation_input = _input(intermediate, _LATEST_REVISION, _LATEST_EPOCH, _LATEST_YEAR)
 
     with pytest.raises(ValidationError, match="product_software_identity"):
         M390AuxiliaryEnvelopeGenerationInput.model_validate(
@@ -207,8 +215,8 @@ def test_refuses_missing_product_software_identity_and_non_annual_period() -> No
         )
     with pytest.raises(ValidationError, match="annual period 0A"):
         M390AuxiliaryEnvelopeGenerationInput(
-            target=ExportFragmentTarget(modelo="390", revision_id="2025-y-siguientes", design_epoch="2025"),
-            filing_period=Period.from_year_and_code(2025, "4T"),
+            target=ExportFragmentTarget(modelo="390", revision_id=_LATEST_REVISION, design_epoch=_LATEST_EPOCH),
+            filing_period=Period.from_year_and_code(_LATEST_YEAR, "4T"),
             product_software_identity=_product_identity(),
             numbered_pages=generation_input.numbered_pages,
         )
@@ -218,9 +226,9 @@ def test_refuses_current_unreviewed_registry_revision_as_a_prospective_target() 
     # Naming the current revision is revision selection, not filing: a filing
     # snapshot would refuse the very revision this test needs, because being
     # unreviewed is the property under test.
-    intermediate = _intermediate("aeat-dr-390-2025", 2025, "2025")
-    current = compiled_bundled_authority().inspect_revision("390", filing_year=2025, period="0A")
-    generation_input = _input(intermediate, str(current.revision_id), "2025", 2025)
+    intermediate = _intermediate(_LATEST_SOURCE, _LATEST_YEAR, _LATEST_EPOCH)
+    current = compiled_bundled_authority().inspect_revision("390", filing_year=_LATEST_YEAR, period="0A")
+    generation_input = _input(intermediate, str(current.revision_id), _LATEST_EPOCH, _LATEST_YEAR)
 
     with pytest.raises(RegistryValidationError, match="has no reviewed source binding"):
         _validate(intermediate, generation_input)
@@ -238,7 +246,10 @@ def _synthetic_target(year: int, **overrides: object) -> M390ProspectiveGenerati
     return M390ProspectiveGenerationTarget.model_validate(fields)
 
 
-@pytest.mark.parametrize("year", [2022, 2025, 2031, 2019])
+@pytest.mark.parametrize(
+    "year",
+    [filing_year_envelope().floor, filing_year_envelope().horizon, _FAR, filing_year_envelope().floor - 3],
+)
 def test_prospective_target_accepts_any_four_digit_design_edition(year: int) -> None:
     target = _synthetic_target(year)
 
@@ -249,20 +260,20 @@ def test_prospective_target_accepts_any_four_digit_design_edition(year: int) -> 
 @pytest.mark.parametrize(
     "overrides",
     [
-        {"source_ref": "aeat-dr-390-31"},
-        {"source_ref": "aeat-dr-390-20311"},
-        {"source_ref": "xaeat-dr-390-2031"},
-        {"source_ref": "aeat-dr-390-2031-b"},
-        {"source_ref": "aeat-dr-390-2030"},
-        {"design_epoch": "203x", "source_ref": "aeat-dr-390-203x"},
-        {"design_epoch": "2031 "},
-        {"filing_year_to": 2030},
+        {"source_ref": f"aeat-dr-390-{str(_FAR)[2:]}"},
+        {"source_ref": f"aeat-dr-390-{_FAR}1"},
+        {"source_ref": f"xaeat-dr-390-{_FAR}"},
+        {"source_ref": f"aeat-dr-390-{_FAR}-b"},
+        {"source_ref": f"aeat-dr-390-{_FAR - 1}"},
+        {"design_epoch": f"{str(_FAR)[:3]}x", "source_ref": f"aeat-dr-390-{str(_FAR)[:3]}x"},
+        {"design_epoch": f"{_FAR} "},
+        {"filing_year_to": _FAR - 1},
         {"source_sha256": "G" * 64},
     ],
 )
 def test_prospective_target_refuses_malformed_or_inconsistent_edition(overrides: dict[str, object]) -> None:
     with pytest.raises(ValidationError):
-        _synthetic_target(2031, **overrides)
+        _synthetic_target(_FAR, **overrides)
 
 
 def test_m390_auxiliary_authority_has_no_layout_or_historical_output_dependency() -> None:
