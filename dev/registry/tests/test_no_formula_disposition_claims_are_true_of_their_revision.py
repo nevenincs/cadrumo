@@ -33,6 +33,8 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
+
 from .registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -100,7 +102,7 @@ def test_the_anchor_modelo_really_derives_nothing() -> None:
     """
     modelos, _catalogues = committed_registry_tree()
     modelo = next(m for m in modelos if m.id == _ANCHOR_MODELO)
-    revision = modelo.revisions["2003-y-siguientes"]
+    revision = modelo.revisions[str(open_ended_revision(_ANCHOR_MODELO).id)]
 
     assert not revision.formulas, "the anchor modelo now declares formulas; its claims need re-reading"
     assert "formulas" in revision.family_dispositions, (
