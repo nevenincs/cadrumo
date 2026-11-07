@@ -48,6 +48,8 @@ impl ResponseHead {
 }
 
 /// Writes one request head. Header values are the caller's and must hold no line breaks.
+/// A caller's own `Accept` replaces the default one, so a server that negotiates on it
+/// sees one media type.
 pub(crate) fn write_request(
     stream: &mut impl Write,
     method: &str,
@@ -55,8 +57,16 @@ pub(crate) fn write_request(
     authority: &str,
     headers: &[(&str, &str)],
 ) -> io::Result<()> {
+    let accept = if headers
+        .iter()
+        .any(|(name, _)| name.eq_ignore_ascii_case("accept"))
+    {
+        ""
+    } else {
+        "Accept: */*\r\n"
+    };
     let mut head = format!(
-        "{method} {target} HTTP/1.1\r\nHost: {authority}\r\nUser-Agent: Cadrumo\r\nAccept: */*\r\nAccept-Encoding: identity\r\nConnection: close\r\n"
+        "{method} {target} HTTP/1.1\r\nHost: {authority}\r\nUser-Agent: Cadrumo\r\n{accept}Accept-Encoding: identity\r\nConnection: close\r\n"
     );
     for (name, value) in headers {
         if value.contains(['\r', '\n']) {
@@ -446,6 +456,19 @@ mod tests {
                 &[("X", "a\r\nInjected: 1")]
             )
             .is_err()
+        );
+        let mut out = Vec::new();
+        write_request(
+            &mut out,
+            "GET",
+            "/m",
+            "cdn.example.com",
+            &[("Accept", "application/example+json")],
+        )
+        .unwrap();
+        assert_eq!(
+            String::from_utf8(out).unwrap(),
+            "GET /m HTTP/1.1\r\nHost: cdn.example.com\r\nUser-Agent: Cadrumo\r\nAccept-Encoding: identity\r\nConnection: close\r\nAccept: application/example+json\r\n\r\n"
         );
     }
 }
