@@ -51,6 +51,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _DATA_ROOT = SRC_CADRUMO / "_data"
 _WHEEL_DATA_PREFIX = "cadrumo/_data"
+_RENTA_EDITIONS = tuple(
+    sorted(entry.name for entry in (_DATA_ROOT / "corpus" / "manuals" / "renta").iterdir() if entry.is_dir())
+)
 
 # Corpus source binaries excluded from the command-bearing ``cadrumo`` wheel
 # (they ship in the two ``cadrumo-data-*`` companions). A path is an excluded binary
@@ -355,11 +358,10 @@ def test_wheel_excludes_renta_source_pdfs(built_wheel: Path) -> None:
     contract force-shipped.
     """
 
-    renta_pdfs = {
-        f"{_WHEEL_DATA_PREFIX}/corpus/manuals/renta/{year}/part1/source.pdf"
-        for year in ("2020", "2021", "2022", "2023", "2024", "2025")
-    }
-    renta_pdfs.add(f"{_WHEEL_DATA_PREFIX}/corpus/manuals/renta/2025/part2-deducciones-autonomicas/source.pdf")
+    renta_pdfs = {f"{_WHEEL_DATA_PREFIX}/corpus/manuals/renta/{year}/part1/source.pdf" for year in _RENTA_EDITIONS}
+    renta_pdfs.add(
+        f"{_WHEEL_DATA_PREFIX}/corpus/manuals/renta/{_RENTA_EDITIONS[-1]}/part2-deducciones-autonomicas/source.pdf"
+    )
     with zipfile.ZipFile(built_wheel) as archive:
         names = {info.filename for info in archive.infolist()}
     leaked = sorted(renta_pdfs & names)
@@ -372,8 +374,8 @@ def test_wheel_excludes_renta_source_pdfs(built_wheel: Path) -> None:
 def test_wheel_keeps_renta_page_annotations_beside_extracted_text(built_wheel: Path) -> None:
     """Small semantic selectors stay in the main wheel while their PDFs stay split."""
     expected = {
-        f"{_WHEEL_DATA_PREFIX}/corpus/manuals/renta/2025/part1/source.pdf.annotation.json",
-        f"{_WHEEL_DATA_PREFIX}/corpus/manuals/renta/2025/part2-deducciones-autonomicas/source.pdf.annotation.json",
+        f"{_WHEEL_DATA_PREFIX}/corpus/manuals/renta/{_RENTA_EDITIONS[-1]}/part1/source.pdf.annotation.json",
+        f"{_WHEEL_DATA_PREFIX}/corpus/manuals/renta/{_RENTA_EDITIONS[-1]}/part2-deducciones-autonomicas/source.pdf.annotation.json",
     }
     with zipfile.ZipFile(built_wheel) as archive:
         names = {info.filename for info in archive.infolist()}

@@ -14,6 +14,8 @@ from functools import cache
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core.filing_year import FOUR_DIGIT_YEAR_LAST
+
 _ROOT: Final = Path(__file__).resolve().parents[3]
 
 SRC: Final = _ROOT / "src" / "cadrumo"
@@ -201,7 +203,7 @@ THOUSAND: Final = 1000
 
 _COLLECTION_WIRE_FLOOR: Final = 10_000
 
-LAST_FOUR_DIGIT_YEAR: Final = 9999
+LAST_FOUR_DIGIT_YEAR: Final = FOUR_DIGIT_YEAR_LAST
 
 _CENT: Final = Decimal("0.01")
 
@@ -458,9 +460,11 @@ ARITHMETIC_COMPARE: Final = frozenset({-1, 0, 1, 2, 100})
 
 ARITHMETIC_PERCENT: Final = 100
 
-FIRST_YEAR: Final = 1900
+CENTURY: Final = 100
 
-LAST_YEAR: Final = 2100
+FIRST_YEAR: Final = 19 * CENTURY
+
+LAST_YEAR: Final = 21 * CENTURY
 
 YEAR_ENDPOINTS: Final = frozenset({(1, 1), (12, 31)})
 
