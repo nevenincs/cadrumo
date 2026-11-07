@@ -28,6 +28,7 @@ from ....core.modelo import Modelo
 from ....core.period import Period
 from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...contribuyente.entity_type import EntityType
+from ...contribuyente.renta_codes import FiscalResidency
 from ..engine import DeadlineEngine, indexed_deadline_window_year
 from ..festivos import DeadlineHolidayCoverage, Holiday, HolidayCalendar, HolidayJurisdiction
 from ..filing_window_projection import (
@@ -42,7 +43,14 @@ from ..filing_window_projection import (
     project_scheduled_window,
     scheduled_coordinate,
 )
-from ..models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, ObligationStatus, TaxpayerProfile
+from ..models import (
+    IrpfEstimationRegime,
+    IrpfIncomeCategory,
+    IVARegime,
+    ModeloEnrollment,
+    ObligationStatus,
+    TaxpayerProfile,
+)
 from ..plazo import resolve_filing_window
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -347,6 +355,8 @@ def _iva_profile() -> TaxpayerProfile:
         does_intracomunitario=False,
         third_party_transactions_above_347_threshold=False,
         bienes_extranjero_above_threshold=False,
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
+        enrollment=ModeloEnrollment(large_company=False),
     )
 
 

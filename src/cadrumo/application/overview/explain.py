@@ -188,7 +188,14 @@ def _base_applicability_profile_fact_keys(rule: ModeloApplicabilityRule) -> dict
     return keys
 
 
-def _exclusion_profile_fact_keys(rule: ModeloApplicabilityRule) -> dict[str, None]:
+def _exclusion_condition_profile_fact_keys(rule: ModeloApplicabilityRule) -> dict[str, None]:
+    """Return the non-payer-fact conditions the rule's exclusions read.
+
+    An exclusion's ``payer_fact`` is not listed here: it is one of the rule's
+    gating payer facts, which
+    :attr:`~cadrumo.domain.calculations.registry.applicability_models.ModeloApplicabilityRule.gating_payer_facts`
+    enumerates for every caller.
+    """
     keys: dict[str, None] = {}
     for exclusion in rule.exclusions:
         if exclusion.entity_types:
@@ -199,8 +206,6 @@ def _exclusion_profile_fact_keys(rule: ModeloApplicabilityRule) -> dict[str, Non
             keys["irpf_income_categories"] = None
         if exclusion.declaration_roles is not None:
             keys["declaration_roles"] = None
-        if exclusion.payer_fact is not None:
-            keys.update(dict.fromkeys(payer_fact_profile_keys(exclusion.payer_fact)))
     return keys
 
 
@@ -208,11 +213,12 @@ def applicability_profile_fact_keys(rule: ModeloApplicabilityRule) -> tuple[str,
     """Return the taxpayer-profile paths ``rule`` reads, in first-read order.
 
     Mirrors the gates :meth:`ModeloApplicabilityRule.evaluate` checks: the
-    positive gates, each exclusion's conditions, and the payer facts named by
-    the rule and its exclusions, expanded to the profile keys the registry
-    declares for them. A derived payer fact therefore contributes every flag it
-    reads, so an exclusion such as an SII one lists each enrolment that can
-    establish it.
+    positive gates, each exclusion's conditions, and then the rule's
+    ``gating_payer_facts`` — the fact the rule requires and the fact an
+    exclusion reads alike — expanded to the profile keys the registry declares
+    for them. A derived payer fact therefore contributes every flag it reads,
+    so an exclusion such as an SII one lists each enrolment that can establish
+    it.
 
     Args:
         rule: The applicability rule whose inputs are listed.
@@ -222,9 +228,9 @@ def applicability_profile_fact_keys(rule: ModeloApplicabilityRule) -> tuple[str,
         without duplicates.
     """
     keys = _base_applicability_profile_fact_keys(rule)
-    keys.update(_exclusion_profile_fact_keys(rule))
-    if rule.required_payer_fact is not None:
-        keys.update(dict.fromkeys(payer_fact_profile_keys(rule.required_payer_fact)))
+    keys.update(_exclusion_condition_profile_fact_keys(rule))
+    for fact in rule.gating_payer_facts:
+        keys.update(dict.fromkeys(payer_fact_profile_keys(fact)))
     return tuple(keys)
 
 
@@ -284,9 +290,12 @@ def _iva_enrollment_profile_facts(profile: TaxpayerProfile) -> dict[str, _Profil
     # The nested IVA + enrolment sub-models also gate applicability.
     # An undeclared IVA sub-model surfaces each fact as an explicit empty
     # string, like the undeclared axes above, rather than dropping the keys.
+    # A declared block whose enrolment is unanswered reads the same way: the
+    # enrolments are three-state, so the gap is a value the payload must
+    # carry rather than a scalar it refuses.
     iva = getattr(profile, "iva", None)
     return {
-        f"iva.{iva_field}": "" if iva is None else getattr(iva, iva_field)
+        f"iva.{iva_field}": _profile_fact_value(None if iva is None else getattr(iva, iva_field))
         for iva_field in (
             "roi_enrolled",
             "oss_enrolled",

@@ -28,6 +28,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.irpf_income_categories import require_irpf_income_category
 from cadrumo.domain.calculations.registry.iva_regime_vocabulary import require_iva_regime
 from cadrumo.domain.calculations.registry.queries import RegistryQueryService
+from cadrumo.domain.calculations.registry.renta_codes_catalogue import require_fiscal_residency
 from cadrumo.domain.calculations.registry.schema_revision_members import (
     ApplicabilityExclusionDefinition,
     ApplicabilityRuleDefinition,
@@ -68,10 +69,22 @@ def _exclusion(**fields: object) -> ApplicabilityExclusionDefinition:
 
 
 def _iva(**facts: bool) -> ModeloIVAProfile:
+    """An IVA block that answers every enrolment question, as a no unless overridden.
+
+    Each enrolment is three-state, so leaving one out states nothing about it
+    and keeps every fact derived over the block unanswered. These fixtures test
+    other axes, so the block answers them all.
+    """
     return ModeloIVAProfile.model_validate(
         {
             "tax_territory": "common_regime",
             "regime_composition": "general",
+            "roi_enrolled": False,
+            "oss_enrolled": False,
+            "group_member_enrolled": False,
+            "group_dominant_entity_enrolled": False,
+            "intracommunity_operations_exceed_50000_eur": False,
+            "sii_enrolled": False,
             "redeme_enrolled": False,
             "cash_accounting_regime_enrolled": False,
             "voluntary_sii_enrolled": False,
@@ -81,6 +94,14 @@ def _iva(**facts: bool) -> ModeloIVAProfile:
     )
 
 
+_NOT_A_LARGE_COMPANY = ModeloEnrollment(large_company=False)
+"""The volumen de operaciones condition answered as a no.
+
+It is three-state and the Modelo 347 SII exclusion reads it, so a profile that
+never states it leaves that exclusion undetermined whatever its IVA block says.
+"""
+
+
 def _sociedad(**facts: object) -> TaxpayerProfile:
     return TaxpayerProfile.model_validate(
         {
@@ -88,6 +109,7 @@ def _sociedad(**facts: object) -> TaxpayerProfile:
             "entity_type": require_entity_type("legal_entity"),
             "legal_entity_form": require_legal_entity_form("sl"),
             "iva_regime": require_iva_regime("GENERAL"),
+            "enrollment": _NOT_A_LARGE_COMPANY,
             **facts,
         },
     )
@@ -100,6 +122,7 @@ def _persona(categories: tuple[str, ...], iva_regime: str, **facts: object) -> T
             "entity_type": require_entity_type("natural_person"),
             "irpf_income_categories": frozenset(require_irpf_income_category(token) for token in categories),
             "iva_regime": require_iva_regime(iva_regime),
+            "enrollment": _NOT_A_LARGE_COMPANY,
             **facts,
         },
     )
@@ -129,17 +152,22 @@ def test_an_exclusion_naming_an_undeclared_payer_fact_is_refused() -> None:
         hydrate_applicability_rule(Modelo("347"), fragment)
 
 
-@pytest.mark.parametrize("payer_fact", ("pays_capital_income_with_retencion", "oss_enrolled"))
-def test_an_exclusion_reading_a_declared_no_of_a_two_state_fact_is_refused(payer_fact: str) -> None:
-    fragment = _fragment(_exclusion(payer_fact=payer_fact, payer_fact_declared=False))
-
-    with pytest.raises(RegistryValidationError, match="cannot tell a declared no"):
-        hydrate_applicability_rule(Modelo("347"), fragment)
+_CODED_FACTS = ("oss_enrolled", "iva_group_member", "iva_group_dominant_entity")
+"""Coded facts, each reading an optional enrolment field of the IVA block."""
 
 
-@pytest.mark.parametrize("payer_fact", ("pays_capital_income_with_retencion", "oss_enrolled"))
-def test_an_exclusion_reading_a_declared_yes_of_a_two_state_fact_is_accepted(payer_fact: str) -> None:
-    fragment = _fragment(_exclusion(payer_fact=payer_fact))
+@pytest.mark.parametrize("payer_fact", (*_CODED_FACTS, "pays_capital_income_with_retencion"))
+@pytest.mark.parametrize("declared", (True, False), ids=("yes", "no"))
+def test_an_exclusion_reading_either_answer_of_a_three_state_fact_is_accepted(
+    payer_fact: str,
+    declared: bool,
+) -> None:
+    """Every coded fact and every projection over an optional field reads both answers.
+
+    A field that can hold an unanswered state tells the taxpayer's own no apart
+    from a question nobody asked, so an exclusion may read either side of it.
+    """
+    fragment = _fragment(_exclusion(payer_fact=payer_fact, payer_fact_declared=declared))
 
     rule = hydrate_applicability_rule(Modelo("347"), fragment)
 
@@ -355,7 +383,20 @@ def _m130(profile: TaxpayerProfile) -> ModeloApplicability:
 
 
 def _autonomo(**facts: object) -> TaxpayerProfile:
-    return _persona(("actividad_economica",), "GENERAL", irpf_estimation_regime="directa_simplificada", **facts)
+    """A resident autónomo en estimación directa simplificada.
+
+    Modelo 130 is the IRPF pago fraccionado, so its rule applies to the
+    resident category alone: habitual residence in Spain is what selects the
+    tax (LIRPF art. 9; TRLIRNR art. 2), and an unstated residency leaves the
+    verdict incomplete before the art. 109 exclusion is read at all.
+    """
+    return _persona(
+        ("actividad_economica",),
+        "GENERAL",
+        irpf_estimation_regime="directa_simplificada",
+        fiscal_residency=require_fiscal_residency("resident_irpf"),
+        **facts,
+    )
 
 
 def test_a_professional_with_seventy_percent_withholding_does_not_file_modelo_130() -> None:
@@ -366,9 +407,20 @@ def test_a_professional_with_seventy_percent_withholding_does_not_file_modelo_13
     assert "artículo 109.1" in result.reason
 
 
-@pytest.mark.parametrize("facts", ({}, {_ART109_FACT: False}), ids=("unanswered", "below-seventy-percent"))
-def test_an_activity_below_the_art109_coverage_files_modelo_130(facts: dict[str, bool]) -> None:
-    assert _m130(_autonomo(**facts)).verdict is ApplicabilityVerdict.APPLICABLE
+def test_an_activity_below_the_art109_coverage_files_modelo_130() -> None:
+    assert _m130(_autonomo(**{_ART109_FACT: False})).verdict is ApplicabilityVerdict.APPLICABLE
+
+
+def test_an_unanswered_art109_coverage_leaves_modelo_130_incomplete() -> None:
+    """A defaulted negative would assert an answer nobody gave, so the verdict stays open.
+
+    The legal ref is asserted because it separates this cause from the
+    undeclared-taxpayer one: only the exclusion's own verdict carries art. 109.
+    """
+    result = _m130(_autonomo())
+
+    assert result.verdict is ApplicabilityVerdict.INCOMPLETE
+    assert _ART_109 in result.legal_refs
 
 
 def test_the_art109_fact_is_declared_for_every_supported_filing_year() -> None:

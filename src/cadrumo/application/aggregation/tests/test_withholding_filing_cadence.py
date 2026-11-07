@@ -68,17 +68,16 @@ def test_an_ordinary_filer_is_quarterly_for_every_withholding_modelo(
         assert schedule.unscheduled_quarters == (), modelo
 
 
-def test_a_large_company_files_modelo_111_monthly_and_no_schedule_covers_its_123(
+def test_a_large_company_files_every_withholding_modelo_monthly(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
+    """RIRPF art. 108.1 gives all three modelos the same monthly plazo for this retenedor."""
     cadence = withholding_filer_cadence(authority_operation, filing_year=2025, facts=LARGE_COMPANY_FACTS)
 
-    m111 = cadence.schedule_for("111")
-    assert m111.scheduled_periods == _MONTHS
-    assert m111.unscheduled_quarters == _QUARTERS
-    m123 = cadence.schedule_for("123")
-    assert m123.scheduled_periods == ()
-    assert m123.unscheduled_quarters == _QUARTERS
+    for modelo in ("111", "115", "123"):
+        schedule = cadence.schedule_for(modelo)
+        assert schedule.scheduled_periods == _MONTHS, modelo
+        assert schedule.unscheduled_quarters == _QUARTERS, modelo
 
 
 def test_a_public_administration_over_the_threshold_is_monthly_for_111_only(
@@ -116,10 +115,17 @@ def test_the_modelo_111_cadence_matches_the_calendar_windows(
     )
 
 
-def test_a_large_company_has_no_modelo_123_calendar_window_either(
+@pytest.mark.parametrize("modelo", ["115", "123"])
+def test_a_large_company_has_the_monthly_calendar_windows_of_the_other_two_modelos(
+    modelo: str,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    assert _calendar_periods(authority_operation, modelo="123", filing_year=2025, facts=LARGE_COMPANY_FACTS) == set()
+    """The cadence and the calendar agree for 115 and 123 as they already did for 111."""
+    admitted = _calendar_periods(authority_operation, modelo=modelo, filing_year=2025, facts=LARGE_COMPANY_FACTS)
+
+    assert admitted == set(_MONTHS)
+    cadence = withholding_filer_cadence(authority_operation, filing_year=2025, facts=LARGE_COMPANY_FACTS)
+    assert set(cadence.schedule_for(modelo).scheduled_periods) == admitted
 
 
 def test_a_quarterly_filer_captures_into_the_recognition_quarter(
@@ -157,9 +163,10 @@ def test_a_monthly_filer_capture_is_refused_with_a_no_action_verdict(
     }
 
 
-def test_a_large_company_capital_capture_is_refused_although_no_monthly_123_schedule_exists(
+def test_a_large_company_capital_capture_is_refused_because_its_123_is_monthly(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
+    """Quarterly capture is still refused, now because the monthly cadence is scheduled."""
     cadence = withholding_filer_cadence(authority_operation, filing_year=2025, facts=LARGE_COMPANY_FACTS)
 
     with pytest.raises(WithholdingFilingCadenceError) as raised:
@@ -168,7 +175,7 @@ def test_a_large_company_capital_capture_is_refused_although_no_monthly_123_sche
     context = raised.value.context
     assert context is not None
     assert context["period"] == "4T"
-    assert context["scheduled_periods"] == ""
+    assert context["scheduled_periods"] == "|".join(_MONTHS)
 
 
 def test_the_annual_source_refuses_when_its_periodic_modelo_is_not_quarterly_all_year(

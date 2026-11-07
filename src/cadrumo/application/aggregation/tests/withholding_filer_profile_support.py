@@ -32,7 +32,7 @@ WITHHOLDING_FILER_PROFILE_ID: Final[str] = "7c1d2e3f-4a5b-4c6d-8e7f-90a1b2c3d4e5
 _CLOCK: Final[datetime] = datetime(2025, 1, 2, 9, tzinfo=UTC)
 
 LARGE_COMPANY_FACTS: Final[tuple[UserProfileFact, ...]] = (UserProfileFact(path="censo.large_company", value=True),)
-"""A large company: the Modelo 111 schedule makes it monthly and no Modelo 123 or 115 schedule covers it."""
+"""A large company: the Modelo 111, 115 and 123 schedules all make it monthly (RIRPF art. 108.1)."""
 
 PUBLIC_ADMINISTRATION_FACTS: Final[tuple[UserProfileFact, ...]] = (
     UserProfileFact(path="censo.public_administration_budget_gt_6000000", value=True),

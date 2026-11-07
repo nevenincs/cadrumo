@@ -33,12 +33,14 @@ from ....domain.calculations.registry.applicability_models import (
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.third_party_declaration_roles import require_third_party_declaration_role
 from ....domain.contribuyente.entity_type import EntityType
+from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.models import (
     IrpfEstimationRegime,
     IrpfIncomeCategory,
     IVARegime,
     M303RegimeComposition,
     M303TaxTerritory,
+    ModeloEnrollment,
     ModeloIVAProfile,
     TaxpayerProfile,
 )
@@ -218,6 +220,12 @@ def _iva_outside_sii() -> ModeloIVAProfile:
         cash_accounting_regime_enrolled=False,
         voluntary_sii_enrolled=False,
         hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+        roi_enrolled=False,
+        oss_enrolled=False,
+        sii_enrolled=False,
+        group_member_enrolled=False,
+        group_dominant_entity_enrolled=False,
+        intracommunity_operations_exceed_50000_eur=False,
     )
 
 
@@ -229,6 +237,8 @@ def _autonomo(*, threshold: bool | None, collector: bool = False, sii: bool = Fa
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
         iva_regime=IVARegime("GENERAL"),
         iva=_iva_outside_sii().model_copy(update={"voluntary_sii_enrolled": sii}),
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
+        enrollment=ModeloEnrollment(large_company=False),
         third_party_transactions_above_347_threshold=threshold,
         declaration_roles=(
             frozenset({require_third_party_declaration_role("third_party_fee_collector")}) if collector else frozenset()
