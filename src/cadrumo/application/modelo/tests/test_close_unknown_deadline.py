@@ -64,9 +64,9 @@ def test_the_effective_deadline_keeps_only_the_nominal_lower_bound(operation: Pi
     assert deadline.nominal_closes_on == _NOMINAL_CLOSE
     assert deadline.closes_on == _NOMINAL_CLOSE
     assert deadline.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
-    assert deadline.days_remaining_on(_BEFORE) == 10
-    assert deadline.days_overdue_on(_AFTER) is None
-    assert deadline.days_remaining_on(_AFTER) is None
+    assert deadline.posture_on(_BEFORE).days_remaining == 10
+    assert deadline.posture_on(_AFTER).days_overdue is None
+    assert deadline.posture_on(_AFTER).days_remaining is None
 
 
 def test_the_work_posture_counts_down_to_the_bound_and_then_states_nothing(

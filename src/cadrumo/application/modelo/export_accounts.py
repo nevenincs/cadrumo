@@ -45,6 +45,7 @@ from decimal import Decimal
 from typing import NamedTuple
 
 from ...core.export_layout_format import ExportLayoutFormat
+from ...core.filing_timeliness import FilingTimeliness
 from ...core.modelo import Modelo
 from ...core.payment_instalment_election import second_instalment_is_payable
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
@@ -59,6 +60,7 @@ from ...domain.deadlines.domiciliation_cutoff import (
     UnavailablePaymentCutoff,
     resolve_payment_cutoff,
 )
+from ...domain.deadlines.effective_close import resolve_effective_filing_deadline
 from ...domain.deadlines.models import ChargeAccount, ModeloIVAProfile, RefundAccount, TaxpayerProfile
 from ...domain.deadlines.plazo import resolve_filing_window
 from ...domain.modelos.calculation_revision import (
@@ -425,17 +427,19 @@ def _instalment_refusal_reason(
         return "nothing_to_pay"
     if revision.amendment_identity is not None:
         return "amendment"
-    resolved_window = resolve_filing_window(
+    deadline = resolve_effective_filing_deadline(
         str(work_unit.modelo),
         work_unit.filing_year,
         work_unit.period,
-        authority=operation,
+        operation=operation,
     )
-    window = None if resolved_window is None else resolved_window.dated_window
-    if window is None:
+    if deadline is None:
         return "filing_window_unknown"
-    if exported_at.astimezone(MADRID_TZ).date() > window.closes_on:
+    timeliness = deadline.timeliness_on(exported_at.astimezone(MADRID_TZ).date())
+    if timeliness is FilingTimeliness.EXTEMPORANEA:
         return "past_filing_window"
+    if timeliness is FilingTimeliness.UNKNOWN:
+        return "filing_window_unknown"
     share = first_instalment_share(str(work_unit.modelo), period_day=work_unit.period.end_date, authority=operation)
     if (
         share is not None

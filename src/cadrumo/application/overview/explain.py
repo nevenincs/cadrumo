@@ -48,6 +48,7 @@ from ...domain.calculations.registry.applicability_payer_facts import payer_fact
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.ids import LegalRefId
 from ...domain.calculations.registry.modelo_obligation_scope import UNMODELED_OBLIGATIONS
+from ...domain.deadlines.effective_close import effective_filing_deadline
 from ...domain.deadlines.engine import DeadlineEngine
 from ...domain.deadlines.errors import DeadlineValidationError, NoDeadlineWindowsError
 from ...domain.deadlines.models import TaxpayerProfile
@@ -578,19 +579,22 @@ def explain_out_of_plazo_warning(
 
     ``profile`` is a :class:`TaxpayerProfile`.
     """
-    deadline_engine = DeadlineEngine()
-    try:
-        windows = deadline_engine.deadline_windows(year)
-    except NoDeadlineWindowsError:
+    with bundled_indexed_authority().operation() as operation:
+        deadline_engine = DeadlineEngine(authority=operation)
+        try:
+            windows = deadline_engine.deadline_windows(year)
+        except NoDeadlineWindowsError:
+            return None
+        # Lateness is counted from the close the filer actually has, the same
+        # effective close every other surface judges against.
+        deadlines = tuple(
+            effective_filing_deadline(window.closes_on, modelo=modelo, operation=operation)
+            for code, revision, window in windows
+            if code == modelo and _deadline_window_matches(deadline_engine, profile, revision, window)
+        )
+    if not deadlines or not all(deadline.close_known for deadline in deadlines):
         return None
-    matching_windows = tuple(
-        window
-        for code, revision, window in windows
-        if code == modelo and _deadline_window_matches(deadline_engine, profile, revision, window)
-    )
-    if not matching_windows:
-        return None
-    closes_on = max(window.closes_on for window in matching_windows)
+    closes_on = max(deadline.closes_on for deadline in deadlines)
     twelve_month_boundary = twelve_month_anniversary(closes_on)
     if today < twelve_month_boundary:
         return None

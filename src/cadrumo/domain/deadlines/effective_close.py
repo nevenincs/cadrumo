@@ -15,11 +15,19 @@ them can judge lateness against the nominal date while another judges it
 against the moved one.
 
 The result keeps both dates and says which holidays the effective date
-accounts for. A year whose holiday calendar is not published keeps the
-nominal date and reports the calendar as unavailable, so an unverified date is
-never shown as final. A projected window whose own close is unknown keeps its
-nominal close only as a lower bound: the filer is on time up to it, and no
-lateness is judged after it.
+accounts for. :meth:`EffectiveFilingDeadline.posture_on` is the one place a
+reference date is judged against that close -- upcoming, due soon, due today
+or overdue, and in plazo or extemporánea for a presentation -- and every
+surface reads its answer instead of comparing dates itself. The judgement
+depends only on the close, its holiday coverage and the reference date; it
+never depends on which filing year is asked, on whether the window is
+authored or projected from the governed rule, or on which surface asks.
+
+A holiday calendar the registry does not publish for a year the shift
+consults leaves the close unknown. That is the one unknown state: the nominal
+date is kept only as a lower bound, a presentation up to it is in plazo, and
+nothing is judged after it. The ``CALENDAR_UNAVAILABLE`` coverage on the
+result is the structured finding a surface reports for it.
 
 See Also:
     :func:`cadrumo.domain.deadlines.festivos.shift_deadline`:
@@ -42,11 +50,12 @@ from ..calculations.registry.errors import RegistryError
 from ..modelos.filing_record import FilingDeclarationKind, declaration_kind_is_timed_against_the_plazo
 from .errors import DeadlineValidationError
 from .festivos import (
+    CALENDAR_UNAVAILABLE_SHIFT_REASON,
     DeadlineHolidayCoverage,
     HolidayJurisdiction,
     shift_deadline,
 )
-from .filing_window_projection import ProjectedFilingWindowCloseUnavailable
+from .models import ObligationStatus
 from .plazo import resolve_filing_window
 
 if TYPE_CHECKING:
@@ -54,8 +63,55 @@ if TYPE_CHECKING:
 
 _LOG = get_logger(__name__)
 
-#: Shift reason recorded when the holiday calendar could not be resolved.
-CALENDAR_UNAVAILABLE_SHIFT_REASON: Final = "calendar_unavailable"
+#: Days before the effective close for which an open obligation is ``DUE_SOON``.
+DEFAULT_DUE_SOON_DAYS: Final = 14
+
+
+def _classify_obligation_status(closes_on: date, today: date, due_soon_days: int) -> ObligationStatus:
+    """Map a KNOWN effective close date to an :class:`ObligationStatus`.
+
+    The OVERDUE / DUE_TODAY / DUE_SOON / UPCOMING boundaries. Surfaces reach
+    them through :meth:`EffectiveFilingDeadline.posture_on`, which first decides
+    whether the close is known at all. The date passed is the effective close,
+    after the business-day shift (Ley 39/2015 art. 30.5 through Ley 58/2003
+    art. 7.2), never the nominal one: a window ending on a Sunday is not
+    overdue on the Monday the filer may still file.
+    """
+    if today > closes_on:
+        return ObligationStatus.OVERDUE
+    if today == closes_on:
+        return ObligationStatus.DUE_TODAY
+    if (closes_on - today).days <= due_soon_days:
+        return ObligationStatus.DUE_SOON
+    return ObligationStatus.UPCOMING
+
+
+@dataclass(frozen=True, slots=True)
+class DeadlinePosture:
+    """Where one reference date stands against a declaration's effective close.
+
+    Attributes:
+        status: ``UPCOMING``, ``DUE_SOON``, ``DUE_TODAY`` or ``OVERDUE`` against
+            a known close; ``UNKNOWN`` when the close is unknown.
+        days_remaining: Days left until the close, or ``None`` once it has
+            passed. For an unknown close it counts to the nominal close, a
+            lower bound, and is ``None`` past it.
+        days_overdue: Days since a known close, or ``None`` while it has not
+            passed or is unknown.
+    """
+
+    status: ObligationStatus
+    days_remaining: int | None
+    days_overdue: int | None
+
+    @property
+    def timeliness(self) -> FilingTimeliness:
+        """The posture a presentation on the reference date takes against the plazo voluntario."""
+        if self.days_overdue is not None:
+            return FilingTimeliness.EXTEMPORANEA
+        if self.days_remaining is not None:
+            return FilingTimeliness.EN_PLAZO
+        return FilingTimeliness.UNKNOWN
 
 
 @dataclass(frozen=True, slots=True)
@@ -71,9 +127,6 @@ class EffectiveFilingDeadline:
         shift_reason: Stable token for why the date moved, or did not.
         jurisdictions: The holiday jurisdictions that moved the date.
         holiday_refs: The holidays that moved the date.
-        close_known: ``False`` for a projected window whose close is unknown;
-            ``closes_on`` is then the nominal close as a lower bound, and no
-            lateness is judged after it.
     """
 
     nominal_closes_on: date
@@ -82,19 +135,20 @@ class EffectiveFilingDeadline:
     shift_reason: str
     jurisdictions: tuple[HolidayJurisdiction, ...] = ()
     holiday_refs: tuple[str, ...] = ()
-    close_known: bool = True
 
     def __post_init__(self) -> None:
         """Refuse an effective date earlier than the nominal one; the shift only moves forward."""
         if self.closes_on < self.nominal_closes_on:
             raise ValueError("the effective close date cannot precede the nominal close date")
-        if not self.close_known and (
-            self.closes_on != self.nominal_closes_on
-            or self.holiday_coverage is not DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
-        ):
-            raise ValueError("an unknown close keeps only the nominal date, with the calendar unavailable")
+        if not self.close_known and self.closes_on != self.nominal_closes_on:
+            raise ValueError("an unknown close keeps only the nominal date")
 
-    def days_remaining_on(self, reference_on: date) -> int | None:
+    @property
+    def close_known(self) -> bool:
+        """Whether the effective close is established; ``False`` when its shift calendar is unpublished."""
+        return self.holiday_coverage is not DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
+
+    def _days_remaining_on(self, reference_on: date) -> int | None:
         """Days left until the effective close date, or ``None`` once it has passed.
 
         For an unknown close this counts to the nominal close, which the close
@@ -102,36 +156,38 @@ class EffectiveFilingDeadline:
         """
         return (self.closes_on - reference_on).days if reference_on <= self.closes_on else None
 
-    def days_overdue_on(self, reference_on: date) -> int | None:
+    def _days_overdue_on(self, reference_on: date) -> int | None:
         """Days since the effective close date, or ``None`` while it has not passed or is unknown."""
         if not self.close_known:
             return None
         return (reference_on - self.closes_on).days if reference_on > self.closes_on else None
 
+    def posture_on(self, reference_on: date, *, due_soon_days: int = DEFAULT_DUE_SOON_DAYS) -> DeadlinePosture:
+        """Judge one reference date against this close: the single posture every surface reads.
+
+        A known close classifies the date by the canonical boundaries. An
+        unknown close is ``UNKNOWN``: its nominal date is only a lower bound,
+        so the date is in plazo up to it and nothing is judged after it.
+        """
+        days_remaining = self._days_remaining_on(reference_on)
+        if not self.close_known:
+            return DeadlinePosture(ObligationStatus.UNKNOWN, days_remaining, None)
+        return DeadlinePosture(
+            _classify_obligation_status(self.closes_on, reference_on, due_soon_days),
+            days_remaining,
+            self._days_overdue_on(reference_on),
+        )
+
     def timeliness_on(self, presented_on: date) -> FilingTimeliness:
         """Say whether a presentation on this date is inside the plazo voluntario, or late.
 
-        Derived from the same one-sided day counts the deadline posture uses, so
-        a surface cannot call a filing late that the posture calls in time. An
-        unknown close keeps its nominal date as a lower bound only: a
-        presentation up to it is still in time, and nothing past it is judged.
-
-        A date whose shift calendar could not be resolved is the same case. The
-        kept date is then the unverified nominal one, which is a lower bound on
-        the day the filer has, so a presentation past it is UNKNOWN rather than
-        late. The obligation schedule reports such a window the same way, and
-        the deadline gate refuses to call it closed.
-
-        This is a calendar posture, never an Article 27 assessment; see
+        The posture of :meth:`posture_on` read for a presentation date, so a
+        filing receipt cannot call a filing late that the schedule, the
+        calendar or the editor calls in time. This is a calendar posture, never
+        an Article 27 assessment; see
         :class:`~cadrumo.core.filing_timeliness.FilingTimeliness`.
         """
-        if self.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE:
-            return FilingTimeliness.EN_PLAZO if presented_on <= self.closes_on else FilingTimeliness.UNKNOWN
-        if self.days_overdue_on(presented_on) is not None:
-            return FilingTimeliness.EXTEMPORANEA
-        if self.days_remaining_on(presented_on) is not None:
-            return FilingTimeliness.EN_PLAZO
-        return FilingTimeliness.UNKNOWN
+        return self.posture_on(presented_on).timeliness
 
 
 def effective_filing_deadline(
@@ -181,8 +237,10 @@ def resolve_effective_filing_deadline(
 ) -> EffectiveFilingDeadline | None:
     """Resolve a declaration's deadline window and its effective close date, or ``None`` without a window.
 
-    A projected window whose close is unknown resolves with ``close_known``
-    false; it is never ``None``, because an unknown close is not an absent one.
+    An authored window and a window projected from the governed rule resolve
+    through the same shift. A close whose shift calendar is unpublished
+    resolves with ``close_known`` false; it is never ``None``, because an
+    unknown close is not an absent one.
 
     Raises:
         RegistryError: The registry could not be read, so the deadline is
@@ -192,14 +250,6 @@ def resolve_effective_filing_deadline(
     resolution = resolve_filing_window(modelo, filing_year, period, authority=operation)
     if resolution is None:
         return None
-    if isinstance(resolution, ProjectedFilingWindowCloseUnavailable):
-        return EffectiveFilingDeadline(
-            nominal_closes_on=resolution.nominal_closes_on,
-            closes_on=resolution.nominal_closes_on,
-            holiday_coverage=DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE,
-            shift_reason=CALENDAR_UNAVAILABLE_SHIFT_REASON,
-            close_known=False,
-        )
     return effective_filing_deadline(resolution.closes_on, modelo=modelo, operation=operation)
 
 
@@ -281,7 +331,8 @@ def decide_filing_timeliness(
 
 
 __all__ = [
-    "CALENDAR_UNAVAILABLE_SHIFT_REASON",
+    "DEFAULT_DUE_SOON_DAYS",
+    "DeadlinePosture",
     "EffectiveFilingDeadline",
     "decide_filing_timeliness",
     "effective_filing_deadline",

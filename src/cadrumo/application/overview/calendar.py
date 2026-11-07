@@ -35,7 +35,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date
-from itertools import chain
 from typing import TYPE_CHECKING
 
 from ...core.external_constants import OutputLanguage
@@ -46,15 +45,11 @@ from ...core.time.clock import now
 from ...domain.calculations.registry.applicability import derive_modelo_applicability, taxpayer_model_is_declared
 from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ...domain.deadlines.domiciliation_cutoff import resolve_payment_cutoff
-from ...domain.deadlines.effective_close import CALENDAR_UNAVAILABLE_SHIFT_REASON, effective_filing_deadline
-from ...domain.deadlines.engine import DeadlineEngine, ScheduleProducer, classify_obligation_status
+from ...domain.deadlines.effective_close import EffectiveFilingDeadline, effective_filing_deadline
+from ...domain.deadlines.engine import DeadlineEngine, ScheduleProducer
 from ...domain.deadlines.errors import NoDeadlineWindowsError
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage
-from ...domain.deadlines.filing_window_projection import (
-    ProjectedFilingWindowCloseUnavailable,
-)
 from ...domain.deadlines.models import (
-    CloseUnknownModeloDeadline,
     ModeloDeadline,
     ObligationStatus,
     Schedule,
@@ -129,20 +124,16 @@ def _window_intersects_range(
 
 
 def entry_intersects_range(
-    obligation: ModeloDeadline | CloseUnknownModeloDeadline,
+    obligation: ModeloDeadline,
     calendar_range: OverviewCalendarRange,
     *,
     operation: PinnedAuthorityOperation,
 ) -> bool:
     """Return whether ``obligation``'s filing window, to its effective close date, intersects the range.
 
-    A window whose close is unknown is placed by its opening and its nominal
-    close, the only dates known for it.
+    A window whose close is unknown keeps its nominal close as its effective
+    one, the only close known for it.
     """
-    if isinstance(obligation, CloseUnknownModeloDeadline):
-        return (
-            obligation.opens_on <= calendar_range.to_date and obligation.nominal_closes_on >= calendar_range.from_date
-        )
     del operation
     return obligation.opens_on <= calendar_range.to_date and obligation.adjusted_closes_on >= calendar_range.from_date
 
@@ -181,30 +172,8 @@ def registry_window_for_work_unit(
     )
 
 
-def _work_unit_window_dates(
-    unit: WorkUnit,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> tuple[date, date, date | None, ProjectedFilingWindowCloseUnavailable | None]:
-    """Return the calendar span used to place a local work unit row, its payment cutoff and any unknown close.
-
-    The last member is the close-unknown projection when the window's close is
-    unknown; the span then ends at its nominal close and no cutoff exists.
-    """
-    resolution = registry_window_for_work_unit(unit, operation=operation)
-    opens_on, closes_on = _work_unit_window_span(unit, resolution)
-    if resolution is None:
-        return opens_on, closes_on, None, None
-    if isinstance(resolution, ProjectedFilingWindowCloseUnavailable):
-        return opens_on, closes_on, None, resolution
-    cutoff = resolve_payment_cutoff(str(unit.modelo), resolution.window, operation=operation).cutoff_on
-    return opens_on, closes_on, cutoff, None
-
-
 def _work_unit_window_span(unit: WorkUnit, resolution: FilingWindowResolution | None) -> tuple[date, date]:
     """Return the calendar span used to place a local work unit row."""
-    if isinstance(resolution, ProjectedFilingWindowCloseUnavailable):
-        return resolution.opens_on, resolution.nominal_closes_on
     if resolution is not None:
         return resolution.opens_on, resolution.closes_on
     if unit.period.has_date_span():
@@ -221,8 +190,6 @@ def _work_unit_intersects_range(
 ) -> bool:
     resolution = registry_window_for_work_unit(unit, operation=operation)
     opens_on, closes_on = _work_unit_window_span(unit, resolution)
-    if isinstance(resolution, ProjectedFilingWindowCloseUnavailable):
-        return opens_on <= calendar_range.to_date and closes_on >= calendar_range.from_date
     return _window_intersects_range(
         opens_on,
         closes_on,
@@ -252,26 +219,23 @@ def _filing_evidence_has_local_state(
 
 def local_work_unit_status(
     unit: WorkUnit,
-    closes_on: date,
+    deadline: EffectiveFilingDeadline,
     today: date,
     due_soon_days: int,
-    *,
-    close_known: bool = True,
 ) -> ObligationStatus:
     """Classify a local work unit, applying overview's filing gate first.
 
     The filing-pointer gate is overview's own concern and is the only
     intentional difference from the deadline engine's classification: a unit
     the operator has already filed locally is FILED regardless of dates. Every
-    date boundary past that gate is the deadline domain's to decide, so it is
-    delegated rather than restated. A window whose close is unknown is
-    ``UNKNOWN`` and is never classified against its nominal close.
+    date boundary past that gate is the canonical deadline posture, read from
+    :meth:`~cadrumo.domain.deadlines.effective_close.EffectiveFilingDeadline.posture_on`
+    rather than restated, so a close whose holiday calendar is unpublished is
+    ``UNKNOWN`` here exactly as in the schedule.
     """
     if _work_unit_has_filing_pointers(unit):
         return ObligationStatus.FILED
-    if not close_known:
-        return ObligationStatus.UNKNOWN
-    return classify_obligation_status(closes_on, today, due_soon_days)
+    return deadline.posture_on(today, due_soon_days=due_soon_days).status
 
 
 def _filing_evidence_with_work_unit_pointers(
@@ -297,25 +261,20 @@ def _filing_evidence_with_work_unit_pointers(
 def _annotate_entry_with_work_unit(
     entry: OverviewCalendarEntry,
     unit: WorkUnit,
-    *,
-    today: date,
-    due_soon_days: int,
 ) -> OverviewCalendarEntry:
-    status = local_work_unit_status(
-        unit,
-        entry.adjusted_closes_on,
-        today,
-        due_soon_days,
-        close_known=entry.status is not ObligationStatus.UNKNOWN,
-    )
-    if entry.filing_evidence.aeat_filed:
-        status = ObligationStatus.FILED
+    """Attach a local work unit to the registry row of its declaration.
+
+    The row's status is the deadline engine's posture for the same close and
+    reference date; only overview's filing gate can replace it, with FILED.
+    """
+    filed = _work_unit_has_filing_pointers(unit) or entry.filing_evidence.aeat_filed
+    status = ObligationStatus.FILED if filed else entry.status
     effective_filing_evidence = _filing_evidence_with_work_unit_pointers(unit, (entry.filing_evidence,))
     return entry.model_copy(
         update={
             "status": status,
             "user_state": user_state_for(status),
-            "days_overdue": (today - entry.adjusted_closes_on).days if status is ObligationStatus.OVERDUE else None,
+            "days_overdue": entry.days_overdue if status is ObligationStatus.OVERDUE else None,
             "filing_evidence": effective_filing_evidence[-1],
             "local_work_unit_id": unit.work_unit_id,
             "local_work_unit_name": unit.name,
@@ -335,7 +294,15 @@ def _calendar_entry_from_work_unit(
     live_censo_verified_profile_keys: tuple[str, ...] | None,
     operation: PinnedAuthorityOperation,
 ) -> OverviewCalendarEntry:
-    opens_on, closes_on, payment_cutoff_on, close_unknown = _work_unit_window_dates(unit, operation=operation)
+    resolution = registry_window_for_work_unit(unit, operation=operation)
+    opens_on, closes_on = _work_unit_window_span(unit, resolution)
+    effective = effective_filing_deadline(closes_on, modelo=str(unit.modelo), operation=operation)
+    # An unknown close judges nothing past its nominal date, a payment cutoff included.
+    payment_cutoff_on = (
+        resolve_payment_cutoff(str(unit.modelo), resolution.window, operation=operation).cutoff_on
+        if resolution is not None and effective.close_known
+        else None
+    )
     effective_filing_evidence = _filing_evidence_with_work_unit_pointers(unit, filing_evidence)
     work_unit_fields = {
         "source": OverviewCalendarEntrySource.LOCAL_WORK_UNIT,
@@ -343,26 +310,6 @@ def _calendar_entry_from_work_unit(
         "local_work_unit_name": unit.name,
         "local_work_unit_revision_id": unit.revision_id,
     }
-    if close_unknown is not None:
-        entry = _calendar_entry_from_close_unknown(
-            CloseUnknownModeloDeadline(
-                modelo=Modelo(str(unit.modelo)),
-                period=unit.period,
-                opens_on=close_unknown.opens_on,
-                nominal_closes_on=close_unknown.nominal_closes_on,
-                close_unavailable_reason=close_unknown.reason.value,
-                boe_references=close_unknown.legal_refs,
-            ),
-            filing_evidence=effective_filing_evidence,
-            live_censo_verified_profile_keys=live_censo_verified_profile_keys,
-            today=today,
-            operation=operation,
-        )
-        status = local_work_unit_status(unit, closes_on, today, due_soon_days, close_known=False)
-        if entry.filing_evidence.aeat_filed:
-            status = ObligationStatus.FILED
-        return entry.model_copy(update={**work_unit_fields, "status": status, "user_state": user_state_for(status)})
-    effective = effective_filing_deadline(closes_on, modelo=str(unit.modelo), operation=operation)
     obligation = ModeloDeadline(
         modelo=Modelo(str(unit.modelo)),
         period=unit.period,
@@ -376,7 +323,7 @@ def _calendar_entry_from_work_unit(
         payment_cutoff_on=payment_cutoff_on,
         # Overview's filing-pointer gate runs first; every date boundary past it
         # is judged against the close the filer actually has.
-        status=local_work_unit_status(unit, effective.closes_on, today, due_soon_days),
+        status=local_work_unit_status(unit, effective, today, due_soon_days),
         boe_references=(),
         recovery=None,
     )
@@ -411,12 +358,7 @@ def _merge_work_units_into_entries(
         key = _work_unit_key(unit)
         existing_index = registry_index.get(key)
         if existing_index is not None and key not in annotated_registry_keys:
-            merged[existing_index] = _annotate_entry_with_work_unit(
-                merged[existing_index],
-                unit,
-                today=today,
-                due_soon_days=due_soon_days,
-            )
+            merged[existing_index] = _annotate_entry_with_work_unit(merged[existing_index], unit)
             annotated_registry_keys.add(key)
             continue
         if not _work_unit_intersects_range(
@@ -504,55 +446,6 @@ def _censo_enrolment_state_for(
     return censo_enrolment_state
 
 
-def _calendar_entry_from_close_unknown(
-    obligation: CloseUnknownModeloDeadline,
-    *,
-    filing_evidence: tuple[OverviewCalendarFilingEvidence, ...],
-    live_censo_verified_profile_keys: tuple[str, ...] | None,
-    today: date,
-    operation: PinnedAuthorityOperation,
-    censo_enrolment_states: dict[str, OverviewCensoEnrolmentState] | None = None,
-) -> OverviewCalendarEntry:
-    """Build the row of a window whose close is unknown.
-
-    The row shows the opening and the nominal close, a lower bound the close
-    is never earlier than, reports the holiday calendar as unavailable, and is
-    ``UNKNOWN`` unless official evidence shows it filed. It is never classified
-    as due or overdue against the nominal date, so it carries no overdue age,
-    recovery or payment cutoff.
-    """
-    period = obligation.period
-    evidence = calendar_entry_filing_evidence(
-        modelo=obligation.modelo,
-        filing_year=period.filing_year,
-        period=period,
-        evidence=filing_evidence,
-    )
-    status = ObligationStatus.FILED if evidence.aeat_filed else ObligationStatus.UNKNOWN
-    return OverviewCalendarEntry(
-        modelo=obligation.modelo,
-        period=period,
-        opens_on=obligation.opens_on,
-        closes_on=obligation.nominal_closes_on,
-        adjusted_closes_on=obligation.nominal_closes_on,
-        shift_reason=CALENDAR_UNAVAILABLE_SHIFT_REASON,
-        holiday_coverage=DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE,
-        payment_cutoff_on=None,
-        evaluated_on=today,
-        days_overdue=None,
-        status=status,
-        user_state=user_state_for(status),
-        filing_year=period.filing_year,
-        censo_enrolment_state=_censo_enrolment_state_for(
-            obligation.modelo,
-            live_censo_verified_profile_keys=live_censo_verified_profile_keys,
-            operation=operation,
-            censo_enrolment_states=censo_enrolment_states,
-        ),
-        filing_evidence=evidence,
-    )
-
-
 def calendar_entry_from_obligation(
     obligation: ModeloDeadline,
     *,
@@ -565,10 +458,7 @@ def calendar_entry_from_obligation(
 ) -> OverviewCalendarEntry:
     """Build an overview calendar entry from a modelo obligation and its filing evidence."""
     # The obligation already carries the effective close and the status its
-    # producer classified against that close, on this same reference date.
-    # Resolving the shift or the boundaries again here could only disagree --
-    # and did, for a year whose holiday calendar is unpublished, where the
-    # producer reports UNKNOWN and a second classification said overdue.
+    # producer read from the canonical posture, on this same reference date.
     # Overview's filing-evidence gate below is its own concern and stays here.
     adjusted = obligation.adjusted_closes_on
     holiday_coverage = obligation.holiday_coverage
@@ -679,7 +569,7 @@ def _schedules_for_calendar_range(
 
 
 def _calendar_obligation_projection(
-    obligation: ModeloDeadline | CloseUnknownModeloDeadline,
+    obligation: ModeloDeadline,
     *,
     profile: TaxpayerProfile,
     calendar_range: OverviewCalendarRange,
@@ -731,25 +621,15 @@ def _calendar_obligation_projection(
 
     if not intersects_range:
         return None, None, obligation.modelo, disagreeing_modelo
-    if isinstance(obligation, CloseUnknownModeloDeadline):
-        entry = _calendar_entry_from_close_unknown(
-            obligation,
-            filing_evidence=filing_evidence,
-            live_censo_verified_profile_keys=live_censo_verified_profile_keys,
-            today=today,
-            operation=operation,
-            censo_enrolment_states=censo_enrolment_states,
-        )
-    else:
-        entry = calendar_entry_from_obligation(
-            obligation,
-            filing_evidence=filing_evidence,
-            live_censo_verified_profile_keys=live_censo_verified_profile_keys,
-            today=today,
-            due_soon_days=due_soon_days,
-            operation=operation,
-            censo_enrolment_states=censo_enrolment_states,
-        )
+    entry = calendar_entry_from_obligation(
+        obligation,
+        filing_evidence=filing_evidence,
+        live_censo_verified_profile_keys=live_censo_verified_profile_keys,
+        today=today,
+        due_soon_days=due_soon_days,
+        operation=operation,
+        censo_enrolment_states=censo_enrolment_states,
+    )
     return entry, None, obligation.modelo, disagreeing_modelo
 
 
@@ -792,10 +672,7 @@ def _entries_and_suppressed_from_schedules(
     # Every row shares this pinned authority and live-censo tuple. Resolve
     # enrolment once per modelo, rather than reloading rules for each period.
     censo_enrolment_states: dict[str, OverviewCensoEnrolmentState] = {}
-    obligations = chain.from_iterable(
-        (*schedule.obligations, *schedule.close_unknown_obligations) for schedule in schedules
-    )
-    for obligation in obligations:
+    for obligation in (row for schedule in schedules for row in schedule.obligations):
         entry, suppressed_entry, covered_modelo, disagreeing_modelo = _calendar_obligation_projection(
             obligation,
             profile=profile,

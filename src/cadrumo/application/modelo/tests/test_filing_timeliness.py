@@ -301,7 +301,6 @@ def test_an_unknown_close_is_unknown_timeliness_past_its_lower_bound(shifted_tar
         closes_on=nominal,
         holiday_coverage=DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE,
         shift_reason="calendar_unavailable",
-        close_known=False,
     )
 
     assert deadline.timeliness_on(nominal - timedelta(days=1)) is FilingTimeliness.EN_PLAZO

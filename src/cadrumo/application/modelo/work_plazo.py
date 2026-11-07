@@ -234,8 +234,9 @@ def modelo_work_deadline_posture(
         )
         if deadline is None:
             return None
-        days_overdue = deadline.days_overdue_on(resolved_reference_on)
-        days_remaining = deadline.days_remaining_on(resolved_reference_on)
+        posture = deadline.posture_on(resolved_reference_on)
+        days_overdue = posture.days_overdue
+        days_remaining = posture.days_remaining
         if days_overdue is None and days_remaining is None:
             # A close that is unknown and lies past its nominal date: lateness
             # cannot be judged, so no posture and no recargo preview are given.

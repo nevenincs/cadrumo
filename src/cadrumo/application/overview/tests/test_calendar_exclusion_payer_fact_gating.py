@@ -48,8 +48,6 @@ _ART109_SELECTOR = "art109_activity_income_withholding_ge_70pct"
 _ART109_PATH = f"irpf.{_ART109_SELECTOR}"
 _PAGO_FRACCIONADO_MODELO = "130"
 _THIRD_PARTY_MODELO = "347"
-_TODAY = date(2026, 10, 19)
-_RANGE = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2027, 2, 1))
 _PROJECTION_SHAPES = ("path", "selector")
 
 
@@ -75,11 +73,12 @@ def _calendar(
     raw: Mapping[str, object] = (
         record_to_path_values(record) if shape == "path" else record_to_values(record, schema=schema)
     )
+    horizon = operation.supported_filing_years().horizon
     return build_overview_calendar(
         projection_for_taxpayer(record, schema=schema),
-        _RANGE,
+        OverviewCalendarRange(from_date=date(horizon, 1, 1), to_date=date(horizon + 1, 2, 1)),
         operation=operation,
-        today=_TODAY,
+        today=date(horizon, 10, 19),
         raw_values=raw,
     )
 

@@ -14,8 +14,8 @@ import hashlib
 from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
-from decimal import Decimal
+from datetime import UTC, date, datetime, timedelta
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
 import pytest
@@ -42,7 +42,6 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
 from ....adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
-from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -76,7 +75,12 @@ from ....core.time.clock import MADRID_TZ
 from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef, date_within_validity_window
+from ....domain.calculations.registry.tests.published_authority import (
+    published_selected_revision_id,
+    published_supported_filing_years,
+)
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.deadlines.effective_close import resolve_effective_filing_deadline
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
@@ -126,11 +130,22 @@ type _Repos = tuple[
     BucketEventHistoryRepository,
 ]
 
-_T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
-_T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
-_T2 = datetime(2026, 1, 15, 14, 0, 0, tzinfo=UTC)
-_T3 = datetime(2026, 4, 15, 15, 0, 0, tzinfo=UTC)
-_T4 = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
+
+def _supported_years() -> tuple[int, int, int]:
+    """Return the envelope horizon and the two filing years beneath it, all inside the envelope."""
+    envelope = published_supported_filing_years()
+    assert envelope is not None
+    horizon = envelope.horizon
+    assert envelope.floor <= horizon - 2, "the module needs two supported filing years beneath the horizon"
+    return horizon, horizon - 1, horizon - 2
+
+
+_YEAR, _PRIOR_YEAR, _EARLIER_YEAR = _supported_years()
+_T0 = datetime(_YEAR, 1, 15, 12, 0, 0, tzinfo=UTC)
+_T1 = datetime(_YEAR, 1, 15, 13, 0, 0, tzinfo=UTC)
+_T2 = datetime(_YEAR, 1, 15, 14, 0, 0, tzinfo=UTC)
+_T3 = datetime(_YEAR, 4, 15, 15, 0, 0, tzinfo=UTC)
+_T4 = datetime(_YEAR, 4, 16, 12, 0, 0, tzinfo=UTC)
 _PROFILE_ID = "10000000-0000-4000-8000-000000000130"
 _PROFILE_LABEL = "Test runtime profile"
 _READY_PROFILE_FACTS = persona_facts_beneath(
@@ -215,13 +230,15 @@ def _seed_work_unit(
     wu_repo: WorkUnitCatalogueRepository,
     *,
     modelo: str = "130",
-    filing_year: int = 2026,
+    filing_year: int = _YEAR,
     period_code: str = "1T",
-    revision_id: str = "2019-y-siguientes",
+    revision_id: str | None = None,
     operation: PinnedAuthorityOperation,
 ) -> WorkUnit:
-    """Modelo 130 1T 2026 — registry-resolvable so the formula engine
+    """Modelo 130 1T of the envelope horizon -- registry-resolvable so the formula engine
     in ``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`` has a snapshot to operate on."""
+    if revision_id is None:
+        revision_id = published_selected_revision_id(modelo, filing_year=filing_year, period=period_code)
 
     return create_work_unit(
         ports=build_work_lifecycle_ports(bucket_id=_PROFILE_ID),
@@ -245,9 +262,9 @@ def _seed_external_baseline(
     *,
     casilla_values: dict[CasillaId, Decimal],
     modelo: str = "130",
-    filing_year: int = 2026,
+    filing_year: int = _YEAR,
     period_code: str = "1T",
-    revision_id_value: str = "2019-y-siguientes",
+    revision_id_value: str | None = None,
     member_nif: str | None = None,
     filing_instance_evidence: FilingInstanceEvidence | None = None,
     input_values_by_casilla_id: dict[CasillaId, str] | None = None,
@@ -342,7 +359,7 @@ def _seed_external_baseline(
         status=ModeloRecordStatus.VIGENTE,
         external_evidence=ExternalEvidence(
             kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-            reference_id="JUST2024303ABC123",
+            reference_id="JUSTM303ABC123",
             imported_at=_T1,
         ),
     )
@@ -396,11 +413,12 @@ def _seed_local_filing_record(
 def test_amend_refuses_evidence_less_m303_external_baseline(
     repos: _Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
-    snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="1T")
+    m303_year = _YEAR
+    snapshot = operation.snapshot("303", filing_year=m303_year, period="1T")
     _, _, baseline = _seed_external_baseline(
         repos,
         modelo="303",
-        filing_year=2026,
+        filing_year=m303_year,
         period_code="1T",
         revision_id_value=snapshot.revision.id,
         casilla_values={_M303_RESULT_CASILLA: Decimal("0")},
@@ -544,7 +562,7 @@ def _seed_engine_computed_baseline(
     """Seed a confirmed 130 baseline whose values the real engine computed from its inputs."""
     _wu_repo, _cr_repo, _fr_repo, _evidence_repo, _bv_repo = repos
     work_unit = _seed_work_unit(_wu_repo, operation=operation)
-    snapshot = operation.snapshot("130", filing_year=2026, period="1T")
+    snapshot = operation.snapshot("130", filing_year=_YEAR, period="1T")
     engine_inputs = {
         _AMEND_INCOME_CASILLA: Decimal("1000"),
         _AMEND_WITHHELD_CASILLA: Decimal("0"),
@@ -607,6 +625,39 @@ def _drive_amend_creates_complementaria(repos: _Repos, *, operation: PinnedAutho
     )
 
 
+#: Casilla 13 for a prior-year net income of at most 9.000 EUR, which the test's binding of zero selects.
+_MINORACION_PRIOR_INCOME_AT_MOST_9000 = Decimal("100")
+_CENT = Decimal("0.01")
+
+
+def _served_percent(snapshot: RegistrySnapshot, parameter_id: str) -> Decimal:
+    """Return the percentage the registry serves for the snapshot's first-quarter close."""
+    quarter_close = date(snapshot.filing_year, 3, 31)
+    parameter = next(item for item in snapshot.revision.parameters if item.id == parameter_id)
+    (served,) = (
+        value
+        for value in parameter.values
+        if date_within_validity_window(quarter_close, valid_from=value.valid_from, valid_to=value.valid_to)
+    )
+    return Decimal(served.value)
+
+
+def _expected_pago_fraccionado(snapshot: RegistrySnapshot, *, income: Decimal, expenses: Decimal) -> Decimal:
+    """Casilla 04 of a simplified-modality 1T return, from the instructions' own arithmetic.
+
+    The provisiones y gastos de difícil justificación are the served percentage of
+    income less the other expenses (RIRPF art. 30.2.a, 7 per cent only for 2023); the
+    rendimiento neto is income less expenses and that provision; the payment is the
+    served percentage of it.
+    """
+    provision = ((income - expenses) * _served_percent(snapshot, "irpf.art-30-2-provision-rate") / 100).quantize(
+        _CENT, ROUND_HALF_UP
+    )
+    net = (income - expenses - provision).quantize(_CENT, ROUND_HALF_UP)
+    rate = _served_percent(snapshot, "irpf.direct_estimation_fractional_payment_rate")
+    return (net * rate / 100).quantize(_CENT, ROUND_HALF_UP)
+
+
 def test_operation_backed_130_successive_confirmed_corrections_recompute_and_guard_decreases(
     repos: _Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
@@ -614,12 +665,11 @@ def test_operation_backed_130_successive_confirmed_corrections_recompute_and_gua
     wu_repo, cr_repo, fr_repo, _, _ = repos
     work_unit = _seed_work_unit(
         wu_repo,
-        filing_year=2025,
+        filing_year=_PRIOR_YEAR,
         period_code="1T",
-        revision_id="2019-y-siguientes",
         operation=operation,
     )
-    snapshot = operation.snapshot("130", filing_year=2025, period="1T")
+    snapshot = operation.snapshot("130", filing_year=_PRIOR_YEAR, period="1T")
     engine_inputs = {
         _AMEND_INCOME_CASILLA: Decimal("8840"),
         validated_casilla_id("gastos-deducibles-previos"): Decimal("4982"),
@@ -655,7 +705,7 @@ def test_operation_backed_130_successive_confirmed_corrections_recompute_and_gua
     _, original_revision, original = _seed_external_baseline(
         repos,
         casilla_values=original_result.values,
-        filing_year=2025,
+        filing_year=_PRIOR_YEAR,
         input_values_by_casilla_id=serialized_inputs,
         binding_overrides=serialized_bindings,
         observations=original_result.observations,
@@ -675,10 +725,14 @@ def test_operation_backed_130_successive_confirmed_corrections_recompute_and_gua
         operation=operation,
     )
     first_revision = cr_repo.load().revisions[first.calculation_revision_id]
-    assert first_revision.casilla_values[validated_casilla_id("04")] == Decimal("953.42")
-    assert first_revision.casilla_values[validated_casilla_id("17")] == Decimal("853.42")
-    assert first_revision.casilla_values[validated_casilla_id("18")] == Decimal("633.02")
-    assert first_revision.casilla_values[validated_casilla_id("19")] == Decimal("220.40")
+    expected_original_04 = _expected_pago_fraccionado(snapshot, income=Decimal("8840"), expenses=Decimal("4982"))
+    expected_first_04 = _expected_pago_fraccionado(snapshot, income=Decimal("10000"), expenses=Decimal("4982"))
+    expected_first_17 = expected_first_04 - _MINORACION_PRIOR_INCOME_AT_MOST_9000
+    expected_first_18 = expected_original_04 - _MINORACION_PRIOR_INCOME_AT_MOST_9000
+    assert first_revision.casilla_values[validated_casilla_id("04")] == expected_first_04
+    assert first_revision.casilla_values[validated_casilla_id("17")] == expected_first_17
+    assert first_revision.casilla_values[validated_casilla_id("18")] == expected_first_18
+    assert first_revision.casilla_values[validated_casilla_id("19")] == expected_first_17 - expected_first_18
 
     from datetime import timedelta
 
@@ -704,9 +758,11 @@ def test_operation_backed_130_successive_confirmed_corrections_recompute_and_gua
         operation=operation,
     )
     second_revision = cr_repo.load().revisions[second.calculation_revision_id]
-    assert second_revision.casilla_values[validated_casilla_id("04")] == Decimal("1143.42")
-    assert second_revision.casilla_values[validated_casilla_id("18")] == Decimal("853.42")
-    assert second_revision.casilla_values[validated_casilla_id("19")] == Decimal("190.00")
+    expected_second_04 = _expected_pago_fraccionado(snapshot, income=Decimal("11000"), expenses=Decimal("4982"))
+    expected_second_17 = expected_second_04 - _MINORACION_PRIOR_INCOME_AT_MOST_9000
+    assert second_revision.casilla_values[validated_casilla_id("04")] == expected_second_04
+    assert second_revision.casilla_values[validated_casilla_id("18")] == expected_first_17
+    assert second_revision.casilla_values[validated_casilla_id("19")] == expected_second_17 - expected_first_17
     assert cr_repo.load().revisions[original_revision.calculation_revision_id].model_dump(mode="json") == original_saved
 
     records_before_decrease = fr_repo.load().model_dump(mode="json")
@@ -1061,12 +1117,11 @@ def test_amend_refuses_printed_number_metadata_token(repos: _Repos, *, operation
     _, _, baseline = _seed_external_baseline(
         repos,
         modelo="303",
-        filing_year=2025,
+        filing_year=_PRIOR_YEAR,
         period_code="1T",
-        revision_id_value="2025",
         casilla_values={_M303_RESULT_CASILLA: Decimal("100")},
         filing_instance_evidence=general_m303_filing_evidence(
-            Period.from_year_and_code(2025, "1T"),
+            Period.from_year_and_code(_PRIOR_YEAR, "1T"),
             reference="test:amend:printed-token",
             operation=operation,
         ),
@@ -1396,9 +1451,8 @@ def test_amend_refuses_a_baseline_saved_with_a_scalar_row_field_input(
         repos,
         casilla_values={validated_casilla_id("decl.total-perceptores"): Decimal("1")},
         modelo="180",
-        filing_year=2024,
+        filing_year=_EARLIER_YEAR,
         period_code="0A",
-        revision_id_value="2023-y-siguientes",
         input_values_by_casilla_id={row_field: "150"},
         operation=operation,
     )
@@ -1438,9 +1492,8 @@ def test_amend_does_not_demand_row_field_casillas_as_scalars(
         repos,
         casilla_values={validated_casilla_id("decl.total-perceptores"): Decimal("1")},
         modelo="180",
-        filing_year=2024,
+        filing_year=_EARLIER_YEAR,
         period_code="0A",
-        revision_id_value="2023-y-siguientes",
         operation=operation,
     )
 

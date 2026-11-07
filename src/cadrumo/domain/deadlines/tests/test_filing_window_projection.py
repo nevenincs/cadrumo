@@ -29,17 +29,21 @@ from ....core.period import Period
 from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...contribuyente.entity_type import EntityType
 from ...contribuyente.renta_codes import FiscalResidency
+from ..effective_close import resolve_effective_filing_deadline
 from ..engine import DeadlineEngine, indexed_deadline_window_year
-from ..festivos import DeadlineHolidayCoverage, Holiday, HolidayCalendar, HolidayJurisdiction
+from ..festivos import (
+    CALENDAR_UNAVAILABLE_SHIFT_REASON,
+    DeadlineHolidayCoverage,
+    Holiday,
+    HolidayCalendar,
+    HolidayJurisdiction,
+)
 from ..filing_window_projection import (
     AuthoredFilingWindow,
     FilingCloseInhabilBasis,
     FilingWindowClause,
-    FilingWindowCloseUnavailableReason,
     FilingWindowOpening,
     ProjectedFilingWindow,
-    ProjectedFilingWindowCloseUnavailable,
-    ProjectedFilingWindowResolution,
     project_scheduled_window,
     scheduled_coordinate,
 )
@@ -70,7 +74,7 @@ def project_filing_window(
     modelo: str,
     period: Period,
     calendars: tuple[HolidayCalendar, ...],
-) -> ProjectedFilingWindowResolution | None:
+) -> ProjectedFilingWindow | None:
     """Project one coordinate from the governed rule with holiday calendars supplied ahead of the authority."""
     if not period.has_date_span():
         return None
@@ -302,12 +306,15 @@ def test_a_year_without_a_published_calendar_has_an_unknown_close(operation: Pin
 
     resolved = resolve_filing_window("303", 2028, period, authority=operation)
 
-    assert isinstance(resolved, ProjectedFilingWindowCloseUnavailable)
-    assert resolved.reason is FilingWindowCloseUnavailableReason.HOLIDAY_CALENDAR_UNAVAILABLE
+    assert isinstance(resolved, ProjectedFilingWindow)
+    assert resolved.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
+    assert resolved.shift_reason == CALENDAR_UNAVAILABLE_SHIFT_REASON
     assert resolved.opens_on == date(2028, 4, 1)
     assert resolved.nominal_closes_on == date(2028, 4, 20)
-    assert resolved.closes_on is None
-    assert resolved.dated_window is None
+    assert resolved.closes_on == resolved.nominal_closes_on, "an unknown close keeps only its nominal date"
+    effective = resolve_effective_filing_deadline("303", 2028, period, operation=operation)
+    assert effective is not None
+    assert effective.close_known is False
 
 
 def test_a_2027_window_resolves_against_the_published_2027_calendar(operation: PinnedAuthorityOperation) -> None:
@@ -330,8 +337,10 @@ def test_a_walk_into_an_unpublished_year_has_an_unknown_close(operation: PinnedA
 
     projected = project_filing_window(operation, modelo="303", period=period, calendars=_FUTURE_CALENDARS[:1])
 
-    assert isinstance(projected, ProjectedFilingWindowCloseUnavailable)
+    assert isinstance(projected, ProjectedFilingWindow)
+    assert projected.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
     assert projected.nominal_closes_on == date(2028, 12, 30)
+    assert projected.closes_on == projected.nominal_closes_on
 
 
 def test_a_year_below_the_floor_projects_nothing(operation: PinnedAuthorityOperation) -> None:
@@ -366,11 +375,17 @@ def test_the_engine_reports_an_unknown_close_as_unknown_and_never_overdue(
     # A reference date past every nominal close of 2028.
     schedule = DeadlineEngine().compute(_iva_profile(), 2028, today=date(2029, 12, 31))
 
-    unknown = {(item.modelo, item.period.registry_token): item for item in schedule.close_unknown_obligations}
-    first_quarter = unknown[(Modelo("303"), "1T")]
+    rows = {(item.modelo, item.period.registry_token): item for item in schedule.obligations}
+    first_quarter = rows[(Modelo("303"), "1T")]
     assert first_quarter.status is ObligationStatus.UNKNOWN
+    assert first_quarter.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
     assert first_quarter.opens_on == date(2028, 4, 1)
-    assert first_quarter.nominal_closes_on == date(2028, 4, 20)
-    assert first_quarter.close_unavailable_reason == FilingWindowCloseUnavailableReason.HOLIDAY_CALENDAR_UNAVAILABLE
-    dated_303 = [item for item in schedule.obligations if item.modelo in _MODELOS]
-    assert dated_303 == [], "a 2028 Modelo 303 or 390 window has no known close, so none is dated or overdue"
+    assert first_quarter.closes_on == date(2028, 4, 20)
+    assert first_quarter.adjusted_closes_on == first_quarter.closes_on
+    assert first_quarter.payment_cutoff_on is None
+    assert first_quarter.recovery is None
+    unshifted = [item for item in schedule.obligations if item.modelo in _MODELOS]
+    assert unshifted, "the 2028 Modelo 303 and 390 windows are dated obligations"
+    assert all(item.status is ObligationStatus.UNKNOWN for item in unshifted), (
+        "a 2028 Modelo 303 or 390 window has no known close, so none is due or overdue"
+    )
