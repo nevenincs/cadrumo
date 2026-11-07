@@ -30,9 +30,9 @@ See Also:
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Mapping, Sequence
 from datetime import date
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -40,6 +40,7 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import PeriodKind, registry_period_kind
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
@@ -54,8 +55,10 @@ from cadrumo.domain.calculations.registry.tests.snapshot_support import build_sn
 from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.compiler.loader import load_shared_catalogues
 
-from .monthly_deadline_support import MONTHLY_RETENCION_DEADLINES
-from .quarterly_deadline_support import QUARTERLY_RETENCION_DEADLINES
+from .retencion_deadline_support import MONTHLY_PERIODS, RETENCION_PERIODS, expected_close, expected_cutoff
+
+if TYPE_CHECKING:
+    from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -83,35 +86,28 @@ _CURRENT_LIFECYCLE_LINK_IDS = (
 )
 
 
-def _census_windows(
-    census: Mapping[int, Sequence[tuple[str, str | None]]], period_token: Callable[[int], str]
-) -> dict[tuple[int, str], tuple[date, date, date | None]]:
-    """Return (opens, closes, domiciled-payment cutoff) per exercise and period, read off one published census row."""
-    windows: dict[tuple[int, str], tuple[date, date, date | None]] = {}
-    for exercise, rows in census.items():
-        for ordinal, (close_text, cutoff_text) in enumerate(rows, start=1):
-            closes_on = date.fromisoformat(close_text)
-            cutoff = None if cutoff_text is None else date.fromisoformat(cutoff_text)
-            windows[(exercise, period_token(ordinal))] = (date(closes_on.year, closes_on.month, 1), closes_on, cutoff)
-    return windows
+def _expected_census(operation: PinnedAuthorityOperation) -> dict[tuple[int, str], tuple[date, date, date | None]]:
+    """Return (opens, closes, domiciled-payment cutoff) per supported exercise and period of Orden EHA/3290/2008 art. 4.
+
+    The trimestral plazo is paragraph one and the gran-empresa mensual one paragraph two. Each close is
+    the statutory twentieth day moved by the business-day shift the deadline resolver applies, and each
+    cutoff is the domiciliacion day the bundled Calendario del Contribuyente of the year it falls in
+    publishes; the December period and the fourth quarter of the horizon year close in a January no
+    bundled calendar covers, so they have no cutoff. Neither side is read from the window under test.
+    """
+    census: dict[tuple[int, str], tuple[date, date, date | None]] = {}
+    for filing_year in filing_year_envelope().years:
+        for period in RETENCION_PERIODS:
+            closes_on = expected_close(operation, "216", filing_year, period)
+            census[(filing_year, period)] = (
+                date(closes_on.year, closes_on.month, 1),
+                closes_on,
+                expected_cutoff(filing_year, period),
+            )
+    return census
 
 
-_EXPECTED_DEADLINES = _census_windows(QUARTERLY_RETENCION_DEADLINES, lambda quarter: f"{quarter}T")
-"""The trimestral census of Orden EHA/3290/2008 art. 4, paragraph one, read from the year each window closes in."""
-
-_EXPECTED_MONTHLY_DEADLINES = _census_windows(MONTHLY_RETENCION_DEADLINES, lambda month: f"{month:02d}")
-"""The gran-empresa mensual census of Orden EHA/3290/2008 art. 4, paragraph two.
-
-Each row is read from the bundled Calendario del Contribuyente of the year it
-closes in, from the monthly entry that names Modelo 216 by number alongside
-Modelos 111, 115, 117, 123, 124, 126, 128 and 230. The December period of the
-horizon year closes in a January no bundled calendar covers and takes the
-statutory twentieth day with no cutoff, as the fourth quarter above does.
-"""
-
-
-_EXPECTED_MONTHLY_PERIODS = frozenset(period for _year, period in _EXPECTED_MONTHLY_DEADLINES)
-"""The twelve monthly registry tokens, taken from the census above rather than relisted."""
+_EXPECTED_MONTHLY_PERIODS = frozenset(MONTHLY_PERIODS)
 
 
 def _load_modelo_216():
@@ -164,13 +160,14 @@ def test_modelo_216_has_exact_supported_deadline_census_and_dates() -> None:
         for window in revision.deadline_windows
         if window.period.filing_year in filing_year_envelope().years
     }
-    assert observed == _EXPECTED_DEADLINES | _EXPECTED_MONTHLY_DEADLINES
+    with bundled_indexed_authority().operation() as operation:
+        assert observed == _expected_census(operation)
 
 
 def test_modelo_216_windows_use_canonical_periods_sources_and_owner() -> None:
     modelo, catalogues = _load_modelo_216()
     owned = [(revision, window) for revision in modelo.revisions.values() for window in revision.deadline_windows]
-    assert len(owned) == len(_EXPECTED_DEADLINES) + len(_EXPECTED_MONTHLY_DEADLINES)
+    assert len(owned) == len(RETENCION_PERIODS) * len(filing_year_envelope().years)
 
     for revision, window in owned:
         filing_year = window.period.filing_year
