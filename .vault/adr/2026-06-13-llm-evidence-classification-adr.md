@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#llm-evidence-classification'
 date: '2026-06-13'
-modified: '2026-10-29'
-body_hash: 'sha256:433ad31faaa2550682cc4f51bcf186709a35f63c77c15408cf772c24b9b13465'
+modified: '2026-11-07'
+body_hash: 'sha256:78748fd2b1db9729b8d70c487824d0625dbb5d4df0114a893ec9b9933b3450d5'
 related:
   - "[[2026-06-13-llm-evidence-classification-research]]"
   - "[[2026-06-10-llm-evidence-classification-adr]]"
@@ -27,7 +27,8 @@ Reading invoices is structured-document OCR. The model only selects `category` /
 `iva_category` from the registry allow-list; it never emits a regulated number
 (those are registry-derived), so the choice of model carries no
 calculation-grounding risk. Model weights are pulled into the person's own Ollama
-runtime; the application ships none. cadrumo-agent already owns providers and
+runtime; the application ships none. (Note 2026-11-07: since `2026-11-07-local-inference-engine-adr`,
+weights are fetched by Rust into a store that either engine reads.) cadrumo-agent already owns providers and
 models, local ones included (`2026-10-25-agent-owned-models-adr`).
 
 ## Constraints
