@@ -13,13 +13,16 @@ from ......domain.calculations.registry.schema_exports import (
     ExportLayoutDefinition,
     ExportRecordDefinition,
 )
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..declarations_observations import verify_submitted_file_context
 from ..errors import SedeParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+_YEAR = filing_year_envelope().horizon
 
-@pytest.mark.parametrize(("attribute", "body"), [("filing_year", b"2023"), ("period_code", b"2T")])
+
+@pytest.mark.parametrize(("attribute", "body"), [("filing_year", str(_YEAR - 1).encode()), ("period_code", b"2T")])
 def test_filed_parser_retains_wrong_identity_for_context_refusal(attribute: str, body: bytes) -> None:
     field = ExportFieldDefinition.model_validate(
         dict(
@@ -55,11 +58,11 @@ def test_filed_parser_retains_wrong_identity_for_context_refusal(attribute: str,
     parsed = parse_filed_payload(layout, body)
     declaration = ExpedientesDeclaration(
         modelo="303",
-        ejercicio=2024,
-        period=Period.from_year_and_code(2024, "1T"),
+        ejercicio=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
         expediente_id="202430300000001A",
         estado="ALTA",
-        presented_at=datetime(2024, 4, 20, tzinfo=UTC),
+        presented_at=datetime(_YEAR, 4, 20, tzinfo=UTC),
         justificante_link_text="Ver",
         archive_link_text="Ver",
     )

@@ -5,16 +5,19 @@ from __future__ import annotations
 import pytest
 
 from ......core.period import Period
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..filed_data_capture_port import DeferredSedeObservations
 from ..schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+_YEAR = filing_year_envelope().horizon
+
 
 def test_source_batch_persists_in_observation_order_once() -> None:
-    period = Period.from_year_and_code(2025, "1T")
-    key1 = ("303", 2025, period, "1")
-    key2 = ("303", 2025, period, "2")
+    period = Period.from_year_and_code(_YEAR, "1T")
+    key1 = ("303", _YEAR, period, "1")
+    key2 = ("303", _YEAR, period, "2")
     first = FiledDeclaracionArtefact.model_construct(kind="register_row", storage_ref=None)
     second = FiledDeclaracionArtefact.model_construct(kind="justificante_pdf", storage_ref=None)
     observed = (
@@ -39,12 +42,12 @@ def test_source_batch_persists_in_observation_order_once() -> None:
 
 
 def test_source_batch_refuses_mismatched_staged_artefacts_before_writing() -> None:
-    period = Period.from_year_and_code(2025, "1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
     artefact = FiledDeclaracionArtefact.model_construct(kind="register_row", storage_ref=None)
     foreign = FiledDeclaracionArtefact.model_construct(kind="justificante_pdf", storage_ref=None)
     deferred = DeferredSedeObservations(
         observations=(FiledDeclaracionObservation.model_construct(artefacts=(artefact,)),),
-        staged=[(("303", 2025, period, "1"), foreign, b"foreign")],
+        staged=[(("303", _YEAR, period, "1"), foreign, b"foreign")],
     )
 
     def forbidden(*args):

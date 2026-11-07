@@ -25,6 +25,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from ......core.casilla_id import validated_casilla_id
 from ......core.casilla_value_kind import CasillaValueKind
 from ......core.directory_scan import scan_directory
+from ......domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ..declarations_observations import non_numeric_observed_casillas, observed_value_kind
 from ..errors import SedeValidationError
 from ..schema import ObservedCasillaSkip, ObservedCasillaValue
@@ -124,7 +125,7 @@ def test_skip_query_returns_empty_when_every_casilla_is_numeric() -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         observation = filed_observation(
             modelo="100",
-            ejercicio=2025,
+            ejercicio=newest_authored_edition("100"),
             period="0A",
             casilla_values={_M100_NUMERIC_CASILLA: Decimal("1234.56")},
         )
@@ -138,7 +139,7 @@ def test_skip_query_names_a_text_casilla_without_disclosing_its_value() -> None:
         filed_address = "CL SANITIZADA 0000 LOCALIDAD"
         observation = filed_observation(
             modelo="100",
-            ejercicio=2025,
+            ejercicio=newest_authored_edition("100"),
             period="0A",
             casilla_values={_M100_NUMERIC_CASILLA: filed_address},
         )
@@ -158,7 +159,7 @@ def test_skip_query_reports_a_numeric_casilla_whose_token_will_not_parse() -> No
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         observation = filed_observation(
             modelo="100",
-            ejercicio=2025,
+            ejercicio=newest_authored_edition("100"),
             period="0A",
             casilla_values={_M100_NUMERIC_CASILLA: "no-decimal"},
             value_kind=CasillaValueKind.NUMERIC,

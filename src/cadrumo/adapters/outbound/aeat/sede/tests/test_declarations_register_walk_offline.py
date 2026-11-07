@@ -36,6 +36,7 @@ from ..errors import SedeParseError
 from .declarations_register_test_support import (
     aeat_sede_fixture,
     declared_register_total,
+    fixture_offered_ejercicios,
     open_routed_declarations_register,
     rendered_register_rows,
 )
@@ -44,6 +45,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _TRUNCATED = "declaraciones-register-form-paginated-synthetic"
 _COMPLETE = "declaraciones-register-form-complete-synthetic"
+# The walk selects an exercise its register form offers, so each fixture names its own.
+_TRUNCATED_EJERCICIO = fixture_offered_ejercicios(_TRUNCATED)[0]
+_COMPLETE_EJERCICIO = fixture_offered_ejercicios(_COMPLETE)[0]
 
 
 async def _walk_against(html: str, *, modelo: str, ejercicio: int) -> tuple[ExpedientesDeclaration, ...]:
@@ -70,14 +74,14 @@ def test_the_walk_itself_refuses_a_page_declaring_more_than_it_rendered() -> Non
     )
 
     with pytest.raises(SedeParseError) as exc_info:
-        asyncio.run(_walk_against(html, modelo="100", ejercicio=2025))
+        asyncio.run(_walk_against(html, modelo="100", ejercicio=_TRUNCATED_EJERCICIO))
 
     context = exc_info.value.context
     assert context is not None, "the refusal reached the operator without its rendered-versus-declared cause"
     assert context["rendered_count"] == rendered_rows
     assert context["declared_total"] == declared_total
     assert context["modelo"] == "100"
-    assert context["ejercicio"] == 2025
+    assert context["ejercicio"] == _TRUNCATED_EJERCICIO
 
 
 def test_the_walk_returns_the_rows_of_a_page_carrying_no_pager() -> None:
@@ -92,12 +96,12 @@ def test_the_walk_returns_the_rows_of_a_page_carrying_no_pager() -> None:
     html = aeat_sede_fixture(_COMPLETE)
     assert declared_register_total(html) is None, "fixture grew a pager label; it can no longer pin the no-pager case"
 
-    rows = asyncio.run(_walk_against(html, modelo="100", ejercicio=2024))
+    rows = asyncio.run(_walk_against(html, modelo="100", ejercicio=_COMPLETE_EJERCICIO))
 
     assert rows, "the walk returned nothing, so it did not reach the parse through the browser shell"
     assert len(rows) == rendered_register_rows(html)
     for row in rows:
         assert row.modelo == "100"
-        assert row.ejercicio == 2024
+        assert row.ejercicio == _COMPLETE_EJERCICIO
         assert row.expediente_id
         assert row.presented_at.tzinfo is not None
