@@ -5,7 +5,7 @@ tags:
 date: '2026-11-07'
 modified: '2026-11-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:da01d0f26784c3b37934c73709a7e0ce0317c6fbf3d9e01b87cb597b2dbad7a6'
+body_hash: 'sha256:84bedb5ae51bbea249d187fc01aaf9f639b29a18ee11f2fdacd91aa6aaeb9b9e'
 related:
   - "[[2026-11-07-local-inference-engine-plan]]"
 ---
@@ -87,6 +87,16 @@ related:
 - `S11` `verify:` `lint-imports quick contract check` -> `pass`
 - `S11` `verify:` `import load targets recompiled` -> `pass`
 - `S11` `by:` `vaultspec-standard-executor`
+- `S11` `A` `dev/packaging/native/msvc_redist.py`
+- `S11` `A` `dev/packaging/native/tests/test_msvc_redist.py`
+- `S11` `M` `dev/packaging/native/llama_server.py`
+- `S11` `M` `dev/packaging/native/tests/test_llama_server.py`
+- `S11` `M` `native/cmake/AssemblyTools.cmake`
+- `S11` `verify:` `pytest msvc_redist llama_server platforms layout no_model_definitions no_git_cli assembly_refusals cmake_package_inputs` -> `pass`
+- `S11` `verify:` `ruff check and format on dev/packaging` -> `pass`
+- `S11` `verify:` `ty check on the touched modules` -> `pass`
+- `S11` `verify:` `lint-imports quick contract check` -> `pass`
+- `S11` `verify:` `real Windows archive with the real MSVC redistributable resolves every import` -> `pass`
 
 ## Notes
 
@@ -103,6 +113,7 @@ related:
 - `S28` Full npm test: 4 `desktop-*.spec.ts` files do not load on tui since a8ebeaaa9d (desktopShell.ts bridge path resolves to native/docs); remaining 2473 tests: 2454 passed, 9 skipped, 10 failed in calendar-place, modelo-related-filings, touch and ledger-invoice-match specs, none importing P06 modules, while concurrent fixture-date commits landed
 - `S11` Pending in the root build slot: CMake configure and build of the `llama_server` step, bundle build and test-native-bundle
 - `S11` Linux llama-server archives exceed the glibc 2.28 floor (x86-64 2.34, aarch64 2.38); staging refuses them by design
+- `S11` Pending in the root build slot: CMake configure resolves the redistributable, then bundle build and test-native-bundle
 
 ## Notes
 

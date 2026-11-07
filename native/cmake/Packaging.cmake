@@ -159,7 +159,7 @@ if(CADRUMO_PACKAGE_USER_DOCS)
   list(APPEND assembly_inputs "${CADRUMO_PATH_USER_DOCS_STAGE}")
 endif()
 # These helpers own assembly; unrelated native build/test helpers are not inputs.
-foreach(helper assemble assembly_transaction service_descriptors stdlib package_inventory layout hashing build_paths docs_stage docs_scan docs_errors cmake_build cached_command build_timing agent_runtime agent_runtime_archive agent_runtime_inventory agent_runtime_validation build_stamp build_fingerprint llama_server)
+foreach(helper assemble assembly_transaction service_descriptors stdlib package_inventory layout hashing build_paths docs_stage docs_scan docs_errors cmake_build cached_command build_timing agent_runtime agent_runtime_archive agent_runtime_inventory agent_runtime_validation build_stamp build_fingerprint llama_server msvc_redist)
   list(APPEND assembly_inputs "${PROJECT_SOURCE_DIR}/dev/packaging/native/${helper}.py")
 endforeach()
 cadrumo_assembly_backend_inputs(assembly_backend_inputs "${PROJECT_SOURCE_DIR}" "${CADRUMO_BACKEND}")

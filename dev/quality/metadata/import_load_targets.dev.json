@@ -731,6 +731,7 @@
         "dev.packaging.native.macos_info",
         "dev.packaging.native.macos_launchagent",
         "dev.packaging.native.metadata",
+        "dev.packaging.native.msvc_redist",
         "dev.packaging.native.operational_settings",
         "dev.packaging.native.package_health_facts",
         "dev.packaging.native.package_identity",

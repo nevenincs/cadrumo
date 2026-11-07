@@ -23,9 +23,11 @@ from ..llama_server import (
     ArchiveMismatchError,
     GlibcFloorError,
     LlamaServerError,
+    UnresolvedImportError,
     acquire_llama_server,
     fetch_archive,
     pin_for_target,
+    require_resolved_imports,
     stage_llama_server,
     verify_acquired,
 )
@@ -388,3 +390,75 @@ def test_the_native_image_walk_of_a_posix_assembly_reaches_every_staged_program_
     staged = {root / "bin/llama" / name for name in _receipt(tree)["files"]}
     assert len(staged) == 3
     assert staged <= set(walked[0])
+
+
+def _redistributable(tmp_path: Path) -> dict[str, Path]:
+    directory = tmp_path / "redist"
+    directory.mkdir()
+    libraries = {}
+    for name in ("msvcp140.dll", "vcruntime140.dll", "vcruntime140_1.dll"):
+        libraries[name] = pe_with_imports(directory / name, "KERNEL32.dll", "api-ms-win-crt-runtime-l1-1-0.dll")
+    return libraries
+
+
+def _staged_windows(tmp_path: Path, redistributable: dict[str, Path] | None) -> Path:
+    content = _windows_archive(tmp_path)
+    pins = _pins("windows-x86-64", "zip", "llama-server.exe", content)
+    tree = acquire_llama_server(tmp_path / "acquired", "windows-x86-64", pins=pins, fetch=lambda _pin, _hosts: content)
+    root = tmp_path / "package"
+    stage_llama_server(tree, root, _LAYOUT, "windows-x86-64", pins=pins, redistributable=redistributable)
+    return root / "bin/llama"
+
+
+def test_a_windows_program_whose_imports_all_resolve_stages_with_the_runtime_beside_it(tmp_path: Path) -> None:
+    program = _staged_windows(tmp_path, _redistributable(tmp_path))
+
+    assert {"msvcp140.dll", "vcruntime140.dll", "vcruntime140_1.dll", "llama-server.exe"} <= {
+        path.name for path in program.iterdir()
+    }
+    assert (program / "vcruntime140.dll").read_bytes() == (tmp_path / "redist" / "vcruntime140.dll").read_bytes()
+
+
+def test_a_windows_program_importing_a_library_nothing_provides_is_refused_naming_both(tmp_path: Path) -> None:
+    with pytest.raises(UnresolvedImportError, match=r"llama-server-impl\.dll imports vcruntime140\.dll"):
+        _staged_windows(tmp_path, None)
+
+
+def test_an_import_of_a_library_that_is_neither_the_systems_nor_staged_fails_the_check(tmp_path: Path) -> None:
+    program = tmp_path / "program"
+    program.mkdir()
+    pe_with_imports(program / "a.dll", "kernel32.dll", "api-ms-win-crt-heap-l1-1-0.dll", "b.dll", "unknown-runtime.dll")
+    pe_with_imports(program / "b.dll", "ADVAPI32.dll")
+
+    with pytest.raises(UnresolvedImportError, match=r"a\.dll imports unknown-runtime\.dll") as refused:
+        require_resolved_imports(program)
+
+    assert "b.dll imports" not in str(refused.value)
+
+
+def test_every_import_resolving_returns_the_system_libraries_it_relies_on(tmp_path: Path) -> None:
+    program = tmp_path / "program"
+    program.mkdir()
+    pe_with_imports(program / "a.dll", "KERNEL32.dll", "api-ms-win-crt-heap-l1-1-0.dll", "b.dll")
+    pe_with_imports(program / "b.dll", "ws2_32.dll")
+
+    assert require_resolved_imports(program) == ("api-ms-win-crt-heap-l1-1-0.dll", "kernel32.dll", "ws2_32.dll")
+
+
+def test_the_vulkan_loader_is_a_driver_library_only_the_vulkan_backend_may_import(tmp_path: Path) -> None:
+    program = tmp_path / "program"
+    program.mkdir()
+    pe_with_imports(program / "ggml-vulkan.dll", "vulkan-1.dll", "kernel32.dll")
+    assert "vulkan-1.dll" in require_resolved_imports(program)
+
+    pe_with_imports(program / "llama-server-impl.dll", "vulkan-1.dll")
+    with pytest.raises(UnresolvedImportError, match=r"llama-server-impl\.dll imports vulkan-1\.dll"):
+        require_resolved_imports(program)
+
+
+def test_a_program_without_pe_images_has_nothing_to_resolve(tmp_path: Path) -> None:
+    program = tmp_path / "program"
+    program.mkdir()
+    elf_with_requirements(program / "llama-server", needed=("libc.so.6",))
+
+    assert require_resolved_imports(program) == ()

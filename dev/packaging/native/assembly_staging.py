@@ -34,6 +34,7 @@ from .layout import (
 )
 from .linux_desktop_runtime import stage as stage_linux_desktop_runtime
 from .llama_server import stage_llama_server
+from .msvc_redist import verified_redist
 from .service_descriptors import stage_service_descriptors
 from .stdlib import bundle as bundle_stdlib
 from .stdlib import bundle_identity, compile_packages_bytecode, compiler_identity
@@ -184,7 +185,14 @@ def stage_binaries(
             raise ValueError("Application assembly requires the acquired llama-server")
         # Staged before relocation: the POSIX backends then check the pinned program against the
         # deployment floor, rewrite its loader paths and, on macOS, seal each of its images.
-        stage_llama_server(llama_server, root, layout, target, copy_function=reuse.copy)
+        stage_llama_server(
+            llama_server,
+            root,
+            layout,
+            target,
+            copy_function=reuse.copy,
+            redistributable=program_redistributable(contract, provenance),
+        )
     native_manifest = _relocate_native(timings, contract, provenance, python, packages, native, root, reuse)
     modules = native_manifest["modules"]
     if not interpreter:
@@ -199,6 +207,17 @@ def stage_binaries(
     relocation = native_manifest.pop("relocation")
     patches = native_manifest.pop("patches")
     return entrypoints, staged_images, modules, service_descriptors, paths, relocation, patches, native_manifest
+
+
+def program_redistributable(
+    contract: dict[str, Any], provenance: Mapping[str, object] | None
+) -> dict[str, Path] | None:
+    """The runtime libraries a Windows package carries beside llama-server, from the configured MSVC toolset."""
+    if contract["backend"] != "windows":
+        return None
+    toolchain = (provenance or {}).get("build_toolchain", {})
+    record = toolchain.get("msvc_redist") if isinstance(toolchain, Mapping) else None
+    return verified_redist(record)
 
 
 def stage_metadata(

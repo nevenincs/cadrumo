@@ -270,6 +270,21 @@ inventory check of an installation admits them and refuses a modified one. The
 Windows backend leaves the directory out of the interpreter's DLL search
 directories, because the program loads its own libraries from beside it.
 
+On Windows the program imports the C++ runtime and loads it from its own
+directory, so the package carries app-local copies of `msvcp140.dll`,
+`vcruntime140.dll` and `vcruntime140_1.dll` in `bin/llama/`. Configure finds them
+in the `VC/Redist/MSVC/<build>/x64/Microsoft.VC*.CRT` folder of the Visual Studio
+instance and toolset it selected, using the toolset's `major.minor` line and the
+newest redistributable build in it, never the search path. It records the folder
+and each file's SHA-256 in the build toolchain, and assembly refuses a file that
+is missing or changed. A staging check then reads the import table of every PE
+image in `bin/llama/`: each imported library must be an operating-system library
+(a fixed list and the `api-ms-win-` and `ext-ms-win-` API sets) or a file in that
+directory, or the build fails naming the image and the library. `vulkan-1.dll`
+belongs to the graphics driver; only `ggml-vulkan.dll` may import it, because
+ggml skips a backend library that fails to load, so a machine without a Vulkan
+loader loses that backend and keeps the CPU backends.
+
 The files are staged before native relocation. On Linux the relocation checks
 each ELF image against the glibc floor and rewrites its `RUNPATH`; the step also
 refuses, before anything is staged, a Linux archive whose files need a newer glibc

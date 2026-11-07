@@ -64,6 +64,38 @@ _LICENSE: Final = re.compile(r"LICEN[CS]E(?:[-._].*)?", re.IGNORECASE)
 _MACHO_MAGIC: Final = frozenset({b"\xcf\xfa\xed\xfe", b"\xca\xfe\xba\xbe"})
 _ELF_MAGIC: Final = b"\x7fELF"
 
+#: Libraries the operating system provides to every process, by case-folded name. The program may import these
+#: without carrying them; the list is the set a Windows 10 or later installation always holds.
+SYSTEM_LIBRARIES: Final = frozenset(
+    {
+        "advapi32.dll",
+        "bcrypt.dll",
+        "crypt32.dll",
+        "dbghelp.dll",
+        "gdi32.dll",
+        "iphlpapi.dll",
+        "kernel32.dll",
+        "ntdll.dll",
+        "ole32.dll",
+        "oleaut32.dll",
+        "psapi.dll",
+        "secur32.dll",
+        "shell32.dll",
+        "shlwapi.dll",
+        "ucrtbase.dll",
+        "user32.dll",
+        "userenv.dll",
+        "version.dll",
+        "ws2_32.dll",
+    }
+)
+#: Forwarders to the operating system's universal C runtime and other API sets.
+SYSTEM_PREFIXES: Final = ("api-ms-win-", "ext-ms-win-")
+#: The Vulkan loader belongs to the graphics driver, not to Cadrumo or the operating system image, and a machine
+#: without it is a machine without Vulkan. Only the Vulkan backend library may import it: ggml skips a backend
+#: whose library fails to load, so an absent loader costs that backend and leaves the CPU backends running.
+DRIVER_LIBRARIES: Final[Mapping[str, frozenset[str]]] = {"vulkan-1.dll": frozenset({"ggml-vulkan.dll"})}
+
 type Fetch = Callable[[ServerArchivePin, tuple[str, ...]], bytes]
 
 
@@ -77,6 +109,10 @@ class ArchiveMismatchError(LlamaServerError):
 
 class GlibcFloorError(LlamaServerError):
     """A Linux archive needs a newer glibc than the package supports."""
+
+
+class UnresolvedImportError(LlamaServerError):
+    """A staged Windows image imports a library that is neither the operating system's nor in the program directory."""
 
 
 class LlamaServerReceipt(BaseModel):
@@ -477,6 +513,41 @@ def verify_acquired(source: Path, target: str, *, pins: ServerPins | None = None
     return receipt
 
 
+def require_resolved_imports(program: Path) -> tuple[str, ...]:
+    """Prove every library each PE image in ``program`` imports is the system's, the driver's or in ``program``.
+
+    Returns the sorted case-folded names of the system and driver libraries the images import.
+
+    Raises:
+        UnresolvedImportError: An image imports a library that none of those provides, or the Vulkan loader
+            from an image other than the Vulkan backend.
+    """
+    present = {path.name.casefold() for path in program.iterdir() if path.is_file()}
+    system: set[str] = set()
+    unresolved: list[str] = []
+    for path in sorted(program.iterdir()):
+        if not path.is_file() or _kind(path) != "pe":
+            continue
+        for name in sorted(pe_imports(path)):
+            if name in present:
+                continue
+            if (
+                name in SYSTEM_LIBRARIES
+                or name.startswith(SYSTEM_PREFIXES)
+                or path.name.casefold() in DRIVER_LIBRARIES.get(name, frozenset())
+            ):
+                system.add(name)
+            else:
+                unresolved.append(f"{path.name} imports {name}")
+    if unresolved:
+        raise UnresolvedImportError(
+            f"the staged llama-server program in {program.name} imports libraries that neither the operating "
+            f"system nor the program directory provides: {'; '.join(unresolved[:6])}"
+            f"{'' if len(unresolved) <= 6 else f' and {len(unresolved) - 6} more'}"
+        )
+    return tuple(sorted(system))
+
+
 def stage_llama_server(
     source: Path,
     root: Path,
@@ -485,10 +556,13 @@ def stage_llama_server(
     *,
     copy_function: Callable[[Path, Path], object] = shutil.copy2,
     pins: ServerPins | None = None,
+    redistributable: Mapping[str, Path] | None = None,
 ) -> LlamaServerReceipt:
     """Copy the verified program files into the package's ``llama_server`` directory and its licences beside the others.
 
     ``layout`` is the package layout's ``paths``. The program directory must not exist yet in ``root``.
+    ``redistributable`` maps the runtime libraries a Windows package carries beside the program to their
+    verified files. Every PE image staged must then resolve its imports.
     """
     receipt = verify_acquired(source, target, pins=pins)
     program = root / layout["llama_server"]
@@ -499,6 +573,11 @@ def stage_llama_server(
         destination.mkdir(parents=True)
     for name in receipt.files:
         copy_function(source / PROGRAM_DIRECTORY / name, program / name)
+    for name, library in sorted((redistributable or {}).items()):
+        if (program / name).exists():
+            raise FileExistsError(f"the llama-server archive already holds the redistributable {name}")
+        copy_function(library, program / name)
+    require_resolved_imports(program)
     for name in receipt.licenses:
         copy_function(source / LICENSE_DIRECTORY / name, notices / name)
     return receipt
