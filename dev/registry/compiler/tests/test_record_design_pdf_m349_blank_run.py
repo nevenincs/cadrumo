@@ -10,6 +10,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ...maintenance_support import resolve_record_design_binary
+from ...tests.authored_edition_support import source_first_exercise, source_reference
 from .. import record_design_pdf_repairs
 from ..loader import load_shared_catalogues
 from ..record_design import extract_record_design, extract_record_design_pdf
@@ -19,6 +20,9 @@ from ..record_design_pdf_visual import extract_pdf_text_lines
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_DESIGN = "aeat-dr-349-2020-current"
+_DESIGN_EXERCISE = source_first_exercise(source_reference(_DESIGN))
+
 
 def _official_pdf() -> tuple[Path, bytes, tuple[str, ...]]:
     root = bundled_path()
@@ -26,9 +30,9 @@ def _official_pdf() -> tuple[Path, bytes, tuple[str, ...]]:
     resolved = resolve_record_design_binary(
         root,
         sources,
-        source_ref="aeat-dr-349-2020-current",
-        filing_year=2020,
-        design_epoch="2020",
+        source_ref=_DESIGN,
+        filing_year=_DESIGN_EXERCISE,
+        design_epoch=str(_DESIGN_EXERCISE),
     )
     pdf_bytes = resolved.path.read_bytes()
     return resolved.path, pdf_bytes, extract_pdf_text_lines(pdf_bytes, source_label=str(resolved.path))

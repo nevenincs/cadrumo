@@ -22,6 +22,7 @@ from cadrumo.domain.calculations.registry.export_literal_fact import ExportLiter
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, governed_facts_in_scope
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 from cadrumo.domain.filing.software_identity import (
     DEVELOPMENT_MOCK_DEVELOPER_TAX_ID_FACT,
     DEVELOPMENT_MOCK_PROGRAM_IDENTIFIER_FACT,
@@ -35,7 +36,7 @@ from ..loader import load_modelo_directory, load_shared_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
-_REVISION = "2019-y-siguientes"
+_REVISION = str(open_ended_revision("115").id)
 _RECORD = "modelo-115-envelope-header"
 _LAYOUT = Path("revisions") / _REVISION / "export_layouts" / "0001-declarations.toml"
 _FIXTURE_LAYOUT = Path(__file__).with_name("fixtures") / "fact_literal_envelope.toml"

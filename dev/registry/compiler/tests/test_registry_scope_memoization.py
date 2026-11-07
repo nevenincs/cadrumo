@@ -22,6 +22,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..authority_state import authoring_root_pair, cached_compilation
 from ..registry_scope import validate_registry_scope
@@ -32,6 +33,8 @@ from ..validate_cross_revision import (
 from ..validation_memoization import ModeloIdentityMemo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def _casilla(*, data_type: str) -> CasillaDefinition:
@@ -57,7 +60,7 @@ def _revision(revision_id: str, *, valid_from: date, valid_to: date | None, data
             "localization_key": f"test.registry.revision.{revision_id}.label",
             "valid_from": valid_from,
             "valid_to": valid_to,
-            "period_selector": PeriodSelector(years=(2025,), periods=("alta",)),
+            "period_selector": PeriodSelector(years=(_YEAR,), periods=("alta",)),
             "legal_refs": ("ley-58-2003:art-29",),
             "source_refs": ("aeat-manual",),
             "casillas": (_casilla(data_type=data_type),),
@@ -67,8 +70,8 @@ def _revision(revision_id: str, *, valid_from: date, valid_to: date | None, data
 
 
 def _overlapping_modelo(*, right_data_type: str) -> ModeloDefinition:
-    left = _revision("variant-a", valid_from=date(2025, 1, 1), valid_to=date(2025, 12, 31), data_type="money")
-    right = _revision("variant-b", valid_from=date(2025, 2, 3), valid_to=None, data_type=right_data_type)
+    left = _revision("variant-a", valid_from=date(_YEAR, 1, 1), valid_to=date(_YEAR, 12, 31), data_type="money")
+    right = _revision("variant-b", valid_from=date(_YEAR, 2, 3), valid_to=None, data_type=right_data_type)
     return ModeloDefinition.model_validate(
         {
             "id": "036",

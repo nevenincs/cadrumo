@@ -11,10 +11,13 @@ import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..corpus_catalogue import verify_manual_annotation_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def _source() -> SourceReference:
@@ -24,12 +27,12 @@ def _source() -> SourceReference:
             "evidence_tier": "official_source_guidance",
             "authority": "aeat",
             "kind": "manual_pdf",
-            "corpus_path": "corpus/manuals/renta/2025/part1/source.pdf",
+            "corpus_path": f"corpus/manuals/renta/{_YEAR}/part1/source.pdf",
             "sha256": hashlib.sha256(b"official PDF").hexdigest(),
             "bytes": len(b"official PDF"),
-            "retrieved_at": date(2026, 9, 14),
-            "applies_from": date(2025, 1, 1),
-            "applies_to": date(2025, 12, 31),
+            "retrieved_at": date(_YEAR, 9, 14),
+            "applies_from": date(_YEAR, 1, 1),
+            "applies_to": date(_YEAR, 12, 31),
             "source_url": "https://sede.agenciatributaria.gob.es/manual.pdf",
             "review_status": "pending_review",
         }
@@ -53,7 +56,7 @@ def _write_annotation(
         json.dumps(
             {
                 "content_length": source.bytes,
-                "fetched_at": "2026-09-14T00:00:00Z",
+                "fetched_at": f"{_YEAR}-09-14T00:00:00Z",
                 "relative_pdf_path": "source.pdf",
                 "sha256": str(source.sha256),
                 "source_pdf_url": source.source_url,

@@ -14,6 +14,7 @@ from typing import Final
 import pytest
 
 from cadrumo.domain.calculations.registry.schema_references import PeriodOverride, PeriodSelector
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..keyed_family_period_scope import selector_periods_for_year
 
@@ -21,7 +22,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _MONTHS: Final = ("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")
 _QUARTERS: Final = ("1T", "2T", "3T", "4T")
-_YEARS: Final = (2024, 2025, 2026, 2027)
+_FIRST_YEAR: Final = filing_year_envelope().floor
+_YEARS: Final = tuple(_FIRST_YEAR + offset for offset in range(4))
+_OVERRIDE_YEAR: Final = _YEARS[2]
 
 
 def _raw(selector: PeriodSelector) -> dict[str, object]:
@@ -49,7 +52,7 @@ def _read(selector: PeriodSelector, year: int) -> tuple[str, ...]:
 
 @pytest.mark.parametrize("year", _YEARS)
 def test_the_two_readers_agree_without_an_override(year: int) -> None:
-    selector = PeriodSelector(year_from=2024, periods=_QUARTERS)
+    selector = PeriodSelector(year_from=_FIRST_YEAR, periods=_QUARTERS)
 
     assert _read(selector, year) == selector.periods_for_year(year)
 
@@ -57,9 +60,9 @@ def test_the_two_readers_agree_without_an_override(year: int) -> None:
 @pytest.mark.parametrize("year", _YEARS)
 def test_the_two_readers_agree_with_an_override(year: int) -> None:
     selector = PeriodSelector(
-        year_from=2024,
+        year_from=_FIRST_YEAR,
         periods=(*_MONTHS, *_QUARTERS),
-        period_overrides=(PeriodOverride(year=2026, periods=(*_MONTHS[1:], "2T", "3T", "4T")),),
+        period_overrides=(PeriodOverride(year=_OVERRIDE_YEAR, periods=(*_MONTHS[1:], "2T", "3T", "4T")),),
     )
 
     assert _read(selector, year) == selector.periods_for_year(year)
@@ -68,14 +71,14 @@ def test_the_two_readers_agree_with_an_override(year: int) -> None:
 def test_the_override_year_is_the_one_that_differs() -> None:
     """Without this the parity above would hold on two identical flat reads."""
     selector = PeriodSelector(
-        year_from=2024,
+        year_from=_FIRST_YEAR,
         periods=(*_MONTHS, *_QUARTERS),
-        period_overrides=(PeriodOverride(year=2026, periods=(*_MONTHS[1:], "2T", "3T", "4T")),),
+        period_overrides=(PeriodOverride(year=_OVERRIDE_YEAR, periods=(*_MONTHS[1:], "2T", "3T", "4T")),),
     )
 
-    assert _read(selector, 2026) != _read(selector, 2025)
-    assert "1T" not in _read(selector, 2026)
-    assert "1T" in _read(selector, 2025)
+    assert _read(selector, _OVERRIDE_YEAR) != _read(selector, _YEARS[1])
+    assert "1T" not in _read(selector, _OVERRIDE_YEAR)
+    assert "1T" in _read(selector, _YEARS[1])
 
 
 @pytest.mark.parametrize("year", _YEARS)
@@ -84,8 +87,8 @@ def test_a_second_override_year_is_matched_by_year_not_by_position(year: int) ->
         years=_YEARS,
         periods=_QUARTERS,
         period_overrides=(
-            PeriodOverride(year=2025, periods=("2T", "3T", "4T")),
-            PeriodOverride(year=2027, periods=("1T",)),
+            PeriodOverride(year=_YEARS[1], periods=("2T", "3T", "4T")),
+            PeriodOverride(year=_YEARS[3], periods=("1T",)),
         ),
     )
 
