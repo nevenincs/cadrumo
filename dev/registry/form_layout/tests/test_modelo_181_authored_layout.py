@@ -6,6 +6,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.form_context import resolve_form_context_field
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormContextFieldBlock
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 
 from ...compiler.form_layout_integrity import form_layout_failures
 from ...compiler.loader import load_modelo_directory
@@ -14,7 +15,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_181_summary_preserves_official_boxes_and_all_registry_fields() -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/181")).revisions["2022-y-siguientes"]
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/181")).revisions[
+        str(open_ended_revision("181").id)
+    ]
     layout = revision.form_layouts[0]
     assert form_layout_failures(revision) == ()
     assert layout.seed_source.value == "authored"
@@ -36,4 +39,4 @@ def test_181_summary_preserves_official_boxes_and_all_registry_fields() -> None:
         "contact_person.full_name",
     }
     assert {s.source_ref for s in layout.design_sources} == {"boe-2009-21165-modelo-181-form", "aeat-dr-181-2022"}
-    assert "2026" in (layout.review.notes or "")
+    assert str(filing_year_envelope().horizon) in (layout.review.notes or "")

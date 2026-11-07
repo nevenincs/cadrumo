@@ -332,7 +332,13 @@ def amendment_prior_paid_values(
     snapshot: RegistrySnapshot,
     amendment_kind: FilingDeclarationKind,
 ) -> dict[CasillaId, Decimal]:
-    """Carry one confirmed period's accumulated payments, never its corrected snapshots' sum."""
+    """Carry one confirmed period's accumulated payments, never its corrected snapshots' sum.
+
+    Args:
+        baseline_revision: The :class:`CalculationRevision` the correction starts from.
+        snapshot: The :class:`RegistrySnapshot` pinned for the corrected declaration.
+        amendment_kind: Which correction is being filed; only a complementaria carries payments.
+    """
     if amendment_kind is not FilingDeclarationKind.COMPLEMENTARIA:
         return {}
     if snapshot.modelo.id != "130":
@@ -369,6 +375,12 @@ def calculate_amendment(
     separate operator layer proves that a saved formula target was explicitly
     authored. Unaffected figures remain the filed declaration's facts; this
     path never pulls today's ledger or profile into a historical correction.
+
+    Args:
+        source_revision: The :class:`CalculationRevision` being corrected.
+        overrides: Operator-authored casilla amounts replacing the filed ones.
+        prior_paid_values: Confirmed prior payments carried into the correction.
+        snapshot: The :class:`RegistrySnapshot` that supplies the formulas and bindings.
     """
     values = dict(source_revision.casilla_values)
     for key, value in prior_paid_values.items():

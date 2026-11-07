@@ -29,6 +29,7 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from dev.packaging.command_execution import CommandResult
 
@@ -74,12 +75,19 @@ _M130_CASILLA_19: CasillaId = validated_casilla_id("19", surface="_M130_CASILLA_
 # the budget only has to stop a hung parse; it stays well clear of the real cost.
 _COMMITTED_WORKBOOK_SCAN_OPTIONS = WorkbookScanOptions(per_file_timeout_seconds=60)
 
-_COMMITTED_M303_RECORD_DESIGN = (
-    Path("disenos_registro")
-    / "modelo_303"
-    / "files"
-    / "01-303-ejercicio-2026-y-siguientes-actualizado-28-01-26-378-kb-xlsx.xlsx"
-)
+_YEAR = filing_year_envelope().horizon
+_M130_REVISION = str(open_ended_revision("130").id)
+_M303_REVISION = str(open_ended_revision("303").id)
+
+
+def _record_design(modelo: str, extension: str) -> Path:
+    """Return the first committed record-design workbook of a modelo, found on disk, relative to the corpus root."""
+    files = Path("disenos_registro") / f"modelo_{modelo}" / "files"
+    (design,) = sorted((bundled_path("corpus", "aeat_official") / files).glob(f"01-{modelo}-*{extension}"))
+    return files / design.name
+
+
+_COMMITTED_M303_RECORD_DESIGN = _record_design("303", ".xlsx")
 
 
 def _write_formula_workbook(path: Path) -> None:
@@ -114,7 +122,7 @@ def _committed_modelo_130_snapshot() -> RegistrySnapshot:
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2026,
+        filing_year=_YEAR,
         period="1T",
     )
 
@@ -212,13 +220,7 @@ def test_scan_budget_exhaustion_is_a_timeout_not_a_formula_free_workbook() -> No
 
 def test_committed_binary_xls_converts_to_layout_evidence_only() -> None:
     root = bundled_path("corpus", "aeat_official")
-    workbook_path = (
-        root
-        / "disenos_registro"
-        / "modelo_130"
-        / "files"
-        / "01-130-orden-hap-258-2015-ejercicios-2019-y-siguientes-actualizado-marzo-2019-176-kb-xls.xls"
-    )
+    workbook_path = root / _record_design("130", ".xls")
 
     report = convert_binary_xls_with_libreoffice(workbook_path, root=root)
 
@@ -232,13 +234,7 @@ def test_committed_binary_xls_converts_to_layout_evidence_only() -> None:
 
 def test_committed_binary_xls_context_yields_temporary_xlsx_workbook() -> None:
     root = bundled_path("corpus", "aeat_official")
-    workbook_path = (
-        root
-        / "disenos_registro"
-        / "modelo_130"
-        / "files"
-        / "01-130-orden-hap-258-2015-ejercicios-2019-y-siguientes-actualizado-marzo-2019-176-kb-xls.xls"
-    )
+    workbook_path = root / _record_design("130", ".xls")
 
     with converted_binary_xls_with_libreoffice(workbook_path, root=root) as converted_path:
         assert converted_path.suffix == ".xlsx"
@@ -275,7 +271,7 @@ def test_registry_workbook_parity_rejects_record_design_as_calculation_oracle(tm
     synthetic = SyntheticInputSet(
         id="modelo-130-record-design-rejected",
         modelo="130",
-        revision="2019-y-siguientes",
+        revision=_M130_REVISION,
         values=(
             SyntheticInputValue(
                 id="casilla-01",
@@ -294,7 +290,7 @@ def test_registry_workbook_parity_rejects_record_design_as_calculation_oracle(tm
             workbook=workbook,
             output_cells={"casilla-19": WorkbookCellRef(sheet="Modelo", coordinate="B1")},
             registry_outputs={"casilla-19": _M130_CASILLA_19},
-            date_context={"filing_period": date(2026, 3, 31)},
+            date_context={"filing_period": date(_YEAR, 3, 31)},
         )
 
 
@@ -354,7 +350,7 @@ def _scanned_formula_workbook_with_synthetic_input(tmp_path: Path) -> tuple[Work
     synthetic = SyntheticInputSet(
         id="synthetic-303-basic",
         modelo="303",
-        revision="2026",
+        revision=_M303_REVISION,
         values=(
             SyntheticInputValue(
                 id="base",
@@ -450,7 +446,7 @@ def test_parity_scenario_rejects_malformed_output_identifier(tmp_path: Path) -> 
     synthetic = SyntheticInputSet(
         id="modelo-130-basic",
         modelo="130",
-        revision="2019-y-siguientes",
+        revision=_M130_REVISION,
         values=(
             SyntheticInputValue(
                 id="casilla-01",
@@ -465,8 +461,8 @@ def test_parity_scenario_rejects_malformed_output_identifier(tmp_path: Path) -> 
         ParityScenario(
             id="modelo-130-basic",
             modelo="130",
-            revision="2019-y-siguientes",
-            filing_year=2026,
+            revision=_M130_REVISION,
+            filing_year=_YEAR,
             period="1T",
             workbook_path=tmp_path / "modelo-130.xlsx",
             synthetic_input=synthetic,
@@ -479,7 +475,7 @@ def test_parity_scenario_rejects_negative_tolerance(tmp_path: Path) -> None:
     synthetic = SyntheticInputSet(
         id="modelo-130-negative-tolerance",
         modelo="130",
-        revision="2019-y-siguientes",
+        revision=_M130_REVISION,
         values=(
             SyntheticInputValue(
                 id="casilla-01",
@@ -494,8 +490,8 @@ def test_parity_scenario_rejects_negative_tolerance(tmp_path: Path) -> None:
         ParityScenario(
             id="modelo-130-negative-tolerance",
             modelo="130",
-            revision="2019-y-siguientes",
-            filing_year=2026,
+            revision=_M130_REVISION,
+            filing_year=_YEAR,
             period="1T",
             workbook_path=tmp_path / "modelo-130.xlsx",
             synthetic_input=synthetic,
@@ -512,7 +508,7 @@ def test_parity_scenario_zero_tolerance_accepts_exact_comparison(tmp_path: Path)
     synthetic = SyntheticInputSet(
         id="modelo-303-zero-tolerance",
         modelo="303",
-        revision="2026",
+        revision=_M303_REVISION,
         values=(
             SyntheticInputValue(
                 id="base",
@@ -525,8 +521,8 @@ def test_parity_scenario_zero_tolerance_accepts_exact_comparison(tmp_path: Path)
     scenario = ParityScenario(
         id="modelo-303-zero-tolerance",
         modelo="303",
-        revision="2026",
-        filing_year=2026,
+        revision=_M303_REVISION,
+        filing_year=_YEAR,
         period="1T",
         workbook_path=workbook_path,
         synthetic_input=synthetic,

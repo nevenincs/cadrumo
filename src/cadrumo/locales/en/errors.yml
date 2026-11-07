@@ -177,7 +177,6 @@ errors:
       cleanup before continuing.
     error_cadrumo_core: An internal application error occurred.
     error_cadrumo_core_not_found: The requested resource or record was not found.
-    error_cadrumo_observability: An error occurred in the application diagnostic logging.
     error_calc_sheets_engine: The spreadsheet export engine encountered an unresolvable
       state while building the export plan.
     error_calc_sheets_record: A spreadsheet record operation failed due to an invalid
@@ -474,8 +473,6 @@ errors:
     fail_modelo_work_unit_persistence: The work-unit catalogue could not be saved
       or read
     fail_notificacion_parse: The AEAT notification document could not be parsed.
-    fail_observability_run_trace_persistence: The run trace store could not complete
-      a filesystem operation.
     fail_outbound_storage: A storage-provider error occurred.
     fail_outbound_storage_network: The storage service could not be reached. Check
       your internet connection and try again.
@@ -622,8 +619,6 @@ errors:
       NIF, NIE or CIF.
     integrity_justificante_verification: The receipt verification with the AEAT could
       not be completed.
-    integrity_observability_run_trace_validation: The persisted run trace failed strict
-      validation.
     integrity_outbound_storage: The fetched payload failed integrity checks (hash,
       size or `etag`).
     integrity_outbound_storage_corruption: A sidecar metadata file contains a field
@@ -726,8 +721,6 @@ errors:
       rule.
     internal_modelo_work_form_layout: This modelo's form layout does not match its
       revision.
-    internal_observability_run_context_missing: 'Internal error: a diagnostic event
-      was recorded outside an active run context.'
     internal_operation_declaration_breach: 'Internal error: an operation executor
       claimed a phase, effect, resource, or interaction its definition does not declare.'
     internal_operation_executor_returned_no_result: 'Internal error: the operation

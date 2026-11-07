@@ -11,11 +11,21 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormGridBlock,
     FormSectionDefinition,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    revision_covering,
+)
 
 from ...compiler.form_layout_integrity import form_layout_failures
 from ...compiler.loader import load_modelo_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def _later_editions() -> list[str]:
+    """Every authored revision after the oldest, whose layout family these tests describe."""
+    return [str(revision.id) for revision in authored_revisions("131")[1:]]
 
 
 def _assert_131_liquidation_sections_keep_their_boxes(sections: dict[str, FormSectionDefinition]) -> None:
@@ -73,12 +83,12 @@ def _assert_131_bound_fields(sections: dict[str, FormSectionDefinition], revisio
     assert "modelo-131.page1.sin-datos-base-vivienda-limite" in bindings
     assert "modelo-131.page1.agraria-vivienda-limite" in bindings
     assert "modelo-131.page1.deduccion-art-110-cuantia" in bindings
-    if revision_id == "2025":
+    if revision_id == str(revision_covering("131", filing_year_envelope().horizon - 1).id):
         assert "modelo-131.page1.agraria-ingresos-ordinarias-generales" in bindings
         assert "modelo-131.page1.agraria-ingresos-prioritarias-ceuta-melilla-la-palma" in bindings
 
 
-@pytest.mark.parametrize("revision_id", ["2024", "2025", "2026", "2026-3t-4t"])
+@pytest.mark.parametrize("revision_id", _later_editions())
 def test_131_groups_keep_all_boxes_context_and_additional_records(revision_id: str) -> None:
     revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/131")).revisions[revision_id]
     layout = revision.form_layouts[0]

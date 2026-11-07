@@ -38,6 +38,7 @@ from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.schema_revision_members import DependencyClassificationDefinition
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 from ..registry_classification_coherence import (
@@ -53,6 +54,7 @@ from ..registry_classification_coherence import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
+_FIRST_YEAR = filing_year_envelope().floor
 _LEGAL_REFS = ("lex:art-1",)
 _SOURCE_REFS = ("src-1",)
 
@@ -72,8 +74,8 @@ def _revision(
     return ModeloRevision(
         id=revision_id,
         localization_key=f"test.schema.revision.{revision_id}.label",
-        valid_from=date(2020, 1, 1),
-        period_selector=PeriodSelector(year_from=2020, periods=("0A",)),
+        valid_from=date(_FIRST_YEAR, 1, 1),
+        period_selector=PeriodSelector(year_from=_FIRST_YEAR, periods=("0A",)),
         legal_refs=_LEGAL_REFS,
         source_refs=_SOURCE_REFS,
         casillas=casillas,

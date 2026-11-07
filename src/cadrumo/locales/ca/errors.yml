@@ -191,8 +191,6 @@ errors:
       torna a intentar la neteja abans de continuar.
     error_cadrumo_core: S'ha produït un error intern en l'aplicació.
     error_cadrumo_core_not_found: No s'ha trobat el recurs o registre sol·licitat.
-    error_cadrumo_observability: S'ha produït un error en el registre de diagnòstic
-      de l'aplicació.
     error_calc_sheets_engine: El motor d'exportació de fulls de càlcul ha trobat un
       estat irresoluble en generar el pla d'exportació.
     error_calc_sheets_record: Una operació de registre de full de càlcul ha fallat
@@ -521,8 +519,6 @@ errors:
       de treball.
     fail_notificacion_parse: No s'ha pogut interpretar el document de la notificació
       de l'AEAT.
-    fail_observability_run_trace_persistence: El magatzem de traces d'execució no
-      ha pogut completar una operació del sistema de fitxers.
     fail_outbound_storage: S'ha produït un error en el proveïdor d'emmagatzematge.
     fail_outbound_storage_network: No s'ha pogut contactar amb el servei d'emmagatzematge.
       Comprova la connexió a internet i torna-ho a provar.
@@ -682,8 +678,6 @@ errors:
       ni CIF espanyol vàlid.
     integrity_justificante_verification: La verificació del justificant amb l'AEAT
       no s'ha pogut completar.
-    integrity_observability_run_trace_validation: La traça d'execució desada no ha
-      superat la validació estricta.
     integrity_outbound_storage: El contingut descarregat no ha superat les comprovacions
       d'integritat (resum, mida o etiqueta).
     integrity_outbound_storage_corruption: S'ha detectat corrupció a l'emmagatzematge
@@ -797,8 +791,6 @@ errors:
       té regla de presentació.
     internal_modelo_work_form_layout: La distribució de l'imprès d'aquest model no
       coincideix amb la seva revisió.
-    internal_observability_run_context_missing: 'Error intern: s''ha intentat registrar
-      un esdeveniment de diagnòstic fora d''un context d''execució actiu.'
     internal_operation_declaration_breach: 'Error intern: un executor d''operació
       ha reclamat una fase, un efecte, un recurs o una interacció que la seva definició
       no declara.'

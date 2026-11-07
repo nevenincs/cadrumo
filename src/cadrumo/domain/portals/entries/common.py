@@ -14,7 +14,7 @@ from collections.abc import Iterable
 from pydantic import HttpUrl, TypeAdapter
 
 from ....core.config import Settings
-from ....core.i18n.translatable import Translatable
+from ....core.i18n.translatable import Translatable as tr
 from ..categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from ..codes import Portal
 from ..errors import PortalValidationError
@@ -109,11 +109,11 @@ def build_entry(
         category=category,
         auth_methods=frozenset(auth_methods),
         url_stability=url_stability,
-        label=Translatable(label),
-        purpose=Translatable(purpose),
+        label=tr(label),
+        purpose=tr(purpose),
         active=active,
         replaced_by=replaced_by,
-        notes=tuple(Translatable(n) for n in notes),
+        notes=tuple(tr(n) for n in notes),
     )
 
 

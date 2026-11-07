@@ -5,15 +5,18 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormContextFieldBlock, FormGridBlock
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ...compiler.form_layout_integrity import form_layout_failures
 from ...compiler.loader import load_modelo_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_REVISION = str(open_ended_revision("360").id)
+
 
 def test_refund_form_preserves_all_fields_without_wire_offset_box_numbers() -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/360")).revisions["2010-y-siguientes"]
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/360")).revisions[_REVISION]
     (layout,) = revision.form_layouts
     assert form_layout_failures(revision) == ()
     assert layout.seed_source == "authored"
@@ -26,7 +29,7 @@ def test_refund_form_preserves_all_fields_without_wire_offset_box_numbers() -> N
 
 
 def test_activities_annexes_and_both_operation_tables_keep_numeric_row_order() -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/360")).revisions["2010-y-siguientes"]
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/360")).revisions[_REVISION]
     grids = {
         block.id: block
         for page in revision.form_layouts[0].pages
@@ -45,7 +48,7 @@ def test_activities_annexes_and_both_operation_tables_keep_numeric_row_order() -
 
 
 def test_applicant_identity_uses_exact_filing_producer_owners() -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/360")).revisions["2010-y-siguientes"]
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/360")).revisions[_REVISION]
     contexts = [
         block
         for page in revision.form_layouts[0].pages

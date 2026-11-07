@@ -9,20 +9,27 @@ from datetime import date
 from importlib import import_module
 
 import pytest
-from pydantic import BaseModel, TypeAdapter, ValidationError
+from pydantic import BaseModel, ValidationError
 
 from ....contribuyente.descendant import DescendantInfo
 from ..authority import bundled_indexed_authority
+from ..errors import RegistryValidationError
 from ..export_value_policy import ExportValuePolicy
 from ..form_codes import resolve_form_codes
 from ..nif_iva_catalogue import resolve_nif_iva_catalogue
 from ..schema_exports import ExportRecordDefinition
-from ..schema_scalars import NifIvaString
+from ..schema_scalars import validate_registry_text_scalar
 from ..withholding_bindings import WithholdingObservation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_NIF_IVA = TypeAdapter(NifIvaString)
+
+class _NifIva:
+    def validate_python(self, raw: object) -> str:
+        return validate_registry_text_scalar("nif_iva", raw)
+
+
+_NIF_IVA = _NifIva()
 
 
 @pytest.fixture(autouse=True)
@@ -85,7 +92,7 @@ def test_a_nif_iva_of_a_body_outside_the_envelope_is_refused() -> None:
     assert _NIF_IVA.validate_python("BE" + "1" * shortest) == "BE" + "1" * shortest
     assert _NIF_IVA.validate_python("BE" + "1" * longest) == "BE" + "1" * longest
     for body in ("1" * (shortest - 1), "1" * (longest + 1)):
-        with pytest.raises(ValidationError):
+        with pytest.raises(RegistryValidationError):
             _NIF_IVA.validate_python("BE" + body)
 
 

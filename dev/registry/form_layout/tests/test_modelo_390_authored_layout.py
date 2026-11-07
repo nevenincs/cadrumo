@@ -10,11 +10,20 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.form_context import resolve_form_context_field
 from cadrumo.domain.calculations.registry.formula_expression import evaluate_expression
 from cadrumo.domain.calculations.registry.formula_runtime_ops import UnresolvedFormulaDependencyError
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ...compiler.form_layout_integrity import form_layout_failures
 from ...compiler.loader import load_modelo_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_EDITIONS = tuple(str(revision.id) for revision in authored_revisions("390"))
+# The first edition predates the printed-calculation evidence, two editions print the BOE 2022
+# form, two the AEAT 2024 form, and the last the BOE 2026 form; a new edition fails this unpacking.
+_FIRST, _EARLY_A, _EARLY_B, _MIDDLE_A, _MIDDLE_B, _LAST = _EDITIONS
+_EARLY = (_EARLY_A, _EARLY_B)
+_MIDDLE = (_MIDDLE_A, _MIDDLE_B)
+_CALCULATED = _EDITIONS[1:]
 
 
 @cache
@@ -22,7 +31,7 @@ def _model():
     return load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/390"))
 
 
-@pytest.mark.parametrize("year", ("2024", "2025"))
+@pytest.mark.parametrize("year", _MIDDLE)
 def test_identity_uses_exact_registry_owners_and_refuses_wrong_records(year):
     revision = _model().revisions[year]
     assert form_layout_failures(revision) == ()
@@ -43,10 +52,10 @@ def test_identity_uses_exact_registry_owners_and_refuses_wrong_records(year):
         resolve_form_context_field(revision, contexts["nif"].model_copy(update={"export_record_id": "missing-record"}))
     # A predecessor's filing field is not an owner for the designless 2026 edition.
     with pytest.raises(RegistryValidationError, match="exactly one"):
-        resolve_form_context_field(_model().revisions["2026"], contexts["nif"])
+        resolve_form_context_field(_model().revisions[_LAST], contexts["nif"])
 
 
-@pytest.mark.parametrize("year", ("2024", "2025"))
+@pytest.mark.parametrize("year", _MIDDLE)
 def test_six_activity_rows_keep_description_code_and_iae_together(year):
     revision = _model().revisions[year]
     assert form_layout_failures(revision) == ()
@@ -68,7 +77,7 @@ def test_six_activity_rows_keep_description_code_and_iae_together(year):
         ]
 
 
-@pytest.mark.parametrize("year", ("2024", "2025"))
+@pytest.mark.parametrize("year", _MIDDLE)
 def test_legal_representatives_follow_three_printed_columns_without_crossing_bindings(year):
     revision = _model().revisions[year]
     assert form_layout_failures(revision) == ()
@@ -83,7 +92,7 @@ def test_legal_representatives_follow_three_printed_columns_without_crossing_bin
         ]
 
 
-def _evaluate(number, values, missing=(), *, year="2026"):
+def _evaluate(number, values, missing=(), *, year=_LAST):
     revision = _model().revisions[year]
     boxes = {c.number: c for c in revision.casillas}
     by_id = {c.id: c for c in revision.casillas}
@@ -107,7 +116,7 @@ def _evaluate(number, values, missing=(), *, year="2026"):
 
 
 def test_current_settlement_preserves_both_printed_fuel_payment_positions():
-    revision = _model().revisions["2026"]
+    revision = _model().revisions[_LAST]
     assert form_layout_failures(revision) == ()
     layout = revision.form_layouts[0]
     page = next(p for p in layout.pages if p.id == "pag-6")
@@ -122,7 +131,7 @@ def test_current_settlement_preserves_both_printed_fuel_payment_positions():
     assert layout.review.state == "generated"
 
 
-@pytest.mark.parametrize("year", ("2024", "2025"))
+@pytest.mark.parametrize("year", _MIDDLE)
 def test_historical_settlement_keeps_printed_branches_without_future_fuel_payment(year):
     revision = _model().revisions[year]
     page = next(p for p in revision.form_layouts[0].pages if p.id == "pag-6")
@@ -166,12 +175,12 @@ def test_territorial_percentage_and_fuel_deduction_are_live():
             _evaluate(94, {k: 0 for k in (92, 659, 93, 112) if k != n}, (n,))
 
 
-@pytest.mark.parametrize("year", ("2024", "2025", "2026"))
+@pytest.mark.parametrize("year", (*_MIDDLE, _LAST))
 def test_specific_operations_preserve_the_printed_order_under_one_heading(year):
     revision = _model().revisions[year]
     assert form_layout_failures(revision) == ()
     page = next(p for p in revision.form_layouts[0].pages if p.id == "pag-7")
-    assert ("12142" if year == "2026" else "136902") in page.official_ref
+    assert ("12142" if year == _LAST else "136902") in page.official_ref
     sections = [s for s in page.sections if s.id.startswith("11-oper-especificas")]
     assert len(sections) == 1
     section = sections[0]
@@ -183,7 +192,7 @@ def test_specific_operations_preserve_the_printed_order_under_one_heading(year):
     assert len({b.id for b in section.blocks}) == len(section.blocks)
 
 
-@pytest.mark.parametrize("year", ("2024", "2025"))
+@pytest.mark.parametrize("year", _MIDDLE)
 def test_prorrata_preserves_five_separate_activity_blocks_and_all_thirty_bindings(year):
     revision = _model().revisions[year]
     page = next(p for p in revision.form_layouts[0].pages if p.id == "pag-7")
@@ -205,7 +214,7 @@ def test_prorrata_preserves_five_separate_activity_blocks_and_all_thirty_binding
         ]
 
 
-@pytest.mark.parametrize("year", ("2022", "2023", "2024", "2025", "2026"))
+@pytest.mark.parametrize("year", _CALCULATED)
 def test_annual_turnover_obeys_every_printed_sign_and_missing_input(year):
     additions = (99, 653, 103, 104, 105, 110, 100, 101, 102, 125, 126, 127, 128, 227, 228)
     deductions = (106, 107)
@@ -221,7 +230,7 @@ def test_annual_turnover_obeys_every_printed_sign_and_missing_input(year):
             _evaluate(108, {k: v for k, v in values.items() if k != n}, (n,), year=year)
 
 
-@pytest.mark.parametrize("year", ("2022", "2023", "2024", "2025"))
+@pytest.mark.parametrize("year", _CALCULATED[:-1])
 def test_historical_territorial_settlement_uses_percentage_without_future_deduction(year):
     assert _evaluate(92, {84: 10000, 87: 25}, year=year) == Decimal("2500")
     assert _evaluate(92, {84: 10000, 87: 0}, year=year) == Decimal("0")
@@ -232,10 +241,10 @@ def test_historical_territorial_settlement_uses_percentage_without_future_deduct
 
 
 def test_new_formula_evidence_does_not_rewrite_the_2021_edition():
-    revision = _model().revisions["2021"]
+    revision = _model().revisions[_FIRST]
     unchanged = ("92", "94", "108", "155", "172", "189")
     assert all(c.formula is None for c in revision.casillas if c.number in unchanged)
-    for year in ("2022", "2023"):
+    for year in _EARLY:
         historical = _model().revisions[year]
         formulas = {f.id: f for f in historical.formulas}
         for casilla in historical.casillas:
@@ -259,7 +268,7 @@ def test_new_formula_evidence_does_not_rewrite_the_2021_edition():
         ),
     ],
 )
-@pytest.mark.parametrize("year", ("2024", "2025", "2026"))
+@pytest.mark.parametrize("year", (*_MIDDLE, _LAST))
 def test_page_two_totals_include_all_printed_rows(total, printed_boxes, year):
     # Independently inspected BOE printed pages 136896 (2024 form) and 12136 (2026).
     numbers = printed_boxes.split()
@@ -287,10 +296,10 @@ def test_page_two_totals_include_all_printed_rows(total, printed_boxes, year):
 
 def test_page_two_totals_keep_older_editions_scoped_to_their_own_form():
     for key, revision in _model().revisions.items():
-        if key in ("2024", "2025", "2026"):
+        if key in (*_MIDDLE, _LAST):
             continue
         boxes = {c.number: c for c in revision.casillas}
-        if key == "2021":
+        if key == _FIRST:
             assert "33" not in boxes and "34" not in boxes
             continue
         assert boxes["33"].formula == "modelo-390-iva-anual-total-bases-iva"
@@ -299,7 +308,7 @@ def test_page_two_totals_keep_older_editions_scoped_to_their_own_form():
         assert formula.source_refs == ("boe-modelo-390-2022-printed-calculations",)
 
 
-@pytest.mark.parametrize("year", ("2022", "2023"))
+@pytest.mark.parametrize("year", _EARLY)
 @pytest.mark.parametrize("total", (33, 34))
 def test_early_vat_subtotal_includes_all_35_printed_amounts(year, total):
     numbers = [
@@ -363,7 +372,7 @@ def test_early_vat_subtotal_includes_all_35_printed_amounts(year, total):
         (189, (174, 176, 178, 180, 182, 184, 186, 187, 188)),
     ],
 )
-@pytest.mark.parametrize("year", ("2022", "2023", "2024", "2025", "2026"))
+@pytest.mark.parametrize("year", _CALCULATED)
 def test_differentiated_totals_sum_only_the_nine_printed_quotas(total, quotas, year):
     values = dict.fromkeys(quotas, 100)
     assert _evaluate(total, values, year=year) == Decimal("900")
@@ -377,18 +386,18 @@ def test_differentiated_totals_sum_only_the_nine_printed_quotas(total, quotas, y
     target = next(c for c in revision.casillas if c.number == str(total))
     formula = next(f for f in revision.formulas if f.id == target.formula)
     expected_source = (
-        "boe-modelo-390-2026-printed-calculations" if year == "2026" else "aeat-modelo-390-2024-printed-calculations"
+        "boe-modelo-390-2026-printed-calculations" if year == _LAST else "aeat-modelo-390-2024-printed-calculations"
     )
-    if year in ("2022", "2023"):
+    if year in _EARLY:
         expected_source = "boe-modelo-390-2022-printed-calculations"
     assert tuple(formula.source_refs) == (expected_source,)
     construct = next(c for c in revision.constructs if c.id == "modelo-390-iva-resumen-anual")
     assert expected_source in construct.source_refs
-    if year == "2026":
+    if year == _LAST:
         assert "aeat-modelo-390-2024-printed-calculations" not in construct.source_refs
 
 
-@pytest.mark.parametrize("year", ("2022", "2023", "2024", "2025", "2026"))
+@pytest.mark.parametrize("year", _CALCULATED)
 def test_differentiated_adjustments_and_totals_stay_in_the_quota_column(year):
     revision = _model().revisions[year]
     assert form_layout_failures(revision) == ()
@@ -412,7 +421,7 @@ def test_differentiated_adjustments_and_totals_stay_in_the_quota_column(year):
 
 
 def test_surcharge_rows_preserve_all_printed_pairs():
-    revision = _model().revisions["2026"]
+    revision = _model().revisions[_LAST]
     numbers = {c.id: c.number for c in revision.casillas}
     surcharge = next(p for p in revision.form_layouts[0].pages if p.id == "pag-2-bis")
     rows = surcharge.sections[0].blocks[0].rows
@@ -427,16 +436,16 @@ def test_surcharge_rows_preserve_all_printed_pairs():
 @pytest.mark.parametrize(
     "year,total,components",
     [
-        ("2022", 47, (34, 36, 600, 602, 42, 44, 46)),
-        ("2023", 47, (34, 664, 36, 666, 600, 602, 42, 44, 46)),
-        ("2024", 47, (34, 664, 692, 36, 666, 694, 600, 602, 42, 44, 46)),
-        ("2025", 47, (34, 664, 692, 36, 666, 694, 600, 602, 42, 44, 46)),
-        ("2026", 47, (34, 664, 692, 36, 666, 694, 600, 602, 42, 44, 46)),
-        ("2022", 64, (49, 513, 51, 521, 53, 55, 57, 59, 598, 61, 661, 62, 652, 63, 522)),
-        ("2023", 64, (49, 513, 51, 521, 53, 55, 57, 59, 598, 61, 661, 62, 652, 63, 522)),
-        ("2024", 64, (49, 513, 51, 521, 53, 55, 57, 59, 598, 61, 661, 62, 652, 63, 522)),
-        ("2025", 64, (49, 513, 51, 521, 53, 55, 57, 59, 598, 61, 661, 62, 652, 63, 522)),
-        ("2026", 64, (49, 513, 51, 521, 53, 55, 57, 59, 598, 61, 661, 62, 652, 63, 522)),
+        (_EARLY_A, 47, (34, 36, 600, 602, 42, 44, 46)),
+        (_EARLY_B, 47, (34, 664, 36, 666, 600, 602, 42, 44, 46)),
+        (_MIDDLE_A, 47, (34, 664, 692, 36, 666, 694, 600, 602, 42, 44, 46)),
+        (_MIDDLE_B, 47, (34, 664, 692, 36, 666, 694, 600, 602, 42, 44, 46)),
+        (_LAST, 47, (34, 664, 692, 36, 666, 694, 600, 602, 42, 44, 46)),
+        (_EARLY_A, 64, (49, 513, 51, 521, 53, 55, 57, 59, 598, 61, 661, 62, 652, 63, 522)),
+        (_EARLY_B, 64, (49, 513, 51, 521, 53, 55, 57, 59, 598, 61, 661, 62, 652, 63, 522)),
+        (_MIDDLE_A, 64, (49, 513, 51, 521, 53, 55, 57, 59, 598, 61, 661, 62, 652, 63, 522)),
+        (_MIDDLE_B, 64, (49, 513, 51, 521, 53, 55, 57, 59, 598, 61, 661, 62, 652, 63, 522)),
+        (_LAST, 64, (49, 513, 51, 521, 53, 55, 57, 59, 598, 61, 661, 62, 652, 63, 522)),
     ],
 )
 def test_main_vat_totals_include_every_printed_component(year, total, components):
@@ -453,7 +462,7 @@ def test_main_vat_totals_include_every_printed_component(year, total, components
     assert _evaluate(65, {47: 1100, 64: 1500}, year=year) == Decimal("-400")
 
 
-@pytest.mark.parametrize("year", ("2024", "2025"))
+@pytest.mark.parametrize("year", _MIDDLE)
 def test_historical_surcharge_rows_use_printed_rate_owners_and_scoped_evidence(year):
     revision = _model().revisions[year]
     assert form_layout_failures(revision) == ()
@@ -485,7 +494,7 @@ def test_historical_surcharge_rows_use_printed_rate_owners_and_scoped_evidence(y
         assert owner not in {a.casilla_id for a in formula.expression.args}
 
 
-@pytest.mark.parametrize("year", ("2024", "2025", "2026"))
+@pytest.mark.parametrize("year", (*_MIDDLE, _LAST))
 def test_deduction_rate_groups_keep_their_own_subtotals_in_the_same_grid(year):
     revision = _model().revisions[year]
     assert form_layout_failures(revision) == ()
@@ -516,7 +525,7 @@ def test_deduction_rate_groups_keep_their_own_subtotals_in_the_same_grid(year):
         ]
 
 
-@pytest.mark.parametrize("year", ("2024", "2025", "2026"))
+@pytest.mark.parametrize("year", (*_MIDDLE, _LAST))
 def test_deduction_continuation_keeps_subtotals_and_adjustments_in_printed_order(year):
     revision = _model().revisions[year]
     assert form_layout_failures(revision) == ()
@@ -535,7 +544,7 @@ def test_deduction_continuation_keeps_subtotals_and_adjustments_in_printed_order
 
 
 def test_deduction_subtotals_are_next_to_their_printed_bases():
-    revision = _model().revisions["2026"]
+    revision = _model().revisions[_LAST]
     labels = {c.id: c.number for c in revision.casillas}
     labels.update({p.casilla_id: p.box_number for p in revision.form_layouts[0].placements if p.box_number})
     page = next(p for p in revision.form_layouts[0].pages if p.id == "pag-3")

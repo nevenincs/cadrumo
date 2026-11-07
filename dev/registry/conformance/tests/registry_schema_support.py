@@ -18,6 +18,7 @@ from cadrumo.domain.calculations.registry.schema import (
 )
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ...compiler.loader import load_modelo_directory
 from ...compiler.validator import RegistryValidator
@@ -48,6 +49,11 @@ def object_boundary(value: object) -> object:
     return value
 
 
+def committed_modelo_revision_id() -> str:
+    """Return the id of the one authored revision of the committed M130 source tree."""
+    return str(open_ended_revision("130").id)
+
+
 def committed_modelo_text() -> str:
     """Flatten the committed M130 source tree into one editable TOML text.
 
@@ -56,7 +62,7 @@ def committed_modelo_text() -> str:
     substitution. The mutated text is always written back out as the fragmented
     directory layout before it is compiled.
     """
-    revision_dir = _MODELO_130_DIR / "revisions" / "2019-y-siguientes"
+    revision_dir = _MODELO_130_DIR / "revisions" / committed_modelo_revision_id()
     fragments = [revision_dir / "revision.toml"]
     fragments.extend(
         item

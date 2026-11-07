@@ -8,6 +8,7 @@ import pytest
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_expression import evaluate_expression
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormContextFieldBlock, FormGridBlock
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ...compiler.form_layout_integrity import form_layout_failures
 from ...compiler.loader import load_modelo_directory
@@ -15,8 +16,13 @@ from ...compiler.loader import load_modelo_directory
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+def _edition(position: int) -> str:
+    """The id of the authored Modelo 308 revision at ``position`` in its oldest-first order."""
+    return str(authored_revisions("308")[position].id)
+
+
 def test_recargo_base_rate_and_quota_share_their_official_row() -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/308")).revisions["2019-y-siguientes"]
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/308")).revisions[_edition(3)]
     (layout,) = revision.form_layouts
     assert form_layout_failures(revision) == ()
     section = next(s for p in layout.pages for s in p.sections if s.id == "req")
@@ -36,7 +42,7 @@ def test_recargo_base_rate_and_quota_share_their_official_row() -> None:
 
 
 def test_transport_families_and_purchase_sale_rows_remain_separate() -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/308")).revisions["2019-y-siguientes"]
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/308")).revisions[_edition(3)]
     sections = {s.id: s for p in revision.form_layouts[0].pages for s in p.sections}
     assert {"vehiculo", "embarcacion", "aeronave", "adquirente", "articulo21"} <= sections.keys()
     contexts = [b for b in sections["identificacion"].blocks if isinstance(b, FormContextFieldBlock)]
@@ -50,9 +56,9 @@ def test_transport_families_and_purchase_sale_rows_remain_separate() -> None:
 
 
 @pytest.mark.parametrize("amounts,expected", [(("210.25", "40.10", "0"), "250.35"), (("0", "0", "0"), "0")])
-@pytest.mark.parametrize("revision_id", ["2009-2011-junio", "2011-julio-2015", "2016-2018", "2019-y-siguientes"])
-def test_refund_total_uses_all_three_declared_quotas(amounts: tuple[str, ...], expected: str, revision_id: str) -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/308")).revisions[revision_id]
+@pytest.mark.parametrize("position", range(4))
+def test_refund_total_uses_all_three_declared_quotas(amounts: tuple[str, ...], expected: str, position: int) -> None:
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/308")).revisions[_edition(position)]
     formula = next(f for f in revision.formulas if f.target_casilla_id == "decl.req-iva-devolver-17")
     ids = ("decl.req-cuota-10", "decl.req-cuota-13", "decl.req-cuota-16")
     values = dict(zip(ids, map(Decimal, amounts), strict=True))
@@ -81,7 +87,7 @@ def test_refund_total_uses_all_three_declared_quotas(amounts: tuple[str, ...], e
 
 
 def test_paper_signature_context_is_not_an_electronic_filing_claim() -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/308")).revisions["2019-y-siguientes"]
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/308")).revisions[_edition(3)]
     ids = {"firma-lugar", "firma-fecha", "firma"}
     fields = [c for c in revision.casillas if c.id in ids]
     assert len(fields) == 3
@@ -99,8 +105,8 @@ def test_paper_signature_context_is_not_an_electronic_filing_claim() -> None:
 
 def test_2016_has_full_historical_fields_without_gaining_electronic_filing() -> None:
     model = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/308"))
-    historical = model.revisions["2016-2018"]
-    current = model.revisions["2019-y-siguientes"]
+    historical = model.revisions[_edition(2)]
+    current = model.revisions[_edition(3)]
     assert historical.authority_grade == "applicability"
     assert not historical.export_layouts
     assert len(historical.casillas) == 51
@@ -116,7 +122,7 @@ def test_2016_has_full_historical_fields_without_gaining_electronic_filing() -> 
 
 def test_2011_preserves_historical_account_and_identity_representation() -> None:
     model = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/308"))
-    revision = model.revisions["2011-julio-2015"]
+    revision = model.revisions[_edition(1)]
     fields = {c.id: c for c in revision.casillas}
     assert len(fields) == 50
     assert revision.authority_grade == "applicability"
@@ -131,14 +137,14 @@ def test_2011_preserves_historical_account_and_identity_representation() -> None
     assert form_layout_failures(revision) == ()
     for locale in ("es", "en", "ca", "hu"):
         assert all(c.get_label(locale) != c.id for c in fields.values())
-    later = {c.id for c in model.revisions["2016-2018"].casillas}
+    later = {c.id for c in model.revisions[_edition(2)].casillas}
     assert "decl.devolucion-ccc" not in later
     assert {"decl.devolucion-iban", "decl.devolucion-bic"} <= later
 
 
 def test_2009_form_does_not_backdate_article21_fields_or_later_bank_offsets() -> None:
     model = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/308"))
-    revision = model.revisions["2009-2011-junio"]
+    revision = model.revisions[_edition(0)]
     fields = {c.id: c for c in revision.casillas}
     assert len(fields) == 48
     assert not {"decl.mtn-iva-soportado-art21", "decl.mtn-iva-devolver-art21"} & fields.keys()
@@ -158,9 +164,9 @@ def test_2009_form_does_not_backdate_article21_fields_or_later_bank_offsets() ->
         assert all(c.get_label(locale) != c.id for c in fields.values())
 
 
-@pytest.mark.parametrize("revision_id", ["2009-2011-junio", "2011-julio-2015", "2016-2018", "2019-y-siguientes"])
-def test_paper_refund_amount_is_declared_and_not_an_invented_sum(revision_id: str) -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/308")).revisions[revision_id]
+@pytest.mark.parametrize("position", range(4))
+def test_paper_refund_amount_is_declared_and_not_an_invented_sum(position: int) -> None:
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/308")).revisions[_edition(position)]
     amount = next(c for c in revision.casillas if c.id == "papel-importe-devolucion")
     assert amount.input_kind == "manual"
     assert amount.data_type == "money"

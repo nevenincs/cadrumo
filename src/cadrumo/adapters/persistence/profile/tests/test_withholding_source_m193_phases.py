@@ -450,7 +450,7 @@ def test_a_large_company_193_source_refuses_instead_of_a_quarterly_only_total(
     tmp_path: Path,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """No Modelo 123 schedule covers a large company, so its 193 source names the missing quarters and refuses."""
+    """A large company files Modelo 123 monthly, so its 193 source names the unscheduled quarters and refuses."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         _persist_manual(profile.repository, _manual_row(source_id="manual-coupon", source_allocation_id="manual-1"))
         with pytest.raises(WithholdingFilingCadenceError) as raised:
@@ -468,6 +468,6 @@ def test_a_large_company_193_source_refuses_instead_of_a_quarterly_only_total(
         "modelo": "123",
         "filing_year": f"{_GROUNDED_ACCRUAL_EXERCISE}",
         "unscheduled_quarters": "1T|2T|3T|4T",
-        "scheduled_periods": "",
+        "scheduled_periods": "|".join(f"{month:02d}" for month in range(1, 13)),
         "monthly_windows_supported": False,
     }

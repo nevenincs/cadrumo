@@ -107,6 +107,8 @@ _REVIEWED_EXCLUDED_FIELDS: frozenset[tuple[type[BaseModel], str]] = frozenset(
         (DeclarationsWorkspaceFilingRefV1, "work_unit_id"),
         (DeclarationsWorkspaceFilingRefV1, "calculation_revision_id"),
         (DeclarationsWorkspaceFilingRefV1, "amends_filing_record_id"),
+        (DeclarationsWorkspaceFilingRefV1, "superseded_by_filing_record_id"),
+        (DeclarationsWorkspaceFilingRefV1, "member_nif"),
         (DeclarationsWorkspaceLifecycleRefV1, "fact_id"),
         (DeclarationsWorkspaceLifecycleRefV1, "work_unit_id"),
         (DeclarationSummary, "technical_reason"),
