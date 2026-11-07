@@ -6,6 +6,8 @@ from functools import lru_cache
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import single_exercise_editions
+
 from .modelo_100_registry_support import (
     ANDALUCIA_EJERCICIO_FISICO_ROLE,
     C_VALENCIANA_LABORES_NO_REMUNERADAS_ROLE,
@@ -30,8 +32,9 @@ from .modelo_100_registry_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_LIVE_M100_YEARS = tuple(range(2020, 2026))
-_RECENT_M100_YEARS = tuple(range(2022, 2026))
+_LIVE_M100_YEARS = single_exercise_editions("100")
+# The regularización block is printed from the third authored edition on.
+_RECENT_M100_YEARS = _LIVE_M100_YEARS[2:]
 
 _CASILLA_0921_ROLE_CASES = (
     (

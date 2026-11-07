@@ -20,10 +20,12 @@ from decimal import Decimal
 
 import pytest
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.justificante.errors import JustificanteParseError
 from ..extract import parse_datetime, parse_decimal, strip_accents
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+_YEAR = filing_year_envelope().horizon
 
 _STRIP_ACCENTS_CASES = (
     ("ascii", "Codigo", "Codigo"),
@@ -46,12 +48,12 @@ _DECIMAL_CASES = (
 )
 
 _DATETIME_CASES = (
-    ("iso-seconds", "2026-04-30 14:30:00", datetime(2026, 4, 30, 14, 30, 0)),
-    ("iso-minutes", "2026-04-30 14:30", datetime(2026, 4, 30, 14, 30)),
-    ("dmy-seconds", "30-04-2026 14:30:00", datetime(2026, 4, 30, 14, 30, 0)),
-    ("dmy-minutes", "30-04-2026 14:30", datetime(2026, 4, 30, 14, 30)),
-    ("t-separator", "2026-04-30T14:30:00", datetime(2026, 4, 30, 14, 30, 0)),
-    ("surrounding-whitespace", "  2026-04-30 14:30:00  ", datetime(2026, 4, 30, 14, 30, 0)),
+    ("iso-seconds", f"{_YEAR}-04-30 14:30:00", datetime(_YEAR, 4, 30, 14, 30, 0)),
+    ("iso-minutes", f"{_YEAR}-04-30 14:30", datetime(_YEAR, 4, 30, 14, 30)),
+    ("dmy-seconds", f"30-04-{_YEAR} 14:30:00", datetime(_YEAR, 4, 30, 14, 30, 0)),
+    ("dmy-minutes", f"30-04-{_YEAR} 14:30", datetime(_YEAR, 4, 30, 14, 30)),
+    ("t-separator", f"{_YEAR}-04-30T14:30:00", datetime(_YEAR, 4, 30, 14, 30, 0)),
+    ("surrounding-whitespace", f"  {_YEAR}-04-30 14:30:00  ", datetime(_YEAR, 4, 30, 14, 30, 0)),
 )
 
 

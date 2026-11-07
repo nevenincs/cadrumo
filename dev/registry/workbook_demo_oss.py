@@ -18,13 +18,15 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import validating_
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormGridBlock
 
 from .compiler.authority import compiled_bundled_authority
+from .workbook_demo_cases import supported_horizon_year
 from .workbook_template_source import load_workbook_template_source
 
 
 def build_oss_detail_plan(
-    *, scheme: Literal["exterior", "union", "importacion"], year: int = 2025
+    *, scheme: Literal["exterior", "union", "importacion"], year: int | None = None
 ) -> tuple[WorkbookTemplateSource, SheetExportPlan[SheetTemplatePreviewMetadata]]:
     """Populate authored grid owners; never invent a country settlement formula."""
+    year = supported_horizon_year() if year is None else year
     period = {"exterior": "EXT-1T", "union": "1T", "importacion": "01"}[scheme]
     source = load_workbook_template_source(
         "369",

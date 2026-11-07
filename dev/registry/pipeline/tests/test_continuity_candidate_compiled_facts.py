@@ -24,6 +24,7 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ...compiler.loader import load_modelo_directory
 from ..candidate_staging import stage_generated_export_candidate
@@ -35,8 +36,9 @@ from ..tree_validation import GeneratedExportTreeValidationContext, validated_ta
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _MODELO = "210"
-_REVISION = "2026-y-siguientes"
-_FILING_YEAR = 2026
+_OPEN_ENDED = open_ended_revision(_MODELO)
+_REVISION = str(_OPEN_ENDED.id)
+_FILING_YEAR = _OPEN_ENDED.valid_from.year
 _PERIOD = "EVENT-1"
 _RETIRED_PROVIDER_FACT_ID = "lirpf-art-101:retencion-administrador-general"
 _RETIRED_PROVIDER_FACT_FILE = "0001-lirpf-art-101-retencion-administrador-general.toml"

@@ -15,6 +15,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
 
 from cadrumo.core.casilla_id import CasillaId
+from cadrumo.core.filing_year import FilingYear
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.time.clock import now
 from cadrumo.domain.calculations.registry.errors import (
@@ -57,7 +58,7 @@ class ParityScenario(ParityTapeModel):
     id: str
     modelo: str
     revision: str
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     period: str
     workbook_path: Path
     synthetic_input: SyntheticInputSet

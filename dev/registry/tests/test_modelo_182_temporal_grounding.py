@@ -11,6 +11,7 @@ from cadrumo.domain.calculations.registry.errors import (
     RegistrySnapshotError,
     RegistryValidationError,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.authority import compiled_bundled_authority
 from .authored_edition_support import source_first_exercise, source_with_sha256
@@ -26,7 +27,7 @@ _EVIDENCED_EDITION = source_first_exercise(
 
 #: Wide enough to cross the support floor in both directions, and to reach past
 #: the last filing year any edition declares a window for.
-_SCANNED_FILING_YEARS = range(2018, 2028)
+_SCANNED_FILING_YEARS = range(filing_year_envelope().floor - 4, filing_year_envelope().horizon + 2)
 
 
 def test_modelo_182_deadline_is_owned_only_by_the_evidenced_revision() -> None:

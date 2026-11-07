@@ -7,8 +7,10 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
+from cadrumo.domain.calculations.registry.tests.authored_editions import revision_covering
 
 from ...compiler.authority import compiled_bundled_authority
+from ...tests.authored_edition_support import source_first_exercise, source_reference
 from ..export_tree import render_complete_export_tree
 from ..render_check import GeneratedExportBootstrapTransport, revision_render_inputs
 
@@ -17,19 +19,21 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 def test_modelo_345_2025_source_complete_nested_render(tmp_path: Path) -> None:
     source_ref = "aeat-dr-345-2025"
+    exercise = source_first_exercise(source_reference(source_ref))
+    revision = str(revision_covering("345", exercise).id)
     source_sha256 = "fb0faaf68f8b0de29316bdc65eaeb3ba0dcb8a441eea4d5415d0cb4517c287fd"
     inputs = revision_render_inputs(
         compiled_bundled_authority(),
         modelo="345",
-        revision="2025",
+        revision=revision,
         source_ref=source_ref,
         bootstrap_transport=GeneratedExportBootstrapTransport(
-            layout_id="generated-modelo-345-2025-fichero",
+            layout_id=f"generated-modelo-345-{revision}-fichero",
             line_ending="none",
             source_ref=source_ref,
             source_sha256=source_sha256,
         ),
-        filing_year=2025,
+        filing_year=exercise,
         period="0A",
     )
     rendered = render_complete_export_tree(

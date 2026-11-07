@@ -44,7 +44,7 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema_formula import BracketEntry, ParameterDefinition
-from cadrumo.domain.calculations.registry.tests.authored_editions import manual_editions_printing
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, manual_editions_printing
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -281,8 +281,8 @@ def _table(*rungs: BracketEntry) -> ParameterDefinition:
     )
 
 
-_YEAR_START = date(2024, 1, 1)
-_YEAR_END = date(2024, 12, 31)
+_YEAR_START = date(filing_year_envelope().horizon, 1, 1)
+_YEAR_END = date(filing_year_envelope().horizon, 12, 31)
 
 
 def _scale(top_fixed_addition: str) -> ParameterDefinition:

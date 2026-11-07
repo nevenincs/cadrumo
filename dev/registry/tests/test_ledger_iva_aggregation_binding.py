@@ -28,6 +28,7 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
 )
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.schema import IvaLedgerObservationRole
 from dev.registry.compiler.authority import compiled_bundled_authority
 
@@ -55,6 +56,8 @@ from .ledger_iva_aggregation_support import (
 _MONEY_VALUE = BindingValueContract(data_type=BindingDataType.MONEY, channel=BindingValueChannel.DECIMAL)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def test_validate_accepts_canonical_iva_repercutido_binding() -> None:
@@ -131,8 +134,8 @@ def _minimal_revision_with_bindings(*bindings: BindingDefinition) -> ModeloRevis
     return ModeloRevision(
         id="test-revision",
         localization_key="test.schema.revision.test-revision.label",
-        valid_from=date(2026, 1, 1),
-        period_selector=PeriodSelector(year_from=2026, periods=("2T",)),
+        valid_from=date(_YEAR, 1, 1),
+        period_selector=PeriodSelector(year_from=_YEAR, periods=("2T",)),
         legal_refs=("ley-37-1992:art-20",),
         source_refs=("test-source",),
         bindings=bindings,
@@ -357,25 +360,25 @@ def test_calculate_303_domestic_reverse_charge_books_boxes_13_and_37_with_zero_n
     """
     reverse_charge_cuota = Decimal("63.00")
     domestic_only = calculate_303_from_observations(
-        filing_year=2025,
+        filing_year=_YEAR,
         period="1T",
         observations=(
             ledger_iva_aggregation_observation(
-                applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("21.00")
+                applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(_YEAR, 2, 15), iva=Decimal("21.00")
             ),
         ),
     )
     with_reverse_charge = calculate_303_from_observations(
-        filing_year=2025,
+        filing_year=_YEAR,
         period="1T",
         observations=(
             ledger_iva_aggregation_observation(
-                applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("21.00")
+                applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(_YEAR, 2, 15), iva=Decimal("21.00")
             ),
             ledger_iva_aggregation_observation(
                 applied_rate=Decimal("0.21"),
                 ledger_id="domestic-rc",
-                txn_date=date(2025, 3, 1),
+                txn_date=date(_YEAR, 3, 1),
                 category=ledger_iva_aggregation_category("domestic_reverse_charge"),
                 flow=ledger_iva_aggregation_flow("inversion_sujeto_pasivo"),
                 iva=reverse_charge_cuota,

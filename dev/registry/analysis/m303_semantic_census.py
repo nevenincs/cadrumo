@@ -20,10 +20,14 @@ transcribed digest could only ever agree with the fragment it was copied from.
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
-from typing import Final
+from functools import cache
+from typing import Final, override
 
+from cadrumo.core.resources.bundled_data import bundled_path
+
+from ..compiler.loader import load_catalogue_file
 from ..pipeline.record_design_intermediate import (
     RecordDesignIntermediate,
     RecordDesignIntermediateField,
@@ -76,9 +80,8 @@ M303_VARIABLE_ENVELOPE_ANCHOR_COUNT: Final[int] = len(M303_VARIABLE_ENVELOPE_ROL
 
 @dataclass(frozen=True, slots=True)
 class M303SemanticCensusExpectation:
-    """The reviewed, epoch-specific totals one design must still measure."""
+    """The reviewed, design-specific totals one official design must still measure."""
 
-    design_epoch: str
     fixed_anchor_count: int
     #: Totals over the persisted ``kind`` of every semantic-map entry.
     class_totals: Mapping[str, int]
@@ -114,8 +117,9 @@ class M303SemanticCensusExpectation:
         )
 
 
-M303_SEMANTIC_CENSUS_EXPECTATIONS: Final[Mapping[str, M303SemanticCensusExpectation]] = {
-    "2022": M303SemanticCensusExpectation(
+#: Reviewed totals keyed by the official record design they were measured on.
+_EXPECTATIONS_BY_DESIGN: Final[Mapping[str, M303SemanticCensusExpectation]] = {
+    "aeat-dr-303-2022": M303SemanticCensusExpectation(
         # The 2022 semantic map was authored without its census expectation, so
         # every case that censuses this epoch refused with "no reviewed
         # expectation" -- the map exists and resolves, but nothing pinned its
@@ -127,7 +131,6 @@ M303_SEMANTIC_CENSUS_EXPECTATIONS: Final[Mapping[str, M303SemanticCensusExpectat
         # (38 facts against 100) and no pure-INTEGER DP30302 slot at all: the
         # Regimen Simplificado actividad modules -- epigrafe, numero de unidades,
         # modulos -- arrive on DP30302 with the 2023 design.
-        design_epoch="2022",
         fixed_anchor_count=314,
         class_totals={
             "casilla": 103,
@@ -158,8 +161,7 @@ M303_SEMANTIC_CENSUS_EXPECTATIONS: Final[Mapping[str, M303SemanticCensusExpectat
         simplified_ordinal_spans=(range(6, 78),),
         simplified_filler_ordinals=frozenset(),
     ),
-    "2023": M303SemanticCensusExpectation(
-        design_epoch="2023",
+    "aeat-dr-303-2023": M303SemanticCensusExpectation(
         fixed_anchor_count=393,
         class_totals={
             "casilla": 106,
@@ -188,8 +190,7 @@ M303_SEMANTIC_CENSUS_EXPECTATIONS: Final[Mapping[str, M303SemanticCensusExpectat
         simplified_ordinal_spans=(range(6, 78), range(90, 152)),
         simplified_filler_ordinals=frozenset(),
     ),
-    "2024-early": M303SemanticCensusExpectation(
-        design_epoch="2024-early",
+    "aeat-dr-303-2024-early": M303SemanticCensusExpectation(
         fixed_anchor_count=393,
         class_totals={
             "casilla": 106,
@@ -218,8 +219,7 @@ M303_SEMANTIC_CENSUS_EXPECTATIONS: Final[Mapping[str, M303SemanticCensusExpectat
         simplified_ordinal_spans=(range(6, 78), range(90, 152)),
         simplified_filler_ordinals=frozenset({92, 94, 120, 122}),
     ),
-    "2024-late": M303SemanticCensusExpectation(
-        design_epoch="2024-late",
+    "aeat-dr-303-2024-late": M303SemanticCensusExpectation(
         fixed_anchor_count=413,
         class_totals={
             "casilla": 114,
@@ -248,8 +248,7 @@ M303_SEMANTIC_CENSUS_EXPECTATIONS: Final[Mapping[str, M303SemanticCensusExpectat
         simplified_ordinal_spans=(range(6, 78), range(90, 162)),
         simplified_filler_ordinals=frozenset({92, 94, 121, 123}),
     ),
-    "2025": M303SemanticCensusExpectation(
-        design_epoch="2025",
+    "aeat-dr-303-2025": M303SemanticCensusExpectation(
         fixed_anchor_count=416,
         class_totals={
             "casilla": 113,
@@ -278,8 +277,7 @@ M303_SEMANTIC_CENSUS_EXPECTATIONS: Final[Mapping[str, M303SemanticCensusExpectat
         simplified_ordinal_spans=(range(6, 78), range(90, 165)),
         simplified_filler_ordinals=frozenset({92, 94, 119, 121, 148}),
     ),
-    "2026": M303SemanticCensusExpectation(
-        design_epoch="2026",
+    "aeat-dr-303-2026": M303SemanticCensusExpectation(
         fixed_anchor_count=417,
         class_totals={
             "casilla": 114,
@@ -309,6 +307,38 @@ M303_SEMANTIC_CENSUS_EXPECTATIONS: Final[Mapping[str, M303SemanticCensusExpectat
         simplified_filler_ordinals=frozenset({92, 94, 119, 121, 148}),
     ),
 }
+
+
+class _EpochKeyedExpectations(Mapping[str, M303SemanticCensusExpectation]):
+    """The reviewed table read by design epoch, the epoch each design's catalogue entry declares."""
+
+    @staticmethod
+    @cache
+    def _by_epoch() -> dict[str, M303SemanticCensusExpectation]:
+        sources = load_catalogue_file(bundled_path("registry", "aeat", "legal", "iva.toml")).sources
+        by_epoch: dict[str, M303SemanticCensusExpectation] = {}
+        for source_ref, expectation in _EXPECTATIONS_BY_DESIGN.items():
+            epoch = sources[source_ref].record_design_epoch
+            if epoch is None:
+                raise ValueError(f"M303 census design {source_ref!r} declares no record-design epoch")
+            by_epoch[epoch] = expectation
+        return by_epoch
+
+    @override
+    def __getitem__(self, design_epoch: str) -> M303SemanticCensusExpectation:
+        return self._by_epoch()[design_epoch]
+
+    @override
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._by_epoch())
+
+    @override
+    def __len__(self) -> int:
+        return len(self._by_epoch())
+
+
+M303_SEMANTIC_CENSUS_EXPECTATIONS: Final[Mapping[str, M303SemanticCensusExpectation]] = _EpochKeyedExpectations()
+"""The reviewed census expectations by design epoch, derived from the design-keyed table and the source catalogue."""
 
 
 @dataclass(frozen=True, slots=True)

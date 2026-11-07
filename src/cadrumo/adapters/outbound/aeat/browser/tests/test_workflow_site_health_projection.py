@@ -9,12 +9,14 @@ from pydantic import ValidationError
 
 from ......application.workflow.run_models import SiteHealthAlert, WorkflowSiteHealthFacts, WorkflowStage
 from ......core.errors.hierarchy import SiteHealthState
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......tests.aeat_literal_fixtures import aeat_url
 from ..site_health_records import SiteHealthEvidence, SiteHealthStatus, parse_site_health_url
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_YEAR = filing_year_envelope().horizon
 
-_SITE_HEALTH_OBSERVED_AT = datetime(2026, 4, 12, 10, 0, 0, tzinfo=UTC)
+_SITE_HEALTH_OBSERVED_AT = datetime(_YEAR, 4, 12, 10, 0, 0, tzinfo=UTC)
 
 
 class TestSiteHealthAlert:

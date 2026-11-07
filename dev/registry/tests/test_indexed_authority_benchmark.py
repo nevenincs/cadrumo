@@ -4,9 +4,13 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
+
 from ..indexed_authority_benchmark import summary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_REVISION = str(authored_revisions("100")[-1].id)
 
 
 def test_summary_uses_backend_workload_medians_and_pairs_only_shared_semantics() -> None:
@@ -18,7 +22,7 @@ def test_summary_uses_backend_workload_medians_and_pairs_only_shared_semantics()
             "incremental_authority_rss_bytes": 10,
             "warm_context_median_seconds": 0.1,
             "identity_digest": "generation-a",
-            "detail": {"modelo": "100", "revision": "2025"},
+            "detail": {"modelo": "100", "revision": _REVISION},
         },
         {
             "backend": "json",
@@ -27,7 +31,7 @@ def test_summary_uses_backend_workload_medians_and_pairs_only_shared_semantics()
             "incremental_authority_rss_bytes": 30,
             "warm_context_median_seconds": 0.3,
             "identity_digest": "generation-a",
-            "detail": {"modelo": "100", "revision": "2025"},
+            "detail": {"modelo": "100", "revision": _REVISION},
         },
         {
             "backend": "json",
@@ -52,7 +56,7 @@ def test_summary_uses_backend_workload_medians_and_pairs_only_shared_semantics()
             "incremental_authority_rss_bytes": 50,
             "warm_context_median_seconds": 0.5,
             "identity_digest": "generation-a",
-            "detail": {"modelo": "100", "revision": "2025"},
+            "detail": {"modelo": "100", "revision": _REVISION},
         },
         {
             "backend": "sqlite",
@@ -61,7 +65,7 @@ def test_summary_uses_backend_workload_medians_and_pairs_only_shared_semantics()
             "incremental_authority_rss_bytes": 70,
             "warm_context_median_seconds": 0.7,
             "identity_digest": "generation-a",
-            "detail": {"modelo": "100", "revision": "2025"},
+            "detail": {"modelo": "100", "revision": _REVISION},
         },
         {
             "backend": "sqlite",

@@ -1,6 +1,5 @@
 """Historical registry cells use shared assembly without a filing snapshot."""
 
-from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -16,6 +15,8 @@ from cadrumo.application.storage.calc_sheets.records import (
 )
 from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo.domain.calculations.registry.temporal import RevisionSelectionMetadata
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, filing_year_envelope
 
 from ..compiler.authority import compiled_bundled_authority
 from ..workbook_demo_refunds import build_historical_refund_plan, refund_inputs
@@ -24,25 +25,48 @@ from ..workbook_template_source import load_workbook_template_source
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 
+def _historical_revisions(modelo: str) -> tuple[RevisionSelectionMetadata, ...]:
+    """Return the authored editions that end below the support floor, oldest first."""
+    floor = filing_year_envelope().floor
+    return tuple(
+        revision
+        for revision in authored_revisions(modelo)
+        if revision.valid_to is not None and revision.valid_to.year < floor
+    )
+
+
+def _last_full_exercise(revision: RevisionSelectionMetadata) -> int:
+    """Return the last calendar year one closed edition governs from January to December."""
+    assert revision.valid_to is not None
+    return (
+        revision.valid_to.year
+        if (revision.valid_to.month, revision.valid_to.day) == (12, 31)
+        else revision.valid_to.year - 1
+    )
+
+
 def test_historical_232_assembly_preserves_real_registry_inputs_without_a_snapshot() -> None:
     authority = compiled_bundled_authority()
+    historical = _historical_revisions("232")[-1]
+    year = _last_full_exercise(historical)
+    revision_id = str(historical.id)
     with pytest.raises(FilingYearOutsideSupportEnvelopeError):
-        authority.snapshot("232", filing_year=2017, period="0A", revision_id="2016-2017")
+        authority.snapshot("232", filing_year=year, period="0A", revision_id=revision_id)
     source = load_workbook_template_source(
-        "232", revision_id="2016-2017", source_ref="aeat-dr-232-2016", preview_year=2017, preview_period="0A"
+        "232", revision_id=revision_id, source_ref="aeat-dr-232-2016", preview_year=year, preview_period="0A"
     )
     revision = source.revision
-    anchor = date(2017, 12, 31)
+    anchor = historical.valid_to
     with validating_governed_facts(authority):
         layout = plan_layout(revision, bracket_filter_date=anchor)
         plan = build_template_preview_plan(
             source,
-            operator_inputs=OperatorInputs(values=(OperatorInput(casilla_id="decl.ejercicio", value=Decimal(2017)),)),
+            operator_inputs=OperatorInputs(values=(OperatorInput(casilla_id="decl.ejercicio", value=Decimal(year)),)),
             guide=SheetGuideContent(title="Ejemplo ficticio", paragraphs=("No válido para presentar.",)),
         )
     assert isinstance(plan.metadata, SheetTemplatePreviewMetadata)
-    assert plan.metadata.preview_year == 2017
-    assert any(cell.casilla_id == "decl.ejercicio" and cell.value == Decimal(2017) for cell in plan.value_cells)
+    assert plan.metadata.preview_year == year
+    assert any(cell.casilla_id == "decl.ejercicio" and cell.value == Decimal(year) for cell in plan.value_cells)
     assert not plan.formula_cells  # The registry declares reported amounts, not arithmetic.
     assert len(layout.binding_cells) >= 140
     assert all(address in plan.all_addresses() for address in layout.binding_cells.values())
@@ -51,10 +75,12 @@ def test_historical_232_assembly_preserves_real_registry_inputs_without_a_snapsh
 
 def test_historical_308_preview_keeps_filing_refusal_and_real_formula() -> None:
     authority = compiled_bundled_authority()
+    historical = _historical_revisions("308")[-1]
+    year = _last_full_exercise(historical)
     with pytest.raises(FilingYearOutsideSupportEnvelopeError):
-        authority.snapshot("308", filing_year=2018, period="0A", revision_id="2016-2018")
-    source, plan = build_historical_refund_plan()
-    values = {v.casilla_id: v.value for v in refund_inputs(2018, historical=True).values}
+        authority.snapshot("308", filing_year=year, period="0A", revision_id=str(historical.id))
+    source, plan = build_historical_refund_plan(year=year)
+    values = {v.casilla_id: v.value for v in refund_inputs(year, historical=True).values}
     assert values["papel-nif"] == "12345678Z"
     assert values["papel-apellidos"] == "Ejemplo"
     assert not source.revision.export_layouts
@@ -64,7 +90,7 @@ def test_historical_308_preview_keeps_filing_refusal_and_real_formula() -> None:
     assert any(c.casilla_id == declared.casilla_id for c in plan.formula_cells if c.address.tab is TabName.FORM)
     assert not any(c.casilla_id == declared.casilla_id for c in plan.formula_cells if c.address.tab is TabName.CALCULOS)
     assert isinstance(plan.metadata, SheetTemplatePreviewMetadata)
-    assert plan.metadata.preview_year == 2018
+    assert plan.metadata.preview_year == year
     assert any(c.casilla_id == "papel-nif" for c in plan.formula_cells if c.address.tab is TabName.FORM)
     assert any(
         c.casilla_id == "decl.req-iva-devolver-17" for c in plan.formula_cells if c.address.tab is TabName.CALCULOS
@@ -74,7 +100,10 @@ def test_historical_308_preview_keeps_filing_refusal_and_real_formula() -> None:
 @pytest.mark.parametrize(
     "year,revision_id,period",
     # aeat-dr-308-2009 admits only the quarters; the July 2011 design adds 0A.
-    [(2010, "2009-2011-junio", "3T"), (2015, "2011-julio-2015", "0A")],
+    [
+        (_last_full_exercise(revision), str(revision.id), period)
+        for revision, period in zip(_historical_revisions("308")[:2], ("3T", "0A"), strict=True)
+    ],
 )
 def test_old_308_preview_uses_complete_name_and_old_bank_account(year: int, revision_id: str, period: str) -> None:
     source, plan = build_historical_refund_plan(year=year)

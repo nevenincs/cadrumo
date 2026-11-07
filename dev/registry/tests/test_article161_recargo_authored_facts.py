@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 from decimal import Decimal
+from functools import cache
 
 import pytest
 
@@ -32,32 +33,37 @@ _RATE_IDS = frozenset(
         "liva-art-161:recargo-rate-tabaco",
     }
 )
+_REPLACEMENT_SOURCE = "boe-rdl-20-2012-art-23-2012-09-01"
 _SOURCES = {
     "boe-liva-art-161-1993-01-01": (
         "d3d03690f5d833a832b1c81309cb76a806ba4bc7d02594233f08f2e071ad2e01",
         692,
-        date(1993, 1, 1),
-        date(1996, 12, 31),
     ),
     "boe-liva-art-161-1997-01-01": (
         "a75415a2ddc099e2114bf46e7888e4e8693d903d8d805e15f74a7e80e8a19c8a",
         1023,
-        date(1997, 1, 1),
-        date(2012, 8, 31),
     ),
     "boe-liva-art-161-2012-07-15": (
         "b80529868fb4904f88b67e98ec54dbb82e8ff876478bcce8666ddb84e1ffee34",
         1452,
-        date(2012, 9, 1),
-        None,
     ),
-    "boe-rdl-20-2012-art-23-2012-09-01": (
+    _REPLACEMENT_SOURCE: (
         "73cdc93bfe9819ebe29c68f3e6a57ccec8d7d9b6d744c3e8756a567e811fea6b",
         26194,
-        date(2012, 9, 1),
-        None,
     ),
 }
+
+
+@cache
+def _shared():
+    return load_shared_catalogues(bundled_path() / "registry" / "aeat")
+
+
+def _replacement_start() -> date:
+    """Return the day the Real Decreto-ley 20/2012 redaction takes effect, as its pinned source declares it."""
+    start = _shared().sources[_REPLACEMENT_SOURCE].applies_from
+    assert start is not None
+    return start
 
 
 def _catalogue() -> GovernedFactCatalogue:
@@ -100,7 +106,7 @@ def _resolve(fact_id: str, effective_date: date) -> ResolvedScalarFact:
             ("boe-liva-art-161-1997-01-01",),
         ),
         (
-            date(2012, 8, 31),
+            -timedelta(days=1),
             date(1997, 1, 1),
             {
                 "liva-art-161:recargo-rate-general": Decimal("0.04"),
@@ -111,8 +117,8 @@ def _resolve(fact_id: str, effective_date: date) -> ResolvedScalarFact:
             ("boe-liva-art-161-1997-01-01",),
         ),
         (
-            date(2012, 9, 1),
-            date(2012, 9, 1),
+            timedelta(0),
+            None,
             {
                 "liva-art-161:recargo-rate-general": Decimal("0.052"),
                 "liva-art-161:recargo-rate-reducido": Decimal("0.014"),
@@ -124,8 +130,16 @@ def _resolve(fact_id: str, effective_date: date) -> ResolvedScalarFact:
     ),
 )
 def test_equivalence_surcharge_rates_resolve_from_their_exact_boe_legal_window(
-    effective_date: date, variant_start: date, values: dict[str, Decimal], source_refs: tuple[str, ...]
+    effective_date: date | timedelta,
+    variant_start: date | None,
+    values: dict[str, Decimal],
+    source_refs: tuple[str, ...],
 ) -> None:
+    """A timedelta is an offset from the day the 2012 redaction takes effect, which its source pins."""
+    if isinstance(effective_date, timedelta):
+        effective_date = _replacement_start() + effective_date
+    if variant_start is None:
+        variant_start = _replacement_start()
     for fact_id, value in values.items():
         resolved = _resolve(fact_id, effective_date)
 
@@ -188,8 +202,8 @@ def test_each_rate_variant_is_bounded_by_its_exact_boe_redaction_window() -> Non
             source = shared.sources[rate_source_ref]
             assert variant.valid_from == source.applies_from
             assert variant.valid_to == source.applies_to
-            if variant.valid_from == date(2012, 9, 1):
-                assert "boe-rdl-20-2012-art-23-2012-09-01" in variant.source_refs
+            if variant.valid_from == _replacement_start():
+                assert _REPLACEMENT_SOURCE in variant.source_refs
 
 
 def test_equivalence_surcharge_rates_cite_hash_pinned_boe_redactions() -> None:
@@ -197,12 +211,22 @@ def test_equivalence_surcharge_rates_cite_hash_pinned_boe_redactions() -> None:
     shared = load_shared_catalogues(source_root / "registry" / "aeat")
     catalogue = _catalogue()
 
-    for source_ref, (sha256, byte_count, applies_from, applies_to) in _SOURCES.items():
+    for source_ref, (sha256, byte_count) in _SOURCES.items():
         source = shared.sources[source_ref]
         assert source.sha256 == sha256
         assert source.bytes == byte_count
-        assert source.applies_from == applies_from
-        assert source.applies_to == applies_to
+    assert {
+        source_ref: (
+            None if source.applies_from is None else source.applies_from.isoformat(),
+            None if source.applies_to is None else source.applies_to.isoformat(),
+        )
+        for source_ref, source in ((ref, shared.sources[ref]) for ref in _SOURCES)
+    } == {
+        "boe-liva-art-161-1993-01-01": ("1993-01-01", "1996-12-31"),
+        "boe-liva-art-161-1997-01-01": ("1997-01-01", "2012-08-31"),
+        "boe-liva-art-161-2012-07-15": ("2012-09-01", None),
+        _REPLACEMENT_SOURCE: ("2012-09-01", None),
+    }
     assert (
         governed_fact_catalogue_failures(
             catalogue,

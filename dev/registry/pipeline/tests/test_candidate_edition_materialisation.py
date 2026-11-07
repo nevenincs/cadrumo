@@ -19,6 +19,11 @@ import rtoml
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    open_ended_revision,
+    revision_covering,
+    supported_authored_exercises,
+)
 
 from ...compiler.edition_materialisation import materialise_edition
 from ...compiler.loader import load_modelo_directory
@@ -28,11 +33,13 @@ from ..published_edition_staging import supporting_modelos
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _INHERITED_MODELO = "390"
-_INHERITING_REVISION = "2023"
-_DECLARING_REVISION = "2022"
+# The oldest supported edition declares the link; the edition after it inherits it.
+_DECLARING_EXERCISE, _INHERITING_EXERCISE = supported_authored_exercises(_INHERITED_MODELO)[:2]
+_INHERITING_REVISION = str(revision_covering(_INHERITED_MODELO, _INHERITING_EXERCISE).id)
+_DECLARING_REVISION = str(revision_covering(_INHERITED_MODELO, _DECLARING_EXERCISE).id)
 _INHERITED_LINK = "modelo-390-approval"
 _STORAGE_ONLY_MODELO = "184"
-_STORAGE_ONLY_REVISION = "2025-y-siguientes"
+_STORAGE_ONLY_REVISION = str(open_ended_revision(_STORAGE_ONLY_MODELO).id)
 
 
 def _stage(candidate_root: Path, *, modelo: str, revision: str) -> Path:

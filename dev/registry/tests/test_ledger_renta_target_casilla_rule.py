@@ -22,10 +22,12 @@ from cadrumo.domain.calculations.registry.ledger_renta_income_bindings import (
     renta_income_target_casilla,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_YEARS = (2022, 2023, 2024, 2025, 2026)
+_YEARS = filing_year_envelope().years
+_YEAR = filing_year_envelope().horizon
 _COORDINATES = tuple(("100", year, "0A") for year in _YEARS) + tuple(
     (modelo, year, "1T") for modelo in ("130", "131") for year in _YEARS
 )
@@ -85,19 +87,19 @@ def test_the_published_targets_are_the_boxes_the_forms_print(year: int) -> None:
     ],
 )
 def test_a_gastos_binding_aimed_at_a_box_not_bound_to_it_is_refused(target: str) -> None:
-    revision = _retargeted(_revision("100", 2025, "0A"), "renta-ledger-expense-0183-deductible", target)
+    revision = _retargeted(_revision("100", _YEAR, "0A"), "renta-ledger-expense-0183-deductible", target)
     assert any(target in failure for failure in ledger_renta_gastos_estimacion_directa_target_failures(revision))
 
 
 def test_an_income_binding_aimed_at_a_modulos_computed_box_is_refused() -> None:
-    revision = _revision("131", 2025, "1T")
+    revision = _revision("131", _YEAR, "1T")
     binding = next(item for item in revision.bindings if isinstance(item.provider, LedgerRentaIncomeProvider))
     defective = _retargeted(revision, binding.id, "01")
     assert any("'01'" in failure for failure in ledger_renta_income_target_failures(defective))
 
 
 def test_the_modelo_130_retencion_binding_may_share_the_income_box() -> None:
-    revision = _revision("130", 2025, "1T")
+    revision = _revision("130", _YEAR, "1T")
     shared = [
         binding.id
         for binding in revision.bindings

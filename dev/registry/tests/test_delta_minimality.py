@@ -30,6 +30,7 @@ from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageO
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ..analysis.corpus import bundled_modelo_ids
 from ..analysis.delta_minimality import (
@@ -58,10 +59,11 @@ from ..compiler.loader import load_modelo_directory
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 #: A real pair of adjacent editions that both carry a completeness manifest and
-#: share lineage-bearing rows, every one of them overridden by the successor.
+#: share lineage-bearing rows, every one of them overridden by the successor. They
+#: are the second and third editions the registry authors for the modelo, after
+#: the root edition that states the rows.
 _MODELO = "131"
-_PREDECESSOR = "2024"
-_SUCCESSOR = "2025"
+_ROOT, _PREDECESSOR, _SUCCESSOR, *_ = (str(revision.id) for revision in authored_revisions(_MODELO))
 
 #: One real row of that pair, whose 2025 override states nothing but the legal
 #: references that cite the orden approving the 2025 edition.
@@ -70,19 +72,18 @@ _ROW = "modulos-epigrafe"
 #: The authored text the copies remove, each asserted present before removal so
 #: a corpus edit retires the proof loudly rather than silently weakening it.
 _OVERRIDE = (
-    '[[revisions."2025".casilla_overrides]]\n'
-    'selector = { revision = "2024", id = "modulos-epigrafe" }\n'
+    f'[[revisions."{_SUCCESSOR}".casilla_overrides]]\n'
+    f'selector = {{ revision = "{_PREDECESSOR}", id = "modulos-epigrafe" }}\n'
     'fields = { legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4"] }\n'
     "removed_fields = []\n\n"
 )
-_ROOT = "2019-2023"
-_ROOT_NEXT_ROW = '[[revisions."2019-2023".casillas]]\nid = "modulos-1-unidades"'
+_ROOT_NEXT_ROW = f'[[revisions."{_ROOT}".casillas]]\nid = "modulos-1-unidades"'
 _ROOT_LEGAL_REFS = (
     f'legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:art-4", "orden-hfp-1172-2022:art-4"]\n\n{_ROOT_NEXT_ROW}'
 )
 _NEXT_OVERRIDE = (
-    'removed_fields = []\n\n[[revisions."2024".casilla_overrides]]\n'
-    'selector = { revision = "2019-2023", id = "modulos-1-unidades" }'
+    f'removed_fields = []\n\n[[revisions."{_PREDECESSOR}".casilla_overrides]]\n'
+    f'selector = {{ revision = "{_ROOT}", id = "modulos-1-unidades" }}'
 )
 _PREDECESSOR_LEGAL_REFS = (
     f'continuidad_origin = "grounded", legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:art-4"]}}\n'
@@ -567,9 +568,9 @@ def test_editions_declaring_no_predecessor_are_roots_and_are_not_judged(
 #: casilla from its storage baseline, followed by an edition that inherits from
 #: it by lineage. The storage edition authors no casilla of its own on disk.
 _STORAGE_MODELO = "038"
-_STORAGE_BASELINE = "2022-hasta-2024-05"
-_STORAGE_EDITION = "2024-desde-06"
-_LINEAGE_EDITION = "2025-y-siguientes"
+_STORAGE_BASELINE, _STORAGE_EDITION, _LINEAGE_EDITION, *_ = (
+    str(revision.id) for revision in authored_revisions(_STORAGE_MODELO)
+)
 _REUSED_ROW = "decl.ejercicio"
 _OVERRIDDEN_ROW = "decl.tipo-declaracion"
 _AUTHORED_ROW = "decl.planted-sin-continuidad"

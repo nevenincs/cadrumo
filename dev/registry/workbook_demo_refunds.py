@@ -16,6 +16,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 
 from .compiler.authority import compiled_bundled_authority
+from .workbook_demo_cases import newest_historical_year, template_edition
 from .workbook_template_source import load_workbook_template_source
 
 
@@ -43,24 +44,20 @@ def refund_inputs(year: int, *, historical: bool = False) -> OperatorInputs:
 
 
 def build_historical_refund_plan(
-    *, year: int = 2018
+    *, year: int | None = None
 ) -> tuple[WorkbookTemplateSource, SheetExportPlan[SheetTemplatePreviewMetadata]]:
     """Build an evidenced historical example without widening filing support."""
-    editions = {
-        2010: ("2009-2011-junio", "aeat-dr-308-2009", "3T"),
-        2015: ("2011-julio-2015", "aeat-dr-308-2011-july", "0A"),
-        2018: ("2016-2018", "aeat-dr-308-2016", "0A"),
-    }
-    revision_id, source_ref, period = editions[year]
+    year = newest_historical_year("308") if year is None else year
+    edition = template_edition("308", year)
     source = load_workbook_template_source(
         "308",
-        revision_id=revision_id,
-        source_ref=source_ref,
+        revision_id=edition.revision_id,
+        source_ref=edition.source_ref,
         preview_year=year,
-        preview_period=period,
+        preview_period=edition.period,
     )
     inputs = refund_inputs(year, historical=True)
-    if year in (2010, 2015):
+    if not any(str(item.id) == "decl.nombre" for item in source.revision.casillas):
         inputs = OperatorInputs(
             values=(
                 *(

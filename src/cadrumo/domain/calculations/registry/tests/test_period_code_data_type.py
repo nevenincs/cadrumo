@@ -1,7 +1,7 @@
-"""Roundtrip tests for the `period_code` data_type and `PeriodCode` alias.
+"""Roundtrip tests for the `period_code` data_type.
 
 The `period_code` variant on `CasillaDefinition.data_type` plus the
-`PeriodCode` `Annotated` alias on the schema module form the
+`validate_period_code` validator on the schema module form the
 canonical filing-period validation surface for the registry
 boundary. Period tokens span six concrete forms documented in the
 schema-hardening fiscal-period inventory: quarterly (`1T`-`4T`),
@@ -11,17 +11,19 @@ OSS-quarter (`EXT-1T`-`EXT-4T`), and event (`EVENT-N`).
 
 from __future__ import annotations
 
+from typing import Annotated
+
 import pytest
-from pydantic import TypeAdapter, ValidationError
+from pydantic import BeforeValidator, TypeAdapter, ValidationError
 
 from ..errors import RegistryValidationError
-from ..schema_scalars import PeriodCode, validate_period_code
+from ..schema_scalars import validate_period_code
 from ..schema_surfaces import CasillaDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-_PERIOD_ADAPTER: TypeAdapter[str] = TypeAdapter(PeriodCode)
+_PERIOD_ADAPTER: TypeAdapter[str] = TypeAdapter(Annotated[str, BeforeValidator(validate_period_code)])
 
 
 def _casilla_with(data_type: str) -> CasillaDefinition:
@@ -39,7 +41,7 @@ def _casilla_with(data_type: str) -> CasillaDefinition:
 
 
 class TestPeriodCodeAccepts:
-    """`PeriodCode` accepts every documented period-token form."""
+    """The period_code validator accepts every documented period-token form."""
 
     def test_valid_tokens_accepted(self) -> None:
         cases = (
@@ -78,7 +80,7 @@ class TestPeriodCodeAccepts:
 
 
 class TestPeriodCodeRejects:
-    """`PeriodCode` rejects malformed and unsupported period tokens."""
+    """The period_code validator rejects malformed and unsupported period tokens."""
 
     def test_invalid_inputs_rejected_through_adapter(self) -> None:
         cases: tuple[object, ...] = (

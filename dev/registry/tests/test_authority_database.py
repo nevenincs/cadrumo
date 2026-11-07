@@ -36,6 +36,7 @@ from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import (
     synthetic_legal_identity,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.user_profile.schema import ProfileSchemaDefinition
 from dev.paths import DEFAULT_AUTHORITY_ROOT, REPO_ROOT
 
@@ -268,11 +269,11 @@ def test_revision_context_selects_directory_before_one_complete_revision(tmp_pat
     try:
         with authority.operation() as operation:
             directory = operation.modelo_directory("130")
-            selected = operation.revision_for_context("130", filing_year=2025, period="0A")
+            selected = operation.revision_for_context("130", filing_year=filing_year_envelope().horizon, period="0A")
             assert str(selected.id) == str(directory.revisions[0].id)
             snapshot = operation.snapshot(
                 "130",
-                filing_year=2025,
+                filing_year=filing_year_envelope().horizon,
                 period="0A",
                 grade=RegistryAuthorityGrade.CALCULATION,
             )
@@ -288,7 +289,7 @@ def test_operation_reuses_generation_scoped_fact_resolutions(tmp_path: Path) -> 
     query = MappingFactQuery(
         fact_id="spanish-tax-identifier-format",
         date_axis=DateAxis.FILING_PERIOD,
-        effective_date=date(2025, 1, 1),
+        effective_date=date(filing_year_envelope().horizon, 1, 1),
     )
     try:
         with authority.operation() as first_operation:

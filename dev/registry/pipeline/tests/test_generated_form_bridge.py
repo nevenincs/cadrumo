@@ -11,6 +11,7 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision, revision_covering
 
 from ...compiler.authority import compile_validated_authority
 from ...form_layout.cli import synchronise_form_layouts
@@ -21,7 +22,11 @@ from ..tree_publication_contracts import GeneratedExportTransactionPaths
 
 pytestmark = [pytest.mark.hex_core]
 
-_REVISION = "2025-y-siguientes"
+_OPEN_ENDED = open_ended_revision("190")
+_REVISION = str(_OPEN_ENDED.id)
+_EXERCISE = _OPEN_ENDED.valid_from.year
+# Any other authored edition stands for the target the reviewed repair does not name.
+_OTHER_REVISION = str(revision_covering("190", _EXERCISE - 1).id)
 _SOURCE = "aeat-dr-190-2025"
 _SOURCE_SHA = "a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d"
 _OLD_MANIFEST_SHA = "c686e3d09a298c32d8025ef9c98f26455548be20d6796df8df05c8509a4d222a"
@@ -36,8 +41,8 @@ def test_m190_bridge_refuses_an_unreviewed_repair_before_source_access(tmp_path:
             registry_root=tmp_path / "absent-live",
             candidate_root=tmp_path / "absent-candidate",
             modelo="191" if defect == "modelo" else "190",
-            revision="2024" if defect == "revision" else _REVISION,
-            source_ref="aeat-dr-190-2024" if defect == "source" else _SOURCE,
+            revision=_OTHER_REVISION if defect == "revision" else _REVISION,
+            source_ref=f"aeat-dr-190-{_EXERCISE - 1}" if defect == "source" else _SOURCE,
             source_sha256="0" * 64 if defect == "source_sha" else _SOURCE_SHA,
             expected_manifest_sha256="0" * 64 if defect == "manifest" else _OLD_MANIFEST_SHA,
         )
@@ -118,7 +123,7 @@ def test_m190_republication_preserves_other_authority_and_closes_the_generated_f
     )
     monkeypatch.setattr(cli, "record_drift_dispositions", lambda: (disposition,))
     prepared_old = cli.prepare_generated_tree_invocation(
-        cli.GeneratedTreeInvocation("190", _REVISION, _SOURCE, 2025, "0A", _OLD_MANIFEST_SHA),
+        cli.GeneratedTreeInvocation("190", _REVISION, _SOURCE, _EXERCISE, "0A", _OLD_MANIFEST_SHA),
         tmp_path / "corrupt-pin-candidate",
         authority=source_authority(),
     )
@@ -138,12 +143,12 @@ def test_m190_republication_preserves_other_authority_and_closes_the_generated_f
         assert sha256(manifest.read_bytes()).hexdigest() == _OLD_MANIFEST_SHA
     finally:
         old_form.write_bytes(old_form_bytes)
-    cli.republish_target_command("190", _REVISION, _SOURCE, 2025, "0A", _OLD_MANIFEST_SHA)
+    cli.republish_target_command("190", _REVISION, _SOURCE, _EXERCISE, "0A", _OLD_MANIFEST_SHA)
 
     assert old_form.read_bytes() != old_form_bytes
     assert synchronise_form_layouts(registry_root, source_root, modelos=("190",), check=True) == ([], [])
     authority = source_authority()
-    assert cli.target_currentness("190", _REVISION, _SOURCE, 2025, "0A", authority=authority).state is (
+    assert cli.target_currentness("190", _REVISION, _SOURCE, _EXERCISE, "0A", authority=authority).state is (
         cli.TargetCurrentnessState.CURRENT
     )
     assert all((registry_root / path).read_bytes() == data for path, data in other_before.items())
@@ -151,7 +156,7 @@ def test_m190_republication_preserves_other_authority_and_closes_the_generated_f
         target_root=registry_root, modelo="190", revision_id=_REVISION
     ).journal.exists()
     prepared = cli.prepare_generated_tree_invocation(
-        cli.GeneratedTreeInvocation("190", _REVISION, _SOURCE, 2025, "0A"),
+        cli.GeneratedTreeInvocation("190", _REVISION, _SOURCE, _EXERCISE, "0A"),
         tmp_path / "reproduced",
         authority=authority,
     )

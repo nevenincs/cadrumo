@@ -13,6 +13,7 @@ from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.filing.errors import FilingExportValidationError
 
@@ -41,7 +42,9 @@ def _sheet_rows(sheet_name: str) -> list[tuple[object, ...]]:
 
 
 def _layout(revision: str, period: str):
-    snapshot = published_snapshot("369", filing_year=2026, period=period, revision_id=revision)
+    snapshot = published_snapshot(
+        "369", filing_year=filing_year_envelope().horizon, period=period, revision_id=revision
+    )
     [layout] = snapshot.revision.export_layouts
     return layout
 
@@ -114,7 +117,7 @@ def test_a_declarant_envelope_refuses_a_period_its_design_does_not_list(token: s
             envelope.prefix_fields,
             prefix_extent=envelope.prefix_extent,
             modelo=Modelo("369"),
-            period=Period.from_year_and_code(2026, token),
+            period=Period.from_year_and_code(filing_year_envelope().horizon, token),
             product_software_identity=None,
             declarant_tax_id="Y0001006P",
             envelope=envelope,

@@ -36,6 +36,12 @@ from cadrumo.domain.calculations.registry.errors import (
     RegistryValidationError,
 )
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    open_ended_revision,
+    revision_covering,
+)
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.loader import (
@@ -76,13 +82,19 @@ _GENERATED_TREES = generated_export_trees()
 _RECORD_DRIFT_DISPOSITIONS = {item.subject: item for item in record_drift_dispositions()}
 _RENDER_REFUSAL_DISPOSITIONS = {item.subject: item for item in render_refusal_dispositions()}
 
+# Modelo 232's early edition and modelo 341's closed historical range both lie below the support floor.
+_M232_EARLY = authored_revisions("232")[0]
+_M341_HISTORICAL = authored_revisions("341")[0]
+_M341_FIRST_YEAR = _M341_HISTORICAL.valid_from.year
+
 
 def test_repaired_historical_m232_tree_is_enrolled_with_its_official_frame() -> None:
-    tree = next(item for item in _GENERATED_TREES if str(item) == "m232-2016-2017")
+    early_year = _M232_EARLY.valid_from.year
+    tree = next(item for item in _GENERATED_TREES if str(item) == f"m232-{_M232_EARLY.id}")
     assert (tree.source_ref, tree.epoch, tree.filing_year, tree.period, tree.historical_static) == (
-        "aeat-dr-232-2016",
-        "2016",
-        2016,
+        f"aeat-dr-232-{early_year}",
+        str(early_year),
+        early_year,
         "0A",
         True,
     )
@@ -90,15 +102,21 @@ def test_repaired_historical_m232_tree_is_enrolled_with_its_official_frame() -> 
 
 def test_historical_m341_closed_year_range_is_enrolled_without_filing_support() -> None:
     """A closed range below the support floor remains a source-proven static tree."""
-    tree = next(item for item in _GENERATED_TREES if str(item) == "m341-2005-2015")
+    tree = next(item for item in _GENERATED_TREES if str(item) == f"m341-{_M341_HISTORICAL.id}")
     assert tree.historical_static
-    assert (tree.source_ref, tree.filing_year, tree.period) == ("aeat-dr-341-2005-2015", 2005, "2T")
+    assert (tree.source_ref, tree.filing_year, tree.period) == (
+        f"aeat-dr-341-{_M341_HISTORICAL.id}",
+        _M341_FIRST_YEAR,
+        "2T",
+    )
     authority = compiled_bundled_authority()
     assert authority.catalogues.supported_filing_years is not None
     assert tree.filing_year < authority.catalogues.supported_filing_years.floor
-    with pytest.raises(RecordDesignFrameUnavailableError, match=r"filing_year=2005.*period='1T'.*eligible=\(\)"):
+    with pytest.raises(
+        RecordDesignFrameUnavailableError, match=rf"filing_year={_M341_FIRST_YEAR}.*period='1T'.*eligible=\(\)"
+    ):
         select_revision_record_design_source(
-            authority, modelo=tree.modelo, revision=tree.revision, filing_year=2005, period="1T"
+            authority, modelo=tree.modelo, revision=tree.revision, filing_year=_M341_FIRST_YEAR, period="1T"
         )
 
 
@@ -164,7 +182,7 @@ def test_every_committed_manifest_attests_the_current_loader_semantics() -> None
 
 def test_a_manifest_attesting_other_loader_semantics_is_named(tmp_path: Path) -> None:
     """Detector: a tree whose manifest attests a different loader digest is reported by name."""
-    tree = next(item for item in _GENERATED_TREES if str(item) == "m347-2025-y-siguientes")
+    tree = next(item for item in _GENERATED_TREES if str(item) == f"m347-{open_ended_revision('347').id}")
     layout = _published_layout(tree, compiled_bundled_authority())
     stale_root = tmp_path / "stale" / "export"
     shutil.copytree(tree.committed, stale_root)
@@ -185,10 +203,14 @@ def test_a_manifest_attesting_other_loader_semantics_is_named(tmp_path: Path) ->
 
 def test_m390_isolation_excludes_both_export_authorities_and_keeps_required_support(tmp_path: Path) -> None:
     """The enrolled-tree harness renders without copying either export authority."""
-    tree = next(item for item in _GENERATED_TREES if item.modelo == "390" and item.revision == "2022")
+    tree = next(
+        item
+        for item in _GENERATED_TREES
+        if item.modelo == "390" and item.revision == str(revision_covering("390", filing_year_envelope().floor).id)
+    )
 
     registry_root = isolated_authority(tree, tmp_path)
-    revision_root = registry_root / "modelos" / "390" / "revisions" / "2022"
+    revision_root = registry_root / "modelos" / "390" / "revisions" / tree.revision
     continuity_metadata_modelo_root = stage_continuity_metadata(
         bundled_path("registry", "aeat", "modelos", tree.modelo),
         tmp_path,
@@ -423,7 +445,7 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
             ("m184-2023.entidad.f008", "E", "m184-2023.socio.f008", "S"),
         ),
         (
-            next(item for item in _GENERATED_TREES if str(item) == "m184-2025-y-siguientes"),
+            next(item for item in _GENERATED_TREES if str(item) == f"m184-{open_ended_revision('184').id}"),
             ("m184-2025.entidad.f008", "E", "m184-2025.socio.f008", "S"),
         ),
     ),
@@ -486,10 +508,15 @@ def test_target_only_continuity_metadata_requires_real_declared_m303_siblings(tm
     absent, missing, or structurally mismatched predecessor declarations still
     refuse through the ordinary strict-continuity validator.
     """
-    tree = next(item for item in _GENERATED_TREES if item.modelo == "303" and item.revision == "2026-y-siguientes")
+    tree = next(
+        item
+        for item in _GENERATED_TREES
+        if item.modelo == "303" and item.revision == str(open_ended_revision("303").id)
+    )
     declared_revisions = compiled_bundled_authority().validate_modelo(tree.modelo).revisions
     expected_siblings = {str(revision_id) for revision_id in declared_revisions if str(revision_id) != tree.revision}
-    assert {"2022", "2023"} <= expected_siblings, "the missing and mismatched predecessor controls must be real"
+    first, second = (str(revision.id) for revision in authored_revisions(tree.modelo)[:2])
+    assert {first, second} <= expected_siblings, "the missing and mismatched predecessor controls must be real"
     joined, semantic_map, transport, render_profile, evidence = isolated_authorities(tree)
     candidate_root = tmp_path / "candidate"
     registry_root = isolated_authority(tree, candidate_root)
@@ -542,16 +569,16 @@ def test_target_only_continuity_metadata_requires_real_declared_m303_siblings(tm
 
     missing_metadata_root = tmp_path / "missing-metadata" / tree.modelo
     shutil.copytree(metadata_modelo_root, missing_metadata_root)
-    shutil.rmtree(missing_metadata_root / "revisions" / "2022")
-    with pytest.raises(RegistryValidationError, match="edition '2023' has no predecessor edition to continue"):
+    shutil.rmtree(missing_metadata_root / "revisions" / first)
+    with pytest.raises(RegistryValidationError, match=f"edition '{second}' has no predecessor edition to continue"):
         validate(missing_metadata_root)
 
     mismatched_metadata_root = tmp_path / "mismatched-metadata" / tree.modelo
     shutil.copytree(metadata_modelo_root, mismatched_metadata_root)
-    (mismatched_metadata_root / "revisions" / "2022").rename(
-        mismatched_metadata_root / "revisions" / "mismatched-2022",
+    (mismatched_metadata_root / "revisions" / first).rename(
+        mismatched_metadata_root / "revisions" / f"mismatched-{first}",
     )
-    with pytest.raises(RegistryLoadError, match="declares '2022', expected 'mismatched-2022'"):
+    with pytest.raises(RegistryLoadError, match=f"declares '{first}', expected 'mismatched-{first}'"):
         validate(mismatched_metadata_root)
 
 

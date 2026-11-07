@@ -109,12 +109,6 @@ still pre-answers keep their stored values: neither can turn an unanswered
 question into a not-applicable verdict.
 """
 
-PAYER_FACT_PATHS_CLEARED_FROM_V6: Final[frozenset[str]] = frozenset(_DEFAULTED_VALUES_FROM_V6)
-"""Schema-6 payer-fact paths whose stored default is not a proven answer."""
-
-PAYER_FACT_PATHS_CLEARED_FROM_V7: Final[frozenset[str]] = frozenset(_DEFAULTED_VALUES_FROM_V7)
-"""Schema-7 payer-fact paths whose stored default is not a proven answer."""
-
 _DEFAULTED_VALUES_BY_TRANSITION: Final[Mapping[int, Mapping[str, object]]] = MappingProxyType(
     {
         6: _DEFAULTED_VALUES_FROM_V6,
@@ -348,8 +342,6 @@ def pending_cleared_payer_fact_paths(
 __all__ = [
     "MIGRATED_PROFILE_SCHEMA_VERSION",
     "PATHS_INTRODUCED_IN_V7",
-    "PAYER_FACT_PATHS_CLEARED_FROM_V6",
-    "PAYER_FACT_PATHS_CLEARED_FROM_V7",
     "SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS",
     "ProfileSchemaMigration",
     "cleared_payer_fact_paths_between",

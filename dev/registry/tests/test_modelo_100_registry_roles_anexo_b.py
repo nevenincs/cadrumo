@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import single_exercise_editions
+
 from .modelo_100_registry_support import (
     ANEXO_B_AAV_AMOUNT_ROWS,
     ANEXO_B_AAV_SECTION,
@@ -44,6 +46,9 @@ from .modelo_100_registry_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+#: Every exercise the registry authors a Modelo 100 edition for, oldest first.
+_ALL_EXERCISES = single_exercise_editions("100")
 
 
 def test_modelo_100_anexo_b_importe_satisfecho_role_is_not_rental_specific() -> None:
@@ -91,7 +96,7 @@ def test_modelo_100_anexo_b_importe_anual_satisfecho_role_is_not_service_fee() -
 
 
 def test_modelo_100_anexo_b_other_service_amount_role_is_otros_gastos_importe_anual() -> None:
-    for filing_year in (2024, 2025):
+    for filing_year in _ALL_EXERCISES[-2:]:
         revision = modelo_100_revision(filing_year)
         casilla = next(casilla for casilla in revision.casillas if casilla.id == "2140")
 
@@ -128,7 +133,7 @@ def test_modelo_100_anexo_b_account_holder_role_is_cm_vivienda_habitual() -> Non
 
 
 def test_modelo_100_anexo_b_baleares_birth_roles_are_spanish_and_label_grounded() -> None:
-    for filing_year in (2023, 2024, 2025):
+    for filing_year in _ALL_EXERCISES[-3:]:
         revision = modelo_100_revision(filing_year)
         casillas_by_id = {
             casilla.id: casilla for casilla in revision.casillas if casilla.id in ANEXO_B_BALEARES_NACIMIENTO_ROWS
@@ -236,7 +241,7 @@ def test_modelo_100_anexo_b_investment_total_role_is_total_by_deduction_type() -
 
 
 def test_modelo_100_anexo_b_insurance_premium_role_is_credit_insurance() -> None:
-    for filing_year in range(2020, 2026):
+    for filing_year in _ALL_EXERCISES:
         revision = modelo_100_revision(filing_year)
         checked = [
             casilla
@@ -255,7 +260,7 @@ def test_modelo_100_anexo_b_insurance_premium_role_is_credit_insurance() -> None
 
 
 def test_modelo_100_anexo_b_insurance_premium_total_role_is_spanish_eps_total() -> None:
-    for filing_year in range(2020, 2026):
+    for filing_year in _ALL_EXERCISES:
         revision = modelo_100_revision(filing_year)
         checked = [
             casilla

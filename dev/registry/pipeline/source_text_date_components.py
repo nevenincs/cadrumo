@@ -19,9 +19,9 @@ _MONTH_280 = "e31979d9f95448f3da3448d8386cf8c6647966903a13e62d62bafb58344fd9f1"
 _DAY_280_OPEN = "3e9fe00ae3ba273565784488f7b337509a083464c6449b11c6da71d380558ed8"
 _DAY_280_CLOSE = "86eccf1d751c6451dafbacabdabc20db8f412889deaef86dd752b4b4e8a3a539"
 
-_PINS: Final[dict[tuple[str, str], tuple[str, str, tuple[tuple[str, str, tuple[tuple[int, int, str], ...]], ...]]]] = {
-    ("165", "2016"): (
-        "aeat-dr-165-2016-2022",
+#: Reviewed text dates keyed by (modelo, official design): (design SHA-256, dates).
+_PINS: Final[dict[tuple[str, str], tuple[str, tuple[tuple[str, str, tuple[tuple[int, int, str], ...]], ...]]]] = {
+    ("165", "aeat-dr-165-2016-2022"): (
         "2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5",
         (
             (
@@ -36,8 +36,7 @@ _PINS: Final[dict[tuple[str, str], tuple[str, str, tuple[tuple[str, str, tuple[t
             ),
         ),
     ),
-    ("165", "2023"): (
-        "aeat-dr-165-2026",
+    ("165", "aeat-dr-165-2026"): (
         "bcc94b07d695703cfa66a3d8cbbb176841906ebf8cef57e2acd3e3fee452a263",
         (
             (
@@ -52,8 +51,7 @@ _PINS: Final[dict[tuple[str, str], tuple[str, str, tuple[tuple[str, str, tuple[t
             ),
         ),
     ),
-    ("280", "2022"): (
-        "aeat-dr-280-2022",
+    ("280", "aeat-dr-280-2022"): (
         "45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701",
         (
             (
@@ -78,7 +76,7 @@ _DATE_POLICIES: Final[tuple[ExportValuePolicy, ...]] = (
 
 
 def text_date_component_policy_for(
-    joined_field: JoinedRecordDesignField, *, modelo: str, epoch: str, source_ref: str, source_sha256: str
+    joined_field: JoinedRecordDesignField, *, modelo: str, source_ref: str, source_sha256: str
 ) -> ExportValuePolicy | None:
     """Recognise only the six reviewed dates' exact source leaves and casillas."""
     field = joined_field.parser_field
@@ -86,8 +84,8 @@ def text_date_component_policy_for(
     field_id = str(entry.export_field_id)
     if not (modelo in {"165", "280"} and "-fecha-" in field_id and "-component-" in field_id):
         return None
-    pin = _PINS.get((modelo, epoch))
-    pin = _require_text_date_source_identity(pin, source_ref, source_sha256)
+    pin = _PINS.get((modelo, source_ref))
+    pin = _require_text_date_source_identity(pin, source_sha256)
     matched = _reviewed_text_date_part(pin, field_id)
     if matched is None:
         raise RegistryValidationError("text date component field identity is unreviewed")
@@ -102,22 +100,21 @@ def text_date_component_policy_for(
 
 
 def _require_text_date_source_identity(
-    pin: tuple[str, str, tuple[tuple[str, str, tuple[tuple[int, int, str], ...]], ...]] | None,
-    source_ref: str,
+    pin: tuple[str, tuple[tuple[str, str, tuple[tuple[int, int, str], ...]], ...]] | None,
     source_sha256: str,
-) -> tuple[str, str, tuple[tuple[str, str, tuple[tuple[int, int, str], ...]], ...]]:
-    if pin is None or (source_ref, source_sha256) != pin[:2]:
+) -> tuple[str, tuple[tuple[str, str, tuple[tuple[int, int, str], ...]], ...]]:
+    if pin is None or source_sha256 != pin[0]:
         raise RegistryValidationError("text date component source identity is unreviewed or stale")
     return pin
 
 
 def _reviewed_text_date_part(
-    pin: tuple[str, str, tuple[tuple[str, str, tuple[tuple[int, int, str], ...]], ...]], field_id: str
+    pin: tuple[str, tuple[tuple[str, str, tuple[tuple[int, int, str], ...]], ...]], field_id: str
 ) -> tuple[str, int, int, int, str] | None:
     return next(
         (
             (casilla_id, index, row, offset, digest)
-            for prefix, casilla_id, parts in pin[2]
+            for prefix, casilla_id, parts in pin[1]
             for index, (row, offset, digest) in enumerate(parts)
             if field_id == f"{prefix}-component-{offset}"
         ),

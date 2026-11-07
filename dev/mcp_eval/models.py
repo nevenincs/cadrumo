@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from cadrumo.core.filing_year import FilingYear
 from cadrumo.core.json_contract import EnvelopeStatus
 from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 
@@ -72,7 +73,7 @@ class GoldenScenario(BaseModel):
 
     name: str = Field(min_length=1)
     modelo: str = Field(min_length=1)
-    filing_year: int = Field(ge=2000, le=2100)
+    filing_year: FilingYear
     period: str = Field(min_length=1)
     expected_trajectory: tuple[str, ...] = Field(min_length=1)
     provenance_required: bool = True

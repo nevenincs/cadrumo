@@ -20,12 +20,15 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Modelo
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
 from cadrumo.domain.calculations.registry.temporal import revision_temporal_resolution, select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ..conformance.registry_schema_support import committed_modelo
 from .edition_corpus_text_support import corpus_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+# The multi-exercise edition on the earlier design and the single-exercise edition that follows it.
+_DESIGN_REVISION, _LATER_REVISION = (str(revision.id) for revision in authored_revisions("182")[:2])
 _DESIGN = "aeat-dr-182-2021-2023"
 _NEXT_DESIGN = "aeat-dr-182-2024"
 # Record fields the casillas and donor-row bindings stand for (tipo 1 EJERCICIO,
@@ -73,7 +76,7 @@ def test_each_design_year_is_authored_on_its_own_design() -> None:
         resolution = revision_temporal_resolution(
             revision, filing_year=year, period="0A", support=catalogues.supported_filing_years
         )
-        assert revision.id == "2022-2023"
+        assert revision.id == _DESIGN_REVISION
         assert resolution.projection_direction is TemporalProjectionDirection.AUTHORED
         assert _DESIGN in revision.source_refs
         assert _NEXT_DESIGN not in revision.source_refs
@@ -84,7 +87,7 @@ def test_each_design_year_is_authored_on_its_own_design() -> None:
 
 def test_the_design_years_state_the_members_2024_states() -> None:
     later = _selected(max(_design_years()) + 1)
-    assert later.id == "2024"
+    assert later.id == _LATER_REVISION
     for year in _design_years():
         revision = _selected(year)
         assert [(c.id, c.number, c.data_type) for c in revision.casillas] == [

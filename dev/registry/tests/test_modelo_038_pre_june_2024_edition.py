@@ -19,12 +19,15 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Modelo
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
 from cadrumo.domain.calculations.registry.temporal import revision_temporal_resolution, select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ..conformance.registry_schema_support import committed_modelo
 from .edition_corpus_text_support import corpus_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+# The modelo's two oldest authored editions: the 2012 design up to the amendment, then the IRUS design from it.
+_OLD_EDITION, _NEW_EDITION = (str(revision.id) for revision in authored_revisions("038")[:2])
 _OLD_DESIGN = "aeat-dr-038-2012"
 _NEW_DESIGN = "aeat-dr-038-2024"
 
@@ -61,7 +64,7 @@ def test_every_month_before_the_amendment_is_authored_on_the_2012_design() -> No
         resolution = revision_temporal_resolution(
             revision, filing_year=year, period=period, support=catalogues.supported_filing_years
         )
-        assert revision.id == "2022-hasta-2024-05", (year, period)
+        assert revision.id == _OLD_EDITION, (year, period)
         assert resolution.projection_direction is TemporalProjectionDirection.AUTHORED
         assert _OLD_DESIGN in revision.source_refs
         assert _NEW_DESIGN not in revision.source_refs
@@ -90,7 +93,7 @@ def test_june_2024_onward_keeps_the_irus_design_and_its_own_windows() -> None:
     first = catalogues.sources[_NEW_DESIGN].applies_from
     assert first is not None
     revision = _selected(first.year, f"{first.month:02d}")
-    assert revision.id == "2024-desde-06"
+    assert revision.id == _NEW_EDITION
     assert _NEW_DESIGN in revision.source_refs
     assert _OLD_DESIGN not in revision.source_refs
     (export_link,) = [link for link in revision.application_links if link.id == "modelo-038-export"]

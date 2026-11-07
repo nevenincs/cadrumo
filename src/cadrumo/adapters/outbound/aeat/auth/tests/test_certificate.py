@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -29,10 +29,12 @@ from ..providers import CertificateContextProvisioner
 from .auth_fixtures import CERTIFICATE_INPUT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
-_VALID_NOT_BEFORE = datetime(2026, 5, 28, 14, 0, 0, tzinfo=UTC)
-_VALID_NOT_AFTER = datetime(2099, 5, 28, 14, 0, 0, tzinfo=UTC)
-_EXPIRED_NOT_BEFORE = datetime(2025, 5, 28, 14, 0, 0, tzinfo=UTC)
-_EXPIRED_NOT_AFTER = datetime(2026, 5, 27, 14, 0, 0, tzinfo=UTC)
+# The certificate loader judges expiry against the wall clock, so every window is relative to it.
+_CLOCK = datetime.now(UTC).replace(microsecond=0)
+_VALID_NOT_BEFORE = _CLOCK - timedelta(days=1)
+_VALID_NOT_AFTER = _CLOCK + timedelta(days=365 * 70)
+_EXPIRED_NOT_BEFORE = _CLOCK - timedelta(days=366)
+_EXPIRED_NOT_AFTER = _CLOCK - timedelta(days=1)
 
 
 def _build_pkcs12_bundle(

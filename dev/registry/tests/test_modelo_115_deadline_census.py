@@ -11,6 +11,7 @@ from datetime import date
 import pytest
 
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 
 from ..compiler.authority import compiled_bundled_authority
 from ..conformance.registry_schema_support import committed_modelo
@@ -19,10 +20,13 @@ from .quarterly_deadline_support import QUARTERLY_RETENCION_DEADLINES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_OPEN_ENDED_REVISION = str(open_ended_revision("115").id)
+
 
 def test_modelo_115_supported_year_deadline_census_dates_sources_and_ownership() -> None:
     modelo, _ = committed_modelo("115")
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions[_OPEN_ENDED_REVISION]
+    horizon = filing_year_envelope().horizon
     windows = {(window.filing_year, window.period.registry_token): window for window in revision.deadline_windows}
 
     assert len(revision.deadline_windows) == len(windows) == 80
@@ -35,7 +39,7 @@ def test_modelo_115_supported_year_deadline_census_dates_sources_and_ownership()
         projected = compiled_bundled_authority().deadline_windows(filing_year, modelos=("115",))
         assert len(projected) == 16
         assert {window.period.registry_token for _, _, window in projected} == expected_periods
-        assert {selected.id for _, selected, _ in projected} == {"2019-y-siguientes"}
+        assert {selected.id for _, selected, _ in projected} == {_OPEN_ENDED_REVISION}
 
         expected = {
             **{
@@ -61,7 +65,7 @@ def test_modelo_115_supported_year_deadline_census_dates_sources_and_ownership()
             assert window.opens_on == date(window.closes_on.year, window.closes_on.month, 1)
             assert window.closes_on == date.fromisoformat(close_text)
             expected_sources = {"aeat-modelo-115-guia-censal"}
-            if window.closes_on.year <= 2026:
+            if window.closes_on.year <= horizon:
                 expected_sources.add(f"aeat-calendario-contribuyente-{window.closes_on.year}")
             else:
                 # No bundled calendar covers this close, so the statutory
@@ -86,4 +90,4 @@ def test_modelo_115_supported_year_deadline_census_dates_sources_and_ownership()
         for period in monthly_periods:
             assert windows[(filing_year, period)].payment_cutoff_on is None
 
-    assert windows[(2026, "4T")].payment_cutoff_on is None
+    assert windows[(horizon, "4T")].payment_cutoff_on is None

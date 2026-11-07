@@ -17,12 +17,15 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..binding_signal.consumer_audit import python_binding_references
 from ..binding_signal.sources import collect_raw_inventory
 from ..bindings import audit, main
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_REVISION = str(filing_year_envelope().horizon)
 
 
 def _limitations(payload: dict[str, object]) -> list[dict[str, object]]:
@@ -67,19 +70,19 @@ def _modelos_root(tmp_path: Path) -> Path:
 def test_modelo_without_revisions_tree_is_named_in_the_raw_inventory(tmp_path: Path) -> None:
     """A modelo contributing no coordinate is named rather than quietly dropped."""
     modelos = _modelos_root(tmp_path)
-    (modelos / "303" / "revisions" / "2024").mkdir(parents=True)
+    (modelos / "303" / "revisions" / _REVISION).mkdir(parents=True)
     (modelos / "390").mkdir(parents=True)
 
     inventory = collect_raw_inventory(tmp_path, modelos, None)
 
     assert inventory.modelos_without_revisions == ["src/cadrumo/_data/registry/aeat/modelos/390"]
-    assert set(inventory.revisions) == {("303", "2024")}
+    assert set(inventory.revisions) == {("303", _REVISION)}
 
 
 def test_every_modelo_carrying_revisions_is_not_named_as_withheld(tmp_path: Path) -> None:
     """The modelo limitation is falsifiable: a complete corpus does not raise it."""
     modelos = _modelos_root(tmp_path)
-    (modelos / "303" / "revisions" / "2024").mkdir(parents=True)
+    (modelos / "303" / "revisions" / _REVISION).mkdir(parents=True)
 
     inventory = collect_raw_inventory(tmp_path, modelos, None)
 
@@ -93,11 +96,11 @@ def test_an_unloadable_registry_is_a_processing_error_not_a_raw_fallback(
 ) -> None:
     """Raw delta files omit inherited bindings, so a loader failure must not degrade into measuring them."""
     monkeypatch.setattr(sys, "path", list(sys.path))
-    revision = _modelos_root(tmp_path) / "303" / "revisions" / "2024"
+    revision = _modelos_root(tmp_path) / "303" / "revisions" / _REVISION
     (revision / "bindings").mkdir(parents=True)
-    (revision / "revision.toml").write_text('[revisions."2024"]\npredecessor = "none"\n', encoding="utf-8")
+    (revision / "revision.toml").write_text(f'[revisions."{_REVISION}"]\npredecessor = "none"\n', encoding="utf-8")
     (revision / "bindings" / "0001-declarations.toml").write_text(
-        '[[revisions."2024".bindings]]\nid = "modelo-303-synthetic-binding"\n',
+        f'[[revisions."{_REVISION}".bindings]]\nid = "modelo-303-synthetic-binding"\n',
         encoding="utf-8",
     )
 

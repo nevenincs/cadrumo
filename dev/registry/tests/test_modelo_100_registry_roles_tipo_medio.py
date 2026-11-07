@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from .authored_edition_support import authored_revisions
 from .modelo_100_registry_support import modelo_100_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -36,20 +37,17 @@ _AVERAGE_RATE_ROWS = {
     ),
 }
 
+_M100_EDITIONS = tuple(revision.valid_from.year for revision in authored_revisions("100"))
 #: art-63's current redaction takes effect 2021-01-01 (Ley 11/2020's sixth
-#: bracket); 2020's devengo (closes 2020-12-31) falls entirely inside the
-#: pre-amendment art-63-2015 window (2015-01-01 to 2020-12-31).
+#: bracket); the oldest authored edition's devengo (closes 2020-12-31) falls entirely
+#: inside the pre-amendment art-63-2015 window (2015-01-01 to 2020-12-31).
 _GENERAL_SCALE_ART_63_REF_BY_YEAR = {
-    2020: "ley-35-2006:art-63-2015",
-    2021: "ley-35-2006:art-63",
-    2022: "ley-35-2006:art-63",
-    2023: "ley-35-2006:art-63",
-    2024: "ley-35-2006:art-63",
-    2025: "ley-35-2006:art-63",
+    filing_year: "ley-35-2006:art-63-2015" if index == 0 else "ley-35-2006:art-63"
+    for index, filing_year in enumerate(_M100_EDITIONS)
 }
 
 
-@pytest.mark.parametrize("filing_year", [2020, 2021, 2022, 2023, 2024, 2025])
+@pytest.mark.parametrize("filing_year", _M100_EDITIONS)
 def test_modelo_100_average_rate_casillas_are_ratio_typed(filing_year: int) -> None:
     revision = modelo_100_revision(filing_year)
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in _AVERAGE_RATE_ROWS}

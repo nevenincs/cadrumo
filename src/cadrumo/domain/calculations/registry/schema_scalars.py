@@ -8,14 +8,13 @@ from collections.abc import Callable
 from decimal import Decimal
 from typing import Annotated, Literal, TypeAliasType
 
-from pydantic import BeforeValidator, Field, ValidationInfo
+from pydantic import BeforeValidator
 
 from ....core.country_code import COUNTRY_CODE_ALPHA2_PATTERN
 from ....core.decimal.coercion import coerce_decimal
 from ....core.errors.hierarchy import pydantic_validation_boundary
-from ....core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 from ....core.iban import BIC_SHAPE_RE, IBAN_SHAPE_RE, iban_mod_97, normalise_iban
-from ....core.identity.documents import TAX_ID_FORMAT_CONTEXT, IdentityError, SpanishTaxIdFormat
+from ....core.identity.documents import IdentityError, SpanishTaxIdFormat
 from ....core.identity.nif_iva import normalise_nif_iva
 from ....core.identity.tax_id import validate_spanish_tax_id
 from ....core.period import StandardPeriodCode
@@ -24,27 +23,13 @@ from ....core.spanish_postcode import (
     SPANISH_POSTCODE_PATTERN,
     SPANISH_PROVINCE_CODE_PATTERN,
 )
-from ....core.type_guards import is_object_mapping
 from .errors import RegistryValidationError
 
 __all__ = [
-    "BicString",
-    "CCAACode",
     "CalendarDate",
     "CountryCode",
     "DecimalValue",
-    "IbanString",
-    "ModeloYear",
-    "MunicipalityCode",
-    "NifIvaString",
-    "NifString",
-    "PeriodCode",
-    "PersonOrEntityName",
-    "PostalCode",
-    "ProvinceCode",
     "WorkbookCellRefStr",
-    "_validate_nif_string",
-    "coerce_modelo_year",
     "registry_scalar_value_type",
     "validate_country_code",
     "validate_iban_string",
@@ -79,70 +64,6 @@ def _validate_nif_value(value: object, tax_id_format: SpanishTaxIdFormat | None)
         raise RegistryValidationError(f"invalid NIF / NIE / CIF identifier: {detail}") from exc
 
 
-@pydantic_validation_boundary
-def _validate_nif_string(value: object, info: ValidationInfo) -> object:
-    """Validate a Spanish NIF / NIE / CIF identifier and return its canonical form.
-
-    Delegates to the shared `validate_spanish_tax_id` algorithm exposed by
-    the single `cadrumo.core.identity` facade and re-raises domain
-    `IdentityError` as `RegistryValidationError` so the schema boundary
-    surfaces identifier-format problems through its established error type.
-    """
-    context = info.context
-    tax_id_format: SpanishTaxIdFormat | None = None
-    if is_object_mapping(context):
-        candidate = context.get(TAX_ID_FORMAT_CONTEXT)
-        if isinstance(candidate, SpanishTaxIdFormat):
-            tax_id_format = candidate
-    return _validate_nif_value(value, tax_id_format)
-
-
-NifString = Annotated[str, BeforeValidator(_validate_nif_string)]
-"""Canonical Spanish tax-identifier string.
-
-Used as the value type for casillas declaring `data_type = "nif"`,
-and by any cross-domain consumer (filing draft assembly, oracle
-replay, export layouts) that needs to validate a NIF, NIE, or CIF
-identifier independently of a casilla declaration.
-"""
-
-
-@pydantic_validation_boundary
-def coerce_modelo_year(value: object) -> object:
-    """Coerce a fiscal-year input to an int within the registry-supported window.
-
-    Accepts an int directly or a non-empty string of digits. Rejects
-    booleans (which are int subclasses in Python), floats, and any
-    value outside ``RegistrySnapshotRef.modelo_year``'s declared
-    ``ge=2000, le=2099`` range.
-    """
-    if isinstance(value, bool):
-        raise RegistryValidationError("year value must not be a boolean")
-    if isinstance(value, float):
-        raise RegistryValidationError("year value must not be a float")
-    if isinstance(value, str):
-        if not value.strip():
-            raise RegistryValidationError("year value must not be blank")
-        try:
-            value = int(value)
-        except ValueError as exc:
-            raise RegistryValidationError(f"year value {value!r} is not a valid integer") from exc
-    return value
-
-
-ModeloYear = Annotated[
-    int, BeforeValidator(coerce_modelo_year), Field(ge=FOUR_DIGIT_YEAR_FIRST, le=FOUR_DIGIT_YEAR_LAST)
-]
-"""Canonical fiscal-year integer for the registry boundary.
-
-Mirrors the ``RegistrySnapshotRef.modelo_year`` bound so a casilla
-declaring ``data_type = "year"`` and the snapshot coordinate agree
-on the supported window. Consumers that need to validate a year
-value independently of a casilla declaration should type their
-field as ``ModeloYear``.
-"""
-
-
 _STANDARD_PERIOD_CODES = frozenset(StandardPeriodCode)
 _EXT_PATTERN = re.compile(r"^EXT-[1-4]T$")
 _EVENT_PATTERN = re.compile(r"^EVENT-\d+$")
@@ -167,16 +88,6 @@ def validate_period_code(value: object) -> object:
     if _EXT_PATTERN.match(value) or _EVENT_PATTERN.match(value):
         return value
     raise RegistryValidationError(f"period_code value {value!r} does not match a supported filing-period form")
-
-
-PeriodCode = Annotated[str, BeforeValidator(validate_period_code)]
-"""Canonical filing-period code for the registry boundary.
-
-Used as the value type for casillas declaring
-``data_type = "period_code"``, and by any cross-domain consumer
-(snapshot coordinates, oracle replay, export layouts) that needs to
-validate a period token independently of a casilla declaration.
-"""
 
 
 _COUNTRY_CODE_RE = re.compile(rf"^{COUNTRY_CODE_ALPHA2_PATTERN}$")
@@ -244,15 +155,6 @@ def validate_iban_string(value: object) -> object:
     return canonical
 
 
-IbanString = Annotated[str, BeforeValidator(validate_iban_string)]
-"""Canonical IBAN string for the registry boundary.
-
-Used as the value type for casillas declaring ``data_type = "iban"``
-and by any cross-domain consumer that needs to validate an IBAN
-independently of a casilla declaration.
-"""
-
-
 _MAX_NAME_LENGTH = 256
 
 
@@ -267,10 +169,6 @@ def _validate_name_string(value: object) -> object:
     if len(stripped) > _MAX_NAME_LENGTH:
         raise RegistryValidationError(f"name value exceeds {_MAX_NAME_LENGTH} characters: {len(stripped)}")
     return stripped
-
-
-PersonOrEntityName = Annotated[str, BeforeValidator(_validate_name_string)]
-"""Personal or entity name for the registry boundary."""
 
 
 _NIF_IVA_PREFIX_LENGTH = 2
@@ -300,10 +198,6 @@ def _validate_nif_iva_string(value: object) -> object:
     return canonical
 
 
-NifIvaString = Annotated[str, BeforeValidator(_validate_nif_iva_string)]
-"""Intracomunitario NIF-IVA string for the registry boundary."""
-
-
 @pydantic_validation_boundary
 def _validate_ccaa_code(value: object) -> object:
     """Validate that a value has the shape of a comunidad code; it binds no code to a community."""
@@ -319,14 +213,6 @@ def _validate_ccaa_code(value: object) -> object:
     return value
 
 
-CCAACode = Annotated[str, BeforeValidator(_validate_ccaa_code)]
-"""Generic two-digit comunidad code for the registry boundary.
-
-Checks shape only; a modelo-specific código comes from that modelo's own
-authority. See the note on the accepted set above.
-"""
-
-
 _PROVINCE_CODE_RE = re.compile(rf"^{SPANISH_PROVINCE_CODE_PATTERN}$")
 
 
@@ -340,10 +226,6 @@ def _validate_province_code(value: object) -> object:
             f"province_code value {value!r} must be a two-digit Spanish province code (01-52)",
         )
     return value
-
-
-ProvinceCode = Annotated[str, BeforeValidator(_validate_province_code)]
-"""Two-digit Spanish province code for the registry boundary."""
 
 
 _POSTAL_CODE_RE = re.compile(rf"^{SPANISH_POSTCODE_PATTERN}$")
@@ -362,10 +244,6 @@ def _validate_postal_code(value: object) -> object:
     if not _POSTAL_CODE_RE.match(value):
         raise RegistryValidationError(f"postal_code value {value!r} must be a five-digit Spanish postal code")
     return value
-
-
-PostalCode = Annotated[str, BeforeValidator(_validate_postal_code)]
-"""Five-digit Spanish postal code for the registry boundary."""
 
 
 _MUNICIPALITY_CODE_RE = re.compile(SPANISH_MUNICIPALITY_CODE_PATTERN)
@@ -389,10 +267,6 @@ def _validate_municipality_code(value: object) -> object:
     return value
 
 
-MunicipalityCode = Annotated[str, BeforeValidator(_validate_municipality_code)]
-"""Five-digit INE municipality code for the registry boundary."""
-
-
 @pydantic_validation_boundary
 def _validate_bic_string(value: object) -> object:
     """Validate a SWIFT BIC (ISO 9362): 8 or 11 characters."""
@@ -402,10 +276,6 @@ def _validate_bic_string(value: object) -> object:
     if not BIC_SHAPE_RE.match(canonical):
         raise RegistryValidationError(f"bic value {value!r} must be 8 or 11 alphanumeric characters per ISO 9362")
     return canonical
-
-
-BicString = Annotated[str, BeforeValidator(_validate_bic_string)]
-"""SWIFT BIC for the registry boundary."""
 
 
 # Keep a named runtime alias while Semgrep cannot parse this PEP 695 declaration.

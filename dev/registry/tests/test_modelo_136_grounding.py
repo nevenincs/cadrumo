@@ -7,6 +7,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, open_ended_revision
+
 from ..conformance.registry_schema_support import committed_modelo
 from .profile_schema_support import committed_registry_validator
 
@@ -25,6 +27,11 @@ _LEGAL_REFS = frozenset(
         "orden-hac-763-2018:df-unica",
     },
 )
+
+_M136_REVISIONS = authored_revisions("136")
+_CURRENT_REVISION = open_ended_revision("136")
+_CURRENT_ID = str(_CURRENT_REVISION.id)
+_CURRENT_YEAR = _CURRENT_REVISION.valid_from.year
 
 _SOURCE_REFS = frozenset(
     {
@@ -47,10 +54,11 @@ def test_modelo_136_current_revision_is_grounded_in_model_specific_catalogues() 
     assert modelo.calculation_class == "filing"
     assert set(modelo.legal_refs) == _LEGAL_REFS
     assert set(modelo.source_refs) == _SOURCE_REFS
-    assert set(modelo.revisions) == {"2022-2025", "2026"}
+    assert set(modelo.revisions) == {str(revision.id) for revision in _M136_REVISIONS}
+    assert len(_M136_REVISIONS) == 2
 
-    revision = modelo.revisions["2026"]
-    assert revision.period_selector.years == (2026,)
+    revision = modelo.revisions[_CURRENT_ID]
+    assert revision.period_selector.years == (_CURRENT_YEAR,)
     assert revision.period_selector.periods == ("1T", "2T", "3T", "4T")
     assert set(revision.legal_refs) == _LEGAL_REFS
     assert set(revision.source_refs) == _SOURCE_REFS
@@ -70,21 +78,16 @@ def test_modelo_136_current_revision_is_grounded_in_model_specific_catalogues() 
     assert set(catalogues.sources) >= _SOURCE_REFS
 
     windows = {window.id: window for window in revision.deadline_windows}
-    assert set(windows) == {
-        "modelo-136-2026-1t",
-        "modelo-136-2026-2t",
-        "modelo-136-2026-3t",
-        "modelo-136-2026-4t",
-    }
-    assert windows["modelo-136-2026-1t"].closes_on == date(2026, 4, 20)
-    assert windows["modelo-136-2026-2t"].closes_on == date(2026, 7, 20)
-    assert windows["modelo-136-2026-3t"].closes_on == date(2026, 10, 20)
-    assert windows["modelo-136-2026-4t"].closes_on == date(2027, 1, 20)
+    assert set(windows) == {f"modelo-136-{_CURRENT_YEAR}-{quarter}t" for quarter in range(1, 5)}
+    assert windows[f"modelo-136-{_CURRENT_YEAR}-1t"].closes_on == date(_CURRENT_YEAR, 4, 20)
+    assert windows[f"modelo-136-{_CURRENT_YEAR}-2t"].closes_on == date(_CURRENT_YEAR, 7, 20)
+    assert windows[f"modelo-136-{_CURRENT_YEAR}-3t"].closes_on == date(_CURRENT_YEAR, 10, 20)
+    assert windows[f"modelo-136-{_CURRENT_YEAR}-4t"].closes_on == date(_CURRENT_YEAR + 1, 1, 20)
 
 
 def test_modelo_136_formula_graph_matches_current_form_rows() -> None:
     modelo, _catalogues = committed_modelo("136")
-    revision = modelo.revisions["2026"]
+    revision = modelo.revisions[_CURRENT_ID]
 
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     formulas = {formula.id: formula for formula in revision.formulas}

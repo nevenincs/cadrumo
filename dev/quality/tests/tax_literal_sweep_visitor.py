@@ -8,6 +8,8 @@ from decimal import Decimal
 from pathlib import Path
 from typing import override
 
+from cadrumo.core.filing_year import FOUR_DIGIT_YEAR_LAST
+
 from .tax_literal_sweep_kinds import (
     BoundReader,
 )
@@ -48,7 +50,6 @@ from .tax_literal_sweep_vocabulary import (
     IDENTITY_NUMBERS,
     ISO_DATE,
     KEYWORD_MECHANICS,
-    LAST_FOUR_DIGIT_YEAR,
     LAST_YEAR,
     LEAP_DAY_SHIFT,
     LENGTH_BOUNDS,
@@ -838,7 +839,7 @@ class _Sweep(BoundReader, ast.NodeVisitor):
     def _four_digit_year_shape(node: ast.Compare) -> bool:
         """``1000 <= year <= 9999`` says a value has four digits; it selects no year."""
         numbers = [constant_number(side) for side in (node.left, *node.comparators)]
-        return numbers[0] == THOUSAND and numbers[-1] == LAST_FOUR_DIGIT_YEAR
+        return numbers[0] == THOUSAND and numbers[-1] == FOUR_DIGIT_YEAR_LAST
 
     def _visit_compared_members(self, node: ast.Compare) -> None:
         """A year tested against a set of years, or anything tested against one code letter, routes on a fact."""

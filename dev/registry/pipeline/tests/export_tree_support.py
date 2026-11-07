@@ -13,6 +13,7 @@ from cadrumo.domain.calculations.registry.static_inspection import (
     StaticGeneratedArtifactInspection,
     StaticGeneratedArtifactSource,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 
 from ..export_tree_models import ExportTreeTransportProfile
 from ..joined_record_design import JoinedRecordDesign, join_record_design_semantics
@@ -26,6 +27,13 @@ from ..render_profile_model_base import RenderProfileAnchor, RenderProfileDesign
 from ..render_profile_rules import SingletonNumericRule
 from ..semantic_map import SemanticMap
 from .generated_tree_test_support import bundled_revision_inspection
+
+_M130_OPEN_ENDED = open_ended_revision("130")
+#: The record-design epoch the synthetic modelo 130 design stands in for: the one the real modelo 130 authors.
+DESIGN_EPOCH = str(_M130_OPEN_ENDED.valid_from.year)
+#: The single synthetic revision a staged shell modelo carries, named for the exercise it covers.
+SHELL_EXERCISE = filing_year_envelope().horizon
+SHELL_REVISION = str(SHELL_EXERCISE)
 
 
 def export_tree_intermediate(
@@ -42,7 +50,7 @@ def export_tree_intermediate(
                 "source_ref": "aeat-dr-130-2019-v12",
                 "source_sha256": "58f731b0c72eff7fd23484000c74e73e0ac803a5167065176d78cac8712f5fe7",
                 "workbook_format": RecordDesignWorkbookFormat.XLSX,
-                "design_epoch": "2019",
+                "design_epoch": DESIGN_EPOCH,
             },
             "sheets": (
                 {
@@ -117,7 +125,7 @@ def export_tree_semantic_map() -> SemanticMap:
     return SemanticMap.model_validate(
         {
             "modelo": "130",
-            "design_epoch": "2019",
+            "design_epoch": DESIGN_EPOCH,
             "source_ref": "aeat-dr-130-2019-v12",
             "source_sha256": "58f731b0c72eff7fd23484000c74e73e0ac803a5167065176d78cac8712f5fe7",
             "records": (
@@ -188,7 +196,7 @@ def _entry(
 def export_tree_profile() -> ExportTreeTransportProfile:
     return ExportTreeTransportProfile(
         modelo="130",
-        design_epoch="2019",
+        design_epoch=DESIGN_EPOCH,
         source_ref="aeat-dr-130-2019-v12",
         source_sha256="58f731b0c72eff7fd23484000c74e73e0ac803a5167065176d78cac8712f5fe7",
         layout_id="generated-modelo-130-fichero",
@@ -202,7 +210,7 @@ def export_tree_profile() -> ExportTreeTransportProfile:
 def wire_profile() -> RenderProfile:
     identity = RenderProfileDesignIdentity(
         modelo="130",
-        design_epoch="2019",
+        design_epoch=DESIGN_EPOCH,
         source_ref="aeat-dr-130-2019-v12",
         source_sha256="58f731b0c72eff7fd23484000c74e73e0ac803a5167065176d78cac8712f5fe7",
     )
@@ -263,7 +271,7 @@ def m130_inspection() -> RegistryRevisionInspection:
     It declares no projection endpoint, so a synthetic semantic map joins against
     it without a projection bijection to satisfy.
     """
-    return bundled_revision_inspection("130", "2019-y-siguientes")
+    return bundled_revision_inspection("130", str(_M130_OPEN_ENDED.id))
 
 
 def export_tree_joined(
@@ -284,7 +292,7 @@ def synthetic_static_inspection() -> StaticGeneratedArtifactInspection:
     source_ref = "aeat-dr-130-2019-v12"
     return StaticGeneratedArtifactInspection(
         modelo_id="130",
-        revision_id="2019",
+        revision_id=DESIGN_EPOCH,
         revision_source_refs=(source_ref,),
         sources={
             source_ref: StaticGeneratedArtifactSource(
@@ -295,7 +303,7 @@ def synthetic_static_inspection() -> StaticGeneratedArtifactInspection:
                 bytes=1,
                 applies_from=None,
                 applies_to=None,
-                record_design_epoch="2019",
+                record_design_epoch=DESIGN_EPOCH,
                 corpus_tier=CorpusTier.FULL_CONSOLIDATED,
             ),
         },
@@ -327,7 +335,7 @@ def oversized_authorities(snapshot, *, field_count: int = 245) -> tuple[Semantic
                 "source_ref": "aeat-dr-130-2019-v12",
                 "source_sha256": "58f731b0c72eff7fd23484000c74e73e0ac803a5167065176d78cac8712f5fe7",
                 "workbook_format": RecordDesignWorkbookFormat.XLSX,
-                "design_epoch": "2019",
+                "design_epoch": DESIGN_EPOCH,
             },
             "sheets": (
                 {
@@ -360,7 +368,7 @@ def oversized_authorities(snapshot, *, field_count: int = 245) -> tuple[Semantic
     semantic_map = SemanticMap.model_validate(
         {
             "modelo": "130",
-            "design_epoch": "2019",
+            "design_epoch": DESIGN_EPOCH,
             "source_ref": "aeat-dr-130-2019-v12",
             "source_sha256": "58f731b0c72eff7fd23484000c74e73e0ac803a5167065176d78cac8712f5fe7",
             "records": (
@@ -404,7 +412,7 @@ def oversized_authorities(snapshot, *, field_count: int = 245) -> tuple[Semantic
 
 
 def write_modelo_shell(modelo_dir: Path) -> Path:
-    revision_dir = modelo_dir / "revisions" / "2025"
+    revision_dir = modelo_dir / "revisions" / SHELL_REVISION
     revision_dir.mkdir(parents=True)
     (modelo_dir / "manifest.toml").write_text(
         """
@@ -420,11 +428,11 @@ source_refs = ["aeat-dr-130-2019-v12"]
         newline="\n",
     )
     (revision_dir / "revision.toml").write_text(
-        """
-[revisions."2025"]
+        f"""
+[revisions."{SHELL_REVISION}"]
 authority_grade = "applicability"
-valid_from = 2025-01-01
-period_selector = { years = [2025], periods = ["0A"] }
+valid_from = {SHELL_EXERCISE}-01-01
+period_selector = {{ years = [{SHELL_EXERCISE}], periods = ["0A"] }}
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-dr-130-2019-v12"]
 """.lstrip(),

@@ -48,6 +48,7 @@ from .generated_export_inheritance_model import GeneratedExportInheritanceContex
 from .generated_form_bridge import (
     GeneratedFormBridge,
     generated_form_companion_changed,
+    is_reviewed_generated_form_repair,
     prepare_generated_form_bridge,
 )
 from .generated_tree_dispositions import GeneratedTreeRecordDriftDisposition, record_drift_dispositions
@@ -599,14 +600,9 @@ def _republish(prepared: PreparedGeneratedTreeInvocation, target_state: Generate
             comparison,
             source_sha256=str(prepared.inputs.transport_profile.source_sha256),
         )
-    if (prepared.invocation.modelo, prepared.invocation.revision) in {
-        ("232", "2016-2017"),
-        ("232", "2018-y-siguientes"),
-        ("190", "2025-y-siguientes"),
-        ("347", "2011-2024"),
-        ("347", "2025-y-siguientes"),
-        ("720", "2013-y-siguientes"),
-    } and generated_form_companion_changed(
+    if is_reviewed_generated_form_repair(
+        prepared.invocation.modelo, prepared.invocation.revision, prepared.invocation.source_ref
+    ) and generated_form_companion_changed(
         prepared.target_root,
         prepared.candidate_root,
         prepared.invocation.modelo,

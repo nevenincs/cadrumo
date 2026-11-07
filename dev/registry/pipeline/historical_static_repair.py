@@ -41,12 +41,16 @@ from .render_check import (
 from .source_defects import source_defects_for
 from .tree_publication_artifacts import verify_generated_export_package
 
-_REVISION = "2016-2017"
 _MODELO = "232"
 _SOURCE_REF = "aeat-dr-232-2016"
 _SOURCE_SHA256 = "fb6802dcf8746e69331b67873cb2e5cae90c3343c69b4f4d430aecde3c56b6ad"
 _OLD_MANIFEST_SHA256 = "f4e1bb800af4c511c93e0d1df74520b70cc0ee986338b57f31c46c619582d6fa"
-_STALE_BINDING = re.compile(r"^modelo 232 revision 2016-2017: export field '[^']+' references unknown binding '[^']+'$")
+
+#: Stands for the target revision in a reviewed layout id or finding. The old
+#: manifest digest pins the revision the reviewed package was generated for, so
+#: the revision is the invocation's, checked against that package, never
+#: written into this table.
+_REVISION_SLOT = "{revision}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,25 +59,41 @@ class _RepairTarget:
     layout_id: str
     finding_count: int
     exact_findings: frozenset[str] | None = None
+    stale_binding: re.Pattern[str] | None = None
+
+    def for_revision(self, modelo: str, revision: str) -> _RepairTarget:
+        """Return this reviewed target with its revision slot filled for one invocation."""
+        return _RepairTarget(
+            source_sha256=self.source_sha256,
+            layout_id=self.layout_id.replace(_REVISION_SLOT, revision),
+            finding_count=self.finding_count,
+            exact_findings=(
+                None
+                if self.exact_findings is None
+                else frozenset(finding.replace(_REVISION_SLOT, revision) for finding in self.exact_findings)
+            ),
+            stale_binding=re.compile(
+                rf"^modelo {re.escape(modelo)} revision {re.escape(revision)}: "
+                r"export field '[^']+' references unknown binding '[^']+'$"
+            ),
+        )
 
 
+#: Reviewed repair targets keyed by (modelo, official design, old manifest SHA-256).
 REVIEWED_TARGETS = {
-    (_MODELO, _REVISION, _SOURCE_REF, 2016, "0A", _OLD_MANIFEST_SHA256): _RepairTarget(
-        _SOURCE_SHA256, "generated-modelo-232-2016-2017-fichero", 140
+    (_MODELO, _SOURCE_REF, _OLD_MANIFEST_SHA256): _RepairTarget(
+        _SOURCE_SHA256, f"generated-modelo-{_MODELO}-{_REVISION_SLOT}-fichero", 140
     ),
     (
         "720",
-        "2013-y-siguientes",
         "aeat-dr-720",
-        2024,
-        "0A",
         "1217b488e839465f1499fba090eeab3faa1e39e83068d7447de68467427f398d",
     ): _RepairTarget(
         "ac324b935b690f0b6fe12dc8351c324cc804170750f483b0768d6417dd4976b7",
         "modelo-720-fichero-aeat",
         9,
         frozenset(
-            f"modelo 720 revision 2013-y-siguientes: export field 'modelo-720-{record}-{field}' "
+            f"modelo 720 revision {_REVISION_SLOT}: export field 'modelo-720-{record}-{field}' "
             f"references unknown binding 'modelo-720.{record}.{field}'"
             for record, field in (
                 ("type_1", "ejercicio"),
@@ -85,12 +105,12 @@ REVIEWED_TARGETS = {
         )
         | frozenset(
             {
-                "modelo 720 revision 2013-y-siguientes: form layout 'form-layout' form layout is stale: "
+                f"modelo 720 revision {_REVISION_SLOT}: form layout 'form-layout' form layout is stale: "
                 "its source_state_digest no longer matches the revision; regenerate it",
             }
         )
         | frozenset(
-            "modelo 720 revision 2013-y-siguientes: form layout 'form-layout' shows binding "
+            f"modelo 720 revision {_REVISION_SLOT}: form layout 'form-layout' shows binding "
             f"'modelo-720.type_1.{field}', which the revision does not declare"
             for field in (
                 "ejercicio",
@@ -101,31 +121,28 @@ REVIEWED_TARGETS = {
     ),
     (
         "720",
-        "2013-y-siguientes",
         "aeat-dr-720",
-        2024,
-        "0A",
         "83c26f2c7c2848ec9544889d070b071d69d24608f48bd52782a6d608039d23b9",
     ): _RepairTarget(
         "ac324b935b690f0b6fe12dc8351c324cc804170750f483b0768d6417dd4976b7",
         "modelo-720-fichero-aeat",
         6,
         frozenset(
-            f"modelo 720 revision 2013-y-siguientes: export field 'modelo-720-{record}-{field}' "
+            f"modelo 720 revision {_REVISION_SLOT}: export field 'modelo-720-{record}-{field}' "
             f"references unknown binding 'modelo-720.{record}.{field}'"
             for record in ("type_1", "type_2")
             for field in ("tipo-de-registro", "modelo-declaracion")
         )
         | frozenset(
             {
-                "modelo 720 revision 2013-y-siguientes: fixed-width export layout 'modelo-720-fichero-aeat' "
+                f"modelo 720 revision {_REVISION_SLOT}: fixed-width export layout 'modelo-720-fichero-aeat' "
                 "has 2 design record(s) without a unique source-to-record join, so per-record coverage is unverified. "
                 "design record 'Tipo 1 - Registro De Declarante': "
                 "no unique authored record joins its source constants; "
                 "layout-wide byte coverage cannot verify this record | "
                 "design record 'Tipo 2 - Registro De Detalle': no unique authored record joins its source constants; "
                 "layout-wide byte coverage cannot verify this record",
-                "modelo 720 revision 2013-y-siguientes: form layout 'form-layout' form layout is stale: "
+                f"modelo 720 revision {_REVISION_SLOT}: form layout 'form-layout' form layout is stale: "
                 "its source_state_digest no longer matches the revision; regenerate it",
             }
         ),
@@ -139,7 +156,8 @@ def validate_repair_findings(target: _RepairTarget, findings: tuple[str, ...]) -
     if len(findings) != target.finding_count or (
         frozenset(findings) != exact
         if exact is not None
-        else any(_STALE_BINDING.fullmatch(finding) is None for finding in findings)
+        else target.stale_binding is None
+        or any(target.stale_binding.fullmatch(finding) is None for finding in findings)
     ):
         raise RegistryValidationError("historical repair has findings beyond the reviewed target defects")
 
@@ -283,12 +301,22 @@ def _reviewed_repair_target(
 ) -> tuple[_RepairTarget, str]:
     if expected_manifest_sha256 is None:
         raise RegistryValidationError("historical repair requires the exact reviewed target manifest")
-    target = REVIEWED_TARGETS.get((modelo, revision, source_ref, filing_year, period, expected_manifest_sha256))
-    if target is None:
+    target = REVIEWED_TARGETS.get((modelo, source_ref, expected_manifest_sha256))
+    if target is None or not _revision_selects(modelo, revision, filing_year, period):
         raise RegistryValidationError(
-            "historical repair requires an exact reviewed M232/2016 or M720/2024 target and manifest"
+            "historical repair requires an exact reviewed target and manifest at a coordinate its revision selects"
         )
-    return target, expected_manifest_sha256
+    return target.for_revision(modelo, revision), expected_manifest_sha256
+
+
+def _revision_selects(modelo: str, revision: str, filing_year: int, period: str) -> bool:
+    """Return whether the authored revision's own period selector selects the requested frame."""
+    revisions = load_modelo_directory(bundled_path("registry", "aeat", "modelos", modelo)).revisions
+    selected = revisions.get(revision)
+    if selected is None:
+        return False
+    selector = selected.period_selector
+    return selector.includes_year(filing_year) and period in selector.periods_for_year(filing_year)
 
 
 def _require_unchanged_repair_inputs(

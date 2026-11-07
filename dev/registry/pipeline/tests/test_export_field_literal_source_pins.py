@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ...compiler.loader import load_modelo_directory, load_shared_catalogues
 from ..export_field_literal_source_pins import (
@@ -18,6 +19,8 @@ from ..semantic_map import load_semantic_map
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_M194_OPEN_ENDED = open_ended_revision("194")
+_M194_REVISION = str(_M194_OPEN_ENDED.id)
 _SOPORTE = "modelo-194-decl-soporte"
 _SOPORTE_CONTENT = "Se cumplimentará una de las siguientes claves: 'T': Transmisión telemática."
 
@@ -25,20 +28,20 @@ _SOPORTE_CONTENT = "Se cumplimentará una de las siguientes claves: 'T': Transmi
 @pytest.fixture(scope="module")
 def inputs() -> RevisionRenderInputs:
     root = Path("src/cadrumo/_data")
-    mapping = load_semantic_map(Path("dev/registry/mappings/modelo_194/2024"))
+    mapping = load_semantic_map(Path("dev/registry/mappings/modelo_194") / _M194_REVISION)
     return build_revision_render_inputs(
         load_modelo_directory(root / "registry/aeat/modelos/194"),
         load_shared_catalogues(root / "registry/aeat"),
         modelo="194",
-        revision="2024",
+        revision=_M194_REVISION,
         source_ref=mapping.source_ref,
         bootstrap_transport=GeneratedExportBootstrapTransport(
-            layout_id="generated-modelo-194-2024-fichero",
+            layout_id=f"generated-modelo-194-{_M194_REVISION}-fichero",
             line_ending="crlf",
             source_ref=mapping.source_ref,
             source_sha256=mapping.source_sha256,
         ),
-        filing_year=2024,
+        filing_year=_M194_OPEN_ENDED.valid_from.year,
         period="0A",
         source_root=root,
     )

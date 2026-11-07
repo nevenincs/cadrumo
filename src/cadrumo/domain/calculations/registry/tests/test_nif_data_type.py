@@ -1,9 +1,9 @@
-"""Roundtrip tests for the `nif` data_type and `NifString` alias.
+"""Roundtrip tests for the `nif` data_type.
 
 The `nif` variant on `CasillaDefinition.data_type` plus the
-`NifString` `Annotated` alias on the schema module form the canonical
+text-scalar validator in the schema module form the canonical
 identifier-validation surface for the registry boundary. These tests
-exercise the alias against valid Spanish NIF, NIE, and CIF inputs and
+exercise the validator against valid Spanish NIF, NIE, and CIF inputs and
 confirm that failure cases raise `RegistryValidationError` (not the
 domain-layer `IdentityError`), preserving the registry boundary's
 error-type contract.
@@ -16,19 +16,18 @@ without losing the type tag.
 from __future__ import annotations
 
 import pytest
-from pydantic import TypeAdapter, ValidationError
+from pydantic import ValidationError
 
-from .....core.identity.documents import TAX_ID_FORMAT_CONTEXT
 from .....core.identity.tests.tax_id_format_support import SPANISH_TAX_ID_FORMAT
 from ..errors import RegistryValidationError
-from ..schema_scalars import NifString, validate_registry_text_scalar
+from ..schema_scalars import validate_registry_text_scalar
 from ..schema_surfaces import CasillaDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-_NIF_ADAPTER: TypeAdapter[str] = TypeAdapter(NifString)
-_NIF_CONTEXT = {TAX_ID_FORMAT_CONTEXT: SPANISH_TAX_ID_FORMAT}
+def _validate_nif(raw: object) -> str:
+    return validate_registry_text_scalar("nif", raw, tax_id_format=SPANISH_TAX_ID_FORMAT)
 
 
 def _casilla_with(data_type: str) -> CasillaDefinition:
@@ -46,7 +45,7 @@ def _casilla_with(data_type: str) -> CasillaDefinition:
 
 
 class TestNifStringAccepts:
-    """`NifString` accepts canonically formatted Spanish identifiers."""
+    """The nif scalar accepts canonically formatted Spanish identifiers."""
 
     def test_valid_input_returns_canonical_output(self) -> None:
         cases = (
@@ -66,20 +65,17 @@ class TestNifStringAccepts:
         )
 
         for raw, canonical in cases:
-            assert _NIF_ADAPTER.validate_python(raw, context=_NIF_CONTEXT) == canonical, raw
+            assert _validate_nif(raw) == canonical, raw
 
 
 class TestNifStringRejects:
-    """`NifString` rejects malformed or checksum-failing identifiers.
+    """The nif scalar rejects malformed or checksum-failing identifiers.
 
-    Pydantic v2 wraps `RegistryValidationError` (a `ValueError`)
-    raised inside a `BeforeValidator` into `ValidationError`. The
-    tests below assert through `ValidationError` at the pydantic
-    boundary, and separately exercise `_validate_nif_string`
-    directly to confirm the raw schema-error surface.
+    The registry's text-scalar entry point refuses with the registered
+    `RegistryValidationError`.
     """
 
-    def test_invalid_inputs_rejected_through_adapter(self) -> None:
+    def test_invalid_inputs_rejected(self) -> None:
         cases: tuple[object, ...] = (
             "",
             "12345678",
@@ -92,12 +88,8 @@ class TestNifStringRejects:
         )
 
         for raw in cases:
-            with pytest.raises(ValidationError):
-                _NIF_ADAPTER.validate_python(raw, context=_NIF_CONTEXT)
-
-    def test_missing_explicit_format_fails_closed(self) -> None:
-        with pytest.raises(ValidationError, match="explicit Spanish tax-ID format"):
-            _NIF_ADAPTER.validate_python("00000000T")
+            with pytest.raises(RegistryValidationError):
+                _validate_nif(raw)
 
     def test_direct_scalar_validation_requires_and_obeys_the_explicit_format(self) -> None:
         assert validate_registry_text_scalar("nif", "ES00000000T", tax_id_format=SPANISH_TAX_ID_FORMAT) == "00000000T"
