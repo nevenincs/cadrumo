@@ -33,7 +33,7 @@ class SavedFilingScreen(ModalScreen[None]):
         border: $cadrumo-radius-overlay $primary;
     }
     #saved-filing-body { height: 1fr; }
-    #saved-filing-values { height: auto; min-height: 5; }
+    #saved-filing-values { height: auto; min-height: $cadrumo-saved-filing-values-min-height; }
     #saved-filing-links { height: auto; }
     """)
 

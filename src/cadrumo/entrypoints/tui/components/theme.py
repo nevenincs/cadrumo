@@ -124,6 +124,7 @@ CADRUMO_CSS_TOKENS: Final[Mapping[str, str]] = MappingProxyType(
         "cadrumo-band-height": "1",
         "cadrumo-modal-width": "80%",
         "cadrumo-modal-height": "80%",
+        "cadrumo-saved-filing-values-min-height": str(5),
         "cadrumo-modal-max-height": "80vh",
         "cadrumo-log-max-height": str(12),
         # -- Spacing scale, in terminal cells -------------------------------
