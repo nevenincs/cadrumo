@@ -25,7 +25,8 @@ from ..pipeline.semantic_map import SemanticMapEntry, load_semantic_map_for_revi
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-_TARGET_REVISION = "2024"
+# The earlier of the two editions the identity worklists cover; its cell ceiling below is that edition's.
+_TARGET_REVISION = identity_subject.load_bundled_m200_target_identity_worklists()[0].revision
 _SHARED_OWNER_CELL_CEILING = 2717
 
 

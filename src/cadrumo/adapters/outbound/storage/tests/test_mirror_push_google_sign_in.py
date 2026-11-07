@@ -17,7 +17,10 @@ from .....adapters.persistence.storage.secure_object_namespaces import (
     GOOGLE_OAUTH_TOKEN_NAMESPACE,
 )
 from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..mirror_push import push_secure_object_mirror_rows
+
+_FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -38,7 +41,7 @@ def test_a_full_push_withholds_the_sign_in_and_still_mirrors_the_drive_root(tmp_
             OAuthMetadata(
                 account_email="mirror@example.invalid",
                 granted_scopes=REQUIRED_SCOPES,
-                issued_at=datetime(2026, 10, 19, tzinfo=UTC),
+                issued_at=datetime(_FILING_YEAR, 10, 19, tzinfo=UTC),
             ),
             DriveConfig(root_folder_id="synthetic-root-folder"),
         )

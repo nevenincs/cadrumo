@@ -283,7 +283,6 @@ CAPITAL_GAINS_SECTION_REFS = frozenset(
     {
         "ley-35-2006:art-33",
         "ley-35-2006:art-34",
-        MODELO_100_2025_FORM_ORDER_REF,
     }
 )
 RIC_RESERVA_SECTION = ("resultados", "anexo_a_res", "reserva_inversiones_canarias_res")
@@ -680,18 +679,12 @@ LIRPF_CAPITAL_GAINS_ART_33_REF = "ley-35-2006:art-33"
 DA45_CLAUSULA_SUELO_REF = "ley-35-2006:da-45"
 RIRPF_DEDUCTION_LOSS_ART_59_REF = "rd-439-2007:art-59"
 LGT_INTEREST_ART_26_REF = "ley-58-2003:art-26"
-_ATTRIBUTION_REGIME_MODE_FLAG_REFS = frozenset(
-    {
-        ATTRIBUTION_REGIME_ART_86_REF,
-        MODELO_100_2025_FORM_ORDER_REF,
-    }
-)
+_ATTRIBUTION_REGIME_MODE_FLAG_REFS = frozenset({ATTRIBUTION_REGIME_ART_86_REF})
 _ATTRIBUTION_REGIME_AGRICULTURAL_MODE_FLAG_REFS = frozenset(
     {
         _OBJECTIVE_ESTIMATION_ART_31_REF,
         ATTRIBUTION_REGIME_ART_86_REF,
         _ATTRIBUTION_OBJECTIVE_ESTIMATION_ART_39_REF,
-        MODELO_100_2025_FORM_ORDER_REF,
     }
 )
 ECONOMIC_ACTIVITY_SECTION_REFS = frozenset(
@@ -701,7 +694,6 @@ ECONOMIC_ACTIVITY_SECTION_REFS = frozenset(
         "ley-35-2006:art-30",
         "ley-35-2006:art-31",
         "ley-35-2006:art-32",
-        MODELO_100_2025_FORM_ORDER_REF,
     }
 )
 GENERAL_BASE_GYP_LIMIT_CASILLA = validated_casilla_id("0433", surface="test_modelo_100_registry.casilla")
@@ -722,10 +714,10 @@ ATTRIBUTION_REGIME_2025_MODE_FLAG_CASILLA_REFS: Mapping[CasillaId, frozenset[str
     ): _ATTRIBUTION_REGIME_AGRICULTURAL_MODE_FLAG_REFS,
     validated_casilla_id("0164", surface="test_modelo_100_registry.casilla"): _ATTRIBUTION_REGIME_MODE_FLAG_REFS,
 }
-_INMUEBLE_ART_22_FORM_ORDER_REFS = frozenset({"ley-35-2006:art-22", MODELO_100_2025_FORM_ORDER_REF})
+_INMUEBLE_ART_22_REFS = frozenset({"ley-35-2006:art-22"})
 INMUEBLE_2025_CONTINUITY_REFS: Mapping[str, frozenset[str]] = {
-    "irpf-inmueble-porcentaje-propiedad": _INMUEBLE_ART_22_FORM_ORDER_REFS,
-    "irpf-inmueble-vivienda-habitual-flag": _INMUEBLE_ART_22_FORM_ORDER_REFS,
+    "irpf-inmueble-porcentaje-propiedad": _INMUEBLE_ART_22_REFS,
+    "irpf-inmueble-vivienda-habitual-flag": _INMUEBLE_ART_22_REFS,
 }
 ANEXO_C_BASE_NEGATIVE_GENERAL_CONSTRUCT_ID = "renta-anexo-c-base-liquidable-negativa-general"
 ANEXO_C_BASE_NEGATIVE_GENERAL_BINDING_ID = "renta-base-liquidable-negativa-general-anterior"
@@ -757,7 +749,7 @@ ARTISTIC_ACTIVITY_REDUCTION_2025_CASILLA_REFS: Mapping[CasillaId, frozenset[str]
         {_ARTISTIC_ACTIVITY_EXCEPTIONAL_REDUCTION_REF}
     ),
     validated_casilla_id("0384", surface="test_modelo_100_registry.casilla"): frozenset(
-        {_ARTISTIC_ACTIVITY_EXCEPTIONAL_REDUCTION_REF, MODELO_100_2025_FORM_ORDER_REF}
+        {_ARTISTIC_ACTIVITY_EXCEPTIONAL_REDUCTION_REF}
     ),
 }
 CAPITAL_GAINS_2025_SECTION_COUNTS: Mapping[tuple[str, str], int] = {
