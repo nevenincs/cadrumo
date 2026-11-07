@@ -39,8 +39,18 @@ In Python, read through the syntax tree, each of these is a finding:
 - ``year arithmetic``: a year added to or subtracted from a year-named value;
 - ``year list``: two or more years held in one tuple, list or set, a
   dictionary keyed by two or more years, or a year in a ``range``;
-- ``year date``: a ``date`` or ``datetime`` built with a year, or a date-only
-  ISO text (``2025-03-01``) parsed with ``fromisoformat``;
+- ``year date``: a ``date`` or ``datetime`` built with a year, or text that
+  holds a year passed to anything that parses it into a date, an instant or a
+  year (``fromisoformat``, ``strptime``, ``isoparse``, ``to_datetime``,
+  ``Timestamp``, or any call whose name pairs ``parse`` or ``from`` with
+  ``date``, ``time``, ``instant``, ``day`` or ``iso``);
+- ``date text``: a string that is exactly a date or an instant of the filing
+  century (``2026-04-01``, ``2026-04``, ``2026-04-01T09:00:00+00:00``,
+  ``01/04/2026``), or an f-string that starts writing one
+  (``f"2026-04-{day}"``), anywhere except as an operand of a comparison or a
+  ``case`` pattern. A frozen clock, a "today", a fixture anchor, a default, a
+  keyword argument or a payload field is a year a parser or a slice later turns
+  into a coordinate, so it is written from the authority instead;
 - ``year text``: a string that is exactly a year;
 - ``edition id``: a string that is a revision id (``2026-y-siguientes``,
   ``2022-2025``, ``2024-desde-09-y-3t``) or that names one in a revision path.
@@ -51,18 +61,30 @@ or ``9999``, and each line is read for ``year compared``, ``year clamped``,
 ``year expected``, ``year constant`` (a year-named binding or object key set
 to a year), ``year argument``, ``year date`` (``new Date`` or ``Date.UTC``
 from a year of the filing century) and ``edition worked out``. Read again with
-only comments blanked, a string that is exactly a year is ``year text`` and a
-revision id is ``edition id``, as in Python.
+only comments blanked, a string that is exactly a year is ``year text``, a
+revision id is ``edition id``, text holding a year opened straight into
+``Date.parse``, ``new Date``, ``Temporal.*.from``, ``dayjs``, ``moment``,
+``DateTime.fromISO``, ``parseISO`` or a ``parse``/``from`` date helper is
+``year date``, and any other string or template that is exactly, or starts
+writing, a date of the filing century is ``date text`` unless it is compared:
+it sits inside an expectation's argument (``toBe``, ``toEqual``,
+``toStrictEqual``, ``toContain``, ``toMatchObject``, ``toHaveText``,
+``toHaveBeenCalledWith`` and their kin, across lines), beside ``===``,
+``!==``, ``==`` or ``!=``, or after ``case``.
 
 What may stay, and why
 ----------------------
 - Prose: comments and docstrings name years in sentences; a sentence is read
   by people, never by a resolver.
-- Text that holds a year among other characters: a legal citation (``Ley
-  58/2003``, ``Orden HAC/1417/2023``, ``BOE-A-2023-12345``), an ISO date or
-  timestamp written as payload text, a URL, a schema or migration stamp. Such
-  text is data a parser reads, not a coordinate the code computes with; an ISO
-  date parsed straight into a date is a ``year date``.
+- A date or instant compared as written: the expected side of a comparison,
+  an element of a literal tuple, list, set or dictionary that is such an
+  operand, a ``case`` pattern, or a TypeScript expectation's argument. The
+  text is the output under test, read as opaque characters; it never becomes a
+  date in code, and a wrong one fails the comparison instead of diverging.
+- Text that holds a year among other characters and is never parsed: a legal
+  citation (``Ley 58/2003``, ``Orden HAC/1417/2023``, ``BOE-A-2023-12345``), a
+  sentence, a URL, a schema or migration stamp. Such text is not a coordinate
+  the code computes with; the same text passed to a parser is a ``year date``.
 - A number in the year range that is no year: a count, a size or an amount,
   which the rules above never reach because they read the name or call the
   number stands under.
@@ -83,14 +105,20 @@ the served edition fields). A Python test takes it from
 the published authority: the floor and horizon (``filing_year_envelope()``),
 the newest authored edition,
 the first projected exercise, the exercises an edition governs. A date is
-built from that year (``date(year, 3, 1)``). The frontend reads the backend's
-recordings. A year that must sit at, inside or outside the envelope is written
-from the floor or horizon, never as a number.
+built from that year (``date(year, 3, 1)``), and a frozen clock from the
+horizon (``datetime(filing_year_envelope().horizon, 4, 1, 9, tzinfo=UTC)``).
+The frontend reads the backend's recordings and builds a date or "today" from
+the served year authority (``servedYearAuthority.ts``). A year that must sit
+at, inside or outside the envelope is written from the floor or horizon, never
+as a number.
 
 What this gate cannot see
 -------------------------
-- A year held in text other than an exact year or an edition id: an ISO date
-  in a JSON-shaped fixture dictionary or a sentence a resolver parses.
+- A year held in text other than an exact year, date, instant or edition id
+  and passed to no parser by name: a date inside a JSON blob, a CSV row or a
+  sentence that a resolver reads later.
+- A date compared in a TypeScript expectation that is reached through a
+  helper rather than opened on the expectation itself.
 - A year computed from other numbers, such as ``2000 + 25``, when neither
   operand is year-named.
 - A year passed positionally to a helper whose name says nothing of a year or
@@ -136,6 +164,24 @@ _YEAR_CALL = re.compile(
 _PERIOD_CODE = re.compile(r"^(?:[1-4]T|0A|0[1-9]|1[0-2]|[1-4]P)$")
 _YEAR_TEXT = re.compile(r"^20\d\d$")
 _ISO_DATE_TEXT = re.compile(r"^20\d\d-\d\d-\d\d$")
+_DAY = r"(?:0[1-9]|[12]\d|3[01])"
+_MONTH = r"(?:0[1-9]|1[0-2])"
+#: Text that is exactly a date or an instant of the filing century: an ISO
+#: year-month, date or timestamp with or without seconds, fraction and offset,
+#: or a day-first or slashed date.
+DATE_TEXT: Final[re.Pattern[str]] = re.compile(
+    rf"^(?:20\d\d-{_MONTH}(?:-{_DAY}(?:[T ](?:[01]\d|2[0-3])(?::[0-5]\d(?::[0-5]\d(?:[.,]\d+)?)?)?"
+    rf"(?:Z|[+-]\d\d(?::?\d\d)?)?)?)?"
+    rf"|{_DAY}[/.-]{_MONTH}[/.-]20\d\d|20\d\d/{_MONTH}/{_DAY})$"
+)
+#: The start of an f-string that writes a date of the filing century, such as ``f"2026-04-{day}"``.
+_DATE_TEXT_START = re.compile(rf"^20\d\d-{_MONTH}(?:-|$)")
+_YEAR_IN_TEXT = re.compile(r"(?<!\d)20\d\d(?!\d)")
+#: Calls that turn text into a date, an instant or a year.
+_PARSE_CALLS = frozenset({"fromisoformat", "strptime", "isoparse", "to_datetime", "Timestamp", "datetime64"})
+_PARSE_NAME = re.compile(
+    r"(?:parse|from)_?\w*?(?:date|time|instant|day|iso)|(?:date|time|instant|day|iso)\w*?_?parse", re.IGNORECASE
+)
 _EDITION_ID = re.compile(r"^20\d\d(?:-[0-9a-z]+)+$")
 _EDITION_IN_TEXT = re.compile(
     r"(?:revisions[/\\]20\d\d(?:-[0-9a-z]+)*)|\b20\d\d(?:-[0-9a-z]+)*-(?:y-siguientes|hasta-[0-9a-z-]+|desde-[0-9a-z-]+)\b"
@@ -234,6 +280,8 @@ class _PythonVisitor(ast.NodeVisitor):
         self._lines = source.splitlines()
         self._prose: set[int] = set()
         self._amounts: set[int] = set()
+        self._compared: set[int] = set()
+        self._parsed: set[int] = set()
 
     def _year(self, node: ast.AST | None) -> int | None:
         return year_value(node, self._lines)
@@ -292,6 +340,13 @@ class _PythonVisitor(ast.NodeVisitor):
         named = any(self._bound_value(side, name) is not None for side in sides for name in names)
         if century or named or capped:
             self._report(node, "year compared", ast.unparse(node)[:80])
+        for side in sides:
+            self._compared.update(_opaque_texts(side))
+        self.generic_visit(node)
+
+    @override
+    def visit_MatchValue(self, node: ast.MatchValue) -> None:
+        self._compared.update(_opaque_texts(node.value))
         self.generic_visit(node)
 
     def _bound(
@@ -398,19 +453,29 @@ class _PythonVisitor(ast.NodeVisitor):
             return (bool(node.args) and self._year(node.args[0]) is not None) or any(
                 keyword.arg == "year" and self._year(keyword.value) is not None for keyword in node.keywords
             )
-        return called == "fromisoformat" and any(
-            isinstance(argument, ast.Constant)
+        if called not in _PARSE_CALLS and not _PARSE_NAME.search(called):
+            return False
+        written = [
+            argument
+            for argument in (*node.args, *(keyword.value for keyword in node.keywords))
+            if isinstance(argument, ast.Constant)
             and isinstance(argument.value, str)
-            and _ISO_DATE_TEXT.match(argument.value)
-            for argument in node.args
-        )
+            and _YEAR_IN_TEXT.search(argument.value)
+        ]
+        self._parsed.update(id(argument) for argument in written)
+        return bool(written)
 
     @override
     def visit_Constant(self, node: ast.Constant) -> None:
         if id(node) in self._prose or id(node) in self._amounts or not isinstance(node.value, str):
             return
         text = node.value
-        if _YEAR_TEXT.match(text):
+        if id(node) in self._parsed:
+            return
+        if DATE_TEXT.match(text):
+            if id(node) not in self._compared:
+                self._report(node, "date text", repr(text))
+        elif _YEAR_TEXT.match(text):
             self._report(node, "year text", repr(text))
         elif is_edition_id(text) or _EDITION_IN_TEXT.search(text):
             self._report(node, "edition id", repr(text[:80]))
@@ -418,11 +483,31 @@ class _PythonVisitor(ast.NodeVisitor):
     @override
     def visit_JoinedStr(self, node: ast.JoinedStr) -> None:
         literal = "".join(str(part.value) for part in node.values if isinstance(part, ast.Constant))
-        if _EDITION_IN_TEXT.search(literal):
+        first = node.values[0] if node.values else None
+        if (
+            isinstance(first, ast.Constant)
+            and _DATE_TEXT_START.match(str(first.value))
+            and id(node) not in self._compared | self._parsed
+        ):
+            self._report(node, "date text", repr(literal[:80]))
+        elif _EDITION_IN_TEXT.search(literal):
             self._report(node, "edition id", repr(literal[:80]))
         for part in node.values:
             if isinstance(part, ast.FormattedValue):
                 self.visit(part)
+
+
+def _opaque_texts(node: ast.AST) -> Iterator[int]:
+    """The texts a comparison operand writes directly or through nested literals, compared as written."""
+    if isinstance(node, (ast.Constant, ast.JoinedStr)):
+        yield id(node)
+    elif isinstance(node, (ast.Tuple, ast.List, ast.Set)):
+        for element in node.elts:
+            yield from _opaque_texts(element)
+    elif isinstance(node, ast.Dict):
+        for part in (*node.keys, *node.values):
+            if part is not None:
+                yield from _opaque_texts(part)
 
 
 def _measures(node: ast.AST) -> bool:
@@ -499,6 +584,33 @@ _TS_RULES: Final[tuple[tuple[str, re.Pattern[str]], ...]] = (
     ),
 )
 _TS_STRING = re.compile(r"""(?P<quote>["'`])(?P<body>(?:\\.|(?!(?P=quote))[^\\\n])*)(?P=quote)""")
+#: A call that turns the text opened right after it into a date, an instant or a year.
+_TS_PARSER_OPEN = re.compile(
+    r"(?:\bDate\.parse|\bnew\s+Date|\bTemporal\.\w+\.from|\bdayjs|\bmoment|\bDateTime\.fromISO|\bparseISO"
+    r"|\b\w*(?:[Pp]arse|[Ff]rom)\w*(?:Date|Time|Instant|Day|Iso|ISO)\w*)\s*\(\s*$"
+)
+#: An expectation whose argument is the expected value, written as it is compared.
+_TS_EXPECT_OPEN = re.compile(
+    r"\.(?:not\.)?(?:toBe|toEqual|toStrictEqual|toContain|toContainEqual|toMatchObject|toHaveText|toHaveValue"
+    r"|toHaveAttribute|toHaveProperty|toMatch|toHaveBeenCalledWith|toHaveBeenLastCalledWith|toHaveBeenNthCalledWith)$"
+)
+_TS_COMPARED_BEFORE = re.compile(r"(?:[!=]==?|\bcase)\s*$")
+_TS_COMPARED_AFTER = re.compile(r"^\s*[!=]==?")
+
+
+def _expected_quotes(blanked: list[str]) -> set[tuple[int, int]]:
+    """The line and column of every quote that opens text inside an expectation's argument."""
+    inside: set[tuple[int, int]] = set()
+    stack: list[bool] = []
+    for number, line in enumerate(blanked, start=1):
+        for column, char in enumerate(line):
+            if char == "(":
+                stack.append(_TS_EXPECT_OPEN.search(line[:column]) is not None)
+            elif char == ")" and stack:
+                stack.pop()
+            elif char in "\"'`" and any(stack):
+                inside.add((number, column))
+    return inside
 
 
 def blank_text(source: str) -> str:
@@ -601,11 +713,22 @@ def typescript_findings(source: str, path: str) -> list[Finding]:
                 continue
             found.append(Finding(path=path, line=number, rule=rule, text=line.strip()))
             break
+    expected = _expected_quotes(blanked)
     original = _comment_free(source).splitlines()
     for number, line in enumerate(original, start=1):
         for match in _TS_STRING.finditer(line):
             body = match.group("body")
-            if _YEAR_TEXT.match(body):
+            if _TS_PARSER_OPEN.search(line[: match.start()]) and _YEAR_IN_TEXT.search(body):
+                found.append(Finding(path=path, line=number, rule="year date", text=line.strip()[:80]))
+            elif DATE_TEXT.match(body) or (match.group("quote") == "`" and _DATE_TEXT_START.match(body)):
+                compared = (
+                    (number, match.start()) in expected
+                    or _TS_COMPARED_BEFORE.search(line[: match.start()])
+                    or _TS_COMPARED_AFTER.match(line[match.end() :])
+                )
+                if not compared:
+                    found.append(Finding(path=path, line=number, rule="date text", text=match.group()[:80]))
+            elif _YEAR_TEXT.match(body):
                 found.append(Finding(path=path, line=number, rule="year text", text=match.group()))
             elif is_edition_id(body) or _EDITION_IN_TEXT.search(body):
                 found.append(Finding(path=path, line=number, rule="edition id", text=match.group()[:80]))
