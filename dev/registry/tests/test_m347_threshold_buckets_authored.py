@@ -24,6 +24,7 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.facts.variants import GovernedFactVariant
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority
 from cadrumo.domain.calculations.registry.m347_threshold import (
     M347ThresholdBuckets,
@@ -42,7 +43,16 @@ _BUCKET_FACT = next(
     for fact in load_governed_facts(bundled_path("registry", "aeat", "facts"))
     if fact.fact_id == "m347-clave-threshold-buckets"
 )
-_WIDENED_FLOOR, _SPLIT_YEAR, _SETTLED_FROM = (variant.valid_from.year for variant in _BUCKET_FACT.variants)
+
+
+def _first_exercise(variant: GovernedFactVariant) -> int:
+    """Return the first exercise a variant governs; one without ``valid_from`` starts at the support floor."""
+    if variant.valid_from is None:
+        return filing_year_envelope().floor
+    return variant.valid_from.year
+
+
+_WIDENED_FLOOR, _SPLIT_YEAR, _SETTLED_FROM = (_first_exercise(variant) for variant in _BUCKET_FACT.variants)
 _END_OF_FIRST = date(_SPLIT_YEAR - 1, 12, 31)
 _IN_SECOND = date(_SPLIT_YEAR, 12, 31)
 _END_OF_SECOND = date(_SETTLED_FROM - 1, 12, 31)

@@ -9,7 +9,7 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, revision_last_exercise
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..conformance.registry_schema_support import committed_modelo
@@ -25,7 +25,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 _AUTHORED = authored_revisions("347")
 _EARLIER_ID, _LATER_ID = (str(revision.id) for revision in _AUTHORED)
 # The last exercise the earlier design governs and the first the later one does.
-_EARLIER_LAST = _AUTHORED[0].valid_to.year
+_EARLIER_LAST = revision_last_exercise("347", _EARLIER_ID)
 _LATER_FIRST = _AUTHORED[1].valid_from.year
 
 
