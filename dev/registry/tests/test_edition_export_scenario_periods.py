@@ -278,16 +278,39 @@ def _annual_orden_grants_lorca(exercise: int) -> bool | None:
     return _ORDEN_LORCA_GRANT.search(re.sub(r"\s+", " ", text)) is not None
 
 
-def _scenario_editions_decided_by_their_orden(*, grants: bool) -> tuple[str, ...]:
-    """The Modelo 303 scenario editions whose annual Orden text decides the Lorca reduction as ``grants``."""
+def _m303_scenario_editions(*, prior_year_supported: bool) -> tuple[str, ...]:
+    """The Modelo 303 scenario editions whose prorrata register can reach the prior year inside the envelope.
+
+    The scenario's register carries the prior year's definitive percentage, so
+    the edition rendered at the floor year reaches a year the envelope refuses.
+    """
+    floor = filing_year_envelope().floor
     return tuple(
         revision_id
         for revision_id, scenario in edition_export_scenarios("303").items()
-        if _annual_orden_grants_lorca(scenario.period.filing_year) is grants
+        if (scenario.period.filing_year - 1 >= floor) is prior_year_supported
     )
 
 
-@pytest.mark.parametrize("revision_id", tuple(edition_export_scenarios("303")))
+def _scenario_editions_decided_by_their_orden(*, grants: bool) -> tuple[str, ...]:
+    """The in-envelope Modelo 303 scenario editions whose annual Orden text decides Lorca as ``grants``."""
+    return tuple(
+        revision_id
+        for revision_id in _m303_scenario_editions(prior_year_supported=True)
+        if _annual_orden_grants_lorca(edition_export_scenarios("303")[revision_id].period.filing_year) is grants
+    )
+
+
+def test_m303_scenario_at_the_floor_year_is_refused_for_the_prior_year_below_the_envelope() -> None:
+    """The register reaches the year before the floor, and the engine refuses it rather than inventing support."""
+    below = _m303_scenario_editions(prior_year_supported=False)
+    assert below, "no Modelo 303 scenario edition is rendered at the floor year"
+    for revision_id in below:
+        with bundled_indexed_authority().operation(), pytest.raises(FilingYearOutsideSupportEnvelopeError):
+            edition_export_scenarios("303")[revision_id].producer_snapshot()
+
+
+@pytest.mark.parametrize("revision_id", _m303_scenario_editions(prior_year_supported=True))
 def test_m303_scenario_carries_the_lorca_reduction_exactly_when_the_official_orden_grants_it(
     revision_id: str,
 ) -> None:
