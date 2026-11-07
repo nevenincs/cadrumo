@@ -3298,6 +3298,7 @@ def _confirm_correction_receipt(work: Any, filing_record_id: str) -> None:
 def _write_correction_chain(directory: Path, work: Any, original_id: str) -> None:
     """Produce a saved original and two successive corrections, with one awaiting confirmation."""
     from cadrumo.core.time.clock import frozen_clock, now
+    from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
     from cadrumo.domain.modelos.filing_record import AeatConfirmationState
 
     original = _correction_filing_view(work, original_id, "en")
@@ -3325,10 +3326,18 @@ def _write_correction_chain(directory: Path, work: Any, original_id: str) -> Non
         first = _write_related_correction(directory, work, first_id, "130-correction-1")
         second = _write_related_correction(directory, work, second_id, "130-correction-2")
         _write_list(directory, work, "declarations-corrections")
-    if saved_original.historical_content != original.historical_content:
-        raise SystemExit("correcting the 130 changed the original's saved content")
-    if first.historical_content != pending.historical_content:
-        raise SystemExit("the successive correction changed the first correction's saved content")
+    # A correction moves the revision it takes out of force to its superseded
+    # lifecycle state; everything the revision saved stays as it was.
+    for saved, before, refusal in (
+        (saved_original, original, "correcting the 130 changed the original's saved content"),
+        (first, pending, "the successive correction changed the first correction's saved content"),
+    ):
+        if saved.historical_content.state is not CalculationRevisionState.PRESENTADO_SUPERSEDIDO:
+            raise SystemExit(f"{refusal}: the superseded revision did not leave force")
+        if saved.historical_content.model_dump(exclude={"state"}) != before.historical_content.model_dump(
+            exclude={"state"}
+        ):
+            raise SystemExit(refusal)
     # Independent hand calculation from the pinned 130 rules: expenses4982,
     # simplified provision5%, payment20%, minor deduction100. Confirmed prior
     # payments are deducted once; the newest pending correction is not paid.
