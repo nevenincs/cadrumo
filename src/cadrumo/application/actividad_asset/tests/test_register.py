@@ -95,6 +95,9 @@ def _pinned_authority() -> Iterator[None]:
 
 ACQUISITION = acquisition_transaction()
 NAME = ActivityAssetDescriptorFacts(name="Office laptop", serial_number="SN-1")
+# The register's tests also claim the following year, and the registry admits a claim only up to the
+# support horizon (``claim_year_beyond_registry``), so the first year is the last one that still has a
+# following year inside the envelope.
 FIRST_YEAR = filing_year_envelope().horizon - 1
 _AT = datetime(FIRST_YEAR, 3, 1, 9, 0, tzinfo=UTC)
 
