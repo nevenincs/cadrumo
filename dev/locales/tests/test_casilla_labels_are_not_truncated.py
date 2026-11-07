@@ -23,6 +23,7 @@ from __future__ import annotations
 import pytest
 import yaml
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -33,15 +34,20 @@ _LOCALES = ("es", "en", "ca", "hu")
 def _labels(locale: str) -> dict[str, str]:
     path = REPO_ROOT / "src" / "cadrumo" / "locales" / locale / "modelo" / "schema" / "200.yml"
     catalogue = yaml.safe_load(path.read_text(encoding="utf-8"))
-    revision = catalogue["modelo"]["schema"]["200"]["revision"]["2024"]["casilla"]
-    return {casilla: entry["label"] for casilla, entry in revision.items() if entry.get("label")}
+    revisions = catalogue["modelo"]["schema"]["200"]["revision"]
+    return {
+        f"{revision.id}/{casilla}": entry["label"]
+        for revision in authored_revisions("200")
+        for casilla, entry in revisions.get(revision.id, {}).get("casilla", {}).items()
+        if entry.get("label")
+    }
 
 
 @pytest.mark.parametrize("locale", _LOCALES)
 def test_no_shipped_casilla_label_is_cut_off(locale: str) -> None:
     """An ellipsis in a label means the official text was lost, not abbreviated."""
     labels = _labels(locale)
-    assert labels, f"{locale} ships no Modelo 200/2024 casilla labels at all"
+    assert labels, f"{locale} ships no Modelo 200 casilla labels at all"
 
     truncated = sorted(casilla for casilla, label in labels.items() if "..." in label)
     assert not truncated, (

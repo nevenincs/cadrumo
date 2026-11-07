@@ -27,7 +27,9 @@ _EXAMPLE_KEY = R2Bucket(
     secret_access_key=_PUBLISHED_EXAMPLE_KEY_MATERIAL,
 )
 _EXAMPLE_HOST = "examplebucket.s3.amazonaws.com"
-_EXAMPLE_INSTANT = datetime(2013, 5, 24, tzinfo=UTC)
+#: The x-amz-date AWS prints for those examples; the signatures below are valid for this instant only.
+_PUBLISHED_EXAMPLE_AMZ_DATE = "20130524T000000Z"
+_EXAMPLE_INSTANT = datetime.strptime(_PUBLISHED_EXAMPLE_AMZ_DATE, "%Y%m%dT%H%M%SZ").replace(tzinfo=UTC)
 _EMPTY_PAYLOAD = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
 

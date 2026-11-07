@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.registry.pipeline.authority_publication import authority_source_identity
 
 from ..legal_note_languages import LEGAL_NOTE_LANGUAGES_RELPATH, apply_legal_note_languages, legal_note_language_ranges
@@ -109,7 +110,7 @@ def test_metadata_edit_preserves_runtime_snapshot_and_authority_identity(tmp_pat
             "document_id": record.document_id,
             "corpus_ref": record.corpus_ref,
             "permalink": record.permalink,
-            "effective_from": date(2000, 1, 1),
+            "effective_from": date(filing_year_envelope().floor, 1, 1),
             "review_status": "pending_review",
             "required_text": ("Artículo 1",),
             "notes": record.notes,

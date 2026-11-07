@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core import atomic_write
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..golden_store import golden_path, read_golden, write_golden
 from ..runner import FrameExecution, SequenceTranscript
@@ -25,7 +26,7 @@ def _transcript(root: Path) -> SequenceTranscript:
     return SequenceTranscript(
         sequence_id=_SEQUENCE_ID,
         profile_id="publication-profile",
-        frozen_instant=datetime(2026, 1, 1, tzinfo=UTC),
+        frozen_instant=datetime(filing_year_envelope().horizon, 1, 1, tzinfo=UTC),
         storage_root=str(root / "storage"),
         workdir=str(root / "workdir"),
         frames=(

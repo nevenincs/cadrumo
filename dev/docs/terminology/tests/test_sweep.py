@@ -26,6 +26,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ...pagefind_inject import (
     SearchInjectionError,
@@ -210,7 +211,7 @@ def test_run_sweep_uses_explicit_alias_authority_for_the_same_pipeline(
                 canonical_query="pro rata",
                 status="ratified",
                 review_reason="Independent spelling form reviewed for the English prorrata query surface.",
-                reviewed_at=date(2026, 8, 6),
+                reviewed_at=date(filing_year_envelope().horizon, 8, 6),
             ),
         ),
     )

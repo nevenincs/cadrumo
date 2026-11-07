@@ -18,6 +18,7 @@ from docutils.core import publish_doctree, publish_parts
 
 from cadrumo.core.directory_scan import iter_directory, scan_directory
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.locales.signal_documentation_inventory import inventory_generated_document_file
 from dev.paths import REPO_ROOT
 
@@ -554,9 +555,11 @@ def test_same_article_versions_get_distinct_headings_by_in_force_date() -> None:
         "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a52",
         "article": "52",
     }
+    first = date(filing_year_envelope().floor, 1, 1)
+    second = first.replace(year=first.year + 1)
     records = (
-        LegalProvisionRecord(legal_id="ley-35-2006:art-52", effective_from=date(2015, 1, 1), **common),
-        LegalProvisionRecord(legal_id="ley-35-2006:art-52-2021", effective_from=date(2021, 1, 1), **common),
+        LegalProvisionRecord(legal_id="ley-35-2006:art-52", effective_from=first, **common),
+        LegalProvisionRecord(legal_id="ley-35-2006:art-52-2021", effective_from=second, **common),
     )
 
     page = render_legal_reference(_REPO_ROOT, records=records).pages[0]
@@ -564,8 +567,8 @@ def test_same_article_versions_get_distinct_headings_by_in_force_date() -> None:
 
     assert len(headings) == len(set(headings)) == 2
     assert all(heading.startswith("Ley 35/2006, art. 52") for heading in headings)
-    assert {"2015-01-01" in heading for heading in headings} == {True, False}
-    assert {"2021-01-01" in heading for heading in headings} == {True, False}
+    assert {first.isoformat() in heading for heading in headings} == {True, False}
+    assert {second.isoformat() in heading for heading in headings} == {True, False}
     assert _system_messages(page.rst) == ()
 
 
@@ -661,7 +664,8 @@ def test_an_effectivity_window_that_closes_before_it_opens_is_refused() -> None:
     the record's own evidence, and the page would otherwise publish it as a
     legal-force claim about BOE authority.
     """
-    record = _windowed_record(effective_from=date(2020, 1, 1), effective_to=date(2018, 1, 1))
+    opens = filing_year_envelope().floor
+    record = _windowed_record(effective_from=date(opens + 2, 1, 1), effective_to=date(opens, 1, 1))
 
     with pytest.raises(LegalReferenceError, match="closes before it opens"):
         render_legal_reference(_REPO_ROOT, records=(record,))
@@ -669,17 +673,21 @@ def test_an_effectivity_window_that_closes_before_it_opens_is_refused() -> None:
 
 def test_a_well_ordered_effectivity_window_still_renders_its_span() -> None:
     """The refusal must not cost the surface a legitimately bounded provision."""
-    record = _windowed_record(effective_from=date(2018, 1, 1), effective_to=date(2020, 1, 1))
+    opens = date(filing_year_envelope().floor, 1, 1)
+    closes = opens.replace(year=opens.year + 2)
+    record = _windowed_record(effective_from=opens, effective_to=closes)
 
     page = render_legal_reference(_REPO_ROOT, records=(record,)).pages[0]
 
-    assert "2018-01-01" in page.rst
-    assert "2020-01-01" in page.rst
+    assert opens.isoformat() in page.rst
+    assert closes.isoformat() in page.rst
 
 
 def test_a_window_closing_on_the_day_it_opens_is_admitted() -> None:
     """A provision in force for a single day is bounded, not contradictory."""
-    record = _windowed_record(effective_from=date(2019, 6, 1), effective_to=date(2019, 6, 1))
+    record = _windowed_record(
+        effective_from=date(filing_year_envelope().floor, 6, 1), effective_to=date(filing_year_envelope().floor, 6, 1)
+    )
 
     assert render_legal_reference(_REPO_ROOT, records=(record,)).pages
 
@@ -692,7 +700,8 @@ def test_a_record_declaring_no_closing_date_is_admitted_unchanged() -> None:
     first, so the window check must stay silent rather than invent one.
     """
     assert render_legal_reference(
-        _REPO_ROOT, records=(_windowed_record(effective_from=date(2020, 1, 1), effective_to=None),)
+        _REPO_ROOT,
+        records=(_windowed_record(effective_from=date(filing_year_envelope().floor, 1, 1), effective_to=None),),
     ).pages
     assert render_legal_reference(_REPO_ROOT, records=(_windowed_record(effective_from=None, effective_to=None),)).pages
 

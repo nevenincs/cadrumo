@@ -23,6 +23,7 @@ from typing import cast
 import pytest
 from pydantic import JsonValue
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.golden_comparison import MASK_SENTINEL
 
 from .. import compare
@@ -355,7 +356,7 @@ class TestEnvelopePathNormalisation:
         return SequenceTranscript(
             sequence_id="path-norm-case",
             profile_id="docs-sequence-sandbox",
-            frozen_instant=datetime(2026, 4, 1, 9, 0, tzinfo=UTC),
+            frozen_instant=datetime(filing_year_envelope().horizon, 4, 1, 9, 0, tzinfo=UTC),
             storage_root=storage_root,
             workdir=workdir,
             frames=(execution,),
@@ -569,7 +570,7 @@ class TestExpectEvaluation:
         transcript = SequenceTranscript(
             sequence_id="compare-quoted-key",
             profile_id="docs-sequence-sandbox",
-            frozen_instant=datetime(2026, 4, 1, 9, 0, tzinfo=UTC),
+            frozen_instant=datetime(filing_year_envelope().horizon, 4, 1, 9, 0, tzinfo=UTC),
             storage_root="/sandbox",
             workdir="/sandbox/workdir",
             frames=(execution,),
@@ -717,7 +718,7 @@ class TestExplicitSandboxPathExpectations:
         transcript = SequenceTranscript(
             sequence_id="exact-export-path",
             profile_id="docs-sequence-sandbox",
-            frozen_instant=datetime(2026, 4, 1, 9, 0, tzinfo=UTC),
+            frozen_instant=datetime(filing_year_envelope().horizon, 4, 1, 9, 0, tzinfo=UTC),
             storage_root=workdir.rsplit(separator, 1)[0] + separator + "storage",
             workdir=workdir,
             frames=(frame,),
@@ -754,7 +755,7 @@ class TestExplicitSandboxPathExpectations:
         transcript = SequenceTranscript(
             sequence_id="raw-export-path",
             profile_id="docs-sequence-sandbox",
-            frozen_instant=datetime(2026, 4, 1, 9, 0, tzinfo=UTC),
+            frozen_instant=datetime(filing_year_envelope().horizon, 4, 1, 9, 0, tzinfo=UTC),
             storage_root="/sandbox/storage",
             workdir="/sandbox/workdir",
             frames=(frame,),
@@ -803,7 +804,7 @@ class TestExplicitSandboxPathExpectations:
         transcript = SequenceTranscript(
             sequence_id="captured-export-path",
             profile_id="docs-sequence-sandbox",
-            frozen_instant=datetime(2026, 4, 1, 9, 0, tzinfo=UTC),
+            frozen_instant=datetime(filing_year_envelope().horizon, 4, 1, 9, 0, tzinfo=UTC),
             storage_root=workdir.rsplit(separator, 1)[0] + separator + "storage",
             workdir=workdir,
             frames=(setup, result),
@@ -842,7 +843,7 @@ class TestExplicitSandboxPathExpectations:
         transcript = SequenceTranscript(
             sequence_id="pre-tokenized-export-path",
             profile_id="docs-sequence-sandbox",
-            frozen_instant=datetime(2026, 4, 1, 9, 0, tzinfo=UTC),
+            frozen_instant=datetime(filing_year_envelope().horizon, 4, 1, 9, 0, tzinfo=UTC),
             storage_root="/sandbox/storage",
             workdir="/sandbox/workdir",
             frames=(frame,),

@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.i18n.render import tr
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..signal_spelling_segments import CATALAN_HYPHENATED_CLITIC_RE, locale_spelling_words
 from ..signal_tokens import filtered_translation_text, translation_words
@@ -101,15 +102,16 @@ def test_unicode_cli_options_are_excluded_as_a_whole() -> None:
 
 
 def test_english_amend_wizard_prompt_renders_line_breaks() -> None:
+    year = filing_year_envelope().horizon
     rendered = tr(
         "cli.app.modelo.work.amend_wizard_select_prompt",
         modelo="303",
-        year="2025",
+        year=str(year),
         period="1T",
         summary="Box 01",
         locale="en",
     )
     assert rendered == (
-        "Recorded as filed: 303 1T 2025,\ncurrent values:\nBox 01\n"
+        f"Recorded as filed: 303 1T {year},\ncurrent values:\nBox 01\n"
         "Which box numbers changed? (comma/space separated, blank for none)"
     )

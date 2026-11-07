@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ..signal_command_paths import filter_detail_row_examples
 from ..signal_document_prose import visible_document_prose
 from ..signal_spelling_segments import (
@@ -421,8 +423,8 @@ def test_hungarian_acronym_suffix_keeps_the_acronym_inside_existing_identifier_r
         ("036-os", "036", "os"),
         ("110-es", "110", "es"),
         ("115-ös", "115", "ös"),
-        ("2022-től", "2022", "től"),
-        ("2025-ös", "2025", "ös"),
+        (f"{filing_year_envelope().floor}-től", str(filing_year_envelope().floor), "től"),
+        (f"{filing_year_envelope().horizon}-ös", str(filing_year_envelope().horizon), "ös"),
     ],
 )
 def test_hungarian_hyphenated_suffix_preserves_stem_and_excludes_only_suffix(

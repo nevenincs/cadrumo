@@ -20,6 +20,7 @@ from pathlib import Path
 import pytest
 from pydantic import JsonValue
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.tests.golden_comparison import canonicalise
 
 from .. import checks
@@ -239,11 +240,13 @@ class TestBothModesReportTheAdvisory:
 
 _REFRESH_PAGE = "tutorials/refresh-readiness-case"
 _REFRESH_SEQUENCE_ID = "refresh-readiness-case"
+_YEAR = filing_year_envelope().horizon
+_REVISION_ID = open_ended_revision("303").id
 _READINESS_EXPECTATIONS = (
     'result.modelo == "303"',
-    "result.filing_year == 2026",
+    f"result.filing_year == {_YEAR}",
     'result.period.code == "1T"',
-    'result.revision_id == "2026-y-siguientes"',
+    f'result.revision_id == "{_REVISION_ID}"',
     "result.profile_ready == true",
     "result.binding_ready == false",
 )
@@ -277,9 +280,9 @@ def _readiness_transcript(
     else:
         envelope["result"] = {
             "modelo": "303",
-            "filing_year": 2026,
-            "period": {"code": "1T", "filing_year": 2026},
-            "revision_id": "2026-y-siguientes",
+            "filing_year": _YEAR,
+            "period": {"code": "1T", "filing_year": _YEAR},
+            "revision_id": _REVISION_ID,
             "profile_ready": True,
             "binding_ready": False,
             "ready": False,
@@ -289,7 +292,7 @@ def _readiness_transcript(
     return SequenceTranscript(
         sequence_id=sequence.sequence_id,
         profile_id="refresh-guard-profile",
-        frozen_instant=datetime(2026, 4, 1, 9, tzinfo=UTC),
+        frozen_instant=datetime(_YEAR, 4, 1, 9, tzinfo=UTC),
         storage_root=str(root / "storage"),
         workdir=str(root / "workdir"),
         frames=(
@@ -328,7 +331,7 @@ def _refresh_readiness_fixture(
     contract = docs_root / "_sequences" / "contracts" / _REFRESH_PAGE / f"{_REFRESH_SEQUENCE_ID}.seq"
     contract.parent.mkdir(parents=True)
     contract.write_text(
-        "@result aeat --format json app modelo readiness --modelo 303 --year 2026 --period 1T\n"
+        f"@result aeat --format json app modelo readiness --modelo 303 --year {_YEAR} --period 1T\n"
         + "".join(f"@expect {expectation}\n" for expectation in _READINESS_EXPECTATIONS)
         + "@expect exit_code == 2\n",
         encoding="utf-8",

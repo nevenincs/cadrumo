@@ -6,6 +6,8 @@ from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ..docs_delivery_contracts import (
     CANONICAL_DOCS_BASE_URL,
     DELIVERY_ROUTES,
@@ -21,8 +23,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_a_release_id_is_the_label_plus_a_utc_instant() -> None:
-    instant = datetime(2026, 9, 23, 15, 4, 5, tzinfo=timezone(timedelta(hours=2)))
-    assert release_id("v0.6.0", now=instant) == "v0.6.0-20260923T130405Z"
+    year = filing_year_envelope().horizon
+    instant = datetime(year, 9, 23, 15, 4, 5, tzinfo=timezone(timedelta(hours=2)))
+    assert release_id("v0.6.0", now=instant) == f"v0.6.0-{year}0923T130405Z"
     assert RELEASE_ID_RE.fullmatch(release_id("local-5b1c188d285f", now=datetime.now(UTC)))
 
 

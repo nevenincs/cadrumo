@@ -12915,7 +12915,8 @@ modelo:
             00952:
               label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
                 és más, növelt levonásra jogosító célokra adott adományok - 2016 -
-                Ugyanazon... részére ismételt adományozással
+                Ugyanazon szervezetnek ismételt adományozással - Függőben lévő/keletkezett
+                levonás
             00953:
               label: Nonprofit szervezeteknek nyújtott adományok levonása - Kiemelt
                 mecenatúra-tevékenységekre és más, növelt levonásra jogosító célokra
@@ -13249,7 +13250,8 @@ modelo:
             01329:
               label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
                 és más, növelt levonásra jogosító célokra adott adományok - 2023 -
-                Ugyanazon... ismételt adományozás nélkül
+                Ugyanazon szervezetnek ismételt adományozás nélkül - Függőben lévő/keletkezett
+                levonás
             '01372':
               label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
                 és más, növelt levonásra jogosító célokra adott adományok - 2023 -
@@ -13359,7 +13361,7 @@ modelo:
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS
                 33. átmeneti rendelkezés és 13. kiegészítő rendelkezés - Keletkezés
-                éve - 2007 és korábbi - A(z) ... alkalmazott DTA
+                éve - 2007 és korábbi - Az időszakban alkalmazott DTA
             '01526':
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS
@@ -13573,8 +13575,8 @@ modelo:
                 után - Csökkenések
             '01577':
               label: Elszámolás III - adóalap - A Kanári-szigeteki hajók és hajózási
-                társaságok különleges rendszere - Az adóalap azon része, amely az
-                egyéb tevékenységekből származik, a tart... után
+                társaságok különleges rendszere - Az adóalapnak az egyéb tevékenységek
+                végzéséből származó része, a kiegyenlítő tartalék után - Csökkenések
             01578:
               label: Elszámolás IV - Helyesbítő bevallás - A 2025. adóidőszakra vonatkozó
                 korábbi önadózások vagy hatósági megállapítások feldolgozása nyomán
@@ -13621,7 +13623,7 @@ modelo:
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS
                 33. átmeneti rendelkezés és 13. kiegészítő rendelkezés - Keletkezés
-                éve - Összesen 2008-2015 - A(z) ... alkalmazott DTA
+                éve - Összesen 2008-2015 - Az időszakban alkalmazott DTA
             01591:
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS
