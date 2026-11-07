@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import html
+import re
 import shutil
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -48,6 +51,7 @@ from ..edition_export_scenarios import (
     edition_export_scenarios,
     supported_scenario_periods,
 )
+from .modelo_100_registry_support import loaded_registry, source_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -246,19 +250,60 @@ def test_m303_scenarios_select_both_form_editions_of_the_split_exercise(position
     assert selected.id == revision_id
 
 
-def _lorca_relief_editions() -> tuple[str, ...]:
-    """The Modelo 303 scenario editions whose pinned annual Orden carries a Lorca reduction."""
+_ORDEN_LORCA_GRANT = re.compile(
+    r"en el término municipal de Lorca y estén acogidos al régimen especial simplificado, "
+    r"podrán reducir en un (\d+) por ciento"
+)
+
+
+def _annual_orden_grants_lorca(exercise: int) -> bool | None:
+    """Whether the bundled official annual Orden of one exercise grants the Lorca reduction.
+
+    Read from the Orden's own published text, not from the registry's pinned
+    fact. ``None`` when the corpus holds no single annual Orden for the exercise.
+    """
+    _, catalogues = loaded_registry()
+    first_day, last_day = date(exercise, 1, 1), date(exercise, 12, 31)
+    ordenes = [
+        source
+        for source_id, source in catalogues.sources.items()
+        if source_id.startswith("boe-orden-")
+        and source_id.endswith("-iva-authority")
+        and source.applies_from == first_day
+        and source.applies_to == last_day
+    ]
+    if len(ordenes) != 1:
+        return None
+    text = html.unescape(re.sub(r"<[^>]+>", " ", (source_root() / ordenes[0].corpus_path).read_text(encoding="utf-8")))
+    return _ORDEN_LORCA_GRANT.search(re.sub(r"\s+", " ", text)) is not None
+
+
+def _scenario_editions_decided_by_their_orden(*, grants: bool) -> tuple[str, ...]:
+    """The Modelo 303 scenario editions whose annual Orden text decides the Lorca reduction as ``grants``."""
+    return tuple(
+        revision_id
+        for revision_id, scenario in edition_export_scenarios("303").items()
+        if _annual_orden_grants_lorca(scenario.period.filing_year) is grants
+    )
+
+
+@pytest.mark.parametrize("revision_id", tuple(edition_export_scenarios("303")))
+def test_m303_scenario_carries_the_lorca_reduction_exactly_when_the_official_orden_grants_it(
+    revision_id: str,
+) -> None:
+    """Both directions: a granting Orden is pinned by the registry, and a silent one is not."""
+    scenario = edition_export_scenarios("303")[revision_id]
+    granted = _annual_orden_grants_lorca(scenario.period.filing_year)
+    if granted is None:
+        pytest.fail(f"the corpus holds no single annual Orden for edition {revision_id}; list it as undecidable")
     with bundled_indexed_authority().operation():
-        relief: list[str] = []
-        for revision_id, scenario in edition_export_scenarios("303").items():
-            facts = scenario.producer_snapshot().m303_filing_facts
-            assert facts is not None
-            if facts.regimen_simplificado.regimen_snapshot.orden.lorca_reduction is not None:
-                relief.append(revision_id)
-        return tuple(relief)
+        facts = scenario.producer_snapshot().m303_filing_facts
+        assert facts is not None
+        carried = facts.regimen_simplificado.regimen_snapshot.orden.lorca_reduction is not None
+    assert carried is granted
 
 
-@pytest.mark.parametrize("revision_id", _lorca_relief_editions())
+@pytest.mark.parametrize("revision_id", _scenario_editions_decided_by_their_orden(grants=True))
 def test_m303_scenario_evidences_no_lorca_relief_and_missing_evidence_still_refuses(revision_id: str) -> None:
     """Synthetic non-Lorca activities render, while missing required evidence still fails."""
     scenario = edition_export_scenarios("303")[revision_id]
