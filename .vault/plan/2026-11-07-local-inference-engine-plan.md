@@ -13,7 +13,7 @@ related:
   - '[[2026-10-25-agent-owned-models-adr]]'
 modified: '2026-11-07'
 body_schema: body-v2
-body_hash: 'sha256:3be6f904211c9d940da9a0b37b76892c8ca60f40493d68328ef39fae33c16191'
+body_hash: 'sha256:8a91488d838b0331d3d2f601cff55b06aa6c81d24ea65ae0b8d98812628a61ca'
 ---
 
 # `local-inference-engine` plan
@@ -100,6 +100,7 @@ Persist one local engine setting with placement, pass the llama.cpp base URL to 
 - [ ] `P04.S21` - Add the desktop engine and placement action: an action_reason entry, a provider-settings command through change(), a local model list parser, engine-aware setup admission and the engine selection the manager reads (repo cadrumo, executor vaultspec-high-executor, lands in feature/tui once verified with tui compiling, the desktop app working and a root build slot from the coordinator); `native/desktop/src-tauri/src/agent/admin.rs, native/desktop/src-tauri/src/shell/provider_settings/mod.rs, native/desktop/src-tauri/src/agent/local_models.rs, native/desktop/src-tauri/src/shell/setup/admission.rs`.
 - [ ] `P04.S22` - Add the local engine and placement words in en, es, ca and hu through the dev.locales workflow with informal singular address, registered as desktop interface keys (repo cadrumo, executor vaultspec-standard-executor, Opus review before the Step closes, lands in feature/tui once verified with tui compiling, the desktop app working and a root build slot from the coordinator); `src/cadrumo_agent_service/locales, dev/locales/desktop_interface_keys.py`.
 - [ ] `P04.S23` - Add one engine selector and a placement switch rendered through t(), filtering catalogLanes by the selected engine, with every other local model surface unchanged (repo cadrumo, executor vaultspec-standard-executor, Opus review before the Step closes, lands in feature/tui once verified with tui compiling, the desktop app working and a root build slot from the coordinator); `native/desktop/frontend/src/components/settings/LocalModels.tsx, native/desktop/frontend/src/components/setup/LocalAi.tsx, native/desktop/frontend/src/shell/localModelLanes.ts`.
+- [ ] `P04.S32` - Make the agent service accept declared catalogue schema 6 and its per-model artefacts field, typed and refusing unknown fields, together with the P02.S03 agent landing, because the service pins schema 5 and refuses unknown model fields, so the bundled agent's v6 catalogue would read as CATALOG_MALFORMED and break provider settings (repo cadrumo, executor vaultspec-standard-executor, lands in feature/tui in the same slot as P02.S03 lands in the cadrumo-agent main, with tui compiling and the desktop app working); `src/cadrumo_agent_service/providers/domain/catalog.py, src/cadrumo_agent_service/providers/domain/tests/test_catalog.py, src/cadrumo_agent_service/adapters/agent_provider_catalog.py`.
 
 ### Phase `P05` - Verification and acceptance (repo cadrumo)
 
