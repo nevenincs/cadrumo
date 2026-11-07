@@ -14,8 +14,8 @@ import hashlib
 from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
-from decimal import Decimal
+from datetime import UTC, date, datetime, timedelta
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
 import pytest
@@ -75,7 +75,8 @@ from ....core.time.clock import MADRID_TZ
 from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef, date_within_validity_window
 from ....domain.calculations.registry.tests.published_authority import (
     published_selected_revision_id,
     published_supported_filing_years,
@@ -624,6 +625,39 @@ def _drive_amend_creates_complementaria(repos: _Repos, *, operation: PinnedAutho
     )
 
 
+#: Casilla 13 for a prior-year net income of at most 9.000 EUR, which the test's binding of zero selects.
+_MINORACION_PRIOR_INCOME_AT_MOST_9000 = Decimal("100")
+_CENT = Decimal("0.01")
+
+
+def _served_percent(snapshot: RegistrySnapshot, parameter_id: str) -> Decimal:
+    """Return the percentage the registry serves for the snapshot's first-quarter close."""
+    quarter_close = date(snapshot.filing_year, 3, 31)
+    parameter = next(item for item in snapshot.revision.parameters if item.id == parameter_id)
+    (served,) = (
+        value
+        for value in parameter.values
+        if date_within_validity_window(quarter_close, valid_from=value.valid_from, valid_to=value.valid_to)
+    )
+    return Decimal(served.value)
+
+
+def _expected_pago_fraccionado(snapshot: RegistrySnapshot, *, income: Decimal, expenses: Decimal) -> Decimal:
+    """Casilla 04 of a simplified-modality 1T return, from the instructions' own arithmetic.
+
+    The provisiones y gastos de difícil justificación are the served percentage of
+    income less the other expenses (RIRPF art. 30.2.a, 7 per cent only for 2023); the
+    rendimiento neto is income less expenses and that provision; the payment is the
+    served percentage of it.
+    """
+    provision = ((income - expenses) * _served_percent(snapshot, "irpf.art-30-2-provision-rate") / 100).quantize(
+        _CENT, ROUND_HALF_UP
+    )
+    net = (income - expenses - provision).quantize(_CENT, ROUND_HALF_UP)
+    rate = _served_percent(snapshot, "irpf.direct_estimation_fractional_payment_rate")
+    return (net * rate / 100).quantize(_CENT, ROUND_HALF_UP)
+
+
 def test_operation_backed_130_successive_confirmed_corrections_recompute_and_guard_decreases(
     repos: _Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
@@ -691,10 +725,14 @@ def test_operation_backed_130_successive_confirmed_corrections_recompute_and_gua
         operation=operation,
     )
     first_revision = cr_repo.load().revisions[first.calculation_revision_id]
-    assert first_revision.casilla_values[validated_casilla_id("04")] == Decimal("953.42")
-    assert first_revision.casilla_values[validated_casilla_id("17")] == Decimal("853.42")
-    assert first_revision.casilla_values[validated_casilla_id("18")] == Decimal("633.02")
-    assert first_revision.casilla_values[validated_casilla_id("19")] == Decimal("220.40")
+    expected_original_04 = _expected_pago_fraccionado(snapshot, income=Decimal("8840"), expenses=Decimal("4982"))
+    expected_first_04 = _expected_pago_fraccionado(snapshot, income=Decimal("10000"), expenses=Decimal("4982"))
+    expected_first_17 = expected_first_04 - _MINORACION_PRIOR_INCOME_AT_MOST_9000
+    expected_first_18 = expected_original_04 - _MINORACION_PRIOR_INCOME_AT_MOST_9000
+    assert first_revision.casilla_values[validated_casilla_id("04")] == expected_first_04
+    assert first_revision.casilla_values[validated_casilla_id("17")] == expected_first_17
+    assert first_revision.casilla_values[validated_casilla_id("18")] == expected_first_18
+    assert first_revision.casilla_values[validated_casilla_id("19")] == expected_first_17 - expected_first_18
 
     from datetime import timedelta
 
@@ -720,9 +758,11 @@ def test_operation_backed_130_successive_confirmed_corrections_recompute_and_gua
         operation=operation,
     )
     second_revision = cr_repo.load().revisions[second.calculation_revision_id]
-    assert second_revision.casilla_values[validated_casilla_id("04")] == Decimal("1143.42")
-    assert second_revision.casilla_values[validated_casilla_id("18")] == Decimal("853.42")
-    assert second_revision.casilla_values[validated_casilla_id("19")] == Decimal("190.00")
+    expected_second_04 = _expected_pago_fraccionado(snapshot, income=Decimal("11000"), expenses=Decimal("4982"))
+    expected_second_17 = expected_second_04 - _MINORACION_PRIOR_INCOME_AT_MOST_9000
+    assert second_revision.casilla_values[validated_casilla_id("04")] == expected_second_04
+    assert second_revision.casilla_values[validated_casilla_id("18")] == expected_first_17
+    assert second_revision.casilla_values[validated_casilla_id("19")] == expected_second_17 - expected_first_17
     assert cr_repo.load().revisions[original_revision.calculation_revision_id].model_dump(mode="json") == original_saved
 
     records_before_decrease = fr_repo.load().model_dump(mode="json")
