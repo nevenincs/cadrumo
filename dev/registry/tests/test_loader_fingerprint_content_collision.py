@@ -17,11 +17,18 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ..compiler.loader import load_modelo_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _CASILLA_NUMBER_SENTINEL = "@@CASILLA_NUMBER@@"
+_YEAR_SENTINEL = "@@YEAR@@"
+
+# An edition the synthetic modelo opens at the support floor, whatever the floor is.
+_FIRST_EXERCISE = str(filing_year_envelope().floor)
+_REVISION_ID = f"{_FIRST_EXERCISE}-y-siguientes"
 
 _MANIFEST_TEXT = """
 [modelo]
@@ -34,15 +41,15 @@ source_refs = ["aeat-source"]
 """.lstrip()
 
 _REVISION_TEXT = """
-[revisions.2019-y-siguientes]
-valid_from = 2019-01-01
-period_selector = { year_from = 2019, periods = ["1T", "2T", "3T", "4T"] }
+[revisions.@@YEAR@@-y-siguientes]
+valid_from = @@YEAR@@-01-01
+period_selector = { year_from = @@YEAR@@, periods = ["1T", "2T", "3T", "4T"] }
 legal_refs = ["ley-35-2006:art-1"]
 source_refs = ["aeat-source"]
-""".lstrip()
+""".lstrip().replace(_YEAR_SENTINEL, _FIRST_EXERCISE)
 
 _CASILLA_TEXT = """
-[[revisions.2019-y-siguientes.casillas]]
+[[revisions.@@YEAR@@-y-siguientes.casillas]]
 id = "01"
 number = "@@CASILLA_NUMBER@@"
 section = ["section"]
@@ -50,7 +57,7 @@ input_kind = "manual"
 continuidad_id = "cont_01"
 legal_refs = ["ley-35-2006:art-1"]
 source_refs = ["aeat-source"]
-"""
+""".replace(_YEAR_SENTINEL, _FIRST_EXERCISE)
 
 
 def _casilla_text(number: str) -> str:
@@ -76,7 +83,7 @@ def _rewrite_pinning_stat(path: Path, new_text: str) -> None:
 def test_modelo_fragment_same_size_same_mtime_edit_invalidates(tmp_path: Path) -> None:
     """A colliding rewrite must serve the new language-neutral field value."""
     modelo_dir = tmp_path / "130"
-    revision_dir = modelo_dir / "revisions" / "2019-y-siguientes"
+    revision_dir = modelo_dir / "revisions" / _REVISION_ID
     (revision_dir / "casillas").mkdir(parents=True)
     (modelo_dir / "manifest.toml").write_text(_MANIFEST_TEXT, encoding="utf-8")
     (revision_dir / "revision.toml").write_text(_REVISION_TEXT, encoding="utf-8")
@@ -84,9 +91,9 @@ def test_modelo_fragment_same_size_same_mtime_edit_invalidates(tmp_path: Path) -
     casilla_path.write_text(_casilla_text("01"), encoding="utf-8")
 
     loaded_a = load_modelo_directory(modelo_dir)
-    assert loaded_a.revisions["2019-y-siguientes"].casillas[0].number == "01"
+    assert loaded_a.revisions[_REVISION_ID].casillas[0].number == "01"
 
     _rewrite_pinning_stat(casilla_path, _casilla_text("02"))
 
     loaded_b = load_modelo_directory(modelo_dir)
-    assert loaded_b.revisions["2019-y-siguientes"].casillas[0].number == "02"
+    assert loaded_b.revisions[_REVISION_ID].casillas[0].number == "02"

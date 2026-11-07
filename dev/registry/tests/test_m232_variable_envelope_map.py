@@ -18,6 +18,7 @@ from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ..compiler.loader import load_modelo_directory, load_shared_catalogues
 from ..pipeline.joined_record_design import join_record_design_semantics
@@ -30,12 +31,24 @@ from ..pipeline.variable_envelope import FilingEnvelopeProvenance, compile_filin
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+# The two official design editions, oldest first. Each epoch is the first exercise its revision governs and
+# names its source and semantic mapping; the digest and total row are what that source prints.
+_OLDER, _NEWER = authored_revisions("232")
+_OLDER_EPOCH = str(_OLDER.valid_from.year)
+_NEWER_EPOCH = str(_NEWER.valid_from.year)
+_OLDER_SOURCE = f"aeat-dr-232-{_OLDER_EPOCH}"
 _DESIGNS = (
-    ("2016", "2016-2017", "aeat-dr-232-2016", "fb6802dcf8746e69331b67873cb2e5cae90c3343c69b4f4d430aecde3c56b6ad", 22),
     (
-        "2018",
-        "2018-y-siguientes",
-        "aeat-dr-232-2018",
+        _OLDER_EPOCH,
+        str(_OLDER.id),
+        _OLDER_SOURCE,
+        "fb6802dcf8746e69331b67873cb2e5cae90c3343c69b4f4d430aecde3c56b6ad",
+        22,
+    ),
+    (
+        _NEWER_EPOCH,
+        str(_NEWER.id),
+        f"aeat-dr-232-{_NEWER_EPOCH}",
         "a61485dfc480393ec1dfc926142fd0b6a9386e28e60746da3dfbf2fdaf3bffff",
         21,
     ),
@@ -78,7 +91,7 @@ def test_m232_complete_source_join_and_envelope(
     assert contract.parser_envelope.closing.source_row == 20
     assert contract.parser_envelope.total_source_row == total_row
     terminator = contract.parser_envelope.terminator
-    if epoch == "2016":
+    if epoch == _OLDER_EPOCH:
         assert terminator is not None
         assert (
             terminator.source_row,
@@ -113,7 +126,7 @@ def test_m232_complete_source_join_and_envelope(
     assert declaration.record_identity == "DR23200"
     assert declaration.prefix_extent == 328
     assert len(declaration.prefix_fields) == 13
-    assert declaration.record_terminator == ("crlf" if epoch == "2016" else None)
+    assert declaration.record_terminator == ("crlf" if epoch == _OLDER_EPOCH else None)
     provenance = FilingEnvelopeProvenance(
         schema_version=2,
         revision_id=revision,
@@ -122,7 +135,7 @@ def test_m232_complete_source_join_and_envelope(
         envelope=declaration,
         envelope_sha256=content_hash_hex(declaration.model_dump(mode="json")),
     )
-    if epoch == "2016":
+    if epoch == _OLDER_EPOCH:
         changed_provenance = provenance.model_dump(mode="json")
         changed_provenance["envelope"]["record_terminator"] = None
         with pytest.raises(ValueError, match="provenance digest does not match"):
@@ -139,7 +152,7 @@ def test_m232_complete_source_join_and_envelope(
     suffix, payload = assemble_filing_envelope_payload(
         declaration, prefix=prefix, occurrences=(occurrence,), closer=closer
     )
-    assert suffix == (b"\r\n" if epoch == "2016" else b"")
+    assert suffix == (b"\r\n" if epoch == _OLDER_EPOCH else b"")
     result = FilingEnvelopeRenderResult(
         draft_id="source-only-envelope-proof",
         revision_id=revision,
@@ -178,13 +191,13 @@ def test_m232_complete_source_join_and_envelope(
             source=stale_source,
             body_record_ids=("m232-operaciones-vinculadas", "m232-paraisos-fiscales"),
         )
-    if epoch == "2018":
+    if epoch == _NEWER_EPOCH:
         historical = load_record_design_intermediate(
             bundled_path(),
             dict(catalogues.sources),
-            source_ref="aeat-dr-232-2016",
-            filing_year=2016,
-            design_epoch="2016",
+            source_ref=_OLDER_SOURCE,
+            filing_year=int(_OLDER_EPOCH),
+            design_epoch=_OLDER_EPOCH,
         )
         with pytest.raises(RegistryValidationError, match="unreviewed trailing record terminator"):
             compile_filing_envelope_definition(
@@ -197,21 +210,24 @@ def test_m232_complete_source_join_and_envelope(
 
 
 def test_unterminated_existing_envelope_keeps_its_committed_canonical_digest() -> None:
-    manifest_path = (
-        bundled_path("registry", "aeat")
-        / "modelos"
-        / "303"
-        / "revisions"
-        / "2025"
-        / "export"
-        / "_generation.provenance.json"
-    )
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    original = manifest["variable_envelope_contract"]
-    typed = FilingEnvelopeProvenance.model_validate_json(json.dumps(original))
-    assert typed.envelope_sha256 == "08b5515d8f59cffca4b8a4752eaf97077489872a3f1f1c663b1a6504159a9485"
-    assert typed.model_dump(mode="json") == original
-    assert "record_terminator" not in typed.envelope.model_dump(mode="json")
+    digests = set()
+    for revision in authored_revisions("303"):
+        manifest_path = (
+            bundled_path("registry", "aeat")
+            / "modelos"
+            / "303"
+            / "revisions"
+            / str(revision.id)
+            / "export"
+            / "_generation.provenance.json"
+        )
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        original = manifest["variable_envelope_contract"]
+        typed = FilingEnvelopeProvenance.model_validate_json(json.dumps(original))
+        assert typed.model_dump(mode="json") == original
+        assert "record_terminator" not in typed.envelope.model_dump(mode="json")
+        digests.add(typed.envelope_sha256)
+    assert "08b5515d8f59cffca4b8a4752eaf97077489872a3f1f1c663b1a6504159a9485" in digests
 
 
 @pytest.mark.parametrize("mutation", ("row", "cell", "ordinal", "length", "description", "missing"))
@@ -219,7 +235,11 @@ def test_m232_2016_terminator_refuses_changed_source_marker(mutation: str) -> No
     root = bundled_path("registry", "aeat")
     catalogues = load_shared_catalogues(root)
     intermediate = load_record_design_intermediate(
-        bundled_path(), dict(catalogues.sources), source_ref="aeat-dr-232-2016", filing_year=2016, design_epoch="2016"
+        bundled_path(),
+        dict(catalogues.sources),
+        source_ref=_OLDER_SOURCE,
+        filing_year=int(_OLDER_EPOCH),
+        design_epoch=_OLDER_EPOCH,
     )
     envelope = intermediate.variable_envelopes[0]
     marker = envelope.terminator
@@ -236,7 +256,7 @@ def test_m232_2016_terminator_refuses_changed_source_marker(mutation: str) -> No
     changed = envelope.model_copy(
         update={"terminator": None if selected is None else marker.model_copy(update=selected)}
     )
-    semantic = load_semantic_map(Path(__file__).resolve().parents[1] / "mappings" / "modelo_232" / "2016")
+    semantic = load_semantic_map(Path(__file__).resolve().parents[1] / "mappings" / "modelo_232" / _OLDER_EPOCH)
     with pytest.raises(RegistryValidationError, match="terminator differs"):
         compile_filing_envelope_definition(
             semantic.variable_envelopes[0],

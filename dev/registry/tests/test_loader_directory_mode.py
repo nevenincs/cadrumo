@@ -18,6 +18,7 @@ from cadrumo.domain.calculations.registry.errors import (
     RegistryLoadError,
     RegistryValidationError,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.loader import (
     load_catalogue_file,
@@ -43,6 +44,12 @@ from ..conformance.loader_directory_mode_support import (
     write_standard_manifest,
 )
 
+_YEAR = filing_year_envelope().horizon
+
+# The synthetic revision the shared minimal preamble declares, read from it rather than restated.
+_REV = standard_revision_preamble_text().split('"')[1]
+_NEXT = str(int(_REV) + 1)
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
@@ -52,7 +59,7 @@ def test_directory_mode_rejects_manifest_with_revisions_table(tmp_path: Path) ->
     target = tmp_path / "bad_manifest"
     target.mkdir()
     (target / "manifest.toml").write_text(
-        '[modelo]\nid = "999"\ntax_domain = "iva"\n[revisions."2025"]\n',
+        f'[modelo]\nid = "999"\ntax_domain = "iva"\n[revisions."{_REV}"]\n',
         encoding="utf-8",
     )
     (target / "revisions").mkdir()
@@ -71,9 +78,9 @@ def test_directory_mode_rejects_inline_section_in_revision_manifest(tmp_path: Pa
     target = tmp_path / "inline_section_manifest"
     revision_dir = minimal_fragment_revision_layout(target)
     (revision_dir / "revision.toml").write_text(
-        '[revisions."2025"]\n'
-        "valid_from = 2025-01-01\n"
-        '[[revisions."2025".bindings]]\n'
+        f'[revisions."{_REV}"]\n'
+        f"valid_from = {_REV}-01-01\n"
+        f'[[revisions."{_REV}".bindings]]\n'
         'id = "inline-binding"\n'
         'source = "previous_filing"\n',
         encoding="utf-8",
@@ -88,9 +95,9 @@ def test_directory_mode_rejects_inline_formulas_section_in_revision_manifest(tmp
     target = tmp_path / "inline_formulas_manifest"
     revision_dir = minimal_fragment_revision_layout(target)
     (revision_dir / "revision.toml").write_text(
-        '[revisions."2025"]\n'
-        "valid_from = 2025-01-01\n"
-        '[[revisions."2025".formulas]]\n'
+        f'[revisions."{_REV}"]\n'
+        f"valid_from = {_REV}-01-01\n"
+        f'[[revisions."{_REV}".formulas]]\n'
         'id = "inline-formula"\n'
         'target_casilla_id = "01"\n',
         encoding="utf-8",
@@ -106,10 +113,10 @@ def test_directory_mode_rejects_malformed_casilla_id_before_locale_key_authority
         tmp_path / "malformed_casilla_id",
         manifest_text=standard_manifest_text("Malformed casilla id test"),
         revisions={
-            "2025": standard_revision_preamble_text()
-            + """
+            _REV: standard_revision_preamble_text()
+            + f"""
 
-[[revisions."2025".casillas]]
+[[revisions."{_REV}".casillas]]
 id = "bad key"
 number = "1"
 section = ["liquidacion"]
@@ -128,17 +135,17 @@ def test_directory_mode_rejects_ambiguous_casilla_identity_during_load(tmp_path:
         tmp_path / "999",
         manifest_text=standard_manifest_text("Ambiguous casilla identity test"),
         revisions={
-            "2025": standard_revision_preamble_text()
-            + """
+            _REV: standard_revision_preamble_text()
+            + f"""
 
-[[revisions."2025".casillas]]
+[[revisions."{_REV}".casillas]]
 id = "01"
 number = "99"
 section = ["test"]
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
 
-[[revisions."2025".casillas]]
+[[revisions."{_REV}".casillas]]
 id = "DPX:01"
 number = "01"
 segmento = "DPX"
@@ -272,7 +279,7 @@ reviewed_by = "registry-test"
 """.lstrip(),
         encoding="utf-8",
     )
-    write_minimal_shared_catalogues(legal_dir, floor=2026, horizon=2026)
+    write_minimal_shared_catalogues(legal_dir, floor=_YEAR, horizon=_YEAR)
 
     with pytest.raises(
         RegistryLoadError,
@@ -304,10 +311,10 @@ def test_registry_tree_cache_invalidates_when_a_revision_directory_is_added_insi
     legal_dir = registry_root / "legal"
     legal_dir.mkdir(parents=True)
     (legal_dir / "supported-filing-years.toml").write_text(
-        "[supported_filing_years]\nfloor = 2025\nhorizon = 2025\n\n"
+        f"[supported_filing_years]\nfloor = {_REV}\nhorizon = {_REV}\n\n"
         "[sociedades_annual_manual_coverage]\n"
-        'dispositions = [{ year = 2025, status = "unpublished", '
-        'official_locator = "https://example.com/manuals", observed_at = 2026-09-10, '
+        f'dispositions = [{{ year = {_REV}, status = "unpublished", '
+        f'official_locator = "https://example.com/manuals", observed_at = {_REV}-09-10, '
         'acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication" }]\n',
         encoding="utf-8",
         newline="\n",
@@ -317,26 +324,26 @@ def test_registry_tree_cache_invalidates_when_a_revision_directory_is_added_insi
     modelo_dir = write_fragmented_modelo(
         modelos_dir / "999",
         manifest_text=standard_manifest_text("Cache invalidation before"),
-        revisions={"2025": standard_revision_preamble_text(source_ref="cache-before")},
+        revisions={_REV: standard_revision_preamble_text(source_ref="cache-before")},
     )
 
     clear_fingerprint_cache()
     first_modelos, first_catalogues = load_registry_tree(registry_root)
     first_by_id = {modelo.id: modelo for modelo in first_modelos}
-    assert set(first_by_id["999"].revisions) == {"2025"}
-    assert first_by_id["999"].revisions["2025"].source_refs == ("cache-before",)
+    assert set(first_by_id["999"].revisions) == {_REV}
+    assert first_by_id["999"].revisions[_REV].source_refs == ("cache-before",)
     assert first_catalogues.supported_filing_years is not None
-    assert first_catalogues.supported_filing_years.years == (2025,)
+    assert first_catalogues.supported_filing_years.years == (int(_REV),)
 
     write_fragmented_revision(
-        modelo_dir / "revisions" / "2026",
-        standard_revision_preamble_text(source_ref="cache-after").replace('"2025"', '"2026"'),
+        modelo_dir / "revisions" / _NEXT,
+        standard_revision_preamble_text(source_ref="cache-after").replace(f'"{_REV}"', f'"{_NEXT}"'),
     )
 
     second_modelos, _second_catalogues = load_registry_tree(registry_root)
     second_by_id = {modelo.id: modelo for modelo in second_modelos}
-    assert set(second_by_id["999"].revisions) == {"2025", "2026"}
-    assert second_by_id["999"].revisions["2026"].source_refs == ("cache-after",)
+    assert set(second_by_id["999"].revisions) == {_REV, _NEXT}
+    assert second_by_id["999"].revisions[_NEXT].source_refs == ("cache-after",)
 
 
 def test_stale_discovered_source_reports_typed_disappearance(tmp_path: Path) -> None:
@@ -513,7 +520,7 @@ def test_directory_mode_refuses_a_revision_file(tmp_path: Path) -> None:
     target = tmp_path / "999"
     (target / "revisions").mkdir(parents=True)
     write_standard_manifest(target, "Retired revision-file layout")
-    revision_file = target / "revisions" / "2025.toml"
+    revision_file = target / "revisions" / f"{_REV}.toml"
     revision_file.write_text(standard_revision_preamble_text(), encoding="utf-8")
 
     with pytest.raises(RegistryLoadError, match="revision files are not a supported layout") as exc_info:
@@ -531,7 +538,7 @@ def test_discovery_refuses_a_revision_file(tmp_path: Path) -> None:
     target = modelos_dir / "999"
     (target / "revisions").mkdir(parents=True)
     write_standard_manifest(target, "Retired revision-file layout")
-    revision_file = target / "revisions" / "2025.toml"
+    revision_file = target / "revisions" / f"{_REV}.toml"
     revision_file.write_text(standard_revision_preamble_text(), encoding="utf-8")
 
     with pytest.raises(RegistryLoadError, match="revision files are not a supported layout"):

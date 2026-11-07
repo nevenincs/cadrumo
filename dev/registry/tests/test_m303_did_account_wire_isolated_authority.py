@@ -60,6 +60,7 @@ from cadrumo.domain.calculations.registry.schema_exports import (
     FilingEnvelopePrefixRole,
 )
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.deadlines.models import (
     ChargeAccount,
@@ -88,6 +89,10 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.compiler.loader import load_modelo_directory
 from dev.registry.compiler.record_design import extract_record_design
 
+# The open-ended Modelo 303 design edition this proof is pinned to, and the exercise it opens.
+_OPEN_ENDED = open_ended_revision("303")
+_YEAR = _OPEN_ENDED.valid_from.year
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("governed_fact_scope")]
 
 
@@ -96,7 +101,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 #: build results by hand rather than by projection, so they state it explicitly.
 _PROVENANCE = BienesInversionParameterProvenance(
     modelo_id="303",
-    revision_id="2025",
+    revision_id=str(_OPEN_ENDED.id),
     parameter_ids=(
         "m303-bien-inversion-ventana-anos-mueble",
         "m303-bien-inversion-ventana-anos-inmueble",
@@ -104,7 +109,7 @@ _PROVENANCE = BienesInversionParameterProvenance(
         "m303-bien-inversion-divisor-inmueble",
         "m303-bien-inversion-regularizacion-umbral-puntos",
     ),
-    resolved_on=_prov_date(2025, 6, 1),
+    resolved_on=_prov_date(_YEAR, 6, 1),
 )
 
 
@@ -133,9 +138,9 @@ def _params_for(year: int) -> BienesInversionRegularizacionParameters:
     )
 
 
-_SOURCE_REF = "aeat-dr-303-2026"
+_SOURCE_REF = f"aeat-dr-303-{_YEAR}"
 _SOURCE_SHA256 = "0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6b9b8489b"
-_REVISION_ID = "2026-y-siguientes"
+_REVISION_ID = str(_OPEN_ENDED.id)
 _TAXPAYER_TAX_ID = "12345678Z"
 _REFUND_IBAN = "GB82WEST12345698765432"
 _CHARGE_IBAN = "ES9121000418450200051332"
@@ -195,8 +200,8 @@ def _test_snapshot(*, modelo, revision) -> RegistrySnapshot:
     return RegistrySnapshot(
         modelo=modelo,
         revision=revision,
-        filing_period=Period.from_year_and_code(2026, "1T"),
-        filing_year=2026,
+        filing_period=Period.from_year_and_code(_YEAR, "1T"),
+        filing_year=_YEAR,
         period="1T",
         legal=catalogues.legal,
         sources=catalogues.sources,
@@ -245,7 +250,7 @@ source_refs = ["{_SOURCE_REF}"]
 def _did_layout_toml() -> str:
     return f'''\
 [[revisions."{_REVISION_ID}".export_layouts]]
-id = "test-owned-m303-did-2026"
+id = "test-owned-m303-did-{_YEAR}"
 format = "fixed_width"
 legal_refs = [{_LEGAL_REFS}]
 source_refs = ["{_SOURCE_REF}"]
@@ -460,8 +465,8 @@ source_refs = ["{_SOURCE_REF}"]
     (revision_dir / "revision.toml").write_text(
         f'''\
 [revisions."{_REVISION_ID}"]
-valid_from = 2026-01-01
-period_selector = {{ years = [2026], periods = ["1T"] }}
+valid_from = {_YEAR}-01-01
+period_selector = {{ years = [{_YEAR}], periods = ["1T"] }}
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 orden_aplicabilidad = ["orden-eha-3786-2008:art-1"]
 source_refs = ["{_SOURCE_REF}"]
@@ -499,7 +504,7 @@ def _m303_2026_snapshot() -> RegistrySnapshot:
         modelo,
         authority.catalogues,
         source_root=bundled_path(),
-        filing_year=2026,
+        filing_year=_YEAR,
         period="1T",
     )
 
@@ -627,7 +632,7 @@ def _m303_did_producer_snapshot(
     non_agricultural_activity_count: int = 0,
 ) -> FilingProducerSnapshot:
     """Build real approved-draft producer authority for the isolated DID layout."""
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
     taxpayer = _taxpayer_profile()
     iva_profile = taxpayer.iva
     assert iva_profile is not None
@@ -794,8 +799,8 @@ def _elections(disposition: ResultDisposition) -> FilingElectionFacts:
 
 
 def _draft() -> ModeloDraft:
-    period = Period.from_year_and_code(2026, "1T")
-    timestamp = datetime(2026, 8, 11, 12, 0, tzinfo=UTC)
+    period = Period.from_year_and_code(_YEAR, "1T")
+    timestamp = datetime(_YEAR, 8, 11, 12, 0, tzinfo=UTC)
     return ModeloDraft(
         draft_id="d" + "0" * 63,
         modelo="303",
@@ -881,9 +886,9 @@ def test_filing_envelope_facade_derives_ordered_bytes_from_the_canonical_resolve
         prior_domiciliation_election=PriorDomiciliationElection.KEEP,
         product_software_identity=_product_software_identity(),
     )
-    assert result.prefix.startswith(b"<T303020261T0000><AUX>")
+    assert result.prefix.startswith(f"<T3030{_YEAR}1T0000><AUX>".encode("ascii"))
     assert result.payload == result.prefix + result.occurrences[0].payload + result.closer
-    assert result.closer == b"</T303020261T0000>"
+    assert result.closer == f"</T3030{_YEAR}1T0000>".encode("ascii")
     assert result.total_length == len(result.payload)
     assert result.payload_sha256 == sha256(result.payload).hexdigest()
 
@@ -1032,7 +1037,7 @@ def test_m303_account_bearing_dispositions_refuse_without_their_selected_account
             refund_account=refund_account,
             charge_account=charge_account,
             m303_filing_facts=_m303_filing_facts(
-                Period.from_year_and_code(2026, "1T"),
+                Period.from_year_and_code(_YEAR, "1T"),
                 registry_snapshot=registry_snapshot,
             ),
         )
