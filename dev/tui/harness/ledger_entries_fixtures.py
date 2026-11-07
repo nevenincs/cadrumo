@@ -9,6 +9,7 @@ and amount is synthetic; nothing is written to storage or to disk.
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+from datetime import date
 from enum import StrEnum
 from pathlib import Path
 from typing import cast, override
@@ -46,7 +47,6 @@ _INTERFACES = {
     "reset": "cadrumo.entrypoints.tui.ledger.entries_reset.LedgerResetScreen",
 }
 #: An absolute destination on the review machine's own root; the export door writes nothing.
-_EXPORT_PATH = str(Path(Path.cwd().anchor) / "exports" / "ledger-2026.csv")
 
 
 class EntriesFixtureState(StrEnum):
@@ -159,7 +159,7 @@ async def _add_optional(host: EntriesCaptureHost) -> None:
 def _required(host: EntriesCaptureHost, amount: str = "121.00") -> None:
     host.type(
         {
-            "#entries-add-booked-date": "2026-03-14",
+            "#entries-add-booked-date": date(_fixture_year(), 3, 14).isoformat(),
             "#entries-add-amount": amount,
             "#entries-add-description": "Material de oficina",
         }
@@ -191,8 +191,12 @@ def _fixture_year() -> int:
         return operation.supported_filing_years().horizon
 
 
+def _export_path() -> str:
+    return str(Path(Path.cwd().anchor) / "exports" / f"ledger-{_fixture_year()}.csv")
+
+
 async def _export_review(host: EntriesCaptureHost) -> None:
-    host.type({"#entries-export-path": _EXPORT_PATH, "#entries-export-year": str(_fixture_year())})
+    host.type({"#entries-export-path": _export_path(), "#entries-export-year": str(_fixture_year())})
     cast("Select[str]", host.tool_screen.query_one("#entries-export-period", Select)).value = "1T"
     await host.press("entries-export-review")
     host.show("#entries-export-summary")
@@ -271,7 +275,7 @@ def _screen(
             controller,
             doors,
             transaction_id=entry_id(0),
-            label="2026-01-01 · 100.00 EUR · Synthetic entry 0000",
+            label=f"{date(_fixture_year(), 1, 1).isoformat()} · 100.00 EUR · Synthetic entry 0000",
             back_to=lambda again: LedgerEntriesBrowseScreen(again, doors),
         )
     if kind == "add":
