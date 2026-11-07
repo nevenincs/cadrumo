@@ -72,9 +72,6 @@ _SAME_DAYS: Final = "same_days"
 _NO_MARGIN: Final = "none"
 _BUSINESS_DAYS: Final = "business_days"
 _BUSINESS_OR_CALENDAR_DAYS: Final = "business_or_calendar_days"
-# ``date.weekday()`` of Saturday; Saturday and Sunday are the weekend the Orden
-# names first among the inhábil days.
-_SATURDAY: Final = 5
 _MAX_DAY_OF_MONTH: Final = 31
 # A margin walk longer than this means the calendar holds an impossible run of
 # inhábil days, which is a registry defect rather than a cutoff.
@@ -390,7 +387,8 @@ def _margin_cap(closes_on: date, margin: DomiciliationMargin, business_day: Call
 def _replaces_base(policy: InhabilBasePolicy, base_on: date, business_day: Callable[[date], bool]) -> bool:
     """Whether the inhábil-base policy replaces this Anexo II day by the margin cap."""
     if policy is InhabilBasePolicy.WEEKEND_TO_LATEST_MARGIN_COMPLIANT_BUSINESS_DAY:
-        return base_on.weekday() >= _SATURDAY
+        # Saturday and Sunday are the weekend the Orden names first among the inhábil days.
+        return base_on.weekday() >= calendar.SATURDAY
     if policy is InhabilBasePolicy.LATEST_MARGIN_COMPLIANT_BUSINESS_DAY:
         return not business_day(base_on)
     return False

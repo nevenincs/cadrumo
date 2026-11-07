@@ -29,8 +29,8 @@ if TYPE_CHECKING:
 
 NOTICE_CODE = "config.profile.payer_fact_cleared"
 _PROFILE_EDIT_ACTION_ID = "operator.profile.edit"
-_CLEARED_BOOL_MESSAGE_KEY = "cli.config.profile.notices.payer_fact_cleared"
-_CLEARED_SELECT_MESSAGE_KEY = "cli.config.profile.notices.payer_fact_cleared_select"
+_CLEARED_BOOL_LOCALE_KEY = "cli.config.profile.notices.payer_fact_cleared"
+_CLEARED_SELECT_LOCALE_KEY = "cli.config.profile.notices.payer_fact_cleared_select"
 
 
 def _edit_question_by_path(operation: PinnedAuthorityOperation) -> dict[str, WizardQuestion]:
@@ -52,8 +52,8 @@ def _cleared_fact_message(question: WizardQuestion, *, fact: str) -> str:
 
     flag = f"--{question.id}"
     if question.widget is WizardWidget.CONFIRM:
-        return tr(_CLEARED_BOOL_MESSAGE_KEY, fact=fact, yes_flag=flag, no_flag=f"--no-{question.id}")
-    return tr(_CLEARED_SELECT_MESSAGE_KEY, fact=fact, flag=flag)
+        return tr(_CLEARED_BOOL_LOCALE_KEY, fact=fact, yes_flag=flag, no_flag=f"--no-{question.id}")
+    return tr(_CLEARED_SELECT_LOCALE_KEY, fact=fact, flag=flag)
 
 
 def payer_fact_cleared_notices(
