@@ -62,7 +62,9 @@ async def exercise_method_asset_lifecycle(
     await set_public_input(
         pilot=pilot,
         selector="#asset-revision-json",
-        value=method_revision_json(acquisition_transaction_id=acquisition_transaction_id),
+        value=method_revision_json(
+            acquisition_transaction_id=acquisition_transaction_id, in_service_year=_method_filing_year()
+        ),
         stage="asset_creation",
     )
     await set_public_input(
@@ -109,7 +111,9 @@ async def exercise_method_asset_lifecycle(
         pilot=pilot,
         selector="#asset-revision-json",
         value=method_correction_json(
-            supersedes_revision_id=first_revision_id, acquisition_transaction_id=acquisition_transaction_id
+            supersedes_revision_id=first_revision_id,
+            acquisition_transaction_id=acquisition_transaction_id,
+            in_service_year=_method_filing_year(),
         ),
         stage="asset_correction",
     )

@@ -42,6 +42,7 @@ from dev.packaging.hashing import sha256_path  # noqa: E402
 from .record_design_acquisition import pull_required_artifact, sha256_bytes  # noqa: E402
 from .record_design_index import index_links, raw_artifact_for_url, supported_index_urls  # noqa: E402
 from .record_design_manifests import (  # noqa: E402
+    DESIGN_CORPUS,
     Artifact,
     HistoricalExclusions,
     Manifest,
@@ -63,7 +64,7 @@ from .record_design_policy import (  # noqa: E402
 _UTF_8: Final[str] = "utf-8"
 
 
-CORPUS = _ROOT / "src/cadrumo/_data/corpus/aeat_official/disenos_registro"
+CORPUS = DESIGN_CORPUS
 
 
 HISTORICAL_EXCLUSIONS_PATH = CORPUS / "historical_exclusions.json"

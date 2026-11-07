@@ -246,7 +246,9 @@ def _cli_first(
                 "ledger",
                 "actividad-asset",
                 "create",
-                method_revision_json(acquisition_transaction_id=acquisition_id),
+                method_revision_json(
+                    acquisition_transaction_id=acquisition_id, in_service_year=_method_year(cli.authority_root)
+                ),
                 "--name",
                 "Acceptance element",
             )
@@ -327,6 +329,7 @@ def _supersede_after_correction(cli: InstalledCli, *, first_claim_id: str, acqui
                 method_correction_json(
                     supersedes_revision_id=str(revisions[-1]["revision_id"]),
                     acquisition_transaction_id=acquisition_id,
+                    in_service_year=_method_year(cli.authority_root),
                 ),
             )
         )
