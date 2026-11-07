@@ -30,8 +30,11 @@ from .....application.ledger.llm_diagnostics import LlmUsageCostProviderMetrics
 from .....core.directory_scan import scan_directory
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....persistence.llm.run_records import LLMRunRecord, LLMRunRecordDiagnosticsAdapter, LLMRunRecorder
 from ....persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+
+_FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 
@@ -57,7 +60,7 @@ def _seed(recorder: LLMRunRecorder) -> None:
             provider="llm:claude:test-model",
             duration_ms=1000,
             succeeded=True,
-            started_at=datetime(2026, 4, 1, tzinfo=UTC),
+            started_at=datetime(_FILING_YEAR, 4, 1, tzinfo=UTC),
         ),
     )
     recorder.record(
@@ -68,7 +71,7 @@ def _seed(recorder: LLMRunRecorder) -> None:
             duration_ms=9000,
             succeeded=False,
             error_kind="LLMClassifierError",
-            started_at=datetime(2026, 4, 2, tzinfo=UTC),
+            started_at=datetime(_FILING_YEAR, 4, 2, tzinfo=UTC),
         ),
     )
     recorder.record(
@@ -78,7 +81,7 @@ def _seed(recorder: LLMRunRecorder) -> None:
             provider="llm:codex:test-model",
             duration_ms=500,
             succeeded=True,
-            started_at=datetime(2026, 4, 3, tzinfo=UTC),
+            started_at=datetime(_FILING_YEAR, 4, 3, tzinfo=UTC),
         ),
     )
 
@@ -146,8 +149,8 @@ def test_build_run_health_report_date_range_scopes_llm_section(profile: TestRunt
     _seed(recorder)
 
     report = build_run_health_report(
-        since=date(2026, 4, 1),
-        until=date(2026, 4, 1),
+        since=date(_FILING_YEAR, 4, 1),
+        until=date(_FILING_YEAR, 4, 1),
         run_record_port=LLMRunRecordDiagnosticsAdapter(recorder),
         auth_probe_port=_FakeAuthProbe(),
     )
@@ -213,7 +216,9 @@ def test_list_recent_runs_date_range_scopes_the_listing(profile: TestRuntimeProf
     _seed(recorder)
 
     rows = list_recent_runs(
-        run_record_port=LLMRunRecordDiagnosticsAdapter(recorder), since=date(2026, 4, 1), until=date(2026, 4, 1)
+        run_record_port=LLMRunRecordDiagnosticsAdapter(recorder),
+        since=date(_FILING_YEAR, 4, 1),
+        until=date(_FILING_YEAR, 4, 1),
     )
 
     assert [row.run_id for row in rows] == ["a"]
@@ -244,7 +249,7 @@ def _seed_percentiles(recorder: LLMRunRecorder) -> None:
                 provider="llm:claude:test-model",
                 duration_ms=duration_ms,
                 succeeded=True,
-                started_at=datetime(2026, 5, index, tzinfo=UTC),
+                started_at=datetime(_FILING_YEAR, 5, index, tzinfo=UTC),
             ),
         )
 
@@ -312,7 +317,9 @@ def test_build_latency_report_date_range_scopes_the_percentiles(profile: TestRun
     _seed(recorder)
 
     report = build_latency_report(
-        since=date(2026, 4, 1), until=date(2026, 4, 1), run_record_port=LLMRunRecordDiagnosticsAdapter(recorder)
+        since=date(_FILING_YEAR, 4, 1),
+        until=date(_FILING_YEAR, 4, 1),
+        run_record_port=LLMRunRecordDiagnosticsAdapter(recorder),
     )
 
     assert report.overall.entries == 1
@@ -357,7 +364,7 @@ def test_build_error_breakdown_sorts_by_descending_count(profile: TestRuntimePro
                 duration_ms=100,
                 succeeded=False,
                 error_kind=error_kind,
-                started_at=datetime(2026, 5, index, tzinfo=UTC),
+                started_at=datetime(_FILING_YEAR, 5, index, tzinfo=UTC),
             ),
         )
 
@@ -438,7 +445,7 @@ def _seed_usage(recorder: LLMRunRecorder) -> None:
                 duration_ms=duration_ms,
                 succeeded=succeeded,
                 error_kind=error_kind,
-                started_at=datetime(2026, 6, index, tzinfo=UTC),
+                started_at=datetime(_FILING_YEAR, 6, index, tzinfo=UTC),
             ),
         )
 
@@ -524,7 +531,9 @@ def test_build_llm_usage_report_date_range_scopes_the_summary(profile: TestRunti
     _seed_usage(recorder)
 
     report = build_llm_usage_report(
-        since=date(2026, 6, 1), until=date(2026, 6, 1), run_record_port=LLMRunRecordDiagnosticsAdapter(recorder)
+        since=date(_FILING_YEAR, 6, 1),
+        until=date(_FILING_YEAR, 6, 1),
+        run_record_port=LLMRunRecordDiagnosticsAdapter(recorder),
     )
 
     assert report.total_runs == 1
@@ -594,25 +603,25 @@ class TestReportWindowInvariant:
     @pytest.mark.parametrize("report", _REPORTS)
     def test_reversed_window_is_refused(self, report: type) -> None:
         with pytest.raises(ValidationError):
-            report(since=date(2026, 2, 1), until=date(2026, 1, 1))
+            report(since=date(_FILING_YEAR, 2, 1), until=date(_FILING_YEAR, 1, 1))
 
     @pytest.mark.parametrize("report", _REPORTS)
     def test_ordered_window_is_accepted(self, report: type) -> None:
-        built = report(since=date(2026, 1, 1), until=date(2026, 2, 1))
-        assert built.since == date(2026, 1, 1)
-        assert built.until == date(2026, 2, 1)
+        built = report(since=date(_FILING_YEAR, 1, 1), until=date(_FILING_YEAR, 2, 1))
+        assert built.since == date(_FILING_YEAR, 1, 1)
+        assert built.until == date(_FILING_YEAR, 2, 1)
 
     @pytest.mark.parametrize("report", _REPORTS)
     def test_single_day_window_is_accepted(self, report: type) -> None:
         """Equal bounds are a legitimate one-day query, not an empty interval."""
-        assert report(since=date(2026, 1, 1), until=date(2026, 1, 1)).until == date(2026, 1, 1)
+        assert report(since=date(_FILING_YEAR, 1, 1), until=date(_FILING_YEAR, 1, 1)).until == date(_FILING_YEAR, 1, 1)
 
     @pytest.mark.parametrize("report", _REPORTS)
     def test_open_and_absent_bounds_stay_permitted(self, report: type) -> None:
         """The invariant must not turn an optional bound into a required one."""
         assert report().since is None
-        assert report(since=date(2026, 1, 1)).until is None
-        assert report(until=date(2026, 2, 1)).since is None
+        assert report(since=date(_FILING_YEAR, 1, 1)).until is None
+        assert report(until=date(_FILING_YEAR, 2, 1)).since is None
 
 
 def test_builders_refuse_a_reversed_window(profile: TestRuntimeProfile) -> None:
@@ -621,26 +630,26 @@ def test_builders_refuse_a_reversed_window(profile: TestRuntimeProfile) -> None:
     _seed(recorder)
     with pytest.raises(ValidationError):
         build_run_health_report(
-            since=date(2026, 2, 1),
-            until=date(2026, 1, 1),
+            since=date(_FILING_YEAR, 2, 1),
+            until=date(_FILING_YEAR, 1, 1),
             run_record_port=LLMRunRecordDiagnosticsAdapter(recorder),
             auth_probe_port=_FakeAuthProbe(),
         )
     with pytest.raises(ValidationError):
         build_latency_report(
-            since=date(2026, 2, 1),
-            until=date(2026, 1, 1),
+            since=date(_FILING_YEAR, 2, 1),
+            until=date(_FILING_YEAR, 1, 1),
             run_record_port=LLMRunRecordDiagnosticsAdapter(recorder),
         )
     with pytest.raises(ValidationError):
         build_error_breakdown(
-            since=date(2026, 2, 1),
-            until=date(2026, 1, 1),
+            since=date(_FILING_YEAR, 2, 1),
+            until=date(_FILING_YEAR, 1, 1),
             run_record_port=LLMRunRecordDiagnosticsAdapter(recorder),
         )
     with pytest.raises(ValidationError):
         build_llm_usage_report(
-            since=date(2026, 2, 1),
-            until=date(2026, 1, 1),
+            since=date(_FILING_YEAR, 2, 1),
+            until=date(_FILING_YEAR, 1, 1),
             run_record_port=LLMRunRecordDiagnosticsAdapter(recorder),
         )

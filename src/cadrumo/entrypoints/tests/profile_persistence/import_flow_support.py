@@ -64,6 +64,16 @@ PROFILE_ID = "13000000-0000-4000-8000-000000000001"
 
 IMPORT_INCOME_CASILLA: CasillaId = validated_casilla_id("01")
 IMPORT_EXPENSE_CASILLA: CasillaId = validated_casilla_id("02")
+#: What an imported Modelo 130 never records and a correction of box 01 reaches: the estimación directa modality
+#: (the RIRPF art. 30.2.4a provision on box 02), the expenses of the earlier quarters that box 02 accumulates, the
+#: earlier year's net income and the agrarian figures that boxes 03 to 19 read; the filer has no agrarian activity.
+IMPORT_UNRECORDED_BINDINGS: Mapping[str, str] = {
+    "modelo-130-estimacion-directa-modalidad": "directa_normal",
+    "modelo-130-actividad-economica-gastos-cumulative": "300",
+    "irpf.previous_year_economic_activity_net_income": "0",
+    "modelo-130-retenciones-agrarias": "0",
+    "modelo-130-volumen-ingresos-agrario": "0",
+}
 UNKNOWN_IMPORT_CASILLA: CasillaId = validated_casilla_id("9999")
 M303_PRINTED_RESULT_TOKEN: CasillaId = validated_casilla_id("69")
 M111_AMENDMENT_CASILLA: CasillaId = validated_casilla_id("01")

@@ -1120,10 +1120,11 @@ def test_an_obligatory_casilla_whose_contenido_admits_blank_keeps_a_blank_repres
         ('"<T840010>"', "<T840010>"),
         ("'</T840010>'", "</T840010>"),
         ("<T840010>", "<T840010>"),
+        ('"576"', "576"),
     ),
 )
 def test_record_tag_printed_quoted_without_a_label_is_the_literal(official_content: str, expected: str) -> None:
-    """Modelo 840 prints its opening tag quoted and unlabelled; the reader returns the bare tag."""
+    """Modelo 840 prints its opening tag quoted and unlabelled; the reader returns the bare token."""
     from types import SimpleNamespace
 
     from dev.registry.pipeline.export_field_literal_derivation import _parse_official_literal
@@ -1137,10 +1138,10 @@ def test_record_tag_printed_quoted_without_a_label_is_the_literal(official_conte
 
 
 @pytest.mark.parametrize(
-    "official_content", ('"<T840010', '"<T840010>', '"ZZ"', '"<T840010>" o "<T840020>"', '"<T 840010>"')
+    "official_content", ('"<T840010', '"<T840010>', '"<T840010>" o "<T840020>"', '"576" "ZZ"', '""', '"<T 840010>"')
 )
-def test_quoted_unlabelled_text_that_is_not_one_record_tag_stays_refused(official_content: str) -> None:
-    """Quotes alone make no constant: only a single complete record tag is admitted."""
+def test_quoted_unlabelled_text_that_is_not_one_token_stays_refused(official_content: str) -> None:
+    """Quotes alone make no constant: only a single complete quoted token is admitted."""
     from types import SimpleNamespace
 
     from dev.registry.pipeline.export_field_literal_derivation import _parse_official_literal

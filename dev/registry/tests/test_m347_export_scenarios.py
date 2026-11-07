@@ -8,6 +8,7 @@ from cadrumo.application.filing.draft_construction import build_draft
 from cadrumo.application.filing.export import export_draft
 from cadrumo.application.filing.runtime import ModeloOperatorProfile, schema_provider_from_authority
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 from cadrumo.domain.submission.models import ModeloDraftStatus
 
 from ..compiler.authority import compiled_bundled_authority
@@ -17,7 +18,7 @@ from ..edition_round_trip import SYNTHETIC_TAX_ID, PayloadSink
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 
-@pytest.mark.parametrize("revision_id", ["2011-2024", "2025-y-siguientes"])
+@pytest.mark.parametrize("revision_id", [str(revision.id) for revision in authored_revisions("347")])
 def test_populated_scenario_exports_both_parties_and_excludes_below_threshold(revision_id: str) -> None:
     scenario = edition_export_scenarios("347")[revision_id]
     assert scenario.inputs["modelo-347-declarante-numero-personas-entidades"] == Decimal(2)

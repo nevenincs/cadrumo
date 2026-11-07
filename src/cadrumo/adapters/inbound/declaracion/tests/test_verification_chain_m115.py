@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from .parser_boundary_support import MODELO_115_SYNTHETIC_FIXTURE, specimen_period
 from .verification_chain_support import (
     COMPUTED_CASILLAS_M115,
     assert_engine_closure_matches_extracted_decimal,
@@ -12,6 +13,9 @@ from .verification_chain_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
+
+_SPECIMEN = specimen_period(MODELO_115_SYNTHETIC_FIXTURE)
+_LABEL = f"M115/{MODELO_115_SYNTHETIC_FIXTURE.stem}"
 
 
 _M115_TOTAL_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("01")
@@ -55,25 +59,30 @@ def test_verification_chain_m115_engine_recomputes_resultado() -> None:
     own printed values. Not an
     AEAT-verified verdict — see FIXTURE, NOT ORACLE above.
     """
-    extracted = parse_extracted_declaracion_values(modelo="115", fixture_stem="2024-1T", year=2024, period="1T")
+    extracted = parse_extracted_declaracion_values(
+        modelo="115",
+        fixture_stem=MODELO_115_SYNTHETIC_FIXTURE.stem,
+        year=_SPECIMEN.filing_year,
+        period=_SPECIMEN.code,
+    )
 
     for required_id in _M115_REQUIRED_CASILLAS:
         assert required_id in extracted, (
-            f"PARSER-GAP [M115/2024-1T]: casilla {required_id!r} not extracted.\n  got: {sorted(extracted)}"
+            f"PARSER-GAP [{_LABEL}]: casilla {required_id!r} not extracted.\n  got: {sorted(extracted)}"
         )
 
     inputs = decimal_inputs_from_extracted_values(extracted, excluding=COMPUTED_CASILLAS_M115)
     engine_values = calculate_engine_values_from_inputs(
         modelo="115",
-        year=2024,
-        period="1T",
-        label="M115/2024-1T",
+        year=_SPECIMEN.filing_year,
+        period=_SPECIMEN.code,
+        label=_LABEL,
         inputs=inputs,
     )
 
     for closure_id in _M115_CLOSURE_CASILLAS:
         assert_engine_closure_matches_extracted_decimal(
-            label="M115/2024-1T",
+            label=_LABEL,
             engine_values=engine_values,
             extracted=extracted,
             casilla_id=closure_id,

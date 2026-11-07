@@ -19,6 +19,7 @@ from cadrumo.domain.calculations.registry.rental_reduction import resolve_rental
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.domain.calculations.registry.tests import m100_rental_reduccion_art23_2_scenarios as scenarios
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions_where
 from cadrumo.domain.renta.rental_reduction import RentalReductionArt232Tier
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test,
@@ -33,6 +34,14 @@ from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ..compiler.authority import compiled_bundled_authority
 
+_TIER_DECLARED_ID = "renta-rental-reduccion-art-23-2-tier"
+# The one authored edition that declares the Art. 23.2 tier binding, so the exercise follows the registry.
+(_REVISION,) = authored_revisions_where(
+    "100", lambda revision: any(item.id == _TIER_DECLARED_ID for item in revision.bindings)
+)
+_REVISION_ID = str(_REVISION.id)
+_EXERCISE = _REVISION.valid_from.year
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
@@ -41,9 +50,9 @@ def m100_2024_snapshot(registry_snapshot: Callable[..., RegistrySnapshot]) -> Re
     """A formula-runtime calculation claim, never a filing one."""
     return registry_snapshot(
         "100",
-        2024,
+        _EXERCISE,
         "0A",
-        revision_id="2024",
+        revision_id=_REVISION_ID,
         grade=RegistryAuthorityGrade.CALCULATION,
     )
 
@@ -98,7 +107,6 @@ def test_0150_rejects_unknown_tier_key(m100_2024_snapshot: RegistrySnapshot) -> 
     scenarios.check_0150_rejects_unknown_tier_key(m100_2024_snapshot)
 
 
-_TIER_DECLARED_ID = "renta-rental-reduccion-art-23-2-tier"
 _TIER_PROFILE_KEY = "renta_rental.reduccion_art_23_2_tier_2024"
 _PROFILE_ID = "10010010-0100-4100-8100-100100100100"
 
@@ -108,15 +116,15 @@ def m100_2024_compiled_snapshot() -> RegistrySnapshot:
     """A snapshot over the authored declarations, not a published artifact."""
     return compiled_bundled_authority().snapshot(
         "100",
-        filing_year=2024,
+        filing_year=_EXERCISE,
         period="0A",
-        revision_id="2024",
+        revision_id=_REVISION_ID,
         grade=RegistryAuthorityGrade.CALCULATION,
     )
 
 
 def _tier_profile_record(tier: RentalReductionArt232Tier) -> UserProfileRecord:
-    moment = datetime(2025, 5, 21, 10, 0, 0, tzinfo=UTC)
+    moment = datetime(_EXERCISE + 1, 5, 21, 10, 0, 0, tzinfo=UTC)
     return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
@@ -185,8 +193,8 @@ def test_declared_tier_resolves_onto_the_enum_channel_through_the_profile_resolv
             CalculationSourceContext(
                 bucket_id=_PROFILE_ID,
                 modelo="100",
-                filing_year=2024,
-                period=Period.from_year_and_code(2024, "0A"),
+                filing_year=_EXERCISE,
+                period=Period.from_year_and_code(_EXERCISE, "0A"),
                 revision=m100_2024_compiled_snapshot.revision,
             ),
         )

@@ -10,16 +10,24 @@ from cadrumo.adapters.outbound.workbook.calc_sheets_xlsx import materialize_expo
 from cadrumo.application.storage.calc_sheets.engine import build_export_plan
 from cadrumo.application.storage.calc_sheets.form_workbook import add_form_workbook
 from cadrumo.application.storage.calc_sheets.records import OperatorInput, OperatorInputs, TabName
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_grade_exercises, revision_covering
 
 from ..workbook_demo import demonstration_snapshot
 from ..workbook_demo_cases import DemoCase
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
+#: The two oldest filing-grade editions are the early history this pins.
+_EXERCISES = filing_grade_exercises("390")[:2]
 
-@pytest.mark.parametrize("year", (2022, 2023))
+
+def _demo_case(year: int) -> DemoCase:
+    return DemoCase("390", str(revision_covering("390", year).id), None, None, filing_year=year, period="0A")
+
+
+@pytest.mark.parametrize("year", _EXERCISES)
 def test_historical_deduction_rows_keep_live_amounts_and_adjacent_subtotals(year):
-    snapshot = demonstration_snapshot(DemoCase("390", str(year), None, None, filing_year=year, period="0A"))
+    snapshot = demonstration_snapshot(_demo_case(year))
     form = snapshot.revision.form_layouts[0]
     page = next(p for p in form.pages if p.id == "pag-3")
     amounts: dict[str, Decimal] = {}

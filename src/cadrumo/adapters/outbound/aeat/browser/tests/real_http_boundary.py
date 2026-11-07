@@ -57,7 +57,7 @@ _PRE303_TARGET_URL: Final[str] = f"{_DOMAINS.www1}{PRE303.presentation_service_p
 _PERMANENTE_IDP_URL: Final[str] = f"https://se-pasarela.{urlsplit(_DOMAINS.clave).netloc}/idp/login"
 _DEFAULT_CLAVE_TARGET_URL: Final[str] = f"{_DOMAINS.www6}{EXTERNAL.aeat.sede_paths.expedientes_resumen}"
 _CENSAL_PATH: Final[str] = EXTERNAL.aeat.sede_paths.censal_datos
-_CHURN_EPOCH: Final[float] = datetime(2099, 1, 1, tzinfo=UTC).timestamp()
+_CHURN_EPOCH: Final[float] = (datetime.now(UTC) + timedelta(days=365 * 70)).timestamp()
 #: The synthetic taxpayer the stood-in Sede shows as signed in, unless a test signs in someone else.
 SIGNED_IN_NIF: Final[str] = "12345678Z"
 #: Registrable domains whose hosts the tunnel stands in for; any other host is refused.

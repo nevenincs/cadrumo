@@ -56,7 +56,8 @@ In Python, read through the syntax tree, each of these is a finding:
   ``2026-EXT-1T``), or an f-string that starts writing one (``f"2026-{code}"``,
   ``f"2026 1T {label}"``), anywhere except as the compared side, exactly as
   ``date text``. A period is a filing coordinate like an edition id;
-- ``year text``: a string that is exactly a year;
+- ``year text``: a string that is exactly a year, unless the code places it
+  as a casilla id (see below);
 - ``edition id``: a string that is a revision id (``2026-y-siguientes``,
   ``2022-2025``, ``2024-desde-09-y-3t``) or that names one in a revision path.
 
@@ -95,6 +96,23 @@ What may stay, and why
 - A number in the year range that is no year: a count, a size or an amount,
   which the rules above never reach because they read the name or call the
   number stands under.
+- A casilla id that reads like a year: the official designs number boxes
+  ``2003``, ``2038`` or ``2057``, and a box number is no year. A string is a
+  casilla id only where the code places it as one: the text given to
+  ``validated_casilla_id`` or a key of the mapping given to
+  ``validated_casilla_id_map``; a value, element or key typed ``CasillaId``; a
+  value, element or mapping key held by a keyword, parameter, assignment target
+  or dictionary key whose name says casilla; the key of a subscript of a
+  casilla-named mapping (``casillas_by_id["2003"]``); or the other side of a
+  comparison with a casilla-named operand (``casilla.id in {"2003", "2004"}``).
+  A name says casilla when one of its words is ``casilla`` or ``casillas`` and
+  none speaks of time (a year word, ``revision``, ``edition``, ``period``,
+  ``predecessor``, ``successor``, ``baseline``, ``epoch``, ``date``), so
+  ``casillas_by_revision["2024"]``, ``casilla_storage_baseline="2024"`` and
+  ``ejercicio_casilla`` still hold years. Value range never decides it: a
+  positional argument to a casilla-named helper (``casilla("2024", "0001")``),
+  a value stored under a casilla key (``{EJERCICIO_CASILLA: "2025"}``) and a
+  ``box``-named keyword stay findings.
 - A number outside 2000 to 2099 that no year name or year comparison holds,
   such as the 1970 and 1980 epochs: no filing year can be one of them.
 - A number written as hex, octal or with digit separators, such as a Unicode
@@ -206,6 +224,24 @@ _EDITION_ID = re.compile(r"^20\d\d(?:-[0-9a-z]+)+$")
 _EDITION_IN_TEXT = re.compile(
     r"(?:revisions[/\\]20\d\d(?:-[0-9a-z]+)*)|\b20\d\d(?:-[0-9a-z]+)*-(?:y-siguientes|hasta-[0-9a-z-]+|desde-[0-9a-z-]+)\b"
 )
+#: The canonical casilla-id parsers in ``cadrumo.core.casilla_id``: the text one
+#: is given, or the keys of the mapping one is given, is a casilla id.
+_CASILLA_ID_PARSERS = frozenset({"validated_casilla_id"})
+_CASILLA_ID_MAP_PARSERS = frozenset({"validated_casilla_id_map"})
+#: The canonical casilla-id type alias.
+_CASILLA_ID_TYPE = "CasillaId"
+_CASILLA_WORD = re.compile(r"^casillas?$")
+#: Words that make a casilla-named value a coordinate in time rather than a box:
+#: ``casilla_storage_baseline``, ``casillas_by_revision``, ``casilla_year``.
+_TEMPORAL_WORD = re.compile(
+    rf"^(?:{_YEAR_WORDS}|revisions?|editions?|periods?|periodo|predecessor|successor|baseline|epoch"
+    r"|dates?|fecha|version|generation)$"
+)
+_SEQUENCE_TYPES = frozenset(
+    {"tuple", "list", "set", "frozenset", "Sequence", "Iterable", "Collection", "AbstractSet", "MutableSequence"}
+)
+_MAPPING_TYPES = frozenset({"dict", "Mapping", "MutableMapping"})
+_COLLECTING_CALLS = frozenset({"set", "frozenset", "tuple", "list", "sorted"})
 _DATE_CALLS = frozenset({"date", "datetime"})
 _BOUND_KEYWORDS = frozenset({"ge", "le", "gt", "lt"})
 _AMOUNT_CALLS = frozenset({"Decimal", "Money", "Fraction"})
@@ -284,6 +320,79 @@ def _year_named(node: ast.AST) -> bool:
     return bool(YEAR_NAME.search(_name(node)))
 
 
+def casilla_named(name: str) -> bool:
+    """Whether ``name`` says it holds casilla ids: a ``casilla`` word and no word of time.
+
+    ``casillas_by_id``, ``casilla_id`` and ``_PARENT_CASILLA`` say so;
+    ``casillas_by_revision``, ``casilla_storage_baseline``, ``ejercicio_casilla``
+    and ``box_retired_in`` do not, so a year they hold stays a year.
+    """
+    words = [word.lower() for word in re.split(r"_+|(?<=[a-z0-9])(?=[A-Z])", name) if word]
+    return any(_CASILLA_WORD.match(word) for word in words) and not any(_TEMPORAL_WORD.match(word) for word in words)
+
+
+def _casilla_operand(node: ast.AST) -> bool:
+    """Whether a comparison operand is a casilla id or a collection of them.
+
+    A casilla-named name or attribute (``row.casilla_id``), the ``id`` of a
+    casilla-named value (``casilla.id``, ``revision.casillas[0].id``), or such an
+    operand gathered by ``set()``, ``sorted()`` and their kin.
+    """
+    if isinstance(node, ast.Call) and _name(node.func) in _COLLECTING_CALLS and len(node.args) == 1:
+        return _casilla_operand(node.args[0])
+    if isinstance(node, ast.Attribute) and node.attr == "id":
+        return casilla_named(_name(node.value))
+    return isinstance(node, (ast.Name, ast.Attribute)) and casilla_named(_name(node))
+
+
+def _shaped_texts(node: ast.AST | None) -> Iterator[int]:
+    """The texts a value places as casilla ids by its shape: itself, its elements or its keys."""
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        yield id(node)
+    elif isinstance(node, (ast.Tuple, ast.List, ast.Set)):
+        for element in node.elts:
+            if isinstance(element, ast.Constant) and isinstance(element.value, str):
+                yield id(element)
+    elif isinstance(node, ast.Dict):
+        for key in node.keys:
+            if isinstance(key, ast.Constant) and isinstance(key.value, str):
+                yield id(key)
+    elif isinstance(node, ast.Call) and _name(node.func) in _COLLECTING_CALLS and len(node.args) == 1:
+        yield from _shaped_texts(node.args[0])
+
+
+def _typed_casilla_texts(annotation: ast.AST | None, value: ast.AST | None) -> Iterator[int]:
+    """The texts a value annotated with ``CasillaId`` places as casilla ids.
+
+    ``CasillaId`` (or ``Final[CasillaId]``, ``CasillaId | None``) types the
+    value; a sequence of ``CasillaId`` types its elements; a mapping keyed by
+    ``CasillaId`` types its keys.
+    """
+    if annotation is None or value is None:
+        return
+    if isinstance(annotation, ast.BinOp):
+        yield from _typed_casilla_texts(annotation.left, value)
+        yield from _typed_casilla_texts(annotation.right, value)
+        return
+    if isinstance(annotation, (ast.Name, ast.Attribute)) and _name(annotation) == _CASILLA_ID_TYPE:
+        if isinstance(value, ast.Constant):
+            yield from _shaped_texts(value)
+        return
+    if not isinstance(annotation, ast.Subscript):
+        return
+    container = _name(annotation.value)
+    parameters = annotation.slice.elts if isinstance(annotation.slice, ast.Tuple) else [annotation.slice]
+    first = parameters[0] if parameters else None
+    if container == "Final" and first is not None:
+        yield from _typed_casilla_texts(first, value)
+        return
+    if first is None or _name(first) != _CASILLA_ID_TYPE:
+        return
+    sequence = container in _SEQUENCE_TYPES and isinstance(value, (ast.Tuple, ast.List, ast.Set, ast.Call))
+    if sequence or (container in _MAPPING_TYPES and isinstance(value, ast.Dict)):
+        yield from _shaped_texts(value)
+
+
 @dataclass(frozen=True, slots=True, order=True)
 class Finding:
     """One year written into code."""
@@ -302,6 +411,7 @@ class _PythonVisitor(ast.NodeVisitor):
         self._amounts: set[int] = set()
         self._compared: set[int] = set()
         self._parsed: set[int] = set()
+        self._casilla_ids: set[int] = set()
 
     def _year(self, node: ast.AST | None) -> int | None:
         return year_value(node, self._lines)
@@ -346,6 +456,9 @@ class _PythonVisitor(ast.NodeVisitor):
             *zip(arguments.kwonlyargs, arguments.kw_defaults, strict=True),
         ]
         for argument, default in defaulted:
+            if casilla_named(argument.arg):
+                self._casilla_ids.update(_shaped_texts(default))
+            self._casilla_ids.update(_typed_casilla_texts(argument.annotation, default))
             year = self._bound_value(default, argument.arg)
             if year is not None and default is not None:
                 self._report(default, "year bound", f"{argument.arg}={year}")
@@ -362,6 +475,10 @@ class _PythonVisitor(ast.NodeVisitor):
             self._report(node, "year compared", ast.unparse(node)[:80])
         for side in sides:
             self._compared.update(_opaque_texts(side))
+            if _casilla_operand(side):
+                for other in sides:
+                    if other is not side:
+                        self._casilla_ids.update(_shaped_texts(other))
         self.generic_visit(node)
 
     @override
@@ -372,8 +489,11 @@ class _PythonVisitor(ast.NodeVisitor):
     def _bound(
         self, targets: Iterable[ast.AST], value: ast.AST | None, node: ast.AST, annotation: ast.AST | None = None
     ) -> None:
+        self._casilla_ids.update(_typed_casilla_texts(annotation, value))
         for target in targets:
             name = _name(target)
+            if casilla_named(name) and not isinstance(target, ast.Subscript):
+                self._casilla_ids.update(_shaped_texts(value))
             year = self._bound_value(value, name)
             if year is not None:
                 self._report(node, "year bound", f"{name}={year}")
@@ -407,11 +527,19 @@ class _PythonVisitor(ast.NodeVisitor):
         for key, value in zip(node.keys, node.values, strict=True):
             if key is None:
                 continue
+            if isinstance(key, ast.Constant) and isinstance(key.value, str) and casilla_named(key.value):
+                self._casilla_ids.update(_shaped_texts(value))
             year = self._bound_value(value, _name(key))
             if year is not None:
                 self._report(value, "year bound", f"{_name(key)}={year}")
         if sum(1 for key in node.keys if self._year(key) is not None) >= 2:
             self._report(node, "year list", "dictionary keyed by years")
+        self.generic_visit(node)
+
+    @override
+    def visit_Subscript(self, node: ast.Subscript) -> None:
+        if casilla_named(_name(node.value)) and isinstance(node.slice, ast.Constant):
+            self._casilla_ids.update(_shaped_texts(node.slice))
         self.generic_visit(node)
 
     @override
@@ -443,6 +571,16 @@ class _PythonVisitor(ast.NodeVisitor):
     @override
     def visit_Call(self, node: ast.Call) -> None:
         called = _name(node.func)
+        parsed = [*node.args[:1], *(keyword.value for keyword in node.keywords if keyword.arg in {"value", "values"})]
+        if called in _CASILLA_ID_PARSERS:
+            self._casilla_ids.update(id(text) for text in parsed if isinstance(text, ast.Constant))
+        if called in _CASILLA_ID_MAP_PARSERS:
+            for mapping in parsed:
+                if isinstance(mapping, ast.Dict):
+                    self._casilla_ids.update(_shaped_texts(mapping))
+        for keyword in node.keywords:
+            if keyword.arg is not None and casilla_named(keyword.arg):
+                self._casilla_ids.update(_shaped_texts(keyword.value))
         if called in _AMOUNT_CALLS:
             # An amount written as text, such as a Decimal of two thousand, is money, not a year.
             self._amounts.update(id(argument) for argument in node.args)
@@ -499,7 +637,8 @@ class _PythonVisitor(ast.NodeVisitor):
             if id(node) not in self._compared:
                 self._report(node, "period text", repr(text))
         elif _YEAR_TEXT.match(text):
-            self._report(node, "year text", repr(text))
+            if id(node) not in self._casilla_ids:
+                self._report(node, "year text", repr(text))
         elif is_edition_id(text) or _EDITION_IN_TEXT.search(text):
             self._report(node, "edition id", repr(text[:80]))
 

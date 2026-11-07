@@ -24,6 +24,7 @@ from pathlib import Path
 import pytest
 
 from .....core.config_support import LLMProvider
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
 from ....persistence.llm.usage import UsageRecorder
 from ....persistence.storage.secure_object_namespaces import LLM_RUN_RECORD_NAMESPACE, LLM_USAGE_NAMESPACE
@@ -31,11 +32,13 @@ from ..errors import LLMCacheError
 from ..models import UsageRecord
 from .engine_binding_fixtures import ENGINE_HOLDER, bind_engine
 
+_FILING_YEAR = filing_year_envelope().horizon
+
 __all__ = ["ENGINE_HOLDER", "bind_engine"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_RECENT = datetime(2026, 5, 28, 12, 0, 0, tzinfo=UTC)
+_RECENT = datetime(_FILING_YEAR, 5, 28, 12, 0, 0, tzinfo=UTC)
 _OLD = _RECENT - timedelta(days=400)
 
 

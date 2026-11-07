@@ -59,6 +59,7 @@ __all__ = [
     "modelo_130_snapshot",
     "modelo_snapshot",
     "render_extraction_profile",
+    "specimen_period",
     "split_by_supported_filing_year",
     "write_declaration_pdf",
 ]
@@ -184,8 +185,15 @@ MODELO_123_HISTORICAL_EXPECTED_TARGETS: tuple[CasillaId, ...] = tuple(
 )
 
 
+def specimen_period(fixture: Path) -> Period:
+    """Return the filing period a bundled synthetic specimen is named for (``<year>-<code>.pdf``)."""
+    year, _, code = fixture.stem.partition("-")
+    return Period.from_year_and_code(int(year), code)
+
+
 def modelo_130_snapshot():
-    return modelo_snapshot("130", filing_year=2024, period="1T")
+    specimen = specimen_period(MODELO_130_SYNTHETIC_FIXTURE)
+    return modelo_snapshot("130", filing_year=specimen.filing_year, period=specimen.code)
 
 
 def modelo_snapshot(modelo_id: str, *, filing_year: int, period: str):
@@ -257,7 +265,7 @@ def write_declaration_pdf(
     *,
     values: dict[CasillaId, Decimal],
     modelo: str = "130",
-    ejercicio: str = "2024",
+    ejercicio: str,
     period: str = "1T",
     tax_id: str = "00000000T",
 ) -> None:

@@ -29,9 +29,12 @@ from cadrumo.domain.calculations.registry.ledger_renta_gastos_pago_fraccionado_b
     unsupported_ledger_renta_gastos_pago_fraccionado_observations,
     validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..conformance.registry_schema_support import committed_modelo
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -64,7 +67,7 @@ def _modelo_130_snapshot():
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2026,
+        filing_year=_YEAR,
         period="1T",
     )
 

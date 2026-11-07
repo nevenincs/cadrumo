@@ -100,6 +100,9 @@ errors:
       asignado (requerida por el operador {op}).
     formula_override_target_invalid: Las casillas {casilla_ids} no pueden recibir
       un valor conservado o sustituido porque no son casillas de fórmula de esta revisión.
+    formula_recalculation_binding_unrecorded: El recálculo de la rectificación alcanza
+      casillas de fórmula ({casilla_ids}) que dependen de {binding_ids}. La presentación
+      nunca lo registró; indícalo como sustitución explícita de enlace en la rectificación.
     formula_recalculation_unresolved: 'El recálculo de la rectificación dejó sin resolver
       casillas de fórmula obligatorias: {casilla_ids}.'
     lookup_dispatch_arg_count: El operador {op} de la fórmula espera {expected} argumentos.

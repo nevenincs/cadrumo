@@ -13,6 +13,7 @@ import pytest
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.schema_extraction import ExtractionProfileDefinition, ExtractionTargetDefinition
 from .....domain.calculations.registry.schema_references import TemporalSupportEnvelope
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....tests.log_records import delivered_records
 from ...pdf.source_provenance import source_pdf_reference_path
 from ..errors import BorradorParseError, BorradorRefusalReason
@@ -26,11 +27,14 @@ pytestmark = [
 ]
 
 
-_SUPPORT = TemporalSupportEnvelope(floor=2022, horizon=2026)
+PRINTED_EXERCISE = filing_year_envelope().horizon
+"""The exercise the synthetic artefacts print and the tests read them for."""
+
+_SUPPORT = TemporalSupportEnvelope(floor=filing_year_envelope().floor, horizon=filing_year_envelope().horizon)
 """A synthetic envelope: these tests read one artefact, not the published span."""
 
 
-parse_borrador = partial(parser_parse_borrador, filing_year=2025, supported_filing_years=_SUPPORT)
+parse_borrador = partial(parser_parse_borrador, filing_year=PRINTED_EXERCISE, supported_filing_years=_SUPPORT)
 
 
 _CUOTA_INTEGRA_GENERAL_ESTATAL_CASILLA = validated_casilla_id(
@@ -80,7 +84,7 @@ def render_borrador_pdf_bytes(
     page.drawString(50, y, "AGENCIA TRIBUTARIA")
     y -= 18
     page.drawString(50, y, "Declaracion IRPF - Modelo 100")
-    page.drawRightString(width - 50, y, "Ejercicio: 2025")
+    page.drawRightString(width - 50, y, f"Ejercicio: {PRINTED_EXERCISE}")
     y -= 18
     page.drawString(50, y, "NIF: 00000000T")
     y -= 18
@@ -102,7 +106,7 @@ def render_borrador_pdf_bytes(
 
 def _write_borrador_pdf(tmp_path: Path, payload: bytes, *, artefact_kind: str = "BORRADOR") -> Path:
     """Write pre-rendered borrador PDF bytes into a per-test ``tmp_path`` file."""
-    path = tmp_path / f"modelo_100_2025_{artefact_kind.lower()}.pdf"
+    path = tmp_path / f"modelo_100_{PRINTED_EXERCISE}_{artefact_kind.lower()}.pdf"
     path.write_bytes(payload)
     return path
 
@@ -244,7 +248,7 @@ class TestObservedValues:
         pdf = _write_borrador_pdf(tmp_path, default_borrador_pdf_bytes)
         filing: InboundBorradorObservation = parse_borrador(pdf)
         assert filing.modelo == "100"
-        assert filing.ejercicio == "2025"
+        assert filing.ejercicio == str(PRINTED_EXERCISE)
         assert filing.tax_id == "00000000T"
         extracted = {value.casilla_id: value.printed_value for value in filing.values}
         assert extracted == {casilla_id: Decimal(raw) for casilla_id, raw in _OBSERVED_VALUES.items()}
@@ -461,7 +465,7 @@ def _extract_text(*lines: str) -> InboundBorradorObservation:
     )
 
 
-_HEADER = ("Ejercicio: 2025", "NIF: 00000000T", "BORRADOR")
+_HEADER = (f"Ejercicio: {PRINTED_EXERCISE}", "NIF: 00000000T", "BORRADOR")
 
 
 class TestSecondDeclarantAndConflictingRows:
