@@ -1,7 +1,7 @@
 """Public :func:`parse_borrador` entry point for Modelo 100 PDFs.
 
 Reads the PDF's page text once and composes the artefact-kind detector
-(:func:`~adapters.inbound.borrador._detect.detect_artefact_kind_from_pages`) with the
+(:func:`~adapters.inbound.borrador.detect.detect_artefact_kind_from_pages`) with the
 observed-value extractor into the single function callers should depend on. The parser
 does not infer the tax year from the PDF: every caller names the filing year, and the
 pinned support envelope decides whether it is inside what the product claims. The row

@@ -8,7 +8,7 @@ Split into its own module rather than added to
 :mod:`~entrypoints.cli.ledger_business_payloads`, following the same pattern
 that module's own docstring documents for
 :mod:`~entrypoints.cli.ledger_rule_results` and
-:mod:`~entrypoints.cli._ledger_llm_payloads`: one transport family per module,
+:mod:`~entrypoints.cli.ledger_llm_payloads`: one transport family per module,
 each under its owning surface.
 
 The models here are the WIRE projection of the application-layer batch result

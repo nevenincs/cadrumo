@@ -464,6 +464,8 @@ def check_snapshot_authority_grade(
     includes the reach of every earlier member.  An absent declaration remains
     distinguishable from the applicability floor because absence is no claim at
     all and therefore cannot satisfy even an applicability-grade request.
+
+    ``modelo`` is a :class:`ModeloDefinition`; ``revision`` is a :class:`ModeloRevision`.
     """
     if not revision.is_graded:
         raise RegistryValidationError(

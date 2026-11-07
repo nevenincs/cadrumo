@@ -293,6 +293,8 @@ def filed_before_grade_cap(
     for grade caps, so a box a capped binding reaches may hold a figure the cap
     would withhold. A proven zero is the one value that cannot be such a figure;
     a box with no value at all is unresolved, so it refuses too.
+
+    ``revision`` is a :class:`CalculationRevision`; ``snapshot`` is a :class:`RegistrySnapshot`.
     """
     if revision.state not in _FILED_STATES or revision.screen_stamp is not None:
         return None

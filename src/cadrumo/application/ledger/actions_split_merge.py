@@ -552,6 +552,8 @@ def resolve_active_split_parent(
     ARCHIVED row would corrupt the lifecycle chain. The state
     refusal carries the actual lifecycle state in its context so an
     operator can diagnose why the split is blocked.
+
+    ``catalogue`` is a :class:`TransactionCatalogue`.
     """
     parent = require_transaction(catalogue, transaction_id)
     if not takes_changes(parent.lifecycle_state):

@@ -912,6 +912,8 @@ def amendment_ledger_anchor(
     A revision with no contributing rows anchors to nothing, and says so with
     ``None`` rather than an empty snapshot that would read as "checked, and
     the ledger was empty".
+
+    ``amendment_draft`` is a :class:`CalculationRevision`.
     """
     if not amendment_draft.source_transaction_ids:
         return (None, None)

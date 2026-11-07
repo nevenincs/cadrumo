@@ -203,7 +203,10 @@ def published_layout_source_payloads(
 
 
 def read_guard_policy_from_snapshot(snapshot: RegistrySnapshot) -> RemoteStateGuardPolicy:
-    """Derive the declarations read guard policy from the snapshot's live cross reference."""
+    """Derive the declarations read guard policy from the snapshot's live cross reference.
+
+    ``snapshot`` is a :class:`RegistrySnapshot`.
+    """
     listing_host = urlsplit(_LISTING_URL).hostname
     if listing_host is None:
         raise RegistryValidationError(f"invalid declarations listing URL: {_LISTING_URL!r}")
@@ -464,6 +467,8 @@ def submitted_file_layout_refusal(
     The refusal names the modelo, the resolved revision and the parser's own
     reason -- which identifies the record the parse stopped on -- so the next
     reader can act on it rather than rediscover it.
+
+    ``snapshot`` is a :class:`RegistrySnapshot`.
     """
     return SedeParseError(
         f"submitted-file artefact {artefact.sha256[:16]} for modelo {snapshot.modelo.id} "
@@ -513,6 +518,8 @@ def submitted_file_coverage_for_casillas(
     otherwise the parsed export fields are scored against the resolved layout's
     ``fields_by_casilla`` map. A layout that will not resolve raises rather than
     scoring, so a modelo whose layout is missing cannot report full coverage.
+
+    ``snapshot`` is a :class:`RegistrySnapshot`.
     """
     resolved_layout = resolve_export_layout(snapshot)
     if resolved_layout.layout.format is ExportLayoutFormat.XML_DICTIONARY:
@@ -550,6 +557,8 @@ def declaration_pdf_extraction_profile_provisional(snapshot: RegistrySnapshot) -
     disclosure that the layout itself is unconfirmed. Callers stamp this signal
     into observation metadata (never silently) so an operator inspecting a live
     filed-declaration capture can see the extraction is not yet specimen-backed.
+
+    ``snapshot`` is a :class:`RegistrySnapshot`.
     """
     return any(
         profile.provisional_pending_specimen
@@ -564,7 +573,10 @@ def observed_casillas_from_declaration_pdf(
     declaration: ExpedientesDeclaration,
     body: bytes,
 ) -> tuple[ObservedCasillaValue, ...]:
-    """Parse a declaration PDF in memory into observed casilla values against a snapshot."""
+    """Parse a declaration PDF in memory into observed casilla values against a snapshot.
+
+    ``snapshot`` is a :class:`RegistrySnapshot`.
+    """
     declaration_period = declaration.period.registry_token
     try:
         # The decrypted declaration bytes are parsed entirely in memory, including

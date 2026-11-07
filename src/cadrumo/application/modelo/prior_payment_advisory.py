@@ -79,7 +79,10 @@ def selected_registry_declaration(
     filing_year: int,
     operation: PinnedAuthorityOperation,
 ) -> PriorPaymentDeclaration | None:
-    """Resolve the dated declaration when it applies to the selected work scope."""
+    """Resolve the dated declaration when it applies to the selected work scope.
+
+    ``revision`` is a :class:`ModeloRevision`.
+    """
     effective_date = date(filing_year, 12, 31)
     resolved = operation.resolve_governed_fact(
         MappingFactQuery(

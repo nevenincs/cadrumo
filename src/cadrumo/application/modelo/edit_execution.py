@@ -456,7 +456,10 @@ def _unresolved_binding_edit_refusal(
 def pre_effect_refusal(
     error: BaseException, *, revision: ModeloRevision | None = None
 ) -> ModeloEditExecutionNoEffectV1:
-    """Translate a precondition the calculation refused before persisting into a typed refusal."""
+    """Translate a precondition the calculation refused before persisting into a typed refusal.
+
+    ``revision`` is a :class:`ModeloRevision`.
+    """
     code = get_registered_error_code(error).code
     if (
         isinstance(error, RegistryValidationError)

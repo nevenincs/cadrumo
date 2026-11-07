@@ -128,7 +128,7 @@ class CalculationRevisionCatalogueRepository:
     is the central namespace, schema-version, sensitivity, and singleton-key
     contract for the encrypted :class:`CalculationRevisionCatalogue` row. The
     write path (``to_secure_object_write`` / ``save`` / ``exists``) composes
-    :class:`~adapters.persistence.profile._secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
+    :class:`~adapters.persistence.profile.secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
     for the shared Envelope-construction mechanic; both read doors share
     one decoder here because it translates a classification or schema-version mismatch
     into :class:`CalculationRevisionPersistenceError` via

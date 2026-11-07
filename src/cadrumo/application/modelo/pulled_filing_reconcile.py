@@ -20,7 +20,7 @@ nearly everywhere, so comparing every pulled figure against it would raise a
 mismatch on essentially every reconciled casilla — the alert fatigue that trains
 an operator to ignore a channel. The comparison is therefore restricted to the
 casillas the local revision supplied independent evidence for, resolved by
-:func:`~application.modelo._reconcile_population.resolve_casilla_population_scope`. An untouched bucket
+:func:`~application.modelo.reconcile_population.resolve_casilla_population_scope`. An untouched bucket
 produces no findings at all, which is the intended behaviour and not a failure
 to detect.
 
@@ -45,7 +45,7 @@ under-declaration this channel exists to surface.
 See Also:
     :func:`~application.modelo.reconcile_casilla.detect_casilla_divergences`
         The pure comparison this delegates to.
-    :func:`~application.modelo._reconcile_population.resolve_casilla_population_scope`
+    :func:`~application.modelo.reconcile_population.resolve_casilla_population_scope`
         Supplies the casilla scope that keeps an empty bucket silent.
     :class:`~CalculationRevision`
         The local side of the comparison.

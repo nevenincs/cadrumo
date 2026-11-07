@@ -11,7 +11,7 @@ The closed state catalogue is an :class:`enum.StrEnum`. Collections are
 ``tuple[str, ...]`` so evidence remains immutable after classification.
 
 See Also:
-    :func:`adapters.outbound.aeat.browser._site_health_parsers.evaluate_response`
+    :func:`adapters.outbound.aeat.browser.site_health_parsers.evaluate_response`
         Pure parser entry point that creates :class:`SiteHealthStatus` records
         from HTTP status, headers, and body text.
     :meth:`adapters.outbound.aeat.browser.session.BrowserSession.navigate`

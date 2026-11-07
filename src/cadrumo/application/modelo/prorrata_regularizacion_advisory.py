@@ -19,7 +19,7 @@ See Also:
         computed casilla values.
     :mod:`~application.calculations.prorrata_regularizacion`:
         Source resolver that owns the regularisation value and its refusals.
-    :mod:`~application.modelo._bienes_inversion_advisory`:
+    :mod:`~application.modelo.bienes_inversion_advisory`:
         Sibling advisory collector for the capital-goods IVA regularización
         (LIVA arts. 107-110), whose settlement-period gating this module
         mirrors.

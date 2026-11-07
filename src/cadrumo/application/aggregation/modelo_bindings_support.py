@@ -25,7 +25,10 @@ STORAGE_DEGRADATION_ERRORS: Final[tuple[type[Exception], ...]] = (
 
 
 def revision_has_binding_source(revision: ModeloRevision, source: str) -> bool:
-    """Report whether the revision declares a binding on the given source."""
+    """Report whether the revision declares a binding on the given source.
+
+    ``revision`` is a :class:`ModeloRevision`.
+    """
     return any(binding.source == source for binding in revision.bindings)
 
 

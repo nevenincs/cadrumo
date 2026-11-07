@@ -2,7 +2,7 @@
 
 Implements the ``PDFPLUMBER`` branch of
 :class:`~domain.justificante.schema.JustificanteParserBackend` for the
-:mod:`adapters.inbound.justificante._parsers` dispatch layer.
+:mod:`adapters.inbound.justificante.parsers` dispatch layer.
 Concatenates the ``page.extract_text()`` output of every non-empty page;
 layout-sensitive parsing is left to the regex extractor downstream.
 

@@ -227,6 +227,8 @@ def orphaned_override_diagnostics(
     longer declares its key -- a stored fact, not a fresh mistake, and refusing
     it would make an old catalogue entry uncalculable rather than merely
     explicable.
+
+    ``revision`` is a :class:`ModeloRevision`.
     """
     declared_binding_ids = {binding.id for binding in revision.bindings}
     return tuple(

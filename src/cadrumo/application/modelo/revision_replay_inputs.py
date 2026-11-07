@@ -389,6 +389,8 @@ def informational_casilla_replay_inputs(
     Only numeric casillas are read from ``casilla_values``. Text and date
     values replay from their persisted inputs. A numeric placeholder for an
     absent text or date is omitted rather than becoming a filed ``0``.
+
+    ``revision`` is a :class:`CalculationRevision`; ``snapshot`` is a :class:`RegistrySnapshot`.
     """
     if snapshot is None:
         return {}

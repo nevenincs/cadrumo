@@ -33,7 +33,7 @@ See Also:
     :func:`~application.modelo.calculation_resolution.resolve_calculation_binding_channels`:
         Merges caller, backend, borrador, and date binding channels for the
         registry engine.
-    :func:`~application.modelo._calculation_helpers.build_typed_observations`:
+    :func:`~application.modelo.calculation_helpers.build_typed_observations`:
         Projects engine output into provenance-bearing casilla observations.
     :func:`~application.modelo.revision_persistence.persist_calculation_revision`:
         Stores the content-addressed ``BORRADOR`` revision and emits the bucket

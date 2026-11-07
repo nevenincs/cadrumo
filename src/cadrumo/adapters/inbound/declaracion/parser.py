@@ -603,6 +603,8 @@ def select_extraction_profile(
     the snapshot. Otherwise the snapshot must expose exactly one matching
     profile, preserving the generic parser shape: registry data
     selects per-modelo extraction behavior, not Python extractor classes.
+
+    ``snapshot`` is a :class:`RegistrySnapshot`.
     """
     profiles = tuple(
         profile
@@ -889,6 +891,8 @@ def extract_profile_values(
     prefers in-memory ``pdf_bytes`` for privacy, falls back to a real source file
     when only a path is available, and reports malformed or ambiguous targets as
     hard parse failures.
+
+    ``revision`` is a :class:`ModeloRevision`.
     """
     # Load word-position data lazily, for the two strategies that need it:
     # bbox_anchored resolves entirely in word space, and named_label amount
@@ -1005,6 +1009,8 @@ def numeric_casilla_anchors(
     tolerable; here it means the target cannot be addressed at all, which is a
     registry-integrity error of the same kind as a target naming a casilla that
     does not exist.
+
+    ``revision`` is a :class:`ModeloRevision`.
     """
     revision_casillas_by_id = casillas_by_id(revision)
     anchors: dict[CasillaId, str] = {}
@@ -1065,6 +1071,8 @@ def parser_printed_box_numbers(
     one fabricated value for a different one, so the remaining unguarded targets
     are recorded as an evidence gap to be closed by populating ``form_number``,
     not papered over here.
+
+    ``revision`` is a :class:`ModeloRevision`.
     """
     revision_casillas_by_id = casillas_by_id(revision)
     numbers: dict[CasillaId, str] = {}
