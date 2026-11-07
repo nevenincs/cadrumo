@@ -278,35 +278,87 @@ def test_saved_modules_preserve_page_occurrence_and_zero(snapshot, saved):
     assert rows[1].values[1] == evidence.calculation_result.activities[2].module_results[0].cuota_devengada
 
 
-def test_single_historical_record_reads_one_occurrence_and_refuses_overflow(operation):
-    snapshot = operation.snapshot("303", filing_year=2022, period="2T")
-    block = _block(24, 25)
-    columns = []
-    for column in block.columns:
-        assert column.export_field_id is not None
-        columns.append(column.model_copy(update={"export_field_id": column.export_field_id.replace("2026", "2022")}))
-    block = block.model_copy(
-        update={
-            "max_rows": 1,
-            "columns": tuple(columns),
-        }
+def _oldest_edition_snapshot(operation: PinnedAuthorityOperation) -> RegistrySnapshot:
+    """Snapshot the oldest filing year the support envelope admits, so the edition is never named here."""
+    return operation.snapshot("303", filing_year=operation.supported_filing_years().floor, period="2T")
+
+
+def _declared_activity_block(
+    operation: PinnedAuthorityOperation, snapshot: RegistrySnapshot
+) -> FormRepeatingGroupBlock:
+    """Return the edition's authored non-agricultural block, limited to two module columns."""
+    layout = operation.form_layout("303", snapshot.revision.id)
+    assert layout is not None
+    block = next(
+        block
+        for page in layout.pages
+        for section in page.sections
+        for block in section.blocks
+        if isinstance(block, FormRepeatingGroupBlock)
+        and block.export_record_id == "m303-regimen-simplificado"
+        and {"modulo-1-unidades", "modulo-1-importe"} <= {column.key for column in block.columns}
     )
+    columns = tuple(column for column in block.columns if column.key in {"modulo-1-unidades", "modulo-1-importe"})
+    return block.model_copy(update={"columns": columns})
+
+
+def test_repeating_record_reads_occurrences_up_to_the_declared_bound_and_refuses_overflow(operation):
+    snapshot = _oldest_edition_snapshot(operation)
+    block = _declared_activity_block(operation, snapshot)
+    bound = block.max_rows
+    assert bound is not None and bound > 1, "the edition's design must grant more than one occurrence"
     assert len(resolve_form_projection_fields(snapshot.revision, block)) == 2
+
+    # One activity fills only the first occurrence.
     known, rows = saved_form_records(
         snapshot=snapshot,
         revision=_saved(snapshot, operation, activity_count=1),
         block=block,
         column_casillas=(None,) * 2,
     )
-    assert known and len(rows) == 1 and rows[0].index == 1
+    assert known and [row.index for row in rows] == [1]
     assert rows[0].values[0] == Decimal("0")
-    for capacity in (None, 2):
-        with pytest.raises(RegistryValidationError, match="bounded to one row"):
-            resolve_form_projection_fields(snapshot.revision, block.model_copy(update={"max_rows": capacity}))
+
+    # Each occurrence holds two non-agricultural activities: the bound is reachable, and the
+    # filing rows refuse one activity more before any projection can overflow it.
+    known, rows = saved_form_records(
+        snapshot=snapshot,
+        revision=_saved(snapshot, operation, activity_count=2 * bound),
+        block=block,
+        column_casillas=(None,) * 2,
+    )
+    assert known and [row.index for row in rows] == list(range(1, bound + 1))
+    with pytest.raises(ValidationError, match="permits fewer activities of each kind"):
+        _saved(snapshot, operation, activity_count=2 * bound + 1)
+    # A smaller declared capacity than the edition's own is refused for the same saved evidence.
     with pytest.raises(RegistryValidationError, match="record capacity"):
         saved_form_records(
-            snapshot=snapshot, revision=_saved(snapshot, operation), block=block, column_casillas=(None,) * 2
+            snapshot=snapshot,
+            revision=_saved(snapshot, operation, activity_count=2 * bound),
+            block=block.model_copy(update={"max_rows": bound - 1}),
+            column_casillas=(None,) * 2,
         )
+
+
+@pytest.mark.parametrize("capacity", [None, 2])
+def test_single_export_record_refuses_a_block_not_bounded_to_one_row(snapshot, capacity):
+    """The annual record is declared once per return, so a multi-row or unbounded block over it is refused."""
+    block = FormRepeatingGroupBlock(
+        id="annual",
+        row_source="export_record",
+        export_record_id="m303-exonerado-390",
+        max_rows=capacity,
+        columns=(
+            FormRepeatingColumn(
+                key="field-1",
+                heading_key="test.form.field-1",
+                official_heading="Dato 1",
+                export_field_id=f"m303-{snapshot.filing_year}.dp30304.f001",
+            ),
+        ),
+    )
+    with pytest.raises(RegistryValidationError, match="bounded to one row"):
+        resolve_form_projection_fields(snapshot.revision, block)
 
 
 def test_missing_evidence_is_unknown_but_not_claimed_scope_is_known_empty(snapshot, operation):
