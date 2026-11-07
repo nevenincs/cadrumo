@@ -8,7 +8,11 @@
 // is always present; a field of what the window sends may be left out where
 // the model gives it a default.
 
-import type { ModeloFormDeadlineTone, OutputLanguage } from "./modelo";
+import type {
+  ModeloFormDeadlineTone,
+  ModeloRelatedFilingProjection,
+  OutputLanguage,
+} from "./modelo";
 
 /**
  * Why an unsurfaced obligation is advised rather than silently dropped.
@@ -161,6 +165,7 @@ export type ModeloDeclarationListRowV1 = {
   aeat_submitted_at: string | null;
   aeat_needs_check: boolean;
   evidence_conflicted: boolean;
+  related_filings: ModeloRelatedFilingProjection[];
 };
 
 /**

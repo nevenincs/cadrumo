@@ -104,12 +104,14 @@ def _prior_observation(*, value: str) -> RegistryModeloObservation:
     )
 
 
-def _save_prior_filing(repository: CalculationObservationRepository, value: str) -> None:
+def _save_prior_filing(
+    repository: CalculationObservationRepository, value: str, *, source_kind: str = "app_filing"
+) -> None:
     """Store the prior filing's observation at ``value``, replacing any earlier one at the same key."""
     repository.save(
         repository.prepare_observation_envelope(
             _prior_observation(value=value),
-            source_kind="app_filing",
+            source_kind=source_kind,
             stamped_revision_id=_stamped_revision_id(),
         )
     )
@@ -210,3 +212,54 @@ def test_approval_not_stale_when_prior_filing_observations_unchanged(
 
         assert ModeloApprovalStaleReason.PRIOR_FILING_OBSERVATIONS_CHANGED not in reasons
         assert reasons == ()
+
+
+def test_pending_correction_changes_approval_but_hidden_official_refresh_does_not(
+    _active_bucket_runtime: TestRuntimeProfile,
+) -> None:
+    """A local 150 replaces official 100; an official refresh to 130 stays behind it."""
+    with bundled_indexed_authority().operation() as operation:
+        bucket_id = _active_bucket_runtime.bucket_id
+        schema_provider = _schema_provider()
+        repository = CalculationObservationRepository(bucket_id=bucket_id)
+        ports = build_draft_review_ports(bucket_id=bucket_id)
+        draft = _ready_draft(schema_provider)
+        _save_prior_filing(repository, "100.00", source_kind="aeat_csv_register")
+        approved = _approve_operator_draft(
+            draft,
+            bucket_id=bucket_id,
+            schema_provider=schema_provider,
+            ports=ports,
+            operation=operation,
+        )
+
+        _save_prior_filing(repository, "150.00")
+        reasons = approval_stale_reasons(
+            approved,
+            bucket_id=bucket_id,
+            schema_provider=schema_provider,
+            ports=ports,
+            operation=operation,
+        )
+        assert reasons == (ModeloApprovalStaleReason.PRIOR_FILING_OBSERVATIONS_CHANGED,)
+
+        approved_pending = _approve_operator_draft(
+            draft,
+            bucket_id=bucket_id,
+            schema_provider=schema_provider,
+            ports=ports,
+            operation=operation,
+        )
+        _save_prior_filing(repository, "130.00", source_kind="aeat_csv_register")
+        reasons_after_official_refresh = approval_stale_reasons(
+            approved_pending,
+            bucket_id=bucket_id,
+            schema_provider=schema_provider,
+            ports=ports,
+            operation=operation,
+        )
+        assert reasons_after_official_refresh == ()
+        layers = repository.load_observation_layers("130", _PERIOD)
+        assert layers.official is not None and layers.pending_local is not None and layers.effective is not None
+        assert layers.official.observation.casilla_values[_M130_RESULTADO_CASILLA] == Decimal("130.00")
+        assert layers.effective.observation.casilla_values[_M130_RESULTADO_CASILLA] == Decimal("150.00")

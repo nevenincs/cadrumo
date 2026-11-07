@@ -247,7 +247,9 @@ class DeclarationsFilingHistoryScreen(DeclarationsProjectionScreen):
         filing_record_id = semantic_key.removeprefix("filing:")
         row = next(item for item in self.controller.projection.filings if item.filing_record_id == filing_record_id)
         self.selected_filing_record_id = row.filing_record_id
-        if self.controller.filing_handoff is None:
+        if self.controller.filing_view_factory is not None:
+            self.app.push_screen(self.controller.filing_view_factory(row))
+        elif self.controller.filing_handoff is None:
             self.refuse_handoff()
         else:
             self.controller.filing_handoff(row)

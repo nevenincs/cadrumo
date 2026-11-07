@@ -150,6 +150,17 @@ def _capture(
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
     if revision.work_unit_id != unit.work_unit_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    saved_scope = revision.registry_snapshot_ref
+    if (
+        saved_scope.modelo != str(unit.modelo)
+        or saved_scope.modelo_year != unit.filing_year
+        or saved_scope.period != unit.period.registry_token
+        or saved_scope.revision_id != unit.revision_id
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    snapshot = modelo_form_snapshot(
+        context.authority_operation, unit.modelo, unit.filing_year, unit.period, saved_scope.revision_id
+    )
     evidence = revision.filing_instance_evidence
     motive_applicable = False
     if evidence is not None and str(unit.modelo) == form_for_role("iva.periodic"):
@@ -188,9 +199,7 @@ def _capture(
             else worded_amendment_context(
                 record=record,
                 unit=unit,
-                snapshot=modelo_form_snapshot(
-                    context.authority_operation, unit.modelo, unit.filing_year, unit.period, unit.revision_id
-                ),
+                snapshot=snapshot,
                 casilla_rows=casilla_rows,
                 filed_values=filed_casilla_values(calculation),
                 permitted_kinds=permitted_kinds,

@@ -44,6 +44,8 @@ from .declarations_list import (
     row_help_words,
     state_words,
 )
+from .declarations_workspace_contracts import DeclarationsWorkspaceFilingRefV1
+from .filing_projection import ModeloRelatedFilingProjection
 from .work_form_header import ModeloFormDeadlineTone, deadline_tone, deadline_words
 from .work_form_wording import date_text, modelo_number, modelo_title, period_words
 
@@ -110,6 +112,7 @@ class ModeloDeclarationListRowV1(BaseModel):
     aeat_submitted_at: datetime | None = None
     aeat_needs_check: bool = False
     evidence_conflicted: bool = False
+    related_filings: tuple[ModeloRelatedFilingProjection, ...] = ()
 
 
 def _calendar_details(
@@ -151,7 +154,11 @@ def _step_details(
     return (None if step is None else next_step_words(row, step, language), step is not None and opens_local_work(step))
 
 
-def worded_list_row(row: DeclarationListRow, language: OutputLanguage) -> ModeloDeclarationListRowV1:
+def worded_list_row(
+    row: DeclarationListRow,
+    language: OutputLanguage,
+    filings: tuple[DeclarationsWorkspaceFilingRefV1, ...] = (),
+) -> ModeloDeclarationListRowV1:
     """Say one row in the filer's language, with its step and the AEAT's facts beside its own."""
     step = next_step(row)
     local_state, submission_state, submitted_at, needs_check, conflicted = _calendar_details(row.calendar)
@@ -199,6 +206,11 @@ def worded_list_row(row: DeclarationListRow, language: OutputLanguage) -> Modelo
         aeat_submitted_at=submitted_at,
         aeat_needs_check=needs_check,
         evidence_conflicted=conflicted,
+        related_filings=tuple(
+            ModeloRelatedFilingProjection.from_reference(filing, language)
+            for filing in sorted(filings, key=lambda item: (item.filed_at, item.filing_record_id))
+            if str(filing.modelo) == row.modelo and filing.period == row.period and filing.member_nif is None
+        ),
     )
 
 

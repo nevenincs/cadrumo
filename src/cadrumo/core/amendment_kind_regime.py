@@ -47,6 +47,14 @@ class AmendmentLiabilityDirection(StrEnum):
 
 
 @dataclass(frozen=True)
+class AmendmentKindRestriction:
+    """Dated intersection supplied by the validated registry policy."""
+
+    effective_from: date
+    permitted_kinds: frozenset[str]
+
+
+@dataclass(frozen=True)
 class AmendmentRegimePolicy:
     """Registry-projected amendment policy consumed by core mechanics.
 
@@ -65,6 +73,9 @@ class AmendmentRegimePolicy:
 
     Their corrections belong to a later period's return, so no amendment kind exists.
     """
+    kind_restrictions: Mapping[str, AmendmentKindRestriction] = field(
+        default_factory=dict[str, AmendmentKindRestriction]
+    )
 
 
 @dataclass(frozen=True)
@@ -76,13 +87,10 @@ class AmendmentKindRegime:
             :class:`~FilingDeclarationKind`
             string values legally available for this modelo and period.
             Empty when the modelo adjusts a filed period only through a later
-            period's return. Otherwise ``"sustitutiva"`` is always permitted
-            (a material restatement is never barred by the rectificativa timeline); ``"rectificativa"``
-            is permitted only once the modelo's own effective period is
-            reached; ``"complementaria"`` is permitted only before that
-            point (once rectificativa applies, it *replaces* complementaria
-            for the modelo's ordinary corrective filings — see
-            ``FilingDeclarationKind.RECTIFICATIVA``'s docstring).
+            period's return. Otherwise the registry's pre/post vocabulary is
+            intersected with any effective restriction for this modelo.
+            A restriction can remove kinds but cannot grant a procedure
+            absent from the selected regime.
         rectificativa_effective: Whether the resolved period is within the
             modelo's rectificativa-supported window (``True``) or the
             pre-rectificativa dual regime still applies (``False``).
@@ -104,8 +112,9 @@ def resolve_amendment_kind_regime(
     Returns an :class:`AmendmentKindRegime` naming the legally-permitted
     :class:`~FilingDeclarationKind` string
     values for this ``(modelo, period)`` pair. A modelo with no registry-
-    declared boundary always resolves to the projected pre-rectificativa pair;
-    the core never invents rectificativa support.
+    declared boundary selects the projected pre-rectificativa vocabulary.
+    Effective restrictions only narrow the selected vocabulary; the core
+    never invents procedure support.
 
     For a period with no calendar date span (an instalment clave or an
     extended/ad-hoc form), the resolution falls back to
@@ -124,20 +133,14 @@ def resolve_amendment_kind_regime(
         policy.rectificativa_effective_from if rectificativa_effective_from is None else rectificativa_effective_from
     )
     boundary = table.get(modelo)
-    if boundary is None:
-        return AmendmentKindRegime(
-            permitted_kinds=policy.pre_rectificativa_kinds,
-            rectificativa_effective=False,
-        )
-
-    if _period_reaches(period, boundary):
-        return AmendmentKindRegime(
-            permitted_kinds=policy.post_rectificativa_kinds,
-            rectificativa_effective=True,
-        )
+    rectificativa_effective = boundary is not None and _period_reaches(period, boundary)
+    permitted_kinds = policy.post_rectificativa_kinds if rectificativa_effective else policy.pre_rectificativa_kinds
+    restriction = policy.kind_restrictions.get(modelo)
+    if restriction is not None and _period_reaches(period, restriction.effective_from):
+        permitted_kinds = permitted_kinds & restriction.permitted_kinds
     return AmendmentKindRegime(
-        permitted_kinds=policy.pre_rectificativa_kinds,
-        rectificativa_effective=False,
+        permitted_kinds=permitted_kinds,
+        rectificativa_effective=rectificativa_effective,
     )
 
 
@@ -177,6 +180,7 @@ def classify_amendment_liability_direction(
 
 __all__ = [
     "AmendmentKindRegime",
+    "AmendmentKindRestriction",
     "AmendmentLiabilityDirection",
     "AmendmentRegimePolicy",
     "classify_amendment_liability_direction",

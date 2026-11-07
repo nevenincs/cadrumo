@@ -83,6 +83,7 @@ import {
 import { useEstimate } from "./estimateRead";
 import { hasIvaWallet } from "./ivaWalletRead";
 import { HistoryView, type HistoryNotice } from "./HistoryView";
+import { RelatedFilingsDialog } from "../declarations/RelatedFilingsDialog";
 import {
   ProfileCompanions,
   type ProfileCompanionKit,
@@ -165,6 +166,7 @@ function Ready({
   const [detailsOpen, setDetailsOpen] = useState(true);
   const [reviewing, setReviewing] = useState(false);
   const [correcting, setCorrecting] = useState(false);
+  const [relatedOpen, setRelatedOpen] = useState(false);
   const correctionGeneration = useRef(0);
   useLayoutEffect(
     () => () => {
@@ -197,8 +199,12 @@ function Ready({
   const [entries, setEntries] = useState<ModeloWorkHistoryEntryV1[] | null>(
     null,
   );
-  const [correction, setCorrection] =
-    useState<ModeloAmendmentCorrectionContextV1 | null>(null);
+  const [correctionRead, setCorrectionRead] = useState<{
+    filingRecord: string;
+    language: OutputLanguage;
+    port: ModeloPort;
+    context: ModeloAmendmentCorrectionContextV1 | null;
+  } | null>(null);
   const workUnit = envelope.work_unit_id;
 
   // Staged edits live only in this window: leaving asks before dropping
@@ -305,6 +311,13 @@ function Ready({
   // What a correction of the recorded filing offers, read when it is asked
   // for.
   const filingRecord = unit?.current_filing_record_id ?? null;
+  const currentCorrection =
+    correctionRead?.filingRecord === filingRecord &&
+    correctionRead?.language === language &&
+    correctionRead?.port === port
+      ? correctionRead
+      : null;
+  const correction = currentCorrection?.context ?? null;
   useEffect(() => {
     if (!correcting || !filingRecord) return;
     let current = true;
@@ -316,12 +329,17 @@ function Ready({
       .then(
         (outcome) => {
           if (current)
-            setCorrection(
-              outcome.kind === "settled" ? outcome.result.correction : null,
-            );
+            setCorrectionRead({
+              filingRecord,
+              language,
+              port,
+              context:
+                outcome.kind === "settled" ? outcome.result.correction : null,
+            });
         },
         () => {
-          if (current) setCorrection(null);
+          if (current)
+            setCorrectionRead({ filingRecord, language, port, context: null });
         },
       );
     return () => {
@@ -859,13 +877,40 @@ function Ready({
             correcting={correcting}
             onCorrectingChange={setCorrecting}
             correction={correction}
+            correctionState={
+              correction
+                ? null
+                : {
+                    kind: currentCorrection ? "unavailable" : "loading",
+                    words: t(
+                      currentCorrection
+                        ? "workspace.modelo.correction.unavailable"
+                        : "workspace.modelo.correction.loading",
+                    ),
+                  }
+            }
             onRename={rename}
             onDiscard={discard}
             onCorrect={baseline && correction ? correct : null}
+            onRelated={filingRecord ? () => setRelatedOpen(true) : undefined}
           />
         ),
         dialogs: (
           <>
+            {relatedOpen && filingRecord && (
+              <RelatedFilingsDialog
+                key={filingRecord}
+                port={port}
+                filingId={filingRecord}
+                language={language}
+                locale={locale}
+                title={
+                  unit?.name ??
+                  t("workspace.declarations.related_filings.title")
+                }
+                onClose={() => setRelatedOpen(false)}
+              />
+            )}
             <DisagreementDialog
               key={answering?.finding_id ?? "none"}
               line={answering}
