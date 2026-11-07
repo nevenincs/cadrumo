@@ -26,7 +26,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_modelo_100_carry_forward_pending_outliers_are_regional_deductions() -> None:
-    for filing_year in (2023, 2024, 2025):
+    for filing_year in sorted(CARRY_FORWARD_PENDING_OUTLIERS):
         revision = modelo_100_revision(filing_year)
         expected_rows = CARRY_FORWARD_PENDING_OUTLIERS[filing_year]
         casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_rows}
@@ -60,7 +60,7 @@ def _assert_madrid_deduction_rows(
 
 
 def test_modelo_100_madrid_reused_ids_are_regional_deductions() -> None:
-    for filing_year in (2023, 2024, 2025):
+    for filing_year in sorted(MADRID_REUSED_ID_DEDUCTION_ROWS):
         revision = modelo_100_revision(filing_year)
         expected_rows = MADRID_REUSED_ID_DEDUCTION_ROWS[filing_year]
         casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_rows}
@@ -74,7 +74,7 @@ def test_modelo_100_madrid_reused_ids_are_regional_deductions() -> None:
 
 
 def test_modelo_100_madrid_vivienda_acquisition_detail_roles_follow_current_deduction() -> None:
-    for filing_year in (2024, 2025):
+    for filing_year in sorted(MADRID_VIVIENDA_ACQUISITION_DETAIL_ROWS):
         revision = modelo_100_revision(filing_year)
         expected_rows = MADRID_VIVIENDA_ACQUISITION_DETAIL_ROWS[filing_year]
         casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_rows}
@@ -84,7 +84,7 @@ def test_modelo_100_madrid_vivienda_acquisition_detail_roles_follow_current_dedu
 
 
 def test_modelo_100_carry_forward_remaining_inst_auto_rows_use_inst_auto_role() -> None:
-    for filing_year in (2021, 2022, 2023, 2024, 2025):
+    for filing_year in sorted(CARRY_FORWARD_REMAINING_INST_AUTO_ROWS):
         revision = modelo_100_revision(filing_year)
         expected_rows = CARRY_FORWARD_REMAINING_INST_AUTO_ROWS[filing_year]
         casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_rows}

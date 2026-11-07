@@ -20,6 +20,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from dev.registry.compiler.authority import compiled_bundled_authority
 
@@ -28,6 +29,9 @@ from .profile_schema_support import committed_registry_validator
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _ModeloFixture = tuple[ModeloDefinition, RegistryCatalogues]
+
+_HORIZON = filing_year_envelope().horizon
+_M130_REVISION = str(open_ended_revision("130").id)
 
 
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
@@ -79,38 +83,16 @@ _M130_EXTRACTION_PROFILE_TARGET_LEGAL_REFS = frozenset(
     }
 )
 _M130_STATUTORY_CLOSE = {1: (4, 20), 2: (7, 20), 3: (10, 20), 4: (1, 30)}
-_M130_SUPPORTED_DEADLINES = {
-    2022: (
-        ("2022-04-20", "2022-04-15"),
-        ("2022-07-20", "2022-07-15"),
-        ("2022-10-20", "2022-10-15"),
-        ("2023-01-30", "2023-01-25"),
-    ),
-    2023: (
-        ("2023-04-20", "2023-04-15"),
-        ("2023-07-20", "2023-07-15"),
-        ("2023-10-20", "2023-10-15"),
-        ("2024-01-30", "2024-01-25"),
-    ),
-    2024: (
-        ("2024-04-22", "2024-04-17"),
-        ("2024-07-22", "2024-07-17"),
-        ("2024-10-21", "2024-10-16"),
-        ("2025-01-30", "2025-01-27"),
-    ),
-    2025: (
-        ("2025-04-21", "2025-04-15"),
-        ("2025-07-21", "2025-07-16"),
-        ("2025-10-20", "2025-10-15"),
-        ("2026-01-30", "2026-01-27"),
-    ),
-    2026: (
-        ("2026-04-20", "2026-04-15"),
-        ("2026-07-20", "2026-07-15"),
-        ("2026-10-20", "2026-10-15"),
-        ("2027-02-01", None),
-    ),
-}
+# Per supported filing year, in envelope order: each quarter's official close and domiciliación
+# cutoff as (month, day) in the year the statutory month falls in; a quarter with no cutoff has None.
+_M130_DEADLINE_DAYS_BY_SUPPORTED_YEAR = (
+    (((4, 20), (4, 15)), ((7, 20), (7, 15)), ((10, 20), (10, 15)), ((1, 30), (1, 25))),
+    (((4, 20), (4, 15)), ((7, 20), (7, 15)), ((10, 20), (10, 15)), ((1, 30), (1, 25))),
+    (((4, 22), (4, 17)), ((7, 22), (7, 17)), ((10, 21), (10, 16)), ((1, 30), (1, 27))),
+    (((4, 21), (4, 15)), ((7, 21), (7, 16)), ((10, 20), (10, 15)), ((1, 30), (1, 27))),
+    (((4, 20), (4, 15)), ((7, 20), (7, 15)), ((10, 20), (10, 15)), ((2, 1), None)),
+)
+_M130_SUPPORTED_DEADLINES = dict(zip(filing_year_envelope().years, _M130_DEADLINE_DAYS_BY_SUPPORTED_YEAR, strict=True))
 
 
 @pytest.fixture(scope="module")
@@ -119,7 +101,7 @@ def modelo_130_registry():
     return authority.modelo("130"), authority.catalogues
 
 
-def _snapshot_130(_modelo_130_registry: _ModeloFixture, *, period: str = "1T", filing_year: int = 2026):
+def _snapshot_130(_modelo_130_registry: _ModeloFixture, *, period: str = "1T", filing_year: int = _HORIZON):
     return compiled_bundled_authority().snapshot("130", filing_year=filing_year, period=period)
 
 
@@ -134,14 +116,14 @@ def test_modelo_130_supported_year_deadline_census_dates_sources_and_ownership(
     modelo_130_registry: _ModeloFixture,
 ) -> None:
     modelo, catalogues = modelo_130_registry
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions[_M130_REVISION]
     windows = {(window.filing_year, window.period.registry_token): window for window in revision.deadline_windows}
 
     assert len(revision.deadline_windows) == len(windows) == 20
     assert set(revision.constructs[0].deadline_windows) == {window.id for window in revision.deadline_windows}
     committed_registry_validator(catalogues).validate_modelo(modelo)
 
-    calendar_refs = {f"aeat-calendario-contribuyente-{year}" for year in range(2022, 2027)}
+    calendar_refs = {f"aeat-calendario-contribuyente-{year}" for year in filing_year_envelope().years}
     assert calendar_refs <= set(revision.source_refs)
     assert calendar_refs <= set(revision.constructs[0].source_refs)
     for source_ref in calendar_refs:
@@ -156,7 +138,7 @@ def test_modelo_130_supported_year_deadline_census_dates_sources_and_ownership(
         assert len(projected) == 4
         assert {window.period.registry_token for _, _, window in projected} == expected_periods
 
-        for quarter, (close_text, cutoff_text) in enumerate(expected_deadlines, start=1):
+        for quarter, (close_day, cutoff_day) in enumerate(expected_deadlines, start=1):
             period = f"{quarter}T"
             window = windows[(filing_year, period)]
             assert select_revision(modelo, filing_year=filing_year, period=period) is revision
@@ -173,21 +155,21 @@ def test_modelo_130_supported_year_deadline_census_dates_sources_and_ownership(
                 expected_close += timedelta(days=1)
             assert window.opens_on == date(statutory_year, statutory_month, 1)
             assert window.closes_on == expected_close
-            assert window.closes_on == date.fromisoformat(close_text)
-            assert window.payment_cutoff_on == (None if cutoff_text is None else date.fromisoformat(cutoff_text))
+            assert window.closes_on == date(statutory_year, *close_day)
+            assert window.payment_cutoff_on == (None if cutoff_day is None else date(statutory_year, *cutoff_day))
             expected_sources = {"aeat-modelo-130-instructions"}
-            if window.closes_on.year <= 2026:
+            if window.closes_on.year <= _HORIZON:
                 expected_sources.add(f"aeat-calendario-contribuyente-{window.closes_on.year}")
             assert set(window.source_refs) == expected_sources
 
-    assert windows[(2026, "4T")].payment_cutoff_on is None
+    assert windows[(_HORIZON, "4T")].payment_cutoff_on is None
 
 
 def test_modelo_130_extraction_profile_legal_refs_match_target_casillas(
     modelo_130_registry: _ModeloFixture,
 ) -> None:
     modelo, _catalogues = modelo_130_registry
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions[_M130_REVISION]
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
     profile = next(item for item in revision.extraction_profiles if item.id == "modelo-130-declaracion-pdf")
     target_refs = frozenset(
@@ -215,7 +197,7 @@ def test_modelo_130_casilla_15_grounding_uses_aeat_instruction_citation(
     assert art_110.notes is not None
     assert "apartado 110.5 vigente" in art_110.notes
 
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions[_M130_REVISION]
     carry_binding = next(
         binding for binding in revision.bindings if binding.id == "modelo-130-resultados-negativos-anteriores"
     )
@@ -253,7 +235,7 @@ def test_modelo_130_art109_profile_advisory_is_not_a_casilla_17_formula_branch(
     modelo_130_registry: _ModeloFixture,
 ) -> None:
     modelo, _catalogues = modelo_130_registry
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions[_M130_REVISION]
     formula = next(item for item in revision.formulas if item.id == "modelo-130-diferencia")
     predicate = next(
         item
@@ -291,7 +273,7 @@ def test_modelo_130_requires_external_previous_year_income_binding_for_minoracio
         calculate_registry_snapshot(
             _snapshot_130(modelo_130_registry),
             inputs={_M130_INGRESOS_CASILLA: Decimal("12000.00"), _M130_GASTOS_PREVIOS_CASILLA: Decimal("4000.00")},
-            date_context={"filing_period": date(2026, 4, 20)},
+            date_context={"filing_period": date(_HORIZON, 4, 20)},
             enum_binding_values=_M130_NORMAL_MODALITY,
             binding_values={"modelo-130-resultados-negativos-anteriores": Decimal("0")},
         )
@@ -311,7 +293,7 @@ def test_modelo_130_first_period_carry_forward_defaults_to_zero_for_capped_formu
             _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
             _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
         },
-        date_context={"filing_period": date(2026, 4, 20)},
+        date_context={"filing_period": date(_HORIZON, 4, 20)},
         enum_binding_values=_M130_NORMAL_MODALITY,
         binding_values={
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
@@ -351,7 +333,7 @@ def test_modelo_130_capped_carry_forward_casilla_input_is_rejected(
                 _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
                 _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
             },
-            date_context={"filing_period": date(2026, 4, 20)},
+            date_context={"filing_period": date(_HORIZON, 4, 20)},
             enum_binding_values=_M130_NORMAL_MODALITY,
             binding_values={
                 "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
@@ -384,7 +366,7 @@ def test_modelo_130_third_and_fourth_quarter_carry_forward_picks_up_prior_quarte
 
     snapshot = _snapshot_130(modelo_130_registry, period=target_period)
     saldo_seed = Decimal("750.00")
-    filing_year = 2026
+    filing_year = _HORIZON
 
     # The casilla-05 expanding-span carry now requires casilla 07 and casilla 16
     # observations on EVERY same-ejercicio quarter strictly preceding the target.
@@ -482,7 +464,7 @@ def test_modelo_130_previous_filing_bound_inputs_must_match_binding_values(model
                 _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
                 _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
             },
-            date_context={"filing_period": date(2026, 7, 20)},
+            date_context={"filing_period": date(_HORIZON, 7, 20)},
             enum_binding_values=_M130_NORMAL_MODALITY,
             binding_values={
                 "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
@@ -498,7 +480,7 @@ def test_modelo_130_carry_forward_caps_prior_negative_seed_at_positive_c14(
     snapshot_2t = _snapshot_130(modelo_130_registry, period="2T")
     first_period_observation = registry_grounded_modelo_observation(
         modelo="130",
-        filing_year=2026,
+        filing_year=_HORIZON,
         period="1T",
         casilla_values={
             _M130_PAGO_FRACCIONADO_CASILLA: Decimal("38.00"),
@@ -508,7 +490,7 @@ def test_modelo_130_carry_forward_caps_prior_negative_seed_at_positive_c14(
     )
     prior_year_income_observation = registry_grounded_modelo_observation(
         modelo="100",
-        filing_year=2025,
+        filing_year=_HORIZON - 1,
         period="0A",
         casilla_values={
             _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: Decimal("20000.00"),
@@ -520,7 +502,7 @@ def test_modelo_130_carry_forward_caps_prior_negative_seed_at_positive_c14(
     resolved_bindings = resolve_previous_filing_binding_values(
         snapshot_2t.revision,
         (first_period_observation, prior_year_income_observation),
-        filing_year=2026,
+        filing_year=_HORIZON,
         period="2T",
     )
 
@@ -538,7 +520,7 @@ def test_modelo_130_carry_forward_caps_prior_negative_seed_at_positive_c14(
             _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
             _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
         },
-        date_context={"filing_period": date(2026, 7, 20)},
+        date_context={"filing_period": date(_HORIZON, 7, 20)},
         enum_binding_values=_M130_NORMAL_MODALITY,
         binding_values=resolved_bindings,
     )
@@ -577,7 +559,7 @@ def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(
     prior_16 = Decimal("25.00")
     first_period_observation = registry_grounded_modelo_observation(
         modelo="130",
-        filing_year=2026,
+        filing_year=_HORIZON,
         period="1T",
         casilla_values={
             _M130_PAGO_FRACCIONADO_CASILLA: prior_07,
@@ -591,7 +573,7 @@ def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(
     # carry-forward path independently.
     prior_year_income_observation = registry_grounded_modelo_observation(
         modelo="100",
-        filing_year=2025,
+        filing_year=_HORIZON - 1,
         period="0A",
         casilla_values={cid: Decimal("0") for cid in _M100_RENDIMIENTO_SOURCE_CASILLAS},
     )
@@ -599,7 +581,7 @@ def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(
     resolved_bindings = resolve_previous_filing_binding_values(
         snapshot_2t.revision,
         (first_period_observation, prior_year_income_observation),
-        filing_year=2026,
+        filing_year=_HORIZON,
         period="2T",
     )
 
@@ -619,7 +601,7 @@ def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(
             _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
             _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
         },
-        date_context={"filing_period": date(2026, 7, 20)},
+        date_context={"filing_period": date(_HORIZON, 7, 20)},
         enum_binding_values=_M130_NORMAL_MODALITY,
         binding_values={
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
@@ -655,7 +637,7 @@ def _casilla_17_and_standard_subtraction(
     result = calculate_registry_snapshot(
         _snapshot_130(modelo_130_registry),
         inputs=inputs,
-        date_context={"filing_period": date(2026, 4, 20)},
+        date_context={"filing_period": date(_HORIZON, 4, 20)},
         enum_binding_values=_M130_NORMAL_MODALITY,
         binding_values={
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
@@ -755,7 +737,7 @@ def test_modelo_130_retencion_casilla_is_reported_amount_not_a_rate_computation(
     reported amount's provenance, not a rate the form derives.
     """
     modelo, _catalogues = modelo_130_registry
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions[_M130_REVISION]
     retenciones = next(casilla for casilla in revision.casillas if casilla.id == _M130_RETENCIONES_CASILLA)
 
     assert retenciones.input_kind is InputKind.MANUAL

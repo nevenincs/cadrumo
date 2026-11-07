@@ -6,6 +6,7 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ..compiler.authority import compile_registry_tree
 from .profile_schema_support import committed_registry_validator
@@ -17,7 +18,7 @@ def test_validator_rejects_missing_relationless_direct_settlement_classification
     """The direct same-modelo carries cannot lose their declared settlement treatment."""
     modelos, catalogues = compile_registry_tree(bundled_path("registry", "aeat"), bundled_path())
     modelo = next(item for item in modelos if item.id == "130")
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions[str(open_ended_revision("130").id)]
     classification = next(item for item in revision.dependency_classifications if item.source_modelo == "130")
     construct = next(item for item in revision.constructs if classification.id in item.dependency_classifications)
     mutated_construct = construct.model_copy(
