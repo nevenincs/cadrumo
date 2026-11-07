@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import calendar
 import json
 from dataclasses import replace
 from datetime import date
@@ -22,6 +23,7 @@ from cadrumo.domain.calculations.registry.facts.payloads import (
     MappingFactPayload,
 )
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..eager_authority_baseline import (
     EagerAuthorityBaselineError,
@@ -33,6 +35,8 @@ from .authority_generation_support import publishable_artifact
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _FACT_ID = "eager-round-trip-atoms"
+#: A leap day, the calendar edge a date atom must round-trip, in a supported leap year.
+_LEAP_DAY = date(next(year for year in filing_year_envelope().years if calendar.isleap(year)), 2, 29)
 
 
 @pytest.fixture
@@ -43,7 +47,7 @@ def artifact() -> AuthorityArtifact:
         entries=(
             MappingFactEntry(key="string", value="0.40"),
             MappingFactEntry(key="decimal", value=Decimal("0.40")),
-            MappingFactEntry(key="date", value=date(2024, 2, 29)),
+            MappingFactEntry(key="date", value=_LEAP_DAY),
             MappingFactEntry(key="true", value=True),
             MappingFactEntry(key="zero", value=0),
             MappingFactEntry(key="false", value=False),

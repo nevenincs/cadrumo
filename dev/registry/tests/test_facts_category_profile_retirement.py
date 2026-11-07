@@ -10,6 +10,7 @@ from shutil import copy2
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.resolution import (
     MappingFactQuery,
@@ -22,6 +23,7 @@ from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalo
 from cadrumo.domain.calculations.registry.facts.variants import FactOwnership, FactSelector
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.categories.registry import CATEGORY_PROFILE_FACT_ID, CATEGORY_STATUTORY_CAP_FACT_ID
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.categories.spending_category_catalogue import spending_category_tokens
@@ -32,6 +34,30 @@ from ..compiler.loader import load_registry_tree
 from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_EXERCISE = filing_year_envelope().horizon
+_MUTUALIDAD = "mutualidad_alternativa"
+
+
+def _authored_mutualidad_variants(filename: str) -> list[dict[str, object]]:
+    """The mutualidad variants as authored in the fact file, read without the resolver."""
+    document = parse_toml(bundled_path("registry", "aeat", "facts", filename).read_text(encoding="utf-8"))
+    return [
+        dict(variant)
+        for variant in document["fact"]["variants"]
+        if {selector["value"] for selector in variant["selectors"]} == {_MUTUALIDAD}
+    ]
+
+
+def _variant_for(variants: list[dict[str, object]], exercise: int) -> dict[str, object]:
+    """The one authored variant whose window holds the exercise."""
+    (variant,) = (
+        variant
+        for variant in variants
+        if variant["valid_from"].year <= exercise
+        and (variant.get("valid_to") is None or exercise <= variant["valid_to"].year)
+    )
+    return variant
 
 
 def _category_facts() -> GovernedFactCatalogue:
@@ -49,7 +75,7 @@ def _master_supported_filing_years() -> frozenset[int]:
 def _category_tokens(catalogue: GovernedFactCatalogue) -> tuple[SpendingCategory, ...]:
     """Project the category vocabulary from the candidate facts under test."""
     return spending_category_tokens(
-        effective_date=date(2025, 12, 31),
+        effective_date=date(_EXERCISE, 12, 31),
         authority=CandidateFactAuthority(catalogue, committed_supported_filing_years()),
     )
 
@@ -103,7 +129,7 @@ def test_authored_category_profile_fact_covers_every_category_with_evidence() ->
             MappingFactQuery(
                 fact_id=CATEGORY_PROFILE_FACT_ID,
                 date_axis=DateAxis.FILING_PERIOD,
-                effective_date=date(2025, 12, 31),
+                effective_date=date(_EXERCISE, 12, 31),
                 selectors=(FactSelector(name="category", value=category.value),),
             ),
             authority_digest="a" * 64,
@@ -123,7 +149,7 @@ def test_authored_category_profile_fact_covers_every_category_with_evidence() ->
             MappingFactQuery(
                 fact_id=CATEGORY_PROFILE_FACT_ID,
                 date_axis=DateAxis.FILING_PERIOD,
-                effective_date=date(2025, 12, 31),
+                effective_date=date(_EXERCISE, 12, 31),
                 selectors=(FactSelector(name="category", value="no-such-spending-category"),),
             ),
             authority_digest="a" * 64,
@@ -145,58 +171,60 @@ def test_category_profile_coverage_gate_bites_when_one_historical_variant_is_rem
     candidate = facts_dir / source.name
     copy2(source, candidate)
 
-    marker = '[[fact.variants]]\nvariant_id = "categories.profile:mutualidad_alternativa:2024"\n'
+    floor = filing_year_envelope().floor
+    marker = f'[[fact.variants]]\nvariant_id = "categories.profile:{_MUTUALIDAD}:{floor}"\n'
     content = candidate.read_text(encoding="utf-8")
     start = content.index(marker)
     end = content.index("[[fact.variants]]", start + len(marker))
     candidate.write_text(content[:start] + content[end:], encoding="utf-8")
 
-    with pytest.raises(AssertionError, match=r"missing exact category profile variants: .*mutualidad_alternativa/2024"):
+    with pytest.raises(AssertionError, match=rf"missing exact category profile variants: .*{_MUTUALIDAD}/{floor}"):
         _assert_category_profile_exact_coverage(facts_dir, _master_supported_filing_years())
 
 
-def test_authored_category_profile_fact_preserves_citation_identity_window_and_grounding() -> None:
+@pytest.mark.parametrize("exercise", filing_year_envelope().years)
+def test_authored_category_profile_fact_preserves_citation_identity_window_and_grounding(exercise: int) -> None:
+    authored = _variant_for(_authored_mutualidad_variants("0064-categories-profile.toml"), exercise)
     resolved = resolve_governed_fact(
         _category_facts(),
         MappingFactQuery(
             fact_id=CATEGORY_PROFILE_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date(2025, 12, 31),
-            selectors=(
-                FactSelector(name="category", value=SpendingCategory.from_registry("mutualidad_alternativa").value),
-            ),
+            effective_date=date(exercise, 12, 31),
+            selectors=(FactSelector(name="category", value=SpendingCategory.from_registry(_MUTUALIDAD).value),),
         ),
         authority_digest="a" * 64,
         support=committed_supported_filing_years(),
     )
     assert isinstance(resolved, ResolvedMappingFact)
-    values = {entry.key: entry.value for entry in resolved.payload.entries}
+    resolved_citations = {
+        entry.key: entry.value for entry in resolved.payload.entries if entry.key.startswith("citation.")
+    }
+    authored_citations = {
+        entry["key"]: entry["value"] for entry in authored["payload"]["entries"] if entry["key"].startswith("citation.")
+    }
 
-    assert values["citation.0.source"] == "aeat_help"
-    assert values["citation.0.grounding"] == "source_not_bundled"
-    assert values["citation.0.valid_from"] == date(2025, 1, 1)
-    assert values["citation.0.valid_to"] == date(2025, 12, 31)
-    assert values["citation.2.legal_ref"] == "ley-35-2006:art-30"
-    assert values["citation.2.quote"]
+    assert authored_citations, "the authored variant carries no citation"
+    assert resolved_citations == authored_citations
 
 
-def test_authored_category_cap_fact_preserves_the_dated_mutualidad_amount() -> None:
+@pytest.mark.parametrize("exercise", filing_year_envelope().years)
+def test_authored_category_cap_fact_preserves_the_dated_mutualidad_amount(exercise: int) -> None:
+    authored = _variant_for(_authored_mutualidad_variants("0065-categories-statutory-cap.toml"), exercise)
     resolved = resolve_governed_fact(
         _category_facts(),
         ScalarFactQuery(
             fact_id=CATEGORY_STATUTORY_CAP_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date(2025, 12, 31),
-            selectors=(
-                FactSelector(name="category", value=SpendingCategory.from_registry("mutualidad_alternativa").value),
-            ),
+            effective_date=date(exercise, 12, 31),
+            selectors=(FactSelector(name="category", value=SpendingCategory.from_registry(_MUTUALIDAD).value),),
         ),
         authority_digest="b" * 64,
         support=committed_supported_filing_years(),
     )
 
     assert isinstance(resolved, ResolvedScalarFact)
-    assert resolved.payload.value == Decimal("16672.66")
+    assert resolved.payload.value == Decimal(authored["payload"]["value"])
     assert resolved.ownership is FactOwnership.AUTHORED
     assert resolved.source_citations
 

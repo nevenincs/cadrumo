@@ -9,10 +9,13 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.fact_validation import governed_fact_catalogue_failures
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def _variant(
@@ -59,8 +62,8 @@ def _failures(*variants: dict[str, object]) -> tuple[str, ...]:
 
 def test_validation_refuses_a_precedence_cycle() -> None:
     failures = _failures(
-        _variant("rate.a", valid_from=date(2025, 1, 1), precedence_over=("rate.b",)),
-        _variant("rate.b", valid_from=date(2025, 1, 1), precedence_over=("rate.a",)),
+        _variant("rate.a", valid_from=date(_YEAR, 1, 1), precedence_over=("rate.b",)),
+        _variant("rate.b", valid_from=date(_YEAR, 1, 1), precedence_over=("rate.a",)),
     )
 
     assert any("precedence graph contains a cycle" in failure for failure in failures)
@@ -68,8 +71,8 @@ def test_validation_refuses_a_precedence_cycle() -> None:
 
 def test_validation_refuses_an_unresolved_overlap() -> None:
     failures = _failures(
-        _variant("rate.a", valid_from=date(2025, 1, 1)),
-        _variant("rate.b", valid_from=date(2025, 6, 1)),
+        _variant("rate.a", valid_from=date(_YEAR, 1, 1)),
+        _variant("rate.b", valid_from=date(_YEAR, 6, 1)),
     )
 
     assert any("overlap without explicit precedence" in failure for failure in failures)
@@ -79,11 +82,11 @@ def test_validation_refuses_precedence_across_non_overlapping_coordinates() -> N
     failures = _failures(
         _variant(
             "rate.a",
-            valid_from=date(2025, 1, 1),
-            valid_to=date(2025, 5, 31),
+            valid_from=date(_YEAR, 1, 1),
+            valid_to=date(_YEAR, 5, 31),
             precedence_over=("rate.b",),
         ),
-        _variant("rate.b", valid_from=date(2025, 6, 1)),
+        _variant("rate.b", valid_from=date(_YEAR, 6, 1)),
     )
 
     assert any("precedence across non-overlapping coordinates" in failure for failure in failures)
@@ -91,8 +94,8 @@ def test_validation_refuses_precedence_across_non_overlapping_coordinates() -> N
 
 def test_validation_accepts_an_acyclic_ordered_overlap() -> None:
     failures = _failures(
-        _variant("rate.a", valid_from=date(2025, 1, 1), precedence_over=("rate.b",)),
-        _variant("rate.b", valid_from=date(2025, 6, 1)),
+        _variant("rate.a", valid_from=date(_YEAR, 1, 1), precedence_over=("rate.b",)),
+        _variant("rate.b", valid_from=date(_YEAR, 6, 1)),
     )
 
     assert failures == ()

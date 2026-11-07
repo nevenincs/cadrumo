@@ -32,17 +32,18 @@ def test_a_structural_succession_withdraws_its_source_lineages(
 ) -> None:
     modelo_dir = tree(tmp_path, delta=False, merge=merge)
     definition = load_modelo_directory(modelo_dir)
-    predecessor = edition_lift(read_edition(modelo_dir, "2024"))
-    source = read_edition(modelo_dir, "2025")
+    predecessor_id, successor_id = sorted(definition.revisions)
+    predecessor = edition_lift(read_edition(modelo_dir, predecessor_id))
+    source = read_edition(modelo_dir, successor_id)
     successor = edition_lift(source)
 
     assert source.retired == withdrawn
 
     causes, _drops, _kept, _not_exact, _overrides, _removals, _positions, _attested, order, _normalised = choose_drops(
         definition=definition,
-        revision_id="2025",
-        predecessor="2024",
-        inherited=[Placed(lift.row, "2024") for lift in predecessor.lifts.values()],
+        revision_id=successor_id,
+        predecessor=predecessor_id,
+        inherited=[Placed(lift.row, predecessor_id) for lift in predecessor.lifts.values()],
         full_rows=list(successor.rows),
         lifts=successor.lifts,
         source=source,
