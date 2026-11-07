@@ -24,7 +24,9 @@ import type {
   ModeloCalculationDetailSnapshot,
   ModeloFilingObservationLayersProjection,
   ModeloRecordStatus,
+  ModeloRelatedFilingProjection,
   ModeloVerificationRegistrySnapshotProjection,
+  OutputLanguage,
   SourceDisagreementFact,
   WorkUnitId,
 } from "./modelo";
@@ -383,6 +385,9 @@ export type ModeloFilingRecordViewProjection = {
   record: ModeloFilingRecordListEntryProjection;
   observation_layers: ModeloFilingObservationLayersProjection;
   historical_content: ModeloHistoricalFilingContentProjection;
+  related_filings: ModeloRelatedFilingProjection[];
+  historical_display_words: string | null;
+  comparison: ModeloHistoricalComparisonProjection | null;
 };
 
 /**
@@ -391,6 +396,7 @@ export type ModeloFilingRecordViewProjection = {
 export type ModeloFilingRecordViewRequest = {
   profile_id: string;
   filing_record_id: FilingRecordId;
+  output_language?: OutputLanguage;
 };
 
 /**
@@ -408,6 +414,33 @@ export type ModeloHistoricalCasillaProjection = {
   legal_refs: string[];
   source_refs: string[];
   absent_by_design: boolean;
+};
+
+/**
+ * A technical saved-value comparison, with no inferred labels or tax effects.
+ */
+export type ModeloHistoricalComparisonProjection = {
+  base_filing_record_id: FilingRecordId | null;
+  availability:
+    | "available"
+    | "no_base"
+    | "missing_base"
+    | "missing_content"
+    | "different_registry_revision";
+  rows: ModeloHistoricalComparisonRowProjection[];
+};
+
+/**
+ * Exact saved scalar spellings; a missing side remains absent rather than
+ * zero.
+ */
+export type ModeloHistoricalComparisonRowProjection = {
+  casilla_id: CasillaId;
+  base_value: string | null;
+  selected_value: string | null;
+  base_value_kind: "decimal" | "text" | null;
+  selected_value_kind: "decimal" | "text" | null;
+  change: "unchanged" | "changed" | "added" | "removed";
 };
 
 /**

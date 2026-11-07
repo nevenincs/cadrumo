@@ -724,7 +724,7 @@ export type ModeloFilingObservationLayerProjection = {
   official_evidence: boolean;
   captured_at: string;
   stamped_revision_id: RevisionId;
-  casilla_values: [string, string][];
+  casilla_values: [CasillaId, string][];
 };
 
 /**
@@ -749,7 +749,7 @@ export type ModeloFilingObservationOverrideProjection = {
   reason: string;
   recorded_at: string;
   replaced_source_kind: ObservationSourceKind | null;
-  replaced_values: [string, string][];
+  replaced_values: [CasillaId, string][];
 };
 
 /**
@@ -815,6 +815,30 @@ export type ModeloRegistrySnapshotCoordinates = {
   revision_id: RevisionId;
   modelo_year: number;
   period: string;
+};
+
+/**
+ * Exact navigation targets with independently worded filing and confirmation
+ * state.
+ */
+export type ModeloRelatedFilingProjection = {
+  filing_record_id: FilingRecordId;
+  work_unit_id: WorkUnitId;
+  calculation_revision_id: CalculationRevisionId;
+  modelo: string;
+  filing_year: number;
+  period: string;
+  member_nif: string | null;
+  filed_at: string;
+  declaration_kind: FilingDeclarationKind;
+  confirmation: AeatConfirmationState;
+  status: ModeloRecordStatus;
+  origin: FilingOrigin;
+  amends_filing_record_id: FilingRecordId | null;
+  superseded_by_filing_record_id: FilingRecordId | null;
+  kind_words: string;
+  confirmation_words: string;
+  status_words: string;
 };
 
 /**

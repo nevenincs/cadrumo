@@ -13,6 +13,7 @@ legal_refs = [
   "orden-hac-657-2025:modelo-200",
 ]
 source_refs = [
+  "aeat-manual-iva-2025",
   "aeat-dr-303-2024-late",
   "aeat-dr-303-2025",
   "aeat-dr-303-2026",
@@ -20,9 +21,27 @@ source_refs = [
   "aeat-dr-200-2024",
   "aeat-modelo-200-manual-2024",
   "boe-modelo-369-2021-form",
+  "aeat-modelo-130-instructions",
+  "aeat-dr-130-2019-v12",
+  "aeat-modelo-131-instructions",
+  "aeat-dr-131-2019-2023-v101",
+  "aeat-dr-131-2024",
+  "aeat-dr-131-2025",
+  "aeat-dr-131-2026",
+  "aeat-dr-131-2026-late",
 ]
 review_status = "agent_reviewed"
 ownership = "authored"
+
+# The manual affirmatively sets the correction procedure and its first monthly
+# and quarterly periods; the record designs below corroborate its fields.
+[[fact.variants.source_citations]]
+source_ref = "aeat-manual-iva-2025"
+required_text = [
+  "introduce la autoliquidación rectificativa como la vía general para rectificar, completar o modificar la autoliquidación presentada con anterioridad",
+  "autoliquidaciones de septiembre de 2024 y siguientes",
+  "autoliquidaciones del tercer trimestre de 2024 y siguientes",
+]
 
 [[fact.variants.source_citations]]
 source_ref = "aeat-dr-303-2024-late"
@@ -31,7 +50,7 @@ required_text = [
   "Motivo de la rectificación: Discrepancia criterio administrativo",
 ]
 
-# the 303 record design publishes the rectificativa motive flags; it does not publish 'sustitutiva' (0 occurrences) -- that element is grounded in the modelo 200 manual.
+# The 303 designs establish motive fields, not the legal procedure boundary.
 [[fact.variants.source_citations]]
 source_ref = "aeat-dr-303-2025"
 required_text = [
@@ -47,12 +66,15 @@ required_text = [
   "Motivo de la rectificación: Discrepancia criterio administrativo",
 ]
 
-# grounds that modelo 100 names both procedures in 2025; the boundary.100.date of 2024-12-31 is NOT quoted here.
+# The 2025 manual expressly applies the general rectificativa procedure to
+# tax periods 2024 onward; earlier periods retain the previous system.
 [[fact.variants.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = [
   "la autoliquidación rectificativa",
   "declaración complementaria, o rectificativa, según corresponda",
+  "la aplicación efectiva de la autoliquidación rectificativa como sistema único para la corrección de autoliquidaciones",
+  "procedimiento general de modificación de declaraciones de IRPF correspondientes a los períodos impositivos 2024 y siguientes",
 ]
 
 # ASCII-only span: this .xls source loses every accented character to replacement chars, so an accented quote cannot match. Grounds that 2024's 200 design carries rectificativa casillas; nothing about complementaria/sustitutiva ordering.
@@ -62,11 +84,14 @@ required_text = [
   "rectificativa que no deban incluirse en otras casillas - total [00031]",
 ]
 
-# the one source that grounds regime.pre_order -> regime.post_order as a SUBSTITUTION, and ties it to periods from 2024-01-01 via Orden HAC/657/2025.
+# The Sociedades manual grounds the procedure, independently of layout fields,
+# for tax periods beginning on or after 2024-01-01.
 [[fact.variants.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
 required_text = [
   "la aplicación efectiva de la autoliquidación rectificativa como mecanismo de corrección de autoliquidaciones en sustitución del actual sistema de autoliquidación complementaria y solicitud de rectificación",
+  "Con efectos para los períodos impositivos que se inicien a partir de 1 de enero de 2024",
+  "mediante la presentación de una autoliquidación rectificativa, con independencia del resultado de la misma",
 ]
 
 # Orden HAC/610/2021 art. 7.5: a filed Modelo 369 is never amended; its adjustment belongs to a later period's return.
@@ -76,6 +101,47 @@ required_text = [
   "la misma no podrá modificarse",
 ]
 
+# Instructions (7): increases use complementaria; other corrections require a
+# separate solicitud de rectificacion. The designs close the filing marker to
+# blank (original) or X (complementaria), from the 2019 editions onward.
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = [
+  "de la autoliquidación complementaria deberá resultar un importe a ingresar superior al de la autoliquidación anterior",
+  "La rectificación por cualquier otra causa de autoliquidaciones presentadas anteriormente no dará lugar a la presentación de autoliquidaciones complementarias",
+]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = [
+  "de la autoliquidación complementaria deberá resultar un importe a ingresar superior al de la autoliquidación anterior",
+  "La rectificación por cualquier otra causa de autoliquidaciones presentadas anteriormente no dará lugar a la presentación de autoliquidaciones complementarias",
+]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-130-2019-v12"
+required_text = ['complementaria.', 'blanco o "X"']
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-131-2019-2023-v101"
+required_text = ['Complementaria (7) - Declaración complementaria', 'blanco o "X"']
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-131-2024"
+required_text = ['Complementaria (7) - Declaración complementaria', 'blanco o "X"']
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-131-2025"
+required_text = ['Complementaria (7) - Declaración complementaria', 'blanco o "X"']
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-131-2026"
+required_text = ['Complementaria (7) - Declaración complementaria', 'blanco o "X"']
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-131-2026-late"
+required_text = ['Complementaria (7) - Declaración complementaria', 'blanco o "X"']
+
 [fact.variants.payload]
 kind = "mapping"
 entries = [
@@ -83,7 +149,7 @@ entries = [
   { key = "procedure.complementaria.value", value = "complementaria" },
   { key = "procedure.complementaria.description", value = "Pre-rectificativa complementary self-assessment procedure for an increased liability." },
   { key = "procedure.sustitutiva.value", value = "sustitutiva" },
-  { key = "procedure.sustitutiva.description", value = "Material replacement procedure retained in both amendment regimes." },
+  { key = "procedure.sustitutiva.description", value = "Material replacement procedure subject to the selected modelo's dated restrictions." },
   { key = "procedure.rectificativa.value", value = "rectificativa" },
   { key = "procedure.rectificativa.description", value = "Unified self-assessment correction procedure once the selected modelo reaches its adoption boundary." },
   { key = "regime.pre_order", value = "complementaria,sustitutiva" },
@@ -95,8 +161,28 @@ entries = [
   { key = "boundary.100.date", value = "2024-12-31" },
   { key = "boundary.100.source", value = "aeat-renta-2025-manual-parte1" },
   { key = "boundary.200.date", value = "2024-12-31" },
-  { key = "boundary.200.source", value = "aeat-dr-200-2024" },
+  { key = "boundary.200.source", value = "aeat-modelo-200-manual-2024" },
   { key = "later_period_adjustment.order", value = "369" },
   { key = "later_period_adjustment.369.date", value = "2021-07-01" },
   { key = "later_period_adjustment.369.source", value = "boe-modelo-369-2021-form" },
+  { key = "restriction.order", value = "130,131,303,100,200" },
+  { key = "restriction.130.date", value = "2019-01-01" },
+  { key = "restriction.130.kinds", value = "complementaria" },
+  { key = "restriction.130.source", value = "aeat-modelo-130-instructions" },
+  { key = "restriction.131.date", value = "2019-01-01" },
+  { key = "restriction.131.kinds", value = "complementaria" },
+  { key = "restriction.131.source", value = "aeat-modelo-131-instructions" },
+  # Dates compare period ends, rather than the first day of legal applicability:
+  # September/3T 2024 for 303; tax periods 2024 onward for annual 100/200.
+  # The 200/2024 revision remains calculation-only; procedure evidence does not
+  # grant filing capability or change the first filing-grade revision (2025).
+  { key = "restriction.303.date", value = "2024-09-30" },
+  { key = "restriction.303.kinds", value = "rectificativa" },
+  { key = "restriction.303.source", value = "aeat-manual-iva-2025" },
+  { key = "restriction.100.date", value = "2024-12-31" },
+  { key = "restriction.100.kinds", value = "rectificativa" },
+  { key = "restriction.100.source", value = "aeat-renta-2025-manual-parte1" },
+  { key = "restriction.200.date", value = "2024-12-31" },
+  { key = "restriction.200.kinds", value = "rectificativa" },
+  { key = "restriction.200.source", value = "aeat-modelo-200-manual-2024" },
 ]

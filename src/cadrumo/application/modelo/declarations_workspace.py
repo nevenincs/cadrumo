@@ -296,21 +296,7 @@ def _revision_rows(
 
 def _filing_rows(filings: tuple[ModeloRecord, ...]) -> tuple[DeclarationsWorkspaceFilingRefV1, ...]:
     return tuple(
-        DeclarationsWorkspaceFilingRefV1(
-            filing_record_id=record.filing_record_id,
-            work_unit_id=record.work_unit_id,
-            calculation_revision_id=record.calculation_revision_id,
-            modelo=record.modelo,
-            filing_year=record.filing_year,
-            period=record.period,
-            filed_at=record.filed_at,
-            local_status=record.status,
-            origin=record.origin,
-            confirmation=record.confirmation,
-            declaration_kind=record.declaration_kind,
-            amends_filing_record_id=record.amends_filing_record_id,
-            evidence_kind=record.external_evidence.kind if record.external_evidence is not None else None,
-        )
+        DeclarationsWorkspaceFilingRefV1.from_record(record)
         for record in sorted(
             filings,
             key=lambda item: (

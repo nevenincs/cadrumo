@@ -309,8 +309,8 @@ async function correct(target: Page, shape: string, figure: string) {
   });
   await dialog
     .getByRole("textbox", { name: context.reason_prompt })
-    .fill("A deductible expense was left out.");
-  const row = context.rows.find((entry) => entry.casilla_id === "06")!;
+    .fill("Income was understated in the recorded declaration.");
+  const row = context.rows.find((entry) => entry.casilla_id === "01")!;
   await dialog
     .getByRole("textbox", {
       name: label("workspace.modelo.editor.new_value_for_box", {
@@ -327,11 +327,19 @@ async function correct(target: Page, shape: string, figure: string) {
 test("a correction that settles closes and the declaration is read again", async ({
   page: target,
 }) => {
-  const dialog = await correct(target, "receipt", "150");
+  const dialog = await correct(target, "receipt", "10000");
   await expect(dialog).toBeHidden();
   expect(await calls(target, "modelo submit modelo.work.amend")).toHaveLength(
     1,
   );
+  const pending = form("130-1T-correction-1-pending").receipt;
+  if (!pending || pending.verified)
+    throw new Error("The corrected filing must await official confirmation");
+  await tab(target, "workspace.modelo.filing.title").click();
+  await expect(target.getByText(pending.words).first()).toBeVisible();
+  await expect(
+    target.getByText(label("workspace.modelo.filing.not_confirmed_yet")),
+  ).toBeVisible();
 });
 
 test("a corrected figure the application cannot read is said beside it, and nothing is sent", async ({
@@ -352,7 +360,7 @@ test("a corrected figure the application cannot read is said beside it, and noth
 test("a refused correction says so and keeps the dialog", async ({
   page: target,
 }) => {
-  const dialog = await correct(target, "correction-refused", "150");
+  const dialog = await correct(target, "correction-refused", "10000");
   await expect(dialog).toBeVisible();
   // The sentence does not name the code the host refused it with.
   await expect(dialog).toContainText(label("workspace.modelo.outcome.refused"));
@@ -362,7 +370,7 @@ test("a refused correction says so and keeps the dialog", async ({
 test("a correction whose settlement was not seen is unknown and sends nothing more", async ({
   page: target,
 }) => {
-  const dialog = await correct(target, "correction-unknown", "150");
+  const dialog = await correct(target, "correction-unknown", "10000");
   await expect(dialog).toContainText(
     label("workspace.modelo.write_hold.unknown"),
   );

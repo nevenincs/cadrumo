@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useRef } from "react";
-import { userEvent, waitFor } from "storybook/test";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { modeloFixture, type ModeloShape } from "@/dev/modeloFixture";
 import type { ModeloPort } from "../../../shell/modelo";
 import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
@@ -164,6 +164,48 @@ const create: NonNullable<Story["play"]> = async (context) => {
 };
 
 export const Declarations: Story = {};
+export const RelatedFilings: Story = {
+  name: "Original and successive corrections",
+  args: { shape: "related-filings" },
+  play: async ({ canvasElement, globals }) => {
+    const t = translator(String(globals.locale ?? "en"));
+    const related = await within(canvasElement).findByText((text) =>
+      text.startsWith(`${t("workspace.declarations.related_filings.title")} ·`),
+    );
+    const row = related.closest<HTMLElement>("[data-kind=data]");
+    if (!row)
+      throw new Error("Related filings are not inside a declaration row");
+    await userEvent.dblClick(
+      row.querySelector<HTMLElement>("[role=gridcell]") ?? row,
+    );
+    const dialog = await within(canvasElement.ownerDocument.body).findByRole(
+      "dialog",
+      {
+        name: t("workspace.declarations.related_filings.title"),
+      },
+    );
+    const picker = await within(dialog).findByRole("combobox", {
+      name: t("workspace.declarations.related_filings.select"),
+    });
+    const options = within(picker).getAllByRole("option");
+    expect(options).toHaveLength(3);
+    const original = (options[0] as HTMLOptionElement).value;
+    const latest = (options[2] as HTMLOptionElement).value;
+    await userEvent.selectOptions(picker, latest);
+    await within(dialog).findByText(
+      t("workspace.declarations.related_filings.base"),
+    );
+    await within(dialog).findByText(
+      t("workspace.declarations.related_filings.saved_values"),
+    );
+    await userEvent.selectOptions(picker, original);
+    await within(dialog).findByText(
+      t("workspace.declarations.related_filings.corrections"),
+    );
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
+  },
+};
 export const Deadlines: Story = { args: { deadlines: true } };
 export const AeatFiling: Story = {
   name: "A return only the AEAT holds",

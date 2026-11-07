@@ -27,6 +27,7 @@ from ...domain.modelos.filing_record import (
     ExternalEvidenceKind,
     FilingDeclarationKind,
     FilingOrigin,
+    ModeloRecord,
     ModeloRecordStatus,
 )
 from ...domain.modelos.work_unit import WorkUnitState
@@ -217,7 +218,30 @@ class DeclarationsWorkspaceFilingRefV1(BaseModel):
     confirmation: AeatConfirmationState
     declaration_kind: FilingDeclarationKind
     amends_filing_record_id: FilingRecordId | None = Field(default=None, exclude=True, repr=False)
+    superseded_by_filing_record_id: FilingRecordId | None = Field(default=None, exclude=True, repr=False)
+    member_nif: str | None = Field(default=None, exclude=True, repr=False)
     evidence_kind: ExternalEvidenceKind | None = None
+
+    @classmethod
+    def from_record(cls, record: ModeloRecord) -> Self:
+        """Retain the exact immutable filing and its two distinct relationships."""
+        return cls(
+            filing_record_id=record.filing_record_id,
+            work_unit_id=record.work_unit_id,
+            calculation_revision_id=record.calculation_revision_id,
+            modelo=record.modelo,
+            filing_year=record.filing_year,
+            period=record.period,
+            filed_at=record.filed_at,
+            local_status=record.status,
+            origin=record.origin,
+            confirmation=record.confirmation,
+            declaration_kind=record.declaration_kind,
+            amends_filing_record_id=record.amends_filing_record_id,
+            superseded_by_filing_record_id=record.superseded_by_filing_record_id,
+            member_nif=record.member_nif,
+            evidence_kind=record.external_evidence.kind if record.external_evidence is not None else None,
+        )
 
     @property
     def aeat_accepted(self) -> bool:

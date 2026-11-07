@@ -108,8 +108,12 @@ from .amendment_kind_resolution import (
     assert_amendment_kind_permitted,
     assert_complementaria_liability_direction_permitted,
 )
-from .calculation_helpers import amendment_observations as calculation_amendment_observations
-from .calculation_helpers import resolve_registry_snapshot_for_work_unit
+from .calculation_helpers import (
+    AmendmentCalculation,
+    amendment_prior_paid_values,
+    calculate_amendment,
+    resolve_registry_snapshot_for_work_unit,
+)
 from .calculation_modelo_adjustments import detail_row_declaration_modelos
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .filed_revision_observation import filed_revision_observation_writes, prepare_filed_revision_observation
@@ -348,6 +352,9 @@ def _prepare_amendment_identity(
     in_force: ModeloRecord,
     revisions: CalculationRevisionCatalogue,
     corrected_values: Mapping[CasillaId, Decimal],
+    calculation: AmendmentCalculation,
+    registry_snapshot: RegistrySnapshot,
+    overrides: Mapping[CasillaId, Decimal],
     amendment_kind: FilingDeclarationKind,
     m303_rectificativa_motive: M303RectificativaMotive | None,
     detail_rows: Sequence[ModeloDetailRow] | None,
@@ -372,6 +379,9 @@ def _prepare_amendment_identity(
         amendment_kind=amendment_kind,
         baseline_casilla_values=baseline_revision.casilla_values,
         corrected_casilla_values=corrected_values,
+        prior_paid_casilla_ids=tuple(
+            casilla.id for casilla in registry_snapshot.revision.casillas if casilla.complementaria_only is not None
+        ),
     )
 
     m303_rectificativa_motive = _resolve_m303_rectificativa_motive_before_identity(
@@ -393,7 +403,7 @@ def _prepare_amendment_identity(
         supplied=detail_rows,
     )
     if (
-        corrected_values == dict(source_revision.casilla_values)
+        all(source_revision.casilla_values.get(key) == value for key, value in overrides.items())
         and amendment_detail_rows == source_revision.detail_rows
     ):
         raise CalculationRevisionStateError(
@@ -405,8 +415,9 @@ def _prepare_amendment_identity(
         )
     new_revision_id = derive_calculation_revision_id(
         work_unit_id=in_force.work_unit_id,
-        input_values_by_casilla_id=source_revision.input_values_by_casilla_id,
-        binding_overrides=source_revision.binding_overrides,
+        input_values_by_casilla_id=calculation.input_values_by_casilla_id,
+        binding_overrides=calculation.binding_overrides,
+        operator_layer=calculation.operator_layer,
         relation_overrides=source_revision.relation_overrides,
         casilla_values=corrected_values,
         source_transaction_ids=source_revision.source_transaction_ids,
@@ -472,8 +483,8 @@ def amend_modelo_revision[CasillaKey](
 ) -> ModeloRecord:
     """Amend a current filing against its latest AEAT-confirmed baseline.
 
-    Canonical overrides replace only the supplied casillas; unchanged values,
-    evidence and provenance remain tied to the saved source revision. The
+    Canonical overrides recompute dependent formulas from the saved source;
+    unchanged evidence and provenance remain tied to that revision. The
     amendment kind, motive and detail rows are validated before deriving the
     revision identity. The corrected draft is checked, verified and filed, then
     its record, observations and lifecycle event are committed together. A
@@ -520,8 +531,18 @@ def amend_modelo_revision[CasillaKey](
         operation=ModeloLifecycleClockOperation.AMEND,
         instants=amendment_ordering_instants(work_unit=work_unit, baseline=baseline, in_force=in_force),
     )
-    corrected_values: dict[CasillaId, Decimal] = dict(source_revision.casilla_values)
-    corrected_values.update(canonical_overrides)
+    registry_snapshot = resolve_registry_snapshot_for_work_unit(work_unit, operation=operation)
+    calculation = calculate_amendment(
+        source_revision=source_revision,
+        overrides=canonical_overrides,
+        prior_paid_values=amendment_prior_paid_values(
+            baseline_revision=baseline_revision,
+            snapshot=registry_snapshot,
+            amendment_kind=amendment_kind,
+        ),
+        snapshot=registry_snapshot,
+    )
+    corrected_values = calculation.casilla_values
 
     new_revision_id, amendment_identity, amendment_detail_rows = _prepare_amendment_identity(
         baseline=baseline,
@@ -531,24 +552,16 @@ def amend_modelo_revision[CasillaKey](
         in_force=in_force,
         revisions=revisions,
         corrected_values=corrected_values,
+        calculation=calculation,
+        registry_snapshot=registry_snapshot,
+        overrides=canonical_overrides,
         amendment_kind=amendment_kind,
         m303_rectificativa_motive=m303_rectificativa_motive,
         detail_rows=detail_rows,
         operation=operation,
     )
 
-    # Carry regulatory grounding onto the amendment: build typed
-    # CasillaObservation rows for the corrected casilla map so the
-    # persisted amendment revision and its CLI emit preserve
-    # legal_refs / source_refs (and baseline formula provenance for
-    # non-overridden casillas) instead of an empty observations tuple.
-    registry_snapshot = resolve_registry_snapshot_for_work_unit(work_unit, operation=operation)
-    amendment_observations = calculation_amendment_observations(
-        corrected_values=corrected_values,
-        overrides=canonical_overrides,
-        baseline_revision=source_revision,
-        snapshot=registry_snapshot,
-    )
+    amendment_observations = calculation.observations
     filing_instance_evidence = validate_m303_filing_instance_evidence_for_revision(
         work_unit=work_unit,
         registry_snapshot=registry_snapshot,
@@ -565,6 +578,7 @@ def amend_modelo_revision[CasillaKey](
         baseline=in_force,
         baseline_revision=source_revision,
         corrected_values=corrected_values,
+        calculation=calculation,
         amendment_observations=amendment_observations,
         amendment_identity=amendment_identity,
         detail_rows=amendment_detail_rows,
@@ -761,6 +775,7 @@ def _build_amendment_draft_revision(
     baseline: ModeloRecord,
     baseline_revision: CalculationRevision,
     corrected_values: dict[CasillaId, Decimal],
+    calculation: AmendmentCalculation,
     amendment_observations: tuple[CasillaObservation, ...],
     amendment_identity: CalculationRevisionAmendmentIdentity,
     detail_rows: tuple[ModeloDetailRow, ...],
@@ -802,8 +817,9 @@ def _build_amendment_draft_revision(
             "work_unit_id": baseline.work_unit_id,
             "registry_snapshot_ref": registry_snapshot_ref,
             "state": CalculationRevisionState.BORRADOR,
-            "input_values_by_casilla_id": baseline_revision.input_values_by_casilla_id,
-            "binding_overrides": baseline_revision.binding_overrides,
+            "input_values_by_casilla_id": calculation.input_values_by_casilla_id,
+            "binding_overrides": calculation.binding_overrides,
+            "operator_layer": calculation.operator_layer,
             "relation_overrides": baseline_revision.relation_overrides,
             "source_transaction_ids": baseline_revision.source_transaction_ids,
             "borrador_snapshot_id": baseline_revision.borrador_snapshot_id,

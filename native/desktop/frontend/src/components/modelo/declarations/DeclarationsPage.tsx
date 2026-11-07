@@ -42,6 +42,7 @@ import {
 } from "./NewDeclarationDialog";
 import { DEADLINE_TONE } from "../workspace/Marks";
 import { AeatFilingDialog } from "./AeatFilingDialog";
+import { RelatedFilingsDialog } from "./RelatedFilingsDialog";
 import { useDeclarationsList, type ListMemory } from "./useDeclarationsList";
 
 /** What the page keeps of itself while it is put away for a declaration:
@@ -120,7 +121,10 @@ const inView = (view: View, row: Row) =>
 /** What choosing a row does, as the read model says: open its local
  * declaration, open the AEAT's return to read, start one, or say why it
  * has no step of its own. */
-function rowAction(row: Row): "open" | "aeat" | "start" | "help" | null {
+function rowAction(
+  row: Row,
+): "open" | "aeat" | "start" | "help" | "related" | null {
+  if (row.related_filings.length > 1) return "related";
   if (row.opens_local_work && row.work_unit_id !== null) return "open";
   if (row.opens_aeat_filing) return "aeat";
   if (row.next_step === "start") return "start";
@@ -161,6 +165,11 @@ function columns(t: Translate): GridColumn<Row>[] {
             </DataGridText>
           )}
           <RowNotes notes={row.calculation_notes} t={t} />
+          {row.related_filings.length > 1 && (
+            <DataGridText className="text-xs text-muted-foreground">
+              {`${t("workspace.declarations.related_filings.title")} · ${row.related_filings.map((entry) => entry.kind_words).join(" · ")}`}
+            </DataGridText>
+          )}
         </span>
       ),
     },
@@ -356,6 +365,16 @@ export function DeclarationsPage({
     new Set<string>() as ReadonlySet<string>,
   );
   const [aeatRow, setAeatRow] = useState<Row | null>(null);
+  const [relatedSelection, setRelatedSelection] = useState<{
+    reader: string | null;
+    memory: DeclarationsMemory;
+    row: Row;
+  } | null>(null);
+  const relatedRow =
+    relatedSelection?.reader === reader &&
+    relatedSelection.memory === ownedMemory
+      ? relatedSelection.row
+      : null;
   const [creating, setCreating] = useState<NewDeclarationStart | null | false>(
     false,
   );
@@ -429,7 +448,9 @@ export function DeclarationsPage({
     if (!row) return;
     const action = rowAction(row);
     setHelp(null);
-    if (action === "open" && row.work_unit_id) onOpen(row.work_unit_id);
+    if (action === "related")
+      setRelatedSelection({ reader, memory: ownedMemory, row });
+    else if (action === "open" && row.work_unit_id) onOpen(row.work_unit_id);
     else if (action === "aeat") setAeatRow(row);
     else if (action === "help") setHelp(row.help_words);
     else if (action === "start")
@@ -599,7 +620,8 @@ export function DeclarationsPage({
             rowHeight={(row) =>
               row.kind !== "data"
                 ? undefined
-                : row.data.calculation_notes.length > 0
+                : row.data.calculation_notes.length > 0 ||
+                    row.data.related_filings.length > 1
                   ? 4.75
                   : row.data.aeat_submission_state !== null
                     ? 4.25
@@ -673,6 +695,29 @@ export function DeclarationsPage({
       )}
       {aeatRow && (
         <AeatFilingDialog row={aeatRow} onClose={() => setAeatRow(null)} />
+      )}
+      {reader !== null && relatedRow && relatedRow.related_filings[0] && (
+        <RelatedFilingsDialog
+          key={relatedRow.key}
+          port={port}
+          filingId={relatedRow.related_filings[0].filing_record_id}
+          filings={relatedRow.related_filings}
+          language={language}
+          locale={language}
+          title={[relatedRow.modelo_title, relatedRow.period_words]
+            .filter(Boolean)
+            .join(" · ")}
+          onClose={() => setRelatedSelection(null)}
+          onOpenWork={
+            relatedRow.opens_local_work && relatedRow.work_unit_id
+              ? () => {
+                  const work = relatedRow.work_unit_id;
+                  setRelatedSelection(null);
+                  if (work) onOpen(work);
+                }
+              : undefined
+          }
+        />
       )}
     </>
   );

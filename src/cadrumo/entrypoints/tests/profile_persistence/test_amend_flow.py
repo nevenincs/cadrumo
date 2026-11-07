@@ -48,6 +48,7 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....application.modelo.action_errors import (
+    AmendmentComplementariaLiabilityDecreaseError,
     AmendmentEvidenceMissingError,
     AmendmentOverrideCasillaError,
     AmendmentTargetStateError,
@@ -72,6 +73,7 @@ from ....core.config import Settings
 from ....core.period import Period
 from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
@@ -82,6 +84,7 @@ from ....domain.modelos.calculation_revision import (
     derive_calculation_revision_id_from_revision,
 )
 from ....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
+from ....domain.modelos.calculation_revision_operator_layer import CalculationOperatorLayer
 from ....domain.modelos.filing_record import (
     AeatConfirmationState,
     ExternalEvidence,
@@ -106,6 +109,7 @@ from ..filing_record_read_support import persisted_filing_record
 from .file_flow_test_support import (
     workflow_profile,
 )
+from .import_flow_support import TAX_ID, import_external_filing, persist_matching_justificante
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -244,6 +248,9 @@ def _seed_external_baseline(
     member_nif: str | None = None,
     filing_instance_evidence: FilingInstanceEvidence | None = None,
     input_values_by_casilla_id: dict[CasillaId, str] | None = None,
+    binding_overrides: dict[str, str] | None = None,
+    observations: tuple | None = None,
+    operator_layer: CalculationOperatorLayer | None = None,
     operation: PinnedAuthorityOperation,
 ) -> tuple[WorkUnit, CalculationRevision, ModeloRecord]:
     """Seed a CURRENT filing record carrying ``external_evidence`` plus
@@ -266,12 +273,13 @@ def _seed_external_baseline(
     )
 
     inputs: dict[CasillaId, str] = {} if input_values_by_casilla_id is None else dict(input_values_by_casilla_id)
-    overrides_map: dict[str, str] = {}
+    overrides_map: dict[str, str] = {} if binding_overrides is None else dict(binding_overrides)
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit.work_unit_id,
         input_values_by_casilla_id=inputs,
         binding_overrides=overrides_map,
         casilla_values=casilla_values,
+        operator_layer=operator_layer,
         filing_instance_evidence=filing_instance_evidence,
         source_provenance=(),
     )
@@ -294,12 +302,14 @@ def _seed_external_baseline(
         input_values_by_casilla_id=inputs,
         binding_overrides=overrides_map,
         casilla_values=casilla_values,
-        observations=registry_grounded_observations(
+        observations=observations
+        or registry_grounded_observations(
             modelo=str(work_unit.modelo),
             filing_year=work_unit.filing_year,
             period=work_unit.period.registry_token,
             casilla_values=casilla_values,
         ),
+        operator_layer=operator_layer,
         created_at=_T1,
         updated_at=_T1,
         verified_at=_T1,
@@ -528,9 +538,44 @@ class _AmendOutcome:
 def _drive_amend_creates_complementaria(repos: _Repos, *, operation: PinnedAuthorityOperation) -> _AmendOutcome:
     """Run the seed-baseline + amend scenario and bundle the observable state."""
     _wu_repo, _cr_repo, _fr_repo, _evidence_repo, _bv_repo = repos
-    work_unit, baseline_revision, baseline = _seed_external_baseline(
+    work_unit = _seed_work_unit(_wu_repo, operation=operation)
+    snapshot = operation.snapshot("130", filing_year=2026, period="1T")
+    engine_inputs = {
+        _AMEND_INCOME_CASILLA: Decimal("1000"),
+        _AMEND_WITHHELD_CASILLA: Decimal("0"),
+        _AMEND_PREVIOUS_PAYMENT_CASILLA: Decimal("0"),
+        _AMEND_HOME_DEDUCTION_CASILLA: Decimal("0"),
+        _AMEND_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
+        validated_casilla_id("gastos-deducibles-previos"): Decimal("0"),
+        validated_casilla_id("rendimiento-neto-reducible-art-32-1"): Decimal("0"),
+    }
+    engine_bindings = {
+        "modelo-130-actividad-economica-ingresos-cumulative": Decimal("1000"),
+        "modelo-130-actividad-economica-gastos-cumulative": Decimal("0"),
+        "modelo-130-volumen-ingresos-agrario": Decimal("0"),
+        "modelo-130-retenciones-agrarias": Decimal("0"),
+        "modelo-130-pagos-fraccionados-anteriores": Decimal("0"),
+        "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+        "irpf.previous_year_economic_activity_net_income": Decimal("0"),
+    }
+    enum_bindings = {"modelo-130-estimacion-directa-modalidad": "directa_simplificada"}
+    engine_result = calculate_registry_snapshot(
+        snapshot,
+        inputs=engine_inputs,
+        binding_values=engine_bindings,
+        enum_binding_values=enum_bindings,
+        date_context={},
+    )
+    input_strings = {key: str(value) for key, value in engine_inputs.items()}
+    binding_strings = {key: str(value) for key, value in engine_bindings.items()} | enum_bindings
+    baseline_layer = CalculationOperatorLayer(decimal_casilla_inputs=input_strings, binding_overrides=binding_strings)
+    _, baseline_revision, baseline = _seed_external_baseline(
         repos,
-        casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000"), _AMEND_EXPENSE_CASILLA: Decimal("250")},
+        casilla_values=engine_result.values,
+        input_values_by_casilla_id=input_strings,
+        binding_overrides=binding_strings,
+        observations=engine_result.observations,
+        operator_layer=baseline_layer,
         operation=operation,
     )
     with bundled_indexed_authority().operation() as operation:
@@ -549,6 +594,124 @@ def _drive_amend_creates_complementaria(repos: _Repos, *, operation: PinnedAutho
         baseline=baseline,
         new_filing=new_filing,
     )
+
+
+def test_operation_backed_130_successive_confirmed_corrections_recompute_and_guard_decreases(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A confirmed correction becomes the paid-period seed for the next correction."""
+    wu_repo, cr_repo, fr_repo, _, _ = repos
+    work_unit = _seed_work_unit(
+        wu_repo,
+        filing_year=2025,
+        period_code="1T",
+        revision_id="2019-y-siguientes",
+        operation=operation,
+    )
+    snapshot = operation.snapshot("130", filing_year=2025, period="1T")
+    engine_inputs = {
+        _AMEND_INCOME_CASILLA: Decimal("8840"),
+        validated_casilla_id("gastos-deducibles-previos"): Decimal("4982"),
+        _AMEND_WITHHELD_CASILLA: Decimal("0"),
+        _AMEND_PREVIOUS_PAYMENT_CASILLA: Decimal("0"),
+        _AMEND_HOME_DEDUCTION_CASILLA: Decimal("0"),
+        _AMEND_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
+        validated_casilla_id("rendimiento-neto-reducible-art-32-1"): Decimal("0"),
+    }
+    engine_bindings = {
+        "modelo-130-actividad-economica-ingresos-cumulative": Decimal("8840"),
+        "modelo-130-actividad-economica-gastos-cumulative": Decimal("4982"),
+        "modelo-130-volumen-ingresos-agrario": Decimal("0"),
+        "modelo-130-retenciones-agrarias": Decimal("0"),
+        "modelo-130-pagos-fraccionados-anteriores": Decimal("0"),
+        "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+        "irpf.previous_year_economic_activity_net_income": Decimal("0"),
+    }
+    engine_enum_bindings = {"modelo-130-estimacion-directa-modalidad": "directa_simplificada"}
+    original_result = calculate_registry_snapshot(
+        snapshot,
+        inputs=engine_inputs,
+        binding_values=engine_bindings,
+        enum_binding_values=engine_enum_bindings,
+        date_context={},
+    )
+    serialized_inputs = {key: str(value) for key, value in engine_inputs.items()}
+    serialized_bindings = {key: str(value) for key, value in engine_bindings.items()} | engine_enum_bindings
+    original_layer = CalculationOperatorLayer(
+        decimal_casilla_inputs=serialized_inputs,
+        binding_overrides=serialized_bindings,
+    )
+    _, original_revision, original = _seed_external_baseline(
+        repos,
+        casilla_values=original_result.values,
+        filing_year=2025,
+        input_values_by_casilla_id=serialized_inputs,
+        binding_overrides=serialized_bindings,
+        observations=original_result.observations,
+        operator_layer=original_layer,
+        operation=operation,
+    )
+    original_saved = original_revision.model_dump(mode="json")
+
+    first = amend_modelo_revision(
+        ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+        from_filing_record_id=original.filing_record_id,
+        overrides={_AMEND_INCOME_CASILLA: Decimal("10000")},
+        amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
+        reason="corrected turnover",
+        actor="operator-A",
+        clock=_T4,
+        operation=operation,
+    )
+    first_revision = cr_repo.load().revisions[first.calculation_revision_id]
+    assert first_revision.casilla_values[validated_casilla_id("04")] == Decimal("953.42")
+    assert first_revision.casilla_values[validated_casilla_id("17")] == Decimal("853.42")
+    assert first_revision.casilla_values[validated_casilla_id("18")] == Decimal("633.02")
+    assert first_revision.casilla_values[validated_casilla_id("19")] == Decimal("220.40")
+
+    from datetime import timedelta
+
+    receipt_time = _T4 + timedelta(minutes=30)
+    persist_matching_justificante("JUST130CORRECT1", work_unit, captured_at=receipt_time)
+    confirmed_first = import_external_filing(
+        repos,
+        work_unit,
+        casilla_values=first_revision.casilla_values,
+        evidence_reference_id="JUST130CORRECT1",
+        expected_tax_id=TAX_ID,
+        clock=receipt_time,
+        declared_kind=FilingDeclarationKind.COMPLEMENTARIA,
+    )
+    second = amend_modelo_revision(
+        ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+        from_filing_record_id=confirmed_first.filing_record_id,
+        overrides={_AMEND_INCOME_CASILLA: Decimal("11000")},
+        amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
+        reason="further corrected turnover",
+        actor="operator-A",
+        clock=receipt_time + timedelta(minutes=30),
+        operation=operation,
+    )
+    second_revision = cr_repo.load().revisions[second.calculation_revision_id]
+    assert second_revision.casilla_values[validated_casilla_id("04")] == Decimal("1143.42")
+    assert second_revision.casilla_values[validated_casilla_id("18")] == Decimal("853.42")
+    assert second_revision.casilla_values[validated_casilla_id("19")] == Decimal("190.00")
+    assert cr_repo.load().revisions[original_revision.calculation_revision_id].model_dump(mode="json") == original_saved
+
+    records_before_decrease = fr_repo.load().model_dump(mode="json")
+    with pytest.raises(AmendmentComplementariaLiabilityDecreaseError):
+        amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+            from_filing_record_id=second.filing_record_id,
+            overrides={_AMEND_WITHHELD_CASILLA: Decimal("400")},
+            amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
+            reason="decrease attempt",
+            actor="operator-A",
+            clock=receipt_time + timedelta(hours=1),
+            operation=operation,
+        )
+    assert fr_repo.load().model_dump(mode="json") == records_before_decrease
+    assert cr_repo.load().revisions[original_revision.calculation_revision_id].model_dump(mode="json") == original_saved
 
 
 def test_amend_new_filing_is_current_complementaria_record(
@@ -713,10 +876,7 @@ def test_amend_unoverridden_casilla_inherits_baseline_value(
             outcome.new_filing.calculation_revision_id,
             ports=build_calculation_action_ports(bucket_id=_PROFILE_ID, operation=operation),
         )
-        assert (
-            new_revision.casilla_values[_AMEND_EXPENSE_CASILLA]
-            == outcome.baseline_revision.casilla_values[_AMEND_EXPENSE_CASILLA]
-        )
+        assert new_revision.casilla_values[_AMEND_EXPENSE_CASILLA] == Decimal("55.00")
 
 
 def test_amend_work_unit_pointers_advance_to_new_filing(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:

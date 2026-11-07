@@ -131,7 +131,7 @@ UNREGIMED: tuple[tuple[str, object], ...] = (("irpf.estimation_regime", None),)
 #: The value the edit scenarios type over a Modelo 130 box, as the desktop stages it.
 EDIT_130: tuple[tuple[str, str], ...] = (("06", "1234.56"),)
 #: The box and figure the correction of the recorded 130 states, as the filer types it.
-CORRECTED_130 = ("06", "150.00")
+CORRECTED_130 = ("01", "10000.00")
 #: The Modelo 303 box the edit scenarios type over, as the filer types it and as the desktop stages it.
 TYPED_303: tuple[tuple[str, str], ...] = (("42", "1234.56"),)
 EDIT_303: tuple[tuple[str, str], ...] = (("42", "1234.56"),)
@@ -165,7 +165,7 @@ UNVERIFIED_EXPORT = ("165", "0A")
 #: An entry the typed-entry path cannot read as a figure.
 UNREADABLE_ENTRY = "doce"
 #: Why the correction is made, as the filer says it.
-CORRECTION_REASON = "A deductible expense was left out."
+CORRECTION_REASON = "Income was understated in the recorded declaration."
 #: A synthetic AEAT justificante specimen for a Modelo 130 of a first quarter.
 JUSTIFICANTE_130 = ("tests", "fixtures", "justificantes", "modelo_130_2026Q1.pdf")
 HELP_BOXES: Mapping[str, tuple[str, ...]] = {
@@ -3127,15 +3127,24 @@ def _write_receipt_import(directory: Path, work: Any) -> None:
     _write(directory, f"reconcile-{work.work_unit.modelo}.json", imported)
 
 
-def _write_correction(directory: Path, work: Any, filing_record_id: str) -> None:
+def _write_correction(
+    directory: Path,
+    work: Any,
+    filing_record_id: str,
+    *,
+    name: str | None = None,
+    form: str = "130-1T-receipt",
+    corrected: tuple[str, str] = CORRECTED_130,
+) -> str:
     """Read what correcting the recorded, receipt-confirmed 130 offers, check a corrected figure, and correct it.
 
     The corrected figure is checked through the canonical typed-entry path as
     the desktop sends it, once as a figure and once as words it cannot read.
     """
+    from cadrumo.application.modelo.amendment_projection import ModeloWorkAmendPublicResultV2
     from cadrumo.application.modelo.workbench_operations import MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID
 
-    modelo = str(work.work_unit.modelo)
+    name = str(work.work_unit.modelo) if name is None else name
     definition_id = "modelo.work.amendment_context"
     context = _operate(
         work,
@@ -3146,16 +3155,17 @@ def _write_correction(directory: Path, work: Any, filing_record_id: str) -> None
         ),
         subject_ref=_profile_subject(work),
     )
-    _write(directory, f"amendment-context-{modelo}.json", context)
+    _write(directory, f"amendment-context-{name}.json", context)
     if not isinstance(context, ModeloWorkAmendmentContextProjection):
         raise SystemExit("the amendment context read did not publish its projection")
     correction = context.correction
     if correction is None or not correction.rows or not correction.kinds:
         raise SystemExit("the recorded 130 offers no correction")
-    row = next((row for row in correction.rows if row.casilla_id == CORRECTED_130[0]), correction.rows[0])
-    form = "130-1T-receipt"
+    row = next((row for row in correction.rows if row.casilla_id == corrected[0]), None)
+    if row is None:
+        raise SystemExit(f"the recorded 130 offers no correction of box {corrected[0]}")
     baseline = _form_baseline(directory, form).model_dump(mode="json")
-    for suffix, lexeme in (("", CORRECTED_130[1]), ("-refused", UNREADABLE_ENTRY)):
+    for suffix, lexeme in (("", corrected[1]), ("-refused", UNREADABLE_ENTRY)):
         document = {
             "input_version": 2,
             "output_language": "en",
@@ -3186,7 +3196,164 @@ def _write_correction(directory: Path, work: Any, filing_record_id: str) -> None
             },
         ),
     )
-    _write(directory, f"amend-{modelo}.json", amended)
+    if not isinstance(amended, ModeloWorkAmendPublicResultV2):
+        raise SystemExit("the amendment did not publish its saved filing")
+    _write(directory, f"amend-{name}.json", amended)
+    return amended.filing_record_id
+
+
+def _correction_filing_view(work: Any, filing_record_id: str, language: str) -> Any:
+    """Read an exact saved filing through the registered profile operation."""
+    definition_id = "modelo.filing_record.view"
+    return _operate(
+        work,
+        definition_id,
+        _request(
+            definition_id,
+            {
+                "profile_id": work.work_unit.bucket_id,
+                "filing_record_id": filing_record_id,
+                "output_language": language,
+            },
+        ),
+        subject_ref=_profile_subject(work),
+        effect=OperationEffect.NONE,
+    )
+
+
+def _write_related_correction(directory: Path, work: Any, filing_record_id: str, name: str) -> Any:
+    """Save each language's exact receipt, saved comparison and labeled correction context."""
+    first = None
+    for language in LANGUAGES:
+        view = _correction_filing_view(work, filing_record_id, language)
+        _write(directory, f"filing-view-{name}-{language}.json", view)
+        definition_id = "modelo.work.amendment_context"
+        context = _operate(
+            work,
+            definition_id,
+            _request(
+                definition_id,
+                {
+                    "profile_id": work.work_unit.bucket_id,
+                    "filing_record_id": filing_record_id,
+                    "output_language": language,
+                },
+            ),
+            subject_ref=_profile_subject(work),
+            effect=OperationEffect.NONE,
+        )
+        _write(directory, f"amendment-context-{name}-{language}.json", context)
+        if first is None:
+            first = view
+    return first
+
+
+def _confirm_correction_receipt(work: Any, filing_record_id: str) -> None:
+    """Confirm the pending correction through the same synthetic receipt door as the original."""
+    from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+    from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
+    from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
+    from cadrumo.core.time.clock import now
+    from cadrumo.domain.modelos.filing_record import AeatConfirmationState, ExternalEvidenceKind
+    from cadrumo.entrypoints.adapter_composition_work_ports import build_filing_action_ports
+
+    unit = work.work_unit
+    ports = build_filing_action_ports(bucket_id=unit.bucket_id, operation=work.operation)
+    record = ports.filing_repository.load().get(filing_record_id)
+    if record is None:
+        raise SystemExit("the pending correction has no saved filing")
+    revision = ports.calculation_repository.load().get(record.calculation_revision_id)
+    if revision is None:
+        raise SystemExit("the pending correction has no saved calculation")
+    received = now()
+    tax_id = _taxpayer_tax_id(ACTIVITY_PERSONA)
+    reference = f"CSV{unit.modelo}{unit.filing_year}{unit.period.registry_token}CORRECTION1"
+    persist_justificante_metadata(
+        reference,
+        modelo=str(unit.modelo),
+        filing_year=unit.filing_year,
+        period=unit.period.registry_token,
+        captured_at=received,
+        tax_id=tax_id,
+    )
+    imported = import_external_filing_evidence(
+        work_unit_id=work.work_unit_id,
+        casilla_values=revision.casilla_values,
+        evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+        evidence_reference_id=reference,
+        declared_kind=record.declaration_kind,
+        actor=ACTOR,
+        work_unit_repository=ports.work_unit_repository,
+        calculation_repository=ports.calculation_repository,
+        filing_repository=ports.filing_repository,
+        bucket_event_repository=ports.bucket_event_repository,
+        observation_repository=CalculationObservationRepository(),
+        expected_tax_id=tax_id,
+        clock=received,
+        operation=work.operation,
+    )
+    confirmed = imported.filing_record
+    if confirmed.filing_record_id != filing_record_id or confirmed.confirmation is not AeatConfirmationState.CONFIRMADA:
+        raise SystemExit("the correction receipt did not confirm the exact pending filing")
+
+
+def _write_correction_chain(directory: Path, work: Any, original_id: str) -> None:
+    """Produce a saved original and two successive corrections, with one awaiting confirmation."""
+    from cadrumo.core.time.clock import frozen_clock, now
+    from cadrumo.domain.modelos.filing_record import AeatConfirmationState
+
+    original = _correction_filing_view(work, original_id, "en")
+    started = max(now(), _in_declarations_year(RECEIPT_ON)) + timedelta(minutes=1)
+    with frozen_clock(started):
+        _write_form(directory, work, "modelo-130-1T-receipt")
+        first_id = _write_correction(directory, work, original_id)
+        pending = _write_related_correction(directory, work, first_id, "130-correction-1-pending")
+        _write_form(directory, work, "modelo-130-1T-correction-1-pending")
+        _write_filing_reads(directory, work, "130-correction-1-pending")
+        _write_list(directory, work, "declarations-correction-pending")
+    with frozen_clock(started + timedelta(minutes=1)):
+        _confirm_correction_receipt(work, first_id)
+        _write_form(directory, work, "modelo-130-1T-correction-1")
+    with frozen_clock(started + timedelta(minutes=2)):
+        second_id = _write_correction(
+            directory,
+            work,
+            first_id,
+            name="130-correction-2",
+            form="130-1T-correction-1",
+            corrected=(CORRECTED_130[0], "11000.00"),
+        )
+        saved_original = _write_related_correction(directory, work, original_id, "130-original")
+        first = _write_related_correction(directory, work, first_id, "130-correction-1")
+        second = _write_related_correction(directory, work, second_id, "130-correction-2")
+        _write_list(directory, work, "declarations-corrections")
+    if saved_original.historical_content != original.historical_content:
+        raise SystemExit("correcting the 130 changed the original's saved content")
+    if first.historical_content != pending.historical_content:
+        raise SystemExit("the successive correction changed the first correction's saved content")
+    # Independent hand calculation from the pinned 130 rules: expenses4982,
+    # simplified provision5%, payment20%, minor deduction100. Confirmed prior
+    # payments are deducted once; the newest pending correction is not paid.
+    for view, expected in (
+        (saved_original, {"01": "8840", "17": "633.02", "18": "0", "19": "633.02"}),
+        (first, {"01": "10000", "02": "5232.90", "07": "953.42", "17": "853.42", "18": "633.02", "19": "220.40"}),
+        (second, {"01": "11000", "02": "5282.90", "07": "1143.42", "17": "1043.42", "18": "853.42", "19": "190.00"}),
+    ):
+        saved = {row.casilla_id: row.value for row in view.historical_content.observations}
+        if any(key not in saved or Decimal(saved[key]) != Decimal(value) for key, value in expected.items()):
+            raise SystemExit("the saved 130 correction did not recompute the grounded liability and prior payment")
+    if len({item.record.calculation_revision_id for item in (saved_original, first, second)}) != 3:
+        raise SystemExit("the correction chain did not save three distinct calculations")
+    if (
+        saved_original.record.superseded_by_filing_record_id != first_id
+        or first.record.amends_filing_record_id != original_id
+        or first.record.superseded_by_filing_record_id != second_id
+        or second.record.amends_filing_record_id != first_id
+        or saved_original.record.confirmation is not AeatConfirmationState.CONFIRMADA
+        or first.record.confirmation is not AeatConfirmationState.CONFIRMADA
+        or second.record.confirmation is not AeatConfirmationState.PENDIENTE
+    ):
+        raise SystemExit("the saved correction chain lost its exact links or confirmation states")
 
 
 def checked_entries(directory: Path, form: str) -> list[dict[str, Any]]:
@@ -3485,7 +3652,7 @@ def _write_scenarios(directory: Path) -> None:
         _import_receipt(filed)
         _write_form(directory, filed, "modelo-130-1T-receipt")
         unit = _write_filing_reads(directory, filed, "130-receipt")
-        _write_correction(directory, filed, unit.current_filing_record_id)
+        _write_correction_chain(directory, filed, unit.current_filing_record_id)
     # Its own profile: the persona's ledger carries the quarter's income and the declaration is calculated, never
     # checked or filed. It records no estimation regime, so its form shows what that leaves it waiting on.
     with (
@@ -3685,6 +3852,7 @@ _WRITE_ENVELOPES: tuple[tuple[str, str], ...] = (
     ("file-*.json", "modelo.work.file"),
     ("reconcile-*.json", "modelo.reconcile.import"),
     ("metadata-*.json", "modelo.work.metadata"),
+    ("filing-view-*.json", "modelo.filing_record.view"),
     ("amendment-context-*.json", "modelo.work.amendment_context"),
     ("amend-[0-9]*.json", "modelo.work.amend"),
     ("disagreements-*.json", "modelo.work.disagreements"),

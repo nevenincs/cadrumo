@@ -105,6 +105,17 @@ def test_a_clear_is_recorded_distinct_from_zero_and_a_later_set_withdraws_it(tmp
     assert zero.operator_layer == CalculationOperatorLayer(decimal_casilla_inputs={_C06: "100", _C16: "0"})
 
 
+def test_applying_a_third_quarter_without_earlier_filings_is_refused(tmp_path: Path) -> None:
+    """A correction cannot apply while the required preceding quarterly filings are missing."""
+    with seeded_operator_work(tmp_path, period_code="3T") as work:
+        head_before = work.head()
+        applied = work.apply(scalar=(_set(_C06, "1234.56"),))
+
+        assert isinstance(applied.refusal, ModeloEditRefusedError)
+        assert applied.effects[-1] is OperationEffect.NONE
+        assert work.head() == head_before
+
+
 def test_clearing_a_casilla_a_source_feeds_is_refused_and_writes_nothing(tmp_path: Path) -> None:
     with seeded_operator_work(tmp_path) as work:
         head = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
