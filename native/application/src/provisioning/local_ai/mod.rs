@@ -21,6 +21,8 @@ pub mod registry;
 pub mod supervision;
 
 #[cfg(test)]
+pub(crate) mod fake_llamacpp;
+#[cfg(test)]
 pub(crate) mod fake_ollama;
 
 use super::{

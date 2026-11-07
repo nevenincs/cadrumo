@@ -6,6 +6,7 @@ date: '2026-11-07'
 modified: '2026-11-07'
 body_schema: 'body-v2'
 body_hash: 'sha256:84bedb5ae51bbea249d187fc01aaf9f639b29a18ee11f2fdacd91aa6aaeb9b9e'
+body_hash: 'sha256:559c18ffecdf2ac553d485a8ad691758af8cf5d3f8ab255089ce3ac472e06d2a'
 related:
   - "[[2026-11-07-local-inference-engine-plan]]"
 ---
@@ -97,6 +98,9 @@ related:
 - `S11` `verify:` `ty check on the touched modules` -> `pass`
 - `S11` `verify:` `lint-imports quick contract check` -> `pass`
 - `S11` `verify:` `real Windows archive with the real MSVC redistributable resolves every import` -> `pass`
+- `S13` `A` `native/application/src/provisioning/local_ai/fake_llamacpp.rs`
+- `S13` `M` `native/application/src/provisioning/local_ai/mod.rs`
+- `S13` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
