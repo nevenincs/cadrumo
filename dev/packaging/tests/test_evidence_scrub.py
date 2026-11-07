@@ -17,6 +17,8 @@ from pathlib import Path
 import pytest
 from pydantic import JsonValue
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ..cohort_manifest import LoadedReleaseCohort
 from ..evidence import (
     AcquisitionIdentity,
@@ -45,6 +47,7 @@ from ..release_cohort_support import release_cohort
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+_YEAR = filing_year_envelope().horizon
 _HOSTNAME = "build-host-example"
 _USERNAME = "gwuser"
 _TOKENS = (_HOSTNAME, _USERNAME)
@@ -81,8 +84,8 @@ def _leaking_evidence(
     transcript = CommandTranscript.from_output(
         argv=(f"{_HOME}\\pipx\\venvs\\cadrumo\\Scripts\\aeat.exe", "--version"),
         cwd=f"{_HOME}\\work\\cadrumo",
-        started_at=datetime(2026, 7, 20, 10, 0, tzinfo=UTC),
-        completed_at=datetime(2026, 7, 20, 10, 1, tzinfo=UTC),
+        started_at=datetime(_YEAR, 7, 20, 10, 0, tzinfo=UTC),
+        completed_at=datetime(_YEAR, 7, 20, 10, 1, tzinfo=UTC),
         exit_status=0,
         stdout="cadrumo 0.2.1",
         stderr="",
@@ -118,7 +121,7 @@ def _leaking_evidence(
         acquisition=AcquisitionIdentity(mechanism="pip", source="https://pypi.org/simple"),
         commands=(transcript,),
         result=result,
-        observed_at=datetime(2026, 7, 20, 10, 2, tzinfo=UTC),
+        observed_at=datetime(_YEAR, 7, 20, 10, 2, tzinfo=UTC),
         destination=DestinationIdentity(kind="pypi-index-install", locator=f"{_HOME}\\venv", version="0.2.1"),
     )
 

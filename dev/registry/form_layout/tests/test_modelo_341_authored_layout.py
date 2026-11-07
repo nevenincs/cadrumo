@@ -5,14 +5,18 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormGridBlock
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ...compiler.form_layout_integrity import form_layout_failures
 from ...compiler.loader import load_modelo_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_EDITIONS = tuple(str(revision.id) for revision in authored_revisions("341"))
+_HISTORICAL, _CURRENT = _EDITIONS
 
-@pytest.mark.parametrize("revision_id", ["2005-2015", "2016-y-siguientes"])
+
+@pytest.mark.parametrize("revision_id", _EDITIONS)
 def test_compensation_rows_preserve_official_operands_and_total(revision_id: str) -> None:
     revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/341")).revisions[revision_id]
     (layout,) = revision.form_layouts
@@ -33,7 +37,7 @@ def test_compensation_rows_preserve_official_operands_and_total(revision_id: str
 
 
 def test_historical_account_and_submission_inputs_are_not_dropped() -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/341")).revisions["2005-2015"]
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/341")).revisions[_HISTORICAL]
     sections = revision.form_layouts[0].pages[0].sections
     assert {block.casilla_id for section in sections for block in section.blocks if block.kind == "field"} >= {
         "wire.codigo-cuenta-cliente",
@@ -42,7 +46,7 @@ def test_historical_account_and_submission_inputs_are_not_dropped() -> None:
     }
 
 
-@pytest.mark.parametrize("revision_id", ["2005-2015", "2016-y-siguientes"])
+@pytest.mark.parametrize("revision_id", _EDITIONS)
 def test_taxpayer_identity_is_not_replaced_by_contact_person(revision_id: str) -> None:
     revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/341")).revisions[revision_id]
     sections = {section.id: section for section in revision.form_layouts[0].pages[0].sections}
@@ -53,7 +57,7 @@ def test_taxpayer_identity_is_not_replaced_by_contact_person(revision_id: str) -
     assert any(field.endswith("-nif") for field in identity_fields)
     refund = sections["devolucion"].blocks
     assert refund[0].kind == "field" and refund[0].casilla_id == "10"
-    if revision_id == "2005-2015":
+    if revision_id == _HISTORICAL:
         assert len(refund) == 2 and refund[1].kind == "field"
         assert refund[1].casilla_id == "wire.codigo-cuenta-cliente"
     else:
@@ -65,18 +69,18 @@ def test_taxpayer_identity_is_not_replaced_by_contact_person(revision_id: str) -
 
 def test_paper_fields_have_no_electronic_or_calculation_owner() -> None:
     modelo = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/341"))
-    historical = modelo.revisions["2005-2015"]
+    historical = modelo.revisions[_HISTORICAL]
     paper = [item for item in historical.casillas if item.id.startswith("papel-")]
     assert len(paper) == 14
     for item in paper:
         assert item.input_kind == "informational" and not item.required
         assert not item.export_refs and item.binding is None and item.formula is None
         assert "boe-modelo-341-2000-form-pdf" in item.source_refs
-    assert not any(item.id.startswith("papel-") for item in modelo.revisions["2016-y-siguientes"].casillas)
+    assert not any(item.id.startswith("papel-") for item in modelo.revisions[_CURRENT].casillas)
     assert next(item for item in paper if item.id == "papel-domicilio-codigo-postal").data_type == "text"
 
 
-@pytest.mark.parametrize("revision_id", ["2005-2015", "2016-y-siguientes"])
+@pytest.mark.parametrize("revision_id", _EDITIONS)
 def test_refund_reuses_total_in_a_declared_alias_without_second_input(revision_id: str) -> None:
     revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/341")).revisions[revision_id]
     (layout,) = revision.form_layouts

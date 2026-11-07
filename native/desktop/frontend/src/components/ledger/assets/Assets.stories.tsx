@@ -14,6 +14,7 @@ import {
   SCENARIO_ELEMENTS,
 } from "@/dev/assetsRegister";
 import { ledgerLanguage } from "../../../shell/ledgerLanguage";
+import { fixtureDay } from "@/dev/fixtureDates";
 
 // The Assets tab over the scenario's ledger: its list, the detail of one
 // element with its plan and timeline, the forms, the filing handoff, and the
@@ -165,9 +166,9 @@ function withList(
 }
 
 const SPAN = {
-  covered_from: "2026-07-01",
-  covered_until: "2027-01-01",
-  covered_through: "2026-12-31",
+  covered_from: fixtureDay(7, 1),
+  covered_until: fixtureDay(1, 1, 1),
+  covered_through: fixtureDay(12, 31),
 };
 
 // The sentences a handoff leaves out are the ones the register said, as
@@ -349,7 +350,7 @@ function Stage({
           first.state = "in_service";
           first.pending_applies = true;
           first.disposal = {
-            disposal_date: "2027-03-31",
+            disposal_date: fixtureDay(3, 31, 1),
             reason: "sale",
             reason_key: "ledger.actividad_asset.disposal_reason.sale",
           };

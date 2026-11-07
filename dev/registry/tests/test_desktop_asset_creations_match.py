@@ -77,6 +77,7 @@ def built(tmp_path_factory: pytest.TempPathFactory) -> dict[str, dict[str, Any]]
     """What the window's builders make of every committed draft, keyed by its name."""
     operations, _today, _payments_read = replayed_register(*committed_scenario())
     year = operations.default_register_year(register_years(operations.list_elements()))
+    assert year is not None
     options = json.loads(operations.form_options(asset_kind=AssetKind.MATERIAL, tax_year=year).model_dump_json())
     served: dict[str, Any] = {name: options[name] for name in _DRAWN_FROM}
     # No request builder reads the Modelo 130 periods, which the registry owns.

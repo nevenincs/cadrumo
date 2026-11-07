@@ -62,8 +62,38 @@ from ..core.json_contract import (
     RegisteredSchema,
     SchemaEnvelope,
 )
-from ..core.observability.errors import GoldenCaptureError, GoldenReplayMismatchError
 from ..core.type_guards import is_object_dict, is_object_list_or_tuple, is_object_mapping
+
+
+class GoldenCaptureError(Exception):
+    """Raised when a captured envelope document cannot be typed or re-validated.
+
+    Surfaces an emitted-envelope document whose ``command`` is not in the
+    JSON-contract schema registry, or whose payload fails strict validation
+    against the registered schema. The comparison substrate refuses to compare
+    an untyped document, keeping the captured payload from degrading to a
+    ``dict[str, Any]`` bag.
+    """
+
+
+class GoldenReplayMismatchError(AssertionError):
+    """Raised when compared envelopes diverge after the declared mask.
+
+    Attributes:
+        differing_paths: Sorted tuple of dotted JSON paths that differ after
+            masking.
+    """
+
+    def __init__(self, *, differing_paths: tuple[str, ...], detail: str) -> None:
+        """Build the mismatch error and its diagnostic message.
+
+        Args:
+            differing_paths: Dotted JSON paths that differ after masking.
+            detail: Rendered human-readable diff summary.
+        """
+        super().__init__(detail)
+        self.differing_paths: tuple[str, ...] = differing_paths
+
 
 #: The sentinel a masked leaf is replaced with before comparison.
 MASK_SENTINEL = "<masked>"

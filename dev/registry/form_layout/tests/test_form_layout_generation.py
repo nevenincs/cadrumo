@@ -25,6 +25,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormPlacementKind,
 )
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, open_ended_revision
 
 from ...compiler.form_layout_integrity import form_layout_failures
 from ...compiler.loader import load_registry_tree
@@ -45,6 +46,16 @@ def _modelos() -> Mapping[str, ModeloDefinition]:
     return {str(modelo.id): modelo for modelo in modelos}
 
 
+def _open_ended(modelo: str) -> str:
+    """The id of the authored revision of ``modelo`` that has no end date."""
+    return str(open_ended_revision(modelo).id)
+
+
+def _authored(modelo: str, position: int) -> str:
+    """The id of the authored revision of ``modelo`` at ``position`` in its oldest-first order."""
+    return str(authored_revisions(modelo)[position].id)
+
+
 def _layout(modelo: str, revision: str) -> FormLayoutDefinition:
     return _modelos()[modelo].revisions[revision].form_layouts[0]
 
@@ -60,7 +71,7 @@ def test_every_revision_declares_a_layout_that_places_every_casilla_once() -> No
 
 
 def test_126_periodification_preserves_the_official_empty_corner() -> None:
-    layout = _layout("126", "2019-y-siguientes")
+    layout = _layout("126", _open_ended("126"))
     assert layout.seed_source is FormLayoutSeedSource.AUTHORED
     sections = layout.pages[0].sections
     assert [section.id for section in sections] == [
@@ -86,7 +97,7 @@ def test_126_periodification_preserves_the_official_empty_corner() -> None:
 
 
 def test_128_official_parallel_blocks_keep_the_empty_withholding_position() -> None:
-    layout = _layout("128", "2019-y-siguientes")
+    layout = _layout("128", _open_ended("128"))
     assert layout.seed_source is FormLayoutSeedSource.AUTHORED
     sections = layout.pages[0].sections
     grid, *totals = sections[2].blocks
@@ -100,7 +111,7 @@ def test_128_official_parallel_blocks_keep_the_empty_withholding_position() -> N
 
 
 def test_117_uses_the_revised_eleven_box_annex_not_the_2007_eight_box_form() -> None:
-    layout = _layout("117", "2019-y-siguientes")
+    layout = _layout("117", _open_ended("117"))
     assert layout.seed_source is FormLayoutSeedSource.AUTHORED
     assert "boe-2018-17997-modelo-117-form-pdf" in {source.source_ref for source in layout.design_sources}
     sections = layout.pages[0].sections
@@ -121,7 +132,7 @@ def test_117_uses_the_revised_eleven_box_annex_not_the_2007_eight_box_form() -> 
 
 
 def test_216_historical_form_keeps_the_official_columns_without_promoting_capability() -> None:
-    revision = _modelos()["216"].revisions["2020-2023"]
+    revision = _modelos()["216"].revisions[_authored("216", 0)]
     layout = revision.form_layouts[0]
     assert layout.seed_source is FormLayoutSeedSource.AUTHORED
     assert "boe-2008-18497-modelo-216-form-pdf" in {s.source_ref for s in layout.design_sources}
@@ -140,7 +151,7 @@ def test_216_historical_form_keeps_the_official_columns_without_promoting_capabi
     assert len(revision.export_layouts) == 1
     context = [b for s in sections for b in s.blocks if isinstance(b, FormContextFieldBlock)]
     assert len(context) == 8
-    assert {str(b.export_layout_id) for b in context} == {"generated-modelo-216-2020-2023-fichero"}
+    assert {str(b.export_layout_id) for b in context} == {f"generated-modelo-216-{revision.id}-fichero"}
     assert {str(b.export_field_id) for b in context} == {
         "modelo-216-page-01-" + field
         for field in (
@@ -157,7 +168,7 @@ def test_216_historical_form_keeps_the_official_columns_without_promoting_capabi
 
 
 def test_216_current_form_separates_withheld_and_nonwithheld_income_grids() -> None:
-    layout = _layout("216", "2024-y-siguientes")
+    layout = _layout("216", _open_ended("216"))
     assert layout.seed_source is FormLayoutSeedSource.AUTHORED
     sections = layout.pages[0].sections
     assert [s.id for s in sections] == [
@@ -181,7 +192,7 @@ def test_216_current_form_separates_withheld_and_nonwithheld_income_grids() -> N
         assert isinstance(grid, FormGridBlock)
         assert [[cell.casilla_id for cell in row.cells] for row in grid.rows] == expected
     assert [b.casilla_id for b in sections[4].blocks if isinstance(b, FormFieldBlock)] == ["20", "21"]
-    assert {str(p.casilla_id) for p in _layout("216", "2020-2023").placements} == {str(i) for i in range(1, 8)}
+    assert {str(p.casilla_id) for p in _layout("216", _authored("216", 0)).placements} == {str(i) for i in range(1, 8)}
 
 
 def test_regeneration_reproduces_the_committed_fragments_byte_for_byte() -> None:
@@ -193,7 +204,7 @@ def test_regeneration_reproduces_the_committed_fragments_byte_for_byte() -> None
 @pytest.mark.parametrize("stale", [False, True])
 def test_authored_draft_is_preserved_without_promoting_review(stale: bool) -> None:
     modelo = _modelos()["130"]
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions[_open_ended("130")]
     layout = revision.form_layouts[0]
     authored = layout.model_copy(
         update={
@@ -214,7 +225,7 @@ def test_authored_draft_is_preserved_without_promoting_review(stale: bool) -> No
 
 
 def test_303_tipo_boxes_are_design_constants_carrying_the_designs_literal() -> None:
-    revision = _modelos()["303"].revisions["2025"]
+    revision = _modelos()["303"].revisions[_open_ended("303")]
     rows = read_record_design(record_design_sidecars(revision.source_refs, _catalogue_sources())[0][1])
     official = {
         description_box(row.label): row.label
@@ -223,7 +234,7 @@ def test_303_tipo_boxes_are_design_constants_carrying_the_designs_literal() -> N
     }
     cells = {
         cell.casilla_id: cell
-        for page in _layout("303", "2025").pages
+        for page in _layout("303", _open_ended("303")).pages
         for section in page.sections
         for block in section.blocks
         if isinstance(block, FormGridBlock)
@@ -245,7 +256,7 @@ def _catalogue_sources() -> Mapping[str, SourceReference]:
 
 
 def test_130_sections_are_the_designs_three_apartados_in_order() -> None:
-    sections = _layout("130", "2019-y-siguientes").pages[0].sections
+    sections = _layout("130", _open_ended("130")).pages[0].sections
     assert [section.id for section in sections[:2]] == ["identificacion", "devengo"]
     assert [section.id for section in sections[5:]] == ["ingreso", "complementaria"]
     headings = [section.official_heading for section in sections[2:5]]
@@ -258,7 +269,7 @@ def test_130_sections_are_the_designs_three_apartados_in_order() -> None:
 
 
 def test_authored_115_retains_five_printed_boxes_and_exact_context_targets() -> None:
-    layout = _layout("115", "2019-y-siguientes")
+    layout = _layout("115", _open_ended("115"))
     assert layout.seed_source is FormLayoutSeedSource.AUTHORED
     assert any(source.source_ref == "boe-2000-21430-modelo-115-form" for source in layout.design_sources)
     sections = layout.pages[0].sections
@@ -293,11 +304,11 @@ def test_authored_115_retains_five_printed_boxes_and_exact_context_targets() -> 
 
 
 @pytest.mark.parametrize(
-    ("revision", "rows", "period_boxes", "total_boxes"),
+    ("position", "rows", "period_boxes", "total_boxes"),
     (
-        ("2019-2023", (("01", "02", "03"),), ("04", "05"), ("06", "07", "08")),
+        (0, (("01", "02", "03"),), ("04", "05"), ("06", "07", "08")),
         (
-            "2024-y-siguientes",
+            -1,
             (("01", "02", "03"), ("04", "05", "06"), ("07", "08", "09")),
             ("10", "11"),
             ("12", "13", "14"),
@@ -305,9 +316,9 @@ def test_authored_115_retains_five_printed_boxes_and_exact_context_targets() -> 
     ),
 )
 def test_123_printed_revision_grids_preserve_changed_box_meanings(
-    revision: str, rows: tuple[tuple[str, ...], ...], period_boxes: tuple[str, ...], total_boxes: tuple[str, ...]
+    position: int, rows: tuple[tuple[str, ...], ...], period_boxes: tuple[str, ...], total_boxes: tuple[str, ...]
 ) -> None:
-    layout = _layout("123", revision)
+    layout = _layout("123", _authored("123", position))
     assert layout.seed_source is FormLayoutSeedSource.AUTHORED
     sections = layout.pages[0].sections
     assert [section.id for section in sections] == [
@@ -323,11 +334,11 @@ def test_123_printed_revision_grids_preserve_changed_box_meanings(
     assert isinstance(period, FormGridBlock)
     assert tuple(cell.casilla_id for cell in period.rows[0].cells) == period_boxes
     assert tuple(block.casilla_id for block in totals if isinstance(block, FormFieldBlock)) == total_boxes
-    assert len(sections[0].blocks) == (2 if revision == "2024-y-siguientes" else 3)
+    assert len(sections[0].blocks) == (2 if position == -1 else 3)
 
 
 def test_authored_131_activity_table_preserves_all_official_columns_and_bindings() -> None:
-    layout = _layout("131", "2019-2023")
+    layout = _layout("131", _authored("131", 0))
     assert layout.seed_source is FormLayoutSeedSource.AUTHORED
     assert layout.review.state is FormLayoutReviewState.GENERATED
     assert any(source.source_ref == "boe-2015-1656-modelos-130-131-form" for source in layout.design_sources)
@@ -365,7 +376,7 @@ def test_authored_131_activity_table_preserves_all_official_columns_and_bindings
 def test_111_withholding_rows_are_grids_over_the_shared_columns() -> None:
     grids = [
         block
-        for page in _layout("111", "2019-y-siguientes").pages
+        for page in _layout("111", _open_ended("111")).pages
         for section in page.sections
         for block in section.blocks
         if isinstance(block, FormGridBlock)
@@ -382,7 +393,7 @@ def test_111_withholding_rows_are_grids_over_the_shared_columns() -> None:
 
 
 def test_authored_111_preserves_the_nine_printed_three_column_rows() -> None:
-    layout = _layout("111", "2019-y-siguientes")
+    layout = _layout("111", _open_ended("111"))
     assert layout.seed_source is FormLayoutSeedSource.AUTHORED
     assert layout.review.state is FormLayoutReviewState.GENERATED
     assert any(source.source_ref == "boe-2011-4948-modelo-111-form" for source in layout.design_sources)
@@ -425,7 +436,7 @@ def test_every_moved_placement_is_acknowledged_and_no_acknowledgement_is_stale()
 def test_the_stability_gate_detects_an_unacknowledged_and_a_stale_move() -> None:
     real = moved_placements(_modelos().values())
     acknowledged = read_acknowledgements()
-    extra = PlacementMove("303", "2025", "01", "dp30301/a", "dp30301/b")
+    extra = PlacementMove("303", _open_ended("303"), "01", "dp30301/a", "dp30301/b")
     missing, stale = unacknowledged_moves((*real, extra), acknowledged)
     assert missing == (extra,)
     missing, stale = unacknowledged_moves(real, {**acknowledged, extra: "reviewed"})
@@ -433,7 +444,7 @@ def test_the_stability_gate_detects_an_unacknowledged_and_a_stale_move() -> None
 
 
 def test_every_on_form_placement_has_a_position_and_every_other_has_none() -> None:
-    layout = _layout("390", "2025")
+    layout = _layout("390", _authored("390", -1))
     shown = layout.casilla_sections()
     for placement in layout.placements:
         assert (placement.casilla_id in shown) == (placement.kind is FormPlacementKind.ON_FORM)

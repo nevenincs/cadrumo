@@ -3,7 +3,7 @@
 The MCP server, its runtime adapter and the registered operation are the
 production ones; the runtime is the host's portable human runtime, whose person signs
 in with the profile password and approves the agent's attendance. The asset is
-a battery-electric van entering service in 2023, whose forecast the product
+a battery-electric van entering service in the newest supported year, whose forecast the product
 refuses under the accelerated regime it does not compute.
 """
 
@@ -23,6 +23,7 @@ from click.testing import Result
 
 from cadrumo.core.config import load_settings
 from cadrumo.core.operations import OperationFrontendProjection
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.cli.tests.cli_fixture_worlds import CliWorldProvider, bind_cli_fixture_ports
 from cadrumo.tests.cli_fixture_ports import CliInvocation
 from cadrumo_client.transport.installed_client import open_installed_client
@@ -39,8 +40,9 @@ from cadrumo_runtime.host.tests.frontend.cli.test_actividad_asset_accelerated_da
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
-_ASSET_ID = "van-2023"
-_IN_SERVICE = date(2023, 3, 1)
+_YEAR = filing_year_envelope().horizon
+_ASSET_ID = f"van-{_YEAR}"
+_IN_SERVICE = date(_YEAR, 3, 1)
 _DA18_CODE = "REFUSED_ACTIVIDAD_ASSET_ACCELERATED_DA18_DEPRECIATION_NOT_COMPUTED"
 _DA18_REASON_KEY = "ledger.actividad_asset.errors.accelerated_da18_depreciation"
 
@@ -74,8 +76,8 @@ async def _forecast_through_mcp(profile_id: UUID) -> dict[str, Any]:
                         "payload": {
                             "profile_id": str(profile_id),
                             "asset_id": _ASSET_ID,
-                            "covered_from": "2023-01-01",
-                            "covered_until": "2024-01-01",
+                            "covered_from": date(_YEAR, 1, 1).isoformat(),
+                            "covered_until": date(_YEAR + 1, 1, 1).isoformat(),
                             "requested_free_amount": {"decimal": "30000.00"},
                         },
                         "wait_seconds": 5,
@@ -127,5 +129,5 @@ def test_a_forecast_refusal_reaches_the_agent_with_its_reason_key_and_facts(
         "asset_id": _ASSET_ID,
         "legal_reference": "ley-27-2014:da-18",
         "method": "electric_vehicle_free",
-        "tax_year": "2023",
+        "tax_year": str(_YEAR),
     }

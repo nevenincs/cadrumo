@@ -100,6 +100,10 @@ errors:
     empty_expression: Üres képletkifejezés.
     enum_binding_value_missing: A(z) {binding_id} felsorolás-kötésnek nincs megadott
       értéke (a(z) {op} művelet igényli).
+    formula_override_target_invalid: A(z) {casilla_ids} mezők nem kaphatnak megőrzött
+      vagy felülírt értéket, mert nem ennek a változatnak a képletmezői.
+    formula_recalculation_unresolved: 'A javítás újraszámítása után kötelező képletmezők
+      maradtak feloldatlanul: {casilla_ids}.'
     lookup_dispatch_arg_count: A(z) {op} képletoperátor {expected} argumentumot vár.
     lookup_dispatch_arg_kind: A(z) {op} képletoperátornál a(z) {position}. pozíciónak
       {expected_kind} levélnek kell lennie.
@@ -188,7 +192,6 @@ errors:
       a folytatás előtt próbáld meg újra a tisztítást.
     error_cadrumo_core: Belső alkalmazáshiba történt.
     error_cadrumo_core_not_found: A kért erőforrás vagy rekord nem található.
-    error_cadrumo_observability: Hiba történt az alkalmazás diagnosztikai naplózásában.
     error_calc_sheets_engine: A táblázatexportáló motor feloldhatatlan állapotba került
       az exportálási terv elkészítésekor.
     error_calc_sheets_record: Egy táblázat-rekordművelet érvénytelen oszlopindex vagy
@@ -477,8 +480,6 @@ errors:
     fail_modelo_work_unit_persistence: A munkajegység-katalógust nem sikerült menteni
       vagy olvasni
     fail_notificacion_parse: Az AEAT értesítési dokumentumát nem sikerült elemezni.
-    fail_observability_run_trace_persistence: A futási nyomkövetési tároló nem tudott
-      fájlrendszer-műveletet elvégezni.
     fail_outbound_storage: Tárhelyszolgáltatói hiba történt.
     fail_outbound_storage_network: A tárhelyszolgáltatás nem érhető el. Ellenőrizd
       az internetkapcsolatot, és próbáld újra.
@@ -629,8 +630,6 @@ errors:
       NIE vagy CIF.
     integrity_justificante_verification: Az AEAT-tal való bizonylat-ellenőrzést nem
       sikerült elvégezni.
-    integrity_observability_run_trace_validation: A tárolt futási nyomkövetés nem
-      ment át a szigorú érvényesítésen.
     integrity_outbound_storage: A letöltött tartalom nem ment át az integritás-ellenőrzésen
       (hash, méret vagy `etag`).
     integrity_outbound_storage_corruption: Egy mellékadatok fájl váratlan típusú mezőt
@@ -735,8 +734,6 @@ errors:
     internal_modelo_value_presentation_unknown: Egy rovat értéktípusához nincs megjelenítési
       szabály.
     internal_modelo_work_form_layout: A nyomtatvány elrendezése nem egyezik a változatával.
-    internal_observability_run_context_missing: 'Belső hiba: diagnosztikai eseményt
-      rögzítettek aktív futási kontextuson kívül.'
     internal_operation_declaration_breach: 'Belső hiba: egy művelet-végrehajtó olyan
       fázist, hatást, erőforrást vagy interakciót igényelt, amelyet a definíciója
       nem deklarál.'

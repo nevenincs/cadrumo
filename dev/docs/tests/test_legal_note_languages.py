@@ -12,6 +12,7 @@ from pydantic import ValidationError
 
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.locales.signal_documentation_inventory import inventory_generated_document_file
 from dev.paths import REPO_ROOT
 
@@ -127,7 +128,7 @@ def test_registry_model_refuses_docs_annotations() -> None:
                 "corpus_ref": "corpus/normatives/html/example.html#art-1",
                 "document_id": "BOE-A-2000-1",
                 "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2000-1#art-1",
-                "effective_from": date(2000, 1, 1),
+                "effective_from": date(filing_year_envelope().floor, 1, 1),
                 "review_status": "pending_review",
                 "required_text": ("Artículo 1",),
                 "notes": "Changed note",

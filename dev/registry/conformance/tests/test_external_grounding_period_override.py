@@ -13,6 +13,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodOverride, PeriodSelector
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..external_grounding import select_revision_for_filing_year
@@ -20,8 +21,8 @@ from ..external_grounding import select_revision_for_filing_year
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _MODELO: Final = "130"
-_REVISION: Final = "2019-y-siguientes"
-_YEAR: Final = 2024
+_REVISION: Final = str(open_ended_revision(_MODELO).id)
+_YEAR: Final = filing_year_envelope().horizon - 1
 _DROPPED: Final = "1T"
 _SERVED: Final = ("2T", "3T", "4T")
 

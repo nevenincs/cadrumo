@@ -9383,7 +9383,7 @@ workspace:
       historical_content_missing: The saved calculation for this filing is unavailable.
       historical_display_unavailable: Saved filing values are preserved, but their
         original labels and formatting are unavailable here.
-      labels_unavailable: Labeled saved values are unavailable. Exact saved fields
+      labels_unavailable: Labelled saved values are unavailable. Exact saved fields
         remain available below when a comparison can be made.
       loading: Reading the saved filing…
       open: View related filings

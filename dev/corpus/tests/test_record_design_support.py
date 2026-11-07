@@ -8,6 +8,7 @@ from pathlib import Path, PurePosixPath
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.corpus.artifact_catalogue import (
     ArtifactDiagnosticKind,
     ArtifactRole,
@@ -250,7 +251,7 @@ def _artefact(stored_path: str, url: str) -> Artifact:
         "content_type": "application/pdf",
         "bytes": 8,
         "sha256": "0" * 64,
-        "retrieved_at": "2026-01-01",
+        "retrieved_at": f"{filing_year_envelope().horizon}-01-01",
     }
 
 
@@ -259,7 +260,7 @@ def _manifest(recorded_count: int, stored_paths: tuple[str, ...]) -> Manifest:
     return {
         "source": "fixture",
         "modelo": "999",
-        "retrieved_at": "2026-01-01",
+        "retrieved_at": f"{filing_year_envelope().horizon}-01-01",
         "source_pages": [PAGES["100"]],
         "artefact_count": recorded_count,
         "artefacts": [_artefact(path, f"{STATIC}/DR_900/archivos/{Path(path).name}") for path in stored_paths],
@@ -377,7 +378,7 @@ def _corpus_fixture(tmp_path: Path) -> dict[str, Manifest]:
         "999": {
             "source": "fixture",
             "modelo": "999",
-            "retrieved_at": "2026-01-01",
+            "retrieved_at": f"{filing_year_envelope().horizon}-01-01",
             "source_pages": [PAGES["100"]],
             "artefact_count": 2,
             "artefacts": [
@@ -523,18 +524,13 @@ def test_named_sheet_text_is_catalogued_as_a_fresh_derivative(tmp_path: Path, mo
 
 def test_the_shipped_sheet_text_derivations_are_named_and_hash_pinned() -> None:
     """Named records prevent a suffix exemption and bind each source workbook."""
+    workbooks = sorted(
+        path.relative_to(CORPUS).as_posix() for path in (CORPUS / "modelo_123" / "files").glob("0[12]-123-*.xls")
+    )
+    assert len(workbooks) == 2
     assert tuple(
         (derivative.path.as_posix(), derivative.input_path.as_posix()) for derivative in EXTRACTION_SIDECAR_DERIVATIONS
-    ) == (
-        (
-            "modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.txt",
-            "modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xls",
-        ),
-        (
-            "modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.txt",
-            "modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.xls",
-        ),
-    )
+    ) == tuple((workbook.removesuffix(".xls") + ".txt", workbook) for workbook in workbooks)
     assert all(
         derivative.producer == "record-design-sheet-text-extractor" for derivative in EXTRACTION_SIDECAR_DERIVATIONS
     )

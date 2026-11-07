@@ -26,7 +26,7 @@ from cadrumo.domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 
-from .filing_record_support import BUCKET_ID, P_2024_2T, RECORD_BUCKET_ID, hex_blob
+from .filing_record_support import BUCKET_ID, FILING_YEAR, PERIOD_2T, RECORD_BUCKET_ID, hex_blob
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -43,7 +43,7 @@ def _amendment_pair(
     work_unit_id = hex_blob("a")
     baseline_revision = hex_blob("b")
     amendment_revision = hex_blob("c")
-    baseline_filed_at = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
+    baseline_filed_at = datetime(FILING_YEAR, 7, 1, 9, 0, 0, tzinfo=UTC)
     amendment_filed_at = baseline_filed_at + timedelta(days=45)
 
     baseline_id = derive_filing_record_id(
@@ -62,8 +62,8 @@ def _amendment_pair(
         calculation_revision_id=baseline_revision,
         bucket_id=bucket_id,
         modelo=ModeloCode("303"),
-        filing_year=2024,
-        period=P_2024_2T,
+        filing_year=FILING_YEAR,
+        period=PERIOD_2T,
         filed_at=baseline_filed_at,
         filed_by="aeat.cli.modelo.file",
         status=ModeloRecordStatus.SUPERSEDIDO,
@@ -73,14 +73,14 @@ def _amendment_pair(
         confirmation=AeatConfirmationState.PENDIENTE,
         declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
-    period = amendment_period or P_2024_2T
+    period = amendment_period or PERIOD_2T
     amendment = ModeloRecord(
         filing_record_id=amendment_id,
         work_unit_id=work_unit_id,
         calculation_revision_id=amendment_revision,
         bucket_id=bucket_id,
         modelo=ModeloCode("303"),
-        filing_year=amendment_filing_year or 2024,
+        filing_year=amendment_filing_year or FILING_YEAR,
         period=period,
         filed_at=amendment_filed_at,
         filed_by="aeat.cli.modelo.amend",
@@ -115,9 +115,9 @@ def test_amendment_link_to_itself_is_refused() -> None:
         calculation_revision_id=revision,
         bucket_id=bucket_id,
         modelo=ModeloCode("303"),
-        filing_year=2024,
-        period=P_2024_2T,
-        filed_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
+        filing_year=FILING_YEAR,
+        period=PERIOD_2T,
+        filed_at=datetime(FILING_YEAR, 7, 1, 9, 0, 0, tzinfo=UTC),
         filed_by="aeat.cli.modelo.amend",
         status=ModeloRecordStatus.VIGENTE,
         amends_filing_record_id=record_id,
@@ -134,7 +134,7 @@ def test_amendment_link_across_filing_coordinates_is_refused() -> None:
     """An amendment corrects the same (bucket, modelo, year, period) coordinate."""
     with pytest.raises(ValidationError, match="across filing coordinates"):
         _amendment_pair(
-            amendment_period=Period.from_year_and_code(2024, "3T"),
+            amendment_period=Period.from_year_and_code(FILING_YEAR, "3T"),
         )
 
 
@@ -151,8 +151,8 @@ def test_resolvable_same_coordinate_amendment_survives_encrypted_storage(
     amendment = loaded.current_for(
         bucket_id=RECORD_BUCKET_ID,
         modelo="303",
-        filing_year=2024,
-        period=P_2024_2T,
+        filing_year=FILING_YEAR,
+        period=PERIOD_2T,
     )
     assert amendment is not None
     assert amendment.amends_filing_record_id is not None
@@ -201,15 +201,15 @@ def test_amendment_whose_baseline_names_no_successor_is_refused() -> None:
         calculation_revision_id=amendment_revision,
         filed_by="aeat.cli.modelo.amend",
     )
-    baseline_filed_at = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
+    baseline_filed_at = datetime(FILING_YEAR, 7, 1, 9, 0, 0, tzinfo=UTC)
     baseline = ModeloRecord(
         filing_record_id=baseline_id,
         work_unit_id=work_unit_id,
         calculation_revision_id=baseline_revision,
         bucket_id=bucket_id,
         modelo=ModeloCode("303"),
-        filing_year=2024,
-        period=P_2024_2T,
+        filing_year=FILING_YEAR,
+        period=PERIOD_2T,
         filed_at=baseline_filed_at,
         filed_by="aeat.cli.modelo.file",
         status=ModeloRecordStatus.VIGENTE,
@@ -223,8 +223,8 @@ def test_amendment_whose_baseline_names_no_successor_is_refused() -> None:
         calculation_revision_id=amendment_revision,
         bucket_id=bucket_id,
         modelo=ModeloCode("303"),
-        filing_year=2024,
-        period=P_2024_2T,
+        filing_year=FILING_YEAR,
+        period=PERIOD_2T,
         filed_at=baseline_filed_at + timedelta(days=45),
         filed_by="aeat.cli.modelo.amend",
         status=ModeloRecordStatus.SUPERSEDIDO,
@@ -247,8 +247,8 @@ def test_agreeing_amendment_link_is_accepted() -> None:
     amendment = catalogue.current_for(
         bucket_id=RECORD_BUCKET_ID,
         modelo="303",
-        filing_year=2024,
-        period=P_2024_2T,
+        filing_year=FILING_YEAR,
+        period=PERIOD_2T,
     )
     assert amendment is not None
     assert amendment.amends_filing_record_id is not None
@@ -261,7 +261,7 @@ def test_amendment_chain_of_three_agrees_at_every_hop() -> None:
     """A -> B -> C: each hop's forward and reverse links must name each other."""
     bucket_id = RECORD_BUCKET_ID
     work_unit_id = hex_blob("a")
-    first_filed_at = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
+    first_filed_at = datetime(FILING_YEAR, 7, 1, 9, 0, 0, tzinfo=UTC)
     revisions = (hex_blob("b"), hex_blob("c"), hex_blob("d"))
     actors = ("aeat.cli.modelo.file", "aeat.cli.modelo.amend", "aeat.cli.modelo.amend")
     ids = tuple(
@@ -282,8 +282,8 @@ def test_amendment_chain_of_three_agrees_at_every_hop() -> None:
             calculation_revision_id=revision,
             bucket_id=bucket_id,
             modelo=ModeloCode("303"),
-            filing_year=2024,
-            period=P_2024_2T,
+            filing_year=FILING_YEAR,
+            period=PERIOD_2T,
             filed_at=filed_at,
             filed_by=actor,
             status=ModeloRecordStatus.VIGENTE if is_last else ModeloRecordStatus.SUPERSEDIDO,

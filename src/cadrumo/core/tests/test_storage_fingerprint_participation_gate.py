@@ -85,9 +85,8 @@ EXPECTED_EXCLUSIONS: Final[tuple[ExclusionExpectation, ...]] = (
     ),
     ExclusionExpectation(
         StorageCategory.RUNS,
-        "Self-reference. This is observability's own output, so hashing it makes every run's "
-        "digest depend on the traces the immediately preceding run left, and a hermetic replay "
-        "refuses on essentially every attempt.",
+        "Run-trace directories an earlier version wrote. Hashing them would make a run's digest "
+        "depend on whatever traces were left on disk, and a hermetic replay would refuse.",
     ),
     ExclusionExpectation(
         StorageCategory.LLM_CACHE,

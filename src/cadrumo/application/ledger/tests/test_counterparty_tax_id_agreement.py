@@ -88,7 +88,7 @@ def test_case_and_padding_are_not_a_disagreement(supplied: str) -> None:
     and nothing more. That paragraph is now stale and is corrected rather than
     deleted, because it recorded a real constraint that has since moved: the
     comparison changed to the same-BEARER predicate, which strips separators
-    precisely so a printed ``B-1234567-4`` matches a stored ``B00015016``. The
+    precisely so a printed ``B-0001501-6`` matches a stored ``B00015016``. The
     token's rule is unchanged and still right for KEYING; comparing is a
     different question and now has a different answer. The separator case is
     covered with the prefix cases at the end of this module.
@@ -179,7 +179,7 @@ def test_the_separator_and_prefix_axes_hold_together() -> None:
     """Both at once, which is the shape a printed document actually produces."""
     assert (
         agreed_counterparty_tax_id(
-            supplied="B-1234567-4",
+            supplied="B-0001501-6",
             extracted="ES B00015016",
             counterparty_country=_COUNTRY,
         )

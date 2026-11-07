@@ -11,6 +11,7 @@ import pytest
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind, SourceCitation
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from .. import validate_evidence
 
@@ -38,7 +39,7 @@ def _source(
         corpus_path=corpus_path,
         sha256=sha256_hex(body),
         bytes=len(body),
-        retrieved_at=date(2026, 11, 2),
+        retrieved_at=date(filing_year_envelope().horizon, 11, 2),
         source_url=f"https://sede.agenciatributaria.gob.es/dictionary{suffix}",
         review_status="pending_review",
     )

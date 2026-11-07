@@ -90,11 +90,11 @@ _PLACEHOLDER_FILL = {
 @pytest.mark.parametrize(
     ("candidate", "substituted"),
     (
-        pytest.param("X0001500M", 1234567, id="x-prefix"),
+        pytest.param("X0001500M", 1500, id="x-prefix"),
         pytest.param("Y0001007D", 10001007, id="y-small-counter-body"),
         pytest.param("Z0001008R", 20001008, id="z-small-counter-body"),
-        pytest.param("Y0001502K", 15678901, id="y-nonzero-body"),
-        pytest.param("Z0001501B", 22345678, id="z-nonzero-body"),
+        pytest.param("Y0001502K", 10001502, id="y-nonzero-body"),
+        pytest.param("Z0001501B", 20001501, id="z-nonzero-body"),
     ),
 )
 def test_valid_nie_forms_are_accepted(candidate: str, substituted: int) -> None:
@@ -108,7 +108,7 @@ def test_valid_nie_forms_are_accepted(candidate: str, substituted: int) -> None:
     ("raw", "expected"),
     (
         pytest.param("x0001500m", "X0001500M", id="lowercase"),
-        pytest.param("  X-1234567-L  ", "X0001500M", id="punctuation-and-padding"),
+        pytest.param("  X-0001500-M  ", "X0001500M", id="punctuation-and-padding"),
         pytest.param("ESX0001500M", "X0001500M", id="foreign-iva-prefix"),
     ),
 )

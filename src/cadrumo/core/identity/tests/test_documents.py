@@ -29,7 +29,7 @@ def test_valid_identity_document_variants_round_trip() -> None:
             (
                 "00000000T",
                 "12345678Z",
-                "X0001502F",
+                "00001502F",
                 "12345678z",
                 "  12345678Z  ",
                 "12345678-Z",

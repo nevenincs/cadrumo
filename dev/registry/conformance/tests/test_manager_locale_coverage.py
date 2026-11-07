@@ -16,6 +16,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..manager import (
     RevisionLocaleCoverage,
@@ -24,6 +25,8 @@ from ..manager import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+_REVISION = str(filing_year_envelope().horizon)
 
 
 def _coverage(**overrides: object) -> RevisionLocaleCoverage:
@@ -123,7 +126,7 @@ def _record(*, help_translated: int) -> SharedModeloLocaleCoverageRecord:
     return SharedModeloLocaleCoverageRecord(
         locale=OutputLanguage.EN,
         modelo_id="303",
-        revision_id="2024",
+        revision_id=_REVISION,
         label_required=10,
         label_translated=10,
         help_required=10,
@@ -144,7 +147,7 @@ def test_the_axis_summary_carries_help_coverage_and_not_only_labels() -> None:
     Constructed rather than live: the point is that the fold CARRIES the
     dimension, which a corpus count would not pin.
     """
-    summary = locale_axis_summary({("303", "2024"): (_record(help_translated=3), _record(help_translated=2))})
+    summary = locale_axis_summary({("303", _REVISION): (_record(help_translated=3), _record(help_translated=2))})
 
     assert len(summary) == 1
     axis = summary[0]

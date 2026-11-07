@@ -135,6 +135,7 @@ from cadrumo.core.period import Period
 from cadrumo.core.time.clock import now
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.categories.spending_category_catalogue import require_spending_category
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
@@ -176,12 +177,12 @@ _FILING_YEARS: Final = 10
 _TRANSACTIONS_PER_YEAR: Final = _TOTAL_TRANSACTIONS // _FILING_YEARS
 #: Ten complete filing years ending in the current one, so every seeded row is
 #: in the past and every measured period is one the registry supports.
-_FIRST_YEAR: Final = 2017
-_LAST_YEAR: Final = _FIRST_YEAR + _FILING_YEARS - 1
+_LAST_YEAR: Final = filing_year_envelope().horizon
+_FIRST_YEAR: Final = _LAST_YEAR - _FILING_YEARS + 1
 #: Invoices and registers resolve governed facts, which the registry answers
 #: only from its supported-filing-year floor; those families span the
 #: supported years inside the ledger's ten.
-_FIRST_SUPPORTED_YEAR: Final = 2022
+_FIRST_SUPPORTED_YEAR: Final = filing_year_envelope().floor
 _SUPPORTED_YEARS: Final = tuple(range(_FIRST_SUPPORTED_YEAR, _LAST_YEAR + 1))
 #: One row in ten is left unreviewed, so review surfaces carry real work.
 _UNREVIEWED_EVERY: Final = 10
@@ -191,7 +192,7 @@ _UNREVIEWED_EVERY: Final = 10
 _INVOICES: Final = _TOTAL_TRANSACTIONS // 10
 _EVIDENCE_DOCUMENTS: Final = _TOTAL_TRANSACTIONS // 100
 _RULES: Final = 25
-_RATIO_YEAR: Final = 2025
+_RATIO_YEAR: Final = _LAST_YEAR
 #: Taxable bases spread over 10.00 to 4,010.00 EUR.
 _AMOUNT_SPREAD_CENTS: Final = 400_000
 _CENT: Final = Decimal("0.01")

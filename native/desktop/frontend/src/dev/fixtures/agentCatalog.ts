@@ -9,6 +9,7 @@ import type {
   AgentProviderLane,
   AgentRecommendedCapability,
 } from "../../shell/agentSession";
+import { fixtureInstant } from "@/dev/fixtureDates";
 
 // A provider catalog in the shape cadrumo-agent serves it, for the scenario
 // host. Cadrumo keeps no list of the agent's providers: every provider, lane
@@ -83,7 +84,7 @@ const DECLARED_LANES: readonly DeclaredLane[] = [
   declare("local", "api", "catalog"),
 ];
 
-const CHECKED = "2026-10-13T08:00:00Z";
+const CHECKED = fixtureInstant(10, 13, "08:00:00Z");
 
 type Health = AgentProviderLane["health"];
 

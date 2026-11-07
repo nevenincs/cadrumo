@@ -20,6 +20,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, filing_year_envelope
 from dev.paths import REPO_ROOT
 from dev.registry.compiler.authority import compiled_bundled_authority
 
@@ -84,7 +85,8 @@ def test_casilla_toml_resolves_to_the_casilla_surface(resolver: TargetResolver) 
     """A real casilla TOML fragment resolves to its modelo's casilla target."""
     from ..resolution import GroundingSurface, ResolvedTarget
 
-    path = "src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/casillas/0001-declarations.toml"
+    oldest = authored_revisions("303")[0].id
+    path = f"src/cadrumo/_data/registry/aeat/modelos/303/revisions/{oldest}/casillas/0001-declarations.toml"
     line_start, line_end = _declaration_span(path, 'id = "iva.repercutido.general"')
     out = resolver.resolve(_hit(path, line_start=line_start, line_end=line_end))
     assert isinstance(out, ResolvedTarget)
@@ -100,10 +102,19 @@ def test_model_only_diseno_source_is_dropped_without_casilla_locator(
     """A model-only Diseño workbook hit fails closed without a casilla locator."""
     from ..resolution import DroppedHit, DropReason
 
-    path = (
-        "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_036/files/"
-        "01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx"
+    files = (
+        REPO_ROOT
+        / "src"
+        / "cadrumo"
+        / "_data"
+        / "corpus"
+        / "aeat_official"
+        / "disenos_registro"
+        / "modelo_036"
+        / "files"
     )
+    (workbook,) = files.glob("01-036-*-xlsx.xlsx")
+    path = workbook.relative_to(REPO_ROOT).as_posix()
     out = resolver.resolve(_hit(path))
     assert isinstance(out, DroppedHit)
     assert out.reason is DropReason.NO_TARGET_ENTITY
@@ -630,7 +641,8 @@ def test_casilla_for_unknown_modelo_is_dropped(resolver: TargetResolver) -> None
     """
     from ..resolution import DroppedHit, DropReason
 
-    path = "src/cadrumo/_data/registry/aeat/modelos/999/revisions/2099/casillas/0001-casillas.toml"
+    unauthored = filing_year_envelope().horizon + 1
+    path = f"src/cadrumo/_data/registry/aeat/modelos/999/revisions/{unauthored}/casillas/0001-casillas.toml"
     out = resolver.resolve(_hit(path))
     assert isinstance(out, DroppedHit)
     assert out.reason is DropReason.NO_TARGET_ENTITY

@@ -16,8 +16,16 @@ from ......core.auth_provider import AuthProviderKind
 from ......core.config import Settings
 from ......core.period import Period
 from ......domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ......domain.contribuyente.entity_type import EntityType
+from ......domain.contribuyente.renta_codes import FiscalResidency
 from ......domain.deadlines.engine import DeadlineEngine
-from ......domain.deadlines.models import IVARegime, TaxpayerProfile
+from ......domain.deadlines.models import (
+    IrpfEstimationRegime,
+    IrpfIncomeCategory,
+    IVARegime,
+    ModeloEnrollment,
+    TaxpayerProfile,
+)
 from ......domain.filing.schema import ModeloDraft, ModeloValidationFinding
 from ......domain.submission.models import ModeloDraftStatus
 from ......domain.submission.protocols import DeadlineWindowChecker
@@ -60,11 +68,20 @@ def deadline_checker() -> DeadlineWindowChecker:
     """Return the production registry-backed filing-window adapter."""
     profile = TaxpayerProfile(
         tax_id="X0001500M",
+        # An autónomo en estimación directa: without these facts no
+        # Modelo 130 obligation exists to be checked.
+        entity_type=EntityType.from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
+        irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
         iva_regime=IVARegime("GENERAL"),
         has_employees=False,
+        pays_professionals_with_retencion=False,
+        art109_activity_income_withholding_ge_70pct=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
         bienes_extranjero_above_threshold=False,
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
+        enrollment=ModeloEnrollment(large_company=False),
     )
     return build_revision_deadline_window_checker(profile=profile, engine=DeadlineEngine())
 

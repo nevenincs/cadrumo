@@ -13,6 +13,7 @@ from typer.testing import CliRunner
 
 from cadrumo.domain.calculations.registry.authority_artifact import AuthorityComponentCodecError
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.paths import REPO_ROOT
 from dev.registry.analysis import generated_tree_state, registry_status
 from dev.registry.pipeline import cli as pipeline_cli
@@ -22,6 +23,10 @@ from .. import cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+_YEAR = str(filing_year_envelope().horizon)
+_PREVIOUS_YEAR = str(filing_year_envelope().horizon - 1)
+_SPAN = f"{_PREVIOUS_YEAR}-{_YEAR}"
+
 
 #: The two-character ``\\t`` as it appears in the CLI module's SOURCE, which is what a
 #: scan of that text has to split on. A real tab would match nothing there.
@@ -30,7 +35,7 @@ _SOURCE_TAB_ESCAPE = "\\t"
 
 def _authority() -> SimpleNamespace:
     return SimpleNamespace(
-        modelos=(SimpleNamespace(revisions={"2025": object()}),),
+        modelos=(SimpleNamespace(revisions={_YEAR: object()}),),
         catalogues=SimpleNamespace(legal={"legal-1": object()}),
     )
 
@@ -38,7 +43,7 @@ def _authority() -> SimpleNamespace:
 def _indexed_authority() -> SimpleNamespace:
     @contextmanager
     def operation():
-        yield SimpleNamespace(modelo_ids=lambda: ("296",), revision_ids=lambda: (("296", "2025"),))
+        yield SimpleNamespace(modelo_ids=lambda: ("296",), revision_ids=lambda: (("296", _YEAR),))
 
     return SimpleNamespace(operation=operation, close=lambda: None)
 
@@ -104,7 +109,7 @@ def test_target_mutation_reports_follow_up_currentness_and_publication(monkeypat
 
     result = CliRunner().invoke(
         pipeline_cli.app,
-        ["publish-target", "296", "2024-2025", "aeat-dr-296-2024", "2024", "0A"],
+        ["publish-target", "296", _SPAN, f"aeat-dr-296-{_PREVIOUS_YEAR}", _PREVIOUS_YEAR, "0A"],
     )
 
     assert result.exit_code == 0, result.output
@@ -185,7 +190,7 @@ def test_status_delegates_axes_and_counts_excluded_targets(monkeypatch) -> None:
             SimpleNamespace(
                 id="296",
                 revisions={
-                    "2024-2025": SimpleNamespace(
+                    _SPAN: SimpleNamespace(
                         bindings=(),
                         casillas=(),
                         formulas=(),
@@ -193,7 +198,7 @@ def test_status_delegates_axes_and_counts_excluded_targets(monkeypatch) -> None:
                         dependency_classifications=(),
                         period_selector=SimpleNamespace(declared_periods=()),
                     ),
-                    "2025": SimpleNamespace(
+                    _YEAR: SimpleNamespace(
                         bindings=(),
                         casillas=(),
                         formulas=(),
@@ -220,7 +225,7 @@ def test_status_delegates_axes_and_counts_excluded_targets(monkeypatch) -> None:
             (
                 generated_tree_state.GeneratedTreeState(
                     "296",
-                    "2024-2025",
+                    _SPAN,
                     "reproducible",
                     (),
                     (),
@@ -273,6 +278,7 @@ def test_status_delegates_axes_and_counts_excluded_targets(monkeypatch) -> None:
         "stale": 0,
         "drifted": 0,
         "never-committed": 0,
+        "not-applicable": 0,
         "unreadable": 1,
     }
     assert status.authority == "current"

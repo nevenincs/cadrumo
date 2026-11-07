@@ -10,7 +10,8 @@ declaration of both.
 These helpers scan instead. They walk the supported filing years from the
 published envelope, compute the real schedule for a supplied profile, and
 return the first obligation whose published and effective closes differ -- or
-whose shift calendar could not be resolved. A scan that finds nothing raises,
+whose shift calendar could not be resolved. The first year whose calendar the
+authority does not publish is found the same way. A scan that finds nothing raises,
 so a test never silently passes against an envelope that no longer contains the
 case it is about.
 """
@@ -19,11 +20,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
+from itertools import count
 from typing import TYPE_CHECKING
 
 from ...calculations.registry.tests.published_authority import published_supported_filing_years
 from ..engine import DeadlineEngine
-from ..festivos import DeadlineHolidayCoverage
+from ..errors import DeadlineValidationError
+from ..festivos import DeadlineHolidayCoverage, holiday_calendar_from_authority
 
 if TYPE_CHECKING:
     from ...calculations.registry.authority import PinnedAuthorityOperation
@@ -52,6 +55,20 @@ def _supported_years() -> tuple[int, ...]:
     envelope = published_supported_filing_years()
     assert envelope is not None, "the published authority declares no supported filing years"
     return tuple(envelope.years)
+
+
+def first_unpublished_calendar_year(operation: PinnedAuthorityOperation) -> int:
+    """Return the first year from the support floor whose holiday calendar the authority does not publish.
+
+    Publications are authored one year at a time, so the walk ends at the year
+    after the newest one.
+    """
+    for year in count(min(_supported_years())):
+        try:
+            holiday_calendar_from_authority(year, operation=operation)
+        except DeadlineValidationError:
+            return year
+    raise AssertionError("unreachable: the year walk is unbounded")
 
 
 def _scanned(
@@ -85,25 +102,22 @@ def obligation_with_a_shifted_close(
     raise AssertionError("no supported filing year authors a window whose close moves to the next business day")
 
 
-def obligation_with_an_unresolvable_shift(
+def obligations_with_an_unresolvable_shift(
     profile: TaxpayerProfile,
     *,
     operation: PinnedAuthorityOperation,
-) -> ScannedObligation:
-    """Return the first obligation whose shift calendar could not be resolved.
-
-    Raises:
-        AssertionError: Every supported year's holiday calendar is bundled, so
-            the unverified-close case cannot be exercised from the envelope.
-    """
-    for scanned in _scanned(profile, operation=operation):
-        if scanned.obligation.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE:
-            return scanned
-    raise AssertionError("every supported filing year resolves its shift calendar, so no window has an unknown close")
+) -> tuple[ScannedObligation, ...]:
+    """Return every dated obligation of the supported years whose shift calendar could not be resolved."""
+    return tuple(
+        scanned
+        for scanned in _scanned(profile, operation=operation)
+        if scanned.obligation.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
+    )
 
 
 __all__ = [
     "ScannedObligation",
+    "first_unpublished_calendar_year",
     "obligation_with_a_shifted_close",
-    "obligation_with_an_unresolvable_shift",
+    "obligations_with_an_unresolvable_shift",
 ]

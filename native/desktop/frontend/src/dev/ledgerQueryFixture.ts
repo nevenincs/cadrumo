@@ -19,6 +19,7 @@ import {
   LEDGER_FIXTURE_PROFILE_ID,
 } from "./fixtures/ledger";
 import { invalid } from "./ledgerRequestFixture";
+import { fixtureDay } from "@/dev/fixtureDates";
 
 export function reviewStatus(classification: string): LedgerReviewStatus {
   if (classification === "NOT_YET_PROCESSED") return "pending";
@@ -175,7 +176,7 @@ export function knownValues(
       ? distinct(values).map((text) => ({
           text,
           uses: 1,
-          last_used: "2020-01-15",
+          last_used: fixtureDay(1, 15, -6),
           counterparty: null,
         }))
       : [];
@@ -191,7 +192,7 @@ export function knownValues(
           country: name === KNOWN_ONLY.counterparty ? "ES" : null,
           identification_state: null,
           uses: 1,
-          last_used: "2020-01-15",
+          last_used: fixtureDay(1, 15, -6),
         }))
       : [],
     descriptions: texts("description", [

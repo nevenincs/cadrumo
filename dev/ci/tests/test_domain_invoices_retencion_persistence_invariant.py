@@ -46,10 +46,13 @@ from cadrumo.adapters.persistence.storage.secure_object_namespaces import INVOIC
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.iva_category_catalogue import require_iva_category
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.enums import PaymentStatus, iva_rate_percentage, resolve_iva_rate_token
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.iva.schema import InvoiceKind
+
+FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -75,8 +78,8 @@ _RETENCION_RATE = Decimal("0.15")
 
 def _retention_invoice() -> Invoice:
     """A received professional invoice declaring both retencion fields."""
-    rate_date = date(2026, 1, 1)
-    issued_at = date(2026, 3, 15)
+    rate_date = date(FILING_YEAR, 1, 1)
+    issued_at = date(FILING_YEAR, 3, 15)
     with bundled_indexed_authority().operation() as operation:
         rate_token = resolve_iva_rate_token("RATE_21", rate_date, authority=operation)
         rate = iva_rate_percentage(rate_token, rate_date)

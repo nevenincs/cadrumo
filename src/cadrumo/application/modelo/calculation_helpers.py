@@ -332,7 +332,13 @@ def amendment_prior_paid_values(
     snapshot: RegistrySnapshot,
     amendment_kind: FilingDeclarationKind,
 ) -> dict[CasillaId, Decimal]:
-    """Carry one confirmed period's accumulated payments, never its corrected snapshots' sum."""
+    """Carry one confirmed period's accumulated payments, never its corrected snapshots' sum.
+
+    Args:
+        baseline_revision: The :class:`CalculationRevision` the correction starts from.
+        snapshot: The :class:`RegistrySnapshot` pinned for the corrected declaration.
+        amendment_kind: Which correction is being filed; only a complementaria carries payments.
+    """
     if amendment_kind is not FilingDeclarationKind.COMPLEMENTARIA:
         return {}
     if snapshot.modelo.id != "130":
@@ -369,6 +375,12 @@ def calculate_amendment(
     separate operator layer proves that a saved formula target was explicitly
     authored. Unaffected figures remain the filed declaration's facts; this
     path never pulls today's ledger or profile into a historical correction.
+
+    Args:
+        source_revision: The :class:`CalculationRevision` being corrected.
+        overrides: Operator-authored casilla amounts replacing the filed ones.
+        prior_paid_values: Confirmed prior payments carried into the correction.
+        snapshot: The :class:`RegistrySnapshot` that supplies the formulas and bindings.
     """
     values = dict(source_revision.casilla_values)
     for key, value in prior_paid_values.items():
@@ -387,7 +399,7 @@ def calculate_amendment(
             if observation.formula_id is not None or observation.casilla_id not in formula_targets:
                 continue
             raw = source_revision.input_values_by_casilla_id.get(observation.casilla_id)
-            if raw is None or Decimal(raw) != observation.value:
+            if isinstance(observation.value, Decimal) and (raw is None or Decimal(raw) != observation.value):
                 authored[observation.casilla_id] = canonical_decimal_string(observation.value)
     authored.update({key: canonical_decimal_string(value) for key, value in overrides.items()})
     explicit = set(authored)
@@ -471,7 +483,9 @@ def calculate_amendment(
         ),
     )
     recalculated = {observation.casilla_id: observation for observation in result.observations}
-    values = {key: observation.value for key, observation in recalculated.items() if observation.value is not None}
+    values = {
+        key: observation.value for key, observation in recalculated.items() if isinstance(observation.value, Decimal)
+    }
     observations = amendment_observations(
         corrected_values=values,
         overrides={**overrides, **prior_paid_values},

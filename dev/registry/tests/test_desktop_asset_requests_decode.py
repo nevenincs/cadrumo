@@ -184,9 +184,9 @@ _OUTSIDE = {
     "acquisition_reference": "Factura 2024-118",
 }
 
-_OUTSIDE_WITH_LATER_PAYMENT = {
+_OUTSIDE_WITH_LATER_PAYMENT: dict[str, str] = {
     **_OUTSIDE,
-    "further_purchase": LATER_PAYMENT["transaction_id"],
+    "further_purchase": str(LATER_PAYMENT["transaction_id"]),
     "further_shape": "split_payment",
 }
 

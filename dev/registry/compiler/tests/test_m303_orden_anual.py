@@ -24,6 +24,7 @@ from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalo
 from cadrumo.domain.calculations.registry.form_codes import resolve_form_codes
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from cadrumo.domain.calculations.registry.schema_references import TemporalSupportEnvelope
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, source_exercise
 from cadrumo.domain.calculations.registry.tests.fact_scope import outside_governed_fact_validation
 from cadrumo.domain.iva.errors import IvaValidationError
 from cadrumo.domain.iva.schema import validate_orden_module_identities
@@ -97,7 +98,7 @@ def test_extraction_outside_a_facts_scope_names_the_missing_authority() -> None:
         InternalInvariantError, match="requires an explicit generation-pinned governed-fact scope"
     ) as refusal:
         extract_m303_annual_orden_source(
-            ejercicio=2022,
+            ejercicio=source_exercise(source),
             source=source,
             source_root=bundled_path(),
         )
@@ -119,13 +120,15 @@ def test_an_unauthored_reduction_year_still_reports_the_coverage_gap() -> None:
     _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     source = catalogues.sources["boe-orden-hfp-1335-2021-iva-authority"]
     lorca = catalogues.facts.facts["liva-orden-lorca-reduction"]
-    without_2022 = GovernedFactCatalogue(
+    without_orden_exercise = GovernedFactCatalogue(
         facts={
             **catalogues.facts.facts,
             lorca.fact_id: lorca.model_copy(
                 update={
                     "variants": tuple(
-                        variant for variant in lorca.variants if not variant.variant_id.endswith(":2022-01-01")
+                        variant
+                        for variant in lorca.variants
+                        if not variant.variant_id.endswith(f":{source_exercise(source)}-01-01")
                     )
                 }
             ),
@@ -133,11 +136,13 @@ def test_an_unauthored_reduction_year_still_reports_the_coverage_gap() -> None:
     )
 
     with (
-        validating_governed_facts(CandidateFactAuthority(without_2022, catalogues.require_supported_filing_years())),
+        validating_governed_facts(
+            CandidateFactAuthority(without_orden_exercise, catalogues.require_supported_filing_years())
+        ),
         pytest.raises(RegistryValidationError, match="without a matching facts projection"),
     ):
         extract_m303_annual_orden_source(
-            ejercicio=2022,
+            ejercicio=source_exercise(source),
             source=source,
             source_root=bundled_path(),
         )
@@ -146,7 +151,9 @@ def test_an_unauthored_reduction_year_still_reports_the_coverage_gap() -> None:
 def _extracted_census() -> M303AnnualOrdenSourceCensus:
     _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     source = catalogues.sources["boe-orden-hfp-1335-2021-iva-authority"]
-    return extract_m303_annual_orden_source(ejercicio=2022, source=source, source_root=bundled_path())
+    return extract_m303_annual_orden_source(
+        ejercicio=source_exercise(source), source=source, source_root=bundled_path()
+    )
 
 
 @pytest.mark.usefixtures("governed_fact_scope")
@@ -169,12 +176,12 @@ def test_a_module_order_past_the_declared_rows_is_refused() -> None:
 def test_module_capacity_follows_the_candidate_fact_not_a_domain_literal() -> None:
     fact = load_governed_fact_file(bundled_path("registry", "aeat", "facts", "0167-form-row-codes.toml"))
     catalogue = GovernedFactCatalogue(facts={fact.fact_id: fact})
-    support = TemporalSupportEnvelope(floor=2022, horizon=2026)
+    support = TemporalSupportEnvelope(floor=filing_year_envelope().floor, horizon=filing_year_envelope().horizon)
     variant = fact.variants[0]
     assert isinstance(variant.payload, MappingFactPayload)
     base = CandidateFactAuthority(catalogue, support)
     with validating_governed_facts(base):
-        codes = resolve_form_codes("form-row-codes", effective_date=date(2025, 1, 1))
+        codes = resolve_form_codes("form-row-codes", effective_date=date(filing_year_envelope().horizon, 1, 1))
         limit = int(codes.code("m303.orden.modules_per_activity"))
         bands = int(codes.code("m303.orden.seasonal_bands"))
     expanded_limit = limit + 1
@@ -213,7 +220,7 @@ def test_module_capacity_follows_the_candidate_fact_not_a_domain_literal() -> No
         required_text=("source wording",),
     )
     altered = M303AnnualOrdenSourceCensus.model_construct(
-        ejercicio=2025,
+        ejercicio=filing_year_envelope().horizon,
         activities=(activity,),
         seasonal_indexes=tuple(
             M303AnnualOrdenRawSeasonalIndex(
@@ -274,14 +281,14 @@ def test_the_auxiliary_indicator_lookup_refuses_when_neither_authority_nor_scope
         outside_governed_fact_validation(),
         pytest.raises(InternalInvariantError, match="requires an explicit generation-pinned governed-fact scope"),
     ):
-        resolve_annual_orden_auxiliary_activity_indicators(effective_date=date(2025, 1, 1))
+        resolve_annual_orden_auxiliary_activity_indicators(effective_date=date(filing_year_envelope().horizon, 1, 1))
 
 
 def test_the_same_lookup_resolves_from_an_explicit_authority_without_a_scope() -> None:
     """CONTROL: the refusal above is the missing scope, not the lookup."""
     with bundled_indexed_authority().lease_operation() as operation, outside_governed_fact_validation():
         indicators = resolve_annual_orden_auxiliary_activity_indicators(
-            effective_date=date(2025, 1, 1), authority=operation
+            effective_date=date(filing_year_envelope().horizon, 1, 1), authority=operation
         )
 
     assert indicators.by_iae_and_activity

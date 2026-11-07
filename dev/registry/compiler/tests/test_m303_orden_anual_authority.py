@@ -33,7 +33,7 @@ from cadrumo.domain.iva.regimen_simplificado_rows import (
 )
 
 from ...maintenance_support import check_m303_annual_orden_manifest
-from ...tests.authored_edition_support import source_first_exercise, source_reference
+from ...tests.authored_edition_support import revision_covering, source_first_exercise, source_reference
 from ...tests.profile_schema_support import committed_supported_filing_years
 from ..authority import compiled_bundled_authority
 from ..loader import load_registry_tree
@@ -52,6 +52,9 @@ _LORCA_REDUCTION_EXERCISE = source_first_exercise(source_reference(_LORCA_ORDEN_
 _LORCA_SUCCESSOR_EXERCISE = _LORCA_REDUCTION_EXERCISE + 1
 _LORCA_REDUCTION_ID = f"lorca-{_LORCA_REDUCTION_EXERCISE}-reduction"
 _LORCA_RECORD_DESIGN = f"aeat-dr-303-{_LORCA_REDUCTION_EXERCISE}"
+# The newest annual Orden the registry pins, and the exercise it applies to.
+_LATEST_ORDEN_SOURCE_REF = "boe-orden-hac-1425-2025-iva-authority"
+_LATEST_ORDEN_EXERCISE = source_first_exercise(source_reference(_LATEST_ORDEN_SOURCE_REF))
 
 
 def _not_claimed_scope() -> M303RegimenSimplificadoScope:
@@ -69,7 +72,6 @@ def registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
 
 @pytest.mark.parametrize(
     (
-        "ejercicio",
         "source_ref",
         "expected_digest",
         "expected_agricultural_axis_count",
@@ -77,35 +79,30 @@ def registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
     ),
     (
         (
-            2022,
             "boe-orden-hfp-1335-2021-iva-authority",
             "29f6edf412129634c9cf16a9a60aede5fe0f962a8489e8e6f2efe7bd0e104c5a",
             16,
             True,
         ),
         (
-            2023,
             "boe-orden-hfp-1172-2022-iva-authority",
             "1cab2ef540868ec0d5344d8e801ac6c52b5ee27c1aefb794ca7c0330df693957",
             16,
             True,
         ),
         (
-            2024,
             "boe-orden-hfp-1359-2023-iva-authority",
             "e403d33762cc7353ca3f752820df71244291217aeb35309d5e383f166cde49a5",
             16,
             True,
         ),
         (
-            2025,
             "boe-orden-hac-1347-2024-iva-authority",
             "fca55fa51ca1b68e4b8098ebfc4749e4d5f9daac880112d35085352df46c8165",
             17,
             False,
         ),
         (
-            2026,
             "boe-orden-hac-1425-2025-iva-authority",
             "7762218c63fcc914dfc5ed532d6c0daa3b21f506427c924b93eb2698527d3ac8",
             17,
@@ -114,7 +111,6 @@ def registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
     ),
 )
 def test_pinned_boe_orden_compiler_extracts_the_complete_annual_iva_catalogue(
-    ejercicio: int,
     source_ref: str,
     expected_digest: str,
     expected_agricultural_axis_count: int,
@@ -123,6 +119,7 @@ def test_pinned_boe_orden_compiler_extracts_the_complete_annual_iva_catalogue(
 ) -> None:
     """Each pinned BOE source supplies all 49 tables and 141 module rows."""
     _, catalogues = registry_tree
+    ejercicio = source_first_exercise(catalogues.sources[source_ref])
 
     with validating_governed_facts(
         CandidateFactAuthority(catalogues.facts, catalogues.require_supported_filing_years())
@@ -183,7 +180,7 @@ def test_pinned_boe_orden_compiler_refuses_a_real_truncated_copy(
 ) -> None:
     """A copied source whose bytes no longer match its pinned digest cannot compile."""
     _, catalogues = registry_tree
-    source = catalogues.sources["boe-orden-hac-1425-2025-iva-authority"]
+    source = catalogues.sources[_LATEST_ORDEN_SOURCE_REF]
     copied_path = tmp_path / source.corpus_path
     copied_path.parent.mkdir(parents=True)
     copyfile(bundled_path() / source.corpus_path, copied_path)
@@ -191,7 +188,7 @@ def test_pinned_boe_orden_compiler_refuses_a_real_truncated_copy(
 
     with pytest.raises(RegistryLoadError, match="digest mismatch"):
         extract_m303_annual_orden_source(
-            ejercicio=2026,
+            ejercicio=_LATEST_ORDEN_EXERCISE,
             source=source,
             source_root=tmp_path,
         )
@@ -203,7 +200,7 @@ def test_pinned_boe_orden_compiler_translates_malformed_html_to_registry_load_er
 ) -> None:
     """A digest-pinned but structurally invalid source remains a typed registry refusal."""
     _, catalogues = registry_tree
-    original_source = catalogues.sources["boe-orden-hac-1425-2025-iva-authority"]
+    original_source = catalogues.sources[_LATEST_ORDEN_SOURCE_REF]
     source_bytes = b"<html><body>not an annual Orden</body></html>"
     source = original_source.model_copy(
         update={
@@ -219,7 +216,7 @@ def test_pinned_boe_orden_compiler_translates_malformed_html_to_registry_load_er
         RegistryLoadError, match="must have exactly one agricultural and one IAE ingreso-a-cuenta table"
     ):
         extract_m303_annual_orden_source(
-            ejercicio=2026,
+            ejercicio=_LATEST_ORDEN_EXERCISE,
             source=source,
             source_root=tmp_path,
         )
@@ -244,7 +241,7 @@ def _stage_orden_copy(
 ) -> _StagedOrdenCopy:
     """Copy the pinned BOE orden corpus file under ``tmp_path`` so a test can corrupt its sidecars."""
     _, catalogues = registry_tree
-    source = catalogues.sources["boe-orden-hac-1425-2025-iva-authority"]
+    source = catalogues.sources[_LATEST_ORDEN_SOURCE_REF]
     source_path = bundled_path() / source.corpus_path
     copied_path = tmp_path / source.corpus_path
     copied_path.parent.mkdir(parents=True)
@@ -269,7 +266,7 @@ def test_pinned_boe_orden_compiler_refuses_a_divergent_markdown_sidecar(
 
     with pytest.raises(RegistryLoadError, match="sidecar pair diverges"):
         extract_m303_annual_orden_source(
-            ejercicio=2026,
+            ejercicio=_LATEST_ORDEN_EXERCISE,
             source=source,
             source_root=tmp_path,
         )
@@ -312,7 +309,7 @@ def test_pinned_boe_orden_compiler_refuses_noncanonical_sidecar_shape(
 
     with pytest.raises(RegistryLoadError, match="sidecar"):
         extract_m303_annual_orden_source(
-            ejercicio=2026,
+            ejercicio=_LATEST_ORDEN_EXERCISE,
             source=source,
             source_root=tmp_path,
         )
@@ -348,7 +345,7 @@ def test_pinned_boe_orden_compiler_refuses_invalid_units_before_pair_comparison(
 
     with pytest.raises(RegistryLoadError, match=expected_refusal):
         extract_m303_annual_orden_source(
-            ejercicio=2026,
+            ejercicio=_LATEST_ORDEN_EXERCISE,
             source=source,
             source_root=tmp_path,
         )
@@ -375,7 +372,7 @@ def test_pinned_boe_orden_compiler_refuses_duplicate_semantic_table_anchor(
 
     with pytest.raises(RegistryLoadError, match="extra, missing, or cross-year authority units"):
         extract_m303_annual_orden_source(
-            ejercicio=2026,
+            ejercicio=_LATEST_ORDEN_EXERCISE,
             source=source,
             source_root=tmp_path,
         )
@@ -383,7 +380,9 @@ def test_pinned_boe_orden_compiler_refuses_duplicate_semantic_table_anchor(
 
 def test_resolved_annual_orden_snapshot_refuses_reference_coordinate_drift() -> None:
     """A reference cannot retain its Orden id while changing source provenance."""
-    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2025, period="4T")
+    registry_snapshot = compiled_bundled_authority().snapshot(
+        "303", filing_year=_LATEST_ORDEN_EXERCISE - 1, period="4T"
+    )
     resolved = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
@@ -400,7 +399,7 @@ def test_resolved_annual_orden_snapshot_refuses_reference_coordinate_drift() -> 
 
 def test_resolved_annual_orden_snapshot_carries_source_derived_identity_and_minimum_quota() -> None:
     """The bundled authority, not a test fixture, supplies row identity and minimum quota."""
-    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="4T")
+    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=_LATEST_ORDEN_EXERCISE, period="4T")
     resolved = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
@@ -408,7 +407,11 @@ def test_resolved_annual_orden_snapshot_carries_source_derived_identity_and_mini
         ),
     )
     assert resolved.orden is not None
-    activity = next(item for item in resolved.orden.activities if item.orden_id == "m303:2026:iva:82e3988053fc055b601e")
+    activity = next(
+        item
+        for item in resolved.orden.activities
+        if item.orden_id == f"m303:{_LATEST_ORDEN_EXERCISE}:iva:82e3988053fc055b601e"
+    )
 
     assert activity.cuota_minima_pct == 20
 
@@ -470,7 +473,7 @@ def test_annual_orden_projection_refuses_missing_or_duplicate_iae_discriminators
         modelos=modelos,
         sources=catalogues.sources,
     )
-    projection = next(item for item in compilation.authority.projections if item.ejercicio == 2026)
+    projection = next(item for item in compilation.authority.projections if item.ejercicio == _LATEST_ORDEN_EXERCISE)
     payload = projection.model_dump(mode="python")
     collision_indices = [
         index for index, activity in enumerate(payload["activities"]) if activity["iae_epigrafe"] == iae_epigrafe
@@ -636,7 +639,9 @@ def test_lorca_reduction_snapshot_refuses_coordinated_record_design_parent_and_c
 
 def test_snapshot_refuses_cross_envelope_filing_year_and_record_design_drift() -> None:
     """The public snapshot retains one filing-year/revision/record-design coordinate."""
-    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2025, period="4T")
+    registry_snapshot = compiled_bundled_authority().snapshot(
+        "303", filing_year=_LATEST_ORDEN_EXERCISE - 1, period="4T"
+    )
     resolved = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
@@ -644,12 +649,12 @@ def test_snapshot_refuses_cross_envelope_filing_year_and_record_design_drift() -
         ),
     )
     year_payload = resolved.model_dump(mode="python")
-    year_payload["filing_year"] = 2026
+    year_payload["filing_year"] = _LATEST_ORDEN_EXERCISE
     with pytest.raises(ValidationError, match="filing year and revision coordinate"):
         type(resolved).model_validate(year_payload)
 
     record_design_payload = resolved.model_dump(mode="python")
-    record_design_payload["orden"]["agricultural_authority"]["record_design_source_ref"] = "aeat-dr-303-2022"
+    record_design_payload["orden"]["agricultural_authority"]["record_design_source_ref"] = _LORCA_RECORD_DESIGN
     record_design_payload["orden"]["agricultural_authority"]["record_design_source_content_digest"] = (
         "6648f6b319579e49cd5bfdaae69e7451db75767e7f19da0b90383b25b79b3f60"
     )
@@ -710,7 +715,7 @@ def test_generated_annual_orden_legal_ids_cover_every_compiled_source_axis(
     assert set().union(*(set(axis_legal_refs) for axis_legal_refs in axis_legal_refs_by_source.values())) == set(
         compilation.legal
     )
-    assert "orden-hfp-1335-2021:da-4-lorca-2022-reduction:lorca-2022-reduction" in compilation.legal
+    assert f"orden-hfp-1335-2021:da-4-{_LORCA_REDUCTION_ID}:{_LORCA_REDUCTION_ID}" in compilation.legal
     for source in compilation.authority.projections:
         corpus_path = bundled_path() / catalogues.sources[source.source_ref].corpus_path
         assert "#m303-anexo-i-iva-" in corpus_path.with_name(corpus_path.name + ".extracted.json").read_text(
@@ -724,7 +729,7 @@ def test_m303_revision_refuses_a_second_cross_year_annual_orden_source(
     """A real revision cannot cite its own Orden plus another year's authority."""
     modelos, catalogues = registry_tree
     modelo = next(item for item in modelos if item.id == "303")
-    revision = modelo.revisions["2023"]
+    revision = modelo.revisions[str(revision_covering("303", _LORCA_SUCCESSOR_EXERCISE).id)]
     contaminated_revision = revision.model_copy(
         update={"source_refs": (*revision.source_refs, "boe-orden-hac-1425-2025-iva-authority")},
     )

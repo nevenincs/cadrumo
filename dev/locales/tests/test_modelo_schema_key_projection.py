@@ -27,22 +27,24 @@ from ..registry_scanner import LocaleRegistryEnumerationError, scan_modelo_schem
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_REVISION = "synthetic-edition"
+
 
 def _write_structural_modelo(root: Path, *, casilla: str = "valid", malformed_binding: bool = False) -> Path:
     modelo = root / "modelos" / "999"
-    revision = modelo / "revisions" / "2024"
+    revision = modelo / "revisions" / _REVISION
     (revision / "constructs").mkdir(parents=True)
     (revision / "casillas").mkdir()
     (modelo / "manifest.toml").write_text('[modelo]\nid = "999"\n', encoding="utf-8")
-    (revision / "revision.toml").write_text('[revisions."2024"]\n', encoding="utf-8")
+    (revision / "revision.toml").write_text(f'[revisions."{_REVISION}"]\n', encoding="utf-8")
     (revision / "constructs" / "0001-construct.toml").write_text(
-        '[[revisions."2024".constructs]]\nid = "construct-1"\n',
+        f'[[revisions."{_REVISION}".constructs]]\nid = "construct-1"\n',
         encoding="utf-8",
     )
     if malformed_binding:
         (revision / "bindings").mkdir()
         (revision / "bindings" / "0001-binding.toml").write_text(
-            '[[revisions."2024".bindings]]\n'
+            f'[[revisions."{_REVISION}".bindings]]\n'
             'id = "binding-1"\n'
             'provider = "not-a-provider"\n'
             "value = { not_a_contract = true }\n",
@@ -50,13 +52,13 @@ def _write_structural_modelo(root: Path, *, casilla: str = "valid", malformed_bi
         )
     if casilla == "valid":
         casilla_source = (
-            '[[revisions."2024".casillas]]\n'
+            f'[[revisions."{_REVISION}".casillas]]\n'
             'id = "c1"\n'
             'continuidad_id = "chain-1"\n'
             'aliases = [{ legal_refs = ["law-1"], source_refs = ["source-1"] }]\n'
         )
     elif casilla == "malformed-alias":
-        casilla_source = '[[revisions."2024".casillas]]\nid = "c1"\naliases = ["not-a-table"]\n'
+        casilla_source = f'[[revisions."{_REVISION}".casillas]]\nid = "c1"\naliases = ["not-a-table"]\n'
     else:
         raise AssertionError(f"unknown fixture variant: {casilla}")
     (revision / "casillas" / "0001-casilla.toml").write_text(casilla_source, encoding="utf-8")
@@ -66,19 +68,19 @@ def _write_structural_modelo(root: Path, *, casilla: str = "valid", malformed_bi
 def test_structural_projection_matches_every_modelo_identity_ignoring_binding_shape(tmp_path: Path) -> None:
     keys = load_modelo_locale_key_projection(_write_structural_modelo(tmp_path, malformed_binding=True))
 
-    occurrence = casilla_occurrence_locale_key("999", "2024", "c1", ModeloLocalizationFieldKind.LABEL)
+    occurrence = casilla_occurrence_locale_key("999", _REVISION, "c1", ModeloLocalizationFieldKind.LABEL)
     continuity = casilla_continuity_locale_key("999", "chain-1", ModeloLocalizationFieldKind.LABEL)
     assert keys == {
         modelo_locale_key("999", "title"),
         modelo_locale_key("999", "official_name"),
-        revision_locale_key("999", "2024"),
-        construct_locale_key("999", "2024", "construct-1"),
+        revision_locale_key("999", _REVISION),
+        construct_locale_key("999", _REVISION, "construct-1"),
         construct_lineage_locale_key("999", "construct-1"),
         occurrence,
         f"{occurrence.removesuffix('.label')}.help",
         continuity,
         f"{continuity.removesuffix('.label')}.help",
-        casilla_alias_locale_key("999", "2024", "c1", "0"),
+        casilla_alias_locale_key("999", _REVISION, "c1", "0"),
         binding_locale_key("999", "binding-1", "label"),
         binding_locale_key("999", "binding-1", "help"),
         binding_locale_key("999", "binding-1", "box_number"),

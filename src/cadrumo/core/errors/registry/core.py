@@ -189,16 +189,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.errors.hierarchy.CadrumoObservabilityError",
-        ErrorCode(
-            code="ERROR_CADRUMO_OBSERVABILITY",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_cadrumo_observability",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.core.errors.hierarchy.SiteHealthError",
         ErrorCode(
             code="FAIL_SITE_HEALTH",
@@ -225,56 +215,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.INTERNAL,
             message_key="errors.internal.internal_output_rendering",
             retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.core.observability.errors.GoldenCaptureError",
-        ErrorCode(
-            code="INTEGRITY_OBSERVABILITY_GOLDEN_CAPTURE",
-            category=ErrorCategory.INTEGRITY,
-            message_key="errors.integrity.integrity_observability_run_trace_validation",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.core.observability.errors.GoldenReplayMismatchError",
-        ErrorCode(
-            code="INTEGRITY_OBSERVABILITY_GOLDEN_REPLAY_MISMATCH",
-            category=ErrorCategory.INTEGRITY,
-            message_key="errors.integrity.integrity_observability_run_trace_validation",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.core.observability.errors.RunContextMissingError",
-        ErrorCode(
-            code="INTERNAL_OBSERVABILITY_RUN_CONTEXT_MISSING",
-            category=ErrorCategory.INTERNAL,
-            message_key="errors.internal.internal_observability_run_context_missing",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.core.observability.errors.RunTraceValidationError",
-        ErrorCode(
-            code="INTEGRITY_OBSERVABILITY_RUN_TRACE_VALIDATION",
-            category=ErrorCategory.INTEGRITY,
-            message_key="errors.integrity.integrity_observability_run_trace_validation",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.core.observability.errors.RunTracePersistenceError",
-        ErrorCode(
-            code="FAIL_OBSERVABILITY_RUN_TRACE_PERSISTENCE",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_observability_run_trace_persistence",
-            retryable=True,
             runbook_id=None,
         ),
     ),

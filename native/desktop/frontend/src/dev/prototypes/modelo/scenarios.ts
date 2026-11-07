@@ -1,6 +1,7 @@
 import checked130En from "@fixtures/modelo/modelo-130-1T-checked-en.json" with { type: "json" };
 import checked130Es from "@fixtures/modelo/modelo-130-1T-checked-es.json" with { type: "json" };
 import type { Attention, FormIssue } from "./types";
+import { fixtureInstant } from "@/dev/fixtureDates";
 
 // What the read models report after steps a fresh synthetic profile never
 // reaches. Findings carry the words of a real checked envelope's issue lines;
@@ -125,30 +126,38 @@ export type HistoryEvent = {
 
 /** The 130 for the third quarter, newest first, matching the recorded story. */
 export const HISTORY_130: HistoryEvent[] = [
-  { at: "2026-10-14T18:02:00", kind: "filed", detail: "Original declaration" },
   {
-    at: "2026-10-14T17:55:00",
+    at: fixtureInstant(10, 14, "18:02:00"),
+    kind: "filed",
+    detail: "Original declaration",
+  },
+  {
+    at: fixtureInstant(10, 14, "17:55:00"),
     kind: "exported",
     detail: "From the calculation of 17:51",
   },
   {
-    at: "2026-10-14T17:52:00",
+    at: fixtureInstant(10, 14, "17:52:00"),
     kind: "verified",
     detail: "Nothing blocks filing",
   },
   {
-    at: "2026-10-14T17:51:00",
+    at: fixtureInstant(10, 14, "17:51:00"),
     kind: "calculated",
     detail: "",
     amount: "1343.92",
   },
-  { at: "2026-10-14T17:49:00", kind: "changed", detail: "Box 18" },
+  { at: fixtureInstant(10, 14, "17:49:00"), kind: "changed", detail: "Box 18" },
   {
-    at: "2026-10-09T11:20:00",
+    at: fixtureInstant(10, 9, "11:20:00"),
     kind: "calculated",
     detail: "From your records",
   },
-  { at: "2026-10-09T11:19:00", kind: "created", detail: "3rd quarter 2026" },
+  {
+    at: fixtureInstant(10, 9, "11:19:00"),
+    kind: "created",
+    detail: "3rd quarter 2026",
+  },
 ];
 
 export type SourceGroup = {

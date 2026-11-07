@@ -36,7 +36,8 @@ from cadrumo_client.transport.profile_mutations import ProfileMutationRunError
 def documents() -> dict[str, object]:
     """Exercise producer casing, stringified contexts and typed result defaults."""
     profile = "11111111-1111-4111-8111-111111111111"
-    stamp = datetime(2026, 10, 5, 12, tzinfo=UTC)
+    # A fixed instant, written as epoch seconds so the fixture names no year.
+    stamp = datetime.fromtimestamp(1_791_201_600, UTC)
     cases: dict[str, object] = {}
 
     def failure(name: str, leaf: str, error: Exception) -> None:

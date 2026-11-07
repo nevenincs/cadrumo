@@ -19,6 +19,7 @@ import pytest
 from pydantic import BaseModel
 
 from cadrumo.core.frozen_mapping import FrozenMapping
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiled_cache_support import INERT_LEAF_TYPES, has_current_pydantic_shape
 
@@ -68,8 +69,8 @@ def test_a_current_graph_of_every_container_kind_is_accepted() -> None:
             None,
             b"bytes",
             decimal.Decimal("1.5"),
-            datetime.date(2026, 1, 1),
-            datetime.datetime(2026, 1, 1, 12, 0, tzinfo=datetime.UTC),
+            datetime.date(filing_year_envelope().horizon, 1, 1),
+            datetime.datetime(filing_year_envelope().horizon, 1, 1, 12, 0, tzinfo=datetime.UTC),
             datetime.time(12, 0),
         ),
     )

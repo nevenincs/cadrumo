@@ -18,6 +18,7 @@ import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 from dev.paths import REPO_ROOT
 
 from ..casilla_reference import render_casilla_reference
@@ -32,9 +33,8 @@ from ..terminology.unified_record import to_search_record
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
 _REPO_ROOT = REPO_ROOT
-_M130_CASILLA_15_SOURCE = (
-    "src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/casillas/0001-declarations.toml"
-)
+_M130_REVISIONS = "src/cadrumo/_data/registry/aeat/modelos/130/revisions"
+_M130_CASILLA_15_SOURCE = f"{_M130_REVISIONS}/{open_ended_revision('130').id}/casillas/0001-declarations.toml"
 
 
 from .registry_authority_fixture import authority

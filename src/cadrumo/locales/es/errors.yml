@@ -98,6 +98,10 @@ errors:
     empty_expression: Expresión de fórmula vacía.
     enum_binding_value_missing: La vinculación enumerada {binding_id} no tiene valor
       asignado (requerida por el operador {op}).
+    formula_override_target_invalid: Las casillas {casilla_ids} no pueden recibir
+      un valor conservado o sustituido porque no son casillas de fórmula de esta revisión.
+    formula_recalculation_unresolved: 'El recálculo de la rectificación dejó sin resolver
+      casillas de fórmula obligatorias: {casilla_ids}.'
     lookup_dispatch_arg_count: El operador {op} de la fórmula espera {expected} argumentos.
     lookup_dispatch_arg_kind: El operador {op} de la fórmula requiere que {position}
       sea una hoja de tipo {expected_kind}.
@@ -186,8 +190,6 @@ errors:
       vuelve a intentar la limpieza antes de continuar.
     error_cadrumo_core: Se produjo un error interno en la aplicación.
     error_cadrumo_core_not_found: No se encontró el recurso o registro solicitado.
-    error_cadrumo_observability: Se produjo un error en el registro de diagnóstico
-      de la aplicación.
     error_calc_sheets_engine: El motor de exportación de hojas de cálculo encontró
       un estado irresoluble al generar el plan de exportación.
     error_calc_sheets_record: Una operación de registro de hoja de cálculo falló por
@@ -514,8 +516,6 @@ errors:
       de trabajo.
     fail_notificacion_parse: No se pudo interpretar el documento de la notificación
       de la AEAT.
-    fail_observability_run_trace_persistence: El almacén de trazas de ejecución no
-      pudo completar una operación del sistema de archivos.
     fail_outbound_storage: Se produjo un error en el proveedor de almacenamiento.
     fail_outbound_storage_network: No se pudo contactar con el servicio de almacenamiento.
       Comprueba tu conexión a internet y vuelve a intentarlo.
@@ -672,8 +672,6 @@ errors:
       NIE ni CIF español válido.
     integrity_justificante_verification: La verificación del justificante con la AEAT
       no se pudo completar.
-    integrity_observability_run_trace_validation: La traza de ejecución guardada no
-      superó la validación estricta.
     integrity_outbound_storage: El contenido descargado no superó las comprobaciones
       de integridad (hash, tamaño o etiqueta).
     integrity_outbound_storage_corruption: Un fichero de metadatos sidecar contiene
@@ -785,8 +783,6 @@ errors:
       tiene regla de presentación.
     internal_modelo_work_form_layout: La distribución del impreso de este modelo no
       coincide con su revisión.
-    internal_observability_run_context_missing: 'Error interno: se intentó registrar
-      un evento de diagnóstico fuera de un contexto de ejecución activo.'
     internal_operation_declaration_breach: 'Error interno: un ejecutor de operación
       reclamó una fase, un efecto, un recurso o una interacción que su definición
       no declara.'

@@ -28,6 +28,9 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
 )
 from cadrumo.domain.buckets.event import BucketEvent, BucketEventType
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
+FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 
@@ -133,7 +136,7 @@ def test_inventory_events_persist_version_one(tmp_path: Path) -> None:
         ).create(
             bucket_id=profile.bucket_id,
             actividad_id="A1",
-            year=2025,
+            year=FILING_YEAR,
             valuation_method="fifo",
             actor="operator",
         )

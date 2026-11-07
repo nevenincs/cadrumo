@@ -1,4 +1,5 @@
 import type { AboutInfo } from "../../ipc/environment";
+import { fixtureInstant } from "@/dev/fixtureDates";
 
 /** A made-up installation, as the About dialog shows it. */
 export const ABOUT_FIXTURE: AboutInfo = {
@@ -7,7 +8,7 @@ export const ABOUT_FIXTURE: AboutInfo = {
   version: "9.8.7",
   build_id: "2031010203",
   build_type: "debug",
-  build_date: "2031-01-02T03:04:05Z",
+  build_date: fixtureInstant(1, 2, "03:04:05Z", 5),
   channel: "stable",
   target: "windows-x86-64",
   python: "3.13.11",

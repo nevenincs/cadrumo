@@ -30,16 +30,19 @@ from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.usage_ratios.errors import UsageRatioPersistenceError
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 from cadrumo.domain.usage_ratios.service import usage_ratio_bucket_lock, usage_ratios_object_key
 
+FILING_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _BUCKET_A_ID = "73737373-7373-4373-8373-737373737301"
 _BUCKET_B_ID = "73737373-7373-4373-8373-737373737302"
-_SECURE_OBJECT_WRITTEN_AT = datetime(2026, 5, 27, 9, 0, 0, tzinfo=UTC)
+_SECURE_OBJECT_WRITTEN_AT = datetime(FILING_YEAR, 5, 27, 9, 0, 0, tzinfo=UTC)
 
 
 @pytest.fixture(scope="module")

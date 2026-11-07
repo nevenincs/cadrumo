@@ -224,7 +224,11 @@ class DeclarationsWorkspaceFilingRefV1(BaseModel):
 
     @classmethod
     def from_record(cls, record: ModeloRecord) -> Self:
-        """Retain the exact immutable filing and its two distinct relationships."""
+        """Retain the exact immutable filing and its two distinct relationships.
+
+        Args:
+            record: The :class:`ModeloRecord` to project.
+        """
         return cls(
             filing_record_id=record.filing_record_id,
             work_unit_id=record.work_unit_id,

@@ -49,14 +49,18 @@ pytestmark = [pytest.mark.unit, pytest.mark.docs, pytest.mark.hex_core]
 _REPO_ROOT = REPO_ROOT
 _DISENOS = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus" / "aeat_official" / "disenos_registro"
 
+
+def _first_design(modelo: str, suffix: str) -> Path:
+    """Return the shipped first-listed design workbook of a modelo, found on disk rather than named."""
+    files = _DISENOS / f"modelo_{modelo}" / "files"
+    matches = sorted(files.glob(f"01-{modelo}-*{suffix}"))
+    return matches[0] if matches else files / f"01-{modelo}-absent{suffix}"
+
+
 # A real modern .xlsx Modelo 303 design (openpyxl path) and a real legacy
 # .xls Modelo 123 design (xlrd path). Both ship in the corpus.
-_XLSX_WORKBOOK = (
-    _DISENOS / "modelo_303" / "files" / "01-303-ejercicio-2026-y-siguientes-actualizado-28-01-26-378-kb-xlsx.xlsx"
-)
-_XLS_WORKBOOK = (
-    _DISENOS / "modelo_123" / "files" / "01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xls"
-)
+_XLSX_WORKBOOK = _first_design("303", "-xlsx.xlsx")
+_XLS_WORKBOOK = _first_design("123", "-xls.xls")
 
 
 def test_worked_example_workbooks_exist() -> None:

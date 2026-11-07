@@ -27,6 +27,7 @@ import {
   sampleRows,
   type SampleRow,
 } from "./gridSample";
+import { fixtureDay } from "@/dev/fixtureDates";
 
 declare global {
   interface Window {
@@ -378,12 +379,21 @@ export function DataGridHarness({
 
 type Declaration = { id: string; model: string; period: string; due: string };
 
+/** An annual declaration: the year it covers is the one before the year of its
+ * due date. */
+const annual = (id: string, model: string, due: string): Declaration => ({
+  id,
+  model,
+  period: String(Number(due.slice(0, 4)) - 1),
+  due,
+});
+
 const DECLARATIONS: Declaration[] = [
-  { id: "303-1T", model: "303", period: "2026 1T", due: "2026-04-20" },
-  { id: "130-1T", model: "130", period: "2026 1T", due: "2026-04-20" },
-  { id: "111-03", model: "111", period: "2026 03", due: "2026-04-20" },
-  { id: "390-0A", model: "390", period: "2025", due: "2026-01-30" },
-  { id: "347-0A", model: "347", period: "2025", due: "2026-02-28" },
+  { id: "303-1T", model: "303", period: "2026 1T", due: fixtureDay(4, 20) },
+  { id: "130-1T", model: "130", period: "2026 1T", due: fixtureDay(4, 20) },
+  { id: "111-03", model: "111", period: "2026 03", due: fixtureDay(4, 20) },
+  annual("390-0A", "390", fixtureDay(1, 30)),
+  annual("347-0A", "347", fixtureDay(2, 28)),
 ];
 
 /** The plain table over made-up declarations, sorted and grouped by
@@ -400,8 +410,8 @@ export function DataTableHarness({ current = "130-1T" }: { current?: string }) {
     const factor = sort.direction === "asc" ? 1 : -1;
     return a[field] < b[field] ? -factor : a[field] > b[field] ? factor : 0;
   });
-  const soon = sorted.filter((row) => row.due >= "2026-04-01");
-  const past = sorted.filter((row) => row.due < "2026-04-01");
+  const soon = sorted.filter((row) => row.due >= fixtureDay(4, 1));
+  const past = sorted.filter((row) => row.due < fixtureDay(4, 1));
   const rows: TableRow<Declaration>[] = [
     {
       kind: "section",

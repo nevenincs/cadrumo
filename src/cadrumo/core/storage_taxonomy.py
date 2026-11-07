@@ -196,8 +196,8 @@ RUN_ENVELOPE_FILENAME: Final[str] = "envelope.json"
 
 A run directory is named by its run id, so these leaves sit below a fan-out
 that no enumerable member can name. They are declared here, beside the
-category they live under, so the observability store that writes them and the
-storage-path contracts that describe them read one spelling.
+category they live under, so the storage-path contracts that describe them
+read one spelling.
 """
 
 _PROFILE_CAPSULE_ENVELOPE_LABEL = "profile-capsule.password-envelope"

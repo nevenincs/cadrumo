@@ -34,6 +34,7 @@ from cadrumo.core.external_constants import (
     load_external_constants,
 )
 from cadrumo.core.toml import parse_toml
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.aeat_literal_fixtures import (
     AEAT_HOST_SUFFIX_EXPECTED,
     AEAT_LEGACY_APEX_CANARY,
@@ -50,6 +51,8 @@ from cadrumo.tests.inventory import (
     repo_relative,
 )
 from dev.quality.cyclic_gc import cyclic_gc_paused
+
+FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -386,7 +389,7 @@ def test_renta_web_open_template_has_year_placeholder() -> None:
     template = load_external_constants().aeat.oracles.renta_web_open_app_template
 
     assert "{year}" in template
-    formatted = template.format(year=2026)
+    formatted = template.format(year=FILING_YEAR)
     assert "EJER=2026" in formatted
 
 

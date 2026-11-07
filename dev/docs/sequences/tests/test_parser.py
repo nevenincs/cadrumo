@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ..errors import SequenceParseError
 from ..parser import (
     RESULT_PAYLOAD_EXEMPT,
@@ -27,11 +29,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 _VERIFY = "Verify the calculation before exporting."
 # The worked example, minus its ``:seed:`` (seed inlining is exercised in
 # ``test_seeds.py``).
-_WORKED_EXAMPLE = """\
-aeat app modelo create 303 --year 2026 --period 1T
+_YEAR = str(filing_year_envelope().horizon)
+_WORKED_EXAMPLE = f"""\
+aeat app modelo create 303 --year {_YEAR} --period 1T
 @capture work_unit_id result.work_unit_id
-aeat app modelo calculate {work_unit_id}
-@result aeat app modelo verify {work_unit_id}
+aeat app modelo calculate {{work_unit_id}}
+@result aeat app modelo verify {{work_unit_id}}
 @expect result.status == "verified_complete"
 """
 
@@ -61,7 +64,7 @@ def test_worked_example_parses_into_typed_frames() -> None:
     create, calculate, result = sequence.frames
 
     assert create.kind is FrameKind.COMMAND
-    assert create.argv == ("aeat", "app", "modelo", "create", "303", "--year", "2026", "--period", "1T")
+    assert create.argv == ("aeat", "app", "modelo", "create", "303", "--year", _YEAR, "--period", "1T")
     assert create.captures == (CaptureBinding(name="work_unit_id", json_path="result.work_unit_id"),)
     assert create.placeholder_names == ()
 

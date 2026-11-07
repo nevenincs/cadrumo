@@ -3,6 +3,7 @@
 // capital goods declared against it. Everything it answers is synthetic.
 
 import type { JsonObject, LedgerDefinitionId } from "../shell/ledger";
+import { SCENARIO_TODAY } from "./assetsRegister";
 import {
   SetupStopped,
   decimal,
@@ -21,6 +22,13 @@ import {
   servedMinimumAcquisitionYear,
   servedYearBounds,
 } from "./servedYearAuthority";
+import { fixtureInstant } from "@/dev/fixtureDates";
+
+/** The year the scenario stands in, and the earlier years the registers hold
+ * entries for. */
+const SCENARIO_YEAR = Number(SCENARIO_TODAY.slice(0, 4));
+const PRIOR_YEAR = SCENARIO_YEAR - 1;
+const ACQUISITION_YEAR = SCENARIO_YEAR - 2;
 
 const PROVENANCES = ["aeat_autorizada", "inicio_actividad"];
 const CARRIED = "carried_prior_definitiva";
@@ -57,7 +65,7 @@ export function prorrataOperations(tools: Tools) {
   const served = servedRefusal(tools.language);
   const prorrata: Prorrata[] = [
     {
-      ejercicio: 2025,
+      ejercicio: PRIOR_YEAR,
       regime: "general",
       sector_id: null,
       provisional: "90",
@@ -72,19 +80,19 @@ export function prorrataOperations(tools: Tools) {
   const sectors: { sector_id: string; letra: string; codes: string[] }[] = [];
   const grossDeclarations: GrossDeclaration[] = [
     {
-      ejercicio: 2026,
+      ejercicio: SCENARIO_YEAR,
       period: "1T",
       sector_id: null,
       gross: "1234.56",
       evidence: "LIQ-2026-1T",
-      declared_at: "2026-02-10T09:00:00Z",
+      declared_at: fixtureInstant(2, 10, "09:00:00Z"),
     },
   ];
   const capital: JsonObject[] = [
     {
       identifier: "BI-2024-01",
       description: "Plotter de gran formato",
-      acquisition_year: 2024,
+      acquisition_year: ACQUISITION_YEAR,
       cuota_soportada: decimal("714"),
       prorrata_inicial_pct: decimal("92"),
       kind: "mueble",

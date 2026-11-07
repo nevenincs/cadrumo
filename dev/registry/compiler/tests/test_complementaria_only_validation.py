@@ -17,6 +17,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema_base import SourceCitation
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition, ComplementariaOnlyDeclaration
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, open_ended_revision
 
 from ..validate_complementaria_only_casillas import validate_complementaria_only_section
 from ..validate_evidence import EvidenceValidator
@@ -27,8 +28,8 @@ if TYPE_CHECKING:
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
-_M130_REVISION = "2019-y-siguientes"
-_M131_REVISIONS = ("2019-2023", "2024", "2025", "2026", "2026-3t-4t")
+_M130_REVISION = str(open_ended_revision("130").id)
+_M131_REVISIONS = tuple(str(revision.id) for revision in authored_revisions("131"))
 
 
 def _revision(authority: ValidatedRegistryAuthority, modelo_id: str, revision_id: str) -> ModeloRevision:

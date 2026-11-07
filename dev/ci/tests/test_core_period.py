@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import calendar
 from datetime import date
 
 import pytest
@@ -18,9 +19,25 @@ from cadrumo.core.period import (
     RegistryPeriodCode,
     StandardPeriodCode,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    open_ended_revision,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+
+FILING_YEAR = filing_year_envelope().horizon
+#: A leap year inside the support envelope, so the February span has its 29th day.
+LEAP_YEAR = max(year for year in filing_year_envelope().years if calendar.isleap(year))
+#: Combined calendar spellings of the filing year that ``Period`` refuses to split.
+_COMBINED_CALENDAR_STRINGS = (
+    f"{FILING_YEAR}Q1",
+    f"{FILING_YEAR}-1T",
+    f"{FILING_YEAR}",
+    f"{FILING_YEAR}-03",
+    f"{FILING_YEAR}A",
+)
 
 #: The tokens a registry ``period_selector`` declares to address a censo or
 #: comunicación revision (Modelo 036 declares the first three, Modelo 145 the
@@ -217,24 +234,24 @@ class TestPeriodTypeBoundarySplit:
     def test_administrative_tokens_are_not_filing_periods(self, token: str) -> None:
         for spelling in (token, token.lower()):
             with pytest.raises(PeriodError):
-                Period.from_year_and_code(2025, spelling)
+                Period.from_year_and_code(FILING_YEAR, spelling)
             with pytest.raises(ValidationError):
                 _validate_filing_test_model(spelling)
 
     def test_symbolic_event_selector_is_not_a_filing_period(self) -> None:
         with pytest.raises(PeriodError):
-            Period.from_year_and_code(2025, SYMBOLIC_EVENT_SELECTOR)
+            Period.from_year_and_code(FILING_YEAR, SYMBOLIC_EVENT_SELECTOR)
         with pytest.raises(ValidationError):
             _validate_filing_test_model(SYMBOLIC_EVENT_SELECTOR)
 
     @pytest.mark.parametrize("token", ("EVENT-3", "EVENT-27", "EVENT-142"))
     def test_concrete_event_numbers_remain_filing_periods(self, token: str) -> None:
         """The positive control: narrowing must not have taken the event family with it."""
-        assert Period.from_year_and_code(2025, token).registry_token == token
+        assert Period.from_year_and_code(FILING_YEAR, token).registry_token == token
 
     def test_filing_refusal_names_the_accepted_filing_set(self) -> None:
         with pytest.raises(PeriodError) as exc_info:
-            Period.from_year_and_code(2025, "ALTA")
+            Period.from_year_and_code(FILING_YEAR, "ALTA")
         message = str(exc_info.value)
         assert "accepted forms" in message
         assert "EXT-1T" in message
@@ -249,8 +266,8 @@ class TestPeriodTypeBoundarySplit:
         assert _validate_test_model(token) == token
         ref = RegistrySnapshotRef(
             modelo="036",
-            revision_id="2025-02-03-y-siguientes",
-            modelo_year=2025,
+            revision_id=open_ended_revision("036").id,
+            modelo_year=FILING_YEAR,
             period=token,
         )
         assert ref.period == token
@@ -267,7 +284,7 @@ class TestPeriodTypeBoundarySplit:
         """The shipped declarations that made the widening necessary in the first place."""
         from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 
-        selector = PeriodSelector(year_from=2012, periods=declared)
+        selector = PeriodSelector(year_from=filing_year_envelope().floor, periods=declared)
 
         assert selector.periods == declared
 
@@ -287,20 +304,20 @@ class TestPeriodConstruction:
             ("EXT-1T", PeriodKind.EXTENDED),
             ("EVENT-3", PeriodKind.EXTENDED),
         ):
-            period = Period.from_year_and_code(2026, code)
-            assert period.filing_year == 2026, code
+            period = Period.from_year_and_code(FILING_YEAR, code)
+            assert period.filing_year == FILING_YEAR, code
             assert period.registry_token == code, code
             assert period.kind is kind, code
 
     def test_combined_calendar_strings_refuse(self) -> None:
-        for combined in ("2026Q1", "2026-1T", "2026", "2026-03", "2026A"):
+        for combined in _COMBINED_CALENDAR_STRINGS:
             with pytest.raises(PeriodError):
-                Period.from_year_and_code(2026, combined)
+                Period.from_year_and_code(FILING_YEAR, combined)
 
     def test_malformed_codes_refuse(self) -> None:
         for bad in ("13", "00", "5T", "0T", "5P", "not-a-period", ""):
             with pytest.raises(PeriodError):
-                Period.from_year_and_code(2026, bad)
+                Period.from_year_and_code(FILING_YEAR, bad)
 
     def test_out_of_range_year_refuses(self) -> None:
         for year in (FOUR_DIGIT_YEAR_FIRST - 1, FOUR_DIGIT_YEAR_LAST + 1):
@@ -308,25 +325,25 @@ class TestPeriodConstruction:
                 Period.from_year_and_code(year, "1T")
 
     def test_lowercase_token_normalises(self) -> None:
-        assert str(Period.from_year_and_code(2026, "ext-2t")) == "2026 EXT-2T"
+        assert str(Period.from_year_and_code(FILING_YEAR, "ext-2t")) == f"{FILING_YEAR} EXT-2T"
 
     def test_from_string_round_trips_canonical_display_projection(self) -> None:
-        period = Period.from_year_and_code(2026, "1T")
+        period = Period.from_year_and_code(FILING_YEAR, "1T")
 
         assert Period.from_string(str(period)) == period
 
     def test_from_string_accepts_current_display_forms(self) -> None:
         for display, expected in (
-            ("2026 1T", Period.from_year_and_code(2026, "1T")),
-            ("2026 03", Period.from_year_and_code(2026, "03")),
-            ("2026 1P", Period.from_year_and_code(2026, "1P")),
-            ("2026 EXT-1T", Period.from_year_and_code(2026, "EXT-1T")),
-            ("2026 EVENT-1", Period.from_year_and_code(2026, "EVENT-1")),
+            (f"{FILING_YEAR} 1T", Period.from_year_and_code(FILING_YEAR, "1T")),
+            (f"{FILING_YEAR} 03", Period.from_year_and_code(FILING_YEAR, "03")),
+            (f"{FILING_YEAR} 1P", Period.from_year_and_code(FILING_YEAR, "1P")),
+            (f"{FILING_YEAR} EXT-1T", Period.from_year_and_code(FILING_YEAR, "EXT-1T")),
+            (f"{FILING_YEAR} EVENT-1", Period.from_year_and_code(FILING_YEAR, "EVENT-1")),
         ):
             assert Period.from_string(display) == expected, display
 
     def test_from_string_refuses_combined_calendar_strings(self) -> None:
-        for combined in ("2026Q1", "2026-1T", "2026", "2026-03", "2026A"):
+        for combined in _COMBINED_CALENDAR_STRINGS:
             with pytest.raises(PeriodError, match="expected 'YYYY <period-code>'"):
                 Period.from_string(combined)
 
@@ -353,16 +370,23 @@ class TestPeriodAccessors:
         code: str,
         expected_quarter_ordinal: int | None,
     ) -> None:
-        period = Period.from_year_and_code(2026, code)
+        period = Period.from_year_and_code(FILING_YEAR, code)
 
         assert period.quarter_ordinal == expected_quarter_ordinal
         assert period.is_quarterly is (expected_quarter_ordinal is not None)
 
     def test_period_date_span(self) -> None:
         for year, code, expected_start, expected_end, inside, outside in (
-            (2026, "1T", date(2026, 1, 1), date(2026, 3, 31), date(2026, 2, 15), date(2026, 4, 1)),
-            (2026, "0A", date(2026, 1, 1), date(2026, 12, 31), None, None),
-            (2024, "02", date(2024, 2, 1), date(2024, 2, 29), None, None),
+            (
+                FILING_YEAR,
+                "1T",
+                date(FILING_YEAR, 1, 1),
+                date(FILING_YEAR, 3, 31),
+                date(FILING_YEAR, 2, 15),
+                date(FILING_YEAR, 4, 1),
+            ),
+            (FILING_YEAR, "0A", date(FILING_YEAR, 1, 1), date(FILING_YEAR, 12, 31), None, None),
+            (LEAP_YEAR, "02", date(LEAP_YEAR, 2, 1), date(LEAP_YEAR, 2, 29), None, None),
         ):
             period = Period.from_year_and_code(year, code)
             assert period.has_date_span() is True, code
@@ -374,20 +398,20 @@ class TestPeriodAccessors:
                 assert period.contains(outside) is False, code
 
     def test_filing_year_is_the_only_year_field(self) -> None:
-        period = Period.from_year_and_code(2026, "1T")
+        period = Period.from_year_and_code(FILING_YEAR, "1T")
 
-        assert period.filing_year == 2026
+        assert period.filing_year == FILING_YEAR
         assert not hasattr(period, "year")
 
     def test_standard_code_for_standard_token(self) -> None:
-        assert Period.from_year_and_code(2026, "3T").standard_code is StandardPeriodCode.Q3
+        assert Period.from_year_and_code(FILING_YEAR, "3T").standard_code is StandardPeriodCode.Q3
 
     def test_standard_code_none_for_extended(self) -> None:
-        assert Period.from_year_and_code(2026, "EXT-1T").standard_code is None
+        assert Period.from_year_and_code(FILING_YEAR, "EXT-1T").standard_code is None
 
     def test_non_span_periods_refuse_date_access(self) -> None:
         for code in ("1P", "EXT-1T", "EVENT-1"):
-            period = Period.from_year_and_code(2026, code)
+            period = Period.from_year_and_code(FILING_YEAR, code)
             assert period.has_date_span() is False, code
             with pytest.raises(PeriodError):
                 _ = period.start_date
@@ -399,38 +423,38 @@ class TestPeriodValueSemantics:
     """Verify equality, hashing, string projection, and serialisation."""
 
     def test_equality_by_year_and_code(self) -> None:
-        assert Period.from_year_and_code(2026, "1T") == Period.from_year_and_code(2026, "1T")
-        assert Period.from_year_and_code(2026, "1T") != Period.from_year_and_code(2026, "2T")
-        assert Period.from_year_and_code(2026, "1T") != Period.from_year_and_code(2025, "1T")
+        assert Period.from_year_and_code(FILING_YEAR, "1T") == Period.from_year_and_code(FILING_YEAR, "1T")
+        assert Period.from_year_and_code(FILING_YEAR, "1T") != Period.from_year_and_code(FILING_YEAR, "2T")
+        assert Period.from_year_and_code(FILING_YEAR, "1T") != Period.from_year_and_code(FILING_YEAR - 1, "1T")
 
     def test_hashable_as_dict_key_and_set_member(self) -> None:
-        a = Period.from_year_and_code(2026, "1T")
-        b = Period.from_year_and_code(2026, "1T")
+        a = Period.from_year_and_code(FILING_YEAR, "1T")
+        b = Period.from_year_and_code(FILING_YEAR, "1T")
         assert len({a, b}) == 1
         mapping = {a: "value"}
         assert mapping[b] == "value"
 
     def test_frozen(self) -> None:
-        period = Period.from_year_and_code(2026, "1T")
+        period = Period.from_year_and_code(FILING_YEAR, "1T")
         with pytest.raises(ValidationError):
-            period.__setattr__("filing_year", 2025)
+            period.__setattr__("filing_year", FILING_YEAR - 1)
 
     def test_str_is_the_separated_form_not_combined(self) -> None:
-        assert str(Period.from_year_and_code(2026, "1T")) == "2026 1T"
-        assert str(Period.from_year_and_code(2026, "0A")) == "2026 0A"
+        assert str(Period.from_year_and_code(FILING_YEAR, "1T")) == f"{FILING_YEAR} 1T"
+        assert str(Period.from_year_and_code(FILING_YEAR, "0A")) == f"{FILING_YEAR} 0A"
         # The killed combined form must never be the display projection.
-        assert "Q" not in str(Period.from_year_and_code(2026, "1T"))
+        assert "Q" not in str(Period.from_year_and_code(FILING_YEAR, "1T"))
 
     def test_repr_round_trips_through_constructor(self) -> None:
-        period = Period.from_year_and_code(2026, "03")
-        assert repr(period) == "Period(filing_year=2026, code='03')"
+        period = Period.from_year_and_code(FILING_YEAR, "03")
+        assert repr(period) == f"Period(filing_year={FILING_YEAR}, code='03')"
 
     def test_json_serialises_to_structured_pair_not_combined_string(self) -> None:
-        period = Period.from_year_and_code(2026, "1T")
-        assert period.model_dump() == {"filing_year": 2026, "code": "1T"}
-        assert period.model_dump_json() == '{"filing_year":2026,"code":"1T"}'
+        period = Period.from_year_and_code(FILING_YEAR, "1T")
+        assert period.model_dump() == {"filing_year": FILING_YEAR, "code": "1T"}
+        assert period.model_dump_json() == f'{{"filing_year":{FILING_YEAR},"code":"1T"}}'
 
     def test_json_round_trip_equality(self) -> None:
-        period = Period.from_year_and_code(2026, "2T")
+        period = Period.from_year_and_code(FILING_YEAR, "2T")
         restored = Period.model_validate_json(period.model_dump_json())
         assert restored == period

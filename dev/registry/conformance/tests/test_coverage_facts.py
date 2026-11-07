@@ -21,10 +21,13 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError, RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ...compiler.authority import compiled_bundled_authority
 from ..coverage import build_model_law_coverage_ledger
 from ..coverage_facts import coverage_facts
+
+FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -80,8 +83,8 @@ def test_a_ledger_built_from_either_projection_is_the_same_ledger(authority) -> 
     one projection for the other across 884 coordinates, so a divergence here
     would silently alter published coverage findings rather than fail loudly.
     """
-    snapshot = authority.snapshot("303", filing_year=2026, period="1T")
-    facts = coverage_facts(authority, "303", filing_year=2026, period="1T")
+    snapshot = authority.snapshot("303", filing_year=FILING_YEAR, period="1T")
+    facts = coverage_facts(authority, "303", filing_year=FILING_YEAR, period="1T")
 
     assert build_model_law_coverage_ledger(snapshot).model_dump_json() == (
         build_model_law_coverage_ledger(facts).model_dump_json()
@@ -111,7 +114,7 @@ def test_what_it_hands_out_is_a_copy_and_not_cached_registry_state(authority) ->
     that a deepcopy call is present, because the second proves the code was
     written and the first proves it works.
     """
-    first = coverage_facts(authority, "303", filing_year=2026, period="1T")
+    first = coverage_facts(authority, "303", filing_year=FILING_YEAR, period="1T")
     assert first.sources, "the fixture coordinate must carry sources for this to prove anything"
     handed_out = first.sources
     victim = next(iter(handed_out))
@@ -127,7 +130,7 @@ def test_what_it_hands_out_is_a_copy_and_not_cached_registry_state(authority) ->
             # not support, to prove it fails closed at runtime.
             del cast(Any, handed_out)[victim]
 
-    second = coverage_facts(authority, "303", filing_year=2026, period="1T")
+    second = coverage_facts(authority, "303", filing_year=FILING_YEAR, period="1T")
     assert victim in second.sources, "a deletion from one caller's facts reached the registry"
     if isinstance(handed_out, MutableMapping):
         # Only a mutable mapping has to be a distinct object; an immutable one

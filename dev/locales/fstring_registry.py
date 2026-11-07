@@ -734,6 +734,7 @@ def _declarations_workspace_registrations() -> tuple[FStringKeyRegistration, ...
     from cadrumo.application.overview.coverage import CoverageAdviceReason
     from cadrumo.domain.deadlines.models import ObligationStatus
     from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
+    from cadrumo.domain.modelos.filing_record import AeatConfirmationState, FilingDeclarationKind, ModeloRecordStatus
     from cadrumo.domain.modelos.work_unit import WorkUnitState
     from cadrumo.entrypoints.tui.declarations.models import DeclarationsCalendarScopeV1
 
@@ -789,6 +790,21 @@ def _declarations_workspace_registrations() -> tuple[FStringKeyRegistration, ...
             description="workspace.declarations.lifecycle.* (DeclarationsLifecycleKind)",
             key_factory=lambda v: f"workspace.declarations.lifecycle.{v}",
             values=_values(DeclarationsLifecycleKind),
+        ),
+        FStringKeyRegistration(
+            description="workspace.declarations.declaration_kind.* (FilingDeclarationKind)",
+            key_factory=lambda v: f"workspace.declarations.declaration_kind.{v}",
+            values=_values(FilingDeclarationKind),
+        ),
+        FStringKeyRegistration(
+            description="workspace.declarations.confirmation.* (AeatConfirmationState)",
+            key_factory=lambda v: f"workspace.declarations.confirmation.{v}",
+            values=_values(AeatConfirmationState),
+        ),
+        FStringKeyRegistration(
+            description="workspace.declarations.filing_state.* (ModeloRecordStatus)",
+            key_factory=lambda v: f"workspace.declarations.filing_state.{v}",
+            values=_values(ModeloRecordStatus),
         ),
         FStringKeyRegistration(
             description="workspace.declarations.work_state.* (WorkUnitState)",

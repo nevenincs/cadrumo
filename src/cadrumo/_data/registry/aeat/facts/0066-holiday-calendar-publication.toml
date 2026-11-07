@@ -15,6 +15,50 @@ fact_id = "deadlines.holiday-calendar-publication"
 family = "event"
 
 [[fact.variants]]
+variant_id = "holiday-calendar-publication:2022"
+date_axis = "submission_date"
+valid_from = 2022-01-01
+valid_to = 2022-12-31
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo"]
+source_refs = ["boe-dias-inhabiles-age-2022"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-dias-inhabiles-age-2022"
+required_text = ["2022-Calendario de días inhábiles"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2022-01-01
+event_code = "holiday_calendar_published"
+outputs = [
+  { name = "boe_ref", value = "resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799" },
+  { name = "verified_territories", value = "ES-AN,ES-AR,ES-AS,ES-IB,ES-CN,ES-CB,ES-CM,ES-CL,ES-CT,ES-EX,ES-GA,ES-RI,ES-MD,ES-MC,ES-NC,ES-PV,ES-VC,ES-CE,ES-ML" },
+]
+
+[[fact.variants]]
+variant_id = "holiday-calendar-publication:2023"
+date_axis = "submission_date"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo"]
+source_refs = ["boe-dias-inhabiles-age-2023"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-dias-inhabiles-age-2023"
+required_text = ["2023 - Calendario de días inhábiles"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2023-01-01
+event_code = "holiday_calendar_published"
+outputs = [
+  { name = "boe_ref", value = "resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309" },
+  { name = "verified_territories", value = "ES-AN,ES-AR,ES-AS,ES-IB,ES-CN,ES-CB,ES-CM,ES-CL,ES-CT,ES-EX,ES-GA,ES-RI,ES-MD,ES-MC,ES-NC,ES-PV,ES-VC,ES-CE,ES-ML" },
+]
+
+[[fact.variants]]
 variant_id = "holiday-calendar-publication:2024"
 date_axis = "submission_date"
 valid_from = 2024-01-01

@@ -15,12 +15,15 @@ import pytest
 from cadrumo.adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation
 from cadrumo.core.identity.tax_id import tax_id_identity_token
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva_compensation.carry_forward import (
     IvaCompensationCarryForwardLot,
     IvaCompensationExpiryReviewState,
 )
 from cadrumo.entrypoints.live_state_composition import carry_forward_lot_row, taxpayer_ref
 from cadrumo.tests.aeat_literal_fixtures import IVA_WALLET_SOURCE_URL_FIXTURE
+
+FILING_YEAR = filing_year_envelope().horizon
 
 # The lot's taxpayer NIF is validated against the registry's governed tax-ID
 # format, so constructing one needs the same authority scope the product has.
@@ -34,8 +37,8 @@ _SYNTHETIC_NIF = "00001005Q"
 def _lot(taxpayer_nif: str | None) -> IvaCompensationCarryForwardLot:
     return IvaCompensationCarryForwardLot(
         taxpayer_nif=taxpayer_nif,
-        source_filing_year=2026,
-        source_period=Period.model_validate({"filing_year": 2026, "code": "1T"}),
+        source_filing_year=FILING_YEAR,
+        source_period=Period.model_validate({"filing_year": FILING_YEAR, "code": "1T"}),
         generated_amount=Decimal("100.00"),
         applied_amount=Decimal("40.00"),
         remaining_amount=Decimal("60.00"),
@@ -110,11 +113,11 @@ def test_the_blank_subject_is_reachable_through_the_wallet_observation() -> None
     observation = IvaCompensationWalletObservation(
         taxpayer_nif="\xa0",
         authenticated_identity=_SYNTHETIC_NIF,
-        target_year=2026,
-        target_period=Period.model_validate({"filing_year": 2026, "code": "1T"}),
+        target_year=FILING_YEAR,
+        target_period=Period.model_validate({"filing_year": FILING_YEAR, "code": "1T"}),
         total_pending=Decimal("0"),
         source_url=IVA_WALLET_SOURCE_URL_FIXTURE,
-        captured_at=datetime(2026, 4, 1, tzinfo=UTC),
+        captured_at=datetime(FILING_YEAR, 4, 1, tzinfo=UTC),
     )
 
     # Full validation ran -- model_construct would have proved nothing here.

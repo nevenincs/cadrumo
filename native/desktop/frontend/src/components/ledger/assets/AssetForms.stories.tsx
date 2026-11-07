@@ -17,6 +17,7 @@ import { CorrectForm } from "./CorrectForm";
 import { DescribeForm } from "./DescribeForm";
 import { ASSET_KEYS } from "./assetsWords";
 import { translator } from "../../../shell/strings";
+import { fixtureDay } from "@/dev/fixtureDates";
 
 /** The year of the scenario's date, which the seeded plans are written around. */
 const scenarioYear = Number(SCENARIO_TODAY.slice(0, 4));
@@ -247,7 +248,7 @@ export const AddElementOutsideLedger: Story = adding({
     (root) => chosenValue(root, "asset_kind", "material"),
     (root) => typed(root, "in_service_date", `${scenarioYear}-06-15`),
     (root) => chosen(root, "acquisition_shape", 1),
-    (root) => typed(root, "declared_acquisition_date", "2024-11-05"),
+    (root) => typed(root, "declared_acquisition_date", fixtureDay(11, 5, -2)),
     (root) => chosen(root, "declared_activity", 0),
     (root) => typed(root, "acquisition_reference", "Factura 2024-118"),
   ),
@@ -258,7 +259,7 @@ export const AddElementOutsideLedgerLaterPayment: Story = adding({
     (root) => chosenValue(root, "asset_kind", "material"),
     (root) => typed(root, "in_service_date", `${scenarioYear}-06-15`),
     (root) => chosen(root, "acquisition_shape", 1),
-    (root) => typed(root, "declared_acquisition_date", "2024-11-05"),
+    (root) => typed(root, "declared_acquisition_date", fixtureDay(11, 5, -2)),
     (root) => chosen(root, "declared_activity", 0),
     (root) => typed(root, "acquisition_reference", "Factura 2024-118"),
     (root) => chosen(root, "further_purchase", 0),

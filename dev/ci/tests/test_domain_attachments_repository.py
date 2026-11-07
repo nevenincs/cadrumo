@@ -18,6 +18,9 @@ from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
 from cadrumo.domain.attachments.errors import AttachmentNotFoundError, AttachmentValidationError
 from cadrumo.domain.attachments.models import Attachment
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
+FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -36,7 +39,7 @@ def _attachment(body: bytes, *, tx_id: str = "tx-001", bucket_id: str | None = _
         sha256=digest,
         mime_type="application/pdf",
         bytes_size=len(body),
-        captured_at=datetime(2026, 4, 27, 10, 0, tzinfo=UTC),
+        captured_at=datetime(FILING_YEAR, 4, 27, 10, 0, tzinfo=UTC),
         linked_transaction_ids=(tx_id,),
         bucket_id=bucket_id,
         captured_by="operator-A",
@@ -99,7 +102,7 @@ def test_un_enveloped_blob_is_refused(
         object_key=digest,
         classification=ATTACHMENT_BLOB_NAMESPACE.sensitivity,
         schema_version=ATTACHMENT_BLOB_NAMESPACE.schema_version,
-        written_at=datetime(2026, 4, 27, 10, 0, tzinfo=UTC),
+        written_at=datetime(FILING_YEAR, 4, 27, 10, 0, tzinfo=UTC),
         payload=body,
     )
 
@@ -171,7 +174,7 @@ def test_foreign_bucket_manifest_is_isolated_from_load_and_listing(
     foreign = _attachment(body, bucket_id=_FOREIGN_BUCKET_ID)
     envelope = Envelope[Attachment](
         schema_version=ATTACHMENT_MANIFEST_NAMESPACE.schema_version,
-        written_at=datetime(2026, 4, 27, 10, 0, tzinfo=UTC),
+        written_at=datetime(FILING_YEAR, 4, 27, 10, 0, tzinfo=UTC),
         classification=ATTACHMENT_MANIFEST_NAMESPACE.sensitivity,
         payload=foreign,
     )

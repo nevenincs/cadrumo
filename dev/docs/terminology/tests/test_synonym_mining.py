@@ -8,6 +8,7 @@ import pytest
 from typer.testing import CliRunner
 
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ...terminology_handbook.loader import load_terminology_handbook
 from ..sweep_runner import enumerate_query_vocabulary
@@ -105,7 +106,7 @@ def test_ratified_candidate_must_land_in_handbook() -> None:
                 competing_concept_id="prorrata-especial",
                 status=RatificationStatus.RATIFIED,
                 review_reason="Reviewer accepted this candidate for the test queue.",
-                reviewed_at=date(2026, 6, 10),
+                reviewed_at=date(filing_year_envelope().horizon, 6, 10),
             ),
         ),
     )

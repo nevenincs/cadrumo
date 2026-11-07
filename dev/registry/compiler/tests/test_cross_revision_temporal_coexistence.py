@@ -9,6 +9,7 @@ import pytest
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..validate_cross_revision import (
     cross_revision_casilla_consistency_failures,
@@ -16,6 +17,8 @@ from ..validate_cross_revision import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def _casilla(*, data_type: str, continuidad_id: str | None = None) -> CasillaDefinition:
@@ -48,7 +51,7 @@ def _revision(
             "localization_key": f"test.registry.revision.{revision_id}.label",
             "valid_from": valid_from,
             "valid_to": valid_to,
-            "period_selector": PeriodSelector(years=(2025,), periods=("alta",)),
+            "period_selector": PeriodSelector(years=(_YEAR,), periods=("alta",)),
             "legal_refs": ("ley-58-2003:art-29",),
             "source_refs": ("aeat-manual",),
             "casillas": (casilla,),
@@ -77,13 +80,13 @@ def test_shared_filing_coordinate_across_disjoint_date_windows_is_not_simultaneo
     modelo = _modelo(
         _revision(
             "before-cutover",
-            valid_from=date(2023, 1, 1),
-            valid_to=date(2025, 2, 2),
+            valid_from=date(_YEAR - 2, 1, 1),
+            valid_to=date(_YEAR, 2, 2),
             casilla=_casilla(data_type="money"),
         ),
         _revision(
             "after-cutover",
-            valid_from=date(2025, 2, 3),
+            valid_from=date(_YEAR, 2, 3),
             valid_to=None,
             casilla=_casilla(data_type="decimal"),
         ),
@@ -96,13 +99,13 @@ def test_shared_filing_coordinate_with_intersecting_date_windows_still_fails() -
     modelo = _modelo(
         _revision(
             "variant-a",
-            valid_from=date(2025, 1, 1),
-            valid_to=date(2025, 12, 31),
+            valid_from=date(_YEAR, 1, 1),
+            valid_to=date(_YEAR, 12, 31),
             casilla=_casilla(data_type="money"),
         ),
         _revision(
             "variant-b",
-            valid_from=date(2025, 2, 3),
+            valid_from=date(_YEAR, 2, 3),
             valid_to=None,
             casilla=_casilla(data_type="decimal"),
         ),
@@ -118,13 +121,13 @@ def test_disjoint_date_windows_remain_subject_to_strict_successive_continuity() 
     modelo = _modelo(
         _revision(
             "before-cutover",
-            valid_from=date(2023, 1, 1),
-            valid_to=date(2025, 2, 2),
+            valid_from=date(_YEAR - 2, 1, 1),
+            valid_to=date(_YEAR, 2, 2),
             casilla=_casilla(data_type="money", continuidad_id="test-value"),
         ),
         _revision(
             "after-cutover",
-            valid_from=date(2025, 2, 3),
+            valid_from=date(_YEAR, 2, 3),
             valid_to=None,
             casilla=_casilla(data_type="decimal", continuidad_id="test-value"),
             strict=True,

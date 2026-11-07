@@ -10,6 +10,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ..loader import load_modelo_directory
 from ..validate_export_field_placement import (
@@ -24,7 +25,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def _real_dpa_selector() -> tuple[ExportRecordDefinition, PlacedSpan, dict[str, tuple[PlacedSpan, ...]]]:
     modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "131"))
-    revision = modelo.revisions["2024"]
+    revision = modelo.revisions[str(authored_revisions("131")[-1].id)]
     record = next(record for record in revision.export_layouts[0].records if record.binding_record == "DPA")
     spans = dict(binding_export_spans(revision))
     selector = next(span for span in spans["DPA"] if span.offset == 13)

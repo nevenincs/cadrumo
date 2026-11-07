@@ -45,6 +45,7 @@ from cadrumo.domain.calculations.registry.schema_references import (
     PeriodSelector,
     SourceReference,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.log_records import delivered_records
 
 from ...conformance.stamp import bundled_registry_root
@@ -65,10 +66,12 @@ from ..validate_exports import validate_export_layout_section
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _MODELO = "999"
-_REVISION = "2016-2017"
-_REVISION_LAST_YEAR = 2017
 #: Distinct from the floor the shipped legal tree declares, on purpose.
-_FIXTURE_FLOOR = 2019
+_FIXTURE_FLOOR = filing_year_envelope().floor + 1
+_REVISION_LAST_YEAR = _FIXTURE_FLOOR - 2
+_REVISION_FIRST_YEAR = _REVISION_LAST_YEAR - 1
+_REVISION = f"{_REVISION_FIRST_YEAR}-{_REVISION_LAST_YEAR}"
+_NEIGHBOUR_REVISION = f"{_REVISION_FIRST_YEAR - 2}-{_REVISION_FIRST_YEAR - 1}"
 _DANGLING_MARKER = "references unknown binding"
 
 _LEGAL_REF = "ley-fixture:art-1"
@@ -119,9 +122,9 @@ def _legal_reference() -> LegalReference:
         corpus_ref="boe/fixture#art-1",
         document_id="BOE-A-2006-20764",
         permalink="https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
-        effective_from=date(2006, 11, 30),
+        effective_from=date(_REVISION_FIRST_YEAR - 10, 11, 30),
         review_status="operator_reviewed",
-        reviewed_at=date(2026, 7, 1),
+        reviewed_at=date(filing_year_envelope().horizon, 7, 1),
         reviewed_by="fixture",
         required_text=("art-1",),
     )
@@ -136,7 +139,7 @@ def _source_reference() -> SourceReference:
         corpus_path="registry/aeat/sources/fixture-design.pdf",
         sha256=_SOURCE_SHA256,
         bytes=1024,
-        retrieved_at=date(2024, 1, 1),
+        retrieved_at=date(_REVISION_FIRST_YEAR, 1, 1),
         source_url="https://sede.agenciatributaria.gob.es/fixture-design.pdf",
         review_status="pending_review",
     )
@@ -185,8 +188,8 @@ def _revision(*extra_fields: ExportFieldDefinition, dangling: Iterable[str] = _D
     return ModeloRevision(
         id=_REVISION,
         localization_key="test.below_floor.revision.label",
-        valid_from=date(2016, 1, 1),
-        period_selector=PeriodSelector(years=(2016, _REVISION_LAST_YEAR), periods=("0A",)),
+        valid_from=date(_REVISION_FIRST_YEAR, 1, 1),
+        period_selector=PeriodSelector(years=(_REVISION_FIRST_YEAR, _REVISION_LAST_YEAR), periods=("0A",)),
         legal_refs=(_LEGAL_REF,),
         source_refs=(_SOURCE_REF,),
         bindings=(declared,),
@@ -367,7 +370,7 @@ def test_without_the_row_the_same_revision_still_refuses(tmp_path: Path) -> None
 
 def test_a_row_for_another_revision_does_not_cover_this_one(tmp_path: Path) -> None:
     """A row is keyed by modelo and revision, so a neighbour's declaration explains nothing here."""
-    carrier = _carrier(tmp_path, rows=[_row(revision="2014-2015")])
+    carrier = _carrier(tmp_path, rows=[_row(revision=_NEIGHBOUR_REVISION)])
     failures = carrier.export_failures()
 
     kept, advisories = carrier.advisories(failures)
@@ -379,12 +382,12 @@ def test_a_row_for_another_revision_does_not_cover_this_one(tmp_path: Path) -> N
 def test_a_row_pinned_to_a_floor_the_registry_no_longer_declares_is_not_honoured(tmp_path: Path) -> None:
     """A stale floor describes a registry that no longer exists, so the refusals return.
 
-    The recorded floor is lowered to 2018, which the ledger loader still accepts
-    because 2017 stays below it. What retires the row here is the live
-    declaration: the legal tree says 2019, and a row written against a different
-    floor no longer explains this registry.
+    The recorded floor is lowered to one above the revision's last year, which the
+    ledger loader still accepts because that year stays below it. What retires the
+    row here is the live declaration: the legal tree says a different floor, and a
+    row written against a different floor no longer explains this registry.
     """
-    carrier = _carrier(tmp_path, rows=[_row(supported_filing_years_floor=2018)])
+    carrier = _carrier(tmp_path, rows=[_row(supported_filing_years_floor=_REVISION_LAST_YEAR + 1)])
     assert disposition_ledger_from_path(carrier.ledger_path)
     failures = carrier.export_failures()
 
@@ -531,7 +534,7 @@ def test_a_row_the_declared_floor_no_longer_excludes_is_a_disagreement(tmp_path:
     _write_tree(carrier.registry_root)
     declaration = carrier.registry_root / "legal" / "supported-filing-years.toml"
     declaration.write_text(
-        rtoml.dumps({"supported_filing_years": {"floor": _REVISION_LAST_YEAR, "horizon": 2024}}),
+        rtoml.dumps({"supported_filing_years": {"floor": _REVISION_LAST_YEAR, "horizon": _FIXTURE_FLOOR + 5}}),
         encoding="utf-8",
     )
 

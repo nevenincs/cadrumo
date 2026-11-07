@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ..cli_journey import main
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -31,7 +33,7 @@ def test_a_nonempty_store_refuses_before_any_installed_command(tmp_path: Path) -
             "--receipt",
             str(receipt),
             "--year",
-            "2025",
+            str(filing_year_envelope().horizon),
             "--package-identity",
             "test-source",
         )

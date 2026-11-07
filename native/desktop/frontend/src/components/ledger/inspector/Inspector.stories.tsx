@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { userEvent, waitFor } from "storybook/test";
+import { SEALED_PERIOD } from "@/dev/fixtures/ledger";
 import { typeAsAPerson } from "@/dev/personTyping";
 import {
   STORY_PERIOD,
@@ -28,6 +29,16 @@ import { SplitDialog } from "./SplitDialog";
 // removal follow.
 
 const noop = () => undefined;
+
+/** The quarter a finalized declaration cites, and the months of it, which the
+ * sealed movements fall in. */
+const SEALED_STORY_PERIOD: LedgerPeriod = {
+  year: SEALED_PERIOD.filing_year,
+  code: SEALED_PERIOD.code,
+};
+const SEALED_STORY_MONTHS = ["01", "02", "03"].map(
+  (month) => `${SEALED_PERIOD.filing_year}-${month}`,
+);
 const NOT_FOCUSED: InspectorFocus = { section: null, index: false, tick: 0 };
 
 type Args = {
@@ -210,11 +221,11 @@ export const Transfer: Story = {
 export const Sealed: Story = {
   name: "A movement a filed declaration cites",
   args: {
-    period: { year: 2026, code: "1T" },
+    period: SEALED_STORY_PERIOD,
     selected: storyMovementIds(
       (m) => m.sealed && m.transaction.direction === "OUTGOING",
       1,
-      ["2026-01", "2026-02", "2026-03"],
+      SEALED_STORY_MONTHS,
     ),
   },
 };
@@ -496,9 +507,9 @@ export const ActionRemoveSealed: StoryObj<ActionArgs> = {
     storyMovementIds(
       (m) => m.sealed && m.transaction.direction === "OUTGOING",
       1,
-      ["2026-01", "2026-02", "2026-03"],
+      SEALED_STORY_MONTHS,
     ),
-    { year: 2026, code: "1T" },
+    SEALED_STORY_PERIOD,
   ),
 };
 export const ActionMerge: StoryObj<ActionArgs> = {

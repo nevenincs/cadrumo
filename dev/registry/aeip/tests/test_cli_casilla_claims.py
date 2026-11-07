@@ -24,6 +24,8 @@ from dataclasses import dataclass
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ..cli import casilla_claims, load
 
 #: Floors for the live modelo 100 family. It yields 314 same-revision keys and
@@ -31,6 +33,9 @@ from ..cli import casilla_claims, load
 #: never fires them but a family the analysis stopped reaching does.
 _MINIMUM_LIVE_REVISION_KEYS = 200
 _MINIMUM_LIVE_REASSIGNED_CASILLAS = 20
+
+_LATER = str(filing_year_envelope().horizon)
+_EARLIER = str(filing_year_envelope().horizon - 1)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -59,13 +64,13 @@ def _inventory(*events: _Event) -> _Inventory:
 def test_two_programmes_sharing_a_casilla_in_one_revision_collide() -> None:
     """The real ambiguity: within one revision an id can name only one programme."""
     inventory = _inventory(
-        _Event("alpha", (_Occurrence("2024", "0100"),)),
-        _Event("bravo", (_Occurrence("2024", "0100"),)),
+        _Event("alpha", (_Occurrence(_LATER, "0100"),)),
+        _Event("bravo", (_Occurrence(_LATER, "0100"),)),
     )
 
     within_revision, _ = casilla_claims(inventory)
 
-    assert within_revision[("2024", "0100")] == {"alpha", "bravo"}
+    assert within_revision[(_LATER, "0100")] == {"alpha", "bravo"}
 
 
 def test_an_id_reassigned_in_a_later_revision_is_not_a_collision() -> None:
@@ -75,8 +80,8 @@ def test_an_id_reassigned_in_a_later_revision_is_not_a_collision() -> None:
     given to another programme the next is the registry working as intended.
     """
     inventory = _inventory(
-        _Event("alpha", (_Occurrence("2023", "0100"),)),
-        _Event("bravo", (_Occurrence("2024", "0100"),)),
+        _Event("alpha", (_Occurrence(_EARLIER, "0100"),)),
+        _Event("bravo", (_Occurrence(_LATER, "0100"),)),
     )
 
     within_revision, pooled = casilla_claims(inventory)
@@ -88,7 +93,7 @@ def test_an_id_reassigned_in_a_later_revision_is_not_a_collision() -> None:
 def test_one_programme_keeping_its_casilla_across_revisions_is_neither() -> None:
     """Continuity is the family's normal shape and must register as nothing."""
     inventory = _inventory(
-        _Event("alpha", (_Occurrence("2023", "0100"), _Occurrence("2024", "0100"))),
+        _Event("alpha", (_Occurrence(_EARLIER, "0100"), _Occurrence(_LATER, "0100"))),
     )
 
     within_revision, pooled = casilla_claims(inventory)
@@ -100,14 +105,14 @@ def test_one_programme_keeping_its_casilla_across_revisions_is_neither() -> None
 def test_a_collision_is_reported_against_its_own_revision() -> None:
     """A finding naming no revision sends a reader through every year to find it."""
     inventory = _inventory(
-        _Event("alpha", (_Occurrence("2023", "0100"), _Occurrence("2024", "0200"))),
-        _Event("bravo", (_Occurrence("2024", "0200"),)),
+        _Event("alpha", (_Occurrence(_EARLIER, "0100"), _Occurrence(_LATER, "0200"))),
+        _Event("bravo", (_Occurrence(_LATER, "0200"),)),
     )
 
     within_revision, _ = casilla_claims(inventory)
     collisions = [key for key, slugs in within_revision.items() if len(slugs) > 1]
 
-    assert collisions == [("2024", "0200")]
+    assert collisions == [(_LATER, "0200")]
 
 
 def test_an_empty_family_yields_no_claims() -> None:

@@ -7,6 +7,7 @@ import type {
   JsonValue,
   LedgerDefinitionId,
 } from "../shell/ledger";
+import { SCENARIO_TODAY } from "./assetsRegister";
 import {
   DATE,
   SetupStopped,
@@ -20,6 +21,12 @@ import {
   type Handler,
   type Tools,
 } from "./ledgerSetupSupport";
+import { fixtureDay, fixtureInstant } from "@/dev/fixtureDates";
+
+/** The year the scenario stands in, and the one before it: the two years the
+ * books are kept for. */
+const SCENARIO_YEAR = Number(SCENARIO_TODAY.slice(0, 4));
+const PRIOR_YEAR = SCENARIO_YEAR - 1;
 
 /** Reasons the catalogue names otherwise than the typed reason is. */
 const REASON_KEY_NAMES: Record<string, string> = {
@@ -113,13 +120,13 @@ export function inventoryOperations(tools: Tools) {
   const books: Book[] = [
     {
       actividad_id: "Papelería y reprografía",
-      year: 2026,
+      year: SCENARIO_YEAR,
       valuation_method: "fifo",
       opening_stock: "410",
       movements: [
         {
           movement_id: "b1f7c6d2-5f0e-4a43-9d53-2c9a6c1e7a10",
-          movement_date: "2026-01-02",
+          movement_date: fixtureDay(1, 2),
           kind: "opening",
           sku: "papel-a3",
           quantity: decimal("100"),
@@ -135,13 +142,13 @@ export function inventoryOperations(tools: Tools) {
     },
     {
       actividad_id: "Venta en línea de material de dibujo",
-      year: 2026,
+      year: SCENARIO_YEAR,
       valuation_method: "pmp",
       opening_stock: "0",
       movements: [
         {
           movement_id: "e3a9c5d1-4b72-4f08-9d16-5a2c7e0b8f43",
-          movement_date: "2026-03-04",
+          movement_date: fixtureDay(3, 4),
           kind: "purchase",
           sku: "papel-a3",
           quantity: decimal("100"),
@@ -212,13 +219,13 @@ export function inventoryOperations(tools: Tools) {
     },
     {
       actividad_id: "Papelería y reprografía",
-      year: 2025,
+      year: PRIOR_YEAR,
       valuation_method: "fifo",
       opening_stock: "380",
       movements: [
         {
           movement_id: "0c4a6b8e-93d1-4e0b-8a3f-6f1d2b7c5e21",
-          movement_date: "2025-01-03",
+          movement_date: fixtureDay(1, 3, -1),
           kind: "opening",
           sku: "papel-a3",
           quantity: decimal("100"),
@@ -230,7 +237,7 @@ export function inventoryOperations(tools: Tools) {
         },
         {
           movement_id: "7d2e9f14-6a35-4c8b-b1e0-3a5c8d9f0b32",
-          movement_date: "2025-11-20",
+          movement_date: fixtureDay(11, 20, -1),
           kind: "cogs",
           sku: "papel-a3",
           quantity: decimal("60"),
@@ -253,7 +260,7 @@ export function inventoryOperations(tools: Tools) {
         {
           correction_id: "3e6a1f90-2b4d-4c7e-9a15-8d0c7b2f4e61",
           kind: "opening_corrected",
-          recorded_at: "2025-02-10T09:30:00Z",
+          recorded_at: fixtureInstant(2, 10, "09:30:00Z", -1),
           actor: "runtime",
           correction_reason: "keying_error",
           retirement_reason: null,
@@ -266,13 +273,13 @@ export function inventoryOperations(tools: Tools) {
         {
           correction_id: "a94b0d7c-5e12-4f38-b6a9-1c3e7d5f2a80",
           kind: "movement_corrected",
-          recorded_at: "2025-11-24T17:05:00Z",
+          recorded_at: fixtureInstant(11, 24, "17:05:00Z", -1),
           actor: "runtime",
           correction_reason: "source_document_corrected",
           retirement_reason: null,
           superseded_movement: {
             movement_id: "c8f1d3a5-7b29-4e60-a4d2-9f0b6e8c1a73",
-            movement_date: "2025-11-20",
+            movement_date: fixtureDay(11, 20, -1),
             kind: "cogs",
             sku: "papel-a3",
             quantity: decimal("50"),
@@ -291,7 +298,7 @@ export function inventoryOperations(tools: Tools) {
     },
     {
       actividad_id: "Taller de enmarcado",
-      year: 2025,
+      year: PRIOR_YEAR,
       valuation_method: "coste_medio",
       opening_stock: "90",
       movements: [],
@@ -304,7 +311,7 @@ export function inventoryOperations(tools: Tools) {
         {
           correction_id: "5b8d2e41-9c07-4a63-8f1e-6d3a0c9b7e52",
           kind: "described",
-          recorded_at: "2025-03-02T11:00:00Z",
+          recorded_at: fixtureInstant(3, 2, "11:00:00Z", -1),
           actor: "runtime",
           correction_reason: null,
           retirement_reason: null,
@@ -317,7 +324,7 @@ export function inventoryOperations(tools: Tools) {
         {
           correction_id: "d07c4a92-1e58-4b36-a2f9-4e8b5c0d3a17",
           kind: "retired",
-          recorded_at: "2025-12-31T18:20:00Z",
+          recorded_at: fixtureInstant(12, 31, "18:20:00Z", -1),
           actor: "runtime",
           correction_reason: null,
           retirement_reason: "activity_ceased",

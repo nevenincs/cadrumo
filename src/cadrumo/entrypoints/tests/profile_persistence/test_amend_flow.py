@@ -11,7 +11,7 @@ bucket event.
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Generator
+from collections.abc import Generator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
@@ -74,6 +74,7 @@ from ....core.period import Period
 from ....core.time.clock import MADRID_TZ
 from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef, date_within_validity_window
@@ -260,7 +261,7 @@ _DEFAULT_130_BINDING_VALUES = {
 def _seed_external_baseline(
     repos_tuple: _Repos,
     *,
-    casilla_values: dict[CasillaId, Decimal],
+    casilla_values: Mapping[CasillaId, Decimal],
     modelo: str = "130",
     filing_year: int = _YEAR,
     period_code: str = "1T",
@@ -269,7 +270,7 @@ def _seed_external_baseline(
     filing_instance_evidence: FilingInstanceEvidence | None = None,
     input_values_by_casilla_id: dict[CasillaId, str] | None = None,
     binding_overrides: dict[str, str] | None = None,
-    observations: tuple | None = None,
+    observations: tuple[CasillaObservation, ...] | None = None,
     operator_layer: CalculationOperatorLayer | None = None,
     operation: PinnedAuthorityOperation,
 ) -> tuple[WorkUnit, CalculationRevision, ModeloRecord]:

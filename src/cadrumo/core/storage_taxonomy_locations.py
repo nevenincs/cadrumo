@@ -238,12 +238,12 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         fingerprint_participation=FingerprintParticipation.EXCLUDED,
     ),
     _location(
-        # Observability's own output. Fingerprinting it would make every run's
-        # digest depend on the traces the immediately preceding run left, so a
-        # hermetic replay would refuse on essentially every attempt.
+        # Run-trace directories an earlier version wrote; reclaim can still
+        # delete them. Fingerprinting them would make a run's digest depend on
+        # whatever traces were left on disk, so a hermetic replay would refuse.
         StorageCategory.RUNS,
         "runs",
-        consumer_module="core/observability/store.py",
+        consumer_module="adapters/persistence/storage/storage_path_definitions.py",
         materialised=True,
         lifecycle=StorageLifecycle.RETENTION,
         grouping=StorageGrouping.LOGS,

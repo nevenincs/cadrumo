@@ -21,6 +21,11 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryError
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    open_ended_revision,
+)
 
 from ...compiler.loader import load_modelo_directory
 from ..stamp import stamp_revision
@@ -29,9 +34,9 @@ from ..stamp_toml import GOVERNANCE_KEYS
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _MODELO = "232"
-_BASE = "2016-2017"
-_DELTA = "2018-y-siguientes"
-_REVIEW_DATE = date(2026, 9, 10)
+_BASE = str(authored_revisions(_MODELO)[0].id)
+_DELTA = str(open_ended_revision(_MODELO).id)
+_REVIEW_DATE = date(filing_year_envelope().horizon, 9, 10)
 _REVIEW_LINE = re.compile(r"^(review_status|reviewed_by|reviewed_at) = .*\n", re.MULTILINE)
 _SCOPE_LINE = f'reviewed_against = "{_BASE}"\n'
 

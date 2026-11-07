@@ -65,6 +65,7 @@ from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.operations import OperationFrontendProjection, profile_operation_subject
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.tests.registered_executor_case_support import (
     OperationRuntimeCloseWitness,
     conformance_operation_runtime,
@@ -250,7 +251,8 @@ def test_every_persons_act_is_refused_on_each_automation_frontend_and_admitted_o
 
 PROBE_PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _PROBE_DESTINATION = UUID("5aa00000-0000-4000-8000-0000000000bb")
-_PROBE_PERIOD = Period.from_year_and_code(2025, "1T")
+_YEAR = filing_year_envelope().horizon
+_PROBE_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 _RESOLVED = "resolved"
 
 _PATTERN_SAMPLES: tuple[str, ...] = (
@@ -259,7 +261,7 @@ _PATTERN_SAMPLES: tuple[str, ...] = (
     f"sha256:{'0' * 64}",
     "0" * 10,
     "303",
-    "2025",
+    str(_YEAR),
     "1T",
     "es",
     "ES",
@@ -287,7 +289,7 @@ class _SampleChoice:
 _SAMPLE_CHOICES: tuple[_SampleChoice, ...] = tuple(
     _SampleChoice(text=text, whole_number=whole_number, alternative=alternative)
     for alternative in range(8)
-    for whole_number in (0, 2025)
+    for whole_number in (0, _YEAR)
     for text in ("0", "1T", "x", "0" * 12)
 )
 
@@ -301,9 +303,9 @@ def _string_sample(schema: Mapping[str, Any], choice: _SampleChoice) -> str:
     if text_format == "uuid":
         return str(PROBE_PROFILE)
     if text_format == "date":
-        return "2025-01-01"
+        return f"{_YEAR}-01-01"
     if text_format == "date-time":
-        return "2025-01-01T00:00:00Z"
+        return f"{_YEAR}-01-01T00:00:00Z"
     minimum = int(schema.get("minLength", 0))
     maximum = schema.get("maxLength")
     pattern = schema.get("pattern")
@@ -469,7 +471,7 @@ def test_the_schema_sample_keeps_to_required_members_and_declared_shapes() -> No
     fixed = {"profile_id": str(PROBE_PROFILE), "digest": "0" * 64, "nested": {"flag": False}, "kind": "thing"}
 
     first = _schema_sample(schema, schema["$defs"], _SampleChoice(text="0", whole_number=0, alternative=0))
-    second = _schema_sample(schema, schema["$defs"], _SampleChoice(text="1T", whole_number=2025, alternative=1))
+    second = _schema_sample(schema, schema["$defs"], _SampleChoice(text="1T", whole_number=_YEAR, alternative=1))
 
     assert first == {**fixed, "mode": "preview", "count": 1, "label": "000"}
     assert second == {**fixed, "mode": "apply", "count": 50, "label": "1T1"}
@@ -506,7 +508,7 @@ stored while this file runs, so the resolver answers every frontend for a
 record it cannot find, and that answer is still held to be the same on each."""
 
 _SAMPLE_EVIDENCE = "e" * 16
-_M145_DRAFT: Mapping[str, Any] = {"communication_year": 2026, "period_token": "comunicacion", "actor": "synthetic"}
+_M145_DRAFT: Mapping[str, Any] = {"communication_year": _YEAR, "period_token": "comunicacion", "actor": "synthetic"}
 _M145_WORKER = {"casilla_id": "perceptor.nif", "value": "12345678Z"}
 _LOCAL_OBSERVATION: Mapping[str, Any] = {
     "modelo": "130",
@@ -522,7 +524,7 @@ _STATED_FOR_THE_PERSON: Mapping[str, tuple[Mapping[str, Any], ...]] = {
     "ledger.own_account": (
         {"action": "add", "label": "synthetic", "holding": "titular", "iban": _SAMPLE_IBAN},
         {"action": "update", "own_account_id": _SAMPLE_ACCOUNT, "label": "synthetic"},
-        {"action": "close", "own_account_id": _SAMPLE_ACCOUNT, "closed_on": "2026-06-30"},
+        {"action": "close", "own_account_id": _SAMPLE_ACCOUNT, "closed_on": f"{_YEAR}-06-30"},
         {"action": "remove", "own_account_id": _SAMPLE_ACCOUNT},
         {"action": "designate", "own_account_id": _SAMPLE_ACCOUNT, "role": "charge"},
         {"action": "undesignate", "role": "charge"},
@@ -533,8 +535,8 @@ _STATED_FOR_THE_PERSON: Mapping[str, tuple[Mapping[str, Any], ...]] = {
         {**_M145_DRAFT, "field_values": [{"casilla_id": "acuse-recibo.tipo-firma", "value": "1"}, _M145_WORKER]},
     ),
     "modelo.m360_solicitud": (
-        {"action": "declare", "filing_year": 2025, "own_account_id": _SAMPLE_ACCOUNT, "facts": _SOLICITUD_FACTS},
-        {"action": "remove", "filing_year": 2025},
+        {"action": "declare", "filing_year": _YEAR, "own_account_id": _SAMPLE_ACCOUNT, "facts": _SOLICITUD_FACTS},
+        {"action": "remove", "filing_year": _YEAR},
     ),
     "modelo.observation.local": ({**_LOCAL_OBSERVATION, "action": "clear"},),
     "modelo.work.calculate": (

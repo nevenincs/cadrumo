@@ -61,7 +61,9 @@ _SMALL_PDF = (
 )
 # A real manuales PDF (flat source_pdf_url manifest) - used only for the
 # attribution-shape assertion, not extracted (it is large).
-_MANUAL_PDF = _CORPUS / "manuals" / "renta" / "2025" / "part1" / "source.pdf"
+_RENTA_MANUALS = _CORPUS / "manuals" / "renta"
+_NEWEST_MANUAL_EDITION = max((entry for entry in _RENTA_MANUALS.iterdir() if entry.is_dir()), default=_RENTA_MANUALS)
+_MANUAL_PDF = _NEWEST_MANUAL_EDITION / "part1" / "source.pdf"
 
 
 def test_worked_example_pdf_exists() -> None:

@@ -22,6 +22,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.binding_targets import BindingConsumerKind, binding_consumers
 from cadrumo.domain.calculations.registry.binding_temporal import TargetPeriods
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, open_ended_revision
 
 from ..loader import load_modelo_directory
 from ..validate_bindings import unreferenced_binding_failures
@@ -32,10 +33,11 @@ if TYPE_CHECKING:
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _MODELOS_ROOT = Path(__file__).resolve().parents[4] / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
-_REVISION = "2025-y-siguientes"
+_REVISION = str(open_ended_revision("193").id)
+_PRIOR_REVISION = str(authored_revisions("193")[-2].id)
 _EVIDENCE_BINDINGS = ("modelo-193-123-base-anual", "modelo-193-123-retenciones-anual")
 _BASE_OVERRIDE = (
-    'selector = {revision = "2024", id = "modelo-193-123-base-anual"}\n'
+    f'selector = {{revision = "{_PRIOR_REVISION}", id = "modelo-193-123-base-anual"}}\n'
     "# A reconciliation cross-check against the quarterly modelo 123, no longer the\n"
     "# source of decl.base-total.\n"
     'fields = {provider = {relation_kind = "cross_model_output", dependency_role = "factual_evidence"}}\n'

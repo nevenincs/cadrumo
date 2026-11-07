@@ -30,6 +30,7 @@ from pathlib import Path
 import pytest
 from bs4 import BeautifulSoup
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.docs.preprocess.orden_anual_sections import extract_lorca_reduction
 from dev.paths import REPO_ROOT
 
@@ -354,12 +355,13 @@ def test_lorca_reduction_modulos_orden_iva_units_preserve_the_legacy_table_shape
 
 def test_lorca_reduction_is_scoped_to_its_observed_heading() -> None:
     """The singular extractor accepts Lorca 2022 but does not reinterpret DANA."""
+    exercise = filing_year_envelope().horizon
     lorca = BeautifulSoup(
-        """
-        <h5>Disposición adicional cuarta. Reducción en 2022 para actividades en Lorca.</h5>
+        f"""
+        <h5>Disposición adicional cuarta. Reducción en {exercise} para actividades en Lorca.</h5>
         <p>Los sujetos pasivos con actividades incluidas en el anexo II de esta Orden en el
         término municipal de Lorca podrán reducir en un 20 por ciento las cuotas devengadas
-        por operaciones corrientes correspondientes al año 2022.</p>
+        por operaciones corrientes correspondientes al año {exercise}.</p>
         <p>Esta reducción se tendrá en cuenta para el cálculo de la cuota trimestral y la cuota anual.</p>
         """,
         "lxml",
@@ -374,10 +376,10 @@ def test_lorca_reduction_is_scoped_to_its_observed_heading() -> None:
         "lxml",
     )
 
-    reduction = extract_lorca_reduction(lorca, source_label="synthetic-lorca-2022.html")
+    reduction = extract_lorca_reduction(lorca, source_label=f"synthetic-lorca-{exercise}.html")
 
     assert reduction is not None
-    assert reduction.ejercicio == 2022
+    assert reduction.ejercicio == exercise
     assert reduction.municipality == "Lorca"
     assert reduction.annex_scope == "ANEXO II"
     assert reduction.percentage == Decimal("20")
