@@ -7,6 +7,7 @@ from typing import cast
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.acceptance.installed_cli import InstalledCli, InstalledCliError
 
 from ..installed_parity import (
@@ -83,7 +84,7 @@ def test_post_tui_cli_calendar_uses_fresh_proof_for_both_formats(refused: bool) 
             return _TEXT
 
     cli = cast("InstalledCli", ReadbackCli())
-    window = CalendarWindow.for_evaluation(date(2026, 9, 23))
+    window = CalendarWindow.for_evaluation(date(filing_year_envelope().horizon, 9, 23))
     if refused:
         with pytest.raises(CalendarParityError, match="fresh-proof refusal"):
             fresh_cli_calendar(cli, window)
@@ -96,8 +97,9 @@ def test_post_tui_cli_calendar_uses_fresh_proof_for_both_formats(refused: bool) 
 
 
 def test_window_covers_the_prior_and_current_calendar_years() -> None:
-    window = CalendarWindow.for_evaluation(date(2026, 9, 23))
-    assert (window.from_date, window.to_date) == (date(2025, 1, 1), date(2026, 12, 31))
+    current = filing_year_envelope().horizon
+    window = CalendarWindow.for_evaluation(date(current, 9, 23))
+    assert (window.from_date, window.to_date) == (date(current - 1, 1, 1), date(current, 12, 31))
 
 
 def test_cli_rows_join_json_meaning_with_localized_text() -> None:

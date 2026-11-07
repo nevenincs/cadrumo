@@ -11,6 +11,8 @@ from typing import TYPE_CHECKING, cast
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from .. import cli_journey, continuation_child_process
 from .. import continuation_cli as continuation_module
 from ..continuation_cli import cli_public_readback
@@ -26,10 +28,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _GENERATION = "a" * 64
 
 
+def _year() -> int:
+    return filing_year_envelope().horizon
+
+
 def test_partial_handoff_has_four_work_units_but_only_q1_is_locally_filed() -> None:
     handoff = continuation_state(
         generation=_GENERATION,
-        year=2025,
+        year=_year(),
         periods=("1T", "2T", "3T", "4T"),
         filed=("1T",),
         annual_exported=False,
@@ -37,7 +43,7 @@ def test_partial_handoff_has_four_work_units_but_only_q1_is_locally_filed() -> N
     checkpoint = create_continuation_checkpoint(frontend_path="cli_to_tui", state=handoff)
     completion = continuation_state(
         generation=_GENERATION,
-        year=2025,
+        year=_year(),
         periods=("1T", "2T", "3T", "4T", "0A"),
         filed=("1T", "2T", "3T", "4T"),
         annual_exported=True,
@@ -81,33 +87,33 @@ def test_cli_readback_uses_public_ledger_and_work_list_collections() -> None:
         [
             {
                 "modelo": "130",
-                "filing_year": 2025,
-                "period": {"filing_year": 2025, "code": "1T"},
+                "filing_year": _year(),
+                "period": {"filing_year": _year(), "code": "1T"},
                 "work_unit_id": "q1",
                 "filed_calculation_revision_id": "revision-q1",
                 "current_filing_record_id": "filing-q1",
             },
             {
                 "modelo": "130",
-                "filing_year": 2025,
-                "period": {"filing_year": 2025, "code": "2T"},
+                "filing_year": _year(),
+                "period": {"filing_year": _year(), "code": "2T"},
                 "work_unit_id": "q2",
             },
             {
                 "modelo": "130",
-                "filing_year": 2025,
-                "period": {"filing_year": 2025, "code": "3T"},
+                "filing_year": _year(),
+                "period": {"filing_year": _year(), "code": "3T"},
                 "work_unit_id": "q3",
             },
             {
                 "modelo": "130",
-                "filing_year": 2025,
-                "period": {"filing_year": 2025, "code": "4T"},
+                "filing_year": _year(),
+                "period": {"filing_year": _year(), "code": "4T"},
                 "work_unit_id": "q4",
             },
         ]
     )
-    state = cli_public_readback(cast("InstalledCli", cli), generation=_GENERATION, year=2025)
+    state = cli_public_readback(cast("InstalledCli", cli), generation=_GENERATION, year=_year())
 
     assert cli.calls == [
         ("app", "ledger", "list"),
@@ -123,15 +129,15 @@ def test_cli_readback_refuses_a_partial_public_work_list() -> None:
         [
             {
                 "modelo": "130",
-                "filing_year": 2025,
-                "period": {"filing_year": 2025, "code": "1T"},
+                "filing_year": _year(),
+                "period": {"filing_year": _year(), "code": "1T"},
                 "work_unit_id": "q1",
             }
         ]
     )
 
     with pytest.raises(InstalledContinuationError, match="four-unit handoff"):
-        cli_public_readback(cast("InstalledCli", cli), generation=_GENERATION, year=2025)
+        cli_public_readback(cast("InstalledCli", cli), generation=_GENERATION, year=_year())
 
 
 def test_cli_readback_refuses_when_q1_has_no_public_filing_pointers() -> None:
@@ -139,8 +145,8 @@ def test_cli_readback_refuses_when_q1_has_no_public_filing_pointers() -> None:
         [
             {
                 "modelo": "130",
-                "filing_year": 2025,
-                "period": {"filing_year": 2025, "code": period},
+                "filing_year": _year(),
+                "period": {"filing_year": _year(), "code": period},
                 "work_unit_id": period,
             }
             for period in ("1T", "2T", "3T", "4T")
@@ -148,7 +154,7 @@ def test_cli_readback_refuses_when_q1_has_no_public_filing_pointers() -> None:
     )
 
     with pytest.raises(InstalledContinuationError, match="Q1 local filing"):
-        cli_public_readback(cast("InstalledCli", cli), generation=_GENERATION, year=2025)
+        cli_public_readback(cast("InstalledCli", cli), generation=_GENERATION, year=_year())
 
 
 def test_cli_completion_reuses_public_handoff_work_ids(monkeypatch, tmp_path: Path) -> None:
@@ -192,7 +198,7 @@ def test_cli_completion_reuses_public_handoff_work_ids(monkeypatch, tmp_path: Pa
         workspace_root=tmp_path,
         output_dir=tmp_path,
         generation=_GENERATION,
-        year=2025,
+        year=_year(),
     )
 
     assert observed == ["q2", "q3", "q4"]
@@ -218,7 +224,7 @@ def test_child_runner_has_a_bounded_2400_second_tui_window(monkeypatch, tmp_path
         storage_root=tmp_path,
         scratch=tmp_path,
         passphrase=secrets.token_urlsafe(32),
-        year=2025,
+        year=_year(),
     )
 
     assert result == {"status": "proven"}
@@ -228,7 +234,7 @@ def test_child_runner_has_a_bounded_2400_second_tui_window(monkeypatch, tmp_path
 def test_child_state_receipt_retains_only_value_free_continuation_state() -> None:
     state = continuation_state(
         generation=_GENERATION,
-        year=2025,
+        year=_year(),
         periods=("1T", "2T", "3T", "4T"),
         filed=("1T",),
         annual_exported=False,
@@ -238,7 +244,7 @@ def test_child_state_receipt_retains_only_value_free_continuation_state() -> Non
     receipt = ContinuationPathReceipt(
         direction="cli_to_tui",
         status="proven",
-        year=2025,
+        year=_year(),
         product_origin="site-packages",
         product_init_sha256="b" * 64,
         handoff_state_sha256=state.state_sha256(),

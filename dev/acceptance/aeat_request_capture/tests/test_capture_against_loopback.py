@@ -25,6 +25,7 @@ from cadrumo.adapters.outbound.aeat.browser.profile import Profile
 from cadrumo.adapters.outbound.aeat.browser.session import BrowserSession
 from cadrumo.adapters.outbound.aeat.sede.notifications import READ_GUARD_POLICY as NOTIFICATIONS_READ_POLICY
 from cadrumo.core.config import Settings, load_settings, override_settings
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.acceptance.aeat_request_capture.flows import LOGIN, ReadFlow
 from dev.acceptance.aeat_request_capture.listener import (
     NotificationDetailRefusedError,
@@ -281,7 +282,7 @@ def test_the_whole_live_path_rehearsed_offline_uses_the_dedicated_profile_and_wr
             {LOGIN: stand_in_reader},
             settings=load_settings(),
             modelo="100",
-            ejercicio=2022,
+            ejercicio=filing_year_envelope().horizon,
             profile_base=profile_base,
             output=output,
             show=lambda _line: None,

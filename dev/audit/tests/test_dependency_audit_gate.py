@@ -16,6 +16,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from .. import dependency_audit as da
 
 if TYPE_CHECKING:
@@ -26,7 +28,19 @@ if TYPE_CHECKING:
 #: repository tooling, so it sits with the cross-cutting core.
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-TODAY = dt.date(2026, 9, 8)
+
+def _today() -> dt.date:
+    return dt.date(filing_year_envelope().horizon, 9, 8)
+
+
+def _far_future() -> dt.date:
+    return _today() + dt.timedelta(days=3650)
+
+
+def _lapsed() -> dt.date:
+    return dt.date(_today().year, 1, 1)
+
+
 COORD = da.Coordinate("PyPI", "jinja2", "3.1.4", "uv.lock")
 HIT = {"GHSA-q2x7-8rv6-6q7h": {COORD}}
 
@@ -40,7 +54,7 @@ def _describe(_identifier: str) -> dict[str, object]:
 
 
 def _report(suppressions: list[da.Suppression], hits: dict[str, set[da.Coordinate]] = HIT) -> da.Report:
-    return da.build_report([COORD], hits, suppressions, today=TODAY, describe_fn=_describe)
+    return da.build_report([COORD], hits, suppressions, today=_today(), describe_fn=_describe)
 
 
 def test_a_finding_fails_the_gate() -> None:
@@ -56,7 +70,7 @@ def test_a_clean_tree_passes() -> None:
 
 
 def test_a_live_suppression_accepts_the_finding_visibly() -> None:
-    live = da.Suppression("GHSA-q2x7-8rv6-6q7h", "no upstream fix", dt.date(2099, 1, 1))
+    live = da.Suppression("GHSA-q2x7-8rv6-6q7h", "no upstream fix", _far_future())
     report = _report([live])
     assert report.exit_code == da.EXIT_OK
     assert report.findings[0].suppressed_by is live
@@ -64,12 +78,12 @@ def test_a_live_suppression_accepts_the_finding_visibly() -> None:
 
 
 def test_a_suppression_matches_an_alias() -> None:
-    live = da.Suppression("CVE-2024-56201", "same advisory, CVE id", dt.date(2099, 1, 1))
+    live = da.Suppression("CVE-2024-56201", "same advisory, CVE id", _far_future())
     assert _report([live]).exit_code == da.EXIT_OK
 
 
 def test_scoped_suppression_requires_every_affected_coordinate_to_match() -> None:
-    live = da.Suppression("GHSA-q2x7-8rv6-6q7h", "specific version", dt.date(2099, 1, 1), "PyPI", "jinja2", "3.1.4")
+    live = da.Suppression("GHSA-q2x7-8rv6-6q7h", "specific version", _far_future(), "PyPI", "jinja2", "3.1.4")
     assert _report([live]).exit_code == da.EXIT_OK
     newer = da.Coordinate("PyPI", "jinja2", "3.1.5", "uv.lock")
     assert _report([live], {"GHSA-q2x7-8rv6-6q7h": {COORD, newer}}).exit_code == da.EXIT_FINDINGS
@@ -87,14 +101,14 @@ def test_partial_suppression_scope_is_rejected(tmp_path: Path) -> None:
 
 def test_an_expired_suppression_fails_even_with_no_finding() -> None:
     """An acceptance that lapsed is a decision nobody has retaken."""
-    stale = da.Suppression("GHSA-q2x7-8rv6-6q7h", "was accepted", dt.date(2026, 1, 1))
+    stale = da.Suppression("GHSA-q2x7-8rv6-6q7h", "was accepted", _lapsed())
     report = _report([stale], hits={})
     assert report.exit_code == da.EXIT_FINDINGS
     assert "EXPIRED" in da.render(report)
 
 
 def test_an_expired_suppression_does_not_cover_its_finding() -> None:
-    stale = da.Suppression("GHSA-q2x7-8rv6-6q7h", "was accepted", dt.date(2026, 1, 1))
+    stale = da.Suppression("GHSA-q2x7-8rv6-6q7h", "was accepted", _lapsed())
     report = _report([stale])
     assert report.blocking
     assert report.exit_code == da.EXIT_FINDINGS

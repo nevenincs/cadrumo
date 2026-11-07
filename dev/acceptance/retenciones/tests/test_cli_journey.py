@@ -16,7 +16,7 @@ from ..cli_contracts import RetencionesInstalledCliError
 from ..cli_journey import failure_evidence
 from ..cli_periodic import is_full_campaign, select_slices
 from ..cli_profile import create_withholding_profile
-from ..scenario import build_installed_annual_cli_slices, build_installed_periodic_cli_slices
+from ..scenario import SUPPORTED_YEAR, build_installed_annual_cli_slices, build_installed_periodic_cli_slices
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -98,7 +98,7 @@ def test_failure_receipt_keeps_redacted_command_evidence_and_artifact_roots(tmp_
             commands=(command,),
         ),
         executable=tmp_path / "missing-aeat.exe",
-        year=2025,
+        year=SUPPORTED_YEAR,
         source_identity="source-id",
         package_identity="package-id",
         storage_root=tmp_path / "storage",
@@ -117,9 +117,9 @@ def test_synthetic_withholding_profile_explicitly_attests_not_a_colegio_concerta
     """M111 readiness must not depend on a defaulted profile fact."""
     cli = _ProfileCli()
 
-    create_withholding_profile(cast(InstalledCli, cli), year=2025)
+    create_withholding_profile(cast(InstalledCli, cli), year=SUPPORTED_YEAR)
 
-    assert cli.created_year == 2025
+    assert cli.created_year == SUPPORTED_YEAR
     assert "--no-colegio-concertado" in cli.calls[0]
 
 
@@ -132,19 +132,19 @@ def test_m190_no_activity_uses_the_public_profile_attestation_not_zero_filings()
         cli=cast(InstalledCli, cli),
         slice_=professional,
         captures_by_period={"2T": professional.captures},
-        year=2025,
+        year=SUPPORTED_YEAR,
     )
 
-    assert tokens == frozenset({"2025:1T", "2025:3T", "2025:4T"})
+    assert tokens == frozenset({f"{SUPPORTED_YEAR}:1T", f"{SUPPORTED_YEAR}:3T", f"{SUPPORTED_YEAR}:4T"})
     assert cli.calls == [
         (
             "config",
             "profile",
             "edit",
-            "income-2025",
+            f"income-{SUPPORTED_YEAR}",
             "--quiet",
             "--modelo-111-no-retenciones-periods",
-            "2025:1T,2025:3T,2025:4T",
+            f"{SUPPORTED_YEAR}:1T,{SUPPORTED_YEAR}:3T,{SUPPORTED_YEAR}:4T",
         )
     ]
 
@@ -158,19 +158,19 @@ def test_m180_no_activity_uses_its_public_no_relevant_payment_attestation() -> N
         cli=cast(InstalledCli, cli),
         slice_=rent,
         captures_by_period={"1T": (rent.captures[0],), "2T": rent.captures[1:]},
-        year=2025,
+        year=SUPPORTED_YEAR,
     )
 
-    assert tokens == frozenset({"2025:3T", "2025:4T"})
+    assert tokens == frozenset({f"{SUPPORTED_YEAR}:3T", f"{SUPPORTED_YEAR}:4T"})
     assert cli.calls == [
         (
             "config",
             "profile",
             "edit",
-            "income-2025",
+            f"income-{SUPPORTED_YEAR}",
             "--quiet",
             "--modelo-115-no-relevant-payment-periods",
-            "2025:3T,2025:4T",
+            f"{SUPPORTED_YEAR}:3T,{SUPPORTED_YEAR}:4T",
         )
     ]
 
@@ -187,7 +187,7 @@ def test_m180_no_activity_refuses_without_the_public_attestation_before_work_cre
             source_revision=rent.captures[0].revision,
             source_period=rent.source_periods[2],
             captures=(),
-            year=2025,
+            year=SUPPORTED_YEAR,
             no_activity_attestations=frozenset(),
         )
 

@@ -18,6 +18,7 @@ from cadrumo.domain.calculations.registry.schema_exports import (
     ExportLineEnding,
     ExportRecordDefinition,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..authority import resolve_income_tax_authority
 
@@ -25,6 +26,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _DICTIONARY_SOURCE = "aeat-dr-100-dictionary"
 _LEGAL_REF = "ley-35-2006:art-1"
+
+
+def _as_of() -> date:
+    """A September day in the support horizon's year, so the latest completed year is the one before it."""
+    return date(filing_year_envelope().horizon, 9, 21)
+
+
+def _completed_year() -> int:
+    return filing_year_envelope().horizon - 1
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,7 +91,7 @@ class _Operation:
         return AuthorityGenerationPin(logical_generation="a" * 64, reader_incarnation="b" * 64)
 
     def supported_filing_years(self) -> _Support:
-        return _Support(floor=2022)
+        return _Support(floor=filing_year_envelope().floor)
 
     def snapshot(self, modelo: str, /, *, filing_year: int, period: str) -> _Snapshot:
         if filing_year in self._missing_years:
@@ -92,12 +102,12 @@ class _Operation:
 
 @pytest.mark.usefixtures("authority_operation")
 def test_latest_mode_keeps_the_latest_completed_year_when_runtime_aux_identity_replaces_static_layout_token() -> None:
-    report = resolve_income_tax_authority(_Operation(), as_of=date(2026, 9, 21))
+    report = resolve_income_tax_authority(_Operation(), as_of=_as_of())
 
-    assert report.latest_completed_year == report.selected_year == 2025
+    assert report.latest_completed_year == report.selected_year == _completed_year()
     assert report.support_gap_years == 0
     assert report.authority_generation == "a" * 64
-    assert [item.revision for item in report.modelo_130] == ["130-2025", "130-2025"]
+    assert [item.revision for item in report.modelo_130] == [f"130-{_completed_year()}"] * 2
     assert report.modelo_100 is not None
     (m100_export,) = report.modelo_100.exports
     assert (m100_export.admission, m100_export.refusal_code, m100_export.undeclared_fields) == ("admitted", None, ())
@@ -106,10 +116,10 @@ def test_latest_mode_keeps_the_latest_completed_year_when_runtime_aux_identity_r
 @pytest.mark.usefixtures("authority_operation")
 def test_runtime_aux_contract_does_not_require_an_obsolete_static_layout_field() -> None:
     operation = _Operation()
-    layout = operation.snapshot("100", filing_year=2025, period="0A").revision.export_layouts[0]
+    layout = operation.snapshot("100", filing_year=_completed_year(), period="0A").revision.export_layouts[0]
 
     assert not hasattr(layout, "aux_version")
-    report = resolve_income_tax_authority(operation, as_of=date(2026, 9, 21))
+    report = resolve_income_tax_authority(operation, as_of=_as_of())
     assert report.modelo_100 is not None
     assert report.modelo_100.exports[0].admission == "admitted"
 
@@ -138,9 +148,9 @@ def test_xml_layout_cannot_be_declared_without_the_official_dictionary_source() 
 
 @pytest.mark.usefixtures("authority_operation")
 def test_fixed_width_layout_without_records_remains_blocked() -> None:
-    report = resolve_income_tax_authority(_Operation(m130_records=False), as_of=date(2026, 9, 21))
+    report = resolve_income_tax_authority(_Operation(m130_records=False), as_of=_as_of())
 
-    assert report.selected_year == 2025
+    assert report.selected_year == _completed_year()
     assert {
         (export.admission, export.renderability, export.refusal_code)
         for m130 in report.modelo_130
@@ -150,16 +160,22 @@ def test_fixed_width_layout_without_records_remains_blocked() -> None:
 
 @pytest.mark.usefixtures("authority_operation")
 def test_explicit_year_keeps_the_completed_year_gap_visible() -> None:
-    report = resolve_income_tax_authority(_Operation(), as_of=date(2026, 9, 21), year=2024)
+    explicit = _completed_year() - 1
+    report = resolve_income_tax_authority(_Operation(), as_of=_as_of(), year=explicit)
 
-    assert (report.selection_mode, report.requested_year, report.selected_year) == ("explicit_year", 2024, 2024)
-    assert (report.latest_completed_year, report.support_gap_years) == (2025, 1)
+    assert (report.selection_mode, report.requested_year, report.selected_year) == (
+        "explicit_year",
+        explicit,
+        explicit,
+    )
+    assert (report.latest_completed_year, report.support_gap_years) == (_completed_year(), 1)
 
 
 @pytest.mark.usefixtures("authority_operation")
 def test_latest_mode_reports_a_missing_newest_coordinate_before_selecting_an_older_one() -> None:
-    report = resolve_income_tax_authority(_Operation(missing_years=frozenset({2025})), as_of=date(2026, 9, 21))
+    newest = _completed_year()
+    report = resolve_income_tax_authority(_Operation(missing_years=frozenset({newest})), as_of=_as_of())
 
-    assert report.selected_year == 2024
+    assert report.selected_year == newest - 1
     assert report.support_gap_years == 1
-    assert report.excluded_years == ((2025, "RegistryError: coordinate unavailable"),)
+    assert report.excluded_years == ((newest, "RegistryError: coordinate unavailable"),)
