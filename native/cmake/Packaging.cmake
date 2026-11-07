@@ -144,7 +144,7 @@ include("${PROJECT_SOURCE_DIR}/native/cmake/PackageInputs.cmake")
 cadrumo_package_bootstrap(package_bootstrap "${package_layout}" "${PROJECT_SOURCE_DIR}")
 cadrumo_assembly_product_inputs(assembly_product_inputs "${CADRUMO_PATH_PRODUCT}")
 set(assembly_inputs "${CADRUMO_PATH_RUNTIME}/runtime-inputs.json" "${CADRUMO_PATH_PYTHON_SDK}" ${assembly_product_inputs}
-  "${CADRUMO_PATH_AGENT}/runtime"
+  "${CADRUMO_PATH_AGENT}/runtime" "${CADRUMO_PATH_LLAMA_SERVER}"
   "${CADRUMO_PATH_GENERATED}/$<CONFIG>/build.json" "${CADRUMO_PATH_GENERATED}/build-toolchain.json"
   ${staged_identities} "${package_bootstrap}" ${contract_inputs})
 foreach(target cadrumo_python cadrumo_python_bridge ${CADRUMO_ENTRYPOINT_TARGETS} ${development_target})
@@ -159,11 +159,13 @@ if(CADRUMO_PACKAGE_USER_DOCS)
   list(APPEND assembly_inputs "${CADRUMO_PATH_USER_DOCS_STAGE}")
 endif()
 # These helpers own assembly; unrelated native build/test helpers are not inputs.
-foreach(helper assemble assembly_transaction service_descriptors stdlib package_inventory layout hashing build_paths docs_stage docs_scan docs_errors cmake_build cached_command build_timing agent_runtime agent_runtime_archive agent_runtime_inventory agent_runtime_validation build_stamp build_fingerprint)
+foreach(helper assemble assembly_transaction service_descriptors stdlib package_inventory layout hashing build_paths docs_stage docs_scan docs_errors cmake_build cached_command build_timing agent_runtime agent_runtime_archive agent_runtime_inventory agent_runtime_validation build_stamp build_fingerprint llama_server msvc_redist)
   list(APPEND assembly_inputs "${PROJECT_SOURCE_DIR}/dev/packaging/native/${helper}.py")
 endforeach()
 cadrumo_assembly_backend_inputs(assembly_backend_inputs "${PROJECT_SOURCE_DIR}" "${CADRUMO_BACKEND}")
 list(APPEND assembly_inputs ${assembly_backend_inputs})
+# The staged llama-server is checked against its committed pin again at assembly.
+list(APPEND assembly_inputs "${PROJECT_SOURCE_DIR}/native/llamacpp-pins.json" "${PROJECT_SOURCE_DIR}/dev/env/llamacpp_pins.py")
 # The component engine's pin tables are staged whole beside the authority.
 file(GLOB component_pin_inputs CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/native/component-pins/*.toml")
 list(APPEND assembly_inputs ${component_pin_inputs})
@@ -205,7 +207,7 @@ add_custom_target(app-payload
   COMMAND ${assembly_command} ${CADRUMO_HELPER} assemble --build "${PROJECT_BINARY_DIR}" --config "$<CONFIG>" ${development_args}
     ${user_docs_args} ${application_image_args}
   DEPENDS cadrumo_python cadrumo_python_bridge ${CADRUMO_ENTRYPOINT_TARGETS} ${application_image_dependencies}
-    python_product ${user_docs_dependencies}
+    python_product llama_server ${user_docs_dependencies}
     ${development_target} native_metadata "${CADRUMO_PATH_GENERATED}/$<CONFIG>/build.json"
     "${CADRUMO_PATH_PRODUCT}/ready" "${PROJECT_SOURCE_DIR}/native/package-layout.json"
     "${PROJECT_SOURCE_DIR}/native/interpreter/bootstrap.py" "${PROJECT_SOURCE_DIR}/dev/packaging/native/assemble.py"

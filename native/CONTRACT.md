@@ -243,6 +243,56 @@ artifact tests, including public pywin32 COM imports and pikepdf/qpdf.
 Library-owned resources retain their wheel locations; assembly projects the
 application authority into `data/authority` through its existing setting.
 
+### Bundled llama-server
+
+The package ships the upstream `llama-server` program and builds none of it.
+`native/llamacpp-pins.json` pins one release archive per build target by tag, size
+and SHA-256, and names the hosts it may come from. The `llama_server` CMake step
+fetches the target's archive into `inputs/llama-server/archives/` under the
+selected binary directory, never under `native/`, and refuses bytes that differ
+from the pin with a typed `ArchiveMismatchError`. A verified archive stays in the
+build tree between builds, as the CPython archive does.
+
+The step keeps the launcher, every library it needs inside the archive, and, on
+ELF and PE builds, the compute backends ggml opens by scanning its own directory.
+The archive's other programs stay behind. Library links are kept as regular
+copies under the name a loader asks for, because an installed package holds no
+links. A receipt beside the kept files records the pin, each file's SHA-256 and
+the libraries the files import that the host must supply. Assembly checks the
+receipt, the files and the committed pin again, refuses any difference, and
+records the receipt in the package manifest's `inputs`.
+
+The program is staged in the layout's `llama_server` directory, `bin/llama/`,
+beside the interpreter's native directory and not among its libraries. The
+archive's licence files go to `docs/licenses/llama.cpp/`. Every staged file
+enters the package manifest's inventory like any other file, so the exact
+inventory check of an installation admits them and refuses a modified one. The
+Windows backend leaves the directory out of the interpreter's DLL search
+directories, because the program loads its own libraries from beside it.
+
+On Windows the program imports the C++ runtime and loads it from its own
+directory, so the package carries app-local copies of `msvcp140.dll`,
+`vcruntime140.dll` and `vcruntime140_1.dll` in `bin/llama/`. Configure finds them
+in the `VC/Redist/MSVC/<build>/x64/Microsoft.VC*.CRT` folder of the Visual Studio
+instance and toolset it selected, using the toolset's `major.minor` line and the
+newest redistributable build in it, never the search path. It records the folder
+and each file's SHA-256 in the build toolchain, and assembly refuses a file that
+is missing or changed. A staging check then reads the import table of every PE
+image in `bin/llama/`: each imported library must be an operating-system library
+(a fixed list and the `api-ms-win-` and `ext-ms-win-` API sets) or a file in that
+directory, or the build fails naming the image and the library. `vulkan-1.dll`
+belongs to the graphics driver; only `ggml-vulkan.dll` may import it, because
+ggml skips a backend library that fails to load, so a machine without a Vulkan
+loader loses that backend and keeps the CPU backends.
+
+The files are staged before native relocation. On Linux the relocation checks
+each ELF image against the glibc floor and rewrites its `RUNPATH`; the step also
+refuses, before anything is staged, a Linux archive whose files need a newer glibc
+than the target's floor, and names the files and versions. On macOS the
+relocation rewrites each image's loader paths and seals it, so the application
+bundle's seal admits the program's signatures as it does the other nested
+images.
+
 ## Bootstrap and ABI
 
 The host uses CPython 3.13's full initialization API, not the Limited API.

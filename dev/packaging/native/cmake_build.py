@@ -133,7 +133,7 @@ def _run_command_action(parser: argparse.ArgumentParser, arguments: argparse.Nam
 def main() -> None:
     """Run one CMake action without changing machine-managed tool caches."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=("sdk", "provision", "product", "assemble", "run", "tools", "agent"))
+    parser.add_argument("action", choices=("sdk", "provision", "product", "assemble", "run", "tools", "agent", "llama"))
     parser.add_argument("--agent-source", type=Path)
     parser.add_argument("--build", type=require_enrolled_build, required=True)
     parser.add_argument("--inputs", type=Path)
@@ -174,7 +174,7 @@ def main() -> None:
         _run_command_action(parser, arguments, command)
     if arguments.build is None:
         parser.error("--build is required")
-    if arguments.action in {"sdk", "provision", "product", "tools", "agent"} and arguments.inputs is None:
+    if arguments.action in {"sdk", "provision", "product", "tools", "agent", "llama"} and arguments.inputs is None:
         parser.error("Shared actions require --inputs")
     build = arguments.build.resolve(strict=True)
     with measure_build(build, arguments.action) as timings:
@@ -289,9 +289,14 @@ def _execute_shared_action(
         raise ValueError("Shared actions require --inputs")
     paths = build_paths(build)
     destination = paths[
-        {"sdk": "python_sdk", "provision": "runtime", "tools": "tools", "product": "product", "agent": "agent"}[
-            arguments.action
-        ]
+        {
+            "sdk": "python_sdk",
+            "provision": "runtime",
+            "tools": "tools",
+            "product": "product",
+            "agent": "agent",
+            "llama": "llama_server",
+        }[arguments.action]
     ]
     extra = selected_published_authority(REPO_ROOT) if arguments.action == "product" else ()
     selected = action_toolchain(configured, arguments.action, arguments.target)
@@ -375,7 +380,7 @@ def execute_action(build: Path, arguments: argparse.Namespace, timings: BuildTim
     identity_file = paths["generated"] / "identity.json"
     configured = json.loads((paths["generated"] / "build-toolchain.json").read_text(encoding="utf-8"))
     arguments.target = json.loads(identity_file.read_text(encoding="utf-8"))["target"]
-    if arguments.action in {"sdk", "provision", "product", "tools", "agent"}:
+    if arguments.action in {"sdk", "provision", "product", "tools", "agent", "llama"}:
         _execute_shared_action(build, arguments, timings, identity_file, configured)
     else:
         timings.log.status(f"assembling the {arguments.config} payload")
@@ -384,12 +389,15 @@ def execute_action(build: Path, arguments: argparse.Namespace, timings: BuildTim
 
 
 def _assembly_provenance(paths: dict[str, Path], runtime: Path, interpreter: bool) -> dict[str, object]:
+    from .llama_server import read_receipt
+
     return {
         "runtime": {} if interpreter else json.loads((runtime / "runtime-inputs.json").read_text(encoding="utf-8")),
         "cohort_wheels": {}
         if interpreter
         else json.loads((paths["product"] / "build/product-wheels.json").read_text(encoding="utf-8")),
         "agent": {} if interpreter else json.loads((paths["product"] / "agent-wheel.json").read_text(encoding="utf-8")),
+        "llama_server": {} if interpreter else read_receipt(paths["llama_server"]),
         "build_toolchain": json.loads((paths["generated"] / "build-toolchain.json").read_text(encoding="utf-8")),
     }
 
@@ -429,6 +437,7 @@ def _assemble_action(
         target=arguments.target,
         agent_runtime=None if arguments.interpreter else paths["agent"] / "runtime",
         agent_dependencies=None if arguments.interpreter else paths["agent"],
+        llama_server=None if arguments.interpreter else paths["llama_server"],
         provenance=_assembly_provenance(paths, runtime, arguments.interpreter),
         timings=timings,
     )
@@ -455,6 +464,14 @@ def _build_sdk(
     if produced.resolve() != sdk.resolve():
         raise ValueError("SDK backend output differs from the declared SDK root")
     return destination
+
+
+def _build_llama_server(build: Path, arguments: argparse.Namespace, paths: dict[str, Path]) -> Path:
+    from .llama_server import acquire_llama_server
+
+    # Reconciled in place: the verified archive is kept, the files derived from it are rebuilt.
+    destination = owned(build, str(paths["llama_server"].relative_to(build)))
+    return acquire_llama_server(destination, arguments.target)
 
 
 def _require_tools_installed(result: CommandResult) -> None:
@@ -494,6 +511,8 @@ def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTi
         )
     elif arguments.action == "sdk":
         destination = _build_sdk(build, arguments, configured, contract, sdk_root, sdk)
+    elif arguments.action == "llama":
+        destination = _build_llama_server(build, arguments, paths)
     elif arguments.action == "tools":
         destination = reset(build, str(paths["tools"].relative_to(build)))
         uv = selected_uv(configured)

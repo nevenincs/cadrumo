@@ -20,6 +20,18 @@ foreach(name IN LISTS native_tool_names)
 endforeach()
 string(JSON build_toolchain SET "${build_toolchain}" native_tools "${native_tools}")
 string(JSON build_toolchain SET "${build_toolchain}" native_tool_sha256 "${native_tool_hashes}")
+if(target_system STREQUAL "Windows")
+  # The bundled llama-server imports the C++ runtime and loads it from its own directory, so the package
+  # carries app-local copies. They come from the redistributable folder of the selected MSVC toolset, found
+  # from the Visual Studio instance and toolset this configure resolved and never from PATH, and each is
+  # hashed here for assembly to check.
+  string(REGEX REPLACE ",.*$" "" msvc_redist_root "${CMAKE_GENERATOR_INSTANCE}")
+  execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.msvc_redist
+    --visual-studio "${msvc_redist_root}" --msvc-version "${msvc_version}"
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" OUTPUT_VARIABLE msvc_redist
+    OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
+  string(JSON build_toolchain SET "${build_toolchain}" msvc_redist "${msvc_redist}")
+endif()
 if(target_system STREQUAL "Darwin")
   # The ad-hoc identity is the distribution signature; another local identity only
   # changes the seal on this builder's own images.

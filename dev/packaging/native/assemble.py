@@ -44,6 +44,7 @@ def assemble(
     provenance: Mapping[str, object] | None = None,
     agent_runtime: Path | None = None,
     agent_dependencies: Path | None = None,
+    llama_server: Path | None = None,
     timings: BuildTimings | None = None,
 ) -> None:
     """Publish a complete candidate, retaining the old package if any phase fails.
@@ -51,6 +52,7 @@ def assemble(
     ``agent_dependencies`` is the agent build directory holding the resolution of the
     agent wheel against both projects' locks; the installed closure must equal
     Cadrumo's base closure with those resolved versions and the agent itself.
+    ``llama_server`` is the acquired, verified llama-server tree an application package stages.
     """
     contract = load_layout(target)
     with assembly_candidate(
@@ -72,6 +74,7 @@ def assemble(
             provenance=provenance,
             agent_runtime=agent_runtime,
             agent_dependencies=agent_dependencies,
+            llama_server=llama_server,
             timings=timings,
             reuse=reuse,
         )
@@ -96,6 +99,7 @@ def _assemble_candidate(
     provenance: Mapping[str, object] | None,
     agent_runtime: Path | None,
     agent_dependencies: Path | None,
+    llama_server: Path | None,
     timings: BuildTimings | None,
     reuse: AssemblyReuse,
 ) -> StagedRecords:
@@ -130,6 +134,7 @@ def _assemble_candidate(
             packages,
             provenance,
             target,
+            llama_server,
         )
     )
     docs_prefix, docs_manifest = stage_metadata(
@@ -185,6 +190,7 @@ if __name__ == "__main__":
     parser.add_argument("--dependencies", type=Path, required=True)
     parser.add_argument("--agent-runtime", type=Path, required=True)
     parser.add_argument("--agent-dependencies", type=Path, required=True)
+    parser.add_argument("--llama-server", type=Path, required=True, help="The acquired llama-server tree")
     parser.add_argument("--build", type=require_enrolled_output, required=True)
     parser.add_argument("--destination", type=require_enrolled_output, required=True)
     parser.add_argument("--metadata", type=Path, required=True)
@@ -213,4 +219,5 @@ if __name__ == "__main__":
         target=args.target,
         agent_runtime=args.agent_runtime,
         agent_dependencies=args.agent_dependencies,
+        llama_server=args.llama_server,
     )

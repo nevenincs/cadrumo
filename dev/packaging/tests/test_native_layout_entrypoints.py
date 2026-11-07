@@ -73,3 +73,11 @@ def test_every_platform_stages_the_component_pins_beside_the_authority(platform:
     staged_names = {child.name for child in COMPONENT_PINS_ROOT.iterdir()}
     assert {"browser_archives.toml", "local_ai_program.toml"} <= staged_names
     assert "local_ai_models.toml" not in staged_names, "no model pins are staged; models are the person's selection"
+
+
+@pytest.mark.parametrize("platform", ["windows-x64", "linux-x86-64", "linux-aarch64", "macos-arm64"])
+def test_every_platform_stages_the_llama_server_program_in_its_own_native_subdirectory(platform: str) -> None:
+    layout = load_layout(platform)
+    program = Path(layout["paths"]["llama_server"])
+
+    assert program == Path(layout["paths"]["native"]) / "llama", "beside, never among, the interpreter's libraries"

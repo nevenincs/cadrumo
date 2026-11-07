@@ -47,6 +47,7 @@ set(CADRUMO_BUILD_DIRECTORIES
   RUNTIME inputs/runtime
   PYTHON_SDK inputs/python-sdk
   TOOLS inputs/build-tools
+  LLAMA_SERVER inputs/llama-server
   PRODUCT product
   AGENT inputs/agent
   BIN bin
@@ -105,7 +106,7 @@ set(cleanup_groups [=[{
   "timings": ["timings"],
   "stage": ["stage", "verification", "testing", "temporary"],
   "packages": ["packages"],
-  "dependencies": ["runtime", "python_sdk", "tools", "product", "agent"],
+  "dependencies": ["runtime", "python_sdk", "llama_server", "tools", "product", "agent"],
   "native": ["bin", "lib", "symbols", "cargo"],
   "desktop": ["desktop_frontend", "desktop_frontend_generated", "desktop_cache", "desktop_icons", "desktop_host", "desktop_cargo", "desktop_testing", "desktop_results", "window_fixtures"],
   "docs": ["user_docs_build", "user_docs_work", "user_docs_stage"]
