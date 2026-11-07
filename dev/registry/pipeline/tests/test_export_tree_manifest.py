@@ -1143,3 +1143,27 @@ def test_quoted_unlabelled_text_that_is_not_one_token_stays_refused(official_con
 
     with pytest.raises(RegistryValidationError, match="ambiguous official constant"):
         _parse_official_literal(field, official_content)
+
+
+@pytest.mark.parametrize(
+    ("official_content", "expected"),
+    (("Constante CRLF", "\r\n"), ("constante crlf.", "\r\n")),
+)
+def test_a_terminator_named_by_word_is_the_two_crlf_bytes(official_content: str, expected: str) -> None:
+    """Modelo 840 closes each page with `Constante CRLF`; the reader returns CR LF."""
+    from dev.registry.pipeline.export_field_literal_derivation import _parse_official_literal
+
+    field = _joined_field_with_aeat_type("An")
+
+    assert _parse_official_literal(field, official_content) == (expected, False)
+
+
+@pytest.mark.parametrize("official_content", ("Constante CRLF o LF", "CRLF CRLF"))
+def test_prose_around_the_terminator_word_stays_refused(official_content: str) -> None:
+    """Only the exact labelled terminator is a constant."""
+    from dev.registry.pipeline.export_field_literal_derivation import _parse_official_literal
+
+    field = _joined_field_with_aeat_type("An")
+
+    with pytest.raises(RegistryValidationError, match="ambiguous official constant"):
+        _parse_official_literal(field, official_content)

@@ -200,6 +200,12 @@ OFFICIAL_BARE_RECORD_TAG_RE: Final[re.Pattern[str]] = re.compile(r"</?T[0-9A-Z]+
 OFFICIAL_QUOTED_TOKEN_RE: Final[re.Pattern[str]] = re.compile(r"(?P<quote>['\"])(?P<literal>[^\s'\"]+)(?P=quote)")
 
 
+#: The line terminator named by word: `Constante CRLF` is the two bytes CR LF.
+#: Modelo 840 closes each page this way. Whitespace is folded before the reader
+#: runs, so the bytes themselves could never travel in the printed content.
+OFFICIAL_CRLF_CONSTANT_RE: Final[re.Pattern[str]] = re.compile(r"constante\s+CRLF\.?", re.IGNORECASE)
+
+
 #: A LABELLED constant whose value AEAT left unquoted. Modelo 200 writes
 #: `Constante 0A` for its periodo and `Constante </T20003000>` for two record
 #: closers, where the same design quotes every other constant. The `Constante`
