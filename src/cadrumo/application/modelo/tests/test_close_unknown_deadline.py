@@ -15,10 +15,10 @@ import pytest
 
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.deadlines.effective_close import resolve_effective_filing_deadline
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ..effective_deadline import resolve_effective_filing_deadline
 from ..work_form_service import modelo_form_deadline
 from ..work_plazo import modelo_work_deadline_posture
 

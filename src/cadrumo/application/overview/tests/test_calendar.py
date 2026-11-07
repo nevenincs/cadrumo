@@ -22,6 +22,7 @@ from ....domain.calculations.registry.tests.published_authority import (
 )
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.contribuyente.renta_codes import FiscalResidency
+from ....domain.deadlines.effective_close import effective_filing_deadline
 from ....domain.deadlines.engine import DeadlineEngine
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.deadlines.filing_window_projection import AuthoredFilingWindow
@@ -730,33 +731,63 @@ def test_build_threads_shift_metadata_onto_every_entry(
         assert entry.shift_reason in accepted_reasons
 
 
-def test_build_uses_adjusted_close_for_status_recovery_and_overdue_age(
+def _obligation_with_real_effective_close(
+    *,
+    operation: PinnedAuthorityOperation,
+    modelo: str,
+    period: Period,
+    opens_on: date,
+    closes_on: date,
+    status: ObligationStatus,
+    payment_cutoff_on: date | None = None,
+) -> ModeloDeadline:
+    """Build an obligation whose effective close comes from the real shift rule.
+
+    The engine resolves the shift once and publishes it on the obligation, so a
+    test that hand-writes an effective date would assert its own arithmetic
+    instead of the governed calendar.
+    """
+    effective = effective_filing_deadline(closes_on, modelo=modelo, operation=operation)
+    return ModeloDeadline(
+        modelo=modelo,
+        period=period,
+        opens_on=opens_on,
+        closes_on=closes_on,
+        adjusted_closes_on=effective.closes_on,
+        holiday_coverage=effective.holiday_coverage,
+        shift_reason=effective.shift_reason,
+        shift_jurisdictions=effective.jurisdictions,
+        shift_holiday_refs=effective.holiday_refs,
+        payment_cutoff_on=payment_cutoff_on,
+        status=status,
+        boe_references=(),
+        recovery=None,
+    )
+
+
+def test_an_entry_renders_the_overdue_age_and_recargo_from_the_effective_close(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    obligation = ModeloDeadline(
+    """The entry counts lateness from the close the filer actually had.
+
+    Modelo 303 1T 2025 closes nominally on Sunday 20 April, so the filer had
+    until Monday the 21st. The status is the one its producer classified
+    against that date -- overview re-deciding it could only disagree -- while
+    the overdue age and the recargo band are counted from it here.
+    """
+    obligation = _obligation_with_real_effective_close(
+        operation=authority_operation,
         modelo="303",
         period=Period.from_year_and_code(2025, "1T"),
         opens_on=date(2025, 4, 1),
         closes_on=date(2025, 4, 20),
         payment_cutoff_on=date(2025, 4, 15),
         status=ObligationStatus.OVERDUE,
-        boe_references=(),
-        recovery=None,
     )
-    on_effective_close = calendar_entry_from_obligation(
-        obligation,
-        filing_evidence=(),
-        live_censo_verified_profile_keys=None,
-        today=date(2025, 4, 21),
-        due_soon_days=14,
-        operation=authority_operation,
-    )
-    assert on_effective_close.adjusted_closes_on == date(2025, 4, 21)
-    assert on_effective_close.status is ObligationStatus.DUE_TODAY
-    assert on_effective_close.days_overdue is None
-    assert on_effective_close.recovery is None
 
-    after_effective_close = calendar_entry_from_obligation(
+    assert obligation.adjusted_closes_on == date(2025, 4, 21), "the Sunday close still runs to the Monday"
+
+    entry = calendar_entry_from_obligation(
         obligation,
         filing_evidence=(),
         live_censo_verified_profile_keys=None,
@@ -764,20 +795,48 @@ def test_build_uses_adjusted_close_for_status_recovery_and_overdue_age(
         due_soon_days=14,
         operation=authority_operation,
     )
-    assert after_effective_close.status is ObligationStatus.OVERDUE
-    assert after_effective_close.days_overdue == 1
+
+    assert entry.adjusted_closes_on == date(2025, 4, 21)
+    assert entry.status is ObligationStatus.OVERDUE
+    assert entry.days_overdue == 1, "one day past the effective close, not two past the nominal one"
+    assert entry.recovery is not None
 
 
-def _obligation(modelo: str, closes_on: date) -> ModeloDeadline:
-    return ModeloDeadline(
+def test_an_entry_keeps_the_status_its_producer_classified(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """Overview applies its filing gate, never a second date classification."""
+    obligation = _obligation_with_real_effective_close(
+        operation=authority_operation,
+        modelo="303",
+        period=Period.from_year_and_code(2025, "1T"),
+        opens_on=date(2025, 4, 1),
+        closes_on=date(2025, 4, 20),
+        status=ObligationStatus.DUE_TODAY,
+    )
+
+    entry = calendar_entry_from_obligation(
+        obligation,
+        filing_evidence=(),
+        live_censo_verified_profile_keys=None,
+        today=date(2025, 4, 21),
+        due_soon_days=14,
+        operation=authority_operation,
+    )
+
+    assert entry.status is ObligationStatus.DUE_TODAY
+    assert entry.days_overdue is None
+    assert entry.recovery is None
+
+
+def _obligation(modelo: str, closes_on: date, operation: PinnedAuthorityOperation) -> ModeloDeadline:
+    return _obligation_with_real_effective_close(
+        operation=operation,
         modelo=modelo,
         period=Period.from_year_and_code(closes_on.year, "3T"),
         opens_on=closes_on.replace(day=1),
         closes_on=closes_on,
-        payment_cutoff_on=None,
         status=ObligationStatus.UPCOMING,
-        boe_references=(),
-        recovery=None,
     )
 
 
@@ -800,7 +859,7 @@ def test_a_regional_holiday_never_moves_the_effective_close(
     An electronic filing counts days on the State's calendar (Ley 39/2015 art. 31.3),
     so the close stays on the Diada for every filer.
     """
-    entry = _entry_for(_obligation("303", date(2025, 9, 11)), authority_operation)
+    entry = _entry_for(_obligation("303", date(2025, 9, 11), authority_operation), authority_operation)
 
     assert entry.adjusted_closes_on == date(2025, 9, 11)
     assert entry.shift_reason == "business_day"
@@ -810,7 +869,7 @@ def test_a_regional_holiday_never_moves_the_effective_close(
 def test_modelo_369_entry_is_not_shifted_on_a_weekend(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    entry = _entry_for(_obligation("369", date(2025, 10, 18)), authority_operation)
+    entry = _entry_for(_obligation("369", date(2025, 10, 18), authority_operation), authority_operation)
 
     assert entry.adjusted_closes_on == date(2025, 10, 18)
     assert entry.shift_reason == "modelo_exception"
@@ -821,7 +880,7 @@ def test_missing_holiday_calendar_keeps_the_original_close_visibly_unverified(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """No holiday publication exists for 2028 yet, so a Saturday close cannot be adjusted or certified."""
-    entry = _entry_for(_obligation("303", date(2028, 10, 14)), authority_operation)
+    entry = _entry_for(_obligation("303", date(2028, 10, 14), authority_operation), authority_operation)
 
     assert entry.adjusted_closes_on == entry.closes_on == date(2028, 10, 14)
     assert entry.shift_reason == "calendar_unavailable"
@@ -1115,15 +1174,13 @@ def test_calendar_leaves_out_a_work_unit_whose_effective_deadline_precedes_the_r
 def test_registry_obligation_intersects_a_range_through_its_effective_deadline(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    obligation = ModeloDeadline(
+    obligation = _obligation_with_real_effective_close(
+        operation=authority_operation,
         modelo="190",
         period=Period.from_year_and_code(2025, "0A"),
         opens_on=date(2026, 1, 1),
         closes_on=_SATURDAY_CLOSE,
-        payment_cutoff_on=None,
         status=ObligationStatus.UPCOMING,
-        boe_references=(),
-        recovery=None,
     )
     after_effective_close = OverviewCalendarRange(from_date=date(2026, 2, 3), to_date=date(2026, 2, 28))
 

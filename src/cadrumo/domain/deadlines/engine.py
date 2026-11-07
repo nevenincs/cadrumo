@@ -45,11 +45,13 @@ if TYPE_CHECKING:
     """One close-unknown projection: modelo code, its owning revision's selection metadata, and the projection."""
 
 from .domiciliation_cutoff import resolve_payment_cutoff
+from .effective_close import EffectiveFilingDeadline, effective_filing_deadline
 from .errors import (
     DeadlineValidationError,
     NoDeadlineWindowsError,
     ScheduleComputationError,
 )
+from .festivos import DeadlineHolidayCoverage
 from .filing_window_projection import (
     ProjectedFilingWindow,
     ProjectedFilingWindowCloseUnavailable,
@@ -80,7 +82,7 @@ SCHEDULE_COMPUTATION_MESSAGE_KEY: Final[str] = "errors.error.error_deadlines_sch
 
 
 def classify_obligation_status(closes_on: date, today: date, due_soon_days: int) -> ObligationStatus:
-    """Map a window close date to an :class:`ObligationStatus`.
+    """Map a filing window's EFFECTIVE close date to an :class:`ObligationStatus`.
 
     This is the single owner of the OVERDUE / DUE_TODAY / DUE_SOON / UPCOMING
     boundary rules. The deadline engine applies it to every registry-scheduled
@@ -89,8 +91,14 @@ def classify_obligation_status(closes_on: date, today: date, due_soon_days: int)
     intentional difference between the two callers, and it decides whether to
     call this function at all, never how the boundaries fall.
 
+    The date passed must be the effective close, after the business-day shift
+    (Ley 39/2015 art. 30.5 through Ley 58/2003 art. 7.2). An obligation whose
+    window ends on a Sunday is not overdue on the Monday a filer may still
+    file; classifying against the nominal date said it was.
+
     Args:
-        closes_on: The day the AEAT filing window closes.
+        closes_on: The effective day the filer has, from
+            :attr:`~cadrumo.domain.deadlines.models.ModeloDeadline.adjusted_closes_on`.
         today: The reference date the engine evaluates against.
         due_soon_days: Window (in days) before ``closes_on`` for which
             the obligation is flagged ``DUE_SOON``.
@@ -472,18 +480,34 @@ class DeadlineEngine:
             ),
         ):
             return None
-        obligation_status = classify_obligation_status(window.closes_on, reference_today, self.due_soon_days)
+        effective = effective_filing_deadline(window.closes_on, modelo=modelo, operation=operation)
+        obligation_status = _classified_window_status(
+            effective=effective,
+            reference_today=reference_today,
+            due_soon_days=self.due_soon_days,
+        )
+        # An unknown effective close judges nothing after the nominal date: no
+        # lateness, no recargo and no payment cutoff.
+        close_known = obligation_status is not ObligationStatus.UNKNOWN
         return ModeloDeadline(
             modelo=Modelo(modelo),
             period=window.period,
             opens_on=window.opens_on,
             closes_on=window.closes_on,
-            payment_cutoff_on=resolve_payment_cutoff(modelo, window, operation=operation).cutoff_on,
+            adjusted_closes_on=effective.closes_on,
+            holiday_coverage=effective.holiday_coverage,
+            shift_reason=effective.shift_reason,
+            shift_jurisdictions=effective.jurisdictions,
+            shift_holiday_refs=effective.holiday_refs,
+            payment_cutoff_on=(
+                resolve_payment_cutoff(modelo, window, operation=operation).cutoff_on if close_known else None
+            ),
             status=obligation_status,
             boe_references=window.legal_refs,
             recovery=_overdue_recovery_or_none(
                 obligation_status=obligation_status,
                 reference_today=reference_today,
+                closes_on=effective.closes_on,
                 window=window,
                 modelo=modelo,
                 operation=operation,
@@ -668,10 +692,29 @@ class DeadlineEngine:
         return self._evaluate_conditions(profile, conditions, mode=mode)
 
 
+def _classified_window_status(
+    *,
+    effective: EffectiveFilingDeadline,
+    reference_today: date,
+    due_soon_days: int,
+) -> ObligationStatus:
+    """Classify one window against the close its filer actually has.
+
+    A shift calendar the pinned authority cannot resolve leaves the effective
+    close unknown. Such an obligation is ``UNKNOWN``: it is never called due or
+    overdue against the nominal date, because the nominal date is only a lower
+    bound on the day the filer has.
+    """
+    if effective.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE:
+        return ObligationStatus.UNKNOWN
+    return classify_obligation_status(effective.closes_on, reference_today, due_soon_days)
+
+
 def _overdue_recovery_or_none(
     *,
     obligation_status: ObligationStatus,
     reference_today: date,
+    closes_on: date,
     window: DeadlineWindowDefinition,
     modelo: str,
     operation: PinnedAuthorityOperation,
@@ -687,12 +730,12 @@ def _overdue_recovery_or_none(
     """
     if obligation_status is not ObligationStatus.OVERDUE:
         return None
-    days_late = (reference_today - window.closes_on).days
+    days_late = (reference_today - closes_on).days
     if days_late < 1:
         return None
     try:
         return build_recovery_for_overdue(
-            closes_on=window.closes_on,
+            closes_on=closes_on,
             reference_today=reference_today,
             modelo=modelo,
             period=window.period,

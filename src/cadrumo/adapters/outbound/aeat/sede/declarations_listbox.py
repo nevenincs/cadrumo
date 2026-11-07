@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 
 from bs4 import BeautifulSoup, Tag
 from pydantic import BaseModel, Field
@@ -14,6 +14,7 @@ from .....core.i18n.render import tr
 from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.period import Period
+from .....core.time.clock import madrid_wall_clock_to_utc
 from ..html import parse_html
 from .adapter_utils import cell_text, normalize_response_text
 from .errors import SedeFailureMode, SedeParseError, SedeValidationError
@@ -270,19 +271,28 @@ def _listbox_action_indexes(listbox: Tag) -> _ListboxActionIndexes | None:
 
 
 def parse_presented_at(value: str) -> datetime:
-    """Parse ``"01/02/2024 19:15:34"`` as the observed AEAT row timestamp."""
+    """Parse ``"01/02/2024 19:15:34"`` as the instant the AEAT row names.
+
+    The cell is peninsular official time without an offset (Ley 39/2015 art.
+    31), so it is read as a Europe/Madrid wall clock and returned as the UTC
+    instant it names. Stamping the printed digits with UTC instead moved every
+    observed presentation one or two hours earlier, which reports a row
+    presented in the last two hours of a Spanish day on the following Spanish
+    civil date -- the date a filing-plazo comparison reads.
+    """
     match = _PRESENTED_AT_RE.match(value)
     if match is None:
         raise SedeValidationError(
             "unexpected presented_at shape",
             context={"cell_length": len(value)},
         )
-    return datetime(
-        year=int(match["year"]),
-        month=int(match["month"]),
-        day=int(match["day"]),
-        hour=int(match["hour"]),
-        minute=int(match["minute"]),
-        second=int(match["second"]),
-        tzinfo=UTC,
+    return madrid_wall_clock_to_utc(
+        datetime(
+            year=int(match["year"]),
+            month=int(match["month"]),
+            day=int(match["day"]),
+            hour=int(match["hour"]),
+            minute=int(match["minute"]),
+            second=int(match["second"]),
+        )
     )

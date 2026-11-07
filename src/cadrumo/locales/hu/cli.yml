@@ -1764,6 +1764,10 @@ cli:
           verification_report_ambiguous: Ehhez a változathoz több jóváhagyó ellenőrzési
             jelentés tartozik. A bevallás rögzítése előtt oldd fel az ellenőrzési
             ütközést.
+        file_extemporanea: 'FIGYELMEZTETÉS: ez a benyújtás az önkéntes benyújtási
+          határidőn kívül kerül rögzítésre. A késedelmes benyújtás következménye a
+          bevallás jellegétől függ (az 58/2003. törvény 27. vagy 198. cikke); az alkalmazás
+          egyiket sem állapítja meg.'
         file_help: Ellenőrzött mentett számítás rögzítése benyújtottként. NEM nyújt
           be semmit az AEAT-hoz.
         file_idempotent_noop: 'Nincs teendő: a(z) %{calculation_revision_id} mentett

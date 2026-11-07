@@ -8,6 +8,7 @@ from typing import Annotated, Self
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.external_constants import OutputLanguage
+from ...core.filing_timeliness import FilingTimeliness
 from ...core.filing_year import FilingYear
 from ...core.hashing import canonical_json_bytes
 from ...core.i18n.render import tr
@@ -163,6 +164,7 @@ class ModeloFilingRecordSnapshot(BaseModel):
     origin: FilingOrigin
     confirmation: AeatConfirmationState
     declaration_kind: FilingDeclarationKind
+    filing_timeliness: FilingTimeliness | None
     aeat_register: ModeloRegisterSnapshot | None
     status: ModeloRecordStatus
     superseded_at: datetime | None

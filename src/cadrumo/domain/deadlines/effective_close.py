@@ -9,9 +9,10 @@ of días inhábiles (art. 31.3, which excludes art. 30.6), so only weekends and
 national inhábiles move a close, and the effective date is the same for every
 filer whatever their territory.
 Every surface that says whether a declaration is on time or late
--- the calculate command, the declaration editor and the filing calendar --
-reads that effective date here, so none of them can judge lateness against the
-nominal date while another judges it against the moved one.
+-- the calculate command, the declaration editor, the filing calendar and the
+local filing record's timeliness -- reads that effective date here, so none of
+them can judge lateness against the nominal date while another judges it
+against the moved one.
 
 The result keeps both dates and says which holidays the effective date
 accounts for. A year whose holiday calendar is not published keeps the
@@ -30,22 +31,26 @@ See Also:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from typing import TYPE_CHECKING, Final
 
+from ...core.filing_timeliness import FilingTimeliness
 from ...core.logging import get_logger
 from ...core.period import Period
-from ...domain.deadlines.errors import DeadlineValidationError
-from ...domain.deadlines.festivos import (
+from ...core.time.clock import MADRID_TZ
+from ..calculations.registry.errors import RegistryError
+from ..modelos.filing_record import FilingDeclarationKind, declaration_kind_is_timed_against_the_plazo
+from .errors import DeadlineValidationError
+from .festivos import (
     DeadlineHolidayCoverage,
     HolidayJurisdiction,
     shift_deadline,
 )
-from ...domain.deadlines.filing_window_projection import ProjectedFilingWindowCloseUnavailable
-from ...domain.deadlines.plazo import resolve_filing_window
+from .filing_window_projection import ProjectedFilingWindowCloseUnavailable
+from .plazo import resolve_filing_window
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ..calculations.registry.authority import PinnedAuthorityOperation
 
 _LOG = get_logger(__name__)
 
@@ -102,6 +107,31 @@ class EffectiveFilingDeadline:
         if not self.close_known:
             return None
         return (reference_on - self.closes_on).days if reference_on > self.closes_on else None
+
+    def timeliness_on(self, presented_on: date) -> FilingTimeliness:
+        """Say whether a presentation on this date is inside the plazo voluntario, or late.
+
+        Derived from the same one-sided day counts the deadline posture uses, so
+        a surface cannot call a filing late that the posture calls in time. An
+        unknown close keeps its nominal date as a lower bound only: a
+        presentation up to it is still in time, and nothing past it is judged.
+
+        A date whose shift calendar could not be resolved is the same case. The
+        kept date is then the unverified nominal one, which is a lower bound on
+        the day the filer has, so a presentation past it is UNKNOWN rather than
+        late. The obligation schedule reports such a window the same way, and
+        the deadline gate refuses to call it closed.
+
+        This is a calendar posture, never an Article 27 assessment; see
+        :class:`~cadrumo.core.filing_timeliness.FilingTimeliness`.
+        """
+        if self.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE:
+            return FilingTimeliness.EN_PLAZO if presented_on <= self.closes_on else FilingTimeliness.UNKNOWN
+        if self.days_overdue_on(presented_on) is not None:
+            return FilingTimeliness.EXTEMPORANEA
+        if self.days_remaining_on(presented_on) is not None:
+            return FilingTimeliness.EN_PLAZO
+        return FilingTimeliness.UNKNOWN
 
 
 def effective_filing_deadline(
@@ -173,9 +203,88 @@ def resolve_effective_filing_deadline(
     return effective_filing_deadline(resolution.closes_on, modelo=modelo, operation=operation)
 
 
+def resolve_filing_timeliness(
+    modelo: str,
+    filing_year: int,
+    period: Period,
+    *,
+    presented_on: date,
+    operation: PinnedAuthorityOperation,
+) -> FilingTimeliness:
+    """Judge one presentation date against the declaration's plazo voluntario.
+
+    A declaration whose axis the registry declares no window for is
+    :attr:`~cadrumo.core.filing_timeliness.FilingTimeliness.UNKNOWN`: an absent
+    window says nothing about punctuality.
+
+    Raises:
+        RegistryError: The registry could not be read, so timeliness is unknown
+            rather than decided. A caller that must not lose a committed fact to
+            a projection failure degrades it to ``UNKNOWN`` itself.
+        DeadlineValidationError: More than one window matches the declaration.
+    """
+    deadline = resolve_effective_filing_deadline(modelo, filing_year, period, operation=operation)
+    if deadline is None:
+        return FilingTimeliness.UNKNOWN
+    return deadline.timeliness_on(presented_on)
+
+
+def decide_filing_timeliness(
+    *,
+    modelo: str,
+    filing_year: int,
+    period: Period,
+    filed_at: datetime,
+    operation: PinnedAuthorityOperation,
+    declaration_kind: FilingDeclarationKind = FilingDeclarationKind.ORIGINAL,
+) -> FilingTimeliness:
+    """Decide the posture to KEEP on a filing being recorded now.
+
+    ``declaration_kind`` selects whether the period's own plazo decides this
+    declaration's lateness at all; a kind no official text times against that
+    window keeps an unknown posture (see
+    :func:`~cadrumo.domain.modelos.filing_record.declaration_kind_is_timed_against_the_plazo`).
+
+    The presentation date is the Europe/Madrid civil date of ``filed_at``. A
+    filing plazo is a Spanish-calendar boundary (Ley 39/2015 art. 31), and the
+    UTC date reports the previous Spanish day for up to two hours every night.
+
+    This is the writer's decision point, so it must yield a value rather than
+    raise: the filing is being committed, and a deadline window that cannot be
+    read is recorded as
+    :attr:`~cadrumo.core.filing_timeliness.FilingTimeliness.UNKNOWN` instead of
+    discarding the filing or passing an unreadable registry off as punctuality.
+    Readers report the kept value; none of them judges it again, because a
+    window amended later must not change what a past filing's posture was.
+    """
+    if not declaration_kind_is_timed_against_the_plazo(declaration_kind):
+        return FilingTimeliness.UNKNOWN
+    try:
+        return resolve_filing_timeliness(
+            modelo,
+            filing_year,
+            period,
+            presented_on=filed_at.astimezone(MADRID_TZ).date(),
+            operation=operation,
+        )
+    except (RegistryError, DeadlineValidationError):
+        _LOG.debug(
+            "filing timeliness undecidable; recording it as unknown",
+            extra={
+                "modelo": modelo,
+                "filing_year": filing_year,
+                "period": period.registry_token,
+            },
+            exc_info=True,
+        )
+        return FilingTimeliness.UNKNOWN
+
+
 __all__ = [
     "CALENDAR_UNAVAILABLE_SHIFT_REASON",
     "EffectiveFilingDeadline",
+    "decide_filing_timeliness",
     "effective_filing_deadline",
     "resolve_effective_filing_deadline",
+    "resolve_filing_timeliness",
 ]

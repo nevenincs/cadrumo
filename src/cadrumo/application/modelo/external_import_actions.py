@@ -50,10 +50,11 @@ from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.coercion import normalize_decimal_separators
+from ...core.filing_timeliness import FilingTimeliness
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.observed_header_fact import ObservedHeaderFact
 from ...core.period import Period
-from ...core.time.clock import now
+from ...core.time.clock import madrid_wall_clock_to_utc, now
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
@@ -64,6 +65,7 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...domain.deadlines.effective_close import decide_filing_timeliness
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.justificante.schema import Justificante
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
@@ -636,11 +638,18 @@ def _external_import_reconciliation_ports(
 
 
 def _external_import_register_reference(receipt: Justificante | None, cleaned_reference: str) -> AeatRegisterRef:
-    """Retain receipt identifiers or the CSV-register reference without synthesizing a receipt."""
+    """Retain receipt identifiers or the CSV-register reference without synthesizing a receipt.
+
+    A receipt carries the presentation timestamp AEAT stamped on it, as a
+    peninsular wall clock, so the reference keeps that instant: it is what says
+    whether the declaration was presented inside its plazo. A bare CSV-register
+    reference carries no presentation date, and none is invented for it.
+    """
     return AeatRegisterRef(
         expediente_id=None if receipt is not None else cleaned_reference,
         csv=receipt.csv if receipt is not None else None,
         justificante_number=receipt.presentation_id if receipt is not None else None,
+        presented_at=madrid_wall_clock_to_utc(receipt.presented_at) if receipt is not None else None,
     )
 
 
@@ -863,6 +872,27 @@ def prepare_external_filing_revision[CasillaKey](
     )
 
 
+def _observed_filing_timeliness(
+    *,
+    work_unit: WorkUnit,
+    aeat_register: AeatRegisterRef | None,
+    declaration_kind: FilingDeclarationKind,
+    operation: PinnedAuthorityOperation,
+) -> FilingTimeliness:
+    """Judge the AEAT-observed presentation date against the period's filing window."""
+    presented_at = aeat_register.presented_at if aeat_register is not None else None
+    if presented_at is None:
+        return FilingTimeliness.UNKNOWN
+    return decide_filing_timeliness(
+        modelo=str(work_unit.modelo),
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        filed_at=presented_at,
+        operation=operation,
+        declaration_kind=declaration_kind,
+    )
+
+
 def build_external_filing_record(
     *,
     filing_record_id: str,
@@ -875,9 +905,18 @@ def build_external_filing_record(
     declaration_kind: FilingDeclarationKind,
     member_nif: str | None = None,
     amends_filing_record_id: str | None = None,
+    operation: PinnedAuthorityOperation,
     aeat_register: AeatRegisterRef | None = None,
 ) -> ModeloRecord:
-    """Build the in-force, AEAT-origin chain entry for externally presented content."""
+    """Build the in-force, AEAT-origin chain entry for externally presented content.
+
+    The plazo posture is decided from the AEAT-observed presentation date the
+    register carries, never from ``filed_at``: ``filed_at`` is when this import
+    ran, so judging on it would call every reconstruction of an old filing late.
+    Without an observed presentation date the posture stays unknown -- an import
+    that cannot say when the declaration was presented cannot say whether it was
+    presented in time.
+    """
     return ModeloRecord(
         filing_record_id=filing_record_id,
         work_unit_id=work_unit.work_unit_id,
@@ -893,6 +932,12 @@ def build_external_filing_record(
         origin=FilingOrigin.AEAT,
         confirmation=AeatConfirmationState.CONFIRMADA,
         declaration_kind=declaration_kind,
+        filing_timeliness=_observed_filing_timeliness(
+            work_unit=work_unit,
+            aeat_register=aeat_register,
+            declaration_kind=declaration_kind,
+            operation=operation,
+        ),
         aeat_register=aeat_register,
         amends_filing_record_id=amends_filing_record_id,
         status=ModeloRecordStatus.VIGENTE,

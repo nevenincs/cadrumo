@@ -8,6 +8,7 @@ stability and the validators on :class:`cadrumo.application.workflow.WorkflowSte
 
 from __future__ import annotations
 
+import hashlib
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any, cast
@@ -23,6 +24,7 @@ from ....core.operator_action_enums import (
     NoRecoveryOutcome,
 )
 from ....core.period import Period
+from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.deadlines.models import ModeloDeadline, ObligationStatus, RecargoBand, Recovery
 from ...operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from ..abort import WorkflowAbortReason
@@ -50,14 +52,45 @@ class TestComputeRunId:
     """Stable hash for a workflow run."""
 
     def test_deterministic(self) -> None:
-        """Same seed → same 16-char hex id."""
+        """Same seed, same 16-char hex id, equal to the documented recipe.
+
+        The expectation is re-derived here from the recipe the producer
+        documents -- the pipe-joined tax id, modelo, ``year:token`` period
+        segment and ISO instant, SHA-256, first sixteen hex characters -- rather
+        than copied from a run. A frozen literal cannot say whether a changed
+        value or a changed recipe moved the id, and that is how the previous
+        expectation came to be the hash of a tax id the fixtures no longer use.
+        """
         started = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
-        a = compute_run_id(tax_id="X0001500M", modelo="130", period=_period(), started_at=started)
-        b = compute_run_id(tax_id="X0001500M", modelo="130", period=_period(), started_at=started)
+        tax_id = "X0001500M"
+        a = compute_run_id(tax_id=tax_id, modelo="130", period=_period(), started_at=started)
+        b = compute_run_id(tax_id=tax_id, modelo="130", period=_period(), started_at=started)
+        recipe = "|".join([tax_id, "130", f"{_period().filing_year}:{_period().registry_token}", started.isoformat()])
+        independent = hashlib.sha256(recipe.encode("utf-8")).hexdigest()[:16]
+
         assert a == b
-        assert a == "71f95b6c466e52b7"
+        assert a == independent
         assert len(a) == 16
         assert all(c in "0123456789abcdef" for c in a)
+
+    def test_a_changed_seed_changes_the_id(self) -> None:
+        """Each seed component is in the hash, so none can be silently dropped."""
+        started = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
+        baseline = compute_run_id(tax_id="X0001500M", modelo="130", period=_period(), started_at=started)
+
+        assert compute_run_id(tax_id="X0001500M", modelo="100", period=_period(), started_at=started) != baseline
+        assert (
+            compute_run_id(tax_id="X0001500M", modelo="130", period=_period(code="2T"), started_at=started) != baseline
+        )
+        assert (
+            compute_run_id(
+                tax_id="X0001500M",
+                modelo="130",
+                period=_period(),
+                started_at=started.replace(hour=10),
+            )
+            != baseline
+        )
 
     def test_differs_by_tax_id(self) -> None:
         """Different tax ids produce different ids."""
@@ -378,6 +411,10 @@ def test_workflow_obligation_projection_carries_stable_recovery_facts() -> None:
         period=_period(2025),
         opens_on=date(2025, 4, 1),
         closes_on=date(2025, 4, 20),
+        # The 20th is a Sunday, so the filer has until the Monday.
+        adjusted_closes_on=date(2025, 4, 21),
+        holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
+        shift_reason="domingo",
         payment_cutoff_on=date(2025, 4, 15),
         status=ObligationStatus.OVERDUE,
         boe_references=("orden-hfp-105-2017:art-1",),

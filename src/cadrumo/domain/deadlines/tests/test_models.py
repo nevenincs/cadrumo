@@ -16,6 +16,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.period import Period
+from ..festivos import DeadlineHolidayCoverage
 from ..models import (
     IVARegime,
     M303RegimeComposition,
@@ -175,6 +176,9 @@ class TestModeloDeadline:
                 period=_P_2026_1T,
                 opens_on=date(2026, 4, 21),
                 closes_on=date(2026, 4, 20),
+                adjusted_closes_on=date(2026, 4, 20),
+                holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
+                shift_reason="business_day",
                 payment_cutoff_on=None,
                 status=ObligationStatus.UPCOMING,
             )
@@ -186,6 +190,9 @@ class TestModeloDeadline:
                 period=_P_2026_1T,
                 opens_on=date(2026, 4, 1),
                 closes_on=date(2026, 4, 20),
+                adjusted_closes_on=date(2026, 4, 20),
+                holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
+                shift_reason="business_day",
                 payment_cutoff_on=date(2026, 4, 25),
                 status=ObligationStatus.UPCOMING,
             )
@@ -200,6 +207,9 @@ class TestScheduleRoundTrip:
             period=_P_2026_1T,
             opens_on=date(2026, 4, 1),
             closes_on=date(2026, 4, 20),
+            adjusted_closes_on=date(2026, 4, 20),
+            holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
+            shift_reason="business_day",
             payment_cutoff_on=date(2026, 4, 15),
             status=ObligationStatus.UPCOMING,
             boe_references=("BOE-Orden-IVA-autoliquidacion",),

@@ -937,23 +937,28 @@ class TestWorkflowInputMismatchError:
     and must carry structured context.
     """
 
-    def _make_provider(self, modelo: str = "100", period: str = "0A") -> RevisionInputsProvider:
+    def _make_provider(
+        self,
+        operation: PinnedAuthorityOperation,
+        modelo: str = "100",
+        period: str = "0A",
+    ) -> RevisionInputsProvider:
         work_unit = _minimal_work_unit(modelo=modelo, period=period)
         revision = _minimal_calculation_revision(work_unit)
-        return RevisionInputsProvider(revision=revision, work_unit=work_unit)
+        return RevisionInputsProvider(revision=revision, work_unit=work_unit, operation=operation)
 
     def _resident_profile(self) -> TaxpayerProfile:
         """Return a minimal real profile (load_inputs discards it via ``del``)."""
         return TaxpayerProfile(tax_id="X0001500M", iva_regime=IVARegime("GENERAL"))
 
-    def test_matching_request_does_not_raise(self) -> None:
+    def test_matching_request_does_not_raise(self, operation: PinnedAuthorityOperation) -> None:
         """load_inputs with the correct modelo and workflow period returns inputs."""
         from ..workflow_gate import workflow_period_for_work_unit
 
         work_unit = _minimal_work_unit(modelo="100", period="0A")
         revision = _minimal_calculation_revision(work_unit)
-        provider = RevisionInputsProvider(revision=revision, work_unit=work_unit)
-        expected_period = workflow_period_for_work_unit(work_unit)
+        provider = RevisionInputsProvider(revision=revision, work_unit=work_unit, operation=operation)
+        expected_period = workflow_period_for_work_unit(work_unit, operation=operation)
         result = provider.load_inputs(
             modelo="100",
             period=expected_period,
@@ -961,14 +966,14 @@ class TestWorkflowInputMismatchError:
         )
         assert isinstance(result, dict)
 
-    def test_mismatched_modelo_raises_workflow_input_mismatch_error(self) -> None:
+    def test_mismatched_modelo_raises_workflow_input_mismatch_error(self, operation: PinnedAuthorityOperation) -> None:
         """load_inputs with a wrong modelo raises WorkflowInputMismatchError."""
         from ..workflow_gate import workflow_period_for_work_unit
 
         work_unit = _minimal_work_unit(modelo="100", period="0A")
         revision = _minimal_calculation_revision(work_unit)
-        provider = RevisionInputsProvider(revision=revision, work_unit=work_unit)
-        correct_period = workflow_period_for_work_unit(work_unit)
+        provider = RevisionInputsProvider(revision=revision, work_unit=work_unit, operation=operation)
+        correct_period = workflow_period_for_work_unit(work_unit, operation=operation)
 
         with pytest.raises(WorkflowInputMismatchError) as exc_info:
             provider.load_inputs(
@@ -983,11 +988,11 @@ class TestWorkflowInputMismatchError:
         assert exc.context["expected_modelo"] == "100"
         assert exc.context["requested_modelo"] == "303"
 
-    def test_mismatched_period_raises_workflow_input_mismatch_error(self) -> None:
+    def test_mismatched_period_raises_workflow_input_mismatch_error(self, operation: PinnedAuthorityOperation) -> None:
         """load_inputs with a wrong period raises WorkflowInputMismatchError."""
         work_unit = _minimal_work_unit(modelo="303", period="1T")
         revision = _minimal_calculation_revision(work_unit)
-        provider = RevisionInputsProvider(revision=revision, work_unit=work_unit)
+        provider = RevisionInputsProvider(revision=revision, work_unit=work_unit, operation=operation)
 
         with pytest.raises(WorkflowInputMismatchError) as exc_info:
             provider.load_inputs(
@@ -1008,13 +1013,13 @@ class TestWorkflowInputMismatchError:
         assert issubclass(WorkflowInputMismatchError, CoreValidationError)
         assert not issubclass(WorkflowInputMismatchError, ValueError)
 
-    def test_error_code_is_registered(self) -> None:
+    def test_error_code_is_registered(self, operation: PinnedAuthorityOperation) -> None:
         """WorkflowInputMismatchError maps to a stable error code in the registry."""
         from ....core.errors.error_codes import get_registered_error_code
 
         work_unit = _minimal_work_unit(modelo="100", period="0A")
         revision = _minimal_calculation_revision(work_unit)
-        provider = RevisionInputsProvider(revision=revision, work_unit=work_unit)
+        provider = RevisionInputsProvider(revision=revision, work_unit=work_unit, operation=operation)
 
         try:
             provider.load_inputs(

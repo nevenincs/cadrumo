@@ -34,6 +34,7 @@ from cadrumo.application.operations.frontend_requests import (
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
 from cadrumo.application.operations.registry import OperationPublicContractSetV1, OperationPublicDefinitionContractV1
 from cadrumo.core.errors.error_codes import get_registered_error_code
+from cadrumo.core.filing_timeliness import FilingTimeliness
 from cadrumo.core.operations import (
     OperationEffect,
     OperationFrontendProjection,
@@ -315,6 +316,7 @@ def _filing_result() -> ModeloWorkFilePublicResultV2:
         origin=FilingOrigin.LOCAL,
         confirmation=AeatConfirmationState.PENDIENTE,
         declaration_kind=FilingDeclarationKind.ORIGINAL,
+        filing_timeliness=FilingTimeliness.EN_PLAZO,
     )
     return ModeloWorkFilePublicResultV2(
         record=ModeloFilingRecordSnapshot.from_record(record),
@@ -322,6 +324,7 @@ def _filing_result() -> ModeloWorkFilePublicResultV2:
             work_unit_id=_WORK_UNIT, calculation_revision_id=_WORK_UNIT, modelo="303", filing_year=2025, period="4T"
         ),
         published=True,
+        filing_timeliness=FilingTimeliness.EN_PLAZO,
         filing_record_id=record.filing_record_id,
         work_unit_id=_WORK_UNIT,
         calculation_revision_id=_WORK_UNIT,

@@ -39,6 +39,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.legal_text import legal_effective_to
 from ....domain.calculations.registry.tests.published_authority import published_selected_revision_id
+from ....domain.deadlines.effective_close import effective_filing_deadline, resolve_effective_filing_deadline
 from ....domain.deadlines.engine import DeadlineEngine
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.deadlines.plazo import resolve_filing_window
@@ -47,7 +48,6 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...overview.calendar import build_overview_calendar
 from ...overview.calendar_models import OverviewCalendarRange
 from ...overview.tests.calendar_test_support import profile
-from ..effective_deadline import effective_filing_deadline, resolve_effective_filing_deadline
 from ..work_form_service import modelo_form_deadline
 from ..work_plazo import modelo_work_deadline_posture
 

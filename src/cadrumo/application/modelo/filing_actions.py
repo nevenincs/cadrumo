@@ -43,12 +43,14 @@ from typing import TYPE_CHECKING
 
 from ...core.config import Settings
 from ...core.diagnostic_log import diagnostic_timing_event
+from ...core.filing_timeliness import FilingTimeliness
 from ...core.identity.hex_ids import CalculationRevisionId, VerificationReportId
 from ...core.logging import get_logger
 from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from ...core.result_disposition import ResultDisposition
+from ...core.time.clock import MADRID_TZ
 from ...core.time.clock import now as clock_utc_now
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
@@ -128,10 +130,28 @@ class ModeloFilingEvidenceMissingError(ModeloPreconditionErrorMixin, ModeloError
 
 @dataclass(frozen=True, slots=True)
 class ModeloFilingResult:
-    """The filed record and whether this call published a new transition."""
+    """The filed record, whether this call published, and the filing's timeliness.
+
+    ``filing_timeliness`` answers the question the record's
+    :class:`~cadrumo.domain.modelos.filing_record.FilingDeclarationKind` cannot:
+    an ``ORIGINAL`` declaration filed after its plazo voluntario closed is late,
+    and a late presentation carries a Ley 58/2003 consequence whose regime
+    depends on the declaration. It is the posture the record kept from its own
+    filing time, normalised so a caller always reads a value; a record that kept
+    none reads as
+    :attr:`~cadrumo.core.filing_timeliness.FilingTimeliness.UNKNOWN` rather than
+    being judged again against today's deadlines. No regime, eligibility,
+    amount or interest is asserted.
+    """
 
     record: ModeloRecord
     published: bool
+    filing_timeliness: FilingTimeliness
+
+
+def _kept_filing_timeliness(record: ModeloRecord) -> FilingTimeliness:
+    """Report the posture the record kept, with no posture reading as unknown."""
+    return record.filing_timeliness or FilingTimeliness.UNKNOWN
 
 
 def _existing_vigente_filing_record(
@@ -267,7 +287,11 @@ def _require_filing_state(
                 observation_repository=obs_repo,
                 operation=operation,
             )
-            return ModeloFilingResult(record=existing, published=False)
+            return ModeloFilingResult(
+                record=existing,
+                published=False,
+                filing_timeliness=_kept_filing_timeliness(existing),
+            )
     if target.state is not CalculationRevisionState.VERIFICADO_COMPLETO:
         raise CalculationRevisionStateError(
             translated_message="errors.error.error_modelo_calculation_revision_state",
@@ -314,9 +338,13 @@ def _run_filing_workflow(
         engine=gate_engine,
         profile=workflow_profile,
         work_unit=work_unit,
-        today=now.date(),
+        # The filing plazo is a Europe/Madrid civil boundary, the same date the
+        # receipt's kept posture is judged on; the UTC date reports the previous
+        # Spanish day for up to two hours every night.
+        today=now.astimezone(MADRID_TZ).date(),
         runs_dir=workflow_runs_dir,
         run_repository=ports.workflow_run_repository,
+        operation=operation,
     )
 
     _filing_phase("workflow_end")
@@ -535,7 +563,11 @@ def _persist_filing_result(
         justificante_repository=ports.justificante_repository,
     )
     _filing_phase("persistence_end")
-    return ModeloFilingResult(record=record, published=True)
+    return ModeloFilingResult(
+        record=record,
+        published=True,
+        filing_timeliness=_kept_filing_timeliness(record),
+    )
 
 
 def _filed_revision_result_disposition(

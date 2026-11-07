@@ -24,9 +24,12 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.workflow.abort import WorkflowAbortReason
 from cadrumo.application.workflow.persistence import WorkflowRunRepository
 from cadrumo.application.workflow.run_models import WorkflowDeadlineContextDetails, WorkflowStage
+from cadrumo.core.filing_timeliness import FilingTimeliness
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
+from cadrumo.domain.deadlines.effective_close import resolve_effective_filing_deadline
+from cadrumo.domain.deadlines.festivos import DeadlineHolidayCoverage
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionCatalogue, CalculationRevisionState
 from cadrumo.domain.modelos.filing_record import (
     AeatConfirmationState,
@@ -49,6 +52,7 @@ from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import
     Repos,
     calculation_ports_for_test,
     file_revision,
+    file_revision_result,
     seed_work_unit,
     target_filing_records,
     verify_revision,
@@ -179,7 +183,7 @@ def test_file_creates_filing_record_and_advances_pointers(
     monkeypatch.setattr(cr_repo, "load_revisioned", counted_load_revisioned)
 
     def publish() -> ModeloRecord:
-        record = file_revision(
+        outcome = file_revision_result(
             revision.calculation_revision_id,
             revision=revision,
             work_unit=work_unit,
@@ -191,7 +195,13 @@ def test_file_creates_filing_record_and_advances_pointers(
             bucket_event_repository=bv_repo,
             clock=T3,
         )
+        record = outcome.record
         assert isinstance(record, ModeloRecord)
+        # Filed inside the plazo voluntario of Modelo 130 1T, so the posture is
+        # decided at filing time and kept on the receipt rather than left for the
+        # operator to infer from ``original``.
+        assert record.filing_timeliness is FilingTimeliness.EN_PLAZO
+        assert outcome.filing_timeliness is FilingTimeliness.EN_PLAZO
         return record
 
     if reject_final_read:
@@ -279,7 +289,7 @@ def test_file_records_verified_modelo_130_as_late_non_official_local_filing(repo
         clock=T2,
     )
 
-    filing = file_revision(
+    outcome = file_revision_result(
         revision.calculation_revision_id,
         revision=revision,
         work_unit=work_unit,
@@ -290,10 +300,29 @@ def test_file_records_verified_modelo_130_as_late_non_official_local_filing(repo
         bucket_event_repository=bv_repo,
         clock=T3,
     )
+    filing = outcome.record
 
     assert filing.status is ModeloRecordStatus.VIGENTE
     assert filing.aeat_accepted is False
     assert filing.external_evidence is None
+    # The declaration kind stays ``original``, so lateness has to be carried as
+    # its own fact or no consumer of the file result can see the late-filing
+    # consequence of a closed-window filing. Which fact the exercise supports
+    # depends on its own holiday calendar: without one the effective close is
+    # not established, and an unverified nominal close is only a lower bound,
+    # so the posture is unknown rather than late.
+    deadline = resolve_effective_filing_deadline(
+        str(work_unit.modelo),
+        work_unit.filing_year,
+        work_unit.period,
+        operation=published_authority_operation(),
+    )
+    assert deadline is not None
+    calendar_published = deadline.holiday_coverage is not DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
+    expected_timeliness = FilingTimeliness.EXTEMPORANEA if calendar_published else FilingTimeliness.UNKNOWN
+    assert filing.declaration_kind is FilingDeclarationKind.ORIGINAL
+    assert filing.filing_timeliness is expected_timeliness
+    assert outcome.filing_timeliness is expected_timeliness
     with calculation_ports_for_test(
         bucket_id=work_unit.bucket_id,
         work_unit_repository=wu_repo,
@@ -327,8 +356,10 @@ def test_file_records_verified_modelo_130_as_late_non_official_local_filing(repo
     computing = next(step for step in target_run.steps if step.stage is WorkflowStage.COMPUTING_DEADLINES)
     assert computing.success is True
     assert isinstance(computing.details, WorkflowDeadlineContextDetails)
-    assert computing.details.overdue is True
-    assert computing.details.extemporanea is True
+    # The gate and the receipt answer alike: a window the shift calendar cannot
+    # establish is never reported closed, so no overdue marker is recorded.
+    assert computing.details.overdue is (True if calendar_published else None)
+    assert computing.details.extemporanea is (True if calendar_published else None)
 
     assert target_filing_records(
         list_filing_records(

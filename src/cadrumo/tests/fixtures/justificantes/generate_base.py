@@ -25,6 +25,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
+from decimal import Decimal
 from pathlib import Path
 
 from reportlab.lib.pagesizes import A4
@@ -64,6 +65,34 @@ class Fixture:
     total_devolver: str | None
 
 
+#: The Modelo 111 1T 2026 receipt's own declared retención inputs: the amounts
+#: of the filled epígrafe column C (casilla 09 and its siblings), and the
+#: prior-autoliquidación box (casilla 29).
+#:
+#: The receipt's printed total is DERIVED from these through the form's own
+#: stated arithmetic -- ``28 = 03+06+09+...+27`` and ``30 = 28 - 29`` -- rather
+#: than written as a second figure. A reconciling consumer compares a receipt
+#: total against the revision's casilla 30, so a hand-typed total would make the
+#: fixture able to disagree with the inputs it prints, which is the one thing it
+#: exists to rule out.
+MODELO_111_2026_Q1_RETENCIONES: tuple[str, ...] = ("1680.00", "375.50")
+MODELO_111_2026_Q1_PRIOR_AUTOLIQUIDACION = "0.00"
+
+
+def _modelo_111_2026_q1_total() -> str:
+    """Return casilla 30 of the Modelo 111 1T 2026 receipt, from its own inputs."""
+    suma = sum((Decimal(amount) for amount in MODELO_111_2026_Q1_RETENCIONES), Decimal("0.00"))
+    return str(suma - Decimal(MODELO_111_2026_Q1_PRIOR_AUTOLIQUIDACION))
+
+
+MODELO_111_2026_Q1_TOTAL_A_INGRESAR = _modelo_111_2026_q1_total()
+"""The figure the Modelo 111 1T 2026 receipt prints as its total a ingresar.
+
+Exported so a consuming test seeds the revision's casilla 30 from the same
+value the PDF prints, instead of repeating it.
+"""
+
+
 FIXTURES: tuple[Fixture, ...] = (
     Fixture(
         filename="modelo_130_2026Q1.pdf",
@@ -90,6 +119,24 @@ FIXTURES: tuple[Fixture, ...] = (
         presentation_id="30320260411ZZZZ9999YYYY8888",
         total_ingresar=None,
         total_devolver="450.00",
+    ),
+    # A Modelo 111 receipt that PRINTS its total. Modelo 111 is the bundled
+    # family whose snapshot declares a reconciliation total casilla, so it is
+    # the one receipt a filing-chain confirmation can actually reconcile
+    # against; the quarterly 111 declaración renders under ``111/`` carry the
+    # epígrafe table and no receipt total, which reconciles nothing.
+    Fixture(
+        filename="modelo_111_2026Q1.pdf",
+        modelo="111",
+        ejercicio="2026",
+        periodo="1T",
+        tax_id="00000000T",
+        full_name="DEMO AUTONOMO UNO",
+        csv="EFGH5678IJKL9012",
+        presented_at="2026-04-17 13:40:12",
+        presentation_id="11120260417EFGH5678IJKL9012",
+        total_ingresar=MODELO_111_2026_Q1_TOTAL_A_INGRESAR,
+        total_devolver=None,
     ),
     Fixture(
         filename="modelo_100_2025A.pdf",

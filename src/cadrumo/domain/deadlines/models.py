@@ -47,6 +47,7 @@ from ..contribuyente.entity_type import EntityType, LegalEntityForm
 from ..contribuyente.renta_codes import FiscalResidency
 from .errors import DeadlineValidationError
 from .fact_context import DeadlineFactResolutionContext
+from .festivos import DeadlineHolidayCoverage, HolidayJurisdiction
 
 
 class IVARegime(str):
@@ -935,12 +936,30 @@ class ModeloDeadline(BaseModel):
             (e.g. ``Period.from_year_and_code(2026, "1T")``).
         opens_on: The first day the AEAT filing window accepts the
             modelo for this period.
-        closes_on: The last day the AEAT filing window accepts the
-            modelo for this period.
+        closes_on: The close AEAT publishes for this window, on the national
+            basis. The nominal date, which is not the last day the filer has
+            when it falls on a non-business day.
+        adjusted_closes_on: The last day the filer actually has: ``closes_on``
+            moved to the next business day when it is a Saturday, Sunday or
+            national inhábil (Ley 39/2015 art. 30.5, applied through Ley
+            58/2003 art. 7.2). Equal to ``closes_on`` when no shift applies,
+            and never earlier than it. Every date comparison that decides
+            whether filing is still timely reads this one.
+        holiday_coverage: Which holidays ``adjusted_closes_on`` accounts for.
+            ``CALENDAR_UNAVAILABLE`` means the shift's calendar could not be
+            resolved, so the effective close is unknown and the obligation's
+            ``status`` is ``UNKNOWN`` rather than a classification against the
+            nominal date.
+        shift_reason: Stable token for why the close moved, or did not.
+        shift_jurisdictions: The holiday jurisdictions that moved the close.
+        shift_holiday_refs: The holidays that moved the close. These three
+            travel with the shifted date so a surface renders the provenance it
+            was given rather than resolving the shift a second time.
         payment_cutoff_on: The cutoff for direct-debit payment, if
             applicable. ``None`` when there is no payment leg.
         status: The :class:`ObligationStatus` against the reference
-            ``today`` used by :meth:`DeadlineEngine.compute`.
+            ``today`` used by :meth:`DeadlineEngine.compute`, classified
+            against ``adjusted_closes_on``.
         boe_references: Tuple of opaque BOE / Manual práctico citation
             keys. Stable identifiers, never URLs.
         recovery: Resolved :class:`Recovery` payload when ``status`` is
@@ -955,6 +974,11 @@ class ModeloDeadline(BaseModel):
     period: Annotated[Period, BeforeValidator(_parse_modelo_deadline_period)]
     opens_on: date
     closes_on: date
+    adjusted_closes_on: date
+    holiday_coverage: DeadlineHolidayCoverage
+    shift_reason: str
+    shift_jurisdictions: tuple[HolidayJurisdiction, ...] = ()
+    shift_holiday_refs: tuple[str, ...] = ()
     payment_cutoff_on: date | None = None
     status: ObligationStatus
     boe_references: tuple[str, ...] = Field(default_factory=tuple)
@@ -966,10 +990,33 @@ class ModeloDeadline(BaseModel):
         """Reject obligations whose ``opens_on`` is after ``closes_on``."""
         if self.opens_on > self.closes_on:
             raise DeadlineValidationError(f"opens_on ({self.opens_on}) is after closes_on ({self.closes_on})")
+        if self.adjusted_closes_on < self.closes_on:
+            raise DeadlineValidationError(
+                f"adjusted_closes_on ({self.adjusted_closes_on}) precedes closes_on ({self.closes_on})",
+            )
         if self.payment_cutoff_on is not None and self.payment_cutoff_on > self.closes_on:
             raise DeadlineValidationError(
                 f"payment_cutoff_on ({self.payment_cutoff_on}) is after closes_on ({self.closes_on})",
             )
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _check_unknown_close(self) -> ModeloDeadline:
+        """Keep an unknown effective close from carrying a judgement made after it.
+
+        An obligation whose shift calendar could not be resolved knows only its
+        nominal close, as a lower bound. Nothing is judged past it: no lateness,
+        no recargo and no payment cutoff.
+        """
+        if self.status is not ObligationStatus.UNKNOWN:
+            return self
+        if self.holiday_coverage is not DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE:
+            raise DeadlineValidationError("an unknown-close obligation must report the calendar as unavailable")
+        if self.adjusted_closes_on != self.closes_on:
+            raise DeadlineValidationError("an unknown-close obligation keeps only its nominal close")
+        if self.payment_cutoff_on is not None or self.recovery is not None:
+            raise DeadlineValidationError("an unknown-close obligation carries no payment cutoff or recovery")
         return self
 
 

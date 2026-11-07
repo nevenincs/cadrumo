@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Callable
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -16,6 +16,7 @@ from ......application.live.expedientes_ports import ExpedientesDeclaration
 from ......core.casilla_id import CasillaId, validated_casilla_id
 from ......core.config import Settings
 from ......core.period import Period
+from ......core.time.clock import MADRID_TZ
 from ......domain.calculations.registry.export import resolve_export_layout
 from ......domain.calculations.registry.export_parse import parse_export_payload
 from ...browser.factory import opened_browser_page, shared_playwright_runtime
@@ -311,7 +312,7 @@ class TestParseListbox:
         printed = re.search(r"ALTA (\d{2})/(\d{2})/(\d{4}) (\d{2}):(\d{2}):(\d{2})", html)
         assert printed is not None
         day, month, year, hour, minute, second = (int(part) for part in printed.groups())
-        assert row.presented_at == datetime(year, month, day, hour, minute, second, tzinfo=UTC)
+        assert row.presented_at == datetime(year, month, day, hour, minute, second, tzinfo=MADRID_TZ)
         assert row.justificante_link_text == "Ver"
         assert row.archive_link_text == "Ver"
         assert row.declaration_copy_link_text is None
@@ -584,20 +585,36 @@ class TestExceptionChainDisclosure:
 
 
 class TestParsePresentedAt:
-    """Verify the Spanish ``dd/mm/YYYY hh:mm:ss`` timestamp shape parses to UTC."""
+    """The Spanish ``dd/mm/YYYY hh:mm:ss`` cell names a peninsular wall clock.
+
+    The sede prints presentation times in peninsular official time without an
+    offset (Ley 39/2015 art. 31), so the parsed instant is that reading
+    converted from Europe/Madrid, not the printed digits stamped with UTC.
+    """
 
     def test_canonical_shape(self) -> None:
-        """Assert a well-formed Spanish timestamp parses to a UTC :class:`datetime`."""
+        """A winter reading is one hour ahead of UTC (CET)."""
         result = parse_presented_at("01/02/2024 19:15:34")
-        assert result == datetime(
-            year=2024,
-            month=2,
-            day=1,
-            hour=19,
-            minute=15,
-            second=34,
-            tzinfo=UTC,
-        )
+        assert result == datetime(2024, 2, 1, 19, 15, 34, tzinfo=MADRID_TZ)
+        assert result == datetime(2024, 2, 1, 18, 15, 34, tzinfo=UTC)
+        assert result.astimezone(MADRID_TZ).date() == date(2024, 2, 1)
+
+    def test_a_summer_reading_uses_the_summer_offset(self) -> None:
+        """A CEST reading is two hours ahead of UTC."""
+        result = parse_presented_at("20/07/2024 19:15:34")
+        assert result == datetime(2024, 7, 20, 17, 15, 34, tzinfo=UTC)
+
+    def test_a_late_evening_reading_keeps_its_spanish_civil_date(self) -> None:
+        """The reading a filing-plazo comparison turns on.
+
+        Stamping the printed digits with UTC put 23:30 peninsular time at
+        23:30Z, which reads back as 01:30 on the NEXT Spanish day -- reporting
+        a declaration presented on the last day of a filing window as presented
+        the day after it closed.
+        """
+        result = parse_presented_at("20/04/2026 23:30:00")
+        assert result == datetime(2026, 4, 20, 21, 30, 0, tzinfo=UTC)
+        assert result.astimezone(MADRID_TZ).date() == date(2026, 4, 20)
 
     def test_invalid_shape_raises_registered_validation_error(self) -> None:
         """Assert ISO-style timestamps are rejected with the registered sede error."""

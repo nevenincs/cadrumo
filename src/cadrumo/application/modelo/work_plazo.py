@@ -14,7 +14,7 @@ posture, logs the validation problem, and lets the rendering layer emit the
 generic extemporaneous-filing warning.
 
 See Also:
-    :func:`cadrumo.application.modelo.effective_deadline.resolve_effective_filing_deadline`:
+    :func:`cadrumo.domain.deadlines.effective_close.resolve_effective_filing_deadline`:
         Nominal and business-day close dates of the plazo voluntario.
     :func:`cadrumo.domain.deadlines.recargo.build_recovery_for_overdue`:
         Resolves the Art. 27 LGT recargo band for overdue filing.
@@ -38,11 +38,11 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.form_codes import form_for_role
+from ...domain.deadlines.effective_close import resolve_effective_filing_deadline
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...domain.deadlines.models import Recovery, TaxpayerProfile
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
-from .effective_deadline import resolve_effective_filing_deadline
 
 _LOG = get_logger(__name__)
 

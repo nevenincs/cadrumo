@@ -650,6 +650,7 @@ def filing_record_payload(record: ModeloRecord) -> ModeloRecordPayload:
         origin=record.origin,
         confirmation=record.confirmation,
         declaration_kind=record.declaration_kind,
+        filing_timeliness=record.filing_timeliness,
         aeat_register=aeat_register_payload(record.aeat_register),
         aeat_accepted=record.aeat_accepted,
         status=record.status,

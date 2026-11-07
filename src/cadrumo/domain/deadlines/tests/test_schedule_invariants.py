@@ -25,6 +25,7 @@ from cadrumo.domain.deadlines.models import IVARegime
 
 from ....core.modelo import Modelo
 from ....core.period import Period
+from ..festivos import DeadlineHolidayCoverage
 from ..models import (
     CrossPeriodGroupMemberRoster,
     ModeloDeadline,
@@ -48,6 +49,9 @@ def _obligation(*, filing_year: int, code: str = "1T") -> ModeloDeadline:
         period=Period.from_year_and_code(filing_year, code),
         opens_on=date(filing_year, 4, 1),
         closes_on=date(filing_year, 4, 20),
+        adjusted_closes_on=date(filing_year, 4, 20),
+        holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
+        shift_reason="business_day",
         status=ObligationStatus.UPCOMING,
     )
 
@@ -166,6 +170,9 @@ def _obligation_with_modelo(raw: object) -> ModeloDeadline:
         period=Period.from_year_and_code(2026, "1T"),
         opens_on=date(2026, 4, 1),
         closes_on=date(2026, 4, 20),
+        adjusted_closes_on=date(2026, 4, 20),
+        holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
+        shift_reason="business_day",
         status=ObligationStatus.UPCOMING,
     )
 

@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date, datetime
 
+from ...core.filing_timeliness import FilingTimeliness
+from ...core.logging import get_logger
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import (
     ActionEvidenceProvenance,
@@ -12,6 +14,11 @@ from ...core.operator_action_enums import (
 )
 from ...core.period import Period
 from ...core.time.clock import now
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.errors import RegistryError
+from ...domain.deadlines.effective_close import resolve_filing_timeliness
+from ...domain.deadlines.errors import DeadlineValidationError
+from ...domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...domain.deadlines.models import ModeloDeadline, ObligationStatus
 from ..operator_actions.models import PreconditionVerdict
 from ..operator_actions.preconditions import no_action_precondition_verdict
@@ -29,6 +36,8 @@ from .run_models import (
     WorkflowStage,
     WorkflowStep,
 )
+
+_LOG = get_logger(__name__)
 
 type WorkflowDeadlineTarget = ModeloDeadline | WorkflowObligationFacts
 
@@ -51,6 +60,57 @@ def no_recovery_verdict(
     )
 
 
+def _filing_window_closed_on(
+    *,
+    obligation: ModeloDeadline,
+    today: date,
+    authority_operation: PinnedAuthorityOperation,
+) -> date | None:
+    """Return the effective close date when the window has genuinely closed, else ``None``.
+
+    The obligation already carries the close its filer actually has: the engine
+    resolves the business-day shift once (Ley 39/2015 art. 30.5 through Ley
+    58/2003 art. 7.2) and publishes it. Comparing the registry's declared close
+    against ``today`` instead refused a filing on the shifted day that the
+    calculate posture, the declaration editor, the filing calendar and the
+    filing receipt all call in time.
+
+    An effective close the engine could not establish is not proof that the
+    window has closed: an unknown close is only a lower bound, so the window is
+    reported as still open and nothing is judged after it.
+
+    ``authority_operation`` is the caller's pin, required so this decision can
+    never answer from a generation other than the one the run reads.
+    """
+    if obligation.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE:
+        return None
+    try:
+        timeliness = resolve_filing_timeliness(
+            str(obligation.modelo),
+            obligation.period.filing_year,
+            obligation.period,
+            presented_on=today,
+            operation=authority_operation,
+        )
+    except (RegistryError, DeadlineValidationError):
+        # The registry or the shift could not be read, so lateness is unknown
+        # rather than established. The window stays open; the local filing
+        # receipt records its own posture as unknown for the same reason.
+        _LOG.debug(
+            "filing window lateness unresolved; treating the window as open",
+            extra={
+                "modelo": str(obligation.modelo),
+                "filing_year": obligation.period.filing_year,
+                "period": obligation.period.registry_token,
+            },
+            exc_info=True,
+        )
+        return None
+    if timeliness is not FilingTimeliness.EXTEMPORANEA:
+        return None
+    return obligation.adjusted_closes_on
+
+
 def decide_filing_deadline(
     *,
     obligation: ModeloDeadline | None,
@@ -60,8 +120,14 @@ def decide_filing_deadline(
     started: datetime,
     steps: list[WorkflowStep],
     purpose: WorkflowPurpose,
+    authority_operation: PinnedAuthorityOperation,
 ) -> WorkflowDeadlineTarget:
-    """Record the selected deadline and enforce the workflow purpose."""
+    """Record the selected deadline and enforce the workflow purpose.
+
+    ``authority_operation`` is required: the lateness decision reads the
+    registry, and a decision taken on a generation other than the run's own is
+    a different answer about the same filing.
+    """
     if purpose is WorkflowPurpose.VERIFY:
         return _record_verify_deadline_context(
             obligation=obligation,
@@ -108,7 +174,12 @@ def decide_filing_deadline(
         )
         raise WorkflowAbortSignalError(reason=WorkflowAbortReason.NO_PENDING_OBLIGATION)
 
-    if obligation.closes_on < today:
+    closed_on = _filing_window_closed_on(
+        obligation=obligation,
+        today=today,
+        authority_operation=authority_operation,
+    )
+    if closed_on is not None:
         if target_modelo is not None and target_period is not None:
             # A targeted but closed-window obligation that genuinely
             # existed is filed locally and late (extemporánea, con recargo)
@@ -124,7 +195,7 @@ def decide_filing_deadline(
                         kind="deadline_context",
                         modelo=obligation.modelo,
                         period=obligation.period,
-                        closes_on=obligation.closes_on,
+                        closes_on=closed_on,
                         overdue=True,
                         extemporanea=True,
                     ),
@@ -142,7 +213,7 @@ def decide_filing_deadline(
                     kind="deadline_context",
                     modelo=obligation.modelo,
                     period=obligation.period,
-                    closes_on=obligation.closes_on,
+                    closes_on=closed_on,
                 ),
                 precondition_verdict=no_recovery_verdict(
                     condition_id="workflow.deadline.filing_window_open",
@@ -207,7 +278,9 @@ def _record_verify_deadline_context(
     if obligation is not None:
         if obligation.opens_on > today:
             window_state = FilingWindowState.FUTURE
-        elif obligation.closes_on >= today:
+        elif obligation.adjusted_closes_on >= today:
+            # The effective close, so the window is not reported shut on a day
+            # the filer may still file.
             window_state = FilingWindowState.OPEN
         else:
             window_state = FilingWindowState.CLOSED

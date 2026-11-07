@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 from ...core.casilla_id import CasillaId
 from ...core.config import Settings
 from ...core.identity.hex_ids import CalculationRevisionId
+from ...core.time.clock import MADRID_TZ
 from ...core.time.clock import now as clock_utc_now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
@@ -395,9 +396,13 @@ def _finish_verification(
             engine=gate_engine,
             profile=workflow_profile,
             work_unit=work_unit,
-            today=now.date(),
+            # The filing calendar is a Europe/Madrid civil boundary, the date
+            # the receipt's posture and the FILE gate are judged on; the UTC
+            # date reports the previous Spanish day for two hours every night.
+            today=now.astimezone(MADRID_TZ).date(),
             runs_dir=workflow_runs_dir,
             run_repository=repos.workflow_run,
+            operation=operation,
             purpose=WorkflowPurpose.VERIFY,
         )
 

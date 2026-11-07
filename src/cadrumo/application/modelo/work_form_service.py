@@ -51,6 +51,7 @@ from ...domain.calculations.registry.form_context import resolve_form_context_fi
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.iva_wallet_carry_targets import revision_offers_iva_wallet
 from ...domain.calculations.registry.schema_form_layouts import FormContextFieldBlock, FormLayoutDefinition
+from ...domain.deadlines.effective_close import resolve_effective_filing_deadline
 from ...domain.modelos.calculation_revision import (
     FILED_REVISION_STATES,
     SEALED_REVISION_STATES,
@@ -78,7 +79,6 @@ from .caller_context import caller_context_of
 from .credit_resolution import load_credit_resolutions
 from .credit_resolution_repository import CreditResolutionReader
 from .edit_models import ModeloEditAdmissionResultV1, ModeloEditAdmittedV1
-from .effective_deadline import resolve_effective_filing_deadline
 from .profile_binding import resolve_profile_sourced_bindings
 from .profile_export_binding import resolve_profile_identity_producer_values
 from .projection_declaration import modelo_projection_available

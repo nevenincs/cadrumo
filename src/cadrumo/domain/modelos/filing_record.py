@@ -35,6 +35,7 @@ from typing import Annotated, Self, override
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.filing_timeliness import FilingTimeliness
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
 from ...core.identity.aeat_csv import AeatCsv
@@ -169,6 +170,42 @@ class FilingDeclarationKind(StrEnum):
     COMPLEMENTARIA = "complementaria"
     SUSTITUTIVA = "sustitutiva"
     RECTIFICATIVA = "rectificativa"
+
+
+#: Declaration kinds whose presentation after the period's plazo voluntario is
+#: itself a late presentation. Ley 58/2003 art. 122.1 says an autoliquidación
+#: complementaria, or a declaración or comunicación complementaria o
+#: sustitutiva, may be presented inside the plazo or after it ends, and "en este
+#: último caso tendrán el carácter de extemporáneas" -- the same window, the
+#: same date test, as an original. Art. 27.1 attaches the recargo to the
+#: presentation of an autoliquidación or declaración "fuera de plazo sin
+#: requerimiento previo", so the calendar fact is the same one for all three.
+#:
+#: RECTIFICATIVA is deliberately absent. Art. 120.3 and the art. 120.4 added by
+#: Ley 13/2023 make the autoliquidación rectificativa the vehicle of the
+#: rectification procedure -- the replacement for the solicitud de rectificación
+#: of an autoliquidación that harmed the taxpayer's legitimate interests -- and
+#: art. 122.1's extemporaneidad rule names complementarias and sustitutivas
+#: only. No bundled official text says a rectificativa presented after the
+#: plazo is thereby extemporánea, so its posture stays unknown instead of being
+#: inferred from a neighbouring rule.
+_PLAZO_TIMED_DECLARATION_KINDS = frozenset(
+    {
+        FilingDeclarationKind.ORIGINAL,
+        FilingDeclarationKind.COMPLEMENTARIA,
+        FilingDeclarationKind.SUSTITUTIVA,
+    }
+)
+
+
+def declaration_kind_is_timed_against_the_plazo(kind: FilingDeclarationKind) -> bool:
+    """Say whether this declaration kind's lateness is the period's own plazo question.
+
+    ``True`` means a presentation date may be judged against the period's filing
+    window. ``False`` means no official text in the bundle supports that test
+    for this kind, so its timeliness stays unknown rather than guessed.
+    """
+    return kind in _PLAZO_TIMED_DECLARATION_KINDS
 
 
 class IvaSettlementRefundState(StrEnum):
@@ -475,6 +512,19 @@ class ModeloRecord(BaseModel):
     :class:`ExternalEvidence` and no other state carries it. An ``AEAT``-origin
     record is always ``CONFIRMADA``; the retired states (``DISCREPANTE``,
     ``DESCARTADA``) are local entries that are no longer in force.
+
+    ``filing_timeliness`` is the posture against the plazo voluntario decided
+    AT FILING TIME and kept. ``declaration_kind`` cannot carry it: an
+    ``ORIGINAL`` declaration presented after its window closed is extemporánea,
+    which carries a consequence under Ley 58/2003 -- the art. 27 recargo where
+    the declaration results in an amount payable, the art. 198 regime where no
+    economic harm arises. It is stored
+    rather than recomputed on read because a filing window can be amended
+    later, and a reread must report the posture the filing actually had.
+    ``None`` means no posture was decided for this record -- a record written
+    before the field existed, or a path that does not decide one -- and is
+    reported as unknown rather than guessed from today's deadlines. Lateness
+    only; no regime, eligibility, amount or interest is asserted.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -493,6 +543,7 @@ class ModeloRecord(BaseModel):
     origin: FilingOrigin
     confirmation: AeatConfirmationState
     declaration_kind: FilingDeclarationKind
+    filing_timeliness: FilingTimeliness | None = None
     aeat_register: AeatRegisterRef | None = None
     status: ModeloRecordStatus = ModeloRecordStatus.VIGENTE
     superseded_at: UtcInstant | None = None

@@ -15,11 +15,13 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
 from cadrumo.application.modelo.action_errors import ExternalModeloImportError
 from cadrumo.application.modelo.amendment_actions import amend_modelo_revision
 from cadrumo.application.modelo.calculation_revision_queries import get_calculation_revision
 from cadrumo.application.modelo.work_lifecycle import get_work_unit
 from cadrumo.core.casilla_id import CasillaId
+from cadrumo.core.filing_timeliness import FilingTimeliness
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -65,6 +67,26 @@ def test_import_filing_carries_external_evidence_metadata(repos: Repos, *, opera
     assert evidence.kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
     assert evidence.reference_id == "JUST2026303Q1OPERATOR1"
     assert evidence.imported_at == T1
+
+
+def test_import_filing_keeps_the_receipts_presentation_date_and_decides_its_posture(
+    repos: Repos, *, operation: PinnedAuthorityOperation
+) -> None:
+    """The receipt's own presentation timestamp reaches the chain entry.
+
+    The register reference used to carry only identifiers, so an imported
+    filing could not say when AEAT recorded the presentation -- and therefore
+    could not say whether it was presented inside the plazo. ``filed_at`` is
+    the import clock and answers a different question.
+    """
+    outcome = drive_import_persists_filing(repos, operation=operation)
+    receipt = JustificanteRepository().load("JUST2026303Q1OPERATOR1")
+
+    assert receipt is not None
+    assert outcome.filing.aeat_register is not None
+    assert outcome.filing.aeat_register.presented_at == receipt.presented_at
+    assert outcome.filing.filing_timeliness is not None
+    assert outcome.filing.filing_timeliness is not FilingTimeliness.UNKNOWN
 
 
 def test_import_filing_records_no_amendment_link(repos: Repos, *, operation: PinnedAuthorityOperation) -> None:

@@ -72,7 +72,7 @@ from ...core.identity.tax_id import tax_id_identity_token
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.time.clock import now
+from ...core.time.clock import madrid_wall_clock_to_utc, now
 from ...domain.justificante.errors import JustificanteVerificationError
 from ..calculations.observations_repository import ObservationSourceKind
 from .errors import (
@@ -756,6 +756,10 @@ def _register_and_confirm_capture(
                 expediente_id=snapshot.expediente_id,
                 csv=snapshot.csv,
                 justificante_number=justificante.presentation_id,
+                # The receipt prints its own presentation timestamp as a
+                # peninsular wall clock; the chain entry needs that instant to
+                # say whether the declaration was presented inside the plazo.
+                presented_at=madrid_wall_clock_to_utc(justificante.presented_at),
             ),
             evidence_kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
             tax_id=expected_tax_id,

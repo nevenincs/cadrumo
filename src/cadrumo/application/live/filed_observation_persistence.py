@@ -35,6 +35,7 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
 from ...core.modelo import Modelo
 from ...core.period import Period, PeriodKind
+from ...core.time.clock import madrid_wall_clock_to_utc
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.iva_compensation.carry_forward import iva_compensation_period_sort_key
 from ...domain.justificante.schema import Justificante
@@ -434,7 +435,10 @@ def _register_entry(
     source_lexicals: dict[CasillaId, str] | None,
 ) -> AeatRegisterEntry:
     tipo_solicitud = observation.metadata.get("tipo_solicitud", "").strip() or None
-    presented_at = observation.presented_at if observation.presented_at.tzinfo is not None else None
+    # An offset-free reading is a peninsular wall clock, not an absent date:
+    # discarding it left the chain entry unable to say when AEAT recorded the
+    # presentation, and so unable to say whether it was inside the plazo.
+    presented_at = madrid_wall_clock_to_utc(observation.presented_at)
     return AeatRegisterEntry(
         bucket_id=bucket_id,
         modelo=observation.modelo,

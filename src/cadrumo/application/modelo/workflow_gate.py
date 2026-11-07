@@ -46,7 +46,6 @@ from __future__ import annotations
 
 import asyncio
 from datetime import date, datetime
-from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -84,12 +83,12 @@ if TYPE_CHECKING:
     from ..auth.operator_scope_ports import OperatorScopePorts
 
 
-@lru_cache(maxsize=512)
 def _deadline_window_period_for_registry_period(
     *,
     modelo: str,
     filing_year: int,
     registry_period: str,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> Period | None:
     """Return the typed :class:`~cadrumo.core.period.Period` declared by the registry deadline window.
 
@@ -98,13 +97,22 @@ def _deadline_window_period_for_registry_period(
     filing target" — this helper only projects the matched window's
     :class:`~cadrumo.core.period.Period` rather than its dates. Returns ``None`` when the
     registry declares no window for the combination.
+
+    ``operation`` keeps the lookup on the caller's pinned authority generation.
+    The result is NOT memoised: a cache keyed on the modelo, year and period
+    alone would serve one generation's answer to a caller pinned to another, and
+    an authority generation is exactly what decides this answer.
     """
     target = Period.from_year_and_code(filing_year, registry_period)
-    resolution = resolve_filing_window(modelo, filing_year, target)
+    resolution = resolve_filing_window(modelo, filing_year, target, authority=operation)
     return None if resolution is None else resolution.period
 
 
-def workflow_period_for_work_unit(work_unit: WorkUnit) -> Period:
+def workflow_period_for_work_unit(
+    work_unit: WorkUnit,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> Period:
     """Return the canonical :class:`~cadrumo.core.period.Period` consumed by the workflow engine.
 
     Quarterly work units use their registry token (for example ``"1T"``) but the
@@ -112,6 +120,8 @@ def workflow_period_for_work_unit(work_unit: WorkUnit) -> Period:
     shape. When the registry exposes such a deadline window, this helper returns
     that declared period so the workflow run addresses the same obligation the
     deadline engine will compute.
+
+    ``operation`` keeps the window lookup on the caller's pinned generation.
     """
     if not work_unit.period.is_quarterly:
         return work_unit.period
@@ -120,6 +130,7 @@ def workflow_period_for_work_unit(work_unit: WorkUnit) -> Period:
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
         registry_period=work_unit.period.registry_token,
+        operation=operation,
     )
     return declared or work_unit.period
 
@@ -127,12 +138,19 @@ def workflow_period_for_work_unit(work_unit: WorkUnit) -> Period:
 class RevisionInputsProvider:
     """Load immutable :class:`CalculationRevision` inputs for the workflow gate."""
 
-    def __init__(self, *, revision: CalculationRevision, work_unit: WorkUnit) -> None:
-        """Bind the calculation revision and work unit whose inputs the gate loads."""
+    def __init__(
+        self,
+        *,
+        revision: CalculationRevision,
+        work_unit: WorkUnit,
+        operation: PinnedAuthorityOperation,
+    ) -> None:
+        """Bind the revision, work unit and pinned authority the gate loads inputs on."""
         self._revision = revision
         self._work_unit = work_unit
         self._modelo = work_unit.modelo
-        self._period = workflow_period_for_work_unit(work_unit)
+        self._operation = operation
+        self._period = workflow_period_for_work_unit(work_unit, operation=operation)
 
     def load_inputs(
         self,
@@ -162,6 +180,9 @@ class RevisionInputsProvider:
             revision=self._revision,
             work_unit=self._work_unit,
             workflow_profile=profile,
+            # The caller's pin, so a verify or file run never replays a
+            # revision's inputs against a generation other than its own.
+            operation=self._operation,
         )
 
 
@@ -275,12 +296,17 @@ class _RevisionDeadlineWindowChecker:
         self._engine = engine
 
     def is_window_open(self, modelo: str, period: Period, today: date) -> bool:
-        """Return whether the taxpayer has an open filing window."""
+        """Return whether the taxpayer has an open filing window.
+
+        The window runs to the close the filer actually has: a plazo ending on
+        a non-business day runs to the next business day, and reading the
+        nominal close called the window shut on a day filing was still timely.
+        """
         schedule = self._engine.compute(self._profile, period.filing_year, today=today)
         return any(
             obligation.modelo == modelo
             and obligation.period == period
-            and obligation.opens_on <= today <= obligation.closes_on
+            and obligation.opens_on <= today <= obligation.adjusted_closes_on
             for obligation in schedule.obligations
         )
 
@@ -356,7 +382,7 @@ def build_revision_workflow_engine(
         operation: Caller-owned generation-pinned indexed authority operation.
     """
     cfg = settings or load_settings()
-    deadline_engine = DeadlineEngine()
+    deadline_engine = DeadlineEngine(authority=operation)
     provider_kind = cfg.cadrumo_auth_provider if cfg.cadrumo_auth_provider is not None else AuthProviderKind.CERTIFICATE
     submission_engine = SubmissionEngine(
         auth_provider=select_provider(
@@ -386,8 +412,10 @@ def build_revision_workflow_engine(
         inputs_provider=RevisionInputsProvider(
             revision=revision,
             work_unit=work_unit,
+            operation=operation,
         ),
         settings=cfg,
+        authority_operation=operation,
     )
 
 
@@ -399,6 +427,7 @@ def run_revision_workflow_gate(
     today: date,
     runs_dir: Path | None,
     run_repository: WorkflowRunRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
     resumed_from: str | None = None,
     purpose: WorkflowPurpose = WorkflowPurpose.FILE,
 ) -> WorkflowResult:
@@ -422,6 +451,8 @@ def run_revision_workflow_gate(
         today: Reference date for deadline and preflight stages.
         runs_dir: Optional filesystem location for persisted workflow runs.
         run_repository: Repository that stores the resulting workflow run.
+        operation: Caller-owned generation-pinned authority operation; the run
+            addresses its obligation on the caller's generation.
         resumed_from: Optional workflow run id when this execution resumes a
             prior run.
         purpose: Workflow policy to apply, usually VERIFY or FILE.
@@ -430,7 +461,7 @@ def run_revision_workflow_gate(
         engine.run_for_period(
             profile,
             work_unit.modelo,
-            workflow_period_for_work_unit(work_unit),
+            workflow_period_for_work_unit(work_unit, operation=operation),
             today=today,
             resumed_from=resumed_from,
             purpose=purpose,

@@ -72,6 +72,7 @@ from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.filing_actions import (
+    ModeloFilingResult,
     file_modelo_revision,
 )
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
@@ -305,6 +306,7 @@ __all__ = [
     "canonical_work_unit_period",
     "file_flow_repositories",
     "file_revision",
+    "file_revision_result",
     "registry_required_manual_casillas",
     "seed_modelo_180_work_unit",
     "seed_modelo_193_work_unit",
@@ -617,7 +619,7 @@ def _workflow_gate(
     )
 
 
-def file_flow_file_revision(
+def file_flow_file_revision_result(
     calculation_revision_id: str,
     *,
     revision: CalculationRevision,
@@ -629,7 +631,7 @@ def file_flow_file_revision(
     filing_repository: ModeloRecordCatalogueRepository,
     bucket_event_repository: BucketEventHistoryRepository,
     clock: datetime,
-):
+) -> ModeloFilingResult:
     with bundled_indexed_authority().operation() as operation:
         seed_clean_cross_period_sources(
             work_unit,
@@ -670,7 +672,35 @@ def file_flow_file_revision(
             clock=clock,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        ).record
+        )
+
+
+def file_flow_file_revision(
+    calculation_revision_id: str,
+    *,
+    revision: CalculationRevision,
+    work_unit: WorkUnit,
+    actor: str = "operator-A",
+    notes: str | None = None,
+    work_unit_repository: WorkUnitCatalogueRepository,
+    calculation_repository: CalculationRevisionCatalogueRepository,
+    filing_repository: ModeloRecordCatalogueRepository,
+    bucket_event_repository: BucketEventHistoryRepository,
+    clock: datetime,
+) -> ModeloRecord:
+    """Run the real filing action and keep only its committed record."""
+    return file_flow_file_revision_result(
+        calculation_revision_id,
+        revision=revision,
+        work_unit=work_unit,
+        actor=actor,
+        notes=notes,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+        filing_repository=filing_repository,
+        bucket_event_repository=bucket_event_repository,
+        clock=clock,
+    ).record
 
 
 def file_flow_verify_revision(
@@ -802,6 +832,7 @@ VERIFY_YEAR = _VERIFY_YEAR
 WorkflowGate = _WorkflowGate
 canonical_work_unit_period = _canonical_work_unit_period
 file_revision = file_flow_file_revision
+file_revision_result = file_flow_file_revision_result
 registry_required_manual_casillas = _registry_required_manual_casillas
 seed_modelo_180_work_unit = _seed_modelo_180_work_unit
 seed_m130_activity = _seed_m130_activity

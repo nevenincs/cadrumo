@@ -8,7 +8,7 @@ import pytest
 
 from ...config import override_settings
 from ...errors.hierarchy import CoreValidationError
-from ..clock import MADRID_TZ, frozen_clock, now, today_madrid
+from ..clock import MADRID_TZ, frozen_clock, madrid_wall_clock_to_utc, now, today_madrid
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -104,3 +104,41 @@ class TestTodayMadrid:
         with frozen_clock(datetime(2026, 12, 31, 23, 30, 0, tzinfo=UTC)):
             assert now().date() == date(2026, 12, 31)
             assert today_madrid() == date(2027, 1, 1)
+
+
+class TestMadridWallClockToUtc:
+    """An offset-free AEAT reading names an instant on Spain's civil clock.
+
+    AEAT prints presentation timestamps without an offset -- the sede's
+    listbox cells and the justificante's "Presentación realizada el" line are
+    peninsular official time (Ley 39/2015 art. 31). The reading must be
+    interpreted on that clock, not stamped with UTC, or the instant moves one
+    or two hours and its Spanish civil date changes for anything stamped in
+    the last two hours of a Spanish day.
+    """
+
+    def test_a_winter_reading_uses_the_cet_offset(self) -> None:
+        assert madrid_wall_clock_to_utc(datetime(2026, 2, 1, 19, 15, 34)) == datetime(
+            2026, 2, 1, 18, 15, 34, tzinfo=UTC
+        )
+
+    def test_a_summer_reading_uses_the_cest_offset(self) -> None:
+        assert madrid_wall_clock_to_utc(datetime(2026, 7, 20, 19, 15, 34)) == datetime(
+            2026, 7, 20, 17, 15, 34, tzinfo=UTC
+        )
+
+    def test_the_spanish_civil_date_round_trips(self) -> None:
+        """The date a filing-plazo comparison reads is preserved."""
+        reading = datetime(2026, 4, 20, 23, 30, 0)
+        instant = madrid_wall_clock_to_utc(reading)
+
+        assert instant == datetime(2026, 4, 20, 21, 30, 0, tzinfo=UTC)
+        assert instant.astimezone(MADRID_TZ).replace(tzinfo=None) == reading
+        assert instant.astimezone(MADRID_TZ).date() == date(2026, 4, 20)
+
+    def test_an_aware_value_is_converted_not_reinterpreted(self) -> None:
+        """An offset its source supplied is a fact, not a reading to re-read."""
+        aware = datetime(2026, 4, 20, 21, 30, 0, tzinfo=UTC)
+
+        assert madrid_wall_clock_to_utc(aware) == aware
+        assert madrid_wall_clock_to_utc(datetime(2026, 4, 20, 23, 30, 0, tzinfo=MADRID_TZ)) == aware

@@ -113,7 +113,9 @@ def _projection() -> ModeloWorkRevisionProjection:
     )
 
 
-def test_external_import_revision_requires_matching_confirmed_filing_receipt() -> None:
+def test_external_import_revision_requires_matching_confirmed_filing_receipt(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """A report-free verified revision is accepted only with its own AEAT receipt."""
     unit = _unit()
     instant = datetime(2026, 3, 10, 12, tzinfo=UTC)
@@ -158,6 +160,7 @@ def test_external_import_revision_requires_matching_confirmed_filing_receipt() -
         evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
         evidence_reference_id="TEST-CSV-RECEIPT",
         declaration_kind=FilingDeclarationKind.ORIGINAL,
+        operation=operation,
     )
 
     class FilingRepository:

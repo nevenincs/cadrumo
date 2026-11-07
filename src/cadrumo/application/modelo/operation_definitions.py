@@ -646,6 +646,7 @@ class ModeloWorkFileExecutor:
                         record=ModeloFilingRecordSnapshot.from_record(record),
                         advisories=advisories,
                         published=outcome.published,
+                        filing_timeliness=outcome.filing_timeliness,
                         filing_record_id=record.filing_record_id,
                         work_unit_id=record.work_unit_id,
                         calculation_revision_id=record.calculation_revision_id,

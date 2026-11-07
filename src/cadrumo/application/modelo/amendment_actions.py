@@ -57,6 +57,7 @@ from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...domain.deadlines.effective_close import decide_filing_timeliness
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -668,6 +669,7 @@ def _finalize_amendment(
         declaration_kind=amendment_kind,
         actor=actor,
         now=now,
+        operation=operation,
     )
 
     filed_amendment = filed_calculation_revision(target=verified_amendment, actor=actor, now=now)
@@ -848,6 +850,7 @@ def _build_amendment_filing_updates(
     declaration_kind: FilingDeclarationKind,
     actor: str,
     now: datetime,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[str, ModeloRecord, ModeloRecordCatalogue]:
     new_filing_id = derive_filing_record_id(
         work_unit_id=in_force.work_unit_id,
@@ -863,6 +866,7 @@ def _build_amendment_filing_updates(
         declaration_kind=declaration_kind,
         filed_at=now,
         filed_by=actor.strip(),
+        operation=operation,
     )
     updated_filing_catalogue = filing_catalogue
     if in_force.filing_record_id != baseline.filing_record_id:
@@ -962,8 +966,17 @@ def _build_amendment_filing_record(
     declaration_kind: FilingDeclarationKind,
     filed_at: datetime,
     filed_by: str,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloRecord:
-    """Create the pending current filing record that replaces ``in_force`` and amends ``baseline``."""
+    """Create the pending current filing record that replaces ``in_force`` and amends ``baseline``.
+
+    The amendment decides its own plazo posture at its own presentation date,
+    against the same period's filing window: Ley 58/2003 art. 122.1 gives a
+    complementaria or sustitutiva presented after that window closed "el
+    carácter de extemporáneas". A kind the official text does not time against
+    the window keeps an unknown posture. The amendment is a new presentation,
+    so it never inherits the posture of the record it supersedes.
+    """
     return ModeloRecord(
         filing_record_id=filing_record_id,
         work_unit_id=in_force.work_unit_id,
@@ -979,6 +992,14 @@ def _build_amendment_filing_record(
         origin=FilingOrigin.LOCAL,
         confirmation=AeatConfirmationState.PENDIENTE,
         declaration_kind=declaration_kind,
+        filing_timeliness=decide_filing_timeliness(
+            modelo=str(in_force.modelo),
+            filing_year=in_force.filing_year,
+            period=in_force.period,
+            filed_at=filed_at,
+            operation=operation,
+            declaration_kind=declaration_kind,
+        ),
         status=ModeloRecordStatus.VIGENTE,
         external_evidence=None,
         amends_filing_record_id=baseline.filing_record_id,

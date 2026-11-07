@@ -6,6 +6,7 @@ from typing import Annotated, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from ...core.filing_timeliness import FilingTimeliness
 from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
@@ -54,6 +55,14 @@ class ModeloWorkFilePublicResultV2(BaseModel):
     ``handoff_required`` is always true and is part of the contract, not a
     computed field: this operation records a filing locally and hands the
     operator the artefacts to submit themselves. Nothing here reaches AEAT.
+
+    ``filing_timeliness`` is the one fact ``declaration_kind`` cannot carry: an
+    ``original`` declaration says nothing about whether it was presented inside
+    its plazo voluntario, and a late one carries a Ley 58/2003 consequence whose
+    regime depends on the declaration. It repeats the posture the record kept at
+    filing time, normalised so a caller outside this package always reads a
+    value: a record that kept no posture reads ``unknown``. It is a calendar
+    posture, and assesses nothing.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
@@ -62,6 +71,7 @@ class ModeloWorkFilePublicResultV2(BaseModel):
     record: ModeloFilingRecordSnapshot
     advisories: ModeloLifecycleAdvisories
     published: bool
+    filing_timeliness: FilingTimeliness
     filing_record_id: Annotated[str, Field(min_length=1, max_length=128)]
     work_unit_id: ModeloWorkUnitSubjectId
     calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
@@ -80,4 +90,7 @@ class ModeloWorkFilePublicResultV2(BaseModel):
             or self.advisories.period != self.record.period.to_period().registry_token
         ):
             raise ValueError("filing summary does not match its committed record")
+        kept = self.record.filing_timeliness
+        if self.filing_timeliness is not (kept if kept is not None else FilingTimeliness.UNKNOWN):
+            raise ValueError("filing timeliness does not match the posture the record kept")
         return self

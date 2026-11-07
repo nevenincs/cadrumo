@@ -1666,6 +1666,10 @@ cli:
         file:
           verification_report_ambiguous: More than one granting verification report
             matches this revision. Resolve the verification conflict before filing.
+        file_extemporanea: 'WARNING: this filing is recorded outside the voluntary
+          filing period. Which consequence a late presentation carries depends on
+          the declaration (Ley 58/2003 Art. 27 or Art. 198); this application determines
+          none of them.'
         file_help: Record a checked saved calculation as filed. Does NOT submit to
           AEAT
         file_idempotent_noop: 'Nothing to do: saved calculation %{calculation_revision_id}
