@@ -99,6 +99,84 @@ def test_a_failure_reaches_the_waiting_request_and_is_not_kept() -> None:
     assert read.answer("lease-1", within=5) == "result-2"
 
 
+def _outlive_failure(read: BoundedRead[str], work: _Work, key: object) -> None:
+    """Leave one request unanswered by its bound, then let the work fail, and make later runs succeed."""
+    work.fail = True
+    work.release.clear()
+    assert read.answer(key, within=0.05) == BUSY
+    work.release.set()
+    with pytest.raises(LookupError):
+        read.answer(key, within=5)
+    work.fail = False
+
+
+def test_a_failure_that_outlived_its_request_is_served_next_instead_of_busy() -> None:
+    work = _Work()
+    read = BoundedRead(work, name="test", fresh_seconds=30)
+    _outlive_failure(read, work, "lease-1")
+
+    with pytest.raises(LookupError):
+        read.answer("lease-1", within=5)
+    with pytest.raises(LookupError):
+        read.answer("lease-1", within=0)
+    assert work.runs == 1
+
+
+def test_a_kept_failure_is_read_again_once_stale() -> None:
+    work = _Work()
+    read = BoundedRead(work, name="test", fresh_seconds=0.5)
+    _outlive_failure(read, work, "lease-1")
+    with pytest.raises(LookupError):
+        read.answer("lease-1", within=5)
+
+    time.sleep(0.6)
+    assert read.answer("lease-1", within=5) == "result-2"
+
+
+def test_a_kept_failure_is_not_served_once_forgotten() -> None:
+    work = _Work()
+    read = BoundedRead(work, name="test", fresh_seconds=30)
+    _outlive_failure(read, work, "lease-1")
+    with pytest.raises(LookupError):
+        read.answer("lease-1", within=5)
+
+    read.forget()
+    assert read.answer("lease-1", within=5) == "result-2"
+
+
+def test_a_kept_failure_is_served_only_for_its_key() -> None:
+    work = _Work()
+    read = BoundedRead(work, name="test", fresh_seconds=30)
+    _outlive_failure(read, work, "lease-1")
+
+    assert read.answer("lease-2", within=5) == "result-2"
+    with pytest.raises(LookupError):
+        read.answer("lease-1", within=5)
+    assert work.runs == 2
+
+
+def test_a_failure_of_work_forgotten_while_it_ran_is_not_kept() -> None:
+    release = Event()
+    runs: list[int] = []
+
+    def compute() -> str:
+        runs.append(len(runs) + 1)
+        if len(runs) == 1:
+            assert release.wait(5)
+            raise LookupError("work_failed")
+        return f"result-{len(runs)}"
+
+    read = BoundedRead(compute, name="test", fresh_seconds=30)
+    assert read.answer("lease-1", within=0.05) == BUSY
+    read.forget()
+    release.set()
+    deadline = time.monotonic() + 5
+    answer = read.answer("lease-1", within=5)
+    while answer == BUSY and time.monotonic() < deadline:
+        answer = read.answer("lease-1", within=5)
+    assert answer == "result-2"
+
+
 @pytest.mark.parametrize("invalidate", (False, True), ids=("changing-lease", "forgetting"))
 def test_changing_context_does_not_multiply_unfinished_reads(invalidate: bool) -> None:
     work = _Work()

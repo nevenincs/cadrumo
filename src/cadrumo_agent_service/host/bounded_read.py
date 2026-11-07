@@ -7,9 +7,9 @@ for each answer, and an exchange left waiting also holds one of the service's
 few administration slots. So the work runs on its own thread, once at a time,
 and the request waits for it only up to its bound. A request that finds the
 work unfinished at the bound is told the service is busy; the work goes on,
-and the next request inside the freshness window is served its result at once.
-Work that finishes within its request's bound is not kept: that request was
-answered, and the next one reads afresh.
+and the next request inside the freshness window is served its outcome at once,
+whether a result or a failure. Work that finishes within its request's bound is
+not kept: that request was answered, and the next one reads afresh.
 """
 
 from __future__ import annotations
@@ -50,8 +50,10 @@ class BoundedRead[T]:
 
     A result is kept under the key the request named, and only a request naming
     the same key is served it: the key says what the result was computed for,
-    such as the lease and the agent tree. A failure is never kept, and reaches
-    the request that waited for it.
+    such as the lease and the agent tree. A failure is kept the same way: the
+    request that waited for it is answered with it, and so is the request that
+    comes back for work that outlived its own request. Telling that request the
+    service is busy instead would have it retry a read that already failed.
     """
 
     def __init__(self, compute: Callable[[], T], *, name: str, fresh_seconds: float) -> None:
@@ -60,7 +62,7 @@ class BoundedRead[T]:
         self._name = name
         self._fresh_seconds = fresh_seconds
         self._lock = Lock()
-        self._kept: tuple[Hashable, T, float] | None = None
+        self._kept: tuple[Hashable, Future[T], float] | None = None
         self._running: tuple[Hashable, int, Future[T]] | None = None
         self._generation = 0
         self._outlived: set[Future[T]] = set()
@@ -69,12 +71,14 @@ class BoundedRead[T]:
         """Return the work's result for ``key`` within ``within`` seconds, or :data:`BUSY`.
 
         Raises:
-            Exception: Whatever the work raised, for the request that waited for it.
+            Exception: Whatever the work raised, for the request that waited for
+                it or, while the failure is kept, for a request that came back for it.
         """
         with self._lock:
             kept = self._kept
             if kept is not None and kept[0] == key and monotonic() - kept[2] < self._fresh_seconds:
-                return kept[1]
+                # A kept outcome is settled, so reading it does not wait.
+                return kept[1].result()
             running = self._running
             if running is not None and (running[0] != key or running[1] != self._generation):
                 # Invalidation withdraws the result, not ownership of the work.
@@ -97,7 +101,7 @@ class BoundedRead[T]:
         except FutureTimeoutError:
             with self._lock:
                 if not running[2].done():
-                    # Its result is kept for the request that comes back for it.
+                    # Its outcome is kept for the request that comes back for it.
                     if running[1] == self._generation:
                         self._outlived.add(running[2])
                     return BUSY
@@ -122,16 +126,24 @@ class BoundedRead[T]:
             value = self._compute()
         except BaseException as error:
             with self._lock:
-                self._outlived.discard(future)
-                if self._running is not None and self._running[2] is future:
-                    self._running = None
                 future.set_exception(error)
+                # An interruption of the process is not an answer to a read.
+                self._settle(key, generation, future, keep=isinstance(error, Exception))
             return
         with self._lock:
-            outlived = future in self._outlived
-            self._outlived.discard(future)
-            if self._running is not None and self._running[2] is future:
-                self._running = None
-                if outlived and generation == self._generation:
-                    self._kept = (key, value, monotonic())
             future.set_result(value)
+            self._settle(key, generation, future, keep=True)
+
+    def _settle(self, key: Hashable, generation: int, future: Future[T], *, keep: bool) -> None:
+        """Release the work's slot, and keep its outcome if a request outlived it.
+
+        The caller holds the lock and has already settled ``future``. An outcome
+        is kept only for the generation it was computed in, so a :meth:`forget`
+        while the work ran withholds it.
+        """
+        outlived = future in self._outlived
+        self._outlived.discard(future)
+        if self._running is not None and self._running[2] is future:
+            self._running = None
+            if keep and outlived and generation == self._generation:
+                self._kept = (key, future, monotonic())
