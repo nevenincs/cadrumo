@@ -4,7 +4,10 @@ The worker serves its channels before any of this composition exists. The
 production registry, its handlers and the pinned tax authority are imported
 and built the first time an operation needs them, never to admit a worker or a
 sign-in, so the modules below stay off the worker's startup path and every
-heavier dependency is imported inside the method that first uses it.
+heavier dependency is imported inside the method that first uses it. Once a
+person is admitted, the worker walks its profile grounding index in the
+background under the same lease; the sign-in has already been answered and no
+read waits for that walk unless it is already under way.
 
 Core types: :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
 """
@@ -45,6 +48,7 @@ from cadrumo.application.operations.secret_submission import OperationSecretRequ
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.config import override_settings
+from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from cadrumo.core.logging import get_logger
 from cadrumo.core.operations import OperationDurability, OperationEffect, OperationLifecycle
 from cadrumo.core.startup_phase_log import startup_phase
@@ -190,6 +194,8 @@ class ProfileWorkerOperationHost:
         # The idle import of the composition graph. A sign-in never waits for
         # it; a composition does, so the two never import the graph at once.
         self._imports_lock = RLock()
+        # The background profile grounding walk a person's admission starts.
+        self._grounding_warmup: asyncio.Task[None] | None = None
 
     def _report_progress(self, operation_ids: tuple[OperationId, ...]) -> None:
         with self._record_effects_guard:
@@ -283,6 +289,48 @@ class ProfileWorkerOperationHost:
             with startup_phase(_log, "worker_operation_imports"):
                 for module in _COMPOSITION_MODULES:
                     import_module(module)
+
+    def start_profile_grounding_warmup(self) -> None:
+        """Start walking this generation's profile grounding index off the loop, once.
+
+        The first calendar or readiness read after a sign-in otherwise walks
+        every published revision itself. Starting the walk as soon as a person
+        is admitted lets that read usually find the index cached. A read never
+        waits for a walk that has not begun: it joins one already under way or
+        walks itself, and a failed walk leaves it to walk on demand.
+        """
+        if self.closed or self._grounding_warmup is not None:
+            return
+        self._grounding_warmup = asyncio.create_task(
+            asyncio.to_thread(self._warm_profile_grounding), name="profile-grounding-warmup"
+        )
+
+    def _warm_profile_grounding(self) -> None:
+        """Walk the grounding index under this worker's own pinned lease and governed facts."""
+        if self.closed:
+            return
+        from cadrumo.domain.calculations.registry.profile_grounding import warm_profile_grounding_index
+
+        started = monotonic()
+        try:
+            with self.governed():
+                computed = warm_profile_grounding_index(self.pinned(), abandoned=lambda: self.closed)
+        except Exception as error:
+            # Only the error's type and frame identity are recorded; the read
+            # that next needs the index walks it again and reports any failure.
+            diagnostic_event(_log, "profile_grounding_warmup_failed", fields=diagnostic_error_fields(error))
+            return
+        diagnostic_event(
+            _log,
+            "profile_grounding_warmup_finished",
+            fields={"computed": computed, "elapsed_seconds": round(monotonic() - started, 3)},
+        )
+
+    async def _join_profile_grounding_warmup(self) -> None:
+        """Wait for a walk under way, which stops at its next revision once the host is closed."""
+        warmup = self._grounding_warmup
+        if warmup is not None:
+            await await_cancellation_complete(asyncio.shield(warmup), task_name="profile-grounding-warmup-join")
 
     def in_flight_operation_count(self) -> int:
         """Read the owning supervisor without creating services or touching custody."""
@@ -886,6 +934,8 @@ class ProfileWorkerOperationHost:
         await await_cancellation_complete(
             asyncio.to_thread(self._await_composition), task_name="profile-operation-compose-join"
         )
+        # The walk reads through the lifetime lease, so it ends before that lease can close.
+        await self._join_profile_grounding_warmup()
         result = (
             await await_cancellation_complete(
                 self.services.drain(timedelta(seconds=5)), task_name="profile-operation-drain"

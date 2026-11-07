@@ -1,0 +1,117 @@
+"""A profile worker walks its grounding index in the background under its own lease.
+
+A person's admission starts the walk; the first read then finds the index cached
+for the worker's pinned generation. Shutdown abandons a walk under way and
+waits for it before the lease closes. A walk that fails leaves only a value-free
+diagnostic record, and the index is walked again on demand. Every case runs the
+real walk and the real lease against a private copy of the published authority.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import logging
+from pathlib import Path
+from typing import cast
+
+import pytest
+
+from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
+from cadrumo.core.diagnostic_log import diagnostic_process
+from cadrumo.domain.calculations.registry import profile_grounding
+from cadrumo.domain.calculations.registry.tests.shared_authority_isolation import isolated_shared_authority
+from cadrumo.tests.log_records import delivered_records
+
+from ...adapters.worker_authorization_client import WorkerAuthorizationClient
+from .. import operation_host
+from ..operation_host import ProfileWorkerOperationHost
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+@pytest.fixture(autouse=True)
+def cold_grounding_cache(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(profile_grounding, "_grounding_index_cache", {})
+    monkeypatch.setattr(profile_grounding, "_grounding_index_flights", {})
+
+
+def _host() -> ProfileWorkerOperationHost:
+    # The walk reads only the pinned authority: no custody method or native
+    # authorization may run on this path.
+    return ProfileWorkerOperationHost(
+        cast(ProfileWorkerCustody, object()), authorization=cast(WorkerAuthorizationClient, object())
+    )
+
+
+@pytest.mark.asyncio
+async def test_admission_warm_up_caches_the_index_of_the_workers_own_generation(tmp_path: Path) -> None:
+    with isolated_shared_authority(tmp_path) as database:
+        host = _host()
+
+        host.start_profile_grounding_warmup()
+        warmup = host._grounding_warmup
+        host.start_profile_grounding_warmup()
+        assert warmup is not None and host._grounding_warmup is warmup
+        await warmup
+
+        generation = host.pinned().generation.logical_generation
+        assert list(profile_grounding._grounding_index_cache) == [generation]
+        with host.governed():
+            index = profile_grounding.build_profile_grounding_index(host.pinned())
+        assert index is profile_grounding._grounding_index_cache[generation]
+        assert "censo.status" in index
+
+        result = await host.close()
+        assert not result.needs_containment
+        # Windows refuses to delete a file a live connection holds.
+        database.unlink()
+
+
+@pytest.mark.asyncio
+async def test_shutdown_abandons_a_walk_under_way_before_releasing_the_lease(tmp_path: Path) -> None:
+    with isolated_shared_authority(tmp_path) as database:
+        host = _host()
+        host.start_profile_grounding_warmup()
+        # Let the walk lease the authority and begin.
+        async with asyncio.timeout(60):
+            while not profile_grounding._grounding_index_flights:
+                await asyncio.sleep(0.01)
+
+        result = await host.close()
+
+        assert not result.needs_containment
+        assert host._grounding_warmup is not None and host._grounding_warmup.done()
+        assert profile_grounding._grounding_index_cache == {}
+        assert profile_grounding._grounding_index_flights == {}
+        database.unlink()
+
+
+@pytest.mark.asyncio
+async def test_a_failed_walk_leaves_one_value_free_record_and_the_host_closes(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    with isolated_shared_authority(tmp_path) as database:
+        canary = "synthetic-private-canary"
+        # An unreadable publication: the lease the walk needs cannot be taken.
+        database.write_bytes(canary.encode())
+        host = _host()
+
+        with diagnostic_process("profile_worker"), caplog.at_level(logging.DEBUG, logger=operation_host.__name__):
+            host.start_profile_grounding_warmup()
+            warmup = host._grounding_warmup
+            assert warmup is not None
+            await warmup
+
+        records = [
+            record
+            for record in delivered_records(caplog, operation_host.__name__)
+            if record.getMessage() == "profile_grounding_warmup_failed"
+        ]
+        assert len(records) == 1
+        assert records[0].levelno == logging.ERROR
+        assert records[0].exc_info is None
+        rendered = "".join(str(value) for value in vars(records[0]).values())
+        assert canary not in rendered
+        assert str(tmp_path) not in rendered
+        assert profile_grounding._grounding_index_cache == {}
+        assert not (await host.close()).needs_containment

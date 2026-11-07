@@ -276,6 +276,9 @@ async def handle_custody_control(context: WorkerControl, request: object) -> _Co
             ),
             deadline=request.timeout_deadline or DEFAULT_TIMEOUT_POLICY.deadline().instant,
         )
+        # The person is admitted and the reply is sent; the first view they open
+        # will need the grounding index, so its walk starts now in the background.
+        context.operations.start_profile_grounding_warmup()
         return "handled"
     if isinstance(request, ProfileWorkerHumanReceiptRequest):
         receipt = await await_cancellation_complete(
