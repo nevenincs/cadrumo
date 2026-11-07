@@ -407,3 +407,1162 @@ value = true
 explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 source_refs = ["aeat-modelo-115-guia-censal"]
+
+# The monthly cadence of RIRPF art. 108.1, paragraph two: the gran-empresa
+# retenedor declares "en los veinte primeros dias naturales de cada mes, en
+# relacion con las cantidades retenidas y los ingresos a cuenta que correspondan
+# por el mes inmediato anterior". Each close below is READ from the bundled
+# Calendario del Contribuyente of the year it falls in, never derived from that
+# rule: the published day moves for weekends and holidays, and a filing deadline
+# written from the rule rather than the calendar is a filing-grade harm. The
+# calendar names this modelo in the monthly population every month -- "<mes>
+# <ejercicio>. grandes empresas: 111, 115, 117, 123, 124, 126, 128, 216, 230" --
+# under its own "Hasta el <dia> de <mes>" heading, which is the close taken here.
+#
+# payment_cutoff_on is not authored: the governed
+# deadlines.domiciliation-cutoff-clause fact declares this modelo's monthly
+# Anexo II day, so the cutoff is derived rather than restated per month.
+#
+# The December close falls in the following January, so the last period of the
+# horizon year closes in a year no bundled calendar covers. That one close is
+# the statutory twentieth day, authored only because it is already a working day
+# and needs no calendar to shift it.
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2022-01"
+filing_year = 2022
+period = "2022 01"
+period_kind = "monthly"
+opens_on = 2022-02-01
+closes_on = 2022-02-21
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2022-02"
+filing_year = 2022
+period = "2022 02"
+period_kind = "monthly"
+opens_on = 2022-03-01
+closes_on = 2022-03-21
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2022-03"
+filing_year = 2022
+period = "2022 03"
+period_kind = "monthly"
+opens_on = 2022-04-01
+closes_on = 2022-04-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2022-04"
+filing_year = 2022
+period = "2022 04"
+period_kind = "monthly"
+opens_on = 2022-05-01
+closes_on = 2022-05-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2022-05"
+filing_year = 2022
+period = "2022 05"
+period_kind = "monthly"
+opens_on = 2022-06-01
+closes_on = 2022-06-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2022-06"
+filing_year = 2022
+period = "2022 06"
+period_kind = "monthly"
+opens_on = 2022-07-01
+closes_on = 2022-07-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2022-07"
+filing_year = 2022
+period = "2022 07"
+period_kind = "monthly"
+opens_on = 2022-08-01
+closes_on = 2022-08-22
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2022-08"
+filing_year = 2022
+period = "2022 08"
+period_kind = "monthly"
+opens_on = 2022-09-01
+closes_on = 2022-09-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2022-09"
+filing_year = 2022
+period = "2022 09"
+period_kind = "monthly"
+opens_on = 2022-10-01
+closes_on = 2022-10-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2022-10"
+filing_year = 2022
+period = "2022 10"
+period_kind = "monthly"
+opens_on = 2022-11-01
+closes_on = 2022-11-21
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2022-11"
+filing_year = 2022
+period = "2022 11"
+period_kind = "monthly"
+opens_on = 2022-12-01
+closes_on = 2022-12-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2022-12"
+filing_year = 2022
+period = "2022 12"
+period_kind = "monthly"
+opens_on = 2023-01-01
+closes_on = 2023-01-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2023-01"
+filing_year = 2023
+period = "2023 01"
+period_kind = "monthly"
+opens_on = 2023-02-01
+closes_on = 2023-02-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2023-02"
+filing_year = 2023
+period = "2023 02"
+period_kind = "monthly"
+opens_on = 2023-03-01
+closes_on = 2023-03-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2023-03"
+filing_year = 2023
+period = "2023 03"
+period_kind = "monthly"
+opens_on = 2023-04-01
+closes_on = 2023-04-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2023-04"
+filing_year = 2023
+period = "2023 04"
+period_kind = "monthly"
+opens_on = 2023-05-01
+closes_on = 2023-05-22
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2023-05"
+filing_year = 2023
+period = "2023 05"
+period_kind = "monthly"
+opens_on = 2023-06-01
+closes_on = 2023-06-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2023-06"
+filing_year = 2023
+period = "2023 06"
+period_kind = "monthly"
+opens_on = 2023-07-01
+closes_on = 2023-07-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2023-07"
+filing_year = 2023
+period = "2023 07"
+period_kind = "monthly"
+opens_on = 2023-08-01
+closes_on = 2023-08-21
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2023-08"
+filing_year = 2023
+period = "2023 08"
+period_kind = "monthly"
+opens_on = 2023-09-01
+closes_on = 2023-09-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2023-09"
+filing_year = 2023
+period = "2023 09"
+period_kind = "monthly"
+opens_on = 2023-10-01
+closes_on = 2023-10-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2023-10"
+filing_year = 2023
+period = "2023 10"
+period_kind = "monthly"
+opens_on = 2023-11-01
+closes_on = 2023-11-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2023-11"
+filing_year = 2023
+period = "2023 11"
+period_kind = "monthly"
+opens_on = 2023-12-01
+closes_on = 2023-12-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2023-12"
+filing_year = 2023
+period = "2023 12"
+period_kind = "monthly"
+opens_on = 2024-01-01
+closes_on = 2024-01-22
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2024-01"
+filing_year = 2024
+period = "2024 01"
+period_kind = "monthly"
+opens_on = 2024-02-01
+closes_on = 2024-02-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2024-02"
+filing_year = 2024
+period = "2024 02"
+period_kind = "monthly"
+opens_on = 2024-03-01
+closes_on = 2024-03-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2024-03"
+filing_year = 2024
+period = "2024 03"
+period_kind = "monthly"
+opens_on = 2024-04-01
+closes_on = 2024-04-22
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2024-04"
+filing_year = 2024
+period = "2024 04"
+period_kind = "monthly"
+opens_on = 2024-05-01
+closes_on = 2024-05-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2024-05"
+filing_year = 2024
+period = "2024 05"
+period_kind = "monthly"
+opens_on = 2024-06-01
+closes_on = 2024-06-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2024-06"
+filing_year = 2024
+period = "2024 06"
+period_kind = "monthly"
+opens_on = 2024-07-01
+closes_on = 2024-07-22
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2024-07"
+filing_year = 2024
+period = "2024 07"
+period_kind = "monthly"
+opens_on = 2024-08-01
+closes_on = 2024-08-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2024-08"
+filing_year = 2024
+period = "2024 08"
+period_kind = "monthly"
+opens_on = 2024-09-01
+closes_on = 2024-09-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2024-09"
+filing_year = 2024
+period = "2024 09"
+period_kind = "monthly"
+opens_on = 2024-10-01
+closes_on = 2024-10-21
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2024-10"
+filing_year = 2024
+period = "2024 10"
+period_kind = "monthly"
+opens_on = 2024-11-01
+closes_on = 2024-11-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2024-11"
+filing_year = 2024
+period = "2024 11"
+period_kind = "monthly"
+opens_on = 2024-12-01
+closes_on = 2024-12-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2024-12"
+filing_year = 2024
+period = "2024 12"
+period_kind = "monthly"
+opens_on = 2025-01-01
+closes_on = 2025-01-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2025-01"
+filing_year = 2025
+period = "2025 01"
+period_kind = "monthly"
+opens_on = 2025-02-01
+closes_on = 2025-02-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2025-02"
+filing_year = 2025
+period = "2025 02"
+period_kind = "monthly"
+opens_on = 2025-03-01
+closes_on = 2025-03-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2025-03"
+filing_year = 2025
+period = "2025 03"
+period_kind = "monthly"
+opens_on = 2025-04-01
+closes_on = 2025-04-21
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2025-04"
+filing_year = 2025
+period = "2025 04"
+period_kind = "monthly"
+opens_on = 2025-05-01
+closes_on = 2025-05-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2025-05"
+filing_year = 2025
+period = "2025 05"
+period_kind = "monthly"
+opens_on = 2025-06-01
+closes_on = 2025-06-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2025-06"
+filing_year = 2025
+period = "2025 06"
+period_kind = "monthly"
+opens_on = 2025-07-01
+closes_on = 2025-07-21
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2025-07"
+filing_year = 2025
+period = "2025 07"
+period_kind = "monthly"
+opens_on = 2025-08-01
+closes_on = 2025-08-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2025-08"
+filing_year = 2025
+period = "2025 08"
+period_kind = "monthly"
+opens_on = 2025-09-01
+closes_on = 2025-09-22
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2025-09"
+filing_year = 2025
+period = "2025 09"
+period_kind = "monthly"
+opens_on = 2025-10-01
+closes_on = 2025-10-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2025-10"
+filing_year = 2025
+period = "2025 10"
+period_kind = "monthly"
+opens_on = 2025-11-01
+closes_on = 2025-11-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2025-11"
+filing_year = 2025
+period = "2025 11"
+period_kind = "monthly"
+opens_on = 2025-12-01
+closes_on = 2025-12-22
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2025-12"
+filing_year = 2025
+period = "2025 12"
+period_kind = "monthly"
+opens_on = 2026-01-01
+closes_on = 2026-01-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2026"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2026-01"
+filing_year = 2026
+period = "2026 01"
+period_kind = "monthly"
+opens_on = 2026-02-01
+closes_on = 2026-02-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2026"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2026-02"
+filing_year = 2026
+period = "2026 02"
+period_kind = "monthly"
+opens_on = 2026-03-01
+closes_on = 2026-03-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2026"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2026-03"
+filing_year = 2026
+period = "2026 03"
+period_kind = "monthly"
+opens_on = 2026-04-01
+closes_on = 2026-04-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2026"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2026-04"
+filing_year = 2026
+period = "2026 04"
+period_kind = "monthly"
+opens_on = 2026-05-01
+closes_on = 2026-05-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2026"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2026-05"
+filing_year = 2026
+period = "2026 05"
+period_kind = "monthly"
+opens_on = 2026-06-01
+closes_on = 2026-06-22
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2026"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2026-06"
+filing_year = 2026
+period = "2026 06"
+period_kind = "monthly"
+opens_on = 2026-07-01
+closes_on = 2026-07-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2026"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2026-07"
+filing_year = 2026
+period = "2026 07"
+period_kind = "monthly"
+opens_on = 2026-08-01
+closes_on = 2026-08-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2026"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2026-08"
+filing_year = 2026
+period = "2026 08"
+period_kind = "monthly"
+opens_on = 2026-09-01
+closes_on = 2026-09-21
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2026"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2026-09"
+filing_year = 2026
+period = "2026 09"
+period_kind = "monthly"
+opens_on = 2026-10-01
+closes_on = 2026-10-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2026"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2026-10"
+filing_year = 2026
+period = "2026 10"
+period_kind = "monthly"
+opens_on = 2026-11-01
+closes_on = 2026-11-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2026"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2026-11"
+filing_year = 2026
+period = "2026 11"
+period_kind = "monthly"
+opens_on = 2026-12-01
+closes_on = 2026-12-21
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2026"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-115-2026-12"
+filing_year = 2026
+period = "2026 12"
+period_kind = "monthly"
+opens_on = 2027-01-01
+closes_on = 2027-01-20
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "boe-rirpf-art-108-retencion-deadline"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
