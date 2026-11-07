@@ -66,19 +66,26 @@ pub(crate) fn agent_selection_available(
     .map(|status| status.permits_agent(provider, transport))
 }
 
-/// A cold sign-in probe outlives the service's bounded status exchange. Its
-/// work continues after `busy`, and the next read collects that result.
-/// Retry only this read and only that explicit response, never a mutation
-/// or an exchange whose outcome is unknown.
+/// How many reads a status answered `busy` gets. The service answers `busy`
+/// while it reads its provider catalog, which probes every lane and took
+/// 5.4 s for 13 lanes on a fresh profile; at the 250 ms pause this waits
+/// about 12 s, where four reads gave up after one second and left the
+/// settings page saying the providers could not be loaded.
+const STATUS_BUSY_ATTEMPTS: u32 = 48;
+
+/// A cold sign-in probe or catalog read outlives the service's bounded status
+/// exchange. Its work continues after `busy`, and the next read collects that
+/// result. Retry only this read and only that explicit response, never a
+/// mutation or an exchange whose outcome is unknown.
 pub(crate) fn read_status(
     mut request: impl FnMut() -> Result<Value, ApplicationError>,
     pause: Duration,
 ) -> Result<Status, CommandFailure> {
-    for attempt in 0..4 {
+    for attempt in 0..STATUS_BUSY_ATTEMPTS {
         match wire::status(outcome(request()?)) {
             Err(CommandFailure::Refused(wire::Refused {
                 code: Refusal::Busy,
-            })) if attempt < 3 => {
+            })) if attempt + 1 < STATUS_BUSY_ATTEMPTS => {
                 std::thread::sleep(pause);
             }
             result => return result,
@@ -315,6 +322,26 @@ mod tests {
     }
 
     #[test]
+    fn a_status_read_outlasting_a_catalog_read_is_collected() {
+        // A catalog read answered `busy` for seconds; twenty reads span five.
+        let mut calls = 0;
+        let status = read_status(
+            || {
+                calls += 1;
+                Ok(if calls <= 20 {
+                    json!({"kind":"refused","code":"busy"})
+                } else {
+                    json!({"providers":[]})
+                })
+            },
+            Duration::ZERO,
+        )
+        .unwrap();
+        assert_eq!(calls, 21);
+        assert!(status.providers.is_empty());
+    }
+
+    #[test]
     fn status_retries_are_bounded_and_preserve_the_refusal() {
         let mut calls = 0;
         let result = read_status(
@@ -324,7 +351,7 @@ mod tests {
             },
             Duration::ZERO,
         );
-        assert_eq!(calls, 4);
+        assert_eq!(calls, STATUS_BUSY_ATTEMPTS);
         assert!(matches!(
             result,
             Err(CommandFailure::Refused(wire::Refused {
