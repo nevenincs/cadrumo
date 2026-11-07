@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import pathlib
 from typing import Final
 
@@ -22,10 +23,18 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: A newline, named so the constructed transcriptions below carry no escape.
 LINE_BREAK = chr(10)
 
-_DESIGN = (
-    pathlib.Path("src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_353/files")
-    / "01-353-ejercicio-2026-y-siguientes-actualizado-03-02-26.xlsx.extracted.md"
-)
+_DESIGNS_ROOT = pathlib.Path("src/cadrumo/_data/corpus/aeat_official/disenos_registro")
+
+
+def _design_transcription(modelo: str, sha256: str) -> pathlib.Path:
+    """Return the transcription of the design whose workbook the corpus manifest pins to ``sha256``."""
+    root = _DESIGNS_ROOT / f"modelo_{modelo}"
+    manifest = json.loads((root / "manifest.json").read_text(encoding=_UTF_8))
+    (artefact,) = (item for item in manifest["artefacts"] if item["sha256"] == sha256)
+    return root / f"{artefact['stored_path']}.extracted.md"
+
+
+_DESIGN = _design_transcription("353", "cb1374a79a87b7c8282ff3c964d78b250bedfa11750decfa0e5e7f90e8f97380")
 #: Note labels are scoped to the sheet that prints them; this design's
 #: pointer cells and their notes sit on its first sheet.
 _SHEET = "35301"
@@ -254,10 +263,7 @@ def test_a_note_printed_as_a_bare_label_is_defined_by_the_rows_beneath_it() -> N
     assert both_shapes["A"]["nota 12"] == "La opcion 0A solo para normativa foral."
     assert both_shapes["A"]["nota 16"] == "Ejercicio 2025: CNAE-2009 Ejercicio 2026 y ss: CNAE-2025"
 
-    design = (
-        pathlib.Path("src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_222/files")
-        / "01-222-ejercicio-2025-y-siguientes.xlsx.extracted.md"
-    )
+    design = _design_transcription("222", "0a44cd6bcae3b6ecbdb7bba1e54ddfad519506b91545b655c8da8454a3a63f51")
     live = sheet_note_definitions(design.read_text(encoding=_UTF_8))["DR22201"]
     assert live["nota 16"].startswith("Ejercicio 2025"), (
         "modelo 222's bare-label note no longer reads back; the design may have been "

@@ -13,11 +13,13 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.auth.sessions import load_persisted_session, storage_state_paths
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.external_constants import load_external_constants
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_YEAR = filing_year_envelope().horizon
 
 _BUCKET_ID = "30303030-3030-4303-8303-303030303030"
-_AUTHENTICATED_AT = datetime(2026, 5, 26, 9, 30, 0, tzinfo=UTC)
+_AUTHENTICATED_AT = datetime(_YEAR, 5, 26, 9, 30, 0, tzinfo=UTC)
 
 
 def test_load_persisted_session_accepts_provider_specific_clave_metadata(tmp_path: Path) -> None:

@@ -58,10 +58,9 @@ _M720_COMPOSITES: Final[dict[int, tuple[str, str, int, int, int, str]]] = {
 # does not establish a general subtraction formula; this reading only admits
 # the explicitly stated signed representation.
 _SOURCE_READINGS: Final = {
-    "aeat-dr-720": ("720", "2013", _M720_SOURCE_SHA256, _M720_COMPOSITES),
+    "aeat-dr-720": ("720", _M720_SOURCE_SHA256, _M720_COMPOSITES),
     "aeat-dr-194-2019": (
         "194",
-        "2019",
         "792cd3ab3f1e94ce7afd62a6fa37710253aec7b801e3097ad27741f90a657d5a",
         {
             641: (
@@ -76,7 +75,6 @@ _SOURCE_READINGS: Final = {
     ),
     "aeat-dr-194-2023": (
         "194",
-        "2023",
         "83cd9a332e0016607e87332bea8c3e5d33f0b0f8373ec56f820d82414ca76a7b",
         {
             604: (
@@ -91,7 +89,6 @@ _SOURCE_READINGS: Final = {
     ),
     "aeat-dr-194-2024": (
         "194",
-        "2024",
         "4a738a126ddb465aac236b687aa25441b7cb71ec4b0ef6ea940096a3747b2651",
         {
             605: (
@@ -114,8 +111,8 @@ def source_stated_composite_anchor_keys_for(
     selected = _SOURCE_READINGS.get(str(source.source_ref))
     if selected is None:
         return frozenset[tuple[str, int, str | None, str | None, str, int | None]]()
-    _modelo, epoch, digest, readings = selected
-    if source.design_epoch != epoch or source.source_sha256 != digest:
+    _modelo, digest, readings = selected
+    if source.source_sha256 != digest:
         raise RegistryValidationError("signed monetary composite source reading is unreviewed or stale")
     keys: set[tuple[str, int, str | None, str | None, str, int | None]] = set()
     for row, reading in readings.items():
@@ -136,8 +133,8 @@ def source_stated_composite_integer_digits_for(
     selected = _SOURCE_READINGS.get(str(identity.source_ref))
     if selected is None:
         return None
-    modelo, epoch, digest, readings = selected
-    if str(identity.modelo) != modelo or identity.design_epoch != epoch or identity.source_sha256 != digest:
+    modelo, digest, readings = selected
+    if str(identity.modelo) != modelo or identity.source_sha256 != digest:
         raise RegistryValidationError("signed monetary composite source reading is unreviewed or stale")
     reading = readings.get(field.source_row)
     if reading is None:

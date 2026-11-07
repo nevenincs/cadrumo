@@ -393,8 +393,8 @@ def test_complementaria_kind_refused_for_post_boundary_period(
         if (exc_info.value.context is not None and exc_info.value.context)
         else ""
     )
-    assert "rectificativa" in accepted
-    assert "sustitutiva" in accepted
+    # The 2025 IVA manual makes the rectificativa the single correction route from this period.
+    assert accepted == "rectificativa"
     assert "complementaria" not in accepted
 
 

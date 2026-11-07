@@ -9,6 +9,7 @@ import pytest
 from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_surfaces import validate_family_identity_uniqueness
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 
 from ..author_family_identities import (
     PROJECTION_ENDPOINTS,
@@ -22,32 +23,36 @@ from ..author_family_identities import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_ENDPOINT_YEAR = str(filing_year_envelope().floor)
+_PREDICATE_YEAR = str(filing_year_envelope().horizon)
+_OPEN_ENDED_123 = str(open_ended_revision("123").id)
+
 _ENDPOINT_TOML = """\
 # An authored comment the pass must not discard.
-[[revisions."2024".projection_endpoints]]
+[[revisions."{year}".projection_endpoints]]
 legal_refs = ["ley-27-2014:art-41"]
-source_refs = ["aeat-dr-200-2024"]
-[revisions."2024".projection_endpoints.projection_ref]
+source_refs = ["aeat-dr-200-{year}"]
+[revisions."{year}".projection_endpoints.projection_ref]
 projection_kind = "m200_administrador"
 slot = 1
 field = "nif"
 
-[[revisions."2024".projection_endpoints]]
+[[revisions."{year}".projection_endpoints]]
 legal_refs = ["ley-27-2014:art-41"]
-source_refs = ["aeat-dr-200-2024"]
-[revisions."2024".projection_endpoints.projection_ref]
+source_refs = ["aeat-dr-200-{year}"]
+[revisions."{year}".projection_endpoints.projection_ref]
 projection_kind = "m200_administrador"
 slot = 2
 field = "nif"
-"""
+""".replace("{year}", _ENDPOINT_YEAR)
 
 _PREDICATE_TOML = """\
-[[revisions."2025".verification_predicates]]
-predicate_id = "modelo-131-2025-c11-cap-by-c10"
+[[revisions."{year}".verification_predicates]]
+predicate_id = "modelo-131-{year}-c11-cap-by-c10"
 expression = 'cap_le_when_positive(["11", "10"])'
 legal_refs = ["orden-hac-1347-2024:anexo-2"]
-source_refs = ["aeat-dr-131-2025"]
-"""
+source_refs = ["aeat-dr-131-{year}"]
+""".replace("{year}", _PREDICATE_YEAR)
 
 
 def _tree(root: Path, modelo: str, revision: str, family: str, body: str) -> Path:
@@ -96,7 +101,7 @@ def test_projection_endpoint_without_a_typed_reference_is_refused() -> None:
         ("modelo-100-2025-retenciones-trabajo-declaradas", "implies-nonzero:retenciones-trabajo-declaradas"),
         ("modelo-100-2024-retenciones-trabajo-declaradas", "implies-nonzero:retenciones-trabajo-declaradas"),
         ("modelo-123-2019-2023-base-declarada", "implies-nonzero:base-declarada"),
-        ("modelo-123-2024-y-siguientes-base-declarada", "implies-nonzero:base-declarada"),
+        (f"modelo-123-{_OPEN_ENDED_123}-base-declarada", "implies-nonzero:base-declarada"),
         ("m210-representante-fiscal-required", "implies-nonzero:representante-fiscal-required"),
     ],
 )
@@ -140,7 +145,7 @@ def test_verification_predicate_without_an_operator_is_refused() -> None:
 def test_duplicate_identities_within_one_revision_are_refused(tmp_path: Path) -> None:
     """Two members of one revision deriving one identity are reported, not renamed."""
     duplicated = _ENDPOINT_TOML.replace("slot = 2", "slot = 1")
-    _tree(tmp_path, "200", "2024", PROJECTION_ENDPOINTS, duplicated)
+    _tree(tmp_path, "200", _ENDPOINT_YEAR, PROJECTION_ENDPOINTS, duplicated)
     outcome = author_identities(
         registry_root=tmp_path,
         families=[PROJECTION_ENDPOINTS],
@@ -160,7 +165,7 @@ def test_the_schema_refuses_a_revision_declaring_one_identity_twice() -> None:
 
 def test_dry_run_derives_without_writing(tmp_path: Path) -> None:
     """A dry run reports every pending member and leaves the tree byte-identical."""
-    endpoints = _tree(tmp_path, "200", "2024", PROJECTION_ENDPOINTS, _ENDPOINT_TOML)
+    endpoints = _tree(tmp_path, "200", _ENDPOINT_YEAR, PROJECTION_ENDPOINTS, _ENDPOINT_TOML)
     before = endpoints.read_bytes()
     report = tmp_path / "reports" / "dry-run.txt"
     exit_code = main(["--modelo", "200", "--dry-run", "--registry-root", str(tmp_path), "--report", str(report)])
@@ -171,8 +176,8 @@ def test_dry_run_derives_without_writing(tmp_path: Path) -> None:
 
 def test_apply_writes_one_id_line_per_member_and_is_idempotent(tmp_path: Path) -> None:
     """The pass writes each id above its member, keeps the authored prose, and re-runs clean."""
-    endpoints = _tree(tmp_path, "200", "2024", PROJECTION_ENDPOINTS, _ENDPOINT_TOML)
-    predicates = _tree(tmp_path, "131", "2025", VERIFICATION_PREDICATES, _PREDICATE_TOML)
+    endpoints = _tree(tmp_path, "200", _ENDPOINT_YEAR, PROJECTION_ENDPOINTS, _ENDPOINT_TOML)
+    predicates = _tree(tmp_path, "131", _PREDICATE_YEAR, VERIFICATION_PREDICATES, _PREDICATE_TOML)
 
     assert main(["--all", "--registry-root", str(tmp_path)]) == 0
 
@@ -180,12 +185,14 @@ def test_apply_writes_one_id_line_per_member_and_is_idempotent(tmp_path: Path) -
     assert "# An authored comment the pass must not discard." in written
     assert 'id = "m200-administrador:field-nif.slot-1"' in written
     assert 'id = "m200-administrador:field-nif.slot-2"' in written
-    endpoint_members = parse_toml(written)["revisions"]["2024"][PROJECTION_ENDPOINTS]
+    endpoint_members = parse_toml(written)["revisions"][_ENDPOINT_YEAR][PROJECTION_ENDPOINTS]
     assert [member["id"] for member in endpoint_members] == [
         "m200-administrador:field-nif.slot-1",
         "m200-administrador:field-nif.slot-2",
     ]
-    predicate_members = parse_toml(predicates.read_text(encoding="utf-8"))["revisions"]["2025"][VERIFICATION_PREDICATES]
+    predicate_members = parse_toml(predicates.read_text(encoding="utf-8"))["revisions"][_PREDICATE_YEAR][
+        VERIFICATION_PREDICATES
+    ]
     assert [member["id"] for member in predicate_members] == ["cap-le-when-positive:c11-cap-by-c10"]
 
     after_first = endpoints.read_bytes()
@@ -196,7 +203,7 @@ def test_apply_writes_one_id_line_per_member_and_is_idempotent(tmp_path: Path) -
 def test_a_collision_exits_nonzero_and_writes_nothing(tmp_path: Path) -> None:
     """The tool refuses the whole run rather than authoring the members it could."""
     duplicated = _ENDPOINT_TOML.replace("slot = 2", "slot = 1")
-    endpoints = _tree(tmp_path, "200", "2024", PROJECTION_ENDPOINTS, duplicated)
+    endpoints = _tree(tmp_path, "200", _ENDPOINT_YEAR, PROJECTION_ENDPOINTS, duplicated)
     before = endpoints.read_bytes()
     assert main(["--all", "--registry-root", str(tmp_path)]) == 1
     assert endpoints.read_bytes() == before

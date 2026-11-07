@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import timedelta
 from pathlib import Path
 
 import pytest
@@ -18,6 +18,11 @@ from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaConstraints
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    authored_revisions_where,
+    filing_year_envelope,
+)
 
 from ..compiler.loader import load_modelo_directory, load_shared_catalogues
 from ..compiler.validate_cross_revision_evolution import strict_continuity_evolution_failures
@@ -28,6 +33,19 @@ from .test_revision_edition_materialisation import casilla, modelo_root, retirem
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+# Four consecutive planted editions, oldest first: the synthetic trees label them by their year.
+_Y0, _Y1, _Y2, _Y3 = range(filing_year_envelope().horizon - 3, filing_year_envelope().horizon + 1)
+_R0, _R1, _R2, _R3 = map(str, (_Y0, _Y1, _Y2, _Y3))
+
+# Modelo 309 declares its structural successions on one authored edition: the one that follows the
+# oldest design and precedes the editions that carry the representation change forward.
+_M309_IDS = tuple(str(revision.id) for revision in authored_revisions("309"))
+_M309_STRUCTURAL = str(
+    authored_revisions_where("309", lambda revision: bool(revision.casilla_structural_successions))[0].id
+)
+_M309_BEFORE = _M309_IDS[_M309_IDS.index(_M309_STRUCTURAL) - 1]
+_M309_AFTER = _M309_IDS[_M309_IDS.index(_M309_STRUCTURAL) + 1 :]
+
 
 def casilla_structural_succession_relation(
     *, kind: str = "split", sources: tuple[str, ...] = ("combined",), targets: tuple[str, ...] = ("surname", "given")
@@ -36,10 +54,10 @@ def casilla_structural_succession_relation(
         return ", ".join(f'"{value}"' for value in values)
 
     return (
-        '[[revisions."2025".casilla_structural_successions]]\n'
+        f'[[revisions."{_R2}".casilla_structural_successions]]\n'
         'id = "name-structure"\n'
         f'kind = "{kind}"\n'
-        'from_revision = "2024"\nto_revision = "2025"\n'
+        f'from_revision = "{_R1}"\nto_revision = "{_R2}"\n'
         f"source_lineages = [{quoted(sources)}]\ntarget_lineages = [{quoted(targets)}]\n"
         'legal_refs = ["ley-58-2003:art-29"]\n'
         'from_source_refs = ["aeat-before"]\nto_source_refs = ["aeat-after"]\n'
@@ -53,25 +71,23 @@ def tree(tmp_path: Path, *, delta: bool = True, merge: bool = False, relation: s
     targets = ("combined",) if merge else ("surname", "given")
     write_edition(
         root,
-        "2024",
-        year=2024,
+        _R1,
+        year=_Y1,
         casillas="".join(
-            casilla("2024", f"old-{index}", number=str(index), lineage=lineage)
-            for index, lineage in enumerate(sources, 1)
+            casilla(_R1, f"old-{index}", number=str(index), lineage=lineage) for index, lineage in enumerate(sources, 1)
         ),
         manifest_extra='continuidad_validation = "strict"\n',
     )
     write_edition(
         root,
-        "2025",
-        year=2025,
+        _R2,
+        year=_Y2,
         casillas="".join(
-            casilla("2025", f"new-{index}", number=str(index), lineage=lineage)
-            for index, lineage in enumerate(targets, 1)
+            casilla(_R2, f"new-{index}", number=str(index), lineage=lineage) for index, lineage in enumerate(targets, 1)
         ),
-        manifest_extra='predecessor = "2024"\n' if delta else "",
+        manifest_extra=f'predecessor = "{_R1}"\n' if delta else "",
     )
-    directory = root / "revisions" / "2025" / "casilla_structural_successions"
+    directory = root / "revisions" / _R2 / "casilla_structural_successions"
     directory.mkdir()
     (directory / "0001-declarations.toml").write_text(
         relation
@@ -91,7 +107,7 @@ def test_structural_boundary_serializes_and_resolves_without_identity_inheritanc
 ) -> None:
     root = tree(tmp_path, merge=merge, delta=delta)
     modelo = load_modelo_directory(root)
-    successor = modelo.revisions["2025"]
+    successor = modelo.revisions[_R2]
     assert len(successor.casillas) == (1 if merge else 2)
     assert all(row.inherited_from is None for row in successor.casillas)
     assert unresolved_successor_rows(modelo) == ()
@@ -100,7 +116,7 @@ def test_structural_boundary_serializes_and_resolves_without_identity_inheritanc
     assert CasillaStructuralSuccession.model_validate_json(relation.model_dump_json()) == relation
     # New identities cannot borrow the source's occurrence or continuity locale.
     for row in successor.casillas:
-        assert "2024" not in str(row.localization_keys)
+        assert _R1 not in str(row.localization_keys)
         forbidden = "combined" if not merge else "surname"
         assert forbidden not in str(row.localization_keys)
 
@@ -110,8 +126,8 @@ def test_structural_boundary_serializes_and_resolves_without_identity_inheritanc
     [
         ('source_lineages = ["combined"]', 'source_lineages = ["unknown"]'),
         ('target_lineages = ["surname", "given"]', 'target_lineages = ["surname", "unknown"]'),
-        ('from_revision = "2024"', 'from_revision = "2025"'),
-        ('to_revision = "2025"', 'to_revision = "2026"'),
+        (f'from_revision = "{_R1}"', f'from_revision = "{_R2}"'),
+        (f'to_revision = "{_R2}"', f'to_revision = "{_R3}"'),
         ('source_lineages = ["combined"]', 'source_lineages = ["combined", "combined"]'),
         ('target_lineages = ["surname", "given"]', 'target_lineages = ["combined", "given"]'),
         ('kind = "split"', 'kind = "merge"'),
@@ -137,10 +153,10 @@ def test_overlapping_ownership_refuses(tmp_path: Path) -> None:
 
 def test_retirement_cannot_duplicate_structural_withdrawal(tmp_path: Path) -> None:
     root = tree(tmp_path)
-    directory = root / "revisions" / "2025" / "casilla_continuidad_evolutions"
+    directory = root / "revisions" / _R2 / "casilla_continuidad_evolutions"
     directory.mkdir()
     (directory / "0001-declarations.toml").write_text(
-        retirement("2025", lineage="combined", from_revision="2024"), encoding="utf-8"
+        retirement(_R2, lineage="combined", from_revision=_R1), encoding="utf-8"
     )
     with pytest.raises(RegistryError, match="conflicting single-chain"):
         load_modelo_directory(root)
@@ -149,7 +165,7 @@ def test_retirement_cannot_duplicate_structural_withdrawal(tmp_path: Path) -> No
 @pytest.mark.parametrize("origin", ["grounded", "seeded", "new_on_form", "predecessor_edition_silent"])
 def test_structural_target_cannot_claim_continuation_or_novelty(tmp_path: Path, origin: str) -> None:
     root = tree(tmp_path)
-    fragment = root / "revisions" / "2025" / "casillas" / "0001-casillas.toml"
+    fragment = root / "revisions" / _R2 / "casillas" / "0001-casillas.toml"
     fragment.write_text(
         fragment.read_text(encoding="utf-8").replace(
             'continuidad_id = "surname"',
@@ -163,10 +179,10 @@ def test_structural_target_cannot_claim_continuation_or_novelty(tmp_path: Path, 
 
 def test_relationship_never_inherits_into_grandchild(tmp_path: Path) -> None:
     root = tree(tmp_path)
-    write_edition(root, "2026", year=2026, casillas="", manifest_extra='predecessor = "2025"\n')
+    write_edition(root, _R3, year=_Y3, casillas="", manifest_extra=f'predecessor = "{_R2}"\n')
     modelo = load_modelo_directory(root)
-    assert modelo.revisions["2026"].casilla_structural_successions == ()
-    assert len(modelo.revisions["2026"].casillas) == 2
+    assert modelo.revisions[_R3].casilla_structural_successions == ()
+    assert len(modelo.revisions[_R3].casillas) == 2
     assert unresolved_successor_rows(modelo) == ()
 
 
@@ -174,8 +190,8 @@ def test_one_to_one_and_many_to_many_are_not_structural_shapes() -> None:
     payload: dict[str, object] = dict(
         id="invalid",
         kind="split",
-        from_revision="2024",
-        to_revision="2025",
+        from_revision=_R1,
+        to_revision=_R2,
         source_lineages=("a",),
         target_lineages=("b",),
         legal_refs=("ley-58-2003:art-29",),
@@ -193,33 +209,33 @@ def test_one_to_one_and_many_to_many_are_not_structural_shapes() -> None:
 def test_source_cannot_reappear_and_target_cannot_preexist(tmp_path: Path) -> None:
     root = tree(tmp_path)
     modelo = load_modelo_directory(root)
-    old, new = modelo.revisions["2024"], modelo.revisions["2025"]
+    old, new = modelo.revisions[_R1], modelo.revisions[_R2]
     continued = new.model_copy(update={"casillas": (*new.casillas, old.casillas[0])})
-    invalid = modelo.model_copy(update={"revisions": {**modelo.revisions, "2025": continued}})
+    invalid = modelo.model_copy(update={"revisions": {**modelo.revisions, _R2: continued}})
     assert any("must end" in failure for failure in structural_succession_failures(invalid))
     assert unresolved_successor_rows(invalid)
     existing = old.model_copy(update={"casillas": (*old.casillas, new.casillas[0])})
-    invalid = modelo.model_copy(update={"revisions": {**modelo.revisions, "2024": existing}})
+    invalid = modelo.model_copy(update={"revisions": {**modelo.revisions, _R1: existing}})
     assert any("must begin" in failure for failure in structural_succession_failures(invalid))
 
 
 def test_relationship_does_not_select_a_predecessor(tmp_path: Path) -> None:
     root = tree(tmp_path, delta=False)
     modelo = load_modelo_directory(root)
-    assert modelo.revisions["2025"].predecessor is None
-    write_edition(root, "2023", year=2023, casillas="")
-    manifest = root / "revisions" / "2025" / "revision.toml"
-    manifest.write_text(manifest.read_text(encoding="utf-8") + 'predecessor = "2023"\n', encoding="utf-8")
+    assert modelo.revisions[_R2].predecessor is None
+    write_edition(root, _R0, year=_Y0, casillas="")
+    manifest = root / "revisions" / _R2 / "revision.toml"
+    manifest.write_text(manifest.read_text(encoding="utf-8") + f'predecessor = "{_R0}"\n', encoding="utf-8")
     with pytest.raises(RegistryError):
         load_modelo_directory(root)
 
 
 def test_committed_309_structural_membership_and_country_wire_width() -> None:
     modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "309"))
-    assert len(modelo.revisions["2016-2017"].casilla_structural_successions) == 3
+    assert len(modelo.revisions[_M309_STRUCTURAL].casilla_structural_successions) == 3
     assert unresolved_successor_rows(modelo) == ()
     assert semantic_role_consistency_failures((modelo,)) == ()
-    old = modelo.revisions["2004-2015"]
+    old = modelo.revisions[_M309_BEFORE]
     field = next(
         field
         for layout in old.export_layouts
@@ -236,7 +252,7 @@ def test_committed_309_structural_membership_and_country_wire_width() -> None:
 def test_representation_path_requires_every_changed_edge() -> None:
     modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "309"))
     assert semantic_role_consistency_failures((modelo,)) == ()
-    revision = modelo.revisions["2016-2017"]
+    revision = modelo.revisions[_M309_STRUCTURAL]
     ungrounded = revision.model_copy(
         update={
             "casilla_continuidad_evolutions": tuple(
@@ -248,8 +264,8 @@ def test_representation_path_requires_every_changed_edge() -> None:
     )
     invalid = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: ungrounded}})
     failures = semantic_role_consistency_failures((invalid,))
-    assert any("2018-2022" in failure and "data_type" in failure for failure in failures)
-    assert any("2023-y-siguientes" in failure and "data_type" in failure for failure in failures)
+    for later in _M309_AFTER:
+        assert any(later in failure and "data_type" in failure for failure in failures)
 
 
 @pytest.mark.parametrize(
@@ -265,7 +281,7 @@ def test_representation_path_requires_every_changed_edge() -> None:
 )
 def test_representation_does_not_waive_value_constraints(constraint: dict[str, object]) -> None:
     modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "309"))
-    revision = modelo.revisions["2004-2015"]
+    revision = modelo.revisions[_M309_BEFORE]
     constraints = CasillaConstraints.model_validate(
         {**constraint, "legal_refs": ("ley-37-1992:art-161",), "source_refs": ("aeat-dr-309-2004",)}
     )
@@ -288,7 +304,7 @@ def test_structural_endpoint_sources_match_their_own_context(defect: str) -> Non
     root = bundled_path("registry", "aeat")
     modelo = load_modelo_directory(root / "modelos" / "309")
     catalogues = load_shared_catalogues(root)
-    revision = modelo.revisions["2016-2017"]
+    revision = modelo.revisions[_M309_STRUCTURAL]
     relations = revision.casilla_structural_successions
     sources = dict(catalogues.sources)
     if defect == "swapped":
@@ -308,8 +324,10 @@ def test_structural_endpoint_sources_match_their_own_context(defect: str) -> Non
     elif defect == "wrong-period":
         sources["aeat-dr-309-2016"] = sources["aeat-dr-309-2016"].model_copy(
             update={
-                # 309/2016-2017 serves 1T-4T, 01-12 and 0A; an instalment clave is none of them.
-                "period_selector": PeriodSelector(years=(2016, 2017), periods=("1P",)),
+                # The structural edition serves 1T-4T, 01-12 and 0A; an instalment clave is none of them.
+                "period_selector": PeriodSelector(
+                    years=tuple(range(revision.valid_from.year, revision.valid_to.year + 1)), periods=("1P",)
+                ),
             }
         )
     elif defect == "multi-edition":
@@ -317,9 +335,9 @@ def test_structural_endpoint_sources_match_their_own_context(defect: str) -> Non
         # need not equal either edition's date. Keep the enrolled source id.
         sources["aeat-dr-309-2004"] = sources["aeat-dr-309-2004"].model_copy(
             update={
-                "applies_from": date(2004, 1, 1),
-                "applies_to": date(2017, 12, 31),
-                "published_at": date(2003, 12, 1),
+                "applies_from": modelo.revisions[_M309_BEFORE].valid_from,
+                "applies_to": revision.valid_to,
+                "published_at": modelo.revisions[_M309_BEFORE].valid_from - timedelta(days=31),
             }
         )
         relations = tuple(
@@ -330,7 +348,7 @@ def test_structural_endpoint_sources_match_their_own_context(defect: str) -> Non
     failures: list[str] = []
     validate_revision_reference_surfaces(
         failures,
-        prefix="309/2016-2017",
+        prefix=f"309/{_M309_STRUCTURAL}",
         modelo=candidate,
         revision=changed,
         legal_refs=catalogues.legal,

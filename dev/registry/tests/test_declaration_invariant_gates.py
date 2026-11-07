@@ -42,6 +42,11 @@ from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
 from cadrumo.domain.calculations.registry.schema_revision_members import ApplicationLinkSurface
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    open_ended_revision,
+    split_exercise_revisions,
+)
 from dev.quality.unread_inputs import report_unread
 
 from ..analysis.casilla_id_grammar import screen_authority as grammar_screen
@@ -882,7 +887,7 @@ def test_the_vault_citation_gate_catches_each_kind_it_claims_to() -> None:
     assert _vault_citations("recorded in .vault/audit/x.md") == ["vault path: .vault/"]
 
     for innocent in (
-        "revision 2025-y-siguientes narrows the window",
+        f"revision {open_ended_revision('303').id} narrows the window",
         "casilla DP200014:01033 carries the base",
         "orden HAC/1155/2024 art. 3 governs this",
         "the 2024-2025 span covers both ejercicios",
@@ -1384,7 +1389,7 @@ def test_the_export_declaration_gates_detect_their_defects(
     tree, and asserted through the helpers the gates themselves call - a proof
     against a second implementation would prove the second implementation.
     """
-    revision = authority.modelo("303").revisions["2025"]
+    revision = authority.modelo("303").revisions[str(authored_revisions("303")[-1].id)]
     layout = next(item for item in revision.export_layouts if item.records)
     record = layout.records[0]
     field = record.fields[0]
@@ -1468,21 +1473,24 @@ def test_the_period_ambiguity_gate_detects_a_planted_clash() -> None:
     """
     from ..analysis.temporal_site_agreement import ambiguously_claimed_periods
 
+    early, late = split_exercise_revisions("303", early_period="2T", late_period="3T")
+    early_id, late_id = str(early.id), str(late.id)
+    exercise = early.valid_from.year
     split_year = (
-        ("2024-hasta-08-y-2t", 2024, "2T"),
-        ("2024-desde-09-y-3t", 2024, "3T"),
+        (early_id, exercise, "2T"),
+        (late_id, exercise, "3T"),
     )
     assert ambiguously_claimed_periods(split_year) == (), "a mid-year split is not ambiguity"
 
-    clash = (*split_year, ("2024-desde-09-y-3t", 2024, "2T"))
+    clash = (*split_year, (late_id, exercise, "2T"))
     reported = ambiguously_claimed_periods(clash)
     assert len(reported) == 1
     year, period, revisions = reported[0]
-    assert (year, period) == (2024, "2T")
-    assert revisions == ("2024-desde-09-y-3t", "2024-hasta-08-y-2t")
+    assert (year, period) == (exercise, "2T")
+    assert revisions == tuple(sorted((early_id, late_id)))
 
     assert ambiguously_claimed_periods(()) == (), "a revision claiming nothing clashes with nothing"
-    assert ambiguously_claimed_periods((("r", 2024, "2T"),)) == (), "one claimant is not two"
+    assert ambiguously_claimed_periods((("r", exercise, "2T"),)) == (), "one claimant is not two"
 
 
 def test_the_citation_gate_exempts_two_located_regions_and_no_more() -> None:

@@ -28,6 +28,7 @@ from cadrumo.application.modelo.export_projection import (
 )
 from cadrumo.core.modelo_export_artefact import ModeloExportArtefact
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.transactions.own_accounts import OwnAccountHolding, OwnAccountRole
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.ledger.own_accounts import LedgerOwnAccountDoorV1
@@ -94,19 +95,26 @@ class ExportAccountsCaptureHost(ScreenHostApp[WorkbenchExportRequest]):
             await asyncio.sleep(0.01)
 
 
+def _fixture_year() -> int:
+    """Return the published support horizon, the year these synthetic captures are staged in."""
+    with bundled_indexed_authority().operation() as operation:
+        return operation.supported_filing_years().horizon
+
+
 def _result() -> ModeloExportPublicResultV3:
+    year = _fixture_year()
     filing = ModeloExportResult(
         calculation_revision_id="a" * 64,
         work_unit_id="b" * 64,
         bucket_id="synthetic-bucket",
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "2T"),
+        filing_year=year,
+        period=Period.from_year_and_code(year, "2T"),
         output_path=Path("modelo-303-2T.txt"),
         byte_size=1024,
         file_sha256="c" * 64,
         format="fichero-boe",
-        exported_at=datetime(2026, 7, 10, 9, 0, tzinfo=UTC),
+        exported_at=datetime(year, 7, 10, 9, 0, tzinfo=UTC),
         actor="operator",
         bucket_event_id="event-1",
         selected_account=ModeloExportAccountReference(role=OwnAccountRole.CHARGE, own_account_id="acc-01"),

@@ -5,8 +5,9 @@ from __future__ import annotations
 import ast
 import re
 
+from cadrumo.core.filing_year import FOUR_DIGIT_YEAR_LAST
+
 from .tax_literal_sweep_vocabulary import (
-    LAST_FOUR_DIGIT_YEAR,
     THOUSAND,
     YEAR_NAME,
     annotation_kind,
@@ -370,7 +371,7 @@ class BoundReader(_ExpressionKinds):
             )
         if field == "cadrumo_bucket_default_session_absolute_minutes" and (low, high) == (60, 720):
             return owner == "core/config_runtime_fields.py"
-        if high == LAST_FOUR_DIGIT_YEAR and field.endswith("year"):
+        if high == FOUR_DIGIT_YEAR_LAST and field.endswith("year"):
             return any(
                 keyword.arg == "ge"
                 and isinstance(keyword.value, ast.Name)

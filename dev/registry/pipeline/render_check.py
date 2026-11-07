@@ -27,6 +27,7 @@ from typing import Literal, cast
 
 import rtoml
 
+from cadrumo.core.filing_year import FOUR_DIGIT_YEAR_FIRST
 from cadrumo.core.period import Period, PeriodError, is_administrative_period_token, is_symbolic_event_selector
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
@@ -666,7 +667,7 @@ def _declared_render_frame(
     horizon = coverage_assessment_horizon(catalogues)
     coordinates = revision_selection_coordinates(
         selected, assessment_horizon=horizon, assessment_floor=coverage_assessment_floor(catalogues)
-    ) or revision_selection_coordinates(selected, assessment_horizon=horizon, assessment_floor=2000)
+    ) or revision_selection_coordinates(selected, assessment_horizon=horizon, assessment_floor=FOUR_DIGIT_YEAR_FIRST)
     refusals: list[str] = []
     for year, declared_period in coordinates:
         try:

@@ -4,6 +4,7 @@ from pathlib import PurePosixPath
 from typing import Final
 
 from .artifact_catalogue import DerivedArtifact
+from .record_design_manifests import recorded_artifact
 
 #: Filenames a model directory legitimately holds without a manifest entry:
 #: the manifest itself, and the derivatives other tooling writes beside a
@@ -56,19 +57,22 @@ UNATTESTED_CORPUS_FILES: Final[tuple[str, ...]] = ("modelo_200/files/01-200-ejer
 #: These are named records rather than a suffix exemption, so an unrecorded
 #: text file remains unclassified.  The source digests make the existing
 #: relationship fail closed when a workbook changes without re-extraction.
+def _sheet_text_derivation(input_sha256: str) -> DerivedArtifact:
+    """Name the sheet-text sibling of the modelo 123 workbook whose manifest entry carries ``input_sha256``.
+
+    The workbook's stored name is an external identifier its manifest already records, so the
+    derivation reads it there and the digest stays the only declared fact about the input.
+    """
+    input_path = PurePosixPath("modelo_123", recorded_artifact("123", sha256=input_sha256)["stored_path"])
+    return DerivedArtifact(
+        path=input_path.with_suffix(".txt"),
+        input_path=input_path,
+        input_sha256=input_sha256,
+        producer="record-design-sheet-text-extractor",
+    )
+
+
 EXTRACTION_SIDECAR_DERIVATIONS: Final[tuple[DerivedArtifact, ...]] = (
-    DerivedArtifact(
-        path=PurePosixPath("modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.txt"),
-        input_path=PurePosixPath(
-            "modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xls"
-        ),
-        input_sha256="85ffe058c1728a50d11d3c6fcfe03f77e172e0458b53920a620aa434d66d07b4",
-        producer="record-design-sheet-text-extractor",
-    ),
-    DerivedArtifact(
-        path=PurePosixPath("modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.txt"),
-        input_path=PurePosixPath("modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.xls"),
-        input_sha256="21ec4feed2950c57c689a772166952b3c2245e7101bce7836c2baedc1f4f8dbd",
-        producer="record-design-sheet-text-extractor",
-    ),
+    _sheet_text_derivation("85ffe058c1728a50d11d3c6fcfe03f77e172e0458b53920a620aa434d66d07b4"),
+    _sheet_text_derivation("21ec4feed2950c57c689a772166952b3c2245e7101bce7836c2baedc1f4f8dbd"),
 )

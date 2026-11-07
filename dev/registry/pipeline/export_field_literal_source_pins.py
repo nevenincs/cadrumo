@@ -19,14 +19,12 @@ _M349_PROSE_CONSTANTS: Final[dict[tuple[str, int, int, int], tuple[str, str]]] =
 }
 
 
-_M190_TRANSPORT_ROWS: Final[dict[str, int]] = {"2020": 91, "2023": 98, "2024": 100, "2025": 102}
-
-
-_M190_TRANSPORT_SHAS: Final[dict[str, str]] = {
-    "2020": "4cefd924a7dda3ac5159582f728a72f6f162d3344b8e87f2d17900e6fdcf3b32",
-    "2023": "430daf439ed645155ffc6096b65c4da5b26dd2e6c16b8e4781f9be145b3792cb",
-    "2024": "20bc8086525ce850063b9ae8644b8514483e5c34f90c8e47cfadc6c52cf7390e",
-    "2025": "a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d",
+#: The four reviewed M190 designs: source_ref -> (design SHA-256, transport row).
+_M190_TRANSPORT_PINS: Final[dict[str, tuple[str, int]]] = {
+    "aeat-dr-190-2020": ("4cefd924a7dda3ac5159582f728a72f6f162d3344b8e87f2d17900e6fdcf3b32", 91),
+    "aeat-dr-190-2023": ("430daf439ed645155ffc6096b65c4da5b26dd2e6c16b8e4781f9be145b3792cb", 98),
+    "aeat-dr-190-2024": ("20bc8086525ce850063b9ae8644b8514483e5c34f90c8e47cfadc6c52cf7390e", 100),
+    "aeat-dr-190-2025": ("a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d", 102),
 }
 
 
@@ -41,7 +39,6 @@ def source_pinned_194_transport_constant(
     identity = render_profile.design_identity
     actual = (
         str(identity.modelo),
-        identity.design_epoch,
         str(identity.source_ref),
         identity.source_sha256,
         field.sheet,
@@ -58,7 +55,6 @@ def source_pinned_194_transport_constant(
     )
     expected = (
         "194",
-        "2024",
         "aeat-dr-194-2024",
         "4a738a126ddb465aac236b687aa25441b7cb71ec4b0ef6ea940096a3747b2651",
         "Tipo 1 - Registro De Declarante",
@@ -103,7 +99,6 @@ def _m341_source_identity_matches(render_profile: RenderProfile) -> bool:
     identity = render_profile.design_identity
     return (
         str(identity.modelo) == "341"
-        and identity.design_epoch == "2005"
         and str(identity.source_ref) == "aeat-dr-341-2005-2015"
         and identity.source_sha256 == "c1c59a317be87dbb4898c017ace8f6327e9df340648808fb6d1831a0c7295c3d"
     )
@@ -159,35 +154,35 @@ def source_pinned_190_transport_constant(
         return None
     field = joined_field.parser_field
     identity = render_profile.design_identity
-    epoch = identity.design_epoch
-    if not _m190_source_identity_matches(identity, epoch) or not _m190_transport_field_matches(
-        field,
-        entry.literal,
-        official_content,
-        epoch,
+    pin = _M190_TRANSPORT_PINS.get(str(identity.source_ref))
+    if (
+        pin is None
+        or not _m190_source_identity_matches(identity, pin)
+        or not _m190_transport_field_matches(
+            field,
+            entry.literal,
+            official_content,
+            pin,
+        )
     ):
         raise RegistryValidationError("modelo 190 telematic constant differs from its sole source-listed code")
     return "T"
 
 
-def _m190_source_identity_matches(identity: RenderProfileDesignIdentity, epoch: str) -> bool:
-    return (
-        str(identity.modelo) == "190"
-        and str(identity.source_ref) == f"aeat-dr-190-{epoch}"
-        and identity.source_sha256 == _M190_TRANSPORT_SHAS.get(epoch)
-    )
+def _m190_source_identity_matches(identity: RenderProfileDesignIdentity, pin: tuple[str, int]) -> bool:
+    return str(identity.modelo) == "190" and identity.source_sha256 == pin[0]
 
 
 def _m190_transport_field_matches(
     field: RecordDesignIntermediateField,
     literal: str | None,
     official_content: str,
-    epoch: str,
+    pin: tuple[str, int],
 ) -> bool:
     return (
         field.sheet == "Tipo 1 - Registro De Declarante"
         and field.record_identity == field.sheet
-        and field.source_row == _M190_TRANSPORT_ROWS.get(epoch)
+        and field.source_row == pin[1]
         and field.ordinal == "6"
         and (field.offset, field.length) == (58, 1)
         and official_content == "Se cumplimentará una de las siguientes claves: ‘T’: Transmisión telemática."
@@ -216,7 +211,6 @@ def source_pinned_345_transport_constant(
 def _m345_source_identity_matches(identity: RenderProfileDesignIdentity) -> bool:
     return (
         str(identity.modelo) == "345"
-        and identity.design_epoch == "2025"
         and str(identity.source_ref) == "aeat-dr-345-2025"
         and identity.source_sha256 == "fb0faaf68f8b0de29316bdc65eaeb3ba0dcb8a441eea4d5415d0cb4517c287fd"
     )
@@ -260,7 +254,6 @@ def source_pinned_270_transport_constant(
 def _m270_source_identity_matches(identity: RenderProfileDesignIdentity) -> bool:
     return (
         str(identity.modelo) == "270"
-        and identity.design_epoch == "2023"
         and str(identity.source_ref) == "aeat-dr-270-2023"
         and identity.source_sha256 == "d845cc47e3b60d01128d27dddcc3cffd2cf64bd6dfb24e0cd0d0467d66f95a92"
     )
@@ -293,10 +286,10 @@ def source_pinned_165_transport_constant(
     field = joined_field.parser_field
     identity = render_profile.design_identity
     pins = {
-        "2016": ("aeat-dr-165-2016-2022", "2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5", 64),
-        "2023": ("aeat-dr-165-2026", "bcc94b07d695703cfa66a3d8cbbb176841906ebf8cef57e2acd3e3fee452a263", 60),
+        "aeat-dr-165-2016-2022": ("2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5", 64),
+        "aeat-dr-165-2026": ("bcc94b07d695703cfa66a3d8cbbb176841906ebf8cef57e2acd3e3fee452a263", 60),
     }
-    pin = pins.get(identity.design_epoch)
+    pin = pins.get(str(identity.source_ref))
     if not _m165_source_identity_matches(identity, field, pin) or not _m165_transport_field_matches(
         field,
         entry.literal,
@@ -309,13 +302,9 @@ def source_pinned_165_transport_constant(
 def _m165_source_identity_matches(
     identity: RenderProfileDesignIdentity,
     field: RecordDesignIntermediateField,
-    pin: tuple[str, str, int] | None,
+    pin: tuple[str, int] | None,
 ) -> bool:
-    return (
-        str(identity.modelo) == "165"
-        and pin is not None
-        and (str(identity.source_ref), identity.source_sha256, field.source_row) == pin
-    )
+    return str(identity.modelo) == "165" and pin is not None and (identity.source_sha256, field.source_row) == pin
 
 
 def _m165_transport_field_matches(
@@ -356,7 +345,6 @@ def source_pinned_280_transport_without_parsed_content(
 def _m280_source_identity_matches(identity: RenderProfileDesignIdentity) -> bool:
     return (
         str(identity.modelo) == "280"
-        and identity.design_epoch == "2022"
         and str(identity.source_ref) == "aeat-dr-280-2022"
         and identity.source_sha256 == "45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701"
     )

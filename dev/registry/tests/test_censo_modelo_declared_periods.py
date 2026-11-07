@@ -18,13 +18,14 @@ from cadrumo.domain.calculations.registry.censo_modelos import (
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodOverride, PeriodSelector
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _CENSO_MODELO = "036"
-_OVERRIDE_YEAR = 2026
+_OVERRIDE_YEAR = filing_year_envelope().horizon
 
 
 def _latest_revision(authority: ValidatedRegistryAuthority) -> ModeloRevision:

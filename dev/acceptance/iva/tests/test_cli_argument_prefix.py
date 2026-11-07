@@ -9,10 +9,10 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.acceptance.installed_cli import CommandEvidence, InstalledCli
 
 from .. import cli_journey
+from .journey_year_support import newest_fully_authored_journey_year
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -115,7 +115,7 @@ def test_bootstrap_prefix_survives_both_reopens_without_accepting_incomplete_ver
             authority_root=authority_root,
             storage_root=tmp_path / "storage",
             artifact_root=tmp_path / "artifacts",
-            year=filing_year_envelope().horizon,
+            year=newest_fully_authored_journey_year(authority_root),
             cli_argument_prefix=prefix,
         )
 

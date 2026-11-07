@@ -18,7 +18,7 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import validating_
 
 from .compiler.authority import compiled_bundled_authority
 from .workbook_demo import demonstration_producer
-from .workbook_demo_cases import DemoCase
+from .workbook_demo_cases import DemoCase, template_edition
 from .workbook_demo_group_vat import group_vat_inputs
 from .workbook_template_source import load_workbook_template_source
 
@@ -27,13 +27,10 @@ def build_historical_group_vat_plan(
     *, year: int
 ) -> tuple[WorkbookTemplateSource, SheetExportPlan[SheetTemplatePreviewMetadata]]:
     """Use fictional December facts; the shared compiler owns positions and formulas."""
-    revision_id, source_ref = {
-        2022: ("2008-2022", "aeat-dr-322-2022"),
-        2023: ("2023", "aeat-dr-322-2023"),
-        2025: ("2024-2025", "aeat-dr-322-2024-2025"),
-    }[year]
+    edition = template_edition("322", year, preferred_period="12")
+    revision_id = edition.revision_id
     source = load_workbook_template_source(
-        "322", revision_id=revision_id, source_ref=source_ref, preview_year=year, preview_period="12"
+        "322", revision_id=revision_id, source_ref=edition.source_ref, preview_year=year, preview_period="12"
     )
     casillas = {casilla.id: casilla for casilla in source.revision.casillas}
     inputs = OperatorInputs(

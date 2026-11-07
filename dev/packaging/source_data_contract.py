@@ -6,6 +6,9 @@ import ast
 import zipfile
 from pathlib import Path, PurePosixPath
 
+from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority
+from cadrumo.domain.calculations.registry.authority_artifact import AuthorityComponentKind, ReferenceComponentQuery
+from cadrumo.domain.calculations.registry.authority_store import SQLiteAuthorityReader
 from dev.first_party_source import is_test_source
 from dev.paths import UTF_8
 from dev.quality.source_import_analysis import wheel_exclude_globs
@@ -35,6 +38,12 @@ _WHEEL_DATA_PREFIX = "cadrumo/_data"
 CORPUS_SOURCE_PREFIX = "src/cadrumo/_data/corpus/"
 
 
+_MANUAL_CORPUS_PREFIX = "corpus/manuals/"
+
+
+_MANUAL_PDF_SUFFIX = "/source.pdf"
+
+
 _COMPANION_HOOKS = (
     "packaging/cadrumo_data_manuals/hatch_build.py",
     "packaging/cadrumo_data_official/hatch_build.py",
@@ -42,26 +51,36 @@ _COMPANION_HOOKS = (
 )
 
 
-# Every practical-manual PDF the manuals companion must carry. Stated as explicit
-# literals rather than derived from a walk of the corpus: a floor computed from the
-# tree it is meant to police cannot detect that tree losing a member. Covering
-# Renta alone would leave the IVA and Sociedades manuals free to drop out of the
-# shipped inventory with this floor still green.
-MANUAL_PDF_PRESENCE_FLOOR = (
-    {
-        f"src/cadrumo/_data/corpus/manuals/renta/{year}/part1/source.pdf"
-        for year in ("2020", "2021", "2022", "2023", "2024", "2025")
-    }
-    | {
-        f"src/cadrumo/_data/corpus/manuals/iva/{year}/source.pdf"
-        for year in ("2020", "2021", "2022", "2023", "2024", "2025")
-    }
-    | {
-        f"src/cadrumo/_data/corpus/manuals/renta/{year}/part2-deducciones-autonomicas/source.pdf"
-        for year in ("2024", "2025")
-    }
-    | {f"src/cadrumo/_data/corpus/manuals/sociedades/{year}/source.pdf" for year in ("2024", "2025")}
-)
+def manual_pdf_presence_floor(repo_root: Path) -> frozenset[str]:
+    """Return every practical-manual PDF the manuals companion must carry.
+
+    The floor is the set of manual sources the tree's published authority declares,
+    not a walk of the corpus: a floor computed from the tree it is meant to police
+    cannot detect that tree losing a member, while the authority names each edition
+    it grounds its calculations in. Covering Renta alone would leave the IVA and
+    Sociedades manuals free to drop out of the shipped inventory.
+    """
+    descriptor, _database = selected_published_authority(repo_root)
+    reader = SQLiteAuthorityReader(descriptor)
+    try:
+        source_ids = tuple(
+            query.reference_id
+            for query in reader.component_queries()
+            if isinstance(query, ReferenceComponentQuery) and query.kind is AuthorityComponentKind.SOURCE_REFERENCE
+        )
+    finally:
+        reader.close()
+    authority = IndexedRegistryAuthority(descriptor)
+    try:
+        with authority.operation() as operation:
+            corpus_paths = (operation.source_reference(source_id).corpus_path for source_id in source_ids)
+            return frozenset(
+                f"{_SOURCE_DATA_PREFIX}{corpus_path}"
+                for corpus_path in corpus_paths
+                if corpus_path.startswith(_MANUAL_CORPUS_PREFIX) and corpus_path.endswith(_MANUAL_PDF_SUFFIX)
+            )
+    finally:
+        authority.close()
 
 
 def _format_path_sample(paths: list[str], *, limit: int = 20) -> str:
@@ -93,7 +112,7 @@ def source_data_paths(repo_root: Path) -> set[str]:
     """Return repository-visible shipped-data paths relative to the repository root."""
     source_paths = set(repository_files(repo_root, under=SOURCE_DATA_ROOTS))
     source_paths = validated_source_data_inventory(repo_root, source_paths, origin="the repository file enumeration")
-    missing_floor = sorted(MANUAL_PDF_PRESENCE_FLOOR - source_paths)
+    missing_floor = sorted(manual_pdf_presence_floor(repo_root) - source_paths)
     if missing_floor:
         raise SystemExit(f"source data is missing required manual PDFs: {missing_floor!r}")
     return source_paths

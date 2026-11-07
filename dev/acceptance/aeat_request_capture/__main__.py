@@ -24,7 +24,6 @@ EXIT_OK: Final = 0
 EXIT_FAILED: Final = 1
 EXIT_REFUSED: Final = 2
 _DEFAULT_MODELO: Final = "100"
-_DEFAULT_EJERCICIO: Final = 2022
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -42,7 +41,12 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument(LIVE_FLAG, action="store_true", help="Authorise contact with AEAT and Cl@ve, phone in hand.")
     run.add_argument("--env-file", type=Path, help="Env file to read when this worktree has no env/.env.")
     run.add_argument("--modelo", default=_DEFAULT_MODELO, help="Modelo for the filed-declarations query.")
-    run.add_argument("--year", type=int, default=_DEFAULT_EJERCICIO, help="Ejercicio for that query.")
+    run.add_argument(
+        "--year",
+        type=int,
+        default=None,
+        help="Ejercicio for that query. Default: the earliest filing year the pinned authority supports.",
+    )
     return parser
 
 
@@ -58,6 +62,13 @@ def _missing_configuration(settings: object) -> list[str]:
         "CADRUMO_CLAVE_MOVIL_NIE_SOPORTE": "cadrumo_clave_movil_nie_soporte",
     }
     return [name for name, attribute in required.items() if not getattr(settings, attribute, None)]
+
+
+def _authority_floor_year() -> int:
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
+    with bundled_indexed_authority().operation() as operation:
+        return operation.supported_filing_years().floor
 
 
 def _run_live(flows: Sequence[ReadFlow], arguments: argparse.Namespace) -> int:
@@ -92,7 +103,7 @@ def _run_live(flows: Sequence[ReadFlow], arguments: argparse.Namespace) -> int:
         LIVE_DRIVERS,
         settings=settings,
         modelo=arguments.modelo,
-        ejercicio=arguments.year,
+        ejercicio=arguments.year if arguments.year is not None else _authority_floor_year(),
         profile_base=TEMP_ROOT / "live-tests",
         output=output,
         show=lambda line: print(line, file=sys.stderr, flush=True),

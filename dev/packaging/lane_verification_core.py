@@ -498,6 +498,21 @@ print("attachment-and-llm-surfaces-ok")
     record_proof("core LLM agent dispatch refuses without a service")
 
 
+def installed_supported_year(work_dir: Path, venv_path: Path) -> int:
+    """Return the newest filing year the installed build's pinned authority supports."""
+    code = (
+        "from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority\n"
+        "with bundled_indexed_authority().operation() as operation:\n"
+        "    print(operation.supported_filing_years().horizon)\n"
+    )
+    result = run_checked(
+        [str(venv_python_path(venv_path)), "-c", code],
+        cwd=work_dir,
+        env=installed_product_env(work_dir / "supported-year-state", venv_path),
+    )
+    return int(result.stdout.strip().splitlines()[-1])
+
+
 def assert_cli_smoke(work_dir: Path, venv_path: Path) -> None:
     """Run installed CLI smoke checks against the clean wheel venv."""
     from .installed_runtime import installed_cli_runtime
@@ -532,7 +547,7 @@ def assert_cli_smoke(work_dir: Path, venv_path: Path) -> None:
             "--modelo",
             "303",
             "--year",
-            "2026",
+            str(installed_supported_year(work_dir, venv_path)),
             "--period",
             "1T",
             "--missing",

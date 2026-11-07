@@ -93,22 +93,27 @@ class _Example:
     modulos: Decimal
 
 
-_EXAMPLES = {
-    "2022": _Example(
+_ORDEN_2022 = "orden-hfp-1335-2021"
+_ORDEN_2023 = "orden-hfp-1172-2022"
+_ORDEN_2024 = "orden-hfp-1359-2023"
+# Each worked example belongs to the ejercicio its orden de módulos governs; the registry resolves that
+# ejercicio from the orden, so no year is written here.
+_ORDEN_EXAMPLES = {
+    _ORDEN_2022: _Example(
         indices=(Decimal("0.09"), Decimal("0.18"), Decimal("0.56")),
         bases=(Decimal("2846.90"), Decimal("10473.45"), Decimal("2665.60")),
         previo=Decimal("21234.55"),
         minorado=Decimal("7949.55"),
         modulos=Decimal("7154.59"),
     ),
-    "2023": _Example(
+    _ORDEN_2023: _Example(
         indices=(Decimal("0.13"), Decimal("0.26"), Decimal("0.56")),
         bases=(Decimal("4112.19"), Decimal("15128.32"), Decimal("2665.60")),
         previo=Decimal("27154.71"),
         minorado=Decimal("13869.71"),
         modulos=Decimal("12482.74"),
     ),
-    "2024": _Example(
+    _ORDEN_2024: _Example(
         indices=(Decimal("0.09"), Decimal("0.26"), Decimal("0.56")),
         bases=(Decimal("2846.90"), Decimal("15128.32"), Decimal("2665.60")),
         previo=Decimal("25889.42"),
@@ -122,7 +127,7 @@ _INDICE_ASALARIADO = Decimal("0.90")
 _CODIGO_12_INDICE = Decimal("0.37")
 # The reducción general for Anexo I activities, from the BOE text of each year's
 # governing provision (see the module docstring).
-_RATES = {"2022": Decimal("25"), "2023": Decimal("15"), "2024": Decimal("5")}
+_ORDEN_RATES = {_ORDEN_2022: Decimal("25"), _ORDEN_2023: Decimal("15"), _ORDEN_2024: Decimal("5")}
 
 
 @cache
@@ -135,6 +140,11 @@ def _orden_years() -> dict[str, str]:
         assert reference.effective_from.year == reference.effective_to.year
         years[str(reference.effective_from.year)] = reference_id.removesuffix(_PREVIO_INSTRUCTION)
     return years
+
+
+_EXAMPLES = {year: _ORDEN_EXAMPLES[orden] for year, orden in _orden_years().items() if orden in _ORDEN_EXAMPLES}
+_RATES = {year: _ORDEN_RATES[orden] for year, orden in _orden_years().items() if orden in _ORDEN_RATES}
+_YEAR_OF_ORDEN = {orden: year for year, orden in _orden_years().items()}
 
 
 @cache
@@ -237,7 +247,7 @@ def test_the_chain_reproduces_the_manual_minorado_and_modulos(year: str) -> None
     assert values[_c("1537")] == example.previo
     assert values[_c("1539")] == example.minorado
     assert abs(values[_c("1548")] - example.modulos) <= _CENT
-    if year != "2022":
+    if year != _YEAR_OF_ORDEN[_ORDEN_2022]:
         assert values[_c("1548")] == example.modulos
 
 
@@ -252,12 +262,15 @@ def test_the_reduccion_general_applies_the_year_s_rate_to_the_modulos(year: str)
 
 
 def test_the_2022_and_2024_manuals_print_the_reduccion_general_the_engine_applies() -> None:
-    assert _percent(_EXAMPLES["2022"].modulos, _RATES["2022"]) == Decimal("1788.65")
-    assert _percent(_EXAMPLES["2024"].modulos, _RATES["2024"]) == Decimal("567.20")
+    for orden, printed in ((_ORDEN_2022, Decimal("1788.65")), (_ORDEN_2024, Decimal("567.20"))):
+        year = _YEAR_OF_ORDEN[orden]
+        assert _percent(_EXAMPLES[year].modulos, _RATES[year]) == printed
 
 
 def test_the_2023_manual_states_the_anexo_i_rate_its_example_omits() -> None:
-    corpus = bundled_path("manual_corpus_text", "manuals", "renta", "2023", "part1", "source.pdf.corpus_text.json")
+    corpus = bundled_path(
+        "manual_corpus_text", "manuals", "renta", _YEAR_OF_ORDEN[_ORDEN_2023], "part1", "source.pdf.corpus_text.json"
+    )
     text = json.loads(corpus.read_text(encoding="utf-8"))["normalised_text"]
     assert normalise_corpus_text("ha elevado del 10 al 15 por 100 la reducción prevista") in text
     assert normalise_corpus_text("Reducción de carácter general: 10% s/12.482,74 = 1.248,27 euros") in text

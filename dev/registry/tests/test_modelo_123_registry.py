@@ -13,6 +13,13 @@ from cadrumo.domain.calculations.registry.formula_runtime import calculate_regis
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    open_ended_revision,
+    revision_first_exercise,
+    revision_last_exercise,
+)
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from dev.registry.compiler.authority import compiled_bundled_authority
 
@@ -25,8 +32,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _SUPPORT = committed_supported_filing_years()
 # The revision whose casilla 06 sums retenciones and regularizacion, and the
 # Orden HAC/56/2024 revision that replaces it with split base sub-totals.
-_RETENCIONES_SUM_REVISION = "2019-2023"
-_SPLIT_BASE_REVISION = "2024-y-siguientes"
+_RETENCIONES_SUM_REVISION = str(authored_revisions("123")[0].id)
+_SPLIT_BASE_REVISION = str(open_ended_revision("123").id)
+_SPLIT_BASE_FIRST_YEAR = revision_first_exercise("123", _SPLIT_BASE_REVISION)
 
 
 _M123_RENTAS_DIVIDENDOS_CASILLA: CasillaId = validated_casilla_id("01")
@@ -68,8 +76,8 @@ def test_modelo_123_guidance_and_layout_sources_are_separated() -> None:
     assert catalogues.sources["boe-modelo-123-2024-form"].evidence_tier == "layout_authority"
 
     formula_sources = {
-        "2019-2023": "boe-modelo-123-2007-form-text",
-        "2024-y-siguientes": "boe-modelo-123-2024-form-text",
+        _RETENCIONES_SUM_REVISION: "boe-modelo-123-2007-form-text",
+        _SPLIT_BASE_REVISION: "boe-modelo-123-2024-form-text",
     }
     for revision_id, source_ref in formula_sources.items():
         source = catalogues.sources[source_ref]
@@ -91,7 +99,7 @@ def test_modelo_123_guidance_and_layout_sources_are_separated() -> None:
     ("filing_year", "required_surfaces"),
     [
         (
-            2023,
+            revision_last_exercise("123", _RETENCIONES_SUM_REVISION),
             {
                 "calculation",
                 "filing",
@@ -105,7 +113,7 @@ def test_modelo_123_guidance_and_layout_sources_are_separated() -> None:
             },
         ),
         (
-            2026,
+            filing_year_envelope().horizon,
             {
                 "calculation",
                 "filing",
@@ -154,7 +162,7 @@ def test_modelo_123_supported_year_deadline_census_dates_sources_and_ownership()
     }
 
     assert sum(len(revision.deadline_windows) for revision in modelo.revisions.values()) == len(windows) == 80
-    current_revision = modelo.revisions["2024-y-siguientes"]
+    current_revision = modelo.revisions[_SPLIT_BASE_REVISION]
     assert set(current_revision.constructs[0].deadline_windows) == {
         window.id for window in current_revision.deadline_windows
     }
@@ -191,7 +199,7 @@ def test_modelo_123_supported_year_deadline_census_dates_sources_and_ownership()
             assert window.opens_on == date(window.closes_on.year, window.closes_on.month, 1)
             assert window.closes_on == date.fromisoformat(close_text)
             expected_sources = {"aeat-modelo-123-procedure"}
-            if window.closes_on.year <= 2026:
+            if window.closes_on.year <= filing_year_envelope().horizon:
                 expected_sources.add(f"aeat-calendario-contribuyente-{window.closes_on.year}")
             assert set(window.source_refs) == expected_sources
 
@@ -205,7 +213,7 @@ def test_modelo_123_supported_year_deadline_census_dates_sources_and_ownership()
         for period in monthly_periods:
             assert windows[(filing_year, period)][1].payment_cutoff_on is None
 
-    assert windows[(2026, "4T")][1].payment_cutoff_on is None
+    assert windows[(filing_year_envelope().horizon, "4T")][1].payment_cutoff_on is None
 
 
 # ---------------------------------------------------------------------------
@@ -218,11 +226,11 @@ def test_modelo_123_supported_year_deadline_census_dates_sources_and_ownership()
 # ---------------------------------------------------------------------------
 
 
-def _snapshot_2024(filing_year: int = 2024) -> RegistrySnapshot:
+def _snapshot_split_base(filing_year: int = _SPLIT_BASE_FIRST_YEAR) -> RegistrySnapshot:
     return compiled_bundled_authority().snapshot("123", filing_year=filing_year, period="1T")
 
 
-def _calculate_2024(
+def _calculate_split_base(
     snapshot: RegistrySnapshot,
     *,
     nperceptores_dividendos: int,
@@ -248,7 +256,7 @@ def _calculate_2024(
             _M123_PREVIOUS_PERIOD_WITHHELD_CASILLA: Decimal("0"),
             _M123_A_INGRESAR_CASILLA: Decimal("0"),
         },
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": date(_SPLIT_BASE_FIRST_YEAR, 12, 31)},
     )
 
 
@@ -262,8 +270,8 @@ def test_m123_casilla_06_equals_base_dividendos_plus_base_resto() -> None:
     The perceptor count (nperceptores=7 split as 01=4, 02=3) must not
     contribute to casilla 06.
     """
-    snapshot = _snapshot_2024()
-    result = _calculate_2024(
+    snapshot = _snapshot_split_base()
+    result = _calculate_split_base(
         snapshot,
         nperceptores_dividendos=4,
         nperceptores_resto=3,
@@ -285,8 +293,8 @@ def test_m123_casilla_06_base_resto_only() -> None:
     Oracle: nperceptores=1 (01=1, 02=0), base=5000 in casilla 05 (base_resto).
     Casilla 06 must be 5000, not 5001.
     """
-    snapshot = _snapshot_2024()
-    result = _calculate_2024(
+    snapshot = _snapshot_split_base()
+    result = _calculate_split_base(
         snapshot,
         nperceptores_dividendos=1,
         nperceptores_resto=0,
@@ -309,10 +317,10 @@ def test_m123_casilla_06_invariant_to_nperceptores() -> None:
     With base fixed at 42000 in casilla 04, casilla 06 must remain 42000
     regardless of whether nperceptores is 1, 7, or 100.
     """
-    snapshot = _snapshot_2024()
+    snapshot = _snapshot_split_base()
     base_fixed = Decimal("42000.00")
     results = [
-        _calculate_2024(
+        _calculate_split_base(
             snapshot,
             nperceptores_dividendos=n,
             nperceptores_resto=0,
@@ -407,7 +415,7 @@ def test_m123_split_base_revision_carries_base_total_implies_retenciones_total_a
     covered_years = tuple(year for year in _SUPPORT.years if year >= revision_start)
     assert covered_years
     for filing_year in covered_years:
-        _assert_base_total_implies_retenciones_total(_snapshot_2024(filing_year))
+        _assert_base_total_implies_retenciones_total(_snapshot_split_base(filing_year))
 
 
 def _assert_base_total_implies_retenciones_total(snapshot: RegistrySnapshot) -> None:
@@ -415,7 +423,7 @@ def _assert_base_total_implies_retenciones_total(snapshot: RegistrySnapshot) -> 
     # Named for the revision it lives on, matching its sibling
     # `modelo-123-2024-y-siguientes-base-declarada-cuando-rentas-positivas`;
     # the revision is `2024-y-siguientes`, not `2024`.
-    predicate_id = "modelo-123-2024-y-siguientes-base-total-implica-retenciones-total"
+    predicate_id = f"modelo-123-{_SPLIT_BASE_REVISION}-base-total-implica-retenciones-total"
     predicate = next(p for p in snapshot.revision.verification_predicates if p.predicate_id == predicate_id)
 
     assert predicate.expression == 'implies_nonzero(["06", "09"])'

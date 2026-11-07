@@ -3,14 +3,19 @@
 from __future__ import annotations
 
 import json
+from itertools import pairwise
 from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, filing_year_envelope
+
 from ..analysis.cross_revision_wire_shape import adjacent_revision_pairs, cross_revision_wire_shape_transitions
 from ..compiler.authority import compiled_bundled_authority
 
-_PAIR_2025_2026 = {"999": (("2025", "2026"),)}
+_LATER = str(filing_year_envelope().horizon)
+_EARLIER = str(filing_year_envelope().horizon - 1)
+_PAIR = {"999": ((_EARLIER, _LATER),)}
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -42,24 +47,24 @@ def test_a_planted_wire_shape_change_is_reported(tmp_path: Path) -> None:
     """A field that changes shape between revisions is a suspect, and is named."""
     stable = {"id": "modelo-999-page-01-cuota", "data_type": "money", "length": 17, "signed": True, "decimals": None}
     moved = {**stable, "signed": False, "data_type": "decimal", "decimals": 2}
-    _write_revision(tmp_path, "999", "2025", (dict(stable),))
-    _write_revision(tmp_path, "999", "2026", (dict(moved),))
+    _write_revision(tmp_path, "999", _EARLIER, (dict(stable),))
+    _write_revision(tmp_path, "999", _LATER, (dict(moved),))
 
-    transitions = tuple(cross_revision_wire_shape_transitions(tmp_path, _PAIR_2025_2026))
+    transitions = tuple(cross_revision_wire_shape_transitions(tmp_path, _PAIR))
 
     assert len(transitions) == 1
     assert transitions[0].casilla_id == "17"
-    assert transitions[0].earlier_revision == "2025"
-    assert transitions[0].later_revision == "2026"
+    assert transitions[0].earlier_revision == _EARLIER
+    assert transitions[0].later_revision == _LATER
 
 
 def test_an_unchanged_field_is_not_reported(tmp_path: Path) -> None:
     """Agreement is reported as nothing, so the screen cannot fire on stability."""
     field = {"id": "modelo-999-page-01-cuota", "data_type": "money", "length": 17, "signed": True, "decimals": None}
-    _write_revision(tmp_path, "999", "2025", (dict(field),))
-    _write_revision(tmp_path, "999", "2026", (dict(field),))
+    _write_revision(tmp_path, "999", _EARLIER, (dict(field),))
+    _write_revision(tmp_path, "999", _LATER, (dict(field),))
 
-    assert not tuple(cross_revision_wire_shape_transitions(tmp_path, _PAIR_2025_2026))
+    assert not tuple(cross_revision_wire_shape_transitions(tmp_path, _PAIR))
 
 
 def test_a_change_the_design_accounts_for_is_marked_as_such(tmp_path: Path) -> None:
@@ -80,10 +85,10 @@ def test_a_change_the_design_accounts_for_is_marked_as_such(tmp_path: Path) -> N
         "aeat_type": "Num",
     }
     later = {**earlier, "data_type": "money", "signed": True, "decimals": None, "aeat_type": "N"}
-    _write_revision(tmp_path, "999", "2025", (dict(earlier),))
-    _write_revision(tmp_path, "999", "2026", (dict(later),))
+    _write_revision(tmp_path, "999", _EARLIER, (dict(earlier),))
+    _write_revision(tmp_path, "999", _LATER, (dict(later),))
 
-    transition = next(iter(cross_revision_wire_shape_transitions(tmp_path, _PAIR_2025_2026)))
+    transition = next(iter(cross_revision_wire_shape_transitions(tmp_path, _PAIR)))
 
     assert transition.official_statement_changed
 
@@ -96,23 +101,24 @@ def test_a_field_carrying_no_casilla_is_not_compared(tmp_path: Path) -> None:
     positionally would be a coordinate join.
     """
     field = {"id": "modelo-999-page-01-filler", "data_type": "text", "length": 3, "signed": False, "decimals": None}
-    _write_revision(tmp_path, "999", "2025", ({**field, "casilla_id": None},))
-    _write_revision(tmp_path, "999", "2026", ({**field, "casilla_id": None, "length": 9},))
+    _write_revision(tmp_path, "999", _EARLIER, ({**field, "casilla_id": None},))
+    _write_revision(tmp_path, "999", _LATER, ({**field, "casilla_id": None, "length": 9},))
 
-    assert not tuple(cross_revision_wire_shape_transitions(tmp_path, _PAIR_2025_2026))
+    assert not tuple(cross_revision_wire_shape_transitions(tmp_path, _PAIR))
 
 
 def test_adjacency_follows_validity_order_not_folder_names() -> None:
     """303's 2024 mid-year pair sorts backwards by folder name; validity order puts it right."""
     modelo = compiled_bundled_authority().modelo("303")
     ids = {str(revision) for revision in modelo.revisions}
+    in_validity_order = [str(revision.id) for revision in authored_revisions("303")]
 
     pairs = adjacent_revision_pairs(modelo, ids)
 
-    assert ("2023", "2024-hasta-08-y-2t") in pairs
-    assert ("2024-hasta-08-y-2t", "2024-desde-09-y-3t") in pairs
-    assert ("2024-desde-09-y-3t", "2025") in pairs
-    assert ("2023", "2024-desde-09-y-3t") not in pairs
+    for earlier, later in pairwise(in_validity_order):
+        assert (earlier, later) in pairs
+    for earlier, later in zip(in_validity_order, in_validity_order[2:], strict=False):
+        assert (earlier, later) not in pairs
 
 
 def test_parallel_revisions_are_not_paired_as_successive_editions() -> None:

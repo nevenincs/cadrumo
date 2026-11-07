@@ -14,6 +14,7 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.queries import RegistryQueryService
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.renta.maritime_exemption import (
     MaritimeWorkerFacts,
     calculate_art_7p_exemption,
@@ -34,7 +35,9 @@ def _pinned_authority() -> Iterator[None]:
 
 def _registry_target_for(observation: CasillaObservation) -> str:
     rows = (
-        RegistryQueryService(compiled_bundled_authority()).formulas_for_scope("100", filing_year=2025, period="0A").rows
+        RegistryQueryService(compiled_bundled_authority())
+        .formulas_for_scope("100", filing_year=filing_year_envelope().horizon, period="0A")
+        .rows
     )
     targets = {
         row.target_casilla_id

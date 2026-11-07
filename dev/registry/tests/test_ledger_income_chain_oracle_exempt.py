@@ -62,6 +62,7 @@ from cadrumo.domain.calculations.registry.ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.components import category_cuota_is_zero_by_law
 from cadrumo.domain.iva.schema import InvoiceKind, IvaCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -83,7 +84,7 @@ _CASH = _TOTAL - _RETENCION
 _INGRESOS_BINDING = "modelo-130-actividad-economica-ingresos-cumulative"
 _RETENCIONES_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
 
-_FILING_YEAR = 2026
+_FILING_YEAR = filing_year_envelope().horizon
 _PERIOD = Period.from_year_and_code(_FILING_YEAR, "1T")
 _VALUE_DATE = date(_FILING_YEAR, 3, 4)
 _BUCKET = "eeb87dd1-12bd-4e70-8f3e-751d9bb85455"  # was 'bucket-oracle-exempt'

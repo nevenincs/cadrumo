@@ -40,7 +40,7 @@ _LATE_SOURCE = f"aeat-dr-232-{_LATE.valid_from.year}"
 
 def test_historical_repair_refuses_another_target_or_old_manifest() -> None:
     for changed in ("modelo", "source", "year", "period", "manifest"):
-        with pytest.raises(RegistryValidationError, match=f"exact reviewed M232/{_EARLY_EXERCISE}"):
+        with pytest.raises(RegistryValidationError, match="exact reviewed target"):
             validated_historical_repair_source(
                 modelo="233" if changed == "modelo" else "232",
                 revision=_EARLY_REVISION,
@@ -249,7 +249,7 @@ def test_only_active_journal_bound_old_backup_is_excluded_from_cutover_census(
         sha256(old_bytes).hexdigest(),
         sha256(b"old form").hexdigest(),
     )
-    monkeypatch.setattr(generated_form_bridge, "REVIEWED", {("232", _EARLY_REVISION): reviewed})
+    monkeypatch.setattr(generated_form_bridge, "REVIEWED", {("232", reviewed[0]): reviewed[1:]})
     monkeypatch.setattr(generated_form_bridge, "bundled_path", lambda: source_root)
     monkeypatch.setattr(generated_form_bridge, "generated_form_interpreting_input_digest", lambda _modelo: "same")
     monkeypatch.setattr(generated_form_bridge, "registry_evidence_content_digest", lambda _source_root: "same")
