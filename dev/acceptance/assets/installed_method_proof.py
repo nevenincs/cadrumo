@@ -16,6 +16,7 @@ import secrets
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
 from typing import cast
 
@@ -26,7 +27,7 @@ from cadrumo.domain.calculations.registry.authority_store import (
     AuthorityStoreError,
 )
 from dev.acceptance.assets.acquisition_seed import seed_machine_acquisition
-from dev.acceptance.assets.export_journey import run_asset_export_journey
+from dev.acceptance.assets.export_journey import asset_journey, run_asset_export_journey
 from dev.acceptance.assets.installed_journey import run_installed_tui_probe
 from dev.acceptance.assets.installed_method_fixture import (
     METHOD_ACQUISITION_BASIS,
@@ -113,6 +114,12 @@ def installed_identity(*, python: Path, wheel: Path, source_commit: str) -> tupl
     )
 
 
+@cache
+def _method_year(authority_root: Path) -> int:
+    """The newest filing year the installed authority authors for the Modelo 130 and 100 the proof files."""
+    return asset_journey(authority_root).year
+
+
 def _money(value: object) -> str:
     return f"{Decimal(str(value)):.2f}"
 
@@ -124,7 +131,8 @@ def _require(condition: bool, message: str) -> None:
 
 def _seed_acquisition(cli: InstalledCli, *, label: str) -> str:
     """Record the payment the method machine is registered against and return its identity."""
-    return seed_machine_acquisition(cli, basis=METHOD_ACQUISITION_BASIS, booked="2025-01-01", label=label)
+    year = _method_year(cli.authority_root)
+    return seed_machine_acquisition(cli, basis=METHOD_ACQUISITION_BASIS, booked=f"{year}-01-01", label=label)
 
 
 def _tui_first(
@@ -178,7 +186,18 @@ def _tui_first(
         isinstance(revisions, list) and len(cast("list[object]", revisions)) == 2, "CLI did not read both TUI revisions"
     )
     handoff = command_result(
-        cli.run(("app", "ledger", "actividad-asset", "filing-handoff", "--tax-year", "2025", "--m130-period", "4T"))
+        cli.run(
+            (
+                "app",
+                "ledger",
+                "actividad-asset",
+                "filing-handoff",
+                "--tax-year",
+                str(_method_year(cli.authority_root)),
+                "--m130-period",
+                "4T",
+            )
+        )
     )
     material_m100 = cast("dict[str, object]", handoff["material_m100"])
     material_m130 = cast("dict[str, object]", handoff["material_m130"])
@@ -242,9 +261,9 @@ def _cli_first(
                 "forecast",
                 METHOD_ASSET_ID,
                 "--covered-from",
-                "2025-01-01",
+                f"{_method_year(cli.authority_root)}-01-01",
                 "--covered-until",
-                "2026-01-01",
+                f"{_method_year(cli.authority_root) + 1}-01-01",
             )
         )
     )
@@ -321,9 +340,9 @@ def _supersede_after_correction(cli: InstalledCli, *, first_claim_id: str, acqui
                 "forecast",
                 METHOD_ASSET_ID,
                 "--covered-from",
-                "2025-01-01",
+                f"{_method_year(cli.authority_root)}-01-01",
                 "--covered-until",
-                "2026-01-01",
+                f"{_method_year(cli.authority_root) + 1}-01-01",
                 "--supersedes-claim-id",
                 first_claim_id,
             )
@@ -348,7 +367,18 @@ def _supersede_after_correction(cli: InstalledCli, *, first_claim_id: str, acqui
         )
     )
     handoff = command_result(
-        cli.run(("app", "ledger", "actividad-asset", "filing-handoff", "--tax-year", "2025", "--m130-period", "4T"))
+        cli.run(
+            (
+                "app",
+                "ledger",
+                "actividad-asset",
+                "filing-handoff",
+                "--tax-year",
+                str(_method_year(cli.authority_root)),
+                "--m130-period",
+                "4T",
+            )
+        )
     )
     material_m100 = _money(cast("dict[str, object]", handoff["material_m100"])["amount"])
     # Only the superseding claim is effective, so the replaced 600.00 no longer reaches Modelo 100.

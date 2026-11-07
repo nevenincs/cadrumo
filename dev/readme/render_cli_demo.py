@@ -20,7 +20,7 @@ from cadrumo.domain.calculations.registry.export_parse import parse_export_paylo
 from dev.packaging.command_execution import run_command
 from dev.paths import REPO_ROOT, UTF_8
 
-from .prepare_cli_demo import DEMO_ROOT, demo_environment, prepare_demo
+from .prepare_cli_demo import DEMO_REVISION_ID, DEMO_ROOT, DEMO_YEAR, demo_environment, prepare_demo
 
 _UTF_8: Final[str] = UTF_8
 
@@ -28,14 +28,14 @@ OUTPUT_PATH = REPO_ROOT / "docs" / "_static" / "readme" / "cli-demo.gif"
 FONT_PATH = REPO_ROOT / "docs" / "_static" / "readme" / "fonts" / "CascadiaMono-Regular.ttf"
 FICHERO_PATH = DEMO_ROOT / "m115.boe"
 DISPLAY_COMMAND = (
-    "aeat app quickfile --modelo=115 --year=2025 --period=1T --casilla=04=0 --output=var/readme-demo/m115.boe"
+    f"aeat app quickfile --modelo=115 --year={DEMO_YEAR} --period=1T --casilla=04=0 --output=var/readme-demo/m115.boe"
 )
 CLI_BOOTSTRAP = "from cadrumo_runtime.host.frontend.cli.bootstrap import main; main()"
 CLI_ARGUMENTS = (
     "app",
     "quickfile",
     "--modelo=115",
-    "--year=2025",
+    f"--year={DEMO_YEAR}",
     "--period=1T",
     "--casilla=04=0",
     "--output=var/readme-demo/m115.boe",
@@ -72,9 +72,9 @@ def _require_quickfile_progress(fields: dict[str, list[tuple[str, ...]]]) -> Non
     expected_scalars = {
         "operation": ("quickfile",),
         "modelo": ("115",),
-        "filing_year": ("2025",),
+        "filing_year": (str(DEMO_YEAR),),
         "period": ("1T",),
-        "registry_revision_id": ("2019-y-siguientes",),
+        "registry_revision_id": (DEMO_REVISION_ID,),
         "completed": ("true",),
     }
     for field, expected in expected_scalars.items():
@@ -98,8 +98,8 @@ def _require_quickfile_export(fields: dict[str, list[tuple[str, ...]]]) -> None:
     actual_hash = sha256(payload).hexdigest()
     if reported_hash != actual_hash:
         raise RuntimeError(f"quickfile digest drifted: reported {reported_hash}, computed {actual_hash}")
-    period = Period.from_year_and_code(2025, "1T")
-    provider = build_runtime_schema_provider(modelos=("115",), filing_year=2025, period=period)
+    period = Period.from_year_and_code(DEMO_YEAR, "1T")
+    provider = build_runtime_schema_provider(modelos=("115",), filing_year=DEMO_YEAR, period=period)
     layout = provider.get_subview("115").export_layouts[0]
     parsed = parse_export_payload(layout, payload)
     if not parsed.fields:
