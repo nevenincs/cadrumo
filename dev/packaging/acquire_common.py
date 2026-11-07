@@ -24,6 +24,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, NoReturn
 
+from mcp.types import LATEST_PROTOCOL_VERSION
+
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from dev.paths import UTF_8
@@ -412,7 +414,7 @@ def capture_owned_server_launch(
                 "id": 1,
                 "method": "initialize",
                 "params": {
-                    "protocolVersion": "2025-06-18",
+                    "protocolVersion": LATEST_PROTOCOL_VERSION,
                     "capabilities": {},
                     "clientInfo": {"name": "owned-launch-capture", "version": "0"},
                 },
