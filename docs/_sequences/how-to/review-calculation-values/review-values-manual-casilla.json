@@ -398,7 +398,7 @@
             "modelo-130-retenciones-agrarias": "0",
             "modelo-130-volumen-ingresos-agrario": "0"
           },
-          "calculation_revision_id": "18286ee4df6171142fdf49c6c0b54198e2758f9babe6b4fde83aa74e8347a620",
+          "calculation_revision_id": "03b0468d1641bf7b557e43c69b830fb1be636e01f83412ff6b40141955e4f583",
           "casilla_values": {
             "01": "1000.00",
             "02": "525.00",
@@ -548,7 +548,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 18286ee4df6171142fdf49c6c0b54198e2758f9babe6b4fde83aa74e8347a620 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 03b0468d1641bf7b557e43c69b830fb1be636e01f83412ff6b40141955e4f583 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
@@ -582,6 +582,17 @@
               "resolved_binding_source": "previous_filing",
               "resolver_id": "previous_filing",
               "source_ref": "100:2025:0A:irpf.previous_year_economic_activity_net_income"
+            },
+            {
+              "contributor_binding_source": "profile",
+              "contributor_source_kind": "profile",
+              "dependency_treatment": "",
+              "fingerprint": "sha256:0fbdf43bc27dbc137ad9c0add124533a9205ca3c04822dce48706b126ef135c3",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "profile",
+              "resolver_id": "profile",
+              "source_ref": "profile:<profile-id>:binding:modelo-130-estimacion-directa-modalidad"
             }
           ],
           "state": "borrador",

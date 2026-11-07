@@ -405,7 +405,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "4b83c11ab5c9063fffdc81768c0d9c46702b4afbd80f47782b4e2fc6cf3d595e"
+          "value": "d49910db6208ea0091c8350fa431181cc39bbedcf73491d08b2abd8ec3e6ad65"
         }
       ],
       "envelope": {
@@ -433,7 +433,7 @@
             "modelo-130-retenciones-agrarias": "0",
             "modelo-130-volumen-ingresos-agrario": "0"
           },
-          "calculation_revision_id": "4b83c11ab5c9063fffdc81768c0d9c46702b4afbd80f47782b4e2fc6cf3d595e",
+          "calculation_revision_id": "d49910db6208ea0091c8350fa431181cc39bbedcf73491d08b2abd8ec3e6ad65",
           "casilla_values": {
             "01": "1000.00",
             "02": "525.00",
@@ -583,7 +583,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 4b83c11ab5c9063fffdc81768c0d9c46702b4afbd80f47782b4e2fc6cf3d595e (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision d49910db6208ea0091c8350fa431181cc39bbedcf73491d08b2abd8ec3e6ad65 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
@@ -617,6 +617,17 @@
               "resolved_binding_source": "previous_filing",
               "resolver_id": "previous_filing",
               "source_ref": "100:2025:0A:irpf.previous_year_economic_activity_net_income"
+            },
+            {
+              "contributor_binding_source": "profile",
+              "contributor_source_kind": "profile",
+              "dependency_treatment": "",
+              "fingerprint": "sha256:0fbdf43bc27dbc137ad9c0add124533a9205ca3c04822dce48706b126ef135c3",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "profile",
+              "resolver_id": "profile",
+              "source_ref": "profile:<profile-id>:binding:modelo-130-estimacion-directa-modalidad"
             }
           ],
           "state": "borrador",
@@ -647,7 +658,7 @@
         "modelo",
         "work",
         "verify",
-        "4b83c11ab5c9063fffdc81768c0d9c46702b4afbd80f47782b4e2fc6cf3d595e"
+        "d49910db6208ea0091c8350fa431181cc39bbedcf73491d08b2abd8ec3e6ad65"
       ],
       "captures": [],
       "envelope": {
@@ -695,7 +706,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "4b83c11ab5c9063fffdc81768c0d9c46702b4afbd80f47782b4e2fc6cf3d595e",
+          "calculation_revision_id": "d49910db6208ea0091c8350fa431181cc39bbedcf73491d08b2abd8ec3e6ad65",
           "completeness_status": "complete",
           "findings": [
             {
@@ -741,7 +752,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "1673ac92c637926f28315dd2d2d34078142492b0987f5c33e18206478164cc14",
+          "verification_report_id": "897f2923b17a7a4b312c4d94b90cc38f05ae91eaa40dbea2ecad74fc4fc69067",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

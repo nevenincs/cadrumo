@@ -331,7 +331,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "revision_id",
-          "value": "8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5"
+          "value": "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491"
         }
       ],
       "envelope": null,
@@ -350,7 +350,7 @@
         "modelo",
         "work",
         "revision",
-        "8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5"
+        "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491"
       ],
       "captures": [],
       "envelope": {
@@ -418,7 +418,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5",
+          "calculation_revision_id": "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -1009,6 +1009,17 @@
               "resolved_binding_source": "prorrata_regularizacion",
               "resolver_id": "prorrata_regularizacion",
               "source_ref": "303:2026:1T:prorrata-regularizacion-settlement-only"
+            },
+            {
+              "contributor_binding_source": "profile",
+              "contributor_source_kind": "profile",
+              "dependency_treatment": "",
+              "fingerprint": "sha256:0fbdf43bc27dbc137ad9c0add124533a9205ca3c04822dce48706b126ef135c3",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "profile",
+              "resolver_id": "profile",
+              "source_ref": "profile:<profile-id>:binding:modelo-303-profile-state-attribution-ratio"
             }
           ],
           "state": "borrador",

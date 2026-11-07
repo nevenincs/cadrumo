@@ -422,7 +422,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5",
+          "calculation_revision_id": "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -989,7 +989,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -1023,6 +1023,17 @@
               "resolved_binding_source": "prorrata_regularizacion",
               "resolver_id": "prorrata_regularizacion",
               "source_ref": "303:2026:1T:prorrata-regularizacion-settlement-only"
+            },
+            {
+              "contributor_binding_source": "profile",
+              "contributor_source_kind": "profile",
+              "dependency_treatment": "",
+              "fingerprint": "sha256:0fbdf43bc27dbc137ad9c0add124533a9205ca3c04822dce48706b126ef135c3",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "profile",
+              "resolver_id": "profile",
+              "source_ref": "profile:<profile-id>:binding:modelo-303-profile-state-attribution-ratio"
             }
           ],
           "state": "borrador",
@@ -1106,7 +1117,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5",
+          "calculation_revision_id": "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491",
           "completeness_status": "complete",
           "findings": [
             {
@@ -1157,7 +1168,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "005b27c69ac5c0a4d4e9a0e9c562fc4ea2cc05bb18a8b16ea0632bc29fdf2256",
+          "verification_report_id": "b617c4e32d514330bf02f4f146204bd9c46b162f6075720ea82428541c244ca8",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -1189,7 +1200,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.file\nfiling_record_id\t0147db2431008a6f6f1f375d05e8d21e61938f6b549c21e27f2e1a91b88119d6\nwork_unit_id\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\ncalculation_revision_id\t8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5\nbucket_id\t<bucket-id>\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nfiled_at\t2026-04-01T09:00:00+00:00\nfiled_by\tdocs-sequence-sandbox\nstatus\tvigente\norigin\tlocal\nconfirmation\tpendiente\ndeclaration_kind\toriginal\naeat_accepted\tfalse\nkind\tinternal_filing\nlive_submission\tfalse\nfiling_disambiguation\tThis filing is internal only and is not submitted to the AEAT.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "operation\tmodelo.work.file\nfiling_record_id\t564a96d267f4add8b38e4b5710ff181605f782ad64ebc59990fd931081c6b3cd\nwork_unit_id\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\ncalculation_revision_id\tc30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491\nbucket_id\t<bucket-id>\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nfiled_at\t2026-04-01T09:00:00+00:00\nfiled_by\tdocs-sequence-sandbox\nstatus\tvigente\norigin\tlocal\nconfirmation\tpendiente\ndeclaration_kind\toriginal\naeat_accepted\tfalse\nkind\tinternal_filing\nlive_submission\tfalse\nfiling_timeliness\ten_plazo\nfiling_disambiguation\tThis filing is internal only and is not submitted to the AEAT.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -1246,10 +1257,10 @@
           }
         ],
         "result": {
-          "bucket_event_id": "36a479a292e7a99591e20a27bf3e66fe1c6c0c94a7b4120566d6d9d775391139",
+          "bucket_event_id": "f03d599d1b5b5764718f2bc8cf9746fb7e71d6e20461e6dd5d9ce61d0ca8b682",
           "bucket_id": "<bucket-id>",
           "byte_size": 2948,
-          "calculation_revision_id": "8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5",
+          "calculation_revision_id": "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491",
           "file_sha256": "99bf280fa20103b0a13b53129ca4fc7563f4226b9a4a0fe5ae6b5e64c26666e0",
           "filing_year": 2026,
           "format": "fichero-boe",

@@ -376,7 +376,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5"
+          "value": "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491"
         }
       ],
       "envelope": {
@@ -475,7 +475,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5",
+          "calculation_revision_id": "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -1042,7 +1042,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -1076,6 +1076,17 @@
               "resolved_binding_source": "prorrata_regularizacion",
               "resolver_id": "prorrata_regularizacion",
               "source_ref": "303:2026:1T:prorrata-regularizacion-settlement-only"
+            },
+            {
+              "contributor_binding_source": "profile",
+              "contributor_source_kind": "profile",
+              "dependency_treatment": "",
+              "fingerprint": "sha256:0fbdf43bc27dbc137ad9c0add124533a9205ca3c04822dce48706b126ef135c3",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "profile",
+              "resolver_id": "profile",
+              "source_ref": "profile:<profile-id>:binding:modelo-303-profile-state-attribution-ratio"
             }
           ],
           "state": "borrador",
@@ -1106,13 +1117,13 @@
         "modelo",
         "work",
         "verify",
-        "8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5"
+        "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491"
       ],
       "captures": [
         {
           "json_path": "result.verification_report_id",
           "name": "verification_report_id",
-          "value": "005b27c69ac5c0a4d4e9a0e9c562fc4ea2cc05bb18a8b16ea0632bc29fdf2256"
+          "value": "b617c4e32d514330bf02f4f146204bd9c46b162f6075720ea82428541c244ca8"
         }
       ],
       "envelope": {
@@ -1160,7 +1171,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5",
+          "calculation_revision_id": "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491",
           "completeness_status": "complete",
           "findings": [
             {
@@ -1211,7 +1222,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "005b27c69ac5c0a4d4e9a0e9c562fc4ea2cc05bb18a8b16ea0632bc29fdf2256",
+          "verification_report_id": "b617c4e32d514330bf02f4f146204bd9c46b162f6075720ea82428541c244ca8",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -1233,7 +1244,7 @@
         "verification-report",
         "list",
         "--calculation-revision-id",
-        "8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5"
+        "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491"
       ],
       "captures": [],
       "envelope": {
@@ -1249,12 +1260,12 @@
           }
         ],
         "result": {
-          "calculation_revision_id_filter": "8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5",
+          "calculation_revision_id_filter": "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491",
           "operation": "modelo.verification_report.list",
           "report_count": 1,
           "reports": [
             {
-              "calculation_revision_id": "8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5",
+              "calculation_revision_id": "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491",
               "completeness_status": "complete",
               "findings": [
                 {
@@ -1304,7 +1315,7 @@
               },
               "resolved_casilla_ids": [],
               "run_at": "2026-04-01T09:00:00+00:00",
-              "verification_report_id": "005b27c69ac5c0a4d4e9a0e9c562fc4ea2cc05bb18a8b16ea0632bc29fdf2256",
+              "verification_report_id": "b617c4e32d514330bf02f4f146204bd9c46b162f6075720ea82428541c244ca8",
               "verified_by": "docs-sequence-sandbox"
             }
           ]
@@ -1327,7 +1338,7 @@
         "modelo",
         "verification-report",
         "view",
-        "005b27c69ac5c0a4d4e9a0e9c562fc4ea2cc05bb18a8b16ea0632bc29fdf2256"
+        "b617c4e32d514330bf02f4f146204bd9c46b162f6075720ea82428541c244ca8"
       ],
       "captures": [],
       "envelope": {
@@ -1343,7 +1354,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5",
+          "calculation_revision_id": "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491",
           "completeness_status": "complete",
           "findings": [
             {
@@ -1394,7 +1405,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "005b27c69ac5c0a4d4e9a0e9c562fc4ea2cc05bb18a8b16ea0632bc29fdf2256",
+          "verification_report_id": "b617c4e32d514330bf02f4f146204bd9c46b162f6075720ea82428541c244ca8",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

@@ -709,7 +709,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "de3c9d0daae659dcffb7c9d80c366658bd38c1c13e3c95f582bdc5d32fd33cc4",
+          "calculation_revision_id": "255e3c7c40929ad80d0199f405618f0af38b03314bdefcd12ce9c0fbca5df777",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -1276,7 +1276,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision de3c9d0daae659dcffb7c9d80c366658bd38c1c13e3c95f582bdc5d32fd33cc4 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 255e3c7c40929ad80d0199f405618f0af38b03314bdefcd12ce9c0fbca5df777 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -1310,6 +1310,17 @@
               "resolved_binding_source": "prorrata_regularizacion",
               "resolver_id": "prorrata_regularizacion",
               "source_ref": "303:2026:1T:prorrata-regularizacion-settlement-only"
+            },
+            {
+              "contributor_binding_source": "profile",
+              "contributor_source_kind": "profile",
+              "dependency_treatment": "",
+              "fingerprint": "sha256:0fbdf43bc27dbc137ad9c0add124533a9205ca3c04822dce48706b126ef135c3",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "profile",
+              "resolver_id": "profile",
+              "source_ref": "profile:<profile-id>:binding:modelo-303-profile-state-attribution-ratio"
             }
           ],
           "state": "borrador",

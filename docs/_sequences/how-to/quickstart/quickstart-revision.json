@@ -245,7 +245,7 @@
             "modelo-130-retenciones-agrarias": "0",
             "modelo-130-volumen-ingresos-agrario": "0"
           },
-          "calculation_revision_id": "f4d79b9fb54a796986e82cf9427100f8dc6ba6fe30ddd86037faa6666add6530",
+          "calculation_revision_id": "60f5fb9308dcbeda8ad8175cb2459e7243a6c042d357211b1edacb2b68232af5",
           "casilla_values": {
             "01": "1000",
             "02": "525.00",
@@ -419,6 +419,17 @@
               "resolved_binding_source": "previous_filing",
               "resolver_id": "previous_filing",
               "source_ref": "100:2025:0A:irpf.previous_year_economic_activity_net_income"
+            },
+            {
+              "contributor_binding_source": "profile",
+              "contributor_source_kind": "profile",
+              "dependency_treatment": "",
+              "fingerprint": "sha256:0fbdf43bc27dbc137ad9c0add124533a9205ca3c04822dce48706b126ef135c3",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "profile",
+              "resolver_id": "profile",
+              "source_ref": "profile:<profile-id>:binding:modelo-130-estimacion-directa-modalidad"
             }
           ],
           "state": "borrador",

@@ -11,7 +11,7 @@
     {"argv":["aeat","app","ledger","attach","c866d7043d518f43f8d261b5c7d6437f1363d6dc16be0d68184bc64e5b0a9860","--purchase-invoice-evidence-id","0021fb5b1e7a777c"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {"argv":["aeat","--format","json","app","modelo","work","create","--modelo","303","--year","2026","--period","1T"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {"argv":["aeat","app","ledger","add","--date","2026-03-20","--amount","121","--direction","INCOMING","--description","Selector transition sale","--classification","BUSINESS","--taxable-base","100","--iva-rate","0.21","--iva-amount","21","--iva-category","domestic_general","--idempotency-key","filing-spine-selector-transition"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","calculate","--modelo","303","--year","2026","--period","1T","--no-joint-return-elected"],"captures":[{"json_path":"result.calculation_revision_id","name":"selected_revision_id","value":"0d4da498a4fe624464df5f1fbcdfd463f6650e0000632d84361d9cb230387cb0"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","calculate","--modelo","303","--year","2026","--period","1T","--no-joint-return-elected"],"captures":[{"json_path":"result.calculation_revision_id","name":"selected_revision_id","value":"68b3948003a202ddff6a641d7ade609b6dd9d4d61503940e9836e0a00b2e64a6"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {
       "argv": [
         "aeat",
@@ -96,7 +96,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "0d4da498a4fe624464df5f1fbcdfd463f6650e0000632d84361d9cb230387cb0",
+          "calculation_revision_id": "68b3948003a202ddff6a641d7ade609b6dd9d4d61503940e9836e0a00b2e64a6",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -698,6 +698,17 @@
               "resolved_binding_source": "prorrata_regularizacion",
               "resolver_id": "prorrata_regularizacion",
               "source_ref": "303:2026:1T:prorrata-regularizacion-settlement-only"
+            },
+            {
+              "contributor_binding_source": "profile",
+              "contributor_source_kind": "profile",
+              "dependency_treatment": "",
+              "fingerprint": "sha256:0fbdf43bc27dbc137ad9c0add124533a9205ca3c04822dce48706b126ef135c3",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "profile",
+              "resolver_id": "profile",
+              "source_ref": "profile:<profile-id>:binding:modelo-303-profile-state-attribution-ratio"
             }
           ],
           "state": "borrador",
@@ -801,7 +812,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "0d4da498a4fe624464df5f1fbcdfd463f6650e0000632d84361d9cb230387cb0",
+          "calculation_revision_id": "68b3948003a202ddff6a641d7ade609b6dd9d4d61503940e9836e0a00b2e64a6",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -1403,6 +1414,17 @@
               "resolved_binding_source": "prorrata_regularizacion",
               "resolver_id": "prorrata_regularizacion",
               "source_ref": "303:2026:1T:prorrata-regularizacion-settlement-only"
+            },
+            {
+              "contributor_binding_source": "profile",
+              "contributor_source_kind": "profile",
+              "dependency_treatment": "",
+              "fingerprint": "sha256:0fbdf43bc27dbc137ad9c0add124533a9205ca3c04822dce48706b126ef135c3",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "profile",
+              "resolver_id": "profile",
+              "source_ref": "profile:<profile-id>:binding:modelo-303-profile-state-attribution-ratio"
             }
           ],
           "state": "verificado_completo",
@@ -1431,7 +1453,7 @@
         "modelo",
         "work",
         "revision",
-        "0d4da498a4fe624464df5f1fbcdfd463f6650e0000632d84361d9cb230387cb0"
+        "68b3948003a202ddff6a641d7ade609b6dd9d4d61503940e9836e0a00b2e64a6"
       ],
       "captures": [],
       "envelope": {
@@ -1499,7 +1521,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "0d4da498a4fe624464df5f1fbcdfd463f6650e0000632d84361d9cb230387cb0",
+          "calculation_revision_id": "68b3948003a202ddff6a641d7ade609b6dd9d4d61503940e9836e0a00b2e64a6",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -2101,6 +2123,17 @@
               "resolved_binding_source": "prorrata_regularizacion",
               "resolver_id": "prorrata_regularizacion",
               "source_ref": "303:2026:1T:prorrata-regularizacion-settlement-only"
+            },
+            {
+              "contributor_binding_source": "profile",
+              "contributor_source_kind": "profile",
+              "dependency_treatment": "",
+              "fingerprint": "sha256:0fbdf43bc27dbc137ad9c0add124533a9205ca3c04822dce48706b126ef135c3",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "profile",
+              "resolver_id": "profile",
+              "source_ref": "profile:<profile-id>:binding:modelo-303-profile-state-attribution-ratio"
             }
           ],
           "state": "presentado",
@@ -2203,7 +2236,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "0d4da498a4fe624464df5f1fbcdfd463f6650e0000632d84361d9cb230387cb0",
+          "calculation_revision_id": "68b3948003a202ddff6a641d7ade609b6dd9d4d61503940e9836e0a00b2e64a6",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -2805,6 +2838,17 @@
               "resolved_binding_source": "prorrata_regularizacion",
               "resolver_id": "prorrata_regularizacion",
               "source_ref": "303:2026:1T:prorrata-regularizacion-settlement-only"
+            },
+            {
+              "contributor_binding_source": "profile",
+              "contributor_source_kind": "profile",
+              "dependency_treatment": "",
+              "fingerprint": "sha256:0fbdf43bc27dbc137ad9c0add124533a9205ca3c04822dce48706b126ef135c3",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "profile",
+              "resolver_id": "profile",
+              "source_ref": "profile:<profile-id>:binding:modelo-303-profile-state-attribution-ratio"
             }
           ],
           "state": "presentado",
