@@ -4,12 +4,20 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from decimal import Decimal
-from typing import Literal, cast
+from typing import Final, Literal, cast
+
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 SCHEMA_VERSION = "ledger-01-installed-tui-v1"
 
 
-YEAR = 2025
+def _supported_year() -> int:
+    """The newest filing year the pinned authority supports."""
+    with bundled_indexed_authority().operation() as operation:
+        return operation.supported_filing_years().horizon
+
+
+YEAR: Final = _supported_year()
 
 
 COUNTERPARTY_NIF = "B00000281"
