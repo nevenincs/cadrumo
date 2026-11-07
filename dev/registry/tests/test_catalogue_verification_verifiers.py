@@ -22,6 +22,7 @@ from cadrumo.domain.calculations.registry.schema_references import (
     LegalReferenceKind,
     SourceReference,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.corpus_catalogue import (
     verify_source_catalogue,
@@ -31,6 +32,8 @@ from ..compiler.legal_grounding import verify_legal_catalogue
 from ..compiler.validate_evidence import EvidenceValidator
 from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_registry_tree
+
+_EDITION = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -860,42 +863,42 @@ def test_registry_validator_rejects_missing_required_text(tmp_path: Path) -> Non
 
 def test_verify_source_file_does_not_require_authored_manual_structure(tmp_path: Path) -> None:
     """A PDF identity is valid before anyone authors a structured manual view."""
-    pdf_path = tmp_path / "corpus" / "manuals" / "renta" / "2020" / "part1" / "source.pdf"
+    pdf_path = tmp_path / "corpus" / "manuals" / "renta" / str(_EDITION) / "part1" / "source.pdf"
     pdf_path.parent.mkdir(parents=True)
     payload = b"%PDF-1.4 manual structure sample bytes"
     pdf_path.write_bytes(payload)
 
     source = SourceReference(
-        id="aeat-renta-2020-manual-parte1",
+        id=f"aeat-renta-{_EDITION}-manual-parte1",
         evidence_tier="official_source_guidance",
         authority="aeat",
         kind="manual_pdf",
-        corpus_path="corpus/manuals/renta/2020/part1/source.pdf",
+        corpus_path=f"corpus/manuals/renta/{_EDITION}/part1/source.pdf",
         sha256=hashlib.sha256(payload).hexdigest(),
         bytes=len(payload),
-        retrieved_at=date(2026, 5, 6),
+        retrieved_at=date(_EDITION, 5, 6),
         source_url=f"{Settings.external_constants().aeat.domains.sede}/Manual.pdf",
         review_status="pending_review",
     )
 
     assert verify_source_file(tmp_path, source) == pdf_path
 
-    structure_dir = tmp_path / "corpus" / "manuals" / "renta" / "2020" / "part1" / "structure"
+    structure_dir = tmp_path / "corpus" / "manuals" / "renta" / str(_EDITION) / "part1" / "structure"
     structure_dir.mkdir(parents=True)
 
     (structure_dir / "manual.json").write_text(
         json.dumps(
             {
                 "manual_id": "renta",
-                "year": 2020,
+                "year": _EDITION,
                 "part": "part1",
-                "title": "Manual Renta 2020",
+                "title": f"Manual Renta {_EDITION}",
                 "summary": "Resumen",
                 "source_pdf_url": f"{Settings.external_constants().aeat.domains.sede}/Manual.pdf",
                 "source_html_url": None,
-                "fetched_at": "2026-05-06T00:00:00Z",
+                "fetched_at": f"{date(_EDITION, 5, 6).isoformat()}T00:00:00Z",
                 "definition_reviewed_by": "operator",
-                "definition_reviewed_at": "2026-06-08",
+                "definition_reviewed_at": date(_EDITION, 6, 8).isoformat(),
             },
         ),
         encoding="utf-8",
@@ -912,23 +915,32 @@ def test_verify_source_file_does_not_require_authored_manual_structure(tmp_path:
 def test_verify_legal_reference_checks_manual_section_json(tmp_path: Path) -> None:
     """verify_legal_reference must fail if a manual legal reference points to an invalid section JSON file."""
     section_path = (
-        tmp_path / "corpus" / "manuals" / "renta" / "2020" / "part1" / "structure" / "sections" / "cap1" / "sec1.json"
+        tmp_path
+        / "corpus"
+        / "manuals"
+        / "renta"
+        / str(_EDITION)
+        / "part1"
+        / "structure"
+        / "sections"
+        / "cap1"
+        / "sec1.json"
     )
     section_path.parent.mkdir(parents=True)
     section_path.write_text("{corrupt json", encoding="utf-8")
 
     reference = LegalReference(
-        id="renta-2020-manual:sec1",
+        id=f"renta-{_EDITION}-manual:sec1",
         evidence_tier=EvidenceTier.LEGAL_AUTHORITY,
         authority="aeat",
         kind="manual",
-        corpus_ref="corpus/manuals/renta/2020/part1/structure/sections/cap1/sec1.json#sec1",
+        corpus_ref=f"corpus/manuals/renta/{_EDITION}/part1/structure/sections/cap1/sec1.json#sec1",
         document_id="BOE-A-2020-0000",
         permalink=f"{Settings.external_constants().aeat.domains.sede}/",
-        published_at=date(2020, 3, 31),
-        effective_from=date(2020, 4, 1),
+        published_at=date(_EDITION, 3, 31),
+        effective_from=date(_EDITION, 4, 1),
         review_status="operator_reviewed",
-        reviewed_at=date(2026, 5, 6),
+        reviewed_at=date(_EDITION, 5, 6),
         reviewed_by="operator",
         notes="Notes",
         required_text=("Seccion 1",),
@@ -950,7 +962,7 @@ def test_verify_legal_reference_checks_manual_section_json(tmp_path: Path) -> No
                 "references_legal_acts": [],
                 "source": {"manual_url": f"{Settings.external_constants().aeat.domains.sede}/", "page": 1},
                 "definition_reviewed_by": "operator",
-                "definition_reviewed_at": "2026-06-08",
+                "definition_reviewed_at": date(_EDITION, 6, 8).isoformat(),
             },
         ),
         encoding="utf-8",

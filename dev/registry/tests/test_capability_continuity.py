@@ -18,6 +18,12 @@ import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    open_ended_revision,
+    revision_covering,
+)
 
 from ..analysis.capability_continuity import (
     GRADE_LADDER,
@@ -35,13 +41,21 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: typed envelope with a product-identity requirement, so removing the layout
 #: removes three capabilities at once.
 _ENVELOPE_MODELO = "303"
-_ENVELOPE_PREDECESSOR = "2024-desde-09-y-3t"
-_ENVELOPE_REVISION = "2025"
+
+
+def _predecessor(modelo_id: str, revision_id: str) -> str:
+    """Return the authored revision right before ``revision_id``."""
+    ids = [str(revision.id) for revision in authored_revisions(modelo_id)]
+    return ids[ids.index(revision_id) - 1]
+
+
+_ENVELOPE_REVISION = str(revision_covering(_ENVELOPE_MODELO, filing_year_envelope().horizon - 1).id)
+_ENVELOPE_PREDECESSOR = _predecessor(_ENVELOPE_MODELO, _ENVELOPE_REVISION)
 
 #: A second clean modelo, whose later revision loses only its deadline windows.
 _DEADLINE_MODELO = "180"
-_DEADLINE_PREDECESSOR = "2019-2022"
-_DEADLINE_REVISION = "2023-y-siguientes"
+_DEADLINE_REVISION = str(open_ended_revision(_DEADLINE_MODELO).id)
+_DEADLINE_PREDECESSOR = _predecessor(_DEADLINE_MODELO, _DEADLINE_REVISION)
 
 #: What a revision stops declaring when its export layouts are removed: the
 #: layout itself and the envelope that lives inside it, with the envelope's
@@ -187,7 +201,7 @@ def test_capabilities_are_directional_and_exclude_counts() -> None:
     the cases where something stopped being expressible at all.
     """
     authority = compiled_bundled_authority()
-    revision = authority.modelo("322").revisions["2024-2025"]
+    revision = authority.modelo("322").revisions[str(revision_covering("322", filing_year_envelope().horizon - 1).id)]
     declared = declared_capabilities(revision)
     assert declared, "the fixture revision declares nothing, so this proves nothing"
     assert all(isinstance(item, str) for item in declared)

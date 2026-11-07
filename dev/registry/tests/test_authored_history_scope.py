@@ -16,6 +16,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ..compiler.authority import compiled_bundled_authority
 from .profile_schema_support import (
@@ -70,28 +71,31 @@ def test_the_widened_envelope_reaches_below_the_filing_floor_and_keeps_its_ceili
 
 
 def test_the_authored_history_authority_resolves_a_pre_floor_ejercicio_the_filing_envelope_refuses() -> None:
-    """The two scopes disagree about 2020, and that disagreement is the point.
+    """The two scopes disagree about the oldest authored ejercicio, and that disagreement is the point.
 
-    Modelo 100 authors 2020. The filing envelope refuses it and now says why;
-    the authored-history authority resolves it. A case whose subject is the
-    2020 source picks the second, and the refusal from the first tells it so.
+    Modelo 100 authors an ejercicio below the filing floor. The filing envelope
+    refuses it and now says why; the authored-history authority resolves it. A
+    case whose subject is that source picks the second, and the refusal from the
+    first tells it so.
     """
     filing = compiled_bundled_authority()
     committed = filing.catalogues.require_supported_filing_years()
-    assert committed.floor > 2020
+    oldest = authored_revisions("100")[0]
+    ejercicio = oldest.valid_from.year
+    assert committed.floor > ejercicio
 
     with pytest.raises(FilingYearOutsideSupportEnvelopeError):
-        select_revision(filing.modelo("100"), filing_year=2020, period="0A", support=committed)
+        select_revision(filing.modelo("100"), filing_year=ejercicio, period="0A", support=committed)
 
     history = authored_history_authority()
     revision = select_revision(
         history.modelo("100"),
-        filing_year=2020,
+        filing_year=ejercicio,
         period="0A",
         support=history.catalogues.require_supported_filing_years(),
     )
 
-    assert revision.id == "2020"
+    assert revision.id == oldest.id
 
 
 def test_no_pending_orden_declaration_is_swallowed_by_the_envelope_gate() -> None:
