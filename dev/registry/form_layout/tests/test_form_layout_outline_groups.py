@@ -1,6 +1,6 @@
 """The reviewed outline declarations reach their layouts whole, and their headings and part names are translated.
 
-The 2025 Modelo 100 layout carries the outline ``outline_groups.toml`` declares
+The Modelo 100 layout carries the outline ``outline_groups.toml`` declares
 for it, and every heading a navigator draws from that edition, its pages,
 sections and outline groups, reads as words in each supported locale. A part
 heading is scoped to its edition, because a positional section id holds
@@ -28,6 +28,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _LOCALES = ("es", "en", "ca", "hu")
 
 
+def _outlined_revision() -> str:
+    """The one Modelo 100 revision that ``outline_groups.toml`` declares an outline for."""
+    (revision,) = (revision for modelo, revision in read_outline_groups().outlines if modelo == "100")
+    return revision
+
+
 @cache
 def _renta_layouts() -> dict[str, FormLayoutDefinition]:
     modelos, _catalogues = load_registry_tree(REGISTRY_ROOT)
@@ -42,22 +48,23 @@ def _edition_keys(layout: FormLayoutDefinition) -> list[str]:
     return [key for key in edition if key is not None]
 
 
-def test_the_2025_renta_layout_carries_the_declared_outline() -> None:
-    layout = _renta_layouts()["2025"]
+def test_the_outlined_renta_layout_carries_the_declared_outline() -> None:
+    revision = _outlined_revision()
+    layout = _renta_layouts()[revision]
 
-    assert layout.outline == read_outline_groups().for_revision("100", "2025")
+    assert layout.outline == read_outline_groups().for_revision("100", revision)
     assert all(group.heading_key == f"modelo.schema.100.form.outline.{group.id}.heading" for group in layout.outline)
 
 
 def test_an_outline_belongs_to_the_one_revision_it_names() -> None:
     layouts = _renta_layouts()
 
-    assert [revision for revision, layout in layouts.items() if layout.outline] == ["2025"]
+    assert [revision for revision, layout in layouts.items() if layout.outline] == [_outlined_revision()]
 
 
 @pytest.mark.parametrize("locale", _LOCALES)
-def test_every_2025_renta_heading_reads_as_words(locale: str) -> None:
-    layout = _renta_layouts()["2025"]
+def test_every_outlined_renta_heading_reads_as_words(locale: str) -> None:
+    layout = _renta_layouts()[_outlined_revision()]
     keys = [page.heading_key for page in layout.pages]
     keys += [section.heading_key for page in layout.pages for section in page.sections]
 
@@ -74,21 +81,21 @@ def test_every_2025_renta_heading_reads_as_words(locale: str) -> None:
 
 
 def test_the_locale_scanner_admits_the_edition_and_outline_headings() -> None:
-    layout = _renta_layouts()["2025"]
+    layout = _renta_layouts()[_outlined_revision()]
     admitted = scan_form_layout_heading_keys()
 
     assert set(_edition_keys(layout)) <= admitted
     assert {group.heading_key for group in layout.outline} <= admitted
-    assert "modelo.schema.100.revision.2025.form.section.nowhere.heading" not in admitted
+    assert f"modelo.schema.100.revision.{layout.revision_id}.form.section.nowhere.heading" not in admitted
 
 
 @pytest.mark.parametrize(
     "document",
     [
-        '[[outlines]]\nmodelo = "100"\nrevision = "2025"\ngroups = [{ id = "a", sections = ["no-slash"] }]\n',
-        '[[outlines]]\nmodelo = "100"\nrevision = "2025"\ngroups = [{ sections = ["p/s"] }]\n',
-        '[[outlines]]\nmodelo = "100"\nrevision = "2025"\ngroups = []\n'
-        '[[outlines]]\nmodelo = "100"\nrevision = "2025"\ngroups = []\n',
+        '[[outlines]]\nmodelo = "100"\nrevision = "synthetic"\ngroups = [{ id = "a", sections = ["no-slash"] }]\n',
+        '[[outlines]]\nmodelo = "100"\nrevision = "synthetic"\ngroups = [{ sections = ["p/s"] }]\n',
+        '[[outlines]]\nmodelo = "100"\nrevision = "synthetic"\ngroups = []\n'
+        '[[outlines]]\nmodelo = "100"\nrevision = "synthetic"\ngroups = []\n',
         'outlines = "none"\n',
     ],
 )
@@ -101,4 +108,4 @@ def test_an_outline_declaration_that_is_not_one_outline_per_revision_is_refused(
 
 
 def test_a_missing_declaration_declares_no_outline(tmp_path: Path) -> None:
-    assert read_outline_groups(tmp_path / "absent.toml").for_revision("100", "2025") == ()
+    assert read_outline_groups(tmp_path / "absent.toml").for_revision("100", "synthetic") == ()

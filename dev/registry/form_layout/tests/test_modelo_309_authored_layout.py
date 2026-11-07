@@ -13,6 +13,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormFieldBlock,
     FormGridBlock,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ...compiler.form_layout_integrity import form_layout_failures
 from ...compiler.loader import load_modelo_directory
@@ -20,8 +21,13 @@ from ...compiler.loader import load_modelo_directory
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+def _edition(position: int) -> str:
+    """The id of the authored Modelo 309 revision at ``position`` in its oldest-first order."""
+    return str(authored_revisions("309")[position].id)
+
+
 def test_2023_grid_preserves_the_inserted_official_rate_row() -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/309")).revisions["2023-y-siguientes"]
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/309")).revisions[_edition(3)]
     (layout,) = revision.form_layouts
     assert form_layout_failures(revision) == ()
     sections = {section.id: section for page in layout.pages for section in page.sections}
@@ -46,7 +52,7 @@ def test_2023_grid_preserves_the_inserted_official_rate_row() -> None:
 
 
 def test_2023_identity_and_choices_have_declared_semantic_owners() -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/309")).revisions["2023-y-siguientes"]
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/309")).revisions[_edition(3)]
     sections = {section.id: section for page in revision.form_layouts[0].pages for section in page.sections}
     contexts = [block for block in sections["identificacion"].blocks if isinstance(block, FormContextFieldBlock)]
     assert {block.export_field_id for block in contexts} == {"modelo-309-p1-nif", "modelo-309-p1-apellidos"}
@@ -72,7 +78,7 @@ def test_2023_identity_and_choices_have_declared_semantic_owners() -> None:
 
 
 def test_total_includes_the_new_quota_and_missing_does_not_mean_zero() -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/309")).revisions["2023-y-siguientes"]
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/309")).revisions[_edition(3)]
     total = next(formula for formula in revision.formulas if formula.target_casilla_id == "decl.cuota-devengada-22")
     result = next(formula for formula in revision.formulas if formula.target_casilla_id == "decl.resultado-24")
     values = {
@@ -121,7 +127,7 @@ def test_signature_and_payment_use_paper_fields_without_filing_side_effects() ->
         assert all(c.input_kind.value == "informational" and not c.required for c in paper)
         assert all(not c.export_refs and c.formula is None and c.binding is None for c in paper)
         assert paper_ids <= set(revision.constructs[0].casilla_ids)
-    revision = modelo.revisions["2023-y-siguientes"]
+    revision = modelo.revisions[_edition(3)]
     layout = revision.form_layouts[0]
     sections = {section.id: section for page in layout.pages for section in page.sections}
     payment = sections["ingreso"].blocks
@@ -139,7 +145,7 @@ def test_signature_and_payment_use_paper_fields_without_filing_side_effects() ->
 
 
 def test_2018_layout_does_not_import_the_later_rate_row_or_presenter_identity() -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/309")).revisions["2018-2022"]
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/309")).revisions[_edition(2)]
     layout = revision.form_layouts[0]
     assert revision.authority_grade is not None
     assert revision.authority_grade.value == "applicability"
@@ -162,16 +168,16 @@ def test_2018_layout_does_not_import_the_later_rate_row_or_presenter_identity() 
 
 
 @pytest.mark.parametrize(
-    ("revision_id", "field_id", "offset"),
+    ("position", "field_id", "offset"),
     [
-        ("2004-2015", "modelo-309-historical-nif", 6),
-        ("2016-2017", "modelo-309-p1-nif", 14),
-        ("2018-2022", "modelo-309-p1-nif", 14),
-        ("2023-y-siguientes", "modelo-309-p1-nif", 14),
+        (0, "modelo-309-historical-nif", 6),
+        (1, "modelo-309-p1-nif", 14),
+        (2, "modelo-309-p1-nif", 14),
+        (3, "modelo-309-p1-nif", 14),
     ],
 )
-def test_identification_nif_belongs_to_taxpayer_across_editions(revision_id: str, field_id: str, offset: int) -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/309")).revisions[revision_id]
+def test_identification_nif_belongs_to_taxpayer_across_editions(position: int, field_id: str, offset: int) -> None:
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/309")).revisions[_edition(position)]
     fields = [
         field
         for layout in revision.export_layouts
@@ -186,7 +192,7 @@ def test_identification_nif_belongs_to_taxpayer_across_editions(revision_id: str
 
 
 def test_original_paper_totals_calculate_and_preserve_missing_inputs() -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/309")).revisions["2004-2015"]
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/309")).revisions[_edition(0)]
     formulas = {formula.target_casilla_id: formula for formula in revision.formulas}
     assert set(formulas) == {"decl.cuota-devengada-22", "decl.resultado-24"}
     values = {
@@ -232,7 +238,7 @@ def test_original_paper_totals_calculate_and_preserve_missing_inputs() -> None:
 
 
 def test_2016_historical_structure_keeps_electronic_iban_separate() -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/309")).revisions["2016-2017"]
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/309")).revisions[_edition(1)]
     layout = revision.form_layouts[0]
     assert form_layout_failures(revision) == ()
     assert {p.casilla_id for p in layout.placements} == {c.id for c in revision.casillas}
@@ -274,7 +280,7 @@ def test_historical_address_and_ccc_do_not_leak_into_modern_editions_or_exports(
     modelo = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/309"))
     for revision_id, revision in modelo.revisions.items():
         paper = [c for c in revision.casillas if str(c.id).startswith(("papel-domicilio-", "papel-ccc-"))]
-        if revision_id in {"2018-2022", "2023-y-siguientes"}:
+        if revision_id in {_edition(2), _edition(3)}:
             assert paper == []
             continue
         assert len(paper) == 14
@@ -288,7 +294,7 @@ def test_historical_address_and_ccc_do_not_leak_into_modern_editions_or_exports(
 
 def test_original_layout_preserves_separate_marks_and_paper_only_identity() -> None:
     modelo = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/309"))
-    revision = modelo.revisions["2004-2015"]
+    revision = modelo.revisions[_edition(0)]
     layout = revision.form_layouts[0]
     assert form_layout_failures(revision) == ()
     assert {p.casilla_id for p in layout.placements} == {c.id for c in revision.casillas}
@@ -307,7 +313,7 @@ def test_original_layout_preserves_separate_marks_and_paper_only_identity() -> N
     assert paper_ids <= casillas.keys()
     assert all(not casillas[c].export_refs and casillas[c].input_kind.value == "informational" for c in paper_ids)
     assert all(
-        paper_ids.isdisjoint({c.id for c in r.casillas}) for k, r in modelo.revisions.items() if k != "2004-2015"
+        paper_ids.isdisjoint({c.id for c in r.casillas}) for k, r in modelo.revisions.items() if k != _edition(0)
     )
     assert not any(p.box_number in {"88", "89", "94", "99", "831", "931"} for p in layout.placements)
     grid = sections["liquidacion"].blocks[0]

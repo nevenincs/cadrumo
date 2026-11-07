@@ -15,6 +15,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormLayoutDefinition,
     FormRepeatingGroupBlock,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, open_ended_revision
 
 from ...compiler.form_layout_integrity import form_layout_failures
 from ...compiler.loader import load_modelo_directory
@@ -22,13 +23,20 @@ from ...compiler.loader import load_modelo_directory
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+def _edition(position: int) -> str:
+    """The id of the authored Modelo 303 revision at ``position`` in its oldest-first order."""
+    return str(authored_revisions("303")[position].id)
+
+
 @cache
 def _revision() -> ModeloRevision:
-    return load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/303")).revisions["2026-y-siguientes"]
+    return load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/303")).revisions[
+        str(open_ended_revision("303").id)
+    ]
 
 
-def test_2022_form_keeps_single_record_and_historical_bank_owners() -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/303")).revisions["2022"]
+def test_the_oldest_form_keeps_single_record_and_historical_bank_owners() -> None:
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/303")).revisions[_edition(0)]
     layout = revision.form_layouts[0]
     assert form_layout_failures(revision) == ()
     assert len(layout.pages) == 6
@@ -52,29 +60,29 @@ def test_2022_form_keeps_single_record_and_historical_bank_owners() -> None:
 
 def test_annual_volume_formula_is_inherited_only_in_grounded_editions() -> None:
     revisions = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/303")).revisions
+    form_sources = (
+        "boe-modelo-303-2021-form-pdf",
+        "boe-modelo-303-2023-form-pdf",
+        "boe-modelo-303-2023-form-pdf",
+        "boe-modelo-303-2024-form-pdf",
+        "boe-modelo-303-2024-form-pdf",
+        "boe-modelo-303-2024-form-pdf",
+        "boe-modelo-303-2026-form-pdf",
+    )
     expressions = []
-    for revision_id in revisions:
-        revision = revisions[revision_id]
+    for position, source in enumerate(form_sources):
+        revision = revisions[_edition(position)]
         box = next(c for c in revision.casillas if c.id == "88")
         assert box.input_kind == "computed"
         formula = next(f for f in revision.formulas if f.id == box.formula)
         expressions.append(formula.expression)
-        source = {
-            "2022": "boe-modelo-303-2021-form-pdf",
-            "2023": "boe-modelo-303-2023-form-pdf",
-            "2024-hasta-08-y-2t": "boe-modelo-303-2023-form-pdf",
-            "2024-desde-09-y-3t": "boe-modelo-303-2024-form-pdf",
-            "2025": "boe-modelo-303-2024-form-pdf",
-            "2026-hasta-01-y-1t": "boe-modelo-303-2024-form-pdf",
-            "2026-y-siguientes": "boe-modelo-303-2026-form-pdf",
-        }[revision_id]
         assert source in formula.source_refs
     assert all(expression == expressions[0] for expression in expressions)
 
 
-@pytest.mark.parametrize("revision_id", ["2024-desde-09-y-3t", "2025"])
-def test_historical_rectificativa_form_preserves_its_own_field_owners(revision_id: str) -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/303")).revisions[revision_id]
+@pytest.mark.parametrize("position", [3, 4])
+def test_historical_rectificativa_form_preserves_its_own_field_owners(position: int) -> None:
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/303")).revisions[_edition(position)]
     layout = revision.form_layouts[0]
     assert form_layout_failures(revision) == ()
     assert len(layout.pages) == 6
@@ -114,9 +122,9 @@ def test_historical_rectificativa_form_preserves_its_own_field_owners(revision_i
     assert form_layout_failures(revision.model_copy(update={"form_layouts": (corrupted,)}))
 
 
-@pytest.mark.parametrize(("revision_id", "count"), [("2023", 219), ("2024-hasta-08-y-2t", 220)])
-def test_complementaria_editions_do_not_inherit_rectificativa_fields(revision_id: str, count: int) -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/303")).revisions[revision_id]
+@pytest.mark.parametrize(("position", "count"), [(1, 219), (2, 220)])
+def test_complementaria_editions_do_not_inherit_rectificativa_fields(position: int, count: int) -> None:
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/303")).revisions[_edition(position)]
     layout = revision.form_layouts[0]
     assert form_layout_failures(revision) == ()
     assert len(layout.pages) == 6

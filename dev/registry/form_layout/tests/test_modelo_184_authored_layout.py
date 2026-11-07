@@ -7,6 +7,7 @@ import pytest
 from cadrumo.application.storage.calc_sheets.workbook_exclusions import workbook_transport_controls
 from cadrumo.domain.calculations.registry.form_context import resolve_form_context_field
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormContextFieldBlock, FormRepeatingGroupBlock
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ...compiler.form_layout_integrity import form_layout_failures
 from ...compiler.loader import load_modelo_directory
@@ -14,8 +15,9 @@ from ...compiler.loader import load_modelo_directory
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-@pytest.mark.parametrize("revision_id,count", [("2023-2024", 86), ("2025-y-siguientes", 87)])
-def test_184_keeps_each_revision_and_hides_only_declared_transport_controls(revision_id: str, count: int) -> None:
+@pytest.mark.parametrize("position,count", [(4, 86), (5, 87)])
+def test_184_keeps_each_revision_and_hides_only_declared_transport_controls(position: int, count: int) -> None:
+    revision_id = str(authored_revisions("184")[position].id)
     revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/184")).revisions[revision_id]
     layout = revision.form_layouts[0]
     assert form_layout_failures(revision) == ()
@@ -45,7 +47,7 @@ def test_184_keeps_each_revision_and_hides_only_declared_transport_controls(revi
     }
     summary = layout.pages[0].sections[-1]
     assert any(getattr(b, "casilla_id", None) == "decl.total-registros-entidad" for b in summary.blocks) == (
-        revision_id == "2025-y-siguientes"
+        position == 5
     )
     members = layout.pages[2].sections[0].blocks[0]
     assert isinstance(members, FormRepeatingGroupBlock)
