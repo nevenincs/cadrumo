@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from .....domain.calculations.registry.tests.authored_editions import revision_covering
 from .....tests.inventory import FIXTURES_DIR
 from ..errors import DeclaracionParseError
 from ..parser import parse_declaracion
@@ -51,7 +52,7 @@ def test_parser_extracts_modelo_303_historical_template_profile_targets_from_cor
     assert filing.tax_id == "Y0001006P"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "303"
-    assert filing.registry_snapshot_ref.revision_id == "2022"
+    assert filing.registry_snapshot_ref.revision_id == str(revision_covering("303", year).id)
     assert filing.registry_snapshot_ref.modelo_year == year
 
     values = {value.casilla_id: value.printed_value for value in filing.values}

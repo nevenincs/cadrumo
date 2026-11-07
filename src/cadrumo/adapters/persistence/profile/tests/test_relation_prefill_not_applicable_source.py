@@ -34,6 +34,7 @@ _YEAR = newest_authored_edition("100")
 _SOURCE = str(Modelo("130"))
 _FACTS = (
     UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+    UserProfileFact(path="taxpayer_type.fiscal_residency", value="resident_irpf"),
     UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
     UserProfileFact(path="irpf.estimation_regime", value="directa_simplificada"),
     UserProfileFact(path="tax_residence.ccaa", value="madrid"),

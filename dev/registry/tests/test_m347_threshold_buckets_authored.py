@@ -31,9 +31,22 @@ from cadrumo.domain.calculations.registry.m347_threshold import (
     resolve_m347_threshold_buckets,
 )
 from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.fact_loader import load_governed_facts
 from ..compiler.loader import load_shared_catalogues
+
+# The authored fact stores one variant per design; the dates below sit at the ends of the designs it keeps.
+_BUCKET_FACT = next(
+    fact
+    for fact in load_governed_facts(bundled_path("registry", "aeat", "facts"))
+    if fact.fact_id == "m347-clave-threshold-buckets"
+)
+_WIDENED_FLOOR, _SPLIT_YEAR, _SETTLED_FROM = (variant.valid_from.year for variant in _BUCKET_FACT.variants)
+_END_OF_FIRST = date(_SPLIT_YEAR - 1, 12, 31)
+_IN_SECOND = date(_SPLIT_YEAR, 12, 31)
+_END_OF_SECOND = date(_SETTLED_FROM - 1, 12, 31)
+_IN_SETTLED = date(filing_year_envelope().horizon, 12, 31)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -57,12 +70,14 @@ def _floor_facts(buckets: M347ThresholdBuckets) -> dict[str, str | None]:
     }
 
 
-_EDITION_DATES = [date(2013, 12, 31), date(2014, 12, 31), date(2024, 12, 31), date(2025, 12, 31)]
+_EDITION_DATES = [_END_OF_FIRST, _IN_SECOND, _END_OF_SECOND, _IN_SETTLED]
 
 
 @pytest.mark.parametrize("filing_date", _EDITION_DATES)
 def test_every_edition_separates_entregas_adquisiciones_c_and_d(filing_date: date) -> None:
-    buckets = resolve_m347_threshold_buckets(effective_date=filing_date, authority=_authored_authority(floor=2011))
+    buckets = resolve_m347_threshold_buckets(
+        effective_date=filing_date, authority=_authored_authority(floor=_WIDENED_FLOOR)
+    )
 
     assert buckets.bucket_of("B") is buckets.bucket_of("F")
     assert buckets.bucket_of("A") is buckets.bucket_of("G")
@@ -74,7 +89,9 @@ def test_every_edition_separates_entregas_adquisiciones_c_and_d(filing_date: dat
 
 @pytest.mark.parametrize("filing_date", _EDITION_DATES)
 def test_clave_d_apart_from_adquisiciones_is_flagged_unsettled_in_every_edition(filing_date: date) -> None:
-    buckets = resolve_m347_threshold_buckets(effective_date=filing_date, authority=_authored_authority(floor=2011))
+    buckets = resolve_m347_threshold_buckets(
+        effective_date=filing_date, authority=_authored_authority(floor=_WIDENED_FLOOR)
+    )
 
     assert buckets.bucket_of("D").reading_unsettled
     assert not buckets.bucket_of("A").reading_unsettled
@@ -84,23 +101,25 @@ def test_clave_d_apart_from_adquisiciones_is_flagged_unsettled_in_every_edition(
 
 def test_clave_e_keeps_the_general_floor_until_2013_under_the_2011_design() -> None:
     buckets = resolve_m347_threshold_buckets(
-        effective_date=date(2013, 12, 31), authority=_authored_authority(floor=2011)
+        effective_date=_END_OF_FIRST, authority=_authored_authority(floor=_WIDENED_FLOOR)
     )
 
     assert _floor_facts(buckets)["E"] == _GENERAL_FLOOR_FACT
     assert not buckets.bucket_of("E").reading_unsettled
 
 
-@pytest.mark.parametrize("filing_date", [date(2014, 12, 31), date(2024, 12, 31)])
+@pytest.mark.parametrize("filing_date", [_IN_SECOND, _END_OF_SECOND])
 def test_clave_e_has_no_floor_from_2014_and_is_flagged_while_the_2011_design_applies(filing_date: date) -> None:
-    buckets = resolve_m347_threshold_buckets(effective_date=filing_date, authority=_authored_authority(floor=2011))
+    buckets = resolve_m347_threshold_buckets(
+        effective_date=filing_date, authority=_authored_authority(floor=_WIDENED_FLOOR)
+    )
 
     assert buckets.bucket_of("E").floor is None
     assert buckets.bucket_of("E").reading_unsettled
 
 
 def test_clave_e_has_no_floor_and_a_settled_reading_from_the_2025_design() -> None:
-    buckets = resolve_m347_threshold_buckets(effective_date=date(2025, 12, 31), authority=_authored_authority())
+    buckets = resolve_m347_threshold_buckets(effective_date=_IN_SETTLED, authority=_authored_authority())
 
     assert buckets.bucket_of("E").floor is None
     assert buckets.bucket_of("E").floor_fact is None
@@ -118,7 +137,7 @@ def test_the_authored_buckets_judge_each_direction_against_its_own_floor() -> No
             ("D33333335", "C"): Decimal("500.00"),
             ("E44444441", "E"): Decimal("1000.00"),
         },
-        effective_date=date(2025, 12, 31),
+        effective_date=_IN_SETTLED,
         authority=authority,
     )
 
@@ -129,15 +148,15 @@ def test_the_authored_buckets_judge_each_direction_against_its_own_floor() -> No
     assert declarable.admits("D33333335", "C")
     assert declarable.admits("E44444441", "E")
 
-    widened = _authored_authority(floor=2011)
+    widened = _authored_authority(floor=_WIDENED_FLOOR)
     in_2013 = m347_declarable_party_buckets(
         {("E44444441", "E"): Decimal("1000.00")},
-        effective_date=date(2013, 12, 31),
+        effective_date=_END_OF_FIRST,
         authority=widened,
     )
     in_2014 = m347_declarable_party_buckets(
         {("E44444441", "E"): Decimal("1000.00")},
-        effective_date=date(2014, 12, 31),
+        effective_date=_IN_SECOND,
         authority=widened,
     )
     assert not in_2013.admits("E44444441", "E")

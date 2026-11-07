@@ -15,6 +15,7 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     resolve_ledger_iva_aggregation_binding_values,
     unsupported_ledger_iva_observations,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.classification import (
     CustomerTaxStatus,
     IvaInvoiceClassificationCriteria,
@@ -40,6 +41,8 @@ from .ledger_iva_aggregation_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
+
+_YEAR = filing_year_envelope().horizon
 
 # The official AEAT box numbers this file asserts against, read from the modelo
 # 303 diseño de registros: box [11] "Adquisiciones intracomunitarias de bienes y
@@ -111,25 +114,25 @@ def test_calculate_303_aic_official_box_parity_books_boxes_and_leaves_resultado_
     """
     aic_cuota = Decimal("84.00")
     domestic_only = calculate_303_from_observations(
-        filing_year=2025,
+        filing_year=_YEAR,
         period="1T",
         observations=(
             ledger_iva_aggregation_observation(
-                applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("21.00")
+                applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(_YEAR, 2, 15), iva=Decimal("21.00")
             ),
         ),
     )
     with_aic = calculate_303_from_observations(
-        filing_year=2025,
+        filing_year=_YEAR,
         period="1T",
         observations=(
             ledger_iva_aggregation_observation(
-                applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("21.00")
+                applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(_YEAR, 2, 15), iva=Decimal("21.00")
             ),
             ledger_iva_aggregation_observation(
                 applied_rate=Decimal("0.21"),
                 ledger_id="aic-isp",
-                txn_date=date(2025, 3, 1),
+                txn_date=date(_YEAR, 3, 1),
                 category=IvaCategory("intra_community_acquisition_reverse_charge"),
                 flow=IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
                 iva=aic_cuota,
@@ -152,7 +155,7 @@ def _received_from_eu_criteria(*, kind: TransactionKind) -> IvaInvoiceClassifica
     """EU_MEMBER -> ES B2B RECEIVED criteria differing only by supply ``kind``."""
     return IvaInvoiceClassificationCriteria.model_validate(
         {
-            "transaction_date": date(2025, 3, 1),
+            "transaction_date": date(_YEAR, 3, 1),
             "issuer_residency": IvaTerritorialScope.from_registry("eu_member"),
             "issuer_identification_state": EUMemberState.from_registry("de"),
             "customer_residency": IvaTerritorialScope.from_registry("es_mainland"),
@@ -273,25 +276,25 @@ def test_calculate_303_import_deducible_reduces_resultado_by_its_cuota() -> None
     """
     import_cuota = Decimal("33.00")
     without_import = calculate_303_from_observations(
-        filing_year=2025,
+        filing_year=_YEAR,
         period="1T",
         observations=(
             ledger_iva_aggregation_observation(
-                applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("210.00")
+                applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(_YEAR, 2, 15), iva=Decimal("210.00")
             ),
         ),
     )
     with_import = calculate_303_from_observations(
-        filing_year=2025,
+        filing_year=_YEAR,
         period="1T",
         observations=(
             ledger_iva_aggregation_observation(
-                applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("210.00")
+                applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(_YEAR, 2, 15), iva=Decimal("210.00")
             ),
             ledger_iva_aggregation_observation(
                 applied_rate=Decimal("0.21"),
                 ledger_id="import",
-                txn_date=date(2025, 3, 1),
+                txn_date=date(_YEAR, 3, 1),
                 category=IvaCategory("import_third_country"),
                 flow=IvaFlowDirection.from_registry("soportado"),
                 iva=import_cuota,
@@ -455,22 +458,22 @@ def test_eu_service_acquisition_books_official_boxes_11_and_37_and_nets_to_zero(
     """
     service_cuota = Decimal("21.00")
     sale = ledger_iva_aggregation_observation(
-        applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("210.00")
+        applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(_YEAR, 2, 15), iva=Decimal("210.00")
     )
     without_service = calculate_303_from_observations(
-        filing_year=2025,
+        filing_year=_YEAR,
         period="1T",
         observations=(sale,),
     )
     with_service = calculate_303_from_observations(
-        filing_year=2025,
+        filing_year=_YEAR,
         period="1T",
         observations=(
             sale,
             ledger_iva_aggregation_observation(
                 applied_rate=Decimal("0.21"),
                 ledger_id="eu-service",
-                txn_date=date(2025, 3, 1),
+                txn_date=date(_YEAR, 3, 1),
                 category=IvaCategory("intra_community_service_acquisition_reverse_charge"),
                 flow=IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
                 iva=service_cuota,
@@ -519,16 +522,16 @@ def test_eu_service_and_goods_legs_sum_onto_the_one_official_intracom_line() -> 
     service_cuota = Decimal("21.00")
     combined = goods_cuota + service_cuota
     result = calculate_303_from_observations(
-        filing_year=2025,
+        filing_year=_YEAR,
         period="1T",
         observations=(
             ledger_iva_aggregation_observation(
-                applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("210.00")
+                applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(_YEAR, 2, 15), iva=Decimal("210.00")
             ),
             ledger_iva_aggregation_observation(
                 applied_rate=Decimal("0.21"),
                 ledger_id="eu-goods",
-                txn_date=date(2025, 3, 1),
+                txn_date=date(_YEAR, 3, 1),
                 category=IvaCategory("intra_community_acquisition_reverse_charge"),
                 flow=IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
                 iva=goods_cuota,
@@ -537,7 +540,7 @@ def test_eu_service_and_goods_legs_sum_onto_the_one_official_intracom_line() -> 
             ledger_iva_aggregation_observation(
                 applied_rate=Decimal("0.21"),
                 ledger_id="eu-service",
-                txn_date=date(2025, 3, 2),
+                txn_date=date(_YEAR, 3, 2),
                 category=IvaCategory("intra_community_service_acquisition_reverse_charge"),
                 flow=IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
                 iva=service_cuota,
