@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.casilla_id import validated_casilla_id
+from cadrumo.domain.calculations.registry.tests.authored_editions import single_exercise_editions
 
 from .authored_edition_support import newest_authored_edition
 from .modelo_100_registry_support import (
@@ -124,7 +125,7 @@ def test_modelo_100_payments_on_account_article_stays_on_payment_casillas_only()
     assert observed == PAYMENTS_ON_ACCOUNT_2025_CASILLA_SECTIONS
 
 
-@pytest.mark.parametrize("filing_year", range(2020, 2026))
+@pytest.mark.parametrize("filing_year", single_exercise_editions("100"))
 def test_modelo_100_fractional_payment_casilla_carries_payment_obligation_and_amount_refs(
     filing_year: int,
 ) -> None:

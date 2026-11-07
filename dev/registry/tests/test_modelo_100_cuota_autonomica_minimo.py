@@ -27,6 +27,7 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.formula_expression import evaluate_expression
 from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import supported_authored_exercises
 
 from .modelo_100_registry_support import loaded_registry
 
@@ -36,11 +37,11 @@ _SURFACE = "test_modelo_100_cuota_autonomica_minimo"
 _ESCALA_SOBRE_MINIMO_AUTONOMICA = validated_casilla_id("0531", surface=_SURFACE)
 _MINIMO_BASE_GENERAL_ESTATAL = validated_casilla_id("0521", surface=_SURFACE)
 _MINIMO_BASE_GENERAL_AUTONOMICO = validated_casilla_id("0523", surface=_SURFACE)
-_MANUAL_EXAMPLE_YEARS = (2022, 2023, 2024, 2025)
+_MANUAL_EXAMPLE_YEARS = supported_authored_exercises("100")
 
 
 def _revisions() -> dict[int, ModeloRevision]:
-    return {int(revision_id): revision for revision_id, revision in loaded_registry()[0]["100"].revisions.items()}
+    return {revision.valid_from.year: revision for revision in loaded_registry()[0]["100"].revisions.values()}
 
 
 def _casilla(casilla_id: str) -> CasillaId:

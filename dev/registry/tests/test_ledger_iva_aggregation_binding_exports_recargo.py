@@ -20,6 +20,11 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     resolve_ledger_iva_aggregation_binding_values,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    open_ended_revision,
+    revision_covering,
+)
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -42,6 +47,13 @@ _SUPPORT = committed_supported_filing_years()
 # The revision family that follows the floor exercise's older design; that design's
 # back-filled base bindings are pinned separately below against its own snapshot.
 _POST_FLOOR_DESIGN_YEARS = tuple(year for year in _SUPPORT.years if year > _SUPPORT.floor)
+_M303_SUPPORTED_REVISION_IDS = tuple(
+    str(revision.id)
+    for revision in authored_revisions("303")
+    if revision.valid_to is None or revision.valid_to.year >= _SUPPORT.floor
+)
+_FLOOR_REVISION_ID = str(revision_covering("303", _SUPPORT.floor).id)
+_HORIZON_REVISION_ID = str(open_ended_revision("303").id)
 
 
 def _m303_revision(revision_id: str) -> ModeloRevision:
@@ -52,7 +64,7 @@ def _m303_revision(revision_id: str) -> ModeloRevision:
 
 @cache
 def _m303_2022_2t_snapshot():
-    return compiled_bundled_authority().snapshot("303", filing_year=2022, period="2T")
+    return compiled_bundled_authority().snapshot("303", filing_year=_SUPPORT.floor, period="2T")
 
 
 def test_box_59_carries_substantive_intra_community_supply_grounding() -> None:
@@ -64,14 +76,7 @@ def test_box_59_carries_substantive_intra_community_supply_grounding() -> None:
     not apply to an exempt entrega) must be gone. Asserted against the loaded
     registry revision, both 2009 and 2023.
     """
-    for revision_id in (
-        "2022",
-        "2023",
-        "2024-hasta-08-y-2t",
-        "2024-desde-09-y-3t",
-        "2025",
-        "2026-y-siguientes",
-    ):
+    for revision_id in _M303_SUPPORTED_REVISION_IDS:
         revision = _m303_revision(revision_id)
         casilla_59 = next(casilla for casilla in revision.casillas if casilla.number == "59")
         refs = tuple(casilla_59.legal_refs)
@@ -90,14 +95,7 @@ def test_box_60_carries_substantive_export_grounding() -> None:
     asimiladas" leg. Asserted against the loaded registry revision, both 2009
     and 2023.
     """
-    for revision_id in (
-        "2022",
-        "2023",
-        "2024-hasta-08-y-2t",
-        "2024-desde-09-y-3t",
-        "2025",
-        "2026-y-siguientes",
-    ):
+    for revision_id in _M303_SUPPORTED_REVISION_IDS:
         revision = _m303_revision(revision_id)
         casilla_60 = next(casilla for casilla in revision.casillas if casilla.number == "60")
         refs = tuple(casilla_60.legal_refs)
@@ -111,14 +109,7 @@ def test_box_60_binding_selects_export_and_assimilated_export_categories() -> No
         IvaCategory("export_third_country_zero_rated"),
         IvaCategory("export_assimilated_zero_rated"),
     }
-    for revision_id in (
-        "2022",
-        "2023",
-        "2024-hasta-08-y-2t",
-        "2024-desde-09-y-3t",
-        "2025",
-        "2026-y-siguientes",
-    ):
+    for revision_id in _M303_SUPPORTED_REVISION_IDS:
         revision = _m303_revision(revision_id)
         binding = next(item for item in revision.bindings if item.id == "modelo-303-casilla-60-exportaciones-base")
         selector_dict: Any = selector_as_dict(binding)
@@ -191,13 +182,13 @@ def test_modelo_303_2009_revision_domestic_base_aggregates_from_ledger() -> None
     ``input_kind = "manual"`` and a ledger-driven 2022 M303 left the base at 0
     while the cuota resolved — a "cuota without base" under-declaration. This fixes
     that by back-filling the four base bindings (``fact = "base_amount_sum"``,
-    selectors mirroring the 2023 revision). filing_year=2022 resolves to the
+    selectors mirroring the 2023 revision). filing_year=_SUPPORT.floor resolves to the
     2022 revision; this test fails loudly if the base regresses to the
     unbound manual state (0). Expected values are the seeded observation base sums
     (ground truth from inputs, not a re-run of the registry formula).
     """
     snapshot = _m303_2022_2t_snapshot()
-    assert snapshot.revision.id == "2022"  # filing_year 2022 resolves to the older revision
+    assert snapshot.revision.id == _FLOOR_REVISION_ID  # filing_year 2022 resolves to the older revision
     observations = (
         ledger_iva_aggregation_observation(
             applied_rate=Decimal("0.21"),
@@ -244,7 +235,7 @@ def test_modelo_303_2009_revision_domestic_base_aggregates_from_ledger() -> None
     assert M303_REPERCUTIDO_GENERAL_BASE_CASILLA not in inputs
     assert inputs[validated_casilla_id("iva.soportado.interiores.base")] == Decimal("300")
     assert M303_SOPORTADO_INTERIORES_BASE_CASILLA not in inputs
-    result = calculate_303_from_observations(filing_year=2022, period="2T", observations=observations)
+    result = calculate_303_from_observations(filing_year=_SUPPORT.floor, period="2T", observations=observations)
     assert result.values[M303_REPERCUTIDO_GENERAL_BASE_CASILLA] == Decimal("6500")
     assert result.values[M303_SOPORTADO_INTERIORES_BASE_CASILLA] == Decimal("300")
 
@@ -265,7 +256,7 @@ def test_recargo_equivalencia_cuota_aggregates_by_tier_from_recargo_amount() -> 
     routed by category to the matching tier binding — not from re-running the sum
     under test. Proves the recargo_amount_sum fact closes the recargo silent zero.
     """
-    revision = _m303_revision("2025")
+    revision = _m303_revision(_HORIZON_REVISION_ID)
     general = ledger_iva_aggregation_observation(
         applied_rate=Decimal("0.21"),
         ledger_id="rec-general",
@@ -314,11 +305,11 @@ def test_modelo_303_2022_revision_recargo_and_intracom_export_aggregate_from_led
     ledger-driven 2022 M303 reported zero recargo (even when a supplier charged
     it) and zero intra-community / export base. The recargo cuotas now aggregate by
     tier via recargo_amount_sum (LIVA art. 161); 59/60 via base_amount_sum — mirroring
-    the 2023 revision. filing_year=2022 resolves to the 2022 revision; expected values
+    the 2023 revision. filing_year=_SUPPORT.floor resolves to the 2022 revision; expected values
     derive from the seeded amounts, not a formula re-run.
     """
     revision = _m303_2022_2t_snapshot().revision
-    assert revision.id == "2022"
+    assert revision.id == _FLOOR_REVISION_ID
     rec_general = ledger_iva_aggregation_observation(
         applied_rate=Decimal("0.21"),
         category=IvaCategory("domestic_general"),
@@ -423,7 +414,7 @@ def test_modelo_303_2022_revision_cuota_devengada_total_anti_tautology_recargo_c
     formulas/0001-declarations.toml): the 2022 revision (filing years
     2022) summed only the five non-recargo devengado components, silently
     excluding the recargo cuota tiers (casillas 18/21/24, LIVA art. 161) a
-    ledger-driven filer's supplier may have charged. filing_year=2022 resolves
+    ledger-driven filer's supplier may have charged. filing_year=_SUPPORT.floor resolves
     to the 2022 revision. This test grades the formula's own
     target casilla ``iva.cuota-devengada-total``, which the official box
     [27] projects through ``modelo-303-dr303-27-projection`` on this edition
@@ -445,7 +436,7 @@ def test_modelo_303_2022_revision_cuota_devengada_total_anti_tautology_recargo_c
             ledger_iva_aggregation_observation(
                 applied_rate=applied_rate,
                 ledger_id="op-ventas-recargo-equivalencia",
-                txn_date=date(2022, 5, 15),
+                txn_date=date(_SUPPORT.floor, 5, 15),
                 category=IvaCategory(f"domestic_{tier}"),
                 rate_kind=IvaRateKind(tier),
                 flow=IvaFlowDirection.from_registry("repercutido"),
@@ -456,12 +447,12 @@ def test_modelo_303_2022_revision_cuota_devengada_total_anti_tautology_recargo_c
         )
 
     with_recargo = _calculate_303_2009_from_observations(
-        filing_year=2022,
+        filing_year=_SUPPORT.floor,
         period="2T",
         observations=_observations(include_recargo=True),
     )
     without_recargo = _calculate_303_2009_from_observations(
-        filing_year=2022,
+        filing_year=_SUPPORT.floor,
         period="2T",
         observations=_observations(include_recargo=False),
     )

@@ -29,6 +29,7 @@ from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.schema_surfaces import CalculationCompletenessManifest
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import write_standard_manifest
@@ -36,6 +37,14 @@ from ..conformance.loader_directory_mode_support import write_standard_manifest
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _MODELO_ID = "999"
+#: The synthetic predecessor edition covers the exercise before the successor's, which is the envelope's horizon.
+_SUCCESSOR_YEAR = filing_year_envelope().horizon
+_PREDECESSOR_YEAR = _SUCCESSOR_YEAR - 1
+_SUCCESSOR_ID = str(_SUCCESSOR_YEAR)
+_PREDECESSOR_ID = str(_PREDECESSOR_YEAR)
+_PREDECESSOR_DECLARATION = f'predecessor = "{_PREDECESSOR_ID}"\n'
+_FORMULA_ID = f"modelo-999-formula-{_PREDECESSOR_ID}"
+_LAYOUT_ID = f"modelo-999-layout-{_PREDECESSOR_ID}"
 _LEGAL_REF = "ley-58-2003:art-29"
 _SOURCE_REF = "aeat-manual"
 
@@ -162,24 +171,24 @@ def test_a_successor_manifest_is_not_inherited_from_a_predecessor_with_manifest_
     modelo_dir = _modelo_root(tmp_path)
     _write_edition(
         modelo_dir,
-        "2024",
-        year=2024,
+        _PREDECESSOR_ID,
+        year=_PREDECESSOR_YEAR,
         casillas=(
-            _casilla("2024", "0001", number="1", lineage="base-imponible")
-            + _casilla("2024", "0002", number="2", lineage="cuota-integra")
+            _casilla(_PREDECESSOR_ID, "0001", number="1", lineage="base-imponible")
+            + _casilla(_PREDECESSOR_ID, "0002", number="2", lineage="cuota-integra")
         ),
-        completeness_manifest=_completeness_manifest_toml("2024", casilla_rows=(("0001", "1"), ("0002", "2"))),
+        completeness_manifest=_completeness_manifest_toml(_PREDECESSOR_ID, casilla_rows=(("0001", "1"), ("0002", "2"))),
     )
     _write_edition(
         modelo_dir,
-        "2025",
-        year=2025,
-        manifest_extra='predecessor = "2024"\n',
-        casillas=_casilla("2025", "0005", number="5", lineage="recargo-nuevo"),
-        completeness_manifest=_completeness_manifest_toml("2025", casilla_rows=(("0002", "2"),)),
+        _SUCCESSOR_ID,
+        year=_SUCCESSOR_YEAR,
+        manifest_extra=_PREDECESSOR_DECLARATION,
+        casillas=_casilla(_SUCCESSOR_ID, "0005", number="5", lineage="recargo-nuevo"),
+        completeness_manifest=_completeness_manifest_toml(_SUCCESSOR_ID, casilla_rows=(("0002", "2"),)),
     )
 
-    successor = load_modelo_directory(modelo_dir).revisions["2025"]
+    successor = load_modelo_directory(modelo_dir).revisions[_SUCCESSOR_ID]
 
     expected_manifest = CalculationCompletenessManifest.model_validate(
         {
@@ -194,17 +203,17 @@ def test_a_successor_manifest_is_not_inherited_from_a_predecessor_with_manifest_
 
 
 def _predecessor_with_formula_and_layout(modelo_dir: Path) -> None:
-    """Author the 2024 edition every case below inherits from."""
+    """Author the predecessor edition every case below inherits from."""
     _write_edition(
         modelo_dir,
-        "2024",
-        year=2024,
+        _PREDECESSOR_ID,
+        year=_PREDECESSOR_YEAR,
         casillas=(
-            _casilla("2024", "0001", number="1", lineage="base-imponible")
-            + _casilla("2024", "0002", number="2", lineage="cuota-integra")
+            _casilla(_PREDECESSOR_ID, "0001", number="1", lineage="base-imponible")
+            + _casilla(_PREDECESSOR_ID, "0002", number="2", lineage="cuota-integra")
         ),
-        formulas=_formula_toml("2024", formula_id="modelo-999-formula-2024", target_casilla_id="0002"),
-        export_layouts=_export_layout_toml("2024", layout_id="modelo-999-layout-2024"),
+        formulas=_formula_toml(_PREDECESSOR_ID, formula_id=_FORMULA_ID, target_casilla_id="0002"),
+        export_layouts=_export_layout_toml(_PREDECESSOR_ID, layout_id=_LAYOUT_ID),
     )
 
 
@@ -220,18 +229,18 @@ def test_a_keyed_family_the_successor_does_not_restate_is_carried_from_its_prede
     _predecessor_with_formula_and_layout(modelo_dir)
     _write_edition(
         modelo_dir,
-        "2025",
-        year=2025,
-        manifest_extra='predecessor = "2024"\n' + _CLEARED_EXPORT_LAYOUTS,
-        casillas=_casilla("2025", "0005", number="5", lineage="recargo-nuevo"),
+        _SUCCESSOR_ID,
+        year=_SUCCESSOR_YEAR,
+        manifest_extra=_PREDECESSOR_DECLARATION + _CLEARED_EXPORT_LAYOUTS,
+        casillas=_casilla(_SUCCESSOR_ID, "0005", number="5", lineage="recargo-nuevo"),
     )
 
     definition = load_modelo_directory(modelo_dir)
-    predecessor = definition.revisions["2024"]
-    successor = definition.revisions["2025"]
+    predecessor = definition.revisions[_PREDECESSOR_ID]
+    successor = definition.revisions[_SUCCESSOR_ID]
 
-    assert {formula.id for formula in predecessor.formulas} == {"modelo-999-formula-2024"}
-    assert {formula.id for formula in successor.formulas} == {"modelo-999-formula-2024"}
+    assert {formula.id for formula in predecessor.formulas} == {_FORMULA_ID}
+    assert {formula.id for formula in successor.formulas} == {_FORMULA_ID}
     assert successor.export_layouts == ()
 
 
@@ -247,10 +256,10 @@ def test_a_scoped_family_the_successor_leaves_undecided_is_refused(tmp_path: Pat
     _predecessor_with_formula_and_layout(modelo_dir)
     _write_edition(
         modelo_dir,
-        "2025",
-        year=2025,
-        manifest_extra='predecessor = "2024"\n',
-        casillas=_casilla("2025", "0005", number="5", lineage="recargo-nuevo"),
+        _SUCCESSOR_ID,
+        year=_SUCCESSOR_YEAR,
+        manifest_extra=_PREDECESSOR_DECLARATION,
+        casillas=_casilla(_SUCCESSOR_ID, "0005", number="5", lineage="recargo-nuevo"),
     )
 
     with pytest.raises(RegistryLoadError, match=r"neither asserts 'export_layouts' in scoped_families"):
@@ -263,26 +272,26 @@ def test_asserting_a_scoped_family_carries_it_and_declining_it_takes_none(tmp_pa
     _predecessor_with_formula_and_layout(asserted_dir)
     _write_edition(
         asserted_dir,
-        "2025",
-        year=2025,
-        manifest_extra='predecessor = "2024"\nscoped_families = ["export_layouts"]\n',
-        casillas=_casilla("2025", "0005", number="5", lineage="recargo-nuevo"),
+        _SUCCESSOR_ID,
+        year=_SUCCESSOR_YEAR,
+        manifest_extra=_PREDECESSOR_DECLARATION + 'scoped_families = ["export_layouts"]\n',
+        casillas=_casilla(_SUCCESSOR_ID, "0005", number="5", lineage="recargo-nuevo"),
     )
 
     declined_dir = _modelo_root(tmp_path / "declined")
     _predecessor_with_formula_and_layout(declined_dir)
     _write_edition(
         declined_dir,
-        "2025",
-        year=2025,
-        manifest_extra='predecessor = "2024"\n' + _CLEARED_EXPORT_LAYOUTS,
-        casillas=_casilla("2025", "0005", number="5", lineage="recargo-nuevo"),
+        _SUCCESSOR_ID,
+        year=_SUCCESSOR_YEAR,
+        manifest_extra=_PREDECESSOR_DECLARATION + _CLEARED_EXPORT_LAYOUTS,
+        casillas=_casilla(_SUCCESSOR_ID, "0005", number="5", lineage="recargo-nuevo"),
     )
 
-    asserted = load_modelo_directory(asserted_dir).revisions["2025"]
-    declined = load_modelo_directory(declined_dir).revisions["2025"]
+    asserted = load_modelo_directory(asserted_dir).revisions[_SUCCESSOR_ID]
+    declined = load_modelo_directory(declined_dir).revisions[_SUCCESSOR_ID]
 
-    assert {layout.id for layout in asserted.export_layouts} == {"modelo-999-layout-2024"}
+    assert {layout.id for layout in asserted.export_layouts} == {_LAYOUT_ID}
     assert declined.export_layouts == ()
 
 
@@ -302,11 +311,11 @@ def test_a_hand_merged_manifest_shape_is_refused_by_the_duplicate_casilla_id_che
     modelo_dir = _modelo_root(tmp_path)
     _write_edition(
         modelo_dir,
-        "2025",
-        year=2025,
-        casillas=_casilla("2025", "0005", number="5", lineage="recargo-nuevo"),
+        _SUCCESSOR_ID,
+        year=_SUCCESSOR_YEAR,
+        casillas=_casilla(_SUCCESSOR_ID, "0005", number="5", lineage="recargo-nuevo"),
         completeness_manifest=_completeness_manifest_toml(
-            "2025",
+            _SUCCESSOR_ID,
             casilla_rows=(("0001", "1"), ("0002", "2"), ("0002", "2")),
         ),
     )

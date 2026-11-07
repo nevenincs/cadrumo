@@ -6,6 +6,8 @@ import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.ids import BindingId
+from .....domain.calculations.registry.tests.authored_editions import split_exercise_revisions
+from .parser_boundary_support import MODELO_131_SYNTHETIC_FIXTURE
 from .verification_chain_support import (
     COMPUTED_CASILLAS_M131,
     assert_engine_closure_matches_extracted_decimal,
@@ -15,6 +17,11 @@ from .verification_chain_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
+
+# The fixture is forced onto the first design of the exercise the registry authors in two designs.
+_FIRST_DESIGN = split_exercise_revisions("131", early_period="2T", late_period="3T")[0]
+_EXERCISE = _FIRST_DESIGN.valid_from.year
+_LABEL = f"M131/yr={_EXERCISE}-1T"
 
 
 _M131_CLOSURE_CASILLAS: tuple[CasillaId, ...] = (
@@ -66,10 +73,10 @@ def test_verification_chain_m131_engine_recomputes_closure_casillas() -> None:
     """
     extracted = parse_extracted_declaracion_values(
         modelo="131",
-        fixture_stem="2024-1T",
-        year=2026,
+        fixture_stem=MODELO_131_SYNTHETIC_FIXTURE.stem,
+        year=_EXERCISE,
         period="1T",
-        template_revision="2026",
+        template_revision=str(_FIRST_DESIGN.id),
     )
     inputs = decimal_inputs_from_extracted_values(extracted, excluding=COMPUTED_CASILLAS_M131)
 
@@ -78,9 +85,9 @@ def test_verification_chain_m131_engine_recomputes_closure_casillas() -> None:
     }
     engine_values = calculate_engine_values_from_inputs(
         modelo="131",
-        year=2026,
+        year=_EXERCISE,
         period="1T",
-        label="M131/yr=2026-1T",
+        label=_LABEL,
         inputs=inputs,
         binding_values=binding_values,
     )
@@ -90,13 +97,13 @@ def test_verification_chain_m131_engine_recomputes_closure_casillas() -> None:
     # would leave this test green while asserting nothing.
     missing = [closure_id for closure_id in _M131_CLOSURE_CASILLAS if closure_id not in extracted]
     assert not missing, (
-        f"PARSER-GAP [M131/yr=2026-1T]: closure casillas {missing} absent from extracted "
+        f"PARSER-GAP [{_LABEL}]: closure casillas {missing} absent from extracted "
         f"values {sorted(extracted)}; the closure check would have been skipped silently."
     )
 
     for closure_id in _M131_CLOSURE_CASILLAS:
         assert_engine_closure_matches_extracted_decimal(
-            label="M131/yr=2026-1T",
+            label=_LABEL,
             engine_values=engine_values,
             extracted=extracted,
             casilla_id=closure_id,
