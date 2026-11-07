@@ -16,6 +16,7 @@ from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from .monthly_deadline_support import MONTHLY_RETENCION_DEADLINES
 from .profile_schema_support import committed_supported_filing_years
 from .quarterly_deadline_support import QUARTERLY_RETENCION_DEADLINES
 
@@ -152,32 +153,57 @@ def test_modelo_123_supported_year_deadline_census_dates_sources_and_ownership()
         for window in revision.deadline_windows
     }
 
-    assert sum(len(revision.deadline_windows) for revision in modelo.revisions.values()) == len(windows) == 20
+    assert sum(len(revision.deadline_windows) for revision in modelo.revisions.values()) == len(windows) == 80
     current_revision = modelo.revisions["2024-y-siguientes"]
     assert set(current_revision.constructs[0].deadline_windows) == {
         window.id for window in current_revision.deadline_windows
     }
 
-    for filing_year, expected_year in QUARTERLY_RETENCION_DEADLINES.items():
-        expected_periods = {"1T", "2T", "3T", "4T"}
+    for filing_year in QUARTERLY_RETENCION_DEADLINES:
+        monthly_periods = tuple(f"{month:02d}" for month in range(1, 13))
+        expected_periods = {*monthly_periods, "1T", "2T", "3T", "4T"}
         assert {period for year, period in windows if year == filing_year} == expected_periods
         projected = compiled_bundled_authority().deadline_windows(filing_year, modelos=("123",))
-        assert len(projected) == 4
+        assert len(projected) == 16
         assert {window.period.registry_token for _, _, window in projected} == expected_periods
 
-        for quarter, (close_text, payment_text) in enumerate(expected_year, start=1):
-            period = f"{quarter}T"
+        expected = {
+            **{
+                f"{month:02d}": close_text
+                for month, (close_text, _cutoff_text) in enumerate(
+                    MONTHLY_RETENCION_DEADLINES[filing_year],
+                    start=1,
+                )
+            },
+            **{
+                f"{quarter}T": close_text
+                for quarter, (close_text, _cutoff_text) in enumerate(
+                    QUARTERLY_RETENCION_DEADLINES[filing_year],
+                    start=1,
+                )
+            },
+        }
+        for period, close_text in expected.items():
             revision, window = windows[(filing_year, period)]
             assert select_revision(modelo, filing_year=filing_year, period=period) is revision
             assert window.id == f"modelo-123-{filing_year}-{period.lower()}"
             assert window.filing_year == window.period.filing_year == filing_year
             assert window.opens_on == date(window.closes_on.year, window.closes_on.month, 1)
             assert window.closes_on == date.fromisoformat(close_text)
-            assert window.payment_cutoff_on == (None if payment_text is None else date.fromisoformat(payment_text))
             expected_sources = {"aeat-modelo-123-procedure"}
             if window.closes_on.year <= 2026:
                 expected_sources.add(f"aeat-calendario-contribuyente-{window.closes_on.year}")
             assert set(window.source_refs) == expected_sources
+
+        # The quarterly cadence authors its domiciliación day; the monthly one
+        # does not, because the governed deadlines.domiciliation-cutoff-clause
+        # fact already declares this modelo's monthly Anexo II day. Asserting
+        # the absence keeps a later per-month restatement from passing silently.
+        for quarter, (_close_text, cutoff_text) in enumerate(QUARTERLY_RETENCION_DEADLINES[filing_year], start=1):
+            _revision, quarterly = windows[(filing_year, f"{quarter}T")]
+            assert quarterly.payment_cutoff_on == (None if cutoff_text is None else date.fromisoformat(cutoff_text))
+        for period in monthly_periods:
+            assert windows[(filing_year, period)][1].payment_cutoff_on is None
 
     assert windows[(2026, "4T")][1].payment_cutoff_on is None
 

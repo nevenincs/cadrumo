@@ -303,3 +303,19 @@ replacement_id = "aeat-dr-123-2024-v20"
 sequence_additions = {casillas = [{casilla_id = "01", number = "01"}, {casilla_id = "02", number = "02"}, {casilla_id = "04", number = "04"}, {casilla_id = "09", number = "09"}, {casilla_id = "11", number = "11"}, {casilla_id = "12", number = "12"}, {casilla_id = "13", number = "13"}, {casilla_id = "14", number = "14"}], legal_refs = ["orden-hac-56-2024:art-1"], source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text", "boe-modelo-123-2024-form-text"]}
 sequence_removals = {legal_refs = [3], source_refs = [0, 1, 2]}
 sequence_order = {casillas = [5, 6, 0, 7, 1, 2, 3, 4, 8, 9, 10, 11, 12], legal_refs = [0, 1, 2, 5, 3, 4]}
+
+# The monthly cadence is inherited with its era's sources replaced. The
+# 2019-2023 edition grounds modelo-123-mensual on the Calendario del
+# Contribuyente of its own two years, and neither reaches this edition: a
+# calendar that stopped applying on 2022-12-31 cannot defend a 2024 filing, and
+# the snapshot source-window check refuses the revision for citing it. The three
+# calendars named here are the ones this revision's own source_refs already
+# carry, and each names this modelo in the monthly population of its year --
+# "<mes> <ejercicio>. grandes empresas: 111, 115, 117, 123, 124, 126, 128, 216,
+# 230". The quarterly schedule needs no override because it cites
+# aeat-modelo-123-procedure, which applies from 2020 with no end.
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "filing_schedules"
+selector = {revision = "2019-2023", id = "modelo-123-mensual"}
+sequence_additions = {profile_conditions = [{field = "enrollment.large_company", op = "equals", value = true, explanation = "Modelo 123 mensual para grandes empresas: el retenedor en las circunstancias de los numeros 1 y 2 del articulo 71.3 del Reglamento del IVA declara por el mes inmediato anterior.", legal_refs = ["rd-439-2007:art-108"], source_refs = ["aeat-calendario-contribuyente-2024", "aeat-calendario-contribuyente-2025", "aeat-calendario-contribuyente-2026"]}], source_refs = ["aeat-calendario-contribuyente-2024", "aeat-calendario-contribuyente-2025", "aeat-calendario-contribuyente-2026"]}
+sequence_removals = {profile_conditions = [0], source_refs = [0, 1]}
