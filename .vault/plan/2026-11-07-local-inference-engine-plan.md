@@ -13,7 +13,7 @@ related:
   - '[[2026-10-25-agent-owned-models-adr]]'
 modified: '2026-11-07'
 body_schema: body-v2
-body_hash: 'sha256:827e89440cab7d630f7d19738bf090926fa35735a6f889efdf864cf7985d0a0c'
+body_hash: 'sha256:54d9d62d0802ae6ba2b06884fa733c0c55688f3d3099f8b126787546f64371a3'
 ---
 
 # `local-inference-engine` plan
@@ -74,6 +74,7 @@ Deliver a keyless loopback llama.cpp lane over llama-server's /v1 and router API
 - [ ] `P02.S08` - Make the gateway model endpoints and model licences engine-aware so the managed local lane set covers llama.cpp and Ollama (repo cadrumo-agent, executor vaultspec-standard-executor, lands in the cadrumo-agent main once verified); `cadrumo-agent:src/cadrumo_agent/api/routes/_gateway_provider_model_endpoints.py, cadrumo-agent:src/cadrumo_agent/providers/model_licences.py`.
 - [ ] `P02.S09` - Fix the audited ollama_api thinking defect: no thinking for structured extraction, collect message.thinking, refuse a think-only reply with a typed condition mapped to output_invalid or run_failed, add a no-content deadline and one visible bounded retry, with fake-server tests (repo cadrumo-agent, executor vaultspec-standard-executor, Opus review before the Step closes, lands in the cadrumo-agent main once verified); `cadrumo-agent:src/cadrumo_agent/providers/ollama_chat_model.py, cadrumo-agent:src/cadrumo_agent/graph/enums.py, Ollama lane tests`.
 - [ ] `P02.S29` - Make the provider catalogue read probe its local-server lanes concurrently with a bounded per-probe timeout and serve interactive reads from a cached last probe result, because the desktop launch measured a 5.4 s serial probe of 13 local-server lanes that left provider settings unable to load and llama.cpp adds a 14th (repo cadrumo-agent, executor vaultspec-standard-executor, Opus review before the Step closes, lands in cadrumo-agent main ahead of P04); `cadrumo-agent:src/cadrumo_agent/providers/provider_catalog_service.py, cadrumo-agent:src/cadrumo_agent/providers/factory.py, cadrumo-agent:src/cadrumo_agent/providers/provider_status.py, their tests`.
+- [ ] `P02.S30` - Address the catalogue probe review follow-ups: clear each lane's evidence and last good catalogue on settings invalidation so a timed-out read cannot serve pre-change state as STALE, report a lane whose runtime was not measured within the bound as unknown rather than pending or unproven where the wire contract allows, and close the Ollama single-flight window between clearing the in-flight read and storing its answer (repo cadrumo-agent, executor vaultspec-standard-executor, Opus review before the Step closes, lands in cadrumo-agent main between DESKTOP builds); `cadrumo-agent:src/cadrumo_agent/providers/provider_catalog_service.py, cadrumo-agent:src/cadrumo_agent/providers/ollama_probe.py, their tests`.
 
 ### Phase `P03` - Native bundling and engine-neutral provisioning (repo cadrumo)
 
