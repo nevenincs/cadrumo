@@ -17,7 +17,7 @@ related:
   - '[[2026-10-13-provider-settings-adr]]'
 ---
 
-# `local-inference-engine` adr: `Bundle llama.cpp as the default local inference engine and keep Ollama as a selectable second engine` | (**status:** `proposed`)
+# `local-inference-engine` adr: `Bundle llama.cpp as the default local inference engine and keep Ollama as a selectable second engine` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -186,4 +186,6 @@ The operator ruled the engine set, the default and the bundling. The rest follow
 
 ## Authorization basis
 
-The operator gave the ruling quoted in the Problem Statement, and its additions, on 2026-11-07. This session received them through the coordinating session. The coordinating session also relayed that the operator authorized this content directly, and it instructed acceptance. This record stays `proposed` until the operator's authorization is confirmed first-hand. The six reconciliation amendments need the same confirmation.
+The operator gave the ruling quoted in the Problem Statement directly to the orchestrating session on 2026-11-07. In the same session the operator added that the UX stays identical whichever engine serves the models, that acquisition must not need Ollama when Ollama is not selected, and asked whether people should pick between GPU and CPU models; D6 answers that question. The coordinating session confirmed acceptance on the same day. On that basis this record is accepted.
+
+The six reconciliation amendments follow directly from the ruling, which makes llama.cpp the default and drops the need for Ollama when it is not selected. They are applied as the first Step of the implementation plan, and the operator has been told about each one. The GPU pass settles only the default vision route, which will be recorded as an amendment.
