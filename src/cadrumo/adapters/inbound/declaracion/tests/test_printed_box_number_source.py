@@ -40,17 +40,25 @@ from __future__ import annotations
 
 import pytest
 
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import validated_casilla_id
 from .....domain.calculations.registry.schema_extraction import ExtractionProfileDefinition, ExtractionTargetDefinition
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..errors import DeclaracionParseError
 from ..parser import numeric_casilla_anchors
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
+_EXERCISE = filing_year_envelope().horizon
+
 
 def _revision(modelo: str, filing_year: int, period: str):
-    return published_snapshot(modelo, filing_year=filing_year, period=period).revision
+    # The subject is the casilla declarations, which every authority grade carries; the newest
+    # exercise of a modelo may be authored at applicability grade only.
+    return published_snapshot(
+        modelo, filing_year=filing_year, period=period, grade=RegistryAuthorityGrade.APPLICABILITY
+    ).revision
 
 
 def _numeric_profile(casilla_id: str) -> ExtractionProfileDefinition:
@@ -79,10 +87,10 @@ def _numeric_profile(casilla_id: str) -> ExtractionProfileDefinition:
 @pytest.mark.parametrize(
     "modelo,filing_year,period,casilla_id,printed,record_design",
     [
-        ("390", 2022, "0A", "iva.anual.cuota-deducible-total", "64", "iva.anual.cuota-deducible-total"),
-        ("390", 2022, "0A", "iva.anual.resultado-regimen-general", "65", "iva.anual.resultado-regimen-general"),
-        ("190", 2024, "0A", "decl.percepciones-total", "02", "145-160"),
-        ("190", 2024, "0A", "decl.retenciones-total", "03", "161-175"),
+        ("390", _EXERCISE, "0A", "iva.anual.cuota-deducible-total", "64", "iva.anual.cuota-deducible-total"),
+        ("390", _EXERCISE, "0A", "iva.anual.resultado-regimen-general", "65", "iva.anual.resultado-regimen-general"),
+        ("190", _EXERCISE, "0A", "decl.percepciones-total", "02", "145-160"),
+        ("190", _EXERCISE, "0A", "decl.retenciones-total", "03", "161-175"),
     ],
     ids=[
         "m390-box-64-id-string-in-number",
@@ -135,7 +143,7 @@ def test_a_casilla_with_no_printed_number_is_refused_rather_than_mis_anchored() 
     ``form_number`` withheld, which is the state every affected casilla was in
     before that field was populated.
     """
-    revision = _revision("190", 2024, "0A")
+    revision = _revision("190", _EXERCISE, "0A")
     profile = _numeric_profile("decl.total-percepciones")
 
     stripped = revision.model_copy(

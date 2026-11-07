@@ -50,7 +50,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.tests.authored_editions import (
     revision_before_first_declaring,
     revision_covering,
-    supported_filing_grade_exercises,
+    filing_grade_exercises,
 )
 from cadrumo.domain.iva.schema import IvaLedgerObservationRole
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -70,7 +70,7 @@ from .ledger_iva_aggregation_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _SURFACE = "test_modelo_390_deducible_block_equals_303_quarters"
-_SUPPORTED_YEARS = supported_filing_grade_exercises("390")
+_SUPPORTED_YEARS = filing_grade_exercises("390")
 _NEWEST_EXERCISE = _SUPPORTED_YEARS[-1]
 _NEWEST_REVISION_ID = str(revision_covering("390", _NEWEST_EXERCISE).id)
 # The 2 % and 7,5 % boxes of the AIC block arrive with one edition; every supported exercise from it on binds them.

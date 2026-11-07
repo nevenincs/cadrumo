@@ -40,8 +40,10 @@ _CLAVE_MOVIL_LOCALE_KEYS = [
     "adapters.auth.clave_movil.errors.session_expired",
     "adapters.auth.clave_movil.errors.storage_state_hash_mismatch",
 ]
-_EXPIRED_AT = datetime(2026, 5, 28, 14, 25, 0, tzinfo=UTC)
-_LIVE_SESSION_AT = datetime(2099, 5, 28, 14, 30, 0, tzinfo=UTC)
+# The persisted-session probe judges idle deadlines against the wall clock, so both instants are relative to it.
+_CLOCK = datetime.now(UTC).replace(microsecond=0)
+_EXPIRED_AT = _CLOCK - timedelta(days=1)
+_LIVE_SESSION_AT = _CLOCK
 
 
 @pytest.fixture(autouse=True)

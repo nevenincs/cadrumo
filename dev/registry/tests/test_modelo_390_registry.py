@@ -23,7 +23,7 @@ from cadrumo.domain.calculations.registry.tests.authored_editions import (
     revision_before_first_declaring,
     revision_covering,
     revision_first_exercise,
-    supported_filing_grade_exercises,
+    filing_grade_exercises,
 )
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
@@ -58,7 +58,7 @@ _M303_PRORRATA_REGULARIZACION_SOURCE_PERIOD_SELECTION = "filer_liquidation_caden
 #: applicability grade has no export layout, so it is not among them. Tests that
 #: assert a STRUCTURAL property parametrise over all of them rather than pinning
 #: one, so a property that silently stops holding in a single year is caught.
-_M390_FILING_EXERCISES = supported_filing_grade_exercises("390")
+_M390_FILING_EXERCISES = filing_grade_exercises("390")
 _M390_REVISION_IDS: tuple[str, ...] = tuple(
     str(revision_covering("390", exercise).id) for exercise in _M390_FILING_EXERCISES
 )

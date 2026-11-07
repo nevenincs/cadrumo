@@ -12,12 +12,9 @@ is caught here, offline.
 
 from __future__ import annotations
 
-from datetime import date
-
 import pytest
 
 from .....application.storage.calc_sheets.engine import build_export_plan
-from .....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..calc_sheets_apply_formatting import (
     build_auto_filter_requests,
     build_base_font_requests,
@@ -32,13 +29,13 @@ from ..calc_sheets_apply_values import (
     build_formula_data,
     build_value_data,
 )
+from ._calc_sheets_support import modelo_130_first_quarter_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
 def _m130_plan():
-    snapshot = published_snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
-    return build_export_plan(snapshot)
+    return build_export_plan(modelo_130_first_quarter_snapshot())
 
 
 def test_apply_request_pipeline_is_complete_for_a_real_modelo() -> None:

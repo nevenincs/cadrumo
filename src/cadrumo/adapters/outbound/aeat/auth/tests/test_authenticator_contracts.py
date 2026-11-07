@@ -24,6 +24,7 @@ from ......application.auth_credentials import unnamed_certificate_credentials
 from ......core.auth_provider import AuthProviderKind
 from ......core.errors.hierarchy import AeatLoginAssertionError
 from ......core.i18n.render import tr
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......tests.log_records import delivered_records
 from .. import authenticator as authenticator
 from ..authenticator import AEAT_SESSION_IDLE_TTL, AeatAuthenticator, require_exact_active_certificate_session
@@ -534,7 +535,7 @@ def test_aeat_session_is_stale_with_naive_datetime(tmp_path: Path) -> None:
         authenticated_at=authenticated_at,
         idle_deadline=authenticated_at + AEAT_SESSION_IDLE_TTL,
     )
-    naive_past = datetime(2020, 1, 1)
+    naive_past = datetime(filing_year_envelope().floor - 1, 1, 1)
     naive_future = datetime(2100, 1, 1)
     assert session.is_stale(naive_past) is False
     assert session.is_stale(naive_future) is True

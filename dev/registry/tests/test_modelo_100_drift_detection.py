@@ -28,6 +28,7 @@ from cadrumo.domain.calculations.registry.runtime_graph import (
     expression_binding_refs,
     expression_parameter_refs,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, filing_year_envelope
 from cadrumo.tests.inventory import REPO_ROOT
 
 from ..compiler.modelo_projections import projected_parameter_ids
@@ -65,7 +66,7 @@ _TOP_LEVEL_CHAIN_TARGETS: frozenset[CasillaId] = frozenset(
     )
 )
 
-_SUPPORTED_REVISIONS: tuple[str, ...] = ("2020", "2021", "2022", "2023", "2024", "2025")
+_SUPPORTED_REVISIONS: tuple[str, ...] = tuple(str(revision.id) for revision in authored_revisions("100"))
 
 
 def _modelo_100():
@@ -557,6 +558,8 @@ def _render_segments(static_segments: list[str], combo: tuple[str, ...]) -> str:
 #: small closed set of Python locals; new placeholder names that appear
 #: in future ``read_parameter`` calls must be registered here.
 _FSTRING_PLACEHOLDER_VALUES: dict[str, tuple[str, ...]] = {
-    "period_year": tuple(str(year) for year in range(2020, 2031)),
+    "period_year": tuple(
+        str(year) for year in range(authored_revisions("100")[0].valid_from.year, filing_year_envelope().horizon + 1)
+    ),
     "tier_id": ("tier-50", "tier-60", "tier-70", "tier-90"),
 }

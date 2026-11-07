@@ -22,6 +22,7 @@ use rather than arithmetic on a truth value.
 
 from __future__ import annotations
 
+from datetime import date
 from typing import Any
 
 import pytest
@@ -34,13 +35,14 @@ from cadrumo.domain.calculations.registry.binding_value_contract import (
     BindingValueChannel,
 )
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.tests.authored_editions import supported_authored_exercises
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _ANUALIDADES_BINDING = "renta-profile-anualidades-sin-minimo-descendientes"
 _ECONOMIC_ACTIVITY_BINDING = "renta-profile-has-economic-activity"
-_MODELO_100_YEARS = (2022, 2023, 2024, 2025)
+_MODELO_100_YEARS = supported_authored_exercises("100")
 
 
 def _snapshot(year: int) -> RegistrySnapshot:
@@ -79,12 +81,14 @@ def test_anualidades_injector_emits_a_real_bool_for_both_truth_values(year: int)
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         snapshot = _snapshot(year)
 
+        # A descendiente a few years old at the filing year, whichever year that is.
+        birth_date = date(year - 8, 5, 1).isoformat()
         eligible: dict[str, object] = {
-            "renta_family.descendiente.0.birth_date": "2015-05-01",
+            "renta_family.descendiente.0.birth_date": birth_date,
             "renta_family.descendiente.0.custodia_compartida": "false",
         }
         shared: dict[str, object] = {
-            "renta_family.descendiente.0.birth_date": "2015-05-01",
+            "renta_family.descendiente.0.birth_date": birth_date,
             "renta_family.descendiente.0.custodia_compartida": "true",
         }
         key = f"renta_family.anualidades_sin_minimo_descendientes_{year}"

@@ -46,6 +46,7 @@ import pytest
 from ......core.auth_provider import AuthProviderKind
 from ......core.config import Settings
 from ......core.errors.hierarchy import AeatLoginAssertionError
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......tests.aeat_literal_fixtures import (
     INWINVOC_LANDING_PATH_CANARY,
     INWINVOC_SIBLING_PATH_CANARY,
@@ -64,6 +65,7 @@ from .clave_movil_support import clave_movil_settings_for
 from .clave_permanente_support import clave_permanente_settings_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_YEAR = filing_year_envelope().horizon
 
 EXTERNAL = Settings.external_constants()
 _SEDE_PATHS = EXTERNAL.aeat.sede_paths
@@ -71,7 +73,7 @@ _DOMAINS = EXTERNAL.aeat.domains
 _TARGET_PATH = _SEDE_PATHS.expedientes_resumen
 _IDENTITY = "12345678Z"
 _BUCKET_ID = "1f6b0000-0000-4000-8000-00000000d0d0"
-_AUTHENTICATED_AT = datetime(2026, 7, 26, 9, 0, 0, tzinfo=UTC)
+_AUTHENTICATED_AT = datetime(_YEAR, 7, 26, 9, 0, 0, tzinfo=UTC)
 
 
 def _storage_state() -> dict[str, object]:

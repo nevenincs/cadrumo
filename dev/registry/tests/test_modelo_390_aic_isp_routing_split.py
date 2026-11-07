@@ -43,7 +43,7 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
 )
 from cadrumo.domain.calculations.registry.tests.authored_editions import (
     revision_covering,
-    supported_filing_grade_exercises,
+    filing_grade_exercises,
 )
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
@@ -58,7 +58,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 #: with one revision per bundled diseno year, so this names the current one. The
 #: constant also builds the scratch-tree paths the mutation gates below copy, so
 #: it has to be a revision that exists on disk, not just one that resolves.
-_EXERCISE = supported_filing_grade_exercises("390")[-1]
+_EXERCISE = filing_grade_exercises("390")[-1]
 _REVISION_ID = str(revision_covering("390", _EXERCISE).id)
 _CASILLA_BOX_26 = "iva.anual.aic.bienes.tipo-21.cuota"
 _CASILLA_BOX_28 = "iva.anual.autorepercutido.interior.cuota"

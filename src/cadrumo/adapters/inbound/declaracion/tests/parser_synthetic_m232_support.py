@@ -8,11 +8,13 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....domain.calculations.registry.tests.authored_editions import open_ended_revision, revision_covering
 from .....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from .....tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 from .parser_boundary_support import (
     MODELO_232_2016_SYNTHETIC_FIXTURE,
     MODELO_232_2018_SYNTHETIC_FIXTURE,
+    specimen_period,
     split_by_supported_filing_year,
 )
 
@@ -30,12 +32,20 @@ M232_PROFILE_CASILLAS: frozenset[CasillaId] = frozenset(
         DECL_CNAE_CASILLA,
     },
 )
+
+
+def _m232_fixture_case(fixture: Path) -> tuple[Path, int, str, str]:
+    """Describe one bundled specimen by the exercise it is named for, its authored revision and its printed year."""
+    exercise = specimen_period(fixture).filing_year
+    return fixture, exercise, str(revision_covering("232", exercise).id), str(exercise)
+
+
 _M232_FIXTURE_CASES: tuple[tuple[Path, int, str, str], ...] = (
-    (MODELO_232_2016_SYNTHETIC_FIXTURE, 2016, "2016-2017", "2016"),
-    (MODELO_232_2018_SYNTHETIC_FIXTURE, 2018, "2018-y-siguientes", "2018"),
+    _m232_fixture_case(MODELO_232_2016_SYNTHETIC_FIXTURE),
+    _m232_fixture_case(MODELO_232_2018_SYNTHETIC_FIXTURE),
 )
 M232_FIXTURE_PARAMS, M232_UNSUPPORTED_FIXTURE_PARAMS = split_by_supported_filing_year(_M232_FIXTURE_CASES, year_index=1)
-M232_OPEN_ENDED_REVISION_ID = "2018-y-siguientes"
+M232_OPEN_ENDED_REVISION_ID = str(open_ended_revision("232").id)
 
 
 def first_supported_filing_year() -> int:

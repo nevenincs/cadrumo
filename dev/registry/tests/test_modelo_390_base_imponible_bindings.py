@@ -40,7 +40,7 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
 )
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.tests.authored_editions import supported_filing_grade_exercises
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 from cadrumo.domain.calculations.registry.tests.m390_formula_support import liquidation_operands
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
@@ -51,7 +51,7 @@ from .ledger_iva_aggregation_support import ledger_iva_aggregation_deduction_pro
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 # The newest exercise whose Modelo 390 edition is filing grade, which is where the box bindings are asserted.
-_EXERCISE = supported_filing_grade_exercises("390")[-1]
+_EXERCISE = filing_grade_exercises("390")[-1]
 
 
 _GENERAL_BASE = Decimal("4000.00")

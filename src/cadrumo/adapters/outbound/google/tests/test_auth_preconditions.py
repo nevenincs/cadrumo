@@ -25,6 +25,7 @@ from cadrumo_client.contracts.google_auth import (
 from .....core.config import override_settings
 from .....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....tests.terminal_precondition_ast import call_name, fact_expressions, keyword_value
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .. import active_profile as active_profile_module
@@ -385,7 +386,7 @@ def test_scope_refusal_has_an_exact_runtime_safety_verdict() -> None:
             token_uri="https://oauth2.googleapis.com/token",
             account_email="operator@example.test",
             granted_scopes=(),
-            issued_at=datetime(2026, 8, 24, tzinfo=UTC),
+            issued_at=datetime(filing_year_envelope().horizon, 8, 24, tzinfo=UTC),
         )
 
     _assert_terminal_contract(

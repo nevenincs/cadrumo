@@ -52,8 +52,10 @@ from .token_endpoint_server import token_endpoint
 
 if TYPE_CHECKING:
     from google_auth_oauthlib.flow import OAuthCredentials
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_YEAR = filing_year_envelope().horizon
 
 
 @pytest.fixture(autouse=True)
@@ -93,7 +95,7 @@ def test_consent_url_requests_exactly_the_three_non_sensitive_scopes() -> None:
 def test_credentials_to_records_preserves_utc_metadata_projection() -> None:
     """The direct OAuth-flow handoff preserves canonical metadata instants."""
 
-    issued_at = datetime(2026, 5, 26, 9, 0, tzinfo=UTC)
+    issued_at = datetime(_YEAR, 5, 26, 9, 0, tzinfo=UTC)
     token, metadata = credentials_to_records(
         refresh_token="1//refresh-token",
         client_id="desktop-client.apps.googleusercontent.com",
@@ -106,7 +108,7 @@ def test_credentials_to_records_preserves_utc_metadata_projection() -> None:
     # The token records the client the consent was granted to.
     assert token.client_id == "desktop-client.apps.googleusercontent.com"
     assert metadata.issued_at == issued_at
-    assert metadata.model_dump(mode="json")["issued_at"] == "2026-05-26T09:00:00Z"
+    assert metadata.model_dump(mode="json")["issued_at"] == f"{_YEAR}-05-26T09:00:00Z"
 
 
 def test_credentials_to_records_refuses_whitespace_only_refresh_token() -> None:
@@ -119,7 +121,7 @@ def test_credentials_to_records_refuses_whitespace_only_refresh_token() -> None:
             token_uri="https://oauth2.googleapis.com/token",
             account_email="operator@example.com",
             granted_scopes=REQUIRED_SCOPES,
-            issued_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
+            issued_at=datetime(_YEAR, 5, 26, 9, 0, tzinfo=UTC),
         )
 
 
@@ -294,7 +296,7 @@ def test_both_sign_in_boundaries_apply_the_one_exact_scope_rule(granted: tuple[s
             token_uri="https://oauth2.googleapis.com/token",
             account_email="operator@example.com",
             granted_scopes=granted,
-            issued_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
+            issued_at=datetime(_YEAR, 5, 26, 9, 0, tzinfo=UTC),
         )
     with pytest.raises(GoogleAuthScopeInsufficientError):
         require_exact_scope_grant(granted, account_email=None)

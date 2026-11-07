@@ -9,6 +9,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.facturae_tax_type_codes import facturae_irpf_tax_type_code
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..xml import local_tag_name, parse_hardened_xml
 
@@ -40,7 +41,7 @@ def _schema_codes_naming(tax: str) -> list[str]:
 
 def test_the_fact_names_the_member_the_schema_gives_irpf(operation: PinnedAuthorityOperation) -> None:
     assert [
-        facturae_irpf_tax_type_code(issued_on=date(2025, 6, 30), authority=operation),
+        facturae_irpf_tax_type_code(issued_on=date(filing_year_envelope().horizon, 6, 30), authority=operation),
     ] == _schema_codes_naming("IRPF")
 
 

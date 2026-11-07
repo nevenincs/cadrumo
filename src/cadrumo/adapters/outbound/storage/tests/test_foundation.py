@@ -15,6 +15,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.errors.hierarchy import CadrumoError, CoreError
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..errors import (
     OutboundStorageConflictError,
     OutboundStorageError,
@@ -30,6 +31,8 @@ from ..errors import (
 from ..protocol import StorageProvider
 from ..records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport, RemoteMirrorObjectManifest
 
+_FILING_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
@@ -40,7 +43,7 @@ def _metadata(**overrides: object) -> ProviderObjectMetadata:
         "provider_object_id": "drive-file-id-xyz",
         "byte_length": 1024,
         "content_hash": "sha256-deadbeef",
-        "written_at": datetime(2026, 5, 14, tzinfo=UTC),
+        "written_at": datetime(_FILING_YEAR, 5, 14, tzinfo=UTC),
     }
     base.update(overrides)
     return ProviderObjectMetadata.model_validate(base)
@@ -57,8 +60,8 @@ def _remote_object_manifest(**overrides: object) -> RemoteMirrorObjectManifest:
         "storage_revision_id": "c" * 64,
         "previous_storage_revision_id": "d" * 64,
         "revision_ancestor_ids": ("e" * 64,),
-        "row_written_at": datetime(2026, 5, 14, tzinfo=UTC),
-        "revision_written_at": datetime(2026, 5, 14, tzinfo=UTC),
+        "row_written_at": datetime(_FILING_YEAR, 5, 14, tzinfo=UTC),
+        "revision_written_at": datetime(_FILING_YEAR, 5, 14, tzinfo=UTC),
     }
     base.update(overrides)
     return RemoteMirrorObjectManifest.model_validate(base)
@@ -95,7 +98,7 @@ def test_provider_object_metadata_rejects_extra_fields() -> None:
                 "provider_object_id": "x",
                 "byte_length": 0,
                 "content_hash": "sha256-x",
-                "written_at": datetime(2026, 5, 14, tzinfo=UTC),
+                "written_at": datetime(_FILING_YEAR, 5, 14, tzinfo=UTC),
                 "unexpected": "value",
             },
         )

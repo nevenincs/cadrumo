@@ -28,6 +28,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from .....core.period import Period
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..invoice_extraction_prompt import (
     render_invoice_extraction_prompt,
     selected_invoice_field_contracts,
@@ -37,7 +38,7 @@ from .prompt_support import build_invoice_extraction_prompt
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_PERIOD = Period.from_year_and_code(2024, "1T")
+_PERIOD = Period.from_year_and_code(filing_year_envelope().horizon, "1T")
 _DECLARED = tuple(contract.field_name for contract in INVOICE_FIELD_CONTRACTS)
 
 

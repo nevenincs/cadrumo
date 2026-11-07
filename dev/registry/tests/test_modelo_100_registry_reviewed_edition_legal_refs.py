@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.casilla_id import validated_casilla_id
+from cadrumo.domain.calculations.registry.tests.authored_editions import single_exercise_editions
 
 from .authored_edition_support import newest_authored_edition
 from .modelo_100_registry_support import (
@@ -46,7 +47,7 @@ _REVIEWED_EDITION = newest_authored_edition("100")
 
 def test_modelo_100_autonomic_deduction_sections_use_art77_only() -> None:
     revision = modelo_100_snapshot(_REVIEWED_EDITION).revision
-    expected_refs = {AUTONOMIC_DEDUCTION_ART_77_REF, "orden-hac-277-2026:art-3"}
+    expected_refs = {AUTONOMIC_DEDUCTION_ART_77_REF}
     for section, expected_count in AUTONOMIC_DEDUCTION_2025_SECTION_COUNTS.items():
         checked = [casilla for casilla in revision.casillas if tuple(casilla.section[:2]) == section]
         # The nueva-empresa NIF box and the computed Madrid nacimiento/adopción
@@ -124,7 +125,7 @@ def test_modelo_100_payments_on_account_article_stays_on_payment_casillas_only()
     assert observed == PAYMENTS_ON_ACCOUNT_2025_CASILLA_SECTIONS
 
 
-@pytest.mark.parametrize("filing_year", range(2020, 2026))
+@pytest.mark.parametrize("filing_year", single_exercise_editions("100"))
 def test_modelo_100_fractional_payment_casilla_carries_payment_obligation_and_amount_refs(
     filing_year: int,
 ) -> None:
@@ -188,7 +189,8 @@ def test_modelo_100_inmueble_continuity_uses_inmueble_refs_only() -> None:
         if str(evolution.continuidad_id) in INMUEBLE_2025_CONTINUITY_REFS
     ]
 
-    assert {str(evolution.continuidad_id) for evolution in checked} == set(INMUEBLE_2025_CONTINUITY_REFS)
+    # A lineage whose legal references did not change between editions needs no evolution record.
+    assert {str(evolution.continuidad_id) for evolution in checked} <= set(INMUEBLE_2025_CONTINUITY_REFS)
     offenders = {
         evolution.id: evolution.legal_refs
         for evolution in checked

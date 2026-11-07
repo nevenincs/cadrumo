@@ -91,28 +91,23 @@ def supported_exercises_with_projection(modelo_id: str) -> tuple[int, ...]:
     return (*supported_authored_exercises(modelo_id), projected_exercise(modelo_id))
 
 
-def supported_filing_grade_exercises(modelo_id: str) -> tuple[int, ...]:
-    """Return the supported authored exercises whose revision declares filing grade.
+def filing_grade_exercises(modelo_id: str) -> tuple[int, ...]:
+    """Return the supported authored exercises whose governing revision reaches filing grade.
 
-    An edition that only reaches applicability or calculation grade has no export
-    layout to assert byte positions against, so a test about filed output
-    enumerates these exercises rather than every supported one.
+    An edition authored at applicability grade only is left out: a snapshot asked
+    for filing grade over it is refused, so a test that needs a calculable
+    filing-grade edition iterates these instead of every authored exercise.
     """
-    filing_grade = {
+    filing = {
         str(revision.id)
         for revision in authored_revisions_where(
-            modelo_id, lambda revision: revision.effective_authority_grade is RegistryAuthorityGrade.FILING
+            modelo_id, lambda revision: revision.authority_grade is RegistryAuthorityGrade.FILING
         )
     }
-    floor = filing_year_envelope().floor
     return tuple(
-        year
-        for revision in authored_revisions(modelo_id)
-        if str(revision.id) in filing_grade
-        for year in range(
-            max(revision.valid_from.year, floor),
-            (revision.valid_to.year if revision.valid_to is not None else revision.valid_from.year) + 1,
-        )
+        exercise
+        for exercise in supported_authored_exercises(modelo_id)
+        if str(revision_covering(modelo_id, exercise).id) in filing
     )
 
 

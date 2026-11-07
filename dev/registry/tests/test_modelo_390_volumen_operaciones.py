@@ -53,7 +53,7 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
 )
 from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.tests.authored_editions import supported_filing_grade_exercises
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 from cadrumo.domain.calculations.registry.tests.m390_formula_support import liquidation_operands
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
@@ -85,7 +85,7 @@ _BOXES = (
 )
 
 # The newest exercise whose Modelo 390 edition is filing grade.
-_EXERCISE = supported_filing_grade_exercises("390")[-1]
+_EXERCISE = filing_grade_exercises("390")[-1]
 _ENTREGAS_BASE = Decimal("18400.00")
 _EXPORT_THIRD_COUNTRY_BASE = Decimal("9250.00")
 _EXPORT_ASSIMILATED_BASE = Decimal("1375.00")

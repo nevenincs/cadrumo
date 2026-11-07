@@ -25,12 +25,14 @@ from pydantic import ValidationError
 
 from ......core.config import override_settings
 from ......core.parsing.codes import normalise_iso_4217_currency
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..base import FinancialValidationError, default_currency
 from ..csv import currency_from_aliases
 from ..ofx import resolve_statement_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
+_YEAR = filing_year_envelope().horizon
 
 #: Tokens every inbound surface must normalise to the same canonical code.
 _ACCEPTED: tuple[tuple[str, str], ...] = (
@@ -48,7 +50,7 @@ def _raw_transaction(currency: str) -> RawTransaction:
     """Build a real ``RawTransaction`` differing only in ``currency``."""
     return RawTransaction(
         provider_transaction_id="tx-1",
-        booked_date=date(2026, 4, 10),
+        booked_date=date(_YEAR, 4, 10),
         amount=Decimal("10.00"),
         currency=currency,
         description="parity probe",
@@ -57,7 +59,7 @@ def _raw_transaction(currency: str) -> RawTransaction:
             source_sha256="a" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2026, 4, 10, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 4, 10, tzinfo=UTC),
             provider_name="parity",
         ),
         raw_fields={},

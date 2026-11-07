@@ -24,10 +24,13 @@ from .....core.redaction.rules import (
     redact_for_log,
     redact_structured,
 )
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....persistence.llm.cache import LLMCache
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....persistence.storage.secure_object_namespaces import LLM_CACHE_NAMESPACE
 from ..models import CachedEntry, LLMRequest, LLMResponse
+
+_FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -57,7 +60,7 @@ def _response(text: str) -> LLMResponse:
         output_tokens=20,
         cost_estimate_usd=Decimal("0"),
         cache_hit=False,
-        created_at=datetime(2026, 9, 1, 12, 0, tzinfo=UTC),
+        created_at=datetime(_FILING_YEAR, 9, 1, 12, 0, tzinfo=UTC),
         request_id="req-legacy",
     )
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import Any
 from uuid import UUID
@@ -12,9 +12,10 @@ import pytest
 from .....application.storage.calc_sheets.engine import build_export_plan
 from .....application.storage.calc_sheets.review_workbook import build_review_workbook
 from .....application.storage.calc_sheets.tests.review_fixture import review_label, review_snapshot
-from .....domain.calculations.registry.tests.published_authority import published_snapshot
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..api import RequestRetryPolicy
 from ..calc_sheets_apply import apply_plan_structural_requests, write_plan_values
+from ._calc_sheets_support import modelo_130_first_quarter_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -51,7 +52,7 @@ def _review_plan():
     return build_review_workbook(
         review_snapshot(),
         publication_id=UUID(int=2),
-        exported_at=datetime(2026, 10, 5, tzinfo=UTC),
+        exported_at=datetime(filing_year_envelope().horizon, 10, 5, tzinfo=UTC),
         label=review_label,
     )
 
@@ -78,7 +79,7 @@ def test_formula_looking_text_is_sent_raw_and_numbers_stay_numbers() -> None:
 
 
 def test_only_generated_formulas_use_user_entered_input() -> None:
-    plan = build_export_plan(published_snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1)))
+    plan = build_export_plan(modelo_130_first_quarter_snapshot())
     assert plan.formula_cells
     recorder: Any = _Recorder()
 

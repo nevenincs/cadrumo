@@ -23,7 +23,7 @@ from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalcula
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.tests.authored_editions import supported_filing_grade_exercises
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -39,7 +39,7 @@ from .ledger_iva_aggregation_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _SURFACE = "test_modelo_390_resultado_liquidacion_anual"
-_SUPPORTED_YEARS = supported_filing_grade_exercises("390")
+_SUPPORTED_YEARS = filing_grade_exercises("390")
 _RATE = Decimal("0.21")
 _QUARTER_MONTH = {"1T": 2, "2T": 5, "3T": 8, "4T": 11}
 
