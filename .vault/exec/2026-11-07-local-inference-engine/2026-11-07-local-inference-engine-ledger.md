@@ -5,9 +5,7 @@ tags:
 date: '2026-11-07'
 modified: '2026-11-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:84bedb5ae51bbea249d187fc01aaf9f639b29a18ee11f2fdacd91aa6aaeb9b9e'
-body_hash: 'sha256:559c18ffecdf2ac553d485a8ad691758af8cf5d3f8ab255089ce3ac472e06d2a'
-body_hash: 'sha256:6a50377cdabc1a6157bc00ea2eb5964b342bbe14d11021f6ff5aaa6d1b0accc0'
+body_hash: 'sha256:fb99d08ccc38249fc664304c84a6a17a60e2b3a9d36c86c51f9f490b5df814ec'
 related:
   - "[[2026-11-07-local-inference-engine-plan]]"
 ---
@@ -110,6 +108,9 @@ related:
 - `S15` `verify:` `rustfmt --edition 2024 --check local_ai sources` -> `pass`
 - `S15` `verify:` `pytest dev/quality/tests/test_no_model_definitions.py dev/quality/tests/test_no_git_cli.py` -> `pass`
 - `S15` `by:` `vaultspec-high-executor`
+- `S13` `verify:` `ctest --preset debug -R application.(rust|fmt|clippy|features.clippy)` -> `pass`
+- `S15` `verify:` `ctest --preset debug -R application.(rust|fmt|clippy|features.clippy)` -> `pass`
+- `S11` `verify:` `pytest S11 packaging focus (156)` -> `pass`
 
 ## Notes
 
@@ -128,6 +129,7 @@ related:
 - `S11` Linux llama-server archives exceed the glibc 2.28 floor (x86-64 2.34, aarch64 2.38); staging refuses them by design
 - `S11` Pending in the root build slot: CMake configure resolves the redistributable, then bundle build and test-native-bundle
 - `S15` cargo test and clippy for native/application are pending the root build slot; not run in the worktree
+- `S11` configure, bundle and test-native-bundle owed in the DESKTOP proving cycle; Step stays open until it passes
 
 ## Notes
 
