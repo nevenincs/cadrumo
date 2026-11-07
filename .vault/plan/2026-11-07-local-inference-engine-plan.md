@@ -13,7 +13,7 @@ related:
   - '[[2026-10-25-agent-owned-models-adr]]'
 modified: '2026-11-07'
 body_schema: body-v2
-body_hash: 'sha256:bafc704107b28c9ca0e136ff11c59d2251fc539a528376d4f5037863a1d4a250'
+body_hash: 'sha256:ecc86bfd90a7842b2de78181763eff8353204d4a946286c19c31260f5986f737'
 ---
 
 # `local-inference-engine` plan
@@ -103,7 +103,7 @@ Persist one local engine setting with placement, pass the llama.cpp base URL to 
 Prove the integrated change in the coordinator's root build slot, settle the default vision route on the GPU pass, and accept identical packaged UX on both engines.
 
 - [ ] `P05.S24` - Run the integrated verification in the coordinator-sequenced root build slot: check-rust, build-native, test-native-bundle, component-pin and packaging-inclusion tests, import boundaries, check-code, targeted pytest, frontend check and test, and regenerated import load targets (repo cadrumo, executor vaultspec-high-executor); `root build tree X:/code/cadrumo, justfile recipes, native/desktop/frontend`.
-- [ ] `P05.S25` - Run the GPU measurement pass after the coordinator GO, then record the default vision route as an ADR amendment and the GPU results in the research record (repo cadrumo, executor vaultspec-high-executor); `.tmp/2026-11-07-ollama-eval-llamacpp/scripts/gpu_pass.py, .vault/adr/2026-11-07-local-inference-engine-adr.md, .vault/research/2026-11-07-local-inference-engine-research.md`.
+- [x] `P05.S25` - Run the GPU measurement pass after the coordinator GO, then record the default vision route as an ADR amendment and the GPU results in the research record (repo cadrumo, executor vaultspec-high-executor); `.tmp/2026-11-07-ollama-eval-llamacpp/scripts/gpu_pass.py, .vault/adr/2026-11-07-local-inference-engine-adr.md, .vault/research/2026-11-07-local-inference-engine-research.md`.
 - [ ] `P05.S26` - Smoke the packaged desktop: with the llama.cpp default and no Ollama installed read a synthetic invoice end to end, then select Ollama, set it up and confirm the identical experience (repo cadrumo, executor vaultspec-high-executor); `packaged desktop built in the root build tree`.
 - [ ] `P05.S27` - Flip the default local engine to the bundled llama.cpp after the P05 packaged smoke passes, changing the default engine of the engine record and the setup and settings defaults (repo cadrumo, plus a cadrumo-agent catalogue default if needed, executor vaultspec-standard-executor, Opus review before the Step closes); `src/cadrumo_agent_service/providers/domain/record.py, src/cadrumo_agent_service/admin.py, native/desktop/frontend/src/shell/localModelLanes.ts, cadrumo-agent:src/cadrumo_agent/providers/provider_metadata.json, their tests`.
 

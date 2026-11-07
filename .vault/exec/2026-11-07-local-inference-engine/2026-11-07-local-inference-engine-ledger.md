@@ -5,7 +5,7 @@ tags:
 date: '2026-11-07'
 modified: '2026-11-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:86af866667427394cb1ec5c5d8bcb648f9e5891f1175a1f3f4a5a7ed9eae4bc0'
+body_hash: 'sha256:7afac383cd7e81787be41c3b848498eadfd8ead64213c7644c4333deb5024fa3'
 related:
   - "[[2026-11-07-local-inference-engine-plan]]"
 ---
@@ -20,3 +20,6 @@ related:
 - `S01` `M` `.vault/adr/2026-06-13-llm-evidence-classification-adr.md`
 - `S01` `verify:` `vaultspec-core vault check all` -> `pass`
 - `S01` `by:` `vaultspec-high-executor`
+- `S25` `M` `.vault/research/2026-11-07-local-inference-engine-research.md`
+- `S25` `M` `.vault/adr/2026-11-07-local-inference-engine-adr.md`
+- `S25` `verify:` `gpu_pass.py --go --cleanup` -> `pass`
