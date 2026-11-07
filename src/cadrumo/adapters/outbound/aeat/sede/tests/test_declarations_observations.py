@@ -19,6 +19,7 @@ from ......core.period import Period
 from ......core.time.clock import MADRID_TZ
 from ......domain.calculations.registry.export import resolve_export_layout
 from ......domain.calculations.registry.export_parse import parse_export_payload
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...browser.factory import opened_browser_page, shared_playwright_runtime
 from ...browser.profile import Profile
 from ..declarations import EJERCICIO_OPTION_RE, MODELO_OPTION_RE, combobox_option_texts, select_combobox_value
@@ -46,6 +47,8 @@ from .declarations_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+_YEAR = filing_year_envelope().horizon
+
 
 _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = validated_casilla_id(
     "iva.compensacion-pendiente-periodos-anteriores"
@@ -60,23 +63,25 @@ _M303_PRINTED_COMPENSATION_REFERENCE_CASILLA: CasillaId = validated_casilla_id("
 
 def test_authoritative_declaration_selection_uses_latest_alta_row_for_duplicate_period() -> None:
     older = declaration_row(
-        expediente_id="202430313521426G",
-        presented_at=datetime(2025, 3, 27, 17, 31, 56, tzinfo=UTC),
+        ejercicio=_YEAR,
+        expediente_id=f"{_YEAR}30313521426G",
+        presented_at=datetime(_YEAR, 3, 27, 17, 31, 56, tzinfo=UTC),
     )
     newer = declaration_row(
-        expediente_id="202430313521428B",
-        presented_at=datetime(2025, 3, 28, 13, 4, 47, tzinfo=UTC),
+        ejercicio=_YEAR,
+        expediente_id=f"{_YEAR}30313521428B",
+        presented_at=datetime(_YEAR, 3, 28, 13, 4, 47, tzinfo=UTC),
     )
 
     selected = declarations_select_authoritative_declaration(
         (older, newer),
         modelo="303",
-        ejercicio=2024,
+        ejercicio=_YEAR,
         period="3T",
         context="previous-filing requirement",
     )
 
-    assert selected.expediente_id == "202430313521428B"
+    assert selected.expediente_id == f"{_YEAR}30313521428B"
 
 
 def test_declarations_page_shape_context_redacts_url_query_and_input_values() -> None:
@@ -101,7 +106,7 @@ def test_declarations_page_shape_context_redacts_url_query_and_input_values() ->
         landing_url=f"{DECLARATIONS_LISTING_URL}?token=QUERY-CANARY",
         stage="post_buscar",
         modelo="303",
-        ejercicio=2026,
+        ejercicio=_YEAR,
     )
 
     assert context["landing_url"] == DECLARATIONS_LISTING_URL
@@ -157,7 +162,7 @@ def test_declarations_page_shape_context_carries_page_text_so_the_leak_assertion
         landing_url=DECLARATIONS_LISTING_URL,
         stage="post_buscar",
         modelo="303",
-        ejercicio=2026,
+        ejercicio=_YEAR,
     )
 
     assert "TITLE-CANARY" in str(context)
@@ -219,7 +224,7 @@ def test_modelo_303_filed_observation_derives_compensation_available() -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         observation = filed_observation(
             modelo="303",
-            ejercicio=2024,
+            ejercicio=_YEAR,
             period="4T",
             casilla_values={
                 _M303_POSTERIOR_CASILLA: Decimal("0"),
@@ -236,7 +241,7 @@ def test_modelo_303_filed_observation_derives_compensation_available() -> None:
         registry_casillas = {
             casilla.id: casilla
             for casilla in modelo_snapshot(
-                "303", filing_year=2024, period="4T", operation=_authority_operation_for_test
+                "303", filing_year=_YEAR, period="4T", operation=_authority_operation_for_test
             ).revision.casillas
         }
 
@@ -255,7 +260,7 @@ def test_modelo_303_filed_observation_derives_compensation_available_from_regist
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         observation = filed_observation(
             modelo="303",
-            ejercicio=2024,
+            ejercicio=_YEAR,
             period="4T",
             casilla_values={
                 _M303_POSTERIOR_CASILLA: Decimal("10.00"),
@@ -278,7 +283,7 @@ def test_registry_observation_from_filed_declaration_refuses_noncanonical_casill
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         observation = filed_observation(
             modelo="303",
-            ejercicio=2024,
+            ejercicio=_YEAR,
             period="4T",
             casilla_values={_M303_PRINTED_COMPENSATION_REFERENCE_CASILLA: Decimal("0")},
         )
@@ -305,7 +310,7 @@ class TestParseListbox:
         row = rows[0]
         assert row.modelo == "100"
         assert row.ejercicio == ejercicio
-        assert row.expediente_id == "202210013522222A"
+        assert row.expediente_id == f"{ejercicio}10013522222A"
         assert row.period == Period.from_year_and_code(ejercicio, "0A")
         assert row.estado == "ALTA"
         # The row prints its presentation instant after its estado, day first.
@@ -322,16 +327,16 @@ class TestParseListbox:
         with pytest.raises(ValueError, match=r"period\.filing_year must match ejercicio"):
             ExpedientesDeclaration(
                 modelo="130",
-                ejercicio=2026,
-                period=Period.from_year_and_code(2025, "1T"),
-                expediente_id="202610013522222A",
+                ejercicio=_YEAR,
+                period=Period.from_year_and_code(_YEAR - 1, "1T"),
+                expediente_id=f"{_YEAR}10013522222A",
                 estado="ALTA",
-                presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+                presented_at=datetime(_YEAR, 4, 20, 10, 0, 0, tzinfo=UTC),
                 justificante_link_text="Ver",
             )
 
     def test_declaration_copy_column_is_classified_separately(self) -> None:
-        html = """
+        html = f"""
             <div class="z-listbox">
               <tr class="z-listhead">
                 <th class="z-listheader"><div>Desistir</div></th>
@@ -349,17 +354,17 @@ class TestParseListbox:
                 <td class="z-listcell"><div></div></td>
                 <td class="z-listcell"><div></div></td>
                 <td class="z-listcell"><div></div></td>
-                <td class="z-listcell"><div>202610013522222A</div></td>
+                <td class="z-listcell"><div>{_YEAR}10013522222A</div></td>
                 <td class="z-listcell"><div>1T</div></td>
                 <td class="z-listcell"><div>ALTA</div></td>
-                <td class="z-listcell"><div>20/04/2026 10:00:00</div></td>
+                <td class="z-listcell"><div>20/04/{_YEAR} 10:00:00</div></td>
                 <td class="z-listcell"><button>Ver</button></td>
                 <td class="z-listcell"><button>Ver</button></td>
                 <td class="z-listcell"><button>Ver</button></td>
               </tr>
             </div>
         """
-        rows = parse_listbox(html, modelo="130", ejercicio=2026).rows
+        rows = parse_listbox(html, modelo="130", ejercicio=_YEAR).rows
 
         assert len(rows) == 1
         row = rows[0]
@@ -369,7 +374,7 @@ class TestParseListbox:
         assert row.archive_cell_index == 9
 
     def test_header_without_submitted_file_does_not_infer_archive_column(self) -> None:
-        html = """
+        html = f"""
             <div class="z-listbox">
               <tr class="z-listhead">
                 <th class="z-listheader"><div>Desistir</div></th>
@@ -386,16 +391,16 @@ class TestParseListbox:
                 <td class="z-listcell"><div></div></td>
                 <td class="z-listcell"><div></div></td>
                 <td class="z-listcell"><div></div></td>
-                <td class="z-listcell"><div>202610013522222A</div></td>
+                <td class="z-listcell"><div>{_YEAR}10013522222A</div></td>
                 <td class="z-listcell"><div>1T</div></td>
                 <td class="z-listcell"><div>ALTA</div></td>
-                <td class="z-listcell"><div>20/04/2026 10:00:00</div></td>
+                <td class="z-listcell"><div>20/04/{_YEAR} 10:00:00</div></td>
                 <td class="z-listcell"><button>Ver</button></td>
                 <td class="z-listcell"><button>Ver</button></td>
               </tr>
             </div>
         """
-        row = parse_listbox(html, modelo="130", ejercicio=2026).rows[0]
+        row = parse_listbox(html, modelo="130", ejercicio=_YEAR).rows[0]
 
         assert row.declaration_copy_link_text == "Ver"
         assert row.archive_link_text is None
@@ -417,22 +422,22 @@ class TestParseListbox:
               </table>
             </div>
         """
-        rows = parse_listbox(html, modelo="130", ejercicio=2024).rows
+        rows = parse_listbox(html, modelo="130", ejercicio=_YEAR).rows
         assert rows == ()
 
     def test_missing_listbox_raises_parse_error(self) -> None:
         """Assert HTML without a listbox raises :exc:`SedeParseError`."""
         with pytest.raises(SedeParseError, match=r"listbox|missing|parse"):
-            parse_listbox("<html><body>not a listbox</body></html>", modelo="100", ejercicio=2022)
+            parse_listbox("<html><body>not a listbox</body></html>", modelo="100", ejercicio=_YEAR)
 
     def test_missing_listbox_is_tagged_external_shape_changed(self) -> None:
         """A page with no ``.z-listbox`` container is a portal-drift outcome, not a bare parse error."""
         with pytest.raises(SedeParseError) as exc_info:
-            parse_listbox("<html><body>not a listbox</body></html>", modelo="100", ejercicio=2022)
+            parse_listbox("<html><body>not a listbox</body></html>", modelo="100", ejercicio=_YEAR)
         assert exc_info.value.failure_mode == "external_shape_changed"
         assert exc_info.value.context is not None
         assert exc_info.value.context["modelo"] == "100"
-        assert exc_info.value.context["ejercicio"] == 2022
+        assert exc_info.value.context["ejercicio"] == _YEAR
 
     def test_missing_justificante_column_is_tagged_external_shape_changed(self) -> None:
         """AEAT dropping/renaming the justificante column is a portal-drift outcome."""
@@ -443,11 +448,11 @@ class TestParseListbox:
             </div>
         """
         with pytest.raises(SedeParseError) as exc_info:
-            parse_listbox(html, modelo="303", ejercicio=2025)
+            parse_listbox(html, modelo="303", ejercicio=_YEAR)
         assert exc_info.value.failure_mode == "external_shape_changed"
         assert exc_info.value.context is not None
         assert exc_info.value.context["modelo"] == "303"
-        assert exc_info.value.context["ejercicio"] == 2025
+        assert exc_info.value.context["ejercicio"] == _YEAR
 
     def test_malformed_timestamp_cell_is_refused_without_echoing_cell_text(self) -> None:
         """A shifted grid can put taxpayer text in the timestamp column; the refusal must not carry it."""
@@ -470,7 +475,7 @@ class TestParseListbox:
                 <td class="z-listcell"><div></div></td>
                 <td class="z-listcell"><div></div></td>
                 <td class="z-listcell"><div></div></td>
-                <td class="z-listcell"><div>202610013599999Z</div></td>
+                <td class="z-listcell"><div>{_YEAR}10013599999Z</div></td>
                 <td class="z-listcell"><div>1T</div></td>
                 <td class="z-listcell"><div>ALTA</div></td>
                 <td class="z-listcell"><div>{leaked_cell}</div></td>
@@ -481,7 +486,7 @@ class TestParseListbox:
             </div>
         """
         with pytest.raises(SedeParseError) as exc_info:
-            parse_listbox(html, modelo="130", ejercicio=2026)
+            parse_listbox(html, modelo="130", ejercicio=_YEAR)
         assert _exception_chain_disclosures(exc_info.value, leaked_cell) == []
 
 
@@ -577,7 +582,7 @@ class TestExceptionChainDisclosure:
     def test_a_redacted_refusal_discloses_nothing(self) -> None:
         refusal = SedeParseError(
             _REDACTED_REFUSAL,
-            context={"modelo": "130", "ejercicio": 2026},
+            context={"modelo": "130", "ejercicio": _YEAR},
             translated_message="adapters.sede.errors.parse_failed",
         )
         refusal.add_note("column=presented_at")
@@ -594,15 +599,15 @@ class TestParsePresentedAt:
 
     def test_canonical_shape(self) -> None:
         """A winter reading is one hour ahead of UTC (CET)."""
-        result = parse_presented_at("01/02/2024 19:15:34")
-        assert result == datetime(2024, 2, 1, 19, 15, 34, tzinfo=MADRID_TZ)
-        assert result == datetime(2024, 2, 1, 18, 15, 34, tzinfo=UTC)
-        assert result.astimezone(MADRID_TZ).date() == date(2024, 2, 1)
+        result = parse_presented_at(f"01/02/{_YEAR} 19:15:34")
+        assert result == datetime(_YEAR, 2, 1, 19, 15, 34, tzinfo=MADRID_TZ)
+        assert result == datetime(_YEAR, 2, 1, 18, 15, 34, tzinfo=UTC)
+        assert result.astimezone(MADRID_TZ).date() == date(_YEAR, 2, 1)
 
     def test_a_summer_reading_uses_the_summer_offset(self) -> None:
         """A CEST reading is two hours ahead of UTC."""
-        result = parse_presented_at("20/07/2024 19:15:34")
-        assert result == datetime(2024, 7, 20, 17, 15, 34, tzinfo=UTC)
+        result = parse_presented_at(f"20/07/{_YEAR} 19:15:34")
+        assert result == datetime(_YEAR, 7, 20, 17, 15, 34, tzinfo=UTC)
 
     def test_a_late_evening_reading_keeps_its_spanish_civil_date(self) -> None:
         """The reading a filing-plazo comparison turns on.
@@ -612,19 +617,19 @@ class TestParsePresentedAt:
         a declaration presented on the last day of a filing window as presented
         the day after it closed.
         """
-        result = parse_presented_at("20/04/2026 23:30:00")
-        assert result == datetime(2026, 4, 20, 21, 30, 0, tzinfo=UTC)
-        assert result.astimezone(MADRID_TZ).date() == date(2026, 4, 20)
+        result = parse_presented_at(f"20/04/{_YEAR} 23:30:00")
+        assert result == datetime(_YEAR, 4, 20, 21, 30, 0, tzinfo=UTC)
+        assert result.astimezone(MADRID_TZ).date() == date(_YEAR, 4, 20)
 
     def test_invalid_shape_raises_registered_validation_error(self) -> None:
         """Assert ISO-style timestamps are rejected with the registered sede error."""
         with pytest.raises(SedeValidationError, match=r"unexpected presented_at shape"):
-            parse_presented_at("2024-02-01 19:15:34")
+            parse_presented_at(f"{_YEAR}-02-01 19:15:34")
 
     def test_partial_match_rejected(self) -> None:
         """Assert a date-only string (no time component) is rejected."""
         with pytest.raises(SedeValidationError, match=r"unexpected presented_at shape"):
-            parse_presented_at("01/02/2024")
+            parse_presented_at(f"01/02/{_YEAR}")
 
 
 def _combobox_html(label_text: str, labels: tuple[str, ...]) -> str:
@@ -651,12 +656,12 @@ class TestSearchOptionSelection:
             opened_browser_page(playwright, settings, profile) as (page, _context),
         ):
             await page.set_content(
-                """
+                f"""
                 <main>
                   <span>Ejercicio (*)</span>
                   <a class="z-combobox-button" href="#">abrir</a>
-                  <div class="z-comboitem-text" onclick="window.selectedYear = this.textContent.trim()">2024</div>
-                  <div class="z-comboitem-text" onclick="window.selectedYear = this.textContent.trim()">2025</div>
+                  <div class="z-comboitem-text" onclick="window.selectedYear = this.textContent.trim()">{_YEAR - 2}</div>
+                  <div class="z-comboitem-text" onclick="window.selectedYear = this.textContent.trim()">{_YEAR - 1}</div>
                 </main>
                 """,
             )
@@ -665,7 +670,7 @@ class TestSearchOptionSelection:
                 page,
                 label_text="Ejercicio (*)",
                 option_pattern=EJERCICIO_OPTION_RE,
-                option_match="2026",
+                option_match=str(_YEAR),
             )
             selected_year = await page.evaluate("window.selectedYear ?? null")
 
@@ -699,9 +704,9 @@ class TestSearchOptionSelection:
             pytest.param(
                 "Ejercicio (*)",
                 EJERCICIO_OPTION_RE,
-                "2024",
-                "2024",
-                ("ATF - ANEXO 2024", "2025", "2024"),
+                str(_YEAR),
+                str(_YEAR),
+                (f"ATF - ANEXO {_YEAR}", str(_YEAR - 1), str(_YEAR)),
                 2,
                 0,
                 id="label-naming-the-year-is-not-the-year",
@@ -866,11 +871,11 @@ class TestSubmittedFileContext:
             parsed = parse_export_payload(resolved.layout, submitted_file_payload())
             declaration = ExpedientesDeclaration(
                 modelo="130",
-                ejercicio=2026,
-                period=Period.from_year_and_code(2026, "2T"),
-                expediente_id="202610013522222A",
+                ejercicio=snapshot.snapshot_ref.modelo_year,
+                period=Period.from_year_and_code(snapshot.snapshot_ref.modelo_year, "2T"),
+                expediente_id=f"{snapshot.snapshot_ref.modelo_year}10013522222A",
                 estado="ALTA",
-                presented_at=datetime(2026, 7, 1, 10, 0, 0, tzinfo=UTC),
+                presented_at=datetime(snapshot.snapshot_ref.modelo_year, 7, 1, 10, 0, 0, tzinfo=UTC),
                 justificante_link_text="Ver",
                 archive_link_text="Ver",
             )

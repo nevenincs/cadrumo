@@ -14,9 +14,14 @@ from typing import TYPE_CHECKING, Final
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority, ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
+from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind
+from cadrumo.domain.calculations.registry.schema_references import PeriodSelector, SourceReference
+from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
+from cadrumo.domain.calculations.registry.temporal import revision_temporal_resolution, select_revision_for_year
 
+from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ..compiler.validate_below_floor_export_refs import declared_supported_filing_years_floor
 from ..compiler.validate_bindings import informational_binding_ids
 from ..compiler.validate_export_exemption import modelo_publishes_a_record_design
@@ -58,6 +63,7 @@ _TARGET_STATE_NAMES: Final[tuple[str, ...]] = (
     "drifted",
     "never-committed",
     "not-applicable",
+    "projected",
     "unreadable",
 )
 
@@ -357,12 +363,16 @@ def project_target_states(
     revision_filing_years: Callable[[str, str], tuple[int, ...]],
     excluded_count: int,
     not_applicable: Iterable[tuple[str, str, str]] = (),
+    projected: Iterable[tuple[str, str, str]] = (),
 ) -> ProjectedTargets:
     """Bucket each classified target, moving a drift its ledger row explains to ``explained``.
 
     ``not_applicable`` carries the targets the registry itself places outside any
     generated tree (see :func:`classify_inapplicable_target`); they are reported
-    in their own bucket and never count toward ``unreadable``.
+    in their own bucket and never count toward ``unreadable``. ``projected``
+    carries the targets with no record design of their own whose layout the
+    registry serves from the nearest authored edition (see
+    :func:`classify_projected_target`); they are not gaps either.
 
     A target whose row is not honoured stays in its drifting bucket and the
     refusal is named in its detail and in the report details. ``declared_floor``
@@ -374,6 +384,7 @@ def project_target_states(
         "drifted": [],
         "never-committed": [],
         "not-applicable": list(not_applicable),
+        "projected": list(projected),
         "unreadable": list(excluded),
     }
     counts: Counter[str] = Counter()
@@ -394,6 +405,7 @@ def project_target_states(
             details.append(explanation_detail)
     counts["unreadable"] = excluded_count
     counts["not-applicable"] = len(grouped["not-applicable"])
+    counts["projected"] = len(grouped["projected"])
     return ProjectedTargets(
         counts=tuple((state, counts[state]) for state in _TARGET_STATE_NAMES),
         findings=tuple((state, tuple(findings)) for state, findings in grouped.items()),
@@ -524,11 +536,18 @@ def collect_target_axis(
         findings = (("unreadable", (("unknown", "unknown", "whole-registry validity failed"),)),)
         return True, Counter({"unreadable": 1}), findings
     try:
-        states, excluded, not_applicable, excluded_count, inventory_failed = _generated_target_inventory(
-            authority, details, registry_root=registry_root, source_root=source_root
+        states, excluded, not_applicable, projected_targets, excluded_count, inventory_failed = (
+            _generated_target_inventory(authority, details, registry_root=registry_root, source_root=source_root)
         )
         projected = _project_generated_targets(
-            authority, registry_root, disposition_ledger, states, excluded, excluded_count, not_applicable
+            authority,
+            registry_root,
+            disposition_ledger,
+            states,
+            excluded,
+            excluded_count,
+            not_applicable,
+            projected_targets,
         )
         details.extend(projected.details)
         return inventory_failed, Counter(dict(projected.counts)), projected.findings
@@ -544,7 +563,14 @@ def _generated_target_inventory(
     *,
     registry_root: Path,
     source_root: Path,
-) -> tuple[list[GeneratedTreeState], list[tuple[str, str, str]], list[tuple[str, str, str]], int, bool]:
+) -> tuple[
+    list[GeneratedTreeState],
+    list[tuple[str, str, str]],
+    list[tuple[str, str, str]],
+    list[tuple[str, str, str]],
+    int,
+    bool,
+]:
     """Measure each modelo separately so one render failure cannot hide the rest.
 
     Returns the classified states, the targets that could not be rendered although
@@ -556,6 +582,7 @@ def _generated_target_inventory(
     states: list[GeneratedTreeState] = []
     excluded: list[tuple[str, str, str]] = []
     not_applicable: list[tuple[str, str, str]] = []
+    projected: list[tuple[str, str, str]] = []
     unrenderable: list[str] = []
     floor: int | None = None
     for modelo in authority.modelos:
@@ -575,22 +602,35 @@ def _generated_target_inventory(
             reason = classify_inapplicable_target(
                 modelo, revision_id, authority.catalogues.sources, floor=floor, has_committed_tree=has_tree
             )
-            if reason is None:
+            if reason is not None:
+                not_applicable.append((modelo_id, revision_id, reason))
+                continue
+            projection = classify_projected_target(
+                modelo,
+                revision_id,
+                authority.catalogues.sources,
+                tree_revisions=_tree_bearing_revisions(registry_root, modelo),
+                support=authority.catalogues.require_supported_filing_years(),
+                render_refusal=error,
+            )
+            if projection is None:
                 excluded.append((modelo_id, revision_id, error))
             else:
-                not_applicable.append((modelo_id, revision_id, reason))
+                projected.append((modelo_id, revision_id, projection))
     if unrenderable:
         joined = ", ".join(unrenderable)
         details.append(f"TARGETS: {len(unrenderable)} modelo(s) could not be censused: {joined}")
     expected_target_count = sum(len(modelo.revisions) for modelo in authority.modelos)
-    excluded_count = max(0, expected_target_count - len(states) - len(not_applicable))
+    excluded_count = max(0, expected_target_count - len(states) - len(not_applicable) - len(projected))
     if not_applicable:
         details.append(
             f"TARGETS: {len(not_applicable)} target(s) have no generated tree to reproduce by registry declaration"
         )
     if excluded_count:
         details.append(f"TARGETS: {excluded_count} target(s) were excluded by the generated-state owner")
-    return states, excluded, not_applicable, excluded_count, bool(unrenderable)
+    if projected:
+        details.append(f"TARGETS: {len(projected)} target(s) are projected from the nearest authored edition")
+    return states, excluded, not_applicable, projected, excluded_count, bool(unrenderable)
 
 
 #: Reason tokens opening the detail of a ``not-applicable`` target.
@@ -637,6 +677,82 @@ def classify_inapplicable_target(
     return None
 
 
+#: Reason token opening the detail of a ``projected`` target.
+PROJECTED_FROM_NEAREST_EDITION: Final = "projected_from"
+
+#: The render refusal the compiler gives a revision none of whose cited sources covers its declared frame.
+_NO_OWN_RECORD_DESIGN_MARKER: Final = "cites no record-design source"
+
+
+def classify_projected_target(
+    modelo: ModeloDefinition,
+    revision_id: str,
+    sources: Mapping[str, SourceReference],
+    *,
+    tree_revisions: frozenset[str],
+    support: SupportedFilingYearsCatalogue,
+    render_refusal: str = "",
+) -> str | None:
+    """Name the authored edition that serves a revision which has no record design of its own.
+
+    A revision citing no record design has nothing to render a tree from. The
+    registry answers such a year from the nearest authored edition, forward from
+    the newest and backward from the oldest, through the canonical temporal
+    resolver; the answer reaches calculation grade at most. The candidates are
+    the editions that ship a generated tree, so the resolver is asked only about
+    editions able to serve a layout. A revision that cites a record design covering its frame is a
+    gap to author, and one already shipping a tree is not projected.
+
+    Returns the reason detail (opening with its token and naming the source
+    edition), or ``None`` when the revision is not a projection.
+    """
+    revision = modelo.revisions[revision_id]
+    cites_own_design = _NO_OWN_RECORD_DESIGN_MARKER not in render_refusal and any(
+        (source := sources.get(ref)) is not None and source.kind is RegistrySourceKind.RECORD_DESIGN
+        for ref in (*revision.source_refs, *(revision.casilla_source_refs or ()))
+    )
+    if revision_id in tree_revisions or cites_own_design:
+        return None
+    candidates = {rid: edition for rid, edition in modelo.revisions.items() if str(rid) in tree_revisions}
+    if not candidates:
+        return None
+    year = _representative_filing_year(revision.period_selector)
+    if year is None:
+        return None
+    try:
+        serving = select_revision_for_year(
+            modelo.model_copy(update={"revisions": candidates}), filing_year=year, support=support
+        )
+        resolution = revision_temporal_resolution(serving, filing_year=year, period=None, support=support)
+    except RegistryError:
+        return None
+    return (
+        f"{PROJECTED_FROM_NEAREST_EDITION}: {serving.id} ({resolution.projection_direction.value}) "
+        f"for filing year {year}; calculation grade at most"
+    )
+
+
+def _representative_filing_year(selector: PeriodSelector) -> int | None:
+    """The filing year a projection is asked for: the last year a bounded selector declares.
+
+    The last year is the one nearest the supported envelope, so a span that
+    begins below the floor is still answerable.
+    """
+    if selector.years:
+        return max(selector.years)
+    return selector.year_to if selector.year_to is not None else selector.year_from
+
+
+def _tree_bearing_revisions(registry_root: Path, modelo: ModeloDefinition) -> frozenset[str]:
+    """The revisions of one modelo that ship a committed generated export tree."""
+    modelo_root = registry_root / "modelos" / str(modelo.id) / "revisions"
+    return frozenset(
+        str(revision_id)
+        for revision_id in modelo.revisions
+        if (modelo_root / str(revision_id) / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME).is_file()
+    )
+
+
 def declared_revision_filing_years(modelo: ModeloDefinition, revision_id: str) -> tuple[int, ...]:
     """The filing years a revision's selector declares, whether it lists them or spans a range.
 
@@ -661,6 +777,7 @@ def _project_generated_targets(
     excluded: list[tuple[str, str, str]],
     excluded_count: int,
     not_applicable: list[tuple[str, str, str]],
+    projected: list[tuple[str, str, str]],
 ) -> ProjectedTargets:
     """Project classified states using the live floor, years, and disposition evidence."""
     return project_target_states(
@@ -673,6 +790,7 @@ def _project_generated_targets(
         ),
         excluded_count=excluded_count,
         not_applicable=not_applicable,
+        projected=projected,
     )
 
 
@@ -973,7 +1091,7 @@ def _target_state_overview(
     }
     if state == "unreadable":
         result["reason_counts"] = _unreadable_reason_counts(findings)
-    if state == "not-applicable":
+    if state in {"not-applicable", "projected"}:
         result["reason_counts"] = dict(sorted(Counter(detail.partition(":")[0] for _, _, detail in findings).items()))
     return result
 

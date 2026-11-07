@@ -21,14 +21,17 @@ from pathlib import Path
 import pytest
 
 from .....core.config_support import LLMProvider
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....persistence.llm.cache import LLMCache
 from ....persistence.storage.secure_object_namespaces import LLM_CACHE_NAMESPACE
 from ....persistence.storage.tests.secure_sql import TestRuntimeProfile, mutate_encrypted_secure_object_json
 from ..models import LLMRequest, LLMResponse
 
+_FILING_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_CREATED_AT = datetime(2026, 5, 28, 12, 25, 0, tzinfo=UTC)
+_CREATED_AT = datetime(_FILING_YEAR, 5, 28, 12, 25, 0, tzinfo=UTC)
 
 
 def _populated_request() -> LLMRequest:
@@ -38,7 +41,7 @@ def _populated_request() -> LLMRequest:
         max_tokens=512,
         temperature=0.2,
         language="en",
-        cache_key="translation-batch-2026Q1",
+        cache_key=f"translation-batch-{_FILING_YEAR}Q1",
         provider_override=LLMProvider.AGENT,
         model_override="claude-opus-4-7",
     )

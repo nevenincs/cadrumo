@@ -9,8 +9,15 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.errors import CasillaConstraintViolationError, RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, open_ended_revision
 
 from ..compiler.authority import compiled_bundled_authority
+
+# The closed edition BOE 216 printed its subtraction under, and the last exercise it governs.
+_HISTORICAL = authored_revisions("216")[0]
+_HISTORICAL_ID = str(_HISTORICAL.id)
+assert _HISTORICAL.valid_to is not None
+_YEAR = _HISTORICAL.valid_to.year
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -18,10 +25,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 def _calculate(inputs):
     authority = compiled_bundled_authority()
     snapshot = authority.snapshot(
-        "216", filing_year=2023, period="4T", revision_id="2020-2023", grade=RegistryAuthorityGrade.CALCULATION
+        "216", filing_year=_YEAR, period="4T", revision_id=_HISTORICAL_ID, grade=RegistryAuthorityGrade.CALCULATION
     )
     with validating_governed_facts(authority):
-        return calculate_registry_snapshot(snapshot, inputs=inputs, date_context={"filing_period": date(2023, 12, 31)})
+        return calculate_registry_snapshot(snapshot, inputs=inputs, date_context={"filing_period": date(_YEAR, 12, 31)})
 
 
 @pytest.mark.parametrize(
@@ -53,11 +60,11 @@ def test_nonwithheld_income_cannot_change_the_payable_amount():
 
 def test_historical_calculation_does_not_grant_filing_grade():
     with pytest.raises(RegistryValidationError, match="cannot satisfy the requested 'filing'"):
-        compiled_bundled_authority().snapshot("216", filing_year=2023, period="4T", revision_id="2020-2023")
+        compiled_bundled_authority().snapshot("216", filing_year=_YEAR, period="4T", revision_id=_HISTORICAL_ID)
 
 
 def test_current_formula_keeps_current_casilla_references():
-    revision = compiled_bundled_authority().modelo("216").revisions["2024-y-siguientes"]
+    revision = compiled_bundled_authority().modelo("216").revisions[str(open_ended_revision("216").id)]
     formula = next(f for f in revision.formulas if f.id == "modelo-216-resultado")
     assert str(formula.target_casilla_id) == "21"
     assert [str(a.casilla_id) for a in formula.expression.args] == ["13", "20"]

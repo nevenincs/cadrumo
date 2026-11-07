@@ -26,6 +26,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Mapping
+from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal, localcontext
@@ -38,6 +39,7 @@ from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 from ...period import calculation_filing_date
 from ..record_row_membership import ClosedRecordRowSet, resolve_closed_record_rows
+from .binding_targets import bound_casilla_binding_ids
 from .binding_value_contract import BindingValueChannel
 from .bindings import CasillaObservation
 from .casilla_membership import casillas_by_id as casilla_membership_casillas_by_id
@@ -754,6 +756,15 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
         binding_ids=recalculate_from_binding_ids,
     )
     if retained and (recalculate_from_casilla_ids or recalculate_from_binding_ids):
+        # A formula the correction does not reach and the filing never recorded is evaluated like a first
+        # calculation, so a figure that reads it sees it resolved or named unresolved rather than missing.
+        unrecorded_unreached = frozenset(formula_targets).difference(retained, recalculated_targets)
+        _evaluate_formulas(
+            snapshot,
+            resolved,
+            state,
+            selected_targets=unrecorded_unreached.difference(formula_overrides or {}),
+        )
         _evaluate_formulas(
             snapshot,
             resolved,
@@ -763,6 +774,19 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
         )
         unresolved = set(recalculated_targets).intersection(state.unresolved_casilla_ids)
         if unresolved:
+            missing_bindings = _unrecorded_bindings_read_by(
+                resolved.revision, set(state.unresolved_casilla_ids), resolved.resolved_unresolved_bindings
+            )
+            if missing_bindings:
+                raise RegistryValidationError(
+                    "amendment recalculation reaches formula(s) whose binding the filing never recorded: "
+                    f"{', '.join(sorted(missing_bindings))}",
+                    translated_message="errors.calc.formula_recalculation_binding_unrecorded",
+                    context={
+                        "casilla_ids": ", ".join(sorted(unresolved)),
+                        "binding_ids": ", ".join(sorted(missing_bindings)),
+                    },
+                )
             raise RegistryValidationError(
                 f"amendment recalculation has unresolved required formula(s): {', '.join(sorted(unresolved))}",
                 translated_message="errors.calc.formula_recalculation_unresolved",
@@ -793,6 +817,32 @@ def _evaluate_formulas(
             state.computed_provenance.pop(target, None)
             state.unresolved_casilla_ids.discard(target)
             _evaluate_formula_target(snapshot, resolved, state, target)
+
+
+def _unrecorded_bindings_read_by(
+    revision: ModeloRevision,
+    targets: AbstractSet[CasillaId],
+    unrecorded: AbstractSet[BindingId],
+) -> frozenset[BindingId]:
+    """Name the unresolved bindings the formulas of ``targets`` read, directly or through a bound casilla."""
+    formula_targets = {formula.target_casilla_id for formula in revision.formulas}
+    bindings_by_casilla = {
+        casilla.id: bound_casilla_binding_ids(casilla)
+        for casilla in revision.casillas
+        if casilla.id not in formula_targets
+    }
+    named: set[BindingId] = set()
+    for formula in revision.formulas:
+        if formula.target_casilla_id not in targets:
+            continue
+        named.update(
+            binding_id for binding_id in expression_binding_refs(formula.expression) if binding_id in unrecorded
+        )
+        for casilla_id in expression_casilla_refs(formula.expression):
+            named.update(
+                binding_id for binding_id in bindings_by_casilla.get(casilla_id, ()) if binding_id in unrecorded
+            )
+    return frozenset(named)
 
 
 def _affected_formula_targets(

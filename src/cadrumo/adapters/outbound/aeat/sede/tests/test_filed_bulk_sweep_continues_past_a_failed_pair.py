@@ -29,9 +29,11 @@ import pytest
 
 from ......application.live.filed_capture_queries import list_filed_data_bulk
 from ......application.live.filed_data import BulkFiledDataListingReport
+from ......domain.calculations.registry.tests.authored_editions import supported_authored_exercises
 from .declarations_register_test_support import (
     RoutedFiledDataCapturePort,
     aeat_sede_fixture,
+    fixture_offered_ejercicios,
     open_routed_declarations_register,
     truncation_failures_naming_their_cause,
 )
@@ -40,9 +42,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MODELO = "100"
 # Both years carry a registry revision for this modelo, so both survive the
-# pre-flight query plan and actually reach the register walk.
-_YEAR_FROM = 2024
-_YEAR_TO = 2025
+# pre-flight query plan, and both are offered by the register form, so both
+# actually reach the register walk.
+_YEAR_FROM, _YEAR_TO = sorted(
+    set(supported_authored_exercises(_MODELO))
+    & set(fixture_offered_ejercicios("declaraciones-register-form-complete-synthetic"))
+)[-2:]
 
 
 def test_a_truncated_pair_is_reported_while_the_other_pair_still_yields_rows() -> None:

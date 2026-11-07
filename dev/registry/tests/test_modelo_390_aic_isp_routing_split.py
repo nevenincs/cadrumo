@@ -41,6 +41,10 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     LedgerIvaProvider,
     resolve_ledger_iva_aggregation_binding_values,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_grade_exercises,
+    revision_covering,
+)
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 
@@ -54,7 +58,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 #: with one revision per bundled diseno year, so this names the current one. The
 #: constant also builds the scratch-tree paths the mutation gates below copy, so
 #: it has to be a revision that exists on disk, not just one that resolves.
-_REVISION_ID = "2025"
+_EXERCISE = filing_grade_exercises("390")[-1]
+_REVISION_ID = str(revision_covering("390", _EXERCISE).id)
 _CASILLA_BOX_26 = "iva.anual.aic.bienes.tipo-21.cuota"
 _CASILLA_BOX_28 = "iva.anual.autorepercutido.interior.cuota"
 _CASILLA_AIC_BLIND = "iva.anual.autorepercutido.intracomunitaria"
@@ -131,7 +136,7 @@ def test_aic_and_domestic_isp_ledger_rows_resolve_to_different_bindings() -> Non
 
     aic_row = IvaLedgerObservation(
         ledger_id="aic-bienes-21",
-        transaction_date=date(2025, 6, 15),
+        transaction_date=date(_EXERCISE, 6, 15),
         category=IvaCategory("intra_community_acquisition_reverse_charge"),
         rate_kind=IvaRateKind("general"),
         applied_rate=Decimal("0.21"),
@@ -147,7 +152,7 @@ def test_aic_and_domestic_isp_ledger_rows_resolve_to_different_bindings() -> Non
     )
     domestic_isp_row = IvaLedgerObservation(
         ledger_id="domestic-isp",
-        transaction_date=date(2025, 6, 15),
+        transaction_date=date(_EXERCISE, 6, 15),
         category=IvaCategory("domestic_reverse_charge"),
         rate_kind=IvaRateKind("general"),
         flow_direction=IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
@@ -180,7 +185,7 @@ def test_zero_rate_aic_base_reaches_its_own_official_box_layer() -> None:
     revision = _m390_revision(_bundled_registry_root())
     aic_row = IvaLedgerObservation(
         ledger_id="aic-bienes-zero",
-        transaction_date=date(2025, 6, 15),
+        transaction_date=date(_EXERCISE, 6, 15),
         category=IvaCategory("intra_community_acquisition_reverse_charge"),
         rate_kind=IvaRateKind("zero"),
         applied_rate=Decimal("0.00"),
@@ -217,7 +222,7 @@ def test_mutation_removing_zero_from_m390_aic_base_selector_reds_the_gate(tmp_pa
 
     aic_row = IvaLedgerObservation(
         ledger_id="aic-bienes-zero-mutant",
-        transaction_date=date(2025, 6, 15),
+        transaction_date=date(_EXERCISE, 6, 15),
         category=IvaCategory("intra_community_acquisition_reverse_charge"),
         rate_kind=IvaRateKind("zero"),
         applied_rate=Decimal("0.00"),

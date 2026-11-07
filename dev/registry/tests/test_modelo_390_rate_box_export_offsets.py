@@ -51,6 +51,10 @@ _DESIGN_PARTS = (
     "files",
     "16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md",
 )
+# The exercise this design prints in its own file name.
+_DESIGN_NAME_MATCH = re.search(r"ejercicio-(\d{4})", _DESIGN_PARTS[-1])
+assert _DESIGN_NAME_MATCH is not None, "the design file name states its exercise"
+_DESIGN_EXERCISE = int(_DESIGN_NAME_MATCH.group(1))
 
 # "5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. ordin. - Tipo 7,5% - Cuota [670]"
 _ORDINARIO_ROW = re.compile(r"Tipo ([\d,]+)% - (Base imponible|Cuota) \[(\d+)\]")
@@ -63,7 +67,7 @@ _CASILLA_PREFIX = "iva.anual.repercutido.tipo-"
 
 
 def _m390_revision() -> ModeloRevision:
-    return compiled_bundled_authority().snapshot("390", filing_year=2024, period="0A").revision
+    return compiled_bundled_authority().snapshot("390", filing_year=_DESIGN_EXERCISE, period="0A").revision
 
 
 def _design_text() -> str:

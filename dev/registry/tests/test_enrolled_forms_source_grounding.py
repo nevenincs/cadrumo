@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 from cadrumo.tests.aeat_literal_fixtures import PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE
 
 from ..conformance.registry_schema_support import (
@@ -182,7 +183,7 @@ def test_current_retention_autoliquidaciones_use_current_grounded_sources(
     committed_registry_validator(catalogues).validate_modelo(modelo)
     _assert_autoliquidacion_sources(modelo, catalogues, modelo_id, procedure_code, annex_ref)
 
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions[str(open_ended_revision(modelo_id).id)]
     assert annex_ref in revision.orden_aplicabilidad
     assert annex_ref in revision.legal_refs
     assert "orden-eha-3435-2007:anexo-ii" not in revision.legal_refs

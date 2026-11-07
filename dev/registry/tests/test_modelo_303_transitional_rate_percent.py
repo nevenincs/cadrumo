@@ -6,12 +6,15 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import split_exercise_revisions
+
 from ..compiler.loader import load_registry_tree
 from .gate_support import mutate_declaration, scratch_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
-_REVISION_ID = "2024-desde-09-y-3t"
+# The late design of the exercise whose Modelo 303 design splits between the early and the late quarters.
+_REVISION_ID = str(split_exercise_revisions("303", early_period="2T", late_period="3T")[1].id)
 
 
 def test_mutation_reverting_154_to_manual_reds_the_gate(tmp_path: Path) -> None:

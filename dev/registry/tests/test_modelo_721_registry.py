@@ -13,6 +13,7 @@ from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, revision_covering
 from cadrumo.tests.inventory import REPO_ROOT
 
 from ..compiler.corpus_catalogue import verify_source_file
@@ -22,9 +23,13 @@ from .authored_edition_support import legal_text_match
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
+# The closed first era and the open era that follows it.
+_FIRST_ERA, _OPEN_ERA = authored_revisions("721")
+_FIRST_ID, _OPEN_ID = str(_FIRST_ERA.id), str(_OPEN_ERA.id)
+_FIRST_EXERCISE, _OPEN_EXERCISE = _FIRST_ERA.valid_from.year, _OPEN_ERA.valid_from.year
 _M721_BOE_ERAS = (
-    (2023, "boe-modelo-721-2023-layout"),
-    (2024, "boe-modelo-721-2024-layout"),
+    (_FIRST_EXERCISE, f"boe-modelo-721-{_FIRST_EXERCISE}-layout"),
+    (_OPEN_EXERCISE, f"boe-modelo-721-{_OPEN_EXERCISE}-layout"),
 )
 
 
@@ -34,7 +39,7 @@ def _modelo_721() -> tuple[ModeloDefinition, RegistryCatalogues]:
 
 def _revision_721(year: int) -> tuple[ModeloDefinition, ModeloRevision, RegistryCatalogues]:
     modelo, catalogues = _modelo_721()
-    return modelo, modelo.revisions[str(year)], catalogues
+    return modelo, modelo.revisions[str(revision_covering("721", year).id)], catalogues
 
 
 def _strings(value: Any) -> Iterator[str]:
@@ -70,7 +75,7 @@ def test_modelo_721_articles_are_content_deadline_and_annex_amendment() -> None:
     assert "1 de enero" in art_4.required_text
     assert "31 de marzo" in art_4.required_text
     assert "Se sustituye el anexo" in amendment.required_text
-    assert "ejercicio 2024" in first_application.required_text
+    assert f"ejercicio {_OPEN_EXERCISE}" in first_application.required_text
     verify_legal_catalogue(
         {
             art_3.id: art_3,
@@ -124,17 +129,17 @@ def test_modelo_721_selects_only_its_two_hash_pinned_boe_form_spec_eras() -> Non
     """Each selected year names and verifies only its official BOE package."""
     modelo, catalogues = _modelo_721()
 
-    assert set(modelo.revisions) == {"2023", "2024"}
+    assert set(modelo.revisions) == {_FIRST_ID, _OPEN_ID}
     assert set(modelo.source_refs) == {"aeat-modelo-721-procedure"}
     for filing_year, source_ref in _M721_BOE_ERAS:
-        revision = modelo.revisions[str(filing_year)]
+        revision = modelo.revisions[str(revision_covering("721", filing_year).id)]
         source = catalogues.sources[source_ref]
 
         # 2024 is OPEN: HAC/1504/2024 substitutes the anexo of Orden HFP/886/2023 and
         # applies it "por primera vez" to ejercicio 2024, and BOE's consolidated
         # Referencias posteriores for BOE-A-2023-17429 (read 2026-08-30) records that
         # substitution as the ONLY subsequent amendment -- nothing in 2025 or 2026.
-        is_open = filing_year == 2024
+        is_open = filing_year == _OPEN_EXERCISE
         era_end = None if is_open else date(filing_year, 12, 31)
         _assert_721_era_revision_window(revision, filing_year, is_open=is_open, era_end=era_end)
         assert {ref for ref in revision.source_refs if ref.startswith("boe-modelo-721-")} == {source_ref}
@@ -146,20 +151,20 @@ def test_modelo_721_selects_only_its_two_hash_pinned_boe_form_spec_eras() -> Non
         _assert_721_era_deadline_windows(revision, filing_year, is_open=is_open)
         assert all(casilla.source_refs == (source_ref,) for casilla in revision.casillas)
 
-    revision_2023 = modelo.revisions["2023"]
-    revision_2024 = modelo.revisions["2024"]
+    revision_2023 = modelo.revisions[_FIRST_ID]
+    revision_2024 = modelo.revisions[_OPEN_ID]
     assert "orden-hac-1504-2024:art-9" not in revision_2023.legal_refs
     assert {"orden-hac-1504-2024:art-9", "orden-hac-1504-2024:df-unica"} <= set(revision_2024.legal_refs)
     # Refused BELOW the first declared era only. 2025+ used to be refused here; that was
     # a hole, not conservatism -- BOE's Referencias posteriores for BOE-A-2023-17429
     # records HAC/1504/2024 as the only subsequent amendment, so its substituted anexo
     # still governs 2025 and later.
-    for filing_year in (2021, 2022):
+    for filing_year in (_FIRST_EXERCISE - 2, _FIRST_EXERCISE - 1):
         with pytest.raises(NoRevisionForPeriodError):
             select_revision(modelo, filing_year=filing_year, period="0A", on=date(filing_year, 12, 31))
-    for filing_year in (2025, 2026):
+    for filing_year in (_OPEN_EXERCISE + 1, _OPEN_EXERCISE + 2):
         carried = select_revision(modelo, filing_year=filing_year, period="0A", on=date(filing_year, 12, 31))
-        assert carried.id == "2024"
+        assert carried.id == _OPEN_ID
 
 
 # The Modelo 721 package that HAC/1504/2024 closes by substituting its anexo: the
@@ -187,7 +192,7 @@ def test_modelo_721_refuses_a_mutated_superseded_selector_past_its_boe_package_w
     """
     superseded = _SUPERSEDED_PACKAGE_EXERCISE
     successor = superseded + 1
-    superseded_id = str(superseded)
+    superseded_id = str(revision_covering("721", superseded).id)
     modelo, revision, catalogues = _revision_721(superseded)
     expanded = revision.model_copy(
         update={
@@ -210,8 +215,8 @@ def test_modelo_721_refuses_a_mutated_superseded_selector_past_its_boe_package_w
 
 def test_modelo_721_refuses_a_mutated_boe_package_hash() -> None:
     """The selected finite era remains bound to the exact official PDF bytes."""
-    _modelo, _revision, catalogues = _revision_721(2024)
-    source_ref = "boe-modelo-721-2024-layout"
+    _modelo, _revision, catalogues = _revision_721(_OPEN_EXERCISE)
+    source_ref = f"boe-modelo-721-{_OPEN_EXERCISE}-layout"
     source = catalogues.sources[source_ref].model_copy(update={"sha256": "0" * 64})
 
     with pytest.raises(RegistryValidationError, match="sha256 mismatch"):
@@ -237,7 +242,7 @@ def test_modelo_721_does_not_claim_pair_complete_aeat_soap_xml_contract_authorit
 
 
 def test_modelo_721_threshold_continuity_has_registry_parameters_without_calculation_surface() -> None:
-    modelo, _, _ = _revision_721(2024)
+    modelo, _, _ = _revision_721(_OPEN_EXERCISE)
 
     expected_link_ids_by_surface = {
         "portal": "modelo-721-portal",
@@ -273,7 +278,7 @@ def test_modelo_721_redeclaration_is_not_authored_as_scalar_previous_filing_bind
     baseline. Reintroducing this as registry previous_filing requires a row-set
     selector, not the retired source_output key.
     """
-    _, revision, _ = _revision_721(2024)
+    _, revision, _ = _revision_721(_OPEN_EXERCISE)
 
     previous_filing_bindings = [binding.id for binding in revision.bindings if binding.source == "previous_filing"]
     all_binding_strings = set(_strings(tuple(binding.model_dump(mode="json") for binding in revision.bindings)))

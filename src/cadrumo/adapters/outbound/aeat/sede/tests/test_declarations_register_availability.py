@@ -24,6 +24,7 @@ the assembled report is covered; the clicks are not.
 from __future__ import annotations
 
 import asyncio
+import re
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -31,6 +32,7 @@ import pytest
 
 from ......application.auth.session_types import AeatSession, CertificateSessionDetail
 from ......core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..declarations import (
     combobox_option_texts,
     discover_filed_declaration_availability,
@@ -56,6 +58,12 @@ def _real_html() -> str:
     return _REAL_CAPTURE.read_text(encoding="utf-8")
 
 
+def _synthetic_ejercicios() -> tuple[int, ...]:
+    """The exercises the hand-authored fixture lists, read from its option markup, newest first."""
+    offered = re.findall(r'class="z-comboitem-text">(\d{4})</span>', _synthetic_html())
+    return tuple(sorted({int(text) for text in offered}, reverse=True))
+
+
 def test_modelo_options_match_the_hand_authored_fixture_exactly() -> None:
     assert filed_register_modelo_options(_synthetic_html()) == (
         "ATF",
@@ -68,7 +76,7 @@ def test_modelo_options_match_the_hand_authored_fixture_exactly() -> None:
 
 
 def test_ejercicio_options_match_the_hand_authored_fixture_exactly() -> None:
-    assert filed_register_ejercicio_options(_synthetic_html()) == (2026, 2025, 2024, 1999)
+    assert filed_register_ejercicio_options(_synthetic_html()) == _synthetic_ejercicios()
 
 
 def test_a_modelo_with_an_empty_description_is_still_offered() -> None:
@@ -136,7 +144,7 @@ def test_an_empty_ejercicio_option_set_is_a_legitimate_answer() -> None:
 
 def _sessionless() -> AeatSession:
     """The smallest valid session carrying no persisted browser state."""
-    authenticated_at = datetime(2026, 8, 7, 9, 0, tzinfo=UTC)
+    authenticated_at = datetime(filing_year_envelope().horizon, 8, 7, 9, 0, tzinfo=UTC)
     return AeatSession(
         authenticated_at=authenticated_at,
         idle_deadline=authenticated_at + timedelta(hours=8),
@@ -160,7 +168,7 @@ def test_availability_discovery_refuses_a_missing_session_exactly_as_capture_doe
     with pytest.raises(SedeNavigationError) as discovery_error:
         asyncio.run(discover_filed_declaration_availability(session))
     with pytest.raises(SedeNavigationError) as capture_error:
-        asyncio.run(walk_declarations_register(session, modelo="303", ejercicio=2025))
+        asyncio.run(walk_declarations_register(session, modelo="303", ejercicio=filing_year_envelope().horizon))
 
     assert discovery_error.value.translated_message == capture_error.value.translated_message
     assert discovery_error.value.translated_message is not None and discovery_error.value.translated_message
@@ -174,14 +182,12 @@ def test_the_assembled_report_pins_the_register_options_provenance() -> None:
             FiledDeclarationAvailability(modelo=modelo, ejercicios=filed_register_ejercicio_options(html))
             for modelo in filed_register_modelo_options(html)
         ),
-        discovered_at=datetime(2026, 8, 7, 12, 0, tzinfo=UTC),
+        discovered_at=datetime(filing_year_envelope().horizon, 8, 7, 12, 0, tzinfo=UTC),
     )
     assert report.signal is FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS
-    assert report.offered_pairs[:5] == (
-        ("ATF", 2026),
-        ("ATF", 2025),
-        ("ATF", 2024),
-        ("ATF", 1999),
-        ("DT2", 2026),
+    ejercicios = _synthetic_ejercicios()
+    assert report.offered_pairs[: len(ejercicios) + 1] == (
+        *(("ATF", ejercicio) for ejercicio in ejercicios),
+        ("DT2", ejercicios[0]),
     )
-    assert len(report.offered_pairs) == 6 * 4
+    assert len(report.offered_pairs) == 6 * len(ejercicios)

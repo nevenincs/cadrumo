@@ -102,11 +102,11 @@ def test_pre_rectificativa_permits_only_complementaria_and_sustitutiva() -> None
     assert _RECTIFICATIVA not in permitted
 
 
-def test_post_rectificativa_permits_only_rectificativa_and_sustitutiva() -> None:
+def test_post_rectificativa_permits_only_the_rectificativa() -> None:
+    """The 2025 IVA manual makes the autoliquidación rectificativa the one route from the 2024 third quarter."""
     period = Period.from_year_and_code(2024, "3T")
     permitted = resolve_amendment_kind_regime(Modelo("303"), period, policy=_policy(period)).permitted_kinds
-    assert permitted == frozenset({_RECTIFICATIVA, _SUSTITUTIVA})
-    assert _COMPLEMENTARIA not in permitted
+    assert permitted == frozenset({_RECTIFICATIVA})
 
 
 def test_modelo_130_only_permits_the_evidenced_complementaria() -> None:

@@ -6,11 +6,14 @@ import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ..compiler.producer_inventory import producer_inventory
 from .modelo_100_registry_support import loaded_registry, registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
+
+_NEWEST_EDITION = str(authored_revisions("100")[-1].id)
 
 
 def test_every_formula_target_is_declared_as_the_matching_computed_casilla() -> None:
@@ -152,7 +155,7 @@ def test_registry_validator_rejects_a_manual_formula_target() -> None:
     """The load-boundary validator prevents the old M100 drift from returning."""
     modelos_by_id, _catalogues = loaded_registry()
     modelo = modelos_by_id["100"]
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[_NEWEST_EDITION]
     target = next(formula.target_casilla_id for formula in revision.formulas)
     broken_casillas = tuple(
         casilla.model_copy(update={"input_kind": InputKind.MANUAL}) if casilla.id == target else casilla
@@ -169,7 +172,7 @@ def test_registry_validator_rejects_a_formula_target_without_back_reference() ->
     """The formula target must also name the same formula in its casilla row."""
     modelos_by_id, _catalogues = loaded_registry()
     modelo = modelos_by_id["100"]
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[_NEWEST_EDITION]
     target = next(formula.target_casilla_id for formula in revision.formulas)
     broken_casillas = tuple(
         casilla.model_copy(update={"formula": None}) if casilla.id == target else casilla
@@ -186,7 +189,7 @@ def test_registry_validator_rejects_a_computed_casilla_without_a_formula_produce
     """A computed row cannot silently fall back to an input path."""
     modelos_by_id, _catalogues = loaded_registry()
     modelo = modelos_by_id["100"]
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[_NEWEST_EDITION]
     manual_casilla = next(casilla for casilla in revision.casillas if casilla.input_kind is InputKind.MANUAL)
     broken_casillas = tuple(
         casilla.model_copy(update={"input_kind": InputKind.COMPUTED, "formula": None})
@@ -205,7 +208,7 @@ def test_registry_validator_rejects_a_noncomputed_casilla_formula_declaration() 
     """Manual rows may remain manual, but cannot carry a deterministic formula declaration."""
     modelos_by_id, _catalogues = loaded_registry()
     modelo = modelos_by_id["100"]
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[_NEWEST_EDITION]
     manual_casilla = next(casilla for casilla in revision.casillas if casilla.input_kind is InputKind.MANUAL)
     formula_id = revision.formulas[0].id
     broken_casillas = tuple(
@@ -223,7 +226,7 @@ def test_registry_validator_rejects_duplicate_formula_targets() -> None:
     """Two deterministic producers cannot claim the same casilla target."""
     modelos_by_id, _catalogues = loaded_registry()
     modelo = modelos_by_id["100"]
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[_NEWEST_EDITION]
     first_formula, second_formula = revision.formulas[:2]
     broken_formulas = tuple(
         formula.model_copy(update={"target_casilla_id": first_formula.target_casilla_id})

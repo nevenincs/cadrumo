@@ -290,6 +290,7 @@ sensitivity = "identity"
 effective_dated = true
 description = "Telefono de la persona con quien relacionarse, declared in the declarante header of every AEAT informativa. AEAT reserves nine numeric positions for it (Modelo 180/190/270/349 positions 59-67) and names the field 'PERSONA CON QUIEN RELACIONARSE'. This is the contact for the declaration, not necessarily the taxpayer."
 model_selectors = ["contact.contact_person_phone"]
+legal_refs = ["orden-hap-72-2013:art-1"]
 
 [[sections.fields]]
 key = "contact_person_name"
@@ -300,6 +301,7 @@ sensitivity = "identity"
 effective_dated = true
 description = "Apellidos y nombre de la persona con quien relacionarse, the second subcampo of the informativa declarante header (Modelo 180/190/270/349 positions 68-107, forty alphanumeric positions). AEAT asks for 'el primer apellido, un espacio, el segundo apellido, un espacio y el nombre completo, necesariamente en este orden'."
 model_selectors = ["contact.contact_person_name"]
+legal_refs = ["orden-hap-72-2013:art-1"]
 
 [[sections]]
 key = "tax_residence"

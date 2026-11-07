@@ -9,6 +9,7 @@ from ......domain.calculations.registry.authority import bundled_indexed_authori
 from ......domain.calculations.registry.export import resolve_export_layout
 from ......domain.calculations.registry.export_parse import parse_filed_payload
 from ......domain.calculations.registry.schema_exports import ExportLayoutDefinition, ExportRecordDefinition
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..declarations_observations import submitted_file_coverage_for_casillas
 from ..schema import ObservedCasillaValue
 
@@ -16,19 +17,26 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
 @pytest.mark.parametrize(
-    ("optional_token", "drop_optional", "drop_zero", "expected"),
+    ("optional_declared", "drop_optional", "drop_zero", "expected"),
     [
-        (b"00000", False, False, 1.0),
-        (b"00026", False, False, 1.0),
-        (b"00026", True, False, 0.5),
-        (b"00026", False, True, 0.5),
+        (False, False, False, 1.0),
+        (True, False, False, 1.0),
+        (True, True, False, 0.5),
+        (True, False, True, 0.5),
     ],
 )
-def test_optional_slot_coverage(optional_token: bytes, drop_optional: bool, drop_zero: bool, expected: float) -> None:
+def test_optional_slot_coverage(optional_declared: bool, drop_optional: bool, drop_zero: bool, expected: float) -> None:
     with bundled_indexed_authority().operation() as operation:
-        snapshot = operation.snapshot("303", filing_year=2024, period="3T")
+        snapshot = operation.snapshot("303", filing_year=filing_year_envelope().horizon, period="3T")
         resolved = resolve_export_layout(snapshot)
         optional = resolved.fields_by_casilla["169"][0].model_copy(update={"offset": 1})
+        # The slot is an enumerated integer: a declared value is one the edition's own design admits.
+        assert optional.allowed_values is not None
+        optional_token = (
+            optional.allowed_values[0].encode().rjust(optional.length or 0, b"0")
+            if optional_declared
+            else b"0" * (optional.length or 0)
+        )
         amount = next(
             field
             for field in resolved.fields_by_id.values()

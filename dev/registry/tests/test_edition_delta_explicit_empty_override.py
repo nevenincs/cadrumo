@@ -26,6 +26,7 @@ import tomlkit
 
 from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryError
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import write_standard_manifest
@@ -41,8 +42,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _MODELO_ID: Final = "999"
 _REF: Final = "ley-58-2003:art-29"
 _SOURCE: Final = "aeat-manual"
-_BASELINE: Final = "2024"
-_EDITION: Final = "2025"
+_BASELINE: Final = str(filing_year_envelope().horizon - 1)
+_EDITION: Final = str(filing_year_envelope().horizon)
 _CONSTRUCT: Final = "modelo-999-liquidacion"
 _CLEAN_REPORT: Final = RoundTripReport(findings=(), byte_compared_revisions=())
 
@@ -64,7 +65,7 @@ def _construct(revision_id: str, *, extra: str = "") -> str:
 
 
 def _modelo(root: Path, *, construct_extra: str = "", manifest_extra: str = "", state_construct: bool = True) -> Path:
-    """A 2024 root whose construct omits ``deadline_windows``, and a 2025 edition stored against it."""
+    """A baseline root whose construct omits ``deadline_windows``, and the next edition stored against it."""
     modelo_dir = root / _MODELO_ID
     modelo_dir.mkdir(parents=True)
     write_standard_manifest(modelo_dir, "Explicit empty fixture")

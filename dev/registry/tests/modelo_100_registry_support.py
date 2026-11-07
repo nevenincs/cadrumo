@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import re
+import unicodedata
 from collections.abc import Mapping
 from decimal import Decimal
 from functools import cache
 from pathlib import Path
+from typing import NamedTuple
 
 import pytest
 
@@ -16,6 +19,12 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.snapshot import legal_window_covers_devengo
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    newest_authored_edition,
+    newest_authored_editions,
+    revision_covering,
+)
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
 from cadrumo.tests.aeat_literal_fixtures import aeat_url, configured_path
@@ -31,17 +40,86 @@ _UNKNOWN_CONSTRUCT_MEMBER_CASILLA: CasillaId = validated_casilla_id(
 )
 
 
-def m100_2024_deduccion_maternidad_bindings() -> Mapping[str, Decimal]:
-    """Return M100 2024's empty-descendant maternity binding from domain law."""
+def m100_second_newest_deduccion_maternidad_bindings() -> Mapping[str, Decimal]:
+    """Return the empty-descendant maternity binding of the second-newest Modelo 100 edition from domain law."""
     return {
         "renta-profile-deduccion-maternidad": Decimal(
             compute_deduccion_maternidad_0611(
                 [],
-                filing_year=2024,
+                filing_year=newest_authored_editions("100", 2)[0],
                 authority=compiled_bundled_authority(),
             ),
         ),
     }
+
+
+class OfficialRow(NamedTuple):
+    """One casilla row of the AEAT record-design dictionary printed for an exercise."""
+
+    name: str
+    section: tuple[str, ...]
+    box: str
+    label: str
+
+
+_OFFICIAL_ROW = re.compile(r"^(?P<name>[^=\[]+)=\[(?P<path>[^\]]*)\]\[[^\]]*\]\[(?P<box>[^\]]*)\]\[(?P<label>.*)\]\s*$")
+_CAMEL_BOUNDARY = re.compile(r"(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])")
+
+
+def _snake(part: str) -> str:
+    return _CAMEL_BOUNDARY.sub("_", part).lower()
+
+
+@cache
+def official_rows(filing_year: int) -> tuple[OfficialRow, ...]:
+    """Read the official Modelo 100 declaration dictionary the AEAT published for one exercise.
+
+    The section is the dictionary path between the economic-data root and the
+    variable, in the registry's snake-case spelling. Nothing here is read from
+    the registry under test.
+    """
+    directory = bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_100", "files")
+    (dictionary,) = directory.glob(f"*-100-diccionario-declaracion-individual-ejercicio-{filing_year}-*.properties")
+    rows: list[OfficialRow] = []
+    for line in dictionary.read_text(encoding="cp1252", errors="replace").splitlines():
+        matched = _OFFICIAL_ROW.match(line)
+        if matched is None:
+            continue
+        parts = matched["path"].strip("/").split("/")
+        rows.append(
+            OfficialRow(matched["name"], tuple(_snake(part) for part in parts[1:-1]), matched["box"], matched["label"])
+        )
+    return tuple(rows)
+
+
+def official_dictionary_years() -> tuple[int, ...]:
+    """Every authored Modelo 100 exercise the AEAT published a declaration dictionary for."""
+    directory = bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_100", "files")
+    return tuple(
+        revision.valid_from.year
+        for revision in authored_revisions("100")
+        if any(
+            directory.glob(
+                f"*-100-diccionario-declaracion-individual-ejercicio-{revision.valid_from.year}-*.properties"
+            )
+        )
+    )
+
+
+def same_printed_label(registry_label: str, printed_label: str) -> bool:
+    """Whether a registry label is the one the dictionary prints, ignoring the accents some dictionaries drop."""
+
+    def fold(label: str) -> str:
+        return "".join(
+            char for char in unicodedata.normalize("NFKD", label) if not unicodedata.combining(char)
+        ).casefold()
+
+    return fold(registry_label) == fold(printed_label)
+
+
+def official_row(filing_year: int, name: str) -> OfficialRow | None:
+    """Return the dictionary row of one variable name in one exercise, if the exercise prints it."""
+    return next((row for row in official_rows(filing_year) if row.name == name), None)
 
 
 @cache
@@ -73,14 +151,15 @@ def registry_validator() -> RegistryValidator:
 
 
 @cache
-def modelo_100_revision(filing_year: int = 2025) -> ModeloRevision:
-    """Return the authored, hydrated edition for one ejercicio.
+def modelo_100_revision(filing_year: int | None = None) -> ModeloRevision:
+    """Return the authored, hydrated edition for one ejercicio, the newest authored one by default.
 
     Content assertions about an authored edition read the canonical authoring
     load, which is not gated by the runtime support floor; a filing snapshot is
     only for questions about what runtime would select.
     """
-    return loaded_registry()[0]["100"].revisions[str(filing_year)]
+    exercise = newest_authored_edition("100") if filing_year is None else filing_year
+    return loaded_registry()[0]["100"].revisions[str(exercise)]
 
 
 def governing_redaction(reference_id: str, revision: ModeloRevision) -> str:
@@ -105,14 +184,15 @@ def governing_redaction(reference_id: str, revision: ModeloRevision) -> str:
     return governing[0]
 
 
-def modelo_100_snapshot(filing_year: int = 2025) -> RegistrySnapshot:
-    """Return the snapshot of one ejercicio at the grade that year reaches.
+def modelo_100_snapshot(filing_year: int | None = None) -> RegistrySnapshot:
+    """Return the snapshot of one ejercicio at the grade that year reaches, the newest authored one by default.
 
     An authored edition is built at its declared grade; a year the registry
     carries across from the nearest edition reaches calculation grade at most,
     so the grade comes from the authority rather than being requested here.
     """
     modelos_by_id, catalogues = loaded_registry()
+    filing_year = newest_authored_edition("100") if filing_year is None else filing_year
     with bundled_indexed_authority().operation() as operation:
         grade = operation.reachable_authority_grade("100", filing_year=filing_year, period="0A")
     return build_snapshot(
@@ -218,10 +298,10 @@ SOURCE_FOUNDATION_APPLICATION_LINKS: frozenset[str] = frozenset(
 )
 
 
-def modelo_100_revision_2025() -> tuple[ModeloDefinition, ModeloRevision]:
+def modelo_100_newest_authored_revision() -> tuple[ModeloDefinition, ModeloRevision]:
     modelos_by_id, _catalogues = loaded_registry()
     modelo = modelos_by_id["100"]
-    return modelo, modelo.revisions["2025"]
+    return modelo, modelo.revisions[revision_covering("100", newest_authored_edition("100")).id]
 
 
 def modelo_100_with_revision(modelo: ModeloDefinition, revision: ModeloRevision) -> ModeloDefinition:
@@ -283,7 +363,6 @@ CAPITAL_GAINS_SECTION_REFS = frozenset(
     {
         "ley-35-2006:art-33",
         "ley-35-2006:art-34",
-        MODELO_100_2025_FORM_ORDER_REF,
     }
 )
 RIC_RESERVA_SECTION = ("resultados", "anexo_a_res", "reserva_inversiones_canarias_res")
@@ -339,10 +418,7 @@ ANEXO_B_IMPORTE_ANUAL_SATISFECHO_SECTIONS = frozenset(
 )
 ANEXO_B_OTROS_GASTOS_IMPORTE_ANUAL_ROLE = "irpf_anexo_b_otros_gastos_importe_anual"
 ANEXO_B_OTROS_GASTOS_SECTION = "an_b_inf_adc_aia"
-ANEXO_B_OTROS_GASTOS_LABELS = {
-    2024: "Importe anual satisfecho",
-    2025: "Importe anual satisfecho de otros gastos",
-}
+ANEXO_B_OTROS_GASTOS_VARIABLE = "CANTAIAOG"
 ANEXO_B_AAV_SECTION = "an_b_inf_adc_aav"
 _ANEXO_B_AAV_IMPORTE_SATISFECHO_ROLE = "irpf_anexo_b_aav_importe_satisfecho"
 _ANEXO_B_AAV_IMPORTE_APLICADO_ROLE = "irpf_anexo_b_aav_importe_aplicado"
@@ -403,22 +479,10 @@ MADRID_DEDUCTION_SECTION = ("resultados", "deduccion_autonomica_res", "madrid_re
 C_VALENCIANA_DEDUCTION_SECTION = ("resultados", "deduccion_autonomica_res", "c_valenciana_res")
 GALICIA_DEDUCTION_SECTION = ("resultados", "deduccion_autonomica_res", "galicia_res")
 ANEXO_B_INST_AUTO_SECTION = ("resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_inst_auto")
-_MADRID_CUIDADO_ASCENDIENTES_ROLE = "irpf_deduccion_madrid_cuidado_ascendientes"
 _LEGACY_MADRID_CUIDADO_ASCENDIENTES_PENDING_ROLE = "irpf_deduccion_autonomica_cuidado_ascendientes_pendiente"
-_MADRID_INTERESES_PRESTAMOS_ESTUDIOS_ROLE = "irpf_deduccion_madrid_intereses_prestamos_estudios"
 _LEGACY_MADRID_INTERESES_PRESTAMOS_ESTUDIOS_PENDING_ROLE = "irpf_deduccion_estudios_intereses_prestamo_pendiente"
 GALICIA_INMUEBLE_VACIO_ADECUACION_ROLE = "irpf_deduccion_galicia_inmueble_vacio_adecuacion"
 _LEGACY_GALICIA_INMUEBLE_VACIO_ADECUACION_PENDING_ROLE = "irpf_deduccion_inmueble_vacio_adecuacion_pendiente"
-_MADRID_GASTOS_ARRENDAMIENTO_ROLE = "irpf_deduccion_madrid_gastos_arrendamiento"
-_MADRID_INTERESES_PRESTAMOS_VIVIENDA_ROLE = "irpf_deduccion_madrid_intereses_prestamos_vivienda"
-_MADRID_VIVIENDA_NACIMIENTO_ADOPCION_ROLE = "irpf_deduccion_madrid_vivienda_nacimiento_adopcion"
-_MADRID_VIVIENDA_NACIMIENTO_ADOPCION_ANIO_ROLE = "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_anio"
-_MADRID_FAMILIA_NUMEROSA_ROLE = "irpf_deduccion_madrid_familia_numerosa"
-_MADRID_VIVIENDA_NACIMIENTO_ADOPCION_IMPORTE_ROLE = "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_importe"
-_MADRID_VIVIENDA_NACIMIENTO_ADOPCION_PRECIO_ROLE = "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_precio"
-_MADRID_VIVIENDA_MUNICIPIO_RIESGO_ROLE = "irpf_deduccion_madrid_vivienda_municipio_riesgo"
-_MADRID_VIVIENDA_MUNICIPIO_RIESGO_ANIO_ROLE = "irpf_deduccion_madrid_vivienda_municipio_riesgo_anio"
-_MADRID_VIVIENDA_MUNICIPIO_RIESGO_PRECIO_ROLE = "irpf_deduccion_madrid_vivienda_municipio_riesgo_precio"
 ANEXO_B_INST_AUTO_IMPORTE_PENDIENTE_ANTERIOR_ROLE = "irpf_anexo_b_inst_auto_importe_pendiente_anterior"
 _LEGACY_ANEXO_B_ARRENDAMIENTO_IMPORTE_APLICADO_ROLE = "irpf_anexo_b_arrendamiento_importe_aplicado"
 _LEGACY_ANEXO_B_ARRENDAMIENTO_IMPORTE_PENDIENTE_ROLE = "irpf_anexo_b_arrendamiento_importe_pendiente"
@@ -427,160 +491,92 @@ _LEGACY_ANEXO_B_NACIMIENTO_VIVIENDA_IMPORTE_PENDIENTE_ROLE = "irpf_anexo_b_nacim
 _LEGACY_ANEXO_B_ENERGIA_SATISFECHO_APLICADO_ROLE = "irpf_anexo_b_energia_satisfecho_aplicado"
 _LEGACY_ANEXO_B_ENERGIA_SATISFECHO_PENDIENTE_ROLE = "irpf_anexo_b_energia_satisfecho_pendiente"
 _LEGACY_ANEXO_B_VIVIENDA_REINVERSION_PENDIENTE_ROLE = "irpf_anexo_b_vivienda_reinversion_pendiente"
-CARRY_FORWARD_PENDING_OUTLIERS = {
-    2023: {
-        "1115": (
-            "Por cuidado de ascendientes",
-            MADRID_DEDUCTION_SECTION,
-            _MADRID_CUIDADO_ASCENDIENTES_ROLE,
-        ),
-        "1118": (
-            "Por el pago de intereses de préstamos a estudios de Grado, Máster y Doctorado",
-            MADRID_DEDUCTION_SECTION,
-            _MADRID_INTERESES_PRESTAMOS_ESTUDIOS_ROLE,
-        ),
-    },
-    2024: {
-        "1115": (
-            "Por cuidado de ascendientes",
-            MADRID_DEDUCTION_SECTION,
-            _MADRID_CUIDADO_ASCENDIENTES_ROLE,
-        ),
-        "1118": (
-            "Por el pago de intereses de préstamos a estudios de Grado, Máster y Doctorado",
-            MADRID_DEDUCTION_SECTION,
-            _MADRID_INTERESES_PRESTAMOS_ESTUDIOS_ROLE,
-        ),
-    },
-    2025: {
-        "1078": (
-            (
-                "Por gastos derivados de la adecuación de un inmueble vacío con destino al arrendamiento como vivienda "
-                "(información adicional en el anexo B.15)"
-            ),
-            GALICIA_DEDUCTION_SECTION,
-            GALICIA_INMUEBLE_VACIO_ADECUACION_ROLE,
-        ),
-        "1115": (
-            "Por cuidado de ascendientes",
-            MADRID_DEDUCTION_SECTION,
-            _MADRID_CUIDADO_ASCENDIENTES_ROLE,
-        ),
-        "1118": (
-            "Por el pago de intereses de préstamos a estudios de Grado, Máster y Doctorado",
-            MADRID_DEDUCTION_SECTION,
-            _MADRID_INTERESES_PRESTAMOS_ESTUDIOS_ROLE,
-        ),
-    },
+_PENDING_OUTLIER_SECTIONS_AND_ROLES = {
+    "1115": (MADRID_DEDUCTION_SECTION, "irpf_deduccion_madrid_cuidado_ascendientes"),
+    "1118": (MADRID_DEDUCTION_SECTION, "irpf_deduccion_madrid_intereses_prestamos_estudios"),
+    "1078": (GALICIA_DEDUCTION_SECTION, GALICIA_INMUEBLE_VACIO_ADECUACION_ROLE),
 }
-MADRID_REUSED_ID_DEDUCTION_ROWS = {
-    2023: {
-        "1116": (
-            "Por gastos derivados de arrendamiento de vivienda",
-            _MADRID_GASTOS_ARRENDAMIENTO_ROLE,
-        ),
-        "1117": (
-            "Por el pago de intereses de préstamos para adquisición de vivienda por jóvenes menores de 30 años",
-            _MADRID_INTERESES_PRESTAMOS_VIVIENDA_ROLE,
-        ),
-        "1119": (
-            "Por adquisición de vivienda habitual por nacimiento o adopción de hijos",
-            _MADRID_VIVIENDA_NACIMIENTO_ADOPCION_ROLE,
-        ),
-        "1120": (
-            "Por la obtención de la condición de familia numerosa",
-            _MADRID_FAMILIA_NUMEROSA_ROLE,
-        ),
-    },
-    2024: {
-        "1116": (
-            "Por gastos derivados de arrendamiento de vivienda",
-            _MADRID_GASTOS_ARRENDAMIENTO_ROLE,
-        ),
-        "1117": (
-            "Por el pago de intereses de préstamos para adquisición de vivienda por jóvenes menores de 30 años",
-            _MADRID_INTERESES_PRESTAMOS_VIVIENDA_ROLE,
-        ),
-        "1119": (
-            "Por adquisición de vivienda habitual por nacimiento o adopción de hijos",
-            _MADRID_VIVIENDA_NACIMIENTO_ADOPCION_ROLE,
-        ),
-        "1120": (
-            "Importe de la deducción",
-            _MADRID_VIVIENDA_NACIMIENTO_ADOPCION_IMPORTE_ROLE,
-        ),
-    },
-    2025: {
-        "1116": (
-            "Por gastos derivados de arrendamiento de vivienda",
-            _MADRID_GASTOS_ARRENDAMIENTO_ROLE,
-        ),
-        "1117": (
-            "Por el pago de intereses de préstamos para adquisición de vivienda por jóvenes menores de 30 años",
-            _MADRID_INTERESES_PRESTAMOS_VIVIENDA_ROLE,
-        ),
-        "1119": (
-            "Por adquisición de vivienda habitual por nacimiento o adopción de hijos",
-            _MADRID_VIVIENDA_NACIMIENTO_ADOPCION_ROLE,
-        ),
-        "1120": (
-            "Importe de la deducción",
-            _MADRID_VIVIENDA_NACIMIENTO_ADOPCION_IMPORTE_ROLE,
-        ),
-    },
+_MADRID_REUSED_ID_ROLES = {
+    ("1116", "Por gastos derivados de arrendamiento de vivienda"): "irpf_deduccion_madrid_gastos_arrendamiento",
+    (
+        "1117",
+        "Por el pago de intereses de préstamos para adquisición de vivienda por jóvenes menores de 30 años",
+    ): "irpf_deduccion_madrid_intereses_prestamos_vivienda",
+    (
+        "1119",
+        "Por adquisición de vivienda habitual por nacimiento o adopción de hijos",
+    ): "irpf_deduccion_madrid_vivienda_nacimiento_adopcion",
+    ("1120", "Por la obtención de la condición de familia numerosa"): "irpf_deduccion_madrid_familia_numerosa",
+    ("1120", "Importe de la deducción"): "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_importe",
 }
-MADRID_VIVIENDA_ACQUISITION_DETAIL_ROWS = {
-    2024: {
-        "2027": (
-            "Por adquisición de vivienda habitual por nacimiento o adopción de hijos",
-            _MADRID_VIVIENDA_NACIMIENTO_ADOPCION_ROLE,
-        ),
-        "2028": (
-            "Precio de adquisición/cantidades invertidas",
-            _MADRID_VIVIENDA_NACIMIENTO_ADOPCION_PRECIO_ROLE,
-        ),
-        "2029": (
-            "Año de adquisición",
-            _MADRID_VIVIENDA_NACIMIENTO_ADOPCION_ANIO_ROLE,
-        ),
-    },
-    2025: {
-        "2027": (
-            "Por adquisición de vivienda habitual en municipios en riesgo de despoblación",
-            _MADRID_VIVIENDA_MUNICIPIO_RIESGO_ROLE,
-        ),
-        "2028": (
-            "Precio de adquisición/cantidades invertidas",
-            _MADRID_VIVIENDA_MUNICIPIO_RIESGO_PRECIO_ROLE,
-        ),
-        "2029": (
-            "Año de adquisición",
-            _MADRID_VIVIENDA_MUNICIPIO_RIESGO_ANIO_ROLE,
-        ),
-    },
+_MADRID_VIVIENDA_PARENT_ROLES = {
+    "Por adquisición de vivienda habitual por nacimiento o adopción de hijos": (
+        "irpf_deduccion_madrid_vivienda_nacimiento_adopcion"
+    ),
+    "Por adquisición de vivienda habitual en municipios en riesgo de despoblación": (
+        "irpf_deduccion_madrid_vivienda_municipio_riesgo"
+    ),
 }
-CARRY_FORWARD_REMAINING_INST_AUTO_ROWS = {
-    2021: {
-        "1117": "Importe satisfecho en 2018 pendiente de aplicación en ejercicios futuros",
-        "1120": "Importe satisfecho en 2021 pendiente de aplicación en ejercicios futuros",
-        "1186": "Importe satisfecho en 2019 y/o 2020 pendiente de aplicación en ejercicios futuros",
-    },
-    2022: {
-        "1120": "Importe satisfecho en 2022 pendiente de aplicación en ejercicios futuros",
-        "1186": "Importe satisfecho en 2019 y/o 2020 pendiente de aplicación en ejercicios futuros",
-        "1709": "Importe satisfecho en 2021 pendiente de aplicación en ejercicios futuros",
-    },
-    2023: {
-        "1186": "Importe satisfecho en 2020 pendiente de aplicación en ejercicios futuros",
-        "1709": "Importe satisfecho en 2021 y/o 2022 pendiente de aplicación en ejercicios futuros",
-    },
-    2024: {
-        "1709": "Importe satisfecho en 2021 y/o 2022 pendiente de aplicación en ejercicios futuros",
-    },
-    2025: {
-        "1709": "Importe satisfecho en 2022 pendiente de aplicación en ejercicios futuros",
-    },
-}
+_MADRID_VIVIENDA_PRECIO_LABEL = "Precio de adquisición/cantidades invertidas"
+_MADRID_VIVIENDA_ANIO_LABEL = "Año de adquisición"
+_INST_AUTO_REMAINING_BOXES = ("1117", "1120", "1186", "1709")
+_INST_AUTO_REMAINING_LABEL = re.compile(r"^Importe satisfecho en .* pendiente de aplicación en ejercicios futuros$")
+
+
+def carry_forward_pending_outliers(filing_year: int) -> dict[str, tuple[str, tuple[str, ...], str]]:
+    """Pending carry-forward boxes the exercise prints in a regional-deduction section: box to label, section, role."""
+    return {
+        row.box: (row.label, row.section, _PENDING_OUTLIER_SECTIONS_AND_ROLES[row.box][1])
+        for row in official_rows(filing_year)
+        if row.box in _PENDING_OUTLIER_SECTIONS_AND_ROLES
+        and row.section == _PENDING_OUTLIER_SECTIONS_AND_ROLES[row.box][0]
+    }
+
+
+def madrid_reused_id_deduction_rows(filing_year: int) -> dict[str, tuple[str, str]]:
+    """Madrid deduction boxes whose number an earlier layout used for another row: box to label and role."""
+    rows: dict[str, tuple[str, str]] = {}
+    for row in official_rows(filing_year):
+        role = _MADRID_REUSED_ID_ROLES.get((row.box, row.label))
+        if role is not None and row.section == MADRID_DEDUCTION_SECTION:
+            rows[row.box] = (row.label, role)
+    return rows
+
+
+def madrid_vivienda_acquisition_detail_rows(filing_year: int) -> dict[str, tuple[str, str]]:
+    """The acquisition detail rows that follow a Madrid vivienda deduction: box to label and role.
+
+    A detail block is the deduction's own row followed, in the printed order, by
+    the purchase price and the year of acquisition.
+    """
+    rows = official_rows(filing_year)
+    detail: dict[str, tuple[str, str]] = {}
+    for index, row in enumerate(rows[:-2]):
+        role = _MADRID_VIVIENDA_PARENT_ROLES.get(row.label)
+        price, acquired = rows[index + 1], rows[index + 2]
+        if (
+            role is not None
+            and (row.box, row.label) not in _MADRID_REUSED_ID_ROLES
+            and row.section == MADRID_DEDUCTION_SECTION
+            and (price.label, acquired.label) == (_MADRID_VIVIENDA_PRECIO_LABEL, _MADRID_VIVIENDA_ANIO_LABEL)
+        ):
+            detail[row.box] = (row.label, role)
+            detail[price.box] = (price.label, f"{role}_precio")
+            detail[acquired.box] = (acquired.label, f"{role}_anio")
+    return detail
+
+
+def carry_forward_remaining_inst_auto_rows(filing_year: int) -> dict[str, str]:
+    """Remaining-amount boxes the exercise prints in the installation-and-automation block: box to label."""
+    return {
+        row.box: row.label
+        for row in official_rows(filing_year)
+        if row.box in _INST_AUTO_REMAINING_BOXES
+        and row.section == ANEXO_B_INST_AUTO_SECTION
+        and _INST_AUTO_REMAINING_LABEL.match(row.label)
+    }
+
+
 LEGACY_CARRY_FORWARD_PENDING_OUTLIER_ROLES = frozenset(
     {
         _ANEXO_B_CARRY_FORWARD_PENDING_ROLE,
@@ -680,18 +676,12 @@ LIRPF_CAPITAL_GAINS_ART_33_REF = "ley-35-2006:art-33"
 DA45_CLAUSULA_SUELO_REF = "ley-35-2006:da-45"
 RIRPF_DEDUCTION_LOSS_ART_59_REF = "rd-439-2007:art-59"
 LGT_INTEREST_ART_26_REF = "ley-58-2003:art-26"
-_ATTRIBUTION_REGIME_MODE_FLAG_REFS = frozenset(
-    {
-        ATTRIBUTION_REGIME_ART_86_REF,
-        MODELO_100_2025_FORM_ORDER_REF,
-    }
-)
+_ATTRIBUTION_REGIME_MODE_FLAG_REFS = frozenset({ATTRIBUTION_REGIME_ART_86_REF})
 _ATTRIBUTION_REGIME_AGRICULTURAL_MODE_FLAG_REFS = frozenset(
     {
         _OBJECTIVE_ESTIMATION_ART_31_REF,
         ATTRIBUTION_REGIME_ART_86_REF,
         _ATTRIBUTION_OBJECTIVE_ESTIMATION_ART_39_REF,
-        MODELO_100_2025_FORM_ORDER_REF,
     }
 )
 ECONOMIC_ACTIVITY_SECTION_REFS = frozenset(
@@ -701,7 +691,6 @@ ECONOMIC_ACTIVITY_SECTION_REFS = frozenset(
         "ley-35-2006:art-30",
         "ley-35-2006:art-31",
         "ley-35-2006:art-32",
-        MODELO_100_2025_FORM_ORDER_REF,
     }
 )
 GENERAL_BASE_GYP_LIMIT_CASILLA = validated_casilla_id("0433", surface="test_modelo_100_registry.casilla")
@@ -722,10 +711,10 @@ ATTRIBUTION_REGIME_2025_MODE_FLAG_CASILLA_REFS: Mapping[CasillaId, frozenset[str
     ): _ATTRIBUTION_REGIME_AGRICULTURAL_MODE_FLAG_REFS,
     validated_casilla_id("0164", surface="test_modelo_100_registry.casilla"): _ATTRIBUTION_REGIME_MODE_FLAG_REFS,
 }
-_INMUEBLE_ART_22_FORM_ORDER_REFS = frozenset({"ley-35-2006:art-22", MODELO_100_2025_FORM_ORDER_REF})
+_INMUEBLE_ART_22_REFS = frozenset({"ley-35-2006:art-22"})
 INMUEBLE_2025_CONTINUITY_REFS: Mapping[str, frozenset[str]] = {
-    "irpf-inmueble-porcentaje-propiedad": _INMUEBLE_ART_22_FORM_ORDER_REFS,
-    "irpf-inmueble-vivienda-habitual-flag": _INMUEBLE_ART_22_FORM_ORDER_REFS,
+    "irpf-inmueble-porcentaje-propiedad": _INMUEBLE_ART_22_REFS,
+    "irpf-inmueble-vivienda-habitual-flag": _INMUEBLE_ART_22_REFS,
 }
 ANEXO_C_BASE_NEGATIVE_GENERAL_CONSTRUCT_ID = "renta-anexo-c-base-liquidable-negativa-general"
 ANEXO_C_BASE_NEGATIVE_GENERAL_BINDING_ID = "renta-base-liquidable-negativa-general-anterior"
@@ -757,7 +746,7 @@ ARTISTIC_ACTIVITY_REDUCTION_2025_CASILLA_REFS: Mapping[CasillaId, frozenset[str]
         {_ARTISTIC_ACTIVITY_EXCEPTIONAL_REDUCTION_REF}
     ),
     validated_casilla_id("0384", surface="test_modelo_100_registry.casilla"): frozenset(
-        {_ARTISTIC_ACTIVITY_EXCEPTIONAL_REDUCTION_REF, MODELO_100_2025_FORM_ORDER_REF}
+        {_ARTISTIC_ACTIVITY_EXCEPTIONAL_REDUCTION_REF}
     ),
 }
 CAPITAL_GAINS_2025_SECTION_COUNTS: Mapping[tuple[str, str], int] = {

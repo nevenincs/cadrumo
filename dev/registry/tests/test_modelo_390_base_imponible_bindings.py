@@ -40,6 +40,7 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
 )
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 from cadrumo.domain.calculations.registry.tests.m390_formula_support import liquidation_operands
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
@@ -48,6 +49,9 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 from .ledger_iva_aggregation_support import ledger_iva_aggregation_deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
+
+# The newest exercise whose Modelo 390 edition is filing grade, which is where the box bindings are asserted.
+_EXERCISE = filing_grade_exercises("390")[-1]
 
 
 _GENERAL_BASE = Decimal("4000.00")
@@ -67,7 +71,7 @@ _EXPORT_BASE = Decimal("2300.00")
 
 
 def _m390_revision() -> ModeloRevision:
-    return compiled_bundled_authority().snapshot("390", filing_year=2024, period="0A").revision
+    return compiled_bundled_authority().snapshot("390", filing_year=_EXERCISE, period="0A").revision
 
 
 def _observation(
@@ -81,7 +85,7 @@ def _observation(
 ) -> IvaLedgerObservation:
     return IvaLedgerObservation(
         ledger_id="ledger-m390-base",
-        transaction_date=date(2024, 6, 15),
+        transaction_date=date(_EXERCISE, 6, 15),
         category=category,
         exemption_article=None,
         rate_kind=rate_kind,

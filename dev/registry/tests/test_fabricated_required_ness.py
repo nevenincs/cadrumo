@@ -42,7 +42,7 @@ def test_an_unrecognised_token_is_not_read_as_silence() -> None:
 
 
 def _write(root: Path, validation: str | None, *, required: bool) -> None:
-    export = root / "999" / "revisions" / "2026" / "export"
+    export = root / "999" / "revisions" / "synthetic-edition" / "export"
     export.mkdir(parents=True, exist_ok=True)
     (export / "_generation.provenance.json").write_text(
         json.dumps(

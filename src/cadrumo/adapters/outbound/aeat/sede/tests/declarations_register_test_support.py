@@ -14,17 +14,25 @@ from playwright.async_api import Route, async_playwright
 from ......application.auth.session_types import AeatSession, CertificateSessionDetail
 from ......core.config import override_settings
 from ......domain.calculations.registry.authority import bundled_indexed_authority
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......tests.inventory import FIXTURES_DIR
 from ..declarations import DeclaracionesRegisterSession
 
 _FIXTURE_ROOT = FIXTURES_DIR / "aeat-sede"
 _TOTAL_REGISTROS_RE = re.compile(r"de (\d+) en total")
 _LISTITEM_RE = re.compile(r'class="[^"]*\bz-listitem\b')
+_EJERCICIO_OPTION_RE = re.compile(r'class="z-comboitem-text">(\d{4})</span>')
 
 
 def aeat_sede_fixture(stem: str) -> str:
     """Load one canonical synthetic Sede document."""
     return (_FIXTURE_ROOT / f"{stem}.html").read_text(encoding="utf-8")
+
+
+def fixture_offered_ejercicios(stem: str) -> tuple[int, ...]:
+    """Read the exercises a register document's ejercicio combobox offers, newest first."""
+    offered = _EJERCICIO_OPTION_RE.findall(aeat_sede_fixture(stem))
+    return tuple(sorted({int(text) for text in offered}, reverse=True))
 
 
 def declared_register_total(html: str) -> int | None:
@@ -69,7 +77,7 @@ def truncation_failures_naming_their_cause[FailureT: _BulkFailure](failures: Seq
 
 def offline_aeat_session() -> AeatSession:
     """Build a real certificate session carrying no persisted browser state."""
-    authenticated_at = datetime(2026, 8, 8, 9, 0, tzinfo=UTC)
+    authenticated_at = datetime(filing_year_envelope().horizon, 8, 8, 9, 0, tzinfo=UTC)
     return AeatSession(
         authenticated_at=authenticated_at,
         idle_deadline=authenticated_at + timedelta(hours=8),

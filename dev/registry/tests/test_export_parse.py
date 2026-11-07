@@ -19,17 +19,30 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncodin
 from cadrumo.domain.calculations.registry.fixed_width_parser import parse_fixed_width_export_field
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    newest_authored_editions,
+    revision_covering,
+)
 
 from .modelo_100_registry_support import loaded_registry, source_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+#: The exercises of the two newest authored editions of Modelo 100, whose dictionaries publish annex boxes by letter.
+_LETTER_EDITIONS = newest_authored_editions("100", 2)
+_AUTHORED_EDITIONS = newest_authored_editions("100", len(authored_revisions("100")))
+
+
+def _revision_id(exercise: int) -> str:
+    return str(revision_covering("100", exercise).id)
+
 
 @pytest.mark.parametrize(
     ("filing_year", "field_id", "expected_casilla_id"),
     (
-        (2024, "VHADQ", "A"),
-        (2025, "MDIC", "I"),
+        (_LETTER_EDITIONS[0], "VHADQ", "A"),
+        (_LETTER_EDITIONS[1], "MDIC", "I"),
     ),
 )
 def test_m100_dictionary_preserves_published_letter_casilla_identities(
@@ -38,7 +51,7 @@ def test_m100_dictionary_preserves_published_letter_casilla_identities(
     expected_casilla_id: str,
 ) -> None:
     modelos_by_id, catalogues = loaded_registry()
-    layout = modelos_by_id["100"].revisions[str(filing_year)].export_layouts[0]
+    layout = modelos_by_id["100"].revisions[_revision_id(filing_year)].export_layouts[0]
     source = catalogues.sources[str(layout.dictionary_source_ref)]
 
     entries = xml_dictionary_entries(
@@ -55,11 +68,11 @@ def test_m100_dictionary_preserves_published_letter_casilla_identities(
     assert entry.casilla_id == expected_casilla_id
 
 
-@pytest.mark.parametrize("filing_year", (2024, 2025))
+@pytest.mark.parametrize("filing_year", _LETTER_EDITIONS)
 def test_m100_dictionary_preserves_published_numeric_casilla_identities(filing_year: int) -> None:
     """Widening the grammar for annex boxes leaves the numeric rows spelled exactly as published."""
     modelos_by_id, catalogues = loaded_registry()
-    layout = modelos_by_id["100"].revisions[str(filing_year)].export_layouts[0]
+    layout = modelos_by_id["100"].revisions[_revision_id(filing_year)].export_layouts[0]
 
     entries = xml_dictionary_entries(
         layout,
@@ -78,23 +91,27 @@ def test_m100_letter_casilla_grammar_is_declared_by_the_bound_source() -> None:
     modelos_by_id, catalogues = loaded_registry()
     sources = tuple(
         catalogues.sources[
-            str(modelos_by_id["100"].revisions[str(filing_year)].export_layouts[0].dictionary_source_ref)
+            str(modelos_by_id["100"].revisions[_revision_id(filing_year)].export_layouts[0].dictionary_source_ref)
         ]
-        for filing_year in range(2020, 2026)
+        for filing_year in _AUTHORED_EDITIONS
     )
     capable = tuple(source for source in sources if source.supports_single_uppercase_letter_casilla_ids)
     capable_starts = tuple(source.applies_from for source in capable)
+    first_capable = next(
+        index for index, source in enumerate(sources) if source.supports_single_uppercase_letter_casilla_ids
+    )
 
     assert capable_starts and all(start is not None for start in capable_starts)
-    assert min(start for start in capable_starts if start is not None) == date(2024, 1, 1)
+    assert min(start for start in capable_starts if start is not None) == date(_AUTHORED_EDITIONS[first_capable], 1, 1)
+    assert all(source.supports_single_uppercase_letter_casilla_ids for source in sources[first_capable:])
     assert all(source.applies_from is not None for source in sources)
-    assert all(source.dictionary_casilla_id_grammar == "numeric" for source in sources[:4])
+    assert all(source.dictionary_casilla_id_grammar == "numeric" for source in sources[:first_capable])
 
 
 def test_m100_letter_casilla_parsing_refuses_when_source_capability_is_removed() -> None:
     """The same published dictionary row becomes non-casilla without its capability."""
     modelos_by_id, catalogues = loaded_registry()
-    layout = modelos_by_id["100"].revisions["2024"].export_layouts[0]
+    layout = modelos_by_id["100"].revisions[_revision_id(_LETTER_EDITIONS[0])].export_layouts[0]
     source = catalogues.sources[str(layout.dictionary_source_ref)]
     dictionary_path = source_root() / source.corpus_path
     removed_capability = SourceReference.model_validate(
@@ -118,8 +135,9 @@ def test_m100_letter_casilla_parsing_refuses_when_source_capability_is_removed()
 
 def test_extended_dictionary_grammar_refuses_a_non_dictionary_source() -> None:
     """Only a dictionary source may claim the annex grammar."""
-    _, catalogues = loaded_registry()
-    source = catalogues.sources["aeat-dr-100-2024-dictionary"]
+    modelos_by_id, catalogues = loaded_registry()
+    layout = modelos_by_id["100"].revisions[_revision_id(_LETTER_EDITIONS[0])].export_layouts[0]
+    source = catalogues.sources[str(layout.dictionary_source_ref)]
     malformed = source.model_dump()
     malformed["kind"] = "manual_pdf"
 

@@ -6,6 +6,7 @@ from decimal import Decimal
 
 import pytest
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....tests.inventory import FIXTURES_DIR
 from ..parser import parse_declaracion
 from .parser_boundary_m111_support import (
@@ -26,7 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.use
 
 def test_parser_extracts_modelo_111_registry_profile_targets_from_pdf() -> None:
     """Assert the M111 declaracion_pdf profile declares exactly the expected 29 targets."""
-    snapshot = modelo_snapshot("111", filing_year=2025, period="1T")
+    snapshot = modelo_snapshot("111", filing_year=filing_year_envelope().horizon, period="1T")
     profile = snapshot.extraction_profiles["modelo-111-declaracion-pdf"]
     assert tuple(target.casilla_id for target in profile.target_casillas) == MODELO_111_EXPECTED_TARGETS
     for target in profile.target_casillas:

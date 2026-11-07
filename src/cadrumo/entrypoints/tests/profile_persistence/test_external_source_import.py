@@ -40,6 +40,7 @@ from cadrumo.entrypoints.adapter_composition_work_ports import (
 from cadrumo.entrypoints.tests.profile_persistence.import_flow_support import (
     IMPORT_EXPENSE_CASILLA,
     IMPORT_INCOME_CASILLA,
+    IMPORT_UNRECORDED_BINDINGS,
     PROFILE_ID,
     T1,
     T2,
@@ -261,6 +262,7 @@ def test_source_payload_import_creates_exact_amendable_baseline(
     amended = _amend_modelo_revision(
         from_filing_record_id=filing.filing_record_id,
         overrides={IMPORT_INCOME_CASILLA: Decimal("1600")},
+        binding_overrides=IMPORT_UNRECORDED_BINDINGS,
         amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
         reason="source-only baseline is immediately amendable",
         actor="operator",

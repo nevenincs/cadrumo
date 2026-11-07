@@ -33,7 +33,6 @@ from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
     bundled_indexed_authority,
 )
-from cadrumo.domain.calculations.registry.tests.legal_text import legal_text_match, spanish_date
 from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from cadrumo.domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind, IvaRateRecord
 
@@ -66,6 +65,11 @@ from ..invoice_field_grounding import (
     parse_invoice_extraction_response,
 )
 from .prompt_support import build_invoice_extraction_prompt
+from .transitional_rate_support import (
+    QUARTER_BEFORE_TRANSITIONAL_RATE,
+    TRANSITIONAL_RATE_ANNUAL,
+    TRANSITIONAL_RATE_QUARTER,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -74,16 +78,6 @@ _SUPPORT = published_supported_filing_years()
 assert _SUPPORT is not None, "the bundled registry declares no supported filing years"
 _HORIZON = _SUPPORT.horizon
 _HORIZON_ANNUAL = Period.from_year_and_code(_HORIZON, "0A")
-# RD-ley 4/2024 art. 1.Dos steps the transitional food rates from the start its second
-# clause prints, a fourth quarter whose law differs from the horizon's.
-_TRANSITIONAL_RATE_STEP = spanish_date(
-    *legal_text_match(
-        "real-decreto-ley-4-2024:art-1", r"dos\. con efectos desde el (\d{1,2}) de (\w+) de (\d{4})"
-    ).groups()
-)
-_TRANSITIONAL_RATE_QUARTER = Period.from_year_and_code(
-    _TRANSITIONAL_RATE_STEP.year, f"{(_TRANSITIONAL_RATE_STEP.month - 1) // 3 + 1}T"
-)
 
 
 def _compiled(*, operation: PinnedAuthorityOperation, period: Period = _HORIZON_ANNUAL) -> str:
@@ -94,7 +88,7 @@ class TestCompiledEnumerationsComeFromTheRegistry:
     """The compiled numbers equal what the owning authority resolves for the period."""
 
     @pytest.mark.parametrize(
-        "period", [_HORIZON_ANNUAL, _TRANSITIONAL_RATE_QUARTER], ids=["horizon-annual", "transitional-rate-quarter"]
+        "period", [_HORIZON_ANNUAL, TRANSITIONAL_RATE_QUARTER], ids=["horizon-annual", "transitional-rate-quarter"]
     )
     def test_iva_rates_equal_every_registered_spanish_rate_overlapping_the_period(
         self, period: Period, *, operation: PinnedAuthorityOperation
@@ -144,13 +138,13 @@ class TestCompiledEnumerationsComeFromTheRegistry:
         the 2024 Q4 prompt and not into the 2026 one, with nothing in this
         package changed between the two calls.
         """
-        annual_2026 = build_invoice_extraction_prompt(period=_HORIZON_ANNUAL, operation=operation)
-        q4_2024 = build_invoice_extraction_prompt(period=_TRANSITIONAL_RATE_QUARTER, operation=operation)
+        horizon_annual = build_invoice_extraction_prompt(period=_HORIZON_ANNUAL, operation=operation)
+        transitional_quarter = build_invoice_extraction_prompt(period=TRANSITIONAL_RATE_QUARTER, operation=operation)
 
-        assert Decimal("7.5") in q4_2024.iva_rate_pcts
-        assert Decimal("7.5") not in annual_2026.iva_rate_pcts
-        assert q4_2024.text != annual_2026.text
-        assert q4_2024.fingerprint != annual_2026.fingerprint
+        assert Decimal("7.5") in transitional_quarter.iva_rate_pcts
+        assert Decimal("7.5") not in horizon_annual.iva_rate_pcts
+        assert transitional_quarter.text != horizon_annual.text
+        assert transitional_quarter.fingerprint != horizon_annual.fingerprint
 
     def test_the_enumeration_is_a_hint_and_never_a_constraint(self, *, operation: PinnedAuthorityOperation) -> None:
         """Documents in scope are international; a foreign rate must not be coerced.
@@ -371,8 +365,8 @@ class TestContractParityAcrossBothDerivations:
                 customer_name="Talleres Mayor S.A.",
                 customer_postal_code="28013",
                 customer_country="Alemania",
-                invoice_number="2026-0142",
-                invoice_date="10/03/2026",
+                invoice_number=f"{_HORIZON}-0142",
+                invoice_date=f"10/03/{_HORIZON}",
                 taxable_base="100,00",
                 iva_rate="21",
                 iva_amount="21,00",
@@ -641,8 +635,8 @@ class TestTheDefaultPeriodIsDerivedNotGuessed:
         self, *, operation: PinnedAuthorityOperation
     ) -> None:
         """An annual span never omits a rate a mid-year statute introduced."""
-        annual = build_invoice_extraction_prompt(period=Period.from_year_and_code(2024, "0A"), operation=operation)
-        q3 = build_invoice_extraction_prompt(period=Period.from_year_and_code(2024, "3T"), operation=operation)
+        annual = build_invoice_extraction_prompt(period=TRANSITIONAL_RATE_ANNUAL, operation=operation)
+        q3 = build_invoice_extraction_prompt(period=QUARTER_BEFORE_TRANSITIONAL_RATE, operation=operation)
 
         assert set(q3.iva_rate_pcts) <= set(annual.iva_rate_pcts)
         assert Decimal("7.5") in annual.iva_rate_pcts

@@ -132,6 +132,7 @@ from cadrumo.core.period import Period
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.core.prorrata_register import (
     ProrrataActivityRowType,
+    ProrrataProvisionalProvenance,
 )
 from cadrumo.core.refund_election import RefundElection
 from cadrumo.core.resources.bundled_data import bundled_path
@@ -152,8 +153,10 @@ from cadrumo.domain.calculations.registry.prorrata_register_catalogue import (
     carried_prior_definitiva_prorrata_provenance,
     general_prorrata_register_regime,
     prorrata_sector_letters,
+    require_prorrata_provenance,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.deadlines.models import ChargeAccount, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
@@ -596,11 +599,27 @@ def _m303_regimen_simplificado_evidence(
     )
 
 
+def _m303_prorrata_provisional_source(
+    period: Period, *, operation: PinnedAuthorityOperation
+) -> tuple[ProrrataProvisionalProvenance, str | None, tuple[RegistrySnapshotRef, ...]]:
+    """Where the provisional percentage comes from: the prior year, or a start-of-activity declaration.
+
+    The carried prior definitive stands on the prior year's fourth-quarter
+    snapshot. A prior year below the support floor has no snapshot the engine
+    admits, so, as the register does for an operator with no prior Modelo 303,
+    the percentage is elected under the start-of-activity provenance with its
+    document reference and no snapshot reference.
+    """
+    prior_year = period.filing_year - 1
+    if prior_year >= operation.supported_filing_years().floor:
+        prior_snapshot_ref = operation.snapshot(str(Modelo("303")), filing_year=prior_year, period="4T").snapshot_ref
+        return carried_prior_definitiva_prorrata_provenance(), None, (prior_snapshot_ref,)
+    return require_prorrata_provenance("inicio_actividad"), "edition-round-trip:prorrata:inicio-actividad", ()
+
+
 def _m303_prorrata_register(period: Period, *, operation: PinnedAuthorityOperation) -> ProrrataRegister:
     """A general-regime register carrying the prior year's definitive percentage for the common and both sectors."""
-    prior_snapshot_ref = operation.snapshot(
-        str(Modelo("303")), filing_year=period.filing_year - 1, period="4T"
-    ).snapshot_ref
+    provenance, reference, snapshot_refs = _m303_prorrata_provisional_source(period, operation=operation)
     return ProrrataRegister(
         sector_definitions=_m303_differentiated_sectors(),
         entries=tuple(
@@ -610,8 +629,9 @@ def _m303_prorrata_register(period: Period, *, operation: PinnedAuthorityOperati
                 regime=general_prorrata_register_regime(),
                 especial_transition=None,
                 provisional_percentage=Decimal("50"),
-                provisional_provenance=carried_prior_definitiva_prorrata_provenance(),
-                source_registry_snapshot_refs=(prior_snapshot_ref,),
+                provisional_provenance=provenance,
+                authorisation_reference=reference,
+                source_registry_snapshot_refs=snapshot_refs,
             )
             for sector_id in (None, *(sector.sector_id for sector in _m303_differentiated_sectors()))
         ),

@@ -55,6 +55,7 @@ from ...domain.buckets.event_repository import bucket_event_history_write
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.form_codes import form_for_role
+from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.deadlines.effective_close import decide_filing_timeliness
@@ -481,6 +482,7 @@ def amend_modelo_revision[CasillaKey](
     clock: datetime | None = None,
     operation: PinnedAuthorityOperation | None = None,
     result_disposition: ResultDisposition | None = None,
+    binding_overrides: Mapping[BindingId, str] | None = None,
 ) -> ModeloRecord:
     """Amend a current filing against its latest AEAT-confirmed baseline.
 
@@ -506,6 +508,7 @@ def amend_modelo_revision[CasillaKey](
                 clock=clock,
                 operation=indexed_operation,
                 result_disposition=result_disposition,
+                binding_overrides=binding_overrides,
             )
     (
         filing_catalogue,
@@ -542,6 +545,7 @@ def amend_modelo_revision[CasillaKey](
             amendment_kind=amendment_kind,
         ),
         snapshot=registry_snapshot,
+        binding_overrides=binding_overrides,
     )
     corrected_values = calculation.casilla_values
 

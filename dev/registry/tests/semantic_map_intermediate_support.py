@@ -2,14 +2,19 @@
 
 from __future__ import annotations
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
+
 from ..pipeline.record_design_intermediate import RecordDesignWorkbookFormat
+
+DEFAULT_DESIGN_EPOCH = str(newest_authored_edition("200"))
+"""The design epoch of the default Modelo 200 source: the newest edition that modelo authors."""
 
 
 def intermediate_payload(
     *,
     source_sha256: str = "0" * 64,
     source_ref: str = "aeat-dr-200-2025",
-    design_epoch: str = "2025",
+    design_epoch: str = DEFAULT_DESIGN_EPOCH,
 ) -> dict[str, object]:
     return {
         "source": {

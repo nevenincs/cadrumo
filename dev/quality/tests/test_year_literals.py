@@ -88,6 +88,24 @@ def _python_rules(source: str) -> list[str]:
         ("label = f'2026 1T {suffix}'\n", "period text"),
         ("ejercicio = '2025'\n", "year text"),
         ("expected = {'year': '2026'}\n", "year text"),
+        # Casilla-looking places that hold a year: a casilla helper's revision argument,
+        # a time word in the casilla name, a value under a casilla key, a box word.
+        ("rows = casilla('2024', '0001', number='1')\n", "year text"),
+        ("rows = edition_casilla('2023', '0002')\n", "year text"),
+        ("write(manifest, casilla_storage_baseline='2024')\n", "year text"),
+        ("rows = casillas_by_revision['2024']\n", "year text"),
+        ("casilla_year = '2025'\n", "year text"),
+        ("_CASILLA_REVISION = '2025'\n", "year text"),
+        ("ok = snapshot.revision.id == '2025'\n", "year text"),
+        ("ok = revision.id in {'2022', '2023'}\n", "year text"),
+        ("payload = build(input_values_by_casilla_id={_EJERCICIO_CASILLA: '2024'})\n", "year text"),
+        ("EXPECTED = {M840_EJERCICIO_CASILLA: '2024'}\n", "year text"),
+        ("ejercicio_casilla_id = '2024'\n", "year text"),
+        ("disposition = Disposition(box_retired_in='2023')\n", "year text"),
+        ("label = expected_labels['2038']\n", "year text"),
+        ("ids = {'2022', '2023'}\n", "year text"),
+        ("casilla_id = validated_casilla_id(revision_id='2024')\n", "year text"),
+        ("ok = casilla.id == number and year == '2025'\n", "year text"),
         (f"revision = '{_YEAR}-y-siguientes'\n", "edition id"),
         (f"revision = '{_YEAR}-{_YEAR + 1}'\n", "edition id"),
         (f"revision = '{_YEAR}-desde-09-y-3t'\n", "edition id"),
@@ -142,6 +160,56 @@ def test_a_planted_python_year_is_found(planted: str, rule: str) -> None:
 )
 def test_what_is_no_python_year_coordinate_is_admitted(allowed: str) -> None:
     assert python_findings(allowed, "allowed.py") == []
+
+
+@pytest.mark.parametrize(
+    "casilla",
+    [
+        "parent = validated_casilla_id('2003')\n",
+        "parent = validated_casilla_id(value='2057', surface='casilla.id')\n",
+        "values = validated_casilla_id_map({'2038': amount, '2039': rest})\n",
+        "PARENT: CasillaId = '2030'\n",
+        "PARENT: Final[CasillaId] = '2030'\n",
+        "PENDING: tuple[CasillaId, ...] = ('2022', '2023')\n",
+        "VALUES: Mapping[CasillaId, Decimal] = {'2031': Decimal(1)}\n",
+        "def f(target: CasillaId = '2032') -> None:\n    pass\n",
+        "def f(casilla_id: str = '2032') -> None:\n    pass\n",
+        "row = observe(casilla_id='2038', value=amount)\n",
+        "row = observe(casilla_ids=('2038', '2039'))\n",
+        "query = ReferenceQuery(modelo='100', casilla='2003')\n",
+        "draft = build(input_values_by_casilla_id={'2003': amount})\n",
+        "_PARENT_CASILLA = '2030'\n",
+        "expected_casilla_ids = {'2022', '2023', '2030'}\n",
+        "casilla_values = {'2003': Decimal(1), '2004': Decimal(2)}\n",
+        "payload = {'casilla_id': '2057'}\n",
+        "parent = casillas_by_id['2003']\n",
+        "parent = revision.casillas_by_id['2003']\n",
+        "ok = row.casilla_id == '2038'\n",
+        "ok = '2038' == row.casilla_id\n",
+        "found = [casilla for casilla in revision.casillas if casilla.id in {'2003', '2004'}]\n",
+        "assert revision.casillas[0].id == '2057'\n",
+        "assert set(casillas_by_id) == {'1055', '2038', '2039'}\n",
+        "assert sorted(casilla_ids) == ['2038', '2039']\n",
+    ],
+)
+def test_a_casilla_id_the_code_places_as_one_is_no_year(casilla: str) -> None:
+    assert python_findings(casilla, "casilla.py") == []
+
+
+def test_a_casilla_place_admits_only_its_casilla_ids_and_not_the_years_beside_them() -> None:
+    source = (
+        "row = observe('2025', casilla_id='2038', ejercicio='2025')\n"
+        "values = {'casilla_id': '2003', 'ejercicio': '2026'}\n"
+        "draft = build(input_values_by_casilla_id={'2003': '2024'})\n"
+        "pending = casillas_by_id['2039'], editions['2024']\n"
+    )
+
+    assert [(finding.line, finding.text) for finding in python_findings(source, "mixed.py")] == [
+        (1, "'2025'"),
+        (2, "'2026'"),
+        (3, "'2024'"),
+        (4, "'2024'"),
+    ]
 
 
 def _typescript_rules(source: str) -> list[str]:

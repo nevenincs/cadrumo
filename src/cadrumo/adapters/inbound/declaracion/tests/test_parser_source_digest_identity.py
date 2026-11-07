@@ -23,9 +23,10 @@ from pathlib import Path
 import pytest
 
 from .....core.hashing import sha256_hex
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....tests.inventory import FIXTURES_DIR
 from ..parser import parse_declaracion, parse_declaracion_bytes
-from .parser_boundary_support import modelo_snapshot, write_declaration_pdf
+from .parser_boundary_support import modelo_snapshot, specimen_period, write_declaration_pdf
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
@@ -59,12 +60,13 @@ def test_parsed_observation_stamps_the_standard_library_digest_of_its_source_byt
     """
     pdf_path = FIXTURES_DIR / "justificantes" / "130" / "2022-2T.pdf"
     pdf_bytes = pdf_path.read_bytes()
+    specimen = specimen_period(pdf_path)
 
     filing = parse_declaracion_bytes(
         pdf_bytes,
         modelo_override="130",
-        año_override=2022,
-        period_override="2T",
+        año_override=specimen.filing_year,
+        period_override=specimen.code,
     )
 
     assert filing.source_pdf_sha256 == hashlib.sha256(pdf_bytes).hexdigest()
@@ -81,7 +83,8 @@ def test_path_parser_reloads_equal_metadata_replacement_and_stamps_its_digest(tm
     coverage floor. The values themselves are incidental to this test, which
     exercises cache/digest identity, not extraction fidelity.
     """
-    snapshot = modelo_snapshot("123", filing_year=2024, period="1T")
+    exercise = filing_year_envelope().horizon
+    snapshot = modelo_snapshot("123", filing_year=exercise, period="1T")
     profile = snapshot.extraction_profiles["modelo-123-declaracion-pdf"]
     values = {
         target.casilla_id: Decimal(index).quantize(Decimal("0.01"))
@@ -91,8 +94,12 @@ def test_path_parser_reloads_equal_metadata_replacement_and_stamps_its_digest(tm
     first_pdf = tmp_path / "first.pdf"
     second_pdf = tmp_path / "second.pdf"
     target_pdf = tmp_path / "declaracion.pdf"
-    write_declaration_pdf(first_pdf, modelo="123", ejercicio="2024", period="1T", values=values, tax_id="00000000T")
-    write_declaration_pdf(second_pdf, modelo="123", ejercicio="2024", period="1T", values=values, tax_id="00001005Q")
+    write_declaration_pdf(
+        first_pdf, modelo="123", ejercicio=str(exercise), period="1T", values=values, tax_id="00000000T"
+    )
+    write_declaration_pdf(
+        second_pdf, modelo="123", ejercicio=str(exercise), period="1T", values=values, tax_id="00001005Q"
+    )
 
     first_bytes = first_pdf.read_bytes()
     second_bytes = second_pdf.read_bytes()
@@ -108,7 +115,7 @@ def test_path_parser_reloads_equal_metadata_replacement_and_stamps_its_digest(tm
     first = parse_declaracion(
         target_pdf,
         modelo_override="123",
-        año_override=2024,
+        año_override=exercise,
         period_override="1T",
     )
     original_stat = target_pdf.stat()
@@ -119,7 +126,7 @@ def test_path_parser_reloads_equal_metadata_replacement_and_stamps_its_digest(tm
     replacement = parse_declaracion(
         target_pdf,
         modelo_override="123",
-        año_override=2024,
+        año_override=exercise,
         period_override="1T",
     )
 

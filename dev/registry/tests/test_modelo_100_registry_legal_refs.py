@@ -6,6 +6,10 @@ import pytest
 
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    single_exercise_editions,
+    supported_authored_exercises,
+)
 
 from .modelo_100_registry_support import (
     AUTONOMIC_DEDUCTION_ART_77_REF,
@@ -24,13 +28,18 @@ from .modelo_100_registry_support import (
     RENTAL_HOUSING_DEDUCTION_DT_15_REF,
     SAVINGS_BASE_ART_49_REF,
     STATE_DEDUCTION_ART_67_REF,
+    loaded_registry,
     modelo_100_revision,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_AUTHORED_EXERCISES = single_exercise_editions("100")
+#: The vehicle incentive's disposición adicional enters the catalogue on the date its amending law takes effect.
+_DA_59_FIRST_EXERCISE = loaded_registry()[1].legal["ley-35-2006:da-59"].effective_from.year
 
-@pytest.mark.parametrize("filing_year", [2022, 2023, 2024, 2025])
+
+@pytest.mark.parametrize("filing_year", supported_authored_exercises("100"))
 def test_disposal_excess_cites_the_law_in_force_for_the_filing_year(filing_year: int) -> None:
     """Legacy DA 30 survives; the vehicle incentive's DA 59 begins in 2024."""
     revision = modelo_100_revision(filing_year)
@@ -46,11 +55,11 @@ def test_disposal_excess_cites_the_law_in_force_for_the_filing_year(filing_year:
     assert len(excess_bindings) == 2
     for binding in excess_bindings.values():
         assert "ley-35-2006:da-30" in binding.legal_refs
-        assert ("ley-35-2006:da-59" in binding.legal_refs) == (filing_year >= 2024)
+        assert ("ley-35-2006:da-59" in binding.legal_refs) == (filing_year >= _DA_59_FIRST_EXERCISE)
 
 
 def test_modelo_100_savings_base_includes_current_capital_mobiliario() -> None:
-    for filing_year in range(2020, 2026):
+    for filing_year in _AUTHORED_EXERCISES:
         revision = modelo_100_revision(filing_year)
         formula = next(
             formula for formula in revision.formulas if formula.target_casilla_id == BASE_IMPONIBLE_AHORRO_CASILLA
@@ -61,7 +70,7 @@ def test_modelo_100_savings_base_includes_current_capital_mobiliario() -> None:
 
 
 def test_modelo_100_donation_deduction_surface_cites_art_68_3() -> None:
-    for filing_year in range(2020, 2026):
+    for filing_year in _AUTHORED_EXERCISES:
         revision = modelo_100_revision(filing_year)
         casillas_by_id = {
             casilla.id: casilla for casilla in revision.casillas if casilla.id in DONATION_DEDUCTION_CASILLAS
@@ -106,7 +115,7 @@ def test_modelo_100_ceuta_melilla_deduction_cites_art_68_4() -> None:
         "irpf_deduccion_ceuta_melilla_autonomica": "autonomica",
     }
 
-    for filing_year in range(2020, 2026):
+    for filing_year in _AUTHORED_EXERCISES:
         revision = modelo_100_revision(filing_year)
         casillas_by_role = {
             casilla.semantic_role: casilla for casilla in revision.casillas if casilla.semantic_role in role_refs
@@ -144,7 +153,7 @@ def test_modelo_100_cultural_interest_deduction_cites_art_68_5() -> None:
         "irpf_deduccion_interes_cultural_autonomica": "autonomica",
     }
 
-    for filing_year in range(2020, 2026):
+    for filing_year in _AUTHORED_EXERCISES:
         revision = modelo_100_revision(filing_year)
         casillas_by_role = {
             casilla.semantic_role: casilla for casilla in revision.casillas if casilla.semantic_role in role_refs
@@ -176,7 +185,7 @@ def test_modelo_100_cultural_interest_deduction_cites_art_68_5() -> None:
 def test_modelo_100_new_company_investment_deduction_cites_art_68_1() -> None:
     anexo_section = ("resultados", "anexo_a_res", "deduccion_empresas_nueva_creacion_res")
 
-    for filing_year in range(2020, 2026):
+    for filing_year in _AUTHORED_EXERCISES:
         revision = modelo_100_revision(filing_year)
         state_casilla = next(
             casilla for casilla in revision.casillas if casilla.semantic_role == "irpf_deduccion_empresa_nueva_creacion"
@@ -222,7 +231,7 @@ def test_modelo_100_business_investment_deductions_cite_art_68_2() -> None:
         ),
     }
 
-    for filing_year in range(2020, 2026):
+    for filing_year in _AUTHORED_EXERCISES:
         revision = modelo_100_revision(filing_year)
         rollup_casillas = {
             casilla.semantic_role: casilla for casilla in revision.casillas if casilla.semantic_role in rollup_roles
@@ -256,7 +265,7 @@ def test_modelo_100_home_investment_deduction_cites_dt_18() -> None:
         "irpf_deduccion_vivienda_habitual_autonomica": AUTONOMIC_DEDUCTION_ART_77_REF,
     }
 
-    for filing_year in range(2020, 2026):
+    for filing_year in _AUTHORED_EXERCISES:
         revision = modelo_100_revision(filing_year)
         casillas_by_role = {
             casilla.semantic_role: casilla for casilla in revision.casillas if casilla.semantic_role in role_refs
@@ -290,7 +299,7 @@ def test_modelo_100_home_investment_deduction_cites_dt_18() -> None:
 
 
 def test_modelo_100_energy_efficiency_deduction_formula_cites_da_50() -> None:
-    for filing_year in range(2021, 2026):
+    for filing_year in _AUTHORED_EXERCISES[1:]:
         revision = modelo_100_revision(filing_year)
         casilla = next(
             casilla
@@ -319,7 +328,7 @@ def test_modelo_100_rental_housing_transitional_deduction_cites_dt_15() -> None:
         "irpf_deduccion_alquiler_vivienda_habitual_autonomica": "autonomica",
     }
 
-    for filing_year in range(2020, 2026):
+    for filing_year in _AUTHORED_EXERCISES:
         revision = modelo_100_revision(filing_year)
         casillas_by_role = {
             casilla.semantic_role: casilla for casilla in revision.casillas if casilla.semantic_role in role_refs

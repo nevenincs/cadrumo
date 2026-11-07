@@ -33,6 +33,7 @@ from cadrumo.domain.calculations.registry.schema import (
 )
 from cadrumo.domain.calculations.registry.schema_formula import ParameterDefinition
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_editions
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.fact_loader import load_governed_facts
@@ -61,11 +62,14 @@ _VEHICULO_ROWS = (
     "renta-actividad-inmovilizado-amortizacion-infraestructura-recarga-ultimo-ejercicio",
 )
 # The amending real decreto-ley that fixed each year's renewables entry-into-service period.
-_RENOVABLES_AMENDING_LAW = {
-    2023: "real-decreto-ley-18-2022:art-22",
-    2024: "real-decreto-ley-8-2023:art-18",
-    2025: "rdl-16-2025:art-17",
-}
+# The three newest editions each carry the period their own amending law fixed, oldest first.
+_RENOVABLES_AMENDING_LAW = dict(
+    zip(
+        newest_authored_editions("100", 3),
+        ("real-decreto-ley-18-2022:art-22", "real-decreto-ley-8-2023:art-18", "rdl-16-2025:art-17"),
+        strict=True,
+    )
+)
 
 
 @cache

@@ -29,6 +29,7 @@ import pytest
 from sqlalchemy import Row, select
 
 from .....core.config_support import LLMProvider
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....persistence.llm.cache import LLMCache
 from ....persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
 from ....persistence.llm.usage import UsageRecorder
@@ -42,9 +43,11 @@ from ....persistence.storage.sql.tables import secure_objects_table
 from ....persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ..models import LLMRequest, LLMResponse, UsageRecord
 
+_FILING_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_WHEN = datetime(2026, 5, 28, 12, 40, 0, tzinfo=UTC)
+_WHEN = datetime(_FILING_YEAR, 5, 28, 12, 40, 0, tzinfo=UTC)
 
 
 def _rows_for(profile: TestRuntimeProfile, namespace: str) -> list[Row[Any]]:

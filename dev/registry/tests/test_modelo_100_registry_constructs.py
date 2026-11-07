@@ -33,7 +33,7 @@ from cadrumo.domain.contribuyente.tax_residence import TaxResidenceProfile
 
 from ..compiler.validate_constructs import CONSTRUCT_MEMBER_ATTRIBUTES
 from ..compiler.validator import RegistryValidator
-from .authored_edition_support import newest_authored_edition
+from .authored_edition_support import authored_revisions, newest_authored_edition
 from .modelo_100_registry_support import (
     DECLARATIONS_LISTING_URL,
     MEMBER_GROUNDED_2025_CONSTRUCT_IDS,
@@ -43,7 +43,7 @@ from .modelo_100_registry_support import (
     assert_registry_validation_error,
     binding_map_by_casilla,
     loaded_registry,
-    modelo_100_revision_2025,
+    modelo_100_newest_authored_revision,
     modelo_100_snapshot,
     modelo_100_with_revision,
     source_root,
@@ -54,6 +54,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 
 # The newest Modelo 100 edition the registry authors; edition-specific declarations below are asserted against it.
 _REVIEWED_EDITION = newest_authored_edition("100")
+_REVIEWED_REVISION = str(authored_revisions("100")[-1].id)
 
 _SNAPSHOT_IDENTIFIER_KEYED_MAPS = (
     "legal",
@@ -476,7 +477,7 @@ def test_modelo_100_application_links_route_current_workflows_through_snapshots(
 
 def test_modelo_100_constructs_declare_their_revision_members() -> None:
     modelos_by_id, _catalogues = loaded_registry()
-    revision = modelos_by_id["100"].revisions["2025"]
+    revision = modelos_by_id["100"].revisions[_REVIEWED_REVISION]
     constructs = {construct.id: construct for construct in revision.constructs}
     dependencies = constructs["renta-dependent-modelos"]
     economic_activities = constructs["renta-economic-activities"]
@@ -497,7 +498,7 @@ def test_modelo_100_renta_section_constructs_classify_registered_relation_source
     their credit from perceptor-side evidence instead, which is not a relation.
     """
     modelos_by_id, _catalogues = loaded_registry()
-    revision = modelos_by_id["100"].revisions["2025"]
+    revision = modelos_by_id["100"].revisions[_REVIEWED_REVISION]
     bindings_by_id = {binding.id: binding for binding in revision.bindings}
     constructs = {construct.id: construct for construct in revision.constructs}
     source_modelos_by_construct = {
@@ -558,6 +559,8 @@ def test_modelo_100_authenticated_filed_data_cross_reference_is_guarded_read_onl
     assert "Consulta de declaraciones presentadas" in source_text
     assert "Datos fiscales" in source_text
 
+    assert source.applies_from is not None
+    procedure_first_year = source.applies_from.year
     support = published_supported_filing_years()
     assert support is not None
     # A filing-grade snapshot exists only for a year the modelo authors; a
@@ -582,7 +585,9 @@ def test_modelo_100_authenticated_filed_data_cross_reference_is_guarded_read_onl
         # `_check_revision_scoped_source_windows` refuses at snapshot build.
         # Those years ground the same read on that year's own Renta manual,
         # which documents Renta WEB and the consulta of filed declarations.
-        expected_ref = "aeat-modelo-100-procedure" if year >= 2025 else f"aeat-renta-{year}-manual-parte1"
+        expected_ref = (
+            "aeat-modelo-100-procedure" if year >= procedure_first_year else f"aeat-renta-{year}-manual-parte1"
+        )
         assert expected_ref in cross_reference.source_refs
         assert_remote_operation_allowed(
             policy,
@@ -646,7 +651,7 @@ def test_modelo_100_live_cross_references_block_declared_forbidden_actions() -> 
 
 
 def test_modelo_100_xml_dictionary_layout_reads_official_casilla_paths() -> None:
-    snapshot = modelo_100_snapshot(2023)
+    snapshot = modelo_100_snapshot(newest_authored_edition("100"))
     resolved = resolve_export_layout(snapshot)
     payload = b"""<?xml version="1.0" encoding="UTF-8"?>
 <Renta>
@@ -754,7 +759,7 @@ def test_modelo_100_objective_estimation_record_design_paths_roundtrip_from_expo
 
 
 def test_validator_rejects_construct_sources_without_official_guidance() -> None:
-    modelo, revision = modelo_100_revision_2025()
+    modelo, revision = modelo_100_newest_authored_revision()
     _modelos_by_id, catalogues = loaded_registry()
     construct = next(item for item in revision.constructs if item.source_refs)
     sources = dict(catalogues.sources)
@@ -774,7 +779,7 @@ def test_validator_rejects_construct_sources_without_official_guidance() -> None
 
 
 def test_validator_rejects_construct_legal_refs_without_legal_authority() -> None:
-    modelo, revision = modelo_100_revision_2025()
+    modelo, revision = modelo_100_newest_authored_revision()
     _modelos_by_id, catalogues = loaded_registry()
     construct = next(item for item in revision.constructs if item.legal_refs)
     legal = dict(catalogues.legal)
@@ -794,7 +799,7 @@ def test_validator_rejects_construct_legal_refs_without_legal_authority() -> Non
 
 
 def test_validator_rejects_construct_member_outside_revision() -> None:
-    modelo, revision = modelo_100_revision_2025()
+    modelo, revision = modelo_100_newest_authored_revision()
     construct = next(item for item in revision.constructs if item.id == "renta-dependent-modelos")
     mutated_construct = construct.model_copy(update={"bindings": (*construct.bindings, "missing-binding")})
     mutated_revision = revision.model_copy(
@@ -808,7 +813,7 @@ def test_validator_rejects_construct_member_outside_revision() -> None:
 
 
 def test_validator_rejects_construct_dependency_classification_outside_revision() -> None:
-    modelo, revision = modelo_100_revision_2025()
+    modelo, revision = modelo_100_newest_authored_revision()
     construct = next(item for item in revision.constructs if item.id == "renta-dependent-modelos")
     mutated_construct = construct.model_copy(
         update={"dependency_classifications": (*construct.dependency_classifications, "missing-dependency")},
@@ -824,7 +829,7 @@ def test_validator_rejects_construct_dependency_classification_outside_revision(
 
 
 def test_validator_rejects_dependency_classification_source_drift() -> None:
-    modelo, revision = modelo_100_revision_2025()
+    modelo, revision = modelo_100_newest_authored_revision()
     classification = revision.dependency_classifications[0].model_copy(update={"source_modelo": "115"})
     mutated_revision = revision.model_copy(
         update={"dependency_classifications": (classification, *revision.dependency_classifications[1:])},
@@ -835,7 +840,7 @@ def test_validator_rejects_dependency_classification_source_drift() -> None:
 
 
 def test_validator_rejects_unclassified_relation_source() -> None:
-    modelo, revision = modelo_100_revision_2025()
+    modelo, revision = modelo_100_newest_authored_revision()
     mutated_revision = revision.model_copy(
         update={
             "dependency_classifications": tuple(
@@ -852,7 +857,7 @@ def test_validator_rejects_unclassified_relation_source() -> None:
 
 
 def test_validator_rejects_partial_dependency_classification_relation_coverage() -> None:
-    modelo, revision = modelo_100_revision_2025()
+    modelo, revision = modelo_100_newest_authored_revision()
     classification = next(item for item in revision.dependency_classifications if item.source_modelo == "130")
     # A foreign binding in place of the modelo 130 one leaves the 130 relation uncovered.
     mutated_classification = classification.model_copy(
@@ -873,7 +878,7 @@ def test_validator_rejects_partial_dependency_classification_relation_coverage()
 
 def test_schema_accepts_direct_previous_filing_classification_without_binding_refs() -> None:
     modelos_by_id, _catalogues = loaded_registry()
-    revision = modelos_by_id["100"].revisions["2025"]
+    revision = modelos_by_id["100"].revisions[_REVIEWED_REVISION]
     classification = next(item for item in revision.dependency_classifications if item.source_modelo == "100")
 
     assert classification.treatment == "direct_annual_settlement"
@@ -882,7 +887,7 @@ def test_schema_accepts_direct_previous_filing_classification_without_binding_re
 
 
 def test_validator_rejects_direct_dependency_classification_without_relation_or_direct_binding() -> None:
-    modelo, revision = modelo_100_revision_2025()
+    modelo, revision = modelo_100_newest_authored_revision()
     classification = next(item for item in revision.dependency_classifications if item.source_modelo == "130")
     mutated_classification = classification.model_copy(update={"binding_refs": ()})
     mutated_revision = revision.model_copy(
@@ -902,7 +907,7 @@ def test_validator_rejects_direct_dependency_classification_without_relation_or_
 
 
 def test_validator_rejects_duplicate_dependency_classification_source() -> None:
-    modelo, revision = modelo_100_revision_2025()
+    modelo, revision = modelo_100_newest_authored_revision()
     classification = next(item for item in revision.dependency_classifications if item.source_modelo == "130")
     duplicate = classification.model_copy(update={"id": "renta-2025-dep-130-duplicate"})
     mutated_revision = revision.model_copy(
@@ -917,7 +922,7 @@ def test_validator_rejects_duplicate_dependency_classification_source() -> None:
 
 
 def test_validator_rejects_dependency_classification_target_construct_drift() -> None:
-    modelo, revision = modelo_100_revision_2025()
+    modelo, revision = modelo_100_newest_authored_revision()
     classification = next(item for item in revision.dependency_classifications if item.source_modelo == "130")
     construct = next(item for item in revision.constructs if item.id == "renta-payments-retentions")
     mutated_construct = construct.model_copy(
@@ -939,7 +944,7 @@ def test_validator_rejects_dependency_classification_target_construct_drift() ->
 
 def test_modelo_100_renta_web_open_cross_reference_is_read_only_simulator_evidence() -> None:
     modelos_by_id, catalogues = loaded_registry()
-    revision = modelos_by_id["100"].revisions["2025"]
+    revision = modelos_by_id["100"].revisions[_REVIEWED_REVISION]
     cross_reference = next(item for item in revision.live_cross_references if item.id == "modelo-100-renta-web-open")
     source = catalogues.sources[cross_reference.source_refs[0]]
     source_text = (source_root() / source.corpus_path).read_text(encoding="utf-8")

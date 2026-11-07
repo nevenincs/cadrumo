@@ -33,6 +33,7 @@ from collections import Counter
 
 import pytest
 
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......tests.inventory import FIXTURES_DIR
 from ..declarations import register_rows_from_snapshot
 from ..declarations_listbox import parse_listbox
@@ -45,7 +46,7 @@ _DUPLICATED_PERIOD_FIXTURE = "declaraciones-modelo-303-duplicated-period-synthet
 _NO_RESULTS_FIXTURE = "declaraciones-modelo-303-no-results-synthetic.html"
 
 _MODELO = "303"
-_EJERCICIO = 2024
+_EJERCICIO = filing_year_envelope().horizon
 
 _LISTITEM_RE = re.compile(r'class="[^"]*\bz-listitem\b')
 _NO_RESULTS_SENTENCE = "No se han encontrado resultados"

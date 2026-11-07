@@ -30,15 +30,17 @@ import pytest
 
 from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 from ......core.config import Settings
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .. import session_store as session_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_YEAR = filing_year_envelope().horizon
 
 _BUCKET_ID = "1f6b0000-0000-4000-8000-00000000e0e0"
 _STEM = "clave-movil-storage"
 _IDENTITY = "12345678Z"
-_AUTHENTICATED_AT = datetime(2026, 7, 26, 9, 0, 0, tzinfo=UTC)
+_AUTHENTICATED_AT = datetime(_YEAR, 7, 26, 9, 0, 0, tzinfo=UTC)
 
 
 _AEAT_DOMAINS = Settings.external_constants().aeat.domains

@@ -31,6 +31,7 @@ from pydantic import AnyHttpUrl
 
 from ......core.config import Settings
 from ......core.period import Period
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from .....persistence.storage.secure_object_namespaces import (
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
     AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
@@ -49,6 +50,8 @@ from .wallet_observation_inventory import list_iva_wallet_observations
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+_EJERCICIO = newest_authored_edition("100")
+_WALLET_YEAR = filing_year_envelope().horizon
 _BUCKET_ID = "d0ab4fce-5ade-4781-9880-7a851f2bf2e1"  # was 'sede-row-identity'
 _AEAT = Settings.external_constants().aeat
 _COTEJO_DOCUMENT_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.cotejo_document}"
@@ -169,14 +172,18 @@ def test_a_wallet_observation_under_a_foreign_row_is_refused(tmp_path: Path) -> 
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
-        path_a = store.persist_iva_wallet_observation(_wallet(2026, datetime(2026, 4, 1, 9, 0, tzinfo=UTC)))
-        store.persist_iva_wallet_observation(_wallet(2025, datetime(2025, 4, 1, 9, 0, tzinfo=UTC)))
+        path_a = store.persist_iva_wallet_observation(
+            _wallet(_WALLET_YEAR, datetime(_WALLET_YEAR, 4, 1, 9, 0, tzinfo=UTC))
+        )
+        store.persist_iva_wallet_observation(
+            _wallet(_WALLET_YEAR - 1, datetime(_WALLET_YEAR - 1, 4, 1, 9, 0, tzinfo=UTC))
+        )
 
         _substitute(
             profile.repository._engine,
             AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE.namespace,
-            victim_marker='"target_year":2026',
-            donor_marker='"target_year":2025',
+            victim_marker=f'"target_year":{_WALLET_YEAR}',
+            donor_marker=f'"target_year":{_WALLET_YEAR - 1}',
         )
 
         with pytest.raises(SedeValidationError):
@@ -226,7 +233,7 @@ def test_an_untampered_store_still_loads_and_lists(tmp_path: Path) -> None:
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
         artefact = declaration_pdf_artefact(b"%PDF-1.7 A")
         observation = filed_declaration_observation(artefact, expediente_id="202310013522456T")
-        wallet = _wallet(2026, datetime(2026, 4, 1, 9, 0, tzinfo=UTC))
+        wallet = _wallet(_WALLET_YEAR, datetime(_WALLET_YEAR, 4, 1, 9, 0, tzinfo=UTC))
 
         path = store.persist_observation(observation)
         wallet_path = store.persist_iva_wallet_observation(wallet)
@@ -250,7 +257,7 @@ def test_an_artefact_whose_bytes_do_not_match_its_reference_is_refused(tmp_path:
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
         body_a = b"%PDF-1.7 body A"
         body_b = b"%PDF-1.7 body B, a different filing entirely"
-        key = ("100", 2023, Period.from_year_and_code(2023, "0A"), "202310013522456T")
+        key = ("100", _EJERCICIO, Period.from_year_and_code(_EJERCICIO, "0A"), "202310013522456T")
         ref_a = store.persist_artefact(key, declaration_pdf_artefact(body_a), body_a).storage_ref
         assert ref_a is not None
         store.persist_artefact(key, declaration_pdf_artefact(body_b), body_b)
@@ -284,7 +291,7 @@ def test_an_untampered_artefact_still_loads(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
         body = b"%PDF-1.7 body A"
-        key = ("100", 2023, Period.from_year_and_code(2023, "0A"), "202310013522456T")
+        key = ("100", _EJERCICIO, Period.from_year_and_code(_EJERCICIO, "0A"), "202310013522456T")
         ref = store.persist_artefact(key, declaration_pdf_artefact(body), body).storage_ref
         assert ref is not None
 

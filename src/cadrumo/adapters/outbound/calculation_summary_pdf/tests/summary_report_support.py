@@ -42,6 +42,8 @@ from .....core.period import Period
 from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.calculations.registry.schema_input_kind import InputKind
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from .....domain.calculations.registry.tests.published_authority import published_selected_revision_id
 from .....domain.filing.schema import ModeloValueKind
 from .....domain.filing.software_identity import AeatSoftwareIdentityGrade
 from .....domain.modelos.calculation_revision import CalculationRevisionState
@@ -50,7 +52,8 @@ from .....domain.modelos.verification_report import VerificationCompletenessStat
 from ..summary_container import write_calculation_summary_pdf
 
 BUCKET_ID = "33333333-3333-4333-8333-333333333333"
-EXPORTED_AT = datetime(2026, 7, 20, 9, 30, tzinfo=UTC)
+FILING_YEAR = filing_year_envelope().horizon
+EXPORTED_AT = datetime(FILING_YEAR, 7, 20, 9, 30, tzinfo=UTC)
 TAXPAYER_TAX_ID = "00001000B"
 TAXPAYER_NAME = "Őrs Güell Núñez"
 CALCULATION_REVISION_ID = "1" * 64
@@ -177,8 +180,8 @@ def synthetic_report(
     return ModeloCalculationReport(
         header=ModeloCalculationReportHeader(
             modelo=ModeloCode("303"),
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "2T"),
+            filing_year=FILING_YEAR,
+            period=Period.from_year_and_code(FILING_YEAR, "2T"),
             taxpayer_tax_id=TAXPAYER_TAX_ID,
             taxpayer_name=TAXPAYER_NAME,
             calculation_revision_id=CALCULATION_REVISION_ID,
@@ -189,8 +192,8 @@ def synthetic_report(
             filing_record_id=None,
             registry_snapshot_ref=RegistrySnapshotRef(
                 modelo="303",
-                revision_id="2026-y-siguientes",
-                modelo_year=2026,
+                revision_id=published_selected_revision_id("303", filing_year=FILING_YEAR, period="2T"),
+                modelo_year=FILING_YEAR,
                 period="2T",
             ),
             authority_logical_generation=authority_logical_generation,

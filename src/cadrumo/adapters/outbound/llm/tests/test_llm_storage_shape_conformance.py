@@ -26,15 +26,18 @@ import pytest
 
 from .....core.config import override_settings
 from .....core.config_support import LLMProvider
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
 from ....persistence.llm.usage import UsageRecorder
 from ....persistence.storage.tests.storage_path_grammar import assert_path_matches_grammar
 from ..models import LLMResponse
 
+_FILING_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
-_CREATED_AT = datetime(2026, 5, 28, 12, 20, 0, tzinfo=UTC)
+_CREATED_AT = datetime(_FILING_YEAR, 5, 28, 12, 20, 0, tzinfo=UTC)
 
 
 def _response() -> LLMResponse:

@@ -18,6 +18,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from .....core.config_support import LLMProvider
 from .....core.model_roles import ModelRole
 from .....domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.transactions.enums import BusinessClassification
 from .....domain.transactions.llm import PromptSpec, prompt_spec_with_every_spending_category
 from .....domain.transactions.models import Transaction
@@ -35,7 +36,7 @@ _REPLY = json.dumps({"classification": "BUSINESS", "confidence": "0.9", "reason"
 
 def _spec() -> PromptSpec:
     with bundled_indexed_authority().operation() as operation:
-        return prompt_spec_with_every_spending_category(year=2025, operation=operation)
+        return prompt_spec_with_every_spending_category(year=filing_year_envelope().horizon, operation=operation)
 
 
 def _transaction() -> Transaction:

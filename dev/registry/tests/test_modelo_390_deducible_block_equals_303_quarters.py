@@ -47,6 +47,11 @@ from cadrumo.domain.calculations.registry.rate_box_partition import (
     rate_box_coverage_shortfalls,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_grade_exercises,
+    revision_before_first_declaring,
+    revision_covering,
+)
 from cadrumo.domain.iva.schema import IvaLedgerObservationRole
 from dev.registry.compiler.authority import compiled_bundled_authority
 
@@ -65,7 +70,12 @@ from .ledger_iva_aggregation_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _SURFACE = "test_modelo_390_deducible_block_equals_303_quarters"
-_SUPPORTED_YEARS = (2022, 2023, 2024, 2025)
+_SUPPORTED_YEARS = filing_grade_exercises("390")
+_NEWEST_EXERCISE = _SUPPORTED_YEARS[-1]
+_NEWEST_REVISION_ID = str(revision_covering("390", _NEWEST_EXERCISE).id)
+# The 2 % and 7,5 % boxes of the AIC block arrive with one edition; every supported exercise from it on binds them.
+_RATE_BOX_ARRIVAL = revision_before_first_declaring("390", "iva.anual.deducible.aic-corrientes.tipo-7-5.cuota")
+_RATE_BOX_YEARS = tuple(year for year in _SUPPORTED_YEARS if year > _RATE_BOX_ARRIVAL.valid_from.year)
 _QUARTER_MONTH = {"1T": 2, "2T": 5, "3T": 8, "4T": 11}
 _GENERAL = Decimal("0.21")
 _REDUCED = Decimal("0.10")
@@ -387,9 +397,9 @@ def test_the_reconciliations_against_the_filed_303s_close(filing_year: int) -> N
     )
 
 
-@pytest.mark.parametrize("filing_year", (2024, 2025))
-def test_the_2024_rate_boxes_of_the_aic_block_are_bound(filing_year: int) -> None:
-    """The 2 % and 7,5 % boxes the 2024 design adds read only their own rate."""
+@pytest.mark.parametrize("filing_year", _RATE_BOX_YEARS)
+def test_the_added_rate_boxes_of_the_aic_block_are_bound(filing_year: int) -> None:
+    """The 2 % and 7,5 % boxes the later design adds read only their own rate."""
     revision = compiled_bundled_authority().snapshot("390", filing_year=filing_year, period="0A").revision
     on = date(filing_year, 11, 10)
     aceite = _Row(
@@ -415,8 +425,8 @@ def test_the_2024_rate_boxes_of_the_aic_block_are_bound(filing_year: int) -> Non
 
 def test_a_rate_unrecorded_aic_row_reaches_the_total_and_is_reported() -> None:
     """The rate-blind layer keeps the row in [57]; the rate boxes cannot, and say so."""
-    revision = compiled_bundled_authority().snapshot("390", filing_year=2025, period="0A").revision
-    on = date(2025, 5, 10)
+    revision = compiled_bundled_authority().snapshot("390", filing_year=_NEWEST_EXERCISE, period="0A").revision
+    on = date(_NEWEST_EXERCISE, 5, 10)
     aic_goods = next(row for row in _ROWS if row.key == "aic-bienes-21")
     unrated = _ledger_row(aic_goods, ledger_id="aic-sin-tipo", on=on, applied_rate=None)
     values = resolve_ledger_iva_aggregation_binding_values(revision, (unrated,))
@@ -440,29 +450,47 @@ def test_a_rate_unrecorded_aic_row_reaches_the_total_and_is_reported() -> None:
 
 
 _MODELOS_ROOT = Path(__file__).resolve().parents[3] / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
-_FRAGMENT = Path("revisions") / "2022" / "bindings" / "0001-declarations.toml"
+_DECLARING_ANCHOR = (
+    'flow_direction = "soportado", fact = "iva_amount_sum", deduction_fact_kinds = ["domestic_current"], '
+)
+
+
+def _declaring_fragment() -> Path:
+    """Return the one bindings fragment, relative to the modelo directory, that declares the corrientes selector."""
+    declaring = [
+        fragment.relative_to(_MODELOS_ROOT / "390")
+        for fragment in sorted((_MODELOS_ROOT / "390" / "revisions").glob("*/bindings/*.toml"))
+        if any(
+            _DECLARING_ANCHOR in line and '"domestic_general"' in line
+            for line in fragment.read_text(encoding="utf-8").splitlines()
+        )
+    ]
+    assert len(declaring) == 1, declaring
+    return declaring[0]
 
 
 def test_a_390_corrientes_selector_that_claims_every_kind_is_refused(tmp_path: Path) -> None:
     """Dropping the interior corrientes kind puts investments and rectifications in [49] too."""
     tree = tmp_path / "390"
     shutil.copytree(_MODELOS_ROOT / "390", tree)
-    fragment = tree / _FRAGMENT
+    fragment = tree / _declaring_fragment()
     text = fragment.read_text(encoding="utf-8")
-    anchor = 'flow_direction = "soportado", fact = "iva_amount_sum", deduction_fact_kinds = ["domestic_current"], '
+    anchor = _DECLARING_ANCHOR
     lines = [line for line in text.splitlines() if anchor in line and '"domestic_general"' in line]
     assert len(lines) == 1, lines
     fragment.write_text(
         text.replace(lines[0], lines[0].replace('deduction_fact_kinds = ["domestic_current"], ', "")),
         encoding="utf-8",
     )
-    clean = load_modelo_directory(_MODELOS_ROOT / "390").revisions["2025"]
-    planted = load_modelo_directory(tree).revisions["2025"]
+    clean = load_modelo_directory(_MODELOS_ROOT / "390").revisions[_NEWEST_REVISION_ID]
+    planted = load_modelo_directory(tree).revisions[_NEWEST_REVISION_ID]
 
     def overlaps(revision: ModeloRevision) -> list[str]:
         return [
             failure
-            for failure in validate_binding_registration_section(prefix="modelo 390 revision 2025", revision=revision)
+            for failure in validate_binding_registration_section(
+                prefix=f"modelo 390 revision {_NEWEST_REVISION_ID}", revision=revision
+            )
             if "deduction kind" in failure
         ]
 

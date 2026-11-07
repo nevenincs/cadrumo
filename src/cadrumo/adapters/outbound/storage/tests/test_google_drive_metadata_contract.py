@@ -25,8 +25,11 @@ from typing import Any
 
 import pytest
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..errors import OutboundStorageIntegrityError
 from ..google_drive_metadata import metadata_from_drive_entry
+
+_FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -46,7 +49,7 @@ def _entry(**overrides: Any) -> dict[str, Any]:
         "name": f"{_HMAC[:8]}--label.bin",
         "size": "12",
         "md5Checksum": "0" * 32,
-        "modifiedTime": "2026-08-02T01:45:29.978Z",
+        "modifiedTime": f"{_FILING_YEAR}-08-02T01:45:29.978Z",
         "appProperties": {"content_hash": _DIGEST, "object_key_hmac": _HMAC},
     }
     entry.update(overrides)
@@ -66,7 +69,7 @@ def test_a_well_formed_entry_still_converts() -> None:
     metadata = _metadata(_entry())
 
     assert metadata.byte_length == 12
-    assert metadata.written_at == datetime(2026, 8, 2, 1, 45, 29, 978000, tzinfo=UTC)
+    assert metadata.written_at == datetime(_FILING_YEAR, 8, 2, 1, 45, 29, 978000, tzinfo=UTC)
     assert metadata.content_hash == _DIGEST
     assert metadata.object_key_hmac == _HMAC
 
@@ -78,7 +81,7 @@ def test_a_well_formed_entry_still_converts() -> None:
         pytest.param("", id="blank"),
         pytest.param(None, id="null"),
         pytest.param(1735819200, id="wrong-type-epoch-int"),
-        pytest.param("2026-08-02T01:45:29.978", id="tz-naive"),
+        pytest.param(f"{_FILING_YEAR}-08-02T01:45:29.978", id="tz-naive"),
     ],
 )
 def test_a_malformed_modified_time_is_refused(modified_time: object) -> None:
