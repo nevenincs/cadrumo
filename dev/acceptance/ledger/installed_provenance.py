@@ -49,7 +49,7 @@ from dev.acceptance.installed_cli import (
 from dev.packaging.installed_wheel_binding import environment_interpreter
 
 from .installed_tui_cli_transport import installed_tui_cli_transport_result, text
-from .installed_tui_contracts import LedgerInstalledTuiError
+from .installed_tui_contracts import YEAR, LedgerInstalledTuiError
 from .installed_tui_controls import (
     activate_button,
     open_invoice_detail,
@@ -62,7 +62,6 @@ from .provenance_fixtures import ProvenanceCase, provenance_cases
 _SCHEMA = "ledger-01-installed-provenance-v2"
 _PATTERN_REVISION = "1.7"
 _BRIEF_REVISION = "0.1"
-_YEAR = 2025
 _TUI_IMPORT_KINDS = {"received": "invoices_received", "issued": "invoices_issued"}
 
 type ChildMode = Literal["import", "inspect"]
@@ -79,7 +78,7 @@ def _import_cli_provenance_cases(
 ) -> tuple[dict[str, list[str]], list[ProvenanceCase]]:
     """Import cli provenance cases."""
     try:
-        cli.create_profile(year=_YEAR)
+        cli.create_profile(year=YEAR)
     except InstalledCliError as error:
         raise LedgerInstalledTuiError("installed CLI profile creation failed") from error
     cli_cases = [case for case in cases if case.import_frontend == "cli"]
@@ -585,7 +584,7 @@ def _run_outer(args: argparse.Namespace) -> dict[str, object]:
         "wheel_sha256": wheel_sha256,
         "installed_extras": {"ofxtools": inspected.get("ofxtools_version")},
         "authority_generation": authority_generation(authority_root),
-        "year": _YEAR,
+        "year": YEAR,
         "product_origin": inspected["product_origin"],
         "product_init_path": inspected["product_init_path"],
         "product_init_sha256": inspected["product_init_sha256"],

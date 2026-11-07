@@ -16,6 +16,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import write_standard_manifest
@@ -26,6 +27,10 @@ _ARTICLE: Final = "ley-58-2003:art-29"
 _SOURCE: Final = "aeat-manual"
 _ROW_BINDING: Final = "modelo-999-contraparte-row-nif"
 _ROW_SLOT: Final = "party_tax_id"
+_NEWER: Final = filing_year_envelope().horizon
+_OLDER: Final = _NEWER - 1
+_NEWER_ID: Final = str(_NEWER)
+_OLDER_ID: Final = str(_OLDER)
 
 
 def _casilla(revision_id: str, casilla_id: str, *, extra: str = "") -> str:
@@ -153,15 +158,15 @@ def _modelo(root: Path) -> Path:
 
 def _single(root: Path, *, casillas: str, layouts: tuple[str, ...], bindings: str = "") -> ModeloRevision:
     modelo_dir = _modelo(root)
-    _write_edition(modelo_dir, "2025", year=2025, casillas=casillas, layouts=layouts, bindings=bindings)
-    return load_modelo_directory(modelo_dir).revisions["2025"]
+    _write_edition(modelo_dir, _NEWER_ID, year=_NEWER, casillas=casillas, layouts=layouts, bindings=bindings)
+    return load_modelo_directory(modelo_dir).revisions[_NEWER_ID]
 
 
 def _refs(revision: ModeloRevision) -> dict[str, tuple[str, ...]]:
     return {str(casilla.id): tuple(casilla.export_refs) for casilla in revision.casillas}
 
 
-_TWO_CASILLAS: Final = _casilla("2025", "01") + _casilla("2025", "02")
+_TWO_CASILLAS: Final = _casilla(_NEWER_ID, "01") + _casilla(_NEWER_ID, "02")
 
 
 def test_refs_follow_the_layout_in_field_order_and_a_moved_field_leaves_no_stale_reference(tmp_path: Path) -> None:
@@ -170,9 +175,10 @@ def test_refs_follow_the_layout_in_field_order_and_a_moved_field_leaves_no_stale
         casillas=_TWO_CASILLAS,
         layouts=(
             _layout(
-                "2025",
+                _NEWER_ID,
                 "l",
-                _field("2025", "m999.r.f002", 2, casilla_id="01") + _field("2025", "m999.r.f001", 1, casilla_id="01"),
+                _field(_NEWER_ID, "m999.r.f002", 2, casilla_id="01")
+                + _field(_NEWER_ID, "m999.r.f001", 1, casilla_id="01"),
             ),
         ),
     )
@@ -184,9 +190,10 @@ def test_refs_follow_the_layout_in_field_order_and_a_moved_field_leaves_no_stale
         casillas=_TWO_CASILLAS,
         layouts=(
             _layout(
-                "2025",
+                _NEWER_ID,
                 "l",
-                _field("2025", "m999.r.f002", 2, casilla_id="02") + _field("2025", "m999.r.f001", 1, casilla_id="01"),
+                _field(_NEWER_ID, "m999.r.f002", 2, casilla_id="02")
+                + _field(_NEWER_ID, "m999.r.f001", 1, casilla_id="01"),
             ),
         ),
     )
@@ -195,18 +202,20 @@ def test_refs_follow_the_layout_in_field_order_and_a_moved_field_leaves_no_stale
 
 def test_refs_follow_record_order_before_field_offset(tmp_path: Path) -> None:
     second_record = (
-        '[[revisions."2025".export_layouts.records]]\n'
+        f'[[revisions."{_NEWER_ID}".export_layouts.records]]\n'
         'id = "l-record-first"\n'
         'record_type = "0"\n'
         "order = 0\n"
         'encoding = "iso-8859-1"\n'
         'line_ending = "none"\n'
-        "required = true\n\n" + _field("2025", "m999.first.f009", 9, casilla_id="01")
+        "required = true\n\n" + _field(_NEWER_ID, "m999.first.f009", 9, casilla_id="01")
     )
     revision = _single(
         tmp_path,
         casillas=_TWO_CASILLAS,
-        layouts=(_layout("2025", "l", _field("2025", "m999.r.f001", 1, casilla_id="01"), order=1) + second_record,),
+        layouts=(
+            _layout(_NEWER_ID, "l", _field(_NEWER_ID, "m999.r.f001", 1, casilla_id="01"), order=1) + second_record,
+        ),
     )
 
     assert _refs(revision)["01"] == ("m999.first.f009", "m999.r.f001")
@@ -216,31 +225,31 @@ def test_an_inherited_row_takes_its_successors_layout_never_its_predecessors(tmp
     modelo_dir = _modelo(tmp_path)
     _write_edition(
         modelo_dir,
-        "2024",
-        year=2024,
-        casillas=_casilla("2024", "01"),
-        layouts=(_layout("2024", "l24", _field("2024", "m999-2024.r.f001", 1, casilla_id="01")),),
+        _OLDER_ID,
+        year=_OLDER,
+        casillas=_casilla(_OLDER_ID, "01"),
+        layouts=(_layout(_OLDER_ID, "l24", _field(_OLDER_ID, f"m999-{_OLDER_ID}.r.f001", 1, casilla_id="01")),),
     )
     _write_edition(
         modelo_dir,
-        "2025",
-        year=2025,
+        _NEWER_ID,
+        year=_NEWER,
         casillas="",
-        layouts=(_layout("2025", "l25", _field("2025", "m999-2025.r.f001", 1, casilla_id="01")),),
-        manifest_extra='predecessor = "2024"\n',
+        layouts=(_layout(_NEWER_ID, "l25", _field(_NEWER_ID, f"m999-{_NEWER_ID}.r.f001", 1, casilla_id="01")),),
+        manifest_extra=f'predecessor = "{_OLDER_ID}"\n',
     )
 
     revisions = load_modelo_directory(modelo_dir).revisions
 
-    assert _refs(revisions["2024"]) == {"01": ("m999-2024.r.f001",)}
-    assert _refs(revisions["2025"]) == {"01": ("m999-2025.r.f001",)}
+    assert _refs(revisions[_OLDER_ID]) == {"01": (f"m999-{_OLDER_ID}.r.f001",)}
+    assert _refs(revisions[_NEWER_ID]) == {"01": (f"m999-{_NEWER_ID}.r.f001",)}
 
 
 def test_two_layouts_addressing_one_casilla_are_refused_rather_than_merged(tmp_path: Path) -> None:
     one_layout = _single(
         tmp_path / "one",
         casillas=_TWO_CASILLAS,
-        layouts=(_layout("2025", "la", _field("2025", "m999.a.f001", 1, casilla_id="01")),),
+        layouts=(_layout(_NEWER_ID, "la", _field(_NEWER_ID, "m999.a.f001", 1, casilla_id="01")),),
     )
     assert _refs(one_layout)["01"] == ("m999.a.f001",)
 
@@ -249,59 +258,59 @@ def test_two_layouts_addressing_one_casilla_are_refused_rather_than_merged(tmp_p
             tmp_path / "two",
             casillas=_TWO_CASILLAS,
             layouts=(
-                _layout("2025", "la", _field("2025", "m999.a.f001", 1, casilla_id="01")),
-                _layout("2025", "lb", _field("2025", "m999.b.f001", 1, casilla_id="01")),
+                _layout(_NEWER_ID, "la", _field(_NEWER_ID, "m999.a.f001", 1, casilla_id="01")),
+                _layout(_NEWER_ID, "lb", _field(_NEWER_ID, "m999.b.f001", 1, casilla_id="01")),
             ),
         )
 
 
 def test_a_field_resolving_to_a_casilla_the_materialised_edition_lacks_is_refused(tmp_path: Path) -> None:
     modelo_dir = _modelo(tmp_path)
-    _write_edition(modelo_dir, "2024", year=2024, casillas=_casilla("2024", "01"))
+    _write_edition(modelo_dir, _OLDER_ID, year=_OLDER, casillas=_casilla(_OLDER_ID, "01"))
     _write_edition(
         modelo_dir,
-        "2025",
-        year=2025,
+        _NEWER_ID,
+        year=_NEWER,
         casillas="",
-        layouts=(_layout("2025", "l", _field("2025", "m999.r.f001", 1, casilla_id="01")),),
-        manifest_extra='predecessor = "2024"\n',
+        layouts=(_layout(_NEWER_ID, "l", _field(_NEWER_ID, "m999.r.f001", 1, casilla_id="01")),),
+        manifest_extra=f'predecessor = "{_OLDER_ID}"\n',
     )
     # The inherited row is part of the materialised edition, so addressing it loads.
-    assert _refs(load_modelo_directory(modelo_dir).revisions["2025"]) == {"01": ("m999.r.f001",)}
+    assert _refs(load_modelo_directory(modelo_dir).revisions[_NEWER_ID]) == {"01": ("m999.r.f001",)}
 
-    layout_path = modelo_dir / "revisions" / "2025" / "export_layouts" / "0001-layout.toml"
+    layout_path = modelo_dir / "revisions" / _NEWER_ID / "export_layouts" / "0001-layout.toml"
     layout_path.write_text(
-        _layout("2025", "l", _field("2025", "m999.r.f001", 1, casilla_id="99")), encoding="utf-8", newline="\n"
+        _layout(_NEWER_ID, "l", _field(_NEWER_ID, "m999.r.f001", 1, casilla_id="99")), encoding="utf-8", newline="\n"
     )
     with pytest.raises(RegistryLoadError, match=r"resolve to casillas \['99'\], which the edition does not declare"):
         load_modelo_directory(modelo_dir)
 
 
 def test_an_authored_export_refs_key_is_refused(tmp_path: Path) -> None:
-    layouts = (_layout("2025", "l", _field("2025", "m999.r.f001", 1, casilla_id="01")),)
-    derived = _single(tmp_path / "derived", casillas=_casilla("2025", "01"), layouts=layouts)
+    layouts = (_layout(_NEWER_ID, "l", _field(_NEWER_ID, "m999.r.f001", 1, casilla_id="01")),)
+    derived = _single(tmp_path / "derived", casillas=_casilla(_NEWER_ID, "01"), layouts=layouts)
     assert _refs(derived) == {"01": ("m999.r.f001",)}
 
     with pytest.raises(RegistryLoadError, match=r"casillas \['01'\] declare export_refs"):
         _single(
             tmp_path / "authored",
-            casillas=_casilla("2025", "01", extra='export_refs = ["m999.r.f001"]\n'),
+            casillas=_casilla(_NEWER_ID, "01", extra='export_refs = ["m999.r.f001"]\n'),
             layouts=layouts,
         )
 
 
 def _row_record(fields: str, *, binding_record: bool, slot_casilla: str = "01") -> str:
     record_extra = 'repeat = "binding_rows"\n' + ('binding_record = "contraparte"\n' if binding_record else "")
-    return _layout("2025", "l", fields, record_extra=record_extra, row_map=f'{_ROW_SLOT} = "{slot_casilla}"')
+    return _layout(_NEWER_ID, "l", fields, record_extra=record_extra, row_map=f'{_ROW_SLOT} = "{slot_casilla}"')
 
 
 def test_a_row_mapped_binding_field_derives_the_back_reference_of_the_casilla_its_slot_names(tmp_path: Path) -> None:
-    binding_field = _field("2025", "m999.r.f005", 1, binding=_ROW_BINDING)
+    binding_field = _field(_NEWER_ID, "m999.r.f005", 1, binding=_ROW_BINDING)
     mapped = _single(
         tmp_path / "mapped",
         casillas=_TWO_CASILLAS,
         layouts=(_row_record(binding_field, binding_record=False),),
-        bindings=_row_binding("2025"),
+        bindings=_row_binding(_NEWER_ID),
     )
     assert _refs(mapped) == {"01": ("m999.r.f005",), "02": ()}
 
@@ -310,18 +319,20 @@ def test_a_row_mapped_binding_field_derives_the_back_reference_of_the_casilla_it
         tmp_path / "remapped",
         casillas=_TWO_CASILLAS,
         layouts=(_row_record(binding_field, binding_record=False, slot_casilla="02"),),
-        bindings=_row_binding("2025"),
+        bindings=_row_binding(_NEWER_ID),
     )
     assert _refs(remapped) == {"01": (), "02": ("m999.r.f005",)}
 
 
 def test_a_binding_record_row_template_contributes_no_casilla_edge(tmp_path: Path) -> None:
-    fields = _field("2025", "m999.r.f001", 1, casilla_id="01") + _field("2025", "m999.r.f002", 2, binding=_ROW_BINDING)
+    fields = _field(_NEWER_ID, "m999.r.f001", 1, casilla_id="01") + _field(
+        _NEWER_ID, "m999.r.f002", 2, binding=_ROW_BINDING
+    )
     template = _single(
         tmp_path / "template",
         casillas=_TWO_CASILLAS,
         layouts=(_row_record(fields, binding_record=True),),
-        bindings=_row_binding("2025"),
+        bindings=_row_binding(_NEWER_ID),
     )
     assert _refs(template) == {"01": (), "02": ()}
 
@@ -330,6 +341,6 @@ def test_a_binding_record_row_template_contributes_no_casilla_edge(tmp_path: Pat
         tmp_path / "design",
         casillas=_TWO_CASILLAS,
         layouts=(_row_record(fields, binding_record=False),),
-        bindings=_row_binding("2025"),
+        bindings=_row_binding(_NEWER_ID),
     )
     assert _refs(design) == {"01": ("m999.r.f001", "m999.r.f002"), "02": ()}

@@ -6,13 +6,15 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.keyed_families import family_spec
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.keyed_family_inheritance import inherit_keyed_family
 from ..compiler.keyed_family_storage_delta import patch_family_sequences
 from ..compiler.loader import load_modelo_directory
-from .synthetic_delta_edition_support import SUCCESSOR_EDITION
+from .synthetic_delta_edition_support import PREDECESSOR_EDITION, SUCCESSOR_EDITION
 from .test_restated_family_merge import (
     BASE_FORMULA,
     CUOTA_FORMULA,
@@ -37,9 +39,9 @@ def _successor(root: Path, declaration: str) -> ModeloRevision:
 def test_changed_member_authors_only_its_changed_nested_field(tmp_path: Path) -> None:
     revision = _successor(
         tmp_path,
-        '[[revisions."2025".family_overrides]]\n'
+        f'[[revisions."{SUCCESSOR_EDITION}".family_overrides]]\n'
         'family = "formulas"\n'
-        'selector = { revision = "2024", id = "modelo-999-cuota" }\n'
+        f'selector = {{ revision = "{PREDECESSOR_EDITION}", id = "modelo-999-cuota" }}\n'
         'fields = { expression = { literal = "7" } }\n',
     )
 
@@ -51,10 +53,10 @@ def test_changed_member_authors_only_its_changed_nested_field(tmp_path: Path) ->
 def test_member_removal_addition_and_order_are_exact(tmp_path: Path) -> None:
     revision = _successor(
         tmp_path,
-        '[[revisions."2025".family_removals]]\n'
+        f'[[revisions."{SUCCESSOR_EDITION}".family_removals]]\n'
         'family = "formulas"\n'
-        'selector = { revision = "2024", id = "modelo-999-cuota" }\n'
-        '[[revisions."2025".family_positions]]\n'
+        f'selector = {{ revision = "{PREDECESSOR_EDITION}", id = "modelo-999-cuota" }}\n'
+        f'[[revisions."{SUCCESSOR_EDITION}".family_positions]]\n'
         'family = "formulas"\n'
         'id = "modelo-999-recargo"\n'
         "position = 0\n",
@@ -91,9 +93,9 @@ def test_inherited_member_keeps_predecessor_source_default(tmp_path: Path) -> No
 @pytest.mark.parametrize(
     ("selector", "expected"),
     [
-        ({"years": [2024], "periods": ["0A"]}, 1),
-        ({"year_from": 2023, "year_to": 2025, "periods": ["0A"]}, 1),
-        ({"years": [2025], "periods": ["0A"]}, 0),
+        ({"years": [int(PREDECESSOR_EDITION)], "periods": ["0A"]}, 1),
+        ({"year_from": filing_year_envelope().floor, "year_to": filing_year_envelope().horizon, "periods": ["0A"]}, 1),
+        ({"years": [int(SUCCESSOR_EDITION)], "periods": ["0A"]}, 0),
     ],
     ids=("matching", "overlapping", "nonmatching"),
 )
@@ -104,12 +106,17 @@ def test_a_deadline_is_inherited_only_into_an_edition_filing_its_period(
     spec = family_spec("deadline_windows")
     assert spec is not None
     assert spec.identity is not None
-    member = {"id": "deadline-2024", "filing_year": 2024, "period": "2024 0A"}
+    predecessor_year = int(PREDECESSOR_EDITION)
+    member = {
+        "id": f"deadline-{predecessor_year}",
+        "filing_year": predecessor_year,
+        "period": str(Period.from_year_and_code(predecessor_year, "0A")),
+    }
 
     result = inherit_keyed_family(
         "deadline fixture",
-        revision_id="2025",
-        predecessor_id="2024",
+        revision_id=SUCCESSOR_EDITION,
+        predecessor_id=PREDECESSOR_EDITION,
         predecessor={"deadline_windows": (member,)},
         family=spec,
         inherited=(member,),

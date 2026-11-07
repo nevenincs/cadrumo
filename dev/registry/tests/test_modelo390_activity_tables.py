@@ -11,14 +11,22 @@ from cadrumo.application.storage.calc_sheets.engine import build_export_plan
 from cadrumo.application.storage.calc_sheets.form_workbook import add_form_workbook
 from cadrumo.application.storage.calc_sheets.layout import plan_layout
 from cadrumo.application.storage.calc_sheets.records import TabName
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_grade_exercises, revision_covering
 
 from ..workbook_demo import demonstration_snapshot
 from ..workbook_demo_cases import DemoCase
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
+#: The two newest filing-grade editions share the page-5 activity tables this pins.
+_EXERCISES = filing_grade_exercises("390")[-2:]
 
-def _assert_module_activity_grid(page, activity: int, year: int):
+
+def _demo_case(year: int) -> DemoCase:
+    return DemoCase("390", str(revision_covering("390", year).id), None, None, filing_year=year, period="0A")
+
+
+def _assert_module_activity_grid(page, activity: int, bindings: frozenset[str]):
     section = next(s for s in page.sections if s.id == f"6-operaciones-reg-simplificado-actividad-{activity}")
     prefix = f"modelo-390.page_5.operaciones-reg-simplificado-actividad-{activity}-"
     identity = section.blocks[0]
@@ -31,7 +39,7 @@ def _assert_module_activity_grid(page, activity: int, year: int):
     assert prefix + "c-cuota-devengada-operaciones-corrientes" == summary_ids[0]
     assert prefix + f"cuota-derivada-regimen-simplificado-j{activity}" in summary_ids
     reduction = prefix + "reduccion-aplicable-por-actividad-realizada-en-el-termin"
-    assert (reduction in summary_ids) == (year == 2024)
+    assert (reduction in summary_ids) == (reduction in bindings)
     for module, row in enumerate(grid.rows, 1):
         assert [c.binding_id for c in row.cells] == [
             f"modelo-390.page_5.operaciones-reg-simplificado-actividad-{activity}-a-no-unidades-modulo-{module}",
@@ -91,12 +99,13 @@ def _assert_seeded_rows_reach_distinct_form_cells(plan, workbook, seeded, row_so
         assert len({a.column for a in targets}) == len(addresses)
 
 
-@pytest.mark.parametrize("year", (2024, 2025))
+@pytest.mark.parametrize("year", _EXERCISES)
 def test_activity_tables_preserve_all_58_independent_live_sources(year: int) -> None:
-    snapshot = demonstration_snapshot(DemoCase("390", str(year), None, None, filing_year=year, period="0A"))
+    snapshot = demonstration_snapshot(_demo_case(year))
     page = next(p for p in snapshot.revision.form_layouts[0].pages if p.id == "pag-5")
     assert page.official_ref is not None and "136900" in page.official_ref
-    grids = [_assert_module_activity_grid(page, activity, year) for activity in (1, 2)]
+    bindings = frozenset(str(binding.id) for binding in snapshot.revision.bindings)
+    grids = [_assert_module_activity_grid(page, activity, bindings) for activity in (1, 2)]
     grids.append(_assert_agricultural_activity_grid(page))
     layout = plan_layout(snapshot.revision)
     seeded, row_sources = _seed_grid_cells(layout, grids)

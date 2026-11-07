@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ..analysis.condition_overlap import (
     RELATIONS,
     UNITS,
@@ -24,9 +26,10 @@ from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_A = ("303", "2025")
-_B = ("200", "2024")
-_C = ("165", "2023-2025")
+_HORIZON = filing_year_envelope().horizon
+_A = ("303", str(_HORIZON))
+_B = ("200", str(_HORIZON - 1))
+_C = ("165", f"{_HORIZON - 2}-{_HORIZON}")
 
 
 def _revisions(*units: tuple[str, str]) -> ConditionPopulation:
@@ -214,15 +217,15 @@ def test_a_pair_speaking_of_fields_is_not_compared_at_the_revision() -> None:
     exactly that pair at the top of its output - the monetary screen's split
     representation inside its unscaled money.
     """
-    split = _fields(("303", "2025", "f1"), ("303", "2025", "f2"))
-    unscaled = _fields(("303", "2025", "f3"))
+    split = _fields((*_A, "f1"), (*_A, "f2"))
+    unscaled = _fields((*_A, "f3"))
 
     assert split.finest_shared(unscaled) == "field"
     assert overlapping_conditions({"a.split": split, "b.unscaled": unscaled}) == ()
 
     # Read at the revision - which is what the pair shares with a coarser
     # condition - the same two look like a containment.
-    coarse = _revisions(("303", "2025"), ("200", "2024"))
+    coarse = _revisions(_A, _B)
     reported = overlapping_conditions({"a.split": split, "z.coarse": coarse})
     assert len(reported) == 1
     assert reported[0].unit == "revision"
@@ -252,8 +255,8 @@ def test_a_finer_unit_is_kept_only_when_every_finding_carries_it(
 def test_the_finest_shared_unit_is_the_first_both_carry() -> None:
     """The ladder is walked coarsest-last, so the finest common unit wins."""
     assert UNITS[-1] == "revision", "the coarsest unit must be last or the walk inverts"
-    both = _fields(("303", "2025", "f1"))
-    coarse = _revisions(("303", "2025"))
+    both = _fields((*_A, "f1"))
+    coarse = _revisions(_A)
     assert both.finest_shared(both) == "field"
     assert both.finest_shared(coarse) == "revision"
     assert coarse.finest_shared(both) == "revision"

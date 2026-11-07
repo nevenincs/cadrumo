@@ -8,23 +8,23 @@ import pytest
 
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.loader import load_modelo_directory
-from ..conformance.loader_directory_mode_support import (
-    standard_manifest_text,
-    standard_revision_preamble_text,
-)
+from ..conformance.loader_directory_mode_support import standard_manifest_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_QUALIFIED_WINDOW = """
-[[revisions."2025".deadline_windows]]
-id = "modelo-999-2025-0a-qualified"
-filing_year = 2025
-period = "2025 0A"
+_YEAR = filing_year_envelope().horizon
+_REVISION_ID = str(_YEAR)
+_QUALIFIED_WINDOW = f"""
+[[revisions."{_REVISION_ID}".deadline_windows]]
+id = "modelo-999-{_YEAR}-0a-qualified"
+filing_year = {_YEAR}
+period = "{_YEAR} 0A"
 period_kind = "annual"
-opens_on = 2026-01-01
-closes_on = 2026-01-20
+opens_on = {_YEAR + 1}-01-01
+closes_on = {_YEAR + 1}-01-20
 resultado_scope = "I"
 tipo_renta_scope = ["01", "35"]
 legal_refs = ["ley-58-2003:art-29"]
@@ -32,13 +32,23 @@ source_refs = ["aeat-manual"]
 """
 
 
+def _revision_preamble() -> str:
+    return (
+        f'[revisions."{_REVISION_ID}"]\n'
+        f"valid_from = {_YEAR}-01-01\n"
+        f'period_selector = {{ years = [{_YEAR}], periods = ["0A"] }}\n'
+        'legal_refs = ["ley-58-2003:art-29"]\n'
+        'source_refs = ["aeat-manual"]\n'
+    )
+
+
 def _write_deadline_modelo(root: Path, title: str, window_text: str) -> Path:
     modelo_dir = root / "999"
-    revision_dir = modelo_dir / "revisions" / "2025"
+    revision_dir = modelo_dir / "revisions" / _REVISION_ID
     deadline_dir = revision_dir / "deadline_windows"
     deadline_dir.mkdir(parents=True)
     (modelo_dir / "manifest.toml").write_text(standard_manifest_text(title), encoding="utf-8")
-    (revision_dir / "revision.toml").write_text(standard_revision_preamble_text(), encoding="utf-8")
+    (revision_dir / "revision.toml").write_text(_revision_preamble(), encoding="utf-8")
     (deadline_dir / "0001-deadline-windows.toml").write_text(window_text, encoding="utf-8")
     return modelo_dir
 
@@ -46,7 +56,7 @@ def _write_deadline_modelo(root: Path, title: str, window_text: str) -> Path:
 def test_qualified_deadline_window_compiles_its_typed_scopes(tmp_path: Path) -> None:
     modelo_dir = _write_deadline_modelo(tmp_path, "qualified deadline", _QUALIFIED_WINDOW)
 
-    window = load_modelo_directory(modelo_dir).revisions["2025"].deadline_windows[0]
+    window = load_modelo_directory(modelo_dir).revisions[_REVISION_ID].deadline_windows[0]
 
     assert window.resultado_scope is ResultDisposition.INGRESO
     assert window.tipo_renta_scope == ("01", "35")
@@ -59,9 +69,9 @@ def test_revision_level_deadline_qualifier_is_refused_outside_deadline_window_ro
 ) -> None:
     value = '"I"' if qualifier == "resultado_scope" else '["01"]'
     modelo_dir = _write_deadline_modelo(tmp_path, "misplaced qualifier", _QUALIFIED_WINDOW)
-    revision_manifest = modelo_dir / "revisions" / "2025" / "revision.toml"
+    revision_manifest = modelo_dir / "revisions" / _REVISION_ID / "revision.toml"
     revision_manifest.write_text(
-        standard_revision_preamble_text() + f"{qualifier} = {value}\n",
+        _revision_preamble() + f"{qualifier} = {value}\n",
         encoding="utf-8",
     )
 

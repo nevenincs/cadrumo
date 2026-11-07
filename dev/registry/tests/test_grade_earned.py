@@ -21,6 +21,7 @@ from cadrumo.domain.calculations.registry.schema_exports import (
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..analysis.grade_earned import grade_findings
 from .single_casilla_export_layout_support import (
@@ -52,11 +53,12 @@ def _revision(
     layouts: tuple[ExportLayoutDefinition, ...],
     casillas: tuple[CasillaDefinition, ...] = (),
 ) -> ModeloRevision:
+    year = filing_year_envelope().horizon
     return ModeloRevision(
         id="test-revision",
         localization_key="test.schema.revision.test-revision.label",
-        valid_from=date(2026, 1, 1),
-        period_selector=PeriodSelector(years=(2026,), periods=("1T",)),
+        valid_from=date(year, 1, 1),
+        period_selector=PeriodSelector(years=(year,), periods=("1T",)),
         legal_refs=(LEGAL_REF,),
         source_refs=(SOURCE_REF,),
         authority_grade=grade,

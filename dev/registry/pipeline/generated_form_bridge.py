@@ -16,13 +16,14 @@ from pathlib import Path
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.link_safety import is_link_like
+from cadrumo.core.resources import bundled_data
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormLayoutDefinition, FormLayoutReviewState
 from dev.temporary_output import prepare_temp_root
 
 from ..compiler.authority import compile_validated_authority
-from ..compiler.loader import load_registry_tree
+from ..compiler.loader import load_modelo_directory, load_registry_tree
 from ..compiler.source_evidence_fingerprint import collect_source_evidence_fingerprints
 from ..form_layout.cli import synchronise_form_layouts, synchronise_selected_form_layout
 from ..form_layout.generator import generate_revision_layout
@@ -34,44 +35,63 @@ from .tree_publication_artifacts import verify_generated_export_package
 from .tree_publication_contracts import GeneratedExportPublicationJournal, GeneratedExportTransactionPaths
 from .tree_publication_journal import journal_backup_path, load_generated_export_publication_journal
 
-REVIEWED: dict[tuple[str, str], tuple[str, str, str, str]] = {
-    ("720", "2013-y-siguientes"): (
-        "aeat-dr-720",
+#: Reviewed separate-owner repairs, keyed by the official design they were
+#: reviewed against: (modelo, source_ref) -> (source SHA-256, old export
+#: manifest SHA-256, old form SHA-256). A design is the reviewed object, so the
+#: revision that adopts it is resolved, never written here.
+REVIEWED: dict[tuple[str, str], tuple[str, str, str]] = {
+    ("720", "aeat-dr-720"): (
         "ac324b935b690f0b6fe12dc8351c324cc804170750f483b0768d6417dd4976b7",
         "1217b488e839465f1499fba090eeab3faa1e39e83068d7447de68467427f398d",
         "3edef464964b5cbe0b29e9cd9b3eba90349d7fe8cfe5e85ed923b7997ce0254a",
     ),
-    ("190", "2025-y-siguientes"): (
-        "aeat-dr-190-2025",
+    ("190", "aeat-dr-190-2025"): (
         "a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d",
         "c686e3d09a298c32d8025ef9c98f26455548be20d6796df8df05c8509a4d222a",
         "3ccbf778c6cf016254508cf12ca8eb1ecd7d2af2a5681eb48d6adf833c40cffe",
     ),
-    ("232", "2016-2017"): (
-        "aeat-dr-232-2016",
+    ("232", "aeat-dr-232-2016"): (
         "fb6802dcf8746e69331b67873cb2e5cae90c3343c69b4f4d430aecde3c56b6ad",
         "f4e1bb800af4c511c93e0d1df74520b70cc0ee986338b57f31c46c619582d6fa",
         "87587cd44e6be0d35afaffa93e35b458e8a61f3aebde2f6d4279a083d33ce647",
     ),
-    ("232", "2018-y-siguientes"): (
-        "aeat-dr-232-2018",
+    ("232", "aeat-dr-232-2018"): (
         "a61485dfc480393ec1dfc926142fd0b6a9386e28e60746da3dfbf2fdaf3bffff",
         "fb76af52570a20598382d59257ff685297864aa6091b1eac0d6155709dc52243",
         "a4e2d574372a6539b15d0467d566e6b1a03f75bb1ae3f75978ff352e09863405",
     ),
-    ("347", "2011-2024"): (
-        "aeat-dr-347-2011",
+    ("347", "aeat-dr-347-2011"): (
         "4cdfb401624e26abe3da3758ddcdcfc85b6b05ffa74e724b2d3f5eeb0c58e809",
         "b8f17768bc41422e399d1f1309049bed94f4831d0297861218c1675222de02d1",
         "91b8e514b64a86ab9a0674d4228edede7151ec45d2e67bf3ec97ac4b46f4c8bb",
     ),
-    ("347", "2025-y-siguientes"): (
-        "aeat-dr-347-2025",
+    ("347", "aeat-dr-347-2025"): (
         "14583ea5ee04441356c4572d30630d46bfe0818366e575ac186370dd3fe38361",
         "0c83baa05a29ccd3e0a246170c60af514e0848ecbb1ef20d5108157d376950da",
         "8e71508cd3cefdad1e8f66cb1ef1e59e2ef104aab07560f9ee930f6f2518fbc1",
     ),
 }
+
+
+def is_reviewed_generated_form_repair(modelo: str, revision: str, source_ref: str) -> bool:
+    """Return whether a revision's own official design carries a reviewed separate-owner form repair."""
+    return (modelo, source_ref) in REVIEWED and _revision_adopts_source(modelo, revision, source_ref)
+
+
+def _revision_adopts_source(modelo: str, revision: str, source_ref: str) -> bool:
+    """Return whether the bundled revision names the design among its own sources."""
+    modelo_root = bundled_data.bundled_path("registry", "aeat", "modelos", modelo)
+    if not modelo_root.is_dir():
+        return False
+    selected = load_modelo_directory(modelo_root).revisions.get(revision)
+    return selected is not None and source_ref in {str(ref) for ref in selected.source_refs}
+
+
+def _reviewed_old_source(modelo: str, source_ref: str) -> tuple[str, str]:
+    reviewed = REVIEWED.get((modelo, source_ref))
+    if reviewed is None:
+        raise RegistryValidationError("Generated export cutover backup differs from reviewed old source")
+    return source_ref, reviewed[0]
 
 
 def sha(path: Path) -> str:
@@ -120,7 +140,7 @@ def active_verified_backup(
     if sha(backup / "_generation.provenance.json") != old_manifest:
         raise RegistryValidationError("Generated export cutover backup differs from reviewed old manifest")
     old_package = verify_generated_export_package(backup)
-    source_ref, source_sha256 = reviewed_source or REVIEWED[(modelo, revision)][:2]
+    source_ref, source_sha256 = reviewed_source or _reviewed_old_source(modelo, str(old_package.source_ref))
     if (
         str(old_package.modelo),
         str(old_package.revision_id),
@@ -324,8 +344,12 @@ def prepare_generated_form_bridge(
     expected_manifest_sha256: str | None,
 ) -> GeneratedFormBridge:
     """Prove full export+form source validity before the export-only journal."""
-    reviewed = REVIEWED.get((modelo, revision))
-    if reviewed is None or (source_ref, source_sha256, expected_manifest_sha256) != reviewed[:3]:
+    reviewed = REVIEWED.get((modelo, source_ref))
+    if (
+        reviewed is None
+        or (source_sha256, expected_manifest_sha256) != reviewed[:2]
+        or not _revision_adopts_source(modelo, revision, source_ref)
+    ):
         raise RegistryValidationError("Generated form bridge requires one exact reviewed source and old target")
     source_root = bundled_path()
     interpreting_digest = generated_form_interpreting_input_digest(modelo)
@@ -336,7 +360,7 @@ def prepare_generated_form_bridge(
     old_form = form_layout_fragment_path(live_revision)
     old_manifest = live_revision / "export" / "_generation.provenance.json"
     new_manifest = candidate_revision / "export" / "_generation.provenance.json"
-    if sha(old_manifest) != expected_manifest_sha256 or sha(old_form) != reviewed[3]:
+    if sha(old_manifest) != expected_manifest_sha256 or sha(old_form) != reviewed[2]:
         raise RegistryValidationError("Generated form bridge old manifest or form differs from reviewed bytes")
     old_package = verify_generated_export_package(live_revision / "export")
     new_package = verify_generated_export_package(candidate_revision / "export")

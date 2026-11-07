@@ -24,6 +24,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.provenance import NormativeCorpusProvenance
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.corpus.artifact_catalogue import ArtifactRole, registry_source_identity
 
 from ..compiler.corpus_catalogue import (
@@ -153,7 +154,7 @@ def test_changed_provenance_shaped_normative_source_still_fails_hash_validation(
             "corpus_path": corpus_path,
             "sha256": hashlib.sha256(original).hexdigest(),
             "bytes": len(original),
-            "retrieved_at": date(2026, 9, 10),
+            "retrieved_at": date(filing_year_envelope().horizon, 9, 10),
             "source_url": "https://www.boe.es/",
             "review_status": "pending_review",
         }

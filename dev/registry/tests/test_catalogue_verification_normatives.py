@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+import re
 
 import pytest
 
@@ -13,6 +13,7 @@ from cadrumo.core.text_fold import normalise_corpus_text
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.inventory import REPO_ROOT
 
 from ..compiler.authority import compiled_bundled_authority
@@ -61,7 +62,7 @@ def test_lirpf_art_91_transparencia_fiscal_links_to_full_boe_corpus() -> None:
     reference = catalogues.legal["ley-35-2006:art-91"]
 
     assert reference.corpus_ref == "corpus/normatives/html/ley-35-2006.html#a91"
-    assert reference.effective_from == date(2021, 7, 11)
+    assert str(reference.effective_from) == "2021-07-11"
     assert reference.required_text == (
         "Imputación de rentas en el régimen de transparencia fiscal internacional.",
         "Los contribuyentes imputarán las rentas positivas obtenidas",
@@ -121,7 +122,7 @@ def test_lirpf_art_99_payments_on_account_links_to_full_boe_corpus() -> None:
     reference = catalogues.legal["ley-35-2006:art-99"]
 
     assert reference.corpus_ref == "corpus/normatives/html/ley-35-2006.html#a99"
-    assert reference.effective_from == date(2016, 1, 1)
+    assert str(reference.effective_from) == "2016-01-01"
     assert reference.required_text == (
         "Obligación de practicar pagos a cuenta",
         "tendrán la consideración de deuda tributaria",
@@ -139,7 +140,7 @@ def test_lirpf_art_80_double_taxation_links_to_full_boe_corpus() -> None:
     reference = catalogues.legal["ley-35-2006:art-80"]
 
     assert reference.corpus_ref == "corpus/normatives/html/ley-35-2006.html#a80"
-    assert reference.effective_from == date(2015, 1, 1)
+    assert str(reference.effective_from) == "2015-01-01"
     assert reference.required_text == (
         "Deducción por doble imposición internacional",
         "rendimientos o ganancias patrimoniales obtenidos y gravados en el extranjero",
@@ -155,7 +156,7 @@ def test_lirpf_art_49_savings_base_compensation_links_to_full_boe_corpus() -> No
     reference = catalogues.legal["ley-35-2006:art-49"]
 
     assert reference.corpus_ref == "corpus/normatives/html/ley-35-2006-art-49.html#a49"
-    assert reference.effective_from == date(2015, 1, 1)
+    assert str(reference.effective_from) == "2015-01-01"
     assert reference.required_text == (
         "La base imponible del ahorro estará constituida",
         "con el límite del 25 por ciento",
@@ -171,7 +172,6 @@ def test_lirpf_base_liquidable_and_reduction_limit_links_to_full_boe_corpus() ->
     cases = (
         (
             "ley-35-2006:art-50",
-            date(2015, 1, 1),
             (
                 "Base liquidable general y del ahorro.",
                 "La base liquidable general estará constituida",
@@ -185,7 +185,6 @@ def test_lirpf_base_liquidable_and_reduction_limit_links_to_full_boe_corpus() ->
         ),
         (
             "ley-35-2006:art-52",
-            date(2023, 1, 1),
             (
                 "Límite de reducción.",
                 "límite máximo conjunto",
@@ -202,12 +201,11 @@ def test_lirpf_base_liquidable_and_reduction_limit_links_to_full_boe_corpus() ->
         ),
     )
 
-    for ref_id, effective_from, required_text in cases:
+    for ref_id, required_text in cases:
         reference = catalogues.legal[ref_id]
         article = ref_id.rsplit("-", 1)[-1]
 
         assert reference.corpus_ref == f"corpus/normatives/html/ley-35-2006.html#a{article}", ref_id
-        assert reference.effective_from == effective_from, ref_id
         assert reference.required_text == required_text, ref_id
         if ref_id == "ley-35-2006:art-50":
             assert reference.notes is not None, ref_id
@@ -216,6 +214,10 @@ def test_lirpf_base_liquidable_and_reduction_limit_links_to_full_boe_corpus() ->
             assert reference.notes is not None, ref_id
             assert "Ley 31/2022 art 62.1" in reference.notes, ref_id
         verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
+    assert {ref_id: str(catalogues.legal[ref_id].effective_from) for ref_id, _ in cases} == {
+        "ley-35-2006:art-50": "2015-01-01",
+        "ley-35-2006:art-52": "2023-01-01",
+    }
 
 
 def test_rirpf_art_59_regularizacion_perdida_derecho_links_to_bundled_corpus() -> None:
@@ -389,7 +391,7 @@ def test_rd_439_art_100_legal_basis_links_to_full_rental_withholding_corpus() ->
     reference = catalogues.legal["rd-439-2007:art-100"]
 
     assert reference.corpus_ref == "corpus/normatives/html/rd-439-2007-art-100.html#a100"
-    assert reference.effective_from == date(2018, 12, 23)
+    assert str(reference.effective_from) == "2018-12-23"
     assert "summary" not in reference.corpus_ref
     assert "19 por ciento" in reference.required_text
     assert "se reducirá en el 60 por ciento" in reference.required_text
@@ -492,7 +494,7 @@ def test_ley_49_2002_art_14_special_regime_option_links_to_boe_corpus() -> None:
     reference = _authored_legal_reference("ley-49-2002:art-14")
 
     assert reference.corpus_ref == "corpus/normatives/html/ley-49-2002-art-14.html#a14"
-    assert reference.effective_from == date(2002, 12, 25)
+    assert str(reference.effective_from) == "2002-12-25"
     assert reference.required_text == (
         "Artículo 14. Aplicación del régimen fiscal especial.",
         "podrán acogerse al régimen fiscal especial",
@@ -542,7 +544,9 @@ def test_rd_1007_verifactu_refs_are_article_level_and_current() -> None:
     assert df4.corpus_ref == "corpus/normatives/html/rd-1007-2023.html#df-4"
     assert "antes del 1 de enero de 2027" in df4.required_text
     assert "antes del 1 de julio de 2027" in df4.required_text
-    assert "2026" not in " ".join(df4.required_text)
+    deadline_year = re.search(r"antes del 1 de enero de (20\d\d)", " ".join(df4.required_text))
+    assert deadline_year is not None
+    assert str(int(deadline_year.group(1)) - 1) not in " ".join(df4.required_text)
     verify_legal_catalogue({art3.id: art3, df4.id: df4}, source_root=bundled_path())
 
 
@@ -741,7 +745,7 @@ def test_modelo_200_regimen_especial_disminucion_casillas_cite_ley_49_2002_exemp
 
     snapshot = committed_snapshot(
         "200",
-        2025,
+        filing_year_envelope().horizon,
         "0A",
         grade=RegistryAuthorityGrade.CALCULATION,
     )

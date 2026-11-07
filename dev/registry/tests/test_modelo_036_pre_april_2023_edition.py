@@ -21,6 +21,7 @@ from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelecti
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ..conformance.registry_schema_support import committed_modelo
 
@@ -28,6 +29,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _OLD_DESIGN = "aeat-dr-036-v35"
 _NEW_DESIGN = "aeat-dr-036-2023"
+# The modelo's two oldest authored editions: the design before the April 2023 form, then the one that replaced it.
+_OLD_EDITION, _NEW_EDITION = (str(revision.id) for revision in authored_revisions("036")[:2])
 _ADDED_BOXES = frozenset({"744", "716.a", "717.a", "716.b", "717.b"})
 
 
@@ -55,8 +58,8 @@ def test_the_design_windows_meet_on_the_orden_hfp_381_2023_entry_into_force() ->
     last_old, first_new = _boundary()
     assert catalogues.legal["orden-hfp-381-2023:df-unica"].effective_from == first_new
     modelo, _ = _modelo()
-    old = modelo.revisions["2022-hasta-2023-04-24"]
-    new = modelo.revisions["2023-hasta-2025-02-02"]
+    old = modelo.revisions[_OLD_EDITION]
+    new = modelo.revisions[_NEW_EDITION]
     assert (old.valid_to, new.valid_from) == (last_old, first_new)
     assert _OLD_DESIGN in old.source_refs and _NEW_DESIGN not in old.source_refs
     assert _NEW_DESIGN in new.source_refs and _OLD_DESIGN not in new.source_refs
@@ -68,9 +71,9 @@ def test_selection_by_date_splits_the_year_at_the_boundary() -> None:
     assert catalogues.supported_filing_years is not None
     floor = min(catalogues.supported_filing_years.years)
     for period in ("alta", "modificacion", "baja"):
-        assert _selected(floor, None, period).id == "2022-hasta-2023-04-24"
-        assert _selected(last_old.year, last_old, period).id == "2022-hasta-2023-04-24"
-        assert _selected(first_new.year, first_new, period).id == "2023-hasta-2025-02-02"
+        assert _selected(floor, None, period).id == _OLD_EDITION
+        assert _selected(last_old.year, last_old, period).id == _OLD_EDITION
+        assert _selected(first_new.year, first_new, period).id == _NEW_EDITION
     with pytest.raises(AmbiguousRevisionSelectionError):
         _selected(first_new.year, None)
 

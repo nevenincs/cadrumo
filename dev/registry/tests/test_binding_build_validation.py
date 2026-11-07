@@ -39,9 +39,12 @@ from cadrumo.domain.calculations.registry.bindings import validate_binding_selec
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ..conformance.registry_schema_support import committed_modelo
 from .profile_schema_support import committed_registry_validator
+
+_REVISION_130 = str(open_ended_revision("130").id)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -75,7 +78,7 @@ def _inject_binding(modelo: ModeloDefinition, replacement: BindingDefinition) ->
     tiers) satisfied so the only thing the build can reject is the lifted
     binding op/fact invariant.
     """
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions[_REVISION_130]
     bindings = tuple(replacement if item.id == revision.bindings[0].id else item for item in revision.bindings)
     mutated = revision.model_copy(update={"bindings": bindings})
     return modelo.model_copy(update={"revisions": {**modelo.revisions, mutated.id: mutated}})
@@ -101,7 +104,7 @@ def _build_binding(
     """Build a binding of ``source`` reusing the first M130 binding's id and grounding."""
     if base is None:
         modelo, _catalogues = _committed_modelo_130()
-        base = modelo.revisions["2019-y-siguientes"].bindings[0]
+        base = modelo.revisions[_REVISION_130].bindings[0]
     # The provider member is built from the kind and its keys, so a malformed
     # key set that the member still admits reaches the family gate as authored.
     value = (
@@ -255,7 +258,7 @@ def test_binding_family_build_gate_contract(
     """Each family accepts a good binding, constructs a bad one, and rejects it at build."""
     _label, source, well_formed_selector, well_formed_op, malformed_selector, malformed_op = case
     modelo, catalogues = _committed_modelo_130()
-    base = modelo.revisions["2019-y-siguientes"].bindings[0]
+    base = modelo.revisions[_REVISION_130].bindings[0]
 
     well_formed = _build_binding(source=source, selector=well_formed_selector, op=well_formed_op, base=base)
     assert validate_binding_selector_shape(well_formed) == [], f"well-formed {source} binding must pass the build gate"
@@ -350,6 +353,6 @@ def test_isolated_revision_build_gate_runs_every_family() -> None:
         assert failures, f"malformed {source} binding must fail the dispatch gate"
         # Sanity: a one-binding revision carrying the malformed binding is still
         # a constructible ModeloRevision (the gate, not schema, rejects it).
-        revision = _committed_modelo_130()[0].revisions["2019-y-siguientes"]
+        revision = _committed_modelo_130()[0].revisions[_REVISION_130]
         one_binding = revision.model_copy(update={"bindings": (malformed,)})
         assert isinstance(one_binding, ModeloRevision)

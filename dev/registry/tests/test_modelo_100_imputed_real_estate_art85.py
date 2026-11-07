@@ -13,7 +13,7 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .modelo_100_registry_support import (
@@ -22,6 +22,7 @@ from .modelo_100_registry_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+#: The newest authored edition and the one before it, which the scenario supplies different profile facts for.
 _NEWEST = newest_authored_edition("100")
 _PREVIOUS = _NEWEST - 1
 
@@ -36,7 +37,7 @@ def _snapshot(year: int) -> RegistrySnapshot:
         "100",
         filing_year=year,
         period="0A",
-        revision_id=str(year),
+        revision_id=str(revision_covering("100", year).id),
     )
 
 

@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import re
+
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from cadrumo.core.filing_year import FourDigitYear
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from .record_design_intermediate import RecordDesignIntermediateSource
@@ -19,7 +22,7 @@ class BoundedYearDeclaration(BaseModel):
     sheet: str = Field(min_length=1)
     source_cell: str = Field(pattern=r"^[A-Z]+[1-9][0-9]*$")
     published_statement: str = Field(min_length=1)
-    minimum_year: int = Field(ge=1000, le=9999)
+    minimum_year: FourDigitYear
 
     @model_validator(mode="after")
     def _require_exact_lower_bound(self) -> BoundedYearDeclaration:
@@ -28,22 +31,31 @@ class BoundedYearDeclaration(BaseModel):
         return self
 
 
+_LOWER_BOUND_STATEMENT = re.compile(r"^>= (?P<year>[0-9]{4})$")
+
+
+def _source_stated_bound(**reading: str) -> BoundedYearDeclaration:
+    """Build one reviewed reading whose bound is the year the design itself prints."""
+    printed = _LOWER_BOUND_STATEMENT.fullmatch(reading["published_statement"])
+    if printed is None:
+        raise RegistryValidationError("year constraint must state one exact inclusive lower bound")
+    return BoundedYearDeclaration(**reading, minimum_year=int(printed["year"]))
+
+
 _YEAR_CONSTRAINTS = {
-    "aeat-dr-216-2024": BoundedYearDeclaration(
+    "aeat-dr-216-2024": _source_stated_bound(
         source_ref="aeat-dr-216-2024",
         source_sha256="ebee21da4709d6cd63e42cbd82d8c0592252ce2157c93ac1df9833f1ea42cbf0",
         sheet="Pág. 1",
         source_cell="A14",
         published_statement=">= 2024",
-        minimum_year=2024,
     ),
-    "aeat-dr-604-2024": BoundedYearDeclaration(
+    "aeat-dr-604-2024": _source_stated_bound(
         source_ref="aeat-dr-604-2024",
         source_sha256="98f7022a391e822ee2c57b6e2b1f873fd2bcc8db80a5b692fd7c6fae1e758f68",
         sheet="Pág. 1",
         source_cell="A14",
         published_statement=">= 2024",
-        minimum_year=2024,
     ),
 }
 

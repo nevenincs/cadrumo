@@ -12,13 +12,15 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
+from .authored_edition_support import authored_revisions
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+# Each edition declares the predicate under its own id; the late-quarters branch of the newest
+# exercise is not among them.
 _PREDICATE_IDS = {
-    "2019-2023": "modelo-131-2019-2023-pago-fraccionado-determinado-cuando-rendimientos-positivos",
-    "2024": "modelo-131-2024-pago-fraccionado-determinado-cuando-rendimientos-positivos",
-    "2025": "modelo-131-2025-pago-fraccionado-determinado-cuando-rendimientos-positivos",
-    "2026": "modelo-131-2026-pago-fraccionado-determinado-cuando-rendimientos-positivos",
+    str(revision.id): f"modelo-131-{revision.id}-pago-fraccionado-determinado-cuando-rendimientos-positivos"
+    for revision in authored_revisions("131")[:4]
 }
 _EXPECTED_EXPRESSION = 'implies_nonzero(["01", "02"])'
 _ROLLED_BACK_EXPRESSION = 'implies_nonzero(["01", "07"])'

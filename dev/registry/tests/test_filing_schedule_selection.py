@@ -11,6 +11,7 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schedules import applicable_filing_schedules
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.deadlines.models import IVARegime, ModeloEnrollment, TaxpayerProfile
 from cadrumo.domain.user_profile.registry_contract import validate_user_profile_registry_contract
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
@@ -23,7 +24,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 def test_modelo_111_selects_monthly_schedule_from_profile_enrollment_facts(
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
-    snapshot = registry_snapshot("111", 2026, "01")
+    snapshot = registry_snapshot("111", filing_year_envelope().horizon, "01")
 
     schedules = applicable_filing_schedules(
         snapshot.revision,
@@ -38,7 +39,7 @@ def test_modelo_111_selects_monthly_schedule_from_profile_enrollment_facts(
 def test_modelo_111_selects_monthly_schedule_from_profile_object(
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
-    snapshot = registry_snapshot("111", 2026, "01")
+    snapshot = registry_snapshot("111", filing_year_envelope().horizon, "01")
     profile = TaxpayerProfile(
         tax_id="X0001500M",
         iva_regime=IVARegime("GENERAL"),
@@ -53,7 +54,7 @@ def test_modelo_111_selects_monthly_schedule_from_profile_object(
 def test_modelo_111_selects_quarterly_schedule_from_profile_enrollment_facts(
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
-    snapshot = registry_snapshot("111", 2026, "1T")
+    snapshot = registry_snapshot("111", filing_year_envelope().horizon, "1T")
 
     schedules = applicable_filing_schedules(
         snapshot.revision,
@@ -69,7 +70,7 @@ def test_validator_rejects_schedule_periods_outside_revision_selector(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
     modelo = registry_authority.modelo("111")
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions[str(open_ended_revision("111").id)]
     schedule = revision.filing_schedules[0].model_copy(update={"periods": ("1T", "99")})
     mutated_revision = revision.model_copy(update={"filing_schedules": (schedule, *revision.filing_schedules[1:])})
     mutated_modelo = modelo.model_copy(update={"revisions": {revision.id: mutated_revision}})
@@ -125,7 +126,7 @@ def test_filing_schedule_predicate_with_unknown_field_is_reported_as_contract_er
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
     modelo = registry_authority.modelo("111")
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions[str(open_ended_revision("111").id)]
     schedule = next(s for s in revision.filing_schedules if s.profile_conditions)
     bad_condition = schedule.profile_conditions[0].model_copy(update={"field": "unknown_predicate_field"})
     bad_schedule = schedule.model_copy(update={"profile_conditions": (bad_condition,)})
@@ -144,7 +145,7 @@ def test_deadline_window_predicate_with_unknown_field_is_reported_as_contract_er
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
     modelo = registry_authority.modelo("111")
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions[str(open_ended_revision("111").id)]
     window = next(w for w in revision.deadline_windows if w.applicability_conditions)
     bad_condition = window.applicability_conditions[0].model_copy(update={"field": "unknown_predicate_field"})
     bad_window = window.model_copy(update={"applicability_conditions": (bad_condition,)})

@@ -30,6 +30,7 @@ import pytest
 
 from cadrumo.core.hashing import blake2b_hex
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.loader import load_modelo_directory, load_registry_tree
 from ..compiler.loader_fingerprints import (
@@ -47,6 +48,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 type _Fingerprint = tuple[str, int, int, str]
 type _Rows = list[tuple[str, str, str | None]]
 
+_SUCCESSOR = filing_year_envelope().horizon
+_PREDECESSOR = _SUCCESSOR - 1
+_SUCCESSOR_ID = str(_SUCCESSOR)
+_PREDECESSOR_ID = str(_PREDECESSOR)
 _MODELO_ID = "999"
 _LEGAL_REF = "ley-58-2003:art-29"
 
@@ -87,21 +92,22 @@ def _casilla(revision_id: str, casilla_id: str, *, number: str, lineage: str) ->
 
 
 def _write_tree(tmp_path: Path) -> Path:
-    """A 2024 edition with two rows and a 2025 delta edition restating one of them."""
+    """A predecessor edition with two rows and a successor delta edition restating one of them."""
     registry_root = tmp_path / "registry" / "aeat"
-    write_minimal_shared_catalogues(registry_root / "legal", floor=2024, horizon=2025)
+    write_minimal_shared_catalogues(registry_root / "legal", floor=_PREDECESSOR, horizon=_SUCCESSOR)
     modelo_dir = registry_root / "modelos" / _MODELO_ID
     modelo_dir.mkdir(parents=True)
     (modelo_dir / "manifest.toml").write_text(_MANIFEST_TOML, encoding="utf-8", newline="\n")
     write_fragmented_revision(
-        modelo_dir / "revisions" / "2024",
-        _revision("2024", predecessor=None)
-        + _casilla("2024", "01", number="01", lineage="base")
-        + _casilla("2024", "02", number="02", lineage="cuota"),
+        modelo_dir / "revisions" / _PREDECESSOR_ID,
+        _revision(_PREDECESSOR_ID, predecessor=None)
+        + _casilla(_PREDECESSOR_ID, "01", number="01", lineage="base")
+        + _casilla(_PREDECESSOR_ID, "02", number="02", lineage="cuota"),
     )
     write_fragmented_revision(
-        modelo_dir / "revisions" / "2025",
-        _revision("2025", predecessor="2024") + _casilla("2025", "02", number="22", lineage="cuota"),
+        modelo_dir / "revisions" / _SUCCESSOR_ID,
+        _revision(_SUCCESSOR_ID, predecessor=_PREDECESSOR_ID)
+        + _casilla(_SUCCESSOR_ID, "02", number="22", lineage="cuota"),
     )
     return registry_root.resolve()
 
@@ -137,7 +143,7 @@ def _changed_paths(before: tuple[_Fingerprint, ...], after: tuple[_Fingerprint, 
 
 #: The successor as expanded from the unedited tree: the inherited ``base`` row
 #: first, then the stated ``cuota`` row in the slot of the row it supersedes.
-_EXPANDED_2025: _Rows = [("01", "01", "base"), ("02", "22", "cuota")]
+_EXPANDED_SUCCESSOR: _Rows = [("01", "01", "base"), ("02", "22", "cuota")]
 
 
 @pytest.fixture(autouse=True)
@@ -148,10 +154,10 @@ def _cold_fingerprint_cache() -> None:
 def test_editing_the_delta_edition_invalidates_and_serves_its_new_content(tmp_path: Path) -> None:
     registry_root = _write_tree(tmp_path)
     modelo_dir = _modelo_dir(registry_root)
-    delta = _casilla_fragment(registry_root, "2025")
+    delta = _casilla_fragment(registry_root, _SUCCESSOR_ID)
 
-    assert _tree_rows(registry_root, "2025") == _EXPANDED_2025
-    assert _rows(load_modelo_directory(modelo_dir), "2025") == _EXPANDED_2025
+    assert _tree_rows(registry_root, _SUCCESSOR_ID) == _EXPANDED_SUCCESSOR
+    assert _rows(load_modelo_directory(modelo_dir), _SUCCESSOR_ID) == _EXPANDED_SUCCESSOR
     tree_before = collect_registry_tree_fingerprints(registry_root)
     modelo_before = collect_modelo_directory_fingerprints(modelo_dir)
 
@@ -160,8 +166,8 @@ def test_editing_the_delta_edition_invalidates_and_serves_its_new_content(tmp_pa
     assert _changed_paths(tree_before, collect_registry_tree_fingerprints(registry_root)) == {str(delta)}
     assert _changed_paths(modelo_before, collect_modelo_directory_fingerprints(modelo_dir)) == {str(delta)}
     edited: _Rows = [("01", "01", "base"), ("02", "23", "cuota")]
-    assert _tree_rows(registry_root, "2025") == edited
-    assert _rows(load_modelo_directory(modelo_dir), "2025") == edited
+    assert _tree_rows(registry_root, _SUCCESSOR_ID) == edited
+    assert _rows(load_modelo_directory(modelo_dir), _SUCCESSOR_ID) == edited
 
 
 def test_editing_the_predecessor_invalidates_the_successor_that_inherits_from_it(tmp_path: Path) -> None:
@@ -172,12 +178,12 @@ def test_editing_the_predecessor_invalidates_the_successor_that_inherits_from_it
     """
     registry_root = _write_tree(tmp_path)
     modelo_dir = _modelo_dir(registry_root)
-    predecessor = _casilla_fragment(registry_root, "2024")
-    successor_files = sorted((modelo_dir / "revisions" / "2025").rglob("*.toml"))
+    predecessor = _casilla_fragment(registry_root, _PREDECESSOR_ID)
+    successor_files = sorted((modelo_dir / "revisions" / _SUCCESSOR_ID).rglob("*.toml"))
     successor_bytes = [path.read_bytes() for path in successor_files]
 
-    assert _tree_rows(registry_root, "2025") == _EXPANDED_2025
-    assert _rows(load_modelo_directory(modelo_dir), "2025") == _EXPANDED_2025
+    assert _tree_rows(registry_root, _SUCCESSOR_ID) == _EXPANDED_SUCCESSOR
+    assert _rows(load_modelo_directory(modelo_dir), _SUCCESSOR_ID) == _EXPANDED_SUCCESSOR
     tree_before = collect_registry_tree_fingerprints(registry_root)
     modelo_before = collect_modelo_directory_fingerprints(modelo_dir)
 
@@ -187,8 +193,8 @@ def test_editing_the_predecessor_invalidates_the_successor_that_inherits_from_it
     assert _changed_paths(tree_before, collect_registry_tree_fingerprints(registry_root)) == {str(predecessor)}
     assert _changed_paths(modelo_before, collect_modelo_directory_fingerprints(modelo_dir)) == {str(predecessor)}
     reinherited: _Rows = [("01", "11", "base"), ("02", "22", "cuota")]
-    assert _tree_rows(registry_root, "2025") == reinherited
-    assert _rows(load_modelo_directory(modelo_dir), "2025") == reinherited
+    assert _tree_rows(registry_root, _SUCCESSOR_ID) == reinherited
+    assert _rows(load_modelo_directory(modelo_dir), _SUCCESSOR_ID) == reinherited
 
 
 def _physical_modelo_fingerprints(modelo_dir: Path) -> set[_Fingerprint]:
@@ -217,14 +223,14 @@ def test_the_fingerprint_is_a_function_of_the_physical_files_alone(tmp_path: Pat
     """
     registry_root = _write_tree(tmp_path)
     modelo_dir = _modelo_dir(registry_root)
-    delta = _casilla_fragment(registry_root, "2025")
+    delta = _casilla_fragment(registry_root, _SUCCESSOR_ID)
 
     modelo_before = collect_modelo_directory_fingerprints(modelo_dir)
     tree_before = collect_registry_tree_fingerprints(registry_root)
 
-    assert _tree_rows(registry_root, "2025") == _EXPANDED_2025
+    assert _tree_rows(registry_root, _SUCCESSOR_ID) == _EXPANDED_SUCCESSOR
     expanded = load_modelo_directory(modelo_dir)
-    assert _rows(expanded, "2025") == _EXPANDED_2025
+    assert _rows(expanded, _SUCCESSOR_ID) == _EXPANDED_SUCCESSOR
     assert delta.read_text(encoding="utf-8").count("[[revisions.") == 1, (
         "sanity: the successor must state fewer rows than it expands to, or nothing was materialised"
     )

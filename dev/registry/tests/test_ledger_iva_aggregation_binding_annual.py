@@ -7,7 +7,10 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from .ledger_iva_aggregation_support import (
     M303_COMPENSACION_GENERADA_PERIODO_CASILLA,
@@ -32,6 +35,30 @@ from .ledger_iva_aggregation_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
+def _newest_year_both_returns_calculate() -> int:
+    """Return the newest supported year in which every 303 quarter and the annual 390 reach calculation grade.
+
+    The pipeline drives the quarterly returns into the annual one, so it needs a year
+    whose editions are authored deeply enough for the engine to calculate both. A year
+    whose annual edition is only applicability-grade is refused by the snapshot builder,
+    which is the registry saying so, not a defect of the pipeline.
+    """
+    ladder = tuple(RegistryAuthorityGrade)
+    coordinates = (("303", "1T"), ("303", "2T"), ("303", "3T"), ("303", "4T"), ("390", "0A"))
+    with bundled_indexed_authority().operation() as operation:
+        for year in reversed(filing_year_envelope().years):
+            if all(
+                ladder.index(operation.reachable_authority_grade(modelo, filing_year=year, period=period))
+                >= ladder.index(RegistryAuthorityGrade.CALCULATION)
+                for modelo, period in coordinates
+            ):
+                return year
+    raise LookupError("no supported year reaches calculation grade for every quarterly 303 and the annual 390")
+
+
+_YEAR = _newest_year_both_returns_calculate()
+
+
 def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_filings() -> None:
     """The 390 annual snapshot resolves its 303-sourced bindings and produces the expected casillas.
 
@@ -45,12 +72,12 @@ def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_fil
     quarterly_observations = {
         "1T": (
             ledger_iva_aggregation_observation(
-                applied_rate=Decimal("0.21"), ledger_id="q1-output", txn_date=date(2025, 2, 15), iva=Decimal("21.00")
+                applied_rate=Decimal("0.21"), ledger_id="q1-output", txn_date=date(_YEAR, 2, 15), iva=Decimal("21.00")
             ),
             ledger_iva_aggregation_observation(
                 applied_rate=Decimal("0.21"),
                 ledger_id="q1-input",
-                txn_date=date(2025, 3, 1),
+                txn_date=date(_YEAR, 3, 1),
                 flow=ledger_iva_aggregation_flow("soportado"),
                 iva=Decimal("42.00"),
                 deduction_fact_kind=deduction_kind("domestic_current"),
@@ -58,12 +85,12 @@ def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_fil
         ),
         "2T": (
             ledger_iva_aggregation_observation(
-                applied_rate=Decimal("0.21"), ledger_id="q2-output", txn_date=date(2025, 5, 10), iva=Decimal("10.00")
+                applied_rate=Decimal("0.21"), ledger_id="q2-output", txn_date=date(_YEAR, 5, 10), iva=Decimal("10.00")
             ),
             ledger_iva_aggregation_observation(
                 applied_rate=Decimal("0.21"),
                 ledger_id="q2-input",
-                txn_date=date(2025, 6, 20),
+                txn_date=date(_YEAR, 6, 20),
                 flow=ledger_iva_aggregation_flow("soportado"),
                 iva=Decimal("30.00"),
                 deduction_fact_kind=deduction_kind("domestic_current"),
@@ -73,7 +100,7 @@ def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_fil
             ledger_iva_aggregation_observation(
                 applied_rate=Decimal("0.10"),
                 ledger_id="q3-output-reduced",
-                txn_date=date(2025, 8, 12),
+                txn_date=date(_YEAR, 8, 12),
                 category=ledger_iva_aggregation_category("domestic_reduced"),
                 rate_kind=ledger_iva_aggregation_rate_kind("reduced"),
                 iva=Decimal("50.00"),
@@ -83,13 +110,13 @@ def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_fil
             ledger_iva_aggregation_observation(
                 applied_rate=Decimal("0.21"),
                 ledger_id="q4-output",
-                txn_date=date(2025, 11, 4),
+                txn_date=date(_YEAR, 11, 4),
                 iva=Decimal("15.00"),
             ),
             ledger_iva_aggregation_observation(
                 applied_rate=Decimal("0.21"),
                 ledger_id="q4-input",
-                txn_date=date(2025, 12, 12),
+                txn_date=date(_YEAR, 12, 12),
                 flow=ledger_iva_aggregation_flow("soportado"),
                 iva=Decimal("45.00"),
                 deduction_fact_kind=deduction_kind("domestic_current"),
@@ -98,14 +125,14 @@ def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_fil
     }
     quarterly_results = {
         period: calculate_303_from_observations(
-            filing_year=2025,
+            filing_year=_YEAR,
             period=period,
             observations=observations,
         )
         for period, observations in quarterly_observations.items()
     }
     annual_result = calculate_390_from_observations_and_303_filings(
-        filing_year=2025,
+        filing_year=_YEAR,
         observations=tuple(row for rows in quarterly_observations.values() for row in rows),
         quarterly_results=quarterly_results,
     )
@@ -160,12 +187,12 @@ def test_m390_annual_intracom_matches_303_quarters_for_an_eu_services_acquisitio
     quarterly_observations = {
         "1T": (
             ledger_iva_aggregation_observation(
-                applied_rate=Decimal("0.21"), ledger_id="sale-1t", txn_date=date(2025, 2, 15), iva=Decimal("210.00")
+                applied_rate=Decimal("0.21"), ledger_id="sale-1t", txn_date=date(_YEAR, 2, 15), iva=Decimal("210.00")
             ),
             ledger_iva_aggregation_observation(
                 applied_rate=Decimal("0.21"),
                 ledger_id="eu-goods",
-                txn_date=date(2025, 3, 1),
+                txn_date=date(_YEAR, 3, 1),
                 category=ledger_iva_aggregation_category("intra_community_acquisition_reverse_charge"),
                 flow=ledger_iva_aggregation_flow("inversion_sujeto_pasivo"),
                 rate_kind=ledger_iva_aggregation_rate_kind("general"),
@@ -175,12 +202,12 @@ def test_m390_annual_intracom_matches_303_quarters_for_an_eu_services_acquisitio
         ),
         "2T": (
             ledger_iva_aggregation_observation(
-                applied_rate=Decimal("0.21"), ledger_id="sale-2t", txn_date=date(2025, 5, 15), iva=Decimal("105.00")
+                applied_rate=Decimal("0.21"), ledger_id="sale-2t", txn_date=date(_YEAR, 5, 15), iva=Decimal("105.00")
             ),
             ledger_iva_aggregation_observation(
                 applied_rate=Decimal("0.21"),
                 ledger_id="eu-service",
-                txn_date=date(2025, 6, 1),
+                txn_date=date(_YEAR, 6, 1),
                 category=ledger_iva_aggregation_category("intra_community_service_acquisition_reverse_charge"),
                 flow=ledger_iva_aggregation_flow("inversion_sujeto_pasivo"),
                 rate_kind=ledger_iva_aggregation_rate_kind("general"),
@@ -190,22 +217,22 @@ def test_m390_annual_intracom_matches_303_quarters_for_an_eu_services_acquisitio
         ),
         "3T": (
             ledger_iva_aggregation_observation(
-                applied_rate=Decimal("0.21"), ledger_id="sale-3t", txn_date=date(2025, 8, 15), iva=Decimal("105.00")
+                applied_rate=Decimal("0.21"), ledger_id="sale-3t", txn_date=date(_YEAR, 8, 15), iva=Decimal("105.00")
             ),
         ),
         "4T": (
             ledger_iva_aggregation_observation(
-                applied_rate=Decimal("0.21"), ledger_id="sale-4t", txn_date=date(2025, 11, 15), iva=Decimal("105.00")
+                applied_rate=Decimal("0.21"), ledger_id="sale-4t", txn_date=date(_YEAR, 11, 15), iva=Decimal("105.00")
             ),
         ),
     }
     quarterly_results = {
-        period: calculate_303_from_observations(filing_year=2025, period=period, observations=observations)
+        period: calculate_303_from_observations(filing_year=_YEAR, period=period, observations=observations)
         for period, observations in quarterly_observations.items()
     }
     all_observations = tuple(row for rows in quarterly_observations.values() for row in rows)
     annual_result = calculate_390_from_observations_and_303_filings(
-        filing_year=2025,
+        filing_year=_YEAR,
         observations=all_observations,
         quarterly_results=quarterly_results,
     )

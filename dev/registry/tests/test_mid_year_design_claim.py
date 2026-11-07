@@ -34,17 +34,21 @@ from datetime import date
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import split_exercise_revisions
+
 from .revision_span_boundary_support import boundaries_for, mid_year_span
 from .revision_span_design_support import declared_revisions, revision_span_design_filing_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_M303_EARLY, _M303_LATE = split_exercise_revisions("303", early_period="08", late_period="09")
+_M490_EARLY, _M490_LATE = split_exercise_revisions("490", early_period="1T", late_period="2T")
 #: Revisions scoped to part of one year, each citing a single design.
 _MID_YEAR_HALVES = {
-    ("303", "2024-hasta-08-y-2t"),
-    ("303", "2024-desde-09-y-3t"),
-    ("490", "2022-1t"),
-    ("490", "2022-2t-4t"),
+    ("303", str(_M303_EARLY.id)),
+    ("303", str(_M303_LATE.id)),
+    ("490", str(_M490_EARLY.id)),
+    ("490", str(_M490_LATE.id)),
 }
 #: Revisions that genuinely cross a design re-layout between YEARS.
 #:

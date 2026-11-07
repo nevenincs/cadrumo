@@ -14,8 +14,6 @@ from functools import cache
 from pathlib import Path
 from typing import Final
 
-from cadrumo.core.filing_year import FOUR_DIGIT_YEAR_LAST
-
 _ROOT: Final = Path(__file__).resolve().parents[3]
 
 SRC: Final = _ROOT / "src" / "cadrumo"
@@ -202,8 +200,6 @@ _SMALLEST_CAPACITY: Final = 16
 THOUSAND: Final = 1000
 
 _COLLECTION_WIRE_FLOOR: Final = 10_000
-
-LAST_FOUR_DIGIT_YEAR: Final = FOUR_DIGIT_YEAR_LAST
 
 _CENT: Final = Decimal("0.01")
 

@@ -58,6 +58,7 @@ from cadrumo.domain.deadlines.models import (
     IVARegime,
     M303RegimeComposition,
     M303TaxTerritory,
+    ModeloEnrollment,
     ModeloIVAProfile,
     TaxpayerProfile,
 )
@@ -306,6 +307,7 @@ def workflow_profile() -> TaxpayerProfile:
         pays_rent_with_retencion=False,
         does_intracomunitario=True,
         bienes_extranjero_above_threshold=False,
+        enrollment=ModeloEnrollment(large_company=False),
         activity_start_date=date(YEAR, 1, 1),
         iva=general_regime_iva_profile(),
     )
@@ -333,6 +335,7 @@ def ireneworkflow_profile() -> TaxpayerProfile:
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
         bienes_extranjero_above_threshold=False,
+        enrollment=ModeloEnrollment(large_company=False),
         activity_start_date=date(IRENE_YEAR, 1, 1),
     )
 

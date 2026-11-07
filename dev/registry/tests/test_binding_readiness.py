@@ -15,12 +15,15 @@ from cadrumo.application.modelo.binding_readiness import annual_period_for_year
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.queries import RegistryQueryService
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.log_records import delivered_records
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_modelo_directory, load_shared_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
 
 _MINIMAL_CATALOGUE_TOML = """\
 [legal."test-ley-001:art-1"]
@@ -78,7 +81,7 @@ _MINIMAL_REVISION_TOML_TEMPLATE = """\
 [revisions."{revision_id}"]
 valid_from = {valid_from}
 {valid_to_line}
-period_selector = {{ years = [2025], periods = ["{period}"] }}
+period_selector = {{ years = [{year}], periods = ["{period}"] }}
 legal_refs = ["test-ley-001:art-1"]
 source_refs = ["test-source-001"]
 orden_aplicabilidad = ["test-ley-001:art-1"]
@@ -122,11 +125,11 @@ source_refs = ["test-source-001"]
 """
 
 
-#: Two revisions that both claim filing year 2025 through different period
+#: Two revisions that both claim one filing year through different period
 #: tokens, which is the shape a year-only readiness query cannot decide.
 _DEFAULT_REVISIONS: Final[tuple[tuple[str, str, str, str | None], ...]] = (
-    ("2025-1t", "1T", "2025-01-01", None),
-    ("2025-2t", "2T", "2025-01-01", None),
+    (f"{_YEAR}-1t", "1T", date(_YEAR, 1, 1).isoformat(), None),
+    (f"{_YEAR}-2t", "2T", date(_YEAR, 1, 1).isoformat(), None),
 )
 
 
@@ -141,18 +144,19 @@ def _write_year_ambiguous_registry(
     legal_dir.mkdir(parents=True)
     modelos_dir.mkdir(parents=True)
     # The loader requires one registry-wide supported-filing-years declaration.
-    # This fixture's revisions select 2025 and the readiness call asks about
-    # 2026, so both are admitted here; without the file the tree refuses to load
-    # before any readiness behaviour is reached.
+    # This fixture's revisions select the year the readiness call asks about
+    # and the year after it is admitted too; without the file the tree refuses
+    # to load before any readiness behaviour is reached.
+    observed_at = date(_YEAR, 9, 10).isoformat()
     (legal_dir / "supported-filing-years.toml").write_text(
-        "[supported_filing_years]\nfloor = 2025\nhorizon = 2026\n\n"
+        f"[supported_filing_years]\nfloor = {_YEAR}\nhorizon = {_YEAR + 1}\n\n"
         "[sociedades_annual_manual_coverage]\n"
-        'dispositions = [{ year = 2025, status = "unpublished", '
-        'official_locator = "https://example.com/manuals", observed_at = 2026-09-10, '
+        f'dispositions = [{{ year = {_YEAR}, status = "unpublished", '
+        f'official_locator = "https://example.com/manuals", observed_at = {observed_at}, '
         "acquisition_condition_key = "
         '"application.registry.manuals.coverage.recheck_aeat_publication" }, '
-        '{ year = 2026, status = "unpublished", official_locator = "https://example.com/manuals", '
-        "observed_at = 2026-09-10, acquisition_condition_key = "
+        f'{{ year = {_YEAR + 1}, status = "unpublished", official_locator = "https://example.com/manuals", '
+        f"observed_at = {observed_at}, acquisition_condition_key = "
         '"application.registry.manuals.coverage.recheck_aeat_publication" }]\n',
         encoding="utf-8",
     )
@@ -199,6 +203,7 @@ def _write_year_ambiguous_registry(
             _MINIMAL_REVISION_TOML_TEMPLATE.format(
                 revision_id=revision_id,
                 period=period,
+                year=_YEAR,
                 valid_from=valid_from,
                 valid_to_line="" if valid_to is None else f"valid_to = {valid_to}",
             ),
@@ -271,9 +276,10 @@ def test_year_only_binding_readiness_refuses_multiple_covering_revisions(
 
     authority = _authority_carrying_the_planted_modelo(tmp_path)
 
-    assert annual_period_for_year(authority, modelo="999", filing_year=2025) is None
+    assert annual_period_for_year(authority, modelo="999", filing_year=_YEAR) is None
     assert any(
-        "binding-readiness: filing_year=2025 for modelo=999 is covered by revisions 2025-1t, 2025-2t" in record.message
+        f"binding-readiness: filing_year={_YEAR} for modelo=999 is covered by revisions {_YEAR}-1t, {_YEAR}-2t"
+        in record.message
         for record in delivered_records(caplog, "cadrumo.application.modelo.binding_readiness")
     )
 
@@ -283,21 +289,21 @@ def test_year_only_report_and_readiness_share_effective_revision_selection(tmp_p
     authority = _authority_carrying_the_planted_modelo(
         tmp_path,
         revisions=(
-            ("2025-early", "1T", "2025-01-01", "2025-06-30"),
-            ("2025-late", "2T", "2025-07-01", None),
+            (f"{_YEAR}-early", "1T", date(_YEAR, 1, 1).isoformat(), date(_YEAR, 6, 30).isoformat()),
+            (f"{_YEAR}-late", "2T", date(_YEAR, 7, 1).isoformat(), None),
         ),
     )
     service = RegistryQueryService(authority)
 
-    early_as_of = date(2025, 3, 31)
-    late_as_of = date(2025, 9, 30)
-    early_report = service.bindings_for_year("999", filing_year=2025, as_of=early_as_of)
-    late_report = service.bindings_for_year("999", filing_year=2025, as_of=late_as_of)
+    early_as_of = date(_YEAR, 3, 31)
+    late_as_of = date(_YEAR, 9, 30)
+    early_report = service.bindings_for_year("999", filing_year=_YEAR, as_of=early_as_of)
+    late_report = service.bindings_for_year("999", filing_year=_YEAR, as_of=late_as_of)
 
-    assert (early_report.revision, early_report.period) == ("2025-early", "1T")
-    assert (late_report.revision, late_report.period) == ("2025-late", "2T")
-    assert annual_period_for_year(authority, modelo="999", filing_year=2025, as_of=early_as_of) == early_report.period
-    assert annual_period_for_year(authority, modelo="999", filing_year=2025, as_of=late_as_of) == late_report.period
+    assert (early_report.revision, early_report.period) == (f"{_YEAR}-early", "1T")
+    assert (late_report.revision, late_report.period) == (f"{_YEAR}-late", "2T")
+    assert annual_period_for_year(authority, modelo="999", filing_year=_YEAR, as_of=early_as_of) == early_report.period
+    assert annual_period_for_year(authority, modelo="999", filing_year=_YEAR, as_of=late_as_of) == late_report.period
     # These assertions are about which revision SELECTION lands on, so they ask
     # for the applicability rung the fixture declares. ``snapshot`` defaults to
     # ``FILING``, which this synthetic revision truthfully cannot satisfy -- and
@@ -307,7 +313,7 @@ def test_year_only_report_and_readiness_share_effective_revision_selection(tmp_p
     assert (
         authority.snapshot(
             "999",
-            filing_year=2025,
+            filing_year=_YEAR,
             period=early_report.period or "",
             on=early_as_of,
             revision_id=early_report.revision,
@@ -318,7 +324,7 @@ def test_year_only_report_and_readiness_share_effective_revision_selection(tmp_p
     assert (
         authority.snapshot(
             "999",
-            filing_year=2025,
+            filing_year=_YEAR,
             period=late_report.period or "",
             on=late_as_of,
             revision_id=late_report.revision,

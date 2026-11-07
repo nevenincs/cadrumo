@@ -11,6 +11,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition, ModeloScheduleDefinition
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.validate_revision_rules import (
     validate_deadline_window_cadence,
@@ -18,11 +19,11 @@ from ..compiler.validate_revision_rules import (
     validate_periodic_deadline_completeness,
 )
 from .profile_schema_support import committed_registry_validator
-from .referential_integrity_support import FIXTURE_EDITION_YEAR, minimal_catalogues, minimal_modelo, minimal_revision
+from .referential_integrity_support import minimal_catalogues, minimal_modelo, minimal_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_YEAR = FIXTURE_EDITION_YEAR
+_YEAR = filing_year_envelope().horizon
 
 
 def _window(window_id: str, period: str) -> DeadlineWindowDefinition:
@@ -77,7 +78,7 @@ def test_period_sensitive_cutover_rejects_window_beneath_non_selected_revision()
 
     assert failures == [
         "modelo 130 revision monthly: deadline window 'quarterly-window' belongs to canonically selected "
-        "revision 'quarterly' for filing coordinate (2024, '1T')",
+        f"revision 'quarterly' for filing coordinate ({_YEAR}, '1T')",
     ]
 
 
@@ -159,8 +160,8 @@ def test_periodic_deadline_completeness_bites_on_one_planted_missing_cell() -> N
     modelo = minimal_modelo(revision)
 
     assert validate_periodic_deadline_completeness(modelo, supported_filing_years=(_YEAR,)) == [
-        "modelo 130 revision test-revision: periodic filing schedule coordinate "
-        f"({_YEAR}, '02') has no deadline window",
+        f"modelo 130 revision test-revision: periodic filing schedule coordinate ({_YEAR}, '02') "
+        "has no deadline window",
     ]
 
     catalogues = minimal_catalogues().model_copy(

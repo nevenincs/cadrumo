@@ -19,6 +19,7 @@ from cadrumo.domain.calculations.registry.tests.authored_editions import (
     authored_revisions,
     filing_year_envelope,
     open_ended_revision,
+    revision_last_exercise,
 )
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -108,7 +109,7 @@ def test_modelo_123_guidance_and_layout_sources_are_separated() -> None:
     ("filing_year", "required_surfaces"),
     [
         (
-            2023,
+            revision_last_exercise("123", _RETENCIONES_SUM_REVISION),
             {
                 "calculation",
                 "filing",
@@ -122,7 +123,7 @@ def test_modelo_123_guidance_and_layout_sources_are_separated() -> None:
             },
         ),
         (
-            2026,
+            filing_year_envelope().horizon,
             {
                 "calculation",
                 "filing",

@@ -23,10 +23,9 @@ from ..record_design_inventory import (
     STATIC,
     RequiredArtifact,
 )
-from ..record_design_manifests import Artifact, Manifest, root_aggregate
+from ..record_design_manifests import DESIGN_CORPUS, Artifact, Manifest, root_aggregate
 from ..record_design_policy import EXTRACTION_SIDECAR_DERIVATIONS, UNATTESTED_CORPUS_FILES
 from ..sync_aeat_record_design_corpus import (
-    CORPUS,
     HISTORICAL_EXCLUSIONS_PATH,
     authority_failures,
     check,
@@ -301,7 +300,7 @@ def test_the_shipped_root_census_agrees_with_the_shipped_manifests() -> None:
     the invariant behind them in one place, and is the assertion the offline
     ``--regenerate-aggregate`` repair path is written to restore.
     """
-    root = json.loads((CORPUS / "manifest.json").read_text(encoding="utf-8"))
+    root = json.loads((DESIGN_CORPUS / "manifest.json").read_text(encoding="utf-8"))
 
     for field, expected in root_aggregate(load_manifests()).items():
         assert root[field] == expected, f"root manifest {field} disagrees with the per-modelo manifests"
@@ -315,8 +314,8 @@ def test_shipped_record_design_catalogue_classifies_its_full_sync_payload_bounda
     official files and the named sheet-text derivatives. Correction targets
     are checked here; annotation content remains owned by the record reader.
     """
-    catalogue, failures = record_design_catalogue(load_manifests(), CORPUS)
-    payload_paths = set(sync_aeat_record_design_corpus_payload_paths(CORPUS))
+    catalogue, failures = record_design_catalogue(load_manifests(), DESIGN_CORPUS)
+    payload_paths = set(sync_aeat_record_design_corpus_payload_paths(DESIGN_CORPUS))
     explicit_debt = {PurePosixPath(path) for path in UNATTESTED_CORPUS_FILES}
 
     assert failures == []
@@ -525,7 +524,8 @@ def test_named_sheet_text_is_catalogued_as_a_fresh_derivative(tmp_path: Path, mo
 def test_the_shipped_sheet_text_derivations_are_named_and_hash_pinned() -> None:
     """Named records prevent a suffix exemption and bind each source workbook."""
     workbooks = sorted(
-        path.relative_to(CORPUS).as_posix() for path in (CORPUS / "modelo_123" / "files").glob("0[12]-123-*.xls")
+        path.relative_to(DESIGN_CORPUS).as_posix()
+        for path in (DESIGN_CORPUS / "modelo_123" / "files").glob("0[12]-123-*.xls")
     )
     assert len(workbooks) == 2
     assert tuple(

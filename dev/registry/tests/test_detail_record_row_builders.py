@@ -27,6 +27,7 @@ from cadrumo.domain.calculations.registry.detail_record_bindings import (
     resolve_atribucion_binding_row_values,
     resolve_foreign_asset_binding_row_values,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.currency.service import CurrencyNormalizationService
 from cadrumo.domain.foreign_assets.record_join import Modelo720Record
 from cadrumo.domain.foreign_assets.register import (
@@ -43,6 +44,8 @@ from ..conformance.registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_YEAR = filing_year_envelope().horizon
+
 
 def _modelos():
     modelos, _catalogues = committed_registry_tree()
@@ -51,7 +54,9 @@ def _modelos():
 
 def _modelo720_revision():
     root = Path(__file__).resolve().parents[3]
-    return load_modelo_directory(root / "src/cadrumo/_data/registry/aeat/modelos/720").revisions["2013-y-siguientes"]
+    return load_modelo_directory(root / "src/cadrumo/_data/registry/aeat/modelos/720").revisions[
+        str(open_ended_revision("720").id)
+    ]
 
 
 def _valued(
@@ -73,7 +78,7 @@ def _valued(
         valuation_amount=Decimal(valuation),
         valuation_event=M720ValuationEvent.YEAR_END,
     )
-    valuation_eur = CurrencyNormalizationService().normalize(observation.native_amount, date(2025, 12, 31))
+    valuation_eur = CurrencyNormalizationService().normalize(observation.native_amount, date(_YEAR, 12, 31))
     return Modelo720Record(
         row=Modelo720ValuedRow(observation=observation, valuation=valuation_eur),
         asset=ForeignAssetRegisterEntry(
@@ -90,7 +95,7 @@ def _valued(
                 value=identifier,
             ),
             description="synthetic asset",
-            held_since=date(2015, 1, 1),
+            held_since=date(_YEAR - 10, 1, 1),
         ),
         declaration=ForeignAssetDeclarationEntry(
             asset_ref=observation.asset_ref,
@@ -104,9 +109,9 @@ def _valued(
 def test_build_foreign_asset_rows_sorts_by_country_class_identifier_date() -> None:
     revision = _modelo720_revision()
     rows = (
-        _valued("a1", M720AssetClassCode.CUENTA, "DE", "DE-bank-001", date(2022, 6, 1), "60000"),
-        _valued("a2", M720AssetClassCode.VALOR, "CH", "ZCH", date(2020, 1, 1), "120000"),
-        _valued("a3", M720AssetClassCode.CUENTA, "CH", "CH-bank-001", date(2021, 3, 15), "80000"),
+        _valued("a1", M720AssetClassCode.CUENTA, "DE", "DE-bank-001", date(_YEAR - 3, 6, 1), "60000"),
+        _valued("a2", M720AssetClassCode.VALOR, "CH", "ZCH", date(_YEAR - 5, 1, 1), "120000"),
+        _valued("a3", M720AssetClassCode.CUENTA, "CH", "CH-bank-001", date(_YEAR - 4, 3, 15), "80000"),
     )
 
     resolved = resolve_foreign_asset_binding_row_values(revision, rows)
@@ -119,7 +124,7 @@ def test_build_foreign_asset_rows_sorts_by_country_class_identifier_date() -> No
 @pytest.mark.usefixtures("governed_fact_scope")
 def test_resolve_foreign_asset_binding_row_values_emits_per_column_indexed_values() -> None:
     revision = _modelo720_revision()
-    rows = (_valued("a1", M720AssetClassCode.CUENTA, "CH", "CH-iban-001", date(2020, 1, 1), "120000"),)
+    rows = (_valued("a1", M720AssetClassCode.CUENTA, "CH", "CH-iban-001", date(_YEAR - 5, 1, 1), "120000"),)
 
     resolved = resolve_foreign_asset_binding_row_values(revision, rows)
 
@@ -143,14 +148,14 @@ def test_resolve_foreign_asset_binding_row_values_emits_per_column_indexed_value
 
 
 def test_resolve_atribucion_binding_row_values_sorts_members_by_country_then_nif() -> None:
-    revision = next(m for m in _modelos() if m.id == "184").revisions["2025-y-siguientes"]
+    revision = next(m for m in _modelos() if m.id == "184").revisions[str(open_ended_revision("184").id)]
     obs = (
         AtributionMemberObservation(
             source_id="m2",
             member_tax_id="87654321Z",
             member_legal_name="Two",
             country_code="ES",
-            transaction_date=date(2025, 1, 1),
+            transaction_date=date(_YEAR, 1, 1),
             share_percentage=Decimal("60"),
             base_imponible_assigned=Decimal("6000"),
             clave="D",
@@ -160,7 +165,7 @@ def test_resolve_atribucion_binding_row_values_sorts_members_by_country_then_nif
             member_tax_id="12345678A",
             member_legal_name="One",
             country_code="ES",
-            transaction_date=date(2025, 1, 1),
+            transaction_date=date(_YEAR, 1, 1),
             share_percentage=Decimal("40"),
             base_imponible_assigned=Decimal("4000"),
             clave="D",

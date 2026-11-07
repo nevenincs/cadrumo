@@ -12,10 +12,15 @@ from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCata
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.domain.contribuyente.entity_type import EntityType
+from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
 from cadrumo.domain.deadlines.models import (
+    IrpfEstimationRegime,
+    IrpfIncomeCategory,
     IVARegime,
     M303RegimeComposition,
     M303TaxTerritory,
+    ModeloEnrollment,
     ModeloIVAProfile,
     TaxpayerProfile,
 )
@@ -100,10 +105,19 @@ def workflow_profile(
         tax_id=tax_id,
         iva_regime=IVARegime(iva_regime),
         activity_start_date=activity_start_date,
+        # An autónomo en estimación directa: without these facts the profile
+        # owes no Modelo 130 and the filing workflow has no obligation to gate.
+        entity_type=EntityType.from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
+        irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
         has_employees=False,
+        pays_professionals_with_retencion=False,
+        art109_activity_income_withholding_ge_70pct=False,
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
         bienes_extranjero_above_threshold=False,
+        enrollment=ModeloEnrollment(large_company=False),
     )
 
 
@@ -116,6 +130,7 @@ def general_iva_workflow_profile() -> TaxpayerProfile:
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
         bienes_extranjero_above_threshold=False,
+        enrollment=ModeloEnrollment(large_company=False),
         iva=ModeloIVAProfile(
             tax_territory=M303TaxTerritory.from_registry("common_regime"),
             regime_composition=M303RegimeComposition.from_registry("general"),
