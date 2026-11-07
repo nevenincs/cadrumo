@@ -38,6 +38,7 @@ from cadrumo.application.invoices.source_resolver_ports import InvoiceSourceReso
 from cadrumo.core.aggregation import IntracomOperationType, InvoiceDevengoRank
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.currency.models import EurRateLookup
 from cadrumo.domain.currency.tests.fx_lookup import eur_rate_lookup
 from cadrumo.domain.invoices.decomposition import decompose_invoice
@@ -48,6 +49,8 @@ from cadrumo.domain.iva.schema import InvoiceKind, IvaCategory
 from cadrumo.domain.modelos.row_models import Modelo349OperadorRow
 
 from ..maintenance_support import load_modelo_path
+
+_YEAR = filing_year_envelope().horizon
 
 
 def _build_catalogue_invoice(**kwargs: Any) -> Invoice:
@@ -90,7 +93,9 @@ _BUCKET_ID = "19191919-1919-4191-8191-191919191919"
 
 
 def _modelo_349_revision():
-    return load_modelo_path(bundled_path("registry", "aeat", "modelos", "349")).revisions["2020-y-siguientes"]
+    return load_modelo_path(bundled_path("registry", "aeat", "modelos", "349")).revisions[
+        str(open_ended_revision("349").id)
+    ]
 
 
 def test_build_catalogue_invoice_derives_grounded_totals() -> None:
@@ -108,7 +113,7 @@ def test_build_catalogue_invoice_derives_grounded_totals() -> None:
         counterparty_tax_id="B00010157",
         counterparty_country="ES",
         invoice_number="2026-0142",
-        issued_at=date(2026, 3, 10),
+        issued_at=date(_YEAR, 3, 10),
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21"),
         currency="EUR",
@@ -133,7 +138,7 @@ def test_build_catalogue_invoice_exempt_carries_zero_cuota() -> None:
         counterparty_tax_id="B00010157",
         counterparty_country="ES",
         invoice_number="2026-0500",
-        issued_at=date(2026, 4, 1),
+        issued_at=date(_YEAR, 4, 1),
         taxable_base=Decimal("200.00"),
         iva_rate=None,
         currency="EUR",
@@ -153,7 +158,7 @@ def test_build_catalogue_invoice_refuses_unsupported_rate() -> None:
             counterparty_tax_id="B00010157",
             counterparty_country="ES",
             invoice_number="2026-0142",
-            issued_at=date(2026, 3, 10),
+            issued_at=date(_YEAR, 3, 10),
             taxable_base=Decimal("100.00"),
             iva_rate=Decimal("13"),
             currency="EUR",
@@ -184,7 +189,7 @@ def test_create_catalogue_invoice_persists_and_refuses_duplicate(tmp_path: Path)
                 counterparty_tax_id="B00010157",
                 counterparty_country="ES",
                 invoice_number="2026-0142",
-                issued_at=date(2026, 3, 10),
+                issued_at=date(_YEAR, 3, 10),
                 taxable_base=Decimal("100.00"),
                 iva_rate=Decimal("21"),
                 currency="EUR",
@@ -204,7 +209,7 @@ def test_create_catalogue_invoice_persists_and_refuses_duplicate(tmp_path: Path)
                     counterparty_tax_id="B00010157",
                     counterparty_country="ES",
                     invoice_number="2026-0142",
-                    issued_at=date(2026, 3, 10),
+                    issued_at=date(_YEAR, 3, 10),
                     taxable_base=Decimal("100.00"),
                     iva_rate=Decimal("21"),
                     currency="EUR",
@@ -226,7 +231,7 @@ def test_build_catalogue_invoice_carries_intra_community_category() -> None:
         counterparty_tax_id="DE345678901",
         counterparty_country="DE",
         invoice_number="EU-001",
-        issued_at=date(2026, 2, 10),
+        issued_at=date(_YEAR, 2, 10),
         taxable_base=Decimal("2000.00"),
         iva_rate=Decimal("0"),
         currency="EUR",
@@ -244,7 +249,7 @@ def test_build_catalogue_invoice_carries_intra_community_category() -> None:
         counterparty_tax_id="B00010157",
         counterparty_country="ES",
         invoice_number="FAC-001",
-        issued_at=date(2026, 2, 10),
+        issued_at=date(_YEAR, 2, 10),
         taxable_base=Decimal("2000.00"),
         iva_rate=Decimal("21"),
         currency="EUR",
@@ -271,7 +276,7 @@ def test_create_catalogue_invoice_intra_community_feeds_modelo_349(tmp_path: Pat
                 counterparty_tax_id="DE345678901",
                 counterparty_country="DE",
                 invoice_number="EU-2026-001",
-                issued_at=date(2026, 2, 10),
+                issued_at=date(_YEAR, 2, 10),
                 taxable_base=Decimal("2000.00"),
                 iva_rate=Decimal("0"),
                 currency="EUR",
@@ -285,8 +290,8 @@ def test_create_catalogue_invoice_intra_community_feeds_modelo_349(tmp_path: Pat
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,
                 modelo="349",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "1T"),
                 revision=_modelo_349_revision(),
             ),
         )
@@ -307,7 +312,7 @@ def test_create_catalogue_invoice_service_keys_feed_modelo_349(tmp_path: Path) -
                 counterparty_tax_id="FR12345678901",
                 counterparty_country="FR",
                 invoice_number="SERV-OUT-2026-001",
-                issued_at=date(2026, 2, 10),
+                issued_at=date(_YEAR, 2, 10),
                 taxable_base=Decimal("4000.00"),
                 iva_rate=Decimal("0"),
                 currency="EUR",
@@ -323,7 +328,7 @@ def test_create_catalogue_invoice_service_keys_feed_modelo_349(tmp_path: Path) -
                 counterparty_tax_id="IT12345678901",
                 counterparty_country="IT",
                 invoice_number="SERV-IN-2026-001",
-                issued_at=date(2026, 3, 5),
+                issued_at=date(_YEAR, 3, 5),
                 taxable_base=Decimal("3000.00"),
                 iva_rate=Decimal("0"),
                 currency="EUR",
@@ -336,8 +341,8 @@ def test_create_catalogue_invoice_service_keys_feed_modelo_349(tmp_path: Path) -
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,
                 modelo="349",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "1T"),
                 revision=_modelo_349_revision(),
             ),
         )
@@ -369,7 +374,7 @@ def test_build_catalogue_invoice_normalises_currency_before_fx_lookup(raw_curren
         counterparty_tax_id="GB123456789",
         counterparty_country="GB",
         invoice_number="GB-2026-001",
-        issued_at=date(2026, 3, 10),
+        issued_at=date(_YEAR, 3, 10),
         taxable_base=Decimal("100.00"),
         iva_rate=None,
         currency=raw_currency,
@@ -377,7 +382,7 @@ def test_build_catalogue_invoice_normalises_currency_before_fx_lookup(raw_curren
     )
     assert invoice.currency == "GBP"
     assert invoice.fx_rate == Decimal("1.2")
-    assert invoice.fx_rate_date == date(2026, 3, 10)
+    assert invoice.fx_rate_date == date(_YEAR, 3, 10)
 
 
 def test_build_catalogue_invoice_rounds_half_cent_cuota_away_from_zero() -> None:
@@ -397,7 +402,7 @@ def test_build_catalogue_invoice_rounds_half_cent_cuota_away_from_zero() -> None
         counterparty_tax_id="B00010157",
         counterparty_country="ES",
         invoice_number="2026-0501",
-        issued_at=date(2026, 4, 2),
+        issued_at=date(_YEAR, 4, 2),
         taxable_base=Decimal("10.50"),
         iva_rate=Decimal("21"),
         currency="EUR",
@@ -429,22 +434,22 @@ def test_an_operator_supplied_operation_date_survives_to_a_declared_devengo_rank
                 counterparty_tax_id="B00010157",
                 counterparty_country="ES",
                 invoice_number="2026-Q1-OP",
-                issued_at=date(2026, 4, 10),
+                issued_at=date(_YEAR, 4, 10),
                 taxable_base=Decimal("1000.00"),
                 iva_rate=Decimal("21"),
                 currency="EUR",
-                operation_date=date(2026, 3, 28),
+                operation_date=date(_YEAR, 3, 28),
             ),
         )
         reloaded = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID).load().get(recorded.invoice.invoice_id)
         assert reloaded is not None
-        assert reloaded.operation_date == date(2026, 3, 28)
+        assert reloaded.operation_date == date(_YEAR, 3, 28)
         assert reloaded.operation_date_role == InvoiceOperationDateRole.from_registry("OPERATION_PERFORMED")
 
         devengo = resolve_invoice_devengo(reloaded)
-        assert devengo.devengo_date == date(2026, 3, 28)
+        assert devengo.devengo_date == date(_YEAR, 3, 28)
         assert devengo.rank is InvoiceDevengoRank.OPERATION_DATE_DECLARED
-        assert invoice_devengo_in_period(reloaded, period=Period.from_year_and_code(2026, "1T")) is True
+        assert invoice_devengo_in_period(reloaded, period=Period.from_year_and_code(_YEAR, "1T")) is True
         assert (
             devengo_proxy_attribution_diagnostics(
                 (reloaded,), source_kind="ledger_iva_aggregation", resolver_id="ledger_iva_aggregation"
@@ -470,7 +475,7 @@ def test_omitting_the_operation_date_leaves_the_record_on_the_issue_date_proxy(t
                 counterparty_tax_id="B00010157",
                 counterparty_country="ES",
                 invoice_number="2026-Q2-NO-OP",
-                issued_at=date(2026, 4, 10),
+                issued_at=date(_YEAR, 4, 10),
                 taxable_base=Decimal("1000.00"),
                 iva_rate=Decimal("21"),
                 currency="EUR",
@@ -510,7 +515,7 @@ def test_m349_excludes_a_self_contradicting_record_but_names_it(tmp_path: Path) 
                 counterparty_tax_id="DE123456789",
                 counterparty_country="DE",
                 invoice_number="GOODS-OUT-2026-001",
-                issued_at=date(2026, 2, 10),
+                issued_at=date(_YEAR, 2, 10),
                 taxable_base=Decimal("5000.00"),
                 iva_rate=Decimal("21"),
                 currency="EUR",
@@ -527,8 +532,8 @@ def test_m349_excludes_a_self_contradicting_record_but_names_it(tmp_path: Path) 
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,
                 modelo="349",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "1T"),
                 revision=_modelo_349_revision(),
             ),
         )
@@ -561,7 +566,7 @@ def test_m349_declares_a_coherent_exempt_supply_with_no_diagnostic(tmp_path: Pat
                 counterparty_tax_id="DE123456789",
                 counterparty_country="DE",
                 invoice_number="GOODS-OUT-2026-002",
-                issued_at=date(2026, 2, 10),
+                issued_at=date(_YEAR, 2, 10),
                 taxable_base=Decimal("5000.00"),
                 iva_rate=Decimal("0"),
                 currency="EUR",
@@ -575,8 +580,8 @@ def test_m349_declares_a_coherent_exempt_supply_with_no_diagnostic(tmp_path: Pat
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,
                 modelo="349",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "1T"),
                 revision=_modelo_349_revision(),
             ),
         )
@@ -611,7 +616,7 @@ def test_intracommunity_services_now_carry_a_category_and_reach_m349(tmp_path: P
                 counterparty_tax_id="FR12345678901",
                 counterparty_country="FR",
                 invoice_number="SERV-OUT-2026-100",
-                issued_at=date(2026, 2, 10),
+                issued_at=date(_YEAR, 2, 10),
                 taxable_base=Decimal("4000.00"),
                 iva_rate=Decimal("0"),
                 currency="EUR",
@@ -628,7 +633,7 @@ def test_intracommunity_services_now_carry_a_category_and_reach_m349(tmp_path: P
                 counterparty_tax_id="IT12345678901",
                 counterparty_country="IT",
                 invoice_number="SERV-IN-2026-100",
-                issued_at=date(2026, 3, 5),
+                issued_at=date(_YEAR, 3, 5),
                 taxable_base=Decimal("3000.00"),
                 iva_rate=Decimal("0"),
                 currency="EUR",
@@ -642,8 +647,8 @@ def test_intracommunity_services_now_carry_a_category_and_reach_m349(tmp_path: P
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,
                 modelo="349",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "1T"),
                 revision=_modelo_349_revision(),
             ),
         )
@@ -717,7 +722,7 @@ def test_a_supplied_line_set_persists_per_rate_instead_of_collapsing_to_one_line
                 counterparty_tax_id="B00015016",
                 counterparty_country="ES",
                 invoice_number="F-2026-MIXED-001",
-                issued_at=date(2026, 4, 1),
+                issued_at=date(_YEAR, 4, 1),
                 taxable_base=None,
                 iva_rate=None,
                 currency="EUR",
@@ -767,7 +772,7 @@ def test_a_supplied_line_set_refuses_any_scalar_base_or_rate(
             counterparty_tax_id="B00015016",
             counterparty_country="ES",
             invoice_number="F-2026-MIXED-002",
-            issued_at=date(2026, 4, 1),
+            issued_at=date(_YEAR, 4, 1),
             taxable_base=taxable_base,
             iva_rate=iva_rate,
             currency="EUR",
@@ -789,7 +794,7 @@ def test_omitting_the_line_set_still_synthesises_the_single_line() -> None:
         counterparty_tax_id="B00015016",
         counterparty_country="ES",
         invoice_number="F-2026-SIMPLE-001",
-        issued_at=date(2026, 4, 1),
+        issued_at=date(_YEAR, 4, 1),
         taxable_base=Decimal("1000.00"),
         iva_rate=Decimal("21"),
         currency="EUR",
@@ -825,7 +830,7 @@ def test_a_rectificativa_with_series_and_recargo_is_writable_and_persists(tmp_pa
                 counterparty_tax_id="B00015016",
                 counterparty_country="ES",
                 invoice_number="R-2026-0001",
-                issued_at=date(2026, 5, 4),
+                issued_at=date(_YEAR, 5, 4),
                 taxable_base=Decimal("1000.00"),
                 iva_rate=Decimal("21"),
                 currency="EUR",
@@ -869,7 +874,7 @@ def test_a_recargo_on_an_exempt_supply_refuses() -> None:
             counterparty_tax_id="B00015016",
             counterparty_country="ES",
             invoice_number="R-2026-0002",
-            issued_at=date(2026, 5, 4),
+            issued_at=date(_YEAR, 5, 4),
             taxable_base=Decimal("1000.00"),
             iva_rate=None,
             currency="EUR",
@@ -890,7 +895,7 @@ def test_the_default_invoice_class_is_still_ordinaria() -> None:
         counterparty_tax_id="B00015016",
         counterparty_country="ES",
         invoice_number="F-2026-0100",
-        issued_at=date(2026, 5, 4),
+        issued_at=date(_YEAR, 5, 4),
         taxable_base=Decimal("1000.00"),
         iva_rate=Decimal("21"),
         currency="EUR",
@@ -940,7 +945,7 @@ def test_canonical_creation_emits_the_lifecycle_event_for_its_direction(
                 counterparty_tax_id="B00010157",
                 counterparty_country="ES",
                 invoice_number=f"EV-2026-{kind.value}",
-                issued_at=date(2026, 6, 1),
+                issued_at=date(_YEAR, 6, 1),
                 taxable_base=Decimal("100.00"),
                 iva_rate=Decimal("21"),
                 currency="EUR",
@@ -977,7 +982,7 @@ def test_an_entrega_intracomunitaria_must_state_its_modelo_349_clave() -> None:
             counterparty_tax_id="DE345678901",
             counterparty_country="DE",
             invoice_number="EU-NO-CLAVE",
-            issued_at=date(2026, 2, 10),
+            issued_at=date(_YEAR, 2, 10),
             taxable_base=Decimal("2000.00"),
             iva_rate=Decimal("0"),
             currency="EUR",
@@ -1009,7 +1014,7 @@ def test_the_clave_requirement_is_scoped_to_the_one_ambiguous_category() -> None
             counterparty_tax_id="DE345678901",
             counterparty_country="DE",
             invoice_number=f"EU-{category.value}",
-            issued_at=date(2026, 2, 10),
+            issued_at=date(_YEAR, 2, 10),
             taxable_base=Decimal("2000.00"),
             iva_rate=Decimal("0"),
             currency="EUR",

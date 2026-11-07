@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ..analysis.coverage_residue_worklist import ResidueCell, collect_residue, render_worklist
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -107,10 +109,23 @@ def test_every_declared_group_count_matches_its_own_rows() -> None:
 
 def test_the_render_groups_by_kind_and_detail() -> None:
     """The grouping is what makes several hundred rows readable."""
+    envelope = filing_year_envelope()
     rendered = render_worklist(
         (
-            ResidueCell(kind="refused-selection", modelo="308", filing_year=2011, period="0A", detail="ambiguous"),
-            ResidueCell(kind="unbacked-declaration", modelo="036", filing_year=2025, period="alta", detail="missing x"),
+            ResidueCell(
+                kind="refused-selection",
+                modelo="308",
+                filing_year=envelope.floor,
+                period="0A",
+                detail="ambiguous",
+            ),
+            ResidueCell(
+                kind="unbacked-declaration",
+                modelo="036",
+                filing_year=envelope.horizon,
+                period="alta",
+                detail="missing x",
+            ),
         ),
     )
 

@@ -16,11 +16,12 @@ independently, so a matching path alone cannot become an origin claim.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime
 from pathlib import PurePosixPath
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.corpus.artifact_catalogue import (
     ArtifactCatalogue,
     ArtifactDiagnosticKind,
@@ -39,7 +40,8 @@ _ANNOTATION = PurePosixPath("corpus/aeat_official/instructions/modelo_999/files/
 _DISPOSITION = PurePosixPath("corpus/aeat_official/instructions/modelo_999/historical_exclusions.json")
 _FIXTURE = PurePosixPath("tests/fixtures/corpus/modelo_999/synthetic-payload.html")
 _MANIFEST = PurePosixPath("corpus/aeat_official/instructions/modelo_999/files/manifest.json")
-_RETRIEVED_AT = date(2026, 9, 10)
+_RETRIEVED_AT = date(filing_year_envelope().horizon, 9, 10)
+_RETRIEVED_AT_TEXT = datetime(_RETRIEVED_AT.year, _RETRIEVED_AT.month, _RETRIEVED_AT.day, tzinfo=UTC).isoformat()
 
 
 def _identity(
@@ -86,7 +88,7 @@ def _independent_manifest_catalogue() -> ArtifactCatalogue:
     """
     first_manifest: dict[str, object] = {
         "source": "AEAT",
-        "retrieved_at": "2026-09-10T00:00:00+00:00",
+        "retrieved_at": _RETRIEVED_AT_TEXT,
         "artefacts": [
             {
                 "stored_path": "payload.html",
@@ -98,7 +100,7 @@ def _independent_manifest_catalogue() -> ArtifactCatalogue:
     }
     independently_loaded_manifest: dict[str, object] = {
         "source": "AEAT",
-        "retrieved_at": "2026-09-10T00:00:00+00:00",
+        "retrieved_at": _RETRIEVED_AT_TEXT,
         "artefacts": [
             {
                 "stored_path": "payload.html",

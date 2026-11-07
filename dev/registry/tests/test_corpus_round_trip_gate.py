@@ -23,6 +23,7 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFa
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_extraction import ExtractionProfileDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ..compiler.profile_schema import capture_profile_schema_source
 from ..compiler.validator import RegistryValidator
@@ -62,7 +63,7 @@ def _committed_profile(
     verification_source: str | None = None,
 ) -> ExtractionProfileDefinition:
     modelo, _catalogues = _committed_130()
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions[str(open_ended_revision("130").id)]
     profile = next(p for p in revision.extraction_profiles if p.surface == "declaracion_pdf")
     return profile.model_copy(
         update={
@@ -108,7 +109,7 @@ def _build_mutated_modelo(
     modelo: ModeloDefinition,
     profile: ExtractionProfileDefinition,
 ) -> ModeloDefinition:
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions[str(open_ended_revision("130").id)]
     mutated = revision.model_copy(update={"extraction_profiles": (profile,)})
     return modelo.model_copy(update={"revisions": {**modelo.revisions, mutated.id: mutated}})
 

@@ -18,6 +18,7 @@ import pytest
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.authority import AuthoritySourceSet
 from ..pipeline.authority_publication import authority_source_identity, install_validated_authority_database
@@ -26,13 +27,16 @@ from .committed_authority_publication import AuthorityPublisher, published_autho
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+_YEAR = filing_year_envelope().horizon
+_REVISION_ID = str(_YEAR)
+
 
 def _stage_inputs(root: Path) -> AuthoritySourceSet:
     registry_root = root / "registry" / "aeat"
-    revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
+    revision_dir = registry_root / "modelos" / "999" / "revisions" / _REVISION_ID
     revision_dir.mkdir(parents=True)
     (registry_root / "modelos" / "999" / "manifest.toml").write_bytes(b'[modelo]\nid = "999"\n')
-    (revision_dir / "revision.toml").write_bytes(b'id = "2025"\nvalid_from = 2025-01-01\n')
+    (revision_dir / "revision.toml").write_bytes(f'id = "{_REVISION_ID}"\nvalid_from = {_YEAR}-01-01\n'.encode())
     evidence_dir = root / "corpus" / "test"
     evidence_dir.mkdir(parents=True)
     (evidence_dir / "ley.html").write_bytes(b"<html>provision text</html>\n")
@@ -81,8 +85,8 @@ def test_a_changed_input_gets_a_new_publication_and_never_reuses_the_old_one(tmp
     assert reused.descriptor == first.descriptor
     assert len(calls) == 1
 
-    revision = sources.registry_root / "modelos" / "999" / "revisions" / "2025" / "revision.toml"
-    revision.write_bytes(b'id = "2025"\nvalid_from = 2025-02-01\n')
+    revision = sources.registry_root / "modelos" / "999" / "revisions" / _REVISION_ID / "revision.toml"
+    revision.write_bytes(f'id = "{_REVISION_ID}"\nvalid_from = {_YEAR}-02-01\n'.encode())
     changed = published_authority(sources, cache_root=cache_root, publish=_recording_publisher(calls))
 
     assert changed.published_by_this_call
