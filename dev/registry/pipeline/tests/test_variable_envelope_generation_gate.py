@@ -13,6 +13,7 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncodin
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.loader import load_catalogue_file
+from ...tests.authored_edition_support import source_first_exercise, source_reference
 from ..export_tree import render_complete_export_tree
 from ..export_tree_models import ExportTreeTransportProfile, RenderedExportTree
 from ..joined_record_design import join_record_design_semantics
@@ -27,6 +28,14 @@ from ..semantic_map import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+_M200_SOURCE = "aeat-dr-200-2025"
+_M220_SOURCE = "aeat-dr-220-2025"
+
+
+def _exercise(source_ref: str) -> int:
+    """Return the first exercise one catalogued design covers, which is also its design epoch."""
+    return source_first_exercise(source_reference(source_ref))
 
 
 def _real_render_profile(
@@ -109,16 +118,16 @@ def test_real_m200_variable_envelope_is_composed_rather_than_truncated(tmp_path:
     """
     source_root = bundled_path()
     catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "is.toml"))
-    inspection = compiled_bundled_authority().inspect_revision("200", filing_year=2025, period="0A")
+    inspection = compiled_bundled_authority().inspect_revision("200", filing_year=_exercise(_M200_SOURCE), period="0A")
     parsed = load_record_design_intermediate(
         source_root,
         catalogues.sources,
-        source_ref="aeat-dr-200-2025",
-        filing_year=2025,
-        design_epoch="2025",
+        source_ref=_M200_SOURCE,
+        filing_year=_exercise(_M200_SOURCE),
+        design_epoch=str(_exercise(_M200_SOURCE)),
     )
-    semantic_map = load_semantic_map(Path("dev/registry/mappings") / "modelo_200" / "2025")
-    render_profile, evidence = _real_render_profile("200", "2025", "aeat-dr-200-2025", catalogues)
+    semantic_map = load_semantic_map(Path("dev/registry/mappings") / "modelo_200" / str(_exercise(_M200_SOURCE)))
+    render_profile, evidence = _real_render_profile("200", str(_exercise(_M200_SOURCE)), _M200_SOURCE, catalogues)
 
     joined = join_record_design_semantics(semantic_map, parsed, inspection)
 
@@ -132,8 +141,8 @@ def test_real_m200_variable_envelope_is_composed_rather_than_truncated(tmp_path:
         semantic_map=semantic_map,
         transport_profile=ExportTreeTransportProfile(
             modelo="200",
-            design_epoch="2025",
-            source_ref="aeat-dr-200-2025",
+            design_epoch=str(_exercise(_M200_SOURCE)),
+            source_ref=_M200_SOURCE,
             source_sha256=parsed.source.source_sha256,
             layout_id="m200-envelope-gate",
             format="fixed_width",
@@ -174,13 +183,13 @@ def test_real_m220_composite_envelope_refuses_the_join_without_a_reviewed_contra
     """
     source_root = bundled_path()
     catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "is.toml"))
-    inspection = compiled_bundled_authority().inspect_revision("220", filing_year=2025, period="0A")
+    inspection = compiled_bundled_authority().inspect_revision("220", filing_year=_exercise(_M220_SOURCE), period="0A")
     parsed = load_record_design_intermediate(
         source_root,
         catalogues.sources,
-        source_ref="aeat-dr-220-2025",
-        filing_year=2025,
-        design_epoch="2025",
+        source_ref=_M220_SOURCE,
+        filing_year=_exercise(_M220_SOURCE),
+        design_epoch=str(_exercise(_M220_SOURCE)),
     )
 
     assert parsed.variable_envelopes[0].record_identity == "T220000000"
@@ -204,7 +213,7 @@ def test_real_m220_composite_envelope_refuses_the_join_without_a_reviewed_contra
     semantic_map = SemanticMap.model_validate(
         {
             "modelo": "220",
-            "design_epoch": "2025",
+            "design_epoch": str(_exercise(_M220_SOURCE)),
             "source_ref": parsed.source.source_ref,
             "source_sha256": parsed.source.source_sha256,
             "records": (

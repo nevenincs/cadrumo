@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingProvider
 
 from ...compiler.loader import load_modelo_directory, load_shared_catalogues
@@ -13,6 +14,10 @@ from ..render_profile_loading import load_render_profile
 from ..semantic_map import load_semantic_map
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_REVISIONS = authored_revisions("194")
+_EPOCHS = tuple(str(revision.id) for revision in _REVISIONS)
+_FIRST_EXERCISE = {str(revision.id): revision.valid_from.year for revision in _REVISIONS}
 
 
 @pytest.mark.parametrize(
@@ -56,7 +61,7 @@ def test_exact_source_geometry_preserves_both_base_signs_and_revision_fields(
     assert "BASE" in detail[157].description
 
 
-@pytest.mark.parametrize("epoch", ["2019", "2023", "2024"])
+@pytest.mark.parametrize("epoch", _EPOCHS)
 def test_semantic_inputs_cover_exact_source_anchors_and_keep_identity_owners(epoch: str) -> None:
     import hashlib
     import tomllib
@@ -73,7 +78,7 @@ def test_semantic_inputs_cover_exact_source_anchors_and_keep_identity_owners(epo
         root,
         load_shared_catalogues(root / "registry/aeat").sources,
         source_ref=mapping.source_ref,
-        filing_year=int(epoch),
+        filing_year=_FIRST_EXERCISE[epoch],
         design_epoch=epoch,
     )
     fields = {(f.sheet, f.source_row, f.ordinal) for s in design.sheets for f in s.fields}
@@ -85,7 +90,7 @@ def test_semantic_inputs_cover_exact_source_anchors_and_keep_identity_owners(epo
     assert entries["modelo-194-perc-nif"].binding == "modelo-194-perceptor-row-nif"
     assert not any(e.producer_key == "presenter.tax_id" for e in mapping.entries)
     assert entries["modelo-194-perc-ceros"].literal == "0" * 13
-    assert ("modelo-194-perc-ceuta-melilla" in entries) == (epoch != "2019")
+    assert ("modelo-194-perc-ceuta-melilla" in entries) == (epoch != _EPOCHS[0])
     assert mapping.records[1].repeat == "binding_rows"
     assert mapping.records[1].binding_record == "perceptor"
     revision = load_modelo_directory(root / "registry/aeat/modelos/194").revisions[epoch]
@@ -114,7 +119,7 @@ def test_semantic_inputs_cover_exact_source_anchors_and_keep_identity_owners(epo
     )
 
 
-@pytest.mark.parametrize("epoch", ["2019", "2023", "2024"])
+@pytest.mark.parametrize("epoch", _EPOCHS)
 def test_render_profiles_keep_signed_base_and_reserved_zero_scale(epoch: str) -> None:
     mapping = load_semantic_map(Path(f"dev/registry/mappings/modelo_194/{epoch}"))
     profile = load_render_profile(Path(f"dev/registry/render_profiles/modelo_194/{epoch}"))
@@ -138,4 +143,4 @@ def test_render_profiles_keep_signed_base_and_reserved_zero_scale(epoch: str) ->
         entry = next(e for e in mapping.entries if e.export_field_id == f"modelo-194-perc-porcentaje-src-{offset}")
         rule = next(r for r in profile.singleton_rules if r.anchor.source_row == entry.anchor.source_row)
         assert rule.value_policy == policy
-    assert len(profile.telematic_transport_choice_rules) == (0 if epoch == "2024" else 1)
+    assert len(profile.telematic_transport_choice_rules) == (0 if epoch == _EPOCHS[-1] else 1)
