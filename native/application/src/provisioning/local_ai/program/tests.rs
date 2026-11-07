@@ -4,7 +4,7 @@ use crate::{
     provisioning::{
         items::ItemId,
         local_ai::fake_ollama::{HELPER_ARGUMENTS, HELPER_GATE, HELPER_MODE, HELPER_VERSION},
-        pins::ComponentPins,
+        pins::{ComponentPins, ProgramIdentity},
         plan::PlanEntry,
         receipts::ReceiptReading,
         test_servers::{Reply, Request, TestCertificate, TlsServer, network_to, response},
@@ -21,10 +21,8 @@ use std::{
 };
 
 fn committed_pins() -> ProgramPins {
-    ComponentPins::load(&crate::provisioning::pins::committed_tables())
-        .unwrap()
-        .program
-        .unwrap()
+    let pins = ComponentPins::load(&crate::provisioning::pins::committed_tables()).unwrap();
+    pins.program(ProgramIdentity::Ollama).unwrap().clone()
 }
 
 #[test]

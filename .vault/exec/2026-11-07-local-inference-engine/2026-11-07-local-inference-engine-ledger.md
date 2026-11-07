@@ -5,7 +5,7 @@ tags:
 date: '2026-11-07'
 modified: '2026-11-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:de389b4c816d12fc1e18c29dffd500c73d7d1e20427825f4a01f9af0c1e1a08f'
+body_hash: 'sha256:7d4cdbda87201a9e118289722864913f832b42add4bb94170376438b70a07b90'
 related:
   - "[[2026-11-07-local-inference-engine-plan]]"
 ---
@@ -34,3 +34,16 @@ related:
 - `S10` `verify:` `ty check` -> `pass`
 - `S10` `verify:` `dev.quality.import_gate` -> `pass`
 - `S10` `by:` `vaultspec-standard-executor`
+- `S12` `M` `native/application/src/provisioning/pins.rs`
+- `S12` `M` `native/application/src/provisioning/engine.rs`
+- `S12` `M` `native/application/src/provisioning/engine/tests.rs`
+- `S12` `M` `native/application/src/provisioning/network.rs`
+- `S12` `M` `native/application/src/provisioning/local_ai/program/tests.rs`
+- `S12` `M` `native/manager/src/supervision/local_ai.rs`
+- `S12` `verify:` `rustfmt --edition 2024 --emit stdout (six files)` -> `pass`
+- `S12` `verify:` `pytest dev/quality/tests/test_no_model_definitions.py` -> `pass`
+- `S12` `by:` `vaultspec-standard-executor`
+
+## Notes
+
+- `S12` Rust not compiled in this worktree; cargo test and clippy for cadrumo-application and the manager are owed in a root build slot

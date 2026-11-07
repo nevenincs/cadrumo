@@ -60,7 +60,7 @@ use super::{
         program::{Program, START_BUDGET, Server},
     },
     network::{self, HOST_TIMEOUT, Reachability},
-    pins::{ComponentPins, Platform},
+    pins::{ComponentPins, Platform, ProgramIdentity},
     plan::{PlanEntry, SetupPlan},
     receipts::{ReceiptReading, ReceiptStore},
     state::{
@@ -866,7 +866,7 @@ impl Engine {
     /// for this platform.
     fn local_ai_parts(&self) -> Option<Result<(Program, Models), Error>> {
         let platform = self.config.platform?;
-        let pins = self.config.pins.program.as_ref()?;
+        let pins = self.config.pins.program(ProgramIdentity::Ollama)?;
         match Program::new(pins, platform, self.config.locations.clone()) {
             Ok(Some(program)) => Some(Ok((
                 program,

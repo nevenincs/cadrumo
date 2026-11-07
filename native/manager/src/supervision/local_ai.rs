@@ -31,7 +31,7 @@ use cadrumo_application::provisioning::{
         program::{Containment, Program},
         supervision::{ServerState, ServerSupervisor},
     },
-    pins::{ComponentPins, Platform},
+    pins::{ComponentPins, Platform, ProgramIdentity},
 };
 use std::{
     net::SocketAddr,
@@ -85,11 +85,10 @@ impl LocalAiHost {
     /// `storage_root`; `None` when the build carries no local AI program for this
     /// platform or its pins cannot be read, so there is nothing to run.
     pub fn for_package(package_root: &Path, storage_root: &Path) -> Option<Self> {
-        let pins = ComponentPins::load(&package_root.join(COMPONENT_PINS))
-            .ok()?
-            .program?;
+        let tables = ComponentPins::load(&package_root.join(COMPONENT_PINS)).ok()?;
+        let pins = tables.program(ProgramIdentity::Ollama)?;
         let program =
-            Program::new(&pins, Platform::current()?, Locations::under(storage_root)).ok()??;
+            Program::new(pins, Platform::current()?, Locations::under(storage_root)).ok()??;
         // The supervisor reads the operator's proxy setting from this manager's own
         // environment, once: a process's environment block cannot be changed from
         // outside it, so a setting changed afterwards reaches the server at this
