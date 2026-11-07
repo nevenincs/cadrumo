@@ -48,9 +48,9 @@ from cadrumo.domain.calculations.registry.rate_box_partition import (
 )
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_grade_exercises,
     revision_before_first_declaring,
     revision_covering,
-    filing_grade_exercises,
 )
 from cadrumo.domain.iva.schema import IvaLedgerObservationRole
 from dev.registry.compiler.authority import compiled_bundled_authority

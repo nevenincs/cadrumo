@@ -42,8 +42,8 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     resolve_ledger_iva_aggregation_binding_values,
 )
 from cadrumo.domain.calculations.registry.tests.authored_editions import (
-    revision_covering,
     filing_grade_exercises,
+    revision_covering,
 )
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
