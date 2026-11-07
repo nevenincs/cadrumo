@@ -201,8 +201,14 @@ export function useAgentCatalog({
     offer,
     selection,
     remember,
-    /** Reads the catalog again after a failed read. */
-    retry: () => setCatalogRetry((count) => count + 1),
+    /** Reads the catalog again after a failed read. The person asking again
+     * starts a fresh bounded budget of busy re-reads, so a service that stays
+     * busy is followed again instead of left after one read. */
+    retry: () => {
+      busyCatalogReads.current = 0;
+      statusAtBusyRead.current = status;
+      setCatalogRetry((count) => count + 1);
+    },
     /** Reads the catalog again: what this computer holds changed. */
     refresh: () => setCatalogAgain((count) => count + 1),
   };
