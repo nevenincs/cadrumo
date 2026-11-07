@@ -7,7 +7,13 @@ import {
   showCalendar,
   calendarReads,
   FIXTURE_DAY,
+  weekRuns,
 } from "../support/scenarioCalendar";
+import {
+  fixtureDay,
+  fixtureMonth,
+  fixtureYear,
+} from "../../src/dev/fixtureDates";
 
 // The calendar's months: filing windows across their days, week start, the list beside them and the legend.
 
@@ -38,15 +44,17 @@ test("the calendar's months draw each filing window across the days it is open",
   await expect(months).toHaveCount(12);
   await expect(months.first().getByRole("heading", { level: 2 })).toHaveText(
     new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(
-      new Date(2026, 6, 1),
+      new Date(fixtureYear, 6, 1),
     ),
   );
   // It opens on the month the product evaluated in, with that day marked.
-  const october = page.locator('.calendar-month[data-month="2026-10"]');
+  const october = page.locator(
+    `.calendar-month[data-month="${fixtureMonth(10)}"]`,
+  );
   await expect(october.getByRole("heading", { level: 2 })).toBeInViewport();
   await expect(page.locator(".calendar-grid-today")).toHaveText(["6"]);
   await expect(
-    october.locator('[data-day="2026-10-06"] .calendar-grid-today'),
+    october.locator(`[data-day="${fixtureDay(10, 6)}"] .calendar-grid-today`),
   ).toHaveCount(1);
 
   // Where on the page a day and a window are.
@@ -55,17 +63,16 @@ test("the calendar's months draw each filing window across the days it is open",
     return { left: box.x, right: box.x + box.width, top: box.y };
   };
   const dayOf = (iso: string) => page.locator(`[data-day="${iso}"]`);
-  // A window open from the first to the twentieth crosses four weeks where
-  // the week begins on Sunday, and is drawn in each: from its first day to
-  // the week's end, across two whole weeks, and up to its closing day.
-  const window303 = october.locator('.calendar-bar[data-entry="303:2026-3T"]');
-  await expect(window303).toHaveCount(4);
-  const spans = [
-    ["2026-10-01", "2026-10-03"],
-    ["2026-10-04", "2026-10-10"],
-    ["2026-10-11", "2026-10-17"],
-    ["2026-10-18", "2026-10-20"],
-  ] as const;
+  // A window open from the first to the twentieth is drawn in each week it
+  // crosses, where the week begins on Sunday: from its first day to the
+  // week's end, across the whole weeks, and up to its closing day.
+  const window303 = october.locator(
+    `.calendar-bar[data-entry="303:${fixtureYear}-3T"]`,
+  );
+  const spans = weekRuns(fixtureDay(10, 1), fixtureDay(10, 20), 0);
+  expect(spans.length).toBeGreaterThan(1);
+  await expect(window303).toHaveCount(spans.length);
+  const continued = spans.map((_, index) => index).slice(1);
   for (const [index, [from, to]] of spans.entries()) {
     const bar = await edges(window303.nth(index));
     const first = await edges(dayOf(from));
@@ -83,24 +90,31 @@ test("the calendar's months draw each filing window across the days it is open",
   });
   await expect(window303.first()).toHaveAccessibleName(
     [
-      `${label("desktop.calendar.modelo", { modelo: "303" })} 2026-3T`,
-      short.formatRange(new Date(2026, 9, 1), new Date(2026, 9, 20)),
+      `${label("desktop.calendar.modelo", { modelo: "303" })} ${fixtureYear}-3T`,
+      short.formatRange(
+        new Date(fixtureYear, 9, 1),
+        new Date(fixtureYear, 9, 20),
+      ),
       label("desktop.calendar.state.due"),
     ].join(", "),
   );
-  await expect(page.getByRole("button", { name: /303.* 2026-3T/ })).toHaveCount(
-    1,
-  );
-  for (const index of [1, 2, 3]) {
+  await expect(
+    page.getByRole("button", { name: new RegExp(`303.* ${fixtureYear}-3T`) }),
+  ).toHaveCount(1);
+  for (const index of continued) {
     await expect(window303.nth(index)).toHaveAttribute("aria-hidden", "true");
     await expect(window303.nth(index)).toHaveAttribute("tabindex", "-1");
   }
   // It is named in full once in the month, where it is first drawn; the
   // weeks it goes on across carry its Modelo alone.
-  await expect(window303.getByText("303", { exact: true })).toHaveCount(4);
-  await expect(window303.first().getByText("2026-3T")).toBeVisible();
-  for (const index of [1, 2, 3])
-    await expect(window303.nth(index).getByText("2026-3T")).toBeHidden();
+  await expect(window303.getByText("303", { exact: true })).toHaveCount(
+    spans.length,
+  );
+  await expect(window303.first().getByText(`${fixtureYear}-3T`)).toBeVisible();
+  for (const index of continued)
+    await expect(
+      window303.nth(index).getByText(`${fixtureYear}-3T`),
+    ).toBeHidden();
   // A window closes with a rounded pill end and has no border.
   const measures = await window303.last().evaluate((bar) => ({
     closing: getComputedStyle(bar).borderRightWidth,
@@ -122,7 +136,11 @@ test("the calendar's months draw each filing window across the days it is open",
   await expect(window303.first()).toHaveAttribute("aria-pressed", "false");
   // Windows open over the same days each keep a row of their own.
   const tops = new Set<number>();
-  for (const key of ["111:2026-3T", "130:2026-3T", "303:2026-3T"])
+  for (const key of [
+    `111:${fixtureYear}-3T`,
+    `130:${fixtureYear}-3T`,
+    `303:${fixtureYear}-3T`,
+  ])
     tops.add(
       Math.round(
         (
@@ -136,20 +154,24 @@ test("the calendar's months draw each filing window across the days it is open",
   // How it stands is drawn, and never only by colour: the list says it.
   await expect(window303.first()).toHaveAttribute("data-state", "due");
   await expect(
-    october.locator('.calendar-bar[data-entry="111:2026-3T"]').first(),
+    october
+      .locator(`.calendar-bar[data-entry="111:${fixtureYear}-3T"]`)
+      .first(),
   ).toHaveAttribute("data-state", "filed");
 
   // A window whose opening was not reported is not guessed at: its closing
   // day alone is drawn, and it says the opening is not known.
-  const unknown = page.locator('.calendar-bar[data-entry="349:2026-3T"]');
+  const unknown = page.locator(
+    `.calendar-bar[data-entry="349:${fixtureYear}-3T"]`,
+  );
   await expect(unknown).toHaveCount(1);
-  const closing = await edges(dayOf("2026-10-20"));
+  const closing = await edges(dayOf(fixtureDay(10, 20)));
   const drawn = await edges(unknown);
   expect(Math.abs(drawn.left - closing.left)).toBeLessThanOrEqual(3);
   expect(Math.abs(drawn.right - closing.right)).toBeLessThanOrEqual(3);
   await expect(unknown).toHaveAccessibleName(
     new RegExp(
-      `${short.format(new Date(2026, 9, 20))} \\(${label("desktop.calendar.window_unknown")}\\)`,
+      `${short.format(new Date(fixtureYear, 9, 20))} \\(${label("desktop.calendar.window_unknown")}\\)`,
     ),
   );
 
@@ -157,12 +179,12 @@ test("the calendar's months draw each filing window across the days it is open",
   // fourth quarter's, moved from a Saturday to the Monday after.
   await expect(
     page.locator(
-      '.calendar-month[data-month="2027-01"] .calendar-bar[data-entry="303:2026-4T"]',
+      `.calendar-month[data-month="${fixtureMonth(1, 1)}"] .calendar-bar[data-entry="303:${fixtureYear}-4T"]`,
     ),
   ).not.toHaveCount(0);
   await expect(
     page.locator(
-      '.calendar-month[data-month="2027-02"] .calendar-bar[data-entry="303:2026-4T"]',
+      `.calendar-month[data-month="${fixtureMonth(2, 1)}"] .calendar-bar[data-entry="303:${fixtureYear}-4T"]`,
     ),
   ).toHaveCount(1);
 
@@ -170,17 +192,16 @@ test("the calendar's months draw each filing window across the days it is open",
   // agency's message, each said with its date and the product's sentence.
   const events = page.locator(".calendar-event");
   await expect(events).toHaveCount(3);
-  const filed = dayOf("2026-10-02").locator(".calendar-event");
+  const filed = dayOf(fixtureDay(10, 2)).locator(".calendar-event");
   await expect(filed).toHaveAttribute("data-event", "filing");
   await expect(filed).toHaveAccessibleName(
     `${new Intl.DateTimeFormat("en", { dateStyle: "full" }).format(
-      new Date(2026, 9, 2),
-    )}: ${label("desktop.calendar.event.filing")}. Modelo 111 2026-3T filed`,
+      new Date(fixtureYear, 9, 2),
+    )}: ${label("desktop.calendar.event.filing")}. Modelo 111 ${fixtureYear}-3T filed`,
   );
-  await expect(dayOf("2026-09-03").locator(".calendar-event")).toHaveAttribute(
-    "data-event",
-    "message",
-  );
+  await expect(
+    dayOf(fixtureDay(9, 3)).locator(".calendar-event"),
+  ).toHaveAttribute("data-event", "message");
   // Nothing was read a second time to draw the months.
   expect(await calendarReads(target)()).toBe(1);
 });
@@ -188,14 +209,23 @@ test("the calendar's months draw each filing window across the days it is open",
 test("the months begin the week on the day the language does", async ({
   page: target,
 }) => {
+  // The first Sunday and the first Monday of the month.
+  const firstOn = (weekday: number) =>
+    new Date(
+      fixtureYear,
+      9,
+      1 + ((weekday - new Date(fixtureYear, 9, 1).getDay() + 7) % 7),
+    );
   for (const [language, first] of [
-    ["en", new Date(2026, 9, 4)],
-    ["es", new Date(2026, 9, 5)],
-    ["hu", new Date(2026, 9, 5)],
+    ["en", firstOn(0)],
+    ["es", firstOn(1)],
+    ["hu", firstOn(1)],
   ] as const) {
     await open(target, "signed-in", `&lang=${language}`);
     await showCalendar(target, language);
-    const october = target.locator('.calendar-month[data-month="2026-10"]');
+    const october = target.locator(
+      `.calendar-month[data-month="${fixtureMonth(10)}"]`,
+    );
     // The first of its weekday letters, and the day under it in the first
     // whole week: a Sunday in English, a Monday in Spanish and Hungarian.
     await expect(
@@ -203,7 +233,7 @@ test("the months begin the week on the day the language does", async ({
     ).toHaveText(
       new Intl.DateTimeFormat(language, { weekday: "narrow" }).format(first),
     );
-    const iso = "2026-10-0" + first.getDate();
+    const iso = fixtureDay(10, first.getDate());
     await expect(october.locator('[data-day="' + iso + '"]')).toHaveCSS(
       "grid-column-start",
       "1",
@@ -246,7 +276,7 @@ test("a maximized calendar shows the months and the list together, and one marks
   expect(Math.abs(right.height - frame.height)).toBeLessThanOrEqual(2);
   // Each opens on where the person is: the current month, and today's mark.
   await expect(
-    page.locator('.calendar-month[data-month="2026-10"] h2'),
+    page.locator(`.calendar-month[data-month="${fixtureMonth(10)}"] h2`),
   ).toBeInViewport();
   await expect(list.getByRole("separator")).toBeInViewport();
   expect(await list.evaluate((element) => element.scrollTop)).toBeGreaterThan(
@@ -255,8 +285,10 @@ test("a maximized calendar shows the months and the list together, and one marks
 
   // Chosen among the months, an obligation is marked in the list, and all
   // of its window is marked among the months.
-  const bars = page.locator('.calendar-bar[data-entry="303:2026-4T"]');
-  const row = list.locator('li[data-entry="303:2026-4T"]');
+  const bars = page.locator(
+    `.calendar-bar[data-entry="303:${fixtureYear}-4T"]`,
+  );
+  const row = list.locator(`li[data-entry="303:${fixtureYear}-4T"]`);
   await expect(row).not.toHaveAttribute("aria-current");
   await bars.first().scrollIntoViewIfNeeded();
   await bars.first().click();
@@ -270,9 +302,14 @@ test("a maximized calendar shows the months and the list together, and one marks
   );
   // Chosen in the list, the last obligation of the range is brought into
   // view among the months, and it alone is chosen.
-  const far = page.locator('.calendar-bar[data-entry="100:2026"]').first();
+  const far = page
+    .locator(`.calendar-bar[data-entry="100:${fixtureYear}"]`)
+    .first();
   await expect(far).not.toBeInViewport();
-  await list.locator('li[data-entry="100:2026"]').getByRole("button").click();
+  await list
+    .locator(`li[data-entry="100:${fixtureYear}"]`)
+    .getByRole("button")
+    .click();
   await expect(far).toHaveAttribute("aria-pressed", "true");
   await expect(far).toBeInViewport();
   await expect(row).not.toHaveAttribute("aria-current");
@@ -295,7 +332,9 @@ test("a maximized calendar shows the months and the list together, and one marks
   await view
     .getByRole("radio", { name: label("desktop.calendar.view_list") })
     .click();
-  const kept = page.locator('.calendar-list li[data-entry="100:2026"]');
+  const kept = page.locator(
+    `.calendar-list li[data-entry="100:${fixtureYear}"]`,
+  );
   await expect(kept).toHaveAttribute("aria-current", "true");
   await expect(kept).toBeInViewport();
   // Choosing it again lets it go.
@@ -364,7 +403,7 @@ test("the calendar's mark stands where the past ends in each shape of range, and
   await found.page
     .getByRole("radio", { name: label("desktop.calendar.view_months") })
     .click();
-  const cell = found.page.locator('[data-day="2026-10-06"]');
+  const cell = found.page.locator(`[data-day="${fixtureDay(10, 6)}"]`);
   await expect(cell.locator(".calendar-grid-today")).toHaveAttribute(
     "data-today",
     "true",
@@ -379,7 +418,7 @@ test("the calendar's mark stands where the past ends in each shape of range, and
 
   // A calendar worked out for a day that is not today here does not call
   // that day today: the mark says the day, and stands where it stood.
-  await target.clock.setFixedTime(new Date(2026, 9, 7, 9));
+  await target.clock.setFixedTime(new Date(fixtureYear, 9, 7, 9));
   found = await shown("straddling");
   expect(found.order).toMatchObject({ behind: 1, ahead: 7, split: [1, 4] });
   await expect(found.mark).toHaveAccessibleName(
@@ -391,7 +430,7 @@ test("the calendar's mark stands where the past ends in each shape of range, and
   await found.page
     .getByRole("radio", { name: label("desktop.calendar.view_months") })
     .click();
-  const stale = found.page.locator('[data-day="2026-10-06"]');
+  const stale = found.page.locator(`[data-day="${fixtureDay(10, 6)}"]`);
   await expect(stale.locator(".calendar-grid-today")).toHaveAttribute(
     "data-today",
     "false",
@@ -425,11 +464,15 @@ test("a close the product does not know is listed and drawn as unknown, with its
   });
   const earliest = (on: Date) =>
     label("desktop.calendar.earliest_close", { date: short.format(on) });
-  const ahead = page.locator('.calendar-list li[data-entry="123:2026-3T"]');
-  const passed = page.locator('.calendar-list li[data-entry="115:2026-2T"]');
+  const ahead = page.locator(
+    `.calendar-list li[data-entry="123:${fixtureYear}-3T"]`,
+  );
+  const passed = page.locator(
+    `.calendar-list li[data-entry="115:${fixtureYear}-2T"]`,
+  );
   for (const [row, on] of [
-    [ahead, new Date(2026, 9, 20)],
-    [passed, new Date(2026, 6, 20)],
+    [ahead, new Date(fixtureYear, 9, 20)],
+    [passed, new Date(fixtureYear, 6, 20)],
   ] as const) {
     // Kept in the list, called by the product's own words for it.
     await expect(row).toBeVisible();
@@ -455,31 +498,43 @@ test("a close the product does not know is listed and drawn as unknown, with its
     ),
   );
   const at = (key: string) => order.indexOf(key);
-  expect(at("115:2026-2T")).toBeGreaterThan(at("130:2026-2T"));
-  expect(at("115:2026-2T")).toBeGreaterThan(at("303:2026-2T"));
-  expect(at("115:2026-2T")).toBeLessThan(at("today"));
-  expect(at("123:2026-3T")).toBeGreaterThan(at("today"));
-  for (const known of ["303:2026-3T", "130:2026-3T", "111:2026-3T"])
-    expect(at("123:2026-3T")).toBeGreaterThan(at(known));
-  expect(at("123:2026-3T")).toBeLessThan(at("303:2026-4T"));
+  expect(at(`115:${fixtureYear}-2T`)).toBeGreaterThan(
+    at(`130:${fixtureYear}-2T`),
+  );
+  expect(at(`115:${fixtureYear}-2T`)).toBeGreaterThan(
+    at(`303:${fixtureYear}-2T`),
+  );
+  expect(at(`115:${fixtureYear}-2T`)).toBeLessThan(at("today"));
+  expect(at(`123:${fixtureYear}-3T`)).toBeGreaterThan(at("today"));
+  for (const known of [
+    `303:${fixtureYear}-3T`,
+    `130:${fixtureYear}-3T`,
+    `111:${fixtureYear}-3T`,
+  ])
+    expect(at(`123:${fixtureYear}-3T`)).toBeGreaterThan(at(known));
+  expect(at(`123:${fixtureYear}-3T`)).toBeLessThan(at(`303:${fixtureYear}-4T`));
 
   // Among the months the window says the same, and is not drawn closing.
   await page
     .getByRole("radio", { name: label("desktop.calendar.view_months") })
     .click();
   const bar = page.locator(
-    '.calendar-bar[data-entry="123:2026-3T"]:not([tabindex="-1"])',
+    `.calendar-bar[data-entry="123:${fixtureYear}-3T"]:not([tabindex="-1"])`,
   );
   await expect(bar).toHaveAccessibleName(
     new RegExp(
-      `${earliest(new Date(2026, 9, 20))}.*${label("workspace.declarations.calendar.legal.unknown")}$`,
+      `${earliest(new Date(fixtureYear, 9, 20))}.*${label("workspace.declarations.calendar.legal.unknown")}$`,
     ),
   );
   await expect(
-    page.locator('.calendar-bar[data-entry="123:2026-3T"].rounded-r-full'),
+    page.locator(
+      `.calendar-bar[data-entry="123:${fixtureYear}-3T"].rounded-r-full`,
+    ),
   ).toHaveCount(0);
   await expect(
-    page.locator('.calendar-bar[data-entry="130:2026-3T"].rounded-r-full'),
+    page.locator(
+      `.calendar-bar[data-entry="130:${fixtureYear}-3T"].rounded-r-full`,
+    ),
   ).toHaveCount(1);
 });
 
@@ -540,7 +595,9 @@ test("the calendar says what its marks are, and has a way back to where it stand
   const back = page.getByRole("button", {
     name: new RegExp(`^${said}$`, "i"),
   });
-  const october = page.locator('.calendar-month[data-month="2026-10"] h2');
+  const october = page.locator(
+    `.calendar-month[data-month="${fixtureMonth(10)}"] h2`,
+  );
   await expect(october).toBeInViewport();
   const opened = await page.evaluate((element) => element.scrollTop);
   await page.evaluate((element) => {
@@ -584,7 +641,7 @@ test("the calendar says what its marks are, and has a way back to where it stand
   await expect(aside.getByRole("separator")).toBeInViewport();
 
   // A calendar worked out for another day names the way back by that day.
-  await target.clock.setFixedTime(new Date(2026, 9, 7, 9));
+  await target.clock.setFixedTime(new Date(fixtureYear, 9, 7, 9));
   await open(target, "signed-in");
   await showCalendar(target);
   // The day alone is what is shown; read aloud it says where it goes.

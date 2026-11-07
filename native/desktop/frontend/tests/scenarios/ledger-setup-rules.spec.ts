@@ -13,6 +13,7 @@ import {
   openSetup,
   area,
 } from "../support/ledgerSetup";
+import { fixtureDay, fixtureYear } from "../../src/dev/fixtureDates";
 
 // The Ledger page's Setup sections over the scenario host's made-up ledger: a rule made from a selection and its run staged, ratios by year, and an own account added through the protected body and shown masked only.
 
@@ -21,7 +22,7 @@ test("a rule made from a selection is prefilled, saved, and its run staged", asy
 }) => {
   await openLedger(target);
   // Two payments to one supplier, one still to classify.
-  for (const invoice of ["FRA 2026-058", "FRA 2026-055"])
+  for (const invoice of [`FRA ${fixtureYear}-058`, `FRA ${fixtureYear}-055`])
     await dataRows(target)
       .filter({ hasText: invoice })
       .locator("input[type=checkbox]")
@@ -166,7 +167,7 @@ test("ratios are set and unset for the year chosen", async ({
     .click();
   await expect(
     target.getByRole("group", {
-      name: label("desktop.ledger.ratios.table", { year: 2025 }),
+      name: label("desktop.ledger.ratios.table", { year: fixtureYear - 1 }),
     }),
   ).toBeVisible();
   await target
@@ -261,7 +262,7 @@ test("an own account is added through the protected body and shown masked only",
     "titular",
   );
   await field(form, "desktop.ledger.accounts.currency").fill("EUR");
-  await field(form, "desktop.ledger.accounts.opened").fill("2026-02-01");
+  await field(form, "desktop.ledger.accounts.opened").fill(fixtureDay(2, 1));
   const number = field(form, "desktop.ledger.accounts.iban");
   await expect(number).toHaveAttribute("type", "password");
   // How it is written is seen here; a wrong check digit is the backend's to
@@ -322,14 +323,18 @@ test("an account closes on a date the person gives, and one in use is not remove
     "",
   );
   await expect(submit).toHaveAttribute("aria-disabled", "true");
-  await field(form, "desktop.ledger.accounts.closed_on").fill("31/10/2026");
+  await field(form, "desktop.ledger.accounts.closed_on").fill(
+    `31/10/${fixtureYear}`,
+  );
   await expect(submit).toHaveAttribute("aria-disabled", "true");
-  await field(form, "desktop.ledger.accounts.closed_on").fill("2026-10-31");
+  await field(form, "desktop.ledger.accounts.closed_on").fill(
+    fixtureDay(10, 31),
+  );
   await submit.click();
   await expect(form).toBeHidden();
   await expect(
     target.locator(".ledger-accounts-table tr", { hasText: "Cuenta personal" }),
-  ).toContainText("2026");
+  ).toContainText(String(fixtureYear));
 
   await actions("Cuenta del estudio").click();
   await target

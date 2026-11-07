@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import type { LedgerOutcome } from "../src/shell/ledger";
 import type { ModeloPort } from "../src/shell/modelo";
 import { runOperation } from "../src/components/modelo/dialogs/operationRun";
+import { fixtureYear } from "../src/dev/fixtureDates";
 
 // One modelo write as the review and the Export and record view send it:
 // sent once, followed with observe while it runs, and unknown whenever its
@@ -333,7 +334,7 @@ test("a settled refusal carries the step the backend named, and only one of a ki
     await refusing({
       kind: "create_work",
       modelo: "130",
-      filing_year: 2025,
+      filing_year: fixtureYear,
       period_code: "1T",
       words: "Create the first quarter",
     }),
@@ -345,7 +346,7 @@ test("a settled refusal carries the step the backend named, and only one of a ki
     step: {
       kind: "create_work",
       modelo: "130",
-      filing_year: 2025,
+      filing_year: fixtureYear,
       period_code: "1T",
       words: "Create the first quarter",
     },

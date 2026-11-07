@@ -3,10 +3,10 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { label } from "../support/strings";
 import { servedPeriodName } from "../support/servedPeriods";
-import { LEDGER_FIXTURE_TODAY } from "../../src/dev/fixtures/ledger";
+import { fixtureYear } from "../../src/dev/fixtureDates";
 
 /** The year of the scenario ledger's date, whose periods the scenarios open. */
-const scenarioYear = Number(LEDGER_FIXTURE_TODAY.slice(0, 4));
+const scenarioYear = fixtureYear;
 
 // The panel beside the Movements grid over the scenario's ledger: the
 // inspector of one movement, with its jump index, sections and actions,
@@ -955,7 +955,7 @@ test("removing is previewed by the ledger, and a movement a finalized declaratio
   await expect(panel(target).locator(".ledger-inspector-head")).toContainText(
     label("desktop.ledger.inspector.used.name", {
       modelo: "303",
-      year: 2026,
+      year: scenarioYear,
       period: "1T",
     }),
   );

@@ -1,9 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { label } from "../support/strings";
-import { LEDGER_FIXTURE_TODAY } from "../../src/dev/fixtures/ledger";
+import { fixtureYear } from "../../src/dev/fixtureDates";
 
 /** The year of the scenario ledger's date, whose periods the scenarios open. */
-const scenarioYear = Number(LEDGER_FIXTURE_TODAY.slice(0, 4));
+const scenarioYear = fixtureYear;
 
 declare global {
   interface Window {
@@ -73,7 +73,7 @@ async function openFourthQuarter(target: Page) {
   }
   const choice = periods
     .getByRole("group", {
-      name: label("desktop.ledger.period.of_year", { year: 2026 }),
+      name: label("desktop.ledger.period.of_year", { year: scenarioYear }),
     })
     .getByRole("button", { name: "4T", exact: true });
   // The page is read from the choice to the first drawn row.
