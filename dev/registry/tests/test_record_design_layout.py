@@ -24,6 +24,20 @@ from .record_design_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+def _first_listed_design(modelo_id: str) -> Path:
+    """Return the design AEAT lists first for one modelo: the corpus numbers it ``01``."""
+    (design,) = (
+        path
+        for path in scan_directory(
+            RECORD_DESIGN_ROOT / f"modelo_{modelo_id}" / "files",
+            pattern=f"01-{modelo_id}-*",
+            select=DirectoryEntryKind.FILES,
+        )
+        if path.suffix.lower() in {".xls", ".xlsx"}
+    )
+    return design
+
+
 def test_header_matching_ignores_an_abbreviating_full_stop_on_either_side() -> None:
     """A header token means the same thing with or without AEAT's trailing stop.
 
@@ -77,12 +91,7 @@ def test_a_design_with_a_dropped_sheet_reports_the_read_as_partial() -> None:
     two disjoint -- rather than on the counts, which move whenever the header
     vocabulary widens or AEAT republishes.
     """
-    design = (
-        RECORD_DESIGN_ROOT
-        / "modelo_232"
-        / "files"
-        / "01-232-orden-hfp-816-2017-ejercicio-2016-y-siguientes-actualizado-15-01-2020-145-kb-xlsx.xlsx"
-    )
+    design = _first_listed_design("232")
     assert design.is_file(), f"corpus anchor moved: {design}"
 
     extraction = extract_record_design(design)
@@ -158,7 +167,7 @@ def test_a_second_recognised_header_shape_is_read_and_a_non_matching_sheet_still
     (spot-checked against the raw workbook, not just "it parsed"), AND a sheet
     matching NEITHER shape -- no ``Descripción``, no ``Com.`` -- still skips.
     """
-    design = RECORD_DESIGN_ROOT / "modelo_151" / "files" / "01-151-ejercicio-2023-y-siguientes.xls"
+    design = _first_listed_design("151")
     assert design.is_file(), f"corpus anchor moved: {design}"
     extraction = extract_record_design(design)
 
@@ -409,12 +418,7 @@ def test_a_design_declaring_no_terminator_does_not_acquire_one() -> None:
     variable envelope as the older editions that DO carry a terminator, so the two
     differ in exactly the thing under test.
     """
-    design = (
-        RECORD_DESIGN_ROOT
-        / "modelo_303"
-        / "files"
-        / "01-303-ejercicio-2026-y-siguientes-actualizado-28-01-26-378-kb-xlsx.xlsx"
-    )
+    design = _first_listed_design("303")
     assert design.is_file(), f"corpus anchor moved: {design}"
 
     extraction = extract_record_design(design)

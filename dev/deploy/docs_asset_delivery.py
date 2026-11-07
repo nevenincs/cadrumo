@@ -7,6 +7,7 @@ import hashlib
 import json
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -142,7 +143,7 @@ def deploy_assets(account: CloudflareAccount, document: dict[str, Any], root: Pa
     if not completion:
         raise ValueError("Static asset upload did not complete")
     metadata = {
-        "compatibility_date": "2026-09-27",
+        "compatibility_date": datetime.now(UTC).date().isoformat(),
         "bindings": [],
         "assets": {"jwt": completion, "config": delivery_config(document)},
     }

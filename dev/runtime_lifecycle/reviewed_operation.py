@@ -38,6 +38,7 @@ import shutil
 import tempfile
 import time
 from collections.abc import Mapping
+from datetime import date
 from pathlib import Path
 from typing import Any, Final
 
@@ -70,6 +71,7 @@ from .proof_support import (
     package_identity,
     started_processes,
     state_taxpayer,
+    supported_filing_year,
 )
 from .session_holder import AsyncRuntimeSessionHolder
 
@@ -245,7 +247,7 @@ async def _reject_then_apply(
             "ledger.add",
             {
                 "profile_id": str(profile.profile_id),
-                "booked_date": "2026-07-15",
+                "booked_date": date(supported_filing_year(), 7, 15).isoformat(),
                 "amount": "121.00",
                 "direction": "OUTGOING",
                 "description": "Papeleria y material de oficina",

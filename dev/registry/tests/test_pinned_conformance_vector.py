@@ -18,6 +18,11 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    newest_authored_editions,
+    open_ended_revision,
+    revision_covering,
+)
 
 from ..filing_export_conformance import FilingExportConformanceRequest
 from ..filing_export_conformance_vectors import (
@@ -34,6 +39,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _PINNED = Path(__file__).resolve().parents[1] / "conformance_vectors" / "modelo_200_2025_y_siguientes.toml"
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
+#: The pin covers the open-ended edition of Modelo 200.
+_PINNED_M200_REVISION = str(open_ended_revision("200").id)
 
 
 def test_the_shipped_pin_materializes_against_the_current_generated_tree(
@@ -46,7 +53,7 @@ def test_the_shipped_pin_materializes_against_the_current_generated_tree(
     )
     assert len(vectors) == 1
     coordinate = vectors[0].evidence.coordinate
-    assert (str(coordinate.modelo), str(coordinate.revision)) == ("200", "2025-y-siguientes")
+    assert (str(coordinate.modelo), str(coordinate.revision)) == ("200", _PINNED_M200_REVISION)
 
     # The canonical proof derives its enrollment from exactly these vectors and
     # the validated bundled authority.
@@ -60,16 +67,15 @@ def test_the_shipped_pin_materializes_against_the_current_generated_tree(
         for residue in enrollment.residues
         if str(residue.modelo) == "200"
     ]
-    assert ("200", "2025-y-siguientes") in materialized, m200_residues
+    assert ("200", _PINNED_M200_REVISION) in materialized, m200_residues
     assert not m200_residues
     candidates = {
         (str(candidate.evidence.coordinate.modelo), str(candidate.evidence.coordinate.revision))
         for candidate in enrollment.provenance_candidates
     }
     assert {
-        ("165", "2026-y-siguientes"),
-        ("189", "2024"),
-        ("189", "2025"),
+        ("165", str(open_ended_revision("165").id)),
+        *(("189", str(revision_covering("189", year).id)) for year in newest_authored_editions("189", 2)),
         ("369", "esquema-exterior"),
         ("369", "esquema-importacion"),
         ("369", "esquema-union"),
@@ -102,8 +108,8 @@ def test_public_proof_uses_the_real_writer_and_restores_candidate_fact_scope(
 
     # The healthy active tree must not mask a corrupt explicitly selected candidate.
     candidate_root = tmp_path / "registry"
-    candidate_export = candidate_root / "modelos/200/revisions/2025-y-siguientes/export"
-    shutil.copytree(_REGISTRY_ROOT / "modelos/200/revisions/2025-y-siguientes/export", candidate_export)
+    candidate_export = candidate_root / f"modelos/200/revisions/{_PINNED_M200_REVISION}/export"
+    shutil.copytree(_REGISTRY_ROOT / f"modelos/200/revisions/{_PINNED_M200_REVISION}/export", candidate_export)
     selected_output = candidate_export / vector.evidence.provenance.generated_outputs[0].relative_path
     selected_output.write_bytes(selected_output.read_bytes() + b"\n# changed candidate\n")
     candidate_proof = CanonicalTwoChannelFilingExportProofAuthority(
@@ -135,7 +141,7 @@ def test_a_manifest_digest_that_drifts_from_the_pin_is_refused(tmp_path: Path) -
         / "modelos"
         / "200"
         / "revisions"
-        / "2025-y-siguientes"
+        / _PINNED_M200_REVISION
         / "export"
         / "_generation.provenance.json"
     )

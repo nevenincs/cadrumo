@@ -15,6 +15,7 @@ from dev.registry.compiler.record_design_schema import (
 )
 
 from ..compiler import record_design_workbook as record_design_workbook_module
+from ..compiler.loader import load_shared_catalogues
 from ..compiler.record_design import (
     extract_record_design,
 )
@@ -33,11 +34,23 @@ _MODELO_303_DESIGNS = (
     ("aeat-dr-303-2025", 429),
     ("aeat-dr-303-2026", 430),
 )
-_MODELO_220_DESIGNS = (
-    ("aeat-dr-220-2023", 2023, "2023"),
-    ("aeat-dr-220-2024", 2024, "2024"),
-    ("aeat-dr-220-2025", 2025, "2025"),
-)
+
+
+def _epoch_designs(modelo_id: str) -> tuple[tuple[str, int, str], ...]:
+    """Return ``(source id, first filing year, design epoch)`` for each epoch-stamped record design of one modelo."""
+    sources = load_shared_catalogues(bundled_path("registry", "aeat")).sources
+    designs = [
+        (str(source_id), source.applies_from.year, source.record_design_epoch)
+        for source_id, source in sources.items()
+        if str(source_id).startswith(f"aeat-dr-{modelo_id}-")
+        and source.kind == "record_design"
+        and source.applies_from is not None
+        and source.record_design_epoch is not None
+    ]
+    return tuple(sorted(designs, key=lambda design: (design[1], design[0])))
+
+
+_MODELO_220_DESIGNS = _epoch_designs("220")
 _M220_COMPOSITE_CLOSING_ROWS: tuple[_WorkbookRow, ...] = (
     (15, "***", 3, "An", "Constante", None, "</T"),
     (16, "***", 3, "An", "Modelo", None, "220"),
@@ -193,15 +206,15 @@ def test_variable_envelope_recognition_has_no_record_name_selector() -> None:
 
 def test_modelo_216_lowercase_variable_markers_preserve_the_official_composition() -> None:
     """The source's marker spelling must not discard its body and closing suffix."""
-    from ..compiler.loader import load_shared_catalogues
-
     catalogues = load_shared_catalogues(bundled_path("registry", "aeat"))
+    # The design in force today carries the lowercase markers.
+    source_ref, filing_year, design_epoch = _epoch_designs("216")[-1]
     resolved = resolve_record_design_binary(
         bundled_path(),
         catalogues.sources,
-        source_ref="aeat-dr-216-2024",
-        filing_year=2024,
-        design_epoch="2024",
+        source_ref=source_ref,
+        filing_year=filing_year,
+        design_epoch=design_epoch,
     )
 
     sheets = extract_record_design(resolved.path).accept_partial()

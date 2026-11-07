@@ -1,0 +1,127 @@
+[[revisions.2003-y-siguientes.export_layouts]]
+id = "generated-modelo-840-2003-y-siguientes-fichero"
+
+[[revisions.2003-y-siguientes.export_layouts.records]]
+id = "m840-pagina01"
+record_type = "pagina01"
+order = 0
+encoding = "iso-8859-1"
+line_ending = "crlf"
+required = true
+
+[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+id = "m840-2003.pagina01.f099"
+offset = 1097
+length = 5
+kind = "casilla"
+casilla_id = "local-indirecto.kilometro"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+id = "m840-2003.pagina01.f100"
+offset = 1102
+length = 4
+kind = "casilla"
+casilla_id = "local-indirecto.pto"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+id = "m840-2003.pagina01.f101"
+offset = 1106
+length = 2
+kind = "casilla"
+casilla_id = "local-indirecto.escalera"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+id = "m840-2003.pagina01.f102"
+offset = 1108
+length = 2
+kind = "casilla"
+casilla_id = "local-indirecto.piso"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+id = "m840-2003.pagina01.f103"
+offset = 1110
+length = 2
+kind = "casilla"
+casilla_id = "local-indirecto.puerta"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+id = "m840-2003.pagina01.f104"
+offset = 1112
+length = 9
+kind = "casilla"
+casilla_id = "local-indirecto.telefono"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+value_policy = "digit-string"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+id = "m840-2003.pagina01.f105"
+offset = 1121
+length = 10
+kind = "literal"
+literal = "</T840010>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+id = "m840-2003.pagina01.f106"
+offset = 1131
+length = 2
+kind = "literal"
+literal = """
+\r
+"""
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+[revisions.2003-y-siguientes.export_layouts.records.row_field_casilla_ids]

@@ -1306,3 +1306,13 @@ section = ["declarante"]
 data_type = "text"
 semantic_role = "sujeto_pasivo_telefono_contacto"
 input_kind = "informational"
+
+# Anexo @10+1, type_code An. Indicador de pagina complementaria: blank for a first page, "C" for a complementary one. [declarante-indicador-pagina-complementaria].
+# Slug: AEAT prints no box number here. The design states a choice and not a fill, so the position is a taxpayer-supplied fact and not a filler.
+[[revisions."2003-y-siguientes".casillas]]
+id = "declarante.indicador-pagina-complementaria"
+number = "declarante-indicador-pagina-complementaria"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "declarante_indicador_pagina_complementaria"
+input_kind = "informational"

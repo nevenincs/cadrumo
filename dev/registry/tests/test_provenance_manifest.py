@@ -23,6 +23,7 @@ from cadrumo.domain.calculations.registry.export_literal_fact import ExportLiter
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportLayoutDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from dev.quality.shared_scan import require_immutable
 
 from ..pipeline import export_fragment_provenance
@@ -61,15 +62,22 @@ from ..pipeline.semantic_map import SemanticMap
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+_YEAR = filing_year_envelope().horizon
+_RULING = f"type_column_contradiction 999/{_YEAR}"
+_M200 = open_ended_revision("200")
+_M200_REVISION_ID = str(_M200.id)
+_M200_EPOCH = str(_M200.valid_from.year)
+_M200_SOURCE_REF = f"aeat-dr-200-{_M200_EPOCH}"
+
 
 def _intermediate() -> RecordDesignIntermediate:
     return RecordDesignIntermediate.model_validate(
         {
             "source": {
-                "source_ref": "aeat-dr-200-2025",
+                "source_ref": _M200_SOURCE_REF,
                 "source_sha256": "a" * 64,
                 "workbook_format": RecordDesignWorkbookFormat.XLSX,
-                "design_epoch": "2025",
+                "design_epoch": _M200_EPOCH,
             },
             "sheets": (
                 {
@@ -99,8 +107,8 @@ def _semantic_map() -> SemanticMap:
     return SemanticMap.model_validate(
         {
             "modelo": "200",
-            "design_epoch": "2025",
-            "source_ref": "aeat-dr-200-2025",
+            "design_epoch": _M200_EPOCH,
+            "source_ref": _M200_SOURCE_REF,
             "source_sha256": "a" * 64,
             "records": (
                 {
@@ -123,7 +131,7 @@ def _semantic_map() -> SemanticMap:
                     "kind": "literal",
                     "literal": "T",
                     "legal_refs": ("ley-27-2014:art-40",),
-                    "source_refs": ("aeat-dr-200-2025",),
+                    "source_refs": (_M200_SOURCE_REF,),
                 },
             ),
         },
@@ -145,8 +153,8 @@ def _projection_semantic_map(reference: M303ProrrataActivityProjectionRef) -> Se
     return SemanticMap.model_validate(
         {
             "modelo": "200",
-            "design_epoch": "2025",
-            "source_ref": "aeat-dr-200-2025",
+            "design_epoch": _M200_EPOCH,
+            "source_ref": _M200_SOURCE_REF,
             "source_sha256": "a" * 64,
             "records": (
                 {
@@ -169,7 +177,7 @@ def _projection_semantic_map(reference: M303ProrrataActivityProjectionRef) -> Se
                     "kind": "projection",
                     "projection_ref": reference,
                     "legal_refs": ("ley-27-2014:art-40",),
-                    "source_refs": ("aeat-dr-200-2025",),
+                    "source_refs": (_M200_SOURCE_REF,),
                 },
             ),
         },
@@ -190,7 +198,7 @@ def _projection_field(reference: M303ProrrataActivityProjectionRef) -> ExportFie
             "justification": "none",
             "signed": False,
             "legal_refs": ("ley-27-2014:art-40",),
-            "source_refs": ("aeat-dr-200-2025",),
+            "source_refs": (_M200_SOURCE_REF,),
         },
     )
 
@@ -216,7 +224,7 @@ def _loaded_layout(*, records_reversed: bool = False, first_offset: int = 1) -> 
                     "justification": "none",
                     "signed": False,
                     "legal_refs": ("ley-27-2014:art-40",),
-                    "source_refs": ("aeat-dr-200-2025",),
+                    "source_refs": (_M200_SOURCE_REF,),
                 },
             ),
         },
@@ -239,7 +247,7 @@ def _loaded_layout(*, records_reversed: bool = False, first_offset: int = 1) -> 
                     "justification": "none",
                     "signed": False,
                     "legal_refs": ("ley-27-2014:art-40",),
-                    "source_refs": ("aeat-dr-200-2025",),
+                    "source_refs": (_M200_SOURCE_REF,),
                 },
             ),
         },
@@ -249,7 +257,7 @@ def _loaded_layout(*, records_reversed: bool = False, first_offset: int = 1) -> 
             "id": "generated-modelo-200-fichero",
             "format": "fixed_width",
             "legal_refs": ("ley-27-2014:art-40",),
-            "source_refs": ("aeat-dr-200-2025",),
+            "source_refs": (_M200_SOURCE_REF,),
             "records": tuple(reversed(records)) if records_reversed else records,
         },
     )
@@ -296,7 +304,7 @@ def _field_derivation() -> ExportFieldDerivation:
                 "justification": "none",
                 "signed": False,
                 "legal_refs": ("ley-27-2014:art-40",),
-                "source_refs": ("aeat-dr-200-2025",),
+                "source_refs": (_M200_SOURCE_REF,),
             },
         ),
         normalization_schema_version=EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION,
@@ -309,8 +317,8 @@ def _sample_render_profile() -> RenderProfile:
         schema_version=1,
         design_identity=RenderProfileDesignIdentity(
             modelo="200",
-            design_epoch="2025",
-            source_ref="aeat-dr-200-2025",
+            design_epoch=_M200_EPOCH,
+            source_ref=_M200_SOURCE_REF,
             source_sha256="a" * 64,
         ),
         fragment_ids=(),
@@ -332,7 +340,7 @@ def _one_field_layout() -> ExportLayoutDefinition:
             "id": "generated-modelo-200-fichero",
             "format": "fixed_width",
             "legal_refs": ("ley-27-2014:art-40",),
-            "source_refs": ("aeat-dr-200-2025",),
+            "source_refs": (_M200_SOURCE_REF,),
             "records": (
                 {
                     "id": "registro-tipo-1",
@@ -352,7 +360,7 @@ def _manifest() -> ExportFragmentProvenanceManifest:
     source_evidence = _render_profile_evidence()
     return ExportFragmentProvenanceManifest(
         manifest_schema_version=EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION,
-        source_ref="aeat-dr-200-2025",
+        source_ref=_M200_SOURCE_REF,
         source_sha256="a" * 64,
         parser_schema_version=RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
         generator_schema_version=EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION,
@@ -360,8 +368,8 @@ def _manifest() -> ExportFragmentProvenanceManifest:
         render_profile_schema_version=RENDER_PROFILE_SCHEMA_VERSION,
         render_profile_sha256=render_profile_digest(render_profile, source_evidence),
         modelo="200",
-        revision_id="2025-y-siguientes",
-        design_epoch="2025",
+        revision_id=_M200_REVISION_ID,
+        design_epoch=_M200_EPOCH,
         loader_semantic_sha256="c" * 64,
         output_files=(ExportFragmentOutputDigest(relative_path="records/0002.toml", sha256="d" * 64),),
         field_derivations=(_field_derivation(),),
@@ -380,7 +388,7 @@ def test_manifest_records_real_output_files_and_roundtrips_canonical_bytes(tmp_p
     manifest = build_export_fragment_provenance_manifest(
         joined=_joined(),
         semantic_map=_semantic_map(),
-        target=ExportFragmentTarget(modelo="200", revision_id="2025-y-siguientes", design_epoch="2025"),
+        target=ExportFragmentTarget(modelo="200", revision_id=_M200_REVISION_ID, design_epoch=_M200_EPOCH),
         loaded_layout=_one_field_layout(),
         export_root=export_root,
         field_derivations=(_field_derivation(),),
@@ -389,10 +397,10 @@ def test_manifest_records_real_output_files_and_roundtrips_canonical_bytes(tmp_p
     )
     serialised = export_fragment_provenance_manifest_json_bytes(manifest)
 
-    assert manifest.source_ref == "aeat-dr-200-2025"
+    assert manifest.source_ref == _M200_SOURCE_REF
     assert manifest.source_sha256 == "a" * 64
     assert manifest.modelo == "200"
-    assert manifest.revision_id == "2025-y-siguientes"
+    assert manifest.revision_id == _M200_REVISION_ID
     assert tuple(item.relative_path for item in manifest.output_files) == (
         "records/0001.toml",
         "records/0002.toml",
@@ -581,7 +589,7 @@ def test_loader_semantic_digest_detects_value_policy_change() -> None:
             "justification": "right",
             "signed": False,
             "legal_refs": ("ley-27-2014:art-40",),
-            "source_refs": ("aeat-dr-200-2025",),
+            "source_refs": (_M200_SOURCE_REF,),
         },
     )
     selected = plain.model_copy(update={"value_policy": ExportValuePolicy.SELECTED_1_UNSELECTED_0})
@@ -612,7 +620,7 @@ def test_loader_semantic_digest_keeps_day_first_date_policy_and_format_distinct(
             "signed": False,
             "value_policy": ExportValuePolicy.DDMMYYYY,
             "legal_refs": ("ley-27-2014:art-40",),
-            "source_refs": ("aeat-dr-200-2025",),
+            "source_refs": (_M200_SOURCE_REF,),
         },
     )
     year_first = day_first.model_copy(
@@ -648,7 +656,7 @@ def test_loader_semantic_digest_detects_allowed_values_change() -> None:
             "value_policy": ExportValuePolicy.ENUMERATED_DIGITS,
             "allowed_values": ("3", "1"),
             "legal_refs": ("ley-27-2014:art-40",),
-            "source_refs": ("aeat-dr-200-2025",),
+            "source_refs": (_M200_SOURCE_REF,),
         },
     )
     reordered = ExportFieldDefinition.model_validate(
@@ -738,7 +746,7 @@ def test_manifest_refuses_legacy_shapes_schema_drift_duplicate_outputs_and_unsaf
         )
     with pytest.raises(RegistryValidationError, match="current contract"):
         load_export_fragment_provenance_manifest(
-            canonical_json_bytes(manifest.model_dump(mode="json") | {"timestamp": "2026-08-10T00:00:00Z"}),
+            canonical_json_bytes(manifest.model_dump(mode="json") | {"timestamp": f"{_YEAR}-08-10T00:00:00Z"}),
         )
     with pytest.raises(ValidationError, match="derivation_code"):
         ExportFieldDerivation.model_validate(_field_derivation().model_dump() | {"derivation_code": "default"})
@@ -820,7 +828,7 @@ def _money_layout(**field_overrides: object) -> ExportLayoutDefinition:
         "justification": "right",
         "signed": True,
         "legal_refs": ("ley-27-2014:art-40",),
-        "source_refs": ("aeat-dr-200-2025",),
+        "source_refs": (_M200_SOURCE_REF,),
     }
     payload.update(field_overrides)
     field = ExportFieldDefinition.model_validate(payload)
@@ -853,7 +861,7 @@ def test_a_stored_manifest_spelling_an_undeclared_optional_field_as_null_is_not_
     manifest = build_export_fragment_provenance_manifest(
         joined=_joined(),
         semantic_map=_semantic_map(),
-        target=ExportFragmentTarget(modelo="200", revision_id="2025-y-siguientes", design_epoch="2025"),
+        target=ExportFragmentTarget(modelo="200", revision_id=_M200_REVISION_ID, design_epoch=_M200_EPOCH),
         loaded_layout=_one_field_layout(),
         export_root=export_root,
         field_derivations=(_field_derivation(),),
@@ -924,9 +932,9 @@ def test_a_constant_in_a_numerically_typed_slot_agrees_rather_than_diverging() -
 def test_a_divergence_is_adjudicated_only_by_a_ruling_on_its_derivation() -> None:
     divergent = _amount_derivation(aeat_type="N", signed=False)
 
-    (attested,) = attach_field_verdicts((divergent,), {"numeric-decimal-v1": "type_column_contradiction 999/2026"})
+    (attested,) = attach_field_verdicts((divergent,), {"numeric-decimal-v1": _RULING})
 
-    assert attested.verdict == ExportFieldVerdict(outcome="adjudicated", ruling="type_column_contradiction 999/2026")
+    assert attested.verdict == ExportFieldVerdict(outcome="adjudicated", ruling=_RULING)
     with pytest.raises(RegistryValidationError, match="no ruling adjudicates"):
         attach_field_verdicts((divergent,), {"numeric-integer-v1": "a ruling on another derivation"})
 
@@ -958,7 +966,14 @@ def test_an_unattached_verdict_moves_no_attested_byte() -> None:
 
 def test_a_committed_manifest_is_loaded_once_per_content_as_a_frozen_value() -> None:
     raw = bundled_path(
-        "registry", "aeat", "modelos", "303", "revisions", "2026-y-siguientes", "export", "_generation.provenance.json"
+        "registry",
+        "aeat",
+        "modelos",
+        "303",
+        "revisions",
+        str(open_ended_revision("303").id),
+        "export",
+        "_generation.provenance.json",
     ).read_bytes()
 
     first = load_export_fragment_provenance_manifest(raw)
@@ -971,7 +986,14 @@ def test_a_committed_manifest_is_loaded_once_per_content_as_a_frozen_value() -> 
 
 def test_a_refused_manifest_is_refused_again_rather_than_remembered() -> None:
     raw = bundled_path(
-        "registry", "aeat", "modelos", "303", "revisions", "2026-y-siguientes", "export", "_generation.provenance.json"
+        "registry",
+        "aeat",
+        "modelos",
+        "303",
+        "revisions",
+        str(open_ended_revision("303").id),
+        "export",
+        "_generation.provenance.json",
     ).read_bytes()
     not_canonical = raw + b"\n"
 

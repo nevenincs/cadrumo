@@ -74,40 +74,36 @@ class _PresumptiveNormativeCorpusException:
     reason: str
     reviewed_reference: str
     reviewed_by: str
-    reviewed_at: str
 
 
-def _exception(reference: str, reviewer: str, reviewed_at: str) -> _PresumptiveNormativeCorpusException:
+def _exception(reference: str, reviewer: str) -> _PresumptiveNormativeCorpusException:
     return _PresumptiveNormativeCorpusException(
         reason="BOE structural markup is present but the file has no direct BOE attribution marker.",
         reviewed_reference=reference,
         reviewed_by=reviewer,
-        reviewed_at=reviewed_at,
     )
 
 
 _REVIEWED_PRESUMPTIVE_NORMATIVE_CORPUS: Final = {
     **{
-        f"corpus/normatives/html/ley-37-1992-art-{article}.html": _exception(
-            f"ley-37-1992:art-{article}", "operator", "2026-05-21"
-        )
+        f"corpus/normatives/html/ley-37-1992-art-{article}.html": _exception(f"ley-37-1992:art-{article}", "operator")
         for article in ("122", "123", "124", "94", "95")
     },
     **{
         f"corpus/normatives/html/orden-eha-789-2010-art-{article}.html": _exception(
-            f"orden-eha-789-2010:art-{article}", "operator", "2026-05-06"
+            f"orden-eha-789-2010:art-{article}", "operator"
         )
         for article in ("1", "4")
     },
     **{
         f"corpus/normatives/html/orden-hap-2250-2015-art-{article}.html": _exception(
-            f"orden-hap-2250-2015:art-{article}", "operator", "2026-05-06"
+            f"orden-hap-2250-2015:art-{article}", "operator"
         )
         for article in ("2", "3", "4", "5")
     },
     **{
         f"corpus/normatives/html/rd-1624-1992-art-{article}.html": _exception(
-            f"rd-1624-1992:art-{article}", "agent-review", "2026-05-19"
+            f"rd-1624-1992:art-{article}", "agent-review"
         )
         for article in ("29", "30")
     },

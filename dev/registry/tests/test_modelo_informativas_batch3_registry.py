@@ -29,6 +29,7 @@ from datetime import date
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..conformance.registry_schema_support import committed_modelo
@@ -36,7 +37,8 @@ from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
-# (modelo_id, revision, approval_ref, plazo_ref, document_id, has_windows)
+# The revision under test is the one governing the support horizon.
+# (modelo_id, approval_ref, plazo_ref, document_id, has_windows)
 # Modelos 179, 186, 233, 234 and 238 are deliberately ABSENT from this list.
 # AEAT publishes no record design for any of them -- confirmed against every
 # current and ejercicios-anteriores Diseno de Registro index page -- and the
@@ -46,18 +48,19 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 # after DAC7 absorbed it into 238. Listing them here asserted a registry
 # membership the tree deliberately does not grant.
 _MODELOS = [
-    ("181", "2022-y-siguientes", "orden-eha-3514-2009:art-1", "orden-eha-3514-2009:art-6", "BOE-A-2009-21165", True),
-    ("270", "2023-y-siguientes", "orden-hap-2368-2013:art-1", "orden-hap-2368-2013:art-3", "BOE-A-2013-13228", True),
+    ("181", "orden-eha-3514-2009:art-1", "orden-eha-3514-2009:art-6", "BOE-A-2009-21165", True),
+    ("270", "orden-hap-2368-2013:art-1", "orden-hap-2368-2013:art-3", "BOE-A-2013-13228", True),
 ]
 
 
-@pytest.mark.parametrize("mid,rev,approval,plazo,doc,has_windows", _MODELOS)
+@pytest.mark.parametrize("mid,approval,plazo,doc,has_windows", _MODELOS)
 def test_committed_definition_legal_authority_and_deadline_shape(
-    mid: str, rev: str, approval: str, plazo: str, doc: str, has_windows: bool
+    mid: str, approval: str, plazo: str, doc: str, has_windows: bool
 ) -> None:
     """Each Batch-3 informativa validates and carries only grounded deadline windows."""
     modelo, catalogues = committed_modelo(mid)
     assert modelo.id == mid
+    rev = str(revision_covering(mid, filing_year_envelope().horizon).id)
     assert rev in modelo.revisions
     committed_registry_validator(catalogues).validate_modelo(modelo)
 
@@ -78,12 +81,13 @@ def test_committed_definition_legal_authority_and_deadline_shape(
 
 def test_annual_january_windows_resolve() -> None:
     authority = compiled_bundled_authority()
+    year = filing_year_envelope().horizon
     for mid in ("181", "270"):
-        windows = {w.id: w for _, _, w in authority.deadline_windows(2024, modelos=(mid,))}
-        wid = f"modelo-{mid}-2024-0a"
+        windows = {w.id: w for _, _, w in authority.deadline_windows(year, modelos=(mid,))}
+        wid = f"modelo-{mid}-{year}-0a"
         assert wid in windows
-        assert windows[wid].opens_on == date(2025, 1, 1)
-        assert windows[wid].closes_on == date(2025, 1, 31)
+        assert windows[wid].opens_on == date(year + 1, 1, 1)
+        assert windows[wid].closes_on == date(year + 1, 1, 31)
 
 
 def test_event_driven_and_delegated_modelos_have_no_calendar_windows() -> None:
@@ -106,7 +110,7 @@ def test_event_driven_and_delegated_modelos_have_no_calendar_windows() -> None:
     assert windowless, "no registry modelo declares an empty deadline-window set"
 
     for mid in windowless:
-        assert [w.id for _, _, w in authority.deadline_windows(2025, modelos=(mid,))] == []
+        assert [w.id for _, _, w in authority.deadline_windows(filing_year_envelope().horizon, modelos=(mid,))] == []
 
 
 def test_all_five_are_registry_backed() -> None:

@@ -30,8 +30,7 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m840-2003.pagina02.f003"
-kind = "casilla"
-casilla_id = "elem-trib.cuota-consignada-tarifas"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -402,8 +401,7 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m840-2003.pagina02.f036"
-kind = "casilla"
-casilla_id = "elem-trib.grupo-epigrafe-suma"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -516,8 +514,7 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m840-2003.pagina02.f046"
-kind = "casilla"
-casilla_id = "maquinas.suma"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -984,8 +981,7 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m840-2003.pagina02.f085"
-kind = "casilla"
-casilla_id = "elem-trib.municipal-valor-elemento"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -996,8 +992,7 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m840-2003.pagina02.f086"
-kind = "casilla"
-casilla_id = "elem-trib.municipal-coeficiente-corrector"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -1008,8 +1003,7 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m840-2003.pagina02.f087"
-kind = "casilla"
-casilla_id = "elem-trib.municipal-cuota-elemento"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -1068,8 +1062,7 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m840-2003.pagina02.f092"
-kind = "casilla"
-casilla_id = "elem-trib.provincial-nacional-cuota-elemento"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -1080,8 +1073,7 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m840-2003.pagina02.f093"
-kind = "casilla"
-casilla_id = "cuota.antes-bonificaciones-incrementos"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -1092,8 +1084,7 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m840-2003.pagina02.f094"
-kind = "casilla"
-casilla_id = "cuota.bonificacion-clave"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -1104,8 +1095,7 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m840-2003.pagina02.f095"
-kind = "casilla"
-casilla_id = "cuota.bonificacion-porcentaje"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -1116,8 +1106,7 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m840-2003.pagina02.f096"
-kind = "casilla"
-casilla_id = "cuota.bonificacion-importe"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -1128,8 +1117,7 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m840-2003.pagina02.f097"
-kind = "casilla"
-casilla_id = "cuota.incremento-clave"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -1140,8 +1128,7 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m840-2003.pagina02.f098"
-kind = "casilla"
-casilla_id = "cuota.incremento-porcentaje"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -1152,8 +1139,7 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m840-2003.pagina02.f099"
-kind = "casilla"
-casilla_id = "cuota.incremento-importe"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -1164,8 +1150,7 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m840-2003.pagina02.f100"
-kind = "casilla"
-casilla_id = "cuota.despues-bonificaciones-incrementos"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -1176,8 +1161,7 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m840-2003.pagina02.f101"
-kind = "casilla"
-casilla_id = "maquinas.suma"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -1188,8 +1172,7 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m840-2003.pagina02.f102"
-kind = "casilla"
-casilla_id = "cuota.tarifa-o-importe-minimo"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]

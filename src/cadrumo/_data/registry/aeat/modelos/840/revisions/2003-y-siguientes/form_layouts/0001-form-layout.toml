@@ -7,12 +7,12 @@ revision_id = "2003-y-siguientes"
 seed_source = "casilla_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "838eb10af0e0cb10ee39abb1dc48dbb7e45776fb30ea1a1f340602ab7e9b6b5e"
+source_state_digest = "d654dbae58894fbe578d498e5ae91f85b7190faffacd990dad868d7d26750126"
 placements = [
     { casilla_id = "act.actividad-principal", kind = "on_form", box_number = "59" },
     { casilla_id = "act.ano-inicio-primera-vez", kind = "on_form", box_number = "65" },
     { casilla_id = "act.bonificacion", kind = "on_form", box_number = "61" },
-    { casilla_id = "act.campamento-turistico", kind = "working_figure" },
+    { casilla_id = "act.campamento-turistico", kind = "on_form" },
     { casilla_id = "act.causa-baja", kind = "on_form", box_number = "63" },
     { casilla_id = "act.causa-declaracion-complementaria", kind = "on_form", box_number = "64" },
     { casilla_id = "act.causa-variacion", kind = "working_figure" },
@@ -49,7 +49,7 @@ placements = [
     { casilla_id = "act.numero-referencia", kind = "on_form", box_number = "67" },
     { casilla_id = "act.provincia", kind = "on_form", box_number = "40" },
     { casilla_id = "act.provincia-cuota-provincial", kind = "working_figure" },
-    { casilla_id = "act.recepcion-loterias", kind = "working_figure" },
+    { casilla_id = "act.recepcion-loterias", kind = "on_form" },
     { casilla_id = "act.regla-4-2-f", kind = "on_form", box_number = "57" },
     { casilla_id = "act.seccion", kind = "on_form", box_number = "58" },
     { casilla_id = "act.tipo-actividad", kind = "on_form", box_number = "34" },
@@ -66,6 +66,7 @@ placements = [
     { casilla_id = "decl.ejercicio", kind = "on_form", box_number = "14" },
     { casilla_id = "decl.numero-referencia", kind = "on_form", box_number = "16" },
     { casilla_id = "decl.tipo-declaracion", kind = "on_form", box_number = "15" },
+    { casilla_id = "declarante.indicador-pagina-complementaria", kind = "on_form" },
     { casilla_id = "elem-trib.cuota-consignada-tarifas", kind = "on_form", box_number = "84" },
     { casilla_id = "elem-trib.grupo-epigrafe-suma", kind = "on_form", box_number = "85" },
     { casilla_id = "elem-trib.municipal-coeficiente-corrector", kind = "on_form", box_number = "93" },
@@ -76,11 +77,11 @@ placements = [
     { casilla_id = "elem-trib.municipal-superficie-computable", kind = "on_form", box_number = "91" },
     { casilla_id = "elem-trib.municipal-superficie-deducible", kind = "on_form", box_number = "90" },
     { casilla_id = "elem-trib.municipal-valor-elemento", kind = "on_form", box_number = "92" },
-    { casilla_id = "elem-trib.provincial-nacional-computable", kind = "on_form", box_number = "98" },
+    { casilla_id = "elem-trib.provincial-nacional-computable", kind = "on_form", box_number = "98", aliases = [{ page_id = "m840-anexo", section_id = "general", official_ref = "m840-anexo" }] },
     { casilla_id = "elem-trib.provincial-nacional-cuota-elemento", kind = "on_form", box_number = "99" },
     { casilla_id = "elem-trib.provincial-nacional-numero", kind = "on_form", box_number = "95" },
-    { casilla_id = "elem-trib.provincial-nacional-rectificada", kind = "on_form", box_number = "97" },
-    { casilla_id = "elem-trib.provincial-nacional-total", kind = "on_form", box_number = "96" },
+    { casilla_id = "elem-trib.provincial-nacional-rectificada", kind = "on_form", box_number = "97", aliases = [{ page_id = "m840-anexo", section_id = "general", official_ref = "m840-anexo" }] },
+    { casilla_id = "elem-trib.provincial-nacional-total", kind = "on_form", box_number = "96", aliases = [{ page_id = "m840-anexo", section_id = "general", official_ref = "m840-anexo" }] },
     { casilla_id = "local-indirecto.codigo-municipio", kind = "on_form", box_number = "71" },
     { casilla_id = "local-indirecto.codigo-postal", kind = "on_form", box_number = "69" },
     { casilla_id = "local-indirecto.codigo-provincia", kind = "on_form", box_number = "73" },
@@ -133,14 +134,15 @@ placements = [
 ]
 
 [[revisions.2003-y-siguientes.form_layouts.pages]]
-id = "numbered-boxes"
-heading_key = "modelo.schema.840.form.page.numbered-boxes.heading"
+id = "m840-pagina01"
+official_ref = "m840-pagina01"
+heading_key = "modelo.schema.840.form.page.m840-pagina01.heading"
 
 [[revisions.2003-y-siguientes.form_layouts.pages.sections]]
-id = "declarante"
-heading_key = "modelo.schema.840.form.section.declarante.heading"
+id = "general"
+heading_key = "modelo.schema.840.form.section.general.heading"
 blocks = [
-    { kind = "field", id = "field-1", casilla_id = "sujeto.nif" },
+    { kind = "field", id = "field", casilla_id = "sujeto.nif" },
     { kind = "field", id = "field-2", casilla_id = "sujeto.apellidos-razon-social" },
     { kind = "field", id = "field-3", casilla_id = "sujeto.domicilio-sigla-via" },
     { kind = "field", id = "field-4", casilla_id = "sujeto.domicilio-via-publica" },
@@ -149,97 +151,142 @@ blocks = [
     { kind = "field", id = "field-7", casilla_id = "sujeto.domicilio-escalera" },
     { kind = "field", id = "field-8", casilla_id = "sujeto.domicilio-piso" },
     { kind = "field", id = "field-9", casilla_id = "sujeto.domicilio-puerta" },
-    { kind = "field", id = "field-10", casilla_id = "sujeto.domicilio-municipio" },
-    { kind = "field", id = "field-11", casilla_id = "sujeto.domicilio-provincia" },
+    { kind = "field", id = "field-10", casilla_id = "sujeto.domicilio-provincia" },
+    { kind = "field", id = "field-11", casilla_id = "sujeto.domicilio-municipio" },
     { kind = "field", id = "field-12", casilla_id = "sujeto.domicilio-codigo-postal" },
     { kind = "field", id = "field-13", casilla_id = "sujeto.telefono-contacto" },
     { kind = "field", id = "field-14", casilla_id = "decl.ejercicio" },
     { kind = "field", id = "field-15", casilla_id = "decl.tipo-declaracion" },
-    { kind = "field", id = "field-16", casilla_id = "decl.numero-referencia" },
+    { kind = "field", id = "field-16", casilla_id = "representante.nif" },
+    { kind = "field", id = "field-17", casilla_id = "representante.apellidos-razon-social" },
+    { kind = "field", id = "field-18", casilla_id = "representante.domicilio-sigla-via" },
+    { kind = "field", id = "field-19", casilla_id = "representante.domicilio-via-publica" },
+    { kind = "field", id = "field-20", casilla_id = "representante.domicilio-numero" },
+    { kind = "field", id = "field-21", casilla_id = "representante.domicilio-kilometro" },
+    { kind = "field", id = "field-22", casilla_id = "representante.domicilio-escalera" },
+    { kind = "field", id = "field-23", casilla_id = "representante.domicilio-piso" },
+    { kind = "field", id = "field-24", casilla_id = "representante.domicilio-puerta" },
+    { kind = "field", id = "field-25", casilla_id = "representante.telefono" },
+    { kind = "field", id = "field-26", casilla_id = "representante.domicilio-codigo-postal" },
+    { kind = "field", id = "field-27", casilla_id = "representante.domicilio-provincia" },
+    { kind = "field", id = "field-28", casilla_id = "representante.domicilio-municipio" },
+    { kind = "field", id = "field-29", casilla_id = "act.clase-cuota" },
+    { kind = "field", id = "field-30", casilla_id = "act.tipo-actividad" },
+    { kind = "field", id = "field-31", casilla_id = "act.local-afecto-indirectamente" },
+    { kind = "field", id = "field-32", casilla_id = "act.grupo-epigrafe" },
+    { kind = "field", id = "field-33", casilla_id = "act.provincia" },
+    { kind = "field", id = "field-34", casilla_id = "act.municipio" },
+    { kind = "field", id = "field-35", casilla_id = "act.domicilio-sigla-via" },
+    { kind = "field", id = "field-36", casilla_id = "act.domicilio-via-publica" },
+    { kind = "field", id = "field-37", casilla_id = "act.domicilio-codigo-postal" },
+    { kind = "field", id = "field-38", casilla_id = "act.domicilio-numero" },
+    { kind = "field", id = "field-39", casilla_id = "act.domicilio-kilometro" },
+    { kind = "field", id = "field-40", casilla_id = "act.domicilio-pto" },
+    { kind = "field", id = "field-41", casilla_id = "act.domicilio-escalera" },
+    { kind = "field", id = "field-42", casilla_id = "act.domicilio-piso" },
+    { kind = "field", id = "field-43", casilla_id = "act.domicilio-puerta" },
+    { kind = "field", id = "field-44", casilla_id = "act.domicilio-telefono" },
+    { kind = "field", id = "field-45", casilla_id = "act.nota-agrupacion-1" },
+    { kind = "field", id = "field-46", casilla_id = "act.nota-grupo-1" },
+    { kind = "field", id = "field-47", casilla_id = "act.nota-epigrafe-1" },
+    { kind = "field", id = "field-48", casilla_id = "act.campamento-turistico" },
+    { kind = "field", id = "field-49", casilla_id = "act.recepcion-loterias" },
+    { kind = "field", id = "field-50", casilla_id = "act.regla-4-2-f" },
+    { kind = "field", id = "field-51", casilla_id = "act.actividad-principal" },
+    { kind = "field", id = "field-52", casilla_id = "act.exencion" },
+    { kind = "field", id = "field-53", casilla_id = "act.bonificacion" },
+    { kind = "field", id = "field-54", casilla_id = "act.fecha-inicio-variacion-cese" },
+    { kind = "field", id = "field-55", casilla_id = "act.causa-baja" },
+    { kind = "field", id = "field-56", casilla_id = "act.causa-declaracion-complementaria" },
+    { kind = "field", id = "field-57", casilla_id = "act.ano-inicio-primera-vez" },
+    { kind = "field", id = "field-58", casilla_id = "act.informacion-adicional" },
+    { kind = "field", id = "field-59", casilla_id = "act.numero-referencia" },
+    { kind = "field", id = "field-60", casilla_id = "local-indirecto.uso-destino" },
+    { kind = "field", id = "field-61", casilla_id = "local-indirecto.codigo-postal" },
+    { kind = "field", id = "field-62", casilla_id = "local-indirecto.provincia" },
+    { kind = "field", id = "field-63", casilla_id = "local-indirecto.municipio" },
+    { kind = "field", id = "field-64", casilla_id = "local-indirecto.sigla-via" },
+    { kind = "field", id = "field-65", casilla_id = "local-indirecto.via-publica" },
+    { kind = "field", id = "field-66", casilla_id = "local-indirecto.numero" },
+    { kind = "field", id = "field-67", casilla_id = "local-indirecto.kilometro" },
+    { kind = "field", id = "field-68", casilla_id = "local-indirecto.pto" },
+    { kind = "field", id = "field-69", casilla_id = "local-indirecto.escalera" },
+    { kind = "field", id = "field-70", casilla_id = "local-indirecto.piso" },
+    { kind = "field", id = "field-71", casilla_id = "local-indirecto.puerta" },
+    { kind = "field", id = "field-72", casilla_id = "local-indirecto.telefono" },
+]
+
+[[revisions.2003-y-siguientes.form_layouts.pages]]
+id = "m840-pagina02"
+official_ref = "m840-pagina02"
+heading_key = "modelo.schema.840.form.page.m840-pagina02.heading"
+
+[[revisions.2003-y-siguientes.form_layouts.pages.sections]]
+id = "general"
+heading_key = "modelo.schema.840.form.section.general.heading"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "elem-trib.municipal-suma-total" },
+    { kind = "field", id = "field-2", casilla_id = "elem-trib.municipal-suma-rectificada" },
+    { kind = "field", id = "field-3", casilla_id = "elem-trib.municipal-suma-computable" },
+    { kind = "field", id = "field-4", casilla_id = "elem-trib.municipal-superficie-deducible" },
+    { kind = "field", id = "field-5", casilla_id = "elem-trib.municipal-superficie-computable" },
+    { kind = "field", id = "field-6", casilla_id = "elem-trib.provincial-nacional-numero" },
+    { kind = "field", id = "field-7", casilla_id = "elem-trib.provincial-nacional-total" },
+    { kind = "field", id = "field-8", casilla_id = "elem-trib.provincial-nacional-rectificada" },
+    { kind = "field", id = "field-9", casilla_id = "elem-trib.provincial-nacional-computable" },
+    { kind = "field", id = "field-10", casilla_id = "notificacion.lugar" },
+]
+
+[[revisions.2003-y-siguientes.form_layouts.pages]]
+id = "m840-anexo"
+official_ref = "m840-anexo"
+heading_key = "modelo.schema.840.form.page.m840-anexo.heading"
+
+[[revisions.2003-y-siguientes.form_layouts.pages.sections]]
+id = "general"
+heading_key = "modelo.schema.840.form.section.general.heading"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "declarante.indicador-pagina-complementaria" },
+]
+
+[[revisions.2003-y-siguientes.form_layouts.pages]]
+id = "numbered-boxes"
+heading_key = "modelo.schema.840.form.page.numbered-boxes.heading"
+
+[[revisions.2003-y-siguientes.form_layouts.pages.sections]]
+id = "declarante"
+heading_key = "modelo.schema.840.form.section.declarante.heading"
+blocks = [
+    { kind = "field", id = "field-1", casilla_id = "decl.numero-referencia" },
 ]
 
 [[revisions.2003-y-siguientes.form_layouts.pages.sections]]
 id = "representante"
 heading_key = "modelo.schema.840.form.section.representante.heading"
 blocks = [
-    { kind = "field", id = "field-1", casilla_id = "representante.nif" },
-    { kind = "field", id = "field-2", casilla_id = "representante.apellidos-razon-social" },
-    { kind = "field", id = "field-3", casilla_id = "representante.domicilio-sigla-via" },
-    { kind = "field", id = "field-4", casilla_id = "representante.domicilio-via-publica" },
-    { kind = "field", id = "field-5", casilla_id = "representante.domicilio-codigo-via" },
-    { kind = "field", id = "field-6", casilla_id = "representante.domicilio-numero" },
-    { kind = "field", id = "field-7", casilla_id = "representante.domicilio-kilometro" },
-    { kind = "field", id = "field-8", casilla_id = "representante.domicilio-escalera" },
-    { kind = "field", id = "field-9", casilla_id = "representante.domicilio-piso" },
-    { kind = "field", id = "field-10", casilla_id = "representante.domicilio-puerta" },
-    { kind = "field", id = "field-11", casilla_id = "representante.telefono" },
-    { kind = "field", id = "field-12", casilla_id = "representante.domicilio-codigo-postal" },
-    { kind = "field", id = "field-13", casilla_id = "representante.domicilio-municipio" },
-    { kind = "field", id = "field-14", casilla_id = "representante.domicilio-codigo-municipio" },
-    { kind = "field", id = "field-15", casilla_id = "representante.domicilio-provincia" },
-    { kind = "field", id = "field-16", casilla_id = "representante.domicilio-codigo-provincia" },
+    { kind = "field", id = "field-1", casilla_id = "representante.domicilio-codigo-via" },
+    { kind = "field", id = "field-2", casilla_id = "representante.domicilio-codigo-municipio" },
+    { kind = "field", id = "field-3", casilla_id = "representante.domicilio-codigo-provincia" },
 ]
 
 [[revisions.2003-y-siguientes.form_layouts.pages.sections]]
 id = "actividad"
 heading_key = "modelo.schema.840.form.section.actividad.heading"
 blocks = [
-    { kind = "field", id = "field-1", casilla_id = "act.clase-cuota" },
-    { kind = "field", id = "field-2", casilla_id = "act.tipo-actividad" },
-    { kind = "field", id = "field-3", casilla_id = "act.local-afecto-indirectamente" },
-    { kind = "field", id = "field-4", casilla_id = "act.descripcion" },
-    { kind = "field", id = "field-5", casilla_id = "act.grupo-epigrafe" },
-    { kind = "field", id = "field-6", casilla_id = "act.municipio" },
-    { kind = "field", id = "field-7", casilla_id = "act.codigo-municipio" },
-    { kind = "field", id = "field-8", casilla_id = "act.provincia" },
-    { kind = "field", id = "field-9", casilla_id = "act.codigo-provincia" },
-    { kind = "field", id = "field-10", casilla_id = "act.domicilio-sigla-via" },
-    { kind = "field", id = "field-11", casilla_id = "act.domicilio-via-publica" },
-    { kind = "field", id = "field-12", casilla_id = "act.domicilio-codigo-postal" },
-    { kind = "field", id = "field-13", casilla_id = "act.domicilio-codigo-via" },
-    { kind = "field", id = "field-14", casilla_id = "act.domicilio-numero" },
-    { kind = "field", id = "field-15", casilla_id = "act.domicilio-kilometro" },
-    { kind = "field", id = "field-16", casilla_id = "act.domicilio-pto" },
-    { kind = "field", id = "field-17", casilla_id = "act.domicilio-escalera" },
-    { kind = "field", id = "field-18", casilla_id = "act.domicilio-piso" },
-    { kind = "field", id = "field-19", casilla_id = "act.domicilio-puerta" },
-    { kind = "field", id = "field-20", casilla_id = "act.domicilio-telefono" },
-    { kind = "field", id = "field-21", casilla_id = "act.nota-agrupacion-1" },
-    { kind = "field", id = "field-22", casilla_id = "act.nota-grupo-1" },
-    { kind = "field", id = "field-23", casilla_id = "act.nota-epigrafe-1" },
-    { kind = "field", id = "field-24", casilla_id = "act.regla-4-2-f" },
-    { kind = "field", id = "field-25", casilla_id = "act.seccion" },
-    { kind = "field", id = "field-26", casilla_id = "act.actividad-principal" },
-    { kind = "field", id = "field-27", casilla_id = "act.exencion" },
-    { kind = "field", id = "field-28", casilla_id = "act.bonificacion" },
-    { kind = "field", id = "field-29", casilla_id = "act.fecha-inicio-variacion-cese" },
-    { kind = "field", id = "field-30", casilla_id = "act.causa-baja" },
-    { kind = "field", id = "field-31", casilla_id = "act.causa-declaracion-complementaria" },
-    { kind = "field", id = "field-32", casilla_id = "act.ano-inicio-primera-vez" },
-    { kind = "field", id = "field-33", casilla_id = "act.informacion-adicional" },
-    { kind = "field", id = "field-34", casilla_id = "act.numero-referencia" },
+    { kind = "field", id = "field-1", casilla_id = "act.descripcion" },
+    { kind = "field", id = "field-2", casilla_id = "act.codigo-municipio" },
+    { kind = "field", id = "field-3", casilla_id = "act.codigo-provincia" },
+    { kind = "field", id = "field-4", casilla_id = "act.domicilio-codigo-via" },
+    { kind = "field", id = "field-5", casilla_id = "act.seccion" },
 ]
 
 [[revisions.2003-y-siguientes.form_layouts.pages.sections]]
 id = "local-afecto-indirectamente"
 heading_key = "modelo.schema.840.form.section.local-afecto-indirectamente.heading"
 blocks = [
-    { kind = "field", id = "field-1", casilla_id = "local-indirecto.uso-destino" },
-    { kind = "field", id = "field-2", casilla_id = "local-indirecto.codigo-postal" },
-    { kind = "field", id = "field-3", casilla_id = "local-indirecto.municipio" },
-    { kind = "field", id = "field-4", casilla_id = "local-indirecto.codigo-municipio" },
-    { kind = "field", id = "field-5", casilla_id = "local-indirecto.provincia" },
-    { kind = "field", id = "field-6", casilla_id = "local-indirecto.codigo-provincia" },
-    { kind = "field", id = "field-7", casilla_id = "local-indirecto.sigla-via" },
-    { kind = "field", id = "field-8", casilla_id = "local-indirecto.via-publica" },
-    { kind = "field", id = "field-9", casilla_id = "local-indirecto.codigo-via" },
-    { kind = "field", id = "field-10", casilla_id = "local-indirecto.numero" },
-    { kind = "field", id = "field-11", casilla_id = "local-indirecto.kilometro" },
-    { kind = "field", id = "field-12", casilla_id = "local-indirecto.pto" },
-    { kind = "field", id = "field-13", casilla_id = "local-indirecto.escalera" },
-    { kind = "field", id = "field-14", casilla_id = "local-indirecto.piso" },
-    { kind = "field", id = "field-15", casilla_id = "local-indirecto.puerta" },
-    { kind = "field", id = "field-16", casilla_id = "local-indirecto.telefono" },
+    { kind = "field", id = "field-1", casilla_id = "local-indirecto.codigo-municipio" },
+    { kind = "field", id = "field-2", casilla_id = "local-indirecto.codigo-provincia" },
+    { kind = "field", id = "field-3", casilla_id = "local-indirecto.codigo-via" },
 ]
 
 [[revisions.2003-y-siguientes.form_layouts.pages.sections]]
@@ -249,19 +296,10 @@ blocks = [
     { kind = "field", id = "field-1", casilla_id = "elem-trib.cuota-consignada-tarifas" },
     { kind = "field", id = "field-2", casilla_id = "elem-trib.grupo-epigrafe-suma" },
     { kind = "field", id = "field-3", casilla_id = "maquinas.suma" },
-    { kind = "field", id = "field-4", casilla_id = "elem-trib.municipal-suma-total" },
-    { kind = "field", id = "field-5", casilla_id = "elem-trib.municipal-suma-rectificada" },
-    { kind = "field", id = "field-6", casilla_id = "elem-trib.municipal-suma-computable" },
-    { kind = "field", id = "field-7", casilla_id = "elem-trib.municipal-superficie-deducible" },
-    { kind = "field", id = "field-8", casilla_id = "elem-trib.municipal-superficie-computable" },
-    { kind = "field", id = "field-9", casilla_id = "elem-trib.municipal-valor-elemento" },
-    { kind = "field", id = "field-10", casilla_id = "elem-trib.municipal-coeficiente-corrector" },
-    { kind = "field", id = "field-11", casilla_id = "elem-trib.municipal-cuota-elemento" },
-    { kind = "field", id = "field-12", casilla_id = "elem-trib.provincial-nacional-numero" },
-    { kind = "field", id = "field-13", casilla_id = "elem-trib.provincial-nacional-total" },
-    { kind = "field", id = "field-14", casilla_id = "elem-trib.provincial-nacional-rectificada" },
-    { kind = "field", id = "field-15", casilla_id = "elem-trib.provincial-nacional-computable" },
-    { kind = "field", id = "field-16", casilla_id = "elem-trib.provincial-nacional-cuota-elemento" },
+    { kind = "field", id = "field-4", casilla_id = "elem-trib.municipal-valor-elemento" },
+    { kind = "field", id = "field-5", casilla_id = "elem-trib.municipal-coeficiente-corrector" },
+    { kind = "field", id = "field-6", casilla_id = "elem-trib.municipal-cuota-elemento" },
+    { kind = "field", id = "field-7", casilla_id = "elem-trib.provincial-nacional-cuota-elemento" },
 ]
 
 [[revisions.2003-y-siguientes.form_layouts.pages.sections]]
@@ -277,11 +315,4 @@ blocks = [
     { kind = "field", id = "field-7", casilla_id = "cuota.incremento-importe" },
     { kind = "field", id = "field-8", casilla_id = "cuota.despues-bonificaciones-incrementos" },
     { kind = "field", id = "field-9", casilla_id = "cuota.tarifa-o-importe-minimo" },
-]
-
-[[revisions.2003-y-siguientes.form_layouts.pages.sections]]
-id = "notificacion"
-heading_key = "modelo.schema.840.form.section.notificacion.heading"
-blocks = [
-    { kind = "field", id = "field-1", casilla_id = "notificacion.lugar" },
 ]

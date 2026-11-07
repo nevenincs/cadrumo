@@ -24,9 +24,22 @@ from ..pipeline.record_design_intermediate import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_SOURCE_REF = "aeat-dr-200-2025"
-_FILING_YEAR = 2025
-_DESIGN_EPOCH = "2025"
+
+def _newest_m200_design() -> tuple[str, int, str]:
+    """Return the ``(source id, first filing year, design epoch)`` of the newest dated Modelo 200 design."""
+    sources = load_catalogue_file(bundled_path("registry", "aeat", "legal", "is.toml")).sources
+    designs = [
+        (str(source_id), source.applies_from.year, source.record_design_epoch)
+        for source_id, source in sources.items()
+        if str(source_id).startswith("aeat-dr-200-")
+        and source.kind == "record_design"
+        and source.applies_from is not None
+        and source.record_design_epoch is not None
+    ]
+    return max(designs, key=lambda design: design[1])
+
+
+_SOURCE_REF, _FILING_YEAR, _DESIGN_EPOCH = _newest_m200_design()
 
 
 def test_intermediate_consumes_the_hash_pinned_binary_not_adjacent_derivatives(tmp_path: Path) -> None:

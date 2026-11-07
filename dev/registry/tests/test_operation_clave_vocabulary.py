@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
@@ -26,6 +26,7 @@ from cadrumo.domain.calculations.registry.invoice_bindings import (
 )
 from cadrumo.domain.calculations.registry.m347_threshold import resolve_counterpart_operation_claves
 from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.fact_scope import outside_governed_fact_validation
 
 from ..compiler.fact_loader import load_governed_facts
@@ -33,6 +34,10 @@ from ..compiler.loader import load_registry_tree, load_shared_catalogues
 from ..compiler.validator import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
+_YEAR_START = date(_YEAR, 1, 1)
+_YEAR_END = date(_YEAR, 12, 31)
 
 _CLAVE_PROVIDERS = (
     CollectibleInvoiceProvider,
@@ -90,25 +95,52 @@ def _authored_authority(*, floor: int) -> CandidateFactAuthority:
     return CandidateFactAuthority(GovernedFactCatalogue(facts={fact.fact_id: fact for fact in facts}), support)
 
 
-@pytest.mark.parametrize("year", [2010, 2011, 2013, 2019, 2020, 2024, 2025])
+def _record_designs(modelo: str) -> list[tuple[date, date | None]]:
+    """Return the ``(applies_from, applies_to)`` window of each dated record design of one modelo, earliest first.
+
+    An open ``applies_to`` is still in force. A design carrying no ``applies_from``
+    is evidence the catalogue holds and never resolves, so it has no window here.
+    """
+    sources = load_shared_catalogues(bundled_path("registry", "aeat")).sources
+    return sorted(
+        (source.applies_from, source.applies_to)
+        for source_id, source in sources.items()
+        if str(source_id).startswith(f"aeat-dr-{modelo}-")
+        and source.kind == "record_design"
+        and source.applies_from is not None
+    )
+
+
+_M347_DESIGNS = _record_designs("347")
+_AUTHORED_FLOOR = _M347_DESIGNS[0][0].year
+# The earliest design prints no clave definitions, so the vocabulary starts with the second one.
+_M347_PRINTING_YEARS = range(_M347_DESIGNS[1][0].year, _YEAR + 1)
+
+
+@pytest.mark.parametrize("year", _M347_PRINTING_YEARS)
 def test_the_m347_vocabulary_is_declared_for_every_design_edition(year: int) -> None:
     claves = resolve_counterpart_operation_claves(
-        "347", effective_date=date(year, 6, 1), authority=_authored_authority(floor=2008)
+        "347", effective_date=date(year, 6, 1), authority=_authored_authority(floor=_AUTHORED_FLOOR)
     )
     assert claves == frozenset("ABCDEFG")
 
 
 def test_the_m347_vocabulary_is_not_asserted_before_the_first_design_that_prints_it() -> None:
+    last_unprinted_day = _M347_DESIGNS[0][1]
+    assert last_unprinted_day is not None, "the earliest design is closed by its successor"
     with pytest.raises(GovernedFactNotApplicableError):
         resolve_counterpart_operation_claves(
-            "347", effective_date=date(2009, 12, 31), authority=_authored_authority(floor=2008)
+            "347", effective_date=last_unprinted_day, authority=_authored_authority(floor=_AUTHORED_FLOOR)
         )
 
 
 def test_the_m349_vocabulary_is_not_asserted_before_its_catalogue_window() -> None:
+    ((first_applies_from, _open_end),) = _record_designs("349")
     with pytest.raises(GovernedFactNotApplicableError):
         resolve_counterpart_operation_claves(
-            "349", effective_date=date(2019, 12, 31), authority=_authored_authority(floor=2008)
+            "349",
+            effective_date=first_applies_from - timedelta(days=1),
+            authority=_authored_authority(floor=_AUTHORED_FLOOR),
         )
 
 
@@ -169,12 +201,12 @@ def test_candidate_revision_uses_candidate_fact_not_the_installed_generation(can
         source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
         party_tax_id="DE123456789",
         country_code="DE",
-        transaction_date=date(2024, 1, 1),
+        transaction_date=_YEAR_START,
         base_amount=Decimal("10"),
         intracommunity_clave="Z",
     )
     with validating_governed_facts(CandidateFactAuthority(facts, candidate.require_supported_filing_years())):
-        values = resolve_invoice_binding_values(altered, (observation,), effective_date=date(2024, 12, 31))
+        values = resolve_invoice_binding_values(altered, (observation,), effective_date=_YEAR_END)
     assert values[altered.bindings[0].id] == Decimal(1)
 
 
@@ -193,11 +225,11 @@ def test_candidate_revision_rechecks_the_fact_when_its_window_changes(candidate_
         else entry
         for entry in variant.payload.entries
     )
-    earlier = variant.model_copy(update={"valid_to": date(2025, 12, 31)})
+    earlier = variant.model_copy(update={"valid_to": date(_YEAR - 1, 12, 31)})
     later = variant.model_copy(
         update={
-            "variant_id": "candidate-operation-claves-2026",
-            "valid_from": date(2026, 1, 1),
+            "variant_id": f"candidate-operation-claves-{_YEAR}",
+            "valid_from": _YEAR_START,
             "payload": variant.payload.model_copy(update={"entries": entries}),
         }
     )
@@ -208,7 +240,7 @@ def test_candidate_revision_rechecks_the_fact_when_its_window_changes(candidate_
     failures = RegistryValidator(candidate)._invoice_clave_failures(
         modelo, _with_selector_clave(revision, "E"), prefix="test"
     )
-    assert any("2026-01-01" in failure and "'E'" in failure for failure in failures)
+    assert any(_YEAR_START.isoformat() in failure and "'E'" in failure for failure in failures)
 
 
 def test_candidate_revision_refuses_a_missing_catalogue(candidate_registry) -> None:
@@ -239,19 +271,19 @@ def test_calculation_input_refuses_cross_model_or_unknown_clave_at_filing_date(
         source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
         party_tax_id="DE123456789",
         country_code="DE",
-        transaction_date=date(2024, 1, 1),
+        transaction_date=_YEAR_START,
         base_amount=Decimal("10"),
         **{field: wrong},
     )
     with validating_governed_facts(authority):
         with pytest.raises(RegistryValidationError, match="undeclared"):
-            resolve_invoice_binding_values(revision, (observation,), effective_date=date(2024, 12, 31))
+            resolve_invoice_binding_values(revision, (observation,), effective_date=_YEAR_END)
         with pytest.raises(RegistryValidationError, match="undeclared"):
-            resolve_invoice_binding_row_values(revision, (observation,), effective_date=date(2024, 12, 31))
+            resolve_invoice_binding_row_values(revision, (observation,), effective_date=_YEAR_END)
         with pytest.raises(RegistryValidationError, match="filing-period date"):
             resolve_invoice_binding_values(revision, (observation,))
     with outside_governed_fact_validation(), pytest.raises(InternalInvariantError, match="explicit"):
-        resolve_invoice_binding_values(revision, (observation,), effective_date=date(2024, 12, 31))
+        resolve_invoice_binding_values(revision, (observation,), effective_date=_YEAR_END)
     if modelo_id == "349":
         unrelated = observation.model_copy(update={"source_kind": BindingSourceKind.PURCHASE_INVOICE_EVIDENCE})
         with outside_governed_fact_validation():
@@ -265,7 +297,7 @@ def test_invoice_clave_shape_refuses_non_ascii_letters() -> None:
             source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
             party_tax_id="DE123456789",
             country_code="DE",
-            transaction_date=date(2024, 1, 1),
+            transaction_date=_YEAR_START,
             base_amount=Decimal("10"),
             intracommunity_clave="Á",
         )
@@ -298,7 +330,7 @@ def test_generic_invoice_provider_cannot_emit_an_undeclared_operation_clave(
         source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
         party_tax_id="DE123456789",
         country_code="DE",
-        transaction_date=date(2024, 1, 1),
+        transaction_date=_YEAR_START,
         base_amount=Decimal("10"),
         invoice_total_amount=Decimal("10000"),
         **{field: invalid},
@@ -306,9 +338,9 @@ def test_generic_invoice_provider_cannot_emit_an_undeclared_operation_clave(
     authority = CandidateFactAuthority(catalogues.facts, catalogues.require_supported_filing_years())
     with validating_governed_facts(authority):
         with pytest.raises(RegistryValidationError, match="undeclared"):
-            resolve_invoice_binding_row_values(revision, (observation,), effective_date=date(2024, 12, 31))
+            resolve_invoice_binding_row_values(revision, (observation,), effective_date=_YEAR_END)
         valid_observation = observation.model_copy(update={field: valid})
-        rows = resolve_invoice_binding_row_values(revision, (valid_observation,), effective_date=date(2024, 12, 31))
+        rows = resolve_invoice_binding_row_values(revision, (valid_observation,), effective_date=_YEAR_END)
         assert valid in rows.values()
 
 
@@ -330,16 +362,16 @@ def test_generic_scalar_clave_filter_does_not_silently_drop_an_invalid_input(can
         source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
         party_tax_id="DE123456789",
         country_code="DE",
-        transaction_date=date(2024, 1, 1),
+        transaction_date=_YEAR_START,
         base_amount=Decimal("10"),
         intracommunity_clave="B",
     )
     authority = CandidateFactAuthority(catalogues.facts, catalogues.require_supported_filing_years())
     with validating_governed_facts(authority):
         with pytest.raises(RegistryValidationError, match="undeclared"):
-            resolve_invoice_binding_values(revision, (observation,), effective_date=date(2024, 12, 31))
+            resolve_invoice_binding_values(revision, (observation,), effective_date=_YEAR_END)
         valid = observation.model_copy(update={"intracommunity_clave": "E"})
-        assert resolve_invoice_binding_values(revision, (valid,), effective_date=date(2024, 12, 31))[binding.id] == 1
+        assert resolve_invoice_binding_values(revision, (valid,), effective_date=_YEAR_END)[binding.id] == 1
 
 
 def test_specialized_provider_checks_each_clave_channel_it_consumes(candidate_registry) -> None:
@@ -354,11 +386,11 @@ def test_specialized_provider_checks_each_clave_channel_it_consumes(candidate_re
         source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
         party_tax_id="DE123456789",
         country_code="DE",
-        transaction_date=date(2024, 1, 1),
+        transaction_date=_YEAR_START,
         base_amount=Decimal("10"),
         operation_clave="A",
         intracommunity_clave="B",
     )
     authority = CandidateFactAuthority(catalogues.facts, catalogues.require_supported_filing_years())
     with validating_governed_facts(authority), pytest.raises(RegistryValidationError, match="undeclared 349"):
-        resolve_invoice_binding_values(revision, (observation,), effective_date=date(2024, 12, 31))
+        resolve_invoice_binding_values(revision, (observation,), effective_date=_YEAR_END)

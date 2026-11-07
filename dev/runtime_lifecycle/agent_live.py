@@ -59,6 +59,8 @@ import time
 from collections.abc import AsyncGenerator, Mapping
 from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass, field
+from datetime import date
+from functools import cache
 from pathlib import Path
 from typing import Any, Final, cast
 
@@ -85,6 +87,7 @@ from .proof_support import (
     package_identity,
     started_processes,
     state_taxpayer,
+    supported_filing_year,
     verified_relay,
 )
 from .session_holder import AsyncRuntimeSessionHolder
@@ -92,10 +95,16 @@ from .session_holder import AsyncRuntimeSessionHolder
 _PROFILE: Final = "agent-live-acceptance"
 _PROTOCOL: Final = 1
 _DRIVER_PROFILE_FILE: Final = "driver-profile-owner.json"
-_SCENARIO: Final[dict[str, Any]] = {
-    "taxpayer": "Daniel Persona",
-    "ledger": {"description": "agent live acceptance", "amount": "12.34", "currency": "EUR", "date": "2026-01-15"},
-}
+
+
+@cache
+def _scenario() -> dict[str, Any]:
+    """The synthetic taxpayer and ledger row, booked in the year the published authority treats as current."""
+    booked = date(supported_filing_year(), 1, 15).isoformat()
+    return {
+        "taxpayer": "Daniel Persona",
+        "ledger": {"description": "agent live acceptance", "amount": "12.34", "currency": "EUR", "date": booked},
+    }
 
 
 def driver_process_start_identity(pid: int) -> str | None:
@@ -455,11 +464,11 @@ def _judge(receipt: Mapping[str, Any], exchange: Exchange, root: Path, after: st
     """Check the runner's receipt against what this driver saw; return the facts worth keeping."""
     require(receipt.get("storage_root_passed") == str(root), f"the runner passed another root: {receipt}")
     replies = " ".join(str(run.get("reply", "")) for run in receipt.get("runs", ()) if isinstance(run, Mapping))
-    require(_SCENARIO["taxpayer"].lower() in replies.lower(), "no reply names the profile's taxpayer")
+    require(_scenario()["taxpayer"].lower() in replies.lower(), "no reply names the profile's taxpayer")
     disagreements = stored_answers_disagree(exchange.given, list(receipt.get("permissions", ())))
     require(not disagreements, f"the gateway stored other answers than were given: {disagreements}")
     require(bool(exchange.given), "the agent asked no permission, so no relay call was approved")
-    description = _SCENARIO["ledger"]["description"]
+    description = _scenario()["ledger"]["description"]
     require(after.count(description) == 1, f"the ledger holds the scenario row {after.count(description)} times")
     return {
         "runs": [run.get("run_id") for run in receipt.get("runs", ()) if isinstance(run, Mapping)],
@@ -500,7 +509,7 @@ async def run(package: Path, scratch: Path) -> Receipt:
         profile = identify_profile(programs, environment, profile)
         state_taxpayer(programs, environment, profile)
         before = _ledger_text(programs, environment, profile)
-        require(_SCENARIO["ledger"]["description"] not in before, "the ledger already holds the scenario row")
+        require(_scenario()["ledger"]["description"] not in before, "the ledger already holds the scenario row")
         if profile.profile_id is None:
             raise AcceptanceError("created profile has no verified identity")
         holder = await AsyncRuntimeSessionHolder.start(
@@ -520,7 +529,7 @@ async def run(package: Path, scratch: Path) -> Receipt:
                 holder.identity,
                 storage_root=root,
                 relay=programs.mcp,
-                scenario=_SCENARIO,
+                scenario=_scenario(),
                 owner_pid=os.getpid(),
                 owner_start_identity=owner_start,
             )
@@ -535,7 +544,7 @@ async def run(package: Path, scratch: Path) -> Receipt:
                         "storage_root": str(root),
                         "profile": str(profile.profile_id),
                         "relay": str(programs.mcp),
-                        "scenario": _SCENARIO,
+                        "scenario": _scenario(),
                     },
                 )
                 receipt.record("exchange_ready", exchange=str(directory))

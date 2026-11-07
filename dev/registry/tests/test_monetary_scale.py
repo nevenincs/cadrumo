@@ -9,7 +9,9 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, single_exercise_editions
 
 from ..analysis.monetary_scale import CENTS_SCALE, SELF_SCALING_WIRE_TYPES, scale_findings, screen_authority
 from ..compiler.authority import compiled_bundled_authority
@@ -28,11 +30,19 @@ def _registry_modelo_ids() -> tuple[str, ...]:
 
 
 #: Floor for the monetary endpoints the absence claim below is measured over.
-#: Live m303's 2025 revision resolves 150 of 174 endpoints to a monetary
+#: Live m303's newest revision resolves 150 of 174 endpoints to a monetary
 #: casilla; two thirds of that, so ordinary revision movement never fires it.
 _MINIMUM_MONETARY_ENDPOINTS = 100
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+#: The oldest edition modelo 714 authors, whose design the quantity-selector cases read.
+_M714_OLDEST = single_exercise_editions("714")[0]
+
+
+def _newest_revision(authority: ValidatedRegistryAuthority, modelo_id: str) -> ModeloRevision:
+    """Return the newest authored revision of one modelo, so the cases follow the registry's own editions."""
+    return authority.modelo(modelo_id).revisions[str(authored_revisions(modelo_id)[-1].id)]
 
 
 @pytest.fixture(scope="module")
@@ -50,14 +60,14 @@ def test_a_self_scaling_wire_type_is_not_reported_as_unscaled(authority: Validat
     revision yields zero findings of ANY kind, and a screen that had stopped
     reading it would yield zero too -- the assertion below cannot tell those
     apart on its own. So the monetary endpoints are counted first: live m303's
-    2025 revision carries 150 of them, every one on the ``decimal`` wire.
+    newest revision carries 150 of them, every one on the ``decimal`` wire.
 
     Named for the self-scaling family rather than for ``money``. The test read
     ``a_money_wire_type`` while the revision it loads carries no ``money`` wire
     at all; both types are self-scaling so the assertion passed either way, and
     the name described a case it never exercised.
     """
-    revision = authority.modelo("303").revisions["2025"]
+    revision = _newest_revision(authority, "303")
     declared = {casilla.id: str(casilla.data_type) for casilla in revision.casillas}
     monetary = [
         endpoint
@@ -65,7 +75,7 @@ def test_a_self_scaling_wire_type_is_not_reported_as_unscaled(authority: Validat
         if endpoint.field is not None and declared.get(endpoint.casilla_id) == "money"
     ]
     assert len(monetary) >= _MINIMUM_MONETARY_ENDPOINTS, (
-        f"only {len(monetary)} monetary endpoint(s) resolved for m303 2025; below this the screen "
+        f"only {len(monetary)} monetary endpoint(s) resolved for the newest m303 revision; below this the screen "
         "examined almost nothing and the absence below says nothing about scaling"
     )
     unscaled_wires: set[str] = set()
@@ -88,7 +98,7 @@ def test_money_rendered_by_an_unscaled_wire_type_is_reported(authority: Validate
     against its casilla, as unscaled. Constructed rather than read from the
     corpus, so repairing every live unscaled amount leaves the proof standing.
     """
-    revision = authority.modelo("303").revisions["2025"]
+    revision = _newest_revision(authority, "303")
     assert scale_findings(revision, modelo_id="303") == (), "the constructed defect must be the only one"
     declared = {casilla.id: str(casilla.data_type) for casilla in revision.casillas}
     layout = revision.export_layouts[0]
@@ -117,7 +127,7 @@ def test_money_rendered_by_an_unscaled_wire_type_is_reported(authority: Validate
 
 def test_the_unusual_decimal_count_is_reported_as_an_exception(authority: ValidatedRegistryAuthority) -> None:
     """A money field rendered at four decimals is surfaced, not accepted silently."""
-    revision = authority.modelo("303").revisions["2025"]
+    revision = _newest_revision(authority, "303")
     layout = revision.export_layouts[0]
     declared = {casilla.id: str(casilla.data_type) for casilla in revision.casillas}
     record, victim = next(
@@ -160,7 +170,7 @@ def test_the_official_part_split_is_not_reported_as_missing_scale(
     complete. This pins the distinction that separates the real defect from the
     shape, and it is why the reported defect count is 24 rather than 156.
     """
-    revision = authority.modelo("347").revisions["2025-y-siguientes"]
+    revision = _newest_revision(authority, "347")
     findings = scale_findings(revision, modelo_id="347")
     split = [item for item in findings if item.kind == "money_split_representation"]
     assert split, "modelo 347 carries the official part split"
@@ -178,7 +188,7 @@ def test_a_self_scaling_wire_type_wins_over_the_split_shape(
     Checking the split before the wire type reported 156 split fields including
     ones the codec already scales; precedence has to put self-scaling first.
     """
-    revision = authority.modelo("390").revisions["2025"]
+    revision = _newest_revision(authority, "390")
     findings = scale_findings(revision, modelo_id="390")
     assert not [item for item in findings if item.kind == "money_split_representation"]
 
@@ -201,7 +211,7 @@ def test_sibling_amounts_of_one_record_are_compared_by_outcome_not_spelling(
     assert scale_outcome("money", None) == scale_outcome("decimal", 2) == "cents"
     assert scale_outcome("integer", None) == "unscaled"
 
-    revision = authority.modelo("353").revisions["2026-desde-02"]
+    revision = _newest_revision(authority, "353")
     declared = {casilla.id: str(casilla.data_type) for casilla in revision.casillas}
     spellings = {
         str(endpoint.field.data_type)
@@ -222,7 +232,7 @@ def test_a_record_whose_amounts_all_scale_alike_reports_nothing(
     """Consistent sibling amounts are the normal case and yield no finding."""
     from ..analysis.monetary_scale import sibling_findings
 
-    revision = authority.modelo("303").revisions["2025"]
+    revision = _newest_revision(authority, "303")
     assert sibling_findings(revision, modelo_id="303") == ()
 
 
@@ -269,7 +279,7 @@ def test_the_sibling_comparison_fires_on_a_constructed_unscaled_field(
     """
     from ..analysis.monetary_scale import sibling_findings
 
-    revision = authority.modelo("353").revisions["2026-desde-02"]
+    revision = _newest_revision(authority, "353")
     assert sibling_findings(revision, modelo_id="353") == (), "the constructed defect must be the only one"
 
     declared = {casilla.id: str(casilla.data_type) for casilla in revision.casillas}
@@ -402,7 +412,7 @@ def test_an_unscaled_amount_carrying_no_casilla_is_reported(
     """
     from ..analysis.monetary_scale import sibling_findings
 
-    revision = authority.modelo("353").revisions["2026-desde-02"]
+    revision = _newest_revision(authority, "353")
     assert sibling_findings(revision, modelo_id="353") == (), "the constructed defect must be the only one"
 
     layout, record, victim = _amount_run(revision)
@@ -434,7 +444,7 @@ def test_a_casilla_less_non_amount_is_not_admitted_to_an_amount_run(
     """
     from ..analysis.monetary_scale import amount_shaped_without_casilla, sibling_findings
 
-    revision = authority.modelo("353").revisions["2026-desde-02"]
+    revision = _newest_revision(authority, "353")
     _layout, record, victim = _amount_run(revision)
     admitted = _unhomed(record, victim).model_copy(update={"data_type": "integer", "decimals": None})
 
@@ -453,7 +463,7 @@ def test_amount_components_are_not_compared_with_whole_amounts(authority: Valida
     from ..analysis.monetary_scale import sibling_findings
     from ..maintenance_support import resolved_export_fields
 
-    revision = authority.modelo("181").revisions["2022-y-siguientes"]
+    revision = _newest_revision(authority, "181")
     fields = [item.field for item in resolved_export_fields(revision) if item.field.length == 10]
     assert any(field.value_policy == "integer-part" for field in fields)
     assert any(field.value_policy == "implied-decimal" and field.decimals == 2 for field in fields)
@@ -479,9 +489,9 @@ def test_m714_quantity_selectors_preserve_the_official_four_decimals(
     source = load_record_design_intermediate(
         data_root,
         load_shared_catalogues(data_root / "registry/aeat").sources,
-        source_ref="aeat-dr-714-2021",
-        filing_year=2021,
-        design_epoch="2021",
+        source_ref=f"aeat-dr-714-{_M714_OLDEST}",
+        filing_year=_M714_OLDEST,
+        design_epoch=str(_M714_OLDEST),
     )
     official = {
         field.offset: field
@@ -490,7 +500,7 @@ def test_m714_quantity_selectors_preserve_the_official_four_decimals(
         if field.sheet == "714-08 Patrimonio" and field.source_row in (35, 40, 45)
     }
     assert set(official) == {588, 682, 776}
-    revision = authority.modelo("714").revisions["2021"]
+    revision = authority.modelo("714").revisions[str(_M714_OLDEST)]
     providers = {binding.id: binding.provider for binding in revision.bindings}
     fields = [
         item.field
@@ -518,7 +528,7 @@ def test_a_manual_monetary_amount_still_reports_a_changed_wire_scale(
 
     from ..analysis.monetary_scale import sibling_findings
 
-    revision = authority.modelo("714").revisions["2021"]
+    revision = authority.modelo("714").revisions[str(_M714_OLDEST)]
     layout = revision.export_layouts[0]
     record = next(item for item in layout.records if str(item.id) == "modelo-714-page-08")
     victim = next(field for field in record.fields if field.offset == 601)
@@ -533,7 +543,7 @@ def test_a_manual_monetary_amount_still_reports_a_changed_wire_scale(
     assert "unscaled" in findings[0].detail and "cents" in findings[0].detail
 
 
-@pytest.mark.parametrize("year", range(2021, 2026))
+@pytest.mark.parametrize("year", single_exercise_editions("714"))
 def test_every_m714_quantity_accepts_and_roundtrips_four_decimal_entry(
     authority: ValidatedRegistryAuthority, year: int
 ) -> None:
