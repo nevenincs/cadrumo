@@ -220,8 +220,9 @@ export function monthNames(
     const named = dateFormats(locale);
     const format =
       width === "short" ? named.monthShortWord : named.monthLongWord;
+    // Any year names the months; the epoch's is the one with no meaning.
     return Array.from({ length: 12 }, (_, month) =>
-      format.format(new Date(Date.UTC(2000, month, 1))),
+      format.format(new Date(Date.UTC(1970, month, 1))),
     );
   });
 }

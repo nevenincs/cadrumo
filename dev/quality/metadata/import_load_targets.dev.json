@@ -879,6 +879,7 @@
         "dev.quality.unused_symbol_coverage",
         "dev.quality.workspace_field_population_scan",
         "dev.quality.write_path_coverage",
+        "dev.quality.year_literals",
         "dev.readme",
         "dev.readme.prepare_cli_demo",
         "dev.readme.render_cli_demo",

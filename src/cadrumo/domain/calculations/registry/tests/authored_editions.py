@@ -23,7 +23,20 @@ from ..authority_location import bundled_authority_descriptor_path
 from ..authority_store import SQLiteAuthorityReader
 from ..schema import ModeloRevision
 from ..schema_references import SourceReference
+from ..snapshot_globals import SupportedFilingYearsCatalogue
 from ..temporal import RevisionSelectionMetadata
+
+
+@cache
+def filing_year_envelope() -> SupportedFilingYearsCatalogue:
+    """Return the published support envelope: its ``floor``, ``horizon`` and supported ``years``.
+
+    A test that needs "a supported year", "the year below the floor" or "the
+    year past the horizon" writes it from these bounds, so it follows the one
+    support declaration when the horizon moves.
+    """
+    with bundled_indexed_authority().operation() as operation:
+        return operation.supported_filing_years()
 
 
 def authored_revisions(modelo_id: str) -> tuple[RevisionSelectionMetadata, ...]:
@@ -61,8 +74,7 @@ def supported_authored_exercises(modelo_id: str) -> tuple[int, ...]:
     among them: the registry carries the nearest edition across it, which reaches
     calculation grade at most.
     """
-    with bundled_indexed_authority().operation() as operation:
-        floor = operation.supported_filing_years().floor
+    floor = filing_year_envelope().floor
     return tuple(
         year
         for revision in authored_revisions(modelo_id)

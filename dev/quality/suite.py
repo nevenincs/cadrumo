@@ -47,6 +47,7 @@ GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("check-types", (sys.executable, "-m", "dev.quality.types")),
     ("complexity-gate", (sys.executable, "-m", "dev.audit.complexity", "--gate")),
     ("check-module-size", (sys.executable, "-m", "dev.quality.typescript_module_size")),
+    ("check-year-literals", (sys.executable, "-m", "dev.quality.year_literals")),
     ("check-import-boundaries", (sys.executable, "-m", "dev.quality.import_gate")),
     (
         "check-dependency-declarations",
