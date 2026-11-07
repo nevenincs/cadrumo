@@ -433,6 +433,22 @@ def free_port() -> int:
         return int(probe.getsockname()[1])
 
 
+def listening_addresses(connections: Sequence[Any], port: int) -> set[str]:
+    """Every local address a server socket on ``port`` is bound to.
+
+    A socket with no remote end is the server side whatever state the table
+    reports for it: WebView2's DevTools listener is reported with no TCP state
+    at all (``NONE``), not ``LISTEN``, so filtering on ``LISTEN`` found nothing
+    and refused a loopback-only endpoint. Counting every remote-less socket on
+    the port keeps any non-loopback binding in the set the caller refuses.
+    """
+    return {
+        connection.laddr.ip
+        for connection in connections
+        if connection.laddr and connection.laddr.port == port and not connection.raddr
+    }
+
+
 def devtools_endpoint(port: int, host: Any, deadline: float) -> str:
     """Wait for the window's DevTools endpoint, and require it to listen on loopback only."""
     endpoint = f"http://127.0.0.1:{port}"
@@ -447,11 +463,7 @@ def devtools_endpoint(port: int, host: Any, deadline: float) -> str:
                 "the desktop opened no DevTools endpoint; the window needs an interactive desktop session"
             )
         time.sleep(0.5)
-    listening = {
-        connection.laddr.ip
-        for connection in psutil.net_connections(kind="tcp")
-        if connection.status == psutil.CONN_LISTEN and connection.laddr and connection.laddr.port == port
-    }
+    listening = listening_addresses(psutil.net_connections(kind="tcp"), port)
     require(bool(listening) and listening <= {"127.0.0.1", "::1"}, f"DevTools listens beyond loopback: {listening}")
     return endpoint
 

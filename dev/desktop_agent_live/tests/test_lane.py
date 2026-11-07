@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import NamedTuple
 
+import psutil
 import pytest
 
 from ..desktop_processes import classify_desktops, person_environment
 from ..lane import (
     LANE_ATTACHMENTS,
     created_during,
+    listening_addresses,
     write_lane_attachments,
 )
 from ..lane_diagnostics import lane_problems, ready_lanes, sign_in_failures
@@ -174,3 +177,45 @@ def test_a_failed_sign_in_the_desktop_recorded_is_named_by_its_code() -> None:
         (41, "child_failed (wrong_password)"),
     ]
     assert sign_in_failures(unrelated) == []
+
+
+class _Address(NamedTuple):
+    ip: str
+    port: int
+
+
+class _Socket(NamedTuple):
+    """The fields of a psutil connection row the guard reads."""
+
+    laddr: _Address
+    raddr: _Address | tuple[()]
+    status: str
+
+
+def _socket(ip: str, port: int, status: str, remote: tuple[str, int] | None = None) -> _Socket:
+    return _Socket(_Address(ip, port), _Address(*remote) if remote else (), status)
+
+
+def test_the_devtools_listener_is_found_whatever_state_the_table_reports() -> None:
+    # WebView2 reports its DevTools server socket with no TCP state at all.
+    table = [
+        _socket("127.0.0.1", 9222, psutil.CONN_NONE),
+        _socket("127.0.0.1", 50000, psutil.CONN_ESTABLISHED, ("127.0.0.1", 9222)),
+        _socket("127.0.0.1", 9222, psutil.CONN_TIME_WAIT, ("127.0.0.1", 50001)),
+        _socket("127.0.0.1", 9223, psutil.CONN_LISTEN),
+    ]
+    assert listening_addresses(table, 9222) == {"127.0.0.1"}
+
+
+def test_a_devtools_binding_beyond_loopback_stays_visible_to_the_guard() -> None:
+    table = [
+        _socket("127.0.0.1", 9222, psutil.CONN_NONE),
+        _socket("192.0.2.10", 9222, psutil.CONN_LISTEN),
+        _socket("::", 9222, psutil.CONN_NONE),
+    ]
+    assert listening_addresses(table, 9222) == {"127.0.0.1", "192.0.2.10", "::"}
+
+
+def test_no_server_socket_on_the_port_leaves_nothing_to_admit() -> None:
+    table = [_socket("127.0.0.1", 9222, psutil.CONN_ESTABLISHED, ("127.0.0.1", 50000))]
+    assert listening_addresses(table, 9222) == set()
