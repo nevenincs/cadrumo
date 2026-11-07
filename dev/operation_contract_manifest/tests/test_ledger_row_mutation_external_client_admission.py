@@ -52,6 +52,7 @@ from cadrumo.core.operations import (
 from cadrumo.core.time.clock import now
 from cadrumo.domain.buckets.event import BucketEvent
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.transactions.enums import (
     BusinessClassification,
     SplitRole,
@@ -431,7 +432,7 @@ def test_a_split_records_the_session_keeps_its_parent_stored_and_is_not_undone_b
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=str(profile_id),
-                booked_date=date(2025, 1, 21),
+                booked_date=date(filing_year_envelope().horizon, 1, 21),
                 amount=Decimal("20.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="synthetic row to split",

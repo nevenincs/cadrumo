@@ -52,6 +52,7 @@ from click.testing import Result
 from cadrumo.adapters.persistence.profile.tests.ready_profile_support import seed_persona_profile
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_profile_facts
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 from cadrumo.entrypoints.cli.tests.cli_fixture_worlds import CliWorldProvider, bind_cli_fixture_ports
 from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
 from cadrumo.tests.cli_envelope import parse_json_object, require_error_document, require_schema_envelope
@@ -67,9 +68,9 @@ from ..runner import check_under_declaration_scenario
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_FILING_YEAR = 2025
+_FILING_YEAR = newest_authored_edition("200")
 _PERIOD = "0A"
-_REVISION = "2025-y-siguientes"
+_REVISION = revision_covering("200", _FILING_YEAR).id
 # legal_refs on the "modelo-200-resultado-antes-impuesto-determinado-cuando-
 # resultado-contable-positivo" ADVISORY predicate (verification_predicates.toml).
 _EXPECTED_LEGAL_REFS = ("ley-27-2014:art-10", "ley-27-2014:art-30")

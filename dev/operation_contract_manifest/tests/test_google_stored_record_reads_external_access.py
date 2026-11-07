@@ -50,6 +50,7 @@ from cadrumo.core.operations import (
     profile_operation_subject,
 )
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDecision, AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, AuthorityState, Availability
 from cadrumo_mcp.mcp.access_scope import surface_scope
@@ -58,7 +59,7 @@ from cadrumo_mcp.mcp.surfaces import MCP_SURFACES, McpSurfaceName
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("38383838-3838-4383-8383-383838383838")
-_NOW = datetime(2026, 10, 10, 12, tzinfo=UTC)
+_NOW = datetime(filing_year_envelope().horizon, 10, 10, 12, tzinfo=UTC)
 _PIN = cast(PinnedAuthorityOperation, object())
 _CLI = OperationFrontendProjection.CLI
 _MCP = OperationFrontendProjection.EXTERNAL_CLIENT

@@ -11,6 +11,8 @@ from typing import Any
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ...command_execution import run_command
 from ..assembly_identity import logical_inventory, package_fingerprint, stamp_package
 from ..build_fingerprint import (
@@ -43,7 +45,7 @@ from ..stdlib import bytecode
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-DAY = datetime(2026, 10, 19, 8, 30, tzinfo=UTC)
+DAY = datetime(filing_year_envelope().horizon, 10, 19, 8, 30, tzinfo=UTC)
 
 # A checkout reduced to the crates and sources the components declare, as pure input data.
 CRATES = {

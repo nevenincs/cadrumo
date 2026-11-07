@@ -14,6 +14,7 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.directory_scan import iter_directory
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..cohort_manifest import (
     REQUIRED_ARTIFACT_KINDS,
@@ -148,7 +149,7 @@ def _synthetic_cohort(tmp_path: Path) -> LoadedReleaseCohort:
         cohort_id=cohort_identifier(version="0.2.1", source=source, artifacts=artifacts),
         version="0.2.1",
         source=source,
-        created_at=datetime(2026, 1, 1, tzinfo=UTC),
+        created_at=datetime(filing_year_envelope().horizon, 1, 1, tzinfo=UTC),
         builder=BuildIdentity(
             implementation="dev.packaging.release_cohort",
             format_version=1,
