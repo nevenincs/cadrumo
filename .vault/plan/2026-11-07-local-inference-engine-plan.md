@@ -13,7 +13,7 @@ related:
   - '[[2026-10-25-agent-owned-models-adr]]'
 modified: '2026-11-07'
 body_schema: body-v2
-body_hash: 'sha256:f7adcea62b15bc563f92b34641455e817bbe314838c77b9c38513783f0ccb7e1'
+body_hash: 'sha256:577cccf0370f8b3591212ccf93a954e950d7374205f6ed74a0e62c8c03ebb0b0'
 ---
 
 # `local-inference-engine` plan
@@ -55,7 +55,7 @@ Out of scope: a CUDA build, vLLM, bundled model weights, and any Python provisio
 
 Apply the reconciliation amendments the accepted decision names, so no accepted provisioning or model-ownership sentence contradicts llama.cpp as the bundled default before any code Step executes.
 
-- [ ] `P01.S01` - Apply the six reconciliation amendments listed in the local inference engine ADR to the three accepted ADRs verbatim, plus its two optional dated context notes (repo cadrumo, executor vaultspec-high-executor); `.vault/adr/2026-10-18-dependency-provisioning-unified-setup-adr.md, .vault/adr/2026-10-24-rust-component-provisioning-adr.md, .vault/adr/2026-10-25-agent-owned-models-adr.md, .vault/adr/2026-06-13-llm-evidence-classification-adr.md`.
+- [x] `P01.S01` - Apply the six reconciliation amendments listed in the local inference engine ADR to the three accepted ADRs verbatim, plus its two optional dated context notes (repo cadrumo, executor vaultspec-high-executor); `.vault/adr/2026-10-18-dependency-provisioning-unified-setup-adr.md, .vault/adr/2026-10-24-rust-component-provisioning-adr.md, .vault/adr/2026-10-25-agent-owned-models-adr.md, .vault/adr/2026-06-13-llm-evidence-classification-adr.md`.
 
 ### Phase `P02` - cadrumo-agent llama.cpp lane and catalogue (repo cadrumo-agent)
 
