@@ -32,14 +32,17 @@ test("the months come back to the month the reader left them on, in a pane and b
   await expect(heading(fixtureMonth(10))).toBeInViewport();
   // The reader scrolls on to January, which begins a row of months in a
   // pane and beside the list alike.
-  await page.evaluate((element) => {
-    const month = element.querySelector(`[data-month="${fixtureMonth(1, 1)}"]`);
-    if (!month) throw new Error("no January");
-    element.scrollTop +=
-      month.getBoundingClientRect().top -
-      element.getBoundingClientRect().top -
-      100;
-  });
+  await page.evaluate(
+    (element, key) => {
+      const month = element.querySelector(`[data-month="${key}"]`);
+      if (!month) throw new Error("no January");
+      element.scrollTop +=
+        month.getBoundingClientRect().top -
+        element.getBoundingClientRect().top -
+        100;
+    },
+    fixtureMonth(1, 1),
+  );
   await expect(heading(fixtureMonth(1, 1))).toBeInViewport();
   await expect(heading(fixtureMonth(10))).not.toBeInViewport();
   const head = target.locator('[data-dock-header="docs"]');
@@ -104,22 +107,23 @@ test("the reader's month does not drift however often the months are laid out an
   // March's row to the top of the view, just under the head, with the row
   // before it gone above: the row at the top is the one that is kept.
   const toMarch = () =>
-    page.evaluate((element) => {
-      const month = element.querySelector(
-        `[data-month="${fixtureMonth(3, 1)}"]`,
-      );
-      if (!month) throw new Error("no March");
-      const kept =
-        element.querySelector<HTMLElement>(".calendar-head")?.offsetHeight ||
-        element.querySelector<HTMLElement>(".calendar-controls")
-          ?.offsetHeight ||
-        0;
-      element.scrollTop +=
-        month.getBoundingClientRect().top -
-        element.getBoundingClientRect().top -
-        kept -
-        12;
-    });
+    page.evaluate(
+      (element, key) => {
+        const month = element.querySelector(`[data-month="${key}"]`);
+        if (!month) throw new Error("no March");
+        const kept =
+          element.querySelector<HTMLElement>(".calendar-head")?.offsetHeight ||
+          element.querySelector<HTMLElement>(".calendar-controls")
+            ?.offsetHeight ||
+          0;
+        element.scrollTop +=
+          month.getBoundingClientRect().top -
+          element.getBoundingClientRect().top -
+          kept -
+          12;
+      },
+      fixtureMonth(3, 1),
+    );
   // The reader goes on to March. The place that is kept is the month that
   // begins March's row, which need not be March: the months of a row are
   // made up anew at every width, and that one month is what stays put.
@@ -128,17 +132,18 @@ test("the reader's month does not drift however often the months are laid out an
   );
   await toMarch();
   await expect(march.locator("h2")).toBeInViewport();
-  const begins = await page.evaluate((element) => {
-    const months = [
-      ...element.querySelectorAll<HTMLElement>(".calendar-month"),
-    ];
-    const top = (month: Element) =>
-      Math.round(month.getBoundingClientRect().top);
-    const row = top(
-      element.querySelector(`[data-month="${fixtureMonth(3, 1)}"]`)!,
-    );
-    return months.find((month) => top(month) === row)?.dataset.month ?? "";
-  });
+  const begins = await page.evaluate(
+    (element, key) => {
+      const months = [
+        ...element.querySelectorAll<HTMLElement>(".calendar-month"),
+      ];
+      const top = (month: Element) =>
+        Math.round(month.getBoundingClientRect().top);
+      const row = top(element.querySelector(`[data-month="${key}"]`)!);
+      return months.find((month) => top(month) === row)?.dataset.month ?? "";
+    },
+    fixtureMonth(3, 1),
+  );
   expect(begins).not.toBe("");
   const left = {
     march: await under(fixtureMonth(3, 1)),
@@ -200,11 +205,11 @@ test("the reader's month does not drift however often the months are laid out an
   // The place is the reader's even with something chosen elsewhere: a
   // window of October is chosen, and the reader goes on to March.
   await target.setViewportSize({ width: 1600, height: 900 });
-  await page.evaluate((element) => {
+  await page.evaluate((element, entry) => {
     element
-      .querySelector(`.calendar-bar[data-entry="303:${fixtureYear}-3T"]`)
+      .querySelector(`.calendar-bar[data-entry="${entry}"]`)
       ?.scrollIntoView({ block: "center" });
-  });
+  }, `303:${fixtureYear}-3T`);
   await page
     .locator(`.calendar-bar[data-entry="303:${fixtureYear}-3T"]`)
     .first()
@@ -513,24 +518,25 @@ test("a reader inside a month taller than the page is kept on that month", async
   // Deep inside January: its name is far above the view and the next row
   // of months is still below it.
   const top = () =>
-    page.evaluate((element) =>
-      Math.round(
-        (element
-          .querySelector(`[data-month="${fixtureMonth(1, 1)}"]`)
-          ?.getBoundingClientRect().top ?? 0) -
-          element.getBoundingClientRect().top -
-          (element.querySelector<HTMLElement>(".calendar-head")?.offsetHeight ||
-            element.querySelector<HTMLElement>(".calendar-controls")
+    page.evaluate(
+      (element, key) =>
+        Math.round(
+          (element
+            .querySelector(`[data-month="${key}"]`)
+            ?.getBoundingClientRect().top ?? 0) -
+            element.getBoundingClientRect().top -
+            (element.querySelector<HTMLElement>(".calendar-head")
               ?.offsetHeight ||
-            0),
-      ),
+              element.querySelector<HTMLElement>(".calendar-controls")
+                ?.offsetHeight ||
+              0),
+        ),
+      fixtureMonth(1, 1),
     );
   await page.evaluate(
-    (element) =>
+    (element, key) =>
       new Promise<void>((done) => {
-        const month = element.querySelector(
-          `[data-month="${fixtureMonth(1, 1)}"]`,
-        );
+        const month = element.querySelector(`[data-month="${key}"]`);
         if (!month) throw new Error("no January");
         element.addEventListener("scroll", () => done(), { once: true });
         element.scrollTop +=
@@ -538,6 +544,7 @@ test("a reader inside a month taller than the page is kept on that month", async
           element.getBoundingClientRect().top +
           300;
       }),
+    fixtureMonth(1, 1),
   );
   const inside = await top();
   expect(inside).toBeLessThan(-300);
@@ -582,23 +589,27 @@ test("a calendar put away and brought back is as it was left", async ({
   await chosen.click();
   await expect(chosen).toHaveAttribute("aria-pressed", "true");
   const where = () =>
-    page.evaluate((element) => {
-      const month = element.querySelector(
-        `[data-month="${fixtureMonth(2, 1)}"]`,
-      );
-      return Math.round(
-        (month?.getBoundingClientRect().top ?? 0) -
-          element.getBoundingClientRect().top,
-      );
-    });
-  await page.evaluate((element) => {
-    const month = element.querySelector(`[data-month="${fixtureMonth(2, 1)}"]`);
-    if (!month) throw new Error("no February");
-    element.scrollTop +=
-      month.getBoundingClientRect().top -
-      element.getBoundingClientRect().top -
-      160;
-  });
+    page.evaluate(
+      (element, key) => {
+        const month = element.querySelector(`[data-month="${key}"]`);
+        return Math.round(
+          (month?.getBoundingClientRect().top ?? 0) -
+            element.getBoundingClientRect().top,
+        );
+      },
+      fixtureMonth(2, 1),
+    );
+  await page.evaluate(
+    (element, key) => {
+      const month = element.querySelector(`[data-month="${key}"]`);
+      if (!month) throw new Error("no February");
+      element.scrollTop +=
+        month.getBoundingClientRect().top -
+        element.getBoundingClientRect().top -
+        160;
+    },
+    fixtureMonth(2, 1),
+  );
   await expect.poll(where).toBeGreaterThan(100);
   const left = await where();
   // Put away with the chord, and brought back with it.

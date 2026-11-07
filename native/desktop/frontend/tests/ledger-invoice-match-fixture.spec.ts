@@ -17,15 +17,33 @@ import { catalogueInvoice, hexId, movement } from "./support/ledger";
 type Scenario = (typeof recorded.scenarios)[number];
 type Entry = Record<string, string | boolean | null | undefined>;
 
+// The backend breaks a tie between equal candidates by invoice id, and its ids
+// come from the invoice's own content. The recording keeps no ids, only the
+// order it answered in, so each invoice is given an id that sorts where the
+// recorded answer put its number: a tied pair is then offered in the order the
+// backend offered it, whatever ids the backend's content now yields.
+function answeredOrder(scenario: Scenario): Map<string, number> {
+  type Named = { invoice: string; ties?: Named[]; others?: Named[] };
+  const named: string[] = [];
+  for (const found of scenario.answer.suggestions as Named[])
+    for (const each of [found, ...(found.ties ?? []), ...(found.others ?? [])])
+      if (!named.includes(each.invoice)) named.push(each.invoice);
+  return new Map(named.map((number, at) => [number, at]));
+}
+
 function recordsOf(scenario: Scenario): {
   rows: LedgerRow[];
   invoices: CatalogueInvoice[];
   numberOf: Map<string, string>;
 } {
+  const answered = answeredOrder(scenario);
   const invoices = scenario.invoices.map((entry: Entry) => {
     const number = entry.number as string;
     const retention = (entry.retention as string | undefined) ?? null;
     return catalogueInvoice(number, {
+      invoice_id: hexId(
+        `${String(answered.get(number) ?? answered.size).padStart(3, "0")}-${number}`,
+      ),
       kind: entry.kind as CatalogueInvoice["kind"],
       issued_at: entry.issued as string,
       counterparty_name: entry.party as string,
