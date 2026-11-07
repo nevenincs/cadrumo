@@ -8,7 +8,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
 modified: '2026-11-07'
 body_schema: body-v2
-body_hash: 'sha256:d4aefdbe014a51ce7af3e77cf1e2e6ff2b8d11089efadbbaf20f9530266cc0ee'
+body_hash: 'sha256:93aaeab57c77ec20a96f60183e605a43d604f94756dd92722f04947afb999bd3'
 ---
 
 <!-- LINK RULES:
@@ -128,8 +128,8 @@ Known findings recorded during the migration and owned elsewhere: Modelo 100 202
 ## Steps
 
 - [x] `S01` - Landed: gate, posture resolver, holiday calendars, P001-P005, T001-T022, T027-T032, T049, T050, ty fixes, domiciliation cutoff fix; `dev/quality/year_literals.py`.
-- [ ] `S02` - Land P006 and P007 production date and period text; `dev/runtime_lifecycle`.
-- [ ] `S03` - Land the loader directory-mode support preamble and drop the three local preamble copies; `dev/registry/conformance/loader_directory_mode_support.py`.
+- [x] `S02` - Land P006 and P007 production date and period text; `dev/runtime_lifecycle`.
+- [x] `S03` - Land the loader directory-mode support preamble and drop the three local preamble copies; `dev/registry/conformance/loader_directory_mode_support.py`.
 - [ ] `S04` - Migrate T023-T025 registry tests (1329 findings); `dev/registry/tests`.
 - [ ] `S05` - Migrate T026 release tests (79 findings); `dev/release`.
 - [ ] `S06` - Migrate T033-T048 adapter tests (2905 findings); `src/cadrumo/adapters`.
