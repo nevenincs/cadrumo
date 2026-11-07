@@ -25,11 +25,16 @@ from cadrumo.domain.calculations.registry.schema_governance import (
 from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from dev.registry.compiler.loader import load_modelo_directory
-from dev.registry.conformance.loader_directory_mode_support import load_revision, write_modelo
+from dev.registry.conformance.loader_directory_mode_support import (
+    STANDARD_REVISION_EXERCISE,
+    load_revision,
+    standard_revision_preamble_text,
+    write_modelo,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_YEAR = filing_year_envelope().horizon
+_YEAR = STANDARD_REVISION_EXERCISE
 _REVISION_ID = str(_YEAR)
 #: The signoff date every fixture stamp carries, written from the derived year; the
 #: second is the date a rewrite moves it to, and sits at the support floor.
@@ -52,17 +57,6 @@ reviewed_at = {_REVIEWED_ON.isoformat()}
 """.lstrip()
 
 
-def _revision_preamble() -> str:
-    """The scalar preamble of the one fixture revision, which opens in the derived year."""
-    return (
-        f'[revisions."{_REVISION_ID}"]\n'
-        f"valid_from = {date(_YEAR, 1, 1).isoformat()}\n"
-        f'period_selector = {{ years = [{_YEAR}], periods = ["0A"] }}\n'
-        'legal_refs = ["ley-58-2003:art-29"]\n'
-        'source_refs = ["aeat-manual"]\n'
-    )
-
-
 def _write_modelo(
     root: Path,
     *,
@@ -73,7 +67,7 @@ def _write_modelo(
         root,
         casilla_fragment=_CASILLA_FRAGMENT,
         revision_id=_REVISION_ID,
-        manifest_text=_revision_preamble() + manifest_extra,
+        manifest_text=standard_revision_preamble_text() + manifest_extra,
         fragment_extra=fragment_extra,
     )
 

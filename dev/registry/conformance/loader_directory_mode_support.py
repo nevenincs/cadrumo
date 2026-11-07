@@ -10,6 +10,7 @@ from pathlib import Path
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.loader import load_modelo_directory, load_modelo_source, load_registry_tree
 from ..compiler.loader_cache import ModeloSource, discover_modelo_sources
@@ -21,7 +22,12 @@ TOML_CASILLA_ID_KEY = "casilla_id"
 COMPLETENESS_CASILLA_0001 = "0001"
 COMPLETENESS_CASILLA_0002 = "0002"
 _MINIMAL_MANIFEST_TEXT = '[modelo]\nid = "999"\n'
-_MINIMAL_REVISION_TEXT = '[revisions."2025"]\nvalid_from = 2025-01-01\n'
+
+# The synthetic fixture edition sits on the newest exercise the support envelope serves, so no
+# fixture tree depends on a year the registry stops supporting.
+STANDARD_REVISION_EXERCISE = filing_year_envelope().horizon
+STANDARD_REVISION_ID = str(STANDARD_REVISION_EXERCISE)
+_MINIMAL_REVISION_TEXT = f'[revisions."{STANDARD_REVISION_ID}"]\nvalid_from = {STANDARD_REVISION_EXERCISE}-01-01\n'
 
 
 @cache
@@ -75,7 +81,7 @@ source_refs = ["aeat-manual"]
 
 
 def standard_revision_preamble_text(source_ref: str = "aeat-manual", *, declare_legal_refs: bool = True) -> str:
-    """Build the standard ``[revisions."2025"]`` scalar preamble.
+    """Build the standard scalar preamble of the ``STANDARD_REVISION_ID`` edition.
 
     ``declare_legal_refs=False`` omits the ``legal_refs`` line entirely
     (rather than declaring an empty one) so a caller can prove a
@@ -85,9 +91,9 @@ def standard_revision_preamble_text(source_ref: str = "aeat-manual", *, declare_
     """
     legal_refs_line = 'legal_refs = ["ley-58-2003:art-29"]\n' if declare_legal_refs else ""
     return (
-        '[revisions."2025"]\n'
-        "valid_from = 2025-01-01\n"
-        'period_selector = { years = [2025], periods = ["0A"] }\n'
+        f'[revisions."{STANDARD_REVISION_ID}"]\n'
+        f"valid_from = {STANDARD_REVISION_EXERCISE}-01-01\n"
+        f'period_selector = {{ years = [{STANDARD_REVISION_EXERCISE}], periods = ["0A"] }}\n'
         f"{legal_refs_line}"
         f'source_refs = ["{source_ref}"]\n'
     )
@@ -107,7 +113,7 @@ def write_modelo(
     root: Path,
     *,
     casilla_fragment: str,
-    revision_id: str = "2025",
+    revision_id: str = STANDARD_REVISION_ID,
     manifest_extra: str = "",
     manifest_text: str | None = None,
     fragment_extra: str = "",
@@ -140,7 +146,7 @@ def write_modelo(
     return modelo_dir
 
 
-def load_revision(modelo_dir: Path, *, revision_id: str = "2025") -> ModeloRevision:
+def load_revision(modelo_dir: Path, *, revision_id: str = STANDARD_REVISION_ID) -> ModeloRevision:
     """Load one fixture revision from a directory-mode modelo."""
     return load_modelo_directory(modelo_dir).revisions[revision_id]
 
@@ -164,7 +170,9 @@ def write_fragmented_modelo(
     return target_dir
 
 
-def write_minimal_shared_catalogues(legal_dir: Path, *, floor: int = 2025, horizon: int = 2025) -> None:
+def write_minimal_shared_catalogues(
+    legal_dir: Path, *, floor: int = STANDARD_REVISION_EXERCISE, horizon: int = STANDARD_REVISION_EXERCISE
+) -> None:
     """Materialise the minimal ``legal/`` declarations ``load_shared_catalogues`` requires.
 
     ``supported_filing_years`` and ``sociedades_annual_manual_coverage`` are
@@ -178,7 +186,7 @@ def write_minimal_shared_catalogues(legal_dir: Path, *, floor: int = 2025, horiz
     legal_dir.mkdir(parents=True, exist_ok=True)
     dispositions = ", ".join(
         f'{{ year = {year}, status = "unpublished", '
-        f'official_locator = "https://example.com/manuals/{year}", observed_at = 2026-09-10, '
+        f'official_locator = "https://example.com/manuals/{year}", observed_at = {horizon + 1}-09-10, '
         'acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication" }'
         for year in range(floor, horizon + 1)
     )
@@ -285,8 +293,8 @@ def minimal_fragment_revision_layout(
     revision_text: str = _MINIMAL_REVISION_TEXT,
     fragment_dirs: tuple[str, ...] = (),
 ) -> Path:
-    """Materialise a minimal ``revisions/2025/`` tree and return that revision dir."""
-    revision_dir = target_dir / "revisions" / "2025"
+    """Materialise a minimal ``revisions/<STANDARD_REVISION_ID>/`` tree and return that revision dir."""
+    revision_dir = target_dir / "revisions" / STANDARD_REVISION_ID
     revision_dir.mkdir(parents=True)
     (target_dir / "manifest.toml").write_text(_MINIMAL_MANIFEST_TEXT, encoding="utf-8", newline="\n")
     (revision_dir / "revision.toml").write_text(revision_text, encoding="utf-8", newline="\n")

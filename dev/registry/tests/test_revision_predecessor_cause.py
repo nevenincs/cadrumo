@@ -27,11 +27,15 @@ from cadrumo.domain.calculations.registry.revision_contracts import (
 )
 
 from ..compiler.loader import load_modelo_directory
-from ..conformance.loader_directory_mode_support import write_modelo
+from ..conformance.loader_directory_mode_support import (
+    STANDARD_REVISION_EXERCISE,
+    STANDARD_REVISION_ID,
+    write_modelo,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REVISION_ID = "2025"
+_REVISION_ID = STANDARD_REVISION_ID
 _LEGAL_REF = "ley-58-2003:art-29"
 _SOURCE_REF = "aeat-manual"
 _REASON = "Stated in full: this edition is one of several parallel scheme variants, not a step in a sequence."
@@ -167,7 +171,9 @@ def test_a_cause_on_anything_but_a_none_table_is_refused(tmp_path: Path) -> None
         tmp_path,
         casilla_fragment=_CASILLA_FRAGMENT,
         revision_id=_REVISION_ID,
-        manifest_extra='predecessor = { revision_id = "2024", cause = "lower_grade" }\n',
+        manifest_extra=(
+            f'predecessor = {{ revision_id = "{STANDARD_REVISION_EXERCISE - 1}", cause = "lower_grade" }}\n'
+        ),
     )
 
     with pytest.raises(RegistryLoadError, match="predecessor must be the revision id of a sibling edition"):

@@ -29,12 +29,19 @@ from cadrumo.domain.calculations.registry.revision_contracts import (
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 from ..compiler.loader import load_modelo_directory
-from ..conformance.loader_directory_mode_support import write_modelo
+from ..conformance.loader_directory_mode_support import (
+    STANDARD_REVISION_EXERCISE,
+    STANDARD_REVISION_ID,
+    write_modelo,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_SUCCESSOR_ID = "2025"
-_PREDECESSOR_ID = "2024"
+_PREDECESSOR_EXERCISE = STANDARD_REVISION_EXERCISE - 1
+_SUCCESSOR_ID = STANDARD_REVISION_ID
+_PREDECESSOR_ID = str(_PREDECESSOR_EXERCISE)
+#: An exercise two before the successor, which no edition of the fixture modelo covers.
+_UNAUTHORED_ID = str(STANDARD_REVISION_EXERCISE - 2)
 _LEGAL_REF = "ley-58-2003:art-29"
 _NO_PREDECESSOR_REASON = "Parallel scheme variant sharing one validity date with its siblings."
 _NO_PREDECESSOR = (
@@ -58,9 +65,9 @@ source_refs = ["aeat-manual"]
 
 
 def _write_two_edition_modelo(root: Path, *, successor_manifest_extra: str = "") -> Path:
-    """Materialise a modelo with a 2024 edition and a 2025 edition.
+    """Materialise a modelo with a predecessor edition and the standard successor edition.
 
-    ``successor_manifest_extra`` is appended to the 2025 ``revision.toml``, the
+    ``successor_manifest_extra`` is appended to the successor ``revision.toml``, the
     one place a test plants or removes a predecessor declaration.
     """
     modelo_dir = write_modelo(
@@ -74,9 +81,9 @@ def _write_two_edition_modelo(root: Path, *, successor_manifest_extra: str = "")
     (predecessor_dir / "revision.toml").write_text(
         (
             f'[revisions."{_PREDECESSOR_ID}"]\n'
-            "valid_from = 2024-01-01\n"
-            "valid_to = 2024-12-31\n"
-            'period_selector = { years = [2024], periods = ["0A"] }\n'
+            f"valid_from = {_PREDECESSOR_EXERCISE}-01-01\n"
+            f"valid_to = {_PREDECESSOR_EXERCISE}-12-31\n"
+            f'period_selector = {{ years = [{_PREDECESSOR_EXERCISE}], periods = ["0A"] }}\n'
             f'legal_refs = ["{_LEGAL_REF}"]\n'
             'source_refs = ["aeat-manual"]\n'
         ),
@@ -90,7 +97,7 @@ def _write_two_edition_modelo(root: Path, *, successor_manifest_extra: str = "")
 
 
 def _set_successor_extra(modelo_dir: Path, extra: str) -> None:
-    """Rewrite the 2025 manifest's trailing declaration in place."""
+    """Rewrite the successor manifest's trailing declaration in place."""
     manifest = modelo_dir / "revisions" / _SUCCESSOR_ID / "revision.toml"
     preamble = manifest.read_text(encoding="utf-8").split("\npredecessor", 1)[0].rstrip("\n") + "\n"
     manifest.write_text(preamble + extra, encoding="utf-8", newline="\n")
@@ -128,7 +135,9 @@ def test_a_declared_predecessor_is_carried_typed_and_serialises_as_authored(tmp_
 
 def test_a_malformed_predecessor_id_is_refused_and_the_well_formed_one_loads(tmp_path: Path) -> None:
     """Both directions on one tree: the plant reds the load, removing it restores it."""
-    modelo_dir = _write_two_edition_modelo(tmp_path, successor_manifest_extra='predecessor = "Edición 2024"\n')
+    modelo_dir = _write_two_edition_modelo(
+        tmp_path, successor_manifest_extra=f'predecessor = "Edición {_PREDECESSOR_ID}"\n'
+    )
 
     with pytest.raises(RegistryLoadError, match=r"predecessor\.revision\.revision_id"):
         load_modelo_directory(modelo_dir)
@@ -142,7 +151,7 @@ def test_a_malformed_predecessor_id_is_refused_and_the_well_formed_one_loads(tmp
     "declaration",
     [
         pytest.param(f'predecessor = {{ revision_id = "{_PREDECESSOR_ID}" }}\n', id="table-spelling"),
-        pytest.param("predecessor = 2024\n", id="integer"),
+        pytest.param(f"predecessor = {_PREDECESSOR_EXERCISE}\n", id="integer"),
         pytest.param(f'predecessor = ["{_PREDECESSOR_ID}"]\n', id="array"),
     ],
 )
@@ -164,9 +173,9 @@ def test_a_revision_naming_itself_as_predecessor_is_refused(tmp_path: Path) -> N
 
 def test_a_predecessor_naming_no_sibling_edition_is_refused(tmp_path: Path) -> None:
     """A well-formed id that resolves to nothing in the modelo is a dangling declaration."""
-    modelo_dir = _write_two_edition_modelo(tmp_path, successor_manifest_extra='predecessor = "2023"\n')
+    modelo_dir = _write_two_edition_modelo(tmp_path, successor_manifest_extra=f'predecessor = "{_UNAUTHORED_ID}"\n')
 
-    with pytest.raises(RegistryLoadError, match="'2023', which is not a revision of this modelo"):
+    with pytest.raises(RegistryLoadError, match=f"'{_UNAUTHORED_ID}', which is not a revision of this modelo"):
         load_modelo_directory(modelo_dir)
 
     _set_successor_extra(modelo_dir, f'predecessor = "{_PREDECESSOR_ID}"\n')
@@ -240,7 +249,7 @@ def test_an_explicit_none_serialises_as_authored_and_hydrates_back(tmp_path: Pat
         ),
         pytest.param(
             f'predecessor = {{ none = {{ reason = "Parallel.", legal_refs = ["{_LEGAL_REF}"], '
-            'source_refs = ["aeat-manual"], revision_id = "2024" } }\n',
+            f'source_refs = ["aeat-manual"], revision_id = "{_PREDECESSOR_ID}" }} }}\n',
             r"predecessor\.none\.revision_id",
             id="unknown-key-inside-none",
         ),
