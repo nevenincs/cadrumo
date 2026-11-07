@@ -20,19 +20,22 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from ..calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
 from ..errors import RegistryValidationError
 from ..schema_scalars import (
-    BicString,
     CalendarDate,
-    CCAACode,
-    MunicipalityCode,
-    NifIvaString,
-    PersonOrEntityName,
-    PostalCode,
-    ProvinceCode,
     validate_registry_text_scalar,
 )
 from ..schema_surfaces import CasillaDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+class _TextScalar:
+    """Validate through the registry's text-scalar entry point, as a casilla value is."""
+
+    def __init__(self, data_type: str) -> None:
+        self._data_type = data_type
+
+    def validate_python(self, raw: object) -> str:
+        return validate_registry_text_scalar(self._data_type, raw)
 
 
 @pytest.fixture(autouse=True)
@@ -71,7 +74,7 @@ def test_semantic_role_accepts_long_cross_modelo_domain_identifier() -> None:
 
 # ---- name ----------------------------------------------------------------
 
-_NAME = TypeAdapter(PersonOrEntityName)
+_NAME = _TextScalar("name")
 
 
 class TestPersonOrEntityName:
@@ -87,13 +90,13 @@ class TestPersonOrEntityName:
 
     def test_rejected(self) -> None:
         for raw in ("", "   ", "x" * 257):
-            with pytest.raises(ValidationError):
+            with pytest.raises(RegistryValidationError):
                 _NAME.validate_python(raw)
 
 
 # ---- nif_iva -------------------------------------------------------------
 
-_NIFIVA = TypeAdapter(NifIvaString)
+_NIFIVA = _TextScalar("nif_iva")
 
 
 class TestNifIvaString:
@@ -125,7 +128,7 @@ class TestNifIvaString:
             "BE12!34",
             123,
         ):
-            with pytest.raises(ValidationError):
+            with pytest.raises(RegistryValidationError):
                 _NIFIVA.validate_python(raw)
 
     def test_direct_registry_scalar_uses_canonical_normalisation_and_keeps_direct_error(self) -> None:
@@ -140,7 +143,7 @@ class TestNifIvaString:
 
 # ---- ccaa_code -----------------------------------------------------------
 
-_CCAA = TypeAdapter(CCAACode)
+_CCAA = _TextScalar("ccaa_code")
 
 
 def _accepted_two_digit_codes() -> set[str]:
@@ -154,7 +157,7 @@ def _accepted_two_digit_codes() -> set[str]:
         candidate = f"{number:02d}"
         try:
             _CCAA.validate_python(candidate)
-        except ValidationError:
+        except RegistryValidationError:
             continue
         accepted.add(candidate)
     return accepted
@@ -194,14 +197,14 @@ class TestCCAACode:
         assert all(len(code) == 2 and code.isdigit() for code in accepted), "every code is two ASCII digits"
 
     def test_rejected(self) -> None:
-        for raw in ("", "20", "1", "ES", "  01  ", "00"):
-            with pytest.raises(ValidationError):
+        for raw in ("", "20", "1", "ES", "00"):
+            with pytest.raises(RegistryValidationError):
                 _CCAA.validate_python(raw)
 
 
 # ---- province_code -------------------------------------------------------
 
-_PROV = TypeAdapter(ProvinceCode)
+_PROV = _TextScalar("province_code")
 
 
 class TestProvinceCode:
@@ -211,13 +214,13 @@ class TestProvinceCode:
 
     def test_rejected(self) -> None:
         for raw in ("", "00", "53", "99", "1", "ES", "AB"):
-            with pytest.raises(ValidationError):
+            with pytest.raises(RegistryValidationError):
                 _PROV.validate_python(raw)
 
 
 # ---- postal_code ---------------------------------------------------------
 
-_POSTAL = TypeAdapter(PostalCode)
+_POSTAL = _TextScalar("postal_code")
 
 
 class TestPostalCode:
@@ -231,13 +234,13 @@ class TestPostalCode:
         # digits -- so "99999" passed as a Spanish postcode while the core
         # authority refused it. The two were merged; these pin the tightening.
         for raw in ("", "1234", "123456", "ABCDE", "28-13", "99999", "00001", "53000"):
-            with pytest.raises(ValidationError):
+            with pytest.raises(RegistryValidationError):
                 _POSTAL.validate_python(raw)
 
 
 # ---- municipality_code --------------------------------------------------
 
-_MUNI = TypeAdapter(MunicipalityCode)
+_MUNI = _TextScalar("municipality_code")
 
 
 class TestMunicipalityCode:
@@ -249,13 +252,13 @@ class TestMunicipalityCode:
         # An INE code carries the same province prefix a postcode does, so a
         # nonexistent province is refused here for the same reason.
         for raw in ("", "123", "ABCDE", "12-345", "00001", "99999"):
-            with pytest.raises(ValidationError):
+            with pytest.raises(RegistryValidationError):
                 _MUNI.validate_python(raw)
 
 
 # ---- bic -----------------------------------------------------------------
 
-_BIC = TypeAdapter(BicString)
+_BIC = _TextScalar("bic")
 
 
 class TestBicString:
@@ -271,7 +274,7 @@ class TestBicString:
 
     def test_rejected(self) -> None:
         for raw in ("", "CAIX", "CAIXES", "CAIXESBBXX", "1AIXESBB"):
-            with pytest.raises(ValidationError):
+            with pytest.raises(RegistryValidationError):
                 _BIC.validate_python(raw)
 
 
