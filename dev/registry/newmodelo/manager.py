@@ -128,7 +128,7 @@ def _validate_modelo_id(modelo_id: str) -> None:
 def _validate_revision_id(revision_id: str) -> None:
     if not _REVISION_ID_RE.match(revision_id):
         raise NewModeloError(
-            f"{revision_id!r}: revision id must be a lowercase kebab-style ref, e.g. '2026-y-siguientes'",
+            f"{revision_id!r}: revision id must be a lowercase kebab-style ref, e.g. '<year>-y-siguientes'",
         )
 
 

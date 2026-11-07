@@ -106,11 +106,9 @@ class M3902022NumberedAnchorCensus:
 
 
 def _require_2022_source_identity(intermediate: RecordDesignIntermediate) -> None:
-    """Refuse an intermediate built from another source or design epoch."""
+    """Refuse an intermediate built from another source; the source pins its own design epoch."""
     if str(intermediate.source.source_ref) != "aeat-dr-390-2022":
         raise ValueError("M390 2022 numbered-anchor census requires aeat-dr-390-2022")
-    if intermediate.source.design_epoch != "2022":
-        raise ValueError("M390 2022 numbered-anchor census requires design epoch '2022'")
 
 
 def _validated_anchor_set(fields: tuple[RecordDesignIntermediateField, ...]) -> frozenset[M390NumberedAnchor]:

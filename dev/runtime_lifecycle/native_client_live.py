@@ -39,6 +39,7 @@ import sysconfig
 import tempfile
 from pathlib import Path
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from dev.temporary_output import prepare_temp_root
 
 from .caller_owned_root import AcceptanceError, Programs, caller_owned_runtime, require, run_cli
@@ -46,6 +47,12 @@ from .caller_owned_root import AcceptanceError, Programs, caller_owned_runtime, 
 _PROFILE_NAME = "native-client-live"
 _APPLICATION_MANIFEST = Path(__file__).resolve().parents[2] / "native" / "application" / "Cargo.toml"
 _DEFAULT_CONTRACT = Path(__file__).resolve().parents[2] / "build" / "windows-x64" / "generated" / "contract.rs"
+
+
+def _supported_filing_year() -> int:
+    """Return a year the published support envelope admits: its horizon."""
+    with bundled_indexed_authority().operation() as operation:
+        return operation.supported_filing_years().horizon
 
 
 def _programs() -> Programs:
@@ -155,7 +162,7 @@ def run(contract: Path, keep: bool) -> int:
                 "--modelo",
                 "303",
                 "--year",
-                "2026",
+                str(_supported_filing_year()),
                 "--period",
                 "1T",
                 "--allow-not-applicable",
