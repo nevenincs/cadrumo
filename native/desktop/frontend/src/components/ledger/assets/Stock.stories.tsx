@@ -18,6 +18,7 @@ import { translator } from "../../../shell/strings";
 import { usePagePause, WritePauseContext } from "../WritePause";
 import type { SetupProps } from "../setup/setupProps";
 import { StockPane } from "./StockPane";
+import { fixtureDay } from "@/dev/fixtureDates";
 
 // The Stock panel of the Assets tab over the scenario's ledger: its books for
 // a year, the forms to add a book and a movement, a valuation shown, and the
@@ -363,7 +364,7 @@ async function writePurchase(context: PlayContext) {
   await pick(context, t("desktop.ledger.inventory.kind_label"), "purchase");
   const write = async (label: string, text: string) =>
     typeAsAPerson((await field(context, label)) as HTMLInputElement, text);
-  await write(t("desktop.ledger.inventory.date"), "2026-03-04");
+  await write(t("desktop.ledger.inventory.date"), fixtureDay(3, 4));
   await write(t("desktop.ledger.inventory.quantity"), "100");
   await write(t("desktop.ledger.stock.field.price"), "1000.50");
   await write(t("desktop.ledger.stock.field.iva"), "210.11");
@@ -382,7 +383,7 @@ export const MovementDateNamesNoDay: Story = {
     await press(context, t("desktop.ledger.stock.action.add_movement"));
     await userEvent.type(
       await field(context, t("desktop.ledger.inventory.date")),
-      "2026-02-30",
+      fixtureDay(2, 30),
     );
     await press(context, t("desktop.ledger.stock.submit.movement"));
   },
@@ -510,7 +511,7 @@ export const RefusedStockBelowZero: Story = {
     );
     await userEvent.type(
       await field(context, t("desktop.ledger.inventory.date")),
-      "2026-12-01",
+      fixtureDay(12, 1),
     );
     await pick(context, t("desktop.ledger.inventory.kind_label"), "cogs");
     await userEvent.type(

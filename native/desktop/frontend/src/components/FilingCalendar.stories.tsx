@@ -18,6 +18,7 @@ import { useStrings } from "../shell/strings";
 import { FilingCalendarView, type CalendarMemory } from "./FilingCalendar";
 import { PaneHeader } from "./PaneHeader";
 import { SignedOut } from "./SignIn";
+import { fixtureDay, fixtureMonth } from "@/dev/fixtureDates";
 
 // The filing calendar page in every state, over a fixed calendar in the
 // product's own shape. The toolbar's language also sets how dates are
@@ -208,7 +209,7 @@ export const BusyWhole: Story = {
     state: { kind: "ready", calendar: BUSY_CALENDAR },
     today: BUSY_TODAY,
     pane: true,
-    left: { asked: new Set(["2027-01"]) },
+    left: { asked: new Set([fixtureMonth(1, 1)]) },
   },
 };
 
@@ -216,7 +217,7 @@ export const BusyWhole: Story = {
 // says the day, and does not call it today.
 export const AnotherDay: Story = {
   name: "Evaluated on another day",
-  args: { pane: true, view: "list", today: "2026-10-07" },
+  args: { pane: true, view: "list", today: fixtureDay(10, 7) },
 };
 
 export const Loading: Story = { args: { state: { kind: "loading" } } };

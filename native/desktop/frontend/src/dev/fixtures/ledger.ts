@@ -7,11 +7,12 @@ import type { CatalogueInvoice } from "../../shell/ledgerInvoiceOperations";
 import type { LedgerTransaction, PublicDecimal } from "../../shell/ledger";
 import { exampleInvoices } from "./ledgerInvoices";
 import { settlementOf } from "../ledgerSettlement";
+import { fixtureDay, fixtureInstant } from "@/dev/fixtureDates";
 
 /** The profile the fixture ledger belongs to: the profile fixture's own. */
 export const LEDGER_FIXTURE_PROFILE_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 /** The fixture's today: movements reach up to this day. */
-export const LEDGER_FIXTURE_TODAY = "2026-10-23";
+export const LEDGER_FIXTURE_TODAY = fixtureDay(10, 23);
 /** The year of the fixture's today, which the ledger is made for. */
 const FIXTURE_YEAR = LEDGER_FIXTURE_TODAY.slice(0, 4);
 /** The quarter a finalized Modelo 303 revision cites: its rows are sealed. */
@@ -823,7 +824,7 @@ export function fixtureLedger(): FixtureLedger {
   // exchange rate was not found, so its euro value is not known.
   const open = movements.filter(
     (movement) =>
-      movement.transaction.date >= "2026-07-01" &&
+      movement.transaction.date >= fixtureDay(7, 1) &&
       movement.transaction.lifecycle_state === "ACTIVE",
   );
   open
@@ -850,12 +851,12 @@ export function fixtureLedger(): FixtureLedger {
   // year's rows so none of those changes. Before the accounts were opened a
   // movement is bound to none.
   for (const [date, kind, amountCents, bound] of [
-    ["2003-05-14", PERSONAL[0]!, 2310, false],
-    ["2011-11-02", PERSONAL[1]!, 1475, false],
-    ["2019-06-21", OCCASIONAL[1]!, 3630, true],
-    ["2024-03-08", OCCASIONAL[1]!, 1815, true],
-    ["2024-12-19", PERSONAL[0]!, 6240, true],
-    ["2025-09-30", OCCASIONAL[0]!, 5600, true],
+    [fixtureDay(5, 14, -23), PERSONAL[0]!, 2310, false],
+    [fixtureDay(11, 2, -15), PERSONAL[1]!, 1475, false],
+    [fixtureDay(6, 21, -7), OCCASIONAL[1]!, 3630, true],
+    [fixtureDay(3, 8, -2), OCCASIONAL[1]!, 1815, true],
+    [fixtureDay(12, 19, -2), PERSONAL[0]!, 6240, true],
+    [fixtureDay(9, 30, -1), OCCASIONAL[0]!, 5600, true],
   ] as const) {
     push(kind, date, amountCents);
     const earlier = movements.at(-1)!;
@@ -877,7 +878,7 @@ export function fixtureLedger(): FixtureLedger {
         category_id: "cuotas_autonomos_ss",
         priority: 10,
         actor: "operator",
-        created_at: "2026-01-04T10:00:00Z",
+        created_at: fixtureInstant(1, 4, "10:00:00Z"),
       },
       {
         rule_id: hex64("HOJA VERDE|PERSONAL|"),
@@ -886,7 +887,7 @@ export function fixtureLedger(): FixtureLedger {
         category_id: null,
         priority: 50,
         actor: "operator",
-        created_at: "2026-01-04T10:02:00Z",
+        created_at: fixtureInstant(1, 4, "10:02:00Z"),
       },
       {
         rule_id: hex64("COMISION MANTENIMIENTO|BUSINESS|gastos_bancarios"),
@@ -895,7 +896,7 @@ export function fixtureLedger(): FixtureLedger {
         category_id: "gastos_bancarios",
         priority: 100,
         actor: "operator",
-        created_at: "2026-02-11T18:20:00Z",
+        created_at: fixtureInstant(2, 11, "18:20:00Z"),
       },
     ],
     accounts: [
@@ -909,7 +910,7 @@ export function fixtureLedger(): FixtureLedger {
         has_swift_bic: false,
         has_bank_block: false,
         currency: "EUR",
-        opened_on: "2019-03-01",
+        opened_on: fixtureDay(3, 1, -7),
         closed_on: null,
       },
       {
@@ -922,7 +923,7 @@ export function fixtureLedger(): FixtureLedger {
         has_swift_bic: false,
         has_bank_block: false,
         currency: "EUR",
-        opened_on: "2012-09-14",
+        opened_on: fixtureDay(9, 14, -14),
         closed_on: null,
       },
     ],

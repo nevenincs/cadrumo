@@ -19,6 +19,7 @@ import { LeaveDialog } from "./LeaveDialog";
 import { useLedgerEditing } from "./LedgerEditing";
 import { PasteDialog } from "./PasteDialog";
 import { stageTally, type EditKind, type PastePlan } from "./editingModel";
+import { fixtureDay } from "@/dev/fixtureDates";
 
 // What is staged and not yet saved: the tray at the foot of the page, the
 // review that checks it against the ledger and saves it, the guard before
@@ -305,7 +306,12 @@ const cell = (
 
 export const CellText = cell("text", "description", "Description", "Rent");
 export const CellAmount = cell("amount", "amount", "Amount", "1234.5");
-export const CellDate = cell("date", "booked_date", "Booked", "2026-10-23");
+export const CellDate = cell(
+  "date",
+  "booked_date",
+  "Booked",
+  fixtureDay(10, 23),
+);
 export const CellPercent = cell("percent", "iva_rate", "IVA rate", "21");
 export const CellAmountRefused = cell(
   "amount",
@@ -318,7 +324,7 @@ export const CellDateRefused = cell(
   "date",
   "booked_date",
   "Booked",
-  "2026-10-23",
+  fixtureDay(10, 23),
   "2026-13-45",
 );
 export const CellPercentRefused = cell(

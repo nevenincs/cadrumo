@@ -40,6 +40,7 @@ import {
   type Spec,
 } from "./ledgerEvidenceSeed";
 import { InvoiceRequestInvalid, InvoiceStopped } from "./ledgerInvoiceFixture";
+import { fixtureDay, fixtureInstant } from "@/dev/fixtureDates";
 
 declare global {
   interface Window {
@@ -237,7 +238,7 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
         invoice_number: image
           ? null
           : name.replace(/\.[a-z0-9]+$/i, "").toUpperCase(),
-        invoice_date: image ? null : "2026-10-20",
+        invoice_date: image ? null : fixtureDay(10, 20),
         taxable_base: image ? null : decimal("50.00"),
         iva_rate: image ? null : decimal("21"),
         iva_amount: image ? null : decimal("10.50"),
@@ -354,8 +355,8 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
         iva_rate: null,
         iva_amount: null,
         notes: "",
-        created_at: "2026-10-20T10:00:00Z",
-        updated_at: "2026-10-20T10:00:00Z",
+        created_at: fixtureInstant(10, 20, "10:00:00Z"),
+        updated_at: fixtureInstant(10, 20, "10:00:00Z"),
         source_path: spec.name,
       };
       ledger.evidence.push(record);
@@ -393,13 +394,13 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
         provider: "AGENT",
         model: "assistant-reader",
         surface: "runtime:ledger.evidence.extract",
-        recorded_at: "2026-10-11T09:12:00Z",
+        recorded_at: fixtureInstant(10, 11, "09:12:00Z"),
       });
       artefacts.push({
         evidence_reference: sent.evidence_id,
         provenance_stamp: "llm:assistant-reader",
         transport: "https",
-        drafted_at: "2026-10-11T09:12:04Z",
+        drafted_at: fixtureInstant(10, 11, "09:12:04Z"),
       });
     }
   }

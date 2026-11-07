@@ -73,6 +73,7 @@ import type {
   FixtureMovement,
   FixtureRule,
 } from "./fixtures/ledger";
+import { fixtureInstant } from "@/dev/fixtureDates";
 
 /** The scenario ledger's setup answers, held beside the movements. */
 export function setupOperations(ledger: FixtureLedger, tools: Tools) {
@@ -89,7 +90,7 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
         territorial_scope: "eu_member",
         identification_state: "LU",
         asserted_by: "person",
-        asserted_at: "2026-03-02T10:00:00Z",
+        asserted_at: fixtureInstant(3, 2, "10:00:00Z"),
         note: "",
       },
     ],

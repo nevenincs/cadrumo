@@ -92,6 +92,7 @@ import {
 } from "./ledgerRequestFixture";
 import { entryOperations } from "./ledgerEntryFixture";
 import { importOperations } from "./ledgerImportFixture";
+import { fixtureInstant } from "@/dev/fixtureDates";
 
 /** The longest reply, in bytes of compact JSON, the host takes from the
  * relay; one longer is lost. */
@@ -665,7 +666,7 @@ export function ledgerFixture(options: Options): LedgerPort {
         ),
         latest_llm_rejection: movement.llm_rejected
           ? {
-              occurred_at: "2026-10-02T09:30:00Z",
+              occurred_at: fixtureInstant(10, 2, "09:30:00Z"),
               operator_reason: "La propuesta no reconoce el proveedor.",
             }
           : null,

@@ -12,6 +12,7 @@ import type {
   InvoiceKind,
 } from "../shell/ledgerInvoiceOperations";
 import type { PublicDecimal } from "../shell/ledger";
+import { fixtureDay, fixtureInstant } from "@/dev/fixtureDates";
 
 export const decimal = (value: string | null): PublicDecimal | null =>
   value === null ? null : { decimal: value };
@@ -91,7 +92,7 @@ export const DOCUMENTS: Spec[] = [
     party: "Domestika SL",
     taxId: "B66000099",
     number: "DK-2026-55120",
-    date: "2026-10-07",
+    date: fixtureDay(10, 7),
     base: "200.00",
     rate: "21",
     iva: "42.00",
@@ -115,7 +116,7 @@ export const DOCUMENTS: Spec[] = [
     party: "Plenoil SL",
     taxId: null,
     number: "T-1015-0042",
-    date: "2026-10-15",
+    date: fixtureDay(10, 15),
     base: "48.26",
     rate: "21",
     iva: "10.13",
@@ -161,7 +162,7 @@ export const DOCUMENTS: Spec[] = [
     party: "Arroyo Asesores SL",
     taxId: "B98000013",
     number: "AA-2026-104",
-    date: "2026-10-01",
+    date: fixtureDay(10, 1),
     base: "60.00",
     rate: "21",
     iva: "12.60",
@@ -195,7 +196,7 @@ type Pairing = {
 export const MOVEMENTS: Pairing[] = [
   {
     key: "turia",
-    date: "2026-10-05",
+    date: fixtureDay(10, 5),
     amount: "1548.80",
     direction: "OUTGOING",
     counterparty: "Imprenta Gráficas Turia SL",
@@ -203,7 +204,7 @@ export const MOVEMENTS: Pairing[] = [
   },
   {
     key: "arroyo-cuota",
-    date: "2026-10-06",
+    date: fixtureDay(10, 6),
     amount: "72.60",
     direction: "OUTGOING",
     counterparty: "Arroyo Asesores SL",
@@ -211,7 +212,7 @@ export const MOVEMENTS: Pairing[] = [
   },
   {
     key: "arroyo-linked",
-    date: "2026-10-02",
+    date: fixtureDay(10, 2),
     amount: "72.60",
     direction: "OUTGOING",
     counterparty: "Arroyo Asesores SL",
@@ -220,7 +221,7 @@ export const MOVEMENTS: Pairing[] = [
   },
   {
     key: "norte-a",
-    date: "2026-10-12",
+    date: fixtureDay(10, 12),
     amount: "605.00",
     direction: "INCOMING",
     counterparty: "Norte Digital SL",
@@ -228,7 +229,7 @@ export const MOVEMENTS: Pairing[] = [
   },
   {
     key: "norte-b",
-    date: "2026-10-12",
+    date: fixtureDay(10, 12),
     amount: "605.00",
     direction: "INCOMING",
     counterparty: "Norte Digital SL",
@@ -236,7 +237,7 @@ export const MOVEMENTS: Pairing[] = [
   },
   {
     key: "correos",
-    date: "2026-10-14",
+    date: fixtureDay(10, 14),
     amount: "39.90",
     direction: "OUTGOING",
     counterparty: "Sociedad Estatal Correos",
@@ -244,7 +245,7 @@ export const MOVEMENTS: Pairing[] = [
   },
   {
     key: "trazo",
-    date: "2026-10-15",
+    date: fixtureDay(10, 15),
     amount: "18.17",
     direction: "OUTGOING",
     counterparty: "Papelería Trazo",
@@ -253,7 +254,7 @@ export const MOVEMENTS: Pairing[] = [
   },
   {
     key: "lost",
-    date: "2026-10-16",
+    date: fixtureDay(10, 16),
     amount: "12.10",
     direction: "OUTGOING",
     counterparty: "Copistería Centro",
@@ -262,7 +263,7 @@ export const MOVEMENTS: Pairing[] = [
   },
   {
     key: "domestika",
-    date: "2026-10-08",
+    date: fixtureDay(10, 8),
     amount: "242.00",
     direction: "OUTGOING",
     counterparty: "Domestika SL",
@@ -284,7 +285,7 @@ export const INVOICES: SeedInvoice[] = [
   {
     number: "GT-2026-0917",
     kind: "received",
-    issued: "2026-09-17",
+    issued: fixtureDay(9, 17),
     party: "Imprenta Gráficas Turia SL",
     taxId: "B46000017",
     base: "1280.00",
@@ -294,7 +295,7 @@ export const INVOICES: SeedInvoice[] = [
   {
     number: "AA-2026-118",
     kind: "received",
-    issued: "2026-10-01",
+    issued: fixtureDay(10, 1),
     party: "Arroyo Asesores SL",
     taxId: "B98000013",
     base: "60.00",
@@ -304,7 +305,7 @@ export const INVOICES: SeedInvoice[] = [
   {
     number: "AA-2026-119",
     kind: "received",
-    issued: "2026-10-01",
+    issued: fixtureDay(10, 1),
     party: "Arroyo Asesores SL",
     taxId: "B98000013",
     base: "60.00",
@@ -314,7 +315,7 @@ export const INVOICES: SeedInvoice[] = [
   {
     number: "AA-2026-104",
     kind: "received",
-    issued: "2026-10-01",
+    issued: fixtureDay(10, 1),
     party: "Arroyo Asesores SL",
     taxId: "B98000013",
     base: "60.00",
@@ -324,7 +325,7 @@ export const INVOICES: SeedInvoice[] = [
   {
     number: "N-2026-0005",
     kind: "issued",
-    issued: "2026-10-09",
+    issued: fixtureDay(10, 9),
     party: "Norte Digital SL",
     taxId: "B48000031",
     base: "500.00",
@@ -334,7 +335,7 @@ export const INVOICES: SeedInvoice[] = [
   {
     number: "C-2026-7781",
     kind: "received",
-    issued: "2026-10-13",
+    issued: fixtureDay(10, 13),
     party: "Sociedad Estatal Correos",
     taxId: "A83000052",
     base: "32.98",
@@ -344,7 +345,7 @@ export const INVOICES: SeedInvoice[] = [
   {
     number: "PT-2026-0412",
     kind: "received",
-    issued: "2026-10-15",
+    issued: fixtureDay(10, 15),
     party: "Papelería Trazo",
     taxId: "B12000045",
     base: "15.02",
@@ -438,7 +439,7 @@ export const ATTACHMENTS: Omit<
     bytes_size: 84_211,
     source: "GMAIL",
     provider_locator: "msg-18c2f0a1",
-    captured_at: "2026-10-03T08:14:00Z",
+    captured_at: fixtureInstant(10, 3, "08:14:00Z"),
     linked_invoice_ids: [],
     pending_review: true,
   },
@@ -447,7 +448,7 @@ export const ATTACHMENTS: Omit<
     bytes_size: 51_022,
     source: "GOOGLE_DRIVE",
     provider_locator: "drive-1AbCdEf",
-    captured_at: "2026-10-19T17:40:00Z",
+    captured_at: fixtureInstant(10, 19, "17:40:00Z"),
     linked_invoice_ids: [],
     pending_review: false,
   },

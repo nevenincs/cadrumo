@@ -20,6 +20,7 @@ import {
   type FixtureLedger,
   type FixtureMovement,
 } from "./fixtures/ledger";
+import { fixtureInstant } from "@/dev/fixtureDates";
 
 /** A request its registered contract would not decode. */
 export class MovementActionInvalid extends Error {}
@@ -256,7 +257,7 @@ export function movementActionOperations(ledger: FixtureLedger, tools: Tools) {
     if (movement.llm_rejected)
       base.push({
         event_type: "ledger.transaction.llm_suggestion.rejected",
-        occurred_at: "2026-10-02T09:30:00Z",
+        occurred_at: fixtureInstant(10, 2, "09:30:00Z"),
         object_id: id,
         details: {
           suggestion_kind: "classification",

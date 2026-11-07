@@ -22,6 +22,7 @@ import {
   servedMinimumAcquisitionYear,
   servedYearBounds,
 } from "./servedYearAuthority";
+import { fixtureInstant } from "@/dev/fixtureDates";
 
 /** The year the scenario stands in, and the earlier years the registers hold
  * entries for. */
@@ -84,7 +85,7 @@ export function prorrataOperations(tools: Tools) {
       sector_id: null,
       gross: "1234.56",
       evidence: "LIQ-2026-1T",
-      declared_at: "2026-02-10T09:00:00Z",
+      declared_at: fixtureInstant(2, 10, "09:00:00Z"),
     },
   ];
   const capital: JsonObject[] = [
