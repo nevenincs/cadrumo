@@ -15,6 +15,7 @@ from typing import Final
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.packaging.cohort_manifest import ArtifactKind
 from dev.paths import REPO_ROOT
 
@@ -157,7 +158,7 @@ def _write_cohort_manifest(directory: Path) -> Path:
         root=directory,
         version="9.9.9",
         source=SourceIdentity(source_digest="a" * 64),
-        created_at=datetime(2026, 1, 1, tzinfo=UTC),
+        created_at=datetime(filing_year_envelope().horizon, 1, 1, tzinfo=UTC),
         builder=BuildIdentity(
             implementation="dev.packaging.release_cohort",
             format_version=1,

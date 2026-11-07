@@ -21,6 +21,7 @@ from typing import cast
 import pytest
 from pydantic import JsonValue
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.golden_comparison import MASK_SENTINEL
 
 from ..compare import check_transcript, compare_transcript_to_golden, evaluate_expectations
@@ -239,7 +240,7 @@ def test_ids_minted_by_a_setup_frame_stay_masked_in_later_text() -> None:
     transcript = SequenceTranscript(
         sequence_id="setup-mask-case",
         profile_id="docs-sequence-sandbox",
-        frozen_instant=datetime(2026, 4, 1, 9, 0, tzinfo=UTC),
+        frozen_instant=datetime(filing_year_envelope().horizon, 4, 1, 9, 0, tzinfo=UTC),
         storage_root="/sandbox/cadrumo-storage",
         workdir="/sandbox/workdir",
         frames=frames,

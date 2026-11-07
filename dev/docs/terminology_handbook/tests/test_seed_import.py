@@ -23,6 +23,7 @@ import pytest
 
 from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..enrolment import EnrolmentCandidate
 from ..enums import ConceptDomain, TermStatus
@@ -43,7 +44,7 @@ from ..seed_import import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_TODAY = date(2026, 6, 11)
+_TODAY = date(filing_year_envelope().horizon, 6, 11)
 _FIXTURES = Path(__file__).parent / "fixtures"
 
 # A controlled concept whose es preferred label is the Spanish key the

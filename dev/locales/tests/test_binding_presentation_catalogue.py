@@ -10,6 +10,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import lookup_translation
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.modelo_localization import construct_lineage_locale_key
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, open_ended_revision
 from dev.registry.compiler.loader import load_modelo_locale_key_projection
 
 from ..manager import LocaleManager
@@ -60,7 +61,7 @@ def test_published_casilla_audit_retains_binding_presentation_keys() -> None:
         index
         for index, occurrence in enumerate(catalogue.occurrences)
         if (occurrence.modelo, occurrence.revision, occurrence.casilla)
-        == ("131", "2026-3t-4t", "construct:modelo-131-objective-estimation-instalment")
+        == ("131", authored_revisions("131")[-1].id, "construct:modelo-131-objective-estimation-instalment")
     )
     assert catalogue.occurrences[late_index].chain("label")[-1] == shared_title
     assert all(
@@ -71,7 +72,7 @@ def test_published_casilla_audit_retains_binding_presentation_keys() -> None:
     m151_model_label = [
         index
         for index, occurrence in enumerate(catalogue.occurrences)
-        if (occurrence.modelo, occurrence.revision) == ("151", "2025-y-siguientes")
+        if (occurrence.modelo, occurrence.revision) == ("151", open_ended_revision("151").id)
         and catalogue.resolve(index, "label", "es") == "Modelo"
     ]
     assert len(m151_model_label) == 1

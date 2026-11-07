@@ -20,6 +20,7 @@ import pytest
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..enums import ConceptDomain, TermStatus
 from ..errors import TerminologyLoadError, TerminologyValidationError
@@ -35,6 +36,8 @@ from .support import write_concept_fragment
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+_CREATED = date(filing_year_envelope().floor, 1, 2)
+_UPDATED = date(filing_year_envelope().horizon, 6, 9)
 _FULL_FRAGMENT = """
 [concept]
 concept_id = "recargo-equivalencia"
@@ -44,8 +47,8 @@ domain_refs = ["modelo:303", "modelo:390"]
 legal_refs = ["ley-37-1992:art-148", "ley-37-1992:art-154"]
 broader = ["iva"]
 related = ["modulos"]
-created_at = 2024-01-02
-updated_at = 2026-06-09
+created_at = @CREATED@
+updated_at = @UPDATED@
 
 [concept.seed_provenance]
 source = "ubterm"
@@ -85,7 +88,7 @@ authority = "boe"
 label = "equivalence surcharge"
 term_status = "preferred"
 part_of_speech = "phrase"
-"""
+""".replace("@CREATED@", _CREATED.isoformat()).replace("@UPDATED@", _UPDATED.isoformat())
 
 _BROADER_PARENT = """
 [concept]
@@ -120,8 +123,8 @@ def test_full_fragment_round_trips_with_every_field_preserved(tmp_path: Path) ->
     assert record.broader == ("iva",)
     assert record.related == ("modulos",)
     assert record.replaced_by is None
-    assert record.created_at == date(2024, 1, 2)
-    assert record.updated_at == date(2026, 6, 9)
+    assert record.created_at == _CREATED
+    assert record.updated_at == _UPDATED
 
     assert record.seed_provenance is not None
     assert record.seed_provenance.source == "ubterm"

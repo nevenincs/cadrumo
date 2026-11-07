@@ -22,6 +22,7 @@ import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.modelo import Modelo
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ..resolution import (
     ChunkHit,
@@ -65,7 +66,8 @@ def _real_casilla_target(score: float, *, index: int = 0) -> ResolvedTarget:
 
     records = project_modelo_casillas(Modelo("303"))
     unified = to_search_record(records[index])
-    path = f"src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/casillas/{index:04d}-casillas.part-001.toml"
+    oldest = authored_revisions("303")[0].id
+    path = f"src/cadrumo/_data/registry/aeat/modelos/303/revisions/{oldest}/casillas/{index:04d}-casillas.part-001.toml"
     return ResolvedTarget(surface=GroundingSurface.CASILLA, record=unified, source_hit=_hit(path, score))
 
 

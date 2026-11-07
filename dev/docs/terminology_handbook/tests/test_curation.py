@@ -18,6 +18,7 @@ from typing import Final
 import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..curation import (
     CurationError,
@@ -35,7 +36,7 @@ from ..scaffold import ScaffoldAction, scaffold_handbook
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_TODAY = date(2026, 6, 10)
+_TODAY = date(filing_year_envelope().horizon, 6, 10)
 
 _PRORRATA = """
 [concept]

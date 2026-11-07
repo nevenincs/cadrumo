@@ -15,6 +15,7 @@ import pytest
 
 from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..enrolment import EnrolmentCandidate, SeedLabel, collect_enrolment_candidates
 from ..enums import ConceptDomain
@@ -27,7 +28,7 @@ from .support import write_concept_fragment
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-_TODAY = date(2026, 6, 10)
+_TODAY = date(filing_year_envelope().horizon, 6, 10)
 
 _CURATED = """
 [concept]

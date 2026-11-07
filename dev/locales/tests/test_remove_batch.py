@@ -33,8 +33,9 @@ from ..paths import LOCALES_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_KEY = "modelo.schema.999.revision.2024.casilla.zztestprobe.help"
-_ABSENT = "modelo.schema.999.revision.2024.casilla.zznotthere.help"
+_REVISION = "synthetic-edition"
+_KEY = f"modelo.schema.999.revision.{_REVISION}.casilla.zztestprobe.help"
+_ABSENT = f"modelo.schema.999.revision.{_REVISION}.casilla.zznotthere.help"
 _SHARD = Path("es") / "modelo" / "schema" / "999.yml"
 
 
@@ -44,7 +45,7 @@ def _manager(root: Path) -> LocaleManager:
 
 def _casillas(root: Path) -> dict[str, LocaleNode]:
     cursor: LocaleNode = _manager(root).load_locale(root / "locales" / _SHARD)
-    for part in ("modelo", "schema", "999", "revision", "2024", "casilla"):
+    for part in ("modelo", "schema", "999", "revision", _REVISION, "casilla"):
         if not isinstance(cursor, dict):
             raise AssertionError(f"catalogue path ended before {part!r}")
         cursor = cursor[part]
@@ -64,7 +65,7 @@ def probe(tmp_path: Path) -> Path:
     shard = tmp_path / "locales" / _SHARD
     shard.parent.mkdir(parents=True)
     shard.write_text(
-        "modelo:\n  schema:\n    '999':\n      revision:\n        '2024':\n"
+        f"modelo:\n  schema:\n    '999':\n      revision:\n        '{_REVISION}':\n"
         "          casilla:\n            '01':\n              label: 'Base imponible'\n",
         encoding="utf-8",
     )

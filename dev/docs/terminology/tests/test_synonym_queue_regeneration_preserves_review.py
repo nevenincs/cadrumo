@@ -35,6 +35,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ..synonym_cli import app
 from ..synonym_mining import (
     RatificationStatus,
@@ -148,13 +150,13 @@ def test_carry_forward_reattaches_a_decision_whose_row_the_miner_still_produces(
         competing_concept_id=target.competing_concept_id,
         status=RatificationStatus.REJECTED,
         review_reason="Rejected in review as a near-duplicate of an admitted term.",
-        reviewed_at=date(2026, 9, 7),
+        reviewed_at=date(filing_year_envelope().horizon, 9, 7),
     )
     prior = SynonymRatificationQueue(generated_by="test", entries=(decision,))
     carried = carry_forward_review_state(mine_synonym_candidates(_observations_from(queue)), prior)
     landed = {entry.candidate: entry for entry in carried.entries}
     assert landed[target.candidate].status is RatificationStatus.REJECTED
-    assert landed[target.candidate].reviewed_at == date(2026, 9, 7)
+    assert landed[target.candidate].reviewed_at == date(filing_year_envelope().horizon, 9, 7)
     assert not reviewed_decisions_dropped(carried, prior)
 
 

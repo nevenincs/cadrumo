@@ -24,6 +24,8 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
+
 from ..manager import LocaleManager
 from ..paths import LOCALES_DIR, SRC_DIR
 from ..registry_scanner import scan_modelo_schema_keys
@@ -97,13 +99,13 @@ def test_an_unmoved_rename_is_reported_in_both_directions(
     it here rather than by editing the registry keeps the tree untouched while
     exercising the same function the two gates above call.
     """
-    modelo, old_revision = "303", "2023"
-    renamed = _rename_revision(registry_keys, modelo, old_revision, "2023-renamed")
+    modelo, old_revision = "303", authored_revisions("303")[0].id
+    renamed = _rename_revision(registry_keys, modelo, old_revision, f"{old_revision}-renamed")
     assert renamed != registry_keys, f"{modelo}/{old_revision} must exist for this proof to mean anything"
 
     findings = classify_revision_parity(renamed, catalogue_keys["es"])
     assert (modelo, old_revision) in findings.stale
-    assert (modelo, "2023-renamed") in findings.absent
+    assert (modelo, f"{old_revision}-renamed") in findings.absent
 
 
 def test_an_unmoved_rename_is_reported_as_a_move_with_its_invocation(
@@ -116,7 +118,8 @@ def test_an_unmoved_rename_is_reported_as_a_move_with_its_invocation(
     on both sides of the report, recognised as one relocation and printed with
     the verb that performs it.
     """
-    modelo, old_revision, new_revision = "303", "2023", "2023-renamed"
+    modelo, old_revision = "303", authored_revisions("303")[0].id
+    new_revision = f"{old_revision}-renamed"
     renamed = _rename_revision(registry_keys, modelo, old_revision, new_revision)
     catalogue = catalogue_keys["es"]
 

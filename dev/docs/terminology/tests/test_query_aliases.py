@@ -10,6 +10,7 @@ from pydantic import ValidationError
 
 from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ...terminology_handbook.loader import load_terminology_handbook
 from ..query_aliases import (
@@ -35,7 +36,7 @@ def _entry(**updates: object) -> QueryAliasEntry:
         "canonical_query": "prorrata",
         "status": "ratified",
         "review_reason": "RAG-grounded project wording reviewed for the closed vocabulary.",
-        "reviewed_at": date(2026, 8, 6),
+        "reviewed_at": date(filing_year_envelope().horizon, 8, 6),
     }
     data.update(updates)
     return QueryAliasEntry.model_validate(data)
@@ -68,7 +69,7 @@ def test_bundled_authority_is_versioned_and_contains_independently_ratified_alia
             "canonical_query": "modelo 130",
             "status": "ratified",
             "review_reason": "Independent RAG grounding and live sweep resolve the user term to Modelo 130.",
-            "reviewed_at": "2026-08-06",
+            "reviewed_at": f"{filing_year_envelope().horizon}-08-06",
         },
         {
             "concept_id": "modelo-303",
@@ -77,7 +78,7 @@ def test_bundled_authority_is_versioned_and_contains_independently_ratified_alia
             "canonical_query": "modelo 303",
             "status": "ratified",
             "review_reason": "Independent RAG grounding and live sweep resolve the user term to Modelo 303.",
-            "reviewed_at": "2026-08-07",
+            "reviewed_at": f"{filing_year_envelope().horizon}-08-07",
         },
     ]
     assert (

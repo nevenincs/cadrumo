@@ -12,6 +12,7 @@ import yaml
 from pydantic import ValidationError
 
 from cadrumo.application.inventory.registered_options_operation import INVENTORY_OPTION_FAMILIES, inventory_options
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.contribuyente.inventory.closing_foundations import InventoryClosingAuthority
 from cadrumo.domain.contribuyente.inventory.records import (
     InventoryAcquisitionEvidenceKind,
@@ -83,7 +84,10 @@ def test_each_role_marks_the_member_the_domain_rules_treat_that_way() -> None:
         load_inventory_acquisition_cost(cost({**kinds, "cost": kinds["iva"], "iva": kinds["cost"]}))
 
     made = MovementRecord.from_purchase_acquisition(
-        movement_id="m", movement_date=date(2026, 1, 1), quantity=Decimal("1"), acquisition_cost=purchase
+        movement_id="m",
+        movement_date=date(filing_year_envelope().horizon, 1, 1),
+        quantity=Decimal("1"),
+        acquisition_cost=purchase,
     )
     assert roles["purchase"] == ("movement_kind", made.kind.value)
     assert roles["count_authority"] == ("closing_authority", InventoryClosingAuthority.PHYSICAL_OBSERVATION.value)

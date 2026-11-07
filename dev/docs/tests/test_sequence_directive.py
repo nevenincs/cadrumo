@@ -29,6 +29,8 @@ from typing import Any
 import pytest
 from sphinx.application import Sphinx
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ..sequence_directive import (
     build_sequence_payload,
     inline_sequence_payload,
@@ -43,16 +45,17 @@ from ..sequences.tokeniser import TokenKind, tokenise_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
+_YEAR = str(filing_year_envelope().horizon)
 _SEQUENCE_ID = "modelo-303-first-quarter"
 _PAGE = "index"
 
 _DIRECTIVE_BODY = """:verify: Verify the calculation before exporting.
 @setup aeat app ledger import --file fixtures/x.csv
-aeat app modelo work create 303 --year 2026 --period 1T
+aeat app modelo work create 303 --year @YEAR@ --period 1T
 @capture work_unit_id result.work_unit_id
 aeat app modelo work calculate {work_unit_id}
 @result aeat app modelo work verify {work_unit_id}
-@expect result.status == "verified_complete\""""
+@expect result.status == "verified_complete\"""".replace("@YEAR@", _YEAR)
 
 
 def _parsed_sequence() -> ParsedSequence:
@@ -81,7 +84,7 @@ def _golden() -> SequenceGolden:
             ),
             GoldenFrame(
                 kind=FrameKind.COMMAND,
-                argv=("aeat", "app", "modelo", "work", "create", "303", "--year", "2026", "--period", "1T"),
+                argv=("aeat", "app", "modelo", "work", "create", "303", "--year", _YEAR, "--period", "1T"),
                 exit_code=0,
                 envelope={
                     "schema_version": 1,
@@ -551,7 +554,7 @@ def test_directive_refuses_a_payload_less_result_frame(tmp_path: Path, isolated_
 
 def test_short_command_is_not_wrapped() -> None:
     """A command that fits in the width budget renders on a single line."""
-    tokens = ["aeat", "app", "modelo", "work", "create", "303", "--year", "2026", "--period", "1T"]
+    tokens = ["aeat", "app", "modelo", "work", "create", "303", "--year", _YEAR, "--period", "1T"]
     lines = wrap_token_lines(tokens)
     assert lines == [list(range(len(tokens)))]
 
@@ -568,7 +571,7 @@ def test_long_command_wraps_at_token_boundaries_and_reassembles() -> None:
         "--provider",
         "caixabank",
         "--year",
-        "2026",
+        _YEAR,
         "--period",
         "1T",
         "--verbose",
@@ -620,7 +623,7 @@ def _wrapping_golden(sequence_id: str) -> SequenceGolden:
 
 _LONG_BODY = (
     "@result aeat app ledger import --file fixtures/2026-first-quarter-bank-statement.csv "
-    "--provider caixabank --year 2026 --period 1T --verbose\n"
+    f"--provider caixabank --year {_YEAR} --period 1T --verbose\n"
     "@expect exit_code == 0"
 )
 
@@ -843,7 +846,7 @@ def test_mixed_sequence_renders_trailing_static_frame_without_output() -> None:
         sequence_id="file-303",
         options={"verify": "Confirm the draft is verified before uploading."},
         body=(
-            "aeat app modelo work create 303 --year 2026 --period 1T\n"
+            f"aeat app modelo work create 303 --year {_YEAR} --period 1T\n"
             "@result aeat app modelo work verify wu\n"
             '@expect result.status == "ok"\n'
             "@step Upload the exported file at the AEAT portal yourself.\n"
@@ -856,7 +859,7 @@ def test_mixed_sequence_renders_trailing_static_frame_without_output() -> None:
         frames=(
             GoldenFrame(
                 kind=FrameKind.COMMAND,
-                argv=("aeat", "app", "modelo", "work", "create", "303", "--year", "2026", "--period", "1T"),
+                argv=("aeat", "app", "modelo", "work", "create", "303", "--year", _YEAR, "--period", "1T"),
                 exit_code=0,
                 envelope={"schema_version": 1, "command": "c", "status": "ok", "notices": [], "result": {}},
                 envelope_source="stdout",
