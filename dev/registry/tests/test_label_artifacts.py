@@ -10,6 +10,7 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.registry_scope import validate_registry_scope
 from ..compiler.validate_label_artifacts import (
@@ -23,6 +24,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SAMPLE_UNRESOLVED_PLACEHOLDER = "{" + "0" + "}"
 _TEST_CASILLA_ID: CasillaId = validated_casilla_id("0001", surface="_TEST_CASILLA_ID")
+_YEAR = filing_year_envelope().horizon
+_REVISION = str(_YEAR)
 
 __all__ = ["synthetic_locale_scope"]
 
@@ -41,10 +44,10 @@ def _modelo_with_label(label: str) -> ModeloDefinition:
     )
     revision = ModeloRevision.model_validate(
         {
-            "id": "2025",
-            "localization_key": "test.schema.revision.2025.label",
-            "valid_from": date(2025, 1, 1),
-            "period_selector": PeriodSelector(years=(2025,), periods=("0A",)),
+            "id": _REVISION,
+            "localization_key": f"test.schema.revision.{_REVISION}.label",
+            "valid_from": date(_YEAR, 1, 1),
+            "period_selector": PeriodSelector(years=(_YEAR,), periods=("0A",)),
             "legal_refs": ("ley-58-2003:art-29",),
             "source_refs": ("aeat-manual",),
             "casillas": (casilla,),
@@ -60,7 +63,7 @@ def _modelo_with_label(label: str) -> ModeloDefinition:
             "jurisdiction": "ES-AEAT",
             "legal_refs": ("ley-58-2003:art-29",),
             "source_refs": ("aeat-manual",),
-            "revisions": {"2025": revision},
+            "revisions": {_REVISION: revision},
         },
     )
 
@@ -73,7 +76,7 @@ def test_label_artifact_inventory_reports_unresolved_format_placeholder() -> Non
     assert len(findings) == 1
     finding = findings[0]
     assert finding.modelo_id == "999"
-    assert finding.revision_id == "2025"
+    assert finding.revision_id == _REVISION
     assert finding.casilla_id == _TEST_CASILLA_ID
     assert finding.artifact == "unresolved_format_placeholder"
     assert finding.placeholder_token == _SAMPLE_UNRESOLVED_PLACEHOLDER
@@ -85,7 +88,7 @@ def test_label_artifact_validator_reports_unresolved_format_placeholder() -> Non
     failures = validate_no_label_artifacts([modelo])
 
     assert len(failures) == 1
-    assert "modelo 999 revision 2025 casilla 0001" in failures[0]
+    assert f"modelo 999 revision {_REVISION} casilla 0001" in failures[0]
     assert "unresolved_format_placeholder" in failures[0]
 
 

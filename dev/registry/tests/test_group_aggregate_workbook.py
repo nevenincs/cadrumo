@@ -8,6 +8,7 @@ from cadrumo.application.storage.calc_sheets.layout import plan_layout
 from cadrumo.application.storage.calc_sheets.records import TabName
 from cadrumo.core.i18n.render import lookup_translation
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from cadrumo.domain.period import calculation_filing_date
 
 from ..workbook_demo_group_aggregate import build_group_aggregate_plan
@@ -60,12 +61,14 @@ def _assert_group_form_text_and_headings(source, plan) -> None:
 
 @pytest.mark.parametrize("period,pages", [("01", 1), ("02", 2)])
 def test_group_example_keeps_member_values_and_settlement_formula_sources(period: str, pages: int) -> None:
-    source, plan = build_group_aggregate_plan(year=2026, period=period)
+    # The pages differ by period because the newest design takes over inside its first exercise.
+    year = newest_authored_edition("353")
+    source, plan = build_group_aggregate_plan(year=year, period=period)
     assert len(source.revision.form_layouts[0].pages) == pages
     assert plan.metadata.template_digest == source.template_digest
     assert plan.tabs[0] is TabName.FORM
     layout = plan_layout(
-        source.revision, bracket_filter_date=calculation_filing_date(Period.from_year_and_code(2026, period))
+        source.revision, bracket_filter_date=calculation_filing_date(Period.from_year_and_code(year, period))
     )
     values = {cell.address: cell.value for cell in plan.value_cells}
     _assert_group_member_values_reach_their_cells(layout, values)
