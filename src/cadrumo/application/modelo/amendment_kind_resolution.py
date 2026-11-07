@@ -149,8 +149,7 @@ def _summed_result(
     )
     if result is None:
         return None
-    if modelo != "130":
-        return result
+    # The registry marks the casillas that carry earlier payments; a modelo without any adds nothing.
     return result + sum((casilla_values.get(key, Decimal("0")) for key in prior_paid_casilla_ids), Decimal("0"))
 
 

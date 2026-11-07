@@ -341,7 +341,10 @@ def amendment_prior_paid_values(
     """
     if amendment_kind is not FilingDeclarationKind.COMPLEMENTARIA:
         return {}
-    if snapshot.modelo.id != "130":
+    prior_paid_casillas = tuple(
+        casilla for casilla in snapshot.revision.casillas if casilla.complementaria_only is not None
+    )
+    if not prior_paid_casillas:
         return {}
     result_ids = result_disposition_casilla_ids(snapshot.modelo.id)
     if result_ids is None:
@@ -357,8 +360,7 @@ def amendment_prior_paid_values(
             ((result, baseline_revision.casilla_values.get(casilla.id, Decimal("0"))),),
             subject=f"{snapshot.modelo.id} amendment",
         )
-        for casilla in snapshot.revision.casillas
-        if casilla.complementaria_only is not None
+        for casilla in prior_paid_casillas
     }
 
 
