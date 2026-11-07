@@ -20,6 +20,7 @@ from .. import installed_tui_controls, installed_tui_seed, installed_tui_withhol
 from ..cli_contracts import RetencionesInstalledCliError
 from ..installed_tui_seed import WithholdingWork
 from ..installed_tui_withholding import main, validate_child_receipt
+from ..scenario import SUPPORTED_YEAR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -41,11 +42,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 )
 def test_child_success_requires_the_whole_requested_public_continuation(fault: str, message: str) -> None:
     """A child's nominal proven status cannot cover an omitted runtime boundary."""
-    target = WithholdingWork("public-work-key", "111", 2025, "2T", "2025", "professional-190")
+    target = WithholdingWork("public-work-key", "111", SUPPORTED_YEAR, "2T", str(SUPPORTED_YEAR), "professional-190")
     work: dict[str, Any] = {
         "target": asdict(target),
         "independent_export_matches": True,
-        "artifact": {"name": "modelo-111-2025-2T.boe", "size": 350, "sha256": "b" * 64},
+        "artifact": {"name": f"modelo-111-{SUPPORTED_YEAR}-2T.boe", "size": 350, "sha256": "b" * 64},
         "operations": ["modelo.work.calculate", "modelo.work.verify", "modelo.export", "modelo.work.file"],
         "recorded_reopen": True,
     }
@@ -139,7 +140,7 @@ def test_complete_setup_failure_receipt_retains_actual_stage_and_safe_commands(t
     cli.commands.extend(commands)
 
     def run_parent(args):
-        return installed_tui_seed.seed_withholding_work(cli, year=2025)
+        return installed_tui_seed.seed_withholding_work(cli, year=SUPPORTED_YEAR)
 
     monkeypatch.setattr(installed_tui_withholding, "run_parent", run_parent)
     receipt = tmp_path / "failed.json"

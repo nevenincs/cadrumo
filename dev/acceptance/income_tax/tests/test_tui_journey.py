@@ -15,6 +15,7 @@ from textual.widgets import Static
 
 from cadrumo.domain.calculations.registry.authority_artifact import AuthorityGenerationPin
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.tui.tests.settling import settle
 
 from ..authority import IncomeTaxAuthorityResolution, resolve_income_tax_authority
@@ -66,14 +67,14 @@ class _Operation:
         return AuthorityGenerationPin(logical_generation="a" * 64, reader_incarnation="b" * 64)
 
     def supported_filing_years(self) -> _Support:
-        return _Support(floor=2022)
+        return _Support(floor=filing_year_envelope().floor)
 
     def snapshot(self, modelo: str, /, *, filing_year: int, period: str) -> _Snapshot:
         return _Snapshot(revision=_Revision(id=f"{modelo}-{filing_year}", export_layouts=()))
 
 
 def _resolution() -> IncomeTaxAuthorityResolution:
-    return resolve_income_tax_authority(_Operation(), as_of=date(2026, 9, 21))
+    return resolve_income_tax_authority(_Operation(), as_of=date(filing_year_envelope().horizon, 9, 21))
 
 
 def test_unavailable_tui_contract_is_blocked_without_claiming_submission() -> None:
@@ -425,7 +426,7 @@ def test_a_verified_declaration_with_a_current_file_records_the_filing_with_f8()
     form = synthetic_form(needs_input=False)
     assert form.calculation_revision_id is not None
     current_file = ModeloFormExport(
-        exported_at=datetime(2026, 4, 2, 9, 0, tzinfo=UTC),
+        exported_at=datetime(filing_year_envelope().horizon, 4, 2, 9, 0, tzinfo=UTC),
         calculation_revision_id=form.calculation_revision_id,
         current=True,
     )

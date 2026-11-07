@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.acceptance import installed_cli as installed_cli_module
 from dev.acceptance.income_tax.cli_journey import imputation_criterion_args
 from dev.acceptance.installed_cli import InstalledCli, decode_cli_document
@@ -55,7 +56,7 @@ def test_installed_cli_rebuilds_the_child_environment_and_delivers_secrets_only_
     monkeypatch.setattr(installed_cli_module.subprocess, "run", fake_run)
     cli = InstalledCli(executable, storage_root=storage_root, authority_root=authority_root, passphrase=passphrase)
 
-    cli.create_profile(year=2025)
+    cli.create_profile(year=filing_year_envelope().horizon)
 
     assert len(observed) == 2
     (first_argv, first), (second_argv, second) = observed
@@ -122,10 +123,11 @@ def test_installed_cli_records_a_non_json_refusal_without_retaining_its_diagnost
 
 def test_the_journey_declares_the_cash_criterion_for_its_year_without_commercial_accounting() -> None:
     """RIRPF art. 7.2: the cobros y pagos election needs a direct-estimation filer with no Codigo de Comercio books."""
-    assert imputation_criterion_args(2025) == (
+    year = filing_year_envelope().horizon
+    assert imputation_criterion_args(year) == (
         "--irpf-activity-income-imputation-criterion",
         "cobros_y_pagos",
         "--irpf-activity-income-imputation-year",
-        "2025",
+        str(year),
         "--no-irpf-codigo-comercio-accounting",
     )
