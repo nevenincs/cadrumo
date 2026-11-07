@@ -5,9 +5,7 @@ tags:
 date: '2026-11-07'
 modified: '2026-11-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:7d4cdbda87201a9e118289722864913f832b42add4bb94170376438b70a07b90'
-body_hash: 'sha256:999ab90d2b6afa03331c80d87930a90a6fbb46807ece09f9e19448a1e1de3238'
-body_hash: 'sha256:d6858361aaf43b2a4ca35a75c0c0b47fdf7ff420e109200f35608497930e7425'
+body_hash: 'sha256:2a4f42df086bca1fb8fc64664075a616c18736eb9be92bb6d2665ebb54f31740'
 related:
   - "[[2026-11-07-local-inference-engine-plan]]"
 ---
@@ -45,6 +43,22 @@ related:
 - `S12` `verify:` `rustfmt --edition 2024 --emit stdout (six files)` -> `pass`
 - `S12` `verify:` `pytest dev/quality/tests/test_no_model_definitions.py` -> `pass`
 - `S12` `by:` `vaultspec-standard-executor`
+- `S10` `verify:` `uv run --no-sync pytest dev/env/tests/test_llamacpp_pins.py dev/env/tests/test_local_ai_pins.py dev/quality/tests/test_no_model_definitions.py dev/quality/tests/test_no_git_cli.py` -> `pass`
+- `S10` `verify:` `just check-import-boundaries` -> `pass`
+- `S10` `by:` `vaultspec-high-executor`
+- `S12` `verify:` `ctest --preset debug -R manager.(rust|supervision|fmt|clippy|fixture.clippy)` -> `pass`
+- `S12` `verify:` `ctest --preset debug -R application.(rust|fmt|clippy|features.clippy)` -> `pass`
+- `S12` `verify:` `uv run --no-sync pytest dev/env/tests/test_local_ai_pins.py` -> `pass`
+- `S12` `by:` `vaultspec-high-executor`
+- `S14` `M` `native/application/src/provisioning/local_ai/registry/tests.rs`
+- `S14` `verify:` `ctest --preset debug -R application.(rust|fmt|clippy|features.clippy)` -> `pass`
+- `S14` `by:` `vaultspec-high-executor`
+- `S10` `verify:` `pytest llamacpp_pins, local_ai_pins, no_model_definitions, no_git_cli (123 tests)` -> `pass`
+- `S28` `verify:` `uv run --no-sync pytest src/cadrumo_agent_service/adapters/tests/test_agent_background_runs.py dev/locales/tests/test_desktop_chrome.py (51 tests)` -> `pass`
+- `S28` `verify:` `just check-locales (0 blocking)` -> `pass`
+- `S28` `verify:` `npm run check (90 node tests, tsc, eslint, prettier)` -> `pass`
+- `S28` `verify:` `npx playwright test tests/agent-live.spec.ts (38 tests)` -> `pass`
+- `S28` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -57,6 +71,8 @@ related:
 - `S14` `M` `native/application/src/provisioning/transfer.rs`
 - `S14` `verify:` `rustfmt --edition 2024 --check` -> `pass`
 - `S14` `by:` `vaultspec-high-executor`
+- `S14` Root build slot fixed two registry progress tests that unwrapped run.result by value before borrowing run; fix committed as e972b40632
+- `S28` Full npm test: 4 `desktop-*.spec.ts` files do not load on tui since a8ebeaaa9d (desktopShell.ts bridge path resolves to native/docs); remaining 2473 tests: 2454 passed, 9 skipped, 10 failed in calendar-place, modelo-related-filings, touch and ledger-invoice-match specs, none importing P06 modules, while concurrent fixture-date commits landed
 
 ## Notes
 
