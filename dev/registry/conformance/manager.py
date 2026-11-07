@@ -96,6 +96,7 @@ from pydantic import BaseModel, Field, model_serializer, model_validator
 from pydantic_core.core_schema import SerializerFunctionWrapHandler
 
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.filing_year import FilingYear
 from cadrumo.core.i18n.render import lookup_translation_entry
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 
@@ -265,7 +266,7 @@ class ConformanceCoordinate(ConformanceModel):
     """
 
     modelo: str = Field(min_length=1)
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     period: str = Field(min_length=1, max_length=32)
     law_selected_revision: str = Field(min_length=1)
     schema_comparison: AnnualCasillaPopulationComparison

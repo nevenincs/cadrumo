@@ -14,6 +14,7 @@ from functools import cache
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_formula import KeyedBracketEntry
@@ -106,8 +107,8 @@ def committed_registry() -> tuple[ModeloDefinition, RegistryCatalogues]:
 
 
 def revision(modelo: ModeloDefinition) -> ModeloRevision:
-    """Return the canonical fixture revision for ``modelo``."""
-    return modelo.revisions["2019-y-siguientes"]
+    """Return the canonical fixture revision for ``modelo``: its newest authored edition."""
+    return max(modelo.revisions.values(), key=lambda candidate: candidate.valid_from)
 
 
 def with_revision(modelo: ModeloDefinition, revision: ModeloRevision) -> ModeloDefinition:
@@ -152,10 +153,12 @@ def as_communication_revision(revision: ModeloRevision) -> ModeloRevision:
 
 
 def keyed_bracket(key: str, value: str = "0.24") -> KeyedBracketEntry:
-    """Build a one-year keyed bracket fixture."""
+    """Build a one-year keyed bracket fixture over the published support horizon."""
+    with bundled_indexed_authority().operation() as operation:
+        year = operation.supported_filing_years().horizon
     return KeyedBracketEntry(
         key=key,
         value=Decimal(value),
-        valid_from=date(2025, 1, 1),
-        valid_to=date(2025, 12, 31),
+        valid_from=date(year, 1, 1),
+        valid_to=date(year, 12, 31),
     )
