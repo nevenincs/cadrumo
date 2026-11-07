@@ -42,7 +42,6 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
 from ....adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
-from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -396,11 +395,12 @@ def _seed_local_filing_record(
 def test_amend_refuses_evidence_less_m303_external_baseline(
     repos: _Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
-    snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="1T")
+    m303_year = operation.supported_filing_years().horizon
+    snapshot = operation.snapshot("303", filing_year=m303_year, period="1T")
     _, _, baseline = _seed_external_baseline(
         repos,
         modelo="303",
-        filing_year=2026,
+        filing_year=m303_year,
         period_code="1T",
         revision_id_value=snapshot.revision.id,
         casilla_values={_M303_RESULT_CASILLA: Decimal("0")},
