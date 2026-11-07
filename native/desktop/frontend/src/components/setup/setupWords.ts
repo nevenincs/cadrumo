@@ -93,6 +93,16 @@ export function rowTone(row: SetupRow): RowTone {
   }
 }
 
+/** What a setup is doing while it works out its plan, before it asks for an
+ * answer. Until the engine reports its first step the host is still
+ * checking the request, such as a model with the agent service, which can
+ * take long; that step is the plan itself, worded as such. */
+export function planningWords(t: Translate, step: SetupStep | null): string {
+  return step === null
+    ? t("desktop.setup.step_checking")
+    : t("desktop.setup.planning");
+}
+
 export function stepWords(t: Translate, step: SetupStep | null): string {
   switch (step) {
     case "plan":

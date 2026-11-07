@@ -316,6 +316,48 @@ test("Download plans that model's setup in the lane, sized by the catalog where 
   await expect(target.getByRole("dialog")).toHaveCount(0);
 });
 
+test("a download still being planned says it is checking, on its row and the local AI's, not that it waits", async ({
+  page: target,
+}) => {
+  await open(target, "start_held");
+  const lane = await openLane(target);
+  const vision = lane.locator('li[data-model="synthetic-vision:1"]');
+  const other = lane.locator('li[data-model="synthetic-text:1"]');
+  await vision
+    .getByRole("button", {
+      name: label("desktop.providers.local_model_download"),
+    })
+    .click();
+  await expect
+    .poll(() => calls(target))
+    .toContain("setup.download local_api synthetic-vision:1");
+  // The host has planned nothing yet, so no part is named: the asked model's
+  // row and the local AI's row say the same thing, and keep their spinner.
+  const checking = label("desktop.setup.step_checking");
+  const figure = vision.locator("[data-setup-planning]");
+  await expect(figure).toHaveText(checking);
+  await expect(figure.locator("[data-slot=spinner]")).toBeVisible();
+  await expect(
+    lane.locator('[data-setup-row="local_ai"] [data-setup-planning]'),
+  ).toHaveText(checking);
+  await expect(vision).not.toContainText(label("desktop.setup.step_waiting"));
+  await expect(lane.locator('[data-setup-row="local_ai"]')).not.toContainText(
+    label("desktop.setup.step_waiting"),
+  );
+  // No other model claims it, and nobody can start a second download.
+  await expect(other.locator("[data-setup-planning]")).toHaveCount(0);
+  for (const button of await lane
+    .getByRole("button", {
+      name: label("desktop.providers.local_model_download"),
+    })
+    .all())
+    await expect(button).toBeDisabled();
+  // Once the plan awaits its answer, the checking is over.
+  await target.evaluate(() => window.__scenarioSetup?.finishPlanning());
+  await expect(laneReview(lane)).toBeVisible();
+  await expect(vision.locator("[data-setup-planning]")).toHaveCount(0);
+});
+
 test("while the local AI sets up, no model offers its download again", async ({
   page: target,
 }) => {

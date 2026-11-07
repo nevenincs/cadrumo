@@ -60,6 +60,10 @@ export const SETUP_SHAPES = [
    * downloads from unreachable: the setup settles failed before its review,
    * leaving its row as it was. */
   "unreachable",
+  /** As `ready`, but a start stays in its planning with nothing reported,
+   * as while the host checks a model with the agent service, until
+   * `finishPlanning` lets its plan reach review. */
+  "start_held",
 ] as const;
 export type SetupShape = (typeof SETUP_SHAPES)[number];
 
@@ -80,6 +84,9 @@ export type SetupFixtureControls = {
   setGoogle(account: GoogleAccount): void;
   /** The first status read settles: an `unread` setup has its rows. */
   readRows(): void;
+  /** The planning a `start_held` start waits in ends: its plan awaits an
+   * answer, and the start returns. */
+  finishPlanning(): void;
   /** The host reads again after the sign-in status changed, as it does on
    * the session's cue. */
   reread(): void;
@@ -212,6 +219,7 @@ function shaped(shape: SetupShape): Seed[] {
   };
   switch (shape) {
     case "ready":
+    case "start_held":
       all.forEach((seed) => (seed.row = readied(seed.row)));
       break;
     case "google_signed_out":
@@ -287,7 +295,10 @@ export function setupFixture({
   // The profile's Google account: signed in on a computer that is otherwise
   // set up, not yet on one where setup has only begun.
   const signedIn =
-    shape === "ready" || shape === "partial" || shape === "hardware";
+    shape === "ready" ||
+    shape === "start_held" ||
+    shape === "partial" ||
+    shape === "hardware";
   let google: GoogleAccount = {
     state: signedIn ? "signed_in" : "signed_out",
     email: signedIn ? GOOGLE_EMAIL : null,
@@ -300,6 +311,9 @@ export function setupFixture({
   let unread = shape === "unread";
   const listeners = new Set<(state: DesktopSetup) => void>();
   const timers = new Set<number>();
+  // The starts a `start_held` setup keeps in planning, by operation id; each
+  // returns its start, with the plan reached or not.
+  const heldStarts = new Map<string, (planned: boolean) => void>();
   // The setups asked to stop, by operation id.
   const pendingCancel = new Set<string>();
   // Each planned row as it stood before its setup ran, for an item a setup
@@ -312,6 +326,7 @@ export function setupFixture({
   // local AI was set up once has it, whatever became of its models.
   let programReady =
     shape === "ready" ||
+    shape === "start_held" ||
     shape === "google_signed_out" ||
     shape === "partial" ||
     shape === "hardware";
@@ -809,6 +824,9 @@ export function setupFixture({
       unread = false;
       publish();
     },
+    finishPlanning() {
+      [...heldStarts.values()].forEach((finish) => finish(true));
+    },
     reread() {
       publish();
     },
@@ -932,6 +950,36 @@ export function setupFixture({
         });
         return Promise.resolve(publish());
       }
+      if (shape === "start_held" && chosen.length > 0) {
+        const id = `setup-${operations}`;
+        put({
+          item: wanted,
+          operation_id: id,
+          stage: "planning",
+          review: null,
+          // The host names no part before its engine has planned.
+          items: chosen.map((seed) => ({ ...progress(seed), parts: [] })),
+          cancellable: true,
+          cancel_requested: false,
+          outcome: null,
+          failure: null,
+        });
+        publish();
+        return new Promise<DesktopSetup>((resolve) => {
+          heldStarts.set(id, (planned) => {
+            heldStarts.delete(id);
+            const run = runById(id);
+            if (run && run.stage === "planning" && planned)
+              put({
+                ...run,
+                stage: "review",
+                review: review(chosen),
+                items: chosen.map(progress),
+              });
+            resolve(publish());
+          });
+        });
+      }
       const plan = chosen.length === 0 ? null : review(chosen);
       const run = put({
         item: wanted,
@@ -982,6 +1030,13 @@ export function setupFixture({
       if (refused) return refused;
       const run = runById(operationId);
       if (!run || run.stage === "settled") return refuse("not_cancellable");
+      const held = heldStarts.get(operationId);
+      if (held) {
+        // A setup cancelled before anything is approved ends at once.
+        settle(run, "cancelled");
+        held(false);
+        return Promise.resolve(publish());
+      }
       if (run.stage === "review") {
         settle(run, "cancelled");
         return Promise.resolve(publish());

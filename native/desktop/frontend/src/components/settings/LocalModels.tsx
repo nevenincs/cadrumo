@@ -16,7 +16,12 @@ import type { AgentModelLicenceFacts } from "../../shell/agentSession";
 import { useLocalModels, type LocalModelHost } from "../../shell/localModels";
 import { useProvisioning } from "../../shell/provisioning";
 import { useStrings, type Translate } from "../../shell/strings";
-import { StepFigure, type StepProgress } from "../setup/ProvisioningRow";
+import type { SetupStep } from "../../ipc/componentSetup";
+import {
+  PlanningFigure,
+  StepFigure,
+  type StepProgress,
+} from "../setup/ProvisioningRow";
 import { refusalWords } from "../setup/setupWords";
 
 const licenceWords = (licence: AgentModelLicenceFacts) =>
@@ -64,6 +69,7 @@ function LocalModelRow({
   busy,
   refusal,
   progress,
+  planning,
   onDownload,
   onRemove,
 }: {
@@ -75,6 +81,9 @@ function LocalModelRow({
   /** What the local AI's latest setup reports of this model, where it
    * planned it and its outcome is still news. */
   progress: StepProgress | null;
+  /** Set while this model's download is still being planned, which names no
+   * part yet: what the engine has reported of the local AI, none at first. */
+  planning: { step: SetupStep | null } | null;
   onDownload?: () => void;
   onRemove?: () => void;
 }) {
@@ -106,8 +115,10 @@ function LocalModelRow({
         )}
       </div>
       <ModelFacts model={model} locale={locale} />
-      {progress && (
+      {progress ? (
         <StepFigure progress={progress} name={model.name} locale={locale} />
+      ) : (
+        planning && <PlanningFigure step={planning.step} />
       )}
       <div className="flex flex-wrap gap-2">
         {model.installed !== true && (
@@ -224,8 +235,7 @@ export function LocalModels({
     store.offered && localAi !== null
       ? (model: string) => {
           if (!lane) return;
-          setAsked(model);
-          store.downloadModel(lane.id, model);
+          if (store.downloadModel(lane.id, model)) setAsked(model);
         }
       : undefined;
   const onRemove = store.offered ? store.removeModel : undefined;
@@ -240,6 +250,13 @@ export function LocalModels({
       ? part
       : null;
   };
+  // From the click until the engine's plan awaits the person's answer, the
+  // setup names no part, so the asked model's row says what it is doing.
+  const liveRun = localAi ? store.liveRunOf(localAi.item) : null;
+  const planningStep =
+    localAi && (liveRun ? liveRun.stage === "planning" : starting)
+      ? { step: store.progressOf(localAi.item)?.step ?? null }
+      : null;
   const [removing, setRemoving] = useState<string | null>(null);
   const [removals, setRemovals] = useState<Record<string, string>>({});
   const readable =
@@ -361,6 +378,7 @@ export function LocalModels({
                       ((settingUp || starting) && model.installed !== true)
                     }
                     progress={progressOf(model)}
+                    planning={asked === model.id ? planningStep : null}
                     refusal={
                       removals[key]
                         ? removalWords(t, removals[key])

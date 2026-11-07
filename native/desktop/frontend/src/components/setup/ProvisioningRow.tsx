@@ -21,6 +21,7 @@ import {
   failureWords,
   itemName,
   outcomeWords,
+  planningWords,
   retryWords,
   rowSentence,
   rowSizeWords,
@@ -81,6 +82,22 @@ export function RowState({ row }: { row: SetupRow }) {
         />
       )}
       <span data-setup-sentence>{rowSentence(t, row)}</span>
+    </p>
+  );
+}
+
+/** What a setup does while it works out its plan, said with the active
+ * marker: the one place that state is worded, in a row and beside a model
+ * alike. `step` is what the engine has reported of the item, none yet. */
+export function PlanningFigure({ step }: { step: SetupStep | null }) {
+  const t = useStrings();
+  return (
+    <p
+      data-setup-planning
+      className="flex items-center gap-2 text-sm text-muted-foreground"
+    >
+      <Spinner />
+      <span data-setup-sentence>{planningWords(t, step)}</span>
     </p>
   );
 }
@@ -233,12 +250,7 @@ export function ProvisioningRow({
   const action = actionWords(t, row.recovery);
   let status: ReactNode;
   if (run?.stage === "planning")
-    status = (
-      <p className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Spinner />
-        <span data-setup-sentence>{t("desktop.setup.planning")}</span>
-      </p>
-    );
+    status = <PlanningFigure step={store.progressOf(run.item)?.step ?? null} />;
   else if (run?.stage === "review")
     status = <RowReview run={run} locale={locale} />;
   else if (run?.stage === "running" && shown)
