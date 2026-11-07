@@ -17,6 +17,7 @@ from cadrumo.domain.calculations.registry.schema import (
 )
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ...compiler.loader import load_modelo_directory
@@ -35,6 +36,7 @@ from ..registry_schema_support import (
     revision as committed_revision,
 )
 from .registry_schema_support import (
+    committed_modelo_revision_id,
     committed_modelo_text,
     load_modelo_text,
     validate_revision,
@@ -43,11 +45,12 @@ from .registry_schema_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+FILING_YEAR = filing_year_envelope().horizon
 
 _SNAPSHOT_HEADER_EXPECTATIONS = (
     ("modelo.id", "130"),
-    ("revision.id", "2019-y-siguientes"),
-    ("filing_year", 2024),
+    ("revision.id", committed_modelo_revision_id()),
+    ("filing_year", FILING_YEAR),
     ("period", "3T"),
 )
 
@@ -99,7 +102,7 @@ _EXPECTED_COMMITTED_M130_DEADLINE_WINDOWS = (
 
 @pytest.fixture
 def modelo_130_snapshot(registry_authority: ValidatedRegistryAuthority) -> RegistrySnapshot:
-    return registry_authority.snapshot("130", filing_year=2024, period="3T")
+    return registry_authority.snapshot("130", filing_year=FILING_YEAR, period="3T")
 
 
 def test_formula_expression_dispatch_table_entry_contract() -> None:
@@ -210,7 +213,7 @@ def test_revision_without_casillas_is_registry_validation_failure() -> None:
 
 def test_model_law_coverage_ledger_does_not_count_layout_source_as_guidance() -> None:
     modelo, catalogues = committed_registry()
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2024, period="3T")
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=FILING_YEAR, period="3T")
     layout_only_snapshot = snapshot.model_copy(
         update={
             "sources": {
@@ -240,7 +243,7 @@ def test_model_law_coverage_ledger_does_not_count_layout_source_as_guidance() ->
 
 def test_model_law_coverage_ledger_moves_status_when_evidence_tier_changes() -> None:
     modelo, catalogues = committed_registry()
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2024, period="3T")
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=FILING_YEAR, period="3T")
     source_id, source = next(iter(snapshot.sources.items()))
     workbook_id, workbook = next(iter(snapshot.workbook_parity_refs.items()))
     workbook_source = snapshot.sources[workbook.workbook_source]
