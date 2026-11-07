@@ -228,7 +228,11 @@ def test_to_json_carries_every_field_uncapped() -> None:
     # so a strict checker cannot see the nested shape without this -- the
     # same reason every other test here reads persisted output back through
     # `json.loads` rather than the in-memory payload.
-    payload = json.loads(json.dumps(to_json(dimensions, Status.AMBER, "2026-01-01T00:00:00+00:00")))
+    payload = json.loads(
+        json.dumps(
+            to_json(dimensions, Status.AMBER, datetime(filing_year_envelope().horizon, 1, 1, tzinfo=UTC).isoformat())
+        )
+    )
 
     assert payload["overall"] == "amber"
     dimension_payload = payload["dimensions"][0]

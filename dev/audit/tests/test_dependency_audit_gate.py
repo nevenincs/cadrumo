@@ -92,7 +92,7 @@ def test_scoped_suppression_requires_every_affected_coordinate_to_match() -> Non
 def test_partial_suppression_scope_is_rejected(tmp_path: Path) -> None:
     path = tmp_path / "allowlist.toml"
     path.write_text(
-        '[[suppression]]\nid = "X"\nreason = "y"\nexpires = 2099-01-01\npackage = "example"\n',
+        f'[[suppression]]\nid = "X"\nreason = "y"\nexpires = {_far_future().isoformat()}\npackage = "example"\n',
         encoding="utf-8",
     )
     with pytest.raises(da.AuditError, match="ecosystem, package and version together"):
@@ -124,7 +124,7 @@ def test_a_suppression_without_an_expiry_is_rejected(tmp_path: Path) -> None:
 def test_a_suppression_without_a_reason_is_rejected(tmp_path: Path) -> None:
     path = tmp_path / "allowlist.toml"
     path.write_text(
-        '[[suppression]]\nid = "X"\nreason = "  "\nexpires = 2099-01-01\n',
+        f'[[suppression]]\nid = "X"\nreason = "  "\nexpires = {_far_future().isoformat()}\n',
         encoding="utf-8",
     )
     with pytest.raises(da.AuditError, match="empty reason"):
