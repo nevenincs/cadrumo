@@ -94,7 +94,7 @@ function DialogContent({
           "forced-colors:border forced-colors:border-[CanvasText]",
           placement === "center"
             ? "top-1/2 max-h-[calc(100%-var(--overlay-gutter))] -translate-y-1/2 overflow-y-auto"
-            : "top-(--overlay-top) max-h-[calc(100dvh-2*var(--overlay-top))]",
+            : "top-(--overlay-top) max-h-[calc(100dvh-2*var(--overlay-top))] overflow-y-auto",
           "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
           className,
         )}
