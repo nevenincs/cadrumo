@@ -16,6 +16,7 @@ from typing import Final
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.application.filing.export_envelope import render_envelope_prefix_field
+from cadrumo.core.filing_year import FilingYear
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period, StandardPeriodCode
@@ -64,8 +65,8 @@ class M390ProspectiveGenerationTarget(_StrictModel):
     source_ref: str = Field(pattern=r"^aeat-dr-390-[0-9]{4}$")
     source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     design_epoch: str = Field(pattern=r"^[0-9]{4}$")
-    filing_year_from: int = Field(ge=1000, le=9999)
-    filing_year_to: int | None = Field(default=None, ge=1000, le=9999)
+    filing_year_from: FilingYear
+    filing_year_to: FilingYear | None = None
 
     @model_validator(mode="after")
     def _require_exact_source_epoch_and_window(self) -> M390ProspectiveGenerationTarget:
