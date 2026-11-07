@@ -38,8 +38,7 @@ _PLACEHOLDER_PATTERNS: Final[dict[str, str]] = {
     # Content-hash fan-out (blob store, both root- and bucket-scoped).
     "sha256[:2]": r"[0-9a-f]{2}",
     "sha256": r"[0-9a-f]{64}",
-    # Observability per-run trace directory: 16 lowercase hex characters,
-    # the shape core.observability.tests.run_scope.mint_run_id mints.
+    # Per-run trace directory: 16 lowercase hex characters.
     "run_id": r"[0-9a-f]{16}",
     # ISO calendar date (llm-usage / run-record daily filenames).
     "timestamp": r"\d{4}-\d{2}-\d{2}",

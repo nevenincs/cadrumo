@@ -6,15 +6,21 @@ import type {
   FilingCalendar,
   NotificationsSummary,
 } from "../../shell/views";
+import {
+  fixtureDay,
+  fixtureInstant,
+  fixtureMonth,
+  fixtureYear,
+} from "@/dev/fixtureDates";
 
 // A filing calendar in the shape the product reports, for the scenario host
 // and the stories. The dates are fixed around `TODAY`, so a story looks the
 // same on any day; nothing here is a real taxpayer's.
 
-export const FIXTURE_TODAY = "2026-10-06";
+export const FIXTURE_TODAY = fixtureDay(10, 6);
 
 /** The year of `FIXTURE_TODAY`, which its annual obligations belong to. */
-const FIXTURE_YEAR = FIXTURE_TODAY.slice(0, 4);
+const FIXTURE_YEAR = String(fixtureYear);
 
 /** The deadline status a fixture row carries with each reading, unless the
  * row names its own. A reading the product could not place is reported as
@@ -76,56 +82,62 @@ function observed(
 }
 
 export const FIXTURE_CALENDAR: FilingCalendar = {
-  range: { from_date: "2026-07-01", to_date: "2027-06-30" },
+  range: { from_date: fixtureDay(7, 1), to_date: fixtureDay(6, 30, 1) },
   generated_at: `${FIXTURE_TODAY}T09:14:05Z`,
   entries: [
-    entry("303", "2026-2T", "2026-07-01", "2026-07-20", {
+    entry("303", "2026-2T", fixtureDay(7, 1), fixtureDay(7, 20), {
       user_state: "filed",
       local_filing_state: "ready_to_file",
       aeat_submission_state: "justificante_verified",
       justificante_verified: true,
     }),
-    entry("130", "2026-2T", "2026-07-01", "2026-07-20", {
+    entry("130", "2026-2T", fixtureDay(7, 1), fixtureDay(7, 20), {
       user_state: "late",
       days_overdue: 78,
       local_filing_state: "ready_to_file",
     }),
-    entry("303", "2026-3T", "2026-10-01", "2026-10-20", {
-      payment_cutoff_on: "2026-10-15",
+    entry("303", "2026-3T", fixtureDay(10, 1), fixtureDay(10, 20), {
+      payment_cutoff_on: fixtureDay(10, 15),
       local_filing_state: "ready_to_file",
     }),
-    entry("130", "2026-3T", "2026-10-01", "2026-10-20"),
-    entry("111", "2026-3T", "2026-10-01", "2026-10-20", {
+    entry("130", "2026-3T", fixtureDay(10, 1), fixtureDay(10, 20)),
+    entry("111", "2026-3T", fixtureDay(10, 1), fixtureDay(10, 20), {
       aeat_submission_state: "submitted_observed",
       user_state: "filed",
       local_filing_state: "external_baseline_imported",
     }),
     // A host that could not say when this window opens: only its close.
-    entry("349", "2026-3T", null, "2026-10-20", { user_state: "unknown" }),
-    entry("303", "2026-4T", "2027-01-01", "2027-01-30", {
-      adjusted_closes_on: "2027-02-01",
+    entry("349", "2026-3T", null, fixtureDay(10, 20), {
+      user_state: "unknown",
+    }),
+    entry("303", "2026-4T", fixtureDay(1, 1, 1), fixtureDay(1, 30, 1), {
+      adjusted_closes_on: fixtureDay(2, 1, 1),
       shift_reason: "weekend",
     }),
-    entry("390", FIXTURE_YEAR, "2027-01-01", "2027-01-30", {
-      adjusted_closes_on: "2027-02-01",
+    entry("390", FIXTURE_YEAR, fixtureDay(1, 1, 1), fixtureDay(1, 30, 1), {
+      adjusted_closes_on: fixtureDay(2, 1, 1),
       shift_reason: "weekend",
     }),
-    entry("100", FIXTURE_YEAR, "2027-04-07", "2027-06-30", {
-      payment_cutoff_on: "2027-06-25",
+    entry("100", FIXTURE_YEAR, fixtureDay(4, 7, 1), fixtureDay(6, 30, 1), {
+      payment_cutoff_on: fixtureDay(6, 25, 1),
     }),
   ],
   events: [
-    observed("filing", "2026-07-17", "Modelo 303 2026-2T filed", {
+    observed("filing", fixtureDay(7, 17), "Modelo 303 2026-2T filed", {
       status: "presentado",
       aeat_submission_state: "justificante_verified",
-      aeat_submitted_at: "2026-07-17T10:42:00Z",
+      aeat_submitted_at: fixtureInstant(7, 17, "10:42:00Z"),
       justificante_verified: true,
     }),
-    observed("message", "2026-09-03", "Notification received from the agency"),
-    observed("filing", "2026-10-02", "Modelo 111 2026-3T filed", {
+    observed(
+      "message",
+      fixtureDay(9, 3),
+      "Notification received from the agency",
+    ),
+    observed("filing", fixtureDay(10, 2), "Modelo 111 2026-3T filed", {
       status: "presentado",
       aeat_submission_state: "submitted_observed",
-      aeat_submitted_at: "2026-10-02T08:15:00Z",
+      aeat_submitted_at: fixtureInstant(10, 2, "08:15:00Z"),
       justificante_verified: false,
     }),
   ],
@@ -179,7 +191,7 @@ export const AHEAD_CALENDAR = without(
 export const STRADDLING_CALENDAR: FilingCalendar = {
   ...AHEAD_CALENDAR,
   entries: [
-    entry("216", "2026-09", "2026-09-21", "2026-10-01", {
+    entry("216", fixtureMonth(9), fixtureDay(9, 21), fixtureDay(10, 1), {
       user_state: "filed",
       local_filing_state: "ready_to_file",
       aeat_submission_state: "accepted",
@@ -197,11 +209,11 @@ export const CLOSE_UNKNOWN_CALENDAR: FilingCalendar = {
   warnings: [],
   entries: [
     ...FIXTURE_CALENDAR.entries,
-    entry("115", "2026-2T", "2026-07-01", "2026-07-20", {
+    entry("115", "2026-2T", fixtureDay(7, 1), fixtureDay(7, 20), {
       status: "UNKNOWN",
       user_state: "unknown",
     }),
-    entry("123", "2026-3T", "2026-10-01", "2026-10-20", {
+    entry("123", "2026-3T", fixtureDay(10, 1), fixtureDay(10, 20), {
       status: "UNKNOWN",
       user_state: "unknown",
     }),

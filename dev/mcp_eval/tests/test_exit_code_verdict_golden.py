@@ -23,6 +23,7 @@ from cadrumo.application.modelo.preconditions import build_modelo_precondition_f
 from cadrumo.application.operator_actions.preconditions import no_action_precondition_verdict
 from cadrumo.core.json_contract import EnvelopeStatus
 from cadrumo.core.operator_action_enums import ActionEvidenceProvenance
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo_client.contracts.command_program import CommandProgram
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import bind_public_cli_runner, invoke_cached_cli
@@ -36,7 +37,7 @@ from .real_cli_support import seed_natural_person_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_FILING_YEAR = 2025
+_FILING_YEAR = filing_year_envelope().horizon
 _PERIOD = "1T"
 
 
@@ -95,7 +96,7 @@ def _dispatch_unprepared_m347_verify(runtime_profile: TestRuntimeProfile) -> tup
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "347", "--year", "2024", "--period", "0A",
+            "--modelo", "347", "--year", str(_FILING_YEAR), "--period", "0A",
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
@@ -118,7 +119,7 @@ def _recovery_precondition(*, coverage: LeafConditionScenario, work_unit_id: str
         evidence_values={
             "work_unit_id": work_unit_id,
             "modelo": "347",
-            "year": 2024,
+            "year": _FILING_YEAR,
             "period": "0A",
         },
         provenance=ActionEvidenceProvenance.PERSISTED_STATE,

@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormGridBlock, FormLayoutSeedSource
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ...compiler.form_layout_integrity import form_layout_failures
 from ...compiler.loader import load_modelo_directory
@@ -14,7 +15,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 def test_145_family_tables_preserve_each_record_slot_and_disclose_historical_scope() -> None:
     revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/145")).revisions[
-        "2012-01-31-y-siguientes"
+        str(open_ended_revision("145").id)
     ]
     layout = revision.form_layouts[0]
     assert layout.seed_source is FormLayoutSeedSource.AUTHORED

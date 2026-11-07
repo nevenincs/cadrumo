@@ -33,6 +33,7 @@ from cadrumo.adapters.persistence.profile.tests.m130_source_support import (
     seed_m130_income_transaction,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
+from cadrumo.domain.calculations.registry.tests.authored_editions import revision_covering
 from cadrumo.entrypoints.cli.tests.cli_fixture_worlds import CliWorldProvider, bind_cli_fixture_ports
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo.tests.cli_fixture_ports import CliInvocation
@@ -50,7 +51,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _SCENARIOS_DIR = Path(__file__).resolve().parent.parent / "scenarios"
 _SCENARIO_PATH = _SCENARIOS_DIR / "modelo_130.toml"
-_REVISION = "2019-y-siguientes"
 
 
 @pytest.fixture
@@ -95,7 +95,9 @@ def _dispatch_real_m130_calculate(
     seed_m130_income_transaction(amount=Decimal("12000.00"), filing_year=filing_year, source_key="ingresos")
     seed_m130_expense_transaction(amount=Decimal("4000.00"), filing_year=filing_year, source_key="gastos")
 
-    work_unit_id = create_m130_work_unit(filing_year=filing_year, period=period, revision=_REVISION)
+    work_unit_id = create_m130_work_unit(
+        filing_year=filing_year, period=period, revision=revision_covering("130", filing_year).id
+    )
 
     result = invoke_cached_cli(
         [

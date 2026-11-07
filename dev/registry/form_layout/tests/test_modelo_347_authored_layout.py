@@ -5,14 +5,18 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormContextFieldBlock, FormRepeatingGroupBlock
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ...compiler.form_layout_integrity import form_layout_failures
 from ...compiler.loader import load_modelo_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_EDITIONS = tuple(str(revision.id) for revision in authored_revisions("347"))
+_CURRENT = _EDITIONS[-1]
 
-@pytest.mark.parametrize("revision_id", ["2011-2024", "2025-y-siguientes"])
+
+@pytest.mark.parametrize("revision_id", _EDITIONS)
 def test_quarters_remain_inside_each_declared_person(revision_id: str) -> None:
     revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/347")).revisions[revision_id]
     (layout,) = revision.form_layouts
@@ -54,5 +58,5 @@ def test_quarters_remain_inside_each_declared_person(revision_id: str) -> None:
     assert {c.casilla_id for c in property_group.columns} == {
         c.id for c in revision.casillas if c.id.startswith("inmueble.")
     }
-    if revision_id == "2025-y-siguientes":
+    if revision_id == _CURRENT:
         assert "contraparte.numero-convocatoria-bdns" in {c.casilla_id for c in group.columns}

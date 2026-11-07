@@ -9,6 +9,7 @@ import type {
 } from "../../shell/userProfile";
 import { translator } from "../../shell/strings";
 import { ProfileEditor, type ProfileDraft } from "./ProfileEditor";
+import { fixtureDay } from "@/dev/fixtureDates";
 
 // Appearance and entry only: a made-up activity entry with a detail of each
 // kind the profile edits. Each detail is the profile's own, worded as the
@@ -46,7 +47,12 @@ const fieldsIn = (locale: string): ProfileField[] => {
   return [
     detail(locale, "activities.description", "description", "Carpentry"),
     detail(locale, "identity.email", "contact_email", "taller@example.com"),
-    detail(locale, "censo.activity_start_date", "start_date", "2026-03-15"),
+    detail(
+      locale,
+      "censo.activity_start_date",
+      "start_date",
+      fixtureDay(3, 15),
+    ),
     detail(locale, "irpf.pagadores_count", "employees", "4"),
     detail(
       locale,
@@ -109,7 +115,7 @@ const draftOf = (
             locale,
             "censo.activity_start_date",
             "start_date",
-            "2026-03-15",
+            fixtureDay(3, 15),
             {
               row: false,
             },

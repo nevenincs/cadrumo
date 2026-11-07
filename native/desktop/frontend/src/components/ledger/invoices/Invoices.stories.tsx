@@ -10,6 +10,7 @@ import { translator } from "../../../shell/strings";
 import { usePagePause, WritePauseContext } from "../WritePause";
 import { type EditorTarget } from "./InvoiceEditor";
 import { InvoicesSection } from "./InvoicesSection";
+import { fixtureDay } from "@/dev/fixtureDates";
 
 // The Invoices section of the Ledger page over the scenario's catalogue of
 // issued and received invoices, and the editor that adds or corrects one.
@@ -66,8 +67,8 @@ const inQuarter = (kind: "issued" | "received") =>
   invoices.find(
     (invoice) =>
       invoice.kind === kind &&
-      invoice.issued_at >= "2026-10-01" &&
-      invoice.issued_at <= "2026-12-31",
+      invoice.issued_at >= fixtureDay(10, 1) &&
+      invoice.issued_at <= fixtureDay(12, 31),
   );
 
 export const Catalogue: Story = {};
@@ -179,7 +180,7 @@ const added: NonNullable<Story["play"]> = async ({
   await typed("counterparty_country", "ES");
   await typed("series", "F");
   await typed("invoice_number", "F-2026-021");
-  await typed("issued_at", "2026-10-23");
+  await typed("issued_at", fixtureDay(10, 23));
   await typed("currency", "EUR");
   const cells = editor.querySelectorAll<HTMLElement>(
     ".ledger-invoice-lines tbody tr:first-child td",

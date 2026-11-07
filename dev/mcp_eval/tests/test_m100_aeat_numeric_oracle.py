@@ -17,7 +17,9 @@ from __future__ import annotations
 
 import json
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
+from urllib.parse import parse_qs, urlsplit
 
 import pytest
 
@@ -32,8 +34,15 @@ def _oracle_payloads() -> list[Path]:
     return list(scan_directory(replay_corpus_directory(), pattern="modelo-100-*.json"))
 
 
-def _m100_computed_grounded_ids() -> dict[str, bool]:
-    rev = compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A").revision
+def _capture_exercise(payload: dict[str, object]) -> int:
+    """Return the exercise the capture printed in the Renta WEB Open address it was taken from."""
+    query = parse_qs(urlsplit(str(payload["raw_evidence_locator"])).query)
+    return int(query["EJER"][0])
+
+
+@cache
+def _m100_computed_grounded_ids(exercise: int) -> dict[str, bool]:
+    rev = compiled_bundled_authority().snapshot("100", filing_year=exercise, period="0A").revision
     casillas = list(rev.casillas.values()) if isinstance(rev.casillas, dict) else list(rev.casillas)
     result: dict[str, bool] = {}
     for casilla in casillas:
@@ -52,11 +61,11 @@ def test_renta_web_open_oracle_payloads_are_bundled() -> None:
 
 
 def test_every_aeat_oracle_figure_is_a_grounded_computed_m100_casilla() -> None:
-    computed_grounded = _m100_computed_grounded_ids()
     failures: list[str] = []
     checked = 0
     for payload_path in _oracle_payloads():
         payload = json.loads(payload_path.read_text(encoding="utf-8"))
+        computed_grounded = _m100_computed_grounded_ids(_capture_exercise(payload))
         expected = payload.get("expected_by_casilla_id", {})
         for casilla_id, figure in expected.items():
             checked += 1

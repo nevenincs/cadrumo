@@ -6,6 +6,12 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    newest_authored_edition,
+    revision_covering,
+)
+
 from ..scenario import (
     AcceptanceOutcome,
     AcceptanceReceipt,
@@ -19,8 +25,12 @@ from ..scenario import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+def _year() -> int:
+    return filing_year_envelope().horizon
+
+
 def test_invoice_decomposition_and_bank_amounts_are_coherent() -> None:
-    scenario = build_scenario(2025)
+    scenario = build_scenario(_year())
 
     assert [item.taxable_base for item in scenario.income] == [
         Decimal("4000"),
@@ -39,7 +49,7 @@ def test_invoice_decomposition_and_bank_amounts_are_coherent() -> None:
 
 
 def test_quarterly_oracle_is_cumulative_and_distinct() -> None:
-    scenario = build_scenario(2025)
+    scenario = build_scenario(_year())
 
     assert [(row.cumulative_income, row.cumulative_expenses) for row in scenario.quarter_oracle] == [
         (Decimal("4000"), Decimal("500")),
@@ -66,24 +76,29 @@ def test_quarterly_oracle_is_cumulative_and_distinct() -> None:
 
 
 def test_year_parameterization_moves_every_control_date() -> None:
-    scenario = build_scenario(2024)
+    year = filing_year_envelope().floor
+    scenario = build_scenario(year)
 
-    assert scenario.taxpayer.activity_start.isoformat() == "2024-01-01"
-    assert {item.invoice_date.year for item in scenario.income + scenario.expenses} == {2024}
-    assert scenario.out_of_year_income.invoice_date.year == 2023
-    assert scenario.income_date_boundary.invoice_date.isoformat() == "2024-03-31"
-    assert scenario.income_date_boundary.transaction_date.isoformat() == "2024-04-01"
-    assert scenario.expense_date_boundary.invoice_date.isoformat() == "2024-03-31"
-    assert scenario.expense_date_boundary.transaction_date.isoformat() == "2024-04-01"
+    assert scenario.taxpayer.activity_start.isoformat() == f"{year}-01-01"
+    assert {item.invoice_date.year for item in scenario.income + scenario.expenses} == {year}
+    assert scenario.out_of_year_income.invoice_date.year == year - 1
+    assert scenario.income_date_boundary.invoice_date.isoformat() == f"{year}-03-31"
+    assert scenario.income_date_boundary.transaction_date.isoformat() == f"{year}-04-01"
+    assert scenario.expense_date_boundary.invoice_date.isoformat() == f"{year}-03-31"
+    assert scenario.expense_date_boundary.transaction_date.isoformat() == f"{year}-04-01"
 
 
 def test_history_states_distinguish_first_period_missing_and_available() -> None:
-    assert expected_history_state(year=2025, period="1T", available_periods=frozenset()) is HistoryState.NOT_APPLICABLE
-    assert expected_history_state(year=2025, period="2T", available_periods=frozenset()) is HistoryState.MISSING
-    assert expected_history_state(year=2025, period="2T", available_periods=frozenset({"1T"})) is HistoryState.AVAILABLE
+    assert (
+        expected_history_state(year=_year(), period="1T", available_periods=frozenset()) is HistoryState.NOT_APPLICABLE
+    )
+    assert expected_history_state(year=_year(), period="2T", available_periods=frozenset()) is HistoryState.MISSING
+    assert (
+        expected_history_state(year=_year(), period="2T", available_periods=frozenset({"1T"})) is HistoryState.AVAILABLE
+    )
     assert (
         expected_history_state(
-            year=2025,
+            year=_year(),
             period="2T",
             available_periods=frozenset({"1T"}),
             recorded_zero_periods=frozenset({"1T"}),
@@ -94,9 +109,9 @@ def test_history_states_distinguish_first_period_missing_and_available() -> None
 
 
 def test_retention_mutation_oracle_changes_the_persisted_q4_pair_without_additive_income() -> None:
-    mutation = build_retention_mutation_oracle(2025)
+    mutation = build_retention_mutation_oracle(_year())
 
-    assert mutation.target_invoice.invoice_id == mutation.corrected_invoice.invoice_id == "income-2025-4T"
+    assert mutation.target_invoice.invoice_id == mutation.corrected_invoice.invoice_id == f"income-{_year()}-4T"
     assert mutation.target_invoice.withholding == Decimal("175.00")
     assert mutation.corrected_invoice.withholding == Decimal("0.00")
     assert mutation.target_invoice.net_receipt == Decimal("2850.00")
@@ -112,11 +127,11 @@ def test_retention_mutation_oracle_changes_the_persisted_q4_pair_without_additiv
 
 
 def test_boundary_control_oracle_uses_transaction_filing_dates_without_changing_baseline() -> None:
-    baseline = build_scenario(2025)
-    controls = build_boundary_control_scenario(2025)
+    baseline = build_scenario(_year())
+    controls = build_boundary_control_scenario(_year())
 
-    assert controls.excluded_income_ids == ("income-2024-control",)
-    assert "income-2025-boundary" in controls.selected_income_ids
+    assert controls.excluded_income_ids == (f"income-{_year() - 1}-control",)
+    assert f"income-{_year()}-boundary" in controls.selected_income_ids
     assert controls.quarter_oracle[0] == baseline.quarter_oracle[0]
     assert controls.quarter_oracle[1].cumulative_income == Decimal("7611")
     assert controls.quarter_oracle[1].cumulative_expenses == Decimal("1299")
@@ -130,14 +145,15 @@ def test_boundary_control_oracle_uses_transaction_filing_dates_without_changing_
 
 
 def test_receipt_is_machine_readable_and_keeps_blocked_distinct() -> None:
+    year = newest_authored_edition("100")
     receipt = AcceptanceReceipt(
         brief_revision="0.6",
-        scenario_id="income-directa-normal-v1:2025:cli",
+        scenario_id=f"income-directa-normal-v1:{year}:cli",
         frontend_path="cli",
-        year=2025,
+        year=year,
         authority_generation="a" * 64,
-        modelo_130_revision="2019-y-siguientes",
-        modelo_100_revision="2025",
+        modelo_130_revision=str(revision_covering("130", year).id),
+        modelo_100_revision=str(revision_covering("100", year).id),
         acceptance_id="A9",
         outcome=AcceptanceOutcome.BLOCKED,
         source_state="export_refused",

@@ -16,12 +16,10 @@ path exceeds the limit.
 
 from __future__ import annotations
 
-import os
 import sys
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Sequence
 from functools import lru_cache
 from pathlib import Path
-from stat import S_ISREG
 from typing import TYPE_CHECKING, Any, Literal, Protocol
 
 from .config_state_root import (
@@ -29,7 +27,6 @@ from .config_state_root import (
     live_state_root_inputs,
     platform_user_data_root,
 )
-from .directory_scan import DirectoryEntryKind, iter_directory
 
 if TYPE_CHECKING:
     from .config import Settings
@@ -270,97 +267,6 @@ def path_stat_fingerprint(path: Path) -> tuple[str, int, int]:
     """
     stat = path.stat()
     return (str(path), stat.st_size, stat.st_mtime_ns)
-
-
-def directory_byte_total(
-    directory: Path,
-    *,
-    tolerate_errors: bool = False,
-    entries: Iterable[Path] | None = None,
-) -> tuple[int, int]:
-    """Return ``(total_bytes, file_count)`` for every regular file under ``directory``.
-
-    A missing (or not-a-directory) ``directory`` reports ``(0, 0)`` rather
-    than raising, mirroring the shape every prior hand-rolled walker used.
-
-    Args:
-        directory: The directory to sum. Only used to short-circuit on
-            absence when ``entries`` is not supplied; the actual walk reads
-            ``entries`` (or a fresh recursive scan of ``directory``).
-        tolerate_errors: When ``False`` (the default), an ``OSError`` raised
-            while statting a candidate propagates, as does one raised while
-            advancing a caller-supplied ``entries`` iterator. When ``True``,
-            the failing candidate — or the rest of an interrupted walk — is
-            skipped and the total reflects only what was successfully
-            stat'd, so a blob write racing this read never crashes the
-            caller.
-
-            The flag does not reach the internal scan's own descent: an
-            unreadable subdirectory is skipped silently whatever it is set
-            to, the scan reporting what it could read rather than raising
-            from beneath the root. That predates the move off
-            ``Path.rglob``, which swallowed the same errors — so an
-            injected ``entries`` is the only walk advance this flag
-            governs.
-        entries: Pre-enumerated candidates to sum instead of a fresh
-            recursive scan of ``directory``. Injectable so a caller that already
-            holds an enumeration can reuse it, and so a test can reproduce a
-            file vanishing mid-walk deterministically (list the candidate,
-            delete it on disk, then call this function with that stale
-            reference).
-
-    Returns:
-        ``(total_bytes, file_count)`` summed over every regular file
-        encountered. Directories and other non-regular entries among the
-        candidates are silently skipped (not an error).
-    """
-    candidates = _byte_total_candidates(directory, entries)
-    total_bytes = 0
-    file_count = 0
-    while True:
-        has_candidate, candidate = _next_byte_total_candidate(candidates, tolerate_errors=tolerate_errors)
-        if not has_candidate:
-            break
-        candidate_stat = _stat_byte_total_candidate(candidate, tolerate_errors=tolerate_errors)
-        if candidate_stat is None:
-            continue
-        if S_ISREG(candidate_stat.st_mode):
-            total_bytes += candidate_stat.st_size
-            file_count += 1
-    return total_bytes, file_count
-
-
-def _byte_total_candidates(directory: Path, entries: Iterable[Path] | None) -> Iterator[Path]:
-    """Return supplied candidates or a fresh recursive file-only directory walk."""
-    if entries is not None:
-        return iter(entries)
-    if not directory.is_dir():
-        return iter(())
-    return iter_directory(directory, recursive=True, select=DirectoryEntryKind.FILES)
-
-
-def _next_byte_total_candidate(candidates: Iterator[Path], *, tolerate_errors: bool) -> tuple[bool, Path | None]:
-    """Advance a candidate iterator, stopping on its tolerated traversal error."""
-    try:
-        return True, next(candidates)
-    except StopIteration:
-        return False, None
-    except OSError:
-        if not tolerate_errors:
-            raise
-        return False, None
-
-
-def _stat_byte_total_candidate(candidate: Path | None, *, tolerate_errors: bool) -> os.stat_result | None:
-    """Stat one candidate, skipping only its tolerated stat failure."""
-    if candidate is None:
-        return None
-    try:
-        return candidate.stat()
-    except OSError:
-        if not tolerate_errors:
-            raise
-        return None
 
 
 class _RetentionTimestamp(Protocol):

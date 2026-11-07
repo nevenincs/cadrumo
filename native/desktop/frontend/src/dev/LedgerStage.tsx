@@ -36,6 +36,7 @@ import {
 import { useStrings } from "../shell/strings";
 import { fixtureLedger, type FixtureMovement } from "./fixtures/ledger";
 import { ledgerFixture, type LedgerShape } from "./ledgerFixture";
+import { fixtureMonth } from "@/dev/fixtureDates";
 
 // What the Ledger stories share: the scenario's ledger port, made once for a
 // story, the page laid out the way the window lays it out with its view held
@@ -87,7 +88,11 @@ export function storyMovementIds(
   pick: (movement: FixtureMovement) => boolean,
   count = Infinity,
   /** The movements' dates start with this; the fourth quarter by default. */
-  dates: string | readonly string[] = ["2026-10", "2026-11", "2026-12"],
+  dates: string | readonly string[] = [
+    fixtureMonth(10),
+    fixtureMonth(11),
+    fixtureMonth(12),
+  ],
 ): string[] {
   const starts = typeof dates === "string" ? [dates] : dates;
   return fixtureLedger()

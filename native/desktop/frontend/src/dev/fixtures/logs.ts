@@ -8,6 +8,7 @@ import type {
   LogSourceState,
   LogSourceStates,
 } from "../../ipc/contract";
+import { fixtureDay, fixtureInstant } from "@/dev/fixtureDates";
 
 export const FIXTURE_LOG_FILE = "<storage>/logs/cadrumo.log";
 
@@ -47,7 +48,7 @@ export const UNREADABLE: LogSourceStates = {
   manager: MANAGER_AVAILABLE,
 };
 
-const START_MS = Date.parse("2026-03-02T09:14:05.120Z");
+const START_MS = Date.parse(fixtureInstant(3, 2, "09:14:05.120Z"));
 
 function python(
   seq: number,
@@ -188,7 +189,7 @@ export const FIXTURE_RECORDS: readonly LogRecord[] = [
   {
     seq: 15,
     source: "python",
-    timestamp: "2026-03-02 09:14:10,000",
+    timestamp: `${fixtureDay(3, 2)} 09:14:10,000`,
     timestampMs: null,
     level: "INFO",
     logger: "cadrumo.legacy",

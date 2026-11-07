@@ -14,6 +14,7 @@ import type {
   Origin,
   ResultDirection,
 } from "./types";
+import { fixtureDay, fixtureInstant } from "@/dev/fixtureDates";
 
 // Envelopes of the registered read `modelo.work.form`, produced by the
 // application's own builder and public projection over the published
@@ -30,13 +31,13 @@ const ENVELOPES: Record<string, Record<"en" | "es", unknown>> = {
 };
 
 /** The day every story is read on, so deadlines read the same everywhere. */
-export const FIXTURE_TODAY = "2026-10-14";
+export const FIXTURE_TODAY = fixtureDay(10, 14);
 /** The year of `FIXTURE_TODAY`, which every story files in. */
 export const FIXTURE_FILING_YEAR = Number(FIXTURE_TODAY.slice(0, 4));
 
 const ANNUAL_CLOSES: Record<string, string> = {
-  "347": "2027-02-28",
-  "390": "2027-01-30",
+  "347": fixtureDay(2, 28, 1),
+  "390": fixtureDay(1, 30, 1),
 };
 
 const daysFrom = (today: string, day: string) =>
@@ -56,8 +57,8 @@ export function envelope(modelo: string, locale: string): FormEnvelope {
   const f = e.form.form;
   const annual = f.period.code === "0A";
   const closes = annual
-    ? (ANNUAL_CLOSES[modelo] ?? "2027-01-30")
-    : "2026-10-20";
+    ? (ANNUAL_CLOSES[modelo] ?? fixtureDay(1, 30, 1))
+    : fixtureDay(10, 20);
   f.period = { filing_year: FIXTURE_FILING_YEAR, code: annual ? "0A" : "3T" };
   f.filing_year = FIXTURE_FILING_YEAR;
   for (const page of f.pages)
@@ -185,9 +186,9 @@ export function checked130(locale: string): FormEnvelope {
 export function recorded130(locale: string): FormEnvelope {
   const e = checked130(locale);
   const f = e.form.form;
-  f.filing = { recorded_at: "2026-10-14T18:02:00" };
+  f.filing = { recorded_at: fixtureInstant(10, 14, "18:02:00") };
   f.last_export = {
-    exported_at: "2026-10-14T17:55:00",
+    exported_at: fixtureInstant(10, 14, "17:55:00"),
     calculation_revision_id: f.calculation_revision_id ?? "",
     current: true,
   };
@@ -333,7 +334,7 @@ export const DECLARATIONS: ListRow[] = [
     state: "calculated",
     group: "attention",
     declaration: work("w-303-3t", "calculated", 3, ["1234.56", "to_pay"]),
-    calendar: cal("2026-10-20"),
+    calendar: cal(fixtureDay(10, 20)),
     advice: null,
   },
   {
@@ -343,7 +344,7 @@ export const DECLARATIONS: ListRow[] = [
     state: "blocked",
     group: "attention",
     declaration: work("w-130-3t", "blocked", 1, null),
-    calendar: cal("2026-10-20"),
+    calendar: cal(fixtureDay(10, 20)),
     advice: null,
   },
   {
@@ -353,7 +354,7 @@ export const DECLARATIONS: ListRow[] = [
     state: "not_started",
     group: "attention",
     declaration: null,
-    calendar: cal("2026-10-20"),
+    calendar: cal(fixtureDay(10, 20)),
     advice: null,
   },
   {
@@ -363,7 +364,7 @@ export const DECLARATIONS: ListRow[] = [
     state: "checked",
     group: "ready",
     declaration: work("w-111-3t", "checked", 0, ["412.00", "to_pay"], true),
-    calendar: cal("2026-10-20"),
+    calendar: cal(fixtureDay(10, 20)),
     advice: null,
   },
   {
@@ -373,7 +374,7 @@ export const DECLARATIONS: ListRow[] = [
     state: "draft",
     group: "in_progress",
     declaration: work("w-347-0a", "draft", null, null),
-    calendar: cal("2027-02-28"),
+    calendar: cal(fixtureDay(2, 28, 1)),
     advice: null,
   },
   {
@@ -383,7 +384,7 @@ export const DECLARATIONS: ListRow[] = [
     state: "draft",
     group: "in_progress",
     declaration: work("w-390-0a", "draft", null, null),
-    calendar: cal("2027-01-30"),
+    calendar: cal(fixtureDay(1, 30, 1)),
     advice: null,
   },
   {
@@ -393,7 +394,7 @@ export const DECLARATIONS: ListRow[] = [
     state: "recorded",
     group: "recorded",
     declaration: work("w-303-2t", "recorded", 0, ["980.10", "to_pay"], true),
-    calendar: cal("2026-07-20", "justificante_verified", recorded),
+    calendar: cal(fixtureDay(7, 20), "justificante_verified", recorded),
     advice: null,
   },
   {
@@ -403,7 +404,7 @@ export const DECLARATIONS: ListRow[] = [
     state: "recorded",
     group: "recorded",
     declaration: work("w-130-2t", "recorded", 0, ["1120.40", "to_pay"], true),
-    calendar: cal("2026-07-20", "not_observed", recorded),
+    calendar: cal(fixtureDay(7, 20), "not_observed", recorded),
     advice: null,
   },
   {
@@ -413,7 +414,7 @@ export const DECLARATIONS: ListRow[] = [
     state: "recorded",
     group: "recorded",
     declaration: work("w-303-1t", "recorded", 0, ["310.00", "to_refund"], true),
-    calendar: cal("2026-04-20", "accepted", {
+    calendar: cal(fixtureDay(4, 20), "accepted", {
       ...recorded,
       aeat_needs_check: true,
     }),
@@ -444,7 +445,7 @@ export function issues130(locale: string): FormEnvelope {
 export function exported130(locale: string, current: boolean): FormEnvelope {
   const e = checked130(locale);
   e.form.form.last_export = {
-    exported_at: "2026-10-14T17:55:00",
+    exported_at: fixtureInstant(10, 14, "17:55:00"),
     calculation_revision_id: current
       ? (e.form.form.calculation_revision_id ?? "")
       : "earlier",

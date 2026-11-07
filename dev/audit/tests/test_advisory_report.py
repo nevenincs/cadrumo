@@ -20,6 +20,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from .. import advisory
 from ..advisory import (
@@ -97,13 +98,13 @@ def test_aggregate_exit_distinguishes_coverage_from_availability(
 
 
 def test_allocate_run_dir_uses_logs_date_partition_and_unique_run_identity(tmp_path: Path) -> None:
-    instant = datetime(2026, 9, 8, 12, 34, 56, 123456, tzinfo=UTC)
+    instant = datetime(filing_year_envelope().horizon, 9, 8, 12, 34, 56, 123456, tzinfo=UTC)
 
     first = allocate_run_dir(tmp_path, now=instant)
     second = allocate_run_dir(tmp_path, now=instant)
 
-    assert first.parent == tmp_path / "logs" / "audit-runs" / "2026-09-08"
-    assert first.name.startswith("20260908T123456.123456Z-audit-code-")
+    assert first.parent == tmp_path / "logs" / "audit-runs" / f"{instant:%Y-%m-%d}"
+    assert first.name.startswith(f"{instant:%Y%m%d}T123456.123456Z-audit-code-")
     assert first != second
 
 
@@ -227,7 +228,11 @@ def test_to_json_carries_every_field_uncapped() -> None:
     # so a strict checker cannot see the nested shape without this -- the
     # same reason every other test here reads persisted output back through
     # `json.loads` rather than the in-memory payload.
-    payload = json.loads(json.dumps(to_json(dimensions, Status.AMBER, "2026-01-01T00:00:00+00:00")))
+    payload = json.loads(
+        json.dumps(
+            to_json(dimensions, Status.AMBER, datetime(filing_year_envelope().horizon, 1, 1, tzinfo=UTC).isoformat())
+        )
+    )
 
     assert payload["overall"] == "amber"
     dimension_payload = payload["dimensions"][0]

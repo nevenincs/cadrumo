@@ -422,10 +422,12 @@ def test_a_link_counts_the_other_movements_holding_the_invoice_and_not_itself() 
 
 _ASKED: Final = json.loads(_QUESTIONS.read_text(encoding="utf-8"))
 
+
 #: Equal ranks fall to the lower invoice_id, so the tied pair's suggestion is whichever of the two sorts first.
 def _lower_tied_invoice() -> str:
     tied = (build_invoice(number, party="Arroyo Asesores") for number in ("AA-118", "AA-119"))
     return min(tied, key=lambda invoice: invoice.invoice_id).invoice_number
+
 
 #: The (movement, invoice) pairs each committed scenario must suggest, in order, worked from the rule its name states.
 _SUGGESTED: Final[dict[str, list[tuple[str, str]]]] = {
@@ -472,9 +474,7 @@ def test_the_committed_scenarios_are_the_ones_the_expectations_state() -> None:
 def test_every_committed_scenario_is_answered_as_its_rule_says(scenario: dict[str, Any]) -> None:
     answer = recorded_scenario(scenario)["answer"]
 
-    expected = [
-        (movement, _lower_tied_invoice() if not invoice else invoice) for movement, invoice in _SUGGESTED[scenario["name"]]
-    ]
+    expected = [(movement, invoice or _lower_tied_invoice()) for movement, invoice in _SUGGESTED[scenario["name"]]]
     assert [(found["movement"], found["invoice"]) for found in answer["suggestions"]] == expected
 
 

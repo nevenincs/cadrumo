@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormRepeatingGroupBlock
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ...compiler.form_layout_integrity import form_layout_failures
 from ...compiler.loader import load_modelo_directory
@@ -13,17 +14,18 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 @pytest.mark.parametrize(
-    ("revision_id", "field_count", "source"),
+    ("position", "field_count", "source"),
     [
-        ("2022", 64, "aeat-dr-190-2020"),
-        ("2023", 69, "aeat-dr-190-2023"),
-        ("2024", 70, "aeat-dr-190-2024"),
-        ("2025-y-siguientes", 76, "aeat-dr-190-2025"),
+        (0, 64, "aeat-dr-190-2020"),
+        (1, 69, "aeat-dr-190-2023"),
+        (2, 70, "aeat-dr-190-2024"),
+        (3, 76, "aeat-dr-190-2025"),
     ],
 )
 def test_recipient_sections_preserve_revision_fields_and_official_numbering(
-    revision_id: str, field_count: int, source: str
+    position: int, field_count: int, source: str
 ) -> None:
+    revision_id = str(authored_revisions("190")[position].id)
     revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/190")).revisions[revision_id]
     layout = revision.form_layouts[0]
     assert form_layout_failures(revision) == ()
@@ -35,7 +37,7 @@ def test_recipient_sections_preserve_revision_fields_and_official_numbering(
     numbered = {
         str(p.casilla_id): p.box_number for p in layout.placements if (p.box_number is not None and p.box_number)
     }
-    if revision_id == "2025-y-siguientes":
+    if position == 3:
         assert numbered == {}
         assert [s.source_ref for s in layout.design_sources] == [source]
     else:
@@ -59,5 +61,5 @@ def test_recipient_sections_preserve_revision_fields_and_official_numbering(
     assert {c.casilla_id for c in columns} == recipient_ids
     assert len(columns) == len(recipient_ids)
     assert max(len(g.columns) for g in groups) <= 10
-    assert ("perc.prestacion-jubilacion" in recipient_ids) == (revision_id == "2025-y-siguientes")
-    assert ("perc.retenciones-forales-navarra" in recipient_ids) == (revision_id != "2022")
+    assert ("perc.prestacion-jubilacion" in recipient_ids) == (position == 3)
+    assert ("perc.retenciones-forales-navarra" in recipient_ids) == (position != 0)

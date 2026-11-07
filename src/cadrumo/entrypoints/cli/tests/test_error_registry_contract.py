@@ -18,9 +18,8 @@ from ....application.review.errors import FilterParseError
 from ....core.access_gate.errors import LiveSubmitForbiddenError
 from ....core.config import override_settings
 from ....core.errors.error_codes import ErrorCategory, render_error_text
-from ....core.errors.hierarchy import DecimalFormatError
+from ....core.errors.hierarchy import DecimalFormatError, InternalInvariantError
 from ....core.i18n.render import tr
-from ....core.observability.errors import RunContextMissingError
 from ....domain.portals.errors import PortalIntegrityError
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -35,7 +34,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
         (AeatSessionExpiredError, ErrorCategory.AUTH),
         (PortalIntegrityError, ErrorCategory.INTEGRITY),
         (BrowserError, ErrorCategory.FAIL),
-        (RunContextMissingError, ErrorCategory.INTERNAL),
+        (InternalInvariantError, ErrorCategory.INTERNAL),
     ],
 )
 @pytest.mark.parametrize("locale", ("en", "es", "ca", "hu"))

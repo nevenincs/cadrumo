@@ -190,8 +190,8 @@ def _spec_family_modules(probe: str) -> list[str]:
 
 def test_importing_the_cli_loads_no_command_spec_family() -> None:
     assert _spec_family_modules("import cadrumo.entrypoints.cli.main") == [
-        "cadrumo.entrypoints.cli.root_command_specs",
         "cadrumo.entrypoints.cli.command_specs",
+        "cadrumo.entrypoints.cli.root_command_specs",
     ]
 
 

@@ -1,4 +1,5 @@
 import type { RecordedCalculationNote } from "../shell/modeloContract/modelo";
+import { fixtureDay } from "@/dev/fixtureDates";
 
 const GAP = "No dotación is recorded for part of the year.";
 
@@ -13,8 +14,8 @@ export const ASSET_NOTES: readonly RecordedCalculationNote[] = [
       values: [
         ["amount", "412.50"],
         ["box", "0208"],
-        ["end", "2026-03-31"],
-        ["start", "2026-01-01"],
+        ["end", fixtureDay(3, 31)],
+        ["start", fixtureDay(1, 1)],
       ],
       element_refs: ["laptop"],
       row_refs: [],
@@ -30,8 +31,8 @@ export const ASSET_NOTES: readonly RecordedCalculationNote[] = [
       values: [
         ["amount", "96.00"],
         ["box", "0208"],
-        ["end", "2026-03-31"],
-        ["start", "2026-02-01"],
+        ["end", fixtureDay(3, 31)],
+        ["start", fixtureDay(2, 1)],
       ],
       element_refs: ["printer"],
       row_refs: [],
@@ -46,7 +47,7 @@ export const ASSET_NOTES: readonly RecordedCalculationNote[] = [
       sentence: "possibly_durable_expense",
       values: [
         ["category", "office"],
-        ["row_date", "2026-02-14"],
+        ["row_date", fixtureDay(2, 14)],
         ["row_amount", "650.00"],
       ],
       element_refs: [],

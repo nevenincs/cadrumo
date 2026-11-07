@@ -2,7 +2,7 @@
 
 One canonical home for the :data:`IBAN_SHAPE_RE` pattern and
 :func:`iban_mod_97` check residue, consumed by
-:data:`~domain.calculations.registry.schema_scalars.IbanString` for registry
+:func:`~domain.calculations.registry.schema_scalars.validate_iban_string` for registry
 casillas declaring ``data_type = "iban"`` and by the secure-storage
 :class:`~domain.deadlines.models.RefundAccount` model. Keeping the primitives in
 ``core`` lets each domain validate an IBAN without importing the other.

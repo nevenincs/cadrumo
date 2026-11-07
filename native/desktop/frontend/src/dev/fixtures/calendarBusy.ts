@@ -1,5 +1,6 @@
 import type { CalendarEntry, FilingCalendar } from "../../shell/views";
 import { FIXTURE_CALENDAR, FIXTURE_STATUS } from "./calendar";
+import { fixtureDay, fixtureInstant, fixtureYear } from "@/dev/fixtureDates";
 
 // The turn of a year, when most of a small business's obligations fall due
 // together: nine filing windows open over the same weeks of January, one
@@ -8,11 +9,11 @@ import { FIXTURE_CALENDAR, FIXTURE_STATUS } from "./calendar";
 // layout under load; the dates are for the drawing and state nothing about
 // any year's legal calendar.
 
-export const BUSY_TODAY = "2027-01-12";
+export const BUSY_TODAY = fixtureDay(1, 12, 1);
 
 /** The year the annual obligations here belong to: the one before the year of
  * `BUSY_TODAY`, in which they close. */
-const ANNUAL_YEAR = String(Number(BUSY_TODAY.slice(0, 4)) - 1);
+const ANNUAL_YEAR = String(fixtureYear);
 
 const base = FIXTURE_CALENDAR.entries[0];
 if (!base) throw new Error("the calendar fixture has no entry to shape from");
@@ -46,49 +47,52 @@ function entry(
 
 // The thirtieth of January 2027 is a Saturday: what closes then binds on
 // the Monday, the first of February.
-const moved = { adjusted_closes_on: "2027-02-01", shift_reason: "weekend" };
+const moved = {
+  adjusted_closes_on: fixtureDay(2, 1, 1),
+  shift_reason: "weekend",
+};
 
 export const BUSY_CALENDAR: FilingCalendar = {
   ...FIXTURE_CALENDAR,
-  range: { from_date: "2026-11-01", to_date: "2027-04-30" },
+  range: { from_date: fixtureDay(11, 1), to_date: fixtureDay(4, 30, 1) },
   generated_at: `${BUSY_TODAY}T08:02:00Z`,
   warnings: [],
   entries: [
-    entry("202", "2026-2P", "2026-12-01", "2026-12-21", {
+    entry("202", "2026-2P", fixtureDay(12, 1), fixtureDay(12, 21), {
       user_state: "late",
       days_overdue: 22,
     }),
-    entry("111", "2026-4T", "2027-01-01", "2027-01-20"),
-    entry("115", "2026-4T", "2027-01-01", "2027-01-20", {
+    entry("111", "2026-4T", fixtureDay(1, 1, 1), fixtureDay(1, 20, 1)),
+    entry("115", "2026-4T", fixtureDay(1, 1, 1), fixtureDay(1, 20, 1), {
       user_state: "filed",
       local_filing_state: "ready_to_file",
       aeat_submission_state: "justificante_verified",
       justificante_verified: true,
     }),
-    entry("123", "2026-4T", "2027-01-01", "2027-01-20", {
+    entry("123", "2026-4T", fixtureDay(1, 1, 1), fixtureDay(1, 20, 1), {
       local_filing_state: "ready_to_file",
     }),
-    entry("130", "2026-4T", "2027-01-01", "2027-01-30", moved),
-    entry("303", "2026-4T", "2027-01-01", "2027-01-30", {
+    entry("130", "2026-4T", fixtureDay(1, 1, 1), fixtureDay(1, 30, 1), moved),
+    entry("303", "2026-4T", fixtureDay(1, 1, 1), fixtureDay(1, 30, 1), {
       ...moved,
       local_filing_state: "ready_to_file",
-      payment_cutoff_on: "2027-01-27",
+      payment_cutoff_on: fixtureDay(1, 27, 1),
     }),
-    entry("349", "2026-4T", null, "2027-01-30", {
+    entry("349", "2026-4T", null, fixtureDay(1, 30, 1), {
       ...moved,
       user_state: "unknown",
     }),
-    entry("180", ANNUAL_YEAR, "2027-01-01", "2027-01-30", moved),
-    entry("190", ANNUAL_YEAR, "2027-01-01", "2027-01-30", moved),
-    entry("390", ANNUAL_YEAR, "2027-01-01", "2027-01-30", moved),
-    entry("347", ANNUAL_YEAR, "2027-02-01", "2027-03-01"),
+    entry("180", ANNUAL_YEAR, fixtureDay(1, 1, 1), fixtureDay(1, 30, 1), moved),
+    entry("190", ANNUAL_YEAR, fixtureDay(1, 1, 1), fixtureDay(1, 30, 1), moved),
+    entry("390", ANNUAL_YEAR, fixtureDay(1, 1, 1), fixtureDay(1, 30, 1), moved),
+    entry("347", ANNUAL_YEAR, fixtureDay(2, 1, 1), fixtureDay(3, 1, 1)),
     // Closes after the range that was asked for.
-    entry("100", ANNUAL_YEAR, "2027-04-07", "2027-06-30"),
+    entry("100", ANNUAL_YEAR, fixtureDay(4, 7, 1), fixtureDay(6, 30, 1)),
   ],
   events: [
     {
       event_type: "message",
-      event_date: "2026-12-22",
+      event_date: fixtureDay(12, 22),
       source: "notifications",
       summary: "Notification received from the agency",
       reference_id: "busy-message-2026-12-22",
@@ -99,18 +103,18 @@ export const BUSY_CALENDAR: FilingCalendar = {
     },
     {
       event_type: "filing",
-      event_date: "2027-01-08",
+      event_date: fixtureDay(1, 8, 1),
       source: "filed_declarations",
       summary: "Modelo 115 2026-4T filed",
       reference_id: "busy-filing-2027-01-08",
       status: "presentado",
       aeat_submission_state: "justificante_verified",
-      aeat_submitted_at: "2027-01-08T09:30:00Z",
+      aeat_submitted_at: fixtureInstant(1, 8, "09:30:00Z", 1),
       justificante_verified: true,
     },
     {
       event_type: "message",
-      event_date: "2027-01-08",
+      event_date: fixtureDay(1, 8, 1),
       source: "notifications",
       summary: "Notification received from the agency",
       reference_id: "busy-message-2027-01-08",

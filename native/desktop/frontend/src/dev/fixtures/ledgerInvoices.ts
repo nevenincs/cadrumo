@@ -12,6 +12,7 @@ import type {
 } from "../../shell/ledgerInvoiceOperations";
 import type { PaymentStatus } from "../../shell/ledgerContract";
 import { settlementOf } from "../ledgerSettlement";
+import { fixtureDay } from "@/dev/fixtureDates";
 
 type Example = {
   kind: InvoiceKind;
@@ -68,7 +69,7 @@ const EXAMPLES: Example[] = [
     invoiceClass: "ORDINARIA",
     series: "F",
     number: "F-2025-099",
-    issued: "2025-12-18",
+    issued: fixtureDay(12, 18, -1),
     name: "Talleres Ondara, S.L.",
     taxId: "B00000017",
     country: "ES",
@@ -82,7 +83,7 @@ const EXAMPLES: Example[] = [
     invoiceClass: "ORDINARIA",
     series: "F",
     number: "F-2026-018",
-    issued: "2026-09-12",
+    issued: fixtureDay(9, 12),
     name: "Hotel Mirador Azul, S.L.",
     taxId: "B00000058",
     country: "ES",
@@ -99,8 +100,8 @@ const EXAMPLES: Example[] = [
     invoiceClass: "ORDINARIA",
     series: "F",
     number: "F-2026-020",
-    issued: "2026-10-10",
-    operated: "2026-09-30",
+    issued: fixtureDay(10, 10),
+    operated: fixtureDay(9, 30),
     name: "Bodegas Peña Rubia, S.L.",
     taxId: "B00000066",
     country: "ES",
@@ -116,7 +117,7 @@ const EXAMPLES: Example[] = [
     invoiceClass: "RECTIFICATIVA",
     series: "R",
     number: "R-2026-02",
-    issued: "2026-08-03",
+    issued: fixtureDay(8, 3),
     name: "Editorial Brisa Norte, S.A.",
     taxId: "A00000025",
     country: "ES",
@@ -130,7 +131,7 @@ const EXAMPLES: Example[] = [
     invoiceClass: "SIMPLIFICADA",
     series: "T",
     number: "T-2026-0007",
-    issued: "2026-10-02",
+    issued: fixtureDay(10, 2),
     name: "Venta en taller",
     taxId: null,
     country: "ES",
@@ -143,7 +144,7 @@ const EXAMPLES: Example[] = [
     invoiceClass: "ORDINARIA",
     series: null,
     number: "INV-88412",
-    issued: "2026-10-06",
+    issued: fixtureDay(10, 6),
     name: "Pixel Foundry Ltd",
     taxId: "GB000000017",
     country: "GB",
@@ -166,7 +167,7 @@ const EXAMPLES: Example[] = [
     invoiceClass: "ORDINARIA",
     series: "A",
     number: "A-1093",
-    issued: "2026-10-14",
+    issued: fixtureDay(10, 14),
     name: "Papelería Trazo, S.L.",
     taxId: "B00000082",
     country: "ES",

@@ -9,6 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ...compiler.authority import compiled_bundled_authority
@@ -85,7 +86,10 @@ def _assert_revision_ledger_rows(
 
 def _assert_modelo_038_selects_its_three_inspection_only_revisions(modelos, ledgers_by_coordinate) -> None:
     m038 = {modelo.id: modelo for modelo in modelos}["038"]
-    m038_revisions = tuple(sorted(m038.revisions.values(), key=lambda revision: revision.id))
+    m038_revisions = tuple(sorted(m038.revisions.values(), key=lambda revision: revision.valid_from))
+    early, amended, late = m038_revisions
+    amendment_year = amended.valid_from.year
+    every_month = ("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")
     assert {
         revision.id: (
             revision.valid_from,
@@ -97,29 +101,29 @@ def _assert_modelo_038_selects_its_three_inspection_only_revisions(modelos, ledg
         )
         for revision in m038_revisions
     } == {
-        "2022-hasta-2024-05": (
-            date(2022, 1, 1),
-            date(2024, 5, 31),
+        early.id: (
+            date(early.valid_from.year, 1, 1),
+            date(amendment_year, 5, 31),
             (),
-            2022,
-            2024,
-            ("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"),
+            early.valid_from.year,
+            amendment_year,
+            every_month,
         ),
-        "2024-desde-06": (
-            date(2024, 6, 1),
-            date(2024, 12, 31),
-            (2024,),
+        amended.id: (
+            date(amendment_year, 6, 1),
+            date(amendment_year, 12, 31),
+            (amendment_year,),
             None,
             None,
-            ("06", "07", "08", "09", "10", "11", "12"),
+            every_month[5:],
         ),
-        "2025-y-siguientes": (
-            date(2025, 1, 1),
+        late.id: (
+            date(amendment_year + 1, 1, 1),
             None,
             (),
-            2025,
+            amendment_year + 1,
             None,
-            ("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"),
+            every_month,
         ),
     }
 
@@ -221,7 +225,7 @@ def test_public_construct_ledger_keeps_reference_presence_unvalidated() -> None:
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2026,
+        filing_year=filing_year_envelope().horizon,
         period="1T",
     )
     ledger = build_construct_evidence_ledger(snapshot)
@@ -241,4 +245,4 @@ def test_construct_evidence_ledger_rejects_duplicate_kind_and_identity() -> None
     )
 
     with pytest.raises(ValidationError, match="unique kind/id coordinates"):
-        ConstructEvidenceLedger(modelo="100", revision="2025", rows=(row, row))
+        ConstructEvidenceLedger(modelo="100", revision=str(filing_year_envelope().horizon), rows=(row, row))

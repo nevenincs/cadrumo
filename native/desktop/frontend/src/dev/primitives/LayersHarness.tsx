@@ -36,6 +36,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { StringsContext, translator } from "@/shell/strings";
+import { fixtureDay } from "@/dev/fixtureDates";
 
 const SUGGESTIONS = ["Alpha", "Alpine", "Beta"].map((word) => ({
   value: word,
@@ -45,7 +46,7 @@ const SUGGESTIONS = ["Alpha", "Alpine", "Beta"].map((word) => ({
 /** Every kind of layer that can open inside a dialog, for the browser tests of
  * who gets Escape. */
 function Layers({ tallSuggestions = false }: { tallSuggestions?: boolean }) {
-  const [day, setDay] = useState("2026-03-14");
+  const [day, setDay] = useState(fixtureDay(3, 14));
   const [text, setText] = useState("");
   const [choice, setChoice] = useState<string | null>(null);
   const [cancels, setCancels] = useState<string[]>([]);

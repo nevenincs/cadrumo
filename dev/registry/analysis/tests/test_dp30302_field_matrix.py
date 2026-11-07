@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import cache
 from pathlib import Path
 from typing import TypedDict
 
@@ -50,6 +51,20 @@ _ARTEFACT_PATH = Path(__file__).resolve().parent.parent / "dp30302_field_matrix.
 #: satisfies a count of epochs while contributing no field to judge.
 _MINIMUM_DP30302_EPOCHS = 5
 _MINIMUM_DP30302_FIELDS_PER_EPOCH = 100
+
+
+_FIRST_EPOCH = DP30302_EPOCHS[0]
+_FIRST_SOURCE_REF = DP30302_EPOCH_COORDINATES[0].source_ref
+
+
+@cache
+def _epoch_revision_ids() -> tuple[str, ...]:
+    """Return the M303 revision each design epoch is filed under, in epoch order."""
+    authority = compiled_bundled_authority()
+    return tuple(
+        authority.inspect_revision("303", filing_year=coordinate.filing_year, period=coordinate.period).revision_id
+        for coordinate in DP30302_EPOCH_COORDINATES
+    )
 
 
 def _dp30302_sheets() -> dict[str, tuple[RecordDesignIntermediateField, ...]]:
@@ -127,7 +142,7 @@ def test_module_sub_indices_are_contiguous_and_gapless_against_real_fields() -> 
 
 def test_resolve_module_sub_indices_refuses_a_duplicate_ordinal_within_one_group() -> None:
     """A corrupted or re-partitioned anchor sharing an ordinal must refuse, not guess an order."""
-    fields = _dp30302_sheets()["2023"]
+    fields = _dp30302_sheets()[_FIRST_EPOCH]
     mesas_capacidad = [
         field
         for field in fields
@@ -202,12 +217,15 @@ def _projection_endpoints(revision_id: str) -> tuple[_ProjectionEndpoint, ...]:
 
 def test_real_dp30302_anchors_keep_other_countries_refund_distinct_from_quarterly_quotas() -> None:
     """The two adjacent 4T concepts are distinct typed declarations, never a shared fact."""
-    fields = _dp30302_sheets()["2023"]
+    fields = _dp30302_sheets()[_FIRST_EPOCH]
     descriptions = tuple(field.normalized_description for field in fields)
     assert any("Devolución cuotas soportadas otros países" in item for item in descriptions)
     assert any("Cuotas soportadas - 4T" in item for item in descriptions)
 
-    refs = tuple(compile_filing_projection_ref(item["projection_ref"]) for item in _projection_endpoints("2023"))
+    refs = tuple(
+        compile_filing_projection_ref(item["projection_ref"])
+        for item in _projection_endpoints(_epoch_revision_ids()[0])
+    )
     non_agricultural_slot_one = {
         ref.fact
         for ref in refs
@@ -221,27 +239,34 @@ def test_real_dp30302_anchors_keep_other_countries_refund_distinct_from_quarterl
 
 def test_real_dp30302_declarations_keep_the_reviewed_epoch_multiplicity() -> None:
     """The hash-pinned designs, rather than a generated count, govern every repeated fact."""
-    expected = {
-        "2023": (208, 134, {"superficie_horno_dias_cuarto_trimestre": {None}}),
-        "2024-hasta-08-y-2t": (204, 130, {"superficie_horno_dias_cuarto_trimestre": {None}}),
-        "2024-desde-09-y-3t": (214, 140, {"superficie_horno_dias_cuarto_trimestre": {None}}),
-        "2025": (
-            216,
-            142,
-            {
-                "superficie_horno_dias_cuarto_trimestre": {1, 2, 3, 4},
-                "superficie_horno_cuarto_trimestre": {1, 2, 3, 4},
-            },
-        ),
-        "2026-y-siguientes": (
-            216,
-            142,
-            {
-                "superficie_horno_dias_cuarto_trimestre": {1, 2, 3, 4},
-                "superficie_horno_cuarto_trimestre": {1, 2, 3, 4},
-            },
-        ),
-    }
+    # One entry per design epoch, in the order of DP30302_EPOCHS.
+    expected = dict(
+        zip(
+            _epoch_revision_ids(),
+            (
+                (208, 134, {"superficie_horno_dias_cuarto_trimestre": {None}}),
+                (204, 130, {"superficie_horno_dias_cuarto_trimestre": {None}}),
+                (214, 140, {"superficie_horno_dias_cuarto_trimestre": {None}}),
+                (
+                    216,
+                    142,
+                    {
+                        "superficie_horno_dias_cuarto_trimestre": {1, 2, 3, 4},
+                        "superficie_horno_cuarto_trimestre": {1, 2, 3, 4},
+                    },
+                ),
+                (
+                    216,
+                    142,
+                    {
+                        "superficie_horno_dias_cuarto_trimestre": {1, 2, 3, 4},
+                        "superficie_horno_cuarto_trimestre": {1, 2, 3, 4},
+                    },
+                ),
+            ),
+            strict=True,
+        )
+    )
     always_repeated = {
         "mesas_capacidad",
         "mesas_dias_cuarto_trimestre",
@@ -292,7 +317,7 @@ def test_a_repartitioned_real_anchor_desynchronises_the_persisted_matrix() -> No
     intermediate = next(
         item
         for item in load_dp30302_epoch_intermediates(compiled_bundled_authority())
-        if item.source.design_epoch == "2023"
+        if item.source.design_epoch == _FIRST_EPOCH
     )
     sheet = next(item for item in intermediate.sheets if item.record_identity == "DP30302")
     anchor = next(
@@ -318,9 +343,9 @@ def test_a_repartitioned_real_anchor_desynchronises_the_persisted_matrix() -> No
     )
     reclassified_epoch, _, _ = measure_dp30302_epoch(
         repartitioned_intermediate,
-        epoch="2023",
+        epoch=_FIRST_EPOCH,
     )
-    persisted_epoch = next(epoch for epoch in persisted.epochs if epoch.epoch == "2023")
+    persisted_epoch = next(epoch for epoch in persisted.epochs if epoch.epoch == _FIRST_EPOCH)
     assert reclassified_epoch.no_agricola == persisted_epoch.no_agricola - 1
     assert reclassified_epoch.reserve == persisted_epoch.reserve + 1
 
@@ -331,8 +356,8 @@ def test_a_repartitioned_real_anchor_desynchronises_the_persisted_matrix() -> No
 def test_epoch_matrix_refuses_a_partition_sum_that_does_not_equal_the_total() -> None:
     with pytest.raises(ValidationError, match="expected total"):
         DP30302EpochFieldMatrix(
-            epoch="2023",
-            source_ref="aeat-dr-303-2023",
+            epoch=_FIRST_EPOCH,
+            source_ref=_FIRST_SOURCE_REF,
             source_sha256="0" * 64,
             total=153,
             agricola=20,
@@ -348,8 +373,8 @@ def test_epoch_matrix_refuses_a_partition_sum_that_does_not_equal_the_total() ->
 def test_epoch_matrix_refuses_a_simplified_count_that_is_not_its_two_cohort_total() -> None:
     with pytest.raises(ValidationError, match="must equal agrícola plus no agrícola"):
         DP30302EpochFieldMatrix(
-            epoch="2023",
-            source_ref="aeat-dr-303-2023",
+            epoch=_FIRST_EPOCH,
+            source_ref=_FIRST_SOURCE_REF,
             source_sha256="0" * 64,
             total=153,
             agricola=20,
@@ -366,7 +391,7 @@ def test_repeating_family_refuses_a_cardinality_that_never_exceeds_one() -> None
     with pytest.raises(ValidationError, match="never exceeds one occurrence per slot"):
         DP30302RepeatingModuleFamily(
             generalized_description="not actually repeating",
-            epochs=(DP30302RepeatingModuleFamilyEpoch(epoch="2023", sub_index_cardinality=1),),
+            epochs=(DP30302RepeatingModuleFamilyEpoch(epoch=_FIRST_EPOCH, sub_index_cardinality=1),),
         )
 
 
@@ -375,8 +400,8 @@ def test_repeating_family_refuses_an_unknown_epoch_name() -> None:
         DP30302RepeatingModuleFamily(
             generalized_description="a family",
             epochs=(
-                DP30302RepeatingModuleFamilyEpoch(epoch="2027", sub_index_cardinality=4),
-                DP30302RepeatingModuleFamilyEpoch(epoch="2023", sub_index_cardinality=1),
+                DP30302RepeatingModuleFamilyEpoch(epoch="no-such-epoch", sub_index_cardinality=4),
+                DP30302RepeatingModuleFamilyEpoch(epoch=_FIRST_EPOCH, sub_index_cardinality=1),
             ),
         )
 
