@@ -6,7 +6,7 @@ import argparse
 import json
 import sys
 from collections import Counter
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
@@ -15,9 +15,11 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority, ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
 
 from ..compiler.validate_below_floor_export_refs import declared_supported_filing_years_floor
 from ..compiler.validate_bindings import informational_binding_ids
+from ..compiler.validate_export_exemption import modelo_publishes_a_record_design
 from ..compiler.validate_export_field_placement import (
     binding_export_spans,
     export_record_placement_advisories,
@@ -55,6 +57,7 @@ _TARGET_STATE_NAMES: Final[tuple[str, ...]] = (
     "stale",
     "drifted",
     "never-committed",
+    "not-applicable",
     "unreadable",
 )
 
@@ -353,8 +356,13 @@ def project_target_states(
     declared_floor: Callable[[], int],
     revision_filing_years: Callable[[str, str], tuple[int, ...]],
     excluded_count: int,
+    not_applicable: Iterable[tuple[str, str, str]] = (),
 ) -> ProjectedTargets:
     """Bucket each classified target, moving a drift its ledger row explains to ``explained``.
+
+    ``not_applicable`` carries the targets the registry itself places outside any
+    generated tree (see :func:`classify_inapplicable_target`); they are reported
+    in their own bucket and never count toward ``unreadable``.
 
     A target whose row is not honoured stays in its drifting bucket and the
     refusal is named in its detail and in the report details. ``declared_floor``
@@ -365,6 +373,7 @@ def project_target_states(
         "stale": [],
         "drifted": [],
         "never-committed": [],
+        "not-applicable": list(not_applicable),
         "unreadable": list(excluded),
     }
     counts: Counter[str] = Counter()
@@ -384,6 +393,7 @@ def project_target_states(
         if explanation_detail is not None:
             details.append(explanation_detail)
     counts["unreadable"] = excluded_count
+    counts["not-applicable"] = len(grouped["not-applicable"])
     return ProjectedTargets(
         counts=tuple((state, counts[state]) for state in _TARGET_STATE_NAMES),
         findings=tuple((state, tuple(findings)) for state, findings in grouped.items()),
@@ -514,11 +524,11 @@ def collect_target_axis(
         findings = (("unreadable", (("unknown", "unknown", "whole-registry validity failed"),)),)
         return True, Counter({"unreadable": 1}), findings
     try:
-        states, excluded, excluded_count, inventory_failed = _generated_target_inventory(
+        states, excluded, not_applicable, excluded_count, inventory_failed = _generated_target_inventory(
             authority, details, registry_root=registry_root, source_root=source_root
         )
         projected = _project_generated_targets(
-            authority, registry_root, disposition_ledger, states, excluded, excluded_count
+            authority, registry_root, disposition_ledger, states, excluded, excluded_count, not_applicable
         )
         details.extend(projected.details)
         return inventory_failed, Counter(dict(projected.counts)), projected.findings
@@ -534,13 +544,20 @@ def _generated_target_inventory(
     *,
     registry_root: Path,
     source_root: Path,
-) -> tuple[list[GeneratedTreeState], list[tuple[str, str, str]], int, bool]:
-    """Measure each modelo separately so one render failure cannot hide the rest."""
+) -> tuple[list[GeneratedTreeState], list[tuple[str, str, str]], list[tuple[str, str, str]], int, bool]:
+    """Measure each modelo separately so one render failure cannot hide the rest.
+
+    Returns the classified states, the targets that could not be rendered although
+    a tree is expected, the targets the registry places outside any generated tree,
+    how many unrendered targets there are, and whether a modelo census crashed.
+    """
     from .generated_tree_state import generated_state_inventory
 
     states: list[GeneratedTreeState] = []
     excluded: list[tuple[str, str, str]] = []
+    not_applicable: list[tuple[str, str, str]] = []
     unrenderable: list[str] = []
+    floor: int | None = None
     for modelo in authority.modelos:
         try:
             modelo_states, modelo_excluded = generated_state_inventory(
@@ -551,15 +568,73 @@ def _generated_target_inventory(
             details.append(f"TARGETS: modelo {modelo.id}: {type(modelo_error).__name__}: {modelo_error}")
             continue
         states.extend(modelo_states)
-        excluded.extend(modelo_excluded)
+        for modelo_id, revision_id, error in modelo_excluded:
+            if floor is None:
+                floor = declared_supported_filing_years_floor(registry_root=registry_root)
+            has_tree = (registry_root / "modelos" / modelo_id / "revisions" / revision_id / "export").is_dir()
+            reason = classify_inapplicable_target(
+                modelo, revision_id, authority.catalogues.sources, floor=floor, has_committed_tree=has_tree
+            )
+            if reason is None:
+                excluded.append((modelo_id, revision_id, error))
+            else:
+                not_applicable.append((modelo_id, revision_id, reason))
     if unrenderable:
         joined = ", ".join(unrenderable)
         details.append(f"TARGETS: {len(unrenderable)} modelo(s) could not be censused: {joined}")
     expected_target_count = sum(len(modelo.revisions) for modelo in authority.modelos)
-    excluded_count = max(0, expected_target_count - len(states))
+    excluded_count = max(0, expected_target_count - len(states) - len(not_applicable))
+    if not_applicable:
+        details.append(
+            f"TARGETS: {len(not_applicable)} target(s) have no generated tree to reproduce by registry declaration"
+        )
     if excluded_count:
         details.append(f"TARGETS: {excluded_count} target(s) were excluded by the generated-state owner")
-    return states, excluded, excluded_count, bool(unrenderable)
+    return states, excluded, not_applicable, excluded_count, bool(unrenderable)
+
+
+#: Reason tokens opening the detail of a ``not-applicable`` target.
+INAPPLICABLE_BELOW_FLOOR: Final = "below_supported_floor"
+INAPPLICABLE_NO_RECORD_DESIGN: Final = "no_published_record_design"
+
+
+def classify_inapplicable_target(
+    modelo: ModeloDefinition,
+    revision_id: str,
+    sources: Mapping[str, SourceReference],
+    *,
+    floor: int,
+    has_committed_tree: bool,
+) -> str | None:
+    """Name why the registry itself places a revision outside every generated export tree.
+
+    A generated tree is reproduced from an official record design for a filing
+    year the product supports. Two registry facts remove that expectation and
+    neither is a defect of the revision: every filing year it declares lies below
+    the supported floor (refused at every grade), or no source of its modelo is a
+    record design, so there is nothing to render from. Any other revision stays
+    unreadable, because a design is published and the years are supported, so a
+    missing tree is a gap to author.
+
+    A revision that already ships a tree is never placed here: it was expected to
+    render, and a failure to do so must stay visible.
+
+    Returns the reason detail (opening with its reason token), or ``None``.
+    """
+    if has_committed_tree:
+        return None
+    years = declared_revision_filing_years(modelo, revision_id)
+    if years and max(years) < floor:
+        return (
+            f"{INAPPLICABLE_BELOW_FLOOR}: every filing year the revision declares (through {max(years)}) "
+            f"lies below the supported filing-years floor {floor}"
+        )
+    if not modelo_publishes_a_record_design(modelo, sources):
+        return (
+            f"{INAPPLICABLE_NO_RECORD_DESIGN}: no source of modelo {modelo.id} is a record design, "
+            "so no generated export tree can exist for it"
+        )
+    return None
 
 
 def declared_revision_filing_years(modelo: ModeloDefinition, revision_id: str) -> tuple[int, ...]:
@@ -585,6 +660,7 @@ def _project_generated_targets(
     states: list[GeneratedTreeState],
     excluded: list[tuple[str, str, str]],
     excluded_count: int,
+    not_applicable: list[tuple[str, str, str]],
 ) -> ProjectedTargets:
     """Project classified states using the live floor, years, and disposition evidence."""
     return project_target_states(
@@ -596,6 +672,7 @@ def _project_generated_targets(
             authority.modelo(modelo_id), revision_id
         ),
         excluded_count=excluded_count,
+        not_applicable=not_applicable,
     )
 
 
@@ -896,6 +973,8 @@ def _target_state_overview(
     }
     if state == "unreadable":
         result["reason_counts"] = _unreadable_reason_counts(findings)
+    if state == "not-applicable":
+        result["reason_counts"] = dict(sorted(Counter(detail.partition(":")[0] for _, _, detail in findings).items()))
     return result
 
 
@@ -1039,11 +1118,14 @@ if __name__ == "__main__":
 
 __all__ = [
     "EXPORT_PLACEMENT_POPULATION",
+    "INAPPLICABLE_BELOW_FLOOR",
+    "INAPPLICABLE_NO_RECORD_DESIGN",
     "ExportPlacementCensus",
     "GeneratedTreeDispositionRow",
     "ProjectedTargets",
     "RegistryStatus",
     "TargetDriftExplanation",
+    "classify_inapplicable_target",
     "collect_registry_status",
     "explain_target_drift",
     "export_placement_census",

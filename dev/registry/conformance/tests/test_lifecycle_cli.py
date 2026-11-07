@@ -273,6 +273,7 @@ def test_status_delegates_axes_and_counts_excluded_targets(monkeypatch) -> None:
         "stale": 0,
         "drifted": 0,
         "never-committed": 0,
+        "not-applicable": 0,
         "unreadable": 1,
     }
     assert status.authority == "current"
