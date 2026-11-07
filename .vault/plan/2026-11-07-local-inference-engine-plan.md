@@ -13,7 +13,7 @@ related:
   - '[[2026-10-25-agent-owned-models-adr]]'
 modified: '2026-11-07'
 body_schema: body-v2
-body_hash: 'sha256:db2a5a573215ecbae81638be2b86cd9cb91f410e8a20d3ebece8b871fefde676'
+body_hash: 'sha256:827e89440cab7d630f7d19738bf090926fa35735a6f889efdf864cf7985d0a0c'
 ---
 
 # `local-inference-engine` plan
@@ -73,6 +73,7 @@ Deliver a keyless loopback llama.cpp lane over llama-server's /v1 and router API
 - [ ] `P02.S07` - Add llama.cpp residency through router /models/load and /models/unload with an explicit context, model_does_not_fit admission parity with the Ollama lane and placement auto and cpu_only per ADR D6, and register the lane in the factory and lane proofs (repo cadrumo-agent, executor vaultspec-high-executor, lands in the cadrumo-agent main once verified); `cadrumo-agent:src/cadrumo_agent/providers/llamacpp_residency.py, cadrumo-agent:src/cadrumo_agent/providers/ollama_residency.py, cadrumo-agent:src/cadrumo_agent/providers/_lane_models.py, cadrumo-agent:src/cadrumo_agent/providers/lane_admission.py`.
 - [ ] `P02.S08` - Make the gateway model endpoints and model licences engine-aware so the managed local lane set covers llama.cpp and Ollama (repo cadrumo-agent, executor vaultspec-standard-executor, lands in the cadrumo-agent main once verified); `cadrumo-agent:src/cadrumo_agent/api/routes/_gateway_provider_model_endpoints.py, cadrumo-agent:src/cadrumo_agent/providers/model_licences.py`.
 - [ ] `P02.S09` - Fix the audited ollama_api thinking defect: no thinking for structured extraction, collect message.thinking, refuse a think-only reply with a typed condition mapped to output_invalid or run_failed, add a no-content deadline and one visible bounded retry, with fake-server tests (repo cadrumo-agent, executor vaultspec-standard-executor, Opus review before the Step closes, lands in the cadrumo-agent main once verified); `cadrumo-agent:src/cadrumo_agent/providers/ollama_chat_model.py, cadrumo-agent:src/cadrumo_agent/graph/enums.py, Ollama lane tests`.
+- [ ] `P02.S29` - Make the provider catalogue read probe its local-server lanes concurrently with a bounded per-probe timeout and serve interactive reads from a cached last probe result, because the desktop launch measured a 5.4 s serial probe of 13 local-server lanes that left provider settings unable to load and llama.cpp adds a 14th (repo cadrumo-agent, executor vaultspec-standard-executor, Opus review before the Step closes, lands in cadrumo-agent main ahead of P04); `cadrumo-agent:src/cadrumo_agent/providers/provider_catalog_service.py, cadrumo-agent:src/cadrumo_agent/providers/factory.py, cadrumo-agent:src/cadrumo_agent/providers/provider_status.py, their tests`.
 
 ### Phase `P03` - Native bundling and engine-neutral provisioning (repo cadrumo)
 
