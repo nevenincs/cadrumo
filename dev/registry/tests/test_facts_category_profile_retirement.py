@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from shutil import copy2
+from typing import Any
 
 import pytest
 
@@ -39,24 +42,32 @@ _EXERCISE = filing_year_envelope().horizon
 _MUTUALIDAD = "mutualidad_alternativa"
 
 
-def _authored_mutualidad_variants(filename: str) -> list[dict[str, object]]:
+@dataclass(frozen=True)
+class _AuthoredVariant:
+    """One mutualidad variant as the fact file states it."""
+
+    valid_from: date
+    #: ``None`` is an open-ended variant, still in force after its start.
+    valid_to: date | None
+    payload: Mapping[str, Any]
+
+    def holds(self, exercise: int) -> bool:
+        return self.valid_from.year <= exercise and (self.valid_to is None or exercise <= self.valid_to.year)
+
+
+def _authored_mutualidad_variants(filename: str) -> list[_AuthoredVariant]:
     """The mutualidad variants as authored in the fact file, read without the resolver."""
     document = parse_toml(bundled_path("registry", "aeat", "facts", filename).read_text(encoding="utf-8"))
     return [
-        dict(variant)
+        _AuthoredVariant(variant["valid_from"], variant.get("valid_to"), variant["payload"])
         for variant in document["fact"]["variants"]
         if {selector["value"] for selector in variant["selectors"]} == {_MUTUALIDAD}
     ]
 
 
-def _variant_for(variants: list[dict[str, object]], exercise: int) -> dict[str, object]:
+def _variant_for(variants: list[_AuthoredVariant], exercise: int) -> _AuthoredVariant:
     """The one authored variant whose window holds the exercise."""
-    (variant,) = (
-        variant
-        for variant in variants
-        if variant["valid_from"].year <= exercise
-        and (variant.get("valid_to") is None or exercise <= variant["valid_to"].year)
-    )
+    (variant,) = (variant for variant in variants if variant.holds(exercise))
     return variant
 
 
@@ -198,10 +209,12 @@ def test_authored_category_profile_fact_preserves_citation_identity_window_and_g
     )
     assert isinstance(resolved, ResolvedMappingFact)
     resolved_citations = {
-        entry.key: entry.value for entry in resolved.payload.entries if entry.key.startswith("citation.")
+        entry.key: entry.value
+        for entry in resolved.payload.entries
+        if isinstance(entry.key, str) and entry.key.startswith("citation.")
     }
     authored_citations = {
-        entry["key"]: entry["value"] for entry in authored["payload"]["entries"] if entry["key"].startswith("citation.")
+        entry["key"]: entry["value"] for entry in authored.payload["entries"] if entry["key"].startswith("citation.")
     }
 
     assert authored_citations, "the authored variant carries no citation"
@@ -224,7 +237,7 @@ def test_authored_category_cap_fact_preserves_the_dated_mutualidad_amount(exerci
     )
 
     assert isinstance(resolved, ResolvedScalarFact)
-    assert resolved.payload.value == Decimal(authored["payload"]["value"])
+    assert resolved.payload.value == Decimal(authored.payload["value"])
     assert resolved.ownership is FactOwnership.AUTHORED
     assert resolved.source_citations
 
