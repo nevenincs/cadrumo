@@ -69,6 +69,7 @@ from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.transactions.date_partition import LedgerDatePartition
 from cadrumo.domain.transactions.models import TransactionCatalogue
+from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.tests.profile_persistence.dormant_resolver_live_support import (
     T0,
     T1,
@@ -98,6 +99,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtu
 # ---------------------------------------------------------------------------
 
 _M369_BUCKET = "36900000-0000-4000-8000-000000000013"
+# Modelo 369 applies only to a filer enrolled in the OSS/IOSS special regime.
+_OSS_ENROLMENT = (UserProfileFact(path="iva.oss_enrolled", value=True),)
 _M369_REVISION = "esquema-union"
 _M369_YEAR = 2026
 _DEFAULT_OSS_REGIME = OssIossRegime("union_scheme")
@@ -212,7 +215,7 @@ def m369_seeded_profile(tmp_path_factory: pytest.TempPathFactory) -> SeededDurab
     return provision_seeded_profile(
         tmp_path_factory.mktemp("m369-runtime"),
         _M369_BUCKET,
-        lambda profile: seed_ready_profile(profile.repository, bucket_id=_M369_BUCKET),
+        lambda profile: seed_ready_profile(profile.repository, bucket_id=_M369_BUCKET, extra_facts=_OSS_ENROLMENT),
     )
 
 
@@ -721,7 +724,7 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
             database_name="m369-injected.db",
         ) as injected_objects,
     ):
-        seed_ready_profile(runtime.repository, bucket_id=_M369_BUCKET)
+        seed_ready_profile(runtime.repository, bucket_id=_M369_BUCKET, extra_facts=_OSS_ENROLMENT)
         wu_repo = WorkUnitCatalogueRepository(objects=runtime.repository)
         cr_repo = CalculationRevisionCatalogueRepository(objects=runtime.repository)
         tx_repo = TransactionCatalogueRepository(bucket_id=_M369_BUCKET, objects=runtime.repository)
