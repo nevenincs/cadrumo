@@ -71,6 +71,9 @@ from cadrumo.entrypoints.live_state_composition import compose_live_state
 from cadrumo.tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 
 FILING_YEAR = filing_year_envelope().horizon
+FLOOR_YEAR = filing_year_envelope().floor
+#: A past year inside the envelope, two years above the floor, for a one-year capture span.
+MIDDLE_YEAR = FLOOR_YEAR + 2
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -127,14 +130,14 @@ def _clave_movil_assertion(identity_nif: str = "12345678Z") -> AeatLoginAssertio
 def _filed_history_report(tmp_path: Path) -> IvaCompensationHistoryCaptureReport:
     return IvaCompensationHistoryCaptureReport(
         output_root=str(tmp_path / "filed-history"),
-        year_from=FILING_YEAR,
-        year_to=FILING_YEAR,
+        year_from=FLOOR_YEAR,
+        year_to=MIDDLE_YEAR,
         captured_count=12,
-        observation_paths=("observations/303-2022-1T.json",),
+        observation_paths=(f"observations/303-{FLOOR_YEAR}-1T.json",),
         artefact_refs=("secure-object:artefact",),
         casilla_count=948,
         calculation_observation_count=12,
-        calculation_observation_keys=("303:2022:1T",),
+        calculation_observation_keys=(f"303:{FLOOR_YEAR}:1T",),
         reloaded_history_count=12,
         reloaded_rows=(),
     )
@@ -164,8 +167,8 @@ def test_combined_acquisition_records_authenticated_success_outcome(tmp_path: Pa
 
     report = build_iva_remote_state_acquisition_report(
         output_root=tmp_path,
-        year_from=FILING_YEAR,
-        year_to=FILING_YEAR,
+        year_from=FLOOR_YEAR,
+        year_to=MIDDLE_YEAR,
         target_year=FILING_YEAR,
         target_period=_TARGET_2T,
         auth_result=auth_result,
@@ -186,23 +189,23 @@ def test_combined_acquisition_marks_partial_filed_history_as_failed(tmp_path: Pa
     auth_result = _reused_clave_movil_result()
     filed_history = IvaCompensationHistoryCaptureReport(
         output_root=str(tmp_path / "filed-history"),
-        year_from=FILING_YEAR,
+        year_from=FLOOR_YEAR,
         year_to=FILING_YEAR,
         captured_count=4,
-        observation_paths=("observations/303-2026-1T.json",),
+        observation_paths=(f"observations/303-{FILING_YEAR}-1T.json",),
         artefact_refs=("secure-object:artefact",),
         casilla_count=316,
         calculation_observation_count=4,
-        calculation_observation_keys=("303:2026:1T",),
+        calculation_observation_keys=(f"303:{FILING_YEAR}:1T",),
         reloaded_history_count=4,
         reloaded_rows=(),
         failed_declaration_count=1,
-        failed_declarations=("modelo=303;ejercicio=FILING_YEAR;period=1T;failure_type=TimeoutError",),
+        failed_declarations=(f"modelo=303;ejercicio={MIDDLE_YEAR};period=1T;failure_type=TimeoutError",),
     )
 
     report = build_iva_remote_state_acquisition_report(
         output_root=tmp_path,
-        year_from=FILING_YEAR,
+        year_from=FLOOR_YEAR,
         year_to=FILING_YEAR,
         target_year=FILING_YEAR,
         target_period=_TARGET_1T,
@@ -220,7 +223,7 @@ def test_combined_acquisition_marks_partial_filed_history_as_failed(tmp_path: Pa
     assert filed_outcome.failure_context == {
         "captured_count": 4,
         "failed_declaration_count": 1,
-        "failed_declarations": ("modelo=303;ejercicio=FILING_YEAR;period=1T;failure_type=TimeoutError",),
+        "failed_declarations": (f"modelo=303;ejercicio={MIDDLE_YEAR};period=1T;failure_type=TimeoutError",),
     }
 
 
@@ -238,8 +241,8 @@ def test_auth_failure_blocks_surface_outcomes_with_typed_mode(tmp_path: Path) ->
 
     report = build_iva_remote_state_acquisition_report(
         output_root=tmp_path,
-        year_from=FILING_YEAR,
-        year_to=FILING_YEAR,
+        year_from=MIDDLE_YEAR,
+        year_to=MIDDLE_YEAR,
         target_year=FILING_YEAR,
         target_period=_TARGET_1T,
         auth_error=auth_error,
@@ -272,8 +275,8 @@ def test_combined_acquisition_preserves_filed_history_when_wallet_auth_gate_fail
 
     report = build_iva_remote_state_acquisition_report(
         output_root=tmp_path,
-        year_from=FILING_YEAR,
-        year_to=FILING_YEAR,
+        year_from=FLOOR_YEAR,
+        year_to=MIDDLE_YEAR,
         target_year=FILING_YEAR,
         target_period=_TARGET_2T,
         filed_history=filed_history,
@@ -304,8 +307,8 @@ def test_combined_acquisition_preserves_filed_history_when_wallet_auth_gate_fail
 def test_combined_acquisition_reports_missing_surface_as_typed_failure(tmp_path: Path) -> None:
     report = build_iva_remote_state_acquisition_report(
         output_root=tmp_path,
-        year_from=FILING_YEAR,
-        year_to=FILING_YEAR,
+        year_from=MIDDLE_YEAR,
+        year_to=MIDDLE_YEAR,
         target_year=FILING_YEAR,
         target_period=_TARGET_1T,
     )
@@ -348,7 +351,7 @@ def test_filed_history_surface_timeout_scales_with_requested_years() -> None:
     settings = Settings(cadrumo_live_iva_surface_timeout_ms=180_000)
 
     assert filed_history_surface_timeout_ms(settings, year_from=FILING_YEAR, year_to=FILING_YEAR) == 180_000
-    assert filed_history_surface_timeout_ms(settings, year_from=FILING_YEAR, year_to=FILING_YEAR) == 900_000
+    assert filed_history_surface_timeout_ms(settings, year_from=FLOOR_YEAR, year_to=FILING_YEAR) == 900_000
 
 
 def test_surface_timeout_does_not_collapse_to_success(tmp_path: Path) -> None:
@@ -356,13 +359,13 @@ def test_surface_timeout_does_not_collapse_to_success(tmp_path: Path) -> None:
         "filed-history read did not finish",
         surface=LiveIvaReadSurface.FILED_HISTORY.value,
         timeout_ms=1,
-        progress_context={"stage": "walk_declarations_register", "modelo": "303", "ejercicio": 2026},
+        progress_context={"stage": "walk_declarations_register", "modelo": "303", "ejercicio": FILING_YEAR},
     )
 
     report = build_iva_remote_state_acquisition_report(
         output_root=tmp_path,
-        year_from=FILING_YEAR,
-        year_to=FILING_YEAR,
+        year_from=MIDDLE_YEAR,
+        year_to=MIDDLE_YEAR,
         target_year=FILING_YEAR,
         target_period=_TARGET_1T,
         filed_history_error=timeout,
@@ -378,7 +381,7 @@ def test_surface_timeout_does_not_collapse_to_success(tmp_path: Path) -> None:
     assert timeout.context["progress"] == {
         "stage": "walk_declarations_register",
         "modelo": "303",
-        "ejercicio": 2026,
+        "ejercicio": FILING_YEAR,
     }
 
 
@@ -389,7 +392,7 @@ def test_surface_timeout_context_preserves_wallet_progress() -> None:
         timeout_ms=30_000,
         progress_context={
             "stage": "fetch_iva_compensation_wallet",
-            "target_year": 2026,
+            "target_year": FILING_YEAR,
             "target_period": "1T",
         },
     )
@@ -397,7 +400,7 @@ def test_surface_timeout_context_preserves_wallet_progress() -> None:
     assert timeout.context is not None
     assert timeout.context["progress"] == {
         "stage": "fetch_iva_compensation_wallet",
-        "target_year": 2026,
+        "target_year": FILING_YEAR,
         "target_period": "1T",
     }
 
@@ -480,8 +483,8 @@ def test_combined_acquisition_manifest_persists_redacted_surface_outcomes(
         wallet_error = _wallet_auth_gate_error()
         report = build_iva_remote_state_acquisition_report(
             output_root=tmp_path / "remote-state",
-            year_from=FILING_YEAR,
-            year_to=FILING_YEAR,
+            year_from=FLOOR_YEAR,
+            year_to=MIDDLE_YEAR,
             target_year=FILING_YEAR,
             target_period=_TARGET_2T,
             filed_history=filed_history,
@@ -500,7 +503,9 @@ def test_combined_acquisition_manifest_persists_redacted_surface_outcomes(
 
         assert reloaded == manifest
         assert listed == (manifest,)
-        assert manifest.acquisition_id.startswith("live-iva-acquisition:2026:2T:20260527T120000000000Z:")
+        assert manifest.acquisition_id.startswith(
+            f"live-iva-acquisition:{FILING_YEAR}:2T:{FILING_YEAR}0527T120000000000Z:"
+        )
         assert len(manifest.acquisition_id.rsplit(":", 1)[-1]) == 64
         assert manifest.filed_history_succeeded is True
         assert manifest.wallet_succeeded is False
@@ -537,8 +542,8 @@ def test_acquisition_manifest_persists_redacted_auth_diagnostic_ref(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         report = build_iva_remote_state_acquisition_report(
             output_root=tmp_path / "remote-state",
-            year_from=FILING_YEAR,
-            year_to=FILING_YEAR,
+            year_from=MIDDLE_YEAR,
+            year_to=MIDDLE_YEAR,
             target_year=FILING_YEAR,
             target_period=_TARGET_1T,
             auth_error=auth_error,
@@ -569,8 +574,8 @@ def test_acquisition_manifest_refuses_an_encrypted_payload_rekeyed_under_another
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         report = build_iva_remote_state_acquisition_report(
             output_root=tmp_path / "remote-state",
-            year_from=FILING_YEAR,
-            year_to=FILING_YEAR,
+            year_from=MIDDLE_YEAR,
+            year_to=MIDDLE_YEAR,
             target_year=FILING_YEAR,
             target_period=_TARGET_1T,
         )
@@ -627,8 +632,8 @@ def test_acquisition_manifest_redacts_sensitive_surface_failure_context(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         report = build_iva_remote_state_acquisition_report(
             output_root=tmp_path / "remote-state",
-            year_from=FILING_YEAR,
-            year_to=FILING_YEAR,
+            year_from=MIDDLE_YEAR,
+            year_to=MIDDLE_YEAR,
             target_year=FILING_YEAR,
             target_period=_TARGET_1T,
             wallet_error=wallet_error,
@@ -671,9 +676,9 @@ def test_acquisition_payloads_require_explicit_auth_outcome() -> None:
         IvaRemoteStateAcquisitionReport.model_validate(
             {
                 "output_root": "missing-auth-output",
-                "year_from": 2024,
-                "year_to": 2024,
-                "target_year": 2026,
+                "year_from": MIDDLE_YEAR,
+                "year_to": MIDDLE_YEAR,
+                "target_year": FILING_YEAR,
                 "target_period": _TARGET_1T,
                 "filed_history": None,
                 "wallet": None,
@@ -688,9 +693,9 @@ def test_acquisition_payloads_require_explicit_auth_outcome() -> None:
             {
                 "acquisition_id": "missing-auth",
                 "captured_at": _CAPTURED_AT,
-                "year_from": 2024,
-                "year_to": 2024,
-                "target_year": 2026,
+                "year_from": MIDDLE_YEAR,
+                "year_to": MIDDLE_YEAR,
+                "target_year": FILING_YEAR,
                 "target_period": _TARGET_1T,
                 "filed_history_succeeded": False,
                 "wallet_succeeded": False,
@@ -710,8 +715,8 @@ def test_combined_acquisition_manifest_requires_ready_active_profile_runtime(
     with isolated_sessionless_storage_root(tmp_path=tmp_path):
         report = build_iva_remote_state_acquisition_report(
             output_root=tmp_path / "operator-private-output-root",
-            year_from=FILING_YEAR,
-            year_to=FILING_YEAR,
+            year_from=MIDDLE_YEAR,
+            year_to=MIDDLE_YEAR,
             target_year=FILING_YEAR,
             target_period=_TARGET_1T,
         )
