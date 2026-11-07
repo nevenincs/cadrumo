@@ -22,10 +22,19 @@ from cadrumo.domain.calculations.registry.query_reports import (
 )
 from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_grade_exercises,
+    filing_year_envelope,
+    split_exercise_revisions,
+)
 
 from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
+# Modelo 100 is authored one edition per renta year, and a snapshot at filing grade needs the year's own edition.
+_M100_YEAR = filing_grade_exercises("100")[-1]
 
 _INPUT_CASILLA: CasillaId = validated_casilla_id("01", surface="_INPUT_CASILLA")
 _TARGET_CASILLA: CasillaId = validated_casilla_id("02", surface="_TARGET_CASILLA")
@@ -34,7 +43,12 @@ _TARGET_CASILLA: CasillaId = validated_casilla_id("02", surface="_TARGET_CASILLA
 # The raw M303 metadata declares 2026-02 only in `2026-y-siguientes`:
 # `2026-hasta-01-y-1t` is limited to 01/1T, while the later revision starts
 # on 2026-02-01 and includes 02 in its 2026 period override.
-_M303_SHARED_FILING_COORDINATE: tuple[int, str, str] = (2026, "02", "2026-y-siguientes")
+_M303_LATE = split_exercise_revisions("303", early_period="1T", late_period="2T")[1]
+_M303_SHARED_FILING_COORDINATE: tuple[int, str, str] = (
+    _M303_LATE.valid_from.year,
+    f"{_M303_LATE.valid_from.month:02d}",
+    str(_M303_LATE.id),
+)
 
 
 def _service() -> RegistryQueryService:
@@ -42,7 +56,7 @@ def _service() -> RegistryQueryService:
 
 
 def test_relation_prefill_bindings_preserve_real_registry_declaration_order() -> None:
-    snapshot = compiled_bundled_authority().snapshot(Modelo("202").value, filing_year=2025, period="2P")
+    snapshot = compiled_bundled_authority().snapshot(Modelo("202").value, filing_year=_YEAR, period="2P")
 
     folds = relation_prefill_bindings_for_period(snapshot.revision, period="2P")
 
@@ -64,7 +78,7 @@ def test_relation_prefill_binding_carries_its_per_target_period_source_window(
     on the binding's own provider, so the window is asserted through the
     provider rather than through a relation identifier.
     """
-    snapshot = compiled_bundled_authority().snapshot(Modelo("202").value, filing_year=2025, period=period)
+    snapshot = compiled_bundled_authority().snapshot(Modelo("202").value, filing_year=_YEAR, period=period)
 
     providers = {
         binding.id: provider
@@ -76,7 +90,7 @@ def test_relation_prefill_binding_carries_its_per_target_period_source_window(
     )
 
 
-@pytest.mark.parametrize("period", ("2026Q1", "2026-Q4", "2026-03", "2026"))
+@pytest.mark.parametrize("period", (f"{_YEAR}Q1", f"{_YEAR}-Q4", f"{_YEAR}-03", str(_YEAR)))
 def test_query_service_rejects_combined_period_shapes(period: str) -> None:
     service = _service()
 
@@ -87,12 +101,12 @@ def test_query_service_rejects_combined_period_shapes(period: str) -> None:
 def test_query_service_lists_and_describes_committed_modelo() -> None:
     service = _service()
 
-    listed = service.list_modelos(year=2026)
-    described = service.describe_modelo_for_scope("303", filing_year=2026, period="1T")
+    listed = service.list_modelos(year=_YEAR)
+    described = service.describe_modelo_for_scope("303", filing_year=_YEAR, period="1T")
 
     assert "303" in {row.code for row in listed.modelos}
     assert described.code == "303"
-    assert described.filing_year == 2026
+    assert described.filing_year == _YEAR
     assert described.period == "1T"
     assert described.tax_domain == "iva"
     assert described.casilla_count > 0
@@ -107,7 +121,7 @@ def test_describe_lists_every_declared_revision_id() -> None:
 
     service = _service()
 
-    described = service.describe_modelo_for_scope("303", filing_year=2026, period="1T")
+    described = service.describe_modelo_for_scope("303", filing_year=_YEAR, period="1T")
     expected = {str(item.id) for item in compiled_bundled_authority().modelo("303").revisions.values()}
 
     assert set(described.revision_ids) == expected
@@ -120,9 +134,9 @@ def test_describe_lists_every_declared_revision_id() -> None:
 def test_query_service_exposes_casillas_bindings_and_formulas_from_same_revision() -> None:
     service = _service()
 
-    casillas = service.casillas_for_scope("303", filing_year=2026, period="1T", input_kind=InputKind.COMPUTED)
-    bindings = service.bindings_for_scope("130", filing_year=2026, period="1T")
-    formulas = service.formulas_for_scope("303", filing_year=2026, period="1T")
+    casillas = service.casillas_for_scope("303", filing_year=_YEAR, period="1T", input_kind=InputKind.COMPUTED)
+    bindings = service.bindings_for_scope("130", filing_year=_YEAR, period="1T")
+    formulas = service.formulas_for_scope("303", filing_year=_YEAR, period="1T")
 
     assert casillas.code == "303"
     assert casillas.rows
@@ -139,7 +153,7 @@ def test_query_service_exposes_casillas_bindings_and_formulas_from_same_revision
 def test_binding_query_rows_expose_typed_provider() -> None:
     service = _service()
 
-    report = service.bindings_for_scope("130", filing_year=2026, period="1T")
+    report = service.bindings_for_scope("130", filing_year=_YEAR, period="1T")
     row = next(item for item in report.rows if item.binding_id == "modelo-130-resultados-negativos-anteriores")
 
     assert isinstance(row.provider, PreviousFilingProvider)
@@ -152,7 +166,7 @@ def test_binding_query_rows_expose_typed_provider() -> None:
 def test_binding_query_rows_dump_typed_provider() -> None:
     service = _service()
 
-    report = service.bindings_for_scope("130", filing_year=2026, period="1T")
+    report = service.bindings_for_scope("130", filing_year=_YEAR, period="1T")
     row = next(item for item in report.rows if item.binding_id == "modelo-130-resultados-negativos-anteriores")
     dumped = row.model_dump(mode="json")
 
@@ -238,7 +252,7 @@ def test_describe_for_scope_preserves_declared_censo_period_casing() -> None:
 
     service = _service()
 
-    described = service.describe_modelo_for_scope("036", filing_year=2026, period="ALTA")
+    described = service.describe_modelo_for_scope("036", filing_year=_YEAR, period="ALTA")
 
     assert described.code == "036"
     assert described.period == "alta"
@@ -298,7 +312,7 @@ def test_binding_rows_surface_the_typed_enum_a_binding_declares() -> None:
 
     service = _service()
 
-    report = service.bindings_for_scope("100", filing_year=2024, period="0A")
+    report = service.bindings_for_scope("100", filing_year=_M100_YEAR, period="0A")
     row = next(r for r in report.rows if r.binding_id == "renta-profile-tax-residence-ccaa")
 
     assert row.typed_enum == "CCAA"
@@ -314,7 +328,7 @@ def test_unscoped_query_refuses_as_of_instead_of_silently_ignoring_it() -> None:
     closes) rather than silently return the current view.
     """
     service = _service()
-    a_date = date(2024, 6, 1)
+    a_date = date(_YEAR, 6, 1)
     unscoped_calls = (
         lambda: service.describe_modelo("303", period="1T", as_of=a_date),
         lambda: service.casillas("303", period="1T", as_of=a_date),
@@ -339,17 +353,17 @@ def test_scoped_query_honours_the_as_of_validity_window() -> None:
     current view.
     """
     service = _service()
-    snapshot = compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A")
+    snapshot = compiled_bundled_authority().snapshot("100", filing_year=_M100_YEAR, period="0A")
     within_window = snapshot.revision.valid_from
 
     # Baseline resolution and an as_of inside the window both resolve.
-    assert service.casillas_for_scope("100", filing_year=2025, period="0A") is not None
-    assert service.casillas_for_scope("100", filing_year=2025, period="0A", as_of=within_window) is not None
+    assert service.casillas_for_scope("100", filing_year=_M100_YEAR, period="0A") is not None
+    assert service.casillas_for_scope("100", filing_year=_M100_YEAR, period="0A", as_of=within_window) is not None
 
     # An as_of before every revision's validity window is honoured: it gates the
     # selection and refuses rather than silently returning a revision.
     with pytest.raises(NoRevisionForPeriodError):
-        service.casillas_for_scope("100", filing_year=2025, period="0A", as_of=date(1990, 1, 1))
+        service.casillas_for_scope("100", filing_year=_M100_YEAR, period="0A", as_of=date(1990, 1, 1))
 
 
 def _filing_year_covered_by(modelo: str, revision_id: str) -> int:
@@ -497,7 +511,7 @@ def test_resolved_query_context_is_frozen_and_rejects_unknown_fields() -> None:
     assert (context.filing_year, context.registry_period) == (None, None)
 
     with pytest.raises(ValidationError):
-        context.filing_year = 2026  # type: ignore[misc]  # reason: the refusal is what this asserts
+        context.filing_year = _YEAR  # type: ignore[misc]  # reason: the refusal is what this asserts
 
     # An unknown field is refused rather than silently carried, so a builder
     # cannot smuggle extra state through the shared context.

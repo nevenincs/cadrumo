@@ -44,6 +44,10 @@ from cadrumo.domain.calculations.registry.schema_revision_members import (
     ApplicabilityExclusionDefinition,
     ApplicabilityRuleDefinition,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    supported_authored_exercises,
+)
 from cadrumo.domain.contribuyente.entity_type import require_entity_type
 from cadrumo.domain.deadlines.models import ModeloEnrollment, ModeloIVAProfile, TaxpayerProfile
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -53,7 +57,9 @@ from .referential_integrity_support import REFERENCE_LEGAL_ID
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_TODAY = date(2025, 6, 30)
+_YEAR = filing_year_envelope().horizon
+_TODAY = date(_YEAR, 6, 30)
+_M136_EXERCISE_DATES = tuple(date(year, 6, 30) for year in supported_authored_exercises("136"))
 _PAYER_FACT_ID = "modelo-payer-applicability-facts"
 _M136_FACT = "premio_loteria_gravamen_especial_sin_retencion"
 _SII_FACT = "iva_books_kept_through_sii"
@@ -80,7 +86,7 @@ _THREE_STATE_CASES = (
     _Case(
         "136",
         "premio_loteria_gravamen_especial_sin_retencion",
-        (("premio_loteria_gravamen_especial_trimestres", frozenset({"2025-1T"})),),
+        (("premio_loteria_gravamen_especial_trimestres", frozenset({f"{_YEAR}-1T"})),),
     ),
 )
 
@@ -185,7 +191,7 @@ def test_modelo_136_is_not_applicable_to_a_legal_entity_whatever_the_fact_says()
             "entity_type": require_entity_type("legal_entity"),
             "iva_regime": require_iva_regime("GENERAL"),
             "premio_loteria_gravamen_especial_sin_retencion": True,
-            "premio_loteria_gravamen_especial_trimestres": frozenset({"2025-1T"}),
+            "premio_loteria_gravamen_especial_trimestres": frozenset({f"{_YEAR}-1T"}),
         },
     )
 
@@ -194,7 +200,7 @@ def test_modelo_136_is_not_applicable_to_a_legal_entity_whatever_the_fact_says()
 
 @pytest.mark.usefixtures("governed_fact_scope")
 def test_modelo_136_undeclared_is_incomplete_across_its_revisions() -> None:
-    for today in (date(2022, 6, 30), date(2026, 6, 30)):
+    for today in _M136_EXERCISE_DATES:
         result = derive_modelo_applicability(_natural_person(), "136", today=today)
         assert result.verdict is ApplicabilityVerdict.INCOMPLETE, today
         assert "orden-hap-70-2013:art-6" in result.legal_refs, today
@@ -231,7 +237,7 @@ def test_the_capital_income_fact_reads_three_states_from_its_optional_profile_fi
 
 
 @pytest.mark.usefixtures("governed_fact_scope")
-@pytest.mark.parametrize("effective_date", (date(2022, 6, 30), date(2025, 6, 30)))
+@pytest.mark.parametrize("effective_date", _M136_EXERCISE_DATES)
 def test_modelo_136_fact_is_dated_three_state_with_a_quarter_companion(effective_date: date) -> None:
     fact = resolve_payer_fact(_M136_FACT, effective_date=effective_date)
 

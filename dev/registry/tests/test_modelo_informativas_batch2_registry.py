@@ -26,10 +26,13 @@ See Also:
 
 from __future__ import annotations
 
+from calendar import monthrange
 from datetime import date
 
 import pytest
 
+from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..conformance.registry_schema_support import committed_modelo
@@ -37,7 +40,8 @@ from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
-# (modelo_id, revision, approval_ref, plazo_ref, document_id, period_kind)
+# (modelo_id, approval_ref, plazo_ref, document_id, period_kind)
+# The revision under test is the one governing the support horizon.
 # Modelos 179, 186, 233, 234 and 238 are deliberately ABSENT from this list.
 # AEAT publishes no record design for any of them -- confirmed against every
 # current and ejercicios-anteriores Diseno de Registro index page -- and the
@@ -47,40 +51,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 # after DAC7 absorbed it into 238. Listing them here asserted a registry
 # membership the tree deliberately does not grant.
 _MODELOS = [
-    (
-        "165",
-        "2023-2025",
-        "orden-hap-2455-2013:art-1",
-        "orden-hap-2455-2013:art-4",
-        "BOE-A-2013-13798",
-        "annual",
-    ),
-    (
-        "156",
-        "2003-y-siguientes",
-        "orden-hac-3580-2003:art-1",
-        "orden-hac-3580-2003:art-4",
-        "BOE-A-2003-23509",
-        "annual",
-    ),
-    ("038", "2025-y-siguientes", "orden-hac-66-2002:art-1", "orden-hac-66-2002:art-6", "BOE-A-2002-1041", "monthly"),
-    (
-        "185",
-        "2025-y-siguientes",
-        "orden-hac-1197-2025:art-1",
-        "orden-hac-1197-2025:art-4",
-        "BOE-A-2025-21726",
-        "monthly",
-    ),
+    ("165", "orden-hap-2455-2013:art-1", "orden-hap-2455-2013:art-4", "BOE-A-2013-13798", "annual"),
+    ("156", "orden-hac-3580-2003:art-1", "orden-hac-3580-2003:art-4", "BOE-A-2003-23509", "annual"),
+    ("038", "orden-hac-66-2002:art-1", "orden-hac-66-2002:art-6", "BOE-A-2002-1041", "monthly"),
+    ("185", "orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "BOE-A-2025-21726", "monthly"),
 ]
 
 
-@pytest.mark.parametrize("mid,rev,approval,plazo,doc,kind", _MODELOS)
+@pytest.mark.parametrize("mid,approval,plazo,doc,kind", _MODELOS)
 def test_committed_definition_legal_refs_and_deadlines_are_grounded(
-    mid: str, rev: str, approval: str, plazo: str, doc: str, kind: str
+    mid: str, approval: str, plazo: str, doc: str, kind: str
 ) -> None:
     modelo, catalogues = committed_modelo(mid)
     assert modelo.id == mid
+    rev = str(revision_covering(mid, filing_year_envelope().horizon).id)
     assert rev in modelo.revisions
     committed_registry_validator(catalogues).validate_modelo(modelo)
 
@@ -102,23 +86,25 @@ def test_committed_definition_legal_refs_and_deadlines_are_grounded(
 def test_annual_january_windows_resolve() -> None:
     """165/233/156 file in January of the year following the filing year."""
     authority = compiled_bundled_authority()
+    year = filing_year_envelope().horizon
     for mid in ("165", "156"):
-        windows = {w.id: w for _, _, w in authority.deadline_windows(2024, modelos=(mid,))}
-        wid = f"modelo-{mid}-2024-0a"
+        windows = {w.id: w for _, _, w in authority.deadline_windows(year, modelos=(mid,))}
+        wid = f"modelo-{mid}-{year}-0a"
         assert wid in windows
-        assert windows[wid].opens_on == date(2025, 1, 1)
-        assert windows[wid].closes_on == date(2025, 1, 31)
+        assert windows[wid].opens_on == date(year + 1, 1, 1)
+        assert windows[wid].closes_on == date(year + 1, 1, 31)
 
 
 def test_monthly_windows_resolve_following_month() -> None:
     """038/186 close on the last natural day, 185 on the 10th, of the next month."""
     authority = compiled_bundled_authority()
-    # January 2025 reference month -> filed in February 2025.
-    for mid, close in (("038", date(2025, 2, 28)), ("185", date(2025, 2, 10))):
-        windows = {str(w.period): w for _, _, w in authority.deadline_windows(2025, modelos=(mid,))}
+    year = filing_year_envelope().horizon
+    # January reference month -> filed in February of the same year.
+    for mid, close in (("038", date(year, 2, monthrange(year, 2)[1])), ("185", date(year, 2, 10))):
+        windows = {w.period: w for _, _, w in authority.deadline_windows(year, modelos=(mid,))}
         assert len(windows) == 12
-        jan = windows["2025 01"]
-        assert jan.opens_on == date(2025, 2, 1)
+        jan = windows[Period.from_year_and_code(year, "01")]
+        assert jan.opens_on == date(year, 2, 1)
         assert jan.closes_on == close
 
 

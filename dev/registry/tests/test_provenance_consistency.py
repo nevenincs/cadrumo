@@ -15,6 +15,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import SCHEMA_FAMILY
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_editions, open_ended_revision
 
 from ..analysis.provenance_consistency import provenance_findings
 from ..compiler.authority import compiled_bundled_authority
@@ -88,14 +89,15 @@ def test_a_reference_absent_from_every_revision_is_distinguished_from_partial_dr
     """
     from ..analysis.provenance_consistency import outside_reference_scope
 
+    older, newer = (str(year) for year in newest_authored_editions("100", 2))
     index = {
-        ("100", "2023", "legal", "ley-1:art-1"): 5,
-        ("100", "2024", "legal", "ley-1:art-1"): 7,
-        ("100", "2023", "legal", "ley-2:art-2"): 3,
+        ("100", older, "legal", "ley-1:art-1"): 5,
+        ("100", newer, "legal", "ley-1:art-1"): 7,
+        ("100", older, "legal", "ley-2:art-2"): 3,
     }
     scopes = {item.reference: item for item in outside_reference_scope(index, {"100": 2})}
     assert scopes["ley-1:art-1"].spans_every_revision is True
-    assert scopes["ley-1:art-1"].revisions == ("2023", "2024")
+    assert scopes["ley-1:art-1"].revisions == (older, newer)
     assert scopes["ley-1:art-1"].sites == 12
     assert scopes["ley-2:art-2"].spans_every_revision is False
 
@@ -177,7 +179,7 @@ def test_the_walked_families_and_the_declared_child_kinds_agree() -> None:
     }
     assert annotated, "the schema annotates no family, so this proves nothing"
 
-    revision = compiled_bundled_authority().modelo("303").revisions["2025"]
+    revision = compiled_bundled_authority().modelo("303").revisions[str(open_ended_revision("303").id)]
     walked = {kind for kind, _ in citing_children(revision)}
     # Every walked family is one the schema declares. The reverse does not hold:
     # a family this revision leaves empty, or that carries no citations at all,
@@ -199,7 +201,7 @@ def test_both_provenance_screens_walk_the_same_families() -> None:
     from ..analysis.provenance_consistency import citing_children
 
     authority = compiled_bundled_authority()
-    revision = authority.modelo("303").revisions["2025"]
+    revision = authority.modelo("303").revisions[str(open_ended_revision("303").id)]
     walked = {kind for kind, items in citing_children(revision) if items}
     assert "deadline_windows" in walked, "the family that motivated this is not walked"
 

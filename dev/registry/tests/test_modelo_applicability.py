@@ -29,6 +29,7 @@ from cadrumo.domain.calculations.registry.irpf_regimes import (
 )
 from cadrumo.domain.calculations.registry.iva_regime_vocabulary import require_iva_regime
 from cadrumo.domain.calculations.registry.renta_codes_catalogue import require_fiscal_residency
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.contribuyente.entity_type import require_entity_type, require_legal_entity_form
 from cadrumo.domain.deadlines.models import (
     IVARegime,
@@ -41,6 +42,10 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 from ..conformance.registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_HORIZON = filing_year_envelope().horizon
+_REGIME_START = date(_HORIZON - 3, 1, 1)
+_REGIME_TODAY = date(_HORIZON, 5, 27)
 
 
 class _FactUpdateParams(TypedDict, total=False):
@@ -491,7 +496,7 @@ def test_pure_landlord_without_actividad_economica_owes_no_m130() -> None:
 
 def _beckham_profile(
     *,
-    start_date: date = date(2023, 1, 1),
+    start_date: date = _REGIME_START,
     bienes_extranjero_above_threshold: bool = False,
 ) -> TaxpayerProfile:
     """An art. 93 impatriado, resident in Spain and electing the special regime.
@@ -526,8 +531,8 @@ def test_impatriado_art93_exempts_modelo_720_even_with_bienes_declared() -> None
     """
 
     beckham_profile = _beckham_profile(bienes_extranjero_above_threshold=True)
-    # Pass today within the 6-year window (2023-2028) so the exemption fires.
-    result = derive_modelo_applicability(beckham_profile, "720", today=date(2026, 5, 27))
+    # Pass today within the 6-year window so the exemption fires.
+    result = derive_modelo_applicability(beckham_profile, "720", today=_REGIME_TODAY)
     assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
     # Reason must cite the Art. 93 special regime
     assert "Art. 93" in result.reason or "impatriado" in result.reason.lower()
@@ -591,8 +596,8 @@ def test_impatriado_in_window_routes_annual_irpf_to_modelo_151() -> None:
 
     beckham_profile = _beckham_profile()
 
-    m100 = derive_modelo_applicability(beckham_profile, "100", today=date(2026, 5, 27))
-    m151 = derive_modelo_applicability(beckham_profile, "151", today=date(2026, 5, 27))
+    m100 = derive_modelo_applicability(beckham_profile, "100", today=_REGIME_TODAY)
+    m151 = derive_modelo_applicability(beckham_profile, "151", today=_REGIME_TODAY)
 
     assert m100.verdict is ApplicabilityVerdict.NOT_APPLICABLE
     assert m100.applicable is False
@@ -616,7 +621,7 @@ def test_impatriado_year_seven_restores_m100_m720_and_suppresses_m151() -> None:
     """After the six-year window, the profile returns to ordinary IRPF routing."""
 
     expired_profile = _beckham_profile(bienes_extranjero_above_threshold=True)
-    year_seven = date(2029, 1, 1)
+    year_seven = date(_REGIME_START.year + 6, 1, 1)
 
     assert (
         derive_modelo_applicability(expired_profile, "100", today=year_seven).verdict is ApplicabilityVerdict.APPLICABLE
@@ -643,7 +648,7 @@ def test_non_impatriado_profile_does_not_route_to_modelo_151() -> None:
             irpf_special_regime=special_regime,
         )
 
-        result = derive_modelo_applicability(general_profile, "151", today=date(2026, 5, 27))
+        result = derive_modelo_applicability(general_profile, "151", today=_REGIME_TODAY)
 
         assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE, special_regime
         assert result.applicable is False, special_regime

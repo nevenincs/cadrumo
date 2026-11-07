@@ -30,6 +30,8 @@ from datetime import date
 
 import pytest
 
+from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, filing_year_envelope
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..conformance.registry_schema_support import committed_modelo
@@ -37,64 +39,46 @@ from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
-# (modelo_id, revision, approval_ref, plazo_ref, document_id, has_windows)
 #: The single 2000-y-siguientes revision was narrowed into two eras. Both cite
 #: the same Orden of 15 December 2000 as their approval and plazo authority, so
 #: each is listed rather than one standing in for the pair: a row per committed
 #: definition is what makes the validator run against every one of them.
-_MODELOS = [
-    (
-        "341",
-        "2005-2015",
-        "orden-min-2000-12-15-m341:art-1",
-        "orden-min-2000-12-15-m341:art-2",
-        "BOE-A-2000-22794",
-        False,
-    ),
-    (
-        "341",
-        "2016-y-siguientes",
-        "orden-min-2000-12-15-m341:art-1",
-        "orden-min-2000-12-15-m341:art-2",
-        "BOE-A-2000-22794",
-        True,
-    ),
-]
+_REVISIONS_341 = tuple(str(revision.id) for revision in authored_revisions("341"))
+_APPROVAL_341 = "orden-min-2000-12-15-m341:art-1"
+_PLAZO_341 = "orden-min-2000-12-15-m341:art-2"
+_DOCUMENT_341 = "BOE-A-2000-22794"
 
 
-@pytest.mark.parametrize("mid,rev,approval,plazo,doc,has_windows", _MODELOS)
-def test_validator_accepts_committed_definition(
-    mid: str, rev: str, approval: str, plazo: str, doc: str, has_windows: bool
-) -> None:
-    modelo, catalogues = committed_modelo(mid)
-    assert modelo.id == mid
+@pytest.mark.parametrize("rev", _REVISIONS_341)
+def test_validator_accepts_committed_definition(rev: str) -> None:
+    modelo, catalogues = committed_modelo("341")
+    assert modelo.id == "341"
     assert rev in modelo.revisions
     assert modelo.tax_domain == "iva"
     committed_registry_validator(catalogues).validate_modelo(modelo)
 
 
-@pytest.mark.parametrize("mid,rev,approval,plazo,doc,has_windows", _MODELOS)
-def test_approval_and_plazo_resolve_as_legal_authority(
-    mid: str, rev: str, approval: str, plazo: str, doc: str, has_windows: bool
-) -> None:
-    _, catalogues = committed_modelo(mid)
-    for ref in (approval, plazo):
+def test_approval_and_plazo_resolve_as_legal_authority() -> None:
+    _, catalogues = committed_modelo("341")
+    for ref in (_APPROVAL_341, _PLAZO_341):
         entry = catalogues.legal[ref]
         assert entry.evidence_tier == "legal_authority"
-        assert entry.document_id == doc
+        assert entry.document_id == _DOCUMENT_341
 
 
 def test_modelo_341_reagp_quarterly_windows_20_days_with_january_30_day_q4() -> None:
     """Orden de 15/12/2000 art 2: 20 natural days after each quarter; 30 in enero for Q4."""
     authority = compiled_bundled_authority()
-    windows = {str(w.period): w for _, _, w in authority.deadline_windows(2025, modelos=("341",))}
-    assert windows["2025 1T"].opens_on == date(2025, 4, 1)
-    assert windows["2025 1T"].closes_on == date(2025, 4, 20)
-    assert windows["2025 2T"].closes_on == date(2025, 7, 20)
-    assert windows["2025 3T"].closes_on == date(2025, 10, 20)
+    year = filing_year_envelope().horizon
+    windows = {w.period: w for _, _, w in authority.deadline_windows(year, modelos=("341",))}
+    first, second, third, fourth = (Period.from_year_and_code(year, code) for code in ("1T", "2T", "3T", "4T"))
+    assert windows[first].opens_on == date(year, 4, 1)
+    assert windows[first].closes_on == date(year, 4, 20)
+    assert windows[second].closes_on == date(year, 7, 20)
+    assert windows[third].closes_on == date(year, 10, 20)
     # Fourth quarter is filed in the first 30 natural days of the following January.
-    assert windows["2025 4T"].opens_on == date(2026, 1, 1)
-    assert windows["2025 4T"].closes_on == date(2026, 1, 30)
+    assert windows[fourth].opens_on == date(year + 1, 1, 1)
+    assert windows[fourth].closes_on == date(year + 1, 1, 30)
 
 
 def test_341_is_registry_backed() -> None:
