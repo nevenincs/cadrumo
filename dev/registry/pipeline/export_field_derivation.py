@@ -192,6 +192,15 @@ OFFICIAL_LABELLED_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
 OFFICIAL_BARE_RECORD_TAG_RE: Final[re.Pattern[str]] = re.compile(r"</?T[0-9A-Z]+>")
 
 
+#: The same record identifier printed QUOTED but without the `Constante` label.
+#: Modelo 840 opens each page with `"<T840010>"` in that form while its closing
+#: tag carries the label. Only the tag shape is admitted, so quotes around any
+#: other unlabelled text still leave the cell unreadable as a constant.
+OFFICIAL_QUOTED_RECORD_TAG_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?P<quote>['\"])(?P<literal></?T[0-9A-Z]+>)(?P=quote)"
+)
+
+
 #: A LABELLED constant whose value AEAT left unquoted. Modelo 200 writes
 #: `Constante 0A` for its periodo and `Constante </T20003000>` for two record
 #: closers, where the same design quotes every other constant. The `Constante`

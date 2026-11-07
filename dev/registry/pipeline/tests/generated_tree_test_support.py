@@ -11,6 +11,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.loader import load_shared_catalogues
@@ -37,8 +38,14 @@ from ..tree_validation import GeneratedExportTreeValidationContext
 #: validation. Modelo 184 is used because its storage-only ancestry exercises
 #: detached target staging while its filing-grade authority remains selectable
 #: at the catalogue-derived supported coordinate.
+_ISOLATED_EDITION: Final = open_ended_revision("184")
 ISOLATED_TREE: Final[GeneratedExportTree] = GeneratedExportTree(
-    "184", "2025-y-siguientes", "aeat-dr-184-2025", "2025", 2025, "0A"
+    "184",
+    str(_ISOLATED_EDITION.id),
+    f"aeat-dr-184-{_ISOLATED_EDITION.valid_from.year}",
+    str(_ISOLATED_EDITION.valid_from.year),
+    _ISOLATED_EDITION.valid_from.year,
+    "0A",
 )
 
 

@@ -13,6 +13,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 
 from ...compiler.loader import load_modelo_directory, load_shared_catalogues
 from ..export_field_literal_derivation import literal_derivation
@@ -28,23 +29,28 @@ from ..semantic_map import load_semantic_map
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+_MAPPINGS = Path("dev/registry/mappings/modelo_122")
+_PROFILES = Path("dev/registry/render_profiles/modelo_122")
+(_DESIGN_EPOCH,) = (path.name for path in _MAPPINGS.iterdir() if path.is_dir())
+_SOURCE_REF = "aeat-dr-122-2016"
+
 
 @pytest.fixture(scope="module")
 def inputs() -> RevisionRenderInputs:
     root = bundled_path()
     catalogues = load_shared_catalogues(root / "registry/aeat")
     definition = load_modelo_directory(root / "registry/aeat/modelos/122")
-    revision = definition.revisions["2017-y-siguientes"]
-    source_ref = "aeat-dr-122-2016"
+    revision = definition.revisions[str(open_ended_revision("122").id)]
+    source_ref = _SOURCE_REF
     intermediate = load_record_design_intermediate(
         root,
         dict(catalogues.sources),
         source_ref=source_ref,
-        filing_year=2024,
-        design_epoch="2016",
+        filing_year=filing_year_envelope().horizon,
+        design_epoch=_DESIGN_EPOCH,
     )
-    semantic = load_semantic_map(Path("dev/registry/mappings/modelo_122/2016"))
-    profile = load_render_profile(Path("dev/registry/render_profiles/modelo_122/2016"))
+    semantic = load_semantic_map(_MAPPINGS / _DESIGN_EPOCH)
+    profile = load_render_profile(_PROFILES / _DESIGN_EPOCH)
     inspection = RegistryRevisionInspection.from_revision(
         modelo=definition,
         revision=revision,
@@ -53,10 +59,10 @@ def inputs() -> RevisionRenderInputs:
         legal_ref_ids=frozenset(catalogues.legal),
     )
     joined = join_record_design_semantics(semantic, intermediate, inspection)
-    layout_id = "generated-modelo-122-2017-y-siguientes-fichero"
+    layout_id = f"generated-modelo-122-{revision.id}-fichero"
     transport = ExportTreeTransportProfile(
         modelo="122",
-        design_epoch="2016",
+        design_epoch=_DESIGN_EPOCH,
         source_ref=source_ref,
         source_sha256=intermediate.source.source_sha256,
         layout_id=layout_id,
@@ -83,14 +89,8 @@ def test_note_constant_is_grounded_in_the_exact_workbook_and_emitted(
     inputs: RevisionRenderInputs, tmp_path: Path
 ) -> None:
     declaration = note_literals_for(inputs.joined.source)[0]
-    source_path = bundled_path(
-        "corpus",
-        "aeat_official",
-        "disenos_registro",
-        "modelo_122",
-        "files",
-        "01-122-ejercicio-2016-y-siguientes.xlsx",
-    )
+    catalogues = load_shared_catalogues(bundled_path() / "registry/aeat")
+    source_path = bundled_path() / catalogues.sources[_SOURCE_REF].corpus_path
     assert hashlib.sha256(source_path.read_bytes()).hexdigest() == declaration.source_sha256
     workbook = load_workbook(source_path, read_only=True, data_only=True)
     try:

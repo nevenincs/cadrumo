@@ -20,6 +20,7 @@ import pytest
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ...compiler.loader import load_modelo_directory
 from ...tests.edition_staging_tree_support import (
@@ -34,9 +35,18 @@ from ..tree_validation import load_continuity_metadata_modelo
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+def _editions(source: Path) -> tuple[str, str, str]:
+    """The three editions of a staged chain, oldest first, as the loader resolves them."""
+    first, second, third = tuple(load_modelo_directory(source).revisions)
+    return first, second, third
+
+
 def _full_copy_modelo(root: Path) -> Path:
     modelo_dir = staged_modelo(root)
-    for revision_id, year in (("2023", 2023), ("2024", 2024), ("2025", 2025)):
+    horizon = filing_year_envelope().horizon
+    years = (horizon - 2, horizon - 1, horizon)
+    for year in years:
+        revision_id = str(year)
         write_edition(
             modelo_dir,
             revision_id,
@@ -45,7 +55,7 @@ def _full_copy_modelo(root: Path) -> Path:
                 edition_casilla(revision_id, "0001", number="1", lineage="base-imponible")
                 + edition_casilla(revision_id, "0002", number="2", lineage="cuota-integra")
             ),
-            retire=("deduccion-retirada", "2023") if revision_id == "2025" else None,
+            retire=("deduccion-retirada", str(years[0])) if year == years[-1] else None,
         )
     return modelo_dir
 
@@ -76,39 +86,41 @@ def _comparable(revision: ModeloRevision) -> dict[str, object]:
 def test_an_inheriting_predecessor_stages_as_the_complete_edition_it_stands_for(tmp_path: Path) -> None:
     source = migrated_chain(tmp_path)
     live = load_modelo_directory(source)
+    first, second, third = _editions(source)
 
-    metadata_root = stage_continuity_metadata(source, tmp_path / "stage", revision="2025")
+    metadata_root = stage_continuity_metadata(source, tmp_path / "stage", revision=third)
 
     assert metadata_root is not None
-    assert sorted(path.name for path in (metadata_root / "revisions").iterdir()) == ["2023", "2024"]
-    witness = load_continuity_metadata_modelo(metadata_root, modelo_id="999", revision_id="2025")
-    staged = witness.revisions["2024"]
+    assert sorted(path.name for path in (metadata_root / "revisions").iterdir()) == [first, second]
+    witness = load_continuity_metadata_modelo(metadata_root, modelo_id="999", revision_id=third)
+    staged = witness.revisions[second]
     assert staged.predecessor is None
     assert _rows(staged) == [
         ("0001", "1", "base-imponible"),
         ("0002", "22", "cuota-integra"),
         ("0003", "3", "deduccion-retirada"),
     ]
-    assert _comparable(staged) == _comparable(live.revisions["2024"])
-    assert _comparable(witness.revisions["2023"]) == _comparable(live.revisions["2023"])
+    assert _comparable(staged) == _comparable(live.revisions[second])
+    assert _comparable(witness.revisions[first]) == _comparable(live.revisions[first])
 
 
 def test_successors_inheriting_through_the_excluded_target_still_stage_complete(tmp_path: Path) -> None:
     """Staging the first edition leaves out the edition both successors inherit through."""
     source = migrated_chain(tmp_path)
     live = load_modelo_directory(source)
+    first, second, third = _editions(source)
 
-    metadata_root = stage_continuity_metadata(source, tmp_path / "stage", revision="2023")
+    metadata_root = stage_continuity_metadata(source, tmp_path / "stage", revision=first)
 
     assert metadata_root is not None
-    witness = load_continuity_metadata_modelo(metadata_root, modelo_id="999", revision_id="2023")
-    assert tuple(witness.revisions) == ("2024", "2025")
-    assert _rows(witness.revisions["2025"]) == [
+    witness = load_continuity_metadata_modelo(metadata_root, modelo_id="999", revision_id=first)
+    assert tuple(witness.revisions) == (second, third)
+    assert _rows(witness.revisions[third]) == [
         ("0001", "1", "base-imponible"),
         ("0002", "22", "cuota-integra"),
         ("0004", "4", "recargo-nuevo"),
     ]
-    for sibling in ("2024", "2025"):
+    for sibling in (second, third):
         assert _comparable(witness.revisions[sibling]) == _comparable(live.revisions[sibling])
 
 
@@ -117,45 +129,51 @@ def test_copying_an_inheriting_sibling_raw_leaves_a_witness_that_cannot_load(tmp
     source = migrated_chain(tmp_path)
     raw_witness = tmp_path / "raw" / "999"
     shutil.copytree(source, raw_witness)
-    shutil.rmtree(raw_witness / "revisions" / "2023")
+    first = _editions(source)[0]
+    shutil.rmtree(raw_witness / "revisions" / first)
 
-    with pytest.raises(RegistryLoadError, match="2023"):
+    with pytest.raises(RegistryLoadError, match=first):
         load_modelo_directory(raw_witness)
 
 
 def test_the_declared_predecessor_chain_is_followed_not_the_evolution_chain(tmp_path: Path) -> None:
-    """2025's only evolution record points at 2022, which is no edition; its declared chain is 2024 then 2023.
+    """The last edition's only evolution record points at a year no edition carries.
+
+    Its declared chain is the middle edition, then the first.
 
     The loader accepts the tree, because an evolution's origin names no
     inheritance edge. Staging must follow the same declared edges the loader
-    does: a sibling's inherited rows come from 2024 and 2023, and the record
+    does: a sibling's inherited rows come from the middle and first editions, and the record
     pointing elsewhere decides nothing.
     """
-    source = migrated_chain(tmp_path, retire_from="2022")
+    non_edition = str(int(_editions(migrated_chain(tmp_path / "probe"))[0]) - 1)
+    source = migrated_chain(tmp_path, retire_from=non_edition)
     live = load_modelo_directory(source)
-    assert [str(item.from_revision) for item in live.revisions["2025"].casilla_continuidad_evolutions] == ["2022"]
+    first, _second, third = _editions(source)
+    assert [str(item.from_revision) for item in live.revisions[third].casilla_continuidad_evolutions] == [non_edition]
 
-    target_2025 = stage_continuity_metadata(source, tmp_path / "stage-2025", revision="2025")
-    target_2023 = stage_continuity_metadata(source, tmp_path / "stage-2023", revision="2023")
+    target_last = stage_continuity_metadata(source, tmp_path / "stage-last", revision=third)
+    target_first = stage_continuity_metadata(source, tmp_path / "stage-first", revision=first)
 
-    assert target_2025 is not None
-    assert target_2023 is not None
-    witness = load_continuity_metadata_modelo(target_2023, modelo_id="999", revision_id="2023")
-    assert _rows(witness.revisions["2025"]) == [
+    assert target_last is not None
+    assert target_first is not None
+    witness = load_continuity_metadata_modelo(target_first, modelo_id="999", revision_id=first)
+    assert _rows(witness.revisions[third]) == [
         ("0001", "1", "base-imponible"),
         ("0002", "22", "cuota-integra"),
         ("0004", "4", "recargo-nuevo"),
     ]
-    assert _comparable(witness.revisions["2025"]) == _comparable(live.revisions["2025"])
+    assert _comparable(witness.revisions[third]) == _comparable(live.revisions[third])
 
 
 def test_a_modelo_whose_editions_state_every_row_stages_byte_for_byte(tmp_path: Path) -> None:
     source = _full_copy_modelo(tmp_path)
+    first, second, third = _editions(source)
 
-    metadata_root = stage_continuity_metadata(source, tmp_path / "stage", revision="2025")
+    metadata_root = stage_continuity_metadata(source, tmp_path / "stage", revision=third)
 
     assert metadata_root is not None
-    assert sorted(path.name for path in (metadata_root / "revisions").iterdir()) == ["2023", "2024"]
+    assert sorted(path.name for path in (metadata_root / "revisions").iterdir()) == [first, second]
     assert (metadata_root / "manifest.toml").read_bytes() == (source / "manifest.toml").read_bytes()
-    for sibling in ("2023", "2024"):
+    for sibling in (first, second):
         assert _tree_bytes(metadata_root / "revisions" / sibling) == _tree_bytes(source / "revisions" / sibling)

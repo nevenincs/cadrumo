@@ -34,6 +34,9 @@ from ..export_fragment_provenance import (
 from ..export_tree import render_complete_export_tree
 from ..joined_record_design import join_record_design_semantics
 from .export_tree_support import (
+    DESIGN_EPOCH,
+    SHELL_EXERCISE,
+    SHELL_REVISION,
     export_tree_intermediate,
     export_tree_joined,
     export_tree_profile,
@@ -91,19 +94,19 @@ source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 """
 
 
-_VALIDATION_REVISION = """\
-[revisions."2025"]
+_VALIDATION_REVISION = f"""\
+[revisions."{SHELL_REVISION}"]
 authority_grade = "applicability"
-valid_from = 2025-01-01
-period_selector = { years = [2025], periods = ["0A"] }
+valid_from = {SHELL_EXERCISE}-01-01
+period_selector = {{ years = [{SHELL_EXERCISE}], periods = ["0A"] }}
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 orden_aplicabilidad = ["orden-eha-672-2007:art-1"]
 """
 
 
-_VALIDATION_APPLICATION_LINKS = """\
-[[revisions."2025".application_links]]
+_VALIDATION_APPLICATION_LINKS = f"""\
+[[revisions."{SHELL_REVISION}".application_links]]
 id = "generated-export-link"
 surface = "export"
 consumer = "cli.app"
@@ -111,7 +114,7 @@ requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
-[[revisions."2025".application_links]]
+[[revisions."{SHELL_REVISION}".application_links]]
 id = "generated-filing-link"
 surface = "filing"
 consumer = "cli.app"
@@ -121,8 +124,8 @@ source_refs = ["aeat-modelo-130-instructions"]
 """
 
 
-_VALIDATION_CASILLAS = """\
-[[revisions."2025".casillas]]
+_VALIDATION_CASILLAS = f"""\
+[[revisions."{SHELL_REVISION}".casillas]]
 id = "01"
 number = "01"
 section = ["generated"]
@@ -132,8 +135,8 @@ source_refs = ["aeat-dr-130-2019-v12"]
 """
 
 
-_VALIDATION_WORKBOOK_PARITY = """\
-[[revisions."2025".workbook_parity_refs]]
+_VALIDATION_WORKBOOK_PARITY = f"""\
+[[revisions."{SHELL_REVISION}".workbook_parity_refs]]
 id = "generated-workbook-parity"
 workbook_source = "aeat-dr-130-2019-v12"
 fixture_id = "generated-tree-validation"
@@ -150,7 +153,7 @@ def test_renderer_writes_stable_complete_tree_that_real_directory_loader_merges(
     revision_dir = write_modelo_shell(tmp_path / "modelos" / "130")
     first = render_complete_export_tree(
         revision_dir / "export",
-        revision_id="2025",
+        revision_id=SHELL_REVISION,
         joined=export_tree_joined(m130_inspection()),
         semantic_map=export_tree_semantic_map(),
         transport_profile=export_tree_profile(),
@@ -160,7 +163,7 @@ def test_renderer_writes_stable_complete_tree_that_real_directory_loader_merges(
     duplicate_revision_dir = write_modelo_shell(tmp_path / "comparison" / "modelos" / "130")
     second = render_complete_export_tree(
         duplicate_revision_dir / "export",
-        revision_id="2025",
+        revision_id=SHELL_REVISION,
         joined=export_tree_joined(m130_inspection()),
         semantic_map=export_tree_semantic_map(),
         transport_profile=export_tree_profile(),
@@ -184,7 +187,7 @@ def test_renderer_writes_stable_complete_tree_that_real_directory_loader_merges(
     }
 
     loaded = load_modelo_directory(tmp_path / "modelos" / "130")
-    layout = loaded.revisions["2025"].export_layouts[0]
+    layout = loaded.revisions[SHELL_REVISION].export_layouts[0]
     manifest_path = revision_dir / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME
     assert manifest_path.is_file()
     assert manifest_path.name not in first.output_files
@@ -194,7 +197,7 @@ def test_renderer_writes_stable_complete_tree_that_real_directory_loader_merges(
             export_root=revision_dir / "export",
             joined=export_tree_joined(m130_inspection()),
             semantic_map=export_tree_semantic_map(),
-            target=ExportFragmentTarget(modelo="130", revision_id="2025", design_epoch="2019"),
+            target=ExportFragmentTarget(modelo="130", revision_id=SHELL_REVISION, design_epoch=DESIGN_EPOCH),
             loaded_layout=layout,
             field_derivations=first.field_derivations,
             render_profile=wire_profile(),
@@ -210,7 +213,7 @@ def test_real_loader_accepts_only_generator_owned_export_provenance(tmp_path) ->
     revision_dir = write_modelo_shell(tmp_path / "modelos" / "130")
     render_complete_export_tree(
         revision_dir / "export",
-        revision_id="2025",
+        revision_id=SHELL_REVISION,
         joined=export_tree_joined(m130_inspection()),
         semantic_map=export_tree_semantic_map(),
         transport_profile=export_tree_profile(),
@@ -219,7 +222,7 @@ def test_real_loader_accepts_only_generator_owned_export_provenance(tmp_path) ->
     )
 
     loaded = load_modelo_directory(tmp_path / "modelos" / "130")
-    assert loaded.revisions["2025"].export_layouts
+    assert loaded.revisions[SHELL_REVISION].export_layouts
 
     unexpected = revision_dir / "export" / "unexpected.json"
     unexpected.write_text("{}\n", encoding="utf-8", newline="\n")
@@ -268,7 +271,7 @@ def test_renderer_carries_semantic_projection_occurrence_authority_into_generate
 
     rendered = render_complete_export_tree(
         tmp_path / "export",
-        revision_id="2025",
+        revision_id=SHELL_REVISION,
         joined=joined,
         semantic_map=semantic_map,
         transport_profile=export_tree_profile(),
@@ -295,7 +298,7 @@ def test_renderer_carries_semantic_record_discriminator_into_generated_record(
 
     rendered = render_complete_export_tree(
         tmp_path / "export",
-        revision_id="2025",
+        revision_id=SHELL_REVISION,
         joined=joined,
         semantic_map=semantic_map,
         transport_profile=export_tree_profile(),
@@ -313,14 +316,14 @@ def test_renderer_manifest_refuses_file_tampering_derivation_drift_and_partial_f
     revision_dir = write_modelo_shell(tmp_path / "modelos" / "130")
     rendered = render_complete_export_tree(
         revision_dir / "export",
-        revision_id="2025",
+        revision_id=SHELL_REVISION,
         joined=export_tree_joined(m130_inspection()),
         semantic_map=export_tree_semantic_map(),
         transport_profile=export_tree_profile(),
         render_profile=wire_profile(),
         render_profile_source_evidence=wire_evidence(),
     )
-    layout = load_modelo_directory(tmp_path / "modelos" / "130").revisions["2025"].export_layouts[0]
+    layout = load_modelo_directory(tmp_path / "modelos" / "130").revisions[SHELL_REVISION].export_layouts[0]
     export_root = revision_dir / "export"
     manifest_path = revision_dir / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME
     original_fragment = export_root / "0001-record-generated-registro-tipo-1.toml"
@@ -332,7 +335,7 @@ def test_renderer_manifest_refuses_file_tampering_derivation_drift_and_partial_f
             export_root=export_root,
             joined=export_tree_joined(m130_inspection()),
             semantic_map=export_tree_semantic_map(),
-            target=ExportFragmentTarget(modelo="130", revision_id="2025", design_epoch="2019"),
+            target=ExportFragmentTarget(modelo="130", revision_id=SHELL_REVISION, design_epoch=DESIGN_EPOCH),
             loaded_layout=layout,
             field_derivations=rendered.field_derivations,
             render_profile=wire_profile(),
@@ -348,7 +351,7 @@ def test_renderer_manifest_refuses_file_tampering_derivation_drift_and_partial_f
             export_root=export_root,
             joined=export_tree_joined(m130_inspection()),
             semantic_map=export_tree_semantic_map(),
-            target=ExportFragmentTarget(modelo="130", revision_id="2025", design_epoch="2019"),
+            target=ExportFragmentTarget(modelo="130", revision_id=SHELL_REVISION, design_epoch=DESIGN_EPOCH),
             loaded_layout=layout,
             field_derivations=rendered.field_derivations,
             render_profile=wire_profile(),
@@ -365,7 +368,7 @@ def test_renderer_manifest_refuses_file_tampering_derivation_drift_and_partial_f
             export_root=export_root,
             joined=export_tree_joined(m130_inspection()),
             semantic_map=export_tree_semantic_map(),
-            target=ExportFragmentTarget(modelo="130", revision_id="2025", design_epoch="2019"),
+            target=ExportFragmentTarget(modelo="130", revision_id=SHELL_REVISION, design_epoch=DESIGN_EPOCH),
             loaded_layout=layout,
             field_derivations=rendered.field_derivations,
             render_profile=wire_profile(),
@@ -379,7 +382,7 @@ def test_renderer_manifest_refuses_file_tampering_derivation_drift_and_partial_f
             export_root=export_root,
             joined=export_tree_joined(m130_inspection()),
             semantic_map=export_tree_semantic_map(),
-            target=ExportFragmentTarget(modelo="130", revision_id="2025", design_epoch="2019"),
+            target=ExportFragmentTarget(modelo="130", revision_id=SHELL_REVISION, design_epoch=DESIGN_EPOCH),
             loaded_layout=layout,
             field_derivations=rendered.field_derivations,
             render_profile=wire_profile(),
@@ -406,7 +409,7 @@ def test_generated_export_target_refuses_a_link_even_though_the_name_and_kind_lo
     with pytest.raises(RegistryValidationError, match="must not be a link"):
         render_complete_export_tree(
             link_target,
-            revision_id="2025",
+            revision_id=SHELL_REVISION,
             joined=export_tree_joined(m130_inspection()),
             semantic_map=export_tree_semantic_map(),
             transport_profile=export_tree_profile(),
@@ -430,7 +433,7 @@ def test_generated_export_target_accepts_a_real_preexisting_empty_directory(
 
     rendered = render_complete_export_tree(
         real_target,
-        revision_id="2025",
+        revision_id=SHELL_REVISION,
         joined=export_tree_joined(m130_inspection()),
         semantic_map=export_tree_semantic_map(),
         transport_profile=export_tree_profile(),

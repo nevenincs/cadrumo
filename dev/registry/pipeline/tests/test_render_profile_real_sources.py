@@ -18,7 +18,7 @@ from cadrumo.domain.calculations.registry.export_value_policy import (
 
 from ...compiler.loader import load_catalogue_file
 from ...maintenance_support import resolve_record_design_binary
-from ...tests.authored_edition_support import source_first_exercise, source_with_sha256
+from ...tests.authored_edition_support import source_first_exercise, source_reference, source_with_sha256
 from .. import render_profile, render_profile_eligibility, render_profile_source_reader
 from ..record_design_intermediate import (
     RecordDesignIntermediateField,
@@ -41,6 +41,16 @@ from ..render_profile_source_reader import load_render_profile_source_evidence
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+_M200_SOURCE = "aeat-dr-200-2025"
+_M200_EXERCISE = source_first_exercise(source_reference(_M200_SOURCE))
+_M200_PROFILES = Path(__file__).parents[2] / "render_profiles" / "modelo_200"
+
+
+def _exercise(source_ref: str) -> int:
+    """Return the first exercise one catalogued design covers, which is also its design epoch."""
+    return source_first_exercise(source_reference(source_ref))
+
+
 #: Floors for the live modelo 200 eligibility this coverage test equates against
 #: the shipped profile. Live: 5682 fields, of which 5556 are width-17 and 126
 #: are smaller.
@@ -55,9 +65,9 @@ def _load_validated_m200_profile():
     intermediate = load_record_design_intermediate(
         source_root,
         catalogues.sources,
-        source_ref="aeat-dr-200-2025",
-        filing_year=2025,
-        design_epoch="2025",
+        source_ref=_M200_SOURCE,
+        filing_year=_M200_EXERCISE,
+        design_epoch=str(_M200_EXERCISE),
     )
     eligibility = project_render_profile_eligibility(field for sheet in intermediate.sheets for field in sheet.fields)
     design_identity = RenderProfileDesignIdentity(
@@ -69,11 +79,11 @@ def _load_validated_m200_profile():
     resolved = resolve_record_design_binary(
         source_root,
         catalogues.sources,
-        source_ref="aeat-dr-200-2025",
-        filing_year=2025,
-        design_epoch="2025",
+        source_ref=_M200_SOURCE,
+        filing_year=_M200_EXERCISE,
+        design_epoch=str(_M200_EXERCISE),
     )
-    profile_directory = Path(__file__).parents[2] / "render_profiles" / "modelo_200" / "2025"
+    profile_directory = _M200_PROFILES / str(_M200_EXERCISE)
     profile = load_render_profile(profile_directory)
     evidence = load_render_profile_source_evidence(resolved.path, profile)
     validate_render_profile_authority(profile, design_identity, eligibility, evidence)
@@ -305,12 +315,12 @@ def test_real_source_loader_refuses_nonexistent_cell_statement_and_sha_mutations
     resolved = resolve_record_design_binary(
         source_root,
         catalogues.sources,
-        source_ref="aeat-dr-200-2025",
-        filing_year=2025,
-        design_epoch="2025",
+        source_ref=_M200_SOURCE,
+        filing_year=_M200_EXERCISE,
+        design_epoch=str(_M200_EXERCISE),
     )
     profile = load_render_profile(
-        Path(__file__).parents[2] / "render_profiles" / "modelo_200" / "2025",
+        _M200_PROFILES / str(_M200_EXERCISE),
     )
     first_rule = profile.width_17_rules[0]
     assert isinstance(first_rule.evidence, OfficialSourceEvidence)
@@ -360,9 +370,9 @@ def test_real_source_loader_refuses_nonexistent_cell_statement_and_sha_mutations
         for sheet in load_record_design_intermediate(
             source_root,
             catalogues.sources,
-            source_ref="aeat-dr-200-2025",
-            filing_year=2025,
-            design_epoch="2025",
+            source_ref=_M200_SOURCE,
+            filing_year=_M200_EXERCISE,
+            design_epoch=str(_M200_EXERCISE),
         ).sheets
         for field in sheet.fields
     )
@@ -392,12 +402,12 @@ def test_real_source_loader_refuses_a_linked_official_binary_before_hashing(tmp_
     resolved = resolve_record_design_binary(
         source_root,
         catalogues.sources,
-        source_ref="aeat-dr-200-2025",
-        filing_year=2025,
-        design_epoch="2025",
+        source_ref=_M200_SOURCE,
+        filing_year=_M200_EXERCISE,
+        design_epoch=str(_M200_EXERCISE),
     )
     profile = load_render_profile(
-        Path(__file__).parents[2] / "render_profiles" / "modelo_200" / "2025",
+        _M200_PROFILES / str(_M200_EXERCISE),
     )
     linked_source = tmp_path / resolved.path.name
     linked_source.symlink_to(resolved.path)
@@ -509,7 +519,7 @@ def test_profile_authority_has_no_legacy_tree_or_layout_oracle() -> None:
 
 def test_real_profile_fragments_stay_below_the_reviewability_line_cap() -> None:
     """Deterministic partitioning keeps every authored fragment reviewable."""
-    profile_directory = Path(__file__).parents[2] / "render_profiles" / "modelo_200" / "2025"
+    profile_directory = _M200_PROFILES / str(_M200_EXERCISE)
     paths = scan_directory(profile_directory, pattern="*.toml")
     assert paths
     assert all(len(path.read_text(encoding="utf-8").splitlines()) <= 500 for path in paths)
@@ -562,8 +572,8 @@ def test_real_modelo_303_reserved_numeric_slots_are_excluded_from_eligibility() 
         bundled_path(),
         catalogues.sources,
         source_ref="aeat-dr-303-2025",
-        filing_year=2025,
-        design_epoch="2025",
+        filing_year=_exercise("aeat-dr-303-2025"),
+        design_epoch=str(_exercise("aeat-dr-303-2025")),
     )
     fixed = tuple(field for sheet in intermediate.sheets for field in sheet.fields)
     reserved_numeric = tuple(
@@ -583,15 +593,15 @@ def test_real_modelo_303_reserved_numeric_slots_are_excluded_from_eligibility() 
 _MINIMUM_ELIGIBLE_347_FIELDS = 15
 
 
-def _eligibility_for(source_ref: str, epoch: str, catalogue: str) -> tuple[RecordDesignIntermediateField, ...]:
+def _eligibility_for(source_ref: str, catalogue: str) -> tuple[RecordDesignIntermediateField, ...]:
     """Return the eligible fields of one hash-verified design."""
     catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", catalogue))
     intermediate = load_record_design_intermediate(
         bundled_path(),
         catalogues.sources,
         source_ref=source_ref,
-        filing_year=2025,
-        design_epoch=epoch,
+        filing_year=_exercise(source_ref),
+        design_epoch=str(_exercise(source_ref)),
     )
     fields = [field for sheet in intermediate.sheets for field in sheet.fields]
     return project_render_profile_eligibility(fields).all_fields
@@ -618,7 +628,7 @@ def test_a_pdf_design_numeric_anchor_is_eligible_for_a_reviewed_rule() -> None:
     each leaf; leaving it at 19 would have asserted that three rows carrying no
     stated wire fact need no reviewed rule.
     """
-    eligible = _eligibility_for("aeat-dr-347-2025", "2025", "operaciones-terceros.toml")
+    eligible = _eligibility_for("aeat-dr-347-2025", "operaciones-terceros.toml")
 
     assert len(eligible) == 22
     assert all(field.source_cell is None for field in eligible), "modelo 347 is PDF-sourced"
@@ -641,7 +651,7 @@ def test_pdf_prose_in_content_is_not_read_as_a_stated_wire_fact() -> None:
     are not evidence for the inference this test exists to refuse, and asserting
     over them would quietly turn the assertion vacuous the moment it flipped.
     """
-    eligible = _eligibility_for("aeat-dr-347-2025", "2025", "operaciones-terceros.toml")
+    eligible = _eligibility_for("aeat-dr-347-2025", "operaciones-terceros.toml")
 
     with_content = [
         field for field in eligible if (field.content is not None and field.content) and field.content.strip()
@@ -653,16 +663,15 @@ def test_pdf_prose_in_content_is_not_read_as_a_stated_wire_fact() -> None:
 
 
 @pytest.mark.parametrize(
-    ("source_ref", "epoch", "catalogue"),
+    ("source_ref", "catalogue"),
     [
-        ("aeat-dr-232-2018", "2018", "is.toml"),
-        ("aeat-dr-210-2022", "2022", "irnr.toml"),
-        ("aeat-dr-303-2025", "2025", "iva.toml"),
+        ("aeat-dr-232-2018", "is.toml"),
+        ("aeat-dr-210-2022", "irnr.toml"),
+        ("aeat-dr-303-2025", "iva.toml"),
     ],
 )
 def test_a_workbook_design_keeps_its_exact_previous_eligibility(
     source_ref: str,
-    epoch: str,
     catalogue: str,
 ) -> None:
     """Widening to PDF sources must not move a workbook's eligible set at all.
@@ -678,8 +687,8 @@ def test_a_workbook_design_keeps_its_exact_previous_eligibility(
         bundled_path(),
         catalogues.sources,
         source_ref=source_ref,
-        filing_year=2025,
-        design_epoch=epoch,
+        filing_year=_exercise(source_ref),
+        design_epoch=str(_exercise(source_ref)),
     )
     fields = [field for sheet in intermediate.sheets for field in sheet.fields]
     original = {
@@ -701,7 +710,7 @@ def test_a_source_reserved_pdf_slot_stays_ineligible() -> None:
     a slot the design reserves, which would force an author to model meaning onto
     filler.
     """
-    eligible = _eligibility_for("aeat-dr-347-2025", "2025", "operaciones-terceros.toml")
+    eligible = _eligibility_for("aeat-dr-347-2025", "operaciones-terceros.toml")
 
     # The claim is an ABSENCE, so it needs the population it is absent from.
     # This has already happened here once: selecting on workbook abbreviations

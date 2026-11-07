@@ -8,10 +8,13 @@ from ..semantic_map import load_semantic_map
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_MAPPINGS = Path("dev/registry/mappings/modelo_193")
+_EPOCHS = sorted(path.name for path in _MAPPINGS.iterdir() if path.is_dir())
 
-@pytest.mark.parametrize("epoch", ["2019", "2023", "2024-early", "2025"])
+
+@pytest.mark.parametrize("epoch", _EPOCHS)
 def test_all_record_types_keep_the_taxpayers_identity(epoch: str) -> None:
-    mapping = load_semantic_map(Path(f"dev/registry/mappings/modelo_193/{epoch}"))
+    mapping = load_semantic_map(_MAPPINGS / epoch)
     entries = {entry.export_field_id: entry for entry in mapping.entries}
     declarant_fields = {
         "modelo-193-decl-nif",

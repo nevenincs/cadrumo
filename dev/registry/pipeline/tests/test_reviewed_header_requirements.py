@@ -18,6 +18,7 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 
 from ..export_field_schema import combined_requirement
 from ..joined_record_design import JoinedRecordDesign, JoinedRecordDesignField, join_record_design_semantics
@@ -28,7 +29,9 @@ from .generated_tree_test_support import bundled_revision_inspection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_MAPPINGS = Path(__file__).resolve().parents[2] / "mappings" / "modelo_111" / "2019"
+_MAPPING_EPOCHS = Path(__file__).resolve().parents[2] / "mappings" / "modelo_111"
+(_DESIGN_EPOCH,) = (path.name for path in _MAPPING_EPOCHS.iterdir() if path.is_dir())
+_MAPPINGS = _MAPPING_EPOCHS / _DESIGN_EPOCH
 _INSTRUCTIONS = "aeat-modelo-111-instructions"
 _DESIGN = "aeat-dr-111-2019-v18"
 _IDENTIFICATION = (
@@ -37,7 +40,7 @@ _IDENTIFICATION = (
 
 
 def _inspection() -> RegistryRevisionInspection:
-    return bundled_revision_inspection("111", "2019-y-siguientes")
+    return bundled_revision_inspection("111", str(open_ended_revision("111").id))
 
 
 @cache
@@ -52,8 +55,8 @@ def _joined(semantic_map: SemanticMap | None = None) -> JoinedRecordDesign:
         bundled_path(),
         inspection.sources,
         source_ref=_DESIGN,
-        filing_year=2026,
-        design_epoch="2019",
+        filing_year=filing_year_envelope().horizon,
+        design_epoch=_DESIGN_EPOCH,
     )
     return join_record_design_semantics(semantic_map or _semantic_map(), intermediate, inspection)
 

@@ -11,6 +11,7 @@ from cadrumo.core import atomic_write
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_field_casilla import derive_casilla_export_refs
 from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.form_layout_integrity import form_layout_failures, form_layout_source_digest
@@ -23,6 +24,13 @@ from ..render_check import GeneratedExportBootstrapTransport, revision_render_in
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+# Modelo 216's oldest edition is the closed one whose export is first published here.
+_HISTORICAL = authored_revisions("216")[0]
+_REVISION = str(_HISTORICAL.id)
+_SOURCE_REF = f"aeat-dr-216-{_REVISION}"
+assert _HISTORICAL.valid_to is not None
+_LAST_EXERCISE = _HISTORICAL.valid_to.year
+
 
 def _with_export(before, layout):
     references = derive_casilla_export_refs((layout,), before.bindings)
@@ -32,7 +40,7 @@ def _with_export(before, layout):
 
 def _omit_historical_export(directory, names):
     path = Path(directory)
-    return {"export"} if path.name == "2020-2023" and path.parent.parent.name == "216" else set()
+    return {"export"} if path.name == _REVISION and path.parent.parent.name == "216" else set()
 
 
 @pytest.fixture(scope="module")
@@ -40,17 +48,17 @@ def historical_before(tmp_path_factory):
     """Reconstruct the authored liquidation-only state before first publication."""
     root = tmp_path_factory.mktemp("before-export") / "216"
     copytree(Path("src/cadrumo/_data/registry/aeat/modelos/216"), root, ignore=_omit_historical_export)
-    revision = load_modelo_directory(root).revisions["2020-2023"]
+    revision = load_modelo_directory(root).revisions[_REVISION]
     layout = revision.form_layouts[0]
     page = layout.pages[0]
     page = page.model_copy(update={"sections": tuple(s for s in page.sections if s.id == "liquidacion")})
     layout = layout.model_copy(update={"pages": (page,)})
     revision = revision.model_copy(update={"form_layouts": (layout,)})
     layout = layout.model_copy(update={"source_state_digest": form_layout_source_digest(revision)})
-    form_layout_fragment_path(root / "revisions" / "2020-2023").write_text(
-        render_form_layout_toml("2020-2023", layout), encoding="utf-8", newline="\n"
+    form_layout_fragment_path(root / "revisions" / _REVISION).write_text(
+        render_form_layout_toml(_REVISION, layout), encoding="utf-8", newline="\n"
     )
-    before = load_modelo_directory(root).revisions["2020-2023"]
+    before = load_modelo_directory(root).revisions[_REVISION]
     assert not before.export_layouts
     assert form_layout_failures(before) == ()
     return before, root
@@ -59,23 +67,23 @@ def historical_before(tmp_path_factory):
 @pytest.fixture(scope="module")
 def historical_rendered(tmp_path_factory):
     authority = compiled_bundled_authority()
-    revision = authority.modelo("216").revisions["2020-2023"]
+    revision = authority.modelo("216").revisions[_REVISION]
     bootstrap = (
         None
         if revision.export_layouts
         else GeneratedExportBootstrapTransport(
-            layout_id="generated-modelo-216-2020-2023-fichero",
+            layout_id=f"generated-modelo-216-{_REVISION}-fichero",
             line_ending="none",
-            source_ref="aeat-dr-216-2020-2023",
+            source_ref=_SOURCE_REF,
             source_sha256="a68460b791ed6c14d698eb0aef3752eda9d407c4fc9b3249d0e4053887f9fee8",
         )
     )
     inputs = revision_render_inputs(
         authority,
         modelo="216",
-        revision="2020-2023",
-        source_ref="aeat-dr-216-2020-2023",
-        filing_year=2023,
+        revision=_REVISION,
+        source_ref=_SOURCE_REF,
+        filing_year=_LAST_EXERCISE,
         period="4T",
         bootstrap_transport=bootstrap,
     )
@@ -109,7 +117,7 @@ def test_historical_identity_and_payment_fields_use_the_historical_offsets(histo
         field = fields[name]
         assert (field.offset, field.length, str(field.producer_key)) == (offset, length, producer)
     assert (fields["close"].offset, fields["close"].length) == (389, 12)
-    assert render_fixed_width_export_field(fields["devengo-ejercicio"], 2023) == "2023"
+    assert render_fixed_width_export_field(fields["devengo-ejercicio"], _LAST_EXERCISE) == str(_LAST_EXERCISE)
 
 
 def test_historical_counts_and_money_do_not_share_a_decimal_scale(historical_layout):
@@ -173,7 +181,7 @@ def test_form_owner_installs_only_the_prevalidated_reconciliation(
     before, before_root = historical_before
     modelo_root = tmp_path / "216"
     copytree(before_root, modelo_root)
-    revision_root = modelo_root / "revisions" / "2020-2023"
+    revision_root = modelo_root / "revisions" / _REVISION
     copytree(export_root, revision_root / "export")
     form = form_layout_fragment_path(revision_root)
     original = form.read_bytes()
@@ -242,11 +250,11 @@ def test_first_export_bridge_prevalidates_and_detects_a_changed_form(
     candidate = tmp_path / "candidate" / "aeat"
     copytree(source_root / "registry" / "aeat", live, ignore=_omit_historical_export)
     before, _before_root = historical_before
-    form_layout_fragment_path(live / "modelos/216/revisions/2020-2023").write_text(
-        render_form_layout_toml("2020-2023", before.form_layouts[0]), encoding="utf-8", newline="\n"
+    form_layout_fragment_path(live / "modelos/216/revisions" / _REVISION).write_text(
+        render_form_layout_toml(_REVISION, before.form_layouts[0]), encoding="utf-8", newline="\n"
     )
     copytree(live, candidate)
-    relative = Path("modelos/216/revisions/2020-2023")
+    relative = Path("modelos/216/revisions") / _REVISION
     copytree(export_root, candidate / relative / "export")
     live_form = form_layout_fragment_path(live / relative)
     original = live_form.read_bytes()
@@ -256,7 +264,7 @@ def test_first_export_bridge_prevalidates_and_detects_a_changed_form(
         source_root=source_root,
         temporary_root=tmp_path,
         modelo="216",
-        revision="2020-2023",
+        revision=_REVISION,
     )
     assert live_form.read_bytes() == original
     assert not (live / relative / "export").exists()
@@ -269,6 +277,6 @@ def test_first_export_bridge_prevalidates_and_detects_a_changed_form(
     assert live_form.read_bytes().endswith(b"# later author edit\n")
     live_form.write_bytes(original)
     bridge.finish_with_form_owner(live, source_root)
-    revision = load_modelo_directory(live / "modelos" / "216").revisions["2020-2023"]
+    revision = load_modelo_directory(live / "modelos" / "216").revisions[_REVISION]
     assert form_layout_failures(revision) == ()
     assert live_form.read_bytes() == form_layout_fragment_path(candidate / relative).read_bytes()

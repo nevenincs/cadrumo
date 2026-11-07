@@ -11,6 +11,11 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    open_ended_revision,
+)
 
 from ...compiler.authority import compile_validated_authority
 from ...compiler.registry_scope import validate_registry_scope
@@ -19,6 +24,10 @@ from ..cli import GeneratedTreeInvocation, check_prepared_invocation, prepare_ge
 from ..tree_validation import candidate_scope_modelos
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+# Modelo 115 has one open-ended edition; modelo 123 has a closed early edition and the open-ended one after it.
+_M115_REVISION = str(open_ended_revision("115").id)
+_EARLY, _LATE = (str(revision.id) for revision in authored_revisions("123"))
 
 
 @pytest.fixture(scope="module")
@@ -29,28 +38,28 @@ def scope_authority(tmp_path_factory) -> ValidatedRegistryAuthority:
         source,
         staged,
         modelo="115",
-        revision="2019-y-siguientes",
+        revision=_M115_REVISION,
         supporting_modelos={"123"},
     )
     shutil.copytree(
-        source / "modelos/115/revisions/2019-y-siguientes/export",
-        staged / "modelos/115/revisions/2019-y-siguientes/export",
+        source / "modelos/115/revisions" / _M115_REVISION / "export",
+        staged / "modelos/115/revisions" / _M115_REVISION / "export",
     )
     return compile_validated_authority(staged, bundled_path())
 
 
 def _candidate(authority: ValidatedRegistryAuthority):
     source = authority.modelo("123")
-    revision = source.revisions["2019-2023"].model_copy(update={"reviewed_by": "candidate-scope-proof"})
-    return source.model_copy(update={"revisions": {"2019-2023": revision}})
+    revision = source.revisions[_EARLY].model_copy(update={"reviewed_by": "candidate-scope-proof"})
+    return source.model_copy(update={"revisions": {_EARLY: revision}})
 
 
 def test_shared_role_scope_keeps_fresh_candidate_and_other_source_revisions(scope_authority) -> None:
     candidate = _candidate(scope_authority)
-    scoped = candidate_scope_modelos(scope_authority, (candidate,), modelo_id="123", revision_id="2019-2023")
+    scoped = candidate_scope_modelos(scope_authority, (candidate,), modelo_id="123", revision_id=_EARLY)
     target = next(modelo for modelo in scoped if str(modelo.id) == "123")
-    assert target.revisions["2019-2023"].reviewed_by == "candidate-scope-proof"
-    assert target.revisions["2024-y-siguientes"] == scope_authority.modelo("123").revisions["2024-y-siguientes"]
+    assert target.revisions[_EARLY].reviewed_by == "candidate-scope-proof"
+    assert target.revisions[_LATE] == scope_authority.modelo("123").revisions[_LATE]
     with validating_governed_facts(
         CandidateFactAuthority(scope_authority.catalogues.facts, scope_authority.supported_filing_years())
     ):
@@ -59,7 +68,7 @@ def test_shared_role_scope_keeps_fresh_candidate_and_other_source_revisions(scop
 
 def test_source_scope_cannot_hide_a_candidate_role_typo(scope_authority) -> None:
     candidate = _candidate(scope_authority)
-    revision = candidate.revisions["2019-2023"]
+    revision = candidate.revisions[_EARLY]
     original = next(
         casilla for casilla in revision.casillas if casilla.semantic_role == "base_retenciones_ingresos_a_cuenta"
     )
@@ -67,7 +76,7 @@ def test_source_scope_cannot_hide_a_candidate_role_typo(scope_authority) -> None
     broken = candidate.model_copy(
         update={
             "revisions": {
-                "2019-2023": revision.model_copy(
+                _EARLY: revision.model_copy(
                     update={
                         "casillas": tuple(changed if casilla == original else casilla for casilla in revision.casillas),
                     }
@@ -75,7 +84,7 @@ def test_source_scope_cannot_hide_a_candidate_role_typo(scope_authority) -> None
             }
         }
     )
-    scoped = candidate_scope_modelos(scope_authority, (broken,), modelo_id="123", revision_id="2019-2023")
+    scoped = candidate_scope_modelos(scope_authority, (broken,), modelo_id="123", revision_id=_EARLY)
     with validating_governed_facts(
         CandidateFactAuthority(scope_authority.catalogues.facts, scope_authority.supported_filing_years())
     ):
@@ -89,16 +98,16 @@ def test_scope_refuses_changed_modelo_metadata_and_supporting_facts(scope_author
             scope_authority,
             (candidate.model_copy(update={"source_refs": ()}),),
             modelo_id="123",
-            revision_id="2019-2023",
+            revision_id=_EARLY,
         )
     support = scope_authority.modelo("115")
     altered = support.model_copy(update={"source_refs": ()})
     with pytest.raises(RegistryValidationError, match="supporting modelo facts"):
-        candidate_scope_modelos(scope_authority, (candidate, altered), modelo_id="123", revision_id="2019-2023")
+        candidate_scope_modelos(scope_authority, (candidate, altered), modelo_id="123", revision_id=_EARLY)
 
 
 def test_real_123_bootstrap_candidate_uses_validated_shared_role_scope(scope_authority, tmp_path: Path) -> None:
-    invocation = GeneratedTreeInvocation("123", "2019-2023", "aeat-dr-123-2019-2023-v13", 2022, "1T")
+    invocation = GeneratedTreeInvocation("123", _EARLY, f"aeat-dr-123-{_EARLY}-v13", filing_year_envelope().floor, "1T")
     prepared = prepare_generated_tree_invocation(invocation, tmp_path, authority=scope_authority)
     state, rendered, _receipt = check_prepared_invocation(prepared)
     assert state == "matched"

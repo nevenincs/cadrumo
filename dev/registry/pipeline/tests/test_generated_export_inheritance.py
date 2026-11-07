@@ -18,6 +18,12 @@ from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import SourceRefId
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    newest_authored_editions,
+    revision_covering,
+    split_exercise_revisions,
+    supported_authored_exercises,
+)
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.loader import load_modelo_directory
@@ -69,14 +75,29 @@ from ..tree_validation import require_isolated_target_context, validate_generate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+# Modelo 189's three newest editions: the manual ancestor, then the two children that inherit its export layout.
+_M189_EXERCISES = newest_authored_editions("189", 3)
+_M189_ANCESTOR, _M189_MIDDLE, _M189_NEWEST = (
+    str(revision_covering("189", exercise).id) for exercise in _M189_EXERCISES
+)
+_M189_MIDDLE_YEAR, _M189_NEWEST_YEAR = _M189_EXERCISES[1:]
+# Modelo 303's split exercise: the early monthly/Q1 edition inherits from the edition that serves the rest of the year.
+_M303_EARLY_EDITION, _M303_LATE_EDITION = split_exercise_revisions("303", early_period="01", late_period="02")
+_M303_EARLY = str(_M303_EARLY_EDITION.id)
+_M303_LATE = str(_M303_LATE_EDITION.id)
+_M303_YEAR = _M303_EARLY_EDITION.valid_from.year
+_M303_PRIOR = str(revision_covering("303", _M303_YEAR - 1).id)
+# Modelo 390 restates its export layout and carries continuity evolutions from its second supported edition on.
+_M390_EVOLVING = str(revision_covering("390", supported_authored_exercises("390")[1]).id)
+
 
 def test_static_storage_verification_refuses_a_changed_earlier_ancestor(tmp_path: Path) -> None:
     """Degraded provenance retains intact chains and refuses a changed physical parent."""
     authority = compiled_bundled_authority()
     registry_root = bundled_path("registry", "aeat")
-    context = select_generated_export_inheritance(authority, registry_root, modelo="189", revision="2025")
+    context = select_generated_export_inheritance(authority, registry_root, modelo="189", revision=_M189_NEWEST)
     assert context is not None and context.baseline_context is not None
-    selected = authority.modelo("189").revisions["2025"]
+    selected = authority.modelo("189").revisions[_M189_NEWEST]
     sources: Mapping[SourceRefId, GeneratedArtifactSource] = dict(authority.catalogues.sources)
     candidate_root = tmp_path / "registry"
     shutil.copytree(registry_root / "modelos/189", candidate_root / "modelos/189")
@@ -96,7 +117,7 @@ def test_static_storage_verification_refuses_a_changed_earlier_ancestor(tmp_path
         )
 
 
-def _prepared(tmp_path: Path, *, revision: str = "2025"):
+def _prepared(tmp_path: Path, *, revision: str = _M189_NEWEST):
     authority = compiled_bundled_authority()
     prepared = prepare_generated_tree_invocation(
         GeneratedTreeInvocation("189", revision, "aeat-dr-189-2023", int(revision), "0A"),
@@ -127,14 +148,14 @@ def test_ordinary_full_revision_with_continuity_evolutions_does_not_select_compa
     authority = compiled_bundled_authority()
     registry_root = bundled_path("registry", "aeat")
     modelo_root = registry_root / "modelos/390"
-    revision = authority.modelo("390").revisions["2023"]
+    revision = authority.modelo("390").revisions[_M390_EVOLVING]
     baseline = authority.modelo("390").revisions[str(revision.family_storage_baseline)]
     assert revision.export_layouts != baseline.export_layouts
-    assert (modelo_root / "revisions/2023/casilla_continuidad_evolutions").exists()
-    assert select_generated_export_inheritance(authority, registry_root, modelo="390", revision="2023") is None
+    assert (modelo_root / f"revisions/{_M390_EVOLVING}/casilla_continuidad_evolutions").exists()
+    assert select_generated_export_inheritance(authority, registry_root, modelo="390", revision=_M390_EVOLVING) is None
 
 
-@pytest.mark.parametrize("evolution_revision", ["2024", "2025"])
+@pytest.mark.parametrize("evolution_revision", [_M189_MIDDLE, _M189_NEWEST])
 def test_equal_layout_with_continuity_evolutions_declines_optional_compaction(
     tmp_path: Path, evolution_revision: str
 ) -> None:
@@ -142,19 +163,19 @@ def test_equal_layout_with_continuity_evolutions_declines_optional_compaction(
     authority = compiled_bundled_authority()
     registry_root = tmp_path / "registry"
     shutil.copytree(bundled_path("registry", "aeat", "modelos", "189"), registry_root / "modelos/189")
-    expected = select_generated_export_inheritance(authority, registry_root, modelo="189", revision="2025")
+    expected = select_generated_export_inheritance(authority, registry_root, modelo="189", revision=_M189_NEWEST)
     assert expected is not None
     definition = authority.modelo("189")
-    assert definition.revisions["2025"].export_layouts == definition.revisions["2024"].export_layouts
+    assert definition.revisions[_M189_NEWEST].export_layouts == definition.revisions[_M189_MIDDLE].export_layouts
     evolution_root = registry_root / "modelos/189/revisions" / evolution_revision / "casilla_continuidad_evolutions"
     assert not evolution_root.exists()
     evolution_root.mkdir()
 
-    assert select_generated_export_inheritance(authority, registry_root, modelo="189", revision="2025") is None
+    assert select_generated_export_inheritance(authority, registry_root, modelo="189", revision=_M189_NEWEST) is None
     with pytest.raises(
         RegistryValidationError, match=f"cannot detach a revision with continuity evolutions: 189/{evolution_revision}"
     ):
-        require_generated_export_inheritance(expected, authority, registry_root, modelo="189", revision="2025")
+        require_generated_export_inheritance(expected, authority, registry_root, modelo="189", revision=_M189_NEWEST)
 
 
 def test_early_2026_m303_renders_a_complete_tree_without_detaching_baseline_evolutions(tmp_path: Path) -> None:
@@ -164,7 +185,7 @@ def test_early_2026_m303_renders_a_complete_tree_without_detaching_baseline_evol
 
     def omit_target_export(directory: str, names: list[str]) -> set[str]:
         """Recreate only the child's first-publication state in a separate scratch copy."""
-        return {"export"}.intersection(names) if Path(directory).name == "2026-hasta-01-y-1t" else set()
+        return {"export"}.intersection(names) if Path(directory).name == _M303_EARLY else set()
 
     shutil.copytree(
         bundled_path("registry", "aeat", "modelos", "303"),
@@ -172,7 +193,7 @@ def test_early_2026_m303_renders_a_complete_tree_without_detaching_baseline_evol
         ignore=omit_target_export,
     )
     definition = authority.modelo("303")
-    selected = definition.revisions["2026-hasta-01-y-1t"]
+    selected = definition.revisions[_M303_EARLY]
     baseline = definition.revisions[str(selected.family_storage_baseline)]
     evolutions = baseline.casilla_continuidad_evolutions
     assert evolutions
@@ -183,7 +204,12 @@ def test_early_2026_m303_renders_a_complete_tree_without_detaching_baseline_evol
     )
 
     inputs = revision_render_inputs(
-        authority, modelo="303", revision=str(selected.id), source_ref="aeat-dr-303-2026", filing_year=2026, period="1T"
+        authority,
+        modelo="303",
+        revision=str(selected.id),
+        source_ref="aeat-dr-303-2026",
+        filing_year=_M303_YEAR,
+        period="1T",
     )
     rendered = render_complete_export_tree(
         tmp_path / "export",
@@ -205,7 +231,7 @@ def test_early_2026_m303_renders_a_complete_tree_without_detaching_baseline_evol
         modelo="303",
         revision=str(selected.id),
         source_ref="aeat-dr-303-2026",
-        filing_year=2026,
+        filing_year=_M303_YEAR,
         period="1T",
         registry_root=registry_root,
     )
@@ -215,9 +241,9 @@ def test_early_2026_m303_renders_a_complete_tree_without_detaching_baseline_evol
 
 
 def test_real_2024_child_candidate_can_replace_its_full_tree(tmp_path: Path) -> None:
-    prepared, authority = _prepared(tmp_path, revision="2024")
+    prepared, authority = _prepared(tmp_path, revision=_M189_MIDDLE)
     assert prepared.inheritance is not None
-    assert prepared.inheritance.pinned_ancestors[0][0] == "2023"
+    assert prepared.inheritance.pinned_ancestors[0][0] == _M189_ANCESTOR
     rendered = render_candidate(prepared)
     validated = validate_generated_export_tree(
         context=prepared.validation,
@@ -227,7 +253,7 @@ def test_real_2024_child_candidate_can_replace_its_full_tree(tmp_path: Path) -> 
         render_profile=prepared.inputs.render_profile,
         render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
     )
-    assert validated.layout == authority.modelo("189").revisions["2024"].export_layouts[0]
+    assert validated.layout == authority.modelo("189").revisions[_M189_MIDDLE].export_layouts[0]
     full_root = _full_witness(prepared, tmp_path / "full-2024-witness" / "export")
     state = GeneratedExportTreeTargetStateReceipt.observe(full_root)
     assert state.manifest_sha256 is not None
@@ -238,10 +264,10 @@ def test_real_2024_child_candidate_can_replace_its_full_tree(tmp_path: Path) -> 
     )
     comparison = compare_export_tree_roots(
         modelo="189",
-        revision="2024",
+        revision=_M189_MIDDLE,
         layout_id=prepared.inputs.layout_id,
         committed_root=full_root,
-        rendered_root=prepared.candidate_root / "modelos/189/revisions/2024/export",
+        rendered_root=prepared.candidate_root / f"modelos/189/revisions/{_M189_MIDDLE}/export",
     )
     assert comparison.disposition_class == "record_drift"
     require_storage_equivalent_republication(bound, rendered, state, comparison)
@@ -255,17 +281,17 @@ def test_recursive_child_chain_requires_every_pinned_ancestor(tmp_path: Path) ->
         authority,
         source_root,
         modelo="189",
-        revision="2024",
+        revision=_M189_MIDDLE,
     )
-    assert prior is not None and tuple(item[0] for item in prior.pinned_ancestors) == ("2023",)
-    source_2024_export = source_root / "modelos/189/revisions/2024/export"
+    assert prior is not None and tuple(item[0] for item in prior.pinned_ancestors) == (_M189_ANCESTOR,)
+    source_2024_export = source_root / f"modelos/189/revisions/{_M189_MIDDLE}/export"
     source_2024_export.rename(tmp_path / "old-2024-export")
     inputs_2024 = revision_render_inputs(
         authority,
         modelo="189",
-        revision="2024",
+        revision=_M189_MIDDLE,
         source_ref="aeat-dr-189-2023",
-        filing_year=2024,
+        filing_year=_M189_MIDDLE_YEAR,
         period="0A",
     )
     render_complete_export_tree(
@@ -283,27 +309,27 @@ def test_recursive_child_chain_requires_every_pinned_ancestor(tmp_path: Path) ->
         authority,
         source_root,
         modelo="189",
-        revision="2025",
+        revision=_M189_NEWEST,
     )
-    assert chain is not None and tuple(item[0] for item in chain.pinned_ancestors) == ("2023", "2024")
+    assert chain is not None and tuple(item[0] for item in chain.pinned_ancestors) == (_M189_ANCESTOR, _M189_MIDDLE)
     candidate_root = tmp_path / "chain-candidate" / "aeat"
     staged_root = stage_attested_inherited_modelo(
         source_root / "modelos/189",
         candidate_root / "modelos/189",
-        revision="2025",
+        revision=_M189_NEWEST,
         inheritance=chain,
         include_target_export=False,
     )
     inputs_2025 = revision_render_inputs(
         authority,
         modelo="189",
-        revision="2025",
+        revision=_M189_NEWEST,
         source_ref="aeat-dr-189-2023",
-        filing_year=2025,
+        filing_year=_M189_NEWEST_YEAR,
         period="0A",
     )
     rendered = render_complete_export_tree(
-        staged_root / "revisions/2025/export",
+        staged_root / f"revisions/{_M189_NEWEST}/export",
         revision_id=inputs_2025.revision_id,
         joined=inputs_2025.joined,
         semantic_map=inputs_2025.semantic_map,
@@ -314,8 +340,8 @@ def test_recursive_child_chain_requires_every_pinned_ancestor(tmp_path: Path) ->
         inheritance=chain,
     )
     assert rendered.output_files == ("0000-export-layout.toml",)
-    assert tuple(load_modelo_directory(staged_root).revisions) == ("2023", "2024", "2025")
-    for revision in ("2023", "2024", "2025"):
+    assert tuple(load_modelo_directory(staged_root).revisions) == (_M189_ANCESTOR, _M189_MIDDLE, _M189_NEWEST)
+    for revision in (_M189_ANCESTOR, _M189_MIDDLE, _M189_NEWEST):
         original = read_staged_edition(source_root / "modelos/189", revision, side="source")
         staged = read_staged_edition(staged_root, revision, side="staged")
         assert member_identities(staged) == member_identities(original)
@@ -323,8 +349,8 @@ def test_recursive_child_chain_requires_every_pinned_ancestor(tmp_path: Path) ->
     require_isolated_target_context(
         candidate_root,
         modelo_id="189",
-        revision_id="2025",
-        baseline_revisions=("2023", "2024"),
+        revision_id=_M189_NEWEST,
+        baseline_revisions=(_M189_ANCESTOR, _M189_MIDDLE),
     )
 
     repeated = replace(chain, baseline_context=chain)
@@ -332,7 +358,7 @@ def test_recursive_child_chain_requires_every_pinned_ancestor(tmp_path: Path) ->
         stage_attested_inherited_modelo(
             source_root / "modelos/189",
             tmp_path / "cycle-candidate" / "modelos/189",
-            revision="2025",
+            revision=_M189_NEWEST,
             inheritance=repeated,
             include_target_export=False,
         )
@@ -341,27 +367,27 @@ def test_recursive_child_chain_requires_every_pinned_ancestor(tmp_path: Path) ->
             authority,
             source_root,
             modelo="189",
-            revision="2025",
-            _visited=frozenset({"2025"}),
+            revision=_M189_NEWEST,
+            _visited=frozenset({_M189_NEWEST}),
         )
     (staged_root / "revisions/unrelated").mkdir()
     with pytest.raises(RegistryValidationError, match="generated modelo revisions directory"):
         require_isolated_target_context(
             candidate_root,
             modelo_id="189",
-            revision_id="2025",
-            baseline_revisions=("2023", "2024"),
+            revision_id=_M189_NEWEST,
+            baseline_revisions=(_M189_ANCESTOR, _M189_MIDDLE),
         )
     (staged_root / "revisions/unrelated").rmdir()
-    (staged_root / "revisions/2023").rename(tmp_path / "removed-2023")
+    (staged_root / f"revisions/{_M189_ANCESTOR}").rename(tmp_path / "removed-2023")
     with pytest.raises(RegistryValidationError, match="generated modelo revisions directory"):
         require_isolated_target_context(
             candidate_root,
             modelo_id="189",
-            revision_id="2025",
-            baseline_revisions=("2023", "2024"),
+            revision_id=_M189_NEWEST,
+            baseline_revisions=(_M189_ANCESTOR, _M189_MIDDLE),
         )
-    source_2023_revision = source_root / "modelos/189/revisions/2023/revision.toml"
+    source_2023_revision = source_root / f"modelos/189/revisions/{_M189_ANCESTOR}/revision.toml"
     source_2023_revision.write_bytes(source_2023_revision.read_bytes() + b"\n# changed ancestor witness\n")
     with pytest.raises(RegistryValidationError, match="baseline chain attestation changed"):
         require_generated_export_inheritance(
@@ -369,7 +395,7 @@ def test_recursive_child_chain_requires_every_pinned_ancestor(tmp_path: Path) ->
             authority,
             source_root,
             modelo="189",
-            revision="2025",
+            revision=_M189_NEWEST,
         )
 
 
@@ -379,7 +405,7 @@ def test_real_child_delta_hydrates_to_full_render_and_old_tree_is_exact(tmp_path
     assert rendered.output_files == ("0000-export-layout.toml",)
     assert rendered.provenance_manifest.generated_export_inheritance == prepared.inheritance.attestation
     assert "export_layouts = []" in (
-        prepared.candidate_root / "modelos/189/revisions/2025/export/0000-export-layout.toml"
+        prepared.candidate_root / f"modelos/189/revisions/{_M189_NEWEST}/export/0000-export-layout.toml"
     ).read_text(encoding="utf-8")
     validated = validate_generated_export_tree(
         context=prepared.validation,
@@ -389,10 +415,10 @@ def test_real_child_delta_hydrates_to_full_render_and_old_tree_is_exact(tmp_path
         render_profile=prepared.inputs.render_profile,
         render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
     )
-    assert validated.layout == authority.modelo("189").revisions["2025"].export_layouts[0]
+    assert validated.layout == authority.modelo("189").revisions[_M189_NEWEST].export_layouts[0]
     hydrated = load_modelo_directory(prepared.candidate_root / "modelos/189")
-    assert hydrated.revisions["2025"].export_layouts == (rendered.layout,)
-    expected = (*tuple(item[0] for item in prepared.inheritance.pinned_ancestors), "2025")
+    assert hydrated.revisions[_M189_NEWEST].export_layouts == (rendered.layout,)
+    expected = (*tuple(item[0] for item in prepared.inheritance.pinned_ancestors), _M189_NEWEST)
     assert tuple(hydrated.revisions) == expected
     for revision in expected:
         original = read_staged_edition(bundled_path("registry", "aeat", "modelos", "189"), revision, side="source")
@@ -401,7 +427,7 @@ def test_real_child_delta_hydrates_to_full_render_and_old_tree_is_exact(tmp_path
         assert chain_materialisation(staged) == chain_materialisation(original)
     with pytest.raises(RegistryValidationError, match="field derivations do not match the rendered tree"):
         verify_export_fragment_provenance_manifest(
-            export_root=prepared.candidate_root / "modelos/189/revisions/2025/export",
+            export_root=prepared.candidate_root / f"modelos/189/revisions/{_M189_NEWEST}/export",
             joined=prepared.inputs.joined,
             semantic_map=prepared.inputs.semantic_map,
             target=prepared.validation.target,
@@ -414,15 +440,15 @@ def test_real_child_delta_hydrates_to_full_render_and_old_tree_is_exact(tmp_path
 
     comparison = compare_export_tree_roots(
         modelo="189",
-        revision="2025",
+        revision=_M189_NEWEST,
         layout_id=prepared.inputs.layout_id,
         committed_root=prepared.target_export_root,
-        rendered_root=prepared.candidate_root / "modelos/189/revisions/2025/export",
+        rendered_root=prepared.candidate_root / f"modelos/189/revisions/{_M189_NEWEST}/export",
     )
     assert comparison.disposition_class in (None, "provenance_only")
     assert not comparison.record_differing and not comparison.only_committed and not comparison.only_rendered
 
-    child_source = prepared.candidate_root / "modelos/189/revisions/2025/revision.toml"
+    child_source = prepared.candidate_root / f"modelos/189/revisions/{_M189_NEWEST}/revision.toml"
     raw_source = child_source.read_bytes()
     changed_source = raw_source.replace(b'authority_grade = "filing"', b'authority_grade = "applicability"', 1)
     assert changed_source != raw_source
@@ -452,7 +478,7 @@ def test_changed_source_pins_baseline_or_layout_refuse_compaction(tmp_path: Path
             authority,
             bundled_path("registry", "aeat"),
             modelo="189",
-            revision="2025",
+            revision=_M189_NEWEST,
         )
     wrong_layout = replace(
         inheritance,
@@ -507,7 +533,7 @@ def test_changed_source_pins_baseline_or_layout_refuse_compaction(tmp_path: Path
 
     isolated_root = tmp_path / "changed-baseline" / "aeat"
     shutil.copytree(bundled_path("registry", "aeat", "modelos", "189"), isolated_root / "modelos/189")
-    baseline_revision = isolated_root / "modelos/189/revisions/2024/revision.toml"
+    baseline_revision = isolated_root / f"modelos/189/revisions/{_M189_MIDDLE}/revision.toml"
     baseline_revision.write_bytes(baseline_revision.read_bytes() + b"\n# changed baseline witness\n")
     with pytest.raises(RegistryValidationError, match="baseline or effective layout changed"):
         require_generated_export_inheritance(
@@ -515,13 +541,13 @@ def test_changed_source_pins_baseline_or_layout_refuse_compaction(tmp_path: Path
             authority,
             isolated_root,
             modelo="189",
-            revision="2025",
+            revision=_M189_NEWEST,
         )
 
     missing_root = tmp_path / "missing-baseline" / "aeat"
     shutil.copytree(bundled_path("registry", "aeat", "modelos", "189"), missing_root / "modelos/189")
-    (missing_root / "modelos/189/revisions/2024/export").rename(
-        missing_root / "modelos/189/revisions/2024/absent-export",
+    (missing_root / f"modelos/189/revisions/{_M189_MIDDLE}/export").rename(
+        missing_root / f"modelos/189/revisions/{_M189_MIDDLE}/absent-export",
     )
     with pytest.raises(RegistryValidationError, match="generated export package must be a non-linked directory"):
         require_generated_export_inheritance(
@@ -529,25 +555,25 @@ def test_changed_source_pins_baseline_or_layout_refuse_compaction(tmp_path: Path
             authority,
             missing_root,
             modelo="189",
-            revision="2025",
+            revision=_M189_NEWEST,
         )
 
     evolution_root = tmp_path / "claimed-evolution" / "aeat"
     shutil.copytree(bundled_path("registry", "aeat", "modelos", "189"), evolution_root / "modelos/189")
-    (evolution_root / "modelos/189/revisions/2025/casilla_continuidad_evolutions").mkdir()
+    (evolution_root / f"modelos/189/revisions/{_M189_NEWEST}/casilla_continuidad_evolutions").mkdir()
     with pytest.raises(RegistryValidationError, match="cannot detach a revision with continuity evolutions"):
         require_generated_export_inheritance(
             inheritance,
             authority,
             evolution_root,
             modelo="189",
-            revision="2025",
+            revision=_M189_NEWEST,
         )
 
     for member in ("semantic_map_sha256", "render_profile_sha256"):
         stale_root = tmp_path / f"stale-{member}" / "aeat"
         shutil.copytree(bundled_path("registry", "aeat", "modelos", "189"), stale_root / "modelos/189")
-        manifest_path = stale_root / "modelos/189/revisions/2024/export/_generation.provenance.json"
+        manifest_path = stale_root / f"modelos/189/revisions/{_M189_MIDDLE}/export/_generation.provenance.json"
         manifest = json.loads(manifest_path.read_bytes())
         manifest[member] = "0" * 64
         manifest_path.write_bytes(canonical_json_bytes(manifest))
@@ -557,12 +583,12 @@ def test_changed_source_pins_baseline_or_layout_refuse_compaction(tmp_path: Path
                 authority,
                 stale_root,
                 modelo="189",
-                revision="2025",
+                revision=_M189_NEWEST,
             )
 
 
 def test_extra_revision_and_same_size_old_field_mutation_refuse(tmp_path: Path) -> None:
-    prepared, _ = _prepared(tmp_path, revision="2024")
+    prepared, _ = _prepared(tmp_path, revision=_M189_MIDDLE)
     rendered = render_candidate(prepared)
     (prepared.candidate_root / "modelos/189/revisions/unrelated").mkdir()
     with pytest.raises(RegistryValidationError, match="generated modelo revisions directory"):
@@ -591,10 +617,10 @@ def test_extra_revision_and_same_size_old_field_mutation_refuse(tmp_path: Path) 
     )
     comparison = compare_export_tree_roots(
         modelo="189",
-        revision="2024",
+        revision=_M189_MIDDLE,
         layout_id=prepared.inputs.layout_id,
         committed_root=mutated,
-        rendered_root=prepared.candidate_root / "modelos/189/revisions/2025/export",
+        rendered_root=prepared.candidate_root / f"modelos/189/revisions/{_M189_NEWEST}/export",
     )
     with pytest.raises(ValueError, match="does not reproduce the current full source render"):
         require_storage_equivalent_republication(bound, rendered, state, comparison)
@@ -605,7 +631,7 @@ def _m303_source_copy(root: Path, *, complete_registry: bool = False) -> Path:
     registry_root = root / "registry" / "aeat"
 
     def omit_child_export(directory: str, names: list[str]) -> set[str]:
-        return {"export"}.intersection(names) if Path(directory).name == "2026-hasta-01-y-1t" else set()
+        return {"export"}.intersection(names) if Path(directory).name == _M303_EARLY else set()
 
     if complete_registry:
         shutil.copytree(bundled_path("registry", "aeat"), registry_root, ignore=omit_child_export)
@@ -633,7 +659,7 @@ def _prepare_retained_m303(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
 
     monkeypatch.setattr(pipeline_cli, "bundled_path", scratch_bundled_path)
     prepared = prepare_generated_tree_invocation(
-        GeneratedTreeInvocation("303", "2026-hasta-01-y-1t", "aeat-dr-303-2026", 2026, "1T"),
+        GeneratedTreeInvocation("303", _M303_EARLY, "aeat-dr-303-2026", _M303_YEAR, "1T"),
         tmp_path / "generation",
         authority=authority,
     )
@@ -648,39 +674,39 @@ def test_real_early_m303_compact_publication_retains_the_complete_legal_chain(
     modelo_root = registry_root / "modelos/303"
     original = authority.modelo("303")
     original_non_export = generated_export_source_chain_fingerprint(
-        registry_root, modelo="303", revision="2026-hasta-01-y-1t", omit_target_export=True
+        registry_root, modelo="303", revision=_M303_EARLY, omit_target_export=True
     )
     assert prepared.inheritance is not None
     assert prepared.validation.source_chain_revisions == tuple(original.revisions)
-    assert str(prepared.inheritance.attestation.baseline_revision_id) == "2026-y-siguientes"
-    assert original.revisions["2026-y-siguientes"].casilla_continuidad_evolutions
+    assert str(prepared.inheritance.attestation.baseline_revision_id) == _M303_LATE
+    assert original.revisions[_M303_LATE].casilla_continuidad_evolutions
     status, rendered, state = check_prepared_invocation(prepared)
     assert status == "publishable_absence" and state.manifest_sha256 is None
     assert rendered.output_files == ("0000-export-layout.toml",)
-    assert rendered.layout == original.revisions["2026-hasta-01-y-1t"].export_layouts[0]
+    assert rendered.layout == original.revisions[_M303_EARLY].export_layouts[0]
     assert rendered.provenance_manifest.generated_export_inheritance == prepared.inheritance.attestation
     publish_prepared_invocation(prepared, rendered, state)
     assert prepared.target_export_root.is_dir()
     assert (
         generated_export_source_chain_fingerprint(
-            registry_root, modelo="303", revision="2026-hasta-01-y-1t", omit_target_export=True
+            registry_root, modelo="303", revision=_M303_EARLY, omit_target_export=True
         )
         == original_non_export
     )
     loaded = load_modelo_directory(modelo_root)
-    require_source_chain_unchanged(original, loaded, revision="2026-hasta-01-y-1t")
-    assert loaded.revisions["2026-hasta-01-y-1t"].form_layouts == original.revisions["2026-hasta-01-y-1t"].form_layouts
-    assert loaded.revisions["2026-y-siguientes"].casilla_continuidad_evolutions == (
-        original.revisions["2026-y-siguientes"].casilla_continuidad_evolutions
+    require_source_chain_unchanged(original, loaded, revision=_M303_EARLY)
+    assert loaded.revisions[_M303_EARLY].form_layouts == original.revisions[_M303_EARLY].form_layouts
+    assert loaded.revisions[_M303_LATE].casilla_continuidad_evolutions == (
+        original.revisions[_M303_LATE].casilla_continuidad_evolutions
     )
     payload = parse_toml((prepared.target_export_root / "0000-export-layout.toml").read_text("utf-8"))
-    assert payload["revisions"]["2026-hasta-01-y-1t"]["export_layouts"] == []
+    assert payload["revisions"][_M303_EARLY]["export_layouts"] == []
     assert compare_revision_against_committed(
         authority,
         modelo="303",
-        revision="2026-hasta-01-y-1t",
+        revision=_M303_EARLY,
         source_ref="aeat-dr-303-2026",
-        filing_year=2026,
+        filing_year=_M303_YEAR,
         period="1T",
         registry_root=registry_root,
     ).reproduced
@@ -701,7 +727,7 @@ def test_real_early_m303_compact_publication_retains_the_complete_legal_chain(
         manifest.write_bytes(before)
 
 
-@pytest.mark.parametrize("evolution_revision", ["2024", "2025"])
+@pytest.mark.parametrize("evolution_revision", [_M189_MIDDLE, _M189_NEWEST])
 def test_explicit_retained_mode_still_refuses_unvalidated_empty_evolution_directories(
     tmp_path: Path, evolution_revision: str
 ) -> None:
@@ -709,12 +735,12 @@ def test_explicit_retained_mode_still_refuses_unvalidated_empty_evolution_direct
     authority = compiled_bundled_authority()
     registry_root = tmp_path / "registry"
     shutil.copytree(bundled_path("registry", "aeat", "modelos", "189"), registry_root / "modelos/189")
-    expected = select_generated_export_inheritance(authority, registry_root, modelo="189", revision="2025")
+    expected = select_generated_export_inheritance(authority, registry_root, modelo="189", revision=_M189_NEWEST)
     assert expected is not None
     (registry_root / "modelos/189/revisions" / evolution_revision / "casilla_continuidad_evolutions").mkdir()
     assert (
         select_generated_export_inheritance(
-            authority, registry_root, modelo="189", revision="2025", retain_source_chain=True
+            authority, registry_root, modelo="189", revision=_M189_NEWEST, retain_source_chain=True
         )
         is None
     )
@@ -722,7 +748,7 @@ def test_explicit_retained_mode_still_refuses_unvalidated_empty_evolution_direct
         RegistryValidationError, match=f"cannot detach a revision with continuity evolutions: 189/{evolution_revision}"
     ):
         require_generated_export_inheritance(
-            expected, authority, registry_root, modelo="189", revision="2025", retain_source_chain=True
+            expected, authority, registry_root, modelo="189", revision=_M189_NEWEST, retain_source_chain=True
         )
 
 
@@ -735,18 +761,18 @@ def test_retained_mode_refuses_changed_real_continuity_or_generated_origin(tmp_p
     registry_root = _m303_source_copy(tmp_path)
     definition = authority.modelo("303")
     expected = select_generated_export_inheritance(
-        authority, registry_root, modelo="303", revision="2026-hasta-01-y-1t", retain_source_chain=True
+        authority, registry_root, modelo="303", revision=_M303_EARLY, retain_source_chain=True
     )
     assert expected is not None
-    baseline_root = registry_root / "modelos/303/revisions/2026-y-siguientes"
+    baseline_root = registry_root / f"modelos/303/revisions/{_M303_LATE}"
     if mutation == "evolution":
         fragment = baseline_root / "casilla_continuidad_evolutions/0001-declarations.toml"
         original = fragment.read_bytes()
-        changed = original.replace(b'from_revision = "2025"', b'from_revision = "absent-endpoint"', 1)
+        changed = original.replace(f'from_revision = "{_M303_PRIOR}"'.encode(), b'from_revision = "absent-endpoint"', 1)
         assert changed != original
         fragment.write_bytes(changed)
     elif mutation == "endpoint":
-        (registry_root / "modelos/303/revisions/2025").rename(tmp_path / "removed-endpoint")
+        (registry_root / f"modelos/303/revisions/{_M303_PRIOR}").rename(tmp_path / "removed-endpoint")
     elif mutation == "source":
         manifest_path = baseline_root / "export/_generation.provenance.json"
         payload = json.loads(manifest_path.read_bytes())
@@ -763,15 +789,11 @@ def test_retained_mode_refuses_changed_real_continuity_or_generated_origin(tmp_p
         (baseline_root / "export").rename(tmp_path / "removed-generated-origin")
         manual = baseline_root / "export_layouts"
         manual.mkdir()
-        layout = definition.revisions["2026-y-siguientes"].export_layouts[0]
+        layout = definition.revisions[_M303_LATE].export_layouts[0]
         (manual / "0001-layout.toml").write_bytes(
             render_toml_bytes(
                 "0001-layout.toml",
-                {
-                    "revisions": {
-                        "2026-y-siguientes": {"export_layouts": [layout.model_dump(mode="json", exclude_none=True)]}
-                    }
-                },
+                {"revisions": {_M303_LATE: {"export_layouts": [layout.model_dump(mode="json", exclude_none=True)]}}},
             )
         )
     else:
@@ -782,10 +804,10 @@ def test_retained_mode_refuses_changed_real_continuity_or_generated_origin(tmp_p
             authority,
             registry_root,
             modelo="303",
-            revision="2026-hasta-01-y-1t",
+            revision=_M303_EARLY,
             retain_source_chain=True,
         )
-    assert not (registry_root / "modelos/303/revisions/2026-hasta-01-y-1t/export").exists()
+    assert not (registry_root / f"modelos/303/revisions/{_M303_EARLY}/export").exists()
 
 
 def test_retained_source_bytes_and_publication_root_are_checked_before_any_cutover(
@@ -798,10 +820,10 @@ def test_retained_source_bytes_and_publication_root_are_checked_before_any_cutov
     modelo_root = registry_root / "modelos/303"
     guarded = (
         modelo_root / "manifest.toml",
-        modelo_root / "revisions/2025/revision.toml",
-        modelo_root / "revisions/2026-hasta-01-y-1t/revision.toml",
-        modelo_root / "revisions/2026-y-siguientes/casilla_continuidad_evolutions/0001-declarations.toml",
-        modelo_root / "revisions/2026-y-siguientes/export/_generation.provenance.json",
+        modelo_root / f"revisions/{_M303_PRIOR}/revision.toml",
+        modelo_root / f"revisions/{_M303_EARLY}/revision.toml",
+        modelo_root / f"revisions/{_M303_LATE}/casilla_continuidad_evolutions/0001-declarations.toml",
+        modelo_root / f"revisions/{_M303_LATE}/export/_generation.provenance.json",
     )
     for path in guarded:
         before = path.read_bytes()
@@ -813,7 +835,7 @@ def test_retained_source_bytes_and_publication_root_are_checked_before_any_cutov
         finally:
             path.write_bytes(before)
 
-    candidate_endpoint = prepared.candidate_root / "modelos/303/revisions/2025"
+    candidate_endpoint = prepared.candidate_root / f"modelos/303/revisions/{_M303_PRIOR}"
     displaced_endpoint = tmp_path / "dropped-candidate-endpoint"
     candidate_endpoint.rename(displaced_endpoint)
     try:
@@ -824,7 +846,7 @@ def test_retained_source_bytes_and_publication_root_are_checked_before_any_cutov
         displaced_endpoint.rename(candidate_endpoint)
 
     other_root = tmp_path / "other-registry"
-    other_target = other_root / "modelos/303/revisions/2026-hasta-01-y-1t/export"
+    other_target = other_root / f"modelos/303/revisions/{_M303_EARLY}/export"
     other_target.parent.mkdir(parents=True)
     context = GeneratedExportTreePublicationContext(
         validation=prepared.validation,
@@ -848,10 +870,10 @@ def test_retained_source_bytes_and_publication_root_are_checked_before_any_cutov
     with pytest.raises(RegistryValidationError, match="complete validated modelo"):
         replace(
             prepared.validation,
-            target=ExportFragmentTarget(modelo="189", revision_id="2026-hasta-01-y-1t", design_epoch="2026"),
+            target=ExportFragmentTarget(modelo="189", revision_id=_M303_EARLY, design_epoch=str(_M303_YEAR)),
         )
     assert (
-        generated_export_source_chain_fingerprint(registry_root, modelo="303", revision="2026-hasta-01-y-1t")
+        generated_export_source_chain_fingerprint(registry_root, modelo="303", revision=_M303_EARLY)
         == prepared.validation.source_chain_sha256
     )
 
@@ -909,7 +931,7 @@ def test_direct_retained_publisher_settles_swap_and_callback_mutations_by_rollba
             # The publisher rolls back only its own export; it never rewrites peer source facts.
             manifest.write_bytes(source_before)
         assert (
-            generated_export_source_chain_fingerprint(registry_root, modelo="303", revision="2026-hasta-01-y-1t")
+            generated_export_source_chain_fingerprint(registry_root, modelo="303", revision=_M303_EARLY)
             == prepared.validation.source_chain_sha256
         )
 
@@ -928,14 +950,14 @@ def test_retained_compact_recovery_checks_source_before_and_after_real_journal_r
         target_export_root=prepared.target_export_root,
     )
     paths = GeneratedExportTransactionPaths.for_context(context)
-    candidate = prepared.candidate_root / "modelos/303/revisions/2026-hasta-01-y-1t/export"
+    candidate = prepared.candidate_root / f"modelos/303/revisions/{_M303_EARLY}/export"
     candidate_manifest = verify_generated_export_package(candidate)
     manifest_sha = export_provenance_file_sha256(candidate / "_generation.provenance.json")
     staged = stage_verified_candidate_package(
         candidate_export_root=candidate,
         target_root=registry_root,
         modelo="303",
-        revision_id="2026-hasta-01-y-1t",
+        revision_id=_M303_EARLY,
         expected_manifest_sha256=manifest_sha,
         expected_manifest=candidate_manifest,
     )
@@ -943,7 +965,7 @@ def test_retained_compact_recovery_checks_source_before_and_after_real_journal_r
         schema_version=2,
         state="intent",
         modelo="303",
-        revision_id="2026-hasta-01-y-1t",
+        revision_id=_M303_EARLY,
         candidate_export=staged.name,
         backup_export=paths.new_backup_sibling().name,
         candidate_manifest_sha256=manifest_sha,
@@ -981,7 +1003,7 @@ def test_retained_compact_recovery_checks_source_before_and_after_real_journal_r
     require_source_chain_unchanged(
         authority.modelo("303"),
         load_modelo_directory(registry_root / "modelos/303"),
-        revision="2026-hasta-01-y-1t",
+        revision=_M303_EARLY,
     )
 
     # Recreate the actual pre-install interruption using the verified package and owning journal.
@@ -1011,7 +1033,7 @@ def test_retained_compact_recovery_checks_source_before_and_after_real_journal_r
     assert not paths.journal.exists()
     assert (
         generated_export_source_chain_fingerprint(
-            registry_root, modelo="303", revision="2026-hasta-01-y-1t", omit_target_export=True
+            registry_root, modelo="303", revision=_M303_EARLY, omit_target_export=True
         )
         == prepared.validation.source_chain_non_export_sha256
     )
@@ -1058,7 +1080,7 @@ def test_retained_compact_refuses_incompatible_modes_before_transaction_changes(
 
     metadata = revision_root / "revision.toml"
     before = metadata.read_bytes()
-    header = b'[revisions."2026-hasta-01-y-1t"]'
+    header = f'[revisions."{_M303_EARLY}"]'.encode()
     assert before.count(header) == 1
     clearance = (
         b'\ncleared_families = [{ family = "export_layouts", cause = "not_authored_for_this_edition", '
@@ -1073,7 +1095,7 @@ def test_retained_compact_refuses_incompatible_modes_before_transaction_changes(
         metadata.write_bytes(before)
 
     bundle = paths.new_bundle_staging_sibling()
-    shutil.copytree(prepared.candidate_root / "modelos/303/revisions/2026-hasta-01-y-1t", bundle)
+    shutil.copytree(prepared.candidate_root / f"modelos/303/revisions/{_M303_EARLY}", bundle)
     bundle_before = {path.relative_to(bundle): path.read_bytes() for path in bundle.rglob("*") if path.is_file()}
     candidate_sha = bootstrap_layout_supersession_fingerprint(bundle)
     manifest_sha = export_provenance_file_sha256(bundle / "export/_generation.provenance.json")
@@ -1081,7 +1103,7 @@ def test_retained_compact_refuses_incompatible_modes_before_transaction_changes(
         schema_version=2,
         state="intent",
         modelo="303",
-        revision_id="2026-hasta-01-y-1t",
+        revision_id=_M303_EARLY,
         candidate_export=bundle.name,
         backup_export=paths.new_bundle_backup_sibling().name,
         candidate_manifest_sha256=manifest_sha,
@@ -1095,7 +1117,7 @@ def test_retained_compact_refuses_incompatible_modes_before_transaction_changes(
         schema_version=2,
         state="intent",
         modelo="303",
-        revision_id="2026-hasta-01-y-1t",
+        revision_id=_M303_EARLY,
         candidate_export=bundle.name,
         backup_export=paths.new_bundle_backup_sibling().name,
         candidate_manifest_sha256=manifest_sha,
@@ -1116,7 +1138,7 @@ def test_retained_compact_refuses_incompatible_modes_before_transaction_changes(
         assert not (paths.transaction_root / journal.backup_export).exists()
         paths.journal.unlink()
     assert (
-        generated_export_source_chain_fingerprint(registry_root, modelo="303", revision="2026-hasta-01-y-1t")
+        generated_export_source_chain_fingerprint(registry_root, modelo="303", revision=_M303_EARLY)
         == prepared.validation.source_chain_sha256
     )
 
@@ -1138,7 +1160,7 @@ def test_retained_compact_refuses_clearance_added_during_actual_candidate_stagin
     paths = GeneratedExportTransactionPaths.for_context(context)
     metadata = prepared.target_export_root.parent / "revision.toml"
     before = metadata.read_bytes()
-    header = b'[revisions."2026-hasta-01-y-1t"]'
+    header = f'[revisions."{_M303_EARLY}"]'.encode()
     assert before.count(header) == 1
     clearance = (
         b'\ncleared_families = [{ family = "export_layouts", cause = "not_authored_for_this_edition", '

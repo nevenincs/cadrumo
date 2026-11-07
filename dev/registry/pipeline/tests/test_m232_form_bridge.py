@@ -15,6 +15,7 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormLayoutSeedSource
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, filing_year_envelope
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.loader import load_registry_tree
@@ -28,15 +29,23 @@ from ..tree_publication_journal import write_generated_export_publication_journa
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+# Modelo 232's two editions: the early one is the reviewed repair target, the late one follows it.
+_EARLY, _LATE = authored_revisions("232")[:2]
+_EARLY_REVISION = str(_EARLY.id)
+_EARLY_EXERCISE = _EARLY.valid_from.year
+_EARLY_SOURCE = f"aeat-dr-232-{_EARLY_EXERCISE}"
+_LATE_REVISION = str(_LATE.id)
+_LATE_SOURCE = f"aeat-dr-232-{_LATE.valid_from.year}"
+
 
 def test_historical_repair_refuses_another_target_or_old_manifest() -> None:
     for changed in ("modelo", "source", "year", "period", "manifest"):
         with pytest.raises(RegistryValidationError, match="exact reviewed target"):
             validated_historical_repair_source(
                 modelo="233" if changed == "modelo" else "232",
-                revision="2016-2017",
-                source_ref="aeat-dr-232-2018" if changed == "source" else "aeat-dr-232-2016",
-                filing_year=2018 if changed == "year" else 2016,
+                revision=_EARLY_REVISION,
+                source_ref=_LATE_SOURCE if changed == "source" else _EARLY_SOURCE,
+                filing_year=_LATE.valid_from.year if changed == "year" else _EARLY_EXERCISE,
                 period="1T" if changed == "period" else "0A",
                 expected_manifest_sha256=(
                     "0" * 64
@@ -52,8 +61,8 @@ def test_bridge_refuses_unreviewed_old_manifest_before_any_file_access(tmp_path:
             registry_root=tmp_path / "absent-registry",
             candidate_root=tmp_path / "absent-candidate",
             modelo="232",
-            revision="2016-2017",
-            source_ref="aeat-dr-232-2016",
+            revision=_EARLY_REVISION,
+            source_ref=_EARLY_SOURCE,
             source_sha256="fb6802dcf8746e69331b67873cb2e5cae90c3343c69b4f4d430aecde3c56b6ad",
             expected_manifest_sha256="0" * 64,
         )
@@ -61,7 +70,7 @@ def test_bridge_refuses_unreviewed_old_manifest_before_any_file_access(tmp_path:
 
 def test_detached_candidate_form_reproduces_generator_without_the_live_fragment_name(tmp_path: Path) -> None:
     """An isolated generated companion reproduces under the detached edition's filename."""
-    revision_id = "2018-y-siguientes"
+    revision_id = _LATE_REVISION
     source_root = bundled_path()
     old_manifest = (
         source_root
@@ -76,7 +85,12 @@ def test_detached_candidate_form_reproduces_generator_without_the_live_fragment_
     )
     prepared = cli.prepare_generated_tree_invocation(
         cli.GeneratedTreeInvocation(
-            "232", revision_id, "aeat-dr-232-2018", 2022, "0A", sha256(old_manifest.read_bytes()).hexdigest()
+            "232",
+            revision_id,
+            _LATE_SOURCE,
+            filing_year_envelope().floor,
+            "0A",
+            sha256(old_manifest.read_bytes()).hexdigest(),
         ),
         tmp_path,
         authority=compiled_bundled_authority(),
@@ -155,8 +169,8 @@ def test_same_size_restored_time_corpus_edit_refuses_cutover(tmp_path: Path, mon
     bridge = GeneratedFormBridge(
         modelo="232",
         old_manifest_sha256=sha256(b"old manifest").hexdigest(),
-        revision="2016-2017",
-        source_ref="aeat-dr-232-2016",
+        revision=_EARLY_REVISION,
+        source_ref=_EARLY_SOURCE,
         source_sha256="fb6802dcf8746e69331b67873cb2e5cae90c3343c69b4f4d430aecde3c56b6ad",
         old_form_sha256=sha256(b"old form").hexdigest(),
         candidate_form_sha256=sha256(b"new form").hexdigest(),
@@ -191,8 +205,8 @@ def test_form_owner_failure_after_export_commit_reports_incomplete(tmp_path: Pat
     bridge = RefusingOwner(
         modelo="232",
         old_manifest_sha256="0" * 64,
-        revision="2016-2017",
-        source_ref="aeat-dr-232-2016",
+        revision=_EARLY_REVISION,
+        source_ref=_EARLY_SOURCE,
         source_sha256="fb6802dcf8746e69331b67873cb2e5cae90c3343c69b4f4d430aecde3c56b6ad",
         old_form_sha256="0" * 64,
         candidate_form_sha256="1" * 64,
@@ -217,7 +231,7 @@ def test_only_active_journal_bound_old_backup_is_excluded_from_cutover_census(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     registry_root = tmp_path / "aeat"
-    revision_root = registry_root / "modelos" / "232" / "revisions" / "2016-2017"
+    revision_root = registry_root / "modelos" / "232" / "revisions" / _EARLY_REVISION
     export_root = revision_root / "export"
     export_root.mkdir(parents=True)
     old_bytes, new_bytes = b"old manifest", b"new manifest"
@@ -230,7 +244,7 @@ def test_only_active_journal_bound_old_backup_is_excluded_from_cutover_census(
     profile_root = source_root / "registry" / "cadrumo"
     profile_root.mkdir(parents=True)
     reviewed = (
-        "aeat-dr-232-2016",
+        _EARLY_SOURCE,
         "fb6802dcf8746e69331b67873cb2e5cae90c3343c69b4f4d430aecde3c56b6ad",
         sha256(old_bytes).hexdigest(),
         sha256(b"old form").hexdigest(),
@@ -243,24 +257,24 @@ def test_only_active_journal_bound_old_backup_is_excluded_from_cutover_census(
         generated_form_bridge,
         "verify_generated_export_package",
         lambda _root: SimpleNamespace(
-            modelo="232", revision_id="2016-2017", source_ref=reviewed[0], source_sha256=reviewed[1]
+            modelo="232", revision_id=_EARLY_REVISION, source_ref=reviewed[0], source_sha256=reviewed[1]
         ),
     )
     bridge = GeneratedFormBridge(
         modelo="232",
         old_manifest_sha256=sha256(b"old manifest").hexdigest(),
-        revision="2016-2017",
+        revision=_EARLY_REVISION,
         source_ref=reviewed[0],
         source_sha256=reviewed[1],
         old_form_sha256=reviewed[3],
         candidate_form_sha256=sha256(b"new form").hexdigest(),
         candidate_manifest_sha256=sha256(new_bytes).hexdigest(),
-        other_files=generated_form_bridge.other_files(registry_root, "232", "2016-2017"),
+        other_files=generated_form_bridge.other_files(registry_root, "232", _EARLY_REVISION),
         interpreting_digest="same",
         evidence_content_digest="same",
         profile_schema_fingerprint=generated_form_bridge.fingerprint_tree(profile_root),
     )
-    paths = GeneratedExportTransactionPaths(target_root=registry_root, modelo="232", revision_id="2016-2017")
+    paths = GeneratedExportTransactionPaths(target_root=registry_root, modelo="232", revision_id=_EARLY_REVISION)
     backup = registry_root / f"{paths.backup_prefix}reviewed"
     shutil.copytree(export_root, backup)
     manifest.write_bytes(new_bytes)
@@ -268,7 +282,7 @@ def test_only_active_journal_bound_old_backup_is_excluded_from_cutover_census(
         schema_version=2,
         state="candidate_live",
         modelo="232",
-        revision_id="2016-2017",
+        revision_id=_EARLY_REVISION,
         candidate_export=f"{paths.staging_prefix}consumed",
         backup_export=backup.name,
         candidate_manifest_sha256=bridge.candidate_manifest_sha256,

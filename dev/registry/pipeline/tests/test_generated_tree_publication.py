@@ -14,6 +14,7 @@ from pydantic import ValidationError
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.authored_editions import revision_covering
 
 from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ...compiler.loader import load_modelo_directory
@@ -57,6 +58,9 @@ from .generated_tree_test_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+#: An authored edition of the isolated tree's modelo other than the tree's own.
+_OTHER_REVISION = str(revision_covering(ISOLATED_TREE.modelo, ISOLATED_TREE.filing_year - 1).id)
 
 
 def _tree_bytes(root: Path) -> dict[str, bytes]:
@@ -244,8 +248,8 @@ def _bundle_transaction_siblings(context: GeneratedExportTreePublicationContext)
 @pytest.mark.parametrize(
     ("modelo", "revision"),
     (
-        ("../184", "2025"),
-        ("C:\\184", "2025"),
+        ("../184", ISOLATED_TREE.revision),
+        ("C:\\184", ISOLATED_TREE.revision),
         ("184", "../escape"),
         ("184", r"..\escape"),
         ("184", ".."),
@@ -274,7 +278,7 @@ def test_supersession_recovery_rejects_unsafe_ids_before_filesystem_access(
 @pytest.mark.parametrize(
     ("modelo", "revision_id"),
     (
-        ("../184", "2025"),
+        ("../184", ISOLATED_TREE.revision),
         ("184", "../escape"),
         ("184", r"..\escape"),
         ("184", ".."),
@@ -305,7 +309,7 @@ def test_publication_journal_persists_only_root_relative_entry_names(field: str,
         "schema_version": 2,
         "state": "intent",
         "modelo": "184",
-        "revision_id": "2025",
+        "revision_id": ISOLATED_TREE.revision,
         "candidate_export": "candidate",
         "backup_export": "backup",
         "candidate_manifest_sha256": "a" * 64,
@@ -733,7 +737,7 @@ def test_publication_refuses_coordinate_authority_and_output_mutations_before_cu
         manifest = load_export_fragment_provenance_manifest(manifest_path.read_bytes())
         manifest_path.write_bytes(
             export_fragment_provenance_manifest_json_bytes(
-                manifest.model_copy(update={"revision_id": "2026"}),
+                manifest.model_copy(update={"revision_id": _OTHER_REVISION}),
             ),
         )
     elif defect == "generated-file":
