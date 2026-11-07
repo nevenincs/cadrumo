@@ -25,13 +25,15 @@ from decimal import Decimal
 
 import pytest
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....tests.ecb_stub import ecb_csv_fetch
 from ..ecb_provider import EcbReferenceRateProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_GOOD_DAY = date(2025, 3, 13)
-_BAD_DAY = date(2025, 3, 14)
+_YEAR = filing_year_envelope().horizon
+_GOOD_DAY = date(_YEAR, 3, 13)
+_BAD_DAY = date(_YEAR, 3, 14)
 _GOOD_QUOTE = Decimal("1.0830")
 
 
