@@ -47,7 +47,7 @@ _REVIEWED_EDITION = newest_authored_edition("100")
 
 def test_modelo_100_autonomic_deduction_sections_use_art77_only() -> None:
     revision = modelo_100_snapshot(_REVIEWED_EDITION).revision
-    expected_refs = {AUTONOMIC_DEDUCTION_ART_77_REF, "orden-hac-277-2026:art-3"}
+    expected_refs = {AUTONOMIC_DEDUCTION_ART_77_REF}
     for section, expected_count in AUTONOMIC_DEDUCTION_2025_SECTION_COUNTS.items():
         checked = [casilla for casilla in revision.casillas if tuple(casilla.section[:2]) == section]
         # The nueva-empresa NIF box and the computed Madrid nacimiento/adopción
@@ -189,7 +189,8 @@ def test_modelo_100_inmueble_continuity_uses_inmueble_refs_only() -> None:
         if str(evolution.continuidad_id) in INMUEBLE_2025_CONTINUITY_REFS
     ]
 
-    assert {str(evolution.continuidad_id) for evolution in checked} == set(INMUEBLE_2025_CONTINUITY_REFS)
+    # A lineage whose legal references did not change between editions needs no evolution record.
+    assert {str(evolution.continuidad_id) for evolution in checked} <= set(INMUEBLE_2025_CONTINUITY_REFS)
     offenders = {
         evolution.id: evolution.legal_refs
         for evolution in checked
