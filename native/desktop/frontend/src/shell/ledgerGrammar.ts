@@ -326,8 +326,8 @@ export function copyDecimal(text: string | null): string {
 const pad = (number: number, width = 2) => String(number).padStart(width, "0");
 function calendarDay(year: number, month: number, day: number): string | null {
   if (year < 1 || month < 1 || month > 12 || day < 1) return null;
-  const date = new Date(Date.UTC(2000, month - 1, day));
-  date.setUTCFullYear(year);
+  const date = new Date(0);
+  date.setUTCFullYear(year, month - 1, day);
   return date.getUTCMonth() === month - 1 && date.getUTCDate() === day
     ? `${pad(year, 4)}-${pad(month)}-${pad(day)}`
     : null;

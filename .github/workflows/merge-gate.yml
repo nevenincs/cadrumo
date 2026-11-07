@@ -72,6 +72,10 @@ jobs:
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: just check-module-size
 
+      - name: Year literals
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: just check-year-literals
+
       - name: Workflow definitions
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: just check-workflows

@@ -1,25 +1,20 @@
-"""Years carry one written shape, and no production code names a year as a bound.
+"""Years carry one written shape, declared once.
 
 Which years exist is the registry's to say. A carrier checks only that a value
 is written as a year, through :obj:`FourDigitYear` from :mod:`core.filing_year`.
-A site spelling ``ge=`` or ``le=`` on a filing-year field restates that, and a
-year literal used as a bound on a year-named value claims a coverage nothing
-keeps true: the same axis once carried four different windows at once, and
-nothing noticed because each site was locally consistent.
-
-Machine capacities, codepoints and format epochs are numbers that only look like
-years; the rule reads the name a number bounds, so they stay outside it.
+A site spelling ``ge=`` or ``le=`` on a filing-year field restates that window
+even when its bounds are names rather than numbers: the same axis once carried
+four different windows at once, and nothing noticed because each site was
+locally consistent. A year written as a number anywhere in the repository is
+the year gate's (``just check-year-literals``) to refuse.
 """
 
 from __future__ import annotations
 
 import ast
-import re
 from pathlib import Path
 
 import pytest
-
-from ..filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -116,97 +111,6 @@ def test_no_filing_year_field_spells_its_own_window() -> None:
         "these fields declare a second filing-year window; type them as "
         f"FilingYear from cadrumo.core.filing_year instead: {restated}"
     )
-
-
-_YEAR_NAME = re.compile(r"(?:^|_)(?:year|years|ejercicio|anio)(?:_|$)", re.IGNORECASE)
-
-
-def _is_year_value(node: ast.AST) -> bool:
-    return (
-        isinstance(node, ast.Constant)
-        and type(node.value) is int
-        and FOUR_DIGIT_YEAR_FIRST <= node.value <= FOUR_DIGIT_YEAR_LAST
-    )
-
-
-def _named(node: ast.AST) -> str:
-    if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute):
-        return node.attr
-    if isinstance(node, ast.Call) and node.args:
-        return _named(node.args[0])
-    return ""
-
-
-def _year_literal_bounds(source: str) -> list[str]:
-    """Return each year literal that bounds a year-named value, in reading order."""
-    found: list[str] = []
-    for node in ast.walk(ast.parse(source)):
-        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
-            found.extend(
-                f"{node.target.id}@{node.lineno}"
-                for side in (node.annotation, node.value)
-                if side is not None and _YEAR_NAME.search(node.target.id)
-                for call in ast.walk(side)
-                if isinstance(call, ast.Call)
-                for keyword in call.keywords
-                if keyword.arg in _BOUND_KWARGS and _is_year_value(keyword.value)
-            )
-            if node.value is not None and _YEAR_NAME.search(node.target.id) and _is_year_value(node.value):
-                found.append(f"{node.target.id}@{node.lineno}")
-        elif isinstance(node, ast.Assign) and _is_year_value(node.value):
-            found.extend(
-                f"{target.id}@{node.lineno}"
-                for target in node.targets
-                if isinstance(target, ast.Name) and _YEAR_NAME.search(target.id)
-            )
-        elif isinstance(node, ast.Compare):
-            sides = (node.left, *node.comparators)
-            if any(isinstance(side, ast.Constant) and side.value == FOUR_DIGIT_YEAR_LAST for side in sides) or (
-                any(_is_year_value(side) for side in sides) and any(_YEAR_NAME.search(_named(side)) for side in sides)
-            ):
-                found.append(f"compare@{node.lineno}")
-    return found
-
-
-@pytest.mark.parametrize(
-    "planted",
-    (
-        "filing_year: int = Field(ge=2000)",
-        "class Row:\n    tax_year: Annotated[int, Field(le=2099)]",
-        "MIN_YEAR = 2022",
-        "if value < 1900 or value > 9999:" + chr(10) + "    raise ValueError",
-        "LAST_YEAR: int = 2100",
-        "if year < 2022:\n    raise ValueError",
-        "if 2000 <= row.filing_year <= 2099:\n    pass",
-    ),
-)
-def test_the_gate_catches_a_planted_year_literal(planted: str) -> None:
-    assert _year_literal_bounds(planted)
-
-
-@pytest.mark.parametrize(
-    "innocent",
-    (
-        "filing_year: FilingYear",
-        "_MAX_ROWS = 2000",
-        "if len(rows) < 2048:\n    pass",
-        "if year < support.floor:\n    pass",
-        "_ARCHIVE_EPOCH = (1980, 1, 1)",
-    ),
-)
-def test_the_gate_leaves_what_is_not_a_year_bound(innocent: str) -> None:
-    assert not _year_literal_bounds(innocent)
-
-
-def test_no_production_code_bounds_a_year_with_a_year_literal() -> None:
-    findings = {
-        path.relative_to(_SRC).as_posix(): bounds
-        for path in _production_modules()
-        if "/_data/" not in path.as_posix() and (bounds := _year_literal_bounds(path.read_text(encoding="utf-8")))
-    }
-    assert not findings, f"years belong to the registry; derive these from it: {findings}"
 
 
 def test_the_canonical_window_is_declared_once() -> None:
