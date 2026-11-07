@@ -62,6 +62,19 @@ def _python_rules(source: str) -> list[str]:
         ("now = datetime(2026, 10, 7, 12, tzinfo=UTC)\n", "year date"),
         ("when = dt.date(year=2025, month=3, day=1)\n", "year date"),
         ("day = date.fromisoformat('2025-03-01')\n", "year date"),
+        ("CLOCK = datetime.fromisoformat('2026-04-01T09:00:00+00:00')\n", "year date"),
+        ("when = datetime.strptime('01/04/2026', '%d/%m/%Y')\n", "year date"),
+        ("when = parser.isoparse('2026-04-01T09:00Z')\n", "year date"),
+        ("when = parse_iso_instant(text='2026-04-01T09:00:00Z')\n", "year date"),
+        ("FIXTURE_TODAY = '2026-10-06'\n", "date text"),
+        ("stamp = '2026-03-02T10:00:00Z'\n", "date text"),
+        ("month = '2026-03'\n", "date text"),
+        ("day = '02/03/2026'\n", "date text"),
+        ("row = build_row(fecha='2026-03-02')\n", "date text"),
+        ("def f(today: str = '2026-03-02') -> None:\n    pass\n", "date text"),
+        ("cases = [('2026-03-02', 3)]\n", "date text"),
+        ("payload = {'issued_on': '2026-03-02'}\n", "date text"),
+        ("day = f'2026-03-{day:02d}'\n", "date text"),
         ("ejercicio = '2025'\n", "year text"),
         ("expected = {'year': '2026'}\n", "year text"),
         (f"revision = '{_YEAR}-y-siguientes'\n", "edition id"),
@@ -85,8 +98,14 @@ def test_a_planted_python_year_is_found(planted: str, rule: str) -> None:
         "order = 'Orden HAC/1417/2023'\n",
         "boe = 'BOE-A-2023-12345'\n",
         "source = 'aeat-dr-190-2024'\n",
-        "stamp = '2026-03-02T10:00:00Z'\n",
-        "day = '2026-03-02'\n",
+        "assert stamp == '2026-03-02T10:00:00Z'\n",
+        "assert day in ('2026-03-02', '2026-03-03')\n",
+        "assert payload == {'issued_on': '2026-03-02'}\n",
+        "match day:\n    case '2026-03-02':\n        pass\n",
+        "note = 'filed on 2026-03-02 by the operator'\n",
+        "when = datetime.fromisoformat(stamp)\n",
+        "when = date(horizon, 4, 1).isoformat()\n",
+        'def f() -> None:\n    """Filed on 2026-03-02."""\n',
         "url = 'https://sede.example/2025/form'\n",
         "_MAX_ROWS = 2000\n",
         "if len(rows) < 2048:\n    pass\n",
@@ -139,6 +158,16 @@ def _typescript_rules(source: str) -> list[str]:
         ("expect(row.tax_year).toBeGreaterThanOrEqual(2022);", "year expected"),
         ("const NOW = new Date(2026, 9, 30, 12, 0, 0);", "year date"),
         ("const START = Date.UTC(2026, 2, 2);", "year date"),
+        ('const at = Date.parse("2026-01-12T00:00:00Z");', "year date"),
+        ('const at = new Date("2026-01-12");', "year date"),
+        ('const at = DateTime.fromISO("2026-01-12");', "year date"),
+        ('await page.clock.install({ time: new Date("2026-11-02T12:00:00Z") });', "year date"),
+        ('export const FIXTURE_TODAY = "2026-10-06";', "date text"),
+        ("const BUSY_TODAY = '2027-01-12';", "date text"),
+        ('const row = { today: "2026-03-02T10:00:00Z" };', "date text"),
+        ('const month = "2026-03";', "date text"),
+        ("const day = `2026-03-${pad(day)}`;", "date text"),
+        ('seed(store, "2026-03-02");', "date text"),
         ("const edition = { projected: year > horizon };", "edition worked out"),
         ("const edition = { revision_id: String(Math.min(year, last)) };", "edition worked out"),
         ("const behind = row.edition.authored_filing_year < year;", "edition worked out"),
@@ -164,8 +193,13 @@ def test_a_planted_typescript_year_is_found(planted: str, rule: str) -> None:
         "if (servedAdmits(year) && !servedBeyondLastAdmitted(year)) years.push(year);",
         "if ([...words].length <= 2048) keep(words);",
         "const edition = servedEditionOf(year);",
-        'const date = "2026-03-02T10:00:00Z";',
-        'const day = "2026-03-02";',
+        'expect(row.date).toBe("2026-03-02");',
+        'expect(row).toEqual({ day: "2026-03-02", at: "2026-03-02T10:00:00Z" });',
+        'if (row.date === "2026-03-02") return;',
+        'const late = "2026-03-02" !== row.date;',
+        'switch (day) { case "2026-03-02": break; }',
+        'const label = "Filed on 2026-03-02 by the operator";',
+        "const at = Date.parse(served.today);",
         "const when = `${year}-01-01`;",
         "const amount = 2026.5 > total;",
         "const first = Number(range.from_date.slice(0, 4));",
@@ -187,6 +221,12 @@ def test_served_reads_text_and_counts_are_not_typescript_findings(clean: str) ->
     source = f"export function sample(year: number) {{\n  {clean}\n}}\n"
 
     assert typescript_findings(source, "clean.ts") == []
+
+
+def test_a_date_inside_a_multiline_expectation_is_compared_and_one_after_it_is_not() -> None:
+    source = 'expect(rows).toEqual([\n  { day: "2026-03-02" },\n]);\nconst TODAY = "2026-03-02";\n'
+
+    assert [(finding.line, finding.rule) for finding in typescript_findings(source, "rows.ts")] == [(4, "date text")]
 
 
 def test_an_unpaired_jsx_apostrophe_hides_no_later_finding_and_keeps_line_numbers() -> None:
