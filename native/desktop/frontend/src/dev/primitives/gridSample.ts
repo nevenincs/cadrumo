@@ -2,6 +2,8 @@
 // Nothing here is anyone's data: names, amounts and dates come from a fixed
 // seed, so every run draws the same grid.
 
+import { fixtureDay } from "../fixtureDates";
+
 export type SampleRow = {
   id: string;
   date: string;
@@ -68,7 +70,7 @@ export function sampleRows(count: number): SampleRow[] {
     const category = SAMPLE_CATEGORIES[Math.floor(random() * 8)];
     rows.push({
       id: `m${at + 1}`,
-      date: `2026-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
+      date: fixtureDay(month, day),
       description: WORDS[at % WORDS.length] ?? "",
       counterparty: PARTIES[at % PARTIES.length] ?? "",
       category: at % 5 === 4 ? null : (category?.value ?? null),

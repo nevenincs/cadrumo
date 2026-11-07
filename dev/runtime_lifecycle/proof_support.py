@@ -9,28 +9,39 @@ import secrets
 from collections.abc import Mapping
 from contextlib import suppress
 from dataclasses import dataclass, field
+from datetime import date
 from itertools import pairwise
 from pathlib import Path
 from uuid import UUID
 
 import psutil
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
 from .caller_owned_root import AcceptanceError, Programs, error_code, notice_codes, require, run_cli
 
-_TAXPAYER_FACTS = (
-    *("--entity-type", "natural_person", "--tax-id", "12345678Z", "--name", "Daniel", "--surnames", "Persona"),
-    *("--activity", "consultoria", "--activity-start-date", "2026-01-01"),
-    *("--irpf-income-categories", "actividad_economica", "--irpf-estimation-regime", "directa_normal"),
-    *("--iva-regime", "GENERAL", "--tax-residence-jurisdiction-scope", "common_regime"),
-    *("--iva-m303-regime-composition", "general", "--no-iva-redeme-enrolled"),
-    *("--no-iva-cash-accounting-regime-enrolled", "--no-iva-voluntary-sii-enrolled"),
-    "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
-    *("--no-iva-roi-enrolled", "--no-iva-oss-enrolled", "--no-iva-sii-enrolled"),
-    *("--no-iva-group-member-enrolled", "--no-iva-group-dominant-entity-enrolled"),
-    *("--no-iva-intracommunity-operations-exceed-50000-eur", "--no-enrollment-large-company"),
-    *("--fiscal-residency", "resident_irpf", "--tax-residence-ccaa", "madrid"),
-)
-"""Synthetic taxpayer facts for these disposable development proofs."""
+
+def supported_filing_year() -> int:
+    """Return a year the published support envelope admits: its horizon."""
+    with bundled_indexed_authority().operation() as operation:
+        return operation.supported_filing_years().horizon
+
+
+def _taxpayer_facts() -> tuple[str, ...]:
+    """Synthetic taxpayer facts for these disposable development proofs."""
+    return (
+        *("--entity-type", "natural_person", "--tax-id", "12345678Z", "--name", "Daniel", "--surnames", "Persona"),
+        *("--activity", "consultoria", "--activity-start-date", date(supported_filing_year(), 1, 1).isoformat()),
+        *("--irpf-income-categories", "actividad_economica", "--irpf-estimation-regime", "directa_normal"),
+        *("--iva-regime", "GENERAL", "--tax-residence-jurisdiction-scope", "common_regime"),
+        *("--iva-m303-regime-composition", "general", "--no-iva-redeme-enrolled"),
+        *("--no-iva-cash-accounting-regime-enrolled", "--no-iva-voluntary-sii-enrolled"),
+        "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
+        *("--no-iva-roi-enrolled", "--no-iva-oss-enrolled", "--no-iva-sii-enrolled"),
+        *("--no-iva-group-member-enrolled", "--no-iva-group-dominant-entity-enrolled"),
+        *("--no-iva-intracommunity-operations-exceed-50000-eur", "--no-enrollment-large-company"),
+        *("--fiscal-residency", "resident_irpf", "--tax-residence-ccaa", "madrid"),
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -176,7 +187,7 @@ def identify_profile(programs: Programs, environment: Mapping[str, str], profile
 def state_taxpayer(programs: Programs, environment: Mapping[str, str], profile: Profile) -> None:
     """State the synthetic taxpayer facts and complete the setup, as the person does at the command line."""
     for arguments in (
-        ("config", "profile", "edit", "--quiet", *_TAXPAYER_FACTS),
+        ("config", "profile", "edit", "--quiet", *_taxpayer_facts()),
         ("config", "profile", "complete-setup"),
     ):
         code, envelope = run_cli(
