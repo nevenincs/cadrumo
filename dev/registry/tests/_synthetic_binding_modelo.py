@@ -23,9 +23,12 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Final
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 __all__ = [
     "BASE_TAIL",
     "CONSUMED_BINDING",
+    "EDITION_YEAR",
     "LEGAL_REF",
     "MODELO",
     "REVISION",
@@ -36,7 +39,10 @@ __all__ = [
 MODELO: Final = "151"
 """The synthetic modelo's number. Nothing is read from the shipped modelo 151."""
 
-REVISION: Final = "2025"
+EDITION_YEAR: Final = filing_year_envelope().horizon
+"""The one exercise the seeded modelo declares: the registry's support horizon."""
+
+REVISION: Final = str(EDITION_YEAR)
 """The single edition the seeded modelo declares."""
 
 CONSUMED_BINDING: Final = "modelo-151-impatriado-base-liquidable-general"
@@ -58,9 +64,9 @@ source_refs = ["{SOURCE_REF}"]
 """
 
 _REVISION_MANIFEST: Final = f"""[revisions."{REVISION}"]
-valid_from = 2025-01-01
-valid_to = 2025-12-31
-period_selector = {{ years = [2025], periods = ["0A"] }}
+valid_from = {EDITION_YEAR}-01-01
+valid_to = {EDITION_YEAR}-12-31
+period_selector = {{ years = [{EDITION_YEAR}], periods = ["0A"] }}
 legal_refs = ["{LEGAL_REF}"]
 source_refs = ["{SOURCE_REF}"]
 """

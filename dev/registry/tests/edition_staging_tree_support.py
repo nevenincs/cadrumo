@@ -4,8 +4,20 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 LEGAL_REF = "ley-58-2003:art-29"
 
+
+THIRD_EDITION_YEAR = filing_year_envelope().horizon
+"""The exercise of the newest of the three editions the migrated chain declares: the support horizon."""
+
+SECOND_EDITION_YEAR = THIRD_EDITION_YEAR - 1
+FIRST_EDITION_YEAR = THIRD_EDITION_YEAR - 2
+
+FIRST_EDITION = str(FIRST_EDITION_YEAR)
+SECOND_EDITION = str(SECOND_EDITION_YEAR)
+THIRD_EDITION = str(THIRD_EDITION_YEAR)
 
 MANIFEST = (
     "[modelo]\n"
@@ -78,36 +90,36 @@ def staged_modelo(root: Path) -> Path:
     return modelo_dir
 
 
-def migrated_chain(root: Path, *, retire_from: str = "2024") -> Path:
-    """2023 states everything; 2024 names 2023, and 2025 names 2024, each stating only what changed.
+def migrated_chain(root: Path, *, retire_from: str = SECOND_EDITION) -> Path:
+    """The first edition states everything; each later one names its predecessor and states only what changed.
 
-    ``retire_from`` is the ``from_revision`` of 2025's one retirement record,
-    which is the only link the continuity evolution chain offers out of 2025.
+    ``retire_from`` is the ``from_revision`` of the third edition's one retirement record,
+    which is the only link the continuity evolution chain offers out of the third edition.
     """
     modelo_dir = staged_modelo(root)
     write_edition(
         modelo_dir,
-        "2023",
-        year=2023,
+        FIRST_EDITION,
+        year=FIRST_EDITION_YEAR,
         casillas=(
-            edition_casilla("2023", "0001", number="1", lineage="base-imponible")
-            + edition_casilla("2023", "0002", number="2", lineage="cuota-integra")
-            + edition_casilla("2023", "0003", number="3", lineage="deduccion-retirada")
+            edition_casilla(FIRST_EDITION, "0001", number="1", lineage="base-imponible")
+            + edition_casilla(FIRST_EDITION, "0002", number="2", lineage="cuota-integra")
+            + edition_casilla(FIRST_EDITION, "0003", number="3", lineage="deduccion-retirada")
         ),
     )
     write_edition(
         modelo_dir,
-        "2024",
-        year=2024,
-        predecessor="2023",
-        casillas=edition_casilla("2024", "0002", number="22", lineage="cuota-integra"),
+        SECOND_EDITION,
+        year=SECOND_EDITION_YEAR,
+        predecessor=FIRST_EDITION,
+        casillas=edition_casilla(SECOND_EDITION, "0002", number="22", lineage="cuota-integra"),
     )
     write_edition(
         modelo_dir,
-        "2025",
-        year=2025,
-        predecessor="2024",
-        casillas=edition_casilla("2025", "0004", number="4", lineage="recargo-nuevo"),
+        THIRD_EDITION,
+        year=THIRD_EDITION_YEAR,
+        predecessor=SECOND_EDITION,
+        casillas=edition_casilla(THIRD_EDITION, "0004", number="4", lineage="recargo-nuevo"),
         retire=("deduccion-retirada", retire_from),
     )
     return modelo_dir

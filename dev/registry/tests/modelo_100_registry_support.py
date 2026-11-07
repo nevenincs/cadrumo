@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping
 from decimal import Decimal
 from functools import cache
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -16,6 +18,11 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.snapshot import legal_window_covers_devengo
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    newest_authored_edition,
+    newest_authored_editions,
+    revision_covering,
+)
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
 from cadrumo.tests.aeat_literal_fixtures import aeat_url, configured_path
@@ -32,16 +39,27 @@ _UNKNOWN_CONSTRUCT_MEMBER_CASILLA: CasillaId = validated_casilla_id(
 
 
 def m100_2024_deduccion_maternidad_bindings() -> Mapping[str, Decimal]:
-    """Return M100 2024's empty-descendant maternity binding from domain law."""
+    """Return the empty-descendant maternity binding of the second-newest Modelo 100 edition from domain law."""
     return {
         "renta-profile-deduccion-maternidad": Decimal(
             compute_deduccion_maternidad_0611(
                 [],
-                filing_year=2024,
+                filing_year=newest_authored_editions("100", 2)[0],
                 authority=compiled_bundled_authority(),
             ),
         ),
     }
+
+
+@cache
+def _edition_oracle(table: str) -> dict[str, Any]:
+    """Return one per-edition expectation table of the Modelo 100 layout, keyed by edition exercise text.
+
+    The rows are what each edition's printed design shows, so they are kept as
+    data beside the tests rather than as code that names the exercises.
+    """
+    path = Path(__file__).with_name("modelo_100_edition_oracles.json")
+    return json.loads(path.read_text(encoding="utf-8"))[table]
 
 
 @cache
@@ -73,14 +91,15 @@ def registry_validator() -> RegistryValidator:
 
 
 @cache
-def modelo_100_revision(filing_year: int = 2025) -> ModeloRevision:
-    """Return the authored, hydrated edition for one ejercicio.
+def modelo_100_revision(filing_year: int | None = None) -> ModeloRevision:
+    """Return the authored, hydrated edition for one ejercicio, the newest authored one by default.
 
     Content assertions about an authored edition read the canonical authoring
     load, which is not gated by the runtime support floor; a filing snapshot is
     only for questions about what runtime would select.
     """
-    return loaded_registry()[0]["100"].revisions[str(filing_year)]
+    exercise = newest_authored_edition("100") if filing_year is None else filing_year
+    return loaded_registry()[0]["100"].revisions[str(exercise)]
 
 
 def governing_redaction(reference_id: str, revision: ModeloRevision) -> str:
@@ -105,14 +124,15 @@ def governing_redaction(reference_id: str, revision: ModeloRevision) -> str:
     return governing[0]
 
 
-def modelo_100_snapshot(filing_year: int = 2025) -> RegistrySnapshot:
-    """Return the snapshot of one ejercicio at the grade that year reaches.
+def modelo_100_snapshot(filing_year: int | None = None) -> RegistrySnapshot:
+    """Return the snapshot of one ejercicio at the grade that year reaches, the newest authored one by default.
 
     An authored edition is built at its declared grade; a year the registry
     carries across from the nearest edition reaches calculation grade at most,
     so the grade comes from the authority rather than being requested here.
     """
     modelos_by_id, catalogues = loaded_registry()
+    filing_year = newest_authored_edition("100") if filing_year is None else filing_year
     with bundled_indexed_authority().operation() as operation:
         grade = operation.reachable_authority_grade("100", filing_year=filing_year, period="0A")
     return build_snapshot(
@@ -221,7 +241,7 @@ SOURCE_FOUNDATION_APPLICATION_LINKS: frozenset[str] = frozenset(
 def modelo_100_revision_2025() -> tuple[ModeloDefinition, ModeloRevision]:
     modelos_by_id, _catalogues = loaded_registry()
     modelo = modelos_by_id["100"]
-    return modelo, modelo.revisions["2025"]
+    return modelo, modelo.revisions[revision_covering("100", newest_authored_edition("100")).id]
 
 
 def modelo_100_with_revision(modelo: ModeloDefinition, revision: ModeloRevision) -> ModeloDefinition:
@@ -340,8 +360,7 @@ ANEXO_B_IMPORTE_ANUAL_SATISFECHO_SECTIONS = frozenset(
 ANEXO_B_OTROS_GASTOS_IMPORTE_ANUAL_ROLE = "irpf_anexo_b_otros_gastos_importe_anual"
 ANEXO_B_OTROS_GASTOS_SECTION = "an_b_inf_adc_aia"
 ANEXO_B_OTROS_GASTOS_LABELS = {
-    2024: "Importe anual satisfecho",
-    2025: "Importe anual satisfecho de otros gastos",
+    int(edition): label for edition, label in _edition_oracle("anexo_b_otros_gastos_labels").items()
 }
 ANEXO_B_AAV_SECTION = "an_b_inf_adc_aav"
 _ANEXO_B_AAV_IMPORTE_SATISFECHO_ROLE = "irpf_anexo_b_aav_importe_satisfecho"
@@ -403,22 +422,10 @@ MADRID_DEDUCTION_SECTION = ("resultados", "deduccion_autonomica_res", "madrid_re
 C_VALENCIANA_DEDUCTION_SECTION = ("resultados", "deduccion_autonomica_res", "c_valenciana_res")
 GALICIA_DEDUCTION_SECTION = ("resultados", "deduccion_autonomica_res", "galicia_res")
 ANEXO_B_INST_AUTO_SECTION = ("resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_inst_auto")
-_MADRID_CUIDADO_ASCENDIENTES_ROLE = "irpf_deduccion_madrid_cuidado_ascendientes"
 _LEGACY_MADRID_CUIDADO_ASCENDIENTES_PENDING_ROLE = "irpf_deduccion_autonomica_cuidado_ascendientes_pendiente"
-_MADRID_INTERESES_PRESTAMOS_ESTUDIOS_ROLE = "irpf_deduccion_madrid_intereses_prestamos_estudios"
 _LEGACY_MADRID_INTERESES_PRESTAMOS_ESTUDIOS_PENDING_ROLE = "irpf_deduccion_estudios_intereses_prestamo_pendiente"
 GALICIA_INMUEBLE_VACIO_ADECUACION_ROLE = "irpf_deduccion_galicia_inmueble_vacio_adecuacion"
 _LEGACY_GALICIA_INMUEBLE_VACIO_ADECUACION_PENDING_ROLE = "irpf_deduccion_inmueble_vacio_adecuacion_pendiente"
-_MADRID_GASTOS_ARRENDAMIENTO_ROLE = "irpf_deduccion_madrid_gastos_arrendamiento"
-_MADRID_INTERESES_PRESTAMOS_VIVIENDA_ROLE = "irpf_deduccion_madrid_intereses_prestamos_vivienda"
-_MADRID_VIVIENDA_NACIMIENTO_ADOPCION_ROLE = "irpf_deduccion_madrid_vivienda_nacimiento_adopcion"
-_MADRID_VIVIENDA_NACIMIENTO_ADOPCION_ANIO_ROLE = "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_anio"
-_MADRID_FAMILIA_NUMEROSA_ROLE = "irpf_deduccion_madrid_familia_numerosa"
-_MADRID_VIVIENDA_NACIMIENTO_ADOPCION_IMPORTE_ROLE = "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_importe"
-_MADRID_VIVIENDA_NACIMIENTO_ADOPCION_PRECIO_ROLE = "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_precio"
-_MADRID_VIVIENDA_MUNICIPIO_RIESGO_ROLE = "irpf_deduccion_madrid_vivienda_municipio_riesgo"
-_MADRID_VIVIENDA_MUNICIPIO_RIESGO_ANIO_ROLE = "irpf_deduccion_madrid_vivienda_municipio_riesgo_anio"
-_MADRID_VIVIENDA_MUNICIPIO_RIESGO_PRECIO_ROLE = "irpf_deduccion_madrid_vivienda_municipio_riesgo_precio"
 ANEXO_B_INST_AUTO_IMPORTE_PENDIENTE_ANTERIOR_ROLE = "irpf_anexo_b_inst_auto_importe_pendiente_anterior"
 _LEGACY_ANEXO_B_ARRENDAMIENTO_IMPORTE_APLICADO_ROLE = "irpf_anexo_b_arrendamiento_importe_aplicado"
 _LEGACY_ANEXO_B_ARRENDAMIENTO_IMPORTE_PENDIENTE_ROLE = "irpf_anexo_b_arrendamiento_importe_pendiente"
@@ -428,158 +435,19 @@ _LEGACY_ANEXO_B_ENERGIA_SATISFECHO_APLICADO_ROLE = "irpf_anexo_b_energia_satisfe
 _LEGACY_ANEXO_B_ENERGIA_SATISFECHO_PENDIENTE_ROLE = "irpf_anexo_b_energia_satisfecho_pendiente"
 _LEGACY_ANEXO_B_VIVIENDA_REINVERSION_PENDIENTE_ROLE = "irpf_anexo_b_vivienda_reinversion_pendiente"
 CARRY_FORWARD_PENDING_OUTLIERS = {
-    2023: {
-        "1115": (
-            "Por cuidado de ascendientes",
-            MADRID_DEDUCTION_SECTION,
-            _MADRID_CUIDADO_ASCENDIENTES_ROLE,
-        ),
-        "1118": (
-            "Por el pago de intereses de préstamos a estudios de Grado, Máster y Doctorado",
-            MADRID_DEDUCTION_SECTION,
-            _MADRID_INTERESES_PRESTAMOS_ESTUDIOS_ROLE,
-        ),
-    },
-    2024: {
-        "1115": (
-            "Por cuidado de ascendientes",
-            MADRID_DEDUCTION_SECTION,
-            _MADRID_CUIDADO_ASCENDIENTES_ROLE,
-        ),
-        "1118": (
-            "Por el pago de intereses de préstamos a estudios de Grado, Máster y Doctorado",
-            MADRID_DEDUCTION_SECTION,
-            _MADRID_INTERESES_PRESTAMOS_ESTUDIOS_ROLE,
-        ),
-    },
-    2025: {
-        "1078": (
-            (
-                "Por gastos derivados de la adecuación de un inmueble vacío con destino al arrendamiento como vivienda "
-                "(información adicional en el anexo B.15)"
-            ),
-            GALICIA_DEDUCTION_SECTION,
-            GALICIA_INMUEBLE_VACIO_ADECUACION_ROLE,
-        ),
-        "1115": (
-            "Por cuidado de ascendientes",
-            MADRID_DEDUCTION_SECTION,
-            _MADRID_CUIDADO_ASCENDIENTES_ROLE,
-        ),
-        "1118": (
-            "Por el pago de intereses de préstamos a estudios de Grado, Máster y Doctorado",
-            MADRID_DEDUCTION_SECTION,
-            _MADRID_INTERESES_PRESTAMOS_ESTUDIOS_ROLE,
-        ),
-    },
+    int(edition): {casilla_id: (label, tuple(section), role) for casilla_id, (label, section, role) in rows.items()}
+    for edition, rows in _edition_oracle("carry_forward_pending_outliers").items()
 }
 MADRID_REUSED_ID_DEDUCTION_ROWS = {
-    2023: {
-        "1116": (
-            "Por gastos derivados de arrendamiento de vivienda",
-            _MADRID_GASTOS_ARRENDAMIENTO_ROLE,
-        ),
-        "1117": (
-            "Por el pago de intereses de préstamos para adquisición de vivienda por jóvenes menores de 30 años",
-            _MADRID_INTERESES_PRESTAMOS_VIVIENDA_ROLE,
-        ),
-        "1119": (
-            "Por adquisición de vivienda habitual por nacimiento o adopción de hijos",
-            _MADRID_VIVIENDA_NACIMIENTO_ADOPCION_ROLE,
-        ),
-        "1120": (
-            "Por la obtención de la condición de familia numerosa",
-            _MADRID_FAMILIA_NUMEROSA_ROLE,
-        ),
-    },
-    2024: {
-        "1116": (
-            "Por gastos derivados de arrendamiento de vivienda",
-            _MADRID_GASTOS_ARRENDAMIENTO_ROLE,
-        ),
-        "1117": (
-            "Por el pago de intereses de préstamos para adquisición de vivienda por jóvenes menores de 30 años",
-            _MADRID_INTERESES_PRESTAMOS_VIVIENDA_ROLE,
-        ),
-        "1119": (
-            "Por adquisición de vivienda habitual por nacimiento o adopción de hijos",
-            _MADRID_VIVIENDA_NACIMIENTO_ADOPCION_ROLE,
-        ),
-        "1120": (
-            "Importe de la deducción",
-            _MADRID_VIVIENDA_NACIMIENTO_ADOPCION_IMPORTE_ROLE,
-        ),
-    },
-    2025: {
-        "1116": (
-            "Por gastos derivados de arrendamiento de vivienda",
-            _MADRID_GASTOS_ARRENDAMIENTO_ROLE,
-        ),
-        "1117": (
-            "Por el pago de intereses de préstamos para adquisición de vivienda por jóvenes menores de 30 años",
-            _MADRID_INTERESES_PRESTAMOS_VIVIENDA_ROLE,
-        ),
-        "1119": (
-            "Por adquisición de vivienda habitual por nacimiento o adopción de hijos",
-            _MADRID_VIVIENDA_NACIMIENTO_ADOPCION_ROLE,
-        ),
-        "1120": (
-            "Importe de la deducción",
-            _MADRID_VIVIENDA_NACIMIENTO_ADOPCION_IMPORTE_ROLE,
-        ),
-    },
+    int(edition): {casilla_id: (label, role) for casilla_id, (label, role) in rows.items()}
+    for edition, rows in _edition_oracle("madrid_reused_id_deduction_rows").items()
 }
 MADRID_VIVIENDA_ACQUISITION_DETAIL_ROWS = {
-    2024: {
-        "2027": (
-            "Por adquisición de vivienda habitual por nacimiento o adopción de hijos",
-            _MADRID_VIVIENDA_NACIMIENTO_ADOPCION_ROLE,
-        ),
-        "2028": (
-            "Precio de adquisición/cantidades invertidas",
-            _MADRID_VIVIENDA_NACIMIENTO_ADOPCION_PRECIO_ROLE,
-        ),
-        "2029": (
-            "Año de adquisición",
-            _MADRID_VIVIENDA_NACIMIENTO_ADOPCION_ANIO_ROLE,
-        ),
-    },
-    2025: {
-        "2027": (
-            "Por adquisición de vivienda habitual en municipios en riesgo de despoblación",
-            _MADRID_VIVIENDA_MUNICIPIO_RIESGO_ROLE,
-        ),
-        "2028": (
-            "Precio de adquisición/cantidades invertidas",
-            _MADRID_VIVIENDA_MUNICIPIO_RIESGO_PRECIO_ROLE,
-        ),
-        "2029": (
-            "Año de adquisición",
-            _MADRID_VIVIENDA_MUNICIPIO_RIESGO_ANIO_ROLE,
-        ),
-    },
+    int(edition): {casilla_id: (label, role) for casilla_id, (label, role) in rows.items()}
+    for edition, rows in _edition_oracle("madrid_vivienda_acquisition_detail_rows").items()
 }
 CARRY_FORWARD_REMAINING_INST_AUTO_ROWS = {
-    2021: {
-        "1117": "Importe satisfecho en 2018 pendiente de aplicación en ejercicios futuros",
-        "1120": "Importe satisfecho en 2021 pendiente de aplicación en ejercicios futuros",
-        "1186": "Importe satisfecho en 2019 y/o 2020 pendiente de aplicación en ejercicios futuros",
-    },
-    2022: {
-        "1120": "Importe satisfecho en 2022 pendiente de aplicación en ejercicios futuros",
-        "1186": "Importe satisfecho en 2019 y/o 2020 pendiente de aplicación en ejercicios futuros",
-        "1709": "Importe satisfecho en 2021 pendiente de aplicación en ejercicios futuros",
-    },
-    2023: {
-        "1186": "Importe satisfecho en 2020 pendiente de aplicación en ejercicios futuros",
-        "1709": "Importe satisfecho en 2021 y/o 2022 pendiente de aplicación en ejercicios futuros",
-    },
-    2024: {
-        "1709": "Importe satisfecho en 2021 y/o 2022 pendiente de aplicación en ejercicios futuros",
-    },
-    2025: {
-        "1709": "Importe satisfecho en 2022 pendiente de aplicación en ejercicios futuros",
-    },
+    int(edition): dict(rows) for edition, rows in _edition_oracle("carry_forward_remaining_inst_auto_rows").items()
 }
 LEGACY_CARRY_FORWARD_PENDING_OUTLIER_ROLES = frozenset(
     {

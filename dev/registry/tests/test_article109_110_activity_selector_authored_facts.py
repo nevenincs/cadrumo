@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
 
@@ -33,8 +33,16 @@ _SELECTOR_IDS = frozenset(
 _M036_TABLE_SOURCE = "aeat-m036-activity-code-table-2026-03-26"
 _ARTICLE_109_SOURCE = "boe-rirpf-art-109-2007-04-01"
 _ARTICLE_110_SOURCE = "boe-rirpf-art-110-2018-12-23"
-_FIRST_GROUNDED_DATE = date(2026, 3, 26)
-_M131_FIRST_GROUNDED_DATE = date(2026, 4, 1)
+_M131_INSTRUCTIONS_SOURCE = "aeat-modelo-131-instructions-2026-04-01"
+
+
+def _source_date(source_id: str) -> date:
+    """The day a dated source id ends with, which is the day its text takes effect."""
+    return date.fromisoformat(source_id[-10:])
+
+
+_FIRST_GROUNDED_DATE = _source_date(_M036_TABLE_SOURCE)
+_M131_FIRST_GROUNDED_DATE = _source_date(_M131_INSTRUCTIONS_SOURCE)
 
 
 def _catalogue() -> GovernedFactCatalogue:
@@ -73,7 +81,7 @@ def _resolve(fact_id: str, effective_date: date) -> ResolvedEntitySetFact:
         (
             "modelo-131:selector-m036-volumen-ingresos-agrario",
             frozenset({"A02", "B01", "B02", "B03"}),
-            (_M036_TABLE_SOURCE, "aeat-modelo-131-instructions-2026-04-01", _ARTICLE_110_SOURCE),
+            (_M036_TABLE_SOURCE, _M131_INSTRUCTIONS_SOURCE, _ARTICLE_110_SOURCE),
         ),
     ),
 )
@@ -95,46 +103,41 @@ def test_payment_fraction_selectors_exclude_retired_broad_identity() -> None:
 
 
 @pytest.mark.parametrize(
-    ("fact_id", "before_first_window", "first_authored_date", "entities", "source_refs"),
+    ("fact_id", "first_authored_date", "entities", "source_refs"),
     (
         (
             "rd-439-2007-art-109:selector-m036-actividades-exencion-pago-fraccionado",
-            date(2026, 3, 25),
             _FIRST_GROUNDED_DATE,
             frozenset({"A02", "A04", "A05", "B01", "B02", "B03"}),
             (_M036_TABLE_SOURCE, _ARTICLE_109_SOURCE),
         ),
         (
             "rd-439-2007-art-109:selector-m036-actividades-base-neta-de-subvenciones",
-            date(2026, 3, 25),
             _FIRST_GROUNDED_DATE,
             frozenset({"A02", "B01", "B02", "B03"}),
             (_M036_TABLE_SOURCE, _ARTICLE_109_SOURCE),
         ),
         (
             "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrarias-pesqueras",
-            date(2026, 3, 25),
             _FIRST_GROUNDED_DATE,
             frozenset({"A02", "B01", "B02", "B03", "B05"}),
             (_M036_TABLE_SOURCE, _ARTICLE_110_SOURCE),
         ),
         (
             "modelo-131:selector-m036-volumen-ingresos-agrario",
-            date(2026, 3, 31),
             _M131_FIRST_GROUNDED_DATE,
             frozenset({"A02", "B01", "B02", "B03"}),
-            (_M036_TABLE_SOURCE, "aeat-modelo-131-instructions-2026-04-01", _ARTICLE_110_SOURCE),
+            (_M036_TABLE_SOURCE, _M131_INSTRUCTIONS_SOURCE, _ARTICLE_110_SOURCE),
         ),
     ),
 )
 def test_payment_fraction_selectors_reach_the_support_floor_before_their_first_citable_window(
     fact_id: str,
-    before_first_window: date,
     first_authored_date: date,
     entities: frozenset[str],
     source_refs: tuple[str, ...],
 ) -> None:
-    resolved = _resolve(fact_id, before_first_window)
+    resolved = _resolve(fact_id, first_authored_date - timedelta(days=1))
 
     assert resolved.projection_direction == "authored"
     assert resolved.authored_valid_from is None
@@ -152,16 +155,16 @@ def test_payment_fraction_selectors_cite_hash_pinned_boe_redactions_and_the_m036
         "ca201b3eb296e5af063ff5bb1ff9944fc9e14f0cf84053cb29c002245397d2c9"
     )
     assert shared.sources[_ARTICLE_109_SOURCE].bytes == 1994
-    assert shared.sources[_ARTICLE_109_SOURCE].applies_from == date(2007, 4, 1)
+    assert shared.sources[_ARTICLE_109_SOURCE].applies_from == _source_date(_ARTICLE_109_SOURCE)
     assert shared.sources[_ARTICLE_110_SOURCE].sha256 == (
         "2d2f769c57987b8a14fa8ed861ef921a0345a1d8b898d3342f0c9de87ba5405c"
     )
     assert shared.sources[_ARTICLE_110_SOURCE].bytes == 11554
-    assert shared.sources[_ARTICLE_110_SOURCE].applies_from == date(2018, 12, 23)
+    assert shared.sources[_ARTICLE_110_SOURCE].applies_from == _source_date(_ARTICLE_110_SOURCE)
     assert shared.sources[_M036_TABLE_SOURCE].applies_from == _FIRST_GROUNDED_DATE
     # The instruction's publication date is a coverage marker: the variant reaches the support floor.
     assert catalogue.facts["modelo-131:selector-m036-volumen-ingresos-agrario"].variants[0].valid_from is None
-    assert shared.sources["aeat-modelo-131-instructions-2026-04-01"].applies_from == _M131_FIRST_GROUNDED_DATE
+    assert shared.sources[_M131_INSTRUCTIONS_SOURCE].applies_from == _M131_FIRST_GROUNDED_DATE
     assert (
         governed_fact_catalogue_failures(
             catalogue,

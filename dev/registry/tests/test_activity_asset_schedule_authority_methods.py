@@ -22,6 +22,7 @@ from cadrumo.domain.calculations.registry.actividad_asset_bindings import (
 )
 from cadrumo.domain.calculations.registry.actividad_asset_parameters import ACTIVITY_ASSET_PARAMETER_IDS
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim, effective_claims
 from cadrumo.domain.renta.actividad_asset.election import (
     AcquiredCondition,
@@ -61,6 +62,7 @@ from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState, Pla
 
 from .activity_asset_schedule_support import (
     DESCRIPTOR,
+    TAX_YEAR,
     YEAR_END,
     YEAR_START,
     acquisition,
@@ -107,7 +109,7 @@ def test_indefinite_life_and_goodwill_are_limited_to_one_twentieth_in_both_modal
 def test_low_value_free_resolves_published_threshold_and_cap() -> None:
     authority = resolve_activity_asset_schedule_authority(
         modelo_100(),
-        tax_year=2025,
+        tax_year=TAX_YEAR,
         asset_revision=activity_asset_schedule_asset(
             activity_asset_schedule_election(
                 AmortizationMethod.LOW_VALUE_FREE,
@@ -196,14 +198,18 @@ def test_charging_infrastructure_free_depreciation_window() -> None:
             condition=condition,
         )
 
-    assert activity_asset_schedule_charge(charger(date(2025, 3, 1)), free_amount="2500").amount == Decimal("2500.00")
-    assert activity_asset_schedule_charge(charger(date(2024, 6, 1)), free_amount="1500").amount == Decimal("1500.00")
+    assert activity_asset_schedule_charge(charger(date(TAX_YEAR, 3, 1)), free_amount="2500").amount == Decimal(
+        "2500.00"
+    )
+    assert activity_asset_schedule_charge(charger(date(TAX_YEAR - 1, 6, 1)), free_amount="1500").amount == Decimal(
+        "1500.00"
+    )
     with activity_asset_schedule_refused(
         ActividadAssetUnsupportedError, "charging_infrastructure_period_not_enrolled", rendered=re.escape("DA 18a.2")
     ):
-        activity_asset_schedule_charge(charger(date(2023, 6, 1)), free_amount="1500")
+        activity_asset_schedule_charge(charger(date(TAX_YEAR - 2, 6, 1)), free_amount="1500")
     with activity_asset_schedule_refused(ActividadAssetUnsupportedError, "charging_infrastructure_new_only"):
-        activity_asset_schedule_charge(charger(date(2025, 3, 1), AcquiredCondition.USED), free_amount="100")
+        activity_asset_schedule_charge(charger(date(TAX_YEAR, 3, 1), AcquiredCondition.USED), free_amount="100")
 
 
 @pytest.mark.parametrize(
@@ -355,7 +361,9 @@ def test_electric_vehicle_free_depreciation_needs_an_affected_new_vehicle_in_the
         ActividadAssetUnsupportedError, "electric_vehicle_period_not_enrolled", rendered=re.escape("DA 18a.1")
     ):
         activity_asset_schedule_charge(
-            activity_asset_schedule_asset(election, basis="30000", vehicle=electric, in_service=date(2023, 6, 1)),
+            activity_asset_schedule_asset(
+                election, basis="30000", vehicle=electric, in_service=date(TAX_YEAR - 2, 6, 1)
+            ),
             free_amount="100",
         )
     with activity_asset_schedule_refused(
@@ -381,13 +389,13 @@ def workforce(*years: tuple[int, str, PlantillaMediaState]) -> tuple[PlantillaMe
     )
 
 
-# 2024 before; 2025 and 2026 after; 2027 and 2028 the further 24 months.
+# One year before the tax year; the tax year and the next after; the two following the further 24 months.
 GROWING = workforce(
-    (2024, "10.00", _OBSERVED),
-    (2025, "12.00", _OBSERVED),
-    (2026, "13.00", _COMMITTED),
-    (2027, "13.00", _COMMITTED),
-    (2028, "13.00", _COMMITTED),
+    (TAX_YEAR - 1, "10.00", _OBSERVED),
+    (TAX_YEAR, "12.00", _OBSERVED),
+    (TAX_YEAR + 1, "13.00", _COMMITTED),
+    (TAX_YEAR + 2, "13.00", _COMMITTED),
+    (TAX_YEAR + 3, "13.00", _COMMITTED),
 )
 
 
@@ -395,69 +403,73 @@ def employment() -> ActivityAssetAmortizationElection:
     return activity_asset_schedule_election(
         AmortizationMethod.SMALL_ENTERPRISE_EMPLOYMENT_FREE,
         authority_class_key="maquinaria",
-        small_enterprise=small_enterprise("5000000", made_available=date(2025, 2, 15)),
+        small_enterprise=small_enterprise("5000000", made_available=date(TAX_YEAR, 2, 15)),
     )
 
 
 def test_job_creating_free_depreciation_caps_the_investment_by_the_workforce_increase() -> None:
-    machine = activity_asset_schedule_asset(employment(), basis="200000", in_service=date(2025, 3, 1))
+    machine = activity_asset_schedule_asset(employment(), basis="200000", in_service=date(TAX_YEAR, 3, 1))
     authority = resolve_activity_asset_schedule_authority(
         modelo_100(),
-        tax_year=2025,
+        tax_year=TAX_YEAR,
         asset_revision=machine,
         authority_generation="candidate-source",
         workforce=GROWING,
         legal_reference=legal_reference,
     )
 
-    # 24 months after 1 January 2025: (12 x 365 + 13 x 365) / 730 = 12.50 against 10.00 before, an
+    # 24 months after 1 January of the tax year: (12 x 365 + 13 x 365) / 730 = 12.50 against 10.00 before, an
     # increase of 2.50; LIS art. 102.1 lets 120,000 x 2.50 = 300,000.00 of investment benefit.
     assert authority.free_depreciation_investment_cap == Decimal("300000.00")
     assert "erd-empleo-inversion-por-unidad-plantilla" in authority.source_reference
-    assert "taxpayer-profile:irpf.plantilla_media:2024:observed" in authority.source_reference
-    assert "taxpayer-profile:irpf.plantilla_media:2028:committed" in authority.source_reference
+    assert f"taxpayer-profile:irpf.plantilla_media:{TAX_YEAR - 1}:observed" in authority.source_reference
+    assert f"taxpayer-profile:irpf.plantilla_media:{TAX_YEAR + 3}:committed" in authority.source_reference
     assert activity_asset_schedule_charge(machine, free_amount="150000", workforce=GROWING).amount == Decimal(
         "150000.00"
     )
     # The whole 300,000.00 fits the cap exactly; one cent more does not.
     assert activity_asset_schedule_charge(
-        activity_asset_schedule_asset(employment(), basis="300000", in_service=date(2025, 3, 1)),
+        activity_asset_schedule_asset(employment(), basis="300000", in_service=date(TAX_YEAR, 3, 1)),
         free_amount="300000",
         workforce=GROWING,
     ).amount == Decimal("300000.00")
     with pytest.raises(ActividadAssetUnsupportedError, match="investment_cap_exceeded"):
         activity_asset_schedule_charge(
-            activity_asset_schedule_asset(employment(), basis="300000.01", in_service=date(2025, 3, 1)),
+            activity_asset_schedule_asset(employment(), basis="300000.01", in_service=date(TAX_YEAR, 3, 1)),
             free_amount="1",
             workforce=GROWING,
         )
 
 
 def test_job_creating_free_depreciation_refuses_each_unmet_condition() -> None:
-    machine = activity_asset_schedule_asset(employment(), basis="200000", in_service=date(2025, 3, 1))
+    machine = activity_asset_schedule_asset(employment(), basis="200000", in_service=date(TAX_YEAR, 3, 1))
 
-    with activity_asset_schedule_refused(ActividadAssetIncompleteError, "workforce_year_not_declared", year=2027):
+    with activity_asset_schedule_refused(
+        ActividadAssetIncompleteError, "workforce_year_not_declared", year=TAX_YEAR + 2
+    ):
         activity_asset_schedule_charge(
-            machine, free_amount="1", workforce=tuple(item for item in GROWING if item.year != 2027)
+            machine, free_amount="1", workforce=tuple(item for item in GROWING if item.year != TAX_YEAR + 2)
         )
-    with activity_asset_schedule_refused(ActividadAssetIncompleteError, "workforce_year_not_declared", year=2024):
+    with activity_asset_schedule_refused(
+        ActividadAssetIncompleteError, "workforce_year_not_declared", year=TAX_YEAR - 1
+    ):
         activity_asset_schedule_charge(machine, free_amount="1")
-    flat = workforce(*((year, "10.00", _OBSERVED) for year in range(2024, 2029)))
+    flat = workforce(*((year, "10.00", _OBSERVED) for year in range(TAX_YEAR - 1, TAX_YEAR + 4)))
     with activity_asset_schedule_refused(ActividadAssetUnsupportedError, "workforce_increase_not_reached"):
         activity_asset_schedule_charge(machine, free_amount="1", workforce=flat)
     lost = workforce(
-        (2024, "10.00", _OBSERVED),
-        (2025, "12.00", _OBSERVED),
-        (2026, "13.00", _COMMITTED),
-        (2027, "11.00", _COMMITTED),
-        (2028, "11.00", _COMMITTED),
+        (TAX_YEAR - 1, "10.00", _OBSERVED),
+        (TAX_YEAR, "12.00", _OBSERVED),
+        (TAX_YEAR + 1, "13.00", _COMMITTED),
+        (TAX_YEAR + 2, "11.00", _COMMITTED),
+        (TAX_YEAR + 3, "11.00", _COMMITTED),
     )
     with activity_asset_schedule_refused(ActividadAssetUnsupportedError, "workforce_increase_not_kept"):
         activity_asset_schedule_charge(machine, free_amount="1", workforce=lost)
     with activity_asset_schedule_refused(ActividadAssetUnsupportedError, "job_creation_new_only"):
         activity_asset_schedule_charge(
             activity_asset_schedule_asset(
-                employment(), basis="200000", in_service=date(2025, 3, 1), condition=AcquiredCondition.USED
+                employment(), basis="200000", in_service=date(TAX_YEAR, 3, 1), condition=AcquiredCondition.USED
             ),
             free_amount="1",
             workforce=GROWING,
@@ -465,13 +477,13 @@ def test_job_creating_free_depreciation_refuses_each_unmet_condition() -> None:
     large = activity_asset_schedule_election(
         AmortizationMethod.SMALL_ENTERPRISE_EMPLOYMENT_FREE,
         authority_class_key="maquinaria",
-        small_enterprise=small_enterprise("12000000", made_available=date(2025, 2, 15)),
+        small_enterprise=small_enterprise("12000000", made_available=date(TAX_YEAR, 2, 15)),
     )
     with activity_asset_schedule_refused(
         ActividadAssetUnsupportedError, "reduced_size_turnover_reached", rendered=re.escape("LIS art. 101.1")
     ):
         activity_asset_schedule_charge(
-            activity_asset_schedule_asset(large, basis="200000", in_service=date(2025, 3, 1)),
+            activity_asset_schedule_asset(large, basis="200000", in_service=date(TAX_YEAR, 3, 1)),
             free_amount="1",
             workforce=GROWING,
         )
@@ -483,11 +495,11 @@ def test_job_creating_free_depreciation_refuses_each_unmet_condition() -> None:
                 activity_asset_schedule_election(
                     AmortizationMethod.SMALL_ENTERPRISE_EMPLOYMENT_FREE,
                     authority_class_key="equipo-proceso-informacion",
-                    small_enterprise=small_enterprise("5000000", made_available=date(2025, 2, 15)),
+                    small_enterprise=small_enterprise("5000000", made_available=date(TAX_YEAR, 2, 15)),
                 ),
-                basis="2000",
+                basis="2000.00",
                 kind=AssetKind.INTANGIBLE,
-                in_service=date(2025, 3, 1),
+                in_service=date(TAX_YEAR, 3, 1),
             ),
             free_amount="1",
             workforce=GROWING,
@@ -516,31 +528,34 @@ def test_assets_entering_service_together_share_one_investment_cap() -> None:
 
     operations.create(
         activity_asset_schedule_asset(
-            employment(), basis="200000", in_service=date(2025, 3, 1), asset_id="first-machine"
+            employment(), basis="200000", in_service=date(TAX_YEAR, 3, 1), asset_id="first-machine"
         ),
         DESCRIPTOR,
     )
-    # A linear asset of the same year and a 2024 asset under the incentive draw on no 2025 cap.
+    # A linear asset of the same year and an asset of the year before under the incentive draw on no cap.
     operations.create(
         activity_asset_schedule_asset(
-            activity_asset_schedule_linear("maquinaria"), basis="500000", in_service=date(2025, 3, 1), asset_id="plain"
+            activity_asset_schedule_linear("maquinaria"),
+            basis="500000",
+            in_service=date(TAX_YEAR, 3, 1),
+            asset_id="plain",
         ),
         DESCRIPTOR,
     )
     operations.create(
         activity_asset_schedule_asset(
-            employment(), basis="250000", in_service=date(2024, 3, 1), asset_id="earlier-year"
+            employment(), basis="250000", in_service=date(TAX_YEAR - 1, 3, 1), asset_id="earlier-year"
         ),
         DESCRIPTOR,
     )
 
     assert forecast("first-machine").amount == Decimal("1000.00")
 
-    # 200,000 + 150,000 = 350,000 of 2025 investment exceeds the 300,000.00 cap, so neither asset
+    # 200,000 + 150,000 = 350,000 of the tax year's investment exceeds the 300,000.00 cap, so neither asset
     # is charged freely: the product does not choose which part of which asset benefits.
     operations.create(
         activity_asset_schedule_asset(
-            employment(), basis="150000", in_service=date(2025, 6, 1), asset_id="second-machine"
+            employment(), basis="150000", in_service=date(TAX_YEAR, 6, 1), asset_id="second-machine"
         ),
         DESCRIPTOR,
     )
@@ -553,7 +568,7 @@ def renewable_evidence(
     purpose: RenewableInstallationPurpose = RenewableInstallationPurpose.ELECTRICITY_SELF_CONSUMPTION,
     documentation: RenewableDocumentationKind = RenewableDocumentationKind.LOW_VOLTAGE_CERTIFICATE,
     *,
-    made_available: date = date(2025, 1, 10),
+    made_available: date = date(TAX_YEAR, 1, 10),
     replaces_fossil: bool = False,
     building_code: bool = False,
 ) -> RenewableSelfConsumptionEvidence:
@@ -578,15 +593,17 @@ def renewable(
     )
 
 
-# 2024 before; 2025 and 2026 after; DA 17a.1 asks only that the average is kept.
-_KEPT = workforce((2024, "10.00", _OBSERVED), (2025, "10.00", _OBSERVED), (2026, "10.00", _COMMITTED))
+# One year before the tax year; the tax year and the next after; DA 17a.1 asks only that the average is kept.
+_KEPT = workforce(
+    (TAX_YEAR - 1, "10.00", _OBSERVED), (TAX_YEAR, "10.00", _OBSERVED), (TAX_YEAR + 1, "10.00", _COMMITTED)
+)
 
 
-def test_renewable_free_depreciation_charges_a_2025_installation_up_to_the_investment_cap() -> None:
-    panels = activity_asset_schedule_asset(renewable(), basis="40000", in_service=date(2025, 2, 1))
+def test_renewable_free_depreciation_charges_an_installation_of_the_tax_year_up_to_the_investment_cap() -> None:
+    panels = activity_asset_schedule_asset(renewable(), basis="40000", in_service=date(TAX_YEAR, 2, 1))
     authority = resolve_activity_asset_schedule_authority(
         modelo_100(),
-        tax_year=2025,
+        tax_year=TAX_YEAR,
         asset_revision=panels,
         authority_generation="candidate-source",
         workforce=_KEPT,
@@ -595,7 +612,7 @@ def test_renewable_free_depreciation_charges_a_2025_installation_up_to_the_inves
 
     assert authority.free_depreciation_investment_cap == Decimal("500000")
     assert "renewable-documentation:low_voltage_certificate:cie-2025-0042" in authority.source_reference
-    assert "taxpayer-profile:irpf.plantilla_media:2026:committed" in authority.source_reference
+    assert f"taxpayer-profile:irpf.plantilla_media:{TAX_YEAR + 1}:committed" in authority.source_reference
     assert activity_asset_schedule_charge(panels, free_amount="40000", workforce=_KEPT).amount == Decimal("40000.00")
     heat = renewable(
         renewable_evidence(
@@ -605,20 +622,20 @@ def test_renewable_free_depreciation_charges_a_2025_installation_up_to_the_inves
         ),
     )
     assert activity_asset_schedule_charge(
-        activity_asset_schedule_asset(heat, basis="9000", in_service=date(2025, 5, 1)),
+        activity_asset_schedule_asset(heat, basis="9000", in_service=date(TAX_YEAR, 5, 1)),
         free_amount="9000",
         workforce=_KEPT,
     ).amount == (Decimal("9000.00"))
     # The installation made available on the day RDL 18/2022 entered into force qualifies.
-    first_day = renewable(renewable_evidence(made_available=date(2022, 10, 20)))
+    first_day = renewable(renewable_evidence(made_available=date(TAX_YEAR - 3, 10, 20)))
     assert activity_asset_schedule_charge(
-        activity_asset_schedule_asset(first_day, basis="1000", in_service=date(2025, 2, 1)),
+        activity_asset_schedule_asset(first_day, basis="1000", in_service=date(TAX_YEAR, 2, 1)),
         free_amount="1000",
         workforce=_KEPT,
     ).amount == (Decimal("1000.00"))
     with pytest.raises(ActividadAssetUnsupportedError, match="investment_cap_exceeded"):
         activity_asset_schedule_charge(
-            activity_asset_schedule_asset(renewable(), basis="500000.01", in_service=date(2025, 2, 1)),
+            activity_asset_schedule_asset(renewable(), basis="500000.01", in_service=date(TAX_YEAR, 2, 1)),
             free_amount="1",
             workforce=_KEPT,
         )
@@ -629,7 +646,7 @@ def test_renewable_free_depreciation_refuses_each_unmet_condition() -> None:
         election: ActivityAssetAmortizationElection,
         key: str,
         *,
-        in_service: date = date(2025, 2, 1),
+        in_service: date = date(TAX_YEAR, 2, 1),
         rendered: str | None = None,
     ) -> None:
         with activity_asset_schedule_refused(ActividadAssetUnsupportedError, key, rendered=rendered):
@@ -656,20 +673,22 @@ def test_renewable_free_depreciation_refuses_each_unmet_condition() -> None:
         rendered=re.escape("DA 17a.5"),
     )
     refused(
-        renewable(renewable_evidence(made_available=date(2022, 10, 19))),
+        renewable(renewable_evidence(made_available=date(TAX_YEAR - 3, 10, 19))),
         "renewable_made_available_before_admitted_date",
     )
     refused(
-        renewable(renewable_evidence(made_available=date(2024, 1, 10))),
+        renewable(renewable_evidence(made_available=date(TAX_YEAR - 1, 1, 10))),
         "renewable_entry_year_not_enrolled",
-        in_service=date(2024, 6, 1),
+        in_service=date(TAX_YEAR - 1, 6, 1),
     )
-    shrinking = workforce((2024, "10.00", _OBSERVED), (2025, "9.00", _OBSERVED), (2026, "9.50", _COMMITTED))
+    shrinking = workforce(
+        (TAX_YEAR - 1, "10.00", _OBSERVED), (TAX_YEAR, "9.00", _OBSERVED), (TAX_YEAR + 1, "9.50", _COMMITTED)
+    )
     with activity_asset_schedule_refused(
         ActividadAssetUnsupportedError, "workforce_fell_below", rendered=re.escape("LIS DA 17a.1")
     ):
         activity_asset_schedule_charge(
-            activity_asset_schedule_asset(renewable(), basis="40000", in_service=date(2025, 2, 1)),
+            activity_asset_schedule_asset(renewable(), basis="40000", in_service=date(TAX_YEAR, 2, 1)),
             free_amount="1",
             workforce=shrinking,
         )
@@ -679,9 +698,9 @@ def test_renewable_free_depreciation_refuses_each_unmet_condition() -> None:
         activity_asset_schedule_charge(
             activity_asset_schedule_asset(
                 renewable(class_key="equipo-proceso-informacion"),
-                basis="2000",
+                basis="2000.00",
                 kind=AssetKind.INTANGIBLE,
-                in_service=date(2025, 2, 1),
+                in_service=date(TAX_YEAR, 2, 1),
             ),
             free_amount="1",
             workforce=_KEPT,
@@ -704,7 +723,7 @@ def test_renewable_free_depreciation_is_taken_only_in_the_entry_year() -> None:
                 parameter.model_copy(
                     update={
                         "values": tuple(
-                            value.model_copy(update={"value": Decimal("2024")}) for value in parameter.values
+                            value.model_copy(update={"value": Decimal(TAX_YEAR - 1)}) for value in parameter.values
                         )
                     },
                 )
@@ -714,19 +733,21 @@ def test_renewable_free_depreciation_is_taken_only_in_the_entry_year() -> None:
             ),
         },
     )
-    installed_2024 = activity_asset_schedule_asset(
-        renewable(renewable_evidence(made_available=date(2024, 1, 10))),
+    installed_year_before = activity_asset_schedule_asset(
+        renewable(renewable_evidence(made_available=date(TAX_YEAR - 1, 1, 10))),
         basis="40000",
-        in_service=date(2024, 6, 1),
+        in_service=date(TAX_YEAR - 1, 6, 1),
     )
 
     with activity_asset_schedule_refused(ActividadAssetUnsupportedError, "renewable_only_in_entry_period"):
         resolve_activity_asset_schedule_authority(
             widened,
-            tax_year=2025,
-            asset_revision=installed_2024,
+            tax_year=TAX_YEAR,
+            asset_revision=installed_year_before,
             authority_generation="candidate-source",
-            workforce=workforce((2023, "10.00", _OBSERVED), (2024, "10.00", _OBSERVED), (2025, "10.00", _OBSERVED)),
+            workforce=workforce(
+                (TAX_YEAR - 2, "10.00", _OBSERVED), (TAX_YEAR - 1, "10.00", _OBSERVED), (TAX_YEAR, "10.00", _OBSERVED)
+            ),
             legal_reference=legal_reference,
         )
 
@@ -786,7 +807,7 @@ def test_an_absent_admission_parameter_fails_closed() -> None:
     with activity_asset_schedule_refused(ActividadAssetUnsupportedError, "parameter_absent"):
         resolve_activity_asset_schedule_authority(
             stripped,
-            tax_year=2025,
+            tax_year=TAX_YEAR,
             asset_revision=activity_asset_schedule_asset(activity_asset_schedule_linear("mobiliario"), basis="1000"),
             authority_generation="candidate-source",
             workforce=(),
@@ -839,7 +860,7 @@ def test_a_change_of_method_inside_a_claimed_tax_year_refuses() -> None:
     first_quarter = operations.forecast(
         asset_id=linear.asset_id,
         covered_from=YEAR_START,
-        covered_until=date(2025, 4, 1),
+        covered_until=date(TAX_YEAR, 4, 1),
     )
     operations.record_claim(first_quarter, creating_operation="test.linear-q1")
     switched = linear.model_copy(
@@ -853,14 +874,16 @@ def test_a_change_of_method_inside_a_claimed_tax_year_refuses() -> None:
 
     assert first_quarter.amount == Decimal("295.89")  # 10,000 x 12% x 90/365 = 295.8904
     with pytest.raises(ActividadAssetValidationError, match="election_changes_only_at_year_boundary"):
-        operations.forecast(asset_id=linear.asset_id, covered_from=date(2025, 4, 1), covered_until=date(2025, 7, 1))
+        operations.forecast(
+            asset_id=linear.asset_id, covered_from=date(TAX_YEAR, 4, 1), covered_until=date(TAX_YEAR, 7, 1)
+        )
 
 
 def test_constant_percentage_and_sum_of_digits_cannot_be_adopted_after_another_method() -> None:
     constant = activity_asset_schedule_asset(
         activity_asset_schedule_constant("maquinaria"),
         basis="10000",
-        in_service=date(2024, 1, 1),
+        in_service=date(TAX_YEAR - 1, 1, 1),
         opening="1200",
         opening_method=AmortizationMethod.CONSTANT_PERCENTAGE,
     )
@@ -876,7 +899,7 @@ def test_constant_percentage_and_sum_of_digits_cannot_be_adopted_after_another_m
     )  # (10,000 - 1,200) x 30%
     # A move to linear from a tax-year boundary is admitted and runs on the remaining basis.
     linear = activity_asset_schedule_asset(
-        activity_asset_schedule_linear("maquinaria"), basis="10000", in_service=date(2024, 1, 1), opening="3000"
+        activity_asset_schedule_linear("maquinaria"), basis="10000", in_service=date(TAX_YEAR - 1, 1, 1), opening="3000"
     )
     after_constant = AssetScheduleHistory(election_fingerprints_before_tax_year=(constant.amortization.fingerprint,))
     assert activity_asset_schedule_charge(linear, history=after_constant).amount == Decimal("1200.00")  # 10,000 x 12%
@@ -920,17 +943,17 @@ def test_a_superseding_claim_is_forecast_without_the_claim_it_replaces() -> None
     machine = activity_asset_schedule_asset(
         activity_asset_schedule_linear("maquinaria"),
         basis="1000",
-        in_service=date(2017, 1, 1),
+        in_service=date(TAX_YEAR - 8, 1, 1),
         opening="950",
         asset_id="nearly-amortized-machine",
     )
     operations.create(machine, DESCRIPTOR)
-    first = operations.forecast(asset_id=machine.asset_id, covered_from=YEAR_START, covered_until=date(2025, 4, 1))
+    first = operations.forecast(asset_id=machine.asset_id, covered_from=YEAR_START, covered_until=date(TAX_YEAR, 4, 1))
     operations.record_claim(first, creating_operation="test.q1")
     second = operations.forecast(
         asset_id=machine.asset_id,
-        covered_from=date(2025, 4, 1),
-        covered_until=date(2025, 7, 1),
+        covered_from=date(TAX_YEAR, 4, 1),
+        covered_until=date(TAX_YEAR, 7, 1),
     )
     second_claim = operations.record_claim(second, creating_operation="test.q2").claim
     corrected = machine.model_copy(
@@ -984,7 +1007,7 @@ def test_the_history_write_refuses_a_claim_under_a_superseded_revision() -> None
     )
     history = ActivityAssetHistory(revisions=(machine, corrected))
     stale = AmortizationClaim.from_schedule(
-        activity_asset_schedule_charge(machine, covered_until=date(2025, 7, 1)),
+        activity_asset_schedule_charge(machine, covered_until=date(TAX_YEAR, 7, 1)),
         asset_kind=machine.asset_kind,
         creating_operation="test.stale-revision",
     )
@@ -1008,12 +1031,12 @@ def test_two_forecasts_taken_before_recording_cannot_both_consume_the_basis() ->
     first_half = operations.forecast(
         asset_id=machine.asset_id,
         covered_from=YEAR_START,
-        covered_until=date(2025, 7, 1),
+        covered_until=date(TAX_YEAR, 7, 1),
         requested_free_amount=Decimal("10000"),
     )
     second_half = operations.forecast(
         asset_id=machine.asset_id,
-        covered_from=date(2025, 7, 1),
+        covered_from=date(TAX_YEAR, 7, 1),
         covered_until=YEAR_END,
         requested_free_amount=Decimal("10000"),
     )
@@ -1041,8 +1064,8 @@ def test_the_history_write_refuses_a_claim_beyond_the_basis_even_without_operati
     machine = activity_asset_schedule_asset(
         activity_asset_schedule_linear("maquinaria"), basis="1000", asset_id="direct-write-machine"
     )
-    first_half = activity_asset_schedule_charge(machine, covered_until=date(2025, 7, 1))
-    second_half = activity_asset_schedule_charge(machine, covered_from=date(2025, 7, 1))
+    first_half = activity_asset_schedule_charge(machine, covered_until=date(TAX_YEAR, 7, 1))
+    second_half = activity_asset_schedule_charge(machine, covered_from=date(TAX_YEAR, 7, 1))
     history = ActivityAssetHistory(revisions=(machine,))
     after_first = history.record_claim(
         AmortizationClaim.from_schedule(first_half, asset_kind=machine.asset_kind, creating_operation="test.first"),
@@ -1127,9 +1150,9 @@ def _ten_percent_furniture() -> ActivityAssetRevision:
     return activity_asset_schedule_asset(
         activity_asset_schedule_linear("mobiliario"),
         basis="10000",
-        in_service=date(2005, 3, 15),
+        in_service=date(TAX_YEAR - 20, 3, 15),
         opening="9000",
-        opening_through=2024,
+        opening_through=TAX_YEAR - 1,
         asset_id="twenty-year-furniture",
     )
 
@@ -1139,43 +1162,45 @@ def test_ten_percent_with_twenty_years_stops_on_the_boundary_day_in_forecast_cla
     furniture = _ten_percent_furniture()
     operations.create(furniture, DESCRIPTOR)
 
-    # In service 15 March 2005 plus 20 years ends the period on 15 March 2025, its first day out.
+    # In service 15 March twenty years earlier ends the period on 15 March of the tax year, its first day out.
     # 1 January to 14 March is 73 days: 10,000 x 10% x 73/365 = 200.00.
-    last = operations.forecast(asset_id=furniture.asset_id, covered_from=YEAR_START, covered_until=date(2025, 3, 15))
-    assert (last.covered_until, last.service_days, last.amount) == (date(2025, 3, 15), 73, Decimal("200.00"))
+    last = operations.forecast(
+        asset_id=furniture.asset_id, covered_from=YEAR_START, covered_until=date(TAX_YEAR, 3, 15)
+    )
+    assert (last.covered_until, last.service_days, last.amount) == (date(TAX_YEAR, 3, 15), 73, Decimal("200.00"))
     clipped = operations.forecast(asset_id=furniture.asset_id, covered_from=YEAR_START, covered_until=YEAR_END)
-    assert (clipped.covered_until, clipped.amount) == (date(2025, 3, 15), Decimal("200.00"))
+    assert (clipped.covered_until, clipped.amount) == (date(TAX_YEAR, 3, 15), Decimal("200.00"))
     final_day = operations.forecast(
         asset_id=furniture.asset_id,
-        covered_from=date(2025, 3, 14),
-        covered_until=date(2025, 3, 15),
+        covered_from=date(TAX_YEAR, 3, 14),
+        covered_until=date(TAX_YEAR, 3, 15),
     )
     assert (final_day.service_days, final_day.amount) == (1, Decimal("2.74"))
 
     with pytest.raises(ActividadAssetPeriodElapsedError, match="amortization_period_elapsed") as refused:
-        operations.forecast(asset_id=furniture.asset_id, covered_from=date(2025, 3, 15), covered_until=YEAR_END)
-    assert refused.value.context == {"ended_on": date(2025, 3, 14), "ended_before": date(2025, 3, 15)}
+        operations.forecast(asset_id=furniture.asset_id, covered_from=date(TAX_YEAR, 3, 15), covered_until=YEAR_END)
+    assert refused.value.context == {"ended_on": date(TAX_YEAR, 3, 14), "ended_before": date(TAX_YEAR, 3, 15)}
 
-    past = last.model_copy(update={"covered_from": date(2025, 3, 15), "covered_until": date(2025, 3, 16)})
+    past = last.model_copy(update={"covered_from": date(TAX_YEAR, 3, 15), "covered_until": date(TAX_YEAR, 3, 16)})
     with pytest.raises(ActividadAssetPeriodElapsedError, match="amortization_period_elapsed"):
         operations.record_claim(past, creating_operation="test.past-the-period")
 
 
 def test_the_plan_shows_the_elapsed_year_as_elapsed_and_never_as_a_zero_amount() -> None:
     furniture = _ten_percent_furniture()
-    operations = _published_year_operations(today=date(2025, 6, 30))
+    operations = _published_year_operations(today=date(TAX_YEAR, 6, 30))
     operations.create(furniture, DESCRIPTOR)
 
     rows = {row.tax_year: row for row in operations.plan(furniture.asset_id)}
 
-    assert rows[2025].planned is not None
-    assert rows[2025].planned.decimal == "200.00"
-    assert rows[2025].service_days == 73
-    assert rows[2026].absence is PlanFigureAbsence.PERIOD_ELAPSED
-    assert rows[2026].planned is None
-    assert rows[2026].absence_reason_key == "ledger.actividad_asset.errors.amortization_period_elapsed"
-    assert rows[2026].claim_state is ActivityAssetClaimState.NOT_DUE
-    assert rows[2024].absence is PlanFigureAbsence.COVERED_BY_OPENING
+    assert rows[TAX_YEAR].planned is not None
+    assert rows[TAX_YEAR].planned.decimal == "200.00"
+    assert rows[TAX_YEAR].service_days == 73
+    assert rows[TAX_YEAR + 1].absence is PlanFigureAbsence.PERIOD_ELAPSED
+    assert rows[TAX_YEAR + 1].planned is None
+    assert rows[TAX_YEAR + 1].absence_reason_key == "ledger.actividad_asset.errors.amortization_period_elapsed"
+    assert rows[TAX_YEAR + 1].claim_state is ActivityAssetClaimState.NOT_DUE
+    assert rows[TAX_YEAR - 1].absence is PlanFigureAbsence.COVERED_BY_OPENING
 
     limits = operations.plan_limits(furniture.asset_id)
     assert limits.class_key == "mobiliario"
@@ -1186,7 +1211,7 @@ def test_the_plan_shows_the_elapsed_year_as_elapsed_and_never_as_a_zero_amount()
     assert Decimal(limits.minimum_coefficient.decimal) == Decimal("0.05")
     assert limits.maximum_period_years is not None
     assert Decimal(limits.maximum_period_years.decimal) == Decimal("20")
-    assert limits.maximum_period_ends_on == date(2025, 3, 15)
+    assert limits.maximum_period_ends_on == date(TAX_YEAR, 3, 15)
     assert limits.legal_citations_complete
     # The parameters the furniture election cites, in the order the authority cites them, each provision once.
     assert [citation.text for citation in limits.legal_citations] == [
@@ -1207,30 +1232,31 @@ def test_the_plan_shows_the_elapsed_year_as_elapsed_and_never_as_a_zero_amount()
 
 
 def test_a_year_before_the_registry_floor_is_typed_and_never_a_guessed_figure() -> None:
-    operations = _published_year_operations(today=date(2025, 12, 31))
+    floor = filing_year_envelope().floor
+    operations = _published_year_operations(today=date(TAX_YEAR, 12, 31))
     old = activity_asset_schedule_asset(
         activity_asset_schedule_linear("mobiliario"),
         basis="10000",
-        in_service=date(2019, 7, 1),
+        in_service=date(floor - 3, 7, 1),
         asset_id="pre-floor-chair",
     )
     operations.create(old, DESCRIPTOR)
 
     rows = {row.tax_year: row for row in operations.plan(old.asset_id)}
 
-    for year in (2019, 2020, 2021):
+    for year in range(floor - 3, floor):
         assert rows[year].absence is PlanFigureAbsence.EDITION_UNAVAILABLE
         assert rows[year].planned is None
         assert rows[year].claimable_intervals == ()
     # From the floor the table reads again, on the 1,000.00 a full year.
-    assert rows[2022].planned is not None
-    assert rows[2022].planned.decimal == "1000.00"
+    assert rows[floor].planned is not None
+    assert rows[floor].planned.decimal == "1000.00"
 
 
 def test_an_authority_for_a_table_method_cannot_omit_the_end_of_its_period() -> None:
     with pytest.raises(ValueError, match="linear schedule authority requires maximum_period_ends_on"):
         ScheduleAuthority(
-            tax_year=2025,
+            tax_year=TAX_YEAR,
             asset_kind=AssetKind.MATERIAL,
             method=AmortizationMethod.LINEAR,
             election_fingerprint="a" * 64,

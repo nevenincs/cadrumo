@@ -5,13 +5,21 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.application.storage.calc_sheets.records import TabName
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, filing_year_envelope
 
 from ..workbook_demo_agricultural_compensation import build_agricultural_compensation_plan
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
+_OLDEST_REVISION_END = authored_revisions("341")[0].valid_to
+assert _OLDEST_REVISION_END is not None, "the oldest Modelo 341 revision is closed"
+_PAPER_YEAR = _OLDEST_REVISION_END.year
+"""The last exercise of the oldest Modelo 341 revision, which still prints the paper form."""
+_ELECTRONIC_YEAR = filing_year_envelope().horizon
+"""An exercise of the open-ended revision, which is filed electronically."""
 
-@pytest.mark.parametrize("year", [2015, 2026])
+
+@pytest.mark.parametrize("year", [_PAPER_YEAR, _ELECTRONIC_YEAR])
 def test_compiled_compensation_example_has_live_rows_and_refund_mirror(year: int) -> None:
     source, plan = build_agricultural_compensation_plan(year=year)
     inputs = {
@@ -37,7 +45,7 @@ def test_compiled_compensation_example_has_live_rows_and_refund_mirror(year: int
     text = "\n".join(str(cell.value) for cell in plan.value_cells)
     assert "12345678Z" in text and "00000000T" not in text
     assert source.template_digest not in text
-    if year == 2015:
+    if year == _PAPER_YEAR:
         assert inputs["papel-domicilio-codigo-postal"].value == "08001"
         assert inputs["papel-firma"].value is None
         assert inputs["wire.codigo-cuenta-cliente"].value is None

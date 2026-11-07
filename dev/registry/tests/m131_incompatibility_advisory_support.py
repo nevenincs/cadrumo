@@ -7,6 +7,7 @@ from functools import cache
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 
 from ..maintenance_support import load_modelo_path
@@ -25,8 +26,17 @@ def taxpayer_profile() -> TaxpayerProfile:
 
 @cache
 def m131_2025_revision() -> ModeloRevision:
+    """The newest Modelo 131 revision that governs one whole calendar year and nothing beyond it."""
+    whole_year = tuple(
+        revision
+        for revision in authored_revisions("131")
+        if revision.valid_to is not None
+        and (revision.valid_from.month, revision.valid_from.day) == (1, 1)
+        and (revision.valid_to.month, revision.valid_to.day) == (12, 31)
+        and revision.valid_from.year == revision.valid_to.year
+    )
     modelo = load_modelo_path(bundled_path("registry", "aeat", "modelos", "131"))
-    return modelo.revisions["2025"]
+    return modelo.revisions[str(whole_year[-1].id)]
 
 
 def predicate_by_id(predicate_id: str) -> VerificationPredicateDefinition:

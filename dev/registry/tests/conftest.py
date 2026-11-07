@@ -9,6 +9,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_editions
 from cadrumo.domain.calculations.registry.tests.formula_runtime_support import (
     committed_modelo_130_snapshot as formula_runtime_modelo_130_snapshot,
 )
@@ -101,17 +102,22 @@ def committed_modelo_180_snapshot(
 def m100_2024_snapshot(
     registry_snapshot: Callable[..., RegistrySnapshot],
 ) -> RegistrySnapshot:
-    """M100/2024 at calculation grade.
+    """M100 at its second-newest authored edition, at calculation grade.
 
     These tests assert settlement-chain arithmetic, never filing eligibility,
     so they must not fail on the revision-review, filing-capability or
     legal-review attestation gates.
     """
-    return registry_snapshot("100", 2024, "0A", grade=RegistryAuthorityGrade.CALCULATION)
+    return registry_snapshot(
+        "100", newest_authored_editions("100", 2)[0], "0A", grade=RegistryAuthorityGrade.CALCULATION
+    )
 
 
 @pytest.fixture
 def m100_2025_snapshot(
     registry_snapshot: Callable[..., RegistrySnapshot],
 ) -> RegistrySnapshot:
-    return registry_snapshot("100", 2025, "0A", grade=RegistryAuthorityGrade.CALCULATION)
+    """M100 at its newest authored edition, at calculation grade."""
+    return registry_snapshot(
+        "100", newest_authored_editions("100", 2)[1], "0A", grade=RegistryAuthorityGrade.CALCULATION
+    )
