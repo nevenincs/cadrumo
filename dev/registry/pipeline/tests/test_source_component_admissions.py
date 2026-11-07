@@ -6,8 +6,11 @@ import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ...compiler.authority import compiled_bundled_authority
+from ...tests.authored_edition_support import authored_revisions as compiled_revisions
+from ...tests.authored_edition_support import authored_revisions_where
 from ..generated_export_inheritance_model import GeneratedExportInheritance, GeneratedExportInheritanceContext
 from ..joined_record_design import design_view
 from ..render_check import revision_render_inputs
@@ -19,12 +22,21 @@ from ..source_text_date_components import text_date_component_policy_for
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+def _first_generated_revision(modelo: str) -> str:
+    """Return the oldest revision of one modelo that carries a generated export layout."""
+    return str(authored_revisions_where(modelo, lambda revision: bool(revision.export_layouts))[0].id)
+
+
+_OLDEST_190 = _first_generated_revision("190")
+_OLDEST_165 = _first_generated_revision("165")
+
+
 @pytest.mark.parametrize(
     ("modelo", "revision", "resolver", "expected"),
     [
-        ("190", "2022", signed_component_policy_for, ExportValuePolicy.SIGNED_COMPONENT_SIGN),
-        ("165", "2016-2022", signed_triple_policy_for, ExportValuePolicy.SIGNED_COMPONENT_SIGN),
-        ("165", "2016-2022", text_date_component_policy_for, ExportValuePolicy.YYYYMMDD_TEXT_YEAR),
+        ("190", _OLDEST_190, signed_component_policy_for, ExportValuePolicy.SIGNED_COMPONENT_SIGN),
+        ("165", _OLDEST_165, signed_triple_policy_for, ExportValuePolicy.SIGNED_COMPONENT_SIGN),
+        ("165", _OLDEST_165, text_date_component_policy_for, ExportValuePolicy.YYYYMMDD_TEXT_YEAR),
     ],
 )
 def test_reviewed_component_admissions_refuse_reissued_source_bytes(modelo, revision, resolver, expected) -> None:
@@ -45,7 +57,8 @@ def test_reviewed_component_admissions_refuse_reissued_source_bytes(modelo, revi
 
 
 def test_source_stated_year_is_not_a_literal_year_or_an_unpinned_constant() -> None:
-    inputs = revision_render_inputs(compiled_bundled_authority(), modelo="131", revision="2026")
+    revision = open_ended_revision("131")
+    inputs = revision_render_inputs(compiled_bundled_authority(), modelo="131", revision=str(revision.id))
     source = inputs.joined.source
     fields = [field.parser_field for field in inputs.joined.fields if field.parser_field.source_cell == "A15"]
     matches = [
@@ -63,12 +76,13 @@ def test_source_stated_year_is_not_a_literal_year_or_an_unpinned_constant() -> N
         source_stated_year_constant_for(
             source_ref=str(source.source_ref),
             source_sha256=source.source_sha256,
-            field=matches[0].model_copy(update={"content": "2026"}),
+            field=matches[0].model_copy(update={"content": str(revision.valid_from.year)}),
         )
 
 
 def test_inheritance_context_preserves_every_ancestor_pin_in_storage_order() -> None:
-    layout = compiled_bundled_authority().modelo("303").revisions["2025"].export_layouts[0]
+    older_revision, newer_revision = compiled_revisions("303")[-2:]
+    layout = newer_revision.export_layouts[0]
 
     def pin(revision: str, digest: str) -> GeneratedExportInheritance:
         return GeneratedExportInheritance(
@@ -80,8 +94,8 @@ def test_inheritance_context_preserves_every_ancestor_pin_in_storage_order() -> 
             baseline_source_sha256="d" * 64,
         )
 
-    older = GeneratedExportInheritanceContext(pin("2024", "a"), layout)
-    newer = GeneratedExportInheritanceContext(pin("2025", "e"), layout, older)
-    assert newer.pinned_ancestors == (("2024", "a" * 64), ("2025", "e" * 64))
+    older = GeneratedExportInheritanceContext(pin(str(older_revision.id), "a"), layout)
+    newer = GeneratedExportInheritanceContext(pin(str(newer_revision.id), "e"), layout, older)
+    assert newer.pinned_ancestors == ((str(older_revision.id), "a" * 64), (str(newer_revision.id), "e" * 64))
     with pytest.raises(ValueError, match="baseline_revision_sha256"):
-        pin("2024", "invalid")
+        pin(str(older_revision.id), "invalid")

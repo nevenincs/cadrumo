@@ -34,6 +34,7 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_
 from cadrumo.domain.calculations.registry.fixed_width_parser import parse_fixed_width_export_field
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.filing.schema import ModeloDraft
 
 from ...compiler.authority import compiled_bundled_authority
@@ -46,14 +47,22 @@ from ..render_profile_authority import validate_signed_composite_source_agreemen
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 
+def _filing_year() -> int:
+    return filing_year_envelope().horizon
+
+
+def _revision_id() -> str:
+    return str(revision_covering("720", _filing_year()).id)
+
+
 @pytest.fixture(scope="module")
 def inputs() -> RevisionRenderInputs:
     return revision_render_inputs(
         compiled_bundled_authority(),
         modelo="720",
-        revision="2013-y-siguientes",
+        revision=_revision_id(),
         source_ref="aeat-dr-720",
-        filing_year=2024,
+        filing_year=_filing_year(),
         period="0A",
         source_root=bundled_path(),
     )
@@ -61,7 +70,7 @@ def inputs() -> RevisionRenderInputs:
 
 def _public_record_context() -> tuple[ModeloDraft, FilingProducerSnapshot]:
     authority = compiled_bundled_authority()
-    period = Period.from_year_and_code(2024, "0A")
+    period = Period.from_year_and_code(_filing_year(), "0A")
     with validating_governed_facts(authority):
         draft = build_draft(
             modelo="720",
@@ -69,12 +78,12 @@ def _public_record_context() -> tuple[ModeloDraft, FilingProducerSnapshot]:
             profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="PERSONA PRUEBA"),
             inputs={
                 "modelo-720.type_1.telefono-contacto": "012345678",
-                "modelo-720.type_2.fecha-de-incorporacion": date(2024, 2, 29),
+                "modelo-720.type_2.fecha-de-incorporacion": date(_filing_year(), 2, 28),
                 "modelo-720.type_2.numero-de-valores": Decimal("12.34"),
                 "modelo-720.type_2.porcentaje-de-participacion": Decimal("25.50"),
             },
             schema_provider=schema_provider_from_authority(
-                authority, filing_year=2024, period=period, modelos=("720",)
+                authority, filing_year=_filing_year(), period=period, modelos=("720",)
             ),
         )
         producer = build_filing_producer_snapshot(
@@ -140,7 +149,7 @@ def _assert_quantity_percentage_and_date_fields_render_exactly(fields) -> None:
     assert render_fixed_width_export_field(fields["type_2", 476], Decimal("25.50")) == "02550"
     for offset in (415, 424):
         field = fields["type_2", offset]
-        assert render_fixed_width_export_field(field, date(2024, 2, 29)) == "20240229"
+        assert render_fixed_width_export_field(field, date(_filing_year(), 2, 28)) == f"{_filing_year()}0228"
 
 
 def _assert_each_record_renders_exactly_500_positions(rendered) -> None:
@@ -170,7 +179,7 @@ def _assert_each_record_renders_exactly_500_positions(rendered) -> None:
         )
         assert len(wire.encode(record.encoding)) == 500
         assert wire[:4] == {"type_1": "1720", "type_2": "2720"}[record.record_type]
-        assert wire[4:8] == "2024"
+        assert wire[4:8] == str(_filing_year())
         assert wire[8:17] == str(producer.taxpayer_tax_id)
         if record.record_type == "type_1":
             assert wire[17:57] == "PERSONA PRUEBA".ljust(40)
@@ -254,7 +263,7 @@ def test_each_source_amount_and_numeric_anchor_requires_explicit_review(inputs: 
 
 
 def test_reviewed_binding_channels_preserve_source_units_and_distinct_contact_facts() -> None:
-    revision = compiled_bundled_authority().modelo("720").revisions["2013-y-siguientes"]
+    revision = compiled_bundled_authority().modelo("720").revisions[_revision_id()]
     by_id = {str(binding.id): binding for binding in revision.bindings}
     assert "modelo-720.type_1.persona-con-quien-relacionarse" not in by_id
     for field in (
@@ -290,7 +299,7 @@ def test_quantity_parts_reconcile_only_as_the_complete_declared_decimal_span(
         render_profile=inputs.render_profile,
         render_profile_source_evidence=inputs.render_profile_source_evidence,
     )
-    revision = compiled_bundled_authority().modelo("720").revisions["2013-y-siguientes"]
+    revision = compiled_bundled_authority().modelo("720").revisions[_revision_id()]
     spans = binding_export_spans(revision)
     record = next(record for record in rendered.layout.records if record.record_type == "type_2")
     whole = next(field for field in record.fields if field.offset == 463)

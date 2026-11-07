@@ -8,6 +8,7 @@ import pytest
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 
 from ...compiler.loader import load_modelo_directory, load_shared_catalogues
 from ..export_tree import render_complete_export_tree
@@ -19,20 +20,21 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 @pytest.fixture(scope="module")
 def rendered(tmp_path_factory: pytest.TempPathFactory) -> ExportLayoutDefinition:
     root = Path("src/cadrumo/_data")
+    revision = str(open_ended_revision("156").id)
     inputs = build_revision_render_inputs(
         load_modelo_directory(root / "registry/aeat/modelos/156"),
         load_shared_catalogues(root / "registry/aeat"),
         modelo="156",
-        revision="2003-y-siguientes",
+        revision=revision,
         source_ref="enrolled-modelo-156-layout",
         bootstrap_transport=None,
-        filing_year=2025,
+        filing_year=filing_year_envelope().horizon,
         period="0A",
         source_root=root,
     )
     return render_complete_export_tree(
         tmp_path_factory.mktemp("modelo156-months") / "export",
-        revision_id="2003-y-siguientes",
+        revision_id=revision,
         joined=inputs.joined,
         semantic_map=inputs.semantic_map,
         transport_profile=inputs.transport_profile,
