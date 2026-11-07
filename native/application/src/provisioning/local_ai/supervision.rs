@@ -1,13 +1,16 @@
 //! Supervision of the one local AI server: the runtime manager's part of the local AI.
 //!
-//! While the program is set up, meaning its pinned version is active and intact, the
-//! supervisor keeps a server running from it on the installation's fixed address. A
-//! server that ends without being asked to, or fails to start, is started again after a
-//! backoff that doubles up to a ceiling, until too many restarts fall inside one window
-//! and supervision fails until a retry. A program change an engine asks for through the
+//! The supervisor runs the server of one [`Supervised`] program: the Ollama program the
+//! engine installs, or the llama-server the package carries. While that program is set
+//! up, the supervisor keeps a server running from it on its fixed address. A server that
+//! ends without being asked to, or fails to start, is started again after a backoff that
+//! doubles up to a ceiling, until too many restarts fall inside one window and
+//! supervision fails until a retry. A program change an engine asks for through the
 //! [`lease`](super::lease) stops the server and holds every start off until the change is
-//! over. The owner stops the server on exit and at session end, and nothing is started
-//! again until it resumes supervision.
+//! over. A server whose program asks for a fresh start, as llama-server does once the
+//! models in the store have changed, is stopped and started again at once, outside the
+//! restart count. The owner stops the server on exit and at session end, and nothing is
+//! started again until it resumes supervision.
 //!
 //! The supervisor never blocks: the owner calls [`ServerSupervisor::poll`] at its own pace
 //! and at [`ServerSupervisor::next_due`], and each call looks once and acts once. Time is
@@ -15,7 +18,7 @@
 
 use super::{
     LocalAiError,
-    program::{Containment, Program},
+    program::{Containment, Program, Server},
 };
 use crate::{
     error::Error,
@@ -66,7 +69,7 @@ impl RestartPolicy {
 /// Where supervision stands after a poll.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ServerState {
-    /// The pinned program is not active and intact, so no server is run.
+    /// The program is not set up, so no server is run.
     NotSetUp,
     /// An engine changes the program or asks to; no server runs until it is done.
     Held,
@@ -86,30 +89,108 @@ pub enum ServerState {
     ProxyRefused,
 }
 
-/// The active pointer's file facts, which change whenever a version is activated or
-/// removed: a program found not set up is looked at again only once they change.
-type PointerStamp = Option<(SystemTime, u64)>;
+/// File facts that change whenever a program is set up or removed: a program found not
+/// set up is looked at again only once they change.
+pub type SetUpStamp = Option<(SystemTime, u64)>;
 
 /// Reads the owner's environment by name.
 pub type Environment = Box<dyn Fn(&str) -> Option<OsString> + Send>;
 
-/// Runs the local AI server for its owner.
-pub struct ServerSupervisor {
-    program: Program,
+/// A program whose server the supervisor runs.
+pub trait Supervised {
+    /// Whether the program is ready to run a server from, read from files alone.
+    fn is_set_up(&self) -> bool;
+
+    /// The facts [`Self::is_set_up`] depends on, so a program not set up is read again
+    /// only once they change.
+    fn set_up_stamp(&self) -> SetUpStamp;
+
+    /// The server this program started, when it has one.
+    fn running_mut(&mut self) -> Option<&mut Server>;
+
+    /// Whether an engine changes the program or asks to.
+    fn change_requested(&self) -> bool;
+
+    /// Whether the running server should be started again now to serve what it was not
+    /// started with. It is asked only while the server runs.
+    fn restart_due(&mut self) -> bool {
+        false
+    }
+
+    /// Whether the server fetches anything through the operator's proxy, so a proxy
+    /// setting the engine cannot use must keep it from running.
+    fn uses_proxy(&self) -> bool;
+
+    /// Starts the server on `address`, contained by `containment`, unless one runs.
+    /// `Busy` while an engine changes the program or asks to, or another server holds
+    /// the lease. `ambient` reads the supervisor's own environment for the operating
+    /// system settings the server is given.
+    fn serve(
+        &mut self,
+        address: SocketAddr,
+        containment: &dyn Containment,
+        ambient: &dyn Fn(&str) -> Option<OsString>,
+        proxy: Option<&ProxySettings>,
+    ) -> Result<(), LocalAiError>;
+
+    /// Stops the server this program started, if any.
+    fn halt(&mut self);
+}
+
+impl Supervised for Program {
+    fn is_set_up(&self) -> bool {
+        self.observe_quick() == Observation::Present
+    }
+
+    fn set_up_stamp(&self) -> SetUpStamp {
+        let metadata = fs::symlink_metadata(self.locations().programs.join("active.json")).ok()?;
+        Some((metadata.modified().ok()?, metadata.len()))
+    }
+
+    fn running_mut(&mut self) -> Option<&mut Server> {
+        self.server_mut()
+    }
+
+    fn change_requested(&self) -> bool {
+        self.leases().change_requested().unwrap_or(false)
+    }
+
+    fn uses_proxy(&self) -> bool {
+        true
+    }
+
+    fn serve(
+        &mut self,
+        address: SocketAddr,
+        containment: &dyn Containment,
+        ambient: &dyn Fn(&str) -> Option<OsString>,
+        proxy: Option<&ProxySettings>,
+    ) -> Result<(), LocalAiError> {
+        self.start(address, containment, ambient, proxy).map(|_| ())
+    }
+
+    fn halt(&mut self) {
+        self.stop();
+    }
+}
+
+/// Runs the local AI server of `P` for its owner.
+pub struct ServerSupervisor<P: Supervised = Program> {
+    program: P,
     address: SocketAddr,
     containment: Box<dyn Containment + Send>,
     environment: Environment,
     policy: RestartPolicy,
     restarts: VecDeque<Instant>,
     state: ServerState,
-    not_set_up: Option<PointerStamp>,
+    not_set_up: Option<SetUpStamp>,
     proxy: Option<ProxySettings>,
     proxy_refused: bool,
     /// Why the latest start failed, until a start succeeds; for logs and tests.
     last_start_failure: Option<LocalAiError>,
 }
 
-impl ServerSupervisor {
+impl<P: Supervised> ServerSupervisor<P> {
     /// Supervises `program`'s server on `address`, a loopback address, contained by
     /// `containment`. `environment` reads the owner's environment: the operating system
     /// settings the server is given, and the operator's proxy for the models it
@@ -119,9 +200,9 @@ impl ServerSupervisor {
     /// and cannot be changed from outside it, so this is the setting for the whole of
     /// this supervisor's life: a setting the operator changes afterwards reaches the
     /// server at the next start of the owner. A setting the engine cannot use runs no
-    /// server at all.
+    /// server at all from a program that fetches through it.
     pub fn new(
-        program: Program,
+        program: P,
         address: SocketAddr,
         containment: Box<dyn Containment + Send>,
         environment: Environment,
@@ -172,7 +253,7 @@ impl ServerSupervisor {
         self.last_start_failure.as_ref()
     }
 
-    pub fn program(&self) -> &Program {
+    pub fn program(&self) -> &P {
         &self.program
     }
 
@@ -184,51 +265,56 @@ impl ServerSupervisor {
         }
     }
 
-    /// Looks once and acts once: notices an ended server, a requested program change or
-    /// a newly set-up program, and starts, stops or schedules accordingly.
+    /// Looks once and acts once: notices an ended server, a requested program change, a
+    /// server its program wants started again, or a newly set-up program, and starts,
+    /// stops or schedules accordingly.
     pub fn poll(&mut self, now: Instant) -> ServerState {
         match self.state {
             ServerState::Stopped | ServerState::Failed => return self.state,
             ServerState::Restarting { at } if now < at => return self.state,
             _ => {}
         }
-        if self.proxy_refused {
-            self.program.stop();
+        if self.proxy_refused && self.program.uses_proxy() {
+            self.program.halt();
             self.state = ServerState::ProxyRefused;
             return self.state;
         }
-        if let Some(server) = self.program.server_mut() {
+        if let Some(server) = self.program.running_mut() {
             if server.exited() {
                 // Reaps it, removes its record and gives the lease up.
-                self.program.stop();
+                self.program.halt();
                 return self.failed_start(now);
             }
-            if self.program.leases().change_requested().unwrap_or(false) {
-                self.program.stop();
+            if self.program.change_requested() {
+                self.program.halt();
                 self.state = ServerState::Held;
-            } else {
-                self.state = ServerState::Running;
+                return self.state;
             }
-            return self.state;
+            if !self.program.restart_due() {
+                self.state = ServerState::Running;
+                return self.state;
+            }
+            // Started again below, at once and outside the restart count: nothing failed.
+            self.program.halt();
         }
-        let stamp = self.pointer_stamp();
+        let stamp = self.program.set_up_stamp();
         if self.not_set_up == Some(stamp) && self.state == ServerState::NotSetUp {
             return self.state;
         }
-        if self.program.observe_quick() != Observation::Present {
+        if !self.program.is_set_up() {
             self.not_set_up = Some(stamp);
             self.state = ServerState::NotSetUp;
             return self.state;
         }
         self.not_set_up = None;
-        let started = self.program.start(
+        let started = self.program.serve(
             self.address,
             self.containment.as_ref(),
             self.environment.as_ref(),
             self.proxy.as_ref(),
         );
         match started {
-            Ok(_) => {
+            Ok(()) => {
                 self.last_start_failure = None;
                 self.state = ServerState::Running;
             }
@@ -259,16 +345,10 @@ impl ServerSupervisor {
         self.state
     }
 
-    fn pointer_stamp(&self) -> PointerStamp {
-        let metadata =
-            fs::symlink_metadata(self.program.locations().programs.join("active.json")).ok()?;
-        Some((metadata.modified().ok()?, metadata.len()))
-    }
-
     /// Stops the server and starts nothing until [`Self::resume`]: the owner exits, or
     /// its session ends.
     pub fn stop(&mut self) {
-        self.program.stop();
+        self.program.halt();
         self.state = ServerState::Stopped;
     }
 
@@ -292,14 +372,14 @@ impl ServerSupervisor {
 
     /// The supervised program, for a test to reach its server.
     #[cfg(test)]
-    pub(crate) fn program_mut(&mut self) -> &mut Program {
+    pub(crate) fn program_mut(&mut self) -> &mut P {
         &mut self.program
     }
 }
 
-impl Drop for ServerSupervisor {
+impl<P: Supervised> Drop for ServerSupervisor<P> {
     fn drop(&mut self) {
-        self.program.stop();
+        self.program.halt();
     }
 }
 

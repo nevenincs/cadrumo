@@ -5,7 +5,7 @@ tags:
 date: '2026-11-07'
 modified: '2026-11-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:fb99d08ccc38249fc664304c84a6a17a60e2b3a9d36c86c51f9f490b5df814ec'
+body_hash: 'sha256:2e381bce86f5d10791557d3c73d4df35d1db6055542c6d70674764d21d1f6e89'
 related:
   - "[[2026-11-07-local-inference-engine-plan]]"
 ---
@@ -111,6 +111,24 @@ related:
 - `S13` `verify:` `ctest --preset debug -R application.(rust|fmt|clippy|features.clippy)` -> `pass`
 - `S15` `verify:` `ctest --preset debug -R application.(rust|fmt|clippy|features.clippy)` -> `pass`
 - `S11` `verify:` `pytest S11 packaging focus (156)` -> `pass`
+- `S17` `M` `dev/packaging/native/environment_components.py`
+- `S17` `M` `dev/packaging/native/generate.py`
+- `S17` `M` `dev/packaging/native/tests/test_application_environment.py`
+- `S17` `M` `dev/packaging/native/tests/test_generator_imports.py`
+- `S17` `M` `dev/packaging/tests/test_native_local_ai_address.py`
+- `S17` `M` `native/application-environment.toml`
+- `S17` `M` `native/application/src/provisioning/local_ai/mod.rs`
+- `S17` `M` `native/application/src/provisioning/local_ai/program.rs`
+- `S17` `M` `native/application/src/provisioning/local_ai/program/tests.rs`
+- `S17` `M` `native/application/src/provisioning/local_ai/supervision.rs`
+- `S17` `M` `native/application/src/provisioning/pins.rs`
+- `S17` `M` `native/cmake/Contract.cmake`
+- `S17` `M` `native/manager/src/background.rs`
+- `S17` `M` `native/manager/src/supervision/local_ai.rs`
+- `S17` `A` `native/application/src/provisioning/local_ai/llama_server.rs`
+- `S17` `A` `native/application/src/provisioning/local_ai/llama_server/tests.rs`
+- `S17` `verify:` `pytest dev/packaging/native/tests dev/packaging/tests/test_native_local_ai_address.py` -> `pass`
+- `S17` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -130,6 +148,7 @@ related:
 - `S11` Pending in the root build slot: CMake configure resolves the redistributable, then bundle build and test-native-bundle
 - `S15` cargo test and clippy for native/application are pending the root build slot; not run in the worktree
 - `S11` configure, bundle and test-native-bundle owed in the DESKTOP proving cycle; Step stays open until it passes
+- `S17` Rust not compiled under root quiet; cargo check, clippy and test owed in a root slot. 12 pytest errors are environmental: no published authority in the worktree.
 
 ## Notes
 

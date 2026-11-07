@@ -613,6 +613,7 @@ fn spawn_through(
     };
     failure(
         Server::spawn(
+            LocalEngine::Ollama,
             command,
             "9.8.7",
             directory.join(SERVER_RECORD),

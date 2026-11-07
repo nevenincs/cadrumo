@@ -2,10 +2,13 @@
 //! archive, the one server run from it on the installation's fixed loopback address, and
 //! the model the person selected for each local role, pulled through that server.
 //!
-//! `program` installs, checks, starts, stops and removes the program, records where it
-//! is, and reports a copy installed outside Cadrumo without touching it. `supervision`
-//! is the runtime manager's part: it keeps the server running while the program is set
-//! up. `lease` keeps that server and a change of the program apart across processes.
+//! Two engines can serve the local models, and [`LocalEngine`] names them. `program`
+//! installs, checks, starts, stops and removes the Ollama program, records where it is,
+//! and reports a copy installed outside Cadrumo without touching it. `llama_server` runs
+//! the llama-server the package carries, which nothing installs. `supervision` is the
+//! runtime manager's part: it keeps the selected engine's server running while its
+//! program is set up. `lease` keeps that server and a change of the program apart across
+//! processes.
 //! `models` pulls and checks each selected model through the running server.
 //! `registry` fetches a model from its registry into the models folder without one, and
 //! `huggingface` fetches a model's declared files from Hugging Face into the same store.
@@ -16,6 +19,7 @@
 pub mod hardware;
 pub mod huggingface;
 pub mod lease;
+pub mod llama_server;
 pub mod loopback;
 pub mod models;
 pub mod program;
@@ -34,6 +38,18 @@ use super::{
 use crate::error::Error;
 use loopback::{ExchangeFailure, ExchangePhase};
 use std::{fmt, io, process::ExitStatus, time::Duration};
+
+/// The engine that serves the local models, and so the one local AI server the runtime
+/// manager runs. Ollama stays the default until the bundled llama-server has passed its
+/// packaged acceptance.
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
+pub enum LocalEngine {
+    /// The Ollama program the engine downloads on the person's approval.
+    #[default]
+    Ollama,
+    /// The llama-server program the package carries.
+    LlamaCpp,
+}
 
 /// The local AI's one reading from its program's observation and version and each selected
 /// model's observation, the worst of them deciding.
@@ -154,15 +170,17 @@ pub enum StartFailureKind {
     LogUnreadable,
     Closed,
     Silent,
+    NotReady,
     VersionUnconfirmed,
 }
 
 impl StartFailureKind {
-    const ALL: [Self; 5] = [
+    const ALL: [Self; 6] = [
         Self::Launch,
         Self::LogUnreadable,
         Self::Closed,
         Self::Silent,
+        Self::NotReady,
         Self::VersionUnconfirmed,
     ];
 
@@ -173,6 +191,7 @@ impl StartFailureKind {
             Self::LogUnreadable => "server_log_unreadable",
             Self::Closed => "server_closed_before_listening",
             Self::Silent => "server_start_budget_expired",
+            Self::NotReady => "server_not_ready",
             Self::VersionUnconfirmed => "server_version_unconfirmed",
         }
     }
@@ -191,6 +210,7 @@ impl ServerStartFailure {
             Self::LogUnreadable => StartFailureKind::LogUnreadable,
             Self::Closed { .. } => StartFailureKind::Closed,
             Self::Silent { .. } => StartFailureKind::Silent,
+            Self::NotReady { .. } => StartFailureKind::NotReady,
             Self::Version(_) => StartFailureKind::VersionUnconfirmed,
         }
     }
@@ -213,6 +233,13 @@ pub enum ServerStartFailure {
     Closed { exit: Option<ExitStatus> },
     /// The program announced nothing within the start budget.
     Silent { budget: Duration },
+    /// The program announced that it listens and did not answer ready within the start
+    /// budget. The status is its latest answer to the readiness question, absent when it
+    /// never answered one.
+    NotReady {
+        budget: Duration,
+        status: Option<u16>,
+    },
     /// The program announced it listens and was then asked its version.
     Version(VersionFailure),
 }
@@ -255,6 +282,22 @@ impl fmt::Display for ServerStartFailure {
             Self::Silent { budget } => write!(
                 f,
                 "it announced nothing within the {}s start budget",
+                budget.as_secs()
+            ),
+            Self::NotReady {
+                budget,
+                status: Some(status),
+            } => write!(
+                f,
+                "it was not ready within the {}s start budget (status {status})",
+                budget.as_secs()
+            ),
+            Self::NotReady {
+                budget,
+                status: None,
+            } => write!(
+                f,
+                "it did not answer ready within the {}s start budget",
                 budget.as_secs()
             ),
             Self::Version(failure) => write!(f, "its version could not be confirmed: {failure}"),

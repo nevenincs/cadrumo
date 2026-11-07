@@ -10,6 +10,8 @@ from typing import Any, TypedDict
 
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
+from dev.env.llamacpp_pins import PINS_PATH, load_server_pins
+from dev.paths import REPO_ROOT
 
 from . import application_environment, environment_compile
 from .build_directory import require_enrolled_output
@@ -216,6 +218,12 @@ def _rust_root_vectors(vectors: list[dict[str, Any]]) -> list[str]:
     return lines
 
 
+def _llama_server_build(root: Path) -> str:
+    """Return the build tag the llama-server ``root`` pins is, which the running server must report."""
+    pins = (root / PINS_PATH.relative_to(REPO_ROOT)).read_text(encoding="utf-8")
+    return load_server_pins(pins).tag
+
+
 def _entrypoint_names(layout: dict[str, object]) -> list[str]:
     entrypoints = [
         Path(relative).name for relative in (*entrypoint_files(layout).values(), *bundled_image_files(layout).values())
@@ -364,6 +372,8 @@ def generate(
             f"pub const MANAGER_LANGUAGE_ENV: &str = {rust_string(components['language_variable'])};",
             f"pub const MANAGER_LANGUAGE_DEFAULT: &str = {rust_string(components['language_default'])};",
             f"pub const LOCAL_AI_ADDRESS: &str = {rust_string(components['local_ai_address'])};",
+            f"pub const LLAMA_SERVER_ADDRESS: &str = {rust_string(components['llama_server_address'])};",
+            f"pub const LLAMA_SERVER_BUILD: &str = {rust_string(_llama_server_build(root))};",
             "pub const MANAGER_STRINGS_JSON: &str = "
             f"{rust_string(json.dumps(load_manager_strings(manager_strings), ensure_ascii=False, sort_keys=True))};",
             f"pub const LOG_MAX_BYTES: u64 = {contract['desktop_defaults']['log_max_bytes']};",
