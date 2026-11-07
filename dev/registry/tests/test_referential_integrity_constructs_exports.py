@@ -31,6 +31,7 @@ from cadrumo.domain.calculations.registry.schema_revision_members import (
 from ..compiler.validator import RegistryValidator
 from .profile_schema_support import load_user_profile_schema
 from .referential_integrity_support import (
+    FIXTURE_EDITION_YEAR,
     NUMERIC_CASILLA_01,
     PARITY_SOURCE_ID,
     REFERENCE_LEGAL_ID,
@@ -121,11 +122,11 @@ def test_snapshot_integrity_rejects_dangling_legal_refs_on_revision_surfaces() -
     )
     window = DeadlineWindowDefinition(
         id="dw.test",
-        filing_year=2024,
-        period=Period.from_year_and_code(2024, "0A"),
+        filing_year=FIXTURE_EDITION_YEAR,
+        period=Period.from_year_and_code(FIXTURE_EDITION_YEAR, "0A"),
         period_kind="annual",
-        opens_on=date(2024, 1, 1),
-        closes_on=date(2024, 6, 30),
+        opens_on=date(FIXTURE_EDITION_YEAR, 1, 1),
+        closes_on=date(FIXTURE_EDITION_YEAR, 6, 30),
         legal_refs=(REFERENCE_LEGAL_ID, _MISSING_LEGAL_ID),
         source_refs=(REFERENCE_SOURCE_ID,),
     )

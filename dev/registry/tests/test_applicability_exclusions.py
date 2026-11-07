@@ -33,6 +33,7 @@ from cadrumo.domain.calculations.registry.schema_revision_members import (
     ApplicabilityExclusionDefinition,
     ApplicabilityRuleDefinition,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from cadrumo.domain.calculations.registry.third_party_declaration_roles import require_third_party_declaration_role
 from cadrumo.domain.contribuyente.entity_type import require_entity_type, require_legal_entity_form
@@ -44,7 +45,7 @@ from .referential_integrity_support import REFERENCE_LEGAL_ID, minimal_legal_ref
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
-_TODAY = date(2026, 10, 3)
+_TODAY = date(filing_year_envelope().horizon, 10, 3)
 _ART_31 = "rd-1065-2007:art-31"
 _ART_32 = "rd-1065-2007:art-32"
 _RIVA_62 = "rd-1624-1992:art-62"

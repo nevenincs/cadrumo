@@ -11,6 +11,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_formula import KeyedBracketEntry
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.authority import compile_validated_authority
 from ..compiler.loader import load_registry_tree
@@ -38,7 +39,7 @@ _NUMERIC_CASILLA_01 = validated_casilla_id("01", surface="registry_schema_suppor
 
 
 def _keyed_bracket(key: str, rate: str) -> KeyedBracketEntry:
-    return KeyedBracketEntry(key=key, value=rate, valid_from=date(2025, 1, 1))
+    return KeyedBracketEntry(key=key, value=rate, valid_from=date(filing_year_envelope().horizon, 1, 1))
 
 
 def _as_communication_revision(revision):

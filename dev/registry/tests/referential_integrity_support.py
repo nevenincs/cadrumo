@@ -56,6 +56,7 @@ from cadrumo.domain.calculations.registry.schema_verification import (
     VerificationExpectationDefinition,
     WorkbookParityReference,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot_for_validated_modelo
 
@@ -67,6 +68,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 __all__ = [
     "EXTRA_LEGAL_ID",
     "EXTRA_SOURCE_ID",
+    "FIXTURE_EDITION_YEAR",
     "NUMERIC_CASILLA_01",
     "NUMERIC_CASILLA_02",
     "PARITY_SOURCE_ID",
@@ -108,6 +110,12 @@ __all__ = [
 ]
 
 PRIOR_REVISION_ID = "test-prior-revision"
+
+FIXTURE_EDITION_YEAR = filing_year_envelope().floor + 2
+"""The exercise the fixture revision opens in: two above the floor, so a supported predecessor sits below it."""
+
+PRIOR_EDITION_YEAR = FIXTURE_EDITION_YEAR - 1
+"""The exercise of the closed edition ``_prior_edition`` derives."""
 EXTRA_LEGAL_ID = "ley-35-2006:art-9998"
 EXTRA_SOURCE_ID = "aeat-extra-source"
 PARITY_SOURCE_ID = "aeat-open-parity-source"
@@ -181,9 +189,9 @@ def _minimal_legal_ref() -> LegalReference:
         corpus_ref="boe/lirpf#art-1",
         document_id="BOE-A-2006-20764",
         permalink="https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
-        effective_from=date(2006, 11, 30),
+        effective_from=date(FIXTURE_EDITION_YEAR - 18, 11, 30),
         review_status="operator_reviewed",
-        reviewed_at=date(2026, 7, 1),
+        reviewed_at=date(filing_year_envelope().horizon, 7, 1),
         reviewed_by="codex test fixture",
         required_text=("art-1",),
     )
@@ -198,7 +206,7 @@ def _minimal_source_ref() -> SourceReference:
         corpus_path="registry/aeat/sources/aeat-dr-130-2019-v12.pdf",
         sha256="a" * 64,
         bytes=1024,
-        retrieved_at=date(2024, 1, 1),
+        retrieved_at=date(FIXTURE_EDITION_YEAR, 1, 1),
         source_url=f"{Settings.external_constants().aeat.domains.legacy_www}/",
         review_status="pending_review",
     )
@@ -313,7 +321,7 @@ def _minimal_revision(
         # first, so the assertions the tests exist for never run.
         review_status="agent_reviewed",
         reviewed_by="codex test fixture",
-        reviewed_at=date(2026, 7, 1),
+        reviewed_at=date(filing_year_envelope().horizon, 7, 1),
         # Same reasoning one rung further: an undeclared authority_grade is itself
         # a refusal now, and it lands before the referential assertions too. These
         # fixtures are built to carry casilla and binding REFERENCES, not to
@@ -321,8 +329,8 @@ def _minimal_revision(
         # intended to support rather than a reading of what they contain.
         authority_grade="applicability",
         localization_key="test.schema.revision.test-revision.label",
-        valid_from=date(2024, 1, 1),
-        period_selector=PeriodSelector(year_from=2024, periods=("0A",)),
+        valid_from=date(FIXTURE_EDITION_YEAR, 1, 1),
+        period_selector=PeriodSelector(year_from=FIXTURE_EDITION_YEAR, periods=("0A",)),
         legal_refs=(_REFERENCE_LEGAL_ID,),
         source_refs=(_REFERENCE_SOURCE_ID,),
         orden_aplicabilidad=(_REFERENCE_LEGAL_ID,),
@@ -350,9 +358,11 @@ def _prior_edition(revision: ModeloRevision) -> ModeloRevision:
         update={
             "id": PRIOR_REVISION_ID,
             "localization_key": f"test.schema.revision.{PRIOR_REVISION_ID}.label",
-            "valid_from": date(2023, 1, 1),
-            "valid_to": date(2023, 12, 31),
-            "period_selector": PeriodSelector(year_from=2023, year_to=2023, periods=("0A",)),
+            "valid_from": date(PRIOR_EDITION_YEAR, 1, 1),
+            "valid_to": date(PRIOR_EDITION_YEAR, 12, 31),
+            "period_selector": PeriodSelector(
+                year_from=PRIOR_EDITION_YEAR, year_to=PRIOR_EDITION_YEAR, periods=("0A",)
+            ),
             "casilla_continuidad_evolutions": (),
         },
     )

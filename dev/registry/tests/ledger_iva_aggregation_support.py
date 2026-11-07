@@ -51,6 +51,7 @@ from cadrumo.domain.calculations.registry.result_casillas import (
     result_disposition_casilla_ids,
 )
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.calculations.registry.tests.relation_fixture import (
     relation_prefill_values_as_binding_values,
     resolve_relation_values_from_observations,
@@ -70,7 +71,10 @@ from cadrumo.domain.iva.schema import (
 from cadrumo.domain.iva_compensation.filed_derivation import M303CompensationBasis
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-_M303_APP_FILING_CAPTURED_AT = datetime(2027, 1, 20, 9, 0, 0, tzinfo=UTC)
+_FIXTURE_YEAR = filing_year_envelope().horizon - 1
+"""The year the fixture rows are dated in: the latest filing year whose four quarters have closed."""
+
+_M303_APP_FILING_CAPTURED_AT = datetime(_FIXTURE_YEAR + 2, 1, 20, 9, 0, 0, tzinfo=UTC)
 
 
 def ledger_iva_aggregation_deduction_provenance(
@@ -163,7 +167,7 @@ M303_REPERCUTIDO_REDUCIDO_BASE_CASILLA: CasillaId = validated_casilla_id("04")
 @lru_cache(maxsize=1)
 def modelo_303_revision() -> ModeloRevision:
     modelo = compiled_bundled_authority().modelo("303")
-    return modelo.revisions["2022"]
+    return modelo.revisions[str(revision_covering("303", filing_year_envelope().floor).id)]
 
 
 def ledger_iva_aggregation_binding(binding_id: str = "modelo-303-iva-repercutido-general-cuota") -> BindingDefinition:
@@ -199,32 +203,32 @@ def _filing_result_disposition(
 _DOMESTIC_RATE_TIERS: Final[frozenset[str]] = frozenset({"general", "reduced", "super_reduced"})
 
 
-def ledger_iva_aggregation_rate_kind(value: str, *, effective_date: date = date(2025, 6, 15)) -> IvaRateKind:
+def ledger_iva_aggregation_rate_kind(value: str, *, effective_date: date = date(_FIXTURE_YEAR, 6, 15)) -> IvaRateKind:
     """Resolve a fixture token through the same dated governed catalogue as production."""
     return require_iva_rate_kind(value, effective_date=effective_date)
 
 
-def ledger_iva_aggregation_category(value: str, *, effective_date: date = date(2025, 6, 15)) -> IvaCategory:
+def ledger_iva_aggregation_category(value: str, *, effective_date: date = date(_FIXTURE_YEAR, 6, 15)) -> IvaCategory:
     """Resolve a fixture category through the dated governed catalogue."""
     return require_iva_category(value, effective_date=effective_date)
 
 
-def ledger_iva_aggregation_flow(value: str, *, effective_date: date = date(2025, 6, 15)) -> IvaFlowDirection:
+def ledger_iva_aggregation_flow(value: str, *, effective_date: date = date(_FIXTURE_YEAR, 6, 15)) -> IvaFlowDirection:
     """Resolve a fixture flow through the dated governed catalogue."""
     return require_iva_flow_direction(value, effective_date=effective_date)
 
 
-def exemption(value: str, *, effective_date: date = date(2025, 6, 15)) -> IvaExemptionArticle:
+def exemption(value: str, *, effective_date: date = date(_FIXTURE_YEAR, 6, 15)) -> IvaExemptionArticle:
     """Resolve a fixture exemption through the dated governed catalogue."""
     return require_iva_exemption_article(value, effective_date=effective_date)
 
 
-def cash_treatment(value: str, *, effective_date: date = date(2025, 6, 15)) -> IvaCashAccountingTreatment:
+def cash_treatment(value: str, *, effective_date: date = date(_FIXTURE_YEAR, 6, 15)) -> IvaCashAccountingTreatment:
     """Resolve a fixture cash treatment through the dated governed catalogue."""
     return require_iva_cash_accounting_treatment(value, effective_date=effective_date)
 
 
-def deduction_kind(value: str, *, effective_date: date = date(2025, 6, 15)) -> IvaDeductionFactKind:
+def deduction_kind(value: str, *, effective_date: date = date(_FIXTURE_YEAR, 6, 15)) -> IvaDeductionFactKind:
     """Resolve a fixture deduction kind through the dated governed catalogue."""
     return require_iva_deduction_fact_kind(value, effective_date=effective_date)
 
@@ -232,7 +236,7 @@ def deduction_kind(value: str, *, effective_date: date = date(2025, 6, 15)) -> I
 def deduction_authority(
     value: str,
     *,
-    effective_date: date = date(2025, 6, 15),
+    effective_date: date = date(_FIXTURE_YEAR, 6, 15),
 ) -> IvaDeductionEvidenceAuthority:
     """Resolve fixture evidence authority through the dated governed catalogue."""
     return require_iva_deduction_evidence_authority(value, effective_date=effective_date)
@@ -241,7 +245,7 @@ def deduction_authority(
 def ledger_iva_aggregation_observation(
     *,
     ledger_id: str = "ledger-1",
-    txn_date: date = date(2025, 6, 15),
+    txn_date: date = date(_FIXTURE_YEAR, 6, 15),
     category: IvaCategory | None = None,
     exemption_article: IvaExemptionArticle | None = None,
     rate_kind: IvaRateKind | None = None,
