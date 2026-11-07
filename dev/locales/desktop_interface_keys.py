@@ -337,6 +337,7 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = DESKTOP_PROFILE_INTERFACE_KEYS |
         "desktop.agent.condition_credits_exhausted",
         "desktop.agent.condition_invalid_request",
         "desktop.agent.condition_network_unreachable",
+        "desktop.agent.condition_no_answer",
         "desktop.agent.condition_provider_overloaded",
         "desktop.agent.condition_throttled",
         "desktop.agent.condition_unknown",

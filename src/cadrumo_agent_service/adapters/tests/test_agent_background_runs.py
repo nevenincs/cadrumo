@@ -254,6 +254,11 @@ def _reply(**fields: object) -> bytes:
             id="does-not-fit-mid-turn",
         ),
         pytest.param(
+            _reply(provider_condition="no_answer", failure_reason="no_answer"),
+            ModelRunRefusal(code=ModelRunRefusalCode.OUTPUT_INVALID),
+            id="no-answer",
+        ),
+        pytest.param(
             _reply(provider_condition="provider_unavailable"),
             ModelRunRefusal(code=ModelRunRefusalCode.RUN_FAILED),
             id="other-failed-load",

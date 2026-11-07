@@ -34,10 +34,11 @@ const CONDITIONS = {
   credits_exhausted: "desktop.agent.condition_credits_exhausted",
   budget_exhausted: "desktop.agent.condition_budget_exhausted",
   invalid_request: "desktop.agent.condition_invalid_request",
+  no_answer: "desktop.agent.condition_no_answer",
   unknown: "desktop.agent.condition_unknown",
 } as const satisfies Record<AgentProviderCondition, string>;
 
-/** Why a provider failed a run: one of cadrumo-agent's nine conditions. */
+/** Why a provider failed a run: one of cadrumo-agent's ten conditions. */
 export function conditionWords(
   t: Translate,
   condition: AgentProviderCondition,

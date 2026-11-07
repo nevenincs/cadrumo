@@ -53,6 +53,8 @@ desktop:
     condition_credits_exhausted: Out of credits
     condition_invalid_request: The provider rejected the request
     condition_network_unreachable: The provider can't be reached
+    condition_no_answer: The model gave no usable answer for this document. Try a
+      different (instruct) model, or try again.
     condition_provider_overloaded: The provider is overloaded
     condition_throttled: Provider usage limit reached. Check your provider account
       or choose another provider.
@@ -131,6 +133,7 @@ desktop:
     new_conversation: New conversation
     no_models: No models to choose from
     no_provider: Set up an AI provider to start.
+    platform_unsupported: The AI agent is not yet supported on this platform.
     provider: Provider
     questions_answer: Answer
     questions_clear: Clear this answer
@@ -187,7 +190,6 @@ desktop:
     sending: Sending…
     sent_files: Files sent with this message
     sent_skills: Skills loaded
-    platform_unsupported: The AI agent is not yet supported on this platform.
     service_absent: The agent isn't installed. Reinstall Cadrumo to add it.
     service_credential_missing: Set up a provider in settings to start.
     service_failed: The agent stopped working.

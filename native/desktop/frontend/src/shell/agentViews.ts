@@ -61,6 +61,7 @@ export type AgentProviderCondition =
   | "credits_exhausted"
   | "budget_exhausted"
   | "invalid_request"
+  | "no_answer"
   | "unknown";
 
 /** Where a tool call is: cadrumo-agent's `ToolCallStatus`. */

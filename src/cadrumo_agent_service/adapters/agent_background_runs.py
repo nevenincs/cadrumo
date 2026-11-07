@@ -92,6 +92,7 @@ _OUTPUT_LIMIT_EXCEEDED: Final = "output_limit_exceeded"
 
 _PROVIDER_CONDITIONS: Final[Mapping[str, ModelRunRefusalCode]] = {
     "model_does_not_fit": ModelRunRefusalCode.MODEL_DOES_NOT_FIT,
+    "no_answer": ModelRunRefusalCode.OUTPUT_INVALID,
 }
 """The provider conditions a failed run's reply names that a tax worker reads as their own refusal.
 

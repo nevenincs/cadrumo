@@ -53,6 +53,8 @@ desktop:
     condition_credits_exhausted: Elfogytak a kreditek
     condition_invalid_request: A szolgáltató elutasította a kérést
     condition_network_unreachable: A szolgáltató nem érhető el
+    condition_no_answer: A modell nem adott használható választ ehhez a dokumentumhoz.
+      Próbálj ki másik (instruct) modellt, vagy próbáld újra.
     condition_provider_overloaded: A szolgáltató túlterhelt
     condition_throttled: Elérted a szolgáltató használati korlátját. Ellenőrizd a
       szolgáltatói fiókodat, vagy válassz másik szolgáltatót.
@@ -134,6 +136,7 @@ desktop:
     new_conversation: Új beszélgetés
     no_models: Nincs választható modell
     no_provider: A kezdéshez állíts be egy MI-szolgáltatót.
+    platform_unsupported: Az MI-ügynök ezen a platformon még nem támogatott.
     provider: Szolgáltató
     questions_answer: Válaszolok
     questions_clear: Válasz törlése
@@ -190,7 +193,6 @@ desktop:
     sending: Küldés…
     sent_files: Az üzenettel küldött fájlok
     sent_skills: Betöltött készségek
-    platform_unsupported: Az MI-ügynök ezen a platformon még nem támogatott.
     service_absent: Az ügynök nincs telepítve. Telepítsd újra a Cadrumót a hozzáadásához.
     service_credential_missing: A kezdéshez állíts be egy szolgáltatót a beállításokban.
     service_failed: Az ügynök leállt.
