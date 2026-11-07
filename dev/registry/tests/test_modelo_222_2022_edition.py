@@ -130,7 +130,7 @@ def test_every_formula_cites_the_instructions_of_its_own_era() -> None:
         assert {str(citation.source_ref) for citation in formula.source_citations} == {_INSTRUCTIONS}, formula.id
 
 
-def _calculate(year: int, values: Mapping[str, str]) -> dict[str, Decimal]:
+def _calculate(year: int, values: Mapping[str, str | Decimal]) -> dict[str, Decimal]:
     """Run the real engine over the year's snapshot with every unnamed manual box at zero."""
     snapshot = compiled_bundled_authority().snapshot(
         "222", filing_year=year, period="1P", grade=RegistryAuthorityGrade.CALCULATION
@@ -162,14 +162,14 @@ def _calculate(year: int, values: Mapping[str, str]) -> dict[str, Decimal]:
         (0, {}, {"16": "90000", "19": "90000", "23": "60000", "25": "14400", "26": "18900", "32": "17900"}),
         (
             1,
-            {"59": "5000", "60": "2000"},
+            {"59": Decimal("5000"), "60": Decimal("2000")},
             {"16": "93000", "19": "93000", "23": "63000", "25": "15120", "26": "19620", "32": "18620"},
         ),
     ],
     ids=["2019-2022 design", "2023-2024 design"],
 )
 def test_several_rates_group_splits_the_same_base_the_single_rate_lane_uses(
-    following: int, extra: Mapping[str, str], expected: Mapping[str, str]
+    following: int, extra: Mapping[str, str | Decimal], expected: Mapping[str, str]
 ) -> None:
     computed = _calculate(
         _year() + following,

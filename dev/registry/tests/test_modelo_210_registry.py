@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import re
 from datetime import date
 from decimal import Decimal
 from functools import cache
+from html import unescape
 
 import pytest
 
@@ -29,7 +31,7 @@ from ..compiler.loader import (
     load_modelo_directory,
 )
 from ..conformance.registry_schema_support import committed_modelo
-from .authored_edition_support import authored_revisions, source_first_exercise, sources_where
+from .authored_edition_support import authored_revisions, revision_covering, source_first_exercise, sources_where
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -57,6 +59,24 @@ _M210_AGRUPACION_ORDER_REF = "orden-eha-3316-2010:art-2"
 _ANNUAL_PERIOD = "0A"
 
 
+def _boe_dates(source_text: str, pattern: str) -> list[date]:
+    return [date(int(year), int(month), int(day)) for day, month, year in re.findall(pattern, unescape(source_text))]
+
+
+def _original_entry_into_force(source_text: str) -> date:
+    """Return the date the BOE page states the order's original text entered into force."""
+    dates = _boe_dates(
+        source_text, r"Texto original, publicado el \d{2}/\d{2}/\d{4}, en vigor a partir del (\d{2})/(\d{2})/(\d{4})"
+    )
+    assert len(set(dates)) == 1, dates
+    return dates[0]
+
+
+def _last_consolidated_update(source_text: str) -> date:
+    """Return the latest consolidation date the BOE page states."""
+    return max(_boe_dates(source_text, r"ltima actualización,? publicada el (\d{2})/(\d{2})/(\d{4})"))
+
+
 def _load_modelo_210() -> tuple[ModeloDefinition, RegistryCatalogues]:
     return committed_modelo("210")
 
@@ -69,7 +89,7 @@ def _compiled_authority() -> ValidatedRegistryAuthority:
 def _tipo_renta(value: str) -> TipoRentaIrnr:
     """Resolve a named M210 category through the validated catalogue."""
     return resolve_tipo_renta_irnr_catalogue(
-        effective_date=date(2025, 1, 1),
+        effective_date=date(_REVIEWED_EDITION, 1, 1),
         authority=_compiled_authority(),
     ).require(value)
 
@@ -198,67 +218,51 @@ def test_modelo_210_snapshot_builds_for_event_and_annual_group_periods() -> None
     assert str(annual_snapshot.filing_period.code) == "0A"
 
 
+def _expected_deadline_windows(
+    filing_year: int,
+) -> dict[str, tuple[ResultDisposition | None, tuple[str, ...], date, date]]:
+    """Return the annual windows of one devengo year: (resultado scope, tipo renta scope, opens, closes).
+
+    Orden EHA/3316/2010 art 5.c).1 as worded by Orden HAC/56/2024 closes the devengos of a year on 20
+    January of the next; the order that updates the deadline moves the ingreso and renta imputada
+    windows to April from the devengos of the year it applies from.
+    """
+    following = filing_year + 1
+    april_window = filing_year >= _DEADLINE_ORDER_YEAR
+    prefix = f"modelo-210-{filing_year}-0a"
+    return {
+        f"{prefix}-arrendamiento-ingreso": (
+            ResultDisposition.INGRESO,
+            ("01", "35"),
+            date(following, 4 if april_window else 1, 1),
+            date(following, 4 if april_window else 1, 20),
+        ),
+        f"{prefix}-cuota-cero": (
+            ResultDisposition.NEGATIVA,
+            ("01", "35"),
+            date(following, 1, 1),
+            date(following, 1, 20),
+        ),
+        f"{prefix}-devolucion": (
+            ResultDisposition.DEVOLUCION,
+            ("01", "35"),
+            date(following, 2, 1),
+            date(following + 4, 2, 1),
+        ),
+        f"{prefix}-renta-imputada": (
+            None,
+            ("02",),
+            date(following, 4 if april_window else 1, 1),
+            date(following, 12, 31),
+        ),
+    }
+
+
 def test_modelo_210_deadlines_use_canonical_annual_identity_and_exact_revision_owner() -> None:
     modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "210"))
 
-    expected = {
-        2025: {
-            # Orden EHA/3316/2010 art 5.c).1 as worded by Orden HAC/56/2024: 2025
-            # devengos close on 20 January; the April window starts with 2026 devengos.
-            "modelo-210-2025-0a-arrendamiento-ingreso": (
-                ResultDisposition.INGRESO,
-                ("01", "35"),
-                date(2026, 1, 1),
-                date(2026, 1, 20),
-            ),
-            "modelo-210-2025-0a-cuota-cero": (
-                ResultDisposition.NEGATIVA,
-                ("01", "35"),
-                date(2026, 1, 1),
-                date(2026, 1, 20),
-            ),
-            "modelo-210-2025-0a-devolucion": (
-                ResultDisposition.DEVOLUCION,
-                ("01", "35"),
-                date(2026, 2, 1),
-                date(2030, 2, 1),
-            ),
-            "modelo-210-2025-0a-renta-imputada": (
-                None,
-                ("02",),
-                date(2026, 1, 1),
-                date(2026, 12, 31),
-            ),
-        },
-        2026: {
-            "modelo-210-2026-0a-arrendamiento-ingreso": (
-                ResultDisposition.INGRESO,
-                ("01", "35"),
-                date(2027, 4, 1),
-                date(2027, 4, 20),
-            ),
-            "modelo-210-2026-0a-cuota-cero": (
-                ResultDisposition.NEGATIVA,
-                ("01", "35"),
-                date(2027, 1, 1),
-                date(2027, 1, 20),
-            ),
-            "modelo-210-2026-0a-devolucion": (
-                ResultDisposition.DEVOLUCION,
-                ("01", "35"),
-                date(2027, 2, 1),
-                date(2031, 2, 1),
-            ),
-            "modelo-210-2026-0a-renta-imputada": (
-                None,
-                ("02",),
-                date(2027, 4, 1),
-                date(2027, 12, 31),
-            ),
-        },
-    }
-
-    for filing_year, expected_windows in expected.items():
+    for filing_year in (_REVIEWED_EDITION, _DEADLINE_ORDER_YEAR):
+        expected_windows = _expected_deadline_windows(filing_year)
         owner = select_revision(modelo, filing_year=filing_year, period=_ANNUAL_PERIOD)
         assert {window.id for window in owner.deadline_windows} == set(expected_windows)
         assert all(window.period.registry_token == _ANNUAL_PERIOD for window in owner.deadline_windows)
@@ -272,8 +276,11 @@ def test_modelo_210_deadlines_use_canonical_annual_identity_and_exact_revision_o
                 window.closes_on,
             ) == expected_windows[window.id]
 
-    assert select_revision(modelo, filing_year=2025, period=_ANNUAL_PERIOD).id == "2025"
-    assert select_revision(modelo, filing_year=2026, period=_ANNUAL_PERIOD).id == "2026-y-siguientes"
+    assert select_revision(modelo, filing_year=_REVIEWED_EDITION, period=_ANNUAL_PERIOD).id == _REVIEWED_REVISION
+    assert (
+        select_revision(modelo, filing_year=_DEADLINE_ORDER_YEAR, period=_ANNUAL_PERIOD).id
+        == revision_covering("210", _DEADLINE_ORDER_YEAR).id
+    )
 
 
 def test_modelo_210_tipo_28_stays_event_shaped_until_its_offset_authority_is_bundled() -> None:
@@ -299,14 +306,14 @@ def test_modelo_210_legacy_evento_period_is_not_supported() -> None:
             modelo,
             catalogues,
             source_root=bundled_path(),
-            filing_year=2025,
+            filing_year=_REVIEWED_EDITION,
             period="evento",
         )
 
 
 def test_modelo_210_form_order_is_boe_corpus_backed() -> None:
     modelo, catalogues = _load_modelo_210()
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[_REVIEWED_REVISION]
     legal = {_M210_FORM_ORDER_REF: catalogues.legal[_M210_FORM_ORDER_REF]}
     source = catalogues.sources["boe-modelo-210-base-order"]
 
@@ -322,23 +329,23 @@ def test_modelo_210_form_order_is_boe_corpus_backed() -> None:
     assert reference.document_id == "BOE-A-2010-19707"
     assert reference.kind == "orden"
     assert reference.article == "1"
-    assert reference.consolidated_as_of == date(2026, 6, 23)
+    source_text = (bundled_path() / source.corpus_path).read_text(encoding="utf-8")
+    assert reference.consolidated_as_of == _last_consolidated_update(source_text)
     assert "Se aprueba el modelo 210" in reference.required_text
 
     assert source.evidence_tier == "layout_authority"
     assert source.corpus_path == "corpus/normatives/html/orden-eha-3316-2010.html"
     assert source.sha256 == "c40939b99cd2091b924a78e0690977a0f7c1f82c734fb0275f1085234c91a21d"
     assert source.bytes == 249282
-    assert source.applies_from == date(2011, 1, 3)
-    source_text = (bundled_path() / source.corpus_path).read_text(encoding="utf-8")
-    assert "Última actualización publicada el 23/06/2026" in source_text
+    assert source.applies_from == _original_entry_into_force(source_text)
+    assert f"Última actualización publicada el {_last_consolidated_update(source_text):%d/%m/%Y}" in source_text
     assert "Se aprueba el modelo 210" in source_text
 
 
 def test_modelo_210_annual_agrupacion_rule_is_boe_corpus_backed() -> None:
     """The 0A selector and grouped-row contract cite the consolidated Article 2 text."""
     modelo, catalogues = _load_modelo_210()
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[_REVIEWED_REVISION]
     legal = {_M210_AGRUPACION_ORDER_REF: catalogues.legal[_M210_AGRUPACION_ORDER_REF]}
 
     verify_legal_catalogue(legal, source_root=bundled_path())
@@ -414,7 +421,7 @@ def test_modelo_210_deadline_update_order_is_bundled_and_referenced_by_current_s
 
 def test_modelo_210_interest_rate_is_grounded_in_unconditional_art_25_1_f() -> None:
     modelo, catalogues = _load_modelo_210()
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[_REVIEWED_REVISION]
     parameter = next(param for param in revision.parameters if param.id == "m210-tipo-gravamen")
     rates = {row.key: row.value for row in parameter.keyed_brackets}
 
@@ -445,7 +452,7 @@ def test_modelo_210_dividend_rate_is_grounded_in_unconditional_art_25_1_f() -> N
     fail-closed baseline-deferred BLOCKING refusal.
     """
     modelo, catalogues = _load_modelo_210()
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[_REVIEWED_REVISION]
     parameter = next(param for param in revision.parameters if param.id == "m210-tipo-gravamen")
     rates = {row.key: row.value for row in parameter.keyed_brackets}
 
@@ -478,7 +485,7 @@ def test_modelo_210_searchable_extract_preserves_unconditional_art_25_1_f() -> N
 
 def test_modelo_210_imputed_real_estate_art_13_1_h_is_catalogued_for_deferred_branch() -> None:
     modelo, catalogues = _load_modelo_210()
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[_REVIEWED_REVISION]
 
     art_13_1_h = catalogues.legal["trlirnr-rdleg-5-2004:art-13.1.h"]
     assert art_13_1_h.corpus_ref.endswith("#a13-1-h")
@@ -505,7 +512,7 @@ def test_modelo_210_imputed_real_estate_art_13_1_h_is_catalogued_for_deferred_br
 
 def test_modelo_210_imputed_real_estate_aeat_guidance_source_is_available() -> None:
     modelo, catalogues = _load_modelo_210()
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[_REVIEWED_REVISION]
 
     source = catalogues.sources["aeat-irnr-renta-imputada-inmueble-urbano"]
     assert source.authority == "aeat"
@@ -525,7 +532,7 @@ def test_modelo_210_imputed_real_estate_aeat_guidance_source_is_available() -> N
 
 def test_modelo_210_pension_tariff_and_convenio_row_are_grounded() -> None:
     modelo, catalogues = _load_modelo_210()
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[_REVIEWED_REVISION]
     convenio = _bundled_convenio_authority()
     ar_treaty_def = convenio.treaties["AR"]
     pension = _tipo_renta("pension")

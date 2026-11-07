@@ -7,11 +7,26 @@ import pytest
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from cadrumo.domain.calculations.registry.temporal import select_revision_for_year
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    open_ended_revision,
+    revision_covering,
+)
 
 from ..conformance.registry_schema_support import committed_modelo
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
+
+# The Modelo 216 redesign is the first design that numbers the casillas Modelo 296 reads; the
+# Modelo 296 revision whose exercises it opens is the first to bind them.
+_REDESIGN_EXERCISE = open_ended_revision("216").valid_from.year
+_BINDING_REVISION = str(revision_covering("296", _REDESIGN_EXERCISE).id)
+_PRE_REDESIGN_REVISIONS = [
+    str(revision.id)
+    for revision in authored_revisions("296")
+    if revision.valid_to is not None and revision.valid_to.year < _REDESIGN_EXERCISE
+]
 
 _SOURCE_CASILLA: CasillaId = validated_casilla_id("04", surface="_SOURCE_CASILLA")
 _TARGET_CASILLA: CasillaId = validated_casilla_id("05", surface="_TARGET_CASILLA")
@@ -45,7 +60,7 @@ def test_modelo_296_declares_no_formula() -> None:
     perceptor records, which this registry does not hold.
     """
     modelo, _ = _load_modelo_296()
-    revision = modelo.revisions["2024-2025"]
+    revision = modelo.revisions[_BINDING_REVISION]
 
     assert revision.formulas == ()
     assert not any(construct.formulas for construct in revision.constructs)
@@ -63,7 +78,7 @@ def test_modelo_296_casilla_set_is_the_printed_box_set() -> None:
     declared and stays operator input.
     """
     modelo, _ = _load_modelo_296()
-    revision = modelo.revisions["2024-2025"]
+    revision = modelo.revisions[_BINDING_REVISION]
     by_id = {str(casilla.id): casilla for casilla in revision.casillas}
 
     assert tuple(by_id) == ("02", "03", "04")
@@ -103,7 +118,7 @@ def test_every_modelo_216_relation_reads_a_casilla_the_source_edition_prints() -
     assert checked, "no modelo 296 edition declares a modelo 216 relation"
 
 
-@pytest.mark.parametrize("revision_id", ["2022", "2023"])
+@pytest.mark.parametrize("revision_id", _PRE_REDESIGN_REVISIONS)
 def test_modelo_296_boxes_02_and_03_are_operator_input_before_the_2024_216_design(revision_id: str) -> None:
     modelo, _ = _load_modelo_296()
     revision = modelo.revisions[revision_id]
