@@ -15,6 +15,7 @@ from functools import cache
 from itertools import pairwise
 from pathlib import PurePosixPath
 
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.resources.bundled_data import bundled_path
 from .....core.text_fold import normalise_corpus_text
 from ..authority import bundled_indexed_authority
@@ -88,6 +89,31 @@ def supported_authored_exercises(modelo_id: str) -> tuple[int, ...]:
 def supported_exercises_with_projection(modelo_id: str) -> tuple[int, ...]:
     """Return every authored exercise from the support floor up, then the first projected one."""
     return (*supported_authored_exercises(modelo_id), projected_exercise(modelo_id))
+
+
+def supported_filing_grade_exercises(modelo_id: str) -> tuple[int, ...]:
+    """Return the supported authored exercises whose revision declares filing grade.
+
+    An edition that only reaches applicability or calculation grade has no export
+    layout to assert byte positions against, so a test about filed output
+    enumerates these exercises rather than every supported one.
+    """
+    filing_grade = {
+        str(revision.id)
+        for revision in authored_revisions_where(
+            modelo_id, lambda revision: revision.effective_authority_grade is RegistryAuthorityGrade.FILING
+        )
+    }
+    floor = filing_year_envelope().floor
+    return tuple(
+        year
+        for revision in authored_revisions(modelo_id)
+        if str(revision.id) in filing_grade
+        for year in range(
+            max(revision.valid_from.year, floor),
+            (revision.valid_to.year if revision.valid_to is not None else revision.valid_from.year) + 1,
+        )
+    )
 
 
 def single_exercise_editions(modelo_id: str) -> tuple[int, ...]:

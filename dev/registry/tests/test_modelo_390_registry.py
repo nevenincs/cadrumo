@@ -19,6 +19,12 @@ from cadrumo.domain.calculations.registry.runtime_graph import expression_casill
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    revision_before_first_declaring,
+    revision_covering,
+    revision_first_exercise,
+    supported_filing_grade_exercises,
+)
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 
@@ -46,29 +52,50 @@ _M303_PRORRATA_REGULARIZACION_SOURCE_CASILLAS: tuple[CasillaId, ...] = (
     validated_casilla_id("iva.prorrata-porcentaje"),
 )
 _M303_PRORRATA_REGULARIZACION_SOURCE_PERIOD_SELECTION = "filer_liquidation_cadence"
-#: Modelo 390's four exact-year revisions. The revision-span split replaced the
-#: single open-ended `2010-y-siguientes` revision with one revision per design
-#: year, each claiming exactly one bundled diseño. Tests that assert a STRUCTURAL
-#: property parametrise over all four rather than pinning one, so a property that
-#: silently stops holding in a single year is caught.
-#: Page-04 offsets for the two Regimen General regularizacion boxes, per revision.
-#: The 2024 diseno inserted "Pag. 2 bis" and grew page 4 from 378 to 854
-#: positions, so both boxes moved. Read from each year's own diseno -- the 2022
-#: sheet prints the prorrata box at 166..182 and the 2024 sheet at 642..658 --
-#: rather than pinned to one era, which is what made these cases fail for 2022
-#: and 2023 after the revision-span split exposed them.
-_M390_PAGE_04_REGULARIZACION_OFFSETS: dict[str, dict[str, int]] = {
-    "2022": {"prorrata": 166, "bienes_inversion": 149},
-    "2023": {"prorrata": 166, "bienes_inversion": 149},
-    "2024": {"prorrata": 642, "bienes_inversion": 625},
-    "2025": {"prorrata": 642, "bienes_inversion": 625},
-}
+#: Modelo 390's exact-year revisions at filing grade. The revision-span split
+#: replaced the single open-ended revision with one revision per design year,
+#: each claiming exactly one bundled diseño. An edition that only reaches
+#: applicability grade has no export layout, so it is not among them. Tests that
+#: assert a STRUCTURAL property parametrise over all of them rather than pinning
+#: one, so a property that silently stops holding in a single year is caught.
+_M390_FILING_EXERCISES = supported_filing_grade_exercises("390")
+_M390_REVISION_IDS: tuple[str, ...] = tuple(
+    str(revision_covering("390", exercise).id) for exercise in _M390_FILING_EXERCISES
+)
+
+#: Page-04 offsets for the two Regimen General regularizacion boxes, recorded in the order of
+#: the filing-grade designs. The 2024 diseno inserted "Pag. 2 bis" and grew page 4 from 378 to
+#: 854 positions, so both boxes moved. Read from each year's own diseno rather than pinned to one
+#: era, which is what made these cases fail for the earlier designs after the revision-span split
+#: exposed them. A new design fails the strict pairing until its offsets are recorded.
+_M390_PAGE_04_REGULARIZACION_OFFSETS: dict[str, dict[str, int]] = dict(
+    zip(
+        _M390_REVISION_IDS,
+        (
+            {"prorrata": 166, "bienes_inversion": 149},
+            {"prorrata": 166, "bienes_inversion": 149},
+            {"prorrata": 642, "bienes_inversion": 625},
+            {"prorrata": 642, "bienes_inversion": 625},
+        ),
+        strict=True,
+    )
+)
+
+#: The most recent filing-grade revision, for assertions that genuinely address one subject.
+_M390_CURRENT_EXERCISE = _M390_FILING_EXERCISES[-1]
+_M390_CURRENT_REVISION = str(revision_covering("390", _M390_CURRENT_EXERCISE).id)
+#: The last edition before the rate boxes and the recargo block arrive; a revision binds them only
+#: from the exercise after it.
+_M390_RATE_BOXES_PREDECESSOR_EXERCISE = revision_before_first_declaring(
+    "390", "iva.anual.deducible.aic-corrientes.tipo-7-5.cuota"
+).valid_from.year
+_M390_RECARGO_PREDECESSOR_EXERCISE = revision_before_first_declaring(
+    "390", "iva.anual.repercutido.recargo.tipo-0.base"
+).valid_from.year
 
 
-_M390_REVISION_IDS: tuple[str, ...] = ("2022", "2023", "2024", "2025")
-
-#: The most recent revision, for assertions that genuinely address one subject.
-_M390_CURRENT_REVISION = "2025"
+def _arrived(revision_id: str, predecessor_exercise: int) -> bool:
+    return revision_first_exercise("390", revision_id) > predecessor_exercise
 
 
 _M390_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.anual.cuota-devengada-total")
@@ -179,7 +206,7 @@ def test_modelo_390_metadata_matches_orden_eha_3111_2009() -> None:
     assert modelo.jurisdiction == "ES-AEAT"
     assert "orden-eha-3111-2009:art-1" in modelo.legal_refs
     assert "orden-eha-3111-2009:art-8" in modelo.legal_refs
-    assert "aeat-dr-390-2025" in modelo.source_refs
+    assert f"aeat-dr-390-{_M390_CURRENT_EXERCISE}" in modelo.source_refs
 
 
 @pytest.mark.parametrize("revision_id", _M390_REVISION_IDS)
@@ -212,19 +239,19 @@ def test_modelo_390_snapshot_builds_for_each_published_filing_year() -> None:
     yet. The resolved id is ASSERTED against the law-determined pick, never fed
     into resolution.
     """
-    for filing_year in (2022, 2023, 2024, 2025):
+    for filing_year in _M390_FILING_EXERCISES:
         snapshot = committed_snapshot("390", filing_year, "0A", grade=RegistryAuthorityGrade.CALCULATION)
-        assert snapshot.revision.id == str(filing_year)
+        assert snapshot.revision.id == str(revision_covering("390", filing_year).id)
 
 
 def test_modelo_390_snapshot_carries_legal_authority_and_record_design() -> None:
     _, catalogues = _load_modelo_390()
-    snapshot = committed_snapshot("390", 2025, "0A", grade=RegistryAuthorityGrade.CALCULATION)
+    snapshot = committed_snapshot("390", _M390_CURRENT_EXERCISE, "0A", grade=RegistryAuthorityGrade.CALCULATION)
     assert "orden-eha-3111-2009:art-1" in snapshot.legal
     assert "orden-eha-3111-2009:art-8" in snapshot.legal
     assert snapshot.revision.orden_aplicabilidad == ("orden-eha-3111-2009:art-1",)
     assert snapshot.legal["orden-eha-3111-2009:art-8"].article == "8"
-    assert "aeat-dr-390-2025" in snapshot.sources
+    assert f"aeat-dr-390-{_M390_CURRENT_EXERCISE}" in snapshot.sources
     assert "aeat-modelo-390-procedure" in snapshot.sources
     assert "boe-modelo-390-2009-form" in snapshot.sources
     assert catalogues.sources["aeat-modelo-390-procedure"].evidence_tier == "official_source_guidance"
@@ -472,9 +499,13 @@ def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen(revisio
         "modelo-390-iva-autorepercutido-interior-base",
         "modelo-390-iva-autorepercutido-interior-cuota",
         *_M390_DEDUCIBLE_BLOCK_BINDING_IDS,
-        *(_M390_DEDUCIBLE_AIC_2024_RATE_BINDING_IDS if revision_id >= "2024" else ()),
-        *(_M390_2024_RATE_BINDING_IDS if revision_id >= "2024" else ()),
-        *((_M390_2023_RECARGO_BINDING_ID,) if revision_id >= "2023" else ()),
+        *(
+            _M390_DEDUCIBLE_AIC_2024_RATE_BINDING_IDS
+            if _arrived(revision_id, _M390_RATE_BOXES_PREDECESSOR_EXERCISE)
+            else ()
+        ),
+        *(_M390_2024_RATE_BINDING_IDS if _arrived(revision_id, _M390_RATE_BOXES_PREDECESSOR_EXERCISE) else ()),
+        *((_M390_2023_RECARGO_BINDING_ID,) if _arrived(revision_id, _M390_RECARGO_PREDECESSOR_EXERCISE) else ()),
     }
 
 
@@ -647,7 +678,7 @@ def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations(r
     observations = [
         IvaLedgerObservation(
             ledger_id=f"q{idx}-rep",
-            transaction_date=date(2025, idx * 3, 15),
+            transaction_date=date(_M390_CURRENT_EXERCISE, idx * 3, 15),
             category=IvaCategory("domestic_general"),
             rate_kind=IvaRateKind("general"),
             flow_direction=IvaFlowDirection.from_registry("repercutido"),
