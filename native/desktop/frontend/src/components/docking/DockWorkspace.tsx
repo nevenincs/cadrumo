@@ -215,11 +215,15 @@ export function DockWorkspace({
         if (level > 0 && header.clientWidth >= memory.widths[level - 1]!) {
           level -= 1;
         } else {
-          // Cut by its own ellipsis, or scrolled past the edge of the tab row.
+          // Cut by its own ellipsis, or its tab scrolled past the edge of
+          // the tab row: a title that fits while its tab's own padding is
+          // clipped still does not stand whole.
           const row = label
             ?.closest("[data-dock-tabs]")
             ?.getBoundingClientRect();
-          const box = label?.getBoundingClientRect();
+          const box = label
+            ?.closest('[aria-selected="true"]')
+            ?.getBoundingClientRect();
           const cut =
             label && row && box
               ? Math.max(
