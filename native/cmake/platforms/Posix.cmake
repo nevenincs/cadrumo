@@ -25,7 +25,9 @@ cadrumo_cached_command(metadata_command native_metadata
 cadrumo_build_step(step_comment native_metadata GROUP contract
   SUMMARY "generate the build metadata the native hosts embed"
   OUTPUTS "${CONTRACT_DIR}/<config>/build.json" "${CONTRACT_DIR}/<config>/build_metadata.h")
-cadrumo_identity_command(interpreter_identity interpreter)
+# The desktop targets, tests and lints included, need these resources too, so generating them
+# publishes the identity without opening the interpreter's build record.
+cadrumo_identity_command(interpreter_identity IDENTITY_ONLY interpreter)
 add_custom_target(native_metadata
   ${interpreter_identity}
   COMMAND ${metadata_command} ${CADRUMO_HELPER} run --build "${PROJECT_BINARY_DIR}" -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.metadata "${CONTRACT_DIR}"
@@ -36,6 +38,14 @@ add_custom_target(native_metadata
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
 # The interpreter fingerprint covers the generated contract the hosts compile in.
 add_dependencies(native_metadata native_contract)
+# Only the hosts and the bridge, which the stage ships, open the interpreter's build record.
+cadrumo_build_step(step_comment native_interpreter_record GROUP contract
+  SUMMARY "open the interpreter hosts' build record before they compile")
+cadrumo_identity_command(interpreter_record interpreter)
+add_custom_target(native_interpreter_record
+  ${interpreter_record}
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
+add_dependencies(native_interpreter_record native_metadata)
 
 set(rust_profile "$<IF:$<CONFIG:Debug>,debug,release>")
 string(TOUPPER "${CADRUMO_PIN_rust_target}" cargo_target)
@@ -160,7 +170,7 @@ foreach(target ${host_targets} cadrumo_python_bridge)
   cadrumo_compile_policy(${target})
   target_include_directories(${target} PRIVATE "${metadata_directory}" "${CONTRACT_DIR}"
     "${CMAKE_CURRENT_SOURCE_DIR}/platform/include")
-  add_dependencies(${target} native_contract native_metadata)
+  add_dependencies(${target} native_contract native_metadata native_interpreter_record)
   # Selects the build type in the shared build_metadata.h.
   target_compile_definitions(${target} PRIVATE "CADRUMO_BUILD_DEBUG=$<CONFIG:Debug>")
 endforeach()

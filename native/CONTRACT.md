@@ -1026,7 +1026,14 @@ Each component also has a build record for readers outside the build,
 `build_stamp.py` read them. A record opens in state `building` when a build of a new
 fingerprint begins, becomes `settled` once the component is built and staged from inputs
 that still give that fingerprint, or `unsettled` when they moved while it ran, and lists per
-configuration the SHA-256 of every artifact the stage holds for it.
+configuration the SHA-256 of every artifact the stage holds for it. Only a step that builds
+the images a stage ships opens the record: `native_interpreter_record` before the interpreter
+hosts and the CPython bridge compile, `desktop-host-build`, `desktop-packaged-host` for the
+test host, and a Cargo `build` of the manager or installer. Steps that only generate, test or
+lint (`native_metadata`, `desktop-host-prepare`, the desktop host `test`, `clippy`,
+`unit-test` and `unit-clippy` targets, and Cargo `clippy` and `test`) publish the identity
+they compile with (`build_stamp --identity-only`) and leave the record describing the
+staged bytes; so does a component resolved only because the one being built embeds it.
 
 The package has its own identity, allocated when `app-payload` (or `app-native` /
 `app-agent`) stages it, keyed on the logical staged content: every staged file by content
@@ -1076,7 +1083,7 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 | `release` / `verify-release` | Build the ZIP and run native, extracted-artifact and live documentation verification |
 | `setup-native-builder` | Validate the existing development interpreter without installing tools |
 | `registry_authority` | Validate the existing publication and its source currency; refuse a missing or stale one without publishing |
-| `native_contract`, `native_metadata` | Generate content-stable C/Rust contracts, resolve the interpreter hosts' build identity, and generate executable resources |
+| `native_contract`, `native_metadata`, `native_interpreter_record` | Generate content-stable C/Rust contracts, resolve the interpreter hosts' build identity, generate executable resources, and open the interpreter hosts' build record before they compile |
 | `rust_platform_static`, `rust_platform_shared`, `rust_platform_consumer` | Build one platform library format or its Rust consumer; `rust_platform` groups the libraries |
 | `rust_application`, `rust_manager`, `desktop-host-build` | Build each application library, manager executable or desktop executable |
 | `python`, `python_d` | Build a runnable standalone interpreter at `stage/<Config>/app`, including `python.zip`, native libraries and site-packages; `python_d` also includes the development executable. Uses the application package layout and assembler without product wheels, application images or user documentation |

@@ -108,11 +108,18 @@ string(JSON build_freeze SET "${build_freeze}" id "\"${CADRUMO_BUILD_ID}\"")
 string(JSON build_freeze SET "${build_freeze}" date "\"${CADRUMO_BUILD_DATE}\"")
 file(CONFIGURE OUTPUT "${CONTRACT_DIR}/build-freeze.json" CONTENT "@build_freeze@\n" @ONLY)
 # Prefix a target's commands with this to publish component-identity/<Config>/<component>.json first.
+# A target that builds a component's staged images also opens its build record; a target that
+# only tests, lints or generates passes IDENTITY_ONLY, so the record keeps describing the bytes
+# the last stage of that component holds.
 function(cadrumo_identity_command output)
+  cmake_parse_arguments(PARSE_ARGV 1 IDENTITY "IDENTITY_ONLY" "" "")
   # One process: the resolution writes only generated/ files and needs no wrapped environment.
   set(command "${CMAKE_COMMAND}" -E chdir "${CADRUMO_SOURCE_ROOT}"
     "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.build_stamp --build "${CMAKE_BINARY_DIR}" --config "$<CONFIG>")
-  foreach(component IN LISTS ARGN)
+  if(IDENTITY_IDENTITY_ONLY)
+    list(APPEND command --identity-only)
+  endif()
+  foreach(component IN LISTS IDENTITY_UNPARSED_ARGUMENTS)
     list(APPEND command --component "${component}")
   endforeach()
   set(${output} COMMAND ${command} PARENT_SCOPE)

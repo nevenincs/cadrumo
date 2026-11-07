@@ -51,7 +51,10 @@ set(CADRUMO_NATIVE_CONTRACT "${CADRUMO_PATH_GENERATED}/contract.json" CACHE FILE
 set(desktop_host_contracts native_contract)
 # The desktop resolves its own build identity (with the manager, installer and interpreter
 # hosts it links) before Tauri compiles it; an unchanged fingerprint changes no variable.
+# Only the image build opens the desktop's build record; preparation, tests and lints stage
+# nothing and leave it describing the staged desktop.
 cadrumo_identity_command(desktop_identity desktop)
+cadrumo_identity_command(desktop_identity_only IDENTITY_ONLY desktop)
 # A desktop image built from the desktop's current fingerprint by the same command is current:
 # the fingerprint covers every input, so the Tauri driver would only confirm it.
 function(cadrumo_reuse_built output component artifact)
@@ -337,7 +340,7 @@ cadrumo_build_step(step_comment desktop-host-prepare GROUP desktop
   SUMMARY "prepare the desktop host project and its icons"
   OUTPUTS "${CADRUMO_PATH_DESKTOP_HOST}" "${CADRUMO_PATH_DESKTOP_ICONS}")
 add_custom_target(desktop-host-prepare
-  ${desktop_identity}
+  ${desktop_identity_only}
   COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment} "${desktop_configuration}" ${desktop_node_path_arguments}
     "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
     "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs" prepare
@@ -402,7 +405,7 @@ foreach(action IN ITEMS test clippy unit-test unit-clippy)
   cadrumo_build_step(step_comment desktop-host-${action} GROUP verification SUMMARY "${host_summary}")
   add_custom_target(desktop-host-${action}
     ${host_fixture_check}
-    ${desktop_identity}
+    ${desktop_identity_only}
     COMMAND "${CMAKE_COMMAND}" -E env --unset=CARGO_BUILD_TARGET
       ${desktop_environment} "${desktop_configuration}" ${desktop_node_path_arguments} ${desktop_rust_environment}
       "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"

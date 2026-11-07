@@ -40,6 +40,7 @@ from ..build_stamp import (
     resolve,
     settle_record,
 )
+from ..cmake_build import builds_images
 from ..hashing import digest
 from ..stdlib import bytecode
 
@@ -474,6 +475,71 @@ def test_a_build_record_opens_on_change_settles_and_names_what_changed(build: Pa
     _all(build, checkout)
     reopened = read_record(build, "manager")
     assert reopened is not None and reopened["state"] == BUILDING and reopened["staged"] == {}
+
+
+def _stage_desktop(build: Path, checkout: Path, now: datetime) -> dict[str, Any]:
+    """Build the desktop for Release as its producer does, then settle the stage of its image."""
+    resolve(build, ["desktop"], configuration="Release", now=now, root=checkout)
+    settled = native_settled(build, ["desktop"], configuration="Release", root=checkout)["desktop"]
+    settle_record(
+        build,
+        "desktop",
+        settled=settled,
+        configuration="Release",
+        package="stage/Release/app",
+        artifacts={"cadrumo.exe": "d" * 64},
+    )
+    record = read_record(build, "desktop")
+    assert record is not None and record["state"] == SETTLED
+    return record
+
+
+def test_a_verification_only_resolution_keeps_the_settled_record_of_the_staged_build(
+    build: Path, checkout: Path
+) -> None:
+    staged = _stage_desktop(build, checkout, DAY)
+    # A source edit, then a Debug unit-test run on a later day: a new fingerprint and identity.
+    _write(checkout / "native/desktop/src-tauri/src/lib.rs", "// edited\n")
+    later = DAY.replace(day=DAY.day + 1)
+    verified = resolve(build, ["desktop"], configuration="Debug", now=later, root=checkout, record=False)["desktop"]
+    assert verified.fingerprint != staged["fingerprint"]
+    assert verified.stamp.build_id != staged["build_id"]
+    # The test compiles against the new identity, and the record still names the staged build.
+    compiled = json.loads(identity_path(build, "desktop", "Debug").read_text(encoding="utf-8"))
+    assert compiled["fingerprint"] == verified.fingerprint
+    assert read_record(build, "desktop") == staged
+    assert changed_inputs(build, "desktop", root=checkout) == ["native/desktop/src-tauri/src/lib.rs"]
+    # Building the packaged test host resolves the desktop it embeds without rebuilding the desktop.
+    resolve(build, ["desktop-test-host"], configuration="Debug", now=later, root=checkout)
+    assert read_record(build, "desktop") == staged
+    test_host = read_record(build, "desktop-test-host")
+    assert test_host is not None and test_host["state"] == BUILDING
+
+
+def test_a_producing_resolution_still_opens_the_record_and_its_stage_settles_it(build: Path, checkout: Path) -> None:
+    staged = _stage_desktop(build, checkout, DAY)
+    _write(checkout / "native/desktop/src-tauri/src/lib.rs", "// edited\n")
+    later = DAY.replace(day=DAY.day + 1)
+    produced = resolve(build, ["desktop"], configuration="Release", now=later, root=checkout)["desktop"]
+    opened = read_record(build, "desktop")
+    assert opened is not None and opened["state"] == BUILDING and opened["staged"] == {}
+    assert (opened["fingerprint"], opened["build_id"], opened["build_sequence"]) == (
+        produced.fingerprint,
+        produced.stamp.build_id,
+        produced.stamp.build_sequence,
+    )
+    assert opened["build_id"] != staged["build_id"] and opened["build_sequence"] != staged["build_sequence"]
+    restaged = _stage_desktop(build, checkout, later)
+    assert restaged["build_id"] == produced.stamp.build_id
+    assert restaged["staged"]["Release"]["artifacts"] == {"cadrumo.exe": "d" * 64}
+
+
+def test_only_a_cargo_build_opens_and_closes_its_component_record() -> None:
+    assert builds_images(["cargo", "build", "--locked"])
+    assert builds_images(["cargo", "rustc", "--locked"])
+    assert not builds_images(["cargo", "clippy", "--locked", "--", "-D", "warnings"])
+    assert not builds_images(["cargo", "test", "--locked"])
+    assert not builds_images(["cargo"])
 
 
 def test_a_reused_image_needs_the_same_fingerprint_command_and_bytes(build: Path, checkout: Path) -> None:

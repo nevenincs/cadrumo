@@ -326,19 +326,24 @@ def resolve(
     configuration: str | None = None,
     now: datetime | None = None,
     root: Path = REPO_ROOT,
+    record: bool = True,
 ) -> dict[str, ComponentIdentity]:
     """Fingerprint the requested components and those they embed, and publish their identities.
 
     Each ``component-identity/<component>.json`` changes bytes only when the identity does,
-    so an unchanged component never invalidates what reads or embeds it. A changed
-    fingerprint also opens the component's build record.
+    so an unchanged component never invalidates what reads or embeds it. With ``record``, a
+    changed fingerprint also opens the build record of each requested component, whose images
+    the caller is about to build. A component resolved only because a requested one embeds
+    it, and every component of a caller that stages nothing (a test or lint target, passing
+    ``record=False``), keeps its record, which goes on describing the bytes last staged.
     """
     generated = build_paths(build)["generated"]
     freeze = read_freeze(build)
     version = _version(build)
+    requested = tuple(components)
     fingerprints: dict[str, str] = {}
     resolved: dict[str, ComponentIdentity] = {}
-    for name in resolution_order(tuple(components)):
+    for name in resolution_order(requested):
         entries = inventory(name, build, fingerprints, root=root)
         fingerprints[name] = inventory_fingerprint(entries)
         stamp = allocate(generated, name, fingerprints[name], freeze=freeze, now=now)
@@ -346,7 +351,8 @@ def resolve(
         path = identity_path(build, name, configuration)
         path.parent.mkdir(parents=True, exist_ok=True)
         write_text(path, json.dumps(identity.document(), indent=2) + "\n")
-        begin_record(build, identity, entries)
+        if record and name in requested:
+            begin_record(build, identity, entries)
         resolved[name] = identity
     return resolved
 
@@ -627,10 +633,17 @@ if __name__ == "__main__":
     parser.add_argument("--component", action="append", default=[], help="a component whose identity to publish")
     parser.add_argument("--settle-test-host", type=Path, help="the host.json the packaged test host build wrote")
     parser.add_argument("--config", choices=tuple(BUILD_TYPES), help="the CMake configuration being built")
+    parser.add_argument(
+        "--identity-only",
+        action="store_true",
+        help="publish the identities and open no build record: the target builds nothing it stages",
+    )
     args = parser.parse_args()
     if args.settle_test_host is not None:
         settle_test_host(args.build, args.settle_test_host)
-    for name, resolved_identity in resolve(args.build, args.component, configuration=args.config).items():
+    for name, resolved_identity in resolve(
+        args.build, args.component, configuration=args.config, record=not args.identity_only
+    ).items():
         BuildLog("build-stamp").status(
             f"{name}: build {resolved_identity.stamp.build_id}, sequence {resolved_identity.stamp.build_sequence}"
         )

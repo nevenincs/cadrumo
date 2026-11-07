@@ -85,10 +85,19 @@ def _run_unenrolled(command: list[str]) -> CommandResult:
     return result
 
 
+def builds_images(command: list[str]) -> bool:
+    """Say whether a Cargo command compiles its component's images, rather than testing or linting them.
+
+    Only such a command opens and closes the component's build record; ``clippy`` and
+    ``test`` read the identity and leave the record describing what was last staged.
+    """
+    return command[1:2] in (["build"], ["rustc"])
+
+
 def _record_command_result(
     arguments: argparse.Namespace, command: list[str], result: CommandResult, reuse: list[str] | None
 ) -> None:
-    if result.returncode == 0 and arguments.build_identity is not None and command[1:2] in (["build"], ["rustc"]):
+    if result.returncode == 0 and arguments.build_identity is not None and builds_images(command):
         # The component's images are compiled; staging adds what it ships of them.
         component = arguments.build_identity
         settled = native_settled(arguments.build, [component], configuration=arguments.config)[component]
@@ -153,7 +162,12 @@ def main() -> None:
         environment.update(dict.fromkeys(("TEMP", "TMP", "TMPDIR"), str(temporary)))
         tempfile.tempdir = str(temporary)
     if arguments.build_identity is not None:
-        resolved = resolve(cast(Path, arguments.build), [arguments.build_identity], configuration=arguments.config)
+        resolved = resolve(
+            cast(Path, arguments.build),
+            [arguments.build_identity],
+            configuration=arguments.config,
+            record=builds_images(command),
+        )
         environment.update(image_environment(resolved[arguments.build_identity]))
     os.environ.update(environment)
     if arguments.action == "run":
