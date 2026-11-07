@@ -47,7 +47,7 @@ export const UNREADABLE: LogSourceStates = {
   manager: MANAGER_AVAILABLE,
 };
 
-const START_MS = Date.UTC(2026, 2, 2, 9, 14, 5, 120);
+const START_MS = Date.parse("2026-03-02T09:14:05.120Z");
 
 function python(
   seq: number,

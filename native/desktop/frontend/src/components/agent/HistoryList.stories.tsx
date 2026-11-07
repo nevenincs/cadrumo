@@ -14,7 +14,7 @@ import type { ConversationGroup } from "./types";
 // The conversations as the service lists them, grouped and worded by the same
 // function the column uses, so headings and "ago" labels follow the language
 // shown. The clock is fixed: the specimen never moves.
-const NOW = new Date(2026, 9, 30, 12, 0, 0);
+const NOW = new Date("2026-10-30T12:00:00");
 const HOURS = 3_600_000;
 const DAYS = 24 * HOURS;
 const conversation = (

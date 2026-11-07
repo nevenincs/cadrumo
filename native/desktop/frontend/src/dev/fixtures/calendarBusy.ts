@@ -10,6 +10,10 @@ import { FIXTURE_CALENDAR, FIXTURE_STATUS } from "./calendar";
 
 export const BUSY_TODAY = "2027-01-12";
 
+/** The year the annual obligations here belong to: the one before the year of
+ * `BUSY_TODAY`, in which they close. */
+const ANNUAL_YEAR = String(Number(BUSY_TODAY.slice(0, 4)) - 1);
+
 const base = FIXTURE_CALENDAR.entries[0];
 if (!base) throw new Error("the calendar fixture has no entry to shape from");
 
@@ -74,12 +78,12 @@ export const BUSY_CALENDAR: FilingCalendar = {
       ...moved,
       user_state: "unknown",
     }),
-    entry("180", "2026", "2027-01-01", "2027-01-30", moved),
-    entry("190", "2026", "2027-01-01", "2027-01-30", moved),
-    entry("390", "2026", "2027-01-01", "2027-01-30", moved),
-    entry("347", "2026", "2027-02-01", "2027-03-01"),
+    entry("180", ANNUAL_YEAR, "2027-01-01", "2027-01-30", moved),
+    entry("190", ANNUAL_YEAR, "2027-01-01", "2027-01-30", moved),
+    entry("390", ANNUAL_YEAR, "2027-01-01", "2027-01-30", moved),
+    entry("347", ANNUAL_YEAR, "2027-02-01", "2027-03-01"),
     // Closes after the range that was asked for.
-    entry("100", "2026", "2027-04-07", "2027-06-30"),
+    entry("100", ANNUAL_YEAR, "2027-04-07", "2027-06-30"),
   ],
   events: [
     {

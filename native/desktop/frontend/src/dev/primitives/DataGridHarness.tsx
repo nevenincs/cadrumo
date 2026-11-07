@@ -378,12 +378,21 @@ export function DataGridHarness({
 
 type Declaration = { id: string; model: string; period: string; due: string };
 
+/** An annual declaration: the year it covers is the one before the year of its
+ * due date. */
+const annual = (id: string, model: string, due: string): Declaration => ({
+  id,
+  model,
+  period: String(Number(due.slice(0, 4)) - 1),
+  due,
+});
+
 const DECLARATIONS: Declaration[] = [
   { id: "303-1T", model: "303", period: "2026 1T", due: "2026-04-20" },
   { id: "130-1T", model: "130", period: "2026 1T", due: "2026-04-20" },
   { id: "111-03", model: "111", period: "2026 03", due: "2026-04-20" },
-  { id: "390-0A", model: "390", period: "2025", due: "2026-01-30" },
-  { id: "347-0A", model: "347", period: "2025", due: "2026-02-28" },
+  annual("390-0A", "390", "2026-01-30"),
+  annual("347-0A", "347", "2026-02-28"),
 ];
 
 /** The plain table over made-up declarations, sorted and grouped by

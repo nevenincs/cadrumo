@@ -25,6 +25,11 @@ import { StockPane } from "./StockPane";
 
 const noop = () => undefined;
 
+/** The years the stock books are kept for: the scenario's own, and the one
+ * before it. */
+const BOOK_YEAR = STORY_PERIOD.year;
+const PRIOR_BOOK_YEAR = BOOK_YEAR - 1;
+
 /** How the list of stock books answers: the scenario ledger's own, or as the
  * story asks. */
 type Answer = "fixture" | "one" | "empty" | "refused" | "loading";
@@ -184,14 +189,14 @@ function Probe({
           if (kind === "replay") {
             const id = crypto.randomUUID();
             const book = "Venta en línea de material de dibujo";
-            const first = await send(id, "Dibujo en línea", book, 2026);
-            const second = await send(id, "Dibujo en línea", book, 2026);
-            const other = await send(id, "Otro nombre", book, 2026);
+            const first = await send(id, "Dibujo en línea", book, BOOK_YEAR);
+            const second = await send(id, "Dibujo en línea", book, BOOK_YEAR);
+            const other = await send(id, "Otro nombre", book, BOOK_YEAR);
             setSaid([first, second, other]);
           } else {
             const retire = await port.submit("ledger.inventory.correct", {
               actividad_id: "Taller de enmarcado",
-              year: 2025,
+              year: PRIOR_BOOK_YEAR,
               correction_id: crypto.randomUUID(),
               reason: "keying_error",
               opening_stock: { decimal: "10" },
@@ -445,7 +450,7 @@ export const RetireForm: Story = {
 export const RestoreForm: Story = {
   name: "Restoring a retired stock book",
   play: async (context) => {
-    await inYear(context, "2025");
+    await inYear(context, String(PRIOR_BOOK_YEAR));
     await rowAction(
       context,
       RETIRED_BOOK,
@@ -474,12 +479,12 @@ export const MovementReversalForm: Story = {
 
 export const RetiredBook: Story = {
   name: "A retired stock book, still listed",
-  play: (context) => inYear(context, "2025"),
+  play: (context) => inYear(context, String(PRIOR_BOOK_YEAR)),
 };
 
 export const History: Story = {
   name: "The history of a stock book",
-  play: (context) => inYear(context, "2025"),
+  play: (context) => inYear(context, String(PRIOR_BOOK_YEAR)),
 };
 
 /** Reverses the first movement of the 2025 book, whose closing value is saved. */
@@ -487,7 +492,7 @@ export const RefusedClosingSaved: Story = {
   name: "A change refused: a closing value is saved",
   play: async (context) => {
     const t = wordsOf(context);
-    await inYear(context, "2025");
+    await inYear(context, String(PRIOR_BOOK_YEAR));
     await press(context, t("desktop.ledger.stock.action.movement_reverse"));
     await pick(context, t("desktop.ledger.stock.field.reason"), "keying_error");
     await press(context, t("desktop.ledger.stock.submit.reverse"));
@@ -632,7 +637,7 @@ export const ClosingFromACount: Story = {
 
 export const ClosingRecorded: Story = {
   name: "A book whose closing value is recorded",
-  play: (context) => inYear(context, "2025"),
+  play: (context) => inYear(context, String(PRIOR_BOOK_YEAR)),
 };
 
 export const ClosingRefusedNeedsPriorDocument: Story = {
@@ -676,7 +681,7 @@ export const ClosingRefusedNeedsPriorDocument: Story = {
 export const RetiredBookWithEntries: Story = {
   name: "A retired book that still holds entries",
   play: async (context) => {
-    await inYear(context, "2025");
+    await inYear(context, String(PRIOR_BOOK_YEAR));
     await readBook(context, RETIRED_BOOK);
   },
 };
