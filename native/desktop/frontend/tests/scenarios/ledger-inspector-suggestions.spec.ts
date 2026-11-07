@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { label } from "../support/strings";
+import { fixtureYear } from "../../src/dev/fixtureDates";
 
 // Suggestions in the movement inspector over the scenario's ledger: picking a
 // counterparty stages the country and identification state the movement left
@@ -187,7 +188,10 @@ test("a prorrata is offered by what the register says of it, and names its refer
   );
   await prorrata.scrollIntoViewIfNeeded();
   await prorrata.click();
-  const entry = target.getByRole("option").filter({ hasText: "2025" }).first();
+  const entry = target
+    .getByRole("option")
+    .filter({ hasText: String(fixtureYear - 1) })
+    .first();
   await expect(entry).toBeVisible();
   await expect(entry).toContainText(
     label("desktop.ledger.prorrata.kind.definitiva"),
@@ -196,7 +200,9 @@ test("a prorrata is offered by what the register says of it, and names its refer
     label("desktop.ledger.prorrata.regime.general"),
   );
   await entry.click();
-  await expect(prorrata).toHaveValue("prorrata:2025:definitiva:general");
+  await expect(prorrata).toHaveValue(
+    `prorrata:${fixtureYear - 1}:definitiva:general`,
+  );
   await expect(prorrata).not.toHaveAttribute("maxlength");
 });
 

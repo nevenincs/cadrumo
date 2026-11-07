@@ -24,7 +24,7 @@ import {
 } from "./ledgerFileFixture";
 import { compare, periodSpan, Stopped } from "./ledgerQueryFixture";
 import { invalid, text } from "./ledgerRequestFixture";
-import { fixtureDay } from "@/dev/fixtureDates";
+import { fixtureDay, fixtureYear } from "@/dev/fixtureDates";
 
 /** The scenario ledger's import answers over its movements. */
 export function importOperations(
@@ -50,7 +50,7 @@ export function importOperations(
     (duplicateTargets ??= ledger.movements
       .filter(
         (movement) =>
-          movement.transaction.date.startsWith("2026-10-") &&
+          movement.transaction.date.startsWith(`${fixtureYear}-10-`) &&
           movement.transaction.lifecycle_state === "ACTIVE",
       )
       .sort((left, right) =>
@@ -293,12 +293,12 @@ export function importOperations(
       }
       const baseCents = 4000 + row * 1250;
       const ivaCents = Math.round(baseCents * 0.21);
-      const issued = `2026-${String(1 + (row % 9)).padStart(2, "0")}-1${row % 9}`;
+      const issued = `${fixtureYear}-${String(1 + (row % 9)).padStart(2, "0")}-1${row % 9}`;
       ledger.invoices.push({
         ...(template ?? ledger.invoices[0]!),
         invoice_id: id,
         kind,
-        invoice_number: `LIB-2026-${String(row).padStart(3, "0")}`,
+        invoice_number: `LIB-${fixtureYear}-${String(row).padStart(3, "0")}`,
         issued_at: issued,
         operation_date: issued,
         counterparty_name: `Proveedor del libro ${row}, S.L.`,

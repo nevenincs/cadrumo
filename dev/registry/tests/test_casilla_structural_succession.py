@@ -322,11 +322,13 @@ def test_structural_endpoint_sources_match_their_own_context(defect: str) -> Non
             relation.model_copy(update={"to_source_refs": ("aeat-dr-390-2021",)}) for relation in relations
         )
     elif defect == "wrong-period":
+        # An open-ended edition is still in force, so it serves every exercise up to the support horizon.
+        last_exercise = filing_year_envelope().horizon if revision.valid_to is None else revision.valid_to.year
         sources["aeat-dr-309-2016"] = sources["aeat-dr-309-2016"].model_copy(
             update={
                 # The structural edition serves 1T-4T, 01-12 and 0A; an instalment clave is none of them.
                 "period_selector": PeriodSelector(
-                    years=tuple(range(revision.valid_from.year, revision.valid_to.year + 1)), periods=("1P",)
+                    years=tuple(range(revision.valid_from.year, last_exercise + 1)), periods=("1P",)
                 ),
             }
         )

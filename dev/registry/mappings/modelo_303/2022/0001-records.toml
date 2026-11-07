@@ -17,6 +17,7 @@ record_identity = "DP30302"
 export_record_id = "m303-regimen-simplificado"
 record_type = "regimen-simplificado"
 required = false
+repeat = "projection_rows"
 
 [[records]]
 sheet = "DP30303"

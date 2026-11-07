@@ -8,9 +8,13 @@ import {
   walletWriteKey,
 } from "../../src/shell/modeloWriteHolds.ts";
 
+// The keys hold the year without reading it, and node cannot resolve the served
+// year recording, so any number stands for it.
+const YEAR = 1;
+
 const target = creationWriteKey({
   modelo: "130",
-  filing_year: 2026,
+  filing_year: YEAR,
   period_code: "2T",
 });
 
@@ -135,7 +139,7 @@ test("hold snapshots remain stable between publications and retain recovery owne
   const holds = createModeloWriteHolds();
   const empty = holds.snapshot();
   assert.equal(holds.snapshot(), empty);
-  const owner = { workUnitId: "303", label: "Modelo 303", filingYear: 2026 };
+  const owner = { workUnitId: "303", label: "Modelo 303", filingYear: YEAR };
   const lease = holds.begin(walletWriteKey, owner)!;
   const running = holds.snapshot();
   assert.notEqual(running, empty);

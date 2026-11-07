@@ -25,7 +25,7 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
 from .ledger_support import MemoryLedger
 from .register_support import MemoryRepository, memory_register_authority
 from .test_baja_correction import low_value_forecast, low_value_revision
-from .test_register import ACQUISITION, NAME, register_operations, register_revision
+from .test_register import ACQUISITION, FIRST_YEAR, NAME, register_operations, register_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -38,7 +38,7 @@ def _free_register() -> ActivityAssetOperations:
         ledger=MemoryLedger(ACQUISITION),
         forecast_operation=low_value_forecast,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
-        register_authority=memory_register_authority(today=date(2026, 12, 31)),
+        register_authority=memory_register_authority(today=date(low_value_revision().in_service_date.year + 1, 12, 31)),
     )
     operations.create(low_value_revision(), NAME)
     return operations
@@ -66,7 +66,7 @@ def test_a_year_after_the_basis_is_spent_does_not_apply() -> None:
 
 
 def test_an_unknown_opening_history_serves_the_field_that_settles_it() -> None:
-    base = register_revision(in_service=date(2020, 1, 1))
+    base = register_revision(in_service=date(FIRST_YEAR - 5, 1, 1))
     facts = {name: getattr(base, name) for name in type(base).model_fields}
     facts["opening_history"] = OpeningAmortizationHistory(status=OpeningHistoryStatus.MISSING)
     operations, _ = register_operations()
@@ -89,7 +89,7 @@ def test_a_reason_that_is_not_about_opening_data_serves_no_remedy_and_the_served
 
 
 def _unknown_opening_register() -> ActivityAssetOperations:
-    base = register_revision(in_service=date(2020, 1, 1))
+    base = register_revision(in_service=date(FIRST_YEAR - 5, 1, 1))
     facts = {name: getattr(base, name) for name in type(base).model_fields}
     facts["opening_history"] = OpeningAmortizationHistory(status=OpeningHistoryStatus.MISSING)
     operations, _ = register_operations()

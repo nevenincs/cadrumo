@@ -39,6 +39,7 @@ import type { ReadinessSnapshot } from "../src/shell/ledgerWindow";
 import { hexId, movement } from "./support/ledger";
 import { SERVED } from "./support/servedVocabulary";
 import { recordedCheck } from "./support/stagedCheck";
+import { fixtureDay, fixtureYear } from "../src/dev/fixtureDates";
 
 // What the movements grid makes of a window, and the one classify command.
 // No page is opened.
@@ -101,12 +102,12 @@ const status = (
 const snapshotOf = (
   issues: { transaction_id: string; reason: LedgerPreflightReason }[],
 ): ReadinessSnapshot => ({
-  period: { year: 2026, code: "4T" },
+  period: { year: fixtureYear, code: "4T" },
   checkedAt: 0,
   status: status(issues),
   preflight: {
     profile_id: "p",
-    period: { filing_year: 2026, code: "4T" },
+    period: { filing_year: fixtureYear, code: "4T" },
     bucket_id: "p",
     checked_transaction_count: 0,
     issues: issues.map((issue) => ({ ...issue, detail: "" })),
@@ -140,7 +141,7 @@ const rows: LedgerRow[] = [
     business_classification: "BUSINESS",
     currency: "USD",
     amount: "12.5",
-    date: "2026-11-03",
+    date: fixtureDay(11, 3),
   }),
   movement(D, {
     business_classification: "PERSONAL",
@@ -354,7 +355,7 @@ test("sorting puts an empty value last both ways and amounts by value", () => {
     at === 1
       ? {
           ...row,
-          transaction: { ...row.transaction, value_date: "2026-10-01" },
+          transaction: { ...row.transaction, value_date: fixtureDay(10, 1) },
         }
       : row,
   );

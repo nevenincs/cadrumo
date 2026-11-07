@@ -11,6 +11,11 @@ import {
 } from "../support/scenarioShell";
 import { calendarButton, messagesButton } from "../support/scenarioRail";
 import { calendarReads, FIXTURE_DAY } from "../support/scenarioCalendar";
+import {
+  fixtureDay,
+  fixtureMonth,
+  fixtureYear,
+} from "../../src/dev/fixtureDates";
 
 // When the filing calendar is read: on showing, after sign-out, past midnight, and when a read fails.
 
@@ -52,8 +57,8 @@ test("the filing calendar is a page of the first pane, read when it is shown", a
   // month in which something was only observed has its heading too.
   await expect(page.getByRole("heading", { level: 2 })).toHaveCount(5);
   await expect(rows).toHaveCount(9);
-  await expect(rows.filter({ hasText: "2026-3T" })).toHaveCount(4);
-  const late = rows.filter({ hasText: "2026-2T" }).first();
+  await expect(rows.filter({ hasText: `${fixtureYear}-3T` })).toHaveCount(4);
+  const late = rows.filter({ hasText: `${fixtureYear}-2T` }).first();
   await expect(late).toContainText(label("desktop.calendar.state.late"));
   await expect(late).toContainText(label("desktop.calendar.aeat.not_observed"));
   // How the range stands, in the product's four readings, the pressing
@@ -72,10 +77,10 @@ test("the filing calendar is a page of the first pane, read when it is shown", a
   // days, a far one in months.
   const said = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
   await expect(late).toContainText(said.format(-78, "day"));
-  await expect(rows.filter({ hasText: "2026-3T" }).last()).toContainText(
-    said.format(14, "day"),
-  );
-  await expect(rows.filter({ hasText: "2026-4T" })).toContainText(
+  await expect(
+    rows.filter({ hasText: `${fixtureYear}-3T` }).last(),
+  ).toContainText(said.format(14, "day"));
+  await expect(rows.filter({ hasText: `${fixtureYear}-4T` })).toContainText(
     said.format(3, "month"),
   );
   // The standing is a list of readings, each with its count.
@@ -84,7 +89,7 @@ test("the filing calendar is a page of the first pane, read when it is shown", a
   // weekday that only the heading above makes a date.
   await expect(late.locator("time .sr-only")).toHaveText(
     new Intl.DateTimeFormat("en", { dateStyle: "full" }).format(
-      new Date(2026, 6, 20),
+      new Date(fixtureYear, 6, 20),
     ),
   );
   await expect(late.locator("time [aria-hidden=true]")).toHaveCount(2);
@@ -111,15 +116,15 @@ test("the filing calendar is a page of the first pane, read when it is shown", a
       };
     }),
   ).toEqual({
-    behind: ["2026-07-20", "2026-07-20"],
+    behind: [fixtureDay(7, 20), fixtureDay(7, 20)],
     ahead: [
-      "2026-10-20",
-      "2026-10-20",
-      "2026-10-20",
-      "2026-10-20",
-      "2027-02-01",
-      "2027-02-01",
-      "2027-06-30",
+      fixtureDay(10, 20),
+      fixtureDay(10, 20),
+      fixtureDay(10, 20),
+      fixtureDay(10, 20),
+      fixtureDay(2, 1, 1),
+      fixtureDay(2, 1, 1),
+      fixtureDay(6, 30, 1),
     ],
   });
   // The list opens on that mark, not on the oldest thing in the range.
@@ -132,11 +137,11 @@ test("the filing calendar is a page of the first pane, read when it is shown", a
   await expect(observed).toHaveCount(3);
   await expect(observed.locator("li")).toHaveText([
     new RegExp(
-      `^Jul 17 · ${label("desktop.calendar.event.filing")} · Modelo 303 2026-2T filed$`,
+      `^Jul 17 · ${label("desktop.calendar.event.filing")} · Modelo 303 ${fixtureYear}-2T filed$`,
     ),
     new RegExp(`^Sep 3 · ${label("desktop.calendar.event.message")} · `),
     new RegExp(
-      `^Oct 2 · ${label("desktop.calendar.event.filing")} · Modelo 111 2026-3T filed$`,
+      `^Oct 2 · ${label("desktop.calendar.event.filing")} · Modelo 111 ${fixtureYear}-3T filed$`,
     ),
   ]);
   // What could not be determined is said, not left out.
@@ -177,13 +182,15 @@ test("a calendar read again after a sign-out opens on the current month, as the 
   const page = target.getByRole("region", {
     name: label("desktop.calendar.title"),
   });
-  const october = page.locator('.calendar-month[data-month="2026-10"] h2');
+  const october = page.locator(
+    `.calendar-month[data-month="${fixtureMonth(10)}"] h2`,
+  );
   await expect(october).toBeInViewport();
   const first = await page.evaluate((element) => element.scrollTop);
   expect(first).toBeGreaterThan(100);
   // Something is chosen, and then the profile is signed out.
   const chosen = page
-    .locator('.calendar-bar[data-entry="303:2026-3T"]')
+    .locator(`.calendar-bar[data-entry="303:${fixtureYear}-3T"]`)
     .first();
   await chosen.click();
   await expect(chosen).toHaveAttribute("aria-pressed", "true");
@@ -210,7 +217,7 @@ test("a calendar read again after a sign-out opens on the current month, as the 
 test("a calendar left on screen past midnight is read again for the new day", async ({
   page: target,
 }) => {
-  await target.clock.install({ time: new Date(2026, 9, 6, 23, 59, 40) });
+  await target.clock.install({ time: new Date(fixtureYear, 9, 6, 23, 59, 40) });
   await open(target, "signed-in");
   // With the TUI beside it, the calendar has a pane's width.
   await showTui(target);

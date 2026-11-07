@@ -16,6 +16,7 @@ import type { ModeloWorkM303AttestationPublicResultV2 } from "../src/shell/model
 import type { ModeloWorkbenchFormProjectionV1 } from "../src/shell/modeloContract/modeloWorkForm";
 import type { LedgerOutcome } from "../src/shell/ledger";
 import { MODELO_FIXTURES } from "./support/windowFixtures";
+import { fixtureInstant, fixtureYear } from "../src/dev/fixtureDates";
 
 const envelope = (last = false) =>
   ({
@@ -27,7 +28,7 @@ const envelope = (last = false) =>
   }) as ModeloWorkbenchFormProjectionV1;
 const answer: CalculationEvidenceAnswer = {
   jointReturn: false,
-  observedAt: "2026-11-03T12:34:56.000Z",
+  observedAt: fixtureInstant(11, 3, "12:34:56.000Z"),
 };
 const settled = (result: unknown): LedgerOutcome => ({
   kind: "settled",
@@ -60,8 +61,8 @@ function harness(last = false) {
     result_version: 2,
     profile_id: form.profile_id,
     work_unit_id: form.work_unit_id,
-    filing_year: 2026,
-    period: { filing_year: 2026, code: "4T" },
+    filing_year: fixtureYear,
+    period: { filing_year: fixtureYear, code: "4T" },
     attachment_id: "a".repeat(64),
     sha256: "a".repeat(64),
   };

@@ -15,7 +15,7 @@ from cadrumo.application.actividad_asset.activity_asset_read_models import (
 from cadrumo.domain.renta.actividad_asset.register_records import ActivityAssetEventKind
 
 from .test_baja_correction import ASSET, baja_correction_without_baja, disposed
-from .test_register import NAME, full_year, register_operations, register_revision
+from .test_register import FIRST_YEAR, NAME, full_year, register_operations, register_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -36,7 +36,7 @@ def test_a_field_whose_value_is_replaced_is_changed() -> None:
     operations, _ = register_operations()
     first = register_revision()
     operations.create(first, NAME)
-    operations.correct(register_revision(number=2, supersedes=first.revision_id, in_service=date(2025, 2, 1)))
+    operations.correct(register_revision(number=2, supersedes=first.revision_id, in_service=date(FIRST_YEAR, 2, 1)))
 
     corrected = [e for e in operations.timeline(ASSET) if e.kind is ActivityAssetEventKind.REVISION][-1]
 
@@ -46,7 +46,7 @@ def test_a_field_whose_value_is_replaced_is_changed() -> None:
 def test_a_claim_recorded_adds_its_amount() -> None:
     operations, _ = register_operations()
     operations.create(register_revision(), NAME)
-    operations.record_claim(full_year(operations, 2025), creating_operation="test.year")
+    operations.record_claim(full_year(operations, FIRST_YEAR), creating_operation="test.year")
 
     claim = next(event for event in operations.timeline(ASSET) if event.kind is ActivityAssetEventKind.CLAIM)
 

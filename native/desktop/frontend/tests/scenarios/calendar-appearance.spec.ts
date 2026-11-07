@@ -3,7 +3,8 @@ import { label } from "../support/strings";
 import { showTui } from "../support/tui";
 import { startFromDocs, open } from "../support/scenarioShell";
 import { calendarButton } from "../support/scenarioRail";
-import { calendarReads } from "../support/scenarioCalendar";
+import { BUSY_DAY, calendarReads } from "../support/scenarioCalendar";
+import { fixtureMonth, fixtureYear } from "../../src/dev/fixtureDates";
 
 // The filing calendar's look: pill colours, head height, forced system colours and crowded months.
 
@@ -87,7 +88,7 @@ for (const scheme of ["light", "dark"] as const)
         JSON.stringify({ prefs: { appearance } }),
       );
     }, scheme);
-    await target.clock.setFixedTime(new Date(2027, 0, 12, 12));
+    await target.clock.setFixedTime(BUSY_DAY);
     await open(target, "signed-in", "&calendar=busy");
     await calendarButton(target).click();
     const page = target.getByRole("region", {
@@ -167,7 +168,7 @@ test("with the system's colours forced, the calendar still shows its day, its st
   page: target,
 }) => {
   await target.emulateMedia({ forcedColors: "active" });
-  await target.clock.setFixedTime(new Date(2027, 0, 12, 12));
+  await target.clock.setFixedTime(BUSY_DAY);
   await open(target, "signed-in", "&calendar=busy");
   await calendarButton(target).click();
   await target
@@ -210,7 +211,9 @@ test("with the system's colours forced, the calendar still shows its day, its st
   await expect(due.locator("[data-slot=icon]")).toHaveCount(0);
   // Filed windows are found by expanding the crowded month.
   await page
-    .locator('.calendar-month[data-month="2027-01"] .calendar-whole')
+    .locator(
+      `.calendar-month[data-month="${fixtureMonth(1, 1)}"] .calendar-whole`,
+    )
     .click();
   const filed = page.locator('.calendar-bar[data-state="filed"]').first();
   await expect(filed.locator("[data-slot=icon]")).toBeVisible();
@@ -218,7 +221,9 @@ test("with the system's colours forced, the calendar still shows its day, its st
   expect(await style(filed, "background-color")).not.toBe(canvas);
   // The unknown window of the fixture is one day wide and is found whole.
   await page
-    .locator('.calendar-month[data-month="2027-02"] .calendar-whole')
+    .locator(
+      `.calendar-month[data-month="${fixtureMonth(2, 1)}"] .calendar-whole`,
+    )
     .click();
   expect(await style(unknown, "border-top-width")).toBe("0px");
   await expect(unknown.locator("[data-slot=icon]")).toBeVisible();
@@ -244,7 +249,7 @@ test("a crowded month shows each week's nearest deadlines and counts the rest, a
   page: target,
 }) => {
   // The day the crowded fixture was evaluated on.
-  await target.clock.setFixedTime(new Date(2027, 0, 12, 12));
+  await target.clock.setFixedTime(BUSY_DAY);
   await open(target, "signed-in", "&calendar=busy");
   // With the TUI beside it, the calendar has a pane's width.
   await showTui(target);
@@ -252,11 +257,13 @@ test("a crowded month shows each week's nearest deadlines and counts the rest, a
   const page = target.getByRole("region", {
     name: label("desktop.calendar.title"),
   });
-  const january = page.locator('.calendar-month[data-month="2027-01"]');
+  const january = page.locator(
+    `.calendar-month[data-month="${fixtureMonth(1, 1)}"]`,
+  );
   const title = new Intl.DateTimeFormat("en", {
     month: "long",
     year: "numeric",
-  }).format(new Date(2027, 0, 1));
+  }).format(new Date(fixtureYear + 1, 0, 1));
   const all = `${label("desktop.calendar.show_all")}: ${title}`;
   const fewer = `${label("desktop.calendar.show_fewer")}: ${title}`;
   const whole = january.locator(".calendar-whole");
@@ -267,12 +274,14 @@ test("a crowded month shows each week's nearest deadlines and counts the rest, a
   await expect(page.locator(".calendar-month")).toHaveCount(8);
   await expect(
     page.locator(
-      '.calendar-month[data-month="2027-06"] .calendar-bar[data-entry="100:2026"]',
+      `.calendar-month[data-month="${fixtureMonth(6, 1)}"] .calendar-bar[data-entry="100:${fixtureYear}"]`,
     ),
   ).not.toHaveCount(0);
   // A month with room for all its windows has nothing to ask.
   await expect(
-    page.locator('.calendar-month[data-month="2026-12"] .calendar-whole'),
+    page.locator(
+      `.calendar-month[data-month="${fixtureMonth(12)}"] .calendar-whole`,
+    ),
   ).toHaveCount(0);
 
   // Eight windows cross the week of the third. Three are drawn: the two
@@ -303,14 +312,16 @@ test("a crowded month shows each week's nearest deadlines and counts the rest, a
   expect(await rows(january)).toBe(4);
   // What is only counted is not drawn, and is not a stop for the keyboard;
   // the count is for the eye and the pointer, and says which they are.
-  await expect(january.locator('[data-entry="303:2026-4T"]')).toHaveCount(0);
+  await expect(
+    january.locator(`[data-entry="303:${fixtureYear}-4T"]`),
+  ).toHaveCount(0);
   await expect(week.locator(".calendar-more")).toHaveAttribute(
     "aria-hidden",
     "true",
   );
   await expect(week.locator(".calendar-more")).toHaveAttribute(
     "title",
-    /303 2026-4T/,
+    new RegExp(`303 ${fixtureYear}-4T`),
   );
   const collapsed = (await january.boundingBox())!.height;
 
@@ -329,10 +340,12 @@ test("a crowded month shows each week's nearest deadlines and counts the rest, a
   );
   // Each obligation is still one stop: its first week in the month.
   const stops = january.locator(
-    '.calendar-bar[data-entry="303:2026-4T"]:not([tabindex="-1"])',
+    `.calendar-bar[data-entry="303:${fixtureYear}-4T"]:not([tabindex="-1"])`,
   );
   await expect(stops).toHaveCount(1);
-  await expect(stops).toHaveAccessibleName(/303.* 2026-4T/);
+  await expect(stops).toHaveAccessibleName(
+    new RegExp(`303.* ${fixtureYear}-4T`),
+  );
   // And back.
   await target.keyboard.press("Enter");
   await expect(whole).toHaveAttribute("aria-expanded", "false");
@@ -365,13 +378,15 @@ test("a crowded month shows each week's nearest deadlines and counts the rest, a
     .getByRole("radio", { name: label("desktop.calendar.view_list") })
     .click();
   await page
-    .locator('.calendar-list li[data-entry="390:2026"]')
+    .locator(`.calendar-list li[data-entry="390:${fixtureYear}"]`)
     .getByRole("button")
     .click();
   await view
     .getByRole("radio", { name: label("desktop.calendar.view_months") })
     .click();
-  const chosen = page.locator('.calendar-bar[data-entry="390:2026"]').first();
+  const chosen = page
+    .locator(`.calendar-bar[data-entry="390:${fixtureYear}"]`)
+    .first();
   await expect(chosen).toHaveAttribute("aria-pressed", "true");
   await expect(chosen).toBeInViewport();
   await expect(whole).toHaveAttribute("aria-expanded", "false");
@@ -385,7 +400,7 @@ test("a crowded month shows each week's nearest deadlines and counts the rest, a
   // Choosing one that is drawn does not redraw the month under the hand:
   // the window pressed stays under the pointer, and stays the stop.
   const drawnOne = january.locator(
-    '.calendar-bar[data-entry="123:2026-4T"]:not([tabindex="-1"])',
+    `.calendar-bar[data-entry="123:${fixtureYear}-4T"]:not([tabindex="-1"])`,
   );
   await drawnOne.scrollIntoViewIfNeeded();
   await drawnOne.hover();
@@ -395,14 +410,16 @@ test("a crowded month shows each week's nearest deadlines and counts the rest, a
   await expect(drawnOne).toBeFocused();
   expect((await drawnOne.boundingBox())!.y).toBe(at.y);
   // The one chosen before is counted again, now that it is not chosen.
-  await expect(january.locator('[data-entry="390:2026"]')).toHaveCount(0);
+  await expect(
+    january.locator(`[data-entry="390:${fixtureYear}"]`),
+  ).toHaveCount(0);
   // Let go with the keyboard on it, a window drawn only for being chosen
   // stays until the keyboard leaves it, and then is counted again.
   await view
     .getByRole("radio", { name: label("desktop.calendar.view_list") })
     .click();
   await page
-    .locator('.calendar-list li[data-entry="390:2026"]')
+    .locator(`.calendar-list li[data-entry="390:${fixtureYear}"]`)
     .getByRole("button")
     .click();
   await view
@@ -413,7 +430,9 @@ test("a crowded month shows each week's nearest deadlines and counts the rest, a
   await expect(page.locator("[data-selected]")).toHaveCount(0);
   await expect(chosen).toBeFocused();
   await target.keyboard.press("Tab");
-  await expect(january.locator('[data-entry="390:2026"]')).toHaveCount(0);
+  await expect(
+    january.locator(`[data-entry="390:${fixtureYear}"]`),
+  ).toHaveCount(0);
   await expect(
     target.locator(":focus"),
     "the keyboard has gone on to something, not to nothing",
