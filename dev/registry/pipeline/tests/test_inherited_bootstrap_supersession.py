@@ -9,6 +9,12 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    newest_authored_editions,
+    open_ended_revision,
+    revision_covering,
+)
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.loader import load_modelo_directory
@@ -40,11 +46,28 @@ from ..tree_validation import GeneratedExportTreeValidationContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+# Modelo 131's late edition inherits the manual layout of the open-ended edition that shares its first exercise.
+_M131_ANCESTOR_EDITION = open_ended_revision("131")
+_M131_ANCESTOR = str(_M131_ANCESTOR_EDITION.id)
+_M131_EXERCISE = _M131_ANCESTOR_EDITION.valid_from.year
+_M131_CHILD = str(
+    next(
+        revision.id
+        for revision in authored_revisions("131")
+        if revision.valid_to is not None and revision.valid_from.year == _M131_EXERCISE
+    )
+)
+_M131_EARLIER = str(revision_covering("131", _M131_EXERCISE - 1).id)
+# Modelo 189's three newest editions: the manual ancestor and the two children that inherit its layout.
+_M189_ANCESTOR, _M189_MIDDLE, _M189_NEWEST = (
+    str(revision_covering("189", exercise).id) for exercise in newest_authored_editions("189", 3)
+)
+
 _CASES = (
     (
         "131",
-        "2026-3t-4t",
-        "2026",
+        _M131_CHILD,
+        _M131_ANCESTOR,
         "modelo-131-fichero-boe",
         1,
         "aeat-dr-131-2026-late",
@@ -52,8 +75,8 @@ _CASES = (
     ),
     (
         "189",
-        "2024",
-        "2023",
+        _M189_MIDDLE,
+        _M189_ANCESTOR,
         "modelo-189-fichero-2023",
         0,
         "aeat-dr-189-2023",
@@ -61,8 +84,8 @@ _CASES = (
     ),
     (
         "189",
-        "2025",
-        "2023",
+        _M189_NEWEST,
+        _M189_ANCESTOR,
         "modelo-189-fichero-2023",
         0,
         "aeat-dr-189-2023",
@@ -112,10 +135,10 @@ def _prepublication_registry(root: Path, *, modelo: str, ancestor: str, revision
 def test_inherited_generated_form_companion_uses_canonical_local_filename(tmp_path: Path) -> None:
     """A detached validation filename must not enter the thin published child."""
     source_modelo_root = bundled_path("registry", "aeat", "modelos", "131")
-    source_fragment = source_modelo_root / "revisions" / "2026-3t-4t" / "form_layouts" / "0001-form-layout.toml"
+    source_fragment = source_modelo_root / "revisions" / _M131_CHILD / "form_layouts" / "0001-form-layout.toml"
     assert source_fragment.is_file()
     candidate_root = tmp_path / "candidate" / "registry" / "aeat"
-    candidate_form_root = candidate_root / "modelos" / "131" / "revisions" / "2026-3t-4t" / "form_layouts"
+    candidate_form_root = candidate_root / "modelos" / "131" / "revisions" / _M131_CHILD / "form_layouts"
     candidate_form_root.mkdir(parents=True)
     (candidate_form_root / "0001-complete-edition.toml").write_bytes(source_fragment.read_bytes())
     staged_revision_root = tmp_path / "staged-child"
@@ -126,8 +149,8 @@ def test_inherited_generated_form_companion_uses_canonical_local_filename(tmp_pa
         validation=GeneratedExportTreeValidationContext(
             registry_root=candidate_root,
             source_root=bundled_path(),
-            target=ExportFragmentTarget(modelo="131", revision_id="2026-3t-4t", design_epoch="2026-late"),
-            filing_year=2026,
+            target=ExportFragmentTarget(modelo="131", revision_id=_M131_CHILD, design_epoch=f"{_M131_EXERCISE}-late"),
+            filing_year=_M131_EXERCISE,
             period="3T",
         ),
         temporary_root=tmp_path,
@@ -139,7 +162,7 @@ def test_inherited_generated_form_companion_uses_canonical_local_filename(tmp_pa
         context=context,
         staged_revision_root=staged_revision_root,
         source_modelo_root=source_modelo_root,
-        revision_id="2026-3t-4t",
+        revision_id=_M131_CHILD,
     )
 
     assert [path.name for path in staged_form_root.iterdir()] == ["0001-form-layout.toml"]
@@ -180,12 +203,12 @@ def test_reviewed_inherited_manual_layout_has_unique_source_pinned_ancestor(
 
 
 def test_inherited_layout_refuses_missing_or_wrong_source_pins_and_identity(tmp_path: Path) -> None:
-    registry_root = _prepublication_registry(tmp_path, modelo="131", ancestor="2026", revisions=("2026-3t-4t",))
+    registry_root = _prepublication_registry(tmp_path, modelo="131", ancestor=_M131_ANCESTOR, revisions=(_M131_CHILD,))
     modelo_root = registry_root / "modelos" / "131"
 
     def guard(
         *,
-        manual_origin_revision: str | None = "2026",
+        manual_origin_revision: str | None = _M131_ANCESTOR,
         source_ref: str | None = None,
         source_sha256: str | None = None,
         superseded_layout_id: str = "modelo-131-fichero-boe",
@@ -194,7 +217,7 @@ def test_inherited_layout_refuses_missing_or_wrong_source_pins_and_identity(tmp_
     ) -> str:
         return validate_bootstrap_manual_export_layout_supersession(
             modelo_root,
-            revision="2026-3t-4t",
+            revision=_M131_CHILD,
             superseded_layout_id=superseded_layout_id,
             expected_references=expected_references,
             generated_layout_id=generated_layout_id,
@@ -213,7 +236,7 @@ def test_inherited_layout_refuses_missing_or_wrong_source_pins_and_identity(tmp_
         )
     with pytest.raises(ValueError, match="manual origin is"):
         guard(
-            manual_origin_revision="2025",
+            manual_origin_revision=_M131_EARLIER,
             source_ref="aeat-dr-131-2026-late",
             source_sha256=_CASES[0][-1],
         )
@@ -244,34 +267,34 @@ def test_inherited_layout_refuses_missing_or_wrong_source_pins_and_identity(tmp_
 
 
 def test_inherited_layout_refuses_changed_or_missing_ancestor(tmp_path: Path) -> None:
-    registry_root = _prepublication_registry(tmp_path, modelo="131", ancestor="2026", revisions=("2026-3t-4t",))
+    registry_root = _prepublication_registry(tmp_path, modelo="131", ancestor=_M131_ANCESTOR, revisions=(_M131_CHILD,))
     copied_root = registry_root / "modelos" / "131"
-    ancestor = copied_root / "revisions" / "2026"
+    ancestor = copied_root / "revisions" / _M131_ANCESTOR
     pinned = bootstrap_layout_supersession_fingerprint(ancestor)
     fragment = next((ancestor / "export_layouts").glob("*.toml"))
     fragment.write_bytes(fragment.read_bytes() + b"\n# changed after review\n")
     with pytest.raises(ValueError, match="ancestor changed"):
         validate_bootstrap_manual_export_layout_supersession(
             copied_root,
-            revision="2026-3t-4t",
+            revision=_M131_CHILD,
             superseded_layout_id="modelo-131-fichero-boe",
             expected_references=1,
             source_ref="aeat-dr-131-2026-late",
             source_sha256=_CASES[0][-1],
             manual_source_sha256=pinned,
-            manual_origin_revision="2026",
+            manual_origin_revision=_M131_ANCESTOR,
         )
     fragment.unlink()
     fragment.parent.rmdir()
     with pytest.raises(RegistryLoadError, match=r"family override selector.*missing"):
         validate_bootstrap_manual_export_layout_supersession(
             copied_root,
-            revision="2026-3t-4t",
+            revision=_M131_CHILD,
             superseded_layout_id="modelo-131-fichero-boe",
             expected_references=1,
             source_ref="aeat-dr-131-2026-late",
             source_sha256=_CASES[0][-1],
-            manual_origin_revision="2026",
+            manual_origin_revision=_M131_ANCESTOR,
         )
 
 
@@ -317,8 +340,8 @@ def test_reviewed_candidate_detaches_only_target_and_keeps_ancestor_intact(
 
 
 def test_inherited_construct_cannot_change_layout_id_without_a_local_keyed_delta(tmp_path: Path) -> None:
-    source_revision = bundled_path("registry", "aeat", "modelos", "131", "revisions", "2026-3t-4t")
-    staged_revision = tmp_path / "2026-3t-4t"
+    source_revision = bundled_path("registry", "aeat", "modelos", "131", "revisions", _M131_CHILD)
+    staged_revision = tmp_path / _M131_CHILD
     shutil.copytree(source_revision, staged_revision)
     before = bootstrap_layout_supersession_fingerprint(staged_revision)
     reviewed = GeneratedExportSupersession(
@@ -328,7 +351,7 @@ def test_inherited_construct_cannot_change_layout_id_without_a_local_keyed_delta
         source_state_sha256=before,
     )
     with pytest.raises(RegistryValidationError, match="inherited construct without a keyed local delta"):
-        retarget_reviewed_constructs(staged_revision, revision_id="2026-3t-4t", supersession=reviewed)
+        retarget_reviewed_constructs(staged_revision, revision_id=_M131_CHILD, supersession=reviewed)
     assert bootstrap_layout_supersession_fingerprint(staged_revision) == before
 
     stable = GeneratedExportSupersession(
@@ -337,7 +360,7 @@ def test_inherited_construct_cannot_change_layout_id_without_a_local_keyed_delta
         expected_construct_references=1,
         source_state_sha256=before,
     )
-    retarget_reviewed_constructs(staged_revision, revision_id="2026-3t-4t", supersession=stable)
+    retarget_reviewed_constructs(staged_revision, revision_id=_M131_CHILD, supersession=stable)
     assert bootstrap_layout_supersession_fingerprint(staged_revision) == before
 
 
@@ -347,9 +370,9 @@ def inherited_publication_candidate(
 ) -> tuple[PreparedGeneratedTreeInvocation, RenderedExportTree]:
     """Prepare one real, source-complete late-131 candidate for both cutover outcomes."""
     registry_root = _prepublication_registry(
-        tmp_path_factory.mktemp("manual-131"), modelo="131", ancestor="2026", revisions=("2026-3t-4t",)
+        tmp_path_factory.mktemp("manual-131"), modelo="131", ancestor=_M131_ANCESTOR, revisions=(_M131_CHILD,)
     )
-    invocation = GeneratedTreeInvocation("131", "2026-3t-4t", "aeat-dr-131-2026-late", 2026, "3T")
+    invocation = GeneratedTreeInvocation("131", _M131_CHILD, "aeat-dr-131-2026-late", _M131_EXERCISE, "3T")
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(
             tree_cli,
@@ -360,14 +383,14 @@ def inherited_publication_candidate(
         # reconstructs the reviewed prepublication target explicitly.
         target = GeneratedExportBootstrapTarget(
             modelo="131",
-            revision="2026-3t-4t",
+            revision=_M131_CHILD,
             source_ref="aeat-dr-131-2026-late",
             source_sha256=_CASES[0][-1],
             layout_id="modelo-131-fichero-boe",
             line_ending="none",
             supersedes_layout_id="modelo-131-fichero-boe",
             superseded_construct_references=1,
-            manual_origin_revision="2026",
+            manual_origin_revision=_M131_ANCESTOR,
         )
         patch.setattr(tree_cli, "generated_export_bootstrap_target", lambda **_kwargs: target)
         prepared = prepare_generated_tree_invocation(
@@ -396,9 +419,9 @@ def test_inherited_publication_keeps_thin_child_and_rolls_back_on_refusal(
     target_modelo_root = target_root / "modelos" / "131"
     target_modelo_root.parent.mkdir(parents=True)
     shutil.copytree(source_modelo_root, target_modelo_root)
-    child_root = target_modelo_root / "revisions" / "2026-3t-4t"
+    child_root = target_modelo_root / "revisions" / _M131_CHILD
     old_digest = bootstrap_layout_supersession_fingerprint(child_root)
-    ancestor_root = child_root.parent / "2026"
+    ancestor_root = child_root.parent / _M131_ANCESTOR
     ancestor_digest = bootstrap_layout_supersession_fingerprint(ancestor_root)
     revision_bytes = (child_root / "revision.toml").read_bytes()
     target_export_root = child_root / "export"
@@ -408,7 +431,7 @@ def test_inherited_publication_keeps_thin_child_and_rolls_back_on_refusal(
         if fail_validation:
             raise RegistryValidationError("forced full live validation refusal")
         loaded = load_modelo_directory(target_modelo_root)
-        revision = loaded.revisions["2026-3t-4t"]
+        revision = loaded.revisions[_M131_CHILD]
         assert len(revision.export_layouts) == 1
         assert str(revision.export_layouts[0].id) == supersession.generated_layout_id
 

@@ -15,6 +15,7 @@ from cadrumo.domain.calculations.registry.schema_exports import (
 from cadrumo.domain.calculations.registry.schema_exports import (
     FilingEnvelopePrefixRole as Role,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.filing.errors import FilingExportValidationError
 from cadrumo.domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 
@@ -67,17 +68,18 @@ def test_exact_language_prefix_from_approved_casilla(
     )
     with validating_governed_facts(authority_operation):
         identity = _identity()
+    year = filing_year_envelope().horizon
     for language in ("E", "C", "G", "V"):
         rendered = render_declared_prefix(
             fields,
             prefix_extent=328,
             modelo=Modelo(modelo),
-            period=Period.from_year_and_code(2025, "0A"),
+            period=Period.from_year_and_code(year, "0A"),
             product_software_identity=identity,
             casilla_values={"decl.idioma": language},
         )
         assert len(rendered) == 328
-        assert rendered[:17] == f"<T{modelo}020250A0000>".encode("ascii")
+        assert rendered[:17] == f"<T{modelo}0{year}0A0000>".encode("ascii")
         assert rendered[52:53] == language.encode("ascii")
         assert rendered[22:52] == b" " * 30
         assert rendered[53:92] == b" " * 39
@@ -89,7 +91,7 @@ def test_exact_language_prefix_from_approved_casilla(
                 fields,
                 prefix_extent=328,
                 modelo=Modelo(modelo),
-                period=Period.from_year_and_code(2025, "0A"),
+                period=Period.from_year_and_code(year, "0A"),
                 product_software_identity=identity,
                 casilla_values={} if value is None else {"decl.idioma": value},
             )

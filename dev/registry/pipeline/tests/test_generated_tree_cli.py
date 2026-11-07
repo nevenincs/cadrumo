@@ -16,6 +16,12 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    newest_authored_editions,
+    open_ended_revision,
+    revision_covering,
+)
 
 from ...compiler import fact_providers
 from ...compiler.authority import compile_validated_authority, compiled_bundled_authority
@@ -62,6 +68,23 @@ from .unpublished_modelo_registry import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+# Modelo 190's edition before its open-ended one carries no record-drift disposition.
+_M190_EXERCISE = open_ended_revision("190").valid_from.year - 1
+_M190_REVISION = str(revision_covering("190", _M190_EXERCISE).id)
+_M190_SOURCE = f"aeat-dr-190-{_M190_EXERCISE}"
+_M190_LAYOUT = f"generated-modelo-190-{_M190_REVISION}-fichero"
+# Modelo 200's open-ended edition has a published export tree of its own.
+_M200_OPEN_ENDED = open_ended_revision("200")
+_M200_REVISION = str(_M200_OPEN_ENDED.id)
+_M200_EXERCISE = _M200_OPEN_ENDED.valid_from.year
+_M200_SOURCE = f"aeat-dr-200-{_M200_EXERCISE}"
+# Modelo 390 keeps one single-year edition per exercise; its floor edition is a supported, enrolled target.
+_M390_REVISION = str(revision_covering("390", filing_year_envelope().floor).id)
+_M390_DRIFT_EXERCISE = newest_authored_editions("390", 3)[0]
+_M390_DRIFT_REVISION = str(revision_covering("390", _M390_DRIFT_EXERCISE).id)
+# Synthetic on-disk revisions need an id that no registry fact depends on.
+_SYNTHETIC_REVISION = str(filing_year_envelope().floor)
+
 
 def test_pipeline_cli_registers_the_separate_check_and_publish_verbs() -> None:
     """The developer-only lifecycle surface exposes both authority modes."""
@@ -74,7 +97,7 @@ def test_pipeline_cli_registers_the_separate_check_and_publish_verbs() -> None:
 
 
 def _republish_invocation(expected_manifest_sha256: str) -> GeneratedTreeInvocation:
-    return GeneratedTreeInvocation("190", "2024", "aeat-dr-190-2024", 2024, "0A", expected_manifest_sha256)
+    return GeneratedTreeInvocation("190", _M190_REVISION, _M190_SOURCE, _M190_EXERCISE, "0A", expected_manifest_sha256)
 
 
 @pytest.mark.parametrize("mode", ["row-bindings", "scalar-sources"])
@@ -90,9 +113,9 @@ def test_field_republication_routes_to_the_explicit_mode(monkeypatch: pytest.Mon
         [
             "republish-target",
             "156",
-            "2003-y-siguientes",
+            str(open_ended_revision("156").id),
             "enrolled-modelo-156-layout",
-            "2025",
+            str(filing_year_envelope().horizon),
             "0A",
             "a" * 64,
             f"--reconcile-{mode}",
@@ -114,8 +137,8 @@ def test_field_republication_routes_to_the_explicit_mode(monkeypatch: pytest.Mon
 def _republish_comparison(*, differing: tuple[str, ...]) -> RenderComparison:
     return RenderComparison(
         modelo="190",
-        revision="2024",
-        layout_id="generated-modelo-190-2024-fichero",
+        revision=_M190_REVISION,
+        layout_id=_M190_LAYOUT,
         files_compared=3,
         differing=differing,
         only_committed=(),
@@ -151,7 +174,7 @@ def test_republish_admits_only_provenance_only_drift() -> None:
     reason. The subject is asserted to carry no such row, so both record-drift
     cases below are refused.
     """
-    assert "190/2024" not in {row.subject for row in record_drift_dispositions()}
+    assert f"190/{_M190_REVISION}" not in {row.subject for row in record_drift_dispositions()}
     digest = "a" * 64
     state = GeneratedExportTreeTargetStateReceipt(manifest_sha256=digest, output_files=())
 
@@ -165,8 +188,8 @@ def test_republish_admits_only_provenance_only_drift() -> None:
         state,
         RenderComparison(
             modelo="190",
-            revision="2024",
-            layout_id="generated-modelo-190-2024-fichero",
+            revision=_M190_REVISION,
+            layout_id=_M190_LAYOUT,
             files_compared=3,
             differing=(EXPORT_FRAGMENT_PROVENANCE_FILENAME, "0002-record-m190-perceptor.toml"),
             only_committed=(),
@@ -188,8 +211,8 @@ def test_republish_admits_only_provenance_only_drift() -> None:
             state,
             RenderComparison(
                 modelo="190",
-                revision="2024",
-                layout_id="generated-modelo-190-2024-fichero",
+                revision=_M190_REVISION,
+                layout_id=_M190_LAYOUT,
                 files_compared=3,
                 differing=(EXPORT_FRAGMENT_PROVENANCE_FILENAME,),
                 only_committed=(),
@@ -318,19 +341,19 @@ def test_pipeline_cli_refuses_a_catalogued_source_undeclared_as_this_revisions_r
     """
     result = CliRunner().invoke(
         app,
-        ["check", "200", "2025-y-siguientes", "aeat-modelo-200-manual-2025", "2025", "0A"],
+        ["check", "200", _M200_REVISION, "aeat-modelo-200-manual-2025", str(_M200_EXERCISE), "0A"],
     )
 
     assert result.exit_code == 1
     assert result.stdout == ""
-    assert "200/2025-y-siguientes does not declare record-design source 'aeat-modelo-200-manual-2025'" in result.stderr
+    assert f"200/{_M200_REVISION} does not declare record-design source 'aeat-modelo-200-manual-2025'" in result.stderr
 
 
 def test_bootstrap_target_refuses_unenrolled_source_digest() -> None:
     """A generic revision/source convention cannot become a bootstrap permission."""
     with pytest.raises(ValueError, match="no reviewed generated-export bootstrap target"):
         reviewed_bootstrap_target(
-            GeneratedTreeInvocation("200", "2025-y-siguientes", "aeat-dr-200-2025", 2025, "0A"),
+            GeneratedTreeInvocation("200", _M200_REVISION, _M200_SOURCE, _M200_EXERCISE, "0A"),
             source_sha256="0" * 64,
         )
 
@@ -340,7 +363,7 @@ def test_bootstrap_supersession_accepts_an_explicit_zero_construct_reference_pin
     target = bootstrap_target_from_row(
         {
             "modelo": "360",
-            "revision": "2023-y-siguientes",
+            "revision": str(open_ended_revision("360").id),
             "source_ref": "aeat-dr-360",
             "source_sha256": "a" * 64,
             "layout_id": "generated-modelo-360",
@@ -396,10 +419,10 @@ def test_bootstrap_construct_retarget_refuses_reference_count_drift_without_muta
     found_references: int,
 ) -> None:
     """Missing, stale, or widened superseded membership invalidates its explicit pin."""
-    path = tmp_path / "revisions" / "2022" / "constructs" / "0001-constructs.toml"
+    path = tmp_path / "revisions" / _SYNTHETIC_REVISION / "constructs" / "0001-constructs.toml"
     path.parent.mkdir(parents=True)
     original = (
-        (f'[[revisions."2022".constructs]]\nid = "annual"\nexport_layouts = {layout_ids!r}\n')
+        (f'[[revisions."{_SYNTHETIC_REVISION}".constructs]]\nid = "annual"\nexport_layouts = {layout_ids!r}\n')
         .replace("'", '"')
         .encode()
     )
@@ -411,7 +434,7 @@ def test_bootstrap_construct_retarget_refuses_reference_count_drift_without_muta
     ):
         retarget_bootstrap_construct_export_layout(
             tmp_path,
-            revision="2022",
+            revision=_SYNTHETIC_REVISION,
             superseded_layout_id="manual-layout",
             generated_layout_id="generated-layout",
             expected_references=expected_references,
@@ -422,23 +445,24 @@ def test_bootstrap_construct_retarget_refuses_reference_count_drift_without_muta
 
 def test_bootstrap_construct_retarget_changes_only_the_pinned_reference(tmp_path: Path) -> None:
     """A positive reviewed reference count retargets its member and preserves unrelated layout ids."""
-    path = tmp_path / "revisions" / "2022" / "constructs" / "0001-constructs.toml"
+    path = tmp_path / "revisions" / _SYNTHETIC_REVISION / "constructs" / "0001-constructs.toml"
     path.parent.mkdir(parents=True)
     path.write_text(
-        '[[revisions."2022".constructs]]\nid = "annual"\nexport_layouts = ["manual-layout", "unrelated-layout"]\n',
+        f'[[revisions."{_SYNTHETIC_REVISION}".constructs]]\nid = "annual"\n'
+        'export_layouts = ["manual-layout", "unrelated-layout"]\n',
         encoding="utf-8",
     )
 
     retarget_bootstrap_construct_export_layout(
         tmp_path,
-        revision="2022",
+        revision=_SYNTHETIC_REVISION,
         superseded_layout_id="manual-layout",
         generated_layout_id="generated-layout",
         expected_references=1,
     )
 
     payload = parse_toml(path.read_text("utf-8"))
-    construct = payload["revisions"]["2022"]["constructs"][0]
+    construct = payload["revisions"][_SYNTHETIC_REVISION]["constructs"][0]
     assert construct["export_layouts"] == ["generated-layout", "unrelated-layout"]
 
 
@@ -473,23 +497,26 @@ def test_every_bootstrap_target_still_names_a_tree_awaiting_publication() -> Non
 
 
 def test_m390_continuity_witness_carries_every_sibling_revision(tmp_path: Path) -> None:
-    """A 2025 target's witness holds every other revision, predecessor chain included.
+    """A target's witness holds every other revision, predecessor chain included.
 
-    The strict-continuity chain back from 2025 is 2024, 2023 and 2022. The
-    witness carries those and 2021 besides, because checks that reason across a
+    The strict-continuity chain back from the target is the three editions before
+    it. The witness carries those and every older one besides, because checks that reason across a
     modelo's revisions -- the semantic-role singleton check among them -- need
     every sibling, not only the ones continuity names. The target itself stays
     out, so the witness cannot validate a stale copy of the candidate.
     """
     modelo_root = bundled_path("registry", "aeat", "modelos", "390")
-    metadata_root = stage_continuity_metadata(modelo_root, tmp_path, revision="2025")
+    *chain_exercises, target_exercise = newest_authored_editions("390", 5)[1:]
+    target = str(revision_covering("390", target_exercise).id)
+    chain = {str(revision_covering("390", exercise).id) for exercise in chain_exercises}
+    metadata_root = stage_continuity_metadata(modelo_root, tmp_path, revision=target)
 
     assert metadata_root is not None
     staged = {path.name for path in (metadata_root / "revisions").iterdir()}
-    siblings = {path.name for path in (modelo_root / "revisions").iterdir() if path.name != "2025"}
-    assert {"2022", "2023", "2024"} <= staged
+    siblings = {path.name for path in (modelo_root / "revisions").iterdir() if path.name != target}
+    assert chain <= staged
     assert staged == siblings
-    assert "2025" not in staged
+    assert target not in staged
 
 
 def test_a_single_revision_modelo_stages_no_witness(tmp_path: Path) -> None:
@@ -516,8 +543,8 @@ def _publication_context_for_target(
         validation=GeneratedExportTreeValidationContext(
             registry_root=target.parent / "unused-registry-root",
             source_root=target.parent / "unused-source-root",
-            target=ExportFragmentTarget(modelo="200", revision_id="2025", design_epoch="2025"),
-            filing_year=2025,
+            target=ExportFragmentTarget(modelo="200", revision_id=_M200_REVISION, design_epoch=str(_M200_EXERCISE)),
+            filing_year=_M200_EXERCISE,
             period="anual",
         ),
         temporary_root=target.parent / "temporary",
@@ -677,38 +704,40 @@ def test_modelo_200_calculation_grade_does_not_widen_its_runtime_filing_authorit
     """Bootstrap publication can validate static output without promoting Modelo 200."""
     authority = compiled_bundled_authority()
 
+    exercise = newest_authored_editions("200", 2)[0]
+    revision_id = str(revision_covering("200", exercise).id)
     calculation = authority.snapshot(
         "200",
-        filing_year=2024,
+        filing_year=exercise,
         period="0A",
-        revision_id="2024",
+        revision_id=revision_id,
         grade=RegistryAuthorityGrade.CALCULATION,
     )
     with pytest.raises(RegistryValidationError, match="cannot satisfy the requested 'filing' snapshot authority"):
         authority.snapshot(
             "200",
-            filing_year=2024,
+            filing_year=exercise,
             period="0A",
-            revision_id="2024",
+            revision_id=revision_id,
             grade=RegistryAuthorityGrade.FILING,
         )
 
-    assert str(calculation.revision.id) == "2024"
+    assert str(calculation.revision.id) == revision_id
 
 
 def test_modelo_200_bootstrap_assembly_reaches_the_real_join_and_renderer(tmp_path: Path) -> None:
     """An unpublished revision is assembled from its selected official design, not a missing layout."""
     authority = compiled_bundled_authority()
-    source = next(item for ref, item in authority.catalogues.sources.items() if str(ref) == "aeat-dr-200-2025")
+    source = next(item for ref, item in authority.catalogues.sources.items() if str(ref) == _M200_SOURCE)
     inputs = revision_render_inputs(
         authority,
         modelo="200",
-        revision="2025-y-siguientes",
-        source_ref="aeat-dr-200-2025",
+        revision=_M200_REVISION,
+        source_ref=_M200_SOURCE,
         bootstrap_transport=GeneratedExportBootstrapTransport(
-            layout_id="generated-modelo-200-2025-y-siguientes-fichero",
+            layout_id=f"generated-modelo-200-{_M200_REVISION}-fichero",
             line_ending="crlf",
-            source_ref="aeat-dr-200-2025",
+            source_ref=_M200_SOURCE,
             source_sha256=source.sha256,
         ),
     )
@@ -723,7 +752,7 @@ def test_modelo_200_bootstrap_assembly_reaches_the_real_join_and_renderer(tmp_pa
         render_profile_source_evidence=inputs.render_profile_source_evidence,
     )
 
-    assert inputs.layout_id == "generated-modelo-200-2025-y-siguientes-fichero"
+    assert inputs.layout_id == f"generated-modelo-200-{_M200_REVISION}-fichero"
     assert rendered.output_files
 
 
@@ -732,11 +761,13 @@ def test_modelo_200_bootstrap_assembly_reaches_the_real_join_and_renderer(tmp_pa
 def test_modelo_390_cli_assembly_uses_the_pipeline_source_defect_catalogue(tmp_path: Path) -> None:
     """The operator path validates M390 without consulting either prior export tree."""
     prepared = prepare_generated_tree_invocation(
-        GeneratedTreeInvocation("390", "2022", "aeat-dr-390-2022", 2022, "0A"),
+        GeneratedTreeInvocation(
+            "390", _M390_REVISION, f"aeat-dr-390-{filing_year_envelope().floor}", filing_year_envelope().floor, "0A"
+        ),
         tmp_path,
     )
 
-    staged_revision = prepared.candidate_root / "modelos" / "390" / "revisions" / "2022"
+    staged_revision = prepared.candidate_root / "modelos" / "390" / "revisions" / _M390_REVISION
     assert not (staged_revision / "export").exists()
     assert not (staged_revision / "export_layouts").exists()
 
@@ -773,8 +804,8 @@ def test_republish_admits_record_drift_a_disposition_explains() -> None:
     explained = GeneratedTreeRecordDriftDisposition(
         kind="record_drift",
         modelo="390",
-        revision="2024",
-        source_ref="aeat-dr-390-2024",
+        revision=_M390_DRIFT_REVISION,
+        source_ref=f"aeat-dr-390-{_M390_DRIFT_EXERCISE}",
         source_sha256="b" * 64,
         remedy="republish",
         differing_records=1,
@@ -783,7 +814,9 @@ def test_republish_admits_record_drift_a_disposition_explains() -> None:
     )
     state = GeneratedExportTreeTargetStateReceipt(manifest_sha256=digest, output_files=())
 
-    invocation = GeneratedTreeInvocation(explained.modelo, explained.revision, explained.source_ref, 2024, "0A", digest)
+    invocation = GeneratedTreeInvocation(
+        explained.modelo, explained.revision, explained.source_ref, _M390_DRIFT_EXERCISE, "0A", digest
+    )
     comparison = RenderComparison(
         modelo=explained.modelo,
         revision=explained.revision,

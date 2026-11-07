@@ -14,6 +14,7 @@ from cadrumo.application.filing.record_renderer import record_render_rows
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.schema_exports import ExportRecordDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, open_ended_revision
 from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.pipeline import render_check
 from dev.registry.pipeline.export_tree import render_complete_export_tree
@@ -23,14 +24,14 @@ from dev.registry.pipeline.source_defects import source_defects_for
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 AUTHORED_ROOT = Path(__file__).resolve().parents[2]
-EPOCHS = (
-    ("2011-2024", "2011", "aeat-dr-347-2011", "4cdfb401624e26abe3da3758ddcdcfc85b6b05ffa74e724b2d3f5eeb0c58e809"),
-    (
-        "2025-y-siguientes",
-        "2025",
-        "aeat-dr-347-2025",
-        "14583ea5ee04441356c4572d30630d46bfe0818366e575ac186370dd3fe38361",
-    ),
+_SOURCE_SHA256 = (
+    "4cdfb401624e26abe3da3758ddcdcfc85b6b05ffa74e724b2d3f5eeb0c58e809",
+    "14583ea5ee04441356c4572d30630d46bfe0818366e575ac186370dd3fe38361",
+)
+# One row per authored design epoch, oldest first, each pinned to its official record design.
+EPOCHS = tuple(
+    (str(revision.id), str(revision.valid_from.year), f"aeat-dr-347-{revision.valid_from.year}", source_sha256)
+    for revision, source_sha256 in zip(authored_revisions("347"), _SOURCE_SHA256, strict=True)
 )
 INMUEBLE_ROW_FIELDS = {
     "declarado_tax_id": "inmueble.arrendatario-nif",
@@ -88,7 +89,7 @@ def test_pinned_map_renders_optional_repeated_inmueble(
     declared_rows = dict(declarado.row_field_casilla_ids)
     assert declared_rows["provincia_code"] == "contraparte.provincia-codigo"
     assert declared_rows["business_premises_lease_mark"] == "contraparte.arrendamiento-local-negocio"
-    if epoch == "2025":
+    if revision == str(open_ended_revision("347").id):
         assert declared_rows["cash_accounting_mark"] == "contraparte.criterio-caja"
         assert declared_rows["reverse_charge_mark"] == "contraparte.inversion-sujeto-pasivo"
 
