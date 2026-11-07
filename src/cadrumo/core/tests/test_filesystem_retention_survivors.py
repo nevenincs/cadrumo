@@ -1,8 +1,7 @@
 """Regression coverage for the shared filesystem retention-survivor selector.
 
 :func:`~cadrumo.core.paths.select_filesystem_retention_survivors` converges
-the four hand-rolled raw-filesystem retention walkers found in
-:mod:`cadrumo.core.observability`,
+the hand-rolled raw-filesystem retention walkers found in
 :mod:`cadrumo.adapters.outbound.aeat.sede`, an external adapter, and
 :mod:`cadrumo.domain.calculations.registry`.
 
@@ -10,7 +9,7 @@ Each bound (age cutoff, count cap, byte ceiling) is pinned alone and then
 composed. The ``combine="union"`` mode and
 ``protect_newest`` are pinned directly here because they are the two
 correctness-critical axes the real callers (session record; the
-run-trace size ceiling) depend on: a wrong default on either would silently
+wallet diagnostic dump prune) depend on: a wrong default on either would silently
 change which files survive a real prune with no other test catching it.
 """
 

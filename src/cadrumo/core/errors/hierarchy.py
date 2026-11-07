@@ -359,16 +359,6 @@ class ProfileAnswerTypeError(CoreValidationError):
     """
 
 
-class CadrumoObservabilityError(CadrumoError):
-    """Base class for observability-layer errors.
-
-    Lives in :mod:`core.errors` (rather than the leaf
-    :mod:`core.observability` subpackage) so other subpackages can catch it
-    without importing observability internals. Concrete subclasses are
-    declared in :mod:`core.observability.errors`.
-    """
-
-
 class SiteHealthError(CadrumoError):
     """Raised when AEAT site-health detection classifies a non-OK state.
 
