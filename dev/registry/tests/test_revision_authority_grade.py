@@ -33,11 +33,11 @@ from cadrumo.domain.calculations.registry.schema import (
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 from ..compiler.loader import load_modelo_directory
-from ..conformance.loader_directory_mode_support import load_revision, write_modelo
+from ..conformance.loader_directory_mode_support import STANDARD_REVISION_ID, load_revision, write_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REVISION_ID = "2025"
+_REVISION_ID = STANDARD_REVISION_ID
 _LEGAL_REF = "ley-58-2003:art-29"
 _MANIFEST_HOME_REFUSAL = "must be declared in the revision's revision.toml"
 
