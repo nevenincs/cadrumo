@@ -118,6 +118,9 @@ _LIFECYCLE_FIELDS = tuple(
             "wal_bytes",
             "wait_seconds",
             "window_seconds",
+            "worker_error_frames",
+            "worker_error_origin",
+            "worker_error_type",
         }
     )
 )

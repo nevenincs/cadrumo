@@ -5,9 +5,10 @@ from __future__ import annotations
 import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
+from io import BytesIO
 from pathlib import Path
 from types import ModuleType, SimpleNamespace
-from typing import override
+from typing import BinaryIO, override
 from uuid import uuid4
 
 import pytest
@@ -330,6 +331,15 @@ class Scope(WindowsProcessScope):
         self.launched = True
 
         return self.child
+
+    @override
+    def launch_with_standard_error(
+        self, *, executable: Path, arguments: Sequence[str], directory: Path, environment: Mapping[str, str]
+    ) -> tuple[WindowsOwnedProcess, BinaryIO]:
+
+        child = self.launch(executable=executable, arguments=arguments, directory=directory, environment=environment)
+
+        return child, BytesIO()
 
     @override
     def active_process_ids(self) -> tuple[int, ...]:

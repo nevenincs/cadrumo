@@ -59,6 +59,7 @@
         "cadrumo_runtime.adapters.worker_authorization_lease",
         "cadrumo_runtime.adapters.worker_authorization_refusals",
         "cadrumo_runtime.adapters.worker_environment",
+        "cadrumo_runtime.adapters.worker_exit_reason",
         "cadrumo_runtime.adapters.worker_lease_transfer",
         "cadrumo_runtime.adapters.worker_native_identity",
         "cadrumo_runtime.adapters.worker_proof_control",

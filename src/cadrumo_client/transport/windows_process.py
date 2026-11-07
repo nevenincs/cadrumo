@@ -24,7 +24,7 @@ from .windows_job_launch import launch_in_windows_job
 from .windows_native_io import NativeWindowsHandle, native_windows_call, owned_windows_handle
 from .windows_owned_process import WindowsOwnedProcess
 from .windows_process_observation import watch_windows_late_exit
-from .windows_process_pipes import windows_parent_streams, windows_standard_pipes
+from .windows_process_pipes import windows_parent_streams, windows_standard_error_pipe, windows_standard_pipes
 
 _LOGGER = get_logger(__name__)
 
@@ -160,6 +160,41 @@ class WindowsProcessScope:
             for end in child_ends:
                 end.Close()
         return process, *windows_parent_streams(parent_ends)
+
+    def launch_with_standard_error(
+        self, *, executable: Path, arguments: Sequence[str], directory: Path, environment: Mapping[str, str]
+    ) -> tuple[WindowsOwnedProcess, BinaryIO]:
+        """Launch into the job with null standard input and output and a private standard-error pipe.
+
+        Return the process and the readable end of its standard error. The
+        caller owns draining it: a child that fills an unread pipe blocks.
+        Only the three child ends are inherited.
+        """
+        if sys.platform != "win32":
+            raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
+        executable, directory = _resolve_launch_paths(executable, directory, arguments, environment)
+        child_ends, standard_error = windows_standard_error_pipe()
+        try:
+            with self._lock:
+                if self._launch_fenced or self._job is None:
+                    raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
+                handle, thread_handle, pid = launch_in_windows_job(
+                    self._job,
+                    executable=executable,
+                    arguments=arguments,
+                    directory=directory,
+                    environment=environment,
+                    standard_handles=cast("tuple[int, int, int]", tuple(int(end) for end in child_ends)),
+                )
+                process = WindowsOwnedProcess(handle=handle, thread_handle=thread_handle, pid=pid)
+                self._children.append(process)
+        except BaseException:
+            standard_error.close()
+            raise
+        finally:
+            for end in child_ends:
+                end.Close()
+        return process, standard_error
 
     def terminate(self, *, timeout: float = 2.0) -> None:
         """Fence launch, terminate this job and verify no active members to a bound."""

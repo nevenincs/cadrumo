@@ -24,7 +24,7 @@ from cadrumo.application.user_profile.access_contracts import (
 )
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
-from cadrumo.core.diagnostic_log import diagnostic_event
+from cadrumo.core.diagnostic_log import DiagnosticValue, diagnostic_event
 from cadrumo.core.logging import get_logger
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.time.clock import now
@@ -94,6 +94,14 @@ _LOGGER = get_logger(__name__)
 # Lifecycle passes stay this far apart, and where nothing reports a login's
 # changes it is also how often that login is observed.
 _LIFECYCLE_INTERVAL_SECONDS = 0.5
+
+
+def _worker_start_failure_fields(error: BaseException) -> dict[str, DiagnosticValue]:
+    """Name a failed worker start by type and refusing check; the exit itself is logged where it was observed."""
+    return {
+        "error_type": type(error).__name__,
+        "refusal_check": error.check if isinstance(error, RefusalError) else None,
+    }
 
 
 class RuntimeProfileConnections(
@@ -277,7 +285,7 @@ class RuntimeProfileConnections(
                     _LOGGER,
                     "profile worker not started before sign-in",
                     level=logging.DEBUG,
-                    fields={"error_type": type(error).__name__},
+                    fields=_worker_start_failure_fields(error),
                 )
 
         Thread(target=prepare, name="profile-worker-prepare", daemon=True).start()
@@ -725,7 +733,7 @@ class RuntimeProfileConnections(
                     _LOGGER,
                     "replacement profile worker not started",
                     level=logging.DEBUG,
-                    fields={"error_type": type(error).__name__},
+                    fields=_worker_start_failure_fields(error),
                 )
 
         Thread(target=prepare, name="profile-worker-replace", daemon=True).start()

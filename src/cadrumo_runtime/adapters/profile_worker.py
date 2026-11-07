@@ -9,7 +9,7 @@ from datetime import datetime
 from importlib.metadata import version
 from logging import WARNING
 from pathlib import Path
-from threading import RLock, Thread, Timer
+from threading import Lock, RLock, Thread, Timer
 from uuid import UUID
 
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
@@ -38,6 +38,7 @@ from .linux_worker_process import LinuxOwnedProcess, LinuxProcessScope
 from .macos_worker_process import MacosOwnedProcess, MacosProcessScope
 from .profile_worker_human_admission import ProfileWorkerHumanAdmission
 from .worker_authorization import WorkerAuthorizationServer
+from .worker_exit_reason import WorkerStandardErrorTail, worker_exit_fields
 from .worker_native_identity import worker_operation_namespace, worker_proof_namespace
 from .worker_resource_cleanup import WorkerResourceCleanup, release_worker_resources
 from .worker_transport import WorkerChannel, WorkerEndpoint, worker_endpoint
@@ -108,6 +109,11 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
         self._human_deadline: float | None = None
         self._human_transaction_deadline: float | None = None
         self._authorization = None
+        self._standard_error: WorkerStandardErrorTail | None = None
+        self._exit_report_lock = Lock()
+        self._exit_reported = False
+        self._started = False
+        launched = False
         endpoint = worker_endpoint(storage_root=storage_root, worker_namespace=identity.worker_id)
         operation_endpoint = worker_endpoint(
             storage_root=storage_root, worker_namespace=worker_operation_namespace(identity.worker_id)
@@ -154,25 +160,33 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
             )
             interpreter, *interpreter_arguments = interpreter_command()
             interpreter = _direct_windows_interpreter(interpreter, environment)
-            self._process = self._scope.launch(
-                executable=Path(interpreter),
-                arguments=(
-                    *interpreter_arguments,
-                    "-I",
-                    "-B",
-                    *worker_entrypoint,
-                    "--storage-root",
-                    str(storage_root),
-                    "--worker-id",
-                    str(identity.worker_id),
-                    "--parent-pid",
-                    str(os.getpid()),
-                    "--expected-version",
-                    product_version,
-                ),
-                directory=storage_root,
-                environment=environment,
+            arguments = (
+                *interpreter_arguments,
+                "-I",
+                "-B",
+                *worker_entrypoint,
+                "--storage-root",
+                str(storage_root),
+                "--worker-id",
+                str(identity.worker_id),
+                "--parent-pid",
+                str(os.getpid()),
+                "--expected-version",
+                product_version,
             )
+            scope = self._scope
+            if isinstance(scope, LinuxProcessScope | MacosProcessScope):
+                self._process = scope.launch(
+                    executable=Path(interpreter), arguments=arguments, directory=storage_root, environment=environment
+                )
+            else:
+                # Only a Windows worker's standard error reaches this parent; the
+                # POSIX guardians discard it.
+                self._process, standard_error = scope.launch_with_standard_error(
+                    executable=Path(interpreter), arguments=arguments, directory=storage_root, environment=environment
+                )
+                self._standard_error = WorkerStandardErrorTail(standard_error)
+            launched = True
             self.watch_exit(exited)
             startup_watchdog = Timer(self._startup_deadline.remaining_seconds(), self._startup_expired.set)
             startup_watchdog.daemon = True
@@ -201,10 +215,14 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
                 error.__dict__["async_cleanup_error"] = cleanup
                 raise error from cleanup
             self._start_proof_dispatcher()
+            self._started = True
         except BaseException as error:
             # Callback settlement needs the caller's profile guard released.
             # Retain this candidate for adoption before a refusal is projected.
             error.__dict__["_profile_worker_candidate"] = self
+            if launched:
+                # Before containment, which would replace the worker's own exit status with the job's.
+                self._report_ended_worker()
             owners = (WorkerResourceCleanup(lambda: self._close_resources(deadline=None, retire_listeners=False)),)
             if not retiring_listeners:
                 owners += (endpoint_owner, operation_endpoint_owner, proof_endpoint_owner)
@@ -238,9 +256,12 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
     ) -> None:
         try:
             if isinstance(waiter, WindowsOwnedProcess):
-                waiter.wait(timeout=None)
+                status = waiter.wait(timeout=None)
             else:
-                waiter.wait(timeout=self._startup_deadline.remaining_seconds())
+                status = waiter.wait(timeout=self._startup_deadline.remaining_seconds())
+            if not self._stopping.is_set():
+                # Reported before the exit wakes startup, so a refused start already names its cause.
+                self._report_unrequested_exit(status)
             self._process_exited.set()
             if not self._stopping.is_set() and exited is not None:
                 exited(self)
@@ -249,6 +270,39 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
         finally:
             if isinstance(waiter, WindowsOwnedProcess):
                 waiter.close()
+
+    def _report_ended_worker(self) -> None:
+        """Account for a worker found already ended when its start failed."""
+        try:
+            status = self._process.wait(timeout=0)
+        except Exception:
+            # Still running, or unobservable: neither may displace the start's own failure.
+            return
+        self._report_unrequested_exit(status)
+
+    def _report_unrequested_exit(self, status: int) -> None:
+        """Log, once, how a worker that nothing stopped ended; never raise into containment.
+
+        Only a Windows wait reports the worker's own status; a POSIX wait
+        observes its guardian. Only identifiers read from the standard error
+        reach this log record, never its text, and none reaches a refusal or
+        a client.
+        """
+        with self._exit_report_lock:
+            if self._exit_reported:
+                return
+            self._exit_reported = True
+            try:
+                standard_error = None if self._standard_error is None else self._standard_error.settled()
+                fields = worker_exit_fields(
+                    exit_code=status if isinstance(self._process, WindowsOwnedProcess) else None,
+                    standard_error=standard_error,
+                )
+                fields["phase"] = "running" if self._started else "startup"
+                fields["child_process_id"] = self._process.pid
+                diagnostic_event(_LOGGER, "profile_worker_exited", fields=fields, level=WARNING)
+            except Exception as error:
+                diagnostic_event(_LOGGER, "profile_worker_exit_unaccounted", primary_error=error, level=WARNING)
 
     def _accept_startup_channel(
         self,
@@ -290,12 +344,10 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
     def _require_startup_wait(self) -> None:
         if self._startup_expired.is_set():
             raise RefusalError(RefusalCode.TIMEOUT)
-        if (
-            self._stopping.is_set()
-            or self._process_exited.is_set()
-            or (self._owner_stopping is not None and self._owner_stopping.is_set())
-        ):
-            raise RefusalError(RefusalCode.CONNECTION_CLOSED)
+        if self._process_exited.is_set():
+            raise RefusalError(RefusalCode.CONNECTION_CLOSED, check="profile_worker_exited")
+        if self._stopping.is_set() or (self._owner_stopping is not None and self._owner_stopping.is_set()):
+            raise RefusalError(RefusalCode.CONNECTION_CLOSED, check="profile_worker_stopping")
 
     def _wait_startup_input(self, channel: WorkerChannel) -> None:
         self._require_startup_wait()

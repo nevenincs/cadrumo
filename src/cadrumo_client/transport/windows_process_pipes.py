@@ -61,6 +61,54 @@ def windows_standard_pipes() -> tuple[tuple[NativeWindowsHandle, ...], tuple[Nat
     return (input_read, output_write, error_write), (input_write, output_read, error_read)
 
 
+def _null_device(attributes: object, access: int) -> NativeWindowsHandle:
+    """Open the null device as one inheritable child standard handle."""
+    import win32file
+
+    # FILE_SHARE_READ | FILE_SHARE_WRITE, OPEN_EXISTING.
+    return owned_windows_handle(
+        native_windows_call(win32file, "CreateFile", "NUL", access, 0x3, attributes, 3, 0, None)
+    )
+
+
+def windows_standard_error_pipe() -> tuple[tuple[NativeWindowsHandle, ...], BinaryIO]:
+    """Create null child standard input and output and a private standard-error pipe.
+
+    Return the child's standard input, output and error ends, then the
+    parent's stream reading the child's standard error.
+    """
+    if sys.platform != "win32":
+        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
+    import pywintypes
+    import win32api
+
+    attributes = pywintypes.SECURITY_ATTRIBUTES()
+    attributes.bInheritHandle = True
+    created: list[NativeWindowsHandle] = []
+    try:
+        # GENERIC_READ for standard input, GENERIC_WRITE for standard output.
+        null_input = _null_device(attributes, 0x80000000)
+        created.append(null_input)
+        null_output = _null_device(attributes, 0x40000000)
+        created.append(null_output)
+        error_read, error_write = _pipe_ends(attributes)
+        created.extend((error_read, error_write))
+        # HANDLE_FLAG_INHERIT cleared: the parent end never reaches any child.
+        win32api.SetHandleInformation(int(error_read), 1, 0)
+    except BaseException:
+        for handle in created:
+            handle.Close()
+        raise
+    child_ends = (null_input, null_output, error_write)
+    try:
+        return child_ends, _python_stream(error_read, "rb")
+    except BaseException:
+        # A detached end was already released by the stream it failed to become.
+        for handle in (*child_ends, error_read):
+            handle.Close()
+        raise
+
+
 def windows_parent_streams(parent_ends: tuple[NativeWindowsHandle, ...]) -> tuple[BinaryIO, BinaryIO, BinaryIO]:
     """Turn the parent's standard-input, output and error ends into streams, releasing every end on failure."""
     streams: list[BinaryIO] = []

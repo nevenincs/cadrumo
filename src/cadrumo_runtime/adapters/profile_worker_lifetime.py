@@ -73,14 +73,14 @@ class ProfileWorkerNativeLifetime:
     def _require_process_alive(self) -> None:
         with self._native_guard, self._native_call("process_health"):
             if self._stopping.is_set():
-                raise RefusalError(RefusalCode.CONNECTION_CLOSED)
+                raise RefusalError(RefusalCode.CONNECTION_CLOSED, check="profile_worker_stopping")
             try:
                 self._process.wait(timeout=0)
             except RefusalError as error:
                 if error.reason is RefusalCode.TIMEOUT:
                     return
                 raise
-        raise RefusalError(RefusalCode.CONNECTION_CLOSED)
+        raise RefusalError(RefusalCode.CONNECTION_CLOSED, check="profile_worker_exited")
 
     def _verify_native_peer(self, channel: WorkerChannel) -> int:
         with self._native_guard, self._native_call("peer_verification"):
