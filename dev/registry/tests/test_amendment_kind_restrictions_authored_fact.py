@@ -43,9 +43,11 @@ def _policy_dates() -> dict[str, date]:
     """Every dated entry the authored amendment-regime policy declares, by its key."""
     variant = _candidate().catalogue.facts["amendment-regime-policy"].variants[0]
     assert isinstance(variant.payload, MappingFactPayload)
-    return {
-        entry.key: date.fromisoformat(entry.value) for entry in variant.payload.entries if entry.key.endswith(".date")
-    }
+    dated: dict[str, date] = {}
+    for entry in variant.payload.entries:
+        if isinstance(entry.key, str) and entry.key.endswith(".date"):
+            dated[entry.key] = entry.value if isinstance(entry.value, date) else date.fromisoformat(str(entry.value))
+    return dated
 
 
 def _quarter_of(day: date) -> int:

@@ -5,15 +5,17 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.application.storage.calc_sheets.records import TabName
-from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, filing_year_envelope
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    revision_last_exercise,
+)
 
 from ..workbook_demo_agricultural_compensation import build_agricultural_compensation_plan
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_OLDEST_REVISION_END = authored_revisions("341")[0].valid_to
-assert _OLDEST_REVISION_END is not None, "the oldest Modelo 341 revision is closed"
-_PAPER_YEAR = _OLDEST_REVISION_END.year
+_PAPER_YEAR = revision_last_exercise("341", str(authored_revisions("341")[0].id))
 """The last exercise of the oldest Modelo 341 revision, which still prints the paper form."""
 _ELECTRONIC_YEAR = filing_year_envelope().horizon
 """An exercise of the open-ended revision, which is filed electronically."""

@@ -20,6 +20,7 @@ import json
 import re
 from datetime import date
 from functools import cache
+from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
 from cadrumo.core.resources.bundled_data import bundled_path
@@ -78,7 +79,7 @@ _ITEM = re.compile(f"{_NUMBERED.pattern}|{_NAMED.pattern}")
 _DOMICILIATION_LAST_DAY: Final = 17
 
 
-def _calendar_path(calendar_year: int):
+def _calendar_path(calendar_year: int) -> Path:
     return bundled_path(
         "manual_corpus_text",
         "aeat_official",

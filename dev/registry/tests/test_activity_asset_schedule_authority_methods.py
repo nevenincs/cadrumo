@@ -1193,8 +1193,9 @@ def test_the_plan_shows_the_elapsed_year_as_elapsed_and_never_as_a_zero_amount()
 
     rows = {row.tax_year: row for row in operations.plan(furniture.asset_id)}
 
-    assert rows[TAX_YEAR].planned is not None
-    assert rows[TAX_YEAR].planned.decimal == "200.00"
+    planned = rows[TAX_YEAR].planned
+    assert planned is not None
+    assert planned.decimal == "200.00"
     assert rows[TAX_YEAR].service_days == 73
     assert rows[TAX_YEAR + 1].absence is PlanFigureAbsence.PERIOD_ELAPSED
     assert rows[TAX_YEAR + 1].planned is None
@@ -1249,8 +1250,9 @@ def test_a_year_before_the_registry_floor_is_typed_and_never_a_guessed_figure() 
         assert rows[year].planned is None
         assert rows[year].claimable_intervals == ()
     # From the floor the table reads again, on the 1,000.00 a full year.
-    assert rows[floor].planned is not None
-    assert rows[floor].planned.decimal == "1000.00"
+    planned_at_floor = rows[floor].planned
+    assert planned_at_floor is not None
+    assert planned_at_floor.decimal == "1000.00"
 
 
 def test_an_authority_for_a_table_method_cannot_omit_the_end_of_its_period() -> None:
