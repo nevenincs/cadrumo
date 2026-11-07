@@ -6,10 +6,13 @@ import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.ids import BindingId
+from .parser_boundary_support import MODELO_193_SYNTHETIC_FIXTURE, specimen_period
 from .verification_chain_support import assert_annual_relation_closure_chain
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
+
+_SPECIMEN = specimen_period(MODELO_193_SYNTHETIC_FIXTURE)
 
 _M123_TOTAL_RENTAS_CASILLA: CasillaId = validated_casilla_id("03")
 _M123_TOTAL_BASE_CASILLA: CasillaId = validated_casilla_id("06")
@@ -77,9 +80,9 @@ def test_verification_chain_m193_engine_recomputes_closure_casillas_from_m123_re
     assert_annual_relation_closure_chain(
         annual_modelo="193",
         source_modelo="123",
-        fixture_stem="2024-0A",
-        year=2024,
-        period="0A",
+        fixture_stem=MODELO_193_SYNTHETIC_FIXTURE.stem,
+        year=_SPECIMEN.filing_year,
+        period=_SPECIMEN.code,
         source_period_values=_M123_QUARTERLY_VALUES,
         perceptor_binding_id=_M193_PERCEPTORES_BINDING,
         perceptor_binding_value=Decimal("2"),
