@@ -8,16 +8,20 @@ import pytest
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import FormulaDefinition
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 
 from ...compiler.loader import load_modelo_directory
 from .formula_evaluation_support import evaluate_formula
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+# The February form opens in the exercise whose January the previous design still serves.
+_TRANSITION_YEAR = newest_authored_edition("353")
+
 
 def _formula(period: str) -> FormulaDefinition:
     modelo = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/353"))
-    revision = select_revision(modelo, filing_year=2026, period=period)
+    revision = select_revision(modelo, filing_year=_TRANSITION_YEAR, period=period)
     return next(formula for formula in revision.formulas if formula.target_casilla_id == "05")
 
 
@@ -55,7 +59,7 @@ def test_january_does_not_require_the_later_advance_box() -> None:
 def test_advance_is_in_the_calculation_closure_only_after_the_official_transition() -> None:
     modelo = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/353"))
     for period in ("01", "02"):
-        revision = select_revision(modelo, filing_year=2026, period=period)
+        revision = select_revision(modelo, filing_year=_TRANSITION_YEAR, period=period)
         assert revision.completeness_manifest is not None
         closure = {entry.casilla_id for entry in revision.completeness_manifest.casillas}
         assert ("10" in closure) == (period == "02")
