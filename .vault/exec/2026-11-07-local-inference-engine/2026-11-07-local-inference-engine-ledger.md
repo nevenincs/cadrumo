@@ -7,6 +7,7 @@ modified: '2026-11-07'
 body_schema: 'body-v2'
 body_hash: 'sha256:7d4cdbda87201a9e118289722864913f832b42add4bb94170376438b70a07b90'
 body_hash: 'sha256:999ab90d2b6afa03331c80d87930a90a6fbb46807ece09f9e19448a1e1de3238'
+body_hash: 'sha256:d6858361aaf43b2a4ca35a75c0c0b47fdf7ff420e109200f35608497930e7425'
 related:
   - "[[2026-11-07-local-inference-engine-plan]]"
 ---
@@ -60,3 +61,24 @@ related:
 ## Notes
 
 - `S14` cargo clippy and the registry tests are pending the root build slot; no cargo ran in the worktree
+- `S28` `M` `src/cadrumo_agent_service/adapters/agent_background_runs.py`
+- `S28` `M` `src/cadrumo_agent_service/adapters/tests/test_agent_background_runs.py`
+- `S28` `M` `src/cadrumo_agent_service/locales/en.yml`
+- `S28` `M` `src/cadrumo_agent_service/locales/es.yml`
+- `S28` `M` `src/cadrumo_agent_service/locales/ca.yml`
+- `S28` `M` `src/cadrumo_agent_service/locales/hu.yml`
+- `S28` `M` `dev/locales/desktop_interface_keys.py`
+- `S28` `M` `native/desktop/frontend/src/shell/agentViews.ts`
+- `S28` `M` `native/desktop/frontend/src/shell/agentWords.ts`
+- `S28` `M` `native/desktop/frontend/tests/agent-live.spec.ts`
+- `S28` `verify:` `pytest test_agent_background_runs` -> `pass`
+- `S28` `verify:` `ruff check+format` -> `pass`
+- `S28` `verify:` `ty` -> `pass`
+- `S28` `verify:` `lint-imports` -> `pass`
+- `S28` `verify:` `dev.locales audit` -> `pass`
+- `S28` `verify:` `dev.locales tests test_desktop_chrome` -> `pass`
+- `S28` `by:` `vaultspec-standard-executor`
+
+## Notes
+
+- `S28` desktop typecheck and playwright pending root slot; locales status blocked by unprovisioned docs pot manifest and spelling dictionaries in this worktree

@@ -54,6 +54,8 @@ desktop:
     condition_credits_exhausted: Sense crèdits
     condition_invalid_request: El proveïdor ha rebutjat la petició
     condition_network_unreachable: No es pot contactar amb el proveïdor
+    condition_no_answer: El model no ha donat cap resposta utilitzable per a aquest
+      document. Prova un altre model (instruct) o torna-ho a provar.
     condition_provider_overloaded: El proveïdor està sobrecarregat
     condition_throttled: Has arribat al límit d'ús del proveïdor. Consulta el teu
       compte del proveïdor o tria'n un altre.
@@ -135,6 +137,7 @@ desktop:
     new_conversation: Conversa nova
     no_models: No hi ha models per triar
     no_provider: Configura un proveïdor d'IA per començar.
+    platform_unsupported: L'agent d'IA encara no està disponible en aquesta plataforma.
     provider: Proveïdor
     questions_answer: Respon
     questions_clear: Esborra aquesta resposta
@@ -191,7 +194,6 @@ desktop:
     sending: Enviant…
     sent_files: Fitxers enviats amb aquest missatge
     sent_skills: Habilitats carregades
-    platform_unsupported: L'agent d'IA encara no està disponible en aquesta plataforma.
     service_absent: L'agent no està instal·lat. Reinstal·la Cadrumo per afegir-lo.
     service_credential_missing: Configura un proveïdor als ajustos per començar.
     service_failed: L'agent ha deixat de funcionar.

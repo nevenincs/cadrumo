@@ -55,6 +55,8 @@ desktop:
     condition_credits_exhausted: Sin créditos
     condition_invalid_request: El proveedor rechazó la petición
     condition_network_unreachable: No se puede contactar con el proveedor
+    condition_no_answer: El modelo no dio una respuesta utilizable para este documento.
+      Prueba con otro modelo (instruct) o inténtalo de nuevo.
     condition_provider_overloaded: El proveedor está sobrecargado
     condition_throttled: Has alcanzado el límite de uso del proveedor. Consulta tu
       cuenta del proveedor o elige otro.
@@ -135,6 +137,7 @@ desktop:
     new_conversation: Nueva conversación
     no_models: No hay modelos para elegir
     no_provider: Configura un proveedor de IA para empezar.
+    platform_unsupported: El agente de IA aún no está disponible en esta plataforma.
     provider: Proveedor
     questions_answer: Responder
     questions_clear: Borrar esta respuesta
@@ -192,7 +195,6 @@ desktop:
     sending: Enviando…
     sent_files: Archivos enviados con este mensaje
     sent_skills: Habilidades cargadas
-    platform_unsupported: El agente de IA aún no está disponible en esta plataforma.
     service_absent: El agente no está instalado. Reinstala Cadrumo para añadirlo.
     service_credential_missing: Configura un proveedor en los ajustes para empezar.
     service_failed: El agente ha dejado de funcionar.
