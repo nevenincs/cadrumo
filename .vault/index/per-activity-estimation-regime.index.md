@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#per-activity-estimation-regime'
 date: '2026-11-05'
-modified: '2026-11-05'
+modified: '2026-11-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:9228e1fffe22f6dff3222235fe09b1928ffe6690a1dd490eb9bf5f4d7673c1ac'
+body_hash: 'sha256:04ff26b1240b60a1fb9ca1e9de5f0208a561e29dd8121d0d0950a1501947d776'
 related:
   - '[[2026-11-05-per-activity-estimation-regime-adr]]'
   - '[[2026-11-05-per-activity-estimation-regime-reference]]'
@@ -21,7 +21,7 @@ Auto-generated index of all documents tagged with `#per-activity-estimation-regi
 
 ### adr
 
-- `2026-11-05-per-activity-estimation-regime-adr` - `per-activity-estimation-regime` adr: `Hold the IRPF estimation regime on each activity, with the taxpayer-wide field as a derived projection` | (**status:** `proposed`)
+- `2026-11-05-per-activity-estimation-regime-adr` - `per-activity-estimation-regime` adr: `Hold the IRPF estimation regime on each activity, with the taxpayer-wide field as a derived projection` | (**status:** `accepted`)
 
 ### reference
 
