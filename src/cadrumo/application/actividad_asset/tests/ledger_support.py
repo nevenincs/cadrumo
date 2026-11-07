@@ -8,9 +8,12 @@ from decimal import Decimal
 from pathlib import Path
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+
+_YEAR = filing_year_envelope().horizon
 
 
 def acquisition_transaction(
@@ -22,7 +25,7 @@ def acquisition_transaction(
     direction: TransactionDirection = TransactionDirection.OUTGOING,
     currency: str = "EUR",
     value_in_eur: Decimal | None = None,
-    booked_date: date = date(2025, 1, 10),
+    booked_date: date = date(_YEAR, 1, 10),
     description: str | None = None,
     input_classification: str | None = None,
     purchase_invoice_evidence_id: str | None = None,
@@ -41,7 +44,7 @@ def acquisition_transaction(
             source_sha256="e" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2025, 1, 11, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 1, 11, 12, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": "ledger_transaction"},
@@ -62,7 +65,7 @@ def acquisition_transaction(
                 "taxable_base": taxable_base,
                 "iva_rate": Decimal("0.21") if iva_amount is not None else None,
                 "iva_amount": iva_amount,
-                "classified_at": datetime(2025, 1, 11, 13, 0, tzinfo=UTC),
+                "classified_at": datetime(_YEAR, 1, 11, 13, 0, tzinfo=UTC),
                 "classified_by": "manual",
                 "input_classification": input_classification,
                 "purchase_invoice_evidence_id": purchase_invoice_evidence_id,

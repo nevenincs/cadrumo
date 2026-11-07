@@ -20,31 +20,38 @@ from cadrumo.domain.renta.actividad_asset.schedule import covered_until_after, l
 
 from .ledger_support import MemoryLedger, acquisition_transaction
 from .operations_support import build_forecast, build_revision
-from .register_support import MemoryRepository, memory_register_authority
+from .register_support import MemoryRepository, accrued_through, memory_register_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_FIRST = build_revision().in_service_date.year
 
 _PROFILE = uuid4()
 ACQUISITION = acquisition_transaction()
 
 
 def _decode(**interval: str | None) -> ActivityAssetForecastRequest:
-    document = {"profile_id": str(_PROFILE), "asset_id": "laptop-1", "covered_from": "2025-01-01", **interval}
+    document = {
+        "profile_id": str(_PROFILE),
+        "asset_id": "laptop-1",
+        "covered_from": date(_FIRST, 1, 1).isoformat(),
+        **interval,
+    }
     return ActivityAssetForecastRequest.model_validate_json(json.dumps(document))
 
 
 def test_the_boundary_inverts_the_last_day() -> None:
-    for boundary in (date(2025, 7, 1), date(2026, 1, 1), date(2024, 3, 1)):
+    for boundary in (date(_FIRST, 7, 1), date(_FIRST + 1, 1, 1), date(_FIRST - 1, 3, 1)):
         assert covered_until_after(last_day_covered(boundary)) == boundary
 
 
 def test_a_last_day_decodes_to_the_boundary_the_operations_compute_with() -> None:
-    from_boundary = _decode(covered_until="2025-07-01")
-    from_last_day = _decode(covered_through="2025-06-30")
-    from_both = _decode(covered_until="2025-07-01", covered_through="2025-06-30")
+    from_boundary = _decode(covered_until=date(_FIRST, 7, 1).isoformat())
+    from_last_day = _decode(covered_through=date(_FIRST, 6, 30).isoformat())
+    from_both = _decode(covered_until=date(_FIRST, 7, 1).isoformat(), covered_through=date(_FIRST, 6, 30).isoformat())
 
-    assert from_last_day.exclusive_end() == date(2025, 7, 1)
-    assert from_boundary.covered_through == date(2025, 6, 30)
+    assert from_last_day.exclusive_end() == date(_FIRST, 7, 1)
+    assert from_boundary.covered_through == date(_FIRST, 6, 30)
     assert from_last_day == from_boundary
     assert from_both == from_boundary
     assert from_both.model_dump_json() == from_boundary.model_dump_json() == from_last_day.model_dump_json()
@@ -54,14 +61,14 @@ def test_a_last_day_decodes_to_the_boundary_the_operations_compute_with() -> Non
 
 
 def test_a_year_end_last_day_reaches_the_next_new_year() -> None:
-    assert _decode(covered_through="2025-12-31").exclusive_end() == date(2026, 1, 1)
+    assert _decode(covered_through=date(_FIRST, 12, 31).isoformat()).exclusive_end() == date(_FIRST + 1, 1, 1)
 
 
 @pytest.mark.parametrize(
     "interval",
     [
-        {"covered_until": "2025-07-01", "covered_through": "2025-07-01"},
-        {"covered_until": "2025-07-01", "covered_through": "2025-06-29"},
+        {"covered_until": date(_FIRST, 7, 1).isoformat(), "covered_through": date(_FIRST, 7, 1).isoformat()},
+        {"covered_until": date(_FIRST, 7, 1).isoformat(), "covered_through": date(_FIRST, 6, 29).isoformat()},
         {},
         {"covered_through": "9999-12-31"},
         {"covered_until": None, "covered_through": None},
@@ -96,13 +103,13 @@ def test_the_stated_form_does_not_change_the_forecast_or_its_fingerprint() -> No
             covered_until=request.exclusive_end(),
         )
 
-    exclusive = forecast(_decode(covered_until="2025-07-01"))
-    inclusive = forecast(_decode(covered_through="2025-06-30"))
+    exclusive = forecast(_decode(covered_until=date(_FIRST, 7, 1).isoformat()))
+    inclusive = forecast(_decode(covered_through=date(_FIRST, 6, 30).isoformat()))
 
     assert inclusive == exclusive
     assert operations.forecast(
-        asset_id="laptop-1", covered_from=date(2025, 1, 1), covered_until=date(2025, 7, 1)
-    ).amount == Decimal("257.86")
+        asset_id="laptop-1", covered_from=date(_FIRST, 1, 1), covered_until=date(_FIRST, 7, 1)
+    ).amount == accrued_through(Decimal("520.00"), date(_FIRST, 7, 1))
 
 
 def test_the_schema_offers_both_ends_as_optional_fields() -> None:

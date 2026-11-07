@@ -14,9 +14,15 @@ resolved through canonical governed-fact temporal selection:
   period by the days the filing period is extended when its last day is inhábil.
   From Orden HAC/241/2025 a minimum of días hábiles or naturales must remain
   before the voluntary close, counted on the calendar of a declared territory.
-  A separate, separately graded variant records AEAT's published practice of
-  replacing an inhábil Anexo II day with the latest business day meeting that
-  margin.
+  Variants graded as AEAT's published practice record what the Orden does not
+  say: the business-day minimum AEAT's calendars kept before that Orden, and the
+  replacement of an Anexo II day falling on a weekend, or on any inhábil day, by
+  the latest business day meeting the margin.
+
+The margin is counted as AEAT's calendars apply it: the business days after the
+domiciliación end up to and including the voluntary close, and the natural days
+strictly between the two ends. An Anexo II day that is not replaced stands while
+it meets the margin and otherwise yields to the latest business day that does.
 
 Each rule part reaches the registry support floor and stays open past its
 horizon, so the cutoff projects backward and forward with the projection
@@ -64,7 +70,11 @@ DOMICILIATION_PROCEDURE_FACT_ID: Final = "deadlines.domiciliation-procedure"
 _MODELO_SELECTOR: Final = "modelo"
 _SAME_DAYS: Final = "same_days"
 _NO_MARGIN: Final = "none"
+_BUSINESS_DAYS: Final = "business_days"
 _BUSINESS_OR_CALENDAR_DAYS: Final = "business_or_calendar_days"
+# ``date.weekday()`` of Saturday; Saturday and Sunday are the weekend the Orden
+# names first among the inhábil days.
+_SATURDAY: Final = 5
 _MAX_DAY_OF_MONTH: Final = 31
 # A margin walk longer than this means the calendar holds an impossible run of
 # inhábil days, which is a registry defect rather than a cutoff.
@@ -75,9 +85,8 @@ _CLAUSE_OPTIONAL_KEYS: Final = frozenset({"leap_year_domiciliation_last_day"})
 _PROCEDURE_REQUIRED_KEYS: Final = frozenset(
     {"filing_extension", "margin_rule", "inhabil_base", "inhabil_base_authority"},
 )
-_PROCEDURE_MARGIN_KEYS: Final = frozenset(
-    {"margin_min_business_days", "margin_min_calendar_days", "business_day_territory"},
-)
+_PROCEDURE_BUSINESS_MARGIN_KEYS: Final = frozenset({"margin_min_business_days", "business_day_territory"})
+_PROCEDURE_MARGIN_KEYS: Final = _PROCEDURE_BUSINESS_MARGIN_KEYS | {"margin_min_calendar_days"}
 
 
 class PaymentCutoffSource(StrEnum):
@@ -107,9 +116,18 @@ class PaymentCutoffUnavailableReason(StrEnum):
 
 
 class InhabilBasePolicy(StrEnum):
-    """What happens to an Anexo II day that falls on an inhábil day."""
+    """What happens to an Anexo II day that falls on an inhábil day.
+
+    * ``KEEP`` -- the day stands, subject only to the margin.
+    * ``WEEKEND_TO_LATEST_MARGIN_COMPLIANT_BUSINESS_DAY`` -- a Saturday or Sunday
+      is replaced by the latest business day meeting the margin; a holiday
+      stands, subject only to the margin.
+    * ``LATEST_MARGIN_COMPLIANT_BUSINESS_DAY`` -- any inhábil day is replaced by
+      the latest business day meeting the margin.
+    """
 
     KEEP = "keep"
+    WEEKEND_TO_LATEST_MARGIN_COMPLIANT_BUSINESS_DAY = "weekend_to_latest_margin_compliant_business_day"
     LATEST_MARGIN_COMPLIANT_BUSINESS_DAY = "latest_margin_compliant_business_day"
 
 
@@ -182,10 +200,16 @@ class DomiciliationClause:
 
 @dataclass(frozen=True, slots=True)
 class DomiciliationMargin:
-    """The minimum between the domiciliación end and the voluntary close, met by either count."""
+    """The minimum between the domiciliación end and the voluntary close.
+
+    ``min_business_days`` counts the business days after the domiciliación end
+    up to and including the close. ``min_calendar_days``, where declared, is an
+    alternative met by that many natural days strictly between the two ends;
+    ``None`` means the business-day count alone decides.
+    """
 
     min_business_days: int
-    min_calendar_days: int
+    min_calendar_days: int | None
     territory: str
 
 
@@ -282,14 +306,19 @@ def domiciliation_procedure_from_fact(resolved: ResolvedMappingFact) -> Domicili
     subject = _subject(resolved.fact_id, resolved.variant_id)
     entries = _entries(resolved)
     margin_rule = entries.get("margin_rule")
-    required = (
-        _PROCEDURE_REQUIRED_KEYS | _PROCEDURE_MARGIN_KEYS
-        if margin_rule == _BUSINESS_OR_CALENDAR_DAYS
-        else _PROCEDURE_REQUIRED_KEYS
-    )
+    required = _PROCEDURE_REQUIRED_KEYS
+    if margin_rule == _BUSINESS_DAYS:
+        required = _PROCEDURE_REQUIRED_KEYS | _PROCEDURE_BUSINESS_MARGIN_KEYS
+    elif margin_rule == _BUSINESS_OR_CALENDAR_DAYS:
+        required = _PROCEDURE_REQUIRED_KEYS | _PROCEDURE_MARGIN_KEYS
     _require_keys(entries, required=required, allowed=required, subject=subject)
     _token(entries, "filing_extension", allowed=frozenset({_SAME_DAYS}), subject=subject)
-    _token(entries, "margin_rule", allowed=frozenset({_NO_MARGIN, _BUSINESS_OR_CALENDAR_DAYS}), subject=subject)
+    _token(
+        entries,
+        "margin_rule",
+        allowed=frozenset({_NO_MARGIN, _BUSINESS_DAYS, _BUSINESS_OR_CALENDAR_DAYS}),
+        subject=subject,
+    )
     inhabil_base = InhabilBasePolicy(
         _token(entries, "inhabil_base", allowed=frozenset(InhabilBasePolicy), subject=subject),
     )
@@ -297,13 +326,17 @@ def domiciliation_procedure_from_fact(resolved: ResolvedMappingFact) -> Domicili
         _token(entries, "inhabil_base_authority", allowed=frozenset(InhabilBaseAuthority), subject=subject),
     )
     margin = None
-    if margin_rule == _BUSINESS_OR_CALENDAR_DAYS:
+    if margin_rule in {_BUSINESS_DAYS, _BUSINESS_OR_CALENDAR_DAYS}:
         territory = entries["business_day_territory"]
         if not isinstance(territory, str) or not territory.strip():
             raise RegistryValidationError(f"{subject} 'business_day_territory' must be a territory code")
         margin = DomiciliationMargin(
             min_business_days=_integer(entries, "margin_min_business_days", minimum=1, maximum=31, subject=subject),
-            min_calendar_days=_integer(entries, "margin_min_calendar_days", minimum=1, maximum=31, subject=subject),
+            min_calendar_days=(
+                _integer(entries, "margin_min_calendar_days", minimum=1, maximum=31, subject=subject)
+                if margin_rule == _BUSINESS_OR_CALENDAR_DAYS
+                else None
+            ),
             territory=territory.strip(),
         )
     if margin is None and inhabil_base is not InhabilBasePolicy.KEEP:
@@ -316,30 +349,51 @@ def domiciliation_procedure_from_fact(resolved: ResolvedMappingFact) -> Domicili
 # ---------------------------------------------------------------------------
 
 
-def _margin_cap(closes_on: date, margin: DomiciliationMargin, business_day: Callable[[date], bool]) -> date:
-    """Return the latest business day leaving the margin before ``closes_on``.
+def _margin_met(
+    candidate: date,
+    closes_on: date,
+    margin: DomiciliationMargin,
+    business_day: Callable[[date], bool],
+) -> bool:
+    """Whether a domiciliación ending on ``candidate`` leaves the margin before ``closes_on``.
 
-    The interval counted is the days after the candidate up to and including the
-    voluntary close; the margin is met by either the business-day or the
-    calendar-day minimum.
+    Business days are counted after the candidate up to and including the
+    voluntary close: AEAT publishes Tuesday 17 February 2026 before a Friday
+    20 February close (1M 26). Natural days are counted strictly between the two
+    ends: Wednesday 16 April 2025 before a Monday 21 April close leaves four, so
+    AEAT publishes Tuesday 15 April (1T 25), which leaves five natural days
+    although only two business days follow it.
     """
+    if margin.min_calendar_days is not None and (closes_on - candidate).days - 1 >= margin.min_calendar_days:
+        return True
     business_days_after = 0
-    joining = closes_on
-    joining_is_business = business_day(joining)
-    for _ in range(_MARGIN_SEARCH_DAYS):
-        if joining_is_business:
+    for offset in range(1, (closes_on - candidate).days + 1):
+        if business_day(candidate + timedelta(days=offset)):
             business_days_after += 1
-        candidate = joining - timedelta(days=1)
-        candidate_is_business = business_day(candidate)
-        margin_met = (
-            business_days_after >= margin.min_business_days or (closes_on - candidate).days >= margin.min_calendar_days
-        )
-        if margin_met and candidate_is_business:
+            if business_days_after >= margin.min_business_days:
+                return True
+    return False
+
+
+def _margin_cap(closes_on: date, margin: DomiciliationMargin, business_day: Callable[[date], bool]) -> date:
+    """Return the latest business day before ``closes_on`` that leaves the margin."""
+    candidate = closes_on
+    for _ in range(_MARGIN_SEARCH_DAYS):
+        candidate -= timedelta(days=1)
+        if business_day(candidate) and _margin_met(candidate, closes_on, margin, business_day):
             return candidate
-        joining, joining_is_business = candidate, candidate_is_business
     raise DeadlineValidationError(
         f"no business day leaves the domiciliation margin within {_MARGIN_SEARCH_DAYS} days of {closes_on.isoformat()}",
     )
+
+
+def _replaces_base(policy: InhabilBasePolicy, base_on: date, business_day: Callable[[date], bool]) -> bool:
+    """Whether the inhábil-base policy replaces this Anexo II day by the margin cap."""
+    if policy is InhabilBasePolicy.WEEKEND_TO_LATEST_MARGIN_COMPLIANT_BUSINESS_DAY:
+        return base_on.weekday() >= _SATURDAY
+    if policy is InhabilBasePolicy.LATEST_MARGIN_COMPLIANT_BUSINESS_DAY:
+        return not business_day(base_on)
+    return False
 
 
 def derive_domiciliation_cutoff(
@@ -373,12 +427,12 @@ def derive_domiciliation_cutoff(
         cutoff_on = base_on
     else:
         margin_cap_on = _margin_cap(closes_on, procedure.margin, business_day)
-        if procedure.inhabil_base is InhabilBasePolicy.LATEST_MARGIN_COMPLIANT_BUSINESS_DAY and not business_day(
-            base_on
+        if _replaces_base(procedure.inhabil_base, base_on, business_day) or not _margin_met(
+            base_on, closes_on, procedure.margin, business_day
         ):
             cutoff_on = margin_cap_on
         else:
-            cutoff_on = min(base_on, margin_cap_on)
+            cutoff_on = base_on
     if cutoff_on > closes_on:
         raise DeadlineValidationError(
             f"derived payment cutoff {cutoff_on.isoformat()} falls after the window close {closes_on.isoformat()}",
