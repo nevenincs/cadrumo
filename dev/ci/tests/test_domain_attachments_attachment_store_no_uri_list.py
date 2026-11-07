@@ -27,10 +27,13 @@ from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
 from cadrumo.domain.attachments.errors import AttachmentValidationError
 from cadrumo.domain.attachments.models import Attachment
 from cadrumo.domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
+FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_CAPTURED_AT = datetime(2026, 6, 30, 9, 0, 0, tzinfo=UTC)
+_CAPTURED_AT = datetime(FILING_YEAR, 6, 30, 9, 0, 0, tzinfo=UTC)
 
 
 # The store refuses a manifest from another profile bucket, so the fixture

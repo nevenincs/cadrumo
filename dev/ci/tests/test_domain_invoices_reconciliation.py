@@ -14,6 +14,7 @@ from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_sc
 from cadrumo.application.invoices.transaction_linking import link_invoice_transaction_repositories
 from cadrumo.core.invoice_link import LinkInconsistencyDirection
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.invoices.service import (
@@ -25,6 +26,8 @@ from cadrumo.domain.iva.schema import InvoiceKind
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+
+FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -61,7 +64,7 @@ def _invoice(
             {
                 "kind": kind,
                 "invoice_number": invoice_number,
-                "issued_at": date(2026, 4, 1),
+                "issued_at": date(FILING_YEAR, 4, 1),
                 "counterparty_name": counterparty_name,
                 "counterparty_tax_id": counterparty_tax_id,
                 "counterparty_country": counterparty_country,
@@ -86,8 +89,8 @@ def _transaction(
 ) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(2026, 4, 5),
-        value_date=date(2026, 4, 5),
+        booked_date=date(FILING_YEAR, 4, 5),
+        value_date=date(FILING_YEAR, 4, 5),
         amount=amount,
         currency="EUR",
         counterparty=counterparty,
@@ -97,7 +100,7 @@ def _transaction(
             source_sha256="c" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2026, 4, 10, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(FILING_YEAR, 4, 10, 12, 0, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={"Concepto": "payment"},

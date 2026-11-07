@@ -16,6 +16,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 from cadrumo.domain.calculations.row_source_identity import RowSourceIdentity
 from cadrumo.domain.filing.errors import FilingValidationError
 from cadrumo.domain.filing.schema import (
@@ -26,6 +27,9 @@ from cadrumo.domain.filing.schema import (
     registry_schema_version,
 )
 from cadrumo.domain.submission.models import ModeloDraftStatus
+
+FILING_YEAR = newest_authored_edition("100")
+REVISION_ID = revision_covering("100", FILING_YEAR).id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -115,11 +119,11 @@ def test_unidentified_m720_style_row_remains_explicitly_supported() -> None:
 
 
 def test_row_identity_participates_in_draft_content_address() -> None:
-    period = Period.from_year_and_code(2025, "0A")
+    period = Period.from_year_and_code(FILING_YEAR, "0A")
     snapshot = RegistrySnapshotRef(
         modelo="100",
-        revision_id="2025",
-        modelo_year=2025,
+        revision_id=REVISION_ID,
+        modelo_year=FILING_YEAR,
         period="0A",
     )
     original = _value()
@@ -145,11 +149,11 @@ def test_row_identity_participates_in_draft_content_address() -> None:
 
 
 def test_identity_bearing_draft_roundtrips_only_inside_encrypted_v2_storage(tmp_path: Path) -> None:
-    period = Period.from_year_and_code(2025, "0A")
+    period = Period.from_year_and_code(FILING_YEAR, "0A")
     snapshot = RegistrySnapshotRef(
         modelo="100",
-        revision_id="2025",
-        modelo_year=2025,
+        revision_id=REVISION_ID,
+        modelo_year=FILING_YEAR,
         period="0A",
     )
     binding_value = _value()
@@ -161,7 +165,7 @@ def test_identity_bearing_draft_roundtrips_only_inside_encrypted_v2_storage(tmp_
         values=(),
         binding_values=(binding_value,),
     )
-    instant = datetime(2026, 8, 23, tzinfo=UTC)
+    instant = datetime(FILING_YEAR, 8, 23, tzinfo=UTC)
     draft = ModeloDraft(
         draft_id=draft_id,
         modelo="100",
@@ -174,7 +178,7 @@ def test_identity_bearing_draft_roundtrips_only_inside_encrypted_v2_storage(tmp_
         binding_values=(binding_value,),
         created_at=instant,
         updated_at=instant,
-        schema_version=registry_schema_version(modelo="100", revision_id="2025"),
+        schema_version=registry_schema_version(modelo="100", revision_id=REVISION_ID),
     )
 
     with isolated_runtime_profile(

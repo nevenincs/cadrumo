@@ -38,6 +38,7 @@ from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.filing.schema import (
     ModeloBindingValue,
     ModeloDraft,
@@ -48,10 +49,13 @@ from cadrumo.domain.filing.schema import (
 )
 from cadrumo.domain.submission.models import ModeloDraftStatus
 
+FILING_YEAR = filing_year_envelope().horizon
+REVISION_ID = open_ended_revision("130").id
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _BUCKET_ID = "54b1b7fc-dbe4-4295-b691-fbb219b96b68"  # was 'filing-binding-provenance'
-_DRAFT_TIMESTAMP = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
+_DRAFT_TIMESTAMP = datetime(FILING_YEAR, 5, 25, 13, 45, 0, tzinfo=UTC)
 _PROVENANCE_FIELDS = ("source", "legal_refs", "source_refs")
 _M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id(
     "03",
@@ -67,11 +71,11 @@ def _populated_draft(*, rendimiento: Decimal = Decimal("8400.00")) -> ModeloDraf
     populated row index) so a save-drops-field / load-re-defaults-field
     regression cannot pass the strict-equality witness vacuously.
     """
-    period = Period.from_year_and_code(2025, "1T")
+    period = Period.from_year_and_code(FILING_YEAR, "1T")
     snapshot_ref = RegistrySnapshotRef(
         modelo="130",
-        revision_id="2019-y-siguientes",
-        modelo_year=2025,
+        revision_id=REVISION_ID,
+        modelo_year=FILING_YEAR,
         period="1T",
     )
     values = (
@@ -122,7 +126,7 @@ def _populated_draft(*, rendimiento: Decimal = Decimal("8400.00")) -> ModeloDraf
         findings=(),
         created_at=_DRAFT_TIMESTAMP,
         updated_at=_DRAFT_TIMESTAMP,
-        schema_version=registry_schema_version(modelo="130", revision_id="2019-y-siguientes"),
+        schema_version=registry_schema_version(modelo="130", revision_id=REVISION_ID),
         notes="Draft pending operator review",
     )
 

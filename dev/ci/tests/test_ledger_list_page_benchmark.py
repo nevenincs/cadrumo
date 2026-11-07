@@ -44,6 +44,7 @@ from cadrumo.application.ledger.transaction_projection import (
 )
 from cadrumo.core.ledger_sort import LedgerSortField
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.transactions.enums import (
     TransactionDirection,
 )
@@ -59,8 +60,8 @@ _BUCKET_ID = "41414141-4141-4141-8141-414141414141"
 _TOTAL_TRANSACTIONS = 30_000
 _FILING_YEARS = 10
 _TRANSACTIONS_PER_YEAR = _TOTAL_TRANSACTIONS // _FILING_YEARS
-_FIRST_YEAR = 2021
-_LAST_YEAR = _FIRST_YEAR + _FILING_YEARS - 1
+_LAST_YEAR = filing_year_envelope().horizon
+_FIRST_YEAR = _LAST_YEAR - _FILING_YEARS + 1
 
 #: The period-operation budget the ledger scale benchmark derives and binds.
 _P95_BUDGET_CPU_SECONDS = 3.0

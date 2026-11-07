@@ -38,8 +38,10 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 from .filing_draft_support import (
     APPROVED_AT,
     DRAFT_TIMESTAMP,
+    FILING_YEAR,
     IVA_DEVENGADO_CASILLA,
     IVA_RESULTADO_OPERANDS,
+    MODELO_303_REVISION_ID,
     approved_modelo_303_draft,
 )
 
@@ -110,8 +112,8 @@ def test_filing_draft_survives_encrypted_storage_roundtrip(
     assert loaded.subject_tax_id == "12345678Z"
     assert loaded.snapshot_ref is not None
     assert loaded.snapshot_ref.modelo == "303"
-    assert loaded.snapshot_ref.revision_id == "2025-y-siguientes"
-    assert loaded.snapshot_ref.modelo_year == 2025
+    assert loaded.snapshot_ref.revision_id == MODELO_303_REVISION_ID
+    assert loaded.snapshot_ref.modelo_year == FILING_YEAR
     assert loaded.snapshot_ref.period == "1T"
     computed = next(v for v in loaded.values if v.kind is ModeloValueKind.COMPUTED)
     assert computed.formula_trace_casilla_ids == IVA_RESULTADO_OPERANDS
@@ -213,7 +215,7 @@ def test_calculation_revision_observations_survive_encrypted_storage(
         # id this test used to carry: that id could never resolve, so the test
         # was asserting the round trip of a revision the product would refuse
         # to store at all.
-        snapshot = compiled_bundled_authority().snapshot("303", filing_year=2025, period="1T")
+        snapshot = compiled_bundled_authority().snapshot("303", filing_year=FILING_YEAR, period="1T")
         registry_snapshot_ref = snapshot.snapshot_ref
         period = Period.from_year_and_code(registry_snapshot_ref.modelo_year, registry_snapshot_ref.period)
         work_unit_id = derive_work_unit_id(

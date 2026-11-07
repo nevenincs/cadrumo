@@ -30,6 +30,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.period import Period
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import WorkUnitPersistenceError
 from cadrumo.domain.modelos.work_unit import (
@@ -38,6 +39,8 @@ from cadrumo.domain.modelos.work_unit import (
     WorkUnitState,
     derive_work_unit_id,
 )
+
+FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -48,9 +51,9 @@ _BUCKET_ID = "df5dd25a-ff53-4086-9cc4-a13e61538a09"  # was 'modelo-runtime'
 _WORK_UNIT_NAMESPACE = MODELO_WORK_UNIT_CATALOGUE_NAMESPACE.namespace
 _WORK_UNIT_OBJECT_KEY = MODELO_WORK_UNIT_CATALOGUE_NAMESPACE.require_default_object_key()
 _WORK_UNIT_CATALOGUE_VERSION = MODELO_WORK_UNIT_CATALOGUE_NAMESPACE.schema_version
-_WORK_UNIT_TIMESTAMP = datetime(2026, 5, 28, 10, 30, 0, tzinfo=UTC)
-_CORRUPT_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 10, 35, 0, tzinfo=UTC)
-_FUTURE_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 10, 40, 0, tzinfo=UTC)
+_WORK_UNIT_TIMESTAMP = datetime(FILING_YEAR, 5, 28, 10, 30, 0, tzinfo=UTC)
+_CORRUPT_ENVELOPE_WRITTEN_AT = datetime(FILING_YEAR, 5, 28, 10, 35, 0, tzinfo=UTC)
+_FUTURE_ENVELOPE_WRITTEN_AT = datetime(FILING_YEAR, 5, 28, 10, 40, 0, tzinfo=UTC)
 
 
 def _populated_work_unit(*, name_suffix: str = "default") -> WorkUnit:
@@ -67,9 +70,9 @@ def _populated_work_unit(*, name_suffix: str = "default") -> WorkUnit:
 
     bucket_id = "b" * 32
     modelo = ModeloCode("303")
-    filing_year = 2025
+    filing_year = FILING_YEAR
     period = Period.from_year_and_code(filing_year, "1T")
-    revision_id = "2025-y-siguientes"
+    revision_id = open_ended_revision("303").id
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=bucket_id,
@@ -116,23 +119,23 @@ def test_work_unit_catalogue_survives_encrypted_storage_roundtrip(
     assert loaded == original
     loaded_unit = loaded.work_units[work_unit.work_unit_id]
     dumped_unit = loaded_unit.model_dump(mode="json")
-    assert dumped_unit["filing_year"] == 2025
-    assert dumped_unit["period"] == {"filing_year": 2025, "code": "1T"}
-    assert "2025Q1" not in loaded_unit.model_dump_json()
+    assert dumped_unit["filing_year"] == FILING_YEAR
+    assert dumped_unit["period"] == {"filing_year": FILING_YEAR, "code": "1T"}
+    assert f"{FILING_YEAR}Q1" not in loaded_unit.model_dump_json()
     from cadrumo.adapters.persistence.storage.tests.secure_sql import read_db_at_rest_bytes
 
     database_bytes = read_db_at_rest_bytes(profile.paths.database_file)
-    assert b"2025Q1" not in database_bytes
-    assert b"2025-1T" not in database_bytes
+    assert f"{FILING_YEAR}Q1".encode() not in database_bytes
+    assert f"{FILING_YEAR}-1T".encode() not in database_bytes
     # Per-field witnesses: ModeloCode preservation, year/period
     # round-trip, state enum identity, content-addressed work_unit_id,
     # and the discard metadata triple (which were the test's main
     # anti-tautology guard: every defaultable field carries a real
     # non-default value).
     assert loaded_unit.modelo == "303"
-    assert loaded_unit.filing_year == 2025
-    assert loaded_unit.period == Period.from_year_and_code(2025, "1T")
-    assert loaded_unit.revision_id == "2025-y-siguientes"
+    assert loaded_unit.filing_year == FILING_YEAR
+    assert loaded_unit.period == Period.from_year_and_code(FILING_YEAR, "1T")
+    assert loaded_unit.revision_id == open_ended_revision("303").id
     assert loaded_unit.state is WorkUnitState.DESCARTADO
     assert loaded_unit.work_unit_id == work_unit.work_unit_id
     # Discard metadata survives the cycle; a regression that dropped any

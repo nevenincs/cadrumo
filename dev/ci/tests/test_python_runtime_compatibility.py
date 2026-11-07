@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.packaging.command_execution import CommandResult
 from dev.packaging.evidence import artifact_map_digest
 
@@ -19,12 +20,14 @@ from .. import (
     runtime_probe_installation,
 )
 
+FILING_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def _command_result(*, returncode: int, stderr: str = "", stdout: str = "") -> CommandResult:
     """Build one real-shaped result for the shared subprocess boundary."""
-    started = datetime(2026, 9, 2, tzinfo=UTC)
+    started = datetime(FILING_YEAR, 9, 2, tzinfo=UTC)
     return CommandResult(
         argv=("uv", "pip", "install"),
         cwd="C:/probe",
@@ -87,7 +90,7 @@ def _evidence(
         commands=(),
         focused_tests=(_focused_test("installed-cadrumo-mcp-help"),) if status == "passed" else (),
         failure={"category": "fixture", "detail": "failed"} if status == "failed" else None,
-        observed_at="2026-09-02T00:00:00+00:00",
+        observed_at=datetime(FILING_YEAR, 9, 2, tzinfo=UTC).isoformat(),
     )
 
 

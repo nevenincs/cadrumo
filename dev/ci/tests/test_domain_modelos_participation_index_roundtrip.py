@@ -31,6 +31,7 @@ from cadrumo.adapters.persistence.storage.secure_object_namespaces import TRANSA
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.participation_index import (
     TransactionParticipationIndexPersistenceError,
@@ -38,6 +39,8 @@ from cadrumo.domain.modelos.participation_index import (
     TransactionRevisionParticipationIndex,
     derive_participation_index_id,
 )
+
+FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -47,8 +50,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 PARTICIPATION_INDEX_NAMESPACE = TRANSACTION_PARTICIPATION_INDEX_NAMESPACE.namespace
 PARTICIPATION_INDEX_SCHEMA_VERSION = TRANSACTION_PARTICIPATION_INDEX_NAMESPACE.schema_version
 _BUCKET_ID = "1f8dbeda-8e90-4f36-9576-7e09554cf7ba"  # was 'modelo-participation-runtime'
-_P_2024_2T = Period.from_year_and_code(2024, "2T")
-_CORRUPT_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 10, 20, 0, tzinfo=UTC)
+_PERIOD_2T = Period.from_year_and_code(FILING_YEAR, "2T")
+_CORRUPT_ENVELOPE_WRITTEN_AT = datetime(FILING_YEAR, 5, 28, 10, 20, 0, tzinfo=UTC)
 
 
 def _hex(seed: str) -> str:
@@ -71,18 +74,18 @@ def _populated_index() -> TransactionRevisionParticipationIndex:
         calculation_revision_id=_hex("b"),
         work_unit_id=_hex("c"),
         modelo=ModeloCode("303"),
-        filing_year=2024,
-        period=_P_2024_2T,
+        filing_year=FILING_YEAR,
+        period=_PERIOD_2T,
         revision_state="presentado",
         filing_record_id=_hex("d"),
-        justificante_reference="2024-303-2T-JUST-0001",
+        justificante_reference=f"{FILING_YEAR}-303-2T-JUST-0001",
     )
     verified = TransactionRevisionParticipation(
         calculation_revision_id=_hex("e"),
         work_unit_id=_hex("f"),
         modelo=ModeloCode("130"),
-        filing_year=2024,
-        period=_P_2024_2T,
+        filing_year=FILING_YEAR,
+        period=_PERIOD_2T,
         revision_state="verificado_completo",
     )
     return TransactionRevisionParticipationIndex(
@@ -105,7 +108,7 @@ def test_participation_index_survives_encrypted_storage_roundtrip(tmp_path: Path
     assert filed.modelo == "303"
     assert filed.revision_state == "presentado"
     assert filed.filing_record_id == _hex("d")
-    assert filed.justificante_reference == "2024-303-2T-JUST-0001"
+    assert filed.justificante_reference == f"{FILING_YEAR}-303-2T-JUST-0001"
     verified = next(p for p in loaded.participations if p.filing_record_id is None)
     assert verified.revision_state == "verificado_completo"
     assert verified.justificante_reference is None

@@ -25,6 +25,7 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -44,6 +45,8 @@ from cadrumo.domain.modelos.verification_report import (
 from cadrumo.domain.modelos.verification_repository import VerificationReportPersistenceError
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 
+FILING_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 # The registry definition is the sole authority for this namespace's identifier,
@@ -61,17 +64,17 @@ _IVA_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
 _IVA_RESOLVED_CASILLA_IDS = (_IVA_DEDUCIBLE_CASILLA, _IVA_RESULTADO_CASILLA)
 _IVA_MISSING_REQUIRED_CASILLA_IDS = (_IVA_DEVENGADO_CASILLA,)
 _TEST_FINDING_LEGAL_REFS = ("ley-58-2003:art-119",)
-_REPORT_RUN_AT = datetime(2026, 5, 28, 11, 5, 0, tzinfo=UTC)
-_LEGACY_KEY_REPORT_RUN_AT = datetime(2026, 5, 28, 11, 10, 0, tzinfo=UTC)
-_CORRUPT_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 11, 15, 0, tzinfo=UTC)
-_FUTURE_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 11, 20, 0, tzinfo=UTC)
+_REPORT_RUN_AT = datetime(FILING_YEAR, 5, 28, 11, 5, 0, tzinfo=UTC)
+_LEGACY_KEY_REPORT_RUN_AT = datetime(FILING_YEAR, 5, 28, 11, 10, 0, tzinfo=UTC)
+_CORRUPT_ENVELOPE_WRITTEN_AT = datetime(FILING_YEAR, 5, 28, 11, 15, 0, tzinfo=UTC)
+_FUTURE_ENVELOPE_WRITTEN_AT = datetime(FILING_YEAR, 5, 28, 11, 20, 0, tzinfo=UTC)
 
 
-_REVISION_CREATED_AT = datetime(2026, 5, 28, 10, 0, 0, tzinfo=UTC)
+_REVISION_CREATED_AT = datetime(FILING_YEAR, 5, 28, 10, 0, 0, tzinfo=UTC)
 _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
     modelo="303",
-    revision_id="2026-y-siguientes",
-    modelo_year=2026,
+    revision_id=open_ended_revision("303").id,
+    modelo_year=FILING_YEAR,
     period="1T",
 )
 
@@ -214,8 +217,8 @@ def test_verification_report_catalogue_survives_encrypted_storage(
 @pytest.mark.parametrize(
     "run_at",
     (
-        datetime(2026, 5, 28, 11, 5, 0),
-        datetime(2026, 5, 28, 12, 5, 0, tzinfo=timezone(timedelta(hours=1))),
+        datetime(FILING_YEAR, 5, 28, 11, 5, 0),
+        datetime(FILING_YEAR, 5, 28, 12, 5, 0, tzinfo=timezone(timedelta(hours=1))),
     ),
     ids=("naive", "non-utc"),
 )
@@ -231,7 +234,10 @@ def test_verification_report_refuses_non_utc_run_at(run_at: datetime) -> None:
 
 @pytest.mark.parametrize(
     "persisted_run_at",
-    ("2026-05-28T11:05:00", "2026-05-28T12:05:00+01:00"),
+    (
+        datetime(FILING_YEAR, 5, 28, 11, 5, 0).isoformat(),
+        datetime(FILING_YEAR, 5, 28, 12, 5, 0, tzinfo=timezone(timedelta(hours=1))).isoformat(),
+    ),
     ids=("naive", "non-utc"),
 )
 def test_verification_report_catalogue_refuses_non_utc_run_at_at_encrypted_load(
@@ -424,7 +430,7 @@ def test_report_id_is_clock_free_for_an_identical_outcome() -> None:
         registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         completeness_status=VerificationCompletenessStatus.BLOCKED,
         findings=findings,
-        run_at=datetime(2026, 1, 1, 9, 0, tzinfo=UTC),
+        run_at=datetime(FILING_YEAR, 1, 1, 9, 0, tzinfo=UTC),
         verified_by=verified_by,
         granted_verificado_completo=False,
     )
@@ -434,7 +440,7 @@ def test_report_id_is_clock_free_for_an_identical_outcome() -> None:
         registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         completeness_status=VerificationCompletenessStatus.BLOCKED,
         findings=findings,
-        run_at=datetime(2026, 12, 31, 23, 59, tzinfo=UTC),
+        run_at=datetime(FILING_YEAR, 12, 31, 23, 59, tzinfo=UTC),
         verified_by=verified_by,
         granted_verificado_completo=False,
     )
