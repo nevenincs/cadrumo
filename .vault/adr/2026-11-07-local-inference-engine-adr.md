@@ -5,7 +5,7 @@ tags:
 date: '2026-11-07'
 modified: '2026-11-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:61c4ada559f386959623de9eb224c499f78a04bb46ccd4d13e92628040fdf628'
+body_hash: 'sha256:51eccb59101c6bca2da1b3903ecd1e12dd1201d0aec033f391062f389c36be79'
 related:
   - "[[2026-11-07-local-inference-engine-research]]"
   - "[[2026-10-24-rust-component-provisioning-adr]]"
@@ -189,3 +189,15 @@ The operator ruled the engine set, the default and the bundling. The rest follow
 The operator gave the ruling quoted in the Problem Statement directly to the orchestrating session on 2026-11-07. In the same session the operator added that the UX stays identical whichever engine serves the models, that acquisition must not need Ollama when Ollama is not selected, and asked whether people should pick between GPU and CPU models; D6 answers that question. The coordinating session confirmed acceptance on the same day. On that basis this record is accepted.
 
 The six reconciliation amendments follow directly from the ruling, which makes llama.cpp the default and drops the need for Ollama when it is not selected. They are applied as the first Step of the implementation plan, and the operator has been told about each one. The GPU pass settles only the default vision route, which will be recorded as an amendment.
+
+## Amendment 2026-11-07: default vision route and the reasoning requirement
+
+Basis: the operator's first-hand ruling of 2026-11-07 recorded above, the coordinator's plan approval of the same day, and the GPU pass in `2026-11-07-local-inference-engine-research` (RTX 4080 SUPER, llama-server b12184 on Vulkan and CUDA, against Ollama 0.40.13). This amendment settles the choice D4 left open and adds one lane requirement. It changes no other constraint.
+
+- **D4, default vision route.** The catalogue chooses the route per model, and Cadrumo still defines no model.
+  - A registry tag that ships a llama.cpp projector layer uses Route A: the Ollama-registry model plus projector layers in the shared store. `qwen3-vl:4b-instruct` is the measured case. Both backends loaded it with its projector layer (`projector_route_ok` true on Vulkan and CUDA), at 1.0 schema-valid and 0.95 field accuracy.
+  - A registry tag without a llama.cpp projector, such as `qwen3-vl:2b`, uses Route B: the Hugging Face GGUF plus mmproj that cadrumo-agent's catalogue declares and digest-pins. The measured pair is `Qwen/Qwen3-VL-2B-Instruct-GGUF` Q4_K_M plus mmproj Q8_0.
+  - A model the catalogue recommends keeps a route on both engines, so the list does not change with the engine.
+- **D2, backend.** CUDA stays optional and later. The bundled Vulkan build is sufficient for the default.
+- **D3, lane reasoning requirement.** The llama.cpp lane suppresses reasoning for structured extraction, with `--reasoning-budget 0` or per-request reasoning control, whichever the pinned build supports. It refuses a think-only reply with a typed refusal. On b12184, `qwen3:4b` (Qwen3 4B Thinking 2507, from the Ollama blob) ignored `chat_template_kwargs` `enable_thinking:false`, spent 400 tokens thinking and returned only empty answers (schema-valid 0/5). The lane re-runs that measurement cell as acceptance.
+- **Known gap.** On the bundled Vulkan build `qwen3-vl:2b` generates at about 128 tok/s, against 261 to 267 tok/s on Ollama and on CUDA, about half. The remedy is the optional CUDA build, later. The gap does not block the 4b vision default.

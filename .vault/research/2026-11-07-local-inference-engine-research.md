@@ -5,13 +5,13 @@ tags:
 date: '2026-11-07'
 modified: '2026-11-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:46f26e9d67ed83381d491f204a8a3b70a7abd87cc9a2ce99a3dc036a575f43d5'
+body_hash: 'sha256:31f75b0df74d2708c879a47c6b043cf8008bbd674f64c634876a2ac86aec097d'
 related: []
 ---
 
 # `local-inference-engine` research: `Local inference engine comparison: Ollama, llama.cpp, vLLM`
 
-The question is which local inference engines Cadrumo can run beside the Ollama program it already provisions, and what each costs in native provisioning and in cadrumo-agent. Ollama is coupled to a bounded set of native modules and to one agent lane. Most of the native provisioning machinery is engine-neutral. llama.cpp's `llama-server` is MIT-licensed, ships small per-backend archives, and serves an OpenAI-compatible API with router-mode residency. vLLM has no native Windows build and depends on Python and PyTorch, so it does not fit a desktop product with Rust-only provisioning. A CPU pass on 2026-11-07 showed that an Ollama text blob loads in llama-server in place, while Ollama's single-GGUF vision blob does not. A GPU pass is pending.
+The question is which local inference engines Cadrumo can run beside the Ollama program it already provisions, and what each costs in native provisioning and in cadrumo-agent. Ollama is coupled to a bounded set of native modules and to one agent lane. Most of the native provisioning machinery is engine-neutral. llama.cpp's `llama-server` is MIT-licensed, ships small per-backend archives, and serves an OpenAI-compatible API with router-mode residency. vLLM has no native Windows build and depends on Python and PyTorch, so it does not fit a desktop product with Rust-only provisioning. A CPU pass on 2026-11-07 showed that an Ollama text blob loads in llama-server in place, while Ollama's single-GGUF vision blob does not. A GPU pass later the same day settled the default vision route.
 
 ## Findings
 
@@ -163,9 +163,75 @@ The Ollama `qwen3-vl:2b` row is a lane defect, not a model ceiling. Three of the
 
 The harness scripts are `bench.py`, `interleave.py`, `extra_probes.py` and `probe_ollama_vl.py`, in the pass's temporary workspace. That workspace is not retained. This section is the durable record.
 
-## Measurement evidence (GPU pass, pending)
+## Measurement evidence (GPU pass, 2026-11-07)
 
-An RTX 4080 SUPER pass follows, once it is coordinated with the desktop build. It settles the default vision route (registry projector layer or Hugging Face GGUF plus mmproj), measures `auto` placement on Vulkan, and repeats the performance tables on an uncontended host.
+### Setup
+
+- GPU: NVIDIA GeForce RTX 4080 SUPER, 16 GB. An idle unrelated service held a 5.8 GB baseline. The VRAM column is peak use over that baseline.
+- Engines: Ollama 0.40.13 against llama-server b12184, Vulkan build and CUDA 13.5 build.
+- Context 8192 on every run (`-c 8192`, `num_ctx 8192`). Engines rotated per repetition, and each figure is the median of 3.
+- The contention log shows no contamination of the GPU. A concurrent CPU-bound build ran on the host throughout, so the CPU-side figures (RSS, cold load) carry that noise.
+- All documents were synthetic: five Spanish invoices and receipts, eight fields each, under a JSON schema.
+- Downloaded archives were verified against their SHA-256: `llama-b12184-bin-win-vulkan-x64.zip` (37,709,845 bytes), `llama-b12184-bin-win-cuda-13.5-x64.zip` (170,769,237 bytes) and `cudart-llama-bin-win-cuda-13.5-x64.zip` (426,314,199 bytes). The Hugging Face pair was verified too: `Qwen3VL-2B-Instruct-Q4_K_M.gguf` is 1,107,409,952 bytes and `mmproj-Qwen3VL-2B-Instruct-Q8_0.gguf` is 445,053,216 bytes.
+- The Ollama `qwen3-vl:2b` row was pulled as `qwen3-vl:2b-instruct`.
+
+### Projector route
+
+`projector_route_ok` is true on Vulkan and on CUDA. llama-server loaded the `qwen3-vl:4b-instruct` registry model layer with its projector layer from the shared store and read the synthetic invoices as images. This settles Route A for that tag.
+
+### Performance
+
+| Engine | Model | Cold load s | TTFT s | Prompt tok/s | Gen tok/s | Peak RSS tree MB | Peak VRAM MB over baseline |
+|---|---|---|---|---|---|---|---|
+| Ollama | `qwen3-vl:4b-instruct` | 5.486 | 0.113 | 390.38 | 179.76 | 912 | 5188 |
+| llama-server Vulkan | `qwen3-vl:4b-instruct` | 3.861 | 0.048 | 1317.47 | 155.6 | 2907 | 4835 |
+| llama-server CUDA | `qwen3-vl:4b-instruct` | 4.001 | 0.074 | 920.53 | 176.92 | 2895 | 5051 |
+| Ollama | `qwen3:4b` | 5.205 | 0.162 | 346.44 | 178.14 | 849 | 3969 |
+| llama-server Vulkan | `qwen3:4b` | 5.216 | 0.165 | 1235.71 | 158.18 | 2855 | 3624 |
+| llama-server CUDA | `qwen3:4b` | 2.771 | 0.241 | 1026.53 | 179.14 | 2860 | 3874 |
+| Ollama | `qwen3:1.7b` | 4.804 | 0.385 | 247.46 | 276.65 | 815 | 2416 |
+| llama-server Vulkan | `qwen3:1.7b` | 3.99 | 0.54 | 677.17 | 198.74 | 1538 | 2095 |
+| llama-server CUDA | `qwen3:1.7b` | 3.351 | 0.193 | 341.75 | 303.58 | 1715 | 2355 |
+| Ollama | `qwen3-vl:2b` | 6.083 | 1.488 | 294.48 | 267.08 | 828 | 3500 |
+| llama-server Vulkan | `qwen3-vl:2b`, Hugging Face pair | 9.634 | 0.261 | 639.67 | 127.6 | 1493 | 2851 |
+| llama-server CUDA | `qwen3-vl:2b`, Hugging Face pair | 6.175 | 0.137 | 611.38 | 261.27 | 1555 | 3052 |
+
+llama-server processes prompts faster than Ollama in every row. On generation, Vulkan is below Ollama in every row. CUDA is within about 2% of Ollama on both 4b models and on `qwen3-vl:2b`, and about 10% above it on `qwen3:1.7b`.
+
+### Extraction quality
+
+| Engine | Model | Input | Schema-valid | Field accuracy | Misses |
+|---|---|---|---|---|---|
+| Ollama | `qwen3-vl:4b-instruct` | png | 1.0 | 1.0 | none |
+| llama-server Vulkan | `qwen3-vl:4b-instruct` | png | 1.0 | 0.95 | issuer_nif 2 |
+| llama-server CUDA | `qwen3-vl:4b-instruct` | png | 1.0 | 0.95 | issuer_nif 2 |
+| Ollama | `qwen3:4b` | text | 1.0 | 1.0 | none |
+| llama-server Vulkan | `qwen3:4b` | text | 0.0 | 0.0 | all eight fields, 5 of 5 replies |
+| llama-server CUDA | `qwen3:4b` | text | 0.0 | 0.0 | all eight fields, 5 of 5 replies |
+| Ollama | `qwen3:1.7b` | text | 1.0 | 0.85 | issuer_name 1, date 1, base 2, iva_amount 1, total 1 |
+| llama-server Vulkan | `qwen3:1.7b` | text | 1.0 | 0.8 | date 1, base 3, iva_amount 2, total 2 |
+| llama-server CUDA | `qwen3:1.7b` | text | 1.0 | 0.825 | base 3, iva_amount 2, total 2 |
+| Ollama | `qwen3-vl:2b` | png | 1.0 | 0.95 | date 2 |
+| llama-server Vulkan | `qwen3-vl:2b`, Hugging Face pair | png | 1.0 | 0.925 | date 2, issuer_name 1 |
+| llama-server CUDA | `qwen3-vl:2b`, Hugging Face pair | png | 1.0 | 0.925 | date 2, issuer_name 1 |
+
+### The `qwen3:4b` thinking caveat on llama-server
+
+The `qwen3:4b` blob from the Ollama registry is "Qwen3 4B Thinking 2507". On llama-server b12184 it ignored `chat_template_kwargs` `enable_thinking:false`. It spent 400 tokens thinking and every answer was empty, so schema-valid was 0 of 5 on both backends. This is a lane requirement, not a model ceiling. The llama.cpp lane must suppress reasoning for structured extraction (`--reasoning-budget 0`, or per-request reasoning control, whichever the pinned build supports), detect think-only replies with a typed refusal, and re-run this cell as acceptance.
+
+### Ollama honoured `think:false`
+
+Ollama honoured `think:false` on all four models in this pass: `qwen3-vl:4b-instruct`, `qwen3:4b`, `qwen3:1.7b` and `qwen3-vl:2b`. Each Ollama row above returned schema-valid replies.
+
+### CUDA against Vulkan
+
+CUDA generates about 13% faster than Vulkan on the 4b models (`qwen3-vl:4b-instruct` 176.92 against 155.6 tok/s, `qwen3:4b` 179.14 against 158.18) and about 2 times faster on `qwen3-vl:2b` (261.27 against 127.6). It costs about 600 MB more: the CUDA 13.5 archive and cudart total 597 MB against 38 MB for Vulkan.
+
+Known gap: on the bundled Vulkan build `qwen3-vl:2b` generates at about 128 tok/s, against 261 to 267 tok/s on Ollama and on CUDA, about half. The remedy is the optional CUDA build, later. The gap does not block the default for `qwen3-vl:4b-instruct`, where Vulkan reaches 155.6 tok/s against 179.76 on Ollama.
+
+### Harness
+
+The GPU pass script is `gpu_pass.py`, with results in `results_gpu.md` and `results_gpu.json`, in a temporary workspace that is not retained. This section is the durable record.
 
 ## Sources
 
@@ -199,3 +265,4 @@ An RTX 4080 SUPER pass follows, once it is coordinated with the desktop build. I
 - https://docs.vllm.ai/en/latest/configuration/optimization/
 - CPU measurement pass, 2026-11-07: harness `bench.py`, `interleave.py`, `extra_probes.py` and `probe_ollama_vl.py`, with results in `results.md` and `results.json`, in a temporary workspace that is not retained.
 - Verification status: the external release versions and archive sizes are as supplied on 2026-11-07 and were not re-downloaded. The README and router facts were read on 2026-11-07. These locators were spot-checked: `pins.rs:252`, `supervision.rs:45-53`, `launch_environment.py:70-72`, `ollama_residency.py:68-81`, `declared_catalog.py:103` and `lane_admission.py:330-341`.
+- GPU measurement pass, 2026-11-07: harness `gpu_pass.py`, with results in `results_gpu.md` and `results_gpu.json`, in a temporary workspace that is not retained.
