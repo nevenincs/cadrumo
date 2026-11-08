@@ -3,6 +3,12 @@ import {
   type InvokeArgs,
   type InvokeOptions,
 } from "@tauri-apps/api/core";
+import {
+  consoleSummary,
+  errorEventSummary,
+  isResizeObserverNotice,
+  rejectionSummary,
+} from "./diagnosticSummary";
 import { notifyInternalFailure } from "./internalFailures";
 import type {
   HostCommand,
@@ -51,24 +57,29 @@ export function installDiagnostics(token: ShellToken | null): void {
   if (installed || !token) return;
   installed = true;
   diagnosticToken = token;
-  const report = (event: Diagnostic["event"], level: Diagnostic["level"]) => {
-    reportDiagnostic(token, { event, level, command: null, code: null });
-    if (level === "ERROR" || level === "CRITICAL") notifyInternalFailure();
-  };
-  window.addEventListener("error", (error) => {
+  window.addEventListener("error", (event) => {
+    // The browser's own notice that a ResizeObserver delivers the rest of a
+    // frame's resizes in the next one: nothing failed.
+    const notice = isResizeObserverNotice(event);
     reportDiagnostic(token, {
       event: "uncaught_error",
+      level: notice ? "WARNING" : "ERROR",
+      command: null,
+      code: null,
+      ...errorEventSummary(event),
+    });
+    if (!notice) notifyInternalFailure();
+  });
+  window.addEventListener("unhandledrejection", (event) => {
+    reportDiagnostic(token, {
+      event: "unhandled_rejection",
       level: "ERROR",
       command: null,
       code: null,
-      line: error.lineno,
-      column: error.colno,
+      ...rejectionSummary(event.reason),
     });
     notifyInternalFailure();
   });
-  window.addEventListener("unhandledrejection", () =>
-    report("unhandled_rejection", "ERROR"),
-  );
   for (const [method, level] of [
     ["error", "ERROR"],
     ["warn", "WARNING"],
@@ -79,7 +90,16 @@ export function installDiagnostics(token: ShellToken | null): void {
     const original = console[method].bind(console);
     console[method] = (...args: unknown[]) => {
       original(...args);
-      report("console", level);
+      // The stack is taken here, so its first frame is this wrapper and its
+      // second the caller.
+      reportDiagnostic(token, {
+        event: "console",
+        level,
+        command: null,
+        code: null,
+        ...consoleSummary(args, new Error().stack),
+      });
+      if (level === "ERROR") notifyInternalFailure();
     };
   }
 }
@@ -108,6 +128,27 @@ export type CallPlan = {
   sessionEnded?(): boolean;
 };
 
+/** Refusals the host answers for what the person did or for where the
+ * session stands, which the owning view words and offers a way on from. */
+const REFUSAL_LEVEL: Readonly<Record<string, "WARNING">> = {
+  // The runtime or host refused the request as asked; nothing failed. A
+  // session that ended is not here: one the window did not see coming is an
+  // error, and one it saw is dropped through `sessionEnded`.
+  refused: "WARNING",
+  review_changed: "WARNING",
+  conflict: "WARNING",
+  too_large: "WARNING",
+};
+
+function rejectionLevel(
+  code: string | null,
+  plan: CallPlan | undefined,
+): "WARNING" | "ERROR" {
+  if (code === null) return "ERROR";
+  if (plan?.retryable?.(code) && plan.scheduled?.()) return "WARNING";
+  return REFUSAL_LEVEL[code] ?? "ERROR";
+}
+
 export async function observedInvoke<T>(
   token: ShellToken | null,
   command: string,
@@ -118,25 +159,25 @@ export async function observedInvoke<T>(
   try {
     return await invoke<T>(command, args, options);
   } catch (error) {
-    const code =
+    const field = (name: "code" | "reason") =>
       error &&
       typeof error === "object" &&
-      "code" in error &&
-      typeof error.code === "string"
-        ? error.code
+      name in error &&
+      typeof (error as Record<string, unknown>)[name] === "string"
+        ? ((error as Record<string, unknown>)[name] as string)
         : null;
+    const code = field("code");
+    const reason = field("reason");
     // The session the call belonged to ended before it answered.
     if (plan?.sessionEnded?.()) throw error;
     // Backpressure and deliberate cancellation are expected control flow.
     if (code !== "queue_full" && code !== "installation_cancelled") {
       reportDiagnostic(token, {
         event: "command_rejected",
-        level:
-          code !== null && plan?.retryable?.(code) && plan.scheduled?.()
-            ? "WARNING"
-            : "ERROR",
+        level: rejectionLevel(code, plan),
         command,
         code,
+        ...(reason !== null ? { reason } : {}),
       });
       // Typed refusals are worded by their owning view. Missing metadata and
       // native faults must also surface when a caller deliberately catches.
