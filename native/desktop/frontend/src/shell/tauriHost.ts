@@ -149,7 +149,8 @@ export function tauriHost(): Host {
       },
     },
     profileCompanions: {
-      household: (language) => call("user_profile_household", { language }),
+      household: (language, plan) =>
+        call("user_profile_household", { language }, plan),
       imputationElection: (profile, taxYear, language) =>
         call("user_profile_imputation_election", {
           profile,

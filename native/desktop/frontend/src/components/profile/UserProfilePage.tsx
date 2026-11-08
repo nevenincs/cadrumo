@@ -64,6 +64,7 @@ type PageAction = Action & { pageKey?: ChordKeys };
 export const UserProfilePage = memo(function UserProfilePage({
   host,
   reader,
+  sessionEnded,
   language,
   shown,
   page,
@@ -84,6 +85,8 @@ export const UserProfilePage = memo(function UserProfilePage({
 }: {
   host: Host;
   reader: string;
+  /** Whether the window asked the signed-in session to end. */
+  sessionEnded?: () => boolean;
   language: string;
   shown: boolean;
   page: RefObject<HTMLElement | null>;
@@ -935,6 +938,7 @@ export const UserProfilePage = memo(function UserProfilePage({
                   observe={host.userProfile.observe}
                   language={language}
                   writable={writable}
+                  sessionEnded={sessionEnded}
                 />
               )}
               {nothing && (
