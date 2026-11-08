@@ -6,6 +6,7 @@ import type { SetupRun } from "../src/ipc/componentSetup";
 import { FIXTURE_CATALOG } from "../src/dev/fixtures/agentCatalog";
 import { catalogLanes, type CatalogLane } from "../src/shell/localModelLanes";
 import { planIsFor } from "../src/shell/localModels";
+import { catalogue } from "./support/strings";
 
 // Where the local AI's plan is answered while it awaits the person: on the
 // asked model's row, on the program's row, or, in a model section that stands
@@ -203,7 +204,7 @@ async function compiled(): Promise<Draw> {
             namespace: "stub",
           }));
           plugin.onLoad({ filter: /.*/, namespace: "stub" }, () => ({
-            contents: "export default { en: {} };",
+            contents: `export default ${JSON.stringify(catalogue)};`,
             loader: "js",
           }));
         },

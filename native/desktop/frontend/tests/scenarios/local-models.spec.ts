@@ -427,8 +427,11 @@ test("from the click on, while the local AI sets up, no model offers its downloa
   // The start is in flight and no snapshot names its setup yet.
   await open(target, "start_unreported");
   const lane = await openLane(target);
+  // Exact: the plan the click brings up has buttons that begin with the same
+  // word, which are the review's and no model's download.
   const downloads = lane.getByRole("button", {
     name: label("desktop.providers.local_model_download"),
+    exact: true,
   });
   const vision = lane.locator('li[data-model="synthetic-vision:1"]');
   const starts = async () =>
@@ -464,6 +467,12 @@ test("a download the setup refuses says why on that model's row alone", async ({
   page: target,
 }) => {
   await open(target, "busy");
+  // A computer that is not set up opens the setup panel over the window; it
+  // is put away to reach the settings the refusal is read in.
+  await target
+    .getByRole("dialog", { name: label("desktop.setup.title") })
+    .getByRole("button", { name: label("desktop.setup.not_now") })
+    .click();
   const lane = await openLane(target);
   const vision = lane.locator('li[data-model="synthetic-vision:1"]');
   await vision
@@ -523,6 +532,10 @@ test("once a download's bytes are all fetched and the setup goes on, the model's
     name: label("desktop.providers.local_model_download"),
   });
   const progress = vision.locator("[data-setup-progress]");
+  // Sizes are written with a no-break space before their unit, which a
+  // whitespace-insensitive match reads as the space the label has.
+  const progressText = async () =>
+    ((await progress.textContent()) ?? "").replace(/\s+/g, " ");
   const step = () =>
     target.evaluate(() => window.__scenarioSetup?.step("local_ai"));
   await download.click();
@@ -538,7 +551,7 @@ test("once a download's bytes are all fetched and the setup goes on, the model's
   });
   for (
     let index = 0;
-    index < 12 && !((await progress.textContent()) ?? "").includes(fetched);
+    index < 12 && !(await progressText()).includes(fetched);
     index += 1
   )
     await step();
