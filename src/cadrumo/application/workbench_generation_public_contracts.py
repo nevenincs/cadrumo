@@ -240,6 +240,7 @@ class PublicDeclarationTarget(BaseModel):
 
     modelo: str
     period: PublicPeriod
+    profile_requirements: tuple[str, ...]
 
 
 class PublicDeclarationsWorkspaceCalculationRevisionRefV1(BaseModel):

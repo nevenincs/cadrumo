@@ -9443,6 +9443,8 @@ workspace:
         open_count: 'megnyitva: {count}'
         open_it: Megnyitás
         other: Egyéb modelók
+        profile_requirements: 'Hogy ez az időszak rád vonatkozik-e, attól függ, mit
+          mond a profilod a következőkről:'
         refused: A Cadrumo nem hozta létre a bevallást.
         search_placeholder: Keresés
         show_all: Minden nyomtatvány, nem csak a rád vonatkozók

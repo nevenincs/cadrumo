@@ -513,7 +513,7 @@ class ProfilePreflightService:
         already_missing = {(item.section_key, item.field_key) for item in existing}
         missing: list[ProfilePreflightRequirement] = []
         for predicate in unresolved_schedule_deciding_fields(revision, taxpayer, period=period.registry_token):
-            path = self._path_for_schedule_predicate(predicate)
+            path = self._schema.schedule_predicate_path(predicate)
             if path is None or self._split_path(path) in already_missing:
                 continue
             missing.append(
@@ -525,13 +525,6 @@ class ProfilePreflightService:
                 ),
             )
         return missing
-
-    def _path_for_schedule_predicate(self, predicate: str) -> str | None:
-        for section in self._schema.sections:
-            for field in section.fields:
-                if predicate in field.schedule_predicates:
-                    return f"{section.key}.{field.key}"
-        return None
 
     def _selector_for_path(self, path: str) -> str:
         section_key, field_key = self._split_path(path)

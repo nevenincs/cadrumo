@@ -265,6 +265,7 @@ def _read_declarations_workspace(
     observed_at: UtcInstant,
     result_casilla_reader: DeclarationResultCasillaReaderV1 | None,
     lifecycle_facts: tuple[DeclarationsSanitizedLifecycleFactV1, ...] | None,
+    profile: UserProfileRecord,
 ) -> DeclarationsWorkspaceProjectionV1 | None:
     history_observation = (
         DeclarationsWorkspaceZoneObservationV1(
@@ -283,6 +284,7 @@ def _read_declarations_workspace(
             calculation_revisions=calculation_revisions,
             filing_records=filing_records,
             lifecycle_facts=() if lifecycle_facts is None else lifecycle_facts,
+            profile=profile,
             result_casilla_reader=result_casilla_reader,
             zone_observations=(
                 declarations_observation(DeclarationsWorkspaceZone.DECLARATIONS, observed_at),
@@ -533,6 +535,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             filings=filings,
             bucket_events=bucket_events,
             observed_at=observed_at,
+            profile=record,
         )
         raw_values = record_to_path_values(record)
         # The ledger is read before the calendar: its invoices answer the
@@ -577,6 +580,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         filings: ModeloRecordCatalogue,
         bucket_events: BucketEventHistoryCatalogue | None,
         observed_at: UtcInstant,
+        profile: UserProfileRecord,
     ) -> DeclarationsWorkspaceProjectionV1 | None:
         lifecycle_facts = (
             None
@@ -604,6 +608,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                 observed_at=observed_at,
                 result_casilla_reader=self.result_casilla_reader,
                 lifecycle_facts=lifecycle_facts,
+                profile=profile,
             ),
             count=lambda workspace: None if workspace is None else len(workspace.declarations),
         )
