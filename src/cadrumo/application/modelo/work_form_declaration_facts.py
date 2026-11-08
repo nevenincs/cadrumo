@@ -27,6 +27,7 @@ from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_references import TemporalProjectionDirection
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage
+from ...domain.iva.refund_eligibility import RefundEligibility
 from ...domain.modelos.calculation_revision_sources import CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT, CalculationNoteFact
 from .work_form_findings import ModeloFormAttention
 
@@ -203,6 +204,13 @@ class ModeloFormResult(ModeloFormBase):
     registry names the settlement box but declares no such rule, the direction
     is unknown. ``election_may_change`` says the filer's refund election can
     still turn a carried credit into a refund.
+
+    ``refund_eligibility`` is why it can or cannot, for a carried IVA credit:
+    the law admits the refund only at the year's last period or for a taxpayer
+    inscribed in the Registro de devolución mensual (LIVA art. 115). It is
+    ``None`` for every result with no refund election to make, and
+    ``election_may_change`` is true exactly when that eligibility allows the
+    refund, so the two can never disagree.
     """
 
     casilla_id: CasillaId
@@ -211,6 +219,15 @@ class ModeloFormResult(ModeloFormBase):
     direction: ModeloFormResultDirection
     disposition: ResultDisposition | None = None
     election_may_change: bool = False
+    refund_eligibility: RefundEligibility | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _election_agrees_with_its_eligibility(self) -> ModeloFormResult:
+        allowed = self.refund_eligibility is not None and self.refund_eligibility.refund_allowed
+        if self.election_may_change != allowed:
+            raise ValueError("a refund election is offered exactly when its eligibility allows the refund")
+        return self
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

@@ -46,7 +46,12 @@ async def read_latest_censal_observation(
         for entry in page.entries:
             if entry.disposition is OperationRecoveryInventoryDisposition.REFUSED:
                 raise InternalInvariantError("census capture history cannot be verified")
-            if entry.disposition is not OperationRecoveryInventoryDisposition.TERMINAL:
+            # The inventory read each record to classify it, so a record opened for any other
+            # definition is passed over without reading it again.
+            if (
+                entry.disposition is not OperationRecoveryInventoryDisposition.TERMINAL
+                or entry.definition_id not in subjects
+            ):
                 continue
             snapshot = await journal.load(entry.operation_id)
             observation = await _snapshot_observation(snapshot, profile_id, subjects, operands)

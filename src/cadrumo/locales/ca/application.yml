@@ -2251,6 +2251,7 @@ application:
       cross_period_clean_state_incomplete: La prova d'estat net entre períodes està
         incompleta per al model {modelo} {period} {filing_year}; queden {finding_count}
         incidència(es).
+      cross_period_sources_not_filed: 'El %{modelo_words} de %{year} suma les declaracions del seu exercici i encara li falten: %{sources}. Quan estiguin presentades, torna a calcular-lo.'
       deductible_iva_evidence_missing: 'Els apunts amb IVA deduïble dels teus registres
         requereixen una factura de compra vinculada. Vincula la factura a l''apunt
         i torna a executar aeat app modelo work verify: la comprovació no es completa
@@ -2991,6 +2992,11 @@ application:
       stage_incomplete: L'etapa %{stage} de `quickfile` ha acabat amb l'estat %{status}.
       stage_refused: '`quickfile` s''ha aturat a l''etapa %{stage}: l''etapa s''ha
         rebutjat amb %{error_code}.'
+    reconciliation_sources:
+      standing:
+        missing: '%{modelo}, %{period}: sense calcular'
+        unfiled: '%{modelo}, %{period}: comprovada, sense presentar'
+        unverified: '%{modelo}, %{period}: calculada, sense comprovar'
     taxation_comparison_words:
       below_materiality: Els dos resultats difereixen en {difference}, menys de {threshold},
         així que tant se val quina de les dues modalitats triïs.

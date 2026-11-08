@@ -30,6 +30,7 @@ from ...domain.calculations.registry.schema_base import CasillaDataType
 from ...domain.deadlines.effective_close import EffectiveFilingDeadline
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...domain.deadlines.models import ObligationStatus
+from ...domain.iva.refund_eligibility import RefundEligibilityOutcome
 from ..overview.calendar import holiday_coverage_statement
 from ..overview.calendar_models import OverviewAeatSubmissionState, OverviewLocalFilingState
 from ..overview.coverage import CoverageAdviceReason
@@ -357,14 +358,32 @@ def state_words(row: DeclarationListRow, language: OutputLanguage) -> str:
     )
 
 
+_CHOICE_PENDING_LOCALE_KEY: Final[str] = "workspace.modelo.header.result.choice_pending"
+_REDEME_UNSTATED_LOCALE_KEY: Final[str] = "workspace.modelo.header.result.redeme_unstated"
+_RESULT_DIRECTION_LOCALE_KEY_PREFIX: Final[str] = "workspace.modelo.header.result."
+
+
+def _settlement_key(result: ModeloFormResult) -> str:
+    """The words a known result settles under, from the same resolver the form reads.
+
+    A carried IVA credit the filer may still ask back says so; one whose refund
+    waits on an unstated REDEME inscription says that instead of claiming the
+    credit is carried, which is not yet established.
+    """
+    if result.election_may_change:
+        return _CHOICE_PENDING_LOCALE_KEY
+    eligibility = result.refund_eligibility
+    if eligibility is not None and eligibility.outcome is RefundEligibilityOutcome.UNDETERMINED_REDEME_UNSTATED:
+        return _REDEME_UNSTATED_LOCALE_KEY
+    return _RESULT_DIRECTION_LOCALE_KEY_PREFIX + _DIRECTION_WORDS[result.direction]
+
+
 def _valued_result_words(result: ModeloFormResult, value: Decimal, language: OutputLanguage) -> str:
     """A known amount with the way it settles, keeping the sign only where nothing says the direction."""
     locale = language.value
     shown_value = value if result.direction is ModeloFormResultDirection.UNKNOWN else abs(value)
     amount = format_casilla_value(shown_value, data_type=CasillaDataType.MONEY, language=language)
-    key = "workspace.modelo.header.result." + _DIRECTION_WORDS[result.direction]
-    if result.election_may_change:
-        key = "workspace.modelo.header.result.choice_pending"
+    key = _settlement_key(result)
     if result.direction is ModeloFormResultDirection.TO_DEDUCT_LATER:
         return tr(key, amount=amount, locale=locale)
     if result.direction in AMOUNTLESS_RESULT_DIRECTIONS:

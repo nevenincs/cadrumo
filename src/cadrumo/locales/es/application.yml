@@ -2247,6 +2247,7 @@ application:
       cross_period_clean_state_incomplete: La prueba de estado limpio entre periodos
         está incompleta para el modelo {modelo} {period} {filing_year}; quedan {finding_count}
         incidencia(s).
+      cross_period_sources_not_filed: 'El %{modelo_words} de %{year} suma las declaraciones de su ejercicio y aún le faltan: %{sources}. Cuando estén presentadas, vuelve a calcularlo.'
       deductible_iva_evidence_missing: 'Los apuntes con IVA deducible de tus registros
         requieren una factura de compra vinculada. Vincula la factura al apunte y
         vuelve a ejecutar aeat app modelo work verify: la comprobación no se completa
@@ -2989,6 +2990,11 @@ application:
       stage_incomplete: La etapa %{stage} de `quickfile` terminó con el estado %{status}.
       stage_refused: '`quickfile` se detuvo en la etapa %{stage}: la etapa se rechazó
         con %{error_code}.'
+    reconciliation_sources:
+      standing:
+        missing: '%{modelo}, %{period}: sin calcular'
+        unfiled: '%{modelo}, %{period}: comprobada, sin presentar'
+        unverified: '%{modelo}, %{period}: calculada, sin comprobar'
     taxation_comparison_words:
       below_materiality: Los dos resultados difieren en {difference}, menos de {threshold},
         así que da igual cuál de las dos modalidades elijas.

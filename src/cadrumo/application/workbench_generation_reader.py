@@ -47,6 +47,7 @@ from ..domain.buckets.event import (
 from ..domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ..domain.invoices.catalogue import InvoiceCatalogue
 from ..domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
+from ..domain.iva.refund_eligibility import RedemeEnrolmentState, redeme_enrolment_state
 from ..domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -101,7 +102,7 @@ from .overview.evidence import (
 )
 from .overview.home import HomeAccountSession
 from .user_profile.censal_observation import CensalObservation
-from .user_profile.projections import record_to_path_values
+from .user_profile.projections import declared_redeme_enrolment, record_to_path_values
 from .workbench_capture_memory import WorkbenchCalendarMemoKey, WorkbenchCaptureMemory
 from .workbench_generation_calendar import (
     CalendarMemo,
@@ -324,6 +325,13 @@ class _StoredCatalogues(NamedTuple):
     bucket_events: BucketEventHistoryCatalogue | None
 
 
+class _AeatSyncSourceReads(NamedTuple):
+    """What a generation read for AEAT Sync alone, rechecked unchanged with the declaration sources."""
+
+    custody_count: int | None
+    census_observation: CensalObservation | None
+
+
 class _DeclarationSources(NamedTuple):
     """Captured declaration inputs retained through a surface's own currentness checks."""
 
@@ -453,8 +461,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             ledger_sources=capture.ledger_sources,
             verification=capture.catalogues.verification,
             bucket_events=capture.catalogues.bucket_events,
-            custody_count=custody_count,
-            census_observation=census_observation,
+            aeat_sync_reads=_AeatSyncSourceReads(custody_count, census_observation),
         ):
             raise InternalInvariantError("secure workbench generation changed during capture")
         return _timed(
@@ -478,7 +485,10 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
 
         It reads the same repositories, through the same projections, as a
         generation does, and is checked unchanged across the capture the same
-        way, without the account session only Home needs.
+        way, without the account session only Home needs. The notification
+        custody count and the census observation feed only AEAT Sync, so the
+        list neither reads nor rechecks them: the census is found by scanning
+        every operation the profile's journal holds.
         """
         with diagnostic_scope(), _capture_phase("declaration_list_inputs"):
             return self._capture_declaration_list_inputs()
@@ -494,8 +504,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             ledger_sources=capture.ledger_sources,
             verification=capture.catalogues.verification,
             bucket_events=capture.catalogues.bucket_events,
-            custody_count=_timed("custody_count", self._load_custody_count),
-            census_observation=_timed("census_observation", self._load_census_observation),
+            aeat_sync_reads=None,
         ):
             raise InternalInvariantError("secure declarations list changed during capture")
         return DeclarationListInputs(
@@ -518,6 +527,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             verification,
             bucket_events,
         ) = catalogues
+        raw_values = record_to_path_values(record)
         declarations = self._read_declarations_projection(
             work_units=work_units,
             revisions=revisions,
@@ -525,8 +535,8 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             filings=filings,
             bucket_events=bucket_events,
             observed_at=observed_at,
+            redeme=redeme_enrolment_state(declared_redeme_enrolment(raw_values)),
         )
-        raw_values = record_to_path_values(record)
         # The ledger is read before the calendar: its invoices answer the
         # ledger-derived obligation signals the calendar decides on.
         ledger_revision = _timed("ledger_revision", self._ledger_revision)
@@ -569,6 +579,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         filings: ModeloRecordCatalogue,
         bucket_events: BucketEventHistoryCatalogue | None,
         observed_at: UtcInstant,
+        redeme: RedemeEnrolmentState = RedemeEnrolmentState.UNSTATED,
     ) -> DeclarationsWorkspaceProjectionV1 | None:
         lifecycle_facts = (
             None
@@ -617,6 +628,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                                     verification=verification,
                                     operation=self.operation,
                                     resolutions=self._resolutions_of(ref),
+                                    redeme=redeme,
                                 )
                             }
                         )
@@ -705,9 +717,13 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         ledger_sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None,
         verification: VerificationReportCatalogue | None,
         bucket_events: BucketEventHistoryCatalogue | None,
-        custody_count: int | None,
-        census_observation: CensalObservation | None = None,
+        aeat_sync_reads: _AeatSyncSourceReads | None,
     ) -> bool:
+        """Re-read every source the capture used and say whether each still equals what it read.
+
+        ``aeat_sync_reads`` is what a generation read for AEAT Sync alone;
+        ``None`` for a capture that read neither of them.
+        """
         with _capture_phase("recheck"):
             final_record = _timed("recheck_profile_record", lambda: self.profile_repository.load(self.profile_id))
             _, final_work_units_revision = _timed("recheck_work_units", self.work_unit_repository.load_revisioned)
@@ -724,8 +740,14 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                 and _timed("recheck_ledger", lambda: self._ledger_is_unchanged(ledger_revision, ledger_sources))
                 and _timed("recheck_verification_reports", self._load_verification_reports) == verification
                 and _timed("recheck_bucket_events", self._load_bucket_events) == bucket_events
-                and _timed("recheck_custody_count", self._load_custody_count) == custody_count
-                and _timed("recheck_census_observation", self._load_census_observation) == census_observation
+                and (
+                    aeat_sync_reads is None
+                    or (
+                        _timed("recheck_custody_count", self._load_custody_count) == aeat_sync_reads.custody_count
+                        and _timed("recheck_census_observation", self._load_census_observation)
+                        == aeat_sync_reads.census_observation
+                    )
+                )
             )
 
     def _load_stored_catalogues(self) -> _StoredCatalogues:

@@ -186,10 +186,12 @@ function Chooser({
   const suggested = forModelo.find((x) => x.suggested) ?? forModelo[0] ?? null;
   const shownYear = year ?? suggested?.filing_year ?? null;
   const periods = forModelo.filter((x) => x.filing_year === shownYear);
+  // Only the person's choice or the backend's suggestion is ever picked: the
+  // window holds no rule for which period a filer is due, so with neither it
+  // waits for the person.
   const picked =
     periods.find((x) => at(x, chosen)) ??
     periods.find((x) => x.suggested) ??
-    periods[0] ??
     null;
   const targetKey = picked ? creationWriteKey(picked) : "";
   const hold = useModeloWriteHold(holds, targetKey);

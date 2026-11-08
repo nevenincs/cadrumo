@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field
 
 from ...core.errors.hierarchy import CadrumoError
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...domain.iva.refund_eligibility import RedemeEnrolmentState
 from ...domain.modelos.calculation_revision import (
     CURRENT_SEALED_REVISION_STATES,
     CalculationRevision,
@@ -87,12 +88,18 @@ def declaration_summary(
     verification: VerificationReportCatalogue | None,
     operation: PinnedAuthorityOperation,
     resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
+    redeme: RedemeEnrolmentState = RedemeEnrolmentState.UNSTATED,
 ) -> DeclarationSummary:
     """Project one row; a registry refusal cannot erase its neighbours.
 
     ``resolutions`` are the source disagreements the operator accepted for this
     declaration: the row counts a disagreement they cover as the gate does, which
     is as no blocker.
+
+    ``redeme`` is the filer's stated inscription in the Registro de devolución
+    mensual, which decides whether a negative IVA result may be asked back in
+    this period. The caller reads it once for the whole list, so a row and the
+    declaration's own form answer that from the same fact.
 
     See Also:
         :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
@@ -124,7 +131,11 @@ def declaration_summary(
         filed_before_cap = _filed_before_grade_cap(declaration, head, operation)
         state = _summary_state(declaration, head, blockers, checked)
         result = settlement_result_values(
-            str(declaration.modelo), snapshot.revision, head.casilla_values, declaration.period
+            str(declaration.modelo),
+            snapshot.revision,
+            head.casilla_values,
+            declaration.period,
+            redeme=redeme,
         )
     except (CadrumoError, ValueError, LookupError) as exc:
         return DeclarationSummary(state=DeclarationSummaryState.UNREADABLE, technical_reason=str(exc))
