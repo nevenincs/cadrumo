@@ -2579,6 +2579,9 @@ application:
       invoice_fingerprint_unavailable: A Cadrumo nem tudta beolvasni a számláidat,
         hogy összevesse őket a(z) %{modelo} %{filing_year}, %{period} modellel, ezért
         nem igazolható, hogy a számítás naprakész. Próbáld újra, ha már olvashatók.
+      invoice_source_document_missing: A(z) %{invoice_number} beérkezett számla IVA-t
+        von le, de a nyilvántartásod nem őrzi a dokumentumát. Nyisd meg a számlát,
+        és csatold a PDF-et vagy az e-számlát.
       iva_compensation_annual_source_evidence_failure: A Modelo 390-hez szükség van
         az év Modelo 303 bevallásainak adataira, és ezekkel kapcsolatban még %{source_issue_count}
         megoldatlan probléma van, ezért ez a bevallás nem fejezhető be.

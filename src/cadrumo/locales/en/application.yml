@@ -2484,6 +2484,9 @@ application:
       invoice_fingerprint_unavailable: Cadrumo could not read your invoices to compare
         them with modelo %{modelo} %{filing_year}, %{period}, so this calculation
         cannot be shown to be current. Try again once they can be read.
+      invoice_source_document_missing: Received invoice %{invoice_number} deducts
+        IVA, but your records do not hold its document. Open the invoice and attach
+        its PDF or e-invoice.
       iva_compensation_annual_source_evidence_failure: Modelo 390 needs figures from
         your modelo 303 returns for the year, and %{source_issue_count} issue(s) with
         them are still open, so this declaration cannot be completed.

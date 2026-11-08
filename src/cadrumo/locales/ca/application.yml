@@ -2626,6 +2626,9 @@ application:
         per comparar-les amb el model %{modelo} %{filing_year}, %{period}, així que
         no es pot confirmar que aquest càlcul estigui al dia. Torna-ho a provar quan
         es puguin llegir.
+      invoice_source_document_missing: La factura rebuda %{invoice_number} dedueix
+        IVA, però els teus registres no en guarden el document. Obre la factura i
+        adjunta'n el PDF o la factura electrònica.
       iva_compensation_annual_source_evidence_failure: El model 390 necessita les
         dades dels teus models 303 de l'any, i encara hi ha %{source_issue_count}
         incidència(es) pendent(s) amb aquestes dades, així que aquesta declaració

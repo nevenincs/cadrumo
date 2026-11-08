@@ -574,6 +574,7 @@ def build_verification_repository_bundle(
     from ..adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
     from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ..adapters.persistence.profile.workflow_gate import build_workflow_gate_ports
+    from ..adapters.persistence.storage.attachment import AttachmentStore
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ..application.aggregation.percepciones_observations_repository import PercepcionObservationPorts
     from ..application.modelo.verification_repository_ports import VerificationRepositoryBundle
@@ -613,6 +614,7 @@ def build_verification_repository_bundle(
             bucket_id=normalized_bucket_id, transaction_repository=transaction_repository, objects=objects
         ),
         credit_resolution=CreditResolutionRepositoryAdapter(objects=objects),
+        attachment=AttachmentStore(objects=objects),
     )
 
 
