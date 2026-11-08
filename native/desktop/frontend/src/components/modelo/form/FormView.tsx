@@ -455,6 +455,23 @@ export function FormView({
             <Icon name="splitColumn" />
           </IconButton>
         </div>
+        {session.carryAttestation && (
+          <div
+            data-carry-attestation=""
+            className="flex flex-none items-start gap-3 border-b border-border px-6 py-3"
+          >
+            <p className="min-w-0 flex-1 text-sm text-muted-foreground">
+              {session.carryAttestation.statement_words}
+            </p>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => session.attestCarries()}
+            >
+              {session.carryAttestation.action_words}
+            </Button>
+          </div>
+        )}
         {pages.length > 1 && page && (
           <Tabs
             value={page.id}

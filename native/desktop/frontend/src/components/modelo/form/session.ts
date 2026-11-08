@@ -67,7 +67,9 @@ type SetValue = {
 
 /** One staged edit as the edit contract names it: a box takes a typed
  * value, a clear or a restore; a binding that feeds a box takes an override
- * or its removal. `change` is the kind of change the filer made, as a
+ * or its removal, or, for a carry from an earlier filing, the filer's
+ * statement that it holds no amount, said in the words the form served for
+ * that statement. `change` is the kind of change the filer made, as a
  * preflight is told it: removing an override clears a value the filer gave,
  * or gives the box back to its source. */
 export type StagedIntent =
@@ -78,6 +80,12 @@ export type StagedIntent =
   | {
       kind: "remove_override";
       change: Exclude<ModeloEditHeldKind, "set">;
+    }
+  | {
+      kind: "attest_no_amount";
+      change: "set";
+      words: string;
+      statement: string;
     };
 
 export type StagedEdit = {
@@ -221,7 +229,8 @@ export function editSubmission(
     } else if (
       address.kind === "binding" &&
       (intent.kind === "set_override_value" ||
-        intent.kind === "remove_override")
+        intent.kind === "remove_override" ||
+        intent.kind === "attest_no_amount")
     )
       binding.push({ address, kind: intent.kind, ...value });
   }
@@ -348,6 +357,9 @@ export function restaged(
   field: PublicModeloFormField,
 ): StagedIntent | null {
   const { intent } = edit;
+  // A statement is the same statement on the box as it now stands.
+  if (intent.kind === "attest_no_amount")
+    return field.takes_typed_value ? intent : null;
   if (intent.change === "set") {
     if (!field.takes_typed_value) return null;
     if (
@@ -447,6 +459,12 @@ export type FormSession = {
   stagedCount: number;
   stage(field: PublicModeloFormField, intent: StagedIntent): void;
   unstage(editKey: string): void;
+  /** The form's statement that no earlier-ejercicio amount is pending, while
+   * it offers one and some carry it names is not yet staged as stated; null
+   * otherwise. */
+  carryAttestation: PublicModeloWorkForm["carry_attestation"];
+  /** Stages the statement on every carry the form names, one edit each. */
+  attestCarries(): void;
   discardAll(): void;
   /** Keeps the staged edits a preflight's `report` keeps, staged again
    * against the declaration as it stands, and drops the others. */
@@ -773,6 +791,36 @@ export function useFormSession({
     [form.pages],
   );
 
+  // The statement's carries, each at the box whose edit address is its binding.
+  const attestation = form.carry_attestation;
+  const carries = useMemo(
+    () =>
+      (attestation?.binding_ids ?? []).flatMap((bindingId) => {
+        const found = placed.find(
+          (p) =>
+            p.field.edit_address.kind === "binding" &&
+            p.field.edit_address.binding_id === bindingId,
+        );
+        return found ? [found.field] : [];
+      }),
+    [attestation, placed],
+  );
+  const attestCarries = useCallback(() => {
+    if (!attestation) return;
+    for (const field of carries)
+      stage(field, {
+        kind: "attest_no_amount",
+        change: "set",
+        words: attestation.action_words,
+        statement: attestation.statement_words,
+      });
+  }, [attestation, carries, stage]);
+  const carriesStated =
+    carries.length > 0 &&
+    carries.every(
+      (field) => staged.get(editKey(field))?.intent.kind === "attest_no_amount",
+    );
+
   return {
     baseline,
     adoptBaseline,
@@ -780,6 +828,14 @@ export function useFormSession({
     stagedCount: staged.size,
     stage,
     unstage,
+    carryAttestation:
+      attestation &&
+      carries.length > 0 &&
+      !carriesStated &&
+      editsAdmitted(envelope)
+        ? attestation
+        : null,
+    attestCarries,
     discardAll,
     rebase,
     rebased,

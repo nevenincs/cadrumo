@@ -22,5 +22,7 @@ export function stagedText(t: Translate, edit: StagedEdit): string {
     case "restore_source_value":
     case "remove_override":
       return t("workspace.modelo.staged.restore");
+    case "attest_no_amount":
+      return edit.intent.words;
   }
 }

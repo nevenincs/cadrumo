@@ -226,6 +226,21 @@ export type ModeloFormCalculationNote = {
 };
 
 /**
+ * The statement a filer can make that no amount from an earlier ejercicio is
+ * still pending.
+ *
+ * It is offered while a carry the declaration reads from an earlier filing
+ * holds no value: no stored earlier return supplied it, and the filer has
+ * neither entered it nor stated it. Applying it stages one `attest_no_amount`
+ * intent per binding, which records each as a zero the filer stated.
+ */
+export type ModeloFormCarryAttestation = {
+  binding_ids: BindingId[];
+  action_words: string;
+  statement_words: string;
+};
+
+/**
  * How many fields stand in each origin, for a section, a page or the form.
  *
  * `total` counts the boxes counted: a section's, a page's, or for the form
@@ -1188,6 +1203,7 @@ export type PublicModeloWorkForm = {
   filing: ModeloFormFiling | null;
   last_export: ModeloFormExport | null;
   edit_closure: ModeloFormEditClosure | null;
+  carry_attestation: ModeloFormCarryAttestation | null;
   modelo_title: string | null;
   modelo_name: string | null;
   modelo_number: string | null;
