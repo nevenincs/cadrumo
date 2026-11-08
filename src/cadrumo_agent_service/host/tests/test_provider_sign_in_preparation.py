@@ -258,6 +258,7 @@ class _CountingProbe(AgentProviderAuthStatusProbe):
 def _service(tmp_path: Path, *, woken: list[str] | None = None) -> AgentService:
     client = SimpleNamespace(lease=SimpleNamespace(profile_id=uuid4()), connection=SimpleNamespace(close=lambda: None))
     return AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
         client=cast(InstalledServiceClient, client),
         storage_root=tmp_path,
         gateway_bearer=bytearray(),
