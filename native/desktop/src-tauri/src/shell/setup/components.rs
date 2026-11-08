@@ -1554,6 +1554,7 @@ fn failure(category: FailureCategory) -> wire::Failure {
     match category {
         FailureCategory::Offline => wire::Failure::Offline,
         FailureCategory::HostUnreachable => wire::Failure::HostUnreachable,
+        FailureCategory::ServerError => wire::Failure::ServerError,
         FailureCategory::SecureConnectionFailed => wire::Failure::SecureConnectionFailed,
         FailureCategory::BlockedByNetwork => wire::Failure::BlockedByNetwork,
         FailureCategory::DiskFull => wire::Failure::DiskFull,

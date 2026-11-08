@@ -8,6 +8,7 @@ use std::fmt;
 pub enum FailureCategory {
     Offline,
     HostUnreachable,
+    ServerError,
     SecureConnectionFailed,
     BlockedByNetwork,
     DiskFull,
@@ -25,9 +26,10 @@ pub enum FailureCategory {
 }
 
 impl FailureCategory {
-    pub const ALL: [Self; 16] = [
+    pub const ALL: [Self; 17] = [
         Self::Offline,
         Self::HostUnreachable,
+        Self::ServerError,
         Self::SecureConnectionFailed,
         Self::BlockedByNetwork,
         Self::DiskFull,
@@ -48,6 +50,7 @@ impl FailureCategory {
         match self {
             Self::Offline => "offline",
             Self::HostUnreachable => "host_unreachable",
+            Self::ServerError => "server_error",
             Self::SecureConnectionFailed => "secure_connection_failed",
             Self::BlockedByNetwork => "blocked_by_network",
             Self::DiskFull => "disk_full",
@@ -129,10 +132,12 @@ impl TransferFailure {
     }
 
     /// Classifies an HTTP status a transfer received; `None` for a success or a redirect.
+    /// A server that answers 429 or 5xx was reached and is having a problem of its own,
+    /// which is not a host that cannot be reached.
     pub fn of_status(status: u16) -> Option<Self> {
         let failure = match status {
             0..400 => return None,
-            429 | 500.. => Self::transient(FailureCategory::HostUnreachable),
+            429 | 500.. => Self::transient(FailureCategory::ServerError),
             403 | 407 => Self::final_(FailureCategory::BlockedByNetwork),
             _ => Self::final_(FailureCategory::Unexpected),
         };
@@ -158,14 +163,14 @@ mod tests {
                 serde_json::Value::String(category.as_str().into())
             );
         }
-        assert_eq!(FailureCategory::ALL.len(), 16);
+        assert_eq!(FailureCategory::ALL.len(), 17);
     }
 
     #[test]
     fn statuses_classify_as_the_retry_contract_says() {
         for status in [429, 500, 502, 503, 599] {
             let failure = TransferFailure::of_status(status).unwrap();
-            assert_eq!(failure.category, FailureCategory::HostUnreachable);
+            assert_eq!(failure.category, FailureCategory::ServerError);
             assert!(failure.transient, "{status}");
         }
         for (status, category) in [
@@ -192,5 +197,6 @@ mod tests {
         }
         assert!(!TransferFailure::transient(FailureCategory::DamagedDownload).transient);
         assert!(TransferFailure::transient(FailureCategory::HostUnreachable).transient);
+        assert!(TransferFailure::transient(FailureCategory::ServerError).transient);
     }
 }

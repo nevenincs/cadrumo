@@ -4838,7 +4838,8 @@ desktop:
       cancelled: Has cancelado la configuración.
       damaged_download: La descarga estaba dañada y no se ha podido usar.
       disk_full: No hay suficiente espacio libre en el disco.
-      host_unreachable: No se ha podido contactar con el servidor de descarga.
+      host_unreachable: No se ha podido contactar con el servidor de descarga. Comprueba
+        tu conexión a internet y vuelve a intentarlo.
       interrupted: La configuración se interrumpió antes de terminar.
       memory_busy: Hay demasiada memoria en uso ahora mismo. Cierra otros programas
         y vuelve a intentarlo.
@@ -4851,6 +4852,8 @@ desktop:
       program_not_running: El programa de IA local no está en marcha.
       secure_connection_failed: No se ha podido establecer una conexión segura. Puede
         que un filtro de red lo impida.
+      server_error: El servidor de descarga tiene un problema. Vuelve a intentarlo
+        dentro de unos minutos.
       unexpected: Algo ha salido mal.
     item:
       browser: Navegador

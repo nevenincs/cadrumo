@@ -41,6 +41,7 @@ export type SetupStaleReason = "older_revision" | "program_too_old";
 export type SetupFailureCategory =
   | "offline"
   | "host_unreachable"
+  | "server_error"
   | "secure_connection_failed"
   | "blocked_by_network"
   | "disk_full"

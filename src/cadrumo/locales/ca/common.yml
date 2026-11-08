@@ -4835,7 +4835,8 @@ desktop:
       cancelled: Has cancel·lat la configuració.
       damaged_download: La baixada estava malmesa i no s'ha pogut fer servir.
       disk_full: No hi ha prou espai lliure al disc.
-      host_unreachable: No s'ha pogut contactar amb el servidor de baixada.
+      host_unreachable: No s'ha pogut contactar amb el servidor de baixada. Comprova
+        la teva connexió a internet i torna-ho a provar.
       interrupted: La configuració es va interrompre abans d'acabar.
       memory_busy: Ara mateix hi ha massa memòria en ús. Tanca altres programes i
         torna-ho a provar.
@@ -4848,6 +4849,8 @@ desktop:
       program_not_running: El programa d'IA local no està en marxa.
       secure_connection_failed: No s'ha pogut establir una connexió segura. Potser
         un filtre de xarxa ho impedeix.
+      server_error: El servidor de baixada té un problema. Torna-ho a provar d'aquí
+        a uns minuts.
       unexpected: Alguna cosa ha anat malament.
     item:
       browser: Navegador
