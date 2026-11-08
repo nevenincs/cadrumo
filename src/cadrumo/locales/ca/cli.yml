@@ -417,6 +417,9 @@ cli:
         arrendamiento_local_negocio_help: Marca que la factura emesa per l'arrendador
           correspon al lloguer d'un local de negoci. Fes servir les opcions de situació
           i referència cadastral per registrar les dades de l'immoble.
+        attach_document_help: Desa el document d'una factura (el PDF o la factura
+          electrònica) amb ella.
+        attach_document_source_help: Ruta del fitxer del document.
         country_code_help: 'Codi de país ISO 3166-1 alfa-2 de la contrapart. Obligatori:
           determina l''encaminament de totes dues informatives, per això mai no es
           dóna per suposat.'

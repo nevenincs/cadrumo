@@ -1141,6 +1141,8 @@ errors:
       before replacing it.
     refused_ledger_counterparty_establishment_input: An establishment fact cannot
       be confirmed against a counterparty identifier that does not verify.
+    refused_ledger_counterparty_provincia_input: The provincia given is not an INE
+      province code.
     refused_ledger_evidence_input: An evidence input provided violates the purchase-invoice
       contract. Correct the input and try again.
     refused_ledger_evidence_not_found: No purchase-invoice evidence exists with the

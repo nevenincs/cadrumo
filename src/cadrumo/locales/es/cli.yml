@@ -419,6 +419,9 @@ cli:
         arrendamiento_local_negocio_help: Marca que la factura emitida por el arrendador
           corresponde al alquiler de un local de negocio. Usa las opciones de situación
           y referencia catastral para registrar los datos del inmueble.
+        attach_document_help: Guarda el documento de una factura (su PDF o la factura
+          electrónica) junto a ella.
+        attach_document_source_help: Ruta del archivo del documento.
         country_code_help: 'Código de país ISO 3166-1 alfa-2 de la contraparte. Obligatorio:
           determina el encaminamiento de ambas declaraciones informativas, por lo
           que nunca se presupone.'

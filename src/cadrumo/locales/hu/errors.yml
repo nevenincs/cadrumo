@@ -1163,6 +1163,7 @@ errors:
       más területen letelepedett; a csere előtt vonja vissza a megerősített tényt.
     refused_ledger_counterparty_establishment_input: A letelepedési tény nem erősíthető
       meg olyan partnerazonosítóval, amely nem érvényes.
+    refused_ledger_counterparty_provincia_input: A megadott tartomány nem INE-tartománykód.
     refused_ledger_evidence_input: Egy megadott igazolás-bemenet sérti a vásárlási
       számla szerződést. Javítsd a bemenetet, és próbáld újra.
     refused_ledger_evidence_not_found: Nem létezik vásárlási számla igazolás a megadott

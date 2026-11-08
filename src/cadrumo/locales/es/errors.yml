@@ -1232,6 +1232,8 @@ errors:
       como establecida en otro territorio; retire el hecho confirmado antes de sustituirlo.
     refused_ledger_counterparty_establishment_input: No se puede confirmar un hecho
       de establecimiento con un identificador de contraparte que no valida.
+    refused_ledger_counterparty_provincia_input: La provincia indicada no es un código
+      de provincia del INE.
     refused_ledger_evidence_input: Un dato de evidencia indicado infringe el contrato
       de la factura de compra. Corrige la entrada y vuelve a intentarlo.
     refused_ledger_evidence_not_found: No existe ninguna evidencia de factura de compra

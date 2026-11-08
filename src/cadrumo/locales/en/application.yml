@@ -1429,10 +1429,10 @@ application:
           rate.
         what_to_do: Check the surcharge on that invoice in your records.
       invoice_recargo_not_attributable_to_a_tier:
-        what: One surcharge covers lines at several VAT rates, so it could not be
-          compared with the official rates.
-        what_to_do: Check the surcharge on your own, or split the invoice by VAT rate
-          in your records.
+        what: This return was calculated without the surcharge of an invoice that
+          covers several VAT rates.
+        what_to_do: 'Calculate again: the surcharge will be declared under each rate,
+          or you will be shown the invoice to correct.'
       invoice_reverse_charge_cuota_not_derivable:
         what: A received invoice with reverse charge has no VAT rate, so the VAT you
           owe on it was not worked out.
@@ -1475,10 +1475,10 @@ application:
           source that confirms them.
         what_to_do: Check those amounts against the official instructions before filing.
       m347_declarado_provincia_unrecorded:
-        what: '{box} is missing for some declarados: it belongs to their domicilio
-          fiscal, which your invoices do not state.'
-        what_to_do: Enter the provincia code of each listed declarado's domicilio
-          fiscal before you file the declaration.
+        what: '{box} is missing for this declarado: it belongs to its domicilio fiscal,
+          which your invoices do not state.'
+        what_to_do: Open its invoice and state the provincia of its domicilio fiscal;
+          it applies to all its invoices when you calculate again.
       m347_metalico_unrecorded:
         what: Your invoices do not say how they were collected, so {box} holds no
           amount on any record.
@@ -1744,6 +1744,7 @@ application:
       instalment_free_gap: '{element}: no depreciation charge is recorded from {start}
         to {end}. Its method leaves the amount to you, so it adds nothing to box {box}.'
       m347_provincia_unrecorded: 'Declarados without a provincia code: {parties}.'
+      m347_provincia_unstated: The provincia of {party}'s domicilio fiscal is missing.
       possibly_durable_expense: The ledger entry of {row_date} for {row_amount} deducts
         as a current expense, and its description reads like a long-term asset.
       prior_filing_unrecorded: To calculate box {box}, record your Modelo {modelo}
@@ -2254,6 +2255,9 @@ application:
         invoice_deduction_family_unresolved: 'the received invoice it pays does not
           show which deduction applies: classify the movement, for example as a current
           expense or as a bien de inversión'
+        invoice_recargo_split_unresolved: 'an issued invoice carries one recargo de
+          equivalencia over several VAT rates that differs from the sum of each rate''s
+          recargo: correct the invoice''s recargo'
         linked_movement_contradicts_invoice: its base or IVA amount differs from the
           invoice it pays
         missing_business_classification: it is not yet classified as business, personal
@@ -2767,6 +2771,10 @@ application:
           ingresos: Income so far (Modelo 130 declarations)
           pagos_fraccionados: Instalments paid (Modelo 130 declarations)
           rendimiento_neto: Net income so far (Modelo 130 declarations)
+      ledger_hold:
+        movement: 'Before %{period} can be calculated, review the movement of %{movement_date},
+          “%{movement_description}”, %{movement_amount}: %{need}.'
+        period: 'Before %{period} can be calculated: %{need}.'
       next_step:
         calculate_work: Calculate %{modelo}, %{period}
         create_work: Create %{modelo}, %{period}

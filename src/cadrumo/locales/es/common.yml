@@ -2146,6 +2146,10 @@ desktop:
         introducido. Tu borrador se conserva.
       note: Nota
       proposed: Tu valor propuesto
+      provincia: Provincia del domicilio fiscal
+      provincia_save: Guardar provincia
+      provincia_unstated: 'Sin indicar: el Modelo 347 la declara para cada contraparte
+        española.'
       scope:
         es_canarias: Canarias
         es_ceuta_melilla: Ceuta y Melilla
@@ -3275,6 +3279,7 @@ desktop:
       added_no_rate: Factura {number} añadida · aún sin tipo de cambio a EUR
       any_class: Cualquier clase
       any_payment: Cualquier pago
+      attach_document: Adjuntar documento
       back: Volver
       base: Base imponible
       cancel: Cancelar
@@ -3312,6 +3317,8 @@ desktop:
       discard_new: ¿Descartar esta factura?
       discard_note: Todavía no se ha guardado nada.
       document: Documento
+      document_already: Ese documento ya estaba guardado con la factura.
+      document_attached: Documento guardado con la factura.
       duplicate: Ya está en el catálogo.
       empty: Aún no hay facturas. Añade una o importa un libro de facturas.
       empty_filtered: Ninguna factura coincide.
@@ -3476,6 +3483,9 @@ desktop:
         s2: País Vasco o Navarra
         s3: España sin referencia catastral
         s4: En el extranjero
+      source_document: Documento de la factura
+      source_document_hint: 'Adjunta el PDF o la factura electrónica: es el documento
+        que permite deducir su IVA.'
       stored_note: '{kind} · {payment} · vinculada: {count}'
       this_is: Es una
       title: Factura {number}
@@ -3791,6 +3801,7 @@ desktop:
       invoice_cash_accounting_regime_unmodelled: Criterio de caja
       invoice_category_contradicted: Categoría IVA
       invoice_deduction_family_unresolved: Deducción
+      invoice_recargo_split_unresolved: Recargo
       linked_movement_contradicts_invoice: Factura
       missing_business_classification: Clasificación
       missing_category: Categoría
@@ -3817,6 +3828,8 @@ desktop:
         con facturas
       invoice_category_contradicted: La categoría de IVA no encaja con el país
       invoice_deduction_family_unresolved: La factura no indica qué deducción corresponde
+      invoice_recargo_split_unresolved: El recargo no se reparte entre sus tipos de
+        IVA
       linked_movement_contradicts_invoice: No coincide con su factura
       missing_business_classification: Falta la clasificación
       missing_category: Falta la categoría
@@ -10315,6 +10328,7 @@ workspace:
       lead: Esto no impide el archivo. Dice qué dejan fuera las dotaciones de tus
         elementos, para que decidas qué añadir.
       title: Conviene saber antes de presentar
+    open_invoice: Abrir la factura
     operation:
       calculated: Calculada. {direction} {value}.
       checked:

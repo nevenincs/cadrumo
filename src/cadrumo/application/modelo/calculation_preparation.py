@@ -488,13 +488,14 @@ def ledger_preflight_hold(
     )
 
 
-_LEDGER_HOLD_WORDS_KEY = "application.modelo.projection_words.ledger_hold"
-
-
 def ledger_hold_words(hold: LedgerPreflightHold, language: OutputLanguage) -> str:
     """The to-do line for a ledger hold: what to put right before the period can be calculated."""
-    leaf = "period" if hold.movement is None else "movement"
-    return tr(f"{_LEDGER_HOLD_WORDS_KEY}.{leaf}", locale=language.value, **hold.context)
+    key = (
+        "application.modelo.projection_words.ledger_hold.period"
+        if hold.movement is None
+        else "application.modelo.projection_words.ledger_hold.movement"
+    )
+    return tr(key, locale=language.value, **hold.context)
 
 
 def raise_if_ledger_preflight_blocks_calculation(

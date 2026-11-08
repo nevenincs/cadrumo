@@ -1519,10 +1519,10 @@ application:
           tipo oficial.
         what_to_do: Revisa el recargo de esa factura en tus registros.
       invoice_recargo_not_attributable_to_a_tier:
-        what: Un único recargo cubre líneas con varios tipos de IVA, así que no se
-          ha podido comparar con los tipos oficiales.
-        what_to_do: Revisa el recargo por tu cuenta, o divide la factura por tipo
-          de IVA en tus registros.
+        what: Esta declaración se calculó sin el recargo de una factura que cubre
+          varios tipos de IVA.
+        what_to_do: 'Vuelve a calcular: el recargo se declarará en cada tipo, o se
+          te indicará la factura que hay que corregir.'
       invoice_reverse_charge_cuota_not_derivable:
         what: Una factura recibida con inversión del sujeto pasivo no tiene tipo de
           IVA, así que no se ha calculado el IVA que debes por ella.
@@ -1565,10 +1565,10 @@ application:
         what_to_do: Comprueba esos importes con las instrucciones oficiales antes
           de presentar.
       m347_declarado_provincia_unrecorded:
-        what: 'Falta {box} de algunos declarados: corresponde a su domicilio fiscal
-          y tus facturas no lo indican.'
-        what_to_do: Consigna el código de provincia del domicilio fiscal de cada declarado
-          indicado antes de presentar la declaración.
+        what: 'Falta {box} de este declarado: corresponde a su domicilio fiscal y
+          tus facturas no lo indican.'
+        what_to_do: Abre su factura e indica la provincia de su domicilio fiscal;
+          vale para todas sus facturas al volver a calcular.
       m347_metalico_unrecorded:
         what: Tus facturas no indican cómo se cobraron, así que {box} queda sin importe
           en todos los registros.
@@ -1841,6 +1841,7 @@ application:
         Su método deja el importe a tu elección, así que no suma nada a la casilla
         {box}.'
       m347_provincia_unrecorded: 'Declarados sin código de provincia: {parties}.'
+      m347_provincia_unstated: Falta la provincia del domicilio fiscal de {party}.
       possibly_durable_expense: El movimiento del {row_date} por {row_amount} se deduce
         como gasto corriente y su descripción parece la de un elemento duradero.
       prior_filing_unrecorded: Para calcular la casilla {box}, registra tu Modelo
@@ -2375,6 +2376,9 @@ application:
         invoice_deduction_family_unresolved: 'la factura recibida que paga no indica
           qué deducción corresponde: clasifica el movimiento, por ejemplo como gasto
           corriente o como bien de inversión'
+        invoice_recargo_split_unresolved: 'una factura emitida lleva un único recargo
+          de equivalencia sobre varios tipos de IVA que no coincide con la suma del
+          recargo de cada tipo: corrige el recargo de la factura'
         linked_movement_contradicts_invoice: su base o su cuota no coinciden con las
           de la factura que paga
         missing_business_classification: falta clasificarlo como profesional, personal
@@ -2920,6 +2924,10 @@ application:
             130)
           rendimiento_neto: Rendimiento neto hasta ahora (declaraciones del Modelo
             130)
+      ledger_hold:
+        movement: 'Antes de calcular %{period}, revisa el movimiento del %{movement_date},
+          «%{movement_description}», %{movement_amount}: %{need}.'
+        period: 'Antes de calcular %{period}: %{need}.'
       next_step:
         calculate_work: Calcula el %{modelo}, %{period}
         create_work: Crea el %{modelo}, %{period}

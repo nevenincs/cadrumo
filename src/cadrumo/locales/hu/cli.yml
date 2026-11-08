@@ -411,6 +411,9 @@ cli:
         arrendamiento_local_negocio_help: Jelöld, ha az ingatlan bérbeadója által
           kibocsátott számla üzleti célú helyiség bérbeadásához kapcsolódik. A fekvés
           és a kataszteri azonosító mezővel rögzítheted az ingatlan adatait.
+        attach_document_help: Egy számla dokumentumát (a PDF-et vagy az e-számlát)
+          a számlával együtt tárolja.
+        attach_document_source_help: A dokumentumfájl elérési útja.
         country_code_help: 'Az ügyfél ISO 3166-1 alfa-2 országkódja. Kötelező: mindkét
           adatszolgáltatás útválasztását meghatározza, ezért soha nem feltételezzük.'
         duplicate_help: Megválaszolja, melyik tárolt számla lehet már a dokumentum,

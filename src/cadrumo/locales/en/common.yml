@@ -2098,6 +2098,9 @@ desktop:
         Your draft has been kept.
       note: Note
       proposed: Your proposed value
+      provincia: Provincia of the domicilio fiscal
+      provincia_save: Save provincia
+      provincia_unstated: 'Not stated: Modelo 347 declares it for each Spanish counterparty.'
       scope:
         es_canarias: Canary Islands
         es_ceuta_melilla: Ceuta and Melilla
@@ -3214,6 +3217,7 @@ desktop:
       added_no_rate: Invoice {number} added · no EUR rate yet
       any_class: Any class
       any_payment: Any payment
+      attach_document: Attach document
       back: Back
       base: Taxable base
       cancel: Cancel
@@ -3251,6 +3255,8 @@ desktop:
       discard_new: Discard this invoice?
       discard_note: Nothing has been saved yet.
       document: Document
+      document_already: That document was already stored with the invoice.
+      document_attached: Document stored with the invoice.
       duplicate: Already in the catalogue.
       empty: No invoices yet. Add one or import an invoice book.
       empty_filtered: No invoices match.
@@ -3414,6 +3420,9 @@ desktop:
         s2: Basque Country or Navarre
         s3: Spain without a cadastral reference
         s4: Abroad
+      source_document: Invoice document
+      source_document_hint: 'Attach the PDF or e-invoice: it is the document that
+        lets you deduct its IVA.'
       stored_note: '{kind} · {payment} · linked: {count}'
       this_is: This is
       title: Invoice {number}
@@ -3726,6 +3735,7 @@ desktop:
       invoice_cash_accounting_regime_unmodelled: Cash basis
       invoice_category_contradicted: IVA category
       invoice_deduction_family_unresolved: Deduction
+      invoice_recargo_split_unresolved: Surcharge
       linked_movement_contradicts_invoice: Invoice
       missing_business_classification: Classification
       missing_category: Category
@@ -3753,6 +3763,8 @@ desktop:
       invoice_category_contradicted: The IVA category does not fit the country
       invoice_deduction_family_unresolved: The invoice does not show which deduction
         applies
+      invoice_recargo_split_unresolved: The surcharge does not divide between its
+        VAT rates
       linked_movement_contradicts_invoice: Differs from its invoice
       missing_business_classification: Classification missing
       missing_category: Category missing
@@ -10108,6 +10120,7 @@ workspace:
       lead: These do not stop the file. They say what the depreciation charges of
         your assets leave out, so you can decide what to add.
       title: Worth knowing before you file
+    open_invoice: Open the invoice
     operation:
       calculated: Calculated. {direction} {value}.
       checked:

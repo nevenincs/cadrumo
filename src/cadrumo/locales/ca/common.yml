@@ -2148,6 +2148,10 @@ desktop:
         Es conserva el teu esborrany.
       note: Nota
       proposed: El valor que proposes
+      provincia: Província del domicili fiscal
+      provincia_save: Desa la província
+      provincia_unstated: 'Sense indicar: el Model 347 la declara per a cada contrapart
+        espanyola.'
       scope:
         es_canarias: Canàries
         es_ceuta_melilla: Ceuta i Melilla
@@ -3272,6 +3276,7 @@ desktop:
       added_no_rate: Factura {number} afegida · encara sense tipus de canvi a EUR
       any_class: Qualsevol classe
       any_payment: Qualsevol pagament
+      attach_document: Adjunta el document
       back: Enrere
       base: Base imposable
       cancel: Cancel·la
@@ -3309,6 +3314,8 @@ desktop:
       discard_new: Vols descartar aquesta factura?
       discard_note: Encara no s'ha desat res.
       document: Document
+      document_already: Aquest document ja estava desat amb la factura.
+      document_attached: Document desat amb la factura.
       duplicate: Ja és al catàleg.
       empty: Encara no hi ha factures. Afegeix-ne una o importa un llibre de factures.
       empty_filtered: Cap factura no coincideix.
@@ -3473,6 +3480,9 @@ desktop:
         s2: País Basc o Navarra
         s3: Espanya sense referència cadastral
         s4: A l'estranger
+      source_document: Document de la factura
+      source_document_hint: 'Adjunta el PDF o la factura electrònica: és el document
+        que permet deduir-ne l''IVA.'
       stored_note: '{kind} · {payment} · vinculada: {count}'
       this_is: És una
       title: Factura {number}
@@ -3787,6 +3797,7 @@ desktop:
       invoice_cash_accounting_regime_unmodelled: Criteri de caixa
       invoice_category_contradicted: Categoria IVA
       invoice_deduction_family_unresolved: Deducció
+      invoice_recargo_split_unresolved: Recàrrec
       linked_movement_contradicts_invoice: Factura
       missing_business_classification: Classificació
       missing_category: Categoria
@@ -3813,6 +3824,8 @@ desktop:
         amb factures
       invoice_category_contradicted: La categoria d'IVA no encaixa amb el país
       invoice_deduction_family_unresolved: La factura no indica quina deducció correspon
+      invoice_recargo_split_unresolved: El recàrrec no es reparteix entre els seus
+        tipus d'IVA
       linked_movement_contradicts_invoice: No coincideix amb la seva factura
       missing_business_classification: Falta la classificació
       missing_category: Falta la categoria
@@ -10302,6 +10315,7 @@ workspace:
       lead: Això no impedeix el fitxer. Diu què deixen fora les dotacions dels teus
         elements, perquè decideixis què afegir.
       title: Convé saber abans de presentar
+    open_invoice: Obre la factura
     operation:
       calculated: Calculada. {direction} {value}.
       checked:

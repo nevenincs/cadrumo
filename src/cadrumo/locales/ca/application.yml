@@ -1513,10 +1513,10 @@ application:
           tipus oficial.
         what_to_do: Revisa el recàrrec d'aquesta factura als teus registres.
       invoice_recargo_not_attributable_to_a_tier:
-        what: Un únic recàrrec cobreix línies amb diversos tipus d'IVA, així que no
-          s'ha pogut comparar amb els tipus oficials.
-        what_to_do: Revisa el recàrrec pel teu compte, o divideix la factura per tipus
-          d'IVA als teus registres.
+        what: Aquesta declaració es va calcular sense el recàrrec d'una factura que
+          cobreix diversos tipus d'IVA.
+        what_to_do: 'Torna a calcular: el recàrrec es declararà en cada tipus, o se
+          t''indicarà la factura que cal corregir.'
       invoice_reverse_charge_cuota_not_derivable:
         what: Una factura rebuda amb inversió del subjecte passiu no té tipus d'IVA,
           així que no s'ha calculat l'IVA que en deus.
@@ -1560,10 +1560,10 @@ application:
         what_to_do: Comprova aquests imports amb les instruccions oficials abans de
           presentar.
       m347_declarado_provincia_unrecorded:
-        what: 'Falta {box} d''alguns declarats: correspon al seu domicili fiscal i
+        what: 'Falta {box} d''aquest declarat: correspon al seu domicili fiscal i
           les teves factures no l''indiquen.'
-        what_to_do: Consigna el codi de província del domicili fiscal de cada declarat
-          indicat abans de presentar la declaració.
+        what_to_do: Obre la seva factura i indica la província del seu domicili fiscal;
+          val per a totes les seves factures en tornar a calcular.
       m347_metalico_unrecorded:
         what: Les teves factures no indiquen com es van cobrar, així que {box} queda
           sense import en tots els registres.
@@ -1840,6 +1840,7 @@ application:
         El seu mètode deixa l''import a la teva elecció, de manera que no suma res
         a la casella {box}.'
       m347_provincia_unrecorded: 'Declarats sense codi de província: {parties}.'
+      m347_provincia_unstated: Falta la província del domicili fiscal de {party}.
       possibly_durable_expense: El moviment del {row_date} per {row_amount} es dedueix
         com a despesa corrent i la seva descripció sembla la d'un element durador.
       prior_filing_unrecorded: Per calcular la casella {box}, registra el teu Modelo
@@ -2378,6 +2379,9 @@ application:
         invoice_deduction_family_unresolved: 'la factura rebuda que paga no indica
           quina deducció correspon: classifica el moviment, per exemple com a despesa
           corrent o com a bé d''inversió'
+        invoice_recargo_split_unresolved: 'una factura emesa porta un únic recàrrec
+          d''equivalència sobre diversos tipus d''IVA que no coincideix amb la suma
+          del recàrrec de cada tipus: corregeix el recàrrec de la factura'
         linked_movement_contradicts_invoice: la seva base o la seva quota no coincideixen
           amb les de la factura que paga
         missing_business_classification: falta classificar-lo com a professional,
@@ -2922,6 +2926,10 @@ application:
           pagos_fraccionados: Pagaments fraccionats ingressats (declaracions del Modelo
             130)
           rendimiento_neto: Rendiment net fins ara (declaracions del Modelo 130)
+      ledger_hold:
+        movement: 'Abans de calcular %{period}, revisa el moviment del %{movement_date},
+          «%{movement_description}», %{movement_amount}: %{need}.'
+        period: 'Abans de calcular %{period}: %{need}.'
       next_step:
         calculate_work: Calcula el %{modelo}, %{period}
         create_work: Crea el %{modelo}, %{period}

@@ -1241,6 +1241,8 @@ errors:
       de substituir-lo.
     refused_ledger_counterparty_establishment_input: No es pot confirmar un fet d'establiment
       amb un identificador de contrapart que no valida.
+    refused_ledger_counterparty_provincia_input: La província indicada no és un codi
+      de província de l'INE.
     refused_ledger_evidence_input: Una dada d'evidència indicada infringeix el contracte
       de la factura de compra. Corregeix l'entrada i torna-ho a provar.
     refused_ledger_evidence_not_found: No existeix cap evidència de factura de compra
