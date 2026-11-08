@@ -52,6 +52,8 @@ impl log::Log for NativeLogger {
             dropped: 0,
             line: record.line(),
             column: None,
+            reason: None,
+            summary: None,
         });
     }
 

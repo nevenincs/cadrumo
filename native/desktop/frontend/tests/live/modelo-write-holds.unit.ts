@@ -254,6 +254,46 @@ for (const effect of ["unknown", "partial", "updated"] as const)
     assert.equal(holds.reviewedFailure(workTarget), undefined);
   });
 
+test("a new calculation attempt retires the reviewed failure's words before it asks for anything", async () => {
+  const holds = createModeloWriteHolds();
+  const lease = holds.begin(workTarget)!;
+  holds.unknown(lease, failedCalculation.operation_id, failedCalculation);
+  await holds.reviewCalculation(
+    holds.get(workTarget)!,
+    async () => true,
+    () => true,
+  );
+  let published = 0;
+  holds.subscribe(() => published++);
+  // The person presses Calcular again; the evidence dialog opens before any
+  // write is admitted, and must not repeat the earlier attempt's words.
+  holds.newAttempt(workTarget);
+  assert.equal(holds.reviewedFailure(workTarget), undefined);
+  assert.equal(published, 1);
+  assert.equal(holds.snapshot().length, 0);
+  // Nothing is admitted or held by the attempt itself.
+  assert.notEqual(holds.begin(workTarget), null);
+});
+
+test("a new attempt leaves another declaration's reviewed failure and every hold alone", async () => {
+  const holds = createModeloWriteHolds();
+  const other = declarationWriteKey("work-two");
+  const lease = holds.begin(other)!;
+  holds.unknown(lease, failedCalculation.operation_id, failedCalculation);
+  await holds.reviewCalculation(
+    holds.get(other)!,
+    async () => true,
+    () => true,
+  );
+  const running = holds.begin(workTarget)!;
+  holds.newAttempt(workTarget);
+  assert.equal(
+    holds.reviewedFailure(other)?.refusal_words,
+    failedCalculation.refusal_words,
+  );
+  assert.equal(holds.get(workTarget)?.id, running.id);
+});
+
 for (const result of [false, "throws"] as const)
   test(`an explicit review whose current form read ${result === false ? "fails" : "throws"} remains held`, async () => {
     const holds = createModeloWriteHolds();

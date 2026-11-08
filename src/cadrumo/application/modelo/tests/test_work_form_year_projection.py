@@ -13,6 +13,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.authority_grade import RegistryAuthorityGrade
+from ....core.i18n.render import tr
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_references import TemporalProjectionDirection
 from ....domain.calculations.registry.tests.authored_editions import (
@@ -35,6 +36,7 @@ def test_an_authored_year_is_served_as_not_projected(operation: PinnedAuthorityO
         projection = built_form(operation, _MODELO, year, _ANNUAL).year_projection
         assert projection.direction is TemporalProjectionDirection.AUTHORED, year
         assert projection.authored_filing_year == year
+        assert projection.words is None, year
 
 
 def test_a_year_after_the_newest_edition_is_served_as_projected_forward(operation: PinnedAuthorityOperation) -> None:
@@ -46,3 +48,17 @@ def test_a_year_after_the_newest_edition_is_served_as_projected_forward(operatio
     assert newest.valid_to is not None
     assert projection.authored_filing_year == newest.valid_to.year
     assert projection.reachable_grade is not RegistryAuthorityGrade.FILING
+
+
+def test_a_projected_year_says_in_its_header_that_it_cannot_be_filed(operation: PinnedAuthorityOperation) -> None:
+    year = projected_exercise(_MODELO)
+    projection = built_form(operation, _MODELO, year, _ANNUAL).year_projection
+
+    assert projection.words == tr(
+        "application.modelo.findings.registry_filing_year_projected",
+        modelo=_MODELO,
+        filing_year=year,
+        period=_ANNUAL,
+        authored_filing_year=projection.authored_filing_year,
+        locale="en",
+    )

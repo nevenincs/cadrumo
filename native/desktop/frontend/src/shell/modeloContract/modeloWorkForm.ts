@@ -21,6 +21,7 @@ import type {
   ResultDisposition,
   RevisionId,
   SourceRefId,
+  TransactionId,
   VerificationCompletenessStatus,
   WorkUnitId,
 } from "./modelo";
@@ -37,6 +38,10 @@ import type {
   ModeloWorkProgressState,
   SourceSurface,
 } from "./modeloWork";
+import type {
+  SourcePolicyV1,
+  TemporalProjectionDirection,
+} from "./modeloWorkFormPart2";
 
 /**
  * What one reported row does in the declaration.
@@ -772,11 +777,15 @@ export type ModeloFormVerdict = {
  * `authored_filing_year` is the year that edition authors and
  * `reachable_grade` the rung of authority the year reaches. The registry's
  * temporal resolver and grade rule supply all three; a surface renders them.
+ * `words` says, for a carried year only, that the declaration calculates under
+ * that edition's rules and cannot be checked for filing or exported: the same
+ * sentence verification refuses it with, served before any check.
  */
 export type ModeloFormYearProjection = {
   direction: TemporalProjectionDirection;
   authored_filing_year: number;
   reachable_grade: RegistryAuthorityGrade;
+  words: string | null;
 };
 
 /**
@@ -827,6 +836,7 @@ export type ModeloWorkbenchFormProjectionV1 = {
   typing_effects: ModeloFormTypingEffect[];
   export_offer: PublicModeloFormExportOffer | null;
   profile_requirements: string[];
+  source_requirements: ReconciliationSourceRequirementV1[];
   receipt: ModeloFormReceipt | null;
 };
 
@@ -837,6 +847,72 @@ export type ModeloWorkbenchFormRequest = {
   profile_id: string;
   work_unit_id: WorkUnitId;
   output_language: OutputLanguage;
+};
+
+/**
+ * Calculate the declaration one work unit holds.
+ */
+export type OperationCalculateWorkStepV1 = {
+  kind: "calculate_work";
+  work_unit_id: WorkUnitId;
+  words: string;
+};
+
+/**
+ * Declare the profile setup complete, which every filing-grade verb re-checks.
+ */
+export type OperationCompleteProfileSetupStepV1 = {
+  kind: "complete_profile_setup";
+  words: string;
+};
+
+/**
+ * Create the declaration of one modelo, filing year and period.
+ */
+export type OperationCreateWorkStepV1 = {
+  kind: "create_work";
+  modelo: string;
+  filing_year: number;
+  period_code: string;
+  words: string;
+};
+
+export type OperationNextStepV1 =
+  | OperationCreateWorkStepV1
+  | OperationCalculateWorkStepV1
+  | OperationOpenWorkStepV1
+  | OperationOpenProfileFieldStepV1
+  | OperationCompleteProfileSetupStepV1
+  | OperationOpenMovementStepV1;
+
+/**
+ * Open one ledger movement in the Libro, where the fact the refusal names is
+ * recorded.
+ */
+export type OperationOpenMovementStepV1 = {
+  kind: "open_movement";
+  transaction_id: TransactionId;
+  words: string;
+};
+
+/**
+ * Fill in one profile detail the refusal named, at the schema path it lives
+ * at.
+ */
+export type OperationOpenProfileFieldStepV1 = {
+  kind: "open_profile_field";
+  path: string;
+  words: string;
+};
+
+/**
+ * Open the declaration one work unit holds, where its own form says what it
+ * still lacks.
+ */
+export type OperationOpenWorkStepV1 = {
+  kind: "open_work";
+  work_unit_id: WorkUnitId;
+  words: string;
 };
 
 /**
@@ -1231,6 +1307,15 @@ export type PublicSpanishTaxIdFormat = {
 };
 
 /**
+ * One source declaration the to-do list names before the summary can be worked
+ * out, and its door.
+ */
+export type ReconciliationSourceRequirementV1 = {
+  words: string;
+  next_step: OperationNextStepV1;
+};
+
+/**
  * How far one modelo registry revision's declared authority reaches.
  *
  * The members form a ladder of increasing claim, each rung requiring
@@ -1265,18 +1350,3 @@ export type SourceOverridePolicy =
   | "enter"
   | "fixed"
   | "undecided";
-
-/**
- * The family, policy and owning surface of one binding source kind.
- */
-export type SourcePolicyV1 = {
-  source_kind: BindingSourceKind;
-  family: SourceFamily;
-  override_policy: SourceOverridePolicy;
-  surface: SourceSurface;
-};
-
-/**
- * How a resolved coordinate relates to the declaration supplying it.
- */
-export type TemporalProjectionDirection = "authored" | "backward" | "forward";
