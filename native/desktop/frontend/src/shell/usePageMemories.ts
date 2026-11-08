@@ -52,15 +52,32 @@ export function usePageMemories({
   const [openDeclaration, setOpenDeclaration] = useState(() => ({
     reader,
     workUnitId: null as string | null,
+    arrival: 0,
     memory: { current: {} as DeclarationsMemory },
   }));
   if (openDeclaration.reader !== reader)
-    setOpenDeclaration({ reader, workUnitId: null, memory: { current: {} } });
+    setOpenDeclaration({
+      reader,
+      workUnitId: null,
+      arrival: 0,
+      memory: { current: {} },
+    });
   const openWorkUnit = (workUnitId: string | null) => {
     wantsDeclarations.current = true;
     setOpenDeclaration((held) => ({ ...held, workUnitId }));
   };
+  // The list, looked at as the caller says: every view, narrowed to the words
+  // given. The page is read anew from its memory.
+  const showDeclarationList = (query: string) => {
+    wantsDeclarations.current = true;
+    setOpenDeclaration((held) => {
+      held.memory.current.view = "all";
+      held.memory.current.query = query;
+      return { ...held, workUnitId: null, arrival: held.arrival + 1 };
+    });
+  };
   return {
+    showDeclarationList,
     setBrowserKeptFor,
     browserMounted,
     browserHome,

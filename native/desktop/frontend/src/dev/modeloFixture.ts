@@ -31,7 +31,10 @@ import {
 } from "../shell/modelo";
 import { RELAY_PAYLOAD_LIMIT } from "../shell/relayBounds";
 import { type OutputLanguage } from "../shell/modeloContract/modelo";
-import { type ModeloDeclarationsListProjectionV1 } from "../shell/modeloContract/modeloDeclarations";
+import {
+  type ModeloDeclarationsListProjectionV1,
+  type ModeloDeclarationsSearchResultV1,
+} from "../shell/modeloContract/modeloDeclarations";
 import type { ModeloFilingRecordViewProjection } from "../shell/modeloContract/modeloFilingRecord";
 import {
   type ModeloEditOperatorInputV2,
@@ -804,6 +807,15 @@ export function modeloFixture(options: Options): ModeloPort {
     return card || reject("unavailable");
   };
 
+  const fold = (text: string) =>
+    text
+      .normalize("NFD")
+      .replace(/\p{M}/gu, "")
+      .toLocaleLowerCase()
+      .replace(/[^\p{L}\p{N}\s]/gu, "")
+      .split(/\s+/)
+      .filter(Boolean);
+
   const port: ModeloPort = {
     async declarations(language) {
       if (typeof window !== "undefined") window.__fixtureModelo = port;
@@ -825,6 +837,40 @@ export function modeloFixture(options: Options): ModeloPort {
       if (!list) return reject("unavailable");
       const read = withStoredDefaults(list);
       return shape === "list-notes" ? withListNotes(read) : read;
+    },
+    async search(query, language, limit) {
+      say(`modelo search ${language}`);
+      const words = fold(query);
+      if (words.length === 0) return reject("invalid");
+      const list = await port.declarations(language);
+      const matches = list.rows.filter((row) => {
+        const haystack = fold(
+          [row.modelo, row.modelo_title, row.period_words ?? ""].join(" "),
+        ).join(" ");
+        return words.every((word) => haystack.includes(word));
+      });
+      const result: ModeloDeclarationsSearchResultV1 = {
+        result_version: 1,
+        profile_id: list.profile_id,
+        output_language: language,
+        hits: matches.slice(0, limit ?? 8).map((row, rank) => ({
+          rank,
+          score: matches.length - rank,
+          kind: row.opens_local_work ? "work" : "declaration",
+          row_key: row.key,
+          modelo: row.modelo,
+          modelo_number: row.modelo_number,
+          title_words: row.modelo_title,
+          filing_year: row.filing_year ?? 0,
+          period_code: row.period_code ?? "",
+          period_words: row.period_words,
+          state_words: row.state_words,
+          work_unit_id: row.work_unit_id,
+          opens_local_work: row.opens_local_work,
+        })),
+        total_matches: matches.length,
+      };
+      return result;
     },
     async form(workUnitId, language) {
       say(`modelo form ${language}`);

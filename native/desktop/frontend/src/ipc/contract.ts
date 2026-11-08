@@ -607,6 +607,16 @@ export interface HostCommands {
     }>;
     result: import("../shell/modeloContract/modeloDeclarations").ModeloDeclarationsListProjectionV1;
   };
+  /** The declarations and works of the signed-in profile that match a query,
+   * said in the output language. */
+  modelo_declarations_search: {
+    args: Authorized<{
+      query: string;
+      outputLanguage: import("../shell/modeloContract/modelo").OutputLanguage;
+      limit?: number;
+    }>;
+    result: import("../shell/modeloContract/modeloDeclarations").ModeloDeclarationsSearchResultV1;
+  };
   /** One declaration's form, with its admitted edit baseline or refusal. */
   modelo_form: {
     args: Authorized<{

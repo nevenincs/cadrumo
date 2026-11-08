@@ -1,5 +1,6 @@
 import settings from "virtual:operational-settings";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useMemo } from "react";
 import { AccountDialogs } from "./components/AccountDialogs";
 import { AttendanceRequests } from "./components/AttendanceRequests";
 import { MainPane } from "./components/MainPane";
@@ -10,6 +11,8 @@ import { WindowOverlays } from "./components/WindowOverlays";
 import { WindowTitlebar } from "./components/WindowTitlebar";
 import { useAbout } from "./shell/about";
 import type { Host } from "./shell/host";
+import type { OutputLanguage } from "./shell/modeloContract/modelo";
+import type { ModeloDeclarationsSearchHitV1 } from "./shell/modeloContract/modeloDeclarations";
 import { paneControls } from "./shell/paneControls";
 import { ShellContexts } from "./shell/ShellContexts";
 import { useSignIn } from "./shell/signIn";
@@ -195,6 +198,29 @@ export function App({ host }: { host: Host }) {
     docsSearchReady: docsFrame.docsSearchReady,
     showDocs: navigation.showDocs,
   });
+  // The palette's declarations search: only where there is a profile read
+  // and a modelo port; the language is the window's.
+  const modeloPort = host.modelo;
+  const searchDeclarations = useMemo(
+    () =>
+      modeloPort && reader !== null
+        ? (query: string) =>
+            modeloPort.search(query, locale as OutputLanguage, 8)
+        : null,
+    [modeloPort, reader, locale],
+  );
+  const openDeclarationHit = (hit: ModeloDeclarationsSearchHitV1) =>
+    navigation.guarded(() => {
+      if (hit.opens_local_work && hit.work_unit_id) {
+        memories.openWorkUnit(hit.work_unit_id);
+      } else {
+        memories.showDeclarationList(
+          [hit.modelo_number, hit.period_words].filter(Boolean).join(" "),
+        );
+      }
+      setMaximized((area) => (area === "docs" ? area : null));
+      navigation.setPage("declarations");
+    });
   useHostNotices({ host, manager: account.manager, say, t });
   const openLink = useOpenExternal(host, say, t);
   const { copy, paste } = useHostClipboard({ host, terminals, say, t });
@@ -664,6 +690,8 @@ export function App({ host }: { host: Host }) {
               pastedLink={pastedLink}
               searchDocs={searchDocs}
               openDoc={openDoc}
+              searchDeclarations={searchDeclarations}
+              openDeclarationHit={openDeclarationHit}
               focusRail={focusRail}
               copy={copy}
               say={say}
