@@ -1307,7 +1307,7 @@ async fn local_ai_plan(
     replies: Replies,
     download: Option<wire::ModelDownload>,
 ) -> (Components, String, wire::Review) {
-    let (components, _) = serving(fixture, replies);
+    let (components, _, diagnostics) = watching(fixture, replies);
     components
         .start(ItemId::LocalAi, false, download)
         .await
@@ -1320,9 +1320,13 @@ async fn local_ai_plan(
     assert_eq!(
         run.stage,
         RunStage::Review,
-        "the plan waits for the window, but the setup ended {:?} {:?}",
+        "the plan waits for the window, but the setup ended {:?} {:?}, recording {:?} after \
+         asking the publisher for {:?}; details: {}",
         run.outcome,
-        run.failure
+        run.failure,
+        recorded(&diagnostics),
+        fixture.server.targets(),
+        asked.details
     );
     let (operation, plan) = review(&asked);
     (components, operation, plan)
