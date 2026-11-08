@@ -192,15 +192,17 @@ def test_changing_context_does_not_multiply_unfinished_reads(invalidate: bool) -
         work.release.set()
 
 
-def test_invalidated_work_cannot_answer_the_request_that_was_waiting_for_it() -> None:
+def test_invalidated_work_answers_the_request_that_was_waiting_for_it_with_a_fresh_read() -> None:
     from concurrent.futures import ThreadPoolExecutor
 
     entered = Event()
     release = Event()
     status = ["old-profile-status"]
+    runs: list[str] = []
 
     def compute() -> str:
         result = status[0]
+        runs.append(result)
         entered.set()
         assert release.wait(10)
         return result
@@ -214,5 +216,38 @@ def test_invalidated_work_cannot_answer_the_request_that_was_waiting_for_it() ->
             status[0] = "new-profile-status"
         finally:
             release.set()
-        assert answer.result(timeout=5) == BUSY
+        # The invalidated result is never served; the request reads afresh within its bound.
+        assert answer.result(timeout=5) == "new-profile-status"
+    assert runs == ["old-profile-status", "new-profile-status"]
     assert read.answer("lease-2", within=5) == "new-profile-status"
+
+
+def test_a_request_arriving_while_invalidated_work_runs_waits_for_it_and_reads_afresh() -> None:
+    from concurrent.futures import ThreadPoolExecutor
+
+    work = _Work()
+    read = BoundedRead(work, name="test", fresh_seconds=30)
+    assert read.answer("lease-1", within=0.05) == BUSY
+    # What the running work reads from changes, as when the agent becomes ready.
+    read.forget()
+    with ThreadPoolExecutor(max_workers=1) as callers:
+        answer = callers.submit(read.answer, "lease-1", within=5)
+        time.sleep(0.2)
+        assert not answer.done(), "a request inside its bound was refused while invalidated work ran"
+        work.release.set()
+        assert answer.result(timeout=5) == "result-2"
+    assert work.runs == 2
+
+
+def test_a_request_whose_bound_ends_before_invalidated_work_is_busy_and_starts_no_second_run() -> None:
+    work = _Work()
+    read = BoundedRead(work, name="test", fresh_seconds=30)
+    try:
+        assert read.answer("lease-1", within=0.05) == BUSY
+        read.forget()
+        started = time.monotonic()
+        assert read.answer("lease-1", within=0.2) == BUSY
+        assert time.monotonic() - started >= 0.15, "the request was refused before its bound"
+        assert work.runs == 1
+    finally:
+        work.release.set()

@@ -10,19 +10,36 @@ work unfinished at the bound is told the service is busy; the work goes on,
 and the next request inside the freshness window is served its outcome at once,
 whether a result or a failure. Work that finishes within its request's bound is
 not kept: that request was answered, and the next one reads afresh.
+
+Work whose result was withdrawn, because what it read from changed or because
+it reads for another key, is not an answer to the request, but it keeps the
+work's slot until it ends. The request waits for it within the same bound and
+then reads afresh: the service tells a request busy only when its bound runs
+out, never because a change landed while earlier work was running.
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable, Hashable
-from concurrent.futures import Future
-from concurrent.futures import TimeoutError as FutureTimeoutError
+from concurrent.futures import Future, wait
+from enum import Enum
 from threading import Lock, Thread
 from time import monotonic
 from typing import Final, override
 
 BUSY: Final = {"kind": "refused", "code": "busy"}
 """The answer to a request whose work did not finish within its bound."""
+
+
+class _Settled(Enum):
+    """How the work a request waited for stood when the wait ended."""
+
+    ANSWERED = "answered"
+    """It ended in the request's generation, and its outcome answers the request."""
+    UNFINISHED = "unfinished"
+    """It was still running when the request's bound ran out."""
+    WITHDRAWN = "withdrawn"
+    """It ended, but its result was withdrawn while it ran."""
 
 
 class Identity:
@@ -74,47 +91,55 @@ class BoundedRead[T]:
             Exception: Whatever the work raised, for the request that waited for
                 it or, while the failure is kept, for a request that came back for it.
         """
-        with self._lock:
-            kept = self._kept
-            if kept is not None and kept[0] == key and monotonic() - kept[2] < self._fresh_seconds:
-                # A kept outcome is settled, so reading it does not wait.
-                return kept[1].result()
-            running = self._running
-            if running is not None and (running[0] != key or running[1] != self._generation):
-                # Invalidation withdraws the result, not ownership of the work.
-                # Another provider probe must wait until this one actually ends.
-                return BUSY
-            if running is None:
-                future: Future[T] = Future()
-                self._running = running = (key, self._generation, future)
-                try:
-                    Thread(target=self._run, args=running, name=f"agent-service-{self._name}", daemon=True).start()
-                except BaseException:
-                    self._running = None
-                    raise
-        return self._await_running(running, within=within)
-
-    def _await_running(self, running: tuple[Hashable, int, Future[T]], *, within: float) -> T | dict[str, str]:
-        """Wait for this generation without releasing unfinished work ownership."""
-        try:
-            value = running[2].result(timeout=within)
-        except FutureTimeoutError:
+        deadline = monotonic() + within
+        while True:
             with self._lock:
+                kept = self._kept
+                if kept is not None and kept[0] == key and monotonic() - kept[2] < self._fresh_seconds:
+                    # A kept outcome is settled, so reading it does not wait.
+                    return kept[1].result()
+                running = self._running
+                withdrawn = running is not None and (running[0] != key or running[1] != self._generation)
+                if running is None:
+                    future: Future[T] = Future()
+                    self._running = running = (key, self._generation, future)
+                    try:
+                        Thread(target=self._run, args=running, name=f"agent-service-{self._name}", daemon=True).start()
+                    except BaseException:
+                        self._running = None
+                        raise
+            if withdrawn:
+                # Invalidation withdraws the result, not ownership of the work:
+                # another provider probe must not start until this one ends.
+                wait((running[2],), timeout=max(0.0, deadline - monotonic()))
                 if not running[2].done():
-                    # Its outcome is kept for the request that comes back for it.
-                    if running[1] == self._generation:
-                        self._outlived.add(running[2])
                     return BUSY
-            value = running[2].result()
+                continue
+            settled = self._await_running(running, deadline=deadline)
+            if settled is _Settled.ANSWERED:
+                return running[2].result()
+            if settled is _Settled.UNFINISHED:
+                return BUSY
+
+    def _await_running(self, running: tuple[Hashable, int, Future[T]], *, deadline: float) -> _Settled:
+        """Wait for this generation's work until ``deadline`` without releasing unfinished work ownership."""
+        future = running[2]
+        wait((future,), timeout=max(0.0, deadline - monotonic()))
         with self._lock:
-            return value if running[1] == self._generation else BUSY
+            if not future.done():
+                # Its outcome is kept for the request that comes back for it.
+                if running[1] == self._generation:
+                    self._outlived.add(future)
+                return _Settled.UNFINISHED
+            return _Settled.ANSWERED if running[1] == self._generation else _Settled.WITHDRAWN
 
     def forget(self) -> None:
         """Drop the kept result: what it was computed from has changed.
 
-        Work still running retains its slot until it ends. Its waiting callers
-        receive busy rather than a result from the invalidated context. Later
-        requests can start fresh work once that slot is released.
+        Work still running retains its slot until it ends. No caller is given
+        its result from the invalidated context: a caller waiting for it, and
+        one that arrives meanwhile, waits for it to end within its own bound
+        and then reads afresh.
         """
         with self._lock:
             self._kept = None
