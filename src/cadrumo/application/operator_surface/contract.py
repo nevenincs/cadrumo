@@ -105,6 +105,14 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(
+        domain=MountedCommandDomain.AUTH,
+        root=RootSurfaceName.CONFIG,
+        child="provider-login",
+        operator_question="sign in to an AI provider by hand from a console when the application's own sign-in fails",
+        service_owner="cadrumo.application.user_profile",
+        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
+    ),
+    MountedCommandFamily(
         domain=MountedCommandDomain.DIAGNOSTICS,
         root=RootSurfaceName.CONFIG,
         child="repair",
