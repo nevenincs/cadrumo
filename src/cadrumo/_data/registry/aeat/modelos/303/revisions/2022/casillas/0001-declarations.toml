@@ -518,6 +518,7 @@ section = ["iva", "resultado"]
 data_type = "ratio"
 semantic_role = "dr303_65"
 continuidad_id = "dr303-65"
+constraints = { min_value = "0", max_value = "100" }
 input_kind = "bound"
 binding = "modelo-303-profile-state-attribution-ratio"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
