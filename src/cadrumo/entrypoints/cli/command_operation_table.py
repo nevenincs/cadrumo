@@ -442,6 +442,7 @@ OPERATIONS_WITHOUT_COMMAND: Final[tuple[str, ...]] = (
     "modelo.audit.query",
     "modelo.bindings.resolve.typed",
     "modelo.declarations.list",
+    "modelo.declarations.search",
     "modelo.edit.apply",
     "modelo.edit.apply_prerequisite",
     "modelo.edit.preflight",

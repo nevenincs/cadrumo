@@ -421,6 +421,21 @@ def compose_modelo_declarations_list_operation(inputs: OperationCompositionInput
     return built((definition,), (build_modelo_declarations_list_registration(definition),))
 
 
+def compose_modelo_declarations_search_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose modelo declarations search operation."""
+    from ..application.search.declarations_search_operation import (
+        build_modelo_declarations_search_definition,
+        build_modelo_declarations_search_registration,
+    )
+    from .workbench_generation_composition import compose_secure_declaration_list_reader
+
+    del inputs
+    definition = build_modelo_declarations_search_definition(
+        lambda profile_id, operation: compose_secure_declaration_list_reader(profile_id=profile_id, operation=operation)
+    )
+    return built((definition,), (build_modelo_declarations_search_registration(definition),))
+
+
 def compose_modelo_work_inventory_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose modelo work inventory operation."""
     from ..application.modelo.work_inventory_operation import (

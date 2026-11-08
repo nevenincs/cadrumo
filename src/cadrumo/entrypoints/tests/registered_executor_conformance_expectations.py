@@ -534,6 +534,12 @@ EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = expectations_own
             ("modelo.declarations.list",),
         ),
         RegisteredExecutorConformanceCase(
+            "modelo.declarations.search",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            ("modelo.declarations.search",),
+        ),
+        RegisteredExecutorConformanceCase(
             "modelo.work.history",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,

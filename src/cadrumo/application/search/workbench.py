@@ -32,7 +32,7 @@ from ...domain.modelos.codes import ModeloCode
 
 _MAX_QUERY_LENGTH = 200
 _MAX_SEARCH_RESULTS = 100
-_WORD_PATTERN = re.compile(r"\w+", re.UNICODE)
+_WORD_PATTERN = re.compile(r"[^\W_]+", re.UNICODE)
 _OPAQUE_IDENTITY_KEY = secrets.token_bytes(32)
 
 
@@ -402,6 +402,8 @@ class WorkbenchSearchDocument(BaseModel):
     identity_basis: SecretStr | None = Field(default=None, exclude=True, repr=False, min_length=1, max_length=512)
     content_terms: tuple[str, ...] = ()
     """The operator's own words for this record, matched alongside the enums."""
+    precedence: Annotated[int, Field(ge=0, le=9)] = 9
+    """Among results of equal score, the lower value is listed first."""
 
     @field_validator("identity_basis")
     @classmethod
@@ -536,6 +538,13 @@ def _immutable_identity_coordinate(document: WorkbenchSearchDocument) -> tuple[s
     return coordinate
 
 
+def _address_order(document: WorkbenchSearchDocument) -> tuple[str, int, str]:
+    """Order equal results by their natural address, so a listing does not change between runs."""
+    if document.address is None:
+        return "", 0, ""
+    return str(document.address.modelo), int(document.address.filing_year), document.address.period.registry_token
+
+
 def _derived_stable_id(document: WorkbenchSearchDocument) -> Hex64Str:
     canonical = "\x1f".join(
         (document.kind.value, document.source.value, *_immutable_identity_coordinate(document))
@@ -580,7 +589,7 @@ class WorkbenchSearchService:
             score = _score_document(document, request.query)
             if score is not None:
                 ranked.append((score, identity, document))
-        ranked.sort(key=lambda item: (-item[0], item[1]))
+        ranked.sort(key=lambda item: (-item[0], item[2].precedence, _address_order(item[2]), item[1]))
         results = tuple(
             WorkbenchSearchResult(
                 stable_id=identity,

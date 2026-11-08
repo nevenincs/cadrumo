@@ -205,6 +205,7 @@ from .operation_composition_modelo import (
     compose_modelo_calculation_report_verification_operation,
     compose_modelo_credit_resolution_operation,
     compose_modelo_declarations_list_operation,
+    compose_modelo_declarations_search_operation,
     compose_modelo_dependency_operation,
     compose_modelo_filing_record_import_operation,
     compose_modelo_filing_record_list_operation,
@@ -358,6 +359,7 @@ _OPERATION_COMPOSITION_GROUPS: Mapping[str, _GroupComposer] = {
         compose_modelo_calculation_report_verification_operation
     ),
     "application.modelo.declarations_list_operation": compose_modelo_declarations_list_operation,
+    "application.search.declarations_search_operation": compose_modelo_declarations_search_operation,
     "application.modelo.dependency_operation": compose_modelo_dependency_operation,
     "application.modelo.filing_record_import_operation": compose_modelo_filing_record_import_operation,
     "application.modelo.filing_record_list_operation": compose_modelo_filing_record_list_operation,
