@@ -8,9 +8,11 @@ from importlib import import_module
 
 import pytest
 
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.tests.published_authority import (
     published_revision_definitions,
     published_snapshot,
@@ -189,3 +191,44 @@ def _require_semantic_role(value: object) -> str:
     if not isinstance(value, str):
         raise TypeError(f"semantic role must be a string, got {type(value).__name__}")
     return value
+
+
+_FILING_CONTEXT_ROLES = ("filing_year", "filing_period", "tipo_declaracion")
+
+
+def test_every_filing_context_role_lands_on_a_casilla_the_declaration_fills() -> None:
+    """A casilla carrying the declaration's year, period or kind is filled from it, never typed.
+
+    Modelo 189 and Modelo 280 once mapped their ejercicio to a casilla left for the
+    person to type, so every calculation of either stopped before reading anything.
+    """
+    offences = [
+        f"modelo {modelo.id} revision {revision_id} role {casilla.semantic_role!r} casilla {casilla.id!r}"
+        for modelo in published_revision_definitions()
+        for revision_id, revision in modelo.revisions.items()
+        for casilla in revision.casillas
+        if casilla.semantic_role in _FILING_CONTEXT_ROLES and casilla.input_kind != InputKind.INFORMATIONAL
+    ]
+
+    assert not offences, "filing-context roles on casillas the declaration does not fill:\n  " + "\n  ".join(offences)
+
+
+# 280's 2025 edition reaches applicability grade only; its ejercicio is still the declaration's.
+@pytest.mark.parametrize(
+    ("modelo", "filing_year", "grade"),
+    [("189", 2025, None), ("189", 2026, None), ("280", 2025, RegistryAuthorityGrade.APPLICABILITY)],
+)
+def test_annual_informative_declarations_take_their_ejercicio_from_the_declaration(
+    modelo: str, filing_year: int, grade: RegistryAuthorityGrade | None
+) -> None:
+    snapshot = published_snapshot(modelo, filing_year=filing_year, period="0A", grade=grade)
+    ejercicio = next(casilla for casilla in snapshot.revision.casillas if casilla.semantic_role == "filing_year")
+
+    resolved = binding_resolution.resolve_declaration_period_inputs(
+        snapshot.revision,
+        filing_year=filing_year,
+        period=Period.from_year_and_code(filing_year, "0A"),
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
+    )
+
+    assert resolved.casilla_inputs[ejercicio.id] == Decimal(filing_year)
