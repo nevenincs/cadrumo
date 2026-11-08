@@ -240,6 +240,7 @@ number = "tipo1.ejercicio"
 section = ["identificacion_declaracion"]
 data_type = "year"
 semantic_role = "filing_year"
+input_kind = "informational"
 legal_refs = ["orden-hap-2118-2015:art-1", "orden-hap-2118-2015:art-4"]
 
 # @9+9 Alfanumérico. NIF DEL DECLARANTE | Se consignará el NIF del declarante. Este campo deberá estar ajustado a la derecha, siendo la última posición el carácter de control y rellenando con ceros las posiciones de la izquierda, de acuerdo con las reglas previstas en el Reglamento General de las actuaciones y los procedimientos de Gestión e Inspección tributaria y de desarrollo de las normas comunes de los procedimientos de aplicación de los tributos, aprobado por Real Decreto 1065/2007, de 27 de julio.
