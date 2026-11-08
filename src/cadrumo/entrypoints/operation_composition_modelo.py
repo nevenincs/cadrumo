@@ -414,9 +414,13 @@ def compose_modelo_declarations_list_operation(inputs: OperationCompositionInput
     )
     from .workbench_generation_composition import compose_secure_declaration_list_reader
 
-    del inputs
+    owner = inputs.capture_memory
     definition = build_modelo_declarations_list_definition(
-        lambda profile_id, operation: compose_secure_declaration_list_reader(profile_id=profile_id, operation=operation)
+        lambda profile_id, operation: compose_secure_declaration_list_reader(
+            profile_id=profile_id,
+            operation=operation,
+            capture_memory=None if owner is None else owner.for_profile(profile_id),
+        )
     )
     return built((definition,), (build_modelo_declarations_list_registration(definition),))
 
@@ -429,9 +433,13 @@ def compose_modelo_declarations_search_operation(inputs: OperationCompositionInp
     )
     from .workbench_generation_composition import compose_secure_declaration_list_reader
 
-    del inputs
+    owner = inputs.capture_memory
     definition = build_modelo_declarations_search_definition(
-        lambda profile_id, operation: compose_secure_declaration_list_reader(profile_id=profile_id, operation=operation)
+        lambda profile_id, operation: compose_secure_declaration_list_reader(
+            profile_id=profile_id,
+            operation=operation,
+            capture_memory=None if owner is None else owner.for_profile(profile_id),
+        )
     )
     return built((definition,), (build_modelo_declarations_search_registration(definition),))
 

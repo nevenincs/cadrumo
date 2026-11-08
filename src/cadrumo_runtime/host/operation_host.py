@@ -501,6 +501,15 @@ class ProfileWorkerOperationHost:
         if services is not None:
             services.forget_settled_ephemeral()
 
+    def end_session_reads(self) -> None:
+        """Drop what reads kept for reuse: a session that locked, signed out or lapsed ends that reuse.
+
+        The composed services also drop it when they drain, so a closed host keeps none.
+        """
+        services = self.services
+        if services is not None:
+            services.end_session_reads()
+
     async def _settle_lapsed_operations(self) -> None:
         await settle_lapsed_operations(self)
 
@@ -951,10 +960,6 @@ class ProfileWorkerOperationHost:
                 recovery_required=result.recovery_required,
             )
         self._drain_result = result
-        # Calendar projections read for this profile's session end with it, drained or not.
-        from cadrumo.entrypoints.workbench_generation_composition import close_declaration_list_capture_memory
-
-        close_declaration_list_capture_memory()
         # The drain's settlements are reported before the host lets go.
         await await_cancellation_complete(
             asyncio.to_thread(self._progress.close), task_name="profile-operation-progress-close"

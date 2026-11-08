@@ -30,6 +30,7 @@ __all__ = [
     "WorkbenchCalendarMemoKey",
     "WorkbenchCalendarWork",
     "WorkbenchCaptureMemory",
+    "WorkbenchCaptureMemoryOwner",
     "WorkbenchMemoSlot",
 ]
 
@@ -108,3 +109,39 @@ class WorkbenchCaptureMemory:
     def close(self) -> None:
         """Drop every stored result deterministically when the session ends."""
         self.calendar.close()
+
+
+class WorkbenchCaptureMemoryOwner:
+    """Hand out one profile's capture memory until a session that read through it ends.
+
+    The owner keeps at most one memory, for the exact profile last asked for,
+    and closes it before handing out another profile's. :meth:`close` drops it
+    when a session ends (a lock, a sign-out, a lapsed lease or the worker's
+    close), and the next read starts an empty memory: a capture still running
+    with the closed one stores nothing, so nothing computed before a session
+    ended is served after it.
+    """
+
+    def __init__(self) -> None:
+        """Start holding no memory."""
+        self._lock = Lock()
+        self._held: tuple[str, WorkbenchCaptureMemory] | None = None
+
+    def for_profile(self, profile_id: str) -> WorkbenchCaptureMemory:
+        """Return the open memory of ``profile_id``, closing another profile's first."""
+        with self._lock:
+            held = self._held
+            if held is not None and held[0] == profile_id:
+                return held[1]
+            memory = WorkbenchCaptureMemory()
+            self._held = (profile_id, memory)
+        if held is not None:
+            held[1].close()
+        return memory
+
+    def close(self) -> None:
+        """Drop the held memory; the next read starts an empty one."""
+        with self._lock:
+            held, self._held = self._held, None
+        if held is not None:
+            held[1].close()

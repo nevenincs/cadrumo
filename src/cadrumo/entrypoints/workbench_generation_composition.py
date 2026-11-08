@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from threading import Lock
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -62,58 +61,25 @@ def compose_secure_workbench_generation_provider(
 
 
 def compose_secure_declaration_list_reader(
-    *, profile_id: str, operation: PinnedAuthorityOperation
+    *, profile_id: str, operation: PinnedAuthorityOperation, capture_memory: WorkbenchCaptureMemory | None
 ) -> Callable[[], DeclarationListInputs]:
     """Bind one explicit profile and pinned authority to the read door's declarations-list capture.
 
     The list reads the same repositories through the same door as a generation,
-    without the account session only Home shows.
+    without the account session only Home shows. ``capture_memory`` is the
+    memory the list-shaped reads of this profile share, so a read reuses the
+    legal calendar its predecessor computed; a reuse still needs the capture's
+    own freshly read profile, work-unit, filing, ledger and authority
+    identities to equal the stored ones. ``None`` recomputes every time.
     """
     read_door = _secure_read_door(
         profile_id=profile_id,
         operation=operation,
         operation_contracts=None,
         account_session_reader=None,
-        capture_memory=_declaration_list_capture_memory(profile_id),
+        capture_memory=capture_memory,
     )
     return lambda: read_door().read_declaration_list_inputs()
-
-
-_LIST_MEMORY_LOCK = Lock()
-_LIST_MEMORY: tuple[str, WorkbenchCaptureMemory] | None = None
-
-
-def close_declaration_list_capture_memory() -> None:
-    """Drop the held capture memory when the profile session that read it ends."""
-    global _LIST_MEMORY
-    with _LIST_MEMORY_LOCK:
-        held, _LIST_MEMORY = _LIST_MEMORY, None
-    if held is not None:
-        held[1].close()
-
-
-def _declaration_list_capture_memory(profile_id: str) -> WorkbenchCaptureMemory:
-    """Return the capture memory the list-shaped reads of one profile share.
-
-    Every list-shaped read builds its own door, so without a shared memory each
-    one recomputes the legal calendar its predecessor just computed. A reuse
-    still needs the capture's own freshly read profile, work-unit, filing,
-    ledger and authority identities to equal the stored ones, so a hit never
-    answers for data the exact-profile door did not just read. Only the latest
-    profile's memory is kept; another profile's read closes the previous one,
-    and the worker host closes it with the profile session
-    (:func:`close_declaration_list_capture_memory`).
-    """
-    global _LIST_MEMORY
-    with _LIST_MEMORY_LOCK:
-        held = _LIST_MEMORY
-        if held is not None and held[0] == profile_id:
-            return held[1]
-        if held is not None:
-            held[1].close()
-        memory = WorkbenchCaptureMemory()
-        _LIST_MEMORY = (profile_id, memory)
-        return memory
 
 
 def _secure_read_door(
@@ -368,7 +334,6 @@ def resolve_modelo_workspace_graded_snapshot(
 
 __all__ = [
     "MODELO_WORKSPACE_READ_ATTEMPTS",
-    "close_declaration_list_capture_memory",
     "compose_secure_workbench_generation_provider",
     "modelo_workspace_projection_reader",
     "resolve_modelo_workspace_graded_snapshot",

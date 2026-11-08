@@ -656,11 +656,14 @@ def compose_operation_dependencies(
         OperationTypedFinancialOperandCustodyFilesystemRepository,
     )
     from ..application.operations.composition import compose_operation_services
+    from ..application.workbench_capture_memory import WorkbenchCaptureMemoryOwner
     from ..core.paths import effective_storage_root
     from ..core.time.clock import now
 
     if execution_authority is not None and execution_authority_factory is not None:
         raise ValueError("operation authority must have one owner")
+    # The services end the memory's reuse whenever the host reports a session's end.
+    capture_memory = WorkbenchCaptureMemoryOwner()
     inputs = OperationCompositionInputs(
         settings=settings or load_settings(),
         evidence_followup_ports=evidence_followup_ports,
@@ -693,6 +696,7 @@ def compose_operation_dependencies(
         modelo_profile_resolver=modelo_profile_resolver,
         execution_caller_reader=execution_caller_reader,
         sede_view_stream_opener=sede_view_stream_opener,
+        capture_memory=capture_memory,
     )
     resolved_settings = inputs.resolved_settings
     storage_root = effective_storage_root(settings=resolved_settings)
@@ -728,4 +732,5 @@ def compose_operation_dependencies(
             settings=resolved_settings
         ),
         execution_authority=execution_authority,
+        session_reads_end=capture_memory.close,
     )
