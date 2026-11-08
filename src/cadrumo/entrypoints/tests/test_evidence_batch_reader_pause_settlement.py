@@ -138,12 +138,14 @@ def test_a_batch_paused_for_its_missing_text_model_settles_with_the_missing_mode
     # was never touched, so the run wrote something and left work undone.
     assert effect is OperationEffect.PARTIAL
     run = projection.run.to_run()
+    # The batch works in content-address order, never request order, so the
+    # document read first is whichever address sorts first.
     attempted, paused = run.items
-    assert attempted.source_name == first.name
+    assert attempted.content_address < paused.content_address
+    assert {attempted.source_name, paused.source_name} == {first.name, second.name}
     assert attempted.status == "refused"
     refused = attempted.refusal_verdict
     assert refused is not None
-    assert paused.source_name == second.name
     assert paused.status == "paused"
     assert paused.refusal_verdict is None
     pause = run.inference_pause
