@@ -64,7 +64,7 @@ use cadrumo_application::{
         installation::installation_config,
         items::{Destination, ItemId, Locations, PROGRAM_PART},
         local_ai::{
-            NotRunningCause, Placement,
+            LocalEngine, NotRunningCause, Placement,
             hardware::Hardware,
             models::{LocalModels, ModelName},
         },
@@ -144,6 +144,20 @@ fn engine_unavailable(error: Error) -> ApplicationError {
         .caused_by(error)
 }
 
+/// What a status read reads: every item, or, with an unreadable engine selection, the
+/// browser alone.
+const EVERY_ITEM: &[ItemId] = &ItemId::ALL;
+const BROWSER_ONLY: &[ItemId] = &[ItemId::Browser];
+
+/// How a check that `stop` refused ends. A host failure has no word of its own for a
+/// check, so it is the unexpected one; a refusal is the person's to fix or retry.
+fn check_stopped(stop: &Stop) -> (CheckStage, Option<wire::Failure>, Option<Refusal>) {
+    match stop.refusal() {
+        Some(refusal) => (CheckStage::Failed, None, Some(refusal)),
+        None => (CheckStage::Failed, Some(wire::Failure::Unexpected), None),
+    }
+}
+
 /// Whether a command over `items` reaches the local AI; no items names every item.
 fn reaches_local_ai(items: &[ItemId]) -> bool {
     items.is_empty() || items.contains(&ItemId::LocalAi)
@@ -158,6 +172,12 @@ fn selected(engines: &Engines, admission: &Admission, local_ai: bool) -> Result<
     } else {
         None
     };
+    made(engines, selection)
+}
+
+/// An engine of this installation for `selection`, the local engine and placement the
+/// runtime manager runs; without one it runs no local engine.
+fn made(engines: &Engines, selection: Option<(LocalEngine, Placement)>) -> Result<Engine, Unready> {
     let placement = selection.map_or_else(Placement::default, |(_, placement)| placement);
     let Installation { mut engine } = engines(placement).map_err(|error| {
         Unready::Engine(failure(failure_category(&error)), engine_unavailable(error))
@@ -618,31 +638,44 @@ impl Components {
         let shared = self.shared.clone();
         let cancellation = window.checks.clone();
         let spawned = self.spawn(window, "setup-check", move || {
-            let local_ai = match kind {
-                CheckKind::StatusQuick | CheckKind::StatusFull => true,
-                CheckKind::Verify => reaches_local_ai(&items),
-            };
-            let report = admitted(&*engines, &admission, local_ai, None, None).map(|mut engine| {
-                let engine = &mut engine;
-                match kind {
-                    CheckKind::StatusQuick => {
-                        engine.status(CheckMode::Quick, &ItemId::ALL, &mut |_| {}, &cancellation)
-                    }
-                    CheckKind::StatusFull => {
-                        engine.status(CheckMode::Full, &ItemId::ALL, &mut |_| {}, &cancellation)
-                    }
-                    CheckKind::Verify => engine.verify(&items, &mut |_| {}, &cancellation),
+            // A status read whose engine selection nobody can read refuses the local AI
+            // alone: it reads the browser, and the local AI's refusal crosses beside it.
+            let (report, withheld) = match kind {
+                CheckKind::StatusQuick | CheckKind::StatusFull => {
+                    let mode = match kind {
+                        CheckKind::StatusFull => CheckMode::Full,
+                        _ => CheckMode::Quick,
+                    };
+                    let (selection, read, withheld) = match admission.local_engine() {
+                        Ok(selection) => (Some(selection), EVERY_ITEM, None),
+                        Err(stop) => (None, BROWSER_ONLY, Some(stop)),
+                    };
+                    let report = made(&*engines, selection).map(|mut engine| {
+                        engine.select_local_models(LocalModels::default());
+                        engine.status(mode, read, &mut |_| {}, &cancellation)
+                    });
+                    (report, withheld)
                 }
-            });
+                CheckKind::Verify => (
+                    admitted(&*engines, &admission, reaches_local_ai(&items), None, None)
+                        .map(|mut engine| engine.verify(&items, &mut |_| {}, &cancellation)),
+                    None,
+                ),
+            };
             // No command returns a check's refusal, so its cause is recorded here, once
             // for as long as every check fails the same way.
-            match &report {
-                Err(unready) => {
+            match (&report, &withheld) {
+                (Err(unready), _) => {
                     if let Some(cause) = unready.cause() {
                         shared.reports.read_error(cause);
                     }
                 }
-                Ok(_) => shared.reports.recovered(),
+                (Ok(_), Some(stop)) => {
+                    if let Some(cause) = stop.cause() {
+                        shared.reports.read_error(cause);
+                    }
+                }
+                (Ok(_), None) => shared.reports.recovered(),
             }
             shared.update(|window| {
                 let current = window
@@ -654,18 +687,17 @@ impl Components {
                 // word, as the role's other clients are given it. A selection that could
                 // not be admitted is the person's to fix, so it crosses as its own code.
                 let (stage, category, refusal) = match report {
+                    // The browser's rows stand; the local AI's refusal fails the check.
                     Ok(report) if report.outcome.succeeded() => {
                         window.rows = Some((report.mode, report.rows));
-                        (CheckStage::Done, None, None)
+                        match &withheld {
+                            Some(stop) => check_stopped(stop),
+                            None => (CheckStage::Done, None, None),
+                        }
                     }
                     Ok(report) => (CheckStage::Failed, report.failure.map(failure), None),
                     Err(Unready::Engine(category, _)) => (CheckStage::Failed, Some(category), None),
-                    // A host failure has no word of its own for a check, so it is the
-                    // unexpected one; a refusal is the person's to fix or retry.
-                    Err(Unready::Stopped(stop)) => match stop.refusal() {
-                        Some(refusal) => (CheckStage::Failed, None, Some(refusal)),
-                        None => (CheckStage::Failed, Some(wire::Failure::Unexpected), None),
-                    },
+                    Err(Unready::Stopped(stop)) => check_stopped(&stop),
                 };
                 if let Some(check) = window.check.as_mut().filter(|_| current) {
                     check.stage = stage;

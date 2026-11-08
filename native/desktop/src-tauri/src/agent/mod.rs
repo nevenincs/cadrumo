@@ -57,9 +57,9 @@ pub struct AgentHost {
     /// The storage root the runtime manager reads its records from, which holds the
     /// local engine selection this host hands on.
     storage_root: PathBuf,
-    /// The local engine a profile that chose none runs: llama.cpp exactly when the
-    /// package carries its llama-server.
-    local_engine_default: cadrumo_application::provisioning::local_ai::LocalEngine,
+    /// The package this process runs from, whose contents decide the local engine a
+    /// profile that chose none runs.
+    package_root: PathBuf,
 }
 
 impl AgentHost {
@@ -67,7 +67,7 @@ impl AgentHost {
         sign_in: Arc<SignIn>,
         diagnostics: Arc<Diagnostics>,
         storage_root: PathBuf,
-        local_engine_default: cadrumo_application::provisioning::local_ai::LocalEngine,
+        package_root: PathBuf,
     ) -> Self {
         let watched = sign_in.clone();
         let changed: supervisor::protocol::Changed =
@@ -87,6 +87,8 @@ impl AgentHost {
             }) as std::pin::Pin<Box<dyn Future<Output = Result<Observation>> + Send>>
         });
         #[cfg(windows)]
+        let launched_from = package_root.clone();
+        #[cfg(windows)]
         let launch: supervisor::protocol::Launch = Arc::new(move |_bearer: &str, profile: &str| {
             let profile_id = sign_in.profile_id(profile)?;
             let person = sign_in.person(&profile_id)?;
@@ -95,7 +97,10 @@ impl AgentHost {
             Ok(supervisor::protocol::Prepared {
                 command,
                 person: Some(person),
-                local_engine_default,
+                local_engine_default:
+                    cadrumo_application::provisioning::local_ai::package_default_engine(
+                        &launched_from,
+                    ),
             })
         });
         #[cfg(windows)]
@@ -115,7 +120,7 @@ impl AgentHost {
             drops: dropping::Drops::default(),
             attendance: std::sync::Mutex::new(None),
             storage_root,
-            local_engine_default,
+            package_root,
         }
     }
 
@@ -124,15 +129,18 @@ impl AgentHost {
         &self.storage_root
     }
 
-    /// Hands a readable local engine setting on to the runtime manager's selection record,
-    /// which is rewritten only when it holds another one. The service's setting stands
-    /// whether or not the record could be written: a failure is recorded, and the next
-    /// read writes it again.
+    /// The package this process runs from.
+    pub(crate) fn package_root(&self) -> &std::path::Path {
+        &self.package_root
+    }
+
+    /// Hands the person's local engine setting on to the runtime manager's selection
+    /// record: a stored choice is written unless the record holds it, no choice removes
+    /// the record so the package's defaults apply, and a setting nobody can read leaves it
+    /// alone. The service's setting stands whether or not the record could be changed: a
+    /// failure is recorded, and the next read changes it again.
     fn record_local_engine(&self, setting: &local_models::LocalEngineSetting) {
-        let Some((engine, placement)) = setting.selected() else {
-            return;
-        };
-        if let Err(error) = local_models::record_selection(&self.storage_root, engine, placement) {
+        if let Err(error) = local_models::sync_record(&self.storage_root, setting.record_sync()) {
             self.diagnostics.host_failure(
                 cadrumo_application::diagnostics::HostStage::Agent,
                 cadrumo_application::error::application::ApplicationError::new(
@@ -143,6 +151,45 @@ impl AgentHost {
                 .caused_by(error),
             );
         }
+    }
+
+    /// Reads the person's local engine setting from the service and hands it on to the
+    /// runtime manager's selection record. A read that fails or breaks the contract leaves
+    /// the record as it is and is recorded.
+    fn sync_local_engine(&self) {
+        use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation};
+        let read = self
+            .administer(serde_json::json!({"action":"local_engine"}), None)
+            .and_then(|answer| {
+                if let Some(code) = local_models::refusal(&answer) {
+                    return Err(ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+                        .with_reason(code));
+                }
+                local_models::parse_engine(&answer).ok_or_else(|| {
+                    ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+                        .with_reason("admin_local_engine_contract")
+                })
+            });
+        match read {
+            Ok(setting) => self.record_local_engine(&setting),
+            Err(error) => self
+                .diagnostics
+                .host_failure(cadrumo_application::diagnostics::HostStage::Agent, error),
+        }
+    }
+
+    /// Hands the person's local engine setting on to the runtime manager each time the
+    /// agent becomes ready for a profile, so the record follows the profile signed in
+    /// even when the window never opens the setting.
+    fn sync_local_engine_when_ready(self: &Arc<Self>) {
+        let host = Arc::downgrade(self);
+        self.supervisor.on_ready(Arc::new(move || {
+            let Some(host) = host.upgrade() else {
+                return;
+            };
+            // The read crosses the service's admin channel, which blocks.
+            let _ = tauri::async_runtime::spawn_blocking(move || host.sync_local_engine());
+        }));
     }
 
     /// Stops the launcher and everything it started, for good.
@@ -278,21 +325,18 @@ pub fn dialog_plugin<R: Runtime>() -> TauriPlugin<R> {
 pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
     let diagnostics = launch.diagnostics.clone();
     let storage_root = launch.working_directory.clone();
-    // The package's contents are fixed for this process, so whether it carries the
-    // llama-server is read once.
-    let local_engine_default = local_models::engine_default(local_models::carries_llama_server(
-        &launch.package_root,
-        &launch.working_directory,
-    ));
+    let package_root = launch.package_root.clone();
     tauri::plugin::Builder::new("cadrumo-agent")
         .setup(move |app, _| {
             let sign_in = app.state::<Arc<SignIn>>().inner().clone();
-            app.manage(Arc::new(AgentHost::new(
+            let host = Arc::new(AgentHost::new(
                 sign_in,
                 diagnostics.clone(),
                 storage_root.clone(),
-                local_engine_default,
-            )));
+                package_root.clone(),
+            ));
+            host.sync_local_engine_when_ready();
+            app.manage(host);
             Ok(())
         })
         .build()
@@ -756,11 +800,11 @@ async fn agent_local_engine_choose(
     {
         return refused("agent_invalid_request");
     }
-    // An engine this package cannot run never reaches the service.
-    if let Some(code) = local_models::engine_unavailable(chosen, host.local_engine_default) {
-        return refused(code);
-    }
     blocking(&host, move |host| {
+        // An engine this package cannot run never reaches the service.
+        if let Some(code) = local_models::engine_unavailable(chosen, &host.package_root) {
+            return refused(code);
+        }
         let answer = host
             .administer(
                 serde_json::json!({

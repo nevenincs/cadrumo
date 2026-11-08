@@ -7,7 +7,7 @@ use super::super::{
         Admission,
         tests::{
             ADDED, GB, LOCAL, Replies, TEXT, VISION, cause, declared, refusal, requested,
-            unselected,
+            unpackaged, unselected,
         },
     },
     wire::{Google, Snapshot},
@@ -303,7 +303,11 @@ sha256 = \"{}\"
 
 /// An admission over a service that answers nothing, as general setup consults none.
 fn unconsulted() -> Arc<Admission> {
-    Arc::new(Admission::new(Arc::new(Replies::default()), unselected()))
+    Arc::new(Admission::new(
+        Arc::new(Replies::default()),
+        unselected(),
+        unpackaged(),
+    ))
 }
 
 /// The window's component engine over `fixture`, with no download asked for.
@@ -321,7 +325,7 @@ pub(in super::super) fn serving(fixture: &Fixture, replies: Replies) -> (Compone
 /// As [`serving`], with the diagnostics the engine records its failures in.
 fn watching(fixture: &Fixture, replies: Replies) -> (Components, Arc<Replies>, Arc<Diagnostics>) {
     let replies = Arc::new(replies);
-    let admission = Arc::new(Admission::new(replies.clone(), unselected()));
+    let admission = Arc::new(Admission::new(replies.clone(), unselected(), unpackaged()));
     let diagnostics = Arc::new(Diagnostics::default());
     let components = Components::new(fixture.engines(), admission, diagnostics.clone());
     (components, replies, diagnostics)
@@ -2234,7 +2238,11 @@ fn unreadable_selection(fixture: &Fixture) -> Arc<Admission> {
         4096,
     )
     .unwrap();
-    Arc::new(Admission::new(Arc::new(Replies::default()), root))
+    Arc::new(Admission::new(
+        Arc::new(Replies::default()),
+        root,
+        unpackaged(),
+    ))
 }
 
 #[cfg(any(windows, target_os = "macos"))]
@@ -2266,13 +2274,38 @@ async fn an_unreadable_engine_selection_refuses_the_local_ai_and_leaves_the_brow
     );
     assert!(components.view().runs.is_empty());
 
-    // A check that reaches the local AI is refused the same way.
+    // A status read reads the browser alone and refuses the local AI beside it, quick
+    // or full.
     components.check(wire::CheckMode::Quick);
-    let refused = until(&components, finished(None)).await.check.unwrap();
+    let read = until(&components, finished(None)).await;
+    let quick = read.check.clone().unwrap();
+    assert_eq!(
+        (quick.stage, quick.refusal),
+        (CheckStage::Failed, Some(Refusal::Unavailable))
+    );
+    assert_eq!(
+        read.rows
+            .iter()
+            .map(|row| row.item.as_str())
+            .collect::<Vec<_>>(),
+        ["browser"]
+    );
+    assert_eq!(read.complete, Some(false));
+    components.check(wire::CheckMode::Full);
+    let read = until(&components, finished(Some(quick.operation_id.clone()))).await;
+    let refused = read.check.clone().unwrap();
     assert_eq!(
         (refused.stage, refused.refusal),
         (CheckStage::Failed, Some(Refusal::Unavailable))
     );
+    assert_eq!(
+        read.rows
+            .iter()
+            .map(|row| row.item.as_str())
+            .collect::<Vec<_>>(),
+        ["browser"]
+    );
+    // A full check of the local AI is refused before any engine runs.
     components.verify(vec![ItemId::LocalAi]);
     let verified = until(&components, finished(Some(refused.operation_id.clone())))
         .await

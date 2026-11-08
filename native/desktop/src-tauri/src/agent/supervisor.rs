@@ -73,9 +73,14 @@ struct Listener {
     channel: Channel<Status>,
 }
 
+/// Called each time the agent becomes ready: for a profile's sign-in, another profile, or
+/// a service start or restart.
+pub type Ready = Arc<dyn Fn() + Send + Sync>;
+
 struct Shared {
     status: Mutex<Status>,
     listener: Mutex<Option<Listener>>,
+    ready: Mutex<Option<Ready>>,
     gateway: Mutex<Option<Gateway>>,
     admin: Mutex<Option<super::admin::Endpoint>>,
     running: Mutex<Option<Running>>,
@@ -186,6 +191,7 @@ impl Supervisor {
             shared: Arc::new(Shared {
                 status: Mutex::new(status),
                 listener: Mutex::new(None),
+                ready: Mutex::new(None),
                 gateway: Mutex::new(None),
                 admin: Mutex::new(None),
                 running: Mutex::new(None),
@@ -341,6 +347,11 @@ impl Supervisor {
         id
     }
 
+    /// Calls `ready` each later time the agent becomes ready, replacing any earlier one.
+    pub fn on_ready(&self, ready: Ready) {
+        *lock(&self.shared.ready) = Some(ready);
+    }
+
     /// Removes the listener `subscription`, never a newer one.
     pub fn unsubscribe(&self, subscription: u32) {
         let mut listener = lock(&self.shared.listener);
@@ -402,6 +413,12 @@ fn publish(shared: &Shared, state: State) {
         shared
             .diagnostics
             .service(None, ServiceFact::AgentRefused { reason: code });
+    }
+    if matches!(status.state, State::Ready { .. }) {
+        let ready = lock(&shared.ready).clone();
+        if let Some(ready) = ready {
+            ready();
+        }
     }
     let mut listener = lock(&shared.listener);
     if listener

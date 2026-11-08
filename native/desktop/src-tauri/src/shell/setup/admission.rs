@@ -182,22 +182,26 @@ pub struct Admission {
     agent: Arc<dyn Agent>,
     /// The storage root the runtime manager reads its local engine selection from.
     selection_root: PathBuf,
+    /// The package this process runs from, whose contents decide the default engine.
+    package_root: PathBuf,
 }
 
 impl Admission {
-    pub fn new(agent: Arc<dyn Agent>, selection_root: PathBuf) -> Self {
+    pub fn new(agent: Arc<dyn Agent>, selection_root: PathBuf, package_root: PathBuf) -> Self {
         Self {
             agent,
             selection_root,
+            package_root,
         }
     }
 
     /// The local engine and placement the runtime manager runs, which every engine of a
-    /// command is made for: the selection record's, or the defaults when there is none.
+    /// command is made for: the selection record's, or the defaults the package derives when
+    /// there is none.
     /// A record nobody can read refuses, since running the defaults could run an engine
     /// the person did not choose.
     pub fn local_engine(&self) -> Result<(LocalEngine, Placement), Stop> {
-        local_models::manager_selection(&self.selection_root)
+        local_models::manager_selection(&self.selection_root, &self.package_root)
             .ok_or_else(|| Stop::unavailable("setup_local_engine_unreadable"))
     }
 

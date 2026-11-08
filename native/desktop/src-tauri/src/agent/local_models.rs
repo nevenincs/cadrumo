@@ -9,7 +9,7 @@
 //! handed on to the runtime manager's local engine selection record, which tells the
 //! manager which engine's server to run; the manager owns that record's format.
 
-use cadrumo_application::provisioning::local_ai::{LocalEngine, Placement};
+use cadrumo_application::provisioning::local_ai::{LocalEngine, Placement, package_default_engine};
 use serde::Serialize;
 use serde_json::Value;
 use std::path::Path;
@@ -152,30 +152,50 @@ pub enum LocalEngineSetting {
         engine: LocalEngine,
         placement: Placement,
         revision: String,
+        /// Whether the person stored this setting. An unchosen one is the defaults the
+        /// package derives, which the window shows as they are and which the runtime
+        /// manager must never keep as a choice.
+        #[serde(skip)]
+        chosen: bool,
     },
     Unreadable {
         revision: String,
     },
 }
 
+/// What the runtime manager's selection record is made to hold for a setting.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RecordSync {
+    /// The person's choice, stored unless the record already holds it.
+    Store(LocalEngine, Placement),
+    /// No choice: the record is removed, so the manager runs the package's defaults.
+    Clear,
+    /// A setting nobody can read says nothing about the choice: the record is left alone.
+    Leave,
+}
+
 impl LocalEngineSetting {
-    /// The engine and placement the record names; none when it is unreadable.
-    pub fn selected(&self) -> Option<(LocalEngine, Placement)> {
+    /// What the runtime manager's selection record is made to hold for this setting.
+    pub fn record_sync(&self) -> RecordSync {
         match self {
             Self::Readable {
-                engine, placement, ..
-            } => Some((*engine, *placement)),
-            Self::Unreadable { .. } => None,
+                engine,
+                placement,
+                chosen: true,
+                ..
+            } => RecordSync::Store(*engine, *placement),
+            Self::Readable { chosen: false, .. } => RecordSync::Clear,
+            Self::Unreadable { .. } => RecordSync::Leave,
         }
     }
 }
 
 /// The local engine setting in `answer`, or `None` when it breaks the contract: exactly
-/// the four members, a revision digest, and an engine and placement named exactly when
-/// the record is readable.
+/// the five members, a revision digest, an engine and placement named exactly when the
+/// record is readable, and a choice only of a readable record.
 pub fn parse_engine(answer: &Value) -> Option<LocalEngineSetting> {
     let object = answer.as_object()?;
-    if object.len() != 4 {
+    if object.len() != 5 {
         return None;
     }
     let revision = object
@@ -185,52 +205,25 @@ pub fn parse_engine(answer: &Value) -> Option<LocalEngineSetting> {
         .to_owned();
     let engine = object.get("engine")?;
     let placement = object.get("placement")?;
+    let chosen = object.get("chosen")?.as_bool()?;
     if object.get("unreadable")?.as_bool()? {
-        return (engine.is_null() && placement.is_null())
+        return (engine.is_null() && placement.is_null() && !chosen)
             .then_some(LocalEngineSetting::Unreadable { revision });
     }
     Some(LocalEngineSetting::Readable {
         engine: engine_token(engine.as_str()?)?,
         placement: placement_token(placement.as_str()?)?,
         revision,
+        chosen,
     })
-}
-
-/// Whether the package under `package_root` carries the llama-server the llama.cpp engine
-/// runs, as the engine and the runtime manager find it: the same packaged-program
-/// check, with the storage root that the program's folders would sit under.
-pub fn carries_llama_server(package_root: &Path, storage_root: &Path) -> bool {
-    use cadrumo_application::provisioning::{
-        items::Locations,
-        local_ai::llama_server::{LOAD_CONTEXT, LlamaServer},
-    };
-    LlamaServer::packaged(
-        &package_root.join(cadrumo_platform::LLAMA_SERVER),
-        cadrumo_platform::LLAMA_SERVER_BUILD,
-        &Locations::under(storage_root),
-        LOAD_CONTEXT,
-    )
-    .is_ok()
-}
-
-/// The local engine a profile that chose none runs: llama.cpp when the package carries
-/// its llama-server, else Ollama.
-pub fn engine_default(carries_llama_server: bool) -> LocalEngine {
-    if carries_llama_server {
-        LocalEngine::LlamaCpp
-    } else {
-        LocalEngine::Ollama
-    }
 }
 
 /// Why a choice of `engine` is refused before it reaches the service: llama.cpp on a
 /// package that carries no llama-server to run it with, which is a package whose
-/// `local_engine_default` is not llama.cpp.
-pub fn engine_unavailable(
-    engine: LocalEngine,
-    local_engine_default: LocalEngine,
-) -> Option<&'static str> {
-    (engine == LocalEngine::LlamaCpp && local_engine_default != LocalEngine::LlamaCpp)
+/// default engine ([`package_default_engine`]) is not llama.cpp.
+pub fn engine_unavailable(engine: LocalEngine, package_root: &Path) -> Option<&'static str> {
+    (engine == LocalEngine::LlamaCpp
+        && package_default_engine(package_root) != LocalEngine::LlamaCpp)
         .then_some("agent_local_engine_unavailable")
 }
 
@@ -253,20 +246,20 @@ pub fn placement_token(text: &str) -> Option<Placement> {
 }
 
 /// The engine and placement the runtime manager's selection record under `root` holds:
-/// the defaults when there is no record, and `None` for a record that cannot be read,
-/// which never stands for the defaults.
+/// the defaults the package at `package_root` derives when there is no record, and `None`
+/// for a record that cannot be read, which never stands for the defaults.
 #[cfg(any(windows, target_os = "macos"))]
-pub fn manager_selection(root: &Path) -> Option<(LocalEngine, Placement)> {
+pub fn manager_selection(root: &Path, package_root: &Path) -> Option<(LocalEngine, Placement)> {
     cadrumo_manager::local_engine::LocalEngineSelection::read(root)
-        .selection()
+        .selection(package_root)
         .map(|selection| (selection.engine, selection.placement))
 }
 
 /// This platform's desktop writes no selection record for a manager, so the defaults the
-/// manager runs without one hold.
+/// package derives hold.
 #[cfg(not(any(windows, target_os = "macos")))]
-pub fn manager_selection(_root: &Path) -> Option<(LocalEngine, Placement)> {
-    Some((LocalEngine::default(), Placement::default()))
+pub fn manager_selection(_root: &Path, package_root: &Path) -> Option<(LocalEngine, Placement)> {
+    Some((package_default_engine(package_root), Placement::default()))
 }
 
 /// Stores `engine` and `placement` as the runtime manager's selection under `root`, unless
@@ -295,6 +288,30 @@ pub fn record_selection(
     _placement: Placement,
 ) -> std::io::Result<bool> {
     Ok(false)
+}
+
+/// Removes the runtime manager's selection record under `root`, readable or not; an
+/// absent one is already clear.
+#[cfg(any(windows, target_os = "macos"))]
+pub fn clear_selection(root: &Path) -> std::io::Result<()> {
+    cadrumo_manager::local_engine::LocalEngineSelection::clear(root)
+}
+
+/// This platform's desktop has no manager selection record to remove.
+#[cfg(not(any(windows, target_os = "macos")))]
+pub fn clear_selection(_root: &Path) -> std::io::Result<()> {
+    Ok(())
+}
+
+/// Makes the runtime manager's selection record under `root` hold what `sync` says.
+pub fn sync_record(root: &Path, sync: RecordSync) -> std::io::Result<()> {
+    match sync {
+        RecordSync::Store(engine, placement) => {
+            record_selection(root, engine, placement).map(|_| ())
+        }
+        RecordSync::Clear => clear_selection(root),
+        RecordSync::Leave => Ok(()),
+    }
 }
 
 fn lanes(value: &Value) -> Option<Vec<String>> {
@@ -349,7 +366,7 @@ pub fn is_model(text: &str) -> bool {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
     use serde_json::json;
 
@@ -596,9 +613,11 @@ mod tests {
         }
     }
 
+    /// An engine answer as the service sends it; a readable one is a stored choice.
     fn engine_answer(unreadable: bool, engine: Value, placement: Value) -> Value {
         json!({
             "unreadable": unreadable,
+            "chosen": !unreadable,
             "engine": engine,
             "placement": placement,
             "revision": revision(),
@@ -614,12 +633,13 @@ mod tests {
                 engine: LocalEngine::LlamaCpp,
                 placement: Placement::CpuOnly,
                 revision: revision(),
+                chosen: true,
             })
         );
         let parsed = parsed.unwrap();
         assert_eq!(
-            parsed.selected(),
-            Some((LocalEngine::LlamaCpp, Placement::CpuOnly))
+            parsed.record_sync(),
+            RecordSync::Store(LocalEngine::LlamaCpp, Placement::CpuOnly)
         );
         assert_eq!(
             serde_json::to_value(&parsed).unwrap(),
@@ -645,10 +665,32 @@ mod tests {
                 revision: revision()
             }
         );
-        assert_eq!(parsed.selected(), None);
+        assert_eq!(parsed.record_sync(), RecordSync::Leave);
         assert_eq!(
             serde_json::to_value(&parsed).unwrap(),
             json!({"state": "unreadable", "revision": revision()})
+        );
+    }
+
+    #[test]
+    fn an_unchosen_setting_is_the_package_default_the_window_reads_and_clears_the_record() {
+        let mut answer = engine_answer(false, json!("llamacpp"), json!("auto"));
+        answer["chosen"] = json!(false);
+        let parsed = parse_engine(&answer).unwrap();
+        assert_eq!(
+            parsed,
+            LocalEngineSetting::Readable {
+                engine: LocalEngine::LlamaCpp,
+                placement: Placement::Auto,
+                revision: revision(),
+                chosen: false,
+            }
+        );
+        assert_eq!(parsed.record_sync(), RecordSync::Clear);
+        // The window reads the same setting whether or not it was chosen.
+        assert_eq!(
+            serde_json::to_value(&parsed).unwrap(),
+            json!({"state": "readable", "engine": "llamacpp", "placement": "auto", "revision": revision()})
         );
     }
 
@@ -667,7 +709,23 @@ mod tests {
         null_revision["revision"] = Value::Null;
         let mut textual_flag = readable();
         textual_flag["unreadable"] = json!("false");
+        let mut unchosen_missing = readable();
+        unchosen_missing.as_object_mut().unwrap().remove("chosen");
+        let mut textual_choice = readable();
+        textual_choice["chosen"] = json!("true");
+        let mut null_choice = readable();
+        null_choice["chosen"] = Value::Null;
+        let mut chosen_unreadable = engine_answer(true, Value::Null, Value::Null);
+        chosen_unreadable["chosen"] = json!(true);
+        let mut renamed_choice = readable();
+        renamed_choice.as_object_mut().unwrap().remove("chosen");
+        renamed_choice["extra"] = json!(false);
         for answer in [
+            unchosen_missing,
+            textual_choice,
+            null_choice,
+            chosen_unreadable,
+            renamed_choice,
             extra,
             missing,
             upper_revision,
@@ -729,14 +787,16 @@ mod tests {
                 .unwrap()
                 .as_nanos()
         ));
-        // No record is the defaults, and a setting is written the first time.
+        let package = Package::new(false);
+        let selection = |root: &Path| manager_selection(root, &package.root());
+        // No record is the package's defaults, and a setting is written the first time.
         assert_eq!(
-            manager_selection(&root),
+            selection(&root),
             Some((LocalEngine::Ollama, Placement::Auto))
         );
         assert!(record_selection(&root, LocalEngine::LlamaCpp, Placement::CpuOnly).unwrap());
         assert_eq!(
-            manager_selection(&root),
+            selection(&root),
             Some((LocalEngine::LlamaCpp, Placement::CpuOnly))
         );
         // The same setting read again rewrites nothing; another one replaces it.
@@ -750,20 +810,20 @@ mod tests {
             4096,
         )
         .unwrap();
-        assert_eq!(manager_selection(&root), None);
+        assert_eq!(selection(&root), None);
         assert!(record_selection(&root, LocalEngine::Ollama, Placement::Auto).unwrap());
         assert_eq!(
-            manager_selection(&root),
+            selection(&root),
             Some((LocalEngine::Ollama, Placement::Auto))
         );
         std::fs::remove_dir_all(&root).unwrap();
     }
 
     /// A package root of its own, removed after the test, carrying a llama-server or not.
-    struct Package(std::path::PathBuf);
+    pub(crate) struct Package(std::path::PathBuf);
 
     impl Package {
-        fn new(carrying: bool) -> Self {
+        pub(crate) fn new(carrying: bool) -> Self {
             use std::time::{SystemTime, UNIX_EPOCH};
             let root = std::env::temp_dir().join(format!(
                 "cadrumo-desktop-package-{}-{}",
@@ -773,7 +833,7 @@ mod tests {
                     .unwrap()
                     .as_nanos()
             ));
-            std::fs::create_dir_all(root.join("storage")).unwrap();
+            std::fs::create_dir_all(&root).unwrap();
             // The packaged-program check refuses a linked ancestor, and a Unix temporary
             // folder can sit under one, as macOS's `/var` does.
             #[cfg(unix)]
@@ -799,8 +859,9 @@ mod tests {
             Self(root)
         }
 
-        fn carries(&self) -> bool {
-            carries_llama_server(&self.0.join("package"), &self.0.join("storage"))
+        /// The package root, as the desktop is launched from it.
+        pub(crate) fn root(&self) -> std::path::PathBuf {
+            self.0.join("package")
         }
     }
 
@@ -810,27 +871,74 @@ mod tests {
         }
     }
 
+    #[cfg(any(windows, target_os = "macos"))]
     #[test]
-    fn a_package_carrying_llama_server_defaults_to_it_and_admits_its_choice() {
+    fn a_chosen_setting_is_stored_an_unchosen_one_clears_the_record_and_an_unreadable_one_leaves_it()
+     {
+        use cadrumo_manager::local_engine::{LocalEngineSelection, Recorded};
+        use std::time::{SystemTime, UNIX_EPOCH};
+        let root = std::env::temp_dir().join(format!(
+            "cadrumo-desktop-engine-sync-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let setting = |chosen: bool| LocalEngineSetting::Readable {
+            engine: LocalEngine::LlamaCpp,
+            placement: Placement::CpuOnly,
+            revision: revision(),
+            chosen,
+        };
+        let stored = Recorded::Selected(LocalEngineSelection::new(
+            LocalEngine::LlamaCpp,
+            Placement::CpuOnly,
+        ));
+        sync_record(&root, setting(true).record_sync()).unwrap();
+        assert_eq!(LocalEngineSelection::read(&root), stored);
+        // A setting nobody can read keeps the stored choice.
+        let unreadable = LocalEngineSetting::Unreadable {
+            revision: revision(),
+        };
+        sync_record(&root, unreadable.record_sync()).unwrap();
+        assert_eq!(LocalEngineSelection::read(&root), stored);
+        // No choice removes the record, so the package's defaults apply; again is a no-op.
+        sync_record(&root, setting(false).record_sync()).unwrap();
+        assert_eq!(LocalEngineSelection::read(&root), Recorded::Absent);
+        sync_record(&root, setting(false).record_sync()).unwrap();
+        assert_eq!(LocalEngineSelection::read(&root), Recorded::Absent);
+        // A record nobody can read is removed by no choice as well.
+        cadrumo_manager::custody::write_local_record(
+            &root.join(cadrumo_manager::contract::LOCAL_ENGINE_SELECTION),
+            b"{",
+            4096,
+        )
+        .unwrap();
+        assert_eq!(LocalEngineSelection::read(&root), Recorded::Unreadable);
+        sync_record(&root, setting(false).record_sync()).unwrap();
+        assert_eq!(LocalEngineSelection::read(&root), Recorded::Absent);
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn a_package_carrying_llama_server_admits_either_engine() {
         let package = Package::new(true);
-        assert!(package.carries());
-        let default = engine_default(package.carries());
-        assert_eq!(default, LocalEngine::LlamaCpp);
         for engine in [LocalEngine::LlamaCpp, LocalEngine::Ollama] {
-            assert_eq!(engine_unavailable(engine, default), None);
+            assert_eq!(engine_unavailable(engine, &package.root()), None);
         }
     }
 
     #[test]
-    fn a_package_without_llama_server_defaults_to_ollama_and_refuses_llama_cpp() {
+    fn a_package_without_llama_server_refuses_llama_cpp_and_admits_ollama() {
         let package = Package::new(false);
-        assert!(!package.carries());
-        let default = engine_default(package.carries());
-        assert_eq!(default, LocalEngine::Ollama);
         assert_eq!(
-            engine_unavailable(LocalEngine::LlamaCpp, default),
+            engine_unavailable(LocalEngine::LlamaCpp, &package.root()),
             Some("agent_local_engine_unavailable")
         );
-        assert_eq!(engine_unavailable(LocalEngine::Ollama, default), None);
+        assert_eq!(
+            engine_unavailable(LocalEngine::Ollama, &package.root()),
+            None
+        );
     }
 }

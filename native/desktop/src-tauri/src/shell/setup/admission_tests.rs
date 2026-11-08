@@ -171,10 +171,18 @@ pub fn unselected() -> std::path::PathBuf {
     std::env::temp_dir().join("cadrumo-desktop-tests-without-a-local-engine-selection")
 }
 
+/// A package root that carries no llama-server, so the default engine is Ollama.
+pub fn unpackaged() -> std::path::PathBuf {
+    std::env::temp_dir().join("cadrumo-desktop-tests-package-without-llama-server")
+}
+
 /// An admission over `replies`, and the replies to ask what it read.
 fn watched(replies: Replies) -> (Admission, Arc<Replies>) {
     let replies = Arc::new(replies);
-    (Admission::new(replies.clone(), unselected()), replies)
+    (
+        Admission::new(replies.clone(), unselected(), unpackaged()),
+        replies,
+    )
 }
 
 fn admission_of(replies: Replies) -> Admission {
@@ -230,7 +238,10 @@ fn scripted(
         action,
         answers: Mutex::new(answers.into()),
     });
-    (Admission::new(agent.clone(), unselected()), agent)
+    (
+        Admission::new(agent.clone(), unselected(), unpackaged()),
+        agent,
+    )
 }
 
 fn busy() -> Result<Value, ApplicationError> {
@@ -429,6 +440,7 @@ fn a_service_busy_past_the_budget_settles_the_download_start_as_unavailable() {
                 action,
             }),
             unselected(),
+            unpackaged(),
         );
         let began = Instant::now();
         let result = admission.download_with_budget(
@@ -576,7 +588,7 @@ fn pending_download_discards_a_reply_after_cancellation_or_service_replacement()
             let service = service.clone();
             let cancellation = cancellation.clone();
             std::thread::spawn(move || {
-                Admission::new(service, unselected()).download_with_budget(
+                Admission::new(service, unselected(), unpackaged()).download_with_budget(
                     &requested(LOCAL, TEXT),
                     &cancellation,
                     Duration::from_secs(4),
@@ -992,11 +1004,17 @@ fn a_context_that_is_no_positive_32_bit_count_is_a_catalogue_outside_the_contrac
 }
 
 #[test]
-fn no_selection_record_is_the_default_engine_and_placement() {
+fn no_selection_record_is_the_engine_the_package_derives_with_automatic_placement() {
     let admission = admission_of(Replies::default());
     assert_eq!(
         admission.local_engine().unwrap(),
         (LocalEngine::Ollama, Placement::Auto)
+    );
+    let package = crate::agent::local_models::tests::Package::new(true);
+    let admission = Admission::new(Arc::new(Replies::default()), unselected(), package.root());
+    assert_eq!(
+        admission.local_engine().unwrap(),
+        (LocalEngine::LlamaCpp, Placement::Auto)
     );
 }
 
@@ -1032,7 +1050,7 @@ mod selection {
     fn the_managers_selection_is_the_engine_and_placement_admitted() {
         let root = Root::new();
         record_selection(&root.0, LocalEngine::LlamaCpp, Placement::CpuOnly).unwrap();
-        let admission = Admission::new(Arc::new(Replies::default()), root.0.clone());
+        let admission = Admission::new(Arc::new(Replies::default()), root.0.clone(), unpackaged());
         assert_eq!(
             admission.local_engine().unwrap(),
             (LocalEngine::LlamaCpp, Placement::CpuOnly)
@@ -1051,7 +1069,7 @@ mod selection {
             4096,
         )
         .unwrap();
-        let admission = Admission::new(Arc::new(Replies::default()), root.0.clone());
+        let admission = Admission::new(Arc::new(Replies::default()), root.0.clone(), unpackaged());
         let result = admission.local_engine();
         assert_eq!(
             result.as_ref().err().and_then(Stop::refusal),
