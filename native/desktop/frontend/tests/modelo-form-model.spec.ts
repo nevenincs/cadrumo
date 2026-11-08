@@ -159,7 +159,7 @@ test("a carry stated to hold nothing is sent as the statement, with no value", (
     kind: "attest_no_amount",
     change: "set",
     words: "served action",
-    statement: "served statement",
+    effect: "served effect",
   } as const;
   const edit = staged(fed, statement);
   expect(

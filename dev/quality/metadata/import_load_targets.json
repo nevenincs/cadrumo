@@ -2307,6 +2307,7 @@
         "cadrumo.domain.calculations.registry.authority_store",
         "cadrumo.domain.calculations.registry.bienes_inversion_catalogue",
         "cadrumo.domain.calculations.registry.bienes_inversion_regularizacion_bindings",
+        "cadrumo.domain.calculations.registry.binding_absence_attestation",
         "cadrumo.domain.calculations.registry.binding_aggregation",
         "cadrumo.domain.calculations.registry.binding_borrador_participation",
         "cadrumo.domain.calculations.registry.binding_grade_cap",

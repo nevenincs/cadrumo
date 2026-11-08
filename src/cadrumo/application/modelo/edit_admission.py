@@ -62,7 +62,7 @@ from .edit_models import (
     ModeloEditWritableScalarSurfaceEntryV1,
 )
 from .edit_services import calculation_head_digest, work_unit_record_digest
-from .edit_value_grammar import ModeloEditValueChannel, binding_value_grammar, casilla_value_grammar
+from .edit_value_grammar import binding_value_grammar, casilla_value_grammar
 from .row_filled_bindings import row_filled_binding_ids
 
 if TYPE_CHECKING:
@@ -232,9 +232,9 @@ def permitted_binding_entry(
         return ModeloEditNonWritableBindingOverrideSurfaceEntryV1(
             binding_id=binding.id, reason=ModeloEditNonWritableReason.NOT_READ_BY_CALCULATION
         )
-    # Only a carry from an earlier filing can be stated to hold nothing: no
-    # earlier return held here shows it, and its absence is never assumed zero.
-    attestable = source is BindingSourceKind.PREVIOUS_FILING and grammar.channel is ModeloEditValueChannel.DECIMAL
+    # Only a carry the registry declares a statement of absence for can be
+    # stated to hold nothing; on any other binding the statement would assert a figure.
+    attestable = binding.absence_attestation is not None
     return ModeloEditWritableBindingOverrideSurfaceEntryV1(
         binding_id=binding.id,
         allowed_intents=(

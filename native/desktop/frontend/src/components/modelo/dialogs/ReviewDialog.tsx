@@ -52,7 +52,7 @@ function effectWords(
     case "remove_override":
       return t("workspace.modelo.review.effect.restore");
     case "attest_no_amount":
-      return edit.intent.statement;
+      return edit.intent.effect;
     default:
       return effect?.words ?? null;
   }

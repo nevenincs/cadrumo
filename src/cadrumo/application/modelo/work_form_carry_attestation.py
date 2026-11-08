@@ -1,54 +1,87 @@
-"""The statement a Modelo form offers when an amount carried from an earlier ejercicio holds no value.
+"""The statements a Modelo form offers when an amount carried from an earlier ejercicio holds no value.
 
 A declaration can read amounts still pending from earlier ejercicios out of the
 earlier return, such as the negative general bases a Modelo 100 compensates
 over the four following years (Ley 35/2006 art. 50.3). With no earlier return
 stored, those carries are unknown, never zero, and the filer who has nothing
-pending says so here: one action states it for every carry still open, and the
-edit records each as a zero the filer stated, apart from a zero typed.
+pending says so here. Only a carry whose binding the registry declares a
+statement of absence for takes one; each declared family is one action that
+states it for every carry of the family still open, and the edit records each
+as a zero the filer stated, apart from a zero typed.
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from types import MappingProxyType
 from typing import Final
 
 from ...core.i18n.render import tr
+from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
+from ...domain.calculations.registry.ids import BindingId
 from .edit_models import ModeloEditBindingIntentKind, ModeloEditWritableBindingOverrideSurfaceEntryV1
 from .work_form_context import WorkFormContext
 from .work_form_models import ModeloFormCarryAttestation
 
-_ACTION_LOCALE_KEY: Final = "application.modelo.work_form.carry_attestation.action"
-_STATEMENT_LOCALE_KEY: Final = "application.modelo.work_form.carry_attestation.statement"
+_ACTION_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = MappingProxyType(
+    {
+        AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING: (
+            "application.modelo.work_form.carry_attestation.renta_negative_general_bases_pending.action"
+        ),
+    }
+)
+_STATEMENT_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = MappingProxyType(
+    {
+        AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING: (
+            "application.modelo.work_form.carry_attestation.renta_negative_general_bases_pending.statement"
+        ),
+    }
+)
+_EFFECT_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = MappingProxyType(
+    {
+        AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING: (
+            "application.modelo.work_form.carry_attestation.renta_negative_general_bases_pending.effect"
+        ),
+    }
+)
 
 
-def form_carry_attestation(context: WorkFormContext) -> ModeloFormCarryAttestation | None:
-    """The statement for every attestable carry that holds no value, or ``None`` when none is open.
+def form_carry_attestations(context: WorkFormContext) -> tuple[ModeloFormCarryAttestation, ...]:
+    """One statement per declared family with a carry that holds no value; none on a form that admits no edit.
 
     A carry holds a value when the current calculation resolved one for it from
     any source, a stored earlier return included, or the filer entered or
-    stated one. A form that admits no edit offers nothing.
+    stated one.
     """
     if context.surface is None:
-        return None
+        return ()
     revision = context.revision
     held = frozenset(()) if revision is None else frozenset(revision.binding_overrides)
     entered = context.overridden or frozenset(())
-    open_carries = sorted(
-        entry.binding_id
-        for entry in context.surface.values()
-        if isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1)
-        and ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT in entry.allowed_intents
-        and entry.binding_id not in held
-        and entry.binding_id not in entered
-    )
-    if not open_carries:
-        return None
+    open_by_family: dict[AbsenceAttestationFamily, list[BindingId]] = {}
+    for entry in context.surface.values():
+        if not (
+            isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1)
+            and ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT in entry.allowed_intents
+            and entry.binding_id not in held
+            and entry.binding_id not in entered
+        ):
+            continue
+        binding = context.bindings.get(entry.binding_id)
+        if binding is not None and binding.absence_attestation is not None:
+            open_by_family.setdefault(binding.absence_attestation, []).append(entry.binding_id)
     locale = context.language.value
-    return ModeloFormCarryAttestation(
-        binding_ids=tuple(open_carries),
-        action_words=tr(_ACTION_LOCALE_KEY, locale=locale),
-        statement_words=tr(_STATEMENT_LOCALE_KEY, locale=locale),
+    return tuple(
+        ModeloFormCarryAttestation(
+            family=family,
+            binding_ids=tuple(sorted(open_by_family[family])),
+            action_words=tr(_ACTION_LOCALE_KEYS[family], locale=locale),
+            statement_words=tr(_STATEMENT_LOCALE_KEYS[family], locale=locale),
+            effect_words=tr(_EFFECT_LOCALE_KEYS[family], locale=locale),
+        )
+        for family in AbsenceAttestationFamily
+        if family in open_by_family
     )
 
 
-__all__ = ["form_carry_attestation"]
+__all__ = ["form_carry_attestations"]

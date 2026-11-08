@@ -21,6 +21,7 @@ import type {
 import type {
   ModeloWorkbenchFormProjectionV1,
   PublicModeloFormField,
+  ModeloFormCarryAttestation,
   PublicModeloWorkForm,
 } from "../../../shell/modeloContract/modeloWorkForm";
 import { takesEntry } from "./entryField";
@@ -85,7 +86,7 @@ export type StagedIntent =
       kind: "attest_no_amount";
       change: "set";
       words: string;
-      statement: string;
+      effect: string;
     };
 
 export type StagedEdit = {
@@ -462,12 +463,11 @@ export type FormSession = {
   stagedCount: number;
   stage(field: PublicModeloFormField, intent: StagedIntent): void;
   unstage(editKey: string): void;
-  /** The form's statement that no earlier-ejercicio amount is pending, while
-   * it offers one and some carry it names is not yet staged as stated; null
-   * otherwise. */
-  carryAttestation: PublicModeloWorkForm["carry_attestation"];
-  /** Stages the statement on every carry the form names, one edit each. */
-  attestCarries(): void;
+  /** The form's statements that no earlier-ejercicio amount is pending, one
+   * per family, each while some carry it names is not yet staged as stated. */
+  carryAttestations: ModeloFormCarryAttestation[];
+  /** Stages one statement on every carry it names, one edit each. */
+  attestCarries(attestation: ModeloFormCarryAttestation): void;
   discardAll(): void;
   /** Keeps the staged edits a preflight's `report` keeps, staged again
    * against the declaration as it stands, and drops the others. */
@@ -794,36 +794,37 @@ export function useFormSession({
     [form.pages],
   );
 
-  // The statement's carries, each at the box whose edit address is its binding.
-  const attestation = form.carry_attestation;
-  const carries = useMemo(
-    () =>
-      (attestation?.binding_ids ?? []).flatMap((bindingId) => {
+  // Each statement's carries, at the box whose edit address is its binding.
+  const attestCarries = useCallback(
+    (attestation: ModeloFormCarryAttestation) => {
+      for (const bindingId of attestation.binding_ids) {
         const found = placed.find(
           (p) =>
             p.field.edit_address.kind === "binding" &&
             p.field.edit_address.binding_id === bindingId,
         );
-        return found ? [found.field] : [];
-      }),
-    [attestation, placed],
+        if (found)
+          stage(found.field, {
+            kind: "attest_no_amount",
+            change: "set",
+            words: attestation.action_words,
+            effect: attestation.effect_words,
+          });
+      }
+    },
+    [placed, stage],
   );
-  const attestCarries = useCallback(() => {
-    if (!attestation) return;
-    for (const field of carries)
-      stage(field, {
-        kind: "attest_no_amount",
-        change: "set",
-        words: attestation.action_words,
-        statement: attestation.statement_words,
-      });
-  }, [attestation, carries, stage]);
-  // Stated only once every carry the form served is staged as stated: a
-  // served carry the window cannot place keeps the offer standing.
-  const carriesStated = (attestation?.binding_ids ?? []).every(
-    (bindingId) =>
-      staged.get(`b:${bindingId}`)?.intent.kind === "attest_no_amount",
-  );
+  // A statement stands until every carry it served is staged as stated: a
+  // served carry the window cannot place keeps it standing.
+  const carryAttestations = editsAdmitted(envelope)
+    ? form.carry_attestations.filter(
+        (attestation) =>
+          !attestation.binding_ids.every(
+            (bindingId) =>
+              staged.get(`b:${bindingId}`)?.intent.kind === "attest_no_amount",
+          ),
+      )
+    : [];
 
   return {
     baseline,
@@ -832,10 +833,7 @@ export function useFormSession({
     stagedCount: staged.size,
     stage,
     unstage,
-    carryAttestation:
-      attestation && !carriesStated && editsAdmitted(envelope)
-        ? attestation
-        : null,
+    carryAttestations,
     attestCarries,
     discardAll,
     rebase,

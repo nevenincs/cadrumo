@@ -50,6 +50,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.hashing import sha256_hex
 from ...core.period import Period
 from ...core.type_guards import is_object_list_or_tuple
+from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ...domain.calculations.registry.ids import BindingId, FormulaId, LegalRefId, RevisionId
 from ...domain.calculations.registry.schema_form_layouts import (
     FormCellKind,
@@ -583,6 +584,9 @@ class ModeloFormField(ModeloFormBase):
     restorable: bool = Field(default_factory=_restorable_of)
     #: Whether the box holds the filer's own value: typed here, or replacing its source's.
     filers_own: bool = Field(default_factory=_filers_own_of)
+    #: The statement the filer made that this carry holds nothing, by the family its binding declares;
+    #: ``None`` for a value typed or taken from a source, so a zero stated never reads as a zero typed.
+    stated_absent: AbsenceAttestationFamily | None = None
     #: The value confirming the box stages, as an edit intent carries it; ``None`` when the box is not confirmable.
     confirm_value: ModeloEditWireScalar = Field(default_factory=_confirm_value_of)
     #: Where the box's value stands, in the few words every frontend shows beside it, in the
@@ -1000,12 +1004,16 @@ class ModeloFormCarryAttestation(ModeloFormBase):
     intent per binding, which records each as a zero the filer stated.
     """
 
+    #: The family of carries the statement answers, as their bindings declare it.
+    family: AbsenceAttestationFamily
     #: The carries the statement answers, each a binding override the edit admits the statement on.
     binding_ids: tuple[BindingId, ...] = Field(min_length=1)
     #: The action, in the form's language.
     action_words: str = Field(min_length=1)
     #: What the statement records and what happens when an earlier return later shows an amount.
     statement_words: str = Field(min_length=1)
+    #: What the statement does to one carry, as a review lists each staged change.
+    effect_words: str = Field(min_length=1)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -1088,8 +1096,9 @@ class ModeloWorkForm(ModeloFormBase):
     last_export: ModeloFormExport | None = None
     #: Why nothing may be edited, when something other than the admission closes the form.
     edit_closure: ModeloFormEditClosure | None = None
-    #: The statement that no earlier-ejercicio amount is pending, while a carry it answers holds no value.
-    carry_attestation: ModeloFormCarryAttestation | None = None
+    #: The statements that no earlier-ejercicio amount is pending, one per family, while a carry each
+    #: answers holds no value.
+    carry_attestations: tuple[ModeloFormCarryAttestation, ...] = ()
     #: The modelo's number and title, its number alone, and the period, in the form's language.
     modelo_title: str | None = None
     #: The modelo's own title without its number, beside the number a frontend shows apart; ``None`` without one.

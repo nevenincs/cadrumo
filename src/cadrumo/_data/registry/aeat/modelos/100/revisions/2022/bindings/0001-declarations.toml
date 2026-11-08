@@ -48,6 +48,7 @@ id = "renta-base-liquidable-negativa-general-anterior"
 provider = { kind = "previous_filing", source_modelo = "100", source_casilla_id = "1391", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
+absence_attestation = "renta_negative_general_bases_pending"
 legal_refs = ["ley-35-2006:art-50"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]
 
@@ -1085,6 +1086,7 @@ id = "renta-base-liquidable-negativa-general-em4-pendiente-inicio"
 provider = { kind = "previous_filing", source_modelo = "100", source_casilla_id = "1384", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
+absence_attestation = "renta_negative_general_bases_pending"
 legal_refs = ["ley-35-2006:art-50"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]
 
@@ -1097,6 +1099,7 @@ id = "renta-base-liquidable-negativa-general-em3-pendiente-inicio"
 provider = { kind = "previous_filing", source_modelo = "100", source_casilla_id = "1387", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
+absence_attestation = "renta_negative_general_bases_pending"
 legal_refs = ["ley-35-2006:art-50"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]
 
@@ -1109,6 +1112,7 @@ id = "renta-base-liquidable-negativa-general-em2-pendiente-inicio"
 provider = { kind = "previous_filing", source_modelo = "100", source_casilla_id = "1390", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
+absence_attestation = "renta_negative_general_bases_pending"
 legal_refs = ["ley-35-2006:art-50"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]
 

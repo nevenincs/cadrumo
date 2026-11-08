@@ -39,6 +39,12 @@ import type {
 } from "./modeloWork";
 
 /**
+ * The closed families of earlier-filing carries a filer may state hold
+ * nothing.
+ */
+export type AbsenceAttestationFamily = "renta_negative_general_bases_pending";
+
+/**
  * What one reported row does in the declaration.
  *
  * Derived from the registry's declared `input_kind` and `semantic_role` and
@@ -235,9 +241,11 @@ export type ModeloFormCalculationNote = {
  * intent per binding, which records each as a zero the filer stated.
  */
 export type ModeloFormCarryAttestation = {
+  family: AbsenceAttestationFamily;
   binding_ids: BindingId[];
   action_words: string;
   statement_words: string;
+  effect_words: string;
 };
 
 /**
@@ -990,6 +998,7 @@ export type PublicModeloFormField = {
   value_text: string | null;
   restorable: boolean;
   filers_own: boolean;
+  stated_absent: AbsenceAttestationFamily | null;
   confirm_value: ModeloEditWireScalar;
   takes_typed_value: boolean;
   clearable: boolean;
@@ -1203,7 +1212,7 @@ export type PublicModeloWorkForm = {
   filing: ModeloFormFiling | null;
   last_export: ModeloFormExport | null;
   edit_closure: ModeloFormEditClosure | null;
-  carry_attestation: ModeloFormCarryAttestation | null;
+  carry_attestations: ModeloFormCarryAttestation[];
   modelo_title: string | null;
   modelo_name: string | null;
   modelo_number: string | null;

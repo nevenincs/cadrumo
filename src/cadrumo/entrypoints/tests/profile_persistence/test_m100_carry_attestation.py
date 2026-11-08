@@ -26,12 +26,13 @@ from ....application.modelo.edit_models import (
     ModeloEditBindingIntentKind,
     ModeloEditWritableBindingOverrideSurfaceEntryV1,
 )
-from ....application.modelo.work_form_models import ModeloWorkForm
+from ....application.modelo.work_form_models import ModeloFormField, ModeloWorkForm
 from ....application.modelo.work_form_service import load_modelo_work_form
 from ....core.aggregation import BindingSourceKind
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.external_constants import OutputLanguage
+from ....domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
@@ -208,14 +209,76 @@ def test_the_form_offers_the_statement_while_a_carry_is_open_and_applying_it_clo
         profile_adapter_composition(),
         seeded_operator_work(tmp_path, modelo="100", filing_year=year, period_code="0A", extra_facts=_FACTS) as renta,
     ):
-        offered = _form(renta, OutputLanguage.EN).carry_attestation
-        assert offered is not None
+        (offered,) = _form(renta, OutputLanguage.EN).carry_attestations
+        assert offered.family is AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING
         assert set(_PENDING_CARRIES) <= set(offered.binding_ids)
-        spanish = _form(renta, OutputLanguage.ES).carry_attestation
-        assert spanish is not None
+        (spanish,) = _form(renta, OutputLanguage.ES).carry_attestations
         assert spanish.binding_ids == offered.binding_ids
         assert spanish.action_words != offered.action_words
+        assert spanish.effect_words != offered.effect_words
 
         # The window stages one statement per binding the form names, and nothing is left to state.
         assert renta.apply(binding=tuple(_attest(binding_id) for binding_id in offered.binding_ids)).refusal is None
-        assert _form(renta, OutputLanguage.EN).carry_attestation is None
+        assert _form(renta, OutputLanguage.EN).carry_attestations == ()
+
+
+def _carry_fields(form: ModeloWorkForm) -> dict[BindingId, ModeloFormField]:
+    """The form's fields a pending carry feeds, by that carry."""
+    return {
+        field.bindings[0].binding_id: field
+        for field in form.fields()
+        if field.bindings and field.bindings[0].binding_id in _PENDING_CARRIES
+    }
+
+
+@pytest.mark.parametrize("year", _renta_years())
+def test_a_stated_carry_reads_as_stated_and_a_typed_zero_does_not(tmp_path: Path, year: int) -> None:
+    stated, typed, *also_stated = _PENDING_CARRIES
+    # Every carry needs an answer for the declaration to calculate; one of them is a zero typed.
+    with (
+        profile_adapter_composition(),
+        seeded_operator_work(tmp_path, modelo="100", filing_year=year, period_code="0A", extra_facts=_FACTS) as renta,
+    ):
+        applied = renta.apply(
+            binding=(
+                *(_attest(binding_id) for binding_id in (stated, *also_stated)),
+                ModeloBindingEditIntentV1(
+                    address=ModeloEditBindingAddressV1(binding_id=typed),
+                    kind=ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
+                    value=Decimal("0"),
+                ),
+            )
+        )
+        assert applied.refusal is None
+        fields = _carry_fields(_form(renta, OutputLanguage.EN))
+        spanish = _carry_fields(_form(renta, OutputLanguage.ES))
+
+    # Both hold a zero, but only the statement says it is one: the typed zero reads as a figure typed.
+    assert {stated, typed} <= set(fields)
+    assert fields[stated].stated_absent is AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING
+    assert fields[typed].stated_absent is None
+    assert fields[stated].origin_words is not None
+    assert fields[stated].origin_words != fields[typed].origin_words
+    assert spanish[stated].origin_words not in {None, fields[stated].origin_words}
+
+
+@pytest.mark.parametrize(("modelo", "period_code"), [("130", "1T"), ("303", "1T")])
+def test_a_declaration_whose_registry_declares_no_statement_of_absence_offers_none(
+    tmp_path: Path, modelo: str, period_code: str
+) -> None:
+    year = max(_renta_years())
+    earlier = [
+        binding.id
+        for binding in published_authority_operation()
+        .snapshot(modelo, filing_year=year, period=period_code, grade=RegistryAuthorityGrade.CALCULATION)
+        .revision.bindings
+        if binding.source is BindingSourceKind.PREVIOUS_FILING
+    ]
+    # The declaration does read earlier filings, so the refusal is the registry's, not an absence of carries.
+    assert earlier
+    with (
+        profile_adapter_composition(),
+        seeded_operator_work(tmp_path, modelo=modelo, filing_year=year, period_code=period_code) as work,
+    ):
+        assert _attestable(work) == frozenset()
+        assert _form(work, OutputLanguage.EN).carry_attestations == ()

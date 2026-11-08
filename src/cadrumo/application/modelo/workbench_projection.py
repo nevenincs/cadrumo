@@ -29,6 +29,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.identity.documents import SpanishTaxIdFormat
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.result_disposition import ResultDisposition
+from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ...domain.calculations.registry.schema_form_layouts import (
     FormCellKind,
     FormLayoutSeedSource,
@@ -191,6 +192,7 @@ class PublicModeloFormField(BaseModel):
     value_text: str | None
     restorable: bool
     filers_own: bool
+    stated_absent: AbsenceAttestationFamily | None = None
     confirm_value: ModeloEditWireScalar
     takes_typed_value: bool
     clearable: bool
@@ -391,7 +393,7 @@ class PublicModeloWorkForm(BaseModel):
     filing: ModeloFormFiling | None
     last_export: ModeloFormExport | None
     edit_closure: ModeloFormEditClosure | None
-    carry_attestation: ModeloFormCarryAttestation | None = None
+    carry_attestations: tuple[ModeloFormCarryAttestation, ...] = ()
     modelo_title: str | None
     modelo_name: str | None
     modelo_number: str | None
