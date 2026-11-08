@@ -2707,8 +2707,7 @@ desktop:
       whole_counts: Movements · whole ledger
     import:
       accepts:
-        bank: CSV, XLSX, XLS, OFX, QFX or PDF · up to 128 files · folders inside a
-          folder are not read
+        bank: '{formats} · up to 128 files · folders inside a folder are not read'
         book: CSV, TSV, XLSX, XLSM or XLS
         documents: PDF, PNG, JPG, TIFF, WEBP, HEIC, or Facturae, UBL or CII XML ·
           folders inside a folder are not read

@@ -2736,8 +2736,7 @@ desktop:
       whole_counts: Tételek · teljes napló
     import:
       accepts:
-        bank: CSV, XLSX, XLS, OFX, QFX vagy PDF · legfeljebb 128 fájl · a mappán belüli
-          mappákat nem olvassa
+        bank: '{formats} · legfeljebb 128 fájl · a mappán belüli mappákat nem olvassa'
         book: CSV, TSV, XLSX, XLSM vagy XLS
         documents: PDF, PNG, JPG, TIFF, WEBP, HEIC vagy Facturae, UBL, CII XML · a
           mappán belüli mappákat nem olvassa
