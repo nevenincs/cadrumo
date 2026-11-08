@@ -88,6 +88,7 @@ def test_committed_user_profile_schema_exposes_profile_lookup_metadata() -> None
     assert "soltero" in situacion.enum_values
 
 
+@pytest.mark.usefixtures("operation")
 def test_the_residence_field_admits_every_territory_the_catalogue_declares() -> None:
     """The write door accepts a ciudad autónoma, as LIRPF DA 32 requires.
 
