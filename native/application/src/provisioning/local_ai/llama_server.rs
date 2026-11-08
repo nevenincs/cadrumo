@@ -470,7 +470,7 @@ impl Supervised for LlamaServer {
             Ok(server) => server,
             Err(error) => {
                 if let LocalAiError::NotRunning(NotRunningCause::Start(failure)) = &error {
-                    program::record_start_failure(&self.folder, failure.kind());
+                    program::record_start_failure(&self.folder, failure);
                 }
                 return Err(error);
             }
