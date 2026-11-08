@@ -131,9 +131,15 @@ export function useAgentCatalog({
   // suspended is the same wait: it is not a sign-out and it comes back.
   const catalogBusy =
     catalog.kind === "failed" && catalogReadBusy(catalog.code);
+  // The repeat stops when the catalog loads, when no read is wanted because
+  // the service reports it stopped or refused, or the profile is gone, and
+  // when the hook unmounts: each ends with the cleanup clearing the pending
+  // pause, and nothing schedules another. Only a newly published status or
+  // the person's retry asks again after that.
+  const followBusy = catalogBusy && readCatalog !== null;
   useEffect(() => {
     if (catalog.kind === "ready") busyPauses.current = 0;
-    if (!catalogBusy) return;
+    if (!followBusy) return;
     if (askedUnder.current !== status) {
       setBusyReads((count) => count + 1);
       return;
@@ -145,7 +151,7 @@ export function useAgentCatalog({
       pause,
     );
     return () => window.clearTimeout(again);
-  }, [catalog, catalogBusy, status]);
+  }, [catalog, followBusy, status]);
   // What the next message runs with: what the person chose while this
   // conversation is shown, else what the conversation last ran with, else the
   // profile's last choice, each only where the catalog still offers it.
