@@ -17,13 +17,17 @@ Real encrypted store, real published authority, real calculation engine. No doub
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Iterator
+from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import BaseModel
 
+from cadrumo.adapters.persistence.operations.tests.supervision_support import run_to_settlement
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from cadrumo.adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
@@ -39,9 +43,27 @@ from cadrumo.application.invoices.catalogue_creation import build_catalogue_invo
 from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
+from cadrumo.application.modelo.calculation_operation import (
+    build_modelo_work_calculate_definition,
+    build_modelo_work_calculate_registration,
+)
+from cadrumo.application.modelo.calculation_request_fields import (
+    ModeloCalculationInputFieldsV1,
+    ModeloCalculationOverride,
+)
+from cadrumo.application.modelo.operation_shared import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.work_calculation_contracts import (
+    ModeloWorkCalculateCallerContext,
+    ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
+    ModeloWorkCalculateRequest,
+)
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.core.period import Period
 from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
 from cadrumo.domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
@@ -51,6 +73,9 @@ from cadrumo.domain.iva_compensation.reconciliation import (
     IvaCompensationAuthoritySource,
     IvaCompensationReconciliationDecision,
 )
+from cadrumo.domain.modelos.work_unit import WorkUnit
+from cadrumo.domain.user_profile.values import UserProfileFact
+from cadrumo.entrypoints.tests.dependency_operation_gating_support import supervisor_with_projections
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
@@ -115,19 +140,34 @@ def _box(box: str) -> CasillaId:
     return validated_casilla_id(box, surface="test casilla id")
 
 
-def test_an_unlinked_received_invoice_deducts_its_iva_in_the_quarter(
+@dataclass(frozen=True, slots=True)
+class _Quarter:
+    work_unit: WorkUnit
+    work_units: WorkUnitCatalogueRepository
+    calculations: CalculationRevisionCatalogueRepository
+    events: BucketEventHistoryRepository
+    transactions: TransactionCatalogueRepository
+    invoices: InvoiceCatalogueRepository
+    decision: IvaCompensationReconciliationDecision
+
+
+def _seed_quarter(
     secure_objects: SecureObjectRepository,
     *,
     operation: PinnedAuthorityOperation,
-) -> None:
-    seed_ready_profile(bucket_id=_BUCKET, at=_T0)
+    facts: tuple[UserProfileFact, ...] = (),
+    wallet_decision: bool = True,
+) -> _Quarter:
+    """The 2026 1T with one confirmed received invoice, its factura stored and no movement linked."""
+    seed_ready_profile(bucket_id=_BUCKET, at=_T0, facts=facts)
     work_units = WorkUnitCatalogueRepository(bucket_id=_BUCKET, objects=secure_objects)
     calculations = CalculationRevisionCatalogueRepository(objects=secure_objects)
     events = BucketEventHistoryRepository(objects=secure_objects)
     transactions = TransactionCatalogueRepository(bucket_id=_BUCKET, objects=secure_objects)
     invoices = InvoiceCatalogueRepository(bucket_id=_BUCKET, objects=secure_objects)
     decision = _wallet_decision()
-    IvaWalletDecisionRepository(objects=secure_objects).save_decision(decision)
+    if wallet_decision:
+        IvaWalletDecisionRepository(objects=secure_objects).save_decision(decision)
 
     catalogue_ports = build_catalogue_creation_ports(bucket_id=_BUCKET)
     created = create_catalogue_invoice(
@@ -174,6 +214,26 @@ def test_an_unlinked_received_invoice_deducts_its_iva_in_the_quarter(
         clock=_T0,
         operation=operation,
     )
+    return _Quarter(
+        work_unit=work_unit,
+        work_units=work_units,
+        calculations=calculations,
+        events=events,
+        transactions=transactions,
+        invoices=invoices,
+        decision=decision,
+    )
+
+
+def test_an_unlinked_received_invoice_deducts_its_iva_in_the_quarter(
+    secure_objects: SecureObjectRepository,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    quarter = _seed_quarter(secure_objects, operation=operation)
+    work_unit = quarter.work_unit
+    work_units, calculations, events = quarter.work_units, quarter.calculations, quarter.events
+    transactions, invoices, decision = quarter.transactions, quarter.invoices, quarter.decision
     with calculation_ports_for_test(
         bucket_id=_BUCKET,
         work_unit_repository=work_units,
@@ -200,3 +260,81 @@ def test_an_unlinked_received_invoice_deducts_its_iva_in_the_quarter(
     values = result.revision.casilla_values
     declared = {box: Decimal(str(values[_box(box)])) for box in _EXPECTED}
     assert declared == _EXPECTED
+
+
+def test_the_calculate_operation_settles_succeeded_and_deducts_the_unlinked_invoice(
+    secure_objects: SecureObjectRepository,
+    tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """APP-QA's build e621263e8c settled this quarter's calculate FAILED on ERROR_FINANCIAL_AGGREGATION_VALIDATION.
+
+    Submitted as the window submits it, the production calculate definition
+    under a real supervisor publishes the quarter with the invoice's IVA deducted.
+
+    The taxpayer's activity starts in the quarter and no wallet decision is
+    stored, so the operation's own wallet gate proves from the profile that no
+    earlier IVA period carries compensation.
+    """
+    quarter = _seed_quarter(
+        secure_objects,
+        operation=operation,
+        facts=(UserProfileFact(path="censo.activity_start_date", value=f"{_YEAR}-01-01"),),
+        wallet_decision=False,
+    )
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET,
+        work_unit_repository=quarter.work_units,
+        calculation_repository=quarter.calculations,
+        bucket_event_repository=quarter.events,
+        transaction_repository=quarter.transactions,
+        invoice_repository=quarter.invoices,
+    ) as ports:
+        definition = build_modelo_work_calculate_definition(
+            calculation_action_ports_factory=lambda **_composition: ports,
+            attachment_store_factory=lambda _bucket_id: AttachmentStore(objects=secure_objects),
+        )
+        supervisor, _projections = supervisor_with_projections(
+            tmp_path=tmp_path,
+            profile_objects=secure_objects,
+            authority_operation=operation,
+            registry=OperationRegistry(
+                definitions=(definition,),
+                public_registrations=(build_modelo_work_calculate_registration(definition),),
+            ),
+        )
+        request = OperationRequest[BaseModel](
+            definition_id=MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+            subject_ref=quarter.work_unit.work_unit_id,
+            payload=ModeloWorkCalculateRequest(
+                work_unit_id=quarter.work_unit.work_unit_id,
+                actor="operator-A",
+                caller_context=ModeloWorkCalculateCallerContext.EXPLICIT,
+                ordinary_m303_filing_evidence=ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
+                    joint_return_elected=False
+                ),
+                inputs=ModeloCalculationInputFieldsV1(
+                    binding_overrides=tuple(
+                        ModeloCalculationOverride(key=key, value="0.00")
+                        for key in (
+                            "modelo-303-compensacion-pendiente-anteriores",
+                            "modelo-303-autoconsumo-promotor-base",
+                        )
+                    )
+                ),
+            ),
+        )
+
+        async def settle() -> OperationPersistedSnapshot:
+            return await run_to_settlement(supervisor, await supervisor.submit(request, operation_id="5" * 64))
+
+        terminal = asyncio.run(settle())
+
+    receipt = terminal.terminal_receipt
+    assert receipt is not None
+    assert receipt.condition is OperationTerminalCondition.SUCCEEDED, receipt
+    assert receipt.effect is OperationEffect.UPDATED
+    (revision,) = quarter.calculations.load(operation=operation).revisions.values()
+    values = revision.casilla_values
+    assert {box: Decimal(str(values[_box(box)])) for box in _EXPECTED} == _EXPECTED
