@@ -116,6 +116,17 @@ const VIEW_KEYS: Record<View, string> = {
   all: "workspace.declarations.list.filter.all",
 };
 
+/** A text as its comparable words: case, accents and punctuation dropped, so
+ * "3.er" and "3er" are one word. */
+const foldWords = (text: string): string[] =>
+  text
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLocaleLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, "")
+    .split(/\s+/)
+    .filter(Boolean);
+
 const inView = (view: View, row: Row) =>
   view === "all" || (view === "recorded") === (row.group === "recorded");
 
@@ -396,14 +407,17 @@ export function DeclarationsPage({
     );
 
   const shownRows = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const found = rows.filter(
-      (row) =>
-        inView(view, row) &&
-        (!q ||
-          row.modelo.includes(q) ||
-          row.modelo_title.toLowerCase().includes(q)),
-    );
+    // Every typed word must be found, in any order, in the modelo, its title
+    // or its period words, ignoring case, accents and punctuation.
+    const words = foldWords(query);
+    const found = rows.filter((row) => {
+      if (!inView(view, row)) return false;
+      if (words.length === 0) return true;
+      const haystack = foldWords(
+        [row.modelo, row.modelo_title, row.period_words ?? ""].join(" "),
+      ).join(" ");
+      return words.every((word) => haystack.includes(word));
+    });
     if (sort.key === "work_order") return found;
     const value = SORT_VALUES[sort.key];
     const sign = sort.direction === "asc" ? 1 : -1;
@@ -424,6 +438,9 @@ export function DeclarationsPage({
       data: row,
     });
     if (sort.key !== "work_order") return shownRows.map(data);
+    // A view with no declarations has no group headers either: the grid then
+    // says why it is empty, which a lone header would hide.
+    if (shownRows.length === 0) return [];
     // Groups in the order the read model lists their first row.
     const groups = new Map<DeclarationListGroup, Row[]>();
     for (const row of shownRows)

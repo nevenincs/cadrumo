@@ -53,6 +53,9 @@ const MIN_QUERY = 2;
 // While a query also searches the documentation, only the best few actions
 // share the list with its results. Untyped, every action is listed.
 const ACTIONS_WHEN_SEARCHING = 6;
+// Documentation yields the list to the actions: only its best few results
+// are shown while searching.
+const DOCS_WHEN_SEARCHING = 5;
 
 function Highlighted({
   text,
@@ -193,6 +196,7 @@ export function CommandPalette({
                 x.rank - y.rank,
             )
             .map(({ result }) => result)
+            .slice(0, DOCS_WHEN_SEARCHING)
         : [],
     [searching, currentDocs],
   );
@@ -326,9 +330,46 @@ export function CommandPalette({
                   </CommandGroup>
                 </section>
               )}
-              {/* While a query searches the documentation its section is the
-                  first one, results or not: what reads the first section
-                  never finds actions there in the meantime. */}
+              {matched.length > 0 && (
+                <section>
+                  <CommandGroup heading={t("desktop.palette.actions")}>
+                    {matched.map((action) => (
+                      <CommandItem
+                        key={action.id}
+                        value={`action:${action.id}`}
+                        onSelect={() => run(action.choose ?? action.run)}
+                      >
+                        <Icon
+                          name={action.icon}
+                          size="md"
+                          className={ROW_ICON}
+                        />
+                        <span className="flex min-w-0 flex-1 items-baseline gap-2">
+                          <span className="palette-title min-w-0 truncate font-medium">
+                            {action.label}
+                          </span>
+                          {action.context && (
+                            <span className="palette-context truncate text-xs text-muted-foreground">
+                              {action.context}
+                            </span>
+                          )}
+                        </span>
+                        {primaryChord(action) && (
+                          <Kbd className="palette-chord">
+                            {primaryChord(action)}
+                          </Kbd>
+                        )}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </section>
+              )}
+              {/* Declarations results get their own section here, between the
+                  actions and the documentation, once the declarations search
+                  command exists. */}
+              {/* While a query searches the documentation its section is
+                  always present, results or not, so the list does not
+                  reshuffle as the answer arrives. */}
               {searching && (
                 <section>
                   {found.length > 0 && (
@@ -369,40 +410,6 @@ export function CommandPalette({
                       ))}
                     </CommandGroup>
                   )}
-                </section>
-              )}
-              {matched.length > 0 && (
-                <section>
-                  <CommandGroup heading={t("desktop.palette.actions")}>
-                    {matched.map((action) => (
-                      <CommandItem
-                        key={action.id}
-                        value={`action:${action.id}`}
-                        onSelect={() => run(action.choose ?? action.run)}
-                      >
-                        <Icon
-                          name={action.icon}
-                          size="md"
-                          className={ROW_ICON}
-                        />
-                        <span className="flex min-w-0 flex-1 items-baseline gap-2">
-                          <span className="palette-title min-w-0 truncate font-medium">
-                            {action.label}
-                          </span>
-                          {action.context && (
-                            <span className="palette-context truncate text-xs text-muted-foreground">
-                              {action.context}
-                            </span>
-                          )}
-                        </span>
-                        {primaryChord(action) && (
-                          <Kbd className="palette-chord">
-                            {primaryChord(action)}
-                          </Kbd>
-                        )}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
                 </section>
               )}
             </div>
