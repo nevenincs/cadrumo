@@ -5,8 +5,9 @@ ERROR_FINANCIAL_AGGREGATION_VALIDATION twice from the retenciones resolver: a
 quarter of the periodic work-withholding return with no retención recorded and
 no attestation that none was paid. That is the person's to state, so submitted
 as the window submits it, the production calculate definition under a real
-supervisor settles REFUSED on the retenciones refusal's code, writes no
-revision, and its served detail opens the profile answer that states it.
+supervisor settles REFUSED on the retenciones refusal's code with no effect,
+because it is refused before anything is written, writes no revision, and its
+served detail opens the profile answer that states it.
 
 Real encrypted store, real published authority, real calculation engine. No doubles.
 """
@@ -42,7 +43,7 @@ from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.next_step import OperationOpenProfileFieldStepV1
 from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.core.errors.error_codes import get_registered_error_code
-from cadrumo.core.operations import OperationTerminalCondition
+from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.form_codes import form_for_role
@@ -129,6 +130,7 @@ def test_a_work_withholding_quarter_with_no_retencion_settles_refused_with_the_d
     assert receipt.condition is OperationTerminalCondition.REFUSED, receipt
     assert receipt.refusal_ref == refusal.code
     assert receipt.failure_error_code is None
+    assert receipt.effect is OperationEffect.NONE
     assert detail.kind is OperationErrorDetailKind.REGISTERED_ERROR
     assert detail.error_code == refusal.code
     assert isinstance(detail.next_step, OperationOpenProfileFieldStepV1)

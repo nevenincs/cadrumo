@@ -398,6 +398,49 @@ def refuse_blocked_ledger_preflight(work_unit_id: str, *, ports: CalculationActi
     )
 
 
+def refuse_empty_retenciones_window(work_unit_id: str, *, ports: CalculationActionPorts) -> None:
+    """Refuse, before anything is written, a withholding period that holds no retención.
+
+    The retenciones resolver refuses the same window during source
+    resolution, which runs after the calculation's preparatory writes; this
+    applies its rule first, so the person's missing answer is reported as a
+    refusal with nothing changed.
+    """
+    from ..aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
+    from ..aggregation.source_mesh import CalculationSourceContext
+    from ..calculations.m115_no_relevant_payments import m115_no_relevant_payment_periods_for_bucket
+    from .work_profile import ModeloWorkProfilePathValues
+
+    work_unit, snapshot, checked_profile = load_bucket_aggregation_context(
+        work_unit_id,
+        work_unit_repository=ports.work_unit_repository,
+        profile=None,
+        operation=ports.operation,
+    )
+    resolver = RetencionesAggregationSourceResolver(
+        ports=ports.retencion_observation_ports,
+        m115_no_relevant_payment_periods=m115_no_relevant_payment_periods_for_bucket(
+            work_unit.bucket_id,
+            profile_path_values_reader=ModeloWorkProfilePathValues(profile=checked_profile),
+        ),
+        invoice_catalogue=ports.invoice_catalogue_read_ports,
+    )
+    refusal = resolver.empty_window_refusal(
+        CalculationSourceContext(
+            bucket_id=work_unit.bucket_id,
+            work_unit_id=work_unit.work_unit_id,
+            modelo=work_unit.modelo,
+            filing_year=work_unit.filing_year,
+            period=work_unit.period,
+            revision=snapshot.revision,
+            profile=checked_profile,
+            operation=ports.operation,
+        )
+    )
+    if refusal is not None:
+        raise refusal
+
+
 def _prepare_bucket_aggregation_calculation(
     *,
     work_unit_id: str,
