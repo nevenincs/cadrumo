@@ -10599,6 +10599,7 @@ workspace:
       failed_lead: Esperan algo que le faltaba al cálculo. Elige una para ver qué.
       none: Nada de este modelo te necesita.
       profile: 'Antes de calcular este periodo, tu perfil tiene que responder:'
+      sources: 'Antes de calcular esta declaración, faltan las declaraciones que resume:'
       title: Pendiente
     value:
       not_applicable: no aplica

@@ -256,14 +256,20 @@ class SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
         except RepositoryError:
             if not self._validate_existing_root() or self.is_absent(operation_id):
                 raise RepositoryError("operation journal inventory changed during read") from None
-            disposition = OperationRecoveryInventoryDisposition.REFUSED
-        else:
-            disposition = (
+            return OperationRecoveryInventoryEntry(
+                operation_id=operation_id,
+                disposition=OperationRecoveryInventoryDisposition.REFUSED,
+                definition_id=None,
+            )
+        return OperationRecoveryInventoryEntry(
+            operation_id=operation_id,
+            disposition=(
                 OperationRecoveryInventoryDisposition.TERMINAL
                 if record.snapshot.lifecycle is OperationLifecycle.TERMINAL
                 else OperationRecoveryInventoryDisposition.NONTERMINAL
-            )
-        return OperationRecoveryInventoryEntry(operation_id=operation_id, disposition=disposition)
+            ),
+            definition_id=record.snapshot.identity.definition_id,
+        )
 
     def _resolve_idempotency_unlocked(self, claim: OperationIdempotencyClaim) -> str | None:
         """Find one exact claim while the canonical journal lock is already held."""

@@ -1329,6 +1329,46 @@ required_text = [
     "no producirá efectos respecto del valor de mercado de las operaciones entre personas o entidades vinculadas",
 ]
 
+[legal."rd-634-2015:art-60"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-634-2015.html#a60"
+document_id = "BOE-A-2015-7771"
+article = "60"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-7771#a60"
+published_at = 2015-07-11
+effective_from = 2015-07-12
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-08
+reviewed_by = "agent-prepared; anchor resolved in the bundled consolidated text; required_text copied from that unit; pending operator re-stamp"
+notes = "RIS art 60: rentas sujetas a retención o ingreso a cuenta del Impuesto sobre Sociedades del perceptor. El apartado 1 lista las rentas del capital, premios, cargos de administrador, derechos de imagen, el arrendamiento de inmuebles urbanos y las rentas de instituciones de inversión colectiva; no incluye los rendimientos de actividades profesionales."
+required_text = [
+    "Rentas sujetas a retención o ingreso a cuenta",
+    "en concepto de pago a cuenta del Impuesto sobre Sociedades correspondiente al perceptor",
+    "Las rentas procedentes del arrendamiento o subarrendamiento de inmuebles urbanos, aun cuando constituyan ingresos derivados de explotaciones económicas",
+    "Las rentas obtenidas como consecuencia de las transmisiones o reembolsos de acciones o participaciones representativas del capital o patrimonio de instituciones de inversión colectiva",
+]
+
+[legal."rd-634-2015:art-65"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-634-2015.html#a65"
+document_id = "BOE-A-2015-7771"
+article = "65"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-7771#a65"
+published_at = 2015-07-11
+effective_from = 2015-07-12
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-08
+reviewed_by = "agent-prepared; anchor resolved in the bundled consolidated text; required_text copied from that unit; pending operator re-stamp"
+notes = "RIS art 65: la obligación de retener e ingresar a cuenta nace en la exigibilidad de la renta, o en su pago si es anterior."
+required_text = [
+    "Nacimiento de la obligación de retener y de ingresar a cuenta",
+    "nacerán en el momento de la exigibilidad de las rentas, dinerarias o en especie, sujetas a retención o ingreso a cuenta, respectivamente, o en el de su pago o entrega si es anterior",
+]
+
 [legal."rd-634-2015:art-13"]
 evidence_tier = "legal_authority"
 authority = "boe"

@@ -507,6 +507,8 @@ def test_native_quickfile_m115_completes_all_stages_and_exports_valid_local_byte
             label="native-quickfile-m115",
             facts={
                 **native_general_iva_facts(),
+                # Modelo 115 is quarterly only for a retenedor stated not to be a large company (RIRPF art. 108.1).
+                "censo.large_company": "false",
                 "identity.tax_id": "12345678Z",
                 "identity.name": "Synthetic",
                 "identity.surnames": "Quickfile",

@@ -21,6 +21,7 @@ from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, override
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from decimal import Decimal
 
     from ..adapters.outbound.aeat.sede.declarations import DeclaracionesRegisterSession
@@ -125,8 +126,12 @@ def build_calculation_action_ports(
     operation: PinnedAuthorityOperation,
     profile_record: object | None = None,
     objects: SecureObjectRepository | None = None,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> CalculationActionPorts:
     """Compose every persisted authority required by one Modelo calculation.
+
+    ``mutation_writer`` admits each actual secure-object commit; it fences a
+    repository this call opens, so it cannot be combined with ``objects``.
 
     Parameter types: ``objects``
     (:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`).
@@ -167,10 +172,16 @@ def build_calculation_action_ports(
     from ..application.invoices.source_resolver_ports import InvoiceSourceResolverPorts
     from ..application.modelo.calculation_action_ports import CalculationActionPorts
     from ..application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+    from ..core.errors.hierarchy import InternalInvariantError
     from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
 
     normalized_bucket_id = bucket_id.strip()
-    objects = objects if objects is not None else secure_object_repository_for_bucket(normalized_bucket_id)
+    if objects is not None and mutation_writer is not None:
+        raise InternalInvariantError("a calculation writer fences only the repository it opens")
+    if objects is None:
+        objects = secure_object_repository_for_bucket(normalized_bucket_id)
+        if mutation_writer is not None:
+            objects = objects.with_mutation_writer(mutation_writer)
     calculation_binding = bind_calculation_revision_persistence_from_profile(
         bucket_id=normalized_bucket_id,
         objects=objects,

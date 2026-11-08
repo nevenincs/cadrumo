@@ -25,15 +25,18 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from datetime import date
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from ...core.aggregation import BindingAggregationOp, BindingSourceKind
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.decimal.constants import ZERO
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language
 from ...core.money.rounding import round_to_cents
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.calculations.registry.binding_aggregation import binding_aggregation_op
@@ -70,6 +73,13 @@ from ...domain.modelos.row_models import (
 from ...domain.modelos.work_unit import WorkUnit
 from .action_errors import ModeloAggregationBindingError, ModeloCrossPeriodCleanStateError
 from .preconditions import build_modelo_precondition_failure
+from .work_form_wording import modelo_number
+
+if TYPE_CHECKING:
+    from .reconciliation_sources import ReconciliationSourceNeed
+
+type ReconciliationSourceNeedsReader = Callable[[tuple[RelationId, ...]], tuple[ReconciliationSourceNeed, ...]]
+"""Read where each source declaration of the given unproven reconciliation relations stands."""
 
 
 def detail_row_declaration_modelos(*, effective_date: date) -> frozenset[str]:
@@ -535,11 +545,35 @@ def _incomplete_reconciliation_error(
     missing_bindings: Sequence[BindingId],
     missing_targets: Sequence[CasillaId],
     missing_annuals: Sequence[CasillaId],
+    source_needs: tuple[ReconciliationSourceNeed, ...] = (),
 ) -> ModeloCrossPeriodCleanStateError:
-    """Name the 303 periods, bindings and boxes whose missing evidence blocks the M390 reconciliation."""
+    """Name the 303 periods, bindings and boxes whose missing evidence blocks the M390 reconciliation.
+
+    ``source_needs`` says why each source declaration's filed values are not
+    there yet; when it names any, the refusal lists them in the words of the
+    refusal's language and serves the first one's step.
+    """
     missing_periods = _required_relation_periods(snapshot, frozenset(missing_relations))
+    language = OutputLanguage(output_language())
+    sourced = (
+        {
+            "modelo_words": modelo_number(str(work_unit.modelo), language),
+            "year": str(work_unit.filing_year),
+            "sources": "; ".join(need.words(language) for need in source_needs),
+            "missing_303_period_standings": tuple(
+                f"{need.period.registry_token}:{need.standing.value}" for need in source_needs
+            ),
+        }
+        if source_needs
+        else {}
+    )
     return ModeloCrossPeriodCleanStateError(
-        translated_message="application.modelo.errors.cross_period_clean_state_incomplete",
+        translated_message=(
+            "application.modelo.errors.cross_period_sources_not_filed"
+            if source_needs
+            else "application.modelo.errors.cross_period_clean_state_incomplete"
+        ),
+        next_step=source_needs[0].next_step() if source_needs else None,
         context={
             "modelo": str(work_unit.modelo),
             "filing_year": str(work_unit.filing_year),
@@ -547,6 +581,7 @@ def _incomplete_reconciliation_error(
             "finding_count": len(missing_bindings),
             "reason": "missing_clean_cross_period_303_filings_or_observations",
             "missing_303_periods": missing_periods,
+            **sourced,
             "missing_303_reconciliation_bindings": tuple(missing_bindings),
             "zero_reconciliation_casillas_at_risk": tuple(missing_targets),
             "annual_casillas_not_proven_zero": tuple(missing_annuals),
@@ -581,8 +616,12 @@ def _raise_if_m390_303_reconciliation_would_save_silent_zero(
     observations: tuple[CasillaObservation, ...],
     supplied_casilla_ids: frozenset[CasillaId],
     answered_binding_ids: frozenset[BindingId],
+    source_needs: ReconciliationSourceNeedsReader | None = None,
 ) -> None:
     """Refuse an M390 draft that would save zero 303 reconciliation slots from missing fold-in evidence.
+
+    ``source_needs`` reads where each source declaration of the unproven
+    relations stands, so the refusal names them as the to-do list does.
 
     A calculated zero proves a slot has nothing to reconcile only when every
     value it was folded from was supplied: an operator entry, a resolved
@@ -639,6 +678,7 @@ def _raise_if_m390_303_reconciliation_would_save_silent_zero(
         missing_bindings=missing_bindings,
         missing_targets=missing_targets,
         missing_annuals=missing_annuals,
+        source_needs=() if source_needs is None else source_needs(tuple(missing_relations)),
     )
 
 

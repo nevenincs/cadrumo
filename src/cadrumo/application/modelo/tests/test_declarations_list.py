@@ -384,7 +384,7 @@ def test_the_new_declaration_dialog_offers_the_admitted_addresses_with_the_due_o
 
     targets = {
         (target.modelo, target.period_code): target
-        for target in worded_creation_targets(rows, admitted, OutputLanguage.EN)
+        for target in worded_creation_targets(rows, admitted, OutputLanguage.EN, as_of=_AS_OF)
     }
 
     assert set(targets) == {("303", "1T"), ("303", "2T"), ("390", "0A")}
@@ -393,11 +393,32 @@ def test_the_new_declaration_dialog_offers_the_admitted_addresses_with_the_due_o
     suggested = targets["303", "2T"]
     assert suggested.suggested and suggested.expected and suggested.existing is None
     assert suggested.deadline == date(2025, 7, 21) and suggested.deadline_text == "Jul 21, 2025"
-    assert not targets["390", "0A"].expected and not targets["390", "0A"].suggested
-    assert [target.suggested for target in targets.values()].count(True) == 1
+    assert not targets["390", "0A"].expected
+    assert [target.suggested for target in targets.values()].count(True) == len({modelo for modelo, _ in targets})
     # With nothing admitted, the returns due are what the dialog offers.
-    offered = [(item.modelo, item.period_code) for item in worded_creation_targets(rows, (), OutputLanguage.EN)]
+    offered = [
+        (item.modelo, item.period_code) for item in worded_creation_targets(rows, (), OutputLanguage.EN, as_of=_AS_OF)
+    ]
     assert offered == [("303", "2T")]
+
+
+def test_each_modelo_starts_on_its_return_due_else_its_latest_ended_period() -> None:
+    due = _entry(external=False, period=Period.from_year_and_code(2025, "2T"), close=date(2025, 7, 21))
+    rows = declaration_list_rows(_workspace(), _calendar(due))
+    # The dialog was opened on 30 April 2025: ejercicio 2025 has not ended, 2024 has.
+    admitted = (
+        DeclarationTarget("303", _PERIOD),
+        DeclarationTarget("303", due.period),
+        *(DeclarationTarget("390", Period.from_year_and_code(year, "0A")) for year in (2023, 2024, 2025)),
+    )
+
+    suggested = {
+        (target.modelo, target.filing_year, target.period_code)
+        for target in worded_creation_targets(rows, admitted, OutputLanguage.EN, as_of=_AS_OF)
+        if target.suggested
+    }
+
+    assert suggested == {("303", 2025, "2T"), ("390", 2024, "0A")}
 
 
 def test_the_list_says_what_it_could_read_and_never_passes_a_partial_read_for_everything() -> None:

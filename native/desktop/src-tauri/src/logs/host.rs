@@ -351,6 +351,23 @@ pub(super) fn entry(event: &Event) -> Entry {
             message.push_str(&format!(": {}", token(code)));
             context.insert("reason_code".into(), Value::from(token(code)));
         }
+        if let Some(reason) = &fact.reason {
+            message.push_str(&format!(" ({})", reason.as_str()));
+            context.insert("backend_code".into(), Value::from(reason.as_str()));
+        }
+        if let Some(summary) = &fact.summary {
+            if let Some(template) = &summary.template {
+                message.push_str(&format!(": {template}"));
+                context.insert("template".into(), Value::from(template.clone()));
+            }
+            if let Some(module) = &summary.module {
+                message.push_str(&format!(" at {module}"));
+                context.insert("module".into(), Value::from(module.clone()));
+                if let (Some(line), Some(column)) = (fact.line, fact.column) {
+                    message.push_str(&format!(":{line}:{column}"));
+                }
+            }
+        }
     }
     let level = super::severity::level(event);
     Entry {
@@ -575,6 +592,8 @@ mod tests {
                 dropped: 2,
                 line: Some(12),
                 column: Some(7),
+                reason: None,
+                summary: None,
             });
         }
         let records = HostEvents::default().poll(&diagnostics);

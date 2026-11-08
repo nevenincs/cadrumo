@@ -87,6 +87,7 @@ from ...domain.transactions.protocols import TransactionCatalogueRepositoryProto
 from ..aggregation.invoice_filing_fingerprint import capture_invoice_fingerprint, draft_contributor_identities
 from ..aggregation.renta_imputation import declared_imputation_criteria
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
+from ..calculations.relation_prefill import activity_start_date_for_bucket
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError
 from ..user_profile.projections import record_to_path_values
 from .action_errors import (
@@ -103,6 +104,7 @@ from .calculation_modelo_adjustments import (
     drop_row_field_template_outputs,
     m131_objective_estimation_data_base_inputs,
     raise_if_m390_303_reconciliation_would_save_silent_zero,
+    reconciliation_relation_targets,
     require_detail_rows_declared_for_their_owning_modelo,
 )
 from .calculation_preparation import PreparedCalculation, prepare_calculation
@@ -122,6 +124,7 @@ from .m303_filing_evidence import validate_m303_filing_instance_evidence_for_rev
 from .m303_regimen_simplificado_scope import m303_general_regime_claimed
 from .printed_boxes import snapshot_printed_boxes
 from .profile_export_binding import profile_text_fact_index, resolve_profile_text_casilla_inputs
+from .reconciliation_sources import ReconciliationSourceNeed, reconciliation_source_needs
 from .revision_persistence import persist_calculation_revision
 from .work_missing_input import ModeloWorkMissingInputError
 from .work_profile import ModeloWorkProfile
@@ -695,6 +698,33 @@ def _calculate_prepared_registry_snapshot(
     )
 
 
+def calculation_reconciliation_source_needs(
+    work_unit: WorkUnit,
+    snapshot: RegistrySnapshot,
+    *,
+    ports: CalculationActionPorts,
+    relation_ids: Iterable[RelationId] | None = None,
+) -> tuple[ReconciliationSourceNeed, ...]:
+    """Where each source declaration of the snapshot's reconciliation stands, read from the calculation's ports.
+
+    A revision that declares no reconciliation relation needs nothing, so no store is read for it.
+    """
+    if not reconciliation_relation_targets(snapshot):
+        return ()
+    return reconciliation_source_needs(
+        snapshot,
+        bucket_id=work_unit.bucket_id,
+        work_catalogue=ports.work_unit_repository.load(),
+        calculation_catalogue=ports.calculation_repository.load(operation=ports.operation),
+        observations=ports.observation_repository,
+        activity_start_date=activity_start_date_for_bucket(
+            work_unit.bucket_id, profile_path_values_reader=ports.profile_read_ports.path_values
+        ),
+        operation=ports.operation,
+        relation_ids=relation_ids,
+    )
+
+
 def _evaluate_prepared_calculation(
     prepared: PreparedCalculation,
     ports: CalculationActionPorts,
@@ -817,6 +847,9 @@ def _evaluate_prepared_calculation(
         supplied_casilla_ids=frozenset(resolved_inputs),
         answered_binding_ids=frozenset(
             (*prepared.channels.bindings, *prepared.channels.boolean_bindings, *settled_binding_ids)
+        ),
+        source_needs=lambda relation_ids: calculation_reconciliation_source_needs(
+            work_unit, snapshot, ports=ports, relation_ids=relation_ids
         ),
     )
     typed_observations = build_typed_observations(engine_result=engine_result, snapshot=snapshot)
