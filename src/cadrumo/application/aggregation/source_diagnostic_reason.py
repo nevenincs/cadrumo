@@ -215,9 +215,10 @@ CalculationSourceDiagnosticReason = Literal[
     # The recorded recargo departs from the rate art. 161 publishes for that
     # slot. A cross-check beside the declared figure, never a replacement of it.
     "invoice_recargo_departs_from_published_rate",
-    # One recorded recargo over lines at several IVA rates. The M303 recargo
-    # casillas are per rate and the invoice does not divide it, so the screen
-    # leaves it out of the ledger comparison and says so rather than passing it.
+    # One recorded recargo over lines at several IVA rates, left out of the
+    # M303 recargo casillas. No longer emitted: the screen now places each
+    # rate's art. 161 share or blocks the period. Kept because stored revisions
+    # calculated before that carry it and must still load and explain it.
     "invoice_recargo_not_attributable_to_a_tier",
     "official_box_unpopulated",
     "prior_payment_not_deducted",
