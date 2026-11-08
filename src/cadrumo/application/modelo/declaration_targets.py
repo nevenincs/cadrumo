@@ -6,7 +6,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from ...core.period import Period
-from ...domain.calculations.registry.temporal import select_authored_revision_metadata
+from ...domain.calculations.registry.errors import NoRevisionForPeriodError
+from ...domain.calculations.registry.temporal import select_revision_metadata
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -21,26 +22,25 @@ class DeclarationTarget:
 
 
 def declaration_targets(operation: PinnedAuthorityOperation) -> tuple[DeclarationTarget, ...]:
-    """Enumerate authored windows, retaining only their law-selected revision owners."""
+    """Every modelo period the registry envelope admits, as the one envelope resolver selects its revision.
+
+    A modelo's periods are those its editions declare filing windows for. Each is offered in every
+    envelope year the resolver answers, a year without its own edition projected from the nearest
+    authored one; a year before the modelo's declared inception is refused there and not offered.
+    """
     support = operation.supported_filing_years()
-    targets: set[tuple[str, Period]] = set()
-    for modelo in operation.modelo_ids():
+    targets: list[DeclarationTarget] = []
+    for modelo in sorted(operation.modelo_ids()):
         directory = operation.modelo_directory(modelo)
-        for revision in directory.revisions:
-            for window in revision.deadline_windows:
-                if not support.admits_coordinate(window.period.filing_year):
-                    continue
-                selected = select_authored_revision_metadata(
-                    directory,
-                    filing_year=window.period.filing_year,
-                    period=window.period.registry_token,
-                )
-                if selected.id == revision.id:
-                    targets.add((modelo, window.period))
-    return tuple(
-        DeclarationTarget(modelo, period)
-        for modelo, period in sorted(
-            targets,
-            key=lambda item: (item[0], item[1].filing_year, item[1].registry_token),
+        codes = sorted(
+            {str(window.period.code) for revision in directory.revisions for window in revision.deadline_windows}
         )
-    )
+        for year in support.years:
+            for code in codes:
+                period = Period.from_year_and_code(year, code)
+                try:
+                    select_revision_metadata(directory, filing_year=year, period=period.registry_token, support=support)
+                except NoRevisionForPeriodError:
+                    continue
+                targets.append(DeclarationTarget(modelo, period))
+    return tuple(targets)

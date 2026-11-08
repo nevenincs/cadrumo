@@ -171,7 +171,7 @@ def project_declarations_list(
             sources=calendar_sources(calendar, language),
             notices=source_notices(workspace, calendar, language),
             deadline_note_words=deadline_note_words(rows, language),
-            creation_targets=worded_creation_targets(rows, workspace.creation_targets, language),
+            creation_targets=worded_creation_targets(rows, workspace.creation_targets, language, as_of=calendar.as_of),
         )
 
 
