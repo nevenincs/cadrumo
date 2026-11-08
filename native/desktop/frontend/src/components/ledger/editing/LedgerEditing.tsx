@@ -62,7 +62,7 @@ export function useLedgerEditing({
   reread: () => void;
   /** A movement took a new id in an apply. */
   onRekey: (from: string, to: string) => void;
-  onShowRows: (ids: string[]) => void;
+  onShowRows: (ids: string[], fields?: readonly string[]) => void;
   onGoToDraft: (key: string) => void;
   locale: string;
   /** The page's one write pause. */
@@ -244,9 +244,9 @@ export function useLedgerEditing({
           tally={tally}
           locale={locale}
           onStage={onStage}
-          onShowRows={(ids) => {
+          onShowRows={(ids, fields) => {
             apply.close();
-            onShowRows(ids);
+            onShowRows(ids, fields);
           }}
           onGoToDraft={(key) => {
             apply.close();

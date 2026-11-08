@@ -1107,6 +1107,8 @@ application:
     staged_check:
       served:
         blocker:
+          amount_signed: 'El importe es una magnitud: el sentido ya dice si el dinero
+            entró o salió.'
           cannot_clear: 'Este valor no se puede vaciar: el campo tiene que tener un
             valor.'
           draft_incomplete: Un movimiento nuevo necesita fecha contable, importe,
@@ -1114,15 +1116,22 @@ application:
           mixed_needs_share: Un movimiento Mixto necesita una parte profesional.
           needs_classification: Este cambio necesita que el movimiento esté clasificado
             antes.
+          needs_withholding_category: La base y el IVA declarados suman más que el
+            dinero que se movió. Esa diferencia es una retención de IRPF y el movimiento
+            no declara ninguna categoría de IRPF.
           share_needs_mixed: La parte profesional solo se aplica a un movimiento Mixto.
           transfer_with_tax: Un traspaso entre tus propias cuentas no lleva datos
             fiscales.
         fix:
+          amount_signed: Escribe el importe sin signo y deja que el sentido diga si
+            entró o salió.
           cannot_clear: Conserva el valor guardado.
           draft_incomplete: Completa lo que le falta al movimiento nuevo.
           mixed_needs_share: Indica la parte profesional como porcentaje, por ejemplo
             50 para el 50 %.
           needs_classification: Clasifica el movimiento como Profesional o Personal.
+          needs_withholding_category: Indica la categoría de IRPF a la que pertenece
+            la retención, o corrige la base y el IVA para que sumen el importe.
           share_needs_mixed: Quita la parte o clasifica el movimiento como Mixto.
           transfer_with_tax: Quita los datos fiscales del traspaso o cambia su sentido.
         share_refusal: 'Eso no es una parte: escribe un porcentaje, como 50 para el

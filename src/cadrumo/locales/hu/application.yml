@@ -1088,19 +1088,28 @@ application:
     staged_check:
       served:
         blocker:
+          amount_signed: 'Az összeg mennyiség, nem előjeles szám: az irány mondja
+            meg, hogy a pénz bejött-e vagy kiment.'
           cannot_clear: 'Ez az érték nem törölhető: a mezőnek értéket kell tartalmaznia.'
           draft_incomplete: Az új tételhez mentés előtt kell könyvelési dátum, összeg,
             pénznem, irány és leírás.
           mixed_needs_share: A Vegyes tételnek üzleti arány kell.
           needs_classification: Ehhez a változtatáshoz előbb be kell sorolni a tételt.
+          needs_withholding_category: A megadott alap és áfa többet ad ki, mint a
+            tényleges pénzmozgás. Ez a különbség IRPF-levonás, a mozgás viszont nem
+            ad meg IRPF-kategóriát.
           share_needs_mixed: Üzleti arány csak Vegyes tételnél van.
           transfer_with_tax: A saját számlák közötti átvezetés nem hordoz adóadatot.
         fix:
+          amount_signed: Írd be az összeget előjel nélkül, és az iránnyal add meg,
+            hogy bejött vagy kiment.
           cannot_clear: Tartsd meg a tárolt értéket.
           draft_incomplete: Egészítsd ki, ami az új tételből hiányzik.
           mixed_needs_share: Add meg az üzleti arányt százalékként, például 50-et
             az 50%-hoz.
           needs_classification: Sorold be a tételt Üzletinek vagy Magánnak.
+          needs_withholding_category: Add meg, melyik IRPF-kategóriába tartozik a
+            levonás, vagy javítsd az alapot és az áfát, hogy kiadják az összeget.
           share_needs_mixed: Vesd el az arányt, vagy sorold a tételt Vegyesnek.
           transfer_with_tax: Vedd le az adóadatokat az átvezetésről, vagy változtasd
             meg az irányát.

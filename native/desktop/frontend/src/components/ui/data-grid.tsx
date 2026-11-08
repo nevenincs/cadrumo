@@ -418,6 +418,7 @@ function DataGrid<R>({
       moveTo({ key, column }, { focus: false });
       startEdit(key, column, initial);
     },
+    clearAnnouncement: () => setAnnouncement(""),
   }));
 
   // ── Pointer: columns ──────────────────────────────────────────────────
