@@ -305,6 +305,16 @@ desktop:
     key_label: Clave de API de {provider}
     key_note: Se guarda cifrada en este equipo y no se vuelve a mostrar.
     load_failed: No se han podido cargar los proveedores. Vuelve a intentarlo.
+    local_engine_change_failed: No se ha guardado tu cambio. Vuelve a intentarlo.
+    local_engine_changing: Guardando…
+    local_engine_lead: El programa que ejecuta los modelos en este ordenador. La lista de modelos es la misma con cualquiera de los dos.
+    local_engine_llamacpp: llama.cpp
+    local_engine_llamacpp_detail: Incluido. No hay nada que instalar.
+    local_engine_ollama: Ollama
+    local_engine_ollama_detail: Se descarga y se configura cuando lo eliges.
+    local_engine_restarts: Cambiar el motor o dónde se ejecutan los modelos reinicia el asistente.
+    local_engine_title: Motor local
+    local_engine_unavailable: llama.cpp no está incluido en esta instalación. Elige Ollama.
     local_model_absent: Sin descargar
     local_model_add: Añadir
     local_model_add_label: Añadir un modelo por su nombre
@@ -335,6 +345,11 @@ desktop:
     local_models_title: Modelos en este ordenador
     local_models_unreadable: Tu lista de modelos guardada no se puede leer. Restablécela
       para empezar de nuevo con los modelos recomendados.
+    local_placement_auto: Automático
+    local_placement_auto_detail: Usa la tarjeta gráfica cuando el modelo cabe.
+    local_placement_cpu_only: Solo procesador
+    local_placement_cpu_only_detail: Más lento. Usa solo la memoria de este ordenador.
+    local_placement_title: Dónde se ejecutan los modelos
     reason_check_settings: Revisa esta configuración y vuelve a intentarlo.
     reason_record_unreadable: No se puede leer la clave API guardada. Vuelve a añadirla.
     refresh: Volver a intentar

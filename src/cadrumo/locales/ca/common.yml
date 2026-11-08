@@ -10599,6 +10599,7 @@ workspace:
         què.
       none: Res d'aquest model no et necessita.
       profile: 'Abans de calcular aquest període, el teu perfil ha de respondre:'
+      sources: 'Abans de calcular aquesta declaració, falten les declaracions que resumeix:'
       title: Pendent
     value:
       not_applicable: no s'aplica

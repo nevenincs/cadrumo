@@ -10,7 +10,10 @@
 //! selected engine's program, as a Linux package carries no llama-server until its source
 //! build lands, has the host reported [`Unavailable`] with the reason, and nothing runs.
 //! Another engine is selected by building the host for it once the current host is
-//! dropped, which stops its server first.
+//! dropped, which stops its server first. A change of the placement alone under llama.cpp
+//! is passed to the running host with [`LocalAiHost::set_placement`] instead: the server
+//! then drains and starts again with it once it holds no model, so a model in use is never
+//! unloaded for it.
 //!
 //! On Windows each server process is created suspended and placed in a kill-on-close job
 //! of its own before any of its code runs, so nothing it starts, such as a llama-server
@@ -37,8 +40,8 @@ use cadrumo_application::provisioning::local_ai::program::ProcessGroup;
 use cadrumo_application::provisioning::{
     items::Locations,
     local_ai::{
-        LocalEngine,
-        llama_server::{LOAD_CONTEXT, LlamaServer, LlamaServerUnavailable},
+        LocalEngine, Placement,
+        llama_server::{LlamaServer, LlamaServerUnavailable, PlacementHandle},
         program::{Containment, Program},
         supervision::{EngineProgram, Environment, ServerState, ServerSupervisor, Supervised},
     },
@@ -108,6 +111,8 @@ pub struct LocalAiHost {
     published: Shared,
     stop_requested: bool,
     worker: Option<JoinHandle<()>>,
+    /// The placement the llama-server presents its models with; none for another program.
+    placement: Option<PlacementHandle>,
 }
 
 impl LocalAiHost {
@@ -115,12 +120,14 @@ impl LocalAiHost {
     /// under `storage_root`; [`Unavailable`] when the package carries no program of that
     /// engine that can run here. The other engine's server is never started.
     ///
-    /// The engine is the person's selection, which the caller reads from where it is
-    /// kept and passes here; until then the default engine is the caller's.
+    /// The engine and the placement are the person's selection, which the caller reads from
+    /// where it is kept and passes here. The placement is the llama-server's, and Ollama's
+    /// own device detection ignores it.
     pub fn for_package(
         package_root: &Path,
         storage_root: &Path,
         engine: LocalEngine,
+        placement: Placement,
     ) -> Result<Self, Unavailable> {
         let address = server_address(engine).ok_or(Unavailable::Address)?;
         let locations = Locations::under(storage_root);
@@ -148,12 +155,28 @@ impl LocalAiHost {
                     &package_root.join(LLAMA_SERVER),
                     LLAMA_SERVER_BUILD,
                     &locations,
-                    LOAD_CONTEXT,
+                    placement,
                 )
                 .map_err(Unavailable::LlamaServer)
             },
         )?;
-        Self::run_server(program, address, environment)
+        let handle = match &program {
+            EngineProgram::LlamaCpp(server) => Some(server.placement_handle()),
+            EngineProgram::Ollama(_) => None,
+        };
+        let mut host = Self::run_server(program, address, environment)?;
+        host.placement = handle;
+        Ok(host)
+    }
+
+    /// Passes a changed placement to the running llama-server, which drains and starts
+    /// again with it once it holds no model. `false` when the host runs another program,
+    /// which has no placement to change.
+    pub fn set_placement(&self, placement: Placement) -> bool {
+        self.placement.as_ref().is_some_and(|handle| {
+            handle.set(placement);
+            true
+        })
     }
 
     fn run_server<P: Supervised + Send + 'static>(
@@ -187,6 +210,7 @@ impl LocalAiHost {
             published,
             stop_requested: false,
             worker: Some(worker),
+            placement: None,
         })
     }
 
@@ -349,6 +373,7 @@ impl Containment for GroupContainment {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::local_engine::Recorded;
     use cadrumo_application::provisioning::local_ai::program::latest_start_failure;
     use std::{fs, path::PathBuf};
 
@@ -387,7 +412,6 @@ mod tests {
             assert!((1024..32768).contains(&address.port()));
         }
         assert_ne!(ollama, llama);
-        assert_eq!(LocalEngine::default(), LocalEngine::Ollama);
     }
 
     fn package_with_pins(package: &Path) {
@@ -421,10 +445,51 @@ mod tests {
     }
 
     #[test]
+    fn with_no_choice_a_package_that_carries_the_llama_server_serves_with_it() {
+        let root = Scratch::new("unchosen-llama");
+        let package = root.path().join("package");
+        package_with_pins(&package);
+        package_with_failing_llama_server(&package);
+        let state = root.path().join("state");
+        let selection = Recorded::Absent
+            .selection(&package)
+            .expect("an absent record has the defaults");
+        assert_eq!(selection.engine, LocalEngine::LlamaCpp);
+        assert_eq!(selection.placement, Placement::Auto);
+        let host =
+            LocalAiHost::for_package(&package, &state, selection.engine, selection.placement)
+                .expect("the package carries llama-server");
+        assert!(host.set_placement(Placement::Auto), "the llama-server runs");
+    }
+
+    #[test]
+    fn with_no_choice_a_package_without_the_llama_server_serves_with_ollama() {
+        let root = Scratch::new("unchosen-ollama");
+        let (package, state) = (root.path().join("package"), root.path().join("state"));
+        let selection = Recorded::Absent
+            .selection(&package)
+            .expect("an absent record has the defaults");
+        assert_eq!(selection.engine, LocalEngine::Ollama);
+        assert_eq!(selection.placement, Placement::Auto);
+        // The package pins no Ollama either, so nothing runs; never the llama-server.
+        let expected = if Platform::current().is_some() {
+            Unavailable::OllamaNotPinned
+        } else {
+            Unavailable::Platform
+        };
+        assert_eq!(
+            LocalAiHost::for_package(&package, &state, selection.engine, selection.placement).err(),
+            Some(expected)
+        );
+        assert!(!state.exists(), "nothing ran");
+    }
+
+    #[test]
     fn a_package_without_the_selected_engines_program_runs_no_server_and_says_why() {
         let root = Scratch::new("absent");
         let (package, state) = (root.path().join("package"), root.path().join("state"));
-        let ollama = LocalAiHost::for_package(&package, &state, LocalEngine::Ollama).err();
+        let ollama =
+            LocalAiHost::for_package(&package, &state, LocalEngine::Ollama, Placement::Auto).err();
         let expected = if Platform::current().is_some() {
             Unavailable::OllamaNotPinned
         } else {
@@ -433,7 +498,8 @@ mod tests {
         assert_eq!(ollama, Some(expected));
         // A Linux package carries no llama-server until its source build lands.
         assert_eq!(
-            LocalAiHost::for_package(&package, &state, LocalEngine::LlamaCpp).err(),
+            LocalAiHost::for_package(&package, &state, LocalEngine::LlamaCpp, Placement::Auto)
+                .err(),
             Some(Unavailable::LlamaServer(
                 LlamaServerUnavailable::NotPackaged
             ))
@@ -452,7 +518,9 @@ mod tests {
         let ollama_folder = state.join("components").join("ollama");
 
         // Ollama selected and not set up: the packaged llama-server is never started.
-        if let Ok(host) = LocalAiHost::for_package(&package, &state, LocalEngine::Ollama) {
+        if let Ok(host) =
+            LocalAiHost::for_package(&package, &state, LocalEngine::Ollama, Placement::Auto)
+        {
             let first = host.wait_until(|published| published.looks >= 1);
             assert_eq!(first.state, ServerState::NotSetUp);
             drop(host);
@@ -461,8 +529,9 @@ mod tests {
 
         // llama-server selected: it is started, and fails here, while Ollama is never
         // looked at.
-        let host = LocalAiHost::for_package(&package, &state, LocalEngine::LlamaCpp)
-            .expect("the package carries llama-server");
+        let host =
+            LocalAiHost::for_package(&package, &state, LocalEngine::LlamaCpp, Placement::Auto)
+                .expect("the package carries llama-server");
         let tried = host.wait_until(|published| {
             matches!(
                 published.state,
@@ -480,13 +549,39 @@ mod tests {
     }
 
     #[test]
+    fn only_a_llama_server_host_takes_a_changed_placement() {
+        let root = Scratch::new("placement");
+        let package = root.path().join("package");
+        package_with_pins(&package);
+        package_with_failing_llama_server(&package);
+        let state = root.path().join("state");
+
+        let llama =
+            LocalAiHost::for_package(&package, &state, LocalEngine::LlamaCpp, Placement::Auto)
+                .expect("the package carries llama-server");
+        assert!(llama.set_placement(Placement::CpuOnly));
+        assert!(llama.set_placement(Placement::Auto));
+        drop(llama);
+
+        // The Ollama host has no placement of the manager's to change.
+        if let Ok(ollama) =
+            LocalAiHost::for_package(&package, &state, LocalEngine::Ollama, Placement::CpuOnly)
+        {
+            assert!(!ollama.set_placement(Placement::Auto));
+        }
+    }
+
+    #[test]
     fn a_program_not_set_up_is_looked_at_on_its_own_thread_until_the_manager_stops() {
         let root = Scratch::new("paced");
         let package = root.path().join("package");
         package_with_pins(&package);
-        let Ok(mut host) =
-            LocalAiHost::for_package(&package, &root.path().join("state"), LocalEngine::Ollama)
-        else {
+        let Ok(mut host) = LocalAiHost::for_package(
+            &package,
+            &root.path().join("state"),
+            LocalEngine::Ollama,
+            Placement::Auto,
+        ) else {
             // The pins carry no archive for this platform.
             assert!(Platform::current().is_none());
             return;

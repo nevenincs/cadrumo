@@ -1,5 +1,10 @@
 import type { CallPlan } from "./hostCall";
-import type { AgentLocalModels } from "../ipc/contract";
+import type {
+  AgentLocalEngine,
+  AgentLocalEngineToken,
+  AgentLocalModels,
+  AgentLocalPlacement,
+} from "../ipc/contract";
 import type {
   AgentSkillDetail,
   AgentSkillInventory,
@@ -591,6 +596,17 @@ export interface AgentSession {
   ): Promise<AgentLocalModels>;
   /** Removes the list record, readable or not, at the revision read. */
   resetLocalModels?(expectedRevision: string): Promise<AgentLocalModels>;
+  /** The local engine and placement, stored in the record that holds the
+   * lists, so a change to either moves the other's revision. */
+  localEngine?(): Promise<AgentLocalEngine>;
+  /** Stores the local engine and placement at the revision read; the
+   * service restarts the assistant when either changes. A refusal carries
+   * the service's reason as `agent_local_models_<reason>`. */
+  chooseLocalEngine?(
+    engine: AgentLocalEngineToken,
+    placement: AgentLocalPlacement,
+    expectedRevision: string,
+  ): Promise<AgentLocalEngine>;
   /** Stores `model` on `lane` as the model documents are read with, at the
    * revision read: the one the person selected in the model picker. */
   chooseReadingModel?(

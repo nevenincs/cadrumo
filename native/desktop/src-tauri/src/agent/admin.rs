@@ -100,6 +100,8 @@ fn action_reason(action: &str) -> &'static str {
         "local_model_remove" => "admin_local_model_remove",
         "local_models_reset" => "admin_local_models_reset",
         "reading_model_choose" => "admin_reading_model_choose",
+        "local_engine" => "admin_local_engine",
+        "local_engine_choose" => "admin_local_engine_choose",
         "attachment_card" => "admin_attachment_card",
         "attachment_release" => "admin_attachment_release",
         "attachment_grants" => "admin_attachment_grants",
@@ -458,6 +460,8 @@ mod tests {
             ("local_models", "admin_local_models"),
             ("local_model_add", "admin_local_model_add"),
             ("reading_model_choose", "admin_reading_model_choose"),
+            ("local_engine", "admin_local_engine"),
+            ("local_engine_choose", "admin_local_engine_choose"),
             ("attachment_release", "admin_attachment_release"),
             ("unheard_of", "admin_undeclared_action"),
         ] {

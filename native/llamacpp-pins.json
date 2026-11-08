@@ -4,6 +4,7 @@
   "tag": "b12184",
   "hosts": [
     "github.com",
+    "raw.githubusercontent.com",
     "release-assets.githubusercontent.com"
   ],
   "archives": [
@@ -52,5 +53,10 @@
       "download_bytes": 37709845,
       "sha256": "39c5acfaf9b9b9d24c73bbebd9d46b0bf84d889a9ea82cbb352764d5227f9d11"
     }
-  ]
+  ],
+  "license": {
+    "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b12184/LICENSE",
+    "download_bytes": 1078,
+    "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d"
+  }
 }

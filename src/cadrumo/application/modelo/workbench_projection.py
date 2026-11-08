@@ -48,6 +48,7 @@ from .calculation_report import CalculationReportRowRole
 from .edit_apply_scalar_contracts import ModeloEditWireScalar
 from .edit_baseline_projection import ModeloEditApplyBaselineV1
 from .edit_models import ModeloEditAdmittedV1, ModeloEditRefusedV1
+from .reconciliation_sources import ReconciliationSourceRequirementV1
 from .source_policy import SourceFamily
 from .work_form_declaration_facts import (
     ModeloFormAeatData,
@@ -501,6 +502,8 @@ class ModeloWorkbenchFormProjectionV1(BaseModel):
     export_offer: PublicModeloFormExportOffer | None = None
     #: The profile details the readiness gate still asks for, each as its label in the form's language.
     profile_requirements: tuple[str, ...] = ()
+    #: The declarations an annual summary sums whose filed figures are not there yet, each with its step.
+    source_requirements: tuple[ReconciliationSourceRequirementV1, ...] = ()
     #: The recorded filing's AEAT receipt state; ``None`` when the declaration is not recorded as filed.
     receipt: ModeloFormReceipt | None = None
     #: What in the ledger holds calculating this declaration, in words, with the movement to open.
@@ -600,6 +603,7 @@ def _restore(projection: ModeloWorkbenchFormProjectionV1) -> ModeloWorkbenchForm
         receipt=projection.receipt,
         profile_requirements=projection.profile_requirements,
         ledger_hold=projection.ledger_hold,
+        source_requirements=projection.source_requirements,
     )
 
 
@@ -652,6 +656,7 @@ def project_modelo_workbench_form(
         receipt=read.receipt,
         profile_requirements=read.profile_requirements,
         ledger_hold=read.ledger_hold,
+        source_requirements=read.source_requirements,
     )
     _require_projection_roundtrip(read, projection)
     return projection

@@ -660,7 +660,13 @@ def _await_invocation_exit(
 
             raise
 
-        completed = changed.wait(deadline.remaining_seconds())
+        # A deadline that passed while the invocation started is a timeout like
+        # one that passes during the wait: answer it as no status, not as an error.
+        try:
+            remaining = deadline.remaining_seconds()
+        except OrchestrationTimeoutError:
+            remaining = 0.0
+        completed = changed.wait(remaining)
 
         if cancellation is not None and cancellation.is_set():
             raise AgentHostError(AgentHostRefusal.CANCELLED)

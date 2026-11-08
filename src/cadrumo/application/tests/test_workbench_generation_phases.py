@@ -149,8 +149,6 @@ def test_the_declaration_list_capture_records_every_phase_with_its_seconds_and_c
         "calendar_aeat_evidence",
         "calendar_memo_key",
         "calendar_inputs",
-        "custody_count",
-        "census_observation",
         "recheck_profile_record",
         "recheck_work_units",
         "recheck_calculation_revisions",
@@ -160,8 +158,6 @@ def test_the_declaration_list_capture_records_every_phase_with_its_seconds_and_c
         "recheck_ledger",
         "recheck_verification_reports",
         "recheck_bucket_events",
-        "recheck_custody_count",
-        "recheck_census_observation",
         "recheck",
         "declaration_list_inputs",
     ]
@@ -176,7 +172,7 @@ def test_the_declaration_list_capture_records_every_phase_with_its_seconds_and_c
     assert counts["work_units"] == counts["declarations_portfolio"] == counts["declaration_summaries"] == 1
     assert counts["calculation_revisions"] == counts["filings"] == counts["bucket_events"] == 0
     assert counts["ledger_transactions"] == counts["ledger_invoices"] == 0
-    assert counts["custody_count"] is None, "a phase that counts nothing says so rather than claiming zero"
+    assert counts["calendar_inputs"] is None, "a phase that counts nothing says so rather than claiming zero"
     _assert_phase_records_are_timed_correlated_and_value_free(records)
 
 
@@ -396,6 +392,41 @@ def test_secure_generation_refuses_a_census_capture_changed_during_read(
     )
     with pytest.raises(InternalInvariantError, match="changed during capture"):
         door.read_workbench_generation_inputs()
+
+
+@pytest.mark.parametrize(("surface", "expected_reads"), (("generation", 2), ("declarations", 0)))
+def test_only_a_generation_reads_the_census_and_custody_count_it_shows_in_aeat_sync(
+    authority_operation: PinnedAuthorityOperation, surface: str, expected_reads: int
+) -> None:
+    """The list shows neither, so it never pays the census scan of every journaled operation.
+
+    A generation reads both once and rechecks both at the close of the capture.
+    """
+    from dataclasses import replace
+
+    reads: list[str] = []
+
+    def census() -> None:
+        reads.append("census")
+
+    def custody() -> int:
+        reads.append("custody")
+        return 4
+
+    door = replace(
+        _declaration_list_door(authority_operation),
+        account_session_reader=lambda: HomeAccountSession(
+            posture=HomeSessionPosture.ACTIVE, profile_label="Perfil local", expires_at=NOW
+        ),
+        census_observation_reader=census,
+        notification_custody_reader=custody,
+    )
+    if surface == "generation":
+        door.read_workbench_generation_inputs()
+    else:
+        door.read_declaration_list_inputs()
+
+    assert reads.count("census") == reads.count("custody") == expected_reads
 
 
 def test_a_resident_s_calendar_survives_the_registered_result_round_trip(

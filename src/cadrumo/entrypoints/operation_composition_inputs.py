@@ -118,6 +118,7 @@ def build_modelo_workbench_read_ports(bucket_id: str, operation: PinnedAuthority
     """Bind the repositories one declaration's workbench reads from to the worker's profile."""
     from ..adapters.persistence.profile.own_accounts import OwnAccountRepository
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ..application.modelo.calculation_actions import calculation_reconciliation_source_needs
     from ..application.modelo.profile_readiness_gate import load_modelo_work_profile
     from ..application.modelo.workbench_read import ModeloWorkbenchLedgerPorts, ModeloWorkbenchReadPorts
     from .adapter_composition_ports import build_borrador_100_snapshot_repository
@@ -149,6 +150,9 @@ def build_modelo_workbench_read_ports(bucket_id: str, operation: PinnedAuthority
             transactions=ports.transaction_repository,
             invoices=ports.invoice_catalogue_read_ports.invoice_reader,
             usage_ratios=ports.usage_ratio_profile_loader,
+        ),
+        reconciliation_sources=lambda unit, snapshot: calculation_reconciliation_source_needs(
+            unit, snapshot, ports=ports
         ),
     )
 
