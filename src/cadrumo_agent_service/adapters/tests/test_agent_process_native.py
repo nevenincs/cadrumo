@@ -343,9 +343,13 @@ def test_an_agent_that_fills_its_standard_error_is_not_blocked_and_its_drain_end
 
 
 def test_a_tree_that_ignores_stop_is_ended_only_at_timeout(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
-    """A sleeping tree is allowed to finish until the injected timeout."""
+    """A sleeping tree is allowed to finish until the injected timeout.
+
+    The 3 s policy is the stop budget under test; the start gets its own
+    deadline so a slow fixture launch cannot spend it before the stop begins.
+    """
     controller = _controller(tmp_path, "deaf", _CredentialSource(), timeout=3)
-    controller.start()
+    controller.start(deadline=TimeoutPolicy(30).deadline())
     grandchild = _received(tmp_path)["grandchild"]
     assert isinstance(grandchild, int)
     try:
