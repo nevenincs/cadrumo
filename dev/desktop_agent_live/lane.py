@@ -351,6 +351,7 @@ def live_configuration(results: Path) -> dict[str, Any]:
     if node is None:
         raise UnavailableError("node is not on PATH")
     environment = {name: value for name, value in os.environ.items() if not name.upper().startswith(_AMBIENT_EXCLUDED)}
+    environment["CADRUMO_CMAKE_BINARY_DIR"] = str(_BUILD)
     environment["CADRUMO_DEV_DESKTOP_LIVE_RESULTS"] = str(results)
     outcome = run_command(
         [node, "--input-type=module", "-e", _CONFIGURATION_READER, _LIVE_CONFIGURATION.as_uri()],
