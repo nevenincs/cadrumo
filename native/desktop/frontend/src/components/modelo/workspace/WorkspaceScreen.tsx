@@ -20,6 +20,7 @@ import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
 import { ledgerFailure, type LedgerOutcome } from "../../../shell/ledger";
 import {
+  createWorkRequest,
   MODELO_ACTOR,
   modeloEditBody,
   type ModeloPort,
@@ -35,6 +36,7 @@ import type {
   ModeloFormIssueLine,
   ModeloFormNextAction,
   ModeloWorkbenchFormProjectionV1,
+  OperationNextStepV1,
 } from "../../../shell/modeloContract/modeloWorkForm";
 import type { ModeloWorkHistoryEntryV1 } from "../../../shell/modeloContract/modeloWorkHistory";
 import { useStrings, type Translate } from "../../../shell/strings";
@@ -292,6 +294,16 @@ function Ready({
   const settledThenReread = async <Result,>(
     send: () => Promise<LedgerOutcome<Result>>,
   ) => (await run(send))?.kind === "settled";
+  // A declaration this one sums that is not filed yet: the one the
+  // application names is created here, or opened in the shell, where its own
+  // form says what is left; nothing else is sent from this declaration.
+  const takeSourceStep = (step: OperationNextStepV1) => {
+    if (step.kind === "open_work") onOpenWork?.(step.work_unit_id);
+    else if (step.kind === "create_work")
+      void run(() =>
+        port.submit("modelo.work.create", createWorkRequest(step)),
+      );
+  };
 
   const readUnit = useCallback(async () => {
     try {
@@ -794,6 +806,7 @@ function Ready({
                 ? () => onOpenSurface("profile")
                 : undefined
             }
+            onSourceStep={takeSourceStep}
           />
         ),
         details: (

@@ -37,6 +37,11 @@ from .edit_refusal_projection import ModeloEditCalculationPrerequisiteV1
 from .edit_review_wording import edit_refusal_words
 from .m303_exonerado_390_applicability_attestation import modelo_390_question_asked
 from .profile_readiness_gate import modelo_work_profile_preflight_report
+from .reconciliation_sources import (
+    ReconciliationSourceNeed,
+    ReconciliationSourceRequirementV1,
+    reconciliation_source_requirements,
+)
 from .verification_report_facts import granting_verification_report
 from .work_form_export_offer import ModeloFormExportOffer, ModeloFormReceipt, form_export_offer, form_receipt
 from .work_form_header import ModeloFormHeader, form_header, form_recorded
@@ -48,6 +53,7 @@ from .work_form_typing_effect import ModeloFormTypingEffect, form_typing_effects
 if TYPE_CHECKING:
     from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.calculations.registry.schema import RegistrySnapshot
     from ...domain.modelos.protocols import (
         CalculationRevisionCatalogueRepositoryProtocol,
         ModeloRecordCatalogueRepositoryProtocol,
@@ -73,7 +79,9 @@ class ModeloWorkbenchReadPorts:
     offer the accounts AEAT debits and pays a refund into; ``credit_resolutions``
     is the store of accepted source disagreements, read so the form holds filing
     exactly where the gate does; ``profile`` loads the taxpayer profile, read so
-    the to-do list names the profile details the readiness gate still asks for.
+    the to-do list names the profile details the readiness gate still asks for;
+    ``reconciliation_sources`` reads where each declaration an annual summary
+    sums stands, the same reader its calculation's refusal names them from.
     """
 
     work_units: WorkUnitCatalogueRepositoryProtocol
@@ -86,6 +94,7 @@ class ModeloWorkbenchReadPorts:
     own_accounts: OwnAccountRegisterReaderProtocol | None = None
     credit_resolutions: CreditResolutionReader | None = None
     profile: Callable[[], ModeloWorkProfile | None] | None = None
+    reconciliation_sources: Callable[[WorkUnit, RegistrySnapshot], tuple[ReconciliationSourceNeed, ...]] | None = None
 
 
 type ModeloWorkbenchReadPortsFactory = Callable[[str, PinnedAuthorityOperation], ModeloWorkbenchReadPorts]
@@ -120,6 +129,9 @@ class ModeloWorkbenchFormReadV1:
     #: The profile details the readiness gate still asks for before this declaration is worked out or filed,
     #: each as its label in the form's language; empty when the profile answers everything the gate asks.
     profile_requirements: tuple[str, ...] = ()
+    #: The declarations an annual summary sums whose filed figures are not there yet, each worded in the
+    #: form's language with its step; the same answer its calculation's refusal names them from.
+    source_requirements: tuple[ReconciliationSourceRequirementV1, ...] = ()
 
     @property
     def typing_effects(self) -> tuple[ModeloFormTypingEffect, ...]:
@@ -228,6 +240,7 @@ def read_modelo_workbench_form(
         else granting_verification_report(ports.verifications.load(operation=operation), head_id)
     )
     is_m303 = str(unit.modelo) == form_for_role("iva.periodic")
+    snapshot = modelo_form_snapshot(operation, unit.modelo, unit.filing_year, unit.period, form.registry_revision_id)
     return ModeloWorkbenchFormReadV1(
         load=loaded,
         admission=admission,
@@ -239,7 +252,7 @@ def read_modelo_workbench_form(
         tax_id_format=runtime_tax_id_format(authority=operation),
         export_offer=form_export_offer(
             str(unit.modelo),
-            modelo_form_snapshot(operation, unit.modelo, unit.filing_year, unit.period, form.registry_revision_id),
+            snapshot,
             language,
             form=form,
             verified=loaded.verified,
@@ -249,6 +262,11 @@ def read_modelo_workbench_form(
         ),
         receipt=_receipt(unit, loaded, ports=ports, language=language),
         profile_requirements=_profile_requirements(unit, ports=ports, operation=operation, language=language),
+        source_requirements=(
+            ()
+            if ports.reconciliation_sources is None
+            else reconciliation_source_requirements(ports.reconciliation_sources(unit, snapshot), language)
+        ),
     )
 
 
