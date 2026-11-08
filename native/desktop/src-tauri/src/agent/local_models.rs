@@ -885,39 +885,57 @@ pub(crate) mod tests {
                 .unwrap()
                 .as_nanos()
         ));
+        let read = || LocalEngineSelection::read(&root);
+        let selected =
+            |engine, placement| Recorded::Selected(LocalEngineSelection::new(engine, placement));
+        let unreadable = || {
+            cadrumo_manager::custody::write_local_record(
+                &root.join(cadrumo_manager::contract::LOCAL_ENGINE_SELECTION),
+                b"{",
+                4096,
+            )
+            .unwrap();
+            assert_eq!(read(), Recorded::Unreadable);
+        };
+        let llama_cpu = RecordSync::Store(LocalEngine::LlamaCpp, Placement::CpuOnly);
+        // Store over an absent record.
+        assert_eq!(read(), Recorded::Absent);
+        sync_record(&root, llama_cpu).unwrap();
+        assert_eq!(read(), selected(LocalEngine::LlamaCpp, Placement::CpuOnly));
+        // Store over a different stored choice replaces it.
+        sync_record(
+            &root,
+            RecordSync::Store(LocalEngine::Ollama, Placement::Auto),
+        )
+        .unwrap();
+        assert_eq!(read(), selected(LocalEngine::Ollama, Placement::Auto));
+        // Clear over a stored choice removes it, so the package's defaults apply.
+        sync_record(&root, RecordSync::Clear).unwrap();
+        assert_eq!(read(), Recorded::Absent);
+        // Clear over a record nobody can read removes it as well.
+        unreadable();
+        sync_record(&root, RecordSync::Clear).unwrap();
+        assert_eq!(read(), Recorded::Absent);
+        // Leave over a record nobody can read keeps it as it is.
+        unreadable();
+        sync_record(&root, RecordSync::Leave).unwrap();
+        assert_eq!(read(), Recorded::Unreadable);
+        // The rule that picks each: a stored choice, no choice, a setting nobody can read.
         let setting = |chosen: bool| LocalEngineSetting::Readable {
             engine: LocalEngine::LlamaCpp,
             placement: Placement::CpuOnly,
             revision: revision(),
             chosen,
         };
-        let stored = Recorded::Selected(LocalEngineSelection::new(
-            LocalEngine::LlamaCpp,
-            Placement::CpuOnly,
-        ));
-        sync_record(&root, setting(true).record_sync()).unwrap();
-        assert_eq!(LocalEngineSelection::read(&root), stored);
-        // A setting nobody can read keeps the stored choice.
-        let unreadable = LocalEngineSetting::Unreadable {
-            revision: revision(),
-        };
-        sync_record(&root, unreadable.record_sync()).unwrap();
-        assert_eq!(LocalEngineSelection::read(&root), stored);
-        // No choice removes the record, so the package's defaults apply; again is a no-op.
-        sync_record(&root, setting(false).record_sync()).unwrap();
-        assert_eq!(LocalEngineSelection::read(&root), Recorded::Absent);
-        sync_record(&root, setting(false).record_sync()).unwrap();
-        assert_eq!(LocalEngineSelection::read(&root), Recorded::Absent);
-        // A record nobody can read is removed by no choice as well.
-        cadrumo_manager::custody::write_local_record(
-            &root.join(cadrumo_manager::contract::LOCAL_ENGINE_SELECTION),
-            b"{",
-            4096,
-        )
-        .unwrap();
-        assert_eq!(LocalEngineSelection::read(&root), Recorded::Unreadable);
-        sync_record(&root, setting(false).record_sync()).unwrap();
-        assert_eq!(LocalEngineSelection::read(&root), Recorded::Absent);
+        assert_eq!(setting(true).record_sync(), llama_cpu);
+        assert_eq!(setting(false).record_sync(), RecordSync::Clear);
+        assert_eq!(
+            LocalEngineSetting::Unreadable {
+                revision: revision()
+            }
+            .record_sync(),
+            RecordSync::Leave
+        );
         std::fs::remove_dir_all(&root).unwrap();
     }
 

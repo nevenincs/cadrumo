@@ -60,6 +60,9 @@ pub struct AgentHost {
     /// The package this process runs from, whose contents decide the local engine a
     /// profile that chose none runs.
     package_root: PathBuf,
+    /// Held across each read or choice of the local engine setting and the manager
+    /// record change that follows it, so an older read never overwrites a newer one.
+    engine_record: std::sync::Mutex<()>,
 }
 
 impl AgentHost {
@@ -121,7 +124,15 @@ impl AgentHost {
             attendance: std::sync::Mutex::new(None),
             storage_root,
             package_root,
+            engine_record: std::sync::Mutex::new(()),
         }
+    }
+
+    /// The hold over one read or choice of the local engine setting and its record change.
+    fn engine_record(&self) -> std::sync::MutexGuard<'_, ()> {
+        self.engine_record
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
     }
 
     /// The storage root the runtime manager reads its local engine selection from.
@@ -153,29 +164,32 @@ impl AgentHost {
         }
     }
 
-    /// Reads the person's local engine setting from the service and hands it on to the
-    /// runtime manager's selection record. A read that fails or breaks the contract leaves
-    /// the record as it is and is recorded.
-    fn sync_local_engine(&self) {
+    /// Reads the person's local engine setting from the service admitted as `generation`
+    /// and hands it on to the runtime manager's selection record, under the record's hold.
+    /// A read that does not succeed leaves the record as it is.
+    fn sync_local_engine_once(&self, generation: u64) -> std::result::Result<(), SyncMiss> {
         use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation};
-        let read = self
-            .administer(serde_json::json!({"action":"local_engine"}), None)
-            .and_then(|answer| {
-                if let Some(code) = local_models::refusal(&answer) {
-                    return Err(ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
-                        .with_reason(code));
-                }
-                local_models::parse_engine(&answer).ok_or_else(|| {
-                    ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
-                        .with_reason("admin_local_engine_contract")
-                })
-            });
-        match read {
-            Ok(setting) => self.record_local_engine(&setting),
-            Err(error) => self
-                .diagnostics
-                .host_failure(cadrumo_application::diagnostics::HostStage::Agent, error),
+        let _record = self.engine_record();
+        let answer = self
+            .administer_generation(serde_json::json!({"action":"local_engine"}), generation)
+            .map_err(|error| match sync_error_code(&error) {
+                Some(code) => sync_miss(code, error),
+                None => SyncMiss::Superseded,
+            })?;
+        if let Some(code) = local_models::refusal(&answer) {
+            return Err(sync_miss(
+                code,
+                ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli).with_reason(code),
+            ));
         }
+        let setting = local_models::parse_engine(&answer).ok_or_else(|| {
+            SyncMiss::Failed(
+                ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+                    .with_reason("admin_local_engine_contract"),
+            )
+        })?;
+        self.record_local_engine(&setting);
+        Ok(())
     }
 
     /// Hands the person's local engine setting on to the runtime manager each time the
@@ -184,11 +198,9 @@ impl AgentHost {
     fn sync_local_engine_when_ready(self: &Arc<Self>) {
         let host = Arc::downgrade(self);
         self.supervisor.on_ready(Arc::new(move || {
-            let Some(host) = host.upgrade() else {
-                return;
-            };
-            // The read crosses the service's admin channel, which blocks.
-            let _ = tauri::async_runtime::spawn_blocking(move || host.sync_local_engine());
+            let host = host.clone();
+            // The read crosses the service's admin channel, and a retry waits, which block.
+            let _ = tauri::async_runtime::spawn_blocking(move || sync_local_engine(&host));
         }));
     }
 
@@ -289,6 +301,87 @@ impl AgentHost {
             code,
             error,
         )
+    }
+}
+
+/// The waits before a ready sync of the local engine setting asks again after a
+/// transient miss; after the last one it gives up and records the miss.
+const SYNC_RETRIES: [std::time::Duration; 3] = [
+    std::time::Duration::from_secs(1),
+    std::time::Duration::from_secs(2),
+    std::time::Duration::from_secs(4),
+];
+
+/// Why a ready sync of the local engine setting did not change the manager record.
+enum SyncMiss {
+    /// The service admitted for that readiness is gone, or the person left: a later
+    /// readiness syncs again, so there is nothing to record.
+    Superseded,
+    /// The service is busy, not ready yet, or reconnecting: asking again may succeed.
+    Transient(cadrumo_application::error::application::ApplicationError),
+    /// Anything else, recorded at once.
+    Failed(cadrumo_application::error::application::ApplicationError),
+}
+
+/// The miss a read refused with the column code `code` is.
+fn sync_miss(
+    code: &str,
+    error: cadrumo_application::error::application::ApplicationError,
+) -> SyncMiss {
+    match code {
+        "agent_service_busy" | "agent_service_not_ready" | "agent_reconnecting" => {
+            SyncMiss::Transient(error)
+        }
+        "agent_signed_out" => SyncMiss::Superseded,
+        _ => SyncMiss::Failed(error),
+    }
+}
+
+/// The column code a failed read crosses as, or `None` when the service admitted for the
+/// readiness was replaced or retired.
+fn sync_error_code(
+    error: &cadrumo_application::error::application::ApplicationError,
+) -> Option<&'static str> {
+    if error.reason.as_deref() == Some("agent_admin_generation_changed") {
+        return None;
+    }
+    Some(match person_refusal(error) {
+        "agent_service_failed" => admin_refusal(error),
+        code => code,
+    })
+}
+
+/// Syncs the local engine setting for the service ready now, asking again after each
+/// transient miss while that same service stays admitted and the host lives, at most
+/// once per wait in [`SYNC_RETRIES`]. Only a miss it gives up on is recorded.
+fn sync_local_engine(host: &std::sync::Weak<AgentHost>) {
+    let Some(generation) = host
+        .upgrade()
+        .and_then(|held| held.supervisor.admin_generation().ok())
+    else {
+        return;
+    };
+    let mut waits = SYNC_RETRIES.iter();
+    loop {
+        let Some(held) = host.upgrade() else {
+            return;
+        };
+        let error = match held.sync_local_engine_once(generation) {
+            Ok(()) | Err(SyncMiss::Superseded) => return,
+            Err(SyncMiss::Failed(error)) => {
+                held.diagnostics
+                    .host_failure(cadrumo_application::diagnostics::HostStage::Agent, error);
+                return;
+            }
+            Err(SyncMiss::Transient(error)) => error,
+        };
+        let Some(wait) = waits.next() else {
+            held.diagnostics
+                .host_failure(cadrumo_application::diagnostics::HostStage::Agent, error);
+            return;
+        };
+        drop(held);
+        std::thread::sleep(*wait);
     }
 }
 
@@ -756,6 +849,7 @@ async fn agent_local_engine(
     host: State<'_, Arc<AgentHost>>,
 ) -> std::result::Result<local_models::LocalEngineSetting, Refused> {
     blocking(&host, |host| {
+        let _record = host.engine_record();
         let answer = host
             .administer(serde_json::json!({"action":"local_engine"}), None)
             .map_err(|error| host.refuse(admin_refusal(&error), error))?;
@@ -805,6 +899,7 @@ async fn agent_local_engine_choose(
         if let Some(code) = local_models::engine_unavailable(chosen, &host.package_root) {
             return refused(code);
         }
+        let _record = host.engine_record();
         let answer = host
             .administer(
                 serde_json::json!({
@@ -1317,6 +1412,50 @@ async fn agent_attachment_policy(
 mod tests {
     use super::*;
     use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation};
+
+    #[test]
+    fn a_ready_sync_asks_again_only_after_a_transient_miss_and_a_bounded_number_of_times() {
+        let error = || ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli);
+        for code in [
+            "agent_service_busy",
+            "agent_service_not_ready",
+            "agent_reconnecting",
+        ] {
+            assert!(
+                matches!(sync_miss(code, error()), SyncMiss::Transient(_)),
+                "{code}"
+            );
+        }
+        assert!(matches!(
+            sync_miss("agent_signed_out", error()),
+            SyncMiss::Superseded
+        ));
+        for code in ["agent_service_failed", "agent_local_models_unknown"] {
+            assert!(
+                matches!(sync_miss(code, error()), SyncMiss::Failed(_)),
+                "{code}"
+            );
+        }
+        // A replaced or retired service supersedes the sync; a timeout is busy; a person
+        // who left is signed out; anything else failed.
+        assert_eq!(
+            sync_error_code(&error().with_reason("agent_admin_generation_changed")),
+            None
+        );
+        assert_eq!(
+            sync_error_code(&ApplicationError::new(ErrorCode::TimedOut, Operation::Cli)),
+            Some("agent_service_busy")
+        );
+        assert_eq!(
+            sync_error_code(&error().with_reason("person_not_signed_in")),
+            Some("agent_signed_out")
+        );
+        assert_eq!(
+            sync_error_code(&error().with_reason("agent_admin_unreadable")),
+            Some("agent_service_failed")
+        );
+        assert_eq!(SYNC_RETRIES, [1, 2, 4].map(std::time::Duration::from_secs));
+    }
 
     #[test]
     fn admission_races_are_quiet_and_retryable_only_while_starting() {
