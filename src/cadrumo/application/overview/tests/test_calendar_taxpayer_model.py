@@ -484,39 +484,42 @@ def test_backlog_across_year_boundary_without_windows_does_not_raise() -> None:
 # ---------------------------------------------------------------------
 
 
-def test_undeclared_profile_message_resolves_to_real_localised_text(
+@pytest.mark.parametrize(
+    ("natural_person", "key"),
+    [
+        pytest.param(False, "application.overview.calendar.taxpayer_model_undeclared.entity_type", id="no-entity-type"),
+        pytest.param(
+            True,
+            "application.overview.calendar.taxpayer_model_undeclared.irpf_income_categories",
+            id="natural-person-without-categories",
+        ),
+    ],
+)
+def test_undeclared_profile_message_names_the_missing_fact_in_every_locale(
     authority_operation: PinnedAuthorityOperation,
+    natural_person: bool,
+    key: str,
 ) -> None:
-    """The undeclared-profile guidance must be a shipped locale string,
-    not the raw translation key.
-
-    ``build_overview_calendar`` populates ``incomplete_reason`` via
-    ``tr("cli.overview.taxpayer_model_undeclared")``. python-i18n
-    returns the literal key when no catalogue entry exists, so the
-    contract here is: the rendered text differs from the key, is
-    non-trivially long, and resolves to genuine guidance in every
-    supported language (es / en / ca / hu).
-    """
+    """The reason is served to the window as well as the CLI, so it names the
+    profile fact that is missing rather than a command-line remedy, and it is
+    shipped text in every supported language rather than the raw key."""
 
     from ....core.i18n.render import tr
 
-    key = "cli.overview.taxpayer_model_undeclared"
     for locale in ("es", "en", "ca", "hu"):
         rendered = tr(key, locale=locale)
-        # Not the raw key, not the python-i18n "[missing translation]" stub.
         assert rendered != key, locale
         assert "[missing" not in rendered.lower(), locale
-        assert "translation" not in rendered.lower() or len(rendered) > 40, locale
-        # Real operator guidance — a full sentence, not a one-token stub.
         assert len(rendered) > 30, (locale, rendered)
-        assert " " in rendered.strip(), (locale, rendered)
 
-    # The calendar surface delivers exactly that resolved text.
+    profile = TaxpayerProfile(
+        tax_id="X0001500M",
+        iva_regime=IVARegime("GENERAL"),
+        entity_type=EntityType.from_registry("natural_person") if natural_person else None,
+    )
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(_undeclared_profile(), rng, operation=authority_operation, today=date(2026, 4, 1))
+    cal = build_overview_calendar(profile, rng, operation=authority_operation, today=date(2026, 4, 1))
     assert cal.incomplete_reason == tr(key)
-    assert cal.incomplete_reason is not None
-    assert cal.incomplete_reason != key
 
 
 # ---------------------------------------------------------------------

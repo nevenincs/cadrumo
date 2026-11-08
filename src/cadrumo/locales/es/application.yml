@@ -3022,6 +3022,11 @@ application:
         domingo: Domingo
         modelo_exception: Excepción del modelo
         sabado: Sábado
+      taxpayer_model_undeclared:
+        entity_type: El calendario no puede mostrar tus plazos hasta que tu perfil
+          indique qué tipo de contribuyente eres (persona física o entidad).
+        irpf_income_categories: El calendario no puede mostrar tus plazos hasta que
+          tu perfil indique tus categorías de renta del IRPF.
     errors:
       horizon_days_not_positive: horizon_days debe ser positivo; se recibió %{horizon_days}
     explain:

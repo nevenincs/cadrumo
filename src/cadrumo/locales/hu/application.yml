@@ -2978,6 +2978,11 @@ application:
         domingo: Vasárnap
         modelo_exception: Nyomtatvány-kivétel
         sabado: Szombat
+      taxpayer_model_undeclared:
+        entity_type: A naptár addig nem tudja megmutatni a határidőidet, amíg a profilod
+          nem adja meg, milyen típusú adózó vagy (magánszemély vagy szervezet).
+        irpf_income_categories: A naptár addig nem tudja megmutatni a határidőidet,
+          amíg a profilod nem adja meg az IRPF-jövedelemkategóriáidat.
     errors:
       horizon_days_not_positive: 'a horizon_days értékének pozitívnak kell lennie;
         a kapott érték: %{horizon_days}'

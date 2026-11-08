@@ -3026,6 +3026,11 @@ application:
         domingo: Diumenge
         modelo_exception: Excepció del model
         sabado: Dissabte
+      taxpayer_model_undeclared:
+        entity_type: El calendari no pot mostrar els teus terminis fins que el teu
+          perfil indiqui quin tipus de contribuent ets (persona física o entitat).
+        irpf_income_categories: El calendari no pot mostrar els teus terminis fins
+          que el teu perfil indiqui les teves categories de renda de l'IRPF.
     errors:
       horizon_days_not_positive: horizon_days ha de ser positiu; s'ha rebut %{horizon_days}
     explain:

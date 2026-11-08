@@ -2866,6 +2866,11 @@ application:
         domingo: Sunday
         modelo_exception: Modelo exception
         sabado: Saturday
+      taxpayer_model_undeclared:
+        entity_type: The calendar cannot show your deadlines until your profile states
+          which kind of taxpayer you are (individual or entity).
+        irpf_income_categories: The calendar cannot show your deadlines until your
+          profile states your IRPF income categories.
     errors:
       horizon_days_not_positive: horizon_days must be positive; got %{horizon_days}
     explain:

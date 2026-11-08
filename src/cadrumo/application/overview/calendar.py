@@ -697,6 +697,13 @@ def _entries_and_suppressed_from_schedules(
     return entries, suppressed, coverage_surface_modelos, disagreeing_modelos
 
 
+def _undeclared_taxpayer_model_reason(profile: TaxpayerProfile) -> str:
+    """Name the profile fact whose absence leaves the taxpayer model undeclared."""
+    if profile.entity_type is None:
+        return tr("application.overview.calendar.taxpayer_model_undeclared.entity_type")
+    return tr("application.overview.calendar.taxpayer_model_undeclared.irpf_income_categories")
+
+
 def build_overview_calendar(
     profile: TaxpayerProfile,
     calendar_range: OverviewCalendarRange,
@@ -741,7 +748,7 @@ def build_overview_calendar(
             warnings=(),
             completeness=CalendarCompleteness(),
             taxpayer_model_declared=False,
-            incomplete_reason=tr("cli.overview.taxpayer_model_undeclared"),
+            incomplete_reason=_undeclared_taxpayer_model_reason(profile),
             events=calendar_events_with_filing_evidence(events, filing_evidence),
             coverage=build_obligation_coverage(profile, frozenset(), today=today, operation=operation),
         )
