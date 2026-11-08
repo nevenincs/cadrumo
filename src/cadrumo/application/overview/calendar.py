@@ -337,6 +337,14 @@ def _calendar_entry_from_work_unit(
     ).model_copy(update=work_unit_fields)
 
 
+def _first_unit_per_address(work_units: tuple[WorkUnit, ...]) -> tuple[WorkUnit, ...]:
+    """Keep one unit per natural address, so a duplicated address names one dated entry."""
+    first: dict[tuple[str, int, str], WorkUnit] = {}
+    for unit in sorted(work_units, key=lambda item: item.work_unit_id):
+        first.setdefault(_work_unit_key(unit), unit)
+    return tuple(first.values())
+
+
 def _merge_work_units_into_entries(
     entries: tuple[OverviewCalendarEntry, ...],
     *,
@@ -735,22 +743,40 @@ def build_overview_calendar(
     if not taxpayer_model_is_declared(profile):
         # An undeclared taxpayer model yields an explicit
         # incomplete answer — never a confident wrong obligation. The
-        # engine does not fall back to the autónomo guess. Coverage is still
-        # reconciled (nothing surfaced), so the report honestly shows the whole
-        # obligation universe as advised/undetermined rather than empty — an
-        # undeclared profile can under-scope the most, so it must not read as
-        # "nothing to file".
+        # engine does not fall back to the autónomo guess. The profile's own
+        # local declarations are not guesses: each keeps its dated entry from
+        # its registry window, so the operator still sees when it is due.
+        # Coverage is reconciled with those declarations surfaced and nothing
+        # else, so the report honestly shows the rest of the obligation universe
+        # as advised/undetermined rather than empty — an undeclared profile can
+        # under-scope the most, so it must not read as "nothing to file".
+        due_soon_days = (engine if engine is not None else DeadlineEngine(authority=operation)).due_soon_days
+        work_entries = _merge_work_units_into_entries(
+            (),
+            work_units=_first_unit_per_address(work_units),
+            calendar_range=calendar_range,
+            today=today,
+            due_soon_days=due_soon_days,
+            filing_evidence=filing_evidence,
+            live_censo_verified_profile_keys=live_censo_verified_profile_keys,
+            operation=operation,
+        )
         return OverviewCalendar(
             range=calendar_range,
             evaluated_on=today,
-            entries=(),
+            entries=work_entries,
             generated_at=now(),
             warnings=(),
             completeness=CalendarCompleteness(),
             taxpayer_model_declared=False,
             incomplete_reason=_undeclared_taxpayer_model_reason(profile),
             events=calendar_events_with_filing_evidence(events, filing_evidence),
-            coverage=build_obligation_coverage(profile, frozenset(), today=today, operation=operation),
+            coverage=build_obligation_coverage(
+                profile,
+                {str(unit.modelo) for unit in work_units if unit.state is not WorkUnitState.DESCARTADO},
+                today=today,
+                operation=operation,
+            ),
         )
 
     deadline_engine, schedules = _schedules_for_calendar_range(

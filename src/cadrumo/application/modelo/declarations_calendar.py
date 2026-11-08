@@ -267,7 +267,11 @@ def _prepare_calendar_inputs(
     if schedule_observation.source is not DeclarationsCalendarSource.SCHEDULE:
         raise DeclarationsCalendarProjectionError("schedule observation names another calendar source")
     schedule_observable = schedule_observation.availability.is_observable
-    if not schedule_observable and calendar.entries:
+    # A local declaration keeps its own dated entry beside an unavailable
+    # schedule; only a registry-scheduled row would claim the schedule was read.
+    if not schedule_observable and any(
+        entry.source is not OverviewCalendarEntrySource.LOCAL_WORK_UNIT for entry in calendar.entries
+    ):
         raise DeclarationsCalendarProjectionError("an unavailable schedule cannot carry legal rows")
 
     local_observation = _observation_from_home(DeclarationsCalendarSource.LOCAL_FILING, evidence.local_state)

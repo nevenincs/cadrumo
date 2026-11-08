@@ -143,6 +143,7 @@ def declaration_list_rows(
                 f"advice:{item.modelo}", item.modelo, None, "maybe", DeclarationListGroup.MAYBE, advice=item.reason
             )
             for item in calendar.coverage.advised
+            if not any(address[0] == item.modelo for address in local_addresses)
         )
     return tuple(rows)
 
