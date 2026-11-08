@@ -186,7 +186,12 @@ class CalculationNoteSentence(StrEnum):
     PRIOR_FILING_UNRECORDED = "prior_filing_unrecorded"
     """A box is built on a figure of an earlier filing, and that filing is not recorded, so the box stays open."""
     M347_PROVINCIA_UNRECORDED = "m347_provincia_unrecorded"
-    """Modelo 347 records of Spanish counterparts whose provincia code no record states."""
+    """Modelo 347 records of Spanish counterparts whose provincia code no record states, listed together.
+
+    Read only from revisions calculated before each counterpart was named on its own.
+    """
+    M347_PROVINCIA_UNSTATED = "m347_provincia_unstated"
+    """One Spanish Modelo 347 declarado whose provincia the person has not stated for the counterparty."""
 
 
 GRADE_CAP_NOTE_SENTENCES: Final[Mapping[BindingGradeCapReason, CalculationNoteSentence]] = MappingProxyType(

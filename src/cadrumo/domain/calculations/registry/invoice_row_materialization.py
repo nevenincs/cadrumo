@@ -211,6 +211,7 @@ class _ContraparteClaveAccumulator(BaseModel):
     party_tax_id: TaxIdIdentityToken
     clave: str
     party_legal_name: str | None
+    provincia_code: str | None
     cash_accounting_operation: bool
     reverse_charge_recipient: bool
     annual_computation_basis: bool
@@ -284,6 +285,7 @@ def _build_contraparte_clave_rows(
                 party_tax_id=observation.party_tax_id,
                 clave=observation.operation_clave,
                 party_legal_name=observation.party_legal_name,
+                provincia_code=observation.party_provincia_code,
                 cash_accounting_operation=observation.cash_accounting_operation,
                 reverse_charge_recipient=observation.reverse_charge_recipient,
                 annual_computation_basis=observation.annual_computation_basis,
@@ -305,7 +307,9 @@ def _build_contraparte_clave_rows(
         values=lambda bucket: {
             "importe_total": bucket.importe_total,
             **_m347_quarter_amounts(bucket),
-            **m347_declarado_identification(bucket.party_tax_id, bucket.country_code),
+            **m347_declarado_identification(
+                bucket.party_tax_id, bucket.country_code, provincia_code=bucket.provincia_code
+            ),
             "cash_accounting_mark": _M347_ROW_MARK if bucket.cash_accounting_operation else "",
             "reverse_charge_mark": _M347_ROW_MARK if bucket.reverse_charge_recipient else "",
             "business_premises_lease_mark": _M347_ROW_MARK if bucket.arrendamiento_local_negocio else "",
@@ -372,7 +376,9 @@ def _m347_quarter_amounts(bucket: _ContraparteClaveAccumulator) -> dict[str, Dec
     }
 
 
-def m347_declarado_identification(party_tax_id: str, country_code: str) -> dict[str, str]:
+def m347_declarado_identification(
+    party_tax_id: str, country_code: str, *, provincia_code: str | None = None
+) -> dict[str, str]:
     """Project one counterparty onto the 347 declarado identification slots.
 
     Both 347 record designs fill the NIF DEL DECLARADO slot "solo ... con los NIF
@@ -383,15 +389,16 @@ def m347_declarado_identification(party_tax_id: str, country_code: str) -> dict[
     country is therefore declared by country, and by NIF-IVA only when its
     identifier has the structure the NIF-IVA catalogue publishes for that State,
     and gets CÓDIGO PROVINCIA 99. A Spanish declarado's provincia is that of its
-    domicilio fiscal, which the invoice records only inside free-text addresses,
-    so it is left without content rather than parsed out of prose.
+    domicilio fiscal, which the invoice records only inside free-text addresses:
+    it is ``provincia_code`` when the person stated it for the counterparty, and
+    otherwise left without content rather than parsed out of prose.
     """
     if country_code == SPAIN_COUNTRY_CODE:
         return {
             "declarado_tax_id": party_tax_id,
             "residence_country_code": "",
             "community_iva_number": "",
-            "provincia_code": "",
+            "provincia_code": provincia_code or "",
         }
     return {
         "declarado_tax_id": "",
