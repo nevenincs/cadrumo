@@ -390,6 +390,7 @@ export function MainPane({
             key={reader}
             host={profileHost}
             reader={reader}
+            sessionEnded={account.sessionEnded}
             language={locale}
             shown={firstPaneShown}
             aeatAsked={aeatAsked}

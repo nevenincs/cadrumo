@@ -145,6 +145,13 @@ declare global {
       declarationsList(): Promise<
         typeof import("../components/modelo/declarations/useDeclarationsList")
       >;
+      profileHousehold(): Promise<{
+        react: typeof import("react");
+        dom: typeof import("react-dom");
+        client: typeof import("react-dom/client");
+        household: typeof import("../components/profile/Household");
+        fixture: typeof import("./householdFixture");
+      }>;
       localAiReads(): Promise<{
         lanes: typeof import("../shell/localAiLanes");
         agent: typeof import("./agentFixtureHost");
@@ -173,6 +180,13 @@ declare global {
 }
 
 window.__scenarioModules = {
+  profileHousehold: async () => ({
+    react: await import("react"),
+    dom: await import("react-dom"),
+    client: await import("react-dom/client"),
+    household: await import("../components/profile/Household"),
+    fixture: await import("./householdFixture"),
+  }),
   localAiReads: async () => ({
     lanes: await import("../shell/localAiLanes"),
     agent: await import("./agentFixtureHost"),

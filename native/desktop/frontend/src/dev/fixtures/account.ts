@@ -46,6 +46,7 @@ export function accountFixture(
     startServices: async () => undefined,
     remaining: null,
     signOutFailure: null,
+    sessionEnded: () => false,
     createRefusal: null,
     createUnknown: null,
     creating: false,

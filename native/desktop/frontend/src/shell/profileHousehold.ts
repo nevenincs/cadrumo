@@ -8,6 +8,8 @@
 // for the two numbers), and `not_served` that the product serves no person of
 // that group at all. The four are never drawn as the same.
 
+import type { CallPlan } from "./hostCall";
+
 /** What the profile says about one group of people. */
 export type HouseholdGroupState =
   "rows" | "incomplete" | "none_declared" | "unknown" | "not_served";
@@ -128,7 +130,7 @@ export type ImputationElection = {
 /** The profile's companion reads. A rejection carries `{ code }`: one of
  * `not_signed_in` or `unavailable`. */
 export type ProfileCompanionPort = {
-  household(language: string): Promise<ProfileHousehold>;
+  household(language: string, plan?: CallPlan): Promise<ProfileHousehold>;
   imputationElection(
     profile: string,
     taxYear: number,

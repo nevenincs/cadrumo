@@ -1,0 +1,6 @@
+Fecha operación;Fecha valor;Concepto;Importe;Saldo;Moneda;Referencia
+12/01/2026;12/01/2026;Cobro factura asesoría contable enero;2420,00;2420,00;EUR;E2E-VTA-01
+19/01/2026;19/01/2026;Compra de licencias de programa de gestión;-363,00;2057,00;EUR;E2E-MAT-01
+10/02/2026;10/02/2026;Cobro factura revisión de libros febrero;1815,00;3872,00;EUR;E2E-VTA-02
+16/02/2026;16/02/2026;Cuota de alquiler del despacho febrero;-726,00;3146,00;EUR;E2E-ALQ-01
+09/03/2026;09/03/2026;Cobro factura cierre trimestral marzo;3025,00;6171,00;EUR;E2E-VTA-03
