@@ -173,6 +173,14 @@ class ProfileFieldDefinition(BaseModel):
     required_for_modelos_when_activity_iae_epigraph_path: str | None = None
     schedule_predicates: tuple[_Selector, ...] = Field(default=())
     legal_refs: tuple[_Description, ...] = Field(default=())
+    #: Registry source references grounding this field, newest design first.
+    #:
+    #: ``legal_refs`` grounds a fact in the law; a fact the taxpayer declares
+    #: only because an AEAT design has a position for it is grounded in that
+    #: design, and the design in force for the supported years is a different
+    #: document from the one the position first appeared in. Both belong here,
+    #: and a reader checking the requirement follows them rather than a comment.
+    source_refs: tuple[_Description, ...] = Field(default=())
     minimum: Decimal | None = None
     maximum: Decimal | None = None
     #: Whether the filing path carries this string field into a bounded producer record.
