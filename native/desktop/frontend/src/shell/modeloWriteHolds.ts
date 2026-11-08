@@ -7,6 +7,9 @@ export type ModeloWriteOwner = {
   readonly workUnitId: string;
   readonly label: string;
   readonly filingYear: number;
+  /** The served form's `offers_iva_wallet`: whether this declaration reads the
+   * profile's IVA wallet. Absent before the form is read. */
+  readonly readsIvaWallet?: boolean;
 };
 export type ModeloWriteLease = {
   readonly key: string;
@@ -44,10 +47,21 @@ export const declarationWriteKey = (workUnitId: string) =>
 export const isCreationWriteKey = (key: string) => key.startsWith('["create",');
 export const walletWriteKey = JSON.stringify(["wallet"]);
 const isDeclarationWriteKey = (key: string) => key.startsWith('["work",');
-export const modeloWriteConflicts = (target: string, held: string) =>
-  target === held ||
-  (target === walletWriteKey && isDeclarationWriteKey(held)) ||
-  (held === walletWriteKey && isDeclarationWriteKey(target));
+/** A settled, refused or journal-stopped operation is no longer in flight; what
+ * stays unresolved belongs to its own declaration. */
+const mayStillRun = (hold: ModeloWriteHold) =>
+  hold.phase === "running" ||
+  (hold.phase === "unknown" && hold.terminalFailure === undefined);
+/** A declaration's hold reaches the shared wallet only while its operation may
+ * still run and only when its served form reads the wallet. A wallet hold keeps
+ * every declaration held until the wallet's own recovery. */
+export const modeloWriteConflicts = (target: string, held: ModeloWriteHold) =>
+  target === held.key ||
+  (target === walletWriteKey &&
+    isDeclarationWriteKey(held.key) &&
+    held.owner?.readsIvaWallet !== false &&
+    mayStillRun(held)) ||
+  (held.key === walletWriteKey && isDeclarationWriteKey(target));
 
 /** Only an observed, stopped calculation can be reviewed as a new work
  * decision. This never claims that its earlier effects were rolled back. */
@@ -78,7 +92,7 @@ export function createModeloWriteHolds() {
     const own = holds.get(key);
     if (own) return own;
     for (const hold of holds.values())
-      if (modeloWriteConflicts(key, hold.key)) return hold;
+      if (modeloWriteConflicts(key, hold)) return hold;
     return undefined;
   };
   return {
