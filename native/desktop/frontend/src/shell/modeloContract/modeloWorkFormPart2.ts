@@ -10,6 +10,28 @@
 
 import type { BindingSourceKind } from "./modelo";
 import type { SourceSurface } from "./modeloWork";
+import type { OperationNextStepV1 } from "./modeloWorkForm";
+
+/**
+ * One source declaration the to-do list names before the summary can be worked
+ * out, and its door.
+ */
+export type ReconciliationSourceRequirementV1 = {
+  words: string;
+  next_step: OperationNextStepV1;
+};
+
+/**
+ * Which fact settled the outcome.
+ */
+export type RefundEligibilityBasis =
+  "final_period" | "redeme" | "non_final_period";
+
+/**
+ * What may be done with a negative Modelo 303 result in one period.
+ */
+export type RefundEligibilityOutcome =
+  "refund_allowed" | "carry_forward_only" | "undetermined_redeme_unstated";
 
 /**
  * How far one modelo registry revision's declared authority reaches.

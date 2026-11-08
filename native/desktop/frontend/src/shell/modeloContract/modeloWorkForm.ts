@@ -39,6 +39,9 @@ import type {
   SourceSurface,
 } from "./modeloWork";
 import type {
+  ReconciliationSourceRequirementV1,
+  RefundEligibilityBasis,
+  RefundEligibilityOutcome,
   RegistryAuthorityGrade,
   SourceFamily,
   SourcePolicyV1,
@@ -887,7 +890,24 @@ export type OperationNextStepV1 =
   | OperationOpenWorkStepV1
   | OperationOpenProfileFieldStepV1
   | OperationCompleteProfileSetupStepV1
-  | OperationOpenMovementStepV1;
+  | OperationOpenMovementStepV1
+  | OperationOpenIvaWalletOpeningBalanceStepV1;
+
+/**
+ * Record the opening IVA balance the period's carry reads, in the IVA balance
+ * of that declaration.
+ *
+ * The balance is the wallet's own, addressed by the modelo, filing year and
+ * period whose carry the refusal could not settle; the window opens that
+ * declaration's IVA balance at its opening-balance entry.
+ */
+export type OperationOpenIvaWalletOpeningBalanceStepV1 = {
+  kind: "open_iva_wallet_opening_balance";
+  modelo: string;
+  filing_year: number;
+  period_code: string;
+  words: string;
+};
 
 /**
  * Open one ledger movement in the Libro, where the fact the refusal names is
@@ -1324,24 +1344,3 @@ export type PublicSpanishTaxIdFormat = {
   cif_letter_only_kinds: string;
   cif_letter_table: string;
 };
-
-/**
- * One source declaration the to-do list names before the summary can be worked
- * out, and its door.
- */
-export type ReconciliationSourceRequirementV1 = {
-  words: string;
-  next_step: OperationNextStepV1;
-};
-
-/**
- * Which fact settled the outcome.
- */
-export type RefundEligibilityBasis =
-  "final_period" | "redeme" | "non_final_period";
-
-/**
- * What may be done with a negative Modelo 303 result in one period.
- */
-export type RefundEligibilityOutcome =
-  "refund_allowed" | "carry_forward_only" | "undetermined_redeme_unstated";
