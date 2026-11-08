@@ -36,6 +36,7 @@ from ..evidence_draft_text import (
     TextInvoiceFieldExtractor,
     build_text_field_extraction_prompt,
 )
+from ..invoice_extraction_prompt import INVOICE_REPLY_STRING_MAX_LENGTH
 from ..invoice_field_contract import (
     INVOICE_FIELD_CONTRACTS,
     anchor_key_for_field,
@@ -373,11 +374,14 @@ class TestExtractorRequestShape:
     def test_the_request_constrains_the_reply_to_the_keys_the_parser_reads(
         self, *, operation: PinnedAuthorityOperation
     ) -> None:
-        """Every key the prompt asks for is a nullable string, and no other key is admitted.
+        """Every key the prompt asks for is a bounded nullable string, each must be answered, and no other key is admitted.
 
         The schema names the same keys as the prompt's reply skeleton, because the
-        parser rejects a key it does not declare; nothing is required, so a field
-        the document never printed may be left out, as the parser allows.
+        parser rejects a key it does not declare. A live read showed why the other
+        two bounds are there: with no key required the constrained model closed
+        the object after a handful of keys, and an unbounded string let it loop
+        inside one anchor until the reply ran out. A field the document never
+        printed is answered with null.
         """
         extractor = TextInvoiceFieldExtractor(settings=load_settings(), operation=operation)
 
@@ -386,7 +390,6 @@ class TestExtractorRequestShape:
         assert schema is not None
         assert schema["type"] == "object"
         assert schema["additionalProperties"] is False
-        assert "required" not in schema
         properties = schema["properties"]
         assert isinstance(properties, dict)
         expected = {
@@ -399,7 +402,11 @@ class TestExtractorRequestShape:
             )
         }
         assert set(properties) == expected
-        assert all(value == {"type": ["string", "null"]} for value in properties.values())
+        assert schema["required"] == list(properties)
+        assert all(
+            value == {"type": ["string", "null"], "maxLength": INVOICE_REPLY_STRING_MAX_LENGTH}
+            for value in properties.values()
+        )
         for key in expected:
             assert f'"{key}"' in extractor._build_request("Invoice 42").prompt
 

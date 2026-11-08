@@ -104,6 +104,7 @@ if TYPE_CHECKING:
 __all__ = [
     "INVOICE_EXTRACTION_PROMPT_ID",
     "INVOICE_EXTRACTION_PROMPT_VERSION",
+    "INVOICE_REPLY_STRING_MAX_LENGTH",
     "PROMPT_TEMPLATE",
     "CompiledInvoiceExtractionPrompt",
     "default_extraction_period",
@@ -395,6 +396,14 @@ def _role_evidence_lines(contracts: tuple[InvoiceFieldContract, ...]) -> str:
     )
 
 
+INVOICE_REPLY_STRING_MAX_LENGTH: Final[int] = 200
+"""The longest string the reply schema admits for a value, anchor or role evidence.
+
+A printed invoice value or the line it sits on fits well within it; the bound
+exists so a constrained model cannot run one string on until the reply ends.
+"""
+
+
 def _reply_keys(contract: InvoiceFieldContract) -> tuple[str, ...]:
     """The reply keys one field is answered under: its value, its anchor and, for an identity, its role evidence."""
     keys = (contract.field_name, anchor_key_for_field(contract.field_name))
@@ -408,15 +417,23 @@ def invoice_extraction_response_schema(fields: Collection[str] | None = None) ->
 
     One flat object whose every key is a nullable string, as the reply skeleton
     shows it, and no other key, because the parser rejects a key it does not
-    declare. Nothing is required: a field the document never printed may be
-    left out, and the parser reads an absent key as null.
+    declare. Every key is required and every string bounded: measured on a
+    small local model under the constrained grammar, a schema requiring nothing
+    let it close the object after a few keys, and an unbounded string let it
+    repeat a newline inside one anchor until the reply ran out. A field the
+    document never printed is answered with null.
     """
     properties: dict[str, JsonValue] = {
-        key: {"type": ["string", "null"]}
+        key: {"type": ["string", "null"], "maxLength": INVOICE_REPLY_STRING_MAX_LENGTH}
         for contract in selected_invoice_field_contracts(fields)
         for key in _reply_keys(contract)
     }
-    return {"type": "object", "properties": properties, "additionalProperties": False}
+    return {
+        "type": "object",
+        "properties": properties,
+        "required": list(properties),
+        "additionalProperties": False,
+    }
 
 
 def _json_skeleton(contracts: tuple[InvoiceFieldContract, ...]) -> str:
