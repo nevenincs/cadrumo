@@ -19,7 +19,10 @@ from ...domain.calculations.registry.form_codes import resolve_form_codes
 
 
 class WithholdingRecognitionRule(StrEnum):
-    """The recognition rules the RIRPF grounds: art. 78, with art. 94 for exigibility and art. 98 for formalization."""
+    """The recognition rules: RIRPF art. 78, with art. 94 for exigibility and art. 98 for formalization.
+
+    An IS recipient's urban rent follows RIS art. 65, exigibility or earlier payment.
+    """
 
     PAID_OR_SATISFIED = "paid_or_satisfied"
     EXIGIBILITY_OR_EARLIER_PAYMENT = "exigibility_or_earlier_payment"
@@ -121,6 +124,9 @@ def derive_withholding_recognition(
     """
     _validate_recipient(evidence)
 
+    if evidence.recipient_tax_regime is WithholdingRecipientTaxRegime.IS:
+        return _corporate_urban_rent_recognition(evidence)
+
     if evidence.income_kind in {
         WithholdingIncomeKind.WORK,
         WithholdingIncomeKind.PROFESSIONAL,
@@ -182,9 +188,40 @@ def _validate_recipient(evidence: WithholdingRecognitionEvidence) -> None:
     if evidence.recipient_tax_regime is WithholdingRecipientTaxRegime.IRNR:
         raise WithholdingRecognitionError("irnr_unsupported")
     if evidence.recipient_tax_regime is WithholdingRecipientTaxRegime.IS:
-        raise WithholdingRecognitionError("corporate_income_tax_unsupported")
+        # RIS art. 60.1 lists urban rent (letter e) among an IS taxpayer's income
+        # subject to retención and lists no professional fee; the other kinds have
+        # no IS rule here.
+        if evidence.income_kind is not WithholdingIncomeKind.URBAN_RENT:
+            raise WithholdingRecognitionError("corporate_income_tax_unsupported")
+        return
     if evidence.recipient_tax_regime is not WithholdingRecipientTaxRegime.IRPF:
         raise WithholdingRecognitionError("recipient_status_regime_conflict")
+
+
+def _corporate_urban_rent_recognition(evidence: WithholdingRecognitionEvidence) -> WithholdingRecognition:
+    """Recognise urban rent paid to an IS taxpayer when it falls due, or when paid if that is earlier.
+
+    RIS art. 65 places the retención on an IS taxpayer's income at its
+    exigibility or at its earlier payment, unlike the RIRPF paid-or-satisfied
+    rule for the same rent paid to a natural person.
+    """
+    _require_ordinary_operation(evidence)
+    _reject_event(evidence.formalization, "conflicting_formalization_evidence")
+    exigibility = _require_event(evidence.exigibility, "missing_exigibility_evidence")
+    payment = evidence.payment_or_satisfaction
+    if payment is not None and payment.occurred_on < exigibility.occurred_on:
+        return WithholdingRecognition(
+            rule=WithholdingRecognitionRule.EXIGIBILITY_OR_EARLIER_PAYMENT,
+            recognized_on=payment.occurred_on,
+            recognition_event_id=payment.event_id,
+            settlement_event_id=payment.event_id,
+        )
+    return WithholdingRecognition(
+        rule=WithholdingRecognitionRule.EXIGIBILITY_OR_EARLIER_PAYMENT,
+        recognized_on=exigibility.occurred_on,
+        recognition_event_id=exigibility.event_id,
+        settlement_event_id=payment.event_id if payment is not None else None,
+    )
 
 
 def _require_ordinary_operation(evidence: WithholdingRecognitionEvidence) -> None:

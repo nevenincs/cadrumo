@@ -61,7 +61,7 @@ from ...core.i18n.render import tr as render_tr
 from ...core.identity.hex_ids import InvoiceId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
-from ...domain.iva.components import category_components, registry_retencion_role_token
+from ...domain.iva.components import category_components, registry_retencion_role_token, retencion_role_of_kind
 from .retenciones import Modelo180PropertyEvidence, Modelo193PendingPaymentEvidence
 from .withholding_filing_cadence import WithholdingFilerCadence, quarterly_withholding_capture_period
 from .withholding_modelo_routing import modelo_for_income_kind
@@ -431,11 +431,16 @@ def invoice_retencion_liability_defects(invoice: Invoice) -> tuple[InvoiceRetenc
     the same fact, free to drift from the table the rest of the engine reads.
     """
     defects: list[InvoiceRetencionProjectionDefect] = []
-    if invoice.iva_category is None:
+    # An undeclared category still has a kind, and every row of that kind that
+    # admits a retención may agree on its role; only a disagreement is undeclared.
+    role = (
+        retencion_role_of_kind(invoice.kind)
+        if invoice.iva_category is None
+        else category_components(invoice.iva_category, invoice.kind).retencion_role
+    )
+    if role is None:
         defects.append(InvoiceRetencionProjectionDefect.IVA_TREATMENT_UNDECLARED)
-    elif category_components(invoice.iva_category, invoice.kind).retencion_role != registry_retencion_role_token(
-        "taxpayer_liability",
-    ):
+    elif role != registry_retencion_role_token("taxpayer_liability"):
         defects.append(InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY)
     if invoice.retention_amount is None or invoice.retention_amount == Decimal("0"):
         defects.append(InvoiceRetencionProjectionDefect.NO_RETENCION_DECLARED)

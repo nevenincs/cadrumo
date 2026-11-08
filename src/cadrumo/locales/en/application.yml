@@ -1786,6 +1786,27 @@ application:
         asset your register does not hold.
       row_unregistered_undated: A ledger entry records an asset your register does
         not hold.
+      withholding_invoice_entity_professional_fee: Received invoice {invoice} from
+        {counterparty} states a withholding of {amount} on a professional fee, but
+        its issuer is a company, and a company's professional services carry no withholding.
+        Correct the invoice so it states no withholding.
+      withholding_invoice_incomplete: Received invoice {invoice} from {counterparty}
+        states a withholding of {amount}, but it lacks the issuer's NIF or its amount
+        in euros. Complete the invoice.
+      withholding_invoice_kind_undeclared: Received invoice {invoice} from {counterparty}
+        states a withholding of {amount}, but its payment does not say whether it
+        is rent or an activity's fee. Open the movement that pays it and choose its
+        IRPF category.
+      withholding_invoice_non_resident: Received invoice {invoice} from {counterparty}
+        states a withholding of {amount}, but its issuer is not resident in Spain,
+        so that withholding is not declared on this modelo. Check the invoice's country
+        and NIF.
+      withholding_invoice_rate_unrecognised: Received invoice {invoice} from {counterparty}
+        states a withholding of {amount} that matches no activity withholding rate.
+        Check the invoice's base and withholding.
+      withholding_invoice_recipient_unknown: Received invoice {invoice} from {counterparty}
+        states a withholding of {amount}, but its NIF does not show whether the issuer
+        pays IRPF or Impuesto sobre Sociedades. Check the invoice's NIF.
     calc_diagnostic_words:
       income_class:
         actividad_economica: economic activities
