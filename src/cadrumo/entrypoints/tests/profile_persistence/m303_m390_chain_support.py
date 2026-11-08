@@ -292,6 +292,8 @@ def store_irene_sl_profile(secure_objects: SecureObjectRepository) -> None:
                 UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
                 UserProfileFact(path="provenance.source", value="manual_cli"),
                 UserProfileFact(path="censo.activity_start_date", value=date(IRENE_YEAR, 1, 1)),
+                # The quarterly 303 schedule needs the condition stated as a no.
+                UserProfileFact(path="censo.large_company", value=False),
             ),
             created_at=T0,
             updated_at=T0,
