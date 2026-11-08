@@ -109,9 +109,17 @@ export type FixtureAsks = "questions" | "approval" | "review";
  * all, storage the host does not serve, or storage that cannot be read. */
 export type FixtureDocuments = "stored" | "none" | "unavailable" | "failed";
 /** How the service answers the catalog: served, busy starting the agent
- * until the scenario publishes the agent's status, or starting with only the
- * agent's declared catalog until the scenario publishes it ready. */
-export type FixtureCatalog = "served" | "busy" | "declared" | "unsupported";
+ * until the scenario publishes the agent's status, busy while the agent
+ * starts and for a moment after the scenario publishes it ready, or starting
+ * with only the agent's declared catalog until the scenario publishes it
+ * ready. */
+export type FixtureCatalog =
+  "served" | "busy" | "busy-past-ready" | "declared" | "unsupported";
+
+/** How long a `busy-past-ready` service stays busy once it reports ready,
+ * as work begun before it was ready ends: longer than reads asked back to
+ * back take, shorter than the window's first pause. */
+const BUSY_PAST_READY_MS = 1_000;
 
 /** The lane whose model list the made-up service keeps: its one keyless
  * lane, and the most models the lists hold. */
@@ -236,12 +244,12 @@ export function fixtureAgent({
   /** Changes the stored model list from elsewhere. */
   changeListElsewhere: () => void;
 } {
-  let catalogBusy = catalog === "busy";
+  let catalogBusy = catalog === "busy" || catalog === "busy-past-ready";
   let catalogDeclared = catalog === "declared";
   let publishedStatus: AgentServiceStatus | null =
     catalog === "unsupported"
       ? { state: "refused", code: "agent_platform_unsupported" }
-      : catalogDeclared
+      : catalogDeclared || catalog === "busy-past-ready"
         ? { state: "starting", lane: "development" }
         : null;
   // The models the person added to the local lane's list, as the made-up
@@ -1326,9 +1334,14 @@ export function fixtureAgent({
 
   const publishStatus = (next?: AgentServiceStatus) => {
     publishedStatus = next ?? null;
-    catalogBusy = false;
+    const ready = next === undefined || next.state === "ready";
+    if (catalog !== "busy-past-ready") catalogBusy = false;
+    else if (ready)
+      window.setTimeout(() => {
+        catalogBusy = false;
+      }, BUSY_PAST_READY_MS);
     // A declared catalog gives way to the served one once the agent is ready.
-    if (next === undefined || next.state === "ready") catalogDeclared = false;
+    if (ready) catalogDeclared = false;
     statusListener?.(status());
   };
   /** Commits a change to the list as another window would, so the
