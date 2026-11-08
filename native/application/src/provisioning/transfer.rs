@@ -13,9 +13,12 @@
 //! Retry follows the setup contract: a transient fault (a reset, refused or timed-out
 //! connection, a resolver failure, an HTTP 5xx or 429, a body that ended early) waits from
 //! 2 s, doubling to at most 60 s, with jitter adding up to half of each wait but never
-//! passing 60 s, for at most 6 attempts inside 15 minutes. Each wait is announced before it starts and observes
-//! cancellation. Cancellation is checked between chunks, not during a blocked read; the
-//! connection's own I/O bound ends such a read.
+//! passing 60 s, for at most 6 attempts inside 15 minutes. The window opens when a fetch
+//! starts and opens again whenever bytes arrive, so one fetch's time never counts against
+//! the next, and a transfer that keeps moving bytes is not cut off for taking long; only
+//! failing attempts with no bytes moving use it up. Each wait is announced before it
+//! starts and observes cancellation. Cancellation is checked between chunks, not during a
+//! blocked read; the connection's own I/O bound ends such a read.
 //!
 //! The partial file belongs to the caller, who holds the item's writer lock. Its bytes
 //! survive an interruption and are resumed with a `Range` request; a server that ignores
@@ -92,8 +95,11 @@ impl RetryPolicy {
 /// The clock and randomness the retry loop runs on. The engine uses [`SystemPacing`]; an
 /// owner that must observe the schedule without waiting supplies its own.
 pub trait Pacing {
-    /// Time since the first attempt began.
+    /// Time since the retry window opened: when the fetch began or bytes last arrived.
     fn elapsed(&self) -> Duration;
+    /// Opens the retry window again now. A fetch calls it when it starts and each time bytes
+    /// arrive. A clock that does not model the window may keep this default.
+    fn restart(&mut self) {}
     /// Waits `delay`, returning early with `Error::Cancelled` once `cancellation` is set.
     fn wait(&mut self, delay: Duration, cancellation: &Cancellation) -> Result<(), Error>;
     /// A fraction in `[0, 1]`.
@@ -120,6 +126,10 @@ impl Default for SystemPacing {
 impl Pacing for SystemPacing {
     fn elapsed(&self) -> Duration {
         self.started.elapsed()
+    }
+
+    fn restart(&mut self) {
+        self.started = Instant::now();
     }
 
     fn wait(&mut self, delay: Duration, cancellation: &Cancellation) -> Result<(), Error> {
@@ -250,13 +260,15 @@ pub(crate) fn request_chain(
 
 impl Transfer<'_> {
     /// Runs `round` under the retry schedule until it is done, its failure is final, or
-    /// the schedule's attempts or window run out. A failure that ends the schedule is
-    /// returned final, with the attempts made. Each wait is announced before it starts
-    /// and observes cancellation.
+    /// the schedule's attempts or window run out. The window is this call's own and opens
+    /// again whenever bytes arrive. A failure that ends the schedule is returned final,
+    /// with the attempts made. Each wait is announced before it starts and observes
+    /// cancellation.
     pub(crate) fn retrying<T, E: From<Error>>(
         &mut self,
         mut round: impl FnMut(&mut Self) -> Result<Round<T>, E>,
     ) -> Result<T, E> {
+        self.pacing.restart();
         for attempt in 1..=self.policy.max_attempts {
             self.cancellation.check()?;
             let failure = match round(&mut *self)? {
@@ -435,6 +447,7 @@ impl Transfer<'_> {
             }
             hash.update(&buffer[..read]);
             held += read as u64;
+            self.pacing.restart();
             (self.events)(TransferEvent::Progress {
                 completed: held,
                 total: size,
@@ -586,6 +599,8 @@ mod tests {
     struct RecordedPacing {
         now: Duration,
         waits: Vec<Duration>,
+        /// Whether a restart opens the window again, as the engine's clock does.
+        windowed: bool,
     }
 
     impl RecordedPacing {
@@ -593,6 +608,14 @@ mod tests {
             Self {
                 now: Duration::ZERO,
                 waits: Vec::new(),
+                windowed: false,
+            }
+        }
+
+        fn windowed() -> Self {
+            Self {
+                windowed: true,
+                ..Self::new()
             }
         }
     }
@@ -600,6 +623,11 @@ mod tests {
     impl Pacing for RecordedPacing {
         fn elapsed(&self) -> Duration {
             self.now
+        }
+        fn restart(&mut self) {
+            if self.windowed {
+                self.now = Duration::ZERO;
+            }
         }
         fn wait(&mut self, delay: Duration, cancellation: &Cancellation) -> Result<(), Error> {
             cancellation.check()?;
@@ -901,6 +929,148 @@ mod tests {
         );
         assert_eq!(failure(&run).attempts, 2);
         assert_eq!(run.waits, [Duration::from_millis(2500)]);
+    }
+
+    /// A server that cuts its first `cuts` answers after `chunk` more bytes and then serves
+    /// the rest, honouring the `Range` a resumed attempt sends.
+    fn cutting(
+        bytes: Vec<u8>,
+        cuts: usize,
+        chunk: usize,
+    ) -> impl Fn(&Request) -> Reply + Send + Sync + 'static {
+        let served = AtomicUsize::new(0);
+        let full = serving(bytes.clone());
+        move |request: &Request| {
+            if served.fetch_add(1, Ordering::SeqCst) >= cuts {
+                return full(request);
+            }
+            let size = bytes.len();
+            let start = request
+                .header("range")
+                .and_then(|range| range.strip_prefix("bytes="))
+                .and_then(|range| range.strip_suffix("-"))
+                .and_then(|start| start.parse::<usize>().ok())
+                .unwrap_or(0);
+            let mut cut = if start == 0 {
+                response("200 OK", &[("Content-Length", size.to_string())], b"")
+            } else {
+                response(
+                    "206 Partial Content",
+                    &[
+                        ("Content-Length", (size - start).to_string()),
+                        (
+                            "Content-Range",
+                            format!("bytes {start}-{}/{size}", size - 1),
+                        ),
+                    ],
+                    b"",
+                )
+            };
+            cut.extend_from_slice(&bytes[start..start + chunk]);
+            Reply::Cut(cut)
+        }
+    }
+
+    #[test]
+    fn a_transient_failure_is_retried_past_the_window_while_bytes_keep_arriving() {
+        let bytes = payload(150_000);
+        let policy = RetryPolicy {
+            window: Duration::from_secs(12),
+            ..RetryPolicy::default()
+        };
+        let digest = Sha256Digest::of(&bytes);
+        let hosts = approved(&HOSTS[..1]);
+        let sources = [url(SOURCE)];
+        // Each of three cut answers moves bytes before it fails. The waits that follow, 2.5,
+        // 5 and 10 s, pass the 12 s window together unless the bytes open it again.
+        for (mut pacing, finishes, waits) in [
+            (RecordedPacing::windowed(), true, 3),
+            (RecordedPacing::new(), false, 2),
+        ] {
+            let (certificate, server, directory) = setup(cutting(bytes.clone(), 3, 30_000));
+            let network = network_to(certificate.roots(), server.address(), None);
+            let partial = directory.path().join("a.part");
+            let cancellation = Cancellation::default();
+            let mut sink = |_: TransferEvent| {};
+            let result = Transfer {
+                network: &network,
+                hosts: &hosts,
+                policy,
+                pacing: &mut pacing,
+                events: &mut sink,
+                cancellation: &cancellation,
+            }
+            .fetch(
+                Pinned {
+                    sources: &sources,
+                    size: bytes.len() as u64,
+                    sha256: &digest,
+                },
+                &partial,
+            );
+            assert_eq!(pacing.waits.len(), waits, "windowed: {finishes}");
+            if finishes {
+                result.unwrap();
+                assert_eq!(std::fs::read(&partial).unwrap(), bytes);
+            } else {
+                match result {
+                    Err(Error::Download(failure)) => assert_eq!(failure.attempts, 3),
+                    other => panic!("expected the window to end the retries, got {other:?}"),
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn each_fetch_opens_its_own_retry_window() {
+        let (certificate, server, directory) = setup(|_: &Request| empty("500 Down"));
+        let network = network_to(certificate.roots(), server.address(), None);
+        let hosts = approved(&HOSTS[..1]);
+        let sources = [url(SOURCE)];
+        let digest = Sha256Digest::of(b"bytes");
+        let policy = RetryPolicy {
+            window: Duration::from_secs(4),
+            ..RetryPolicy::default()
+        };
+        // One clock serves both fetches: the time the first spent waiting is not the
+        // second's.
+        let mut pacing = RecordedPacing::windowed();
+        let cancellation = Cancellation::default();
+        let mut sink = |_: TransferEvent| {};
+        for name in ["first.part", "second.part"] {
+            let result = Transfer {
+                network: &network,
+                hosts: &hosts,
+                policy,
+                pacing: &mut pacing,
+                events: &mut sink,
+                cancellation: &cancellation,
+            }
+            .fetch(
+                Pinned {
+                    sources: &sources,
+                    size: 5,
+                    sha256: &digest,
+                },
+                &directory.path().join(name),
+            );
+            match result {
+                Err(Error::Download(failure)) => assert_eq!(failure.attempts, 2, "{name}"),
+                other => panic!("expected a final failure, got {other:?}"),
+            }
+        }
+        assert_eq!(pacing.waits.len(), 2);
+        assert_eq!(server.targets().len(), 4);
+    }
+
+    #[test]
+    fn the_engines_clock_opens_the_window_again_on_a_restart() {
+        let mut pacing = SystemPacing::default();
+        std::thread::sleep(Duration::from_millis(50));
+        let aged = pacing.elapsed();
+        assert!(aged >= Duration::from_millis(50));
+        pacing.restart();
+        assert!(pacing.elapsed() < aged);
     }
 
     #[test]
