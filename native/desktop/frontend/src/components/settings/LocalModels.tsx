@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
+import { Spinner } from "@/components/ui/spinner";
 import {
   addedTo,
   laneModelList,
@@ -369,6 +370,26 @@ export function LocalModels({
                 <p role="alert">{listRefusalWords(t, outcomes.reset.code)}</p>
               )}
             </div>
+          )}
+          {store.offered && localAi === null && (
+            <p
+              data-slot="local-models-setup-unread"
+              role={store.control.read.kind === "failed" ? "alert" : "status"}
+              className="flex items-start gap-2 text-sm text-muted-foreground"
+            >
+              {store.control.read.kind === "loading" ? (
+                <>
+                  <Spinner />
+                  <span>{t("desktop.setup.checking")}</span>
+                </>
+              ) : (
+                <span>
+                  {store.control.read.kind === "failed"
+                    ? refusalWords(t, store.control.read.code)
+                    : t("desktop.setup.unavailable")}
+                </span>
+              )}
+            </p>
           )}
           {listed.length > 0 && (
             <ul className="grid gap-2">

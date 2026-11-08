@@ -231,8 +231,6 @@ export function useProvisioningStore(
   rowsRef.current = rows;
   const offeredRef = useRef(offered);
   offeredRef.current = offered;
-  const snapshotRef = useRef(snapshot);
-  snapshotRef.current = snapshot;
 
   const offer = useCallback(
     (action: string): boolean => {
@@ -329,10 +327,13 @@ export function useProvisioningStore(
           start(row.item, { resume: row.recovery === "resume" });
       },
       downloadModel: (lane, model) => {
-        const row = localAiOf(rowsRef.current);
+        // Read from the snapshot this store was built from, which is the one
+        // the model's Download was enabled by: a click the button offered
+        // is never ignored here.
+        const row = localAiRow;
         // A start while the local AI sets up joins that setup, which would
         // not pull this model: it waits until that one settles.
-        if (!row || liveRunOf(snapshotRef.current, row.item)) return false;
+        if (!row || liveRunOf(snapshot, row.item)) return false;
         control.clearRefusal();
         start(row.item, { download: { lane, model } });
         setAsked({ lane, model });

@@ -616,6 +616,25 @@ test("a lane turned off shows no models", async ({ page: target }) => {
   await expect(lane.locator("[data-slot=local-models]")).toHaveCount(0);
 });
 
+test("while the setup status cannot be read, Download is disabled and the list says why", async ({
+  page: target,
+}) => {
+  await open(target, "unavailable");
+  const lane = await openLane(target);
+  const vision = lane.locator('li[data-model="synthetic-vision:1"]');
+  const download = vision.getByRole("button", {
+    name: label("desktop.providers.local_model_download"),
+  });
+  await expect(download).toBeDisabled();
+  await expect(
+    lane.locator("[data-slot=local-models-setup-unread]"),
+  ).toHaveText(label("desktop.setup.unavailable"));
+  await download.click({ force: true });
+  expect(
+    (await calls(target)).filter((call) => call.startsWith("setup.start")),
+  ).toHaveLength(0);
+});
+
 test("a host without setup cannot offer a model download", async ({
   page: target,
 }) => {
