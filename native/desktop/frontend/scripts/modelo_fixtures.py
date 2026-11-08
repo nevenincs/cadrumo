@@ -874,6 +874,7 @@ def _other_declaration(work: Any, modelo: str, period_code: str, *, filing_year:
 
 def _read_ports(bucket_id: str, operation: Any) -> Any:
     from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+    from cadrumo.application.modelo.calculation_actions import calculation_reconciliation_source_needs
     from cadrumo.application.modelo.workbench_read import ModeloWorkbenchReadPorts
     from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 
@@ -885,6 +886,10 @@ def _read_ports(bucket_id: str, operation: Any) -> Any:
         bucket_events=ports.bucket_event_repository,
         filings=ports.filing_repository,
         credit_resolutions=ports.credit_resolution_reader,
+        # An annual summary's form names the declarations it sums that are not there yet, as the window reads it.
+        reconciliation_sources=lambda unit, snapshot: calculation_reconciliation_source_needs(
+            unit, snapshot, ports=ports
+        ),
     )
 
 
