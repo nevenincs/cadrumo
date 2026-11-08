@@ -45,6 +45,15 @@ export function LocalAi({
   const t = useStrings();
   const store = useProvisioning();
   const row = store.localAiRow;
+  // The plan is answered on the row of the model asked for where this
+  // element lists that model; otherwise on the program's row.
+  const reviewed = store.reviewedModel();
+  const reviewElsewhere =
+    reviewed !== null &&
+    !signedOut &&
+    host !== null &&
+    status === "ready" &&
+    lanes.some((lane) => lane.id === reviewed.lane);
   return (
     <div data-slot="local-ai" data-testid="local-ai" className="grid gap-2">
       {row && (
@@ -54,6 +63,7 @@ export function LocalAi({
             locale={locale}
             heading={t("desktop.setup.part_program")}
             progress={store.programPart()}
+            reviewElsewhere={reviewElsewhere}
           >
             <ItemRemoval
               row={row}

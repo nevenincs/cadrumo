@@ -43,6 +43,9 @@ export type PanelState = {
   request: number;
 };
 
+/** A model of a local lane whose download the person asked for. */
+export type AskedModel = { lane: string; model: string };
+
 export type ProvisioningStore = {
   /** Whether this window offers setup now. */
   offered: boolean;
@@ -64,6 +67,12 @@ export type ProvisioningStore = {
   modelPart(model: string): SetupPartProgress | null;
   /** The local AI's program part in its latest setup. */
   programPart(): SetupPartProgress | null;
+  /** The model whose download the person asked for last, in this window. */
+  asked: AskedModel | null;
+  /** The model whose row answers the local AI's plan now: the model last
+   * asked for, while the local AI's setup awaits the answer on a plan that
+   * holds a part for it. Null leaves the answer on the local AI's own row. */
+  reviewedModel(): AskedModel | null;
   /** A row's own button: check it again, or set it up. */
   act(row: SetupRow): void;
   /** Downloads one model of a local lane's list through the local AI's
@@ -129,6 +138,8 @@ const NO_PROVISIONING: ProvisioningStore = {
   progressOf: () => null,
   modelPart: () => null,
   programPart: () => null,
+  asked: null,
+  reviewedModel: () => null,
   act: () => undefined,
   downloadModel: () => false,
   removeModel: () => Promise.resolve("unavailable"),
@@ -189,6 +200,8 @@ export function useProvisioningStore(
   const { offered, snapshot } = control;
   const rows = useMemo(() => snapshot?.rows ?? [], [snapshot]);
   const [panel, setPanel] = useState<PanelState>(CLOSED);
+  // The model whose download the person asked for last, for this profile.
+  const [asked, setAsked] = useState<AskedModel | null>(null);
   const opened = useRef(onOpen);
   opened.current = onOpen;
   // The launch's opening, decided by the first status read and still owed
@@ -251,6 +264,7 @@ export function useProvisioningStore(
   );
   useEffect(() => {
     deferred.current = null;
+    setAsked(null);
   }, [owner]);
   useEffect(() => {
     const action = deferred.current;
@@ -300,6 +314,14 @@ export function useProvisioningStore(
       modelPart: (model) =>
         localParts().find((part) => part.model === model) ?? null,
       programPart: () => localParts().find((part) => !part.model) ?? null,
+      asked,
+      reviewedModel: () =>
+        asked !== null &&
+        localAiRow !== null &&
+        runOf(snapshot, localAiRow.item)?.stage === "review" &&
+        localParts().some((part) => part.model === asked.model)
+          ? asked
+          : null,
       act: (row) => {
         control.clearRefusal();
         if (row.recovery === "check_again") verify([row.item]);
@@ -313,6 +335,7 @@ export function useProvisioningStore(
         if (!row || liveRunOf(snapshotRef.current, row.item)) return false;
         control.clearRefusal();
         start(row.item, { download: { lane, model } });
+        setAsked({ lane, model });
         return true;
       },
       removeModel,
@@ -326,6 +349,7 @@ export function useProvisioningStore(
   }, [
     offered,
     control,
+    asked,
     snapshot,
     rows,
     live,

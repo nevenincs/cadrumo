@@ -174,7 +174,7 @@ export function StepFigure({
 /** The plan `run` awaits an answer on, inside its row: what it downloads,
  * the space it needs, its parts and where they come from, and the row's
  * own approve and reject. */
-function RowReview({ run, locale }: { run: SetupRun; locale: string }) {
+export function RowReview({ run, locale }: { run: SetupRun; locale: string }) {
   const t = useStrings();
   const store = useProvisioning();
   const review = run.review;
@@ -228,6 +228,7 @@ export function ProvisioningRow({
   locale,
   heading,
   progress,
+  reviewElsewhere = false,
   className,
   children,
 }: {
@@ -237,6 +238,9 @@ export function ProvisioningRow({
   /** Null where the running setup has nothing of this row's to show: the
    * row then says its sentence. Absent for the item's own progress. */
   progress?: StepProgress | null;
+  /** Set where a model's own row on this screen answers the row's plan, so
+   * the answer is asked once. */
+  reviewElsewhere?: boolean;
   className?: string;
   children?: ReactNode;
 }) {
@@ -251,7 +255,7 @@ export function ProvisioningRow({
   let status: ReactNode;
   if (run?.stage === "planning")
     status = <PlanningFigure step={store.progressOf(run.item)?.step ?? null} />;
-  else if (run?.stage === "review")
+  else if (run?.stage === "review" && !reviewElsewhere)
     status = <RowReview run={run} locale={locale} />;
   else if (run?.stage === "running" && shown)
     status = <StepFigure progress={shown} name={name} locale={locale} />;

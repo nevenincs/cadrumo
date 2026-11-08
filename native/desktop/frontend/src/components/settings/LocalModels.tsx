@@ -16,9 +16,10 @@ import type { AgentModelLicenceFacts } from "../../shell/agentSession";
 import { useLocalModels, type LocalModelHost } from "../../shell/localModels";
 import { useProvisioning } from "../../shell/provisioning";
 import { useStrings, type Translate } from "../../shell/strings";
-import type { SetupStep } from "../../ipc/componentSetup";
+import type { SetupRun, SetupStep } from "../../ipc/componentSetup";
 import {
   PlanningFigure,
+  RowReview,
   StepFigure,
   type StepProgress,
 } from "../setup/ProvisioningRow";
@@ -70,6 +71,7 @@ function LocalModelRow({
   refusal,
   progress,
   planning,
+  review,
   onDownload,
   onRemove,
 }: {
@@ -84,6 +86,9 @@ function LocalModelRow({
   /** Set while this model's download is still being planned, which names no
    * part yet: what the engine has reported of the local AI, none at first. */
   planning: { step: SetupStep | null } | null;
+  /** The local AI's setup while it awaits the person's answer on a plan for
+   * this model: the row carries the answer, the one place it is asked. */
+  review: SetupRun | null;
   onDownload?: () => void;
   onRemove?: () => void;
 }) {
@@ -115,7 +120,9 @@ function LocalModelRow({
         )}
       </div>
       <ModelFacts model={model} locale={locale} />
-      {progress ? (
+      {review ? (
+        <RowReview run={review} locale={locale} />
+      ) : progress ? (
         <StepFigure progress={progress} name={model.name} locale={locale} />
       ) : (
         planning && <PlanningFigure step={planning.step} />
@@ -224,18 +231,20 @@ export function LocalModels({
   // Downloading and removing are setup's: offered only where this window
   // offers setup, and a download waits while the local AI sets up.
   const localAi = store.localAiRow;
-  const settingUp = localAi !== null && store.liveRunOf(localAi.item) !== null;
+  const liveRun = localAi ? store.liveRunOf(localAi.item) : null;
+  const settingUp = liveRun !== null;
   // A start that no snapshot shows yet is as much a setup under way as one
   // that does, and a second click would send it again.
   const starting = localAi !== null && store.control.busy(localAi.item);
   // The model whose download was asked for last: the start's refusal, which
   // the control holds once for the window, is said on its row.
-  const [asked, setAsked] = useState<string | null>(null);
+  const asked =
+    lane && store.asked?.lane === lane.id ? store.asked.model : null;
   const onSetUp =
     store.offered && localAi !== null
       ? (model: string) => {
           if (!lane) return;
-          if (store.downloadModel(lane.id, model)) setAsked(model);
+          store.downloadModel(lane.id, model);
         }
       : undefined;
   const onRemove = store.offered ? store.removeModel : undefined;
@@ -245,18 +254,20 @@ export function LocalModels({
   const progressOf = (model: LaneModel): StepProgress | null => {
     const part = store.modelPart(model.id);
     if (!part) return null;
-    if (part.result === null) return settingUp ? part : null;
+    // A part planned for the person's review has not begun: it reports no
+    // step until the setup runs.
+    if (part.result === null) return liveRun?.stage === "running" ? part : null;
     return part.result.failure !== null || model.installed !== true
       ? part
       : null;
   };
   // From the click until the engine's plan awaits the person's answer, the
   // setup names no part, so the asked model's row says what it is doing.
-  const liveRun = localAi ? store.liveRunOf(localAi.item) : null;
   const planningStep =
     localAi && (liveRun ? liveRun.stage === "planning" : starting)
       ? { step: store.progressOf(localAi.item)?.step ?? null }
       : null;
+  const reviewed = store.reviewedModel();
   const [removing, setRemoving] = useState<string | null>(null);
   const [removals, setRemovals] = useState<Record<string, string>>({});
   const readable =
@@ -379,6 +390,13 @@ export function LocalModels({
                     }
                     progress={progressOf(model)}
                     planning={asked === model.id ? planningStep : null}
+                    review={
+                      reviewed?.lane === lane.id &&
+                      reviewed.model === model.id &&
+                      liveRun?.stage === "review"
+                        ? liveRun
+                        : null
+                    }
                     refusal={
                       removals[key]
                         ? removalWords(t, removals[key])

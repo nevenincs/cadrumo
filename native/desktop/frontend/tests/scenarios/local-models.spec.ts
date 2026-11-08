@@ -274,10 +274,9 @@ test("the model picker offers the local lane's list, and a model added to it joi
   expect(await offeredModels(picker)).toContain("synthetic-plain:1");
 });
 
-/** The plan a model download awaits an answer on, in the local AI's own row
- * inside the lane. */
-const laneReview = (lane: Locator) =>
-  lane.locator('[data-setup-row="local_ai"] [data-setup-review]');
+/** The plan a model download awaits an answer on, where the lane shows it:
+ * on the asked model's row, never also on the local AI's own row. */
+const laneReview = (lane: Locator) => lane.locator("[data-setup-review]");
 
 test("Download plans that model's setup in the lane, sized by the catalog where it states one", async ({
   page: target,
@@ -290,8 +289,16 @@ test("Download plans that model's setup in the lane, sized by the catalog where 
       name: label("desktop.providers.local_model_download"),
     })
     .click();
-  const review = laneReview(lane);
+  const review = vision.locator("[data-setup-review]");
   await expect(review).toContainText(label("desktop.setup.lead_review"));
+  // The asked model's row is the one place the plan is answered, and it does
+  // not say the model waits to start while the plan awaits the person.
+  await expect(laneReview(lane)).toHaveCount(1);
+  await expect(
+    lane.locator('[data-setup-row="local_ai"] [data-setup-review]'),
+  ).toHaveCount(0);
+  await expect(vision).not.toContainText(label("desktop.setup.step_waiting"));
+  await expect(vision.locator("[data-setup-progress]")).toHaveCount(0);
   // No other window opens: the plan is answered where it was asked for.
   await expect(target.getByRole("dialog")).toHaveCount(0);
   await expect(review.locator('[data-setup-plan="local_ai"]')).toHaveCount(1);
@@ -307,9 +314,12 @@ test("Download plans that model's setup in the lane, sized by the catalog where 
       name: label("desktop.setup.approve_size", { size: "3.2 GB" }),
     })
     .click();
-  // The model's own entry shows its download; the program row shows none,
-  // since the program is not part of this setup. Nothing opens over it.
+  // The answer moved the run on: the model's own entry shows its download;
+  // the program row shows none, since the program is not part of this setup.
+  // Nothing opens over it.
   await expect(vision.locator("[data-setup-progress]")).toBeVisible();
+  await expect(laneReview(lane)).toHaveCount(0);
+  expect(await calls(target)).toContain("setup.answer apply");
   await expect(
     lane.locator('[data-setup-row="local_ai"] [data-setup-progress]'),
   ).toHaveCount(0);
@@ -354,8 +364,9 @@ test("a download still being planned says it is checking, on its row and the loc
     await expect(button).toBeDisabled();
   // Once the plan awaits its answer, the checking is over.
   await target.evaluate(() => window.__scenarioSetup?.finishPlanning());
-  await expect(laneReview(lane)).toBeVisible();
+  await expect(vision.locator("[data-setup-review]")).toBeVisible();
   await expect(vision.locator("[data-setup-planning]")).toHaveCount(0);
+  await expect(vision).not.toContainText(label("desktop.setup.step_waiting"));
 });
 
 test("while the local AI sets up, no model offers its download again", async ({
