@@ -304,18 +304,20 @@ def test_every_revision_declares_the_autonomico_binding() -> None:
         assert binding_id == "renta-profile-minimo-descendientes-autonomico"
 
 
-def test_non_madrid_ccaa_autonomico_mirrors_estatal_for_two_descendants() -> None:
-    """A CCAA absent from the wired divergence table mirrors the estatal aggregate.
+@pytest.mark.parametrize("ccaa", ["cataluna", "ceuta", "melilla"])
+def test_non_madrid_ccaa_autonomico_mirrors_estatal_for_two_descendants(ccaa: str) -> None:
+    """A residence absent from the wired divergence table mirrors the estatal aggregate.
 
-    Cataluña, like every CCAA except Madrid, has no wired override, so the
+    Cataluña, like every comunidad except Madrid, has no wired override, so the
     autonómico aggregate must equal the estatal one for the identical
-    descendientes facts.
+    descendientes facts. The two ciudades autónomas approve no mínimo of their
+    own either, so they take the same fallback.
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         for year in _ENGINE_FILING_YEARS:
             snapshot = _snapshot(year)
             fact_index: dict[str, object] = {
-                "tax_residence.ccaa": "cataluna",
+                "tax_residence.ccaa": ccaa,
                 "renta_family.descendiente.0.birth_date": "2010-01-01",
                 "renta_family.descendiente.0.convivencia": "true",
                 "renta_family.descendiente.1.birth_date": "2015-06-01",

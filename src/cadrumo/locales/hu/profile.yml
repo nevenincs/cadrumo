@@ -114,7 +114,7 @@ profile:
     tax:
       id: Adóazonosító (NIF/CIF/DNI/NIE)
     tax_residence:
-      ccaa: Adóügyi illetőség szerinti autonóm közösség
+      ccaa: Adóügyi illetőség szerinti autonóm közösség vagy város
       jurisdiction_scope: Melyik adóterület alkalmazandó erre a Modelo 303-ra?
     taxpayer_type:
       country_of_fiscal_residence: Adóügyi illetőség szerinti ország (ISO 3166-1 alfa-2
@@ -511,13 +511,15 @@ profile:
             castilla_la_mancha: Kasztília-La Mancha
             castilla_y_leon: Kasztília és León
             cataluna: Katalónia
+            ceuta: Ceuta (autonóm város)
             comunidad_valenciana: Valenciai Közösség
             extremadura: Extremadura
             galicia: Galicia
             la_rioja: La Rioja
             madrid: Madrid
+            melilla: Melilla (autonóm város)
             murcia: Murcia
-          label: Lakóhely szerinti autonóm közösség
+          label: Lakóhely szerinti autonóm közösség vagy város
         jurisdiction_scope:
           choices:
             common_regime: Közös területi rendszer

@@ -115,7 +115,7 @@ profile:
     tax:
       id: Identificador fiscal (NIF/NIE/CIF)
     tax_residence:
-      ccaa: Comunitat autònoma de residència fiscal
+      ccaa: Comunitat o ciutat autònoma de residència fiscal
       jurisdiction_scope: Quin territori tributari s'aplica a aquest Model 303?
     taxpayer_type:
       country_of_fiscal_residence: País de residència fiscal (codi ISO 3166-1 alfa-2,
@@ -509,13 +509,15 @@ profile:
             castilla_la_mancha: Castella-la Manxa
             castilla_y_leon: Castella i Lleó
             cataluna: Catalunya
+            ceuta: Ciutat de Ceuta
             comunidad_valenciana: Comunitat Valenciana
             extremadura: Extremadura
             galicia: Galícia
             la_rioja: La Rioja
             madrid: Comunitat de Madrid
+            melilla: Ciutat de Melilla
             murcia: Regió de Múrcia
-          label: Comunitat autònoma de residència
+          label: Comunitat o ciutat autònoma de residència
         jurisdiction_scope:
           choices:
             common_regime: Territori comú

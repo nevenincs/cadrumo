@@ -485,8 +485,8 @@ wizard:
       tax-id:
         help: Adóazonosító (NIF/CIF/DNI/NIE) az aktív profilhoz
       tax-residence-ccaa:
-        help: Az adóügyi illetőség autonóm közössége, közös területi rendszerben.
-          Ha az érték nem ismerhető fel, a hibaüzenet felsorolja az elfogadott közösségeket.
+        help: Az adóügyi illetőség autonóm közössége vagy városa, közös területi rendszerben.
+          Ha az érték nem ismerhető fel, a hiba felsorolja az elfogadott területeket.
       tax-residence-jurisdiction-scope:
         help: 'Nyilatkozott területi rendszer: közös terület vagy még nem támogatott
           forális terület.'
@@ -754,6 +754,8 @@ wizard:
             label: Kasztília és León
           cataluna:
             label: Katalónia
+          ceuta:
+            label: Ceuta (autonóm város)
           comunidad_valenciana:
             label: Valenciai Közösség
           extremadura:
@@ -764,6 +766,8 @@ wizard:
             label: La Rioja
           madrid:
             label: Madrid
+          melilla:
+            label: Melilla (autonóm város)
           murcia:
             label: Murcia
       country-of-fiscal-residence:
@@ -786,7 +790,7 @@ wizard:
       representante-fiscal-nombre:
         prompt: A spanyolországi adóügyi képviselő neve
       tax-residence-ccaa:
-        prompt: Adóügyi illetékességi autonóm közösség
+        prompt: Adóügyi illetékességi autonóm közösség vagy város
       tax-residence-jurisdiction-scope:
         choices:
           common_regime:

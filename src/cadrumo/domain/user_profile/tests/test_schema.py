@@ -6,6 +6,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.classification.policies import SensitivityClass
+from ...calculations.registry.ccaa_catalogue import ccaa_choices
 from ...calculations.registry.tests.published_authority import (
     published_legal_evidence_text,
     published_legal_references,
@@ -18,6 +19,7 @@ from ..schema import (
     ProfileSchemaDefinition,
     ProfileSectionDefinition,
     ProfileSnapshotPolicy,
+    enum_value_refusal,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -84,6 +86,22 @@ def test_committed_user_profile_schema_exposes_profile_lookup_metadata() -> None
     situacion = schema.field("renta_family.situacion_familiar")
     assert situacion.type is ProfileFieldType.ENUM
     assert "soltero" in situacion.enum_values
+
+
+def test_the_residence_field_admits_every_territory_the_catalogue_declares() -> None:
+    """The write door accepts a ciudad autónoma, as LIRPF DA 32 requires.
+
+    Before this, a resident of Ceuta or Melilla could not record their residence:
+    the enum declaration omitted both tokens, so ``enum_value_refusal`` refused
+    the only answer they could give. The admitted set is read off the residence
+    catalogue, so the two declarations cannot drift apart.
+    """
+    field = published_profile_schema().field("tax_residence.ccaa")
+
+    assert field.enum_values == tuple(str(token) for token in ccaa_choices())
+    for token in ("ceuta", "melilla"):
+        assert enum_value_refusal(field, token) is None
+    assert enum_value_refusal(field, "navarra") is not None
 
 
 def test_image_reading_capability_leaves_the_off_host_decision_to_the_cloud_gate() -> None:

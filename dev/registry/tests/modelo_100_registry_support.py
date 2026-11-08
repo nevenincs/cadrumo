@@ -15,7 +15,9 @@ import pytest
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.ccaa_catalogue import ccaa_choices
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.snapshot import legal_window_covers_devengo
@@ -26,6 +28,7 @@ from cadrumo.domain.calculations.registry.tests.authored_editions import (
     revision_covering,
 )
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
+from cadrumo.domain.contribuyente.ccaa import CCAA
 from cadrumo.domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
 from cadrumo.tests.aeat_literal_fixtures import aeat_url, configured_path
 
@@ -138,6 +141,19 @@ def loaded_registry() -> tuple[dict[str, ModeloDefinition], RegistryCatalogues]:
     # that governed facts cite; the raw tree load does not.
     authority = compiled_bundled_authority()
     return {modelo.id: modelo for modelo in authority.modelos}, authority.catalogues
+
+
+@cache
+def authored_ccaa_choices() -> tuple[CCAA, ...]:
+    """Return the residence tokens the authored catalogue declares, in its own order.
+
+    A case that walks every recorded IRPF residence asks the catalogue instead of
+    listing tokens, so a territory joining or leaving the fact reaches the case.
+    """
+    _modelos_by_id, catalogues = loaded_registry()
+    return ccaa_choices(
+        authority=CandidateFactAuthority(catalogues.facts, catalogues.require_supported_filing_years()),
+    )
 
 
 @cache

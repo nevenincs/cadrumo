@@ -95,9 +95,11 @@ def test_married_filer_is_fail_closed_no_auto_claim() -> None:
         assert facts[_COUNT_KEY] == Decimal("0")
 
 
-def test_non_madrid_resident_leaves_count_at_zero_default() -> None:
+@pytest.mark.parametrize("ccaa", ["cataluna", "ceuta"])
+def test_non_madrid_resident_leaves_count_at_zero_default(ccaa: str) -> None:
+    """A ciudad autónoma is covered too: it approves no deducción of its own."""
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        facts = _facts(**{"tax_residence.ccaa": "cataluna"})
+        facts = _facts(**{"tax_residence.ccaa": ccaa})
         inject_derived_autonomic_deduccion_facts(
             facts, _REVIEWED_EDITION, authored_year=_REVIEWED_EDITION, operation=_authority_operation_for_test
         )

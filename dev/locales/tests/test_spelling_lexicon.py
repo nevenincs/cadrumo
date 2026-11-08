@@ -385,6 +385,8 @@ def test_attested_forms_do_not_hide_nearby_typos_or_untranslated_prose() -> None
         ("en", "castilla_la_mancha", "Castile-La Mancha"),
         ("en", "castilla_y_leon", "Castilla y León"),
         ("en", "castilla_y_leon", "Castile and León"),
+        ("en", "ceuta", "Ceuta (autonomous city)"),
+        ("en", "melilla", "Melilla (autonomous city)"),
         ("en", "comunidad_valenciana", "Valencian Community"),
         ("en", "extremadura", "Extremadura"),
         ("en", "galicia", "Galicia"),
@@ -396,6 +398,8 @@ def test_attested_forms_do_not_hide_nearby_typos_or_untranslated_prose() -> None
         ("hu", "galicia", "Galicia"),
         ("hu", "la_rioja", "La Rioja"),
         ("hu", "murcia", "Murcia"),
+        ("hu", "ceuta", "Ceuta (autonóm város)"),
+        ("hu", "melilla", "Melilla (autonóm város)"),
         ("es", "andalucia", "Andalucía"),
     ],
 )

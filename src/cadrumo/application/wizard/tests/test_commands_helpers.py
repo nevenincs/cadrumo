@@ -103,9 +103,9 @@ def test_flag_name_prefixes_double_dash_to_question_id() -> None:
 
 def test_tax_residence_ccaa_option_uses_short_metavar() -> None:
     """The CCAA option declares a short metavar so the help table does not
-    wrap the 15-choice list mid-token inside its bracket.
+    wrap the whole choice list mid-token inside its bracket.
 
-    Before fix: Rich rendered the full ``[andalucia|...|murcia]`` choice
+    Before fix: Rich rendered the full ``[andalucia|...]`` choice
     list as one ~150-char metavar and broke it inside a token (``com``
     / ``unidad_valenciana``).
     After fix: the metavar is the compact ``CCAA`` token and choices
