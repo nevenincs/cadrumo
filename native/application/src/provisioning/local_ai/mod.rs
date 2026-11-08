@@ -37,18 +37,34 @@ use super::{
 };
 use crate::error::Error;
 use loopback::{ExchangeFailure, ExchangePhase};
+use serde::{Deserialize, Serialize};
 use std::{fmt, io, process::ExitStatus, time::Duration};
 
 /// The engine that serves the local models, and so the one local AI server the runtime
 /// manager runs. Ollama stays the default until the bundled llama-server has passed its
-/// packaged acceptance.
-#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
+/// packaged acceptance. Stored as `ollama` or `llamacpp`.
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum LocalEngine {
     /// The Ollama program the engine downloads on the person's approval.
     #[default]
+    #[serde(rename = "ollama")]
     Ollama,
     /// The llama-server program the package carries.
+    #[serde(rename = "llamacpp")]
     LlamaCpp,
+}
+
+/// Where the local engine runs a model: the device policy of its server's launch. The
+/// same model files serve either, so no placement has a model list of its own. Stored as
+/// `auto` or `cpu_only`.
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Placement {
+    /// The engine offloads layers to a device when one is present and the load fits.
+    #[default]
+    Auto,
+    /// The engine keeps every layer on the processor.
+    CpuOnly,
 }
 
 /// The local AI's one reading from its program's observation and version and each selected

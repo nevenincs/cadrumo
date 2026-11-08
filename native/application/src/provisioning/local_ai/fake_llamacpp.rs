@@ -16,7 +16,8 @@
 //! It answers a load as the router does: `200` at once, whatever then becomes of the model,
 //! and `400` that the model is already running when it is held. A load that fails shows only
 //! in the model's entry in the list, as `unloaded` with `failed` and an exit code, never in
-//! an answer body.
+//! an answer body. A load that another caller's load evicts shows there as `unloaded` with
+//! no `failed` flag.
 
 use serde_json::{Value, json};
 use std::{
@@ -113,6 +114,9 @@ pub(crate) struct FakeState {
     /// Whether a load is taken, answered `200`, and then fails: the model's entry reads
     /// unloaded, failed, with exit code 1, as the router lists a model whose process ended.
     pub load_fails: bool,
+    /// Whether a load is taken, answered `200`, and then evicted by another caller's load
+    /// into the router's one place: the model's entry reads unloaded with no `failed` flag.
+    pub load_evicted: bool,
     /// Every request line, in order.
     pub requests: Vec<String>,
     /// Every request body, in order, `null` when it was none or not JSON.
@@ -295,6 +299,7 @@ fn answer(state: &Shared, mut stream: TcpStream) {
             let loading = target == "/models/load";
             let leaves_loading = guard.load_leaves_loading;
             let fails = guard.load_fails;
+            let evicted = guard.load_evicted;
             let reply = match body["model"].as_str() {
                 None => ("400 Bad Request", error_body("the request names no model")),
                 Some(model) => match guard.models.get_mut(model) {
@@ -303,11 +308,12 @@ fn answer(state: &Shared, mut stream: TcpStream) {
                         ("400 Bad Request", error_body("model is already running"))
                     }
                     Some(status) => {
-                        *status = match (loading, fails, leaves_loading) {
-                            (true, true, _) => ModelStatus::Failed,
-                            (true, false, true) => ModelStatus::Loading,
-                            (true, false, false) => ModelStatus::Loaded,
-                            (false, _, _) => ModelStatus::Unloaded,
+                        *status = match (loading, fails, evicted, leaves_loading) {
+                            (true, true, _, _) => ModelStatus::Failed,
+                            (true, false, true, _) => ModelStatus::Unloaded,
+                            (true, false, false, true) => ModelStatus::Loading,
+                            (true, false, false, false) => ModelStatus::Loaded,
+                            (false, _, _, _) => ModelStatus::Unloaded,
                         };
                         ("200 OK", json!({ "success": true }))
                     }
@@ -633,6 +639,25 @@ mod tests {
         assert_eq!(
             json_of(&body)["data"][0]["status"],
             json!({ "value": "loaded" })
+        );
+    }
+
+    #[test]
+    fn an_evicted_load_is_taken_and_listed_unloaded_with_no_failed_flag() {
+        let fake = FakeLlamaCpp::start("b1");
+        let loopback = Loopback::new(fake.address()).unwrap();
+        {
+            let mut state = fake.state.lock().unwrap();
+            state.models.insert("m".into(), ModelStatus::Unloaded);
+            state.load_evicted = true;
+        }
+
+        let (status, body) = loopback.post("/models/load", br#"{"model":"m"}"#).unwrap();
+        assert_eq!((status, json_of(&body)), (200, json!({ "success": true })));
+        let (_, body) = loopback.get("/models").unwrap();
+        assert_eq!(
+            json_of(&body)["data"][0]["status"],
+            json!({ "value": "unloaded" })
         );
     }
 

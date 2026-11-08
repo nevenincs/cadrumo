@@ -59,6 +59,7 @@ use serde::Deserialize;
 use std::{
     collections::BTreeSet,
     fmt, io,
+    num::NonZeroU32,
     path::{Path, PathBuf},
 };
 
@@ -193,30 +194,41 @@ impl fmt::Display for ModelName {
 }
 
 /// One admitted local model: the plan part it is fetched as, its artefact and its download
-/// size as its catalogue entry states it, or `None` when no entry states one.
+/// size as its catalogue entry states it, or `None` when no entry states one, and the
+/// context llama.cpp loads it with, which the caller states or leaves out.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SelectedModel {
     pub role: String,
     pub artefact: ModelArtefact,
     pub size_bytes: Option<u64>,
+    /// The context, in tokens, the llama.cpp router loads the model with. Zero cannot be
+    /// stated. A model without one is stored but not presented to the router.
+    pub llamacpp_context: Option<NonZeroU32>,
 }
 
 impl SelectedModel {
-    /// One admitted triple of a model its registry serves under `name`; refuses a part that
-    /// is not a plain identifier, an empty or malformed name, and a stated zero size.
-    pub fn new(role: &str, name: &str, size_bytes: Option<u64>) -> Result<Self, Error> {
+    /// One admitted model its registry serves under `name`; refuses a part that is not a
+    /// plain identifier, an empty or malformed name, and a stated zero size.
+    pub fn new(
+        role: &str,
+        name: &str,
+        size_bytes: Option<u64>,
+        llamacpp_context: Option<NonZeroU32>,
+    ) -> Result<Self, Error> {
         Self::of_artefact(
             role,
             ModelArtefact::Registry(ModelName::parse(name)?),
             size_bytes,
+            llamacpp_context,
         )
     }
 
-    /// One admitted triple of any artefact, under the same refusals as [`Self::new`].
+    /// One admitted model of any artefact, under the same refusals as [`Self::new`].
     pub fn of_artefact(
         role: &str,
         artefact: ModelArtefact,
         size_bytes: Option<u64>,
+        llamacpp_context: Option<NonZeroU32>,
     ) -> Result<Self, Error> {
         let mut bytes = role.bytes();
         let identifier = role.len() <= ROLE_LIMIT
@@ -232,6 +244,7 @@ impl SelectedModel {
             role: role.to_owned(),
             artefact,
             size_bytes,
+            llamacpp_context,
         })
     }
 
@@ -373,7 +386,8 @@ pub struct LocalModels(Vec<SelectedModel>);
 
 impl LocalModels {
     /// Refuses a role selected twice, and a model selected for two roles under two
-    /// different sizes or artefacts, which no one catalogue entry can state.
+    /// different sizes, artefacts or llama.cpp contexts, which no one catalogue entry can
+    /// state: the store keeps one context for one model.
     pub fn new(mut models: Vec<SelectedModel>) -> Result<Self, Error> {
         models.sort_by(|a, b| a.role.cmp(&b.role));
         if models.windows(2).any(|pair| pair[0].role == pair[1].role) {
@@ -383,9 +397,10 @@ impl LocalModels {
             if models[..index].iter().any(|other| {
                 other.name().same(model.name())
                     && (other.size_bytes != model.size_bytes
+                        || other.llamacpp_context != model.llamacpp_context
                         || !other.artefact.same(&model.artefact))
             }) {
-                return Err(invalid("a model has one size and one source"));
+                return Err(invalid("a model has one size, one source and one context"));
             }
         }
         Ok(Self(models))

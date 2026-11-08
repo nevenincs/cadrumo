@@ -190,6 +190,7 @@ fn fetch_tiny_model(root: &Path) -> (SelectedModel, Models) {
         "text_extraction",
         ModelArtefact::HuggingFace(declared),
         None,
+        None,
     )
     .unwrap();
     let models = Models::new(

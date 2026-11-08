@@ -314,7 +314,7 @@ fn progress(run: &Run, total: u64) -> Vec<u64> {
 }
 
 fn models(root: &Path, model: &HuggingFaceModel) -> (Models, SelectedModel) {
-    let selected = SelectedModel::new("vision", &model.name().to_string(), None).unwrap();
+    let selected = SelectedModel::new("vision", &model.name().to_string(), None, None).unwrap();
     let models = Models::new(
         LocalModels::new(vec![selected.clone()]).unwrap(),
         root.to_path_buf(),

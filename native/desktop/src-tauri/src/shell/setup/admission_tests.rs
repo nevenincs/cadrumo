@@ -185,7 +185,10 @@ pub fn requested(lane: &str, model: &str) -> ModelDownload {
 }
 
 fn admitted(model: &str, size: Option<u64>) -> LocalModels {
-    LocalModels::new(vec![SelectedModel::new("download", model, size).unwrap()]).unwrap()
+    LocalModels::new(vec![
+        SelectedModel::new("download", model, size, None).unwrap(),
+    ])
+    .unwrap()
 }
 
 /// Override one read with a sequence, leaving the other service replies intact.

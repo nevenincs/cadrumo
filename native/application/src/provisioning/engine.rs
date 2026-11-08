@@ -64,7 +64,7 @@ use super::{
     follow::{self, Changes},
     items::{Destination, ItemId, Locations, PROGRAM_PART},
     local_ai::{
-        self, LocalAiError, LocalEngine, NotRunningCause, StartFailureKind,
+        self, LocalAiError, LocalEngine, NotRunningCause, Placement, StartFailureKind,
         hardware::Hardware,
         llama_server::{self, LOAD_CONTEXT, LlamaServer, LlamaServerUnavailable, Presentation},
         models::{LocalModels, ModelName, Models},
@@ -296,6 +296,9 @@ pub struct EngineConfig {
     pub llama_server_folder: PathBuf,
     /// The llama.cpp build tag the package pins its llama-server at.
     pub llama_server_build: String,
+    /// Where the llama-server runs a model, as the person selected it. The component
+    /// engine never runs the server, so this only completes the program it checks.
+    pub placement: Placement,
     /// The complete environment a browser check launches the browser with.
     pub browser_environment: BTreeMap<OsString, OsString>,
     /// The owner's temporary folder; a browser check's throwaway profile lives inside it.

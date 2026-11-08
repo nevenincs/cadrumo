@@ -17,7 +17,7 @@ use cadrumo_application::provisioning::{
     engine::{EngineConfig, SERVER_WAIT},
     items::FULL_CHECK_BUDGET,
     local_ai::{
-        ServerCall, StartFailureKind,
+        Placement, ServerCall, StartFailureKind,
         loopback::{ExchangeFailure, ExchangePhase},
     },
     pins::{ComponentPins, Platform},
@@ -272,6 +272,7 @@ sha256 = \"{}\"
                 local_ai_address: "127.0.0.1:9".parse().expect("an address"),
                 llama_server_folder: root.join("package").join("bin").join("llama"),
                 llama_server_build: "b1".into(),
+                placement: Placement::default(),
                 browser_environment: BTreeMap::new(),
                 scratch: root.join("tmp"),
                 free_space: Box::new(move |_| free_bytes),
