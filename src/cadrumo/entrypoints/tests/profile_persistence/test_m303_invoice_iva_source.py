@@ -26,6 +26,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import BaseModel
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
@@ -51,7 +52,11 @@ from cadrumo.application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from cadrumo.application.modelo.calculation_operation import ModeloWorkCalculateExecutor
+from cadrumo.application.modelo.calculation_operation import (
+    ModeloWorkCalculateExecutor,
+    build_modelo_work_calculate_definition,
+    build_modelo_work_calculate_registration,
+)
 from cadrumo.application.modelo.operation_shared import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_calculation_contracts import (
     ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
@@ -65,8 +70,10 @@ from cadrumo.application.modelo.workbench_read import (
     ModeloWorkbenchReadPorts,
     read_modelo_workbench_form,
 )
-from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.error_detail import OperationErrorDetailKind, OperationErrorDetailV1
+from cadrumo.application.operations.models import OperationRequest, OperationTerminalReceipt
 from cadrumo.application.operations.next_step import OperationOpenMovementStepV1
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.tests.operation_host_fakes import (
     IrreversibleSectionGrant,
     RecordingEvents,
@@ -76,6 +83,7 @@ from cadrumo.application.tests.operation_host_fakes import (
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.errors.error_codes import ErrorCategory, get_registered_error_code
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.categories.spending_category import SpendingCategory
@@ -90,6 +98,10 @@ from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from cadrumo.entrypoints.tests.dependency_operation_gating_support import (
+    settle_to_error_detail,
+    supervisor_with_projections,
+)
 from cadrumo.entrypoints.tests.production_operation_registry import production_operation_registry
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
@@ -613,4 +625,125 @@ def test_a_blocked_calculate_settles_refused_and_reports_no_effect(
 
     assert get_registered_error_code(refused.value).category is ErrorCategory.REFUSED
     assert events.effects == []
+    assert not quarter.calculations.load(operation=operation).revisions
+
+
+def _with_unclassified_movement(quarter: _Quarter) -> str:
+    """Add one 1T card payment nobody has classified yet, as APP-QA D44 recorded; return its id."""
+    movement = Transaction.model_validate(
+        {
+            "raw": RawTransaction(
+                provider_transaction_id="banco-sin-clasificar-1T",
+                booked_date=date(_YEAR, 2, 20),
+                value_date=date(_YEAR, 2, 20),
+                amount=Decimal("48.40"),
+                currency="EUR",
+                counterparty="Papeleria Ejemplo SL",
+                description="PAGO TARJETA PAPELERIA EJEMPLO",
+                provenance=RawProvenance(
+                    source_path=Path(__file__),
+                    source_sha256="f" * 64,
+                    source_row_index=2,
+                    source_format=SourceFormat.MANUAL,
+                    ingested_at=_T0,
+                    provider_name="banco-sintetico",
+                ),
+                raw_fields={"source_kind": "ledger_transaction"},
+            ),
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+        },
+    )
+    held = quarter.transactions.load()
+    quarter.transactions.save(
+        TransactionCatalogue.model_validate(
+            {**{t.transaction_id: t for t in held.values()}, movement.transaction_id: movement},
+        )
+    )
+    return movement.transaction_id
+
+
+def _settle_calculate_through_the_supervisor(
+    quarter: _Quarter,
+    secure_objects: SecureObjectRepository,
+    tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[OperationTerminalReceipt, OperationErrorDetailV1]:
+    """Submit the production calculate definition to a real supervisor and read its receipt and error detail."""
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET,
+        work_unit_repository=quarter.work_units,
+        calculation_repository=quarter.calculations,
+        bucket_event_repository=quarter.events,
+        transaction_repository=quarter.transactions,
+        invoice_repository=quarter.invoices,
+    ) as ports:
+        definition = build_modelo_work_calculate_definition(
+            calculation_action_ports_factory=lambda **_composition: ports,
+            attachment_store_factory=lambda _bucket_id: AttachmentStore(),
+        )
+        registration = build_modelo_work_calculate_registration(definition)
+        supervisor, projections = supervisor_with_projections(
+            tmp_path=tmp_path,
+            profile_objects=secure_objects,
+            authority_operation=operation,
+            registry=OperationRegistry(definitions=(definition,), public_registrations=(registration,)),
+        )
+        request = OperationRequest[BaseModel](
+            definition_id=MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+            subject_ref=quarter.work_unit.work_unit_id,
+            payload=ModeloWorkCalculateRequest(
+                work_unit_id=quarter.work_unit.work_unit_id,
+                actor="operator-A",
+                ordinary_m303_filing_evidence=ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
+                    joint_return_elected=False
+                ),
+            ),
+        )
+        return asyncio.run(
+            settle_to_error_detail(
+                supervisor,
+                projections,
+                request,
+                definition_contract_digest=registration.contract.definition_contract_digest,
+            )
+        )
+
+
+@pytest.mark.parametrize("blocking", ["unclassified_movement", "deduction_family_unresolved"])
+def test_a_blocked_ledger_settles_the_calculate_operation_refused_with_the_door_to_its_movement(
+    blocking: str,
+    secure_objects: SecureObjectRepository,
+    tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """APP-QA D44 saw the quarter's calculate settle FAILED on ERROR_MODELO_AGGREGATION_BINDING with effect unknown.
+
+    A movement the ledger cannot yet use is the person's to correct, so the
+    supervisor settles the operation REFUSED on the ledger refusal's code, with
+    nothing written, and the served detail names the movement and opens it.
+    """
+    if blocking == "unclassified_movement":
+        quarter = _seed_linked_quarter(secure_objects, operation=operation)
+        held = _with_unclassified_movement(quarter)
+    else:
+        quarter = _seed_linked_quarter(secure_objects, operation=operation, received=(*_RECEIVED, _EQUIPMENT))
+        held = quarter.movement_by_invoice[_EQUIPMENT[0]]
+
+    receipt, detail = _settle_calculate_through_the_supervisor(quarter, secure_objects, tmp_path, operation=operation)
+
+    refusal = get_registered_error_code(ModeloLedgerPreflightBlockedError)
+    assert receipt.condition is OperationTerminalCondition.REFUSED
+    assert receipt.refusal_ref == refusal.code
+    assert receipt.failure_error_code is None
+    assert receipt.effect is OperationEffect.NONE
+    assert detail.kind is OperationErrorDetailKind.REGISTERED_ERROR
+    assert detail.error_code == refusal.code
+    assert isinstance(detail.next_step, OperationOpenMovementStepV1)
+    assert detail.next_step.transaction_id == held
+    assert detail.refusal_words is not None
+    assert held not in detail.refusal_words
     assert not quarter.calculations.load(operation=operation).revisions
