@@ -23,8 +23,6 @@ from ...application.ports import (
     UnreadableLocalModelList,
 )
 from ...domain.record import (
-    DEFAULT_LOCAL_ENGINE,
-    DEFAULT_LOCAL_PLACEMENT,
     LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
     ListedModel,
     LocalEngine,
@@ -124,7 +122,7 @@ def _store(records: _Records) -> SecureLocalModelListStore:
 
 def _record(
     *models: ListedModel,
-    engine: LocalEngine = LocalEngine.OLLAMA,
+    engine: LocalEngine | None = LocalEngine.OLLAMA,
     placement: LocalPlacement = LocalPlacement.AUTO,
 ) -> LocalModelListRecord:
     return LocalModelListRecord(
@@ -216,7 +214,7 @@ def test_a_stored_per_role_record_reads_as_the_models_it_chose_without_being_rew
     assert records.rows[LOCAL_MODEL_LIST_KEY] == ("a" * 64, stored)
 
 
-def test_a_stored_model_list_record_without_an_engine_setting_reads_with_the_defaults_without_being_rewritten() -> None:
+def test_a_stored_model_list_record_without_an_engine_setting_reads_as_unchosen_without_being_rewritten() -> None:
     records = _Records()
     stored = _model_list_v2()
     records.rows[LOCAL_MODEL_LIST_KEY] = ("a" * 64, stored)
@@ -230,7 +228,7 @@ def test_a_stored_model_list_record_without_an_engine_setting_reads_with_the_def
     assert read.record.reading == _OTHER
     assert read.record.generation == "d" * 64
     assert read.record.updated_at == datetime(2026, 10, 26, 9, 0, tzinfo=UTC)
-    assert (read.record.engine, read.record.placement) == (DEFAULT_LOCAL_ENGINE, DEFAULT_LOCAL_PLACEMENT)
+    assert (read.record.engine, read.record.placement) == (None, None)
     assert records.rows[LOCAL_MODEL_LIST_KEY] == ("a" * 64, stored)
 
 
@@ -241,11 +239,11 @@ def test_a_stored_model_list_record_without_a_reading_model_keeps_none_when_migr
     assert parsed.models == (_ADDED,)
 
 
-def test_a_migrated_per_role_record_carries_the_default_engine_and_placement() -> None:
+def test_a_migrated_per_role_record_carries_no_engine_choice() -> None:
     parsed = parse_local_model_list_record(_role_choices(("text_extraction", "local_api", "custom-text:1")))
 
     assert parsed.schema_version == LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION
-    assert (parsed.engine, parsed.placement) == (DEFAULT_LOCAL_ENGINE, DEFAULT_LOCAL_PLACEMENT)
+    assert (parsed.engine, parsed.placement) == (None, None)
 
 
 def test_the_engine_setting_round_trips_through_the_document_and_the_store() -> None:

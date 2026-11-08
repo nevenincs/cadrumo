@@ -267,7 +267,7 @@ def test_choosing_the_local_engine_retires_the_running_agent_and_schedules_its_r
     try:
         assert service.admin("local_engine") == {
             "unreadable": False,
-            "engine": "ollama",
+            "engine": "llamacpp",
             "placement": "auto",
             "revision": ABSENT_SECURE_OBJECT_REVISION_ID,
         }
@@ -304,20 +304,23 @@ def test_choosing_the_local_engine_retires_the_running_agent_and_schedules_its_r
         service._ownership.close()
 
 
-def test_choosing_the_stored_local_engine_setting_again_leaves_the_running_agent_alone(tmp_path: Path) -> None:
+def test_choosing_the_setting_the_agent_already_runs_under_leaves_the_running_agent_alone(tmp_path: Path) -> None:
     service, events, grandchild = _running_service(tmp_path, _CredentialSource())
-    _with_memory_model_list(service)
+    store = _with_memory_model_list(service)
     controller = service._controller
     assert controller is not None
     try:
+        # An unchosen profile already runs under llama.cpp with automatic
+        # placement: storing that as the person's choice changes no engine.
         answer = service.admin(
             "local_engine_choose",
-            engine="ollama",
+            engine="llamacpp",
             placement="auto",
             expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID,
         )
 
-        assert answer["revision"] == ABSENT_SECURE_OBJECT_REVISION_ID
+        assert store.stored is not None
+        assert answer["revision"] == store.stored.revision
         assert service._start_thread is None
         assert controller.superseded() is False
         assert controller.published() is not None

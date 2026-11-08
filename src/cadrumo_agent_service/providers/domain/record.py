@@ -198,8 +198,8 @@ class LocalPlacement(StrEnum):
     CPU_ONLY = "cpu_only"
 
 
-DEFAULT_LOCAL_ENGINE: Final[LocalEngine] = LocalEngine.OLLAMA
-"""The engine an absent or earlier record means, until the bundled engine becomes the default."""
+DEFAULT_LOCAL_ENGINE: Final[LocalEngine] = LocalEngine.LLAMACPP
+"""The engine a profile runs while the person has chosen none: the one the package carries."""
 
 DEFAULT_LOCAL_PLACEMENT: Final[LocalPlacement] = LocalPlacement.AUTO
 
@@ -222,7 +222,9 @@ class LocalModelListRecord(BaseModel):
     are not stored here; a model the record does not name was not added.
     ``reading`` is the lane and model the person selected in the agent's model
     picker, on any lane, local or not; ``None`` when none is stored.
-    ``engine`` and ``placement`` are the local engine setting.
+    ``engine`` and ``placement`` are the local engine setting as the person
+    chose it; ``None`` where the person chose none, which reads as the default
+    and follows a later default.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -230,8 +232,8 @@ class LocalModelListRecord(BaseModel):
     schema_version: Literal[3]
     models: tuple[ListedModel, ...] = Field(max_length=LOCAL_MODEL_LIST_MAX_MODELS)
     reading: ListedModel | None = None
-    engine: LocalEngine
-    placement: LocalPlacement
+    engine: LocalEngine | None = None
+    placement: LocalPlacement | None = None
     generation: Hex64Str
     updated_at: UtcInstant
 
@@ -290,8 +292,8 @@ def local_model_list_record_document(record: LocalModelListRecord) -> bytes:
 def parse_local_model_list_record(payload: bytes) -> LocalModelListRecord:
     """Parse at-rest JSON back into a model list record.
 
-    A schema version 2 record holds no local engine setting; it is read with
-    the default engine and placement, which is what it meant when stored.
+    A schema version 2 record holds no local engine setting: the person chose
+    none, so it is read with none chosen.
 
     A schema version 1 record names a lane and a model per role. Each model it
     names is one the person chose, so it is read as a model on that lane's
@@ -320,8 +322,6 @@ def parse_local_model_list_record(payload: bytes) -> LocalModelListRecord:
             schema_version=LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
             models=listed_record.models,
             reading=listed_record.reading,
-            engine=DEFAULT_LOCAL_ENGINE,
-            placement=DEFAULT_LOCAL_PLACEMENT,
             generation=listed_record.generation,
             updated_at=listed_record.updated_at,
         )
@@ -332,8 +332,6 @@ def parse_local_model_list_record(payload: bytes) -> LocalModelListRecord:
     return LocalModelListRecord(
         schema_version=LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
         models=tuple(listed.values()),
-        engine=DEFAULT_LOCAL_ENGINE,
-        placement=DEFAULT_LOCAL_PLACEMENT,
         generation=earlier.generation,
         updated_at=earlier.updated_at,
     )

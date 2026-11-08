@@ -268,7 +268,7 @@ export function fixtureAgent({
   let engine: {
     engine: AgentLocalEngineToken;
     placement: AgentLocalPlacement;
-  } = { engine: "ollama", placement: "auto" };
+  } = { engine: "llamacpp", placement: "auto" };
   const engineSnapshot = (): AgentLocalEngine => ({
     state: "readable",
     ...engine,

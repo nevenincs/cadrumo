@@ -181,10 +181,12 @@ class LocalModelListService:
     def choose_engine(
         self, engine: LocalEngine, placement: LocalPlacement, *, expected_revision: str
     ) -> LocalEngineResult:
-        """Store ``engine`` and ``placement`` as the local engine setting.
+        """Store ``engine`` and ``placement`` as the local engine setting the person chose.
 
         The added models and the reading model are kept as stored. Storing
-        the setting already stored answers it unchanged.
+        the setting already stored answers it unchanged; storing the setting
+        an unchosen record reads as makes it the person's choice, so a later
+        default does not change it.
         """
         current = self._current(expected_revision)
         if isinstance(current, ProviderSettingsRefusal):
@@ -241,7 +243,7 @@ class LocalModelListService:
         self,
         models: tuple[ListedModel, ...],
         reading: ListedModel | None,
-        setting: tuple[LocalEngine, LocalPlacement],
+        setting: tuple[LocalEngine | None, LocalPlacement | None],
         expected_revision: str,
     ) -> StoredLocalModelList | ProviderSettingsRefusal:
         engine, placement = setting
@@ -286,18 +288,27 @@ def _reading_of(record: LocalModelListRecord | None) -> ListedModel | None:
     return None if record is None else record.reading
 
 
-def _setting_of(record: LocalModelListRecord | None) -> tuple[LocalEngine, LocalPlacement]:
-    """Return the record's local engine setting; an absent record means the defaults."""
+def _setting_of(record: LocalModelListRecord | None) -> tuple[LocalEngine | None, LocalPlacement | None]:
+    """Return the local engine setting as the person chose it; ``None`` where none was chosen."""
     if record is None:
-        return DEFAULT_LOCAL_ENGINE, DEFAULT_LOCAL_PLACEMENT
+        return None, None
     return record.engine, record.placement
+
+
+def _resolved(record: LocalModelListRecord | None) -> tuple[LocalEngine, LocalPlacement]:
+    """Return the setting a profile runs under: the person's choice, else the default."""
+    engine, placement = _setting_of(record)
+    return (
+        DEFAULT_LOCAL_ENGINE if engine is None else engine,
+        DEFAULT_LOCAL_PLACEMENT if placement is None else placement,
+    )
 
 
 def _engine_status(read: LocalModelListRead) -> LocalEngineStatus:
     """Project a list read onto its local engine setting; an unreadable record names none."""
     if isinstance(read, UnreadableLocalModelList):
         return LocalEngineStatus(unreadable=True, engine=None, placement=None, revision=read.revision)
-    engine, placement = _setting_of(read.record if isinstance(read, StoredLocalModelList) else None)
+    engine, placement = _resolved(read.record if isinstance(read, StoredLocalModelList) else None)
     return LocalEngineStatus(unreadable=False, engine=engine, placement=placement, revision=_list_revision(read))
 
 

@@ -18,7 +18,6 @@ from cadrumo_client.contracts.model_runs import (
 from ...domain.catalog import BackgroundOption
 from ...domain.record import (
     DEFAULT_LOCAL_ENGINE,
-    DEFAULT_LOCAL_PLACEMENT,
     LOCAL_MODEL_LIST_MAX_MODELS,
     LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
     ListedModel,
@@ -77,8 +76,8 @@ def _put(
     store: MemoryLocalModelListStore,
     *models: tuple[str, str],
     reading: ListedModel | None = None,
-    engine: LocalEngine = LocalEngine.OLLAMA,
-    placement: LocalPlacement = LocalPlacement.AUTO,
+    engine: LocalEngine | None = None,
+    placement: LocalPlacement | None = None,
 ) -> str:
     record = LocalModelListRecord(
         schema_version=LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
@@ -361,13 +360,38 @@ def _engine(result: LocalEngineStatus | ProviderSettingsRefusal) -> LocalEngineS
     return result
 
 
-def test_a_fresh_profile_reads_the_default_engine_and_placement_at_the_absent_revision() -> None:
+def test_a_fresh_profile_reads_the_bundled_llamacpp_engine_with_automatic_placement() -> None:
     assert _service(MemoryLocalModelListStore()).engine_status() == LocalEngineStatus(
         unreadable=False,
-        engine=DEFAULT_LOCAL_ENGINE,
-        placement=DEFAULT_LOCAL_PLACEMENT,
+        engine=LocalEngine.LLAMACPP,
+        placement=LocalPlacement.AUTO,
         revision=ABSENT_SECURE_OBJECT_REVISION_ID,
     )
+
+
+def test_a_record_written_without_an_engine_choice_stays_unchosen_and_reads_as_llamacpp() -> None:
+    store = MemoryLocalModelListStore()
+    service = _service(store)
+
+    added = _status(service.add(KEYLESS_LANE, model=_ADDED, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID))
+
+    assert store.stored is not None
+    assert (store.stored.record.engine, store.stored.record.placement) == (None, None)
+    setting = _engine(service.engine_status())
+    assert (setting.engine, setting.placement) == (LocalEngine.LLAMACPP, LocalPlacement.AUTO)
+    assert setting.revision == added.revision
+
+
+def test_a_stored_ollama_choice_is_kept_through_list_changes() -> None:
+    store = MemoryLocalModelListStore()
+    revision = _put(store, engine=LocalEngine.OLLAMA, placement=LocalPlacement.AUTO)
+    service = _service(store)
+
+    added = _status(service.add(KEYLESS_LANE, model=_ADDED, expected_revision=revision))
+    _status(service.remove(KEYLESS_LANE, model=_ADDED, expected_revision=added.revision))
+
+    kept = _engine(service.engine_status())
+    assert (kept.engine, kept.placement) == (LocalEngine.OLLAMA, LocalPlacement.AUTO)
 
 
 def test_choosing_the_engine_stores_it_with_its_placement_and_reads_back() -> None:
@@ -429,17 +453,19 @@ def test_choosing_the_stored_engine_setting_again_writes_nothing() -> None:
     assert store.stored is stored
 
 
-def test_choosing_the_default_setting_on_a_fresh_profile_writes_nothing() -> None:
+def test_choosing_the_setting_an_unchosen_profile_reads_stores_it_as_the_person_s_choice() -> None:
     store = MemoryLocalModelListStore()
 
-    unchanged = _engine(
+    chosen = _engine(
         _service(store).choose_engine(
-            DEFAULT_LOCAL_ENGINE, DEFAULT_LOCAL_PLACEMENT, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+            LocalEngine.LLAMACPP, LocalPlacement.AUTO, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
         )
     )
 
-    assert unchanged.revision == ABSENT_SECURE_OBJECT_REVISION_ID
-    assert store.stored is None
+    assert (chosen.engine, chosen.placement) == (LocalEngine.LLAMACPP, LocalPlacement.AUTO)
+    assert chosen.revision != ABSENT_SECURE_OBJECT_REVISION_ID
+    assert store.stored is not None
+    assert (store.stored.record.engine, store.stored.record.placement) == (LocalEngine.LLAMACPP, LocalPlacement.AUTO)
 
 
 def test_choosing_the_engine_against_a_stale_revision_is_refused_and_changes_nothing() -> None:

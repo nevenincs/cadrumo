@@ -423,11 +423,18 @@ class AgentServiceAdministration(ABC):
     ) -> dict[str, Any]:
         if engine is None or placement is None or expected_revision is None:
             return {"kind": "refused", "code": "invalid_request"}
+        before = self._local_models.engine_status()
         result = self._local_models.choose_engine(
             LocalEngine(engine), LocalPlacement(placement), expected_revision=expected_revision
         )
-        # A commit happens only for a setting other than the stored one, and moves the revision.
-        changed = isinstance(result, LocalEngineStatus) and result.revision != expected_revision
+        # The tree is replaced only when the setting it runs under changes,
+        # not when an unchosen default becomes the person's choice.
+        changed = (
+            isinstance(result, LocalEngineStatus)
+            and isinstance(before, LocalEngineStatus)
+            and result.revision != expected_revision
+            and (before.engine, before.placement) != (result.engine, result.placement)
+        )
         controller = self._controller
         if changed and controller is not None:
             # The setting moves no provider-settings generation: the tree it

@@ -46,14 +46,14 @@ const modelRows = (target: Page, provider: string) =>
 const calls = (target: Page) =>
   target.evaluate(() => window.__scenarioHostCalls ?? []);
 
-test("Ollama is the default and shows its lane alone", async ({
+test("the bundled llama.cpp is the default and shows its lane alone", async ({
   page: target,
 }) => {
   await open(target);
   await openSettings(target);
   await expect(
     engineGroup(target).getByRole("radio", {
-      name: label("desktop.providers.local_engine_ollama"),
+      name: label("desktop.providers.local_engine_llamacpp"),
     }),
   ).toBeChecked();
   await expect(
@@ -61,8 +61,8 @@ test("Ollama is the default and shows its lane alone", async ({
       name: label("desktop.providers.local_placement_auto"),
     }),
   ).toBeChecked();
-  await expect(modelRows(target, "ollama")).toHaveCount(1);
-  await expect(modelRows(target, "llamacpp")).toHaveCount(0);
+  await expect(modelRows(target, "llamacpp")).toHaveCount(1);
+  await expect(modelRows(target, "ollama")).toHaveCount(0);
   await expect(
     settings(target).getByText(
       label("desktop.providers.local_engine_restarts"),
@@ -70,7 +70,7 @@ test("Ollama is the default and shows its lane alone", async ({
   ).toBeVisible();
 });
 
-test("choosing llama.cpp stores it at the revision read and shows its lane", async ({
+test("choosing Ollama stores it at the revision read and shows its lane", async ({
   page: target,
 }) => {
   await open(target);
@@ -81,17 +81,17 @@ test("choosing llama.cpp stores it at the revision read and shows its lane", asy
   });
   await engineGroup(target)
     .getByRole("radio", {
-      name: label("desktop.providers.local_engine_llamacpp"),
+      name: label("desktop.providers.local_engine_ollama"),
     })
     .click();
-  await expect(modelRows(target, "llamacpp")).toHaveCount(1);
-  await expect(modelRows(target, "ollama")).toHaveCount(0);
+  await expect(modelRows(target, "ollama")).toHaveCount(1);
+  await expect(modelRows(target, "llamacpp")).toHaveCount(0);
   expect(await calls(target)).toContain(
-    `agentLocalEngineChoose llamacpp auto ${read}`,
+    `agentLocalEngineChoose ollama auto ${read}`,
   );
   await expect(
     engineGroup(target).getByRole("radio", {
-      name: label("desktop.providers.local_engine_llamacpp"),
+      name: label("desktop.providers.local_engine_ollama"),
     }),
   ).toBeChecked();
 });
@@ -113,7 +113,7 @@ test("the placement switches to the processor alone", async ({
   ).toBeChecked();
   expect(
     (await calls(target)).some((call) =>
-      call.startsWith("agentLocalEngineChoose ollama cpu_only "),
+      call.startsWith("agentLocalEngineChoose llamacpp cpu_only "),
     ),
   ).toBe(true);
 });
@@ -132,7 +132,7 @@ test("a change made first refuses the choice with its word", async ({
   });
   await engineGroup(target)
     .getByRole("radio", {
-      name: label("desktop.providers.local_engine_llamacpp"),
+      name: label("desktop.providers.local_engine_ollama"),
     })
     .click();
   await expect(
