@@ -61,7 +61,12 @@ use std::{
 /// The manifest media type a pull asks the registry for.
 pub const MANIFEST_MEDIA_TYPE: &str = "application/vnd.docker.distribution.manifest.v2+json";
 
-/// The storage hosts the default registry redirects a blob request to.
+/// The storage hosts the default registry redirects a blob request to. On 2026-11-08 a
+/// `GET` of a layer blob of `library/qwen3:1.7b` (config, model, template) and of a
+/// `library/llama3.2:1b` layer each answered `307 Temporary Redirect` to this one host, in
+/// one hop with a signed query; a `Range` request there answered `206` with an exact
+/// `Content-Range`. A host the registry moves blobs to is refused as blocked until it is
+/// added here.
 const DEFAULT_REGISTRY_BLOB_HOSTS: &[&str] =
     &["dd20bb891979d25aebc8bec07b2b3bbc.r2.cloudflarestorage.com"];
 
