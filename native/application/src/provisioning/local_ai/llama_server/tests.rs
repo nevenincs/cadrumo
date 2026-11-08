@@ -1067,7 +1067,7 @@ fn a_load_the_router_took_and_then_failed_reads_not_enough_memory() {
 }
 
 #[test]
-fn an_evicted_load_is_asked_for_again_and_reads_program_not_running_when_the_budget_ends() {
+fn an_evicted_load_is_asked_for_again_and_reads_memory_busy_when_the_budget_ends() {
     let root = tempfile::tempdir().unwrap();
     let folder = root.path().join(FOLDER);
     let fake = FakeLlamaCpp::start(BUILD_INFO);
@@ -1085,12 +1085,13 @@ fn an_evicted_load_is_asked_for_again_and_reads_program_not_running_when_the_bud
 
     // The router answers the load and lists the entry unloaded with no failed flag: another
     // caller's load took the router's one place. That is no memory failure: the check asks
-    // again until its budget is spent, and then the router reads as not running.
+    // again until its budget is spent, and then reads the router's memory as taken by
+    // another model: the router itself runs and answers.
     fake.state.lock().unwrap().load_evicted = true;
     let started = Instant::now();
     assert_eq!(
         failure_category(check(&folder, &model, Duration::from_millis(900))),
-        FailureCategory::ProgramNotRunning
+        FailureCategory::MemoryBusy
     );
     assert!(started.elapsed() >= Duration::from_millis(900));
     assert!(started.elapsed() < Duration::from_secs(10));
