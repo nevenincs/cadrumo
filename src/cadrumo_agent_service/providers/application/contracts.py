@@ -200,13 +200,16 @@ class LocalEngineStatus(OutputSchema):
     """The local engine setting: the engine that runs models on this computer and where it runs them.
 
     It is kept in the model list record, so ``revision`` is that record's
-    guard and a change to either sends it back. An absent record reads as the
-    default engine and placement. ``unreadable`` means the stored record
+    guard and a change to either sends it back. An absent record, or one
+    holding no choice, reads as the default engine and placement with
+    ``chosen`` false; ``chosen`` is true only for a setting the person stored,
+    which the default never overrules. ``unreadable`` means the stored record
     cannot be read: then no engine or placement is known and none is
     assumed, and ``revision`` guards the reset that removes the record.
     """
 
     unreadable: bool
+    chosen: bool
     engine: LocalEngine | None
     placement: LocalPlacement | None
     revision: ProviderSettingsRevision
@@ -216,6 +219,8 @@ class LocalEngineStatus(OutputSchema):
     def _setting_follows_readability(self) -> Self:
         if self.unreadable != (self.engine is None) or self.unreadable != (self.placement is None):
             raise ValueError("an unreadable record names no engine or placement, and a readable one names both")
+        if self.unreadable and self.chosen:
+            raise ValueError("an unreadable record holds no choice")
         return self
 
 

@@ -370,6 +370,7 @@ def _engine(result: LocalEngineStatus | ProviderSettingsRefusal) -> LocalEngineS
 def test_a_fresh_profile_reads_the_bundled_llamacpp_engine_with_automatic_placement() -> None:
     assert _service(MemoryLocalModelListStore()).engine_status() == LocalEngineStatus(
         unreadable=False,
+        chosen=False,
         engine=LocalEngine.LLAMACPP,
         placement=LocalPlacement.AUTO,
         revision=ABSENT_SECURE_OBJECT_REVISION_ID,
@@ -385,7 +386,7 @@ def test_a_record_written_without_an_engine_choice_stays_unchosen_and_reads_as_l
     assert store.stored is not None
     assert (store.stored.record.engine, store.stored.record.placement) == (None, None)
     setting = _engine(service.engine_status())
-    assert (setting.engine, setting.placement) == (LocalEngine.LLAMACPP, LocalPlacement.AUTO)
+    assert (setting.chosen, setting.engine, setting.placement) == (False, LocalEngine.LLAMACPP, LocalPlacement.AUTO)
     assert setting.revision == added.revision
 
 
@@ -393,7 +394,7 @@ def test_a_record_written_without_an_engine_choice_stays_unchosen_and_reads_as_l
 def test_a_fresh_profile_reads_the_engine_the_package_defaults_to(default: LocalEngine) -> None:
     setting = _engine(_service(MemoryLocalModelListStore(), default).engine_status())
 
-    assert (setting.engine, setting.placement) == (default, LocalPlacement.AUTO)
+    assert (setting.chosen, setting.engine, setting.placement) == (False, default, LocalPlacement.AUTO)
     assert setting.revision == ABSENT_SECURE_OBJECT_REVISION_ID
 
 
@@ -405,7 +406,12 @@ def test_an_unchosen_stored_record_reads_as_the_package_default_and_stays_unchos
 
     setting = _engine(service.engine_status())
 
-    assert (setting.engine, setting.placement, setting.revision) == (default, LocalPlacement.AUTO, revision)
+    assert (setting.chosen, setting.engine, setting.placement, setting.revision) == (
+        False,
+        default,
+        LocalPlacement.AUTO,
+        revision,
+    )
     assert store.stored is not None
     assert (store.stored.record.engine, store.stored.record.placement) == (None, None)
 
@@ -416,7 +422,7 @@ def test_a_stored_llamacpp_choice_is_not_overruled_by_an_ollama_package_default(
 
     setting = _engine(_service(store, LocalEngine.OLLAMA).engine_status())
 
-    assert (setting.engine, setting.placement) == (LocalEngine.LLAMACPP, LocalPlacement.AUTO)
+    assert (setting.chosen, setting.engine, setting.placement) == (True, LocalEngine.LLAMACPP, LocalPlacement.AUTO)
 
 
 def test_a_stored_ollama_choice_is_kept_through_list_changes() -> None:
@@ -499,7 +505,7 @@ def test_choosing_the_setting_an_unchosen_profile_reads_stores_it_as_the_person_
         )
     )
 
-    assert (chosen.engine, chosen.placement) == (LocalEngine.LLAMACPP, LocalPlacement.AUTO)
+    assert (chosen.chosen, chosen.engine, chosen.placement) == (True, LocalEngine.LLAMACPP, LocalPlacement.AUTO)
     assert chosen.revision != ABSENT_SECURE_OBJECT_REVISION_ID
     assert store.stored is not None
     assert (store.stored.record.engine, store.stored.record.placement) == (LocalEngine.LLAMACPP, LocalPlacement.AUTO)
@@ -522,7 +528,9 @@ def test_an_unreadable_record_names_no_engine_and_refuses_choosing_one() -> None
     store.unreadable = "d" * 64
     service = _service(store)
 
-    assert service.engine_status() == LocalEngineStatus(unreadable=True, engine=None, placement=None, revision="d" * 64)
+    assert service.engine_status() == LocalEngineStatus(
+        unreadable=True, chosen=False, engine=None, placement=None, revision="d" * 64
+    )
     refused = service.choose_engine(LocalEngine.LLAMACPP, LocalPlacement.AUTO, expected_revision="d" * 64)
     assert refused == _refused(ProviderSettingsRefusalCode.UNKNOWN)
     assert store.unreadable == "d" * 64
@@ -546,8 +554,10 @@ def test_a_profile_that_is_not_signed_in_refuses_the_engine_read_and_change() ->
 def test_an_engine_status_names_an_engine_and_placement_exactly_when_the_record_is_readable() -> None:
     revision = ABSENT_SECURE_OBJECT_REVISION_ID
     with pytest.raises(ValueError, match="engine"):
-        LocalEngineStatus(unreadable=True, engine=LocalEngine.OLLAMA, placement=None, revision=revision)
+        LocalEngineStatus(unreadable=True, chosen=False, engine=LocalEngine.OLLAMA, placement=None, revision=revision)
     with pytest.raises(ValueError, match="engine"):
-        LocalEngineStatus(unreadable=False, engine=None, placement=None, revision=revision)
+        LocalEngineStatus(unreadable=False, chosen=False, engine=None, placement=None, revision=revision)
     with pytest.raises(ValueError, match="engine"):
-        LocalEngineStatus(unreadable=False, engine=LocalEngine.OLLAMA, placement=None, revision=revision)
+        LocalEngineStatus(unreadable=False, chosen=False, engine=LocalEngine.OLLAMA, placement=None, revision=revision)
+    with pytest.raises(ValueError, match="choice"):
+        LocalEngineStatus(unreadable=True, chosen=True, engine=None, placement=None, revision=revision)

@@ -315,9 +315,16 @@ def _resolved(record: LocalModelListRecord | None, default_engine: LocalEngine) 
 def _engine_status(read: LocalModelListRead, default_engine: LocalEngine) -> LocalEngineStatus:
     """Project a list read onto its local engine setting; an unreadable record names none."""
     if isinstance(read, UnreadableLocalModelList):
-        return LocalEngineStatus(unreadable=True, engine=None, placement=None, revision=read.revision)
-    engine, placement = _resolved(read.record if isinstance(read, StoredLocalModelList) else None, default_engine)
-    return LocalEngineStatus(unreadable=False, engine=engine, placement=placement, revision=_list_revision(read))
+        return LocalEngineStatus(unreadable=True, chosen=False, engine=None, placement=None, revision=read.revision)
+    record = read.record if isinstance(read, StoredLocalModelList) else None
+    engine, placement = _resolved(record, default_engine)
+    return LocalEngineStatus(
+        unreadable=False,
+        chosen=_setting_of(record)[0] is not None,
+        engine=engine,
+        placement=placement,
+        revision=_list_revision(read),
+    )
 
 
 def _is_model_id(model: str) -> bool:

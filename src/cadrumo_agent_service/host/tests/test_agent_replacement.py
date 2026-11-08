@@ -271,6 +271,7 @@ def test_choosing_the_local_engine_retires_the_running_agent_and_schedules_its_r
     try:
         assert service.admin("local_engine") == {
             "unreadable": False,
+            "chosen": False,
             "engine": "llamacpp",
             "placement": "auto",
             "revision": ABSENT_SECURE_OBJECT_REVISION_ID,
@@ -287,6 +288,7 @@ def test_choosing_the_local_engine_retires_the_running_agent_and_schedules_its_r
         assert store.stored is not None
         assert answer == {
             "unreadable": False,
+            "chosen": True,
             "engine": "llamacpp",
             "placement": "cpu_only",
             "revision": store.stored.revision,
