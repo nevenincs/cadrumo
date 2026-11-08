@@ -45,6 +45,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...domain.iva.refund_eligibility import RefundEligibility, RefundEligibilityOutcome
 from .value_presentation import format_casilla_value
 from .work_form_declaration_facts import AMOUNTLESS_RESULT_DIRECTIONS, ModeloFormResultDirection
 from .work_form_findings import ModeloFormAttention
@@ -71,6 +72,13 @@ _MISSING_ELSEWHERE_LOCALE_KEY: Final[str] = "workspace.modelo.todo.elsewhere"
 _CHOICE_PENDING_LOCALE_KEY: Final[str] = "workspace.modelo.header.result.choice_pending"
 _CHOICE_PENDING_SHORT_LOCALE_KEY: Final[str] = "workspace.modelo.header.result.choice_pending_short"
 _SIGN_HELP_LOCALE_KEY: Final[str] = "workspace.modelo.header.result.sign_help"
+_REFUND_ELIGIBILITY_LOCALE_KEYS: Final[Mapping[RefundEligibilityOutcome, str]] = MappingProxyType(
+    {
+        RefundEligibilityOutcome.CARRY_FORWARD_ONLY: "workspace.modelo.header.result.carry_forward_only_help",
+        RefundEligibilityOutcome.UNDETERMINED_REDEME_UNSTATED: ("workspace.modelo.header.result.redeme_unstated_help"),
+    }
+)
+"""Why a negative IVA result cannot be asked back in this period, for each outcome that withholds it."""
 _NOT_APPLICABLE_VALUE_LOCALE_KEY: Final[str] = "workspace.modelo.value.not_applicable"
 
 _DIRECTION_LOCALE_KEYS: Final[Mapping[ModeloFormResultDirection, str]] = MappingProxyType(
@@ -430,6 +438,7 @@ class _SelectedResult:
     direction: ModeloFormResultDirection
     settles: bool
     election_may_change: bool
+    refund_eligibility: RefundEligibility | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -472,6 +481,7 @@ def _selected_result(form: ModeloWorkForm) -> _SelectedResult | None:
         direction=result.direction if result is not None else ModeloFormResultDirection.UNKNOWN,
         settles=result is not None,
         election_may_change=result is not None and result.election_may_change,
+        refund_eligibility=None if result is None else result.refund_eligibility,
     )
 
 
@@ -543,6 +553,21 @@ def _directional_presentation(
     return _Presentation(full, short, words, amount)
 
 
+def _say_why_no_refund(selected: _SelectedResult, language: OutputLanguage, help_lines: list[str]) -> None:
+    """Say why this period's negative IVA result cannot be asked back, where it cannot.
+
+    The direction already states that the credit is carried forward; this adds
+    the reason, which is the only thing that tells a filer whether they are
+    waiting for the year's last period or owe Cadrumo the REDEME fact.
+    """
+    eligibility = selected.refund_eligibility
+    if eligibility is None:
+        return
+    key = _REFUND_ELIGIBILITY_LOCALE_KEYS.get(eligibility.outcome)
+    if key is not None:
+        help_lines.append(tr(key, locale=language.value))
+
+
 def _show_sign_help(selected: _SelectedResult, value: Decimal, presentation: _Presentation) -> bool:
     return (
         value < 0
@@ -563,6 +588,7 @@ def _stated(
         presentation = _choice_presentation(value, selected.box, language, help_lines)
     else:
         presentation = _directional_presentation(selected.direction, value, selected.box, language, help_lines)
+        _say_why_no_refund(selected, language, help_lines)
     if _show_sign_help(selected, value, presentation):
         help_lines.append(
             tr(_SIGN_HELP_LOCALE_KEY, box=selected.box, value=_money(value, language), locale=language.value)

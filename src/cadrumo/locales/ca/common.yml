@@ -9831,6 +9831,9 @@ workspace:
         la presentació (per confirmar: {count}).'
       election:
         amendment: Una autoliquidació rectificativa no es pot pagar en dos terminis.
+        carry_forward_only: La devolució només es pot demanar en l'últim període de
+          l'any, tret que estiguis inscrit en el registre de devolució mensual (REDEME).
+          Aquest saldo es compensa en els períodes següents.
         filing_window_unknown: No es coneix el termini de presentació d'aquesta declaració,
           així que no es pot oferir el pagament en dos terminis.
         no_open_account: Cap dels teus comptes bancaris propis no és obert. Afegeix-ne
@@ -9842,6 +9845,9 @@ workspace:
         nothing_to_refund: El resultat no és una devolució, així que això no s'aplica.
         past_filing_window: El termini de presentació ha acabat, i pagar en dos terminis
           exigeix presentar la declaració dins d'aquest termini.
+        redeme_unstated: Indica al teu perfil si estàs inscrit en el registre de devolució
+          mensual (REDEME). Fora de l'últim període de l'any la devolució en depèn,
+          així que només s'ofereix la compensació.
         result_unknown: 'Calcula abans la declaració: el seu resultat ho decideix.'
         second_instalment_nothing: Aquest import és tan petit que el segon termini
           quedaria a zero, així que es paga d'una sola vegada.
@@ -9995,6 +10001,8 @@ workspace:
       no_deadline_short: Termini no registrat
       own_calculation: Càlcul de Cadrumo. L'AEAT no l'ha vist.
       result:
+        carry_forward_only_help: La devolució només es pot demanar en l'últim període
+          de l'any. Aquest saldo al teu favor es compensa en els períodes següents.
         choice_pending: 'A compensar o a retornar: ho tries en generar el fitxer'
         choice_pending_short: A compensar o a retornar
         direction_unknown_help: Cadrumo encara no indica si aquest import és a ingressar
@@ -10007,6 +10015,10 @@ workspace:
         other_boxes: 'Altres caselles de resultat d''aquest model: {boxes}'
         out_of_date_until_applied: desactualitzat fins que ho apliquis
         provisional: provisional
+        redeme_unstated_help: Fora de l'últim període de l'any, demanar la devolució
+          exigeix estar inscrit en el registre de devolució mensual (REDEME). El teu
+          perfil no diu si ho estàs, així que només s'ofereix la compensació. Indica-ho
+          al teu perfil.
         sign_help: La casella [{box}] figura al model oficial com a {value}. A dalt
           es mostra l'import sense signe i el sentit en paraules.
         to_carry_forward: A compensar

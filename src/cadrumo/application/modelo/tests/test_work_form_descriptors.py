@@ -230,17 +230,24 @@ def test_a_result_not_calculated_yet_has_no_direction(operation: PinnedAuthority
     assert result.direction is ModeloFormResultDirection.UNKNOWN
 
 
-def test_a_modelo_303_credit_is_carried_forward_unless_a_refund_is_elected(
+def test_a_modelo_303_credit_is_carried_forward_in_a_first_quarter(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """ "C (solicitud de compensación)": a negative box 71 is carried; a refund election may still turn it into D."""
+    """ "C (solicitud de compensación)": a negative box 71 of a first quarter is carried, and nothing else.
+
+    A refund election could turn it into "D", but only where LIVA art. 115
+    admits one, which the first quarter does not for a filer who is not on the
+    Registro de devolución mensual. The election's own conditions are asserted
+    in ``test_m303_refund_election_words``; this form reads no profile, so the
+    inscription stays unstated here.
+    """
     result = _form(operation, "303", 2026, "1T", values={"71": Decimal("-420.00")}).result
 
     assert result is not None
     assert result.box == "71"
     assert result.direction is ModeloFormResultDirection.TO_CARRY_FORWARD
     assert result.disposition is ResultDisposition.COMPENSACION
-    assert result.election_may_change
+    assert not result.election_may_change
 
 
 def test_a_modelo_100_result_settles_by_its_declared_type(operation: PinnedAuthorityOperation) -> None:

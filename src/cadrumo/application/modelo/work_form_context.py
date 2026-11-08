@@ -18,6 +18,7 @@ from ...domain.calculations.registry.export_field_casilla import (
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
+from ...domain.iva.refund_eligibility import RedemeEnrolmentState
 from ...domain.modelos.calculation_revision import FILED_REVISION_STATES, CalculationRevision
 from .calculation_note_gate import NO_SOURCE_DISAGREEMENT_RESOLUTIONS, SourceDisagreementResolutions
 from .calculation_required_inputs import calculation_required_inputs
@@ -129,13 +130,19 @@ class WorkFormContext:
         element_names: Mapping[str, str] | None = None,
         known_truths: Mapping[BindingId, bool] | None = None,
         resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
+        redeme: RedemeEnrolmentState = RedemeEnrolmentState.UNSTATED,
     ) -> None:
         """Index one work review and its pinned revision for repeated form lookups.
 
         ``resolutions`` are the source disagreements the operator accepted, which
         the form's hold on filing lifts exactly as the gate does.
+
+        ``redeme`` is the filer's stated inscription in the Registro de
+        devolución mensual, which the settlement result needs to answer whether
+        a carried IVA credit may be elected as a refund in this period.
         """
         self.review = review
+        self.redeme = redeme
         self.resolutions = resolutions
         self.element_names: Mapping[str, str] = element_names or {}
         self.unworked = unworked_casilla_ids

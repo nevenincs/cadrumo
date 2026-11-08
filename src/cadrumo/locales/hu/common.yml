@@ -9789,6 +9789,9 @@ workspace:
         meg a feltételezett értékeket (megerősítendő: {count}).'
       election:
         amendment: Helyesbítő bevallást nem fizethetsz két részletben.
+        carry_forward_only: Visszatérítést csak az év utolsó időszakában kérhetsz,
+          kivéve ha szerepelsz a havi visszatérítési nyilvántartásban (REDEME). Ez
+          az egyenleg helyette a következő időszakokban kerül beszámításra.
         filing_window_unknown: Ennek a bevallásnak nem ismert a benyújtási határideje,
           ezért a két részletben fizetés nem ajánlható fel.
         no_open_account: Egyik saját bankszámlád sincs nyitva. Adj hozzá egyet a saját
@@ -9799,6 +9802,9 @@ workspace:
         nothing_to_refund: Az eredmény nem visszatérítés, így ez nem vonatkozik rá.
         past_filing_window: A benyújtási határidő lejárt, a két részletben fizetéshez
           pedig azon belül kell benyújtanod a bevallást.
+        redeme_unstated: Add meg a profilodban, hogy szerepelsz-e a havi visszatérítési
+          nyilvántartásban (REDEME). Az év utolsó időszakán kívül a visszatérítés
+          ettől függ, ezért csak a beszámítás érhető el.
         result_unknown: 'Előbb számold ki a bevallást: az eredménye dönt erről.'
         second_instalment_nothing: Ez az összeg olyan kicsi, hogy a második részlet
           nulla lenne, ezért egy összegben fizetendő.
@@ -9953,6 +9959,8 @@ workspace:
       no_deadline_short: Nincs nyilvántartott határidő
       own_calculation: A Cadrumo számítása; az AEAT még nem látta.
       result:
+        carry_forward_only_help: Visszatérítést csak az év utolsó időszakában kérhetsz.
+          Ez a javadra szóló egyenleg a következő időszakokban kerül beszámításra.
         choice_pending: 'Beszámítás vagy visszatérítés: a fájl létrehozásakor választ'
         choice_pending_short: Beszámítás vagy visszatérítés
         direction_unknown_help: A Cadrumo még nem jelzi, hogy ez az összeg fizetendő
@@ -9965,6 +9973,10 @@ workspace:
         other_boxes: 'A nyomtatvány további eredményrovatai: {boxes}'
         out_of_date_until_applied: elavult, amíg nem alkalmazod
         provisional: ideiglenes
+        redeme_unstated_help: Az év utolsó időszakán kívül a visszatérítés kéréséhez
+          szerepelned kell a havi visszatérítési nyilvántartásban (REDEME). A profilod
+          nem mondja meg, hogy szerepelsz-e, ezért csak a beszámítás érhető el. Add
+          meg a profilodban.
         sign_help: A(z) [{box}] rovat a hivatalos nyomtatványon {value} értéket mutat.
           A fejléc az összeget előjel nélkül mutatja, az irányt pedig szavakkal jelzi.
         to_carry_forward: Később beszámítható

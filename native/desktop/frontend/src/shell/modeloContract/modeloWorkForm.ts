@@ -363,7 +363,9 @@ export type ModeloFormElectionReason =
   | "no_open_account"
   | "no_spanish_account"
   | "settlement_unsupported"
-  | "second_instalment_nothing";
+  | "second_instalment_nothing"
+  | "carry_forward_only"
+  | "redeme_unstated";
 
 /**
  * Whether the filer can answer an election now.
@@ -1100,6 +1102,7 @@ export type PublicModeloFormResult = {
   direction: ModeloFormResultDirection;
   disposition: ResultDisposition | null;
   election_may_change: boolean;
+  refund_eligibility: PublicRefundEligibility | null;
 };
 
 /**
@@ -1204,6 +1207,20 @@ export type PublicModeloWorkFormLoadV1 = {
 };
 
 /**
+ * Typed local-human view of RefundEligibility: whether the IVA refund may be
+ * asked for, and why.
+ *
+ * `legal_refs` are the registry's declared references for the provisions the
+ * outcome rests on. A frontend renders the header's words; this carries the
+ * machine-readable outcome beside them so none of it is re-derived there.
+ */
+export type PublicRefundEligibility = {
+  outcome: RefundEligibilityOutcome;
+  basis: RefundEligibilityBasis;
+  legal_refs: string[];
+};
+
+/**
  * Preserve scalar kind and decimal precision across the public schema.
  */
 export type PublicScalarValueV1 = {
@@ -1229,6 +1246,18 @@ export type PublicSpanishTaxIdFormat = {
   cif_letter_only_kinds: string;
   cif_letter_table: string;
 };
+
+/**
+ * Which fact settled the outcome.
+ */
+export type RefundEligibilityBasis =
+  "final_period" | "redeme" | "non_final_period";
+
+/**
+ * What may be done with a negative Modelo 303 result in one period.
+ */
+export type RefundEligibilityOutcome =
+  "refund_allowed" | "carry_forward_only" | "undetermined_redeme_unstated";
 
 /**
  * How far one modelo registry revision's declared authority reaches.

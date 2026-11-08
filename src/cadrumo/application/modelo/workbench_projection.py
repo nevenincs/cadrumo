@@ -35,6 +35,7 @@ from ...domain.calculations.registry.schema_form_layouts import (
     FormPageCondition,
     FormUnplacedReason,
 )
+from ...domain.iva.refund_eligibility import RefundEligibilityBasis, RefundEligibilityOutcome
 from ...domain.modelos.verification_report import VerificationCompletenessStatus
 from ..operations.public_mirror import (
     PublicScalarValueV1,
@@ -139,6 +140,21 @@ class PublicModeloFormPrintedRate(BaseModel):
     literal: str
 
 
+class PublicRefundEligibility(BaseModel):
+    """Typed local-human view of RefundEligibility: whether the IVA refund may be asked for, and why.
+
+    ``legal_refs`` are the registry's declared references for the provisions the
+    outcome rests on. A frontend renders the header's words; this carries the
+    machine-readable outcome beside them so none of it is re-derived there.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    outcome: RefundEligibilityOutcome
+    basis: RefundEligibilityBasis
+    legal_refs: tuple[str, ...]
+
+
 class PublicModeloFormResult(BaseModel):
     """Typed local-human workbench view of ModeloFormResult; the value keeps its exact decimal text."""
 
@@ -150,6 +166,7 @@ class PublicModeloFormResult(BaseModel):
     direction: ModeloFormResultDirection
     disposition: ResultDisposition | None
     election_may_change: bool
+    refund_eligibility: PublicRefundEligibility | None
 
 
 class PublicModeloFormField(BaseModel):

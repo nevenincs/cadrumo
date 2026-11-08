@@ -35,6 +35,11 @@ from ...core.result_disposition import ResultDisposition
 from ...domain.calculations.registry.result_casillas import derive_result_disposition
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.filing.schema import ModeloValueKind
+from ...domain.iva.refund_eligibility import (
+    RedemeEnrolmentState,
+    RefundEligibility,
+    refund_eligibility_for_period,
+)
 from .settlement_casilla import declaration_result_casillas
 from .work_form_declaration_facts import ModeloFormResult, ModeloFormResultDirection
 from .work_review import ModeloWorkReviewCasilla
@@ -55,7 +60,13 @@ _DIRECTION_BY_DISPOSITION: Final[Mapping[ResultDisposition, ModeloFormResultDire
 """The direction each official "tipo de declaración" code states; total over the codes."""
 
 _ELECTABLE_DISPOSITIONS: Final[frozenset[ResultDisposition]] = frozenset({ResultDisposition.COMPENSACION})
-"""The codes a refund election at filing can still change: a carried IVA credit may be requested as a refund."""
+"""The codes a refund election at filing can still change: a carried IVA credit may be requested as a refund.
+
+Only the periodic IVA declaration derives ``C`` (every other modelo's closed
+code set in :mod:`cadrumo.core.result_disposition` settles a negative result as
+``B`` or ``N``), so this is exactly the LIVA art. 115 refund election and the
+eligibility gate below is the right one to ask about it.
+"""
 
 
 def _amount(row: ModeloWorkReviewCasilla) -> Decimal | None:
@@ -68,7 +79,11 @@ def _amount(row: ModeloWorkReviewCasilla) -> Decimal | None:
 
 
 def _declared_type_result(
-    modelo: str, result_ids: tuple[CasillaId, ...], values: Mapping[str, Decimal | None], period: Period
+    modelo: str,
+    result_ids: tuple[CasillaId, ...],
+    values: Mapping[str, Decimal | None],
+    period: Period,
+    redeme: RedemeEnrolmentState,
 ) -> ModeloFormResult | None:
     """The result by the modelo's declared "tipo de declaración" rule, over the result boxes this revision has."""
     if not _has_declared_result_value(result_ids, values):
@@ -81,14 +96,30 @@ def _declared_type_result(
     disposition = derive_result_disposition(modelo, known, period=period)
     value = sum(known.values(), Decimal("0"))
     direction = _declared_result_direction(disposition, value)
+    eligibility = _refund_eligibility(disposition, period, redeme)
     return ModeloFormResult(
         casilla_id=settling,
         box=None,
         value=value,
         direction=direction,
         disposition=disposition,
-        election_may_change=disposition in _ELECTABLE_DISPOSITIONS,
+        election_may_change=eligibility is not None and eligibility.refund_allowed,
+        refund_eligibility=eligibility,
     )
+
+
+def _refund_eligibility(
+    disposition: ResultDisposition | None, period: Period, redeme: RedemeEnrolmentState
+) -> RefundEligibility | None:
+    """Whether this result's carried credit may be elected as a refund, or ``None`` when none can be.
+
+    The question only arises for a carried IVA credit; every other code settles
+    with no election to make. The answer comes from the shared resolver, so the
+    words the form serves and the code the export writes cannot disagree.
+    """
+    if disposition not in _ELECTABLE_DISPOSITIONS:
+        return None
+    return refund_eligibility_for_period(period=period, redeme=redeme)
 
 
 def _has_declared_result_value(result_ids: tuple[CasillaId, ...], values: Mapping[str, Decimal | None]) -> bool:
@@ -119,12 +150,24 @@ def _declared_result_direction(disposition: ResultDisposition | None, value: Dec
 
 
 def settlement_result(
-    modelo: str, revision: ModeloRevision, rows: Mapping[str, ModeloWorkReviewCasilla], period: Period
+    modelo: str,
+    revision: ModeloRevision,
+    rows: Mapping[str, ModeloWorkReviewCasilla],
+    period: Period,
+    *,
+    redeme: RedemeEnrolmentState = RedemeEnrolmentState.UNSTATED,
 ) -> ModeloFormResult | None:
     """Return the settlement box of ``revision`` with its value and direction in ``period``, or ``None``.
 
     ``rows`` are the work review's rows by casilla id. The returned ``box`` is
     left for the caller, which knows where the form prints the casilla.
+
+    ``redeme`` is the filer's stated inscription in the Registro de devolución
+    mensual, which decides whether a carried IVA credit may be elected as a
+    refund outside the year's last period. It defaults to
+    :attr:`~cadrumo.domain.iva.refund_eligibility.RedemeEnrolmentState.UNSTATED`
+    so a caller that has not read the profile offers only what is certain
+    instead of assuming an answer.
 
     Raises:
         AmbiguousDeclarationResultError: The registry declares two final-result
@@ -134,17 +177,27 @@ def settlement_result(
         :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
             The registry declaration supplying casillas, formulas, bindings and layout metadata.
     """
-    return settlement_result_values(modelo, revision, {key: _amount(row) for key, row in rows.items()}, period)
+    return settlement_result_values(
+        modelo, revision, {key: _amount(row) for key, row in rows.items()}, period, redeme=redeme
+    )
 
 
 def settlement_result_values(
-    modelo: str, revision: ModeloRevision, values: Mapping[str, Decimal | None], period: Period
+    modelo: str,
+    revision: ModeloRevision,
+    values: Mapping[str, Decimal | None],
+    period: Period,
+    *,
+    redeme: RedemeEnrolmentState = RedemeEnrolmentState.UNSTATED,
 ) -> ModeloFormResult | None:
     """Read the same settlement contract from already-loaded calculation values.
 
     Portfolio summaries use this path without building a review or a full form.
     Missing settlement operands remain unknown, including a partially computed
     result split across several declared boxes.
+
+    ``redeme`` carries the same meaning and the same default as in
+    :func:`settlement_result`.
 
     See Also:
         :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
@@ -154,7 +207,7 @@ def settlement_result_values(
     if selected is None:
         return None
     if selected.by_declared_type:
-        return _declared_type_result(modelo, selected.casilla_ids, values, period)
+        return _declared_type_result(modelo, selected.casilla_ids, values, period, redeme)
     role_casilla = selected.casilla_ids[0]
     if role_casilla not in values:
         return None
