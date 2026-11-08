@@ -94,9 +94,9 @@ function readParams() {
       (skills) => skills === params.get("skills"),
     ),
     // How the service answers the agent's catalog.
-    agentCatalog: (["served", "busy", "declared", "unsupported"] as const).find(
-      (catalog) => catalog === params.get("catalog"),
-    ),
+    agentCatalog: (
+      ["served", "busy", "busy-past-ready", "declared", "unsupported"] as const
+    ).find((catalog) => catalog === params.get("catalog")),
     // The shape of the component setup.
     setup: SETUP_SHAPES.find((shape) => shape === params.get("setup")),
     // How the made-up ledger answers.
@@ -157,6 +157,9 @@ declare global {
         hook: typeof import("../components/browser/useSedeView");
       }>;
       catalogReadPolicy(): Promise<typeof import("../shell/catalogReadPolicy")>;
+      agentCatalog(): Promise<
+        typeof import("../components/agent/useAgentCatalog")
+      >;
       providerReads(): Promise<{
         settings: typeof import("../shell/providerSettings");
         views: typeof import("../shell/agentViews");
@@ -186,6 +189,7 @@ window.__scenarioModules = {
     hook: await import("../components/browser/useSedeView"),
   }),
   catalogReadPolicy: () => import("../shell/catalogReadPolicy"),
+  agentCatalog: () => import("../components/agent/useAgentCatalog"),
   providerReads: async () => ({
     settings: await import("../shell/providerSettings"),
     views: await import("../shell/agentViews"),

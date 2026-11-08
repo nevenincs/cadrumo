@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { createContext, useCallback, useEffect, useState } from "react";
 import { failureCode } from "../errors";
 import type { AgentLocalModels } from "../ipc/contract";
+import type { CatalogLane, LaneModel } from "./localModelLanes";
+import type { AskedModel } from "./provisioning";
 
 // The models the person added by name to the local lanes' model lists, read
 // from the agent service and changed there at the revision read. The agent's
@@ -22,6 +24,13 @@ export type LocalModelHost = {
   ) => Promise<AgentLocalModels>;
   reset: (expectedRevision: string) => Promise<AgentLocalModels>;
 };
+
+/** Where a model row that is showing the local AI's plan says so, to the
+ * element that would otherwise show the same plan on the program's row.
+ * Absent where no program row shares the screen with the model rows. */
+export const ReviewClaimContext = createContext<
+  ((held: boolean) => void) | null
+>(null);
 
 export type ListSnapshot =
   | { kind: "loading" }
@@ -100,4 +109,28 @@ export function useLocalModels(
     setReads((count) => count + 1);
   }, []);
   return { snapshot, retry, busy, outcomes, change };
+}
+
+/**
+ * Whether the local AI's plan awaiting an answer is for `lane`: the model
+ * asked for belongs to it, or, with nothing asked in this window as after a
+ * reload, the plan holds a part for one of its `models`.
+ */
+export function planIsFor({
+  lane,
+  models,
+  reviewed,
+  planned,
+}: {
+  lane: CatalogLane | null;
+  models: readonly LaneModel[];
+  /** The model asked for, while the plan holds a part for it. */
+  reviewed: AskedModel | null;
+  /** Whether the plan holds a part for a model. */
+  planned: (model: string) => boolean;
+}): boolean {
+  if (!lane) return false;
+  return reviewed !== null
+    ? reviewed.lane === lane.id
+    : models.some(({ id }) => planned(id));
 }

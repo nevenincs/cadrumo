@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
-  CATALOG_BUSY_RETRIES,
-  CATALOG_BUSY_PAUSE_MS,
+  catalogBusyPause,
   catalogReadBusy,
   catalogReadRetry,
 } from "../../shell/catalogReadPolicy";
@@ -67,6 +66,16 @@ export function useAgentCatalog({
   const ready = status?.state === "ready";
   const starting = status?.state === "starting";
   const [catalogRetry, setCatalogRetry] = useState(0);
+  // The status the service last published, the one the newest catalog read
+  // was asked under, and the pauses taken since a read was asked under it.
+  const published = useRef(status);
+  useLayoutEffect(() => {
+    published.current = status;
+  }, [status]);
+  const askedUnder = useRef(status);
+  const busyPauses = useRef(0);
+  // Whether a read is wanted, so a busy refusal is followed by another.
+  const reading = useRef(false);
   const catalogRequest = useMemo(
     () => ({ reader, ready, starting, session, retry: catalogRetry }),
     [reader, ready, starting, session, catalogRetry],
@@ -74,14 +83,25 @@ export function useAgentCatalog({
   const readCatalog = useMemo(() => {
     const { reader, ready, starting, session } = catalogRequest;
     return reader !== null && (ready || starting) && session
-      ? () =>
-          session.providerCatalog(
-            catalogReadRetry(
-              () => busyCatalogReads.current < CATALOG_BUSY_RETRIES,
-            ),
-          )
+      ? () => {
+          // A read asked under a newly published status starts its pauses
+          // afresh.
+          if (askedUnder.current !== published.current) {
+            askedUnder.current = published.current;
+            busyPauses.current = 0;
+          }
+          return session.providerCatalog(
+            catalogReadRetry(() => reading.current),
+          );
+        }
       : null;
   }, [catalogRequest]);
+  useLayoutEffect(() => {
+    reading.current = readCatalog !== null;
+    return () => {
+      reading.current = false;
+    };
+  }, [readCatalog]);
   // Setup and provider settings invalidate the catalog independently.
   const [catalogAgain, setCatalogAgain] = useState(0);
   // Reads asked for while the service was busy.
@@ -101,32 +121,37 @@ export function useAgentCatalog({
     () => (catalog.kind === "ready" ? catalogLanes(catalog.value) : []),
     [catalog],
   );
-  // A service still busy starting the agent answers the catalog late. The
-  // column says the agent is still starting and asks again at the service's
-  // next published status; a few reads, each after a longer pause, are the
-  // bounded fallback when it publishes none. A session the runtime keeps
+  // A service still busy starting the agent, or still busy just after it
+  // became ready, answers the catalog late. The column says the agent is
+  // still starting and asks again: at once when the service published a
+  // status after the busy read was asked, and otherwise after a pause that
+  // grows to a ceiling, until the service answers. A read the published
+  // status already caused is not repeated at once, so two reads never land
+  // back to back in the same busy moment. A session the runtime keeps
   // suspended is the same wait: it is not a sign-out and it comes back.
   const catalogBusy =
     catalog.kind === "failed" && catalogReadBusy(catalog.code);
-  const busyCatalogReads = useRef(0);
-  const statusAtBusyRead = useRef(status);
+  // The repeat stops when the catalog loads, when no read is wanted because
+  // the service reports it stopped or refused, or the profile is gone, and
+  // when the hook unmounts: each ends with the cleanup clearing the pending
+  // pause, and nothing schedules another. Only a newly published status or
+  // the person's retry asks again after that.
+  const followBusy = catalogBusy && readCatalog !== null;
   useEffect(() => {
-    if (catalog.kind === "ready") busyCatalogReads.current = 0;
-    if (!catalogBusy) return;
-    if (statusAtBusyRead.current !== status) {
-      statusAtBusyRead.current = status;
+    if (catalog.kind === "ready") busyPauses.current = 0;
+    if (!followBusy) return;
+    if (askedUnder.current !== status) {
       setBusyReads((count) => count + 1);
       return;
     }
-    if (busyCatalogReads.current >= CATALOG_BUSY_RETRIES) return;
-    const pause = CATALOG_BUSY_PAUSE_MS * 2 ** busyCatalogReads.current;
-    busyCatalogReads.current += 1;
+    const pause = catalogBusyPause(busyPauses.current);
+    busyPauses.current += 1;
     const again = window.setTimeout(
       () => setBusyReads((count) => count + 1),
       pause,
     );
     return () => window.clearTimeout(again);
-  }, [catalog, catalogBusy, status]);
+  }, [catalog, followBusy, status]);
   // What the next message runs with: what the person chose while this
   // conversation is shown, else what the conversation last ran with, else the
   // profile's last choice, each only where the catalog still offers it.
@@ -201,12 +226,10 @@ export function useAgentCatalog({
     offer,
     selection,
     remember,
-    /** Reads the catalog again after a failed read. The person asking again
-     * starts a fresh bounded budget of busy re-reads, so a service that stays
-     * busy is followed again instead of left after one read. */
+    /** Reads the catalog again after a failed read, at once, and starts the
+     * pauses before any busy re-read afresh. */
     retry: () => {
-      busyCatalogReads.current = 0;
-      statusAtBusyRead.current = status;
+      busyPauses.current = 0;
       setCatalogRetry((count) => count + 1);
     },
     /** Reads the catalog again: what this computer holds changed. */
