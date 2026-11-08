@@ -10035,6 +10035,7 @@ workspace:
         other_boxes: 'Otras casillas de resultado de este modelo: {boxes}'
         out_of_date_until_applied: desactualizado hasta que lo apliques
         provisional: provisional
+        redeme_unstated: 'Sin decidir: la devolución necesita tu dato de REDEME'
         redeme_unstated_help: Fuera del último periodo del año, pedir la devolución
           exige estar inscrito en el registro de devolución mensual (REDEME). Tu perfil
           no dice si lo estás, así que solo se ofrece la compensación. Indícalo en

@@ -9830,6 +9830,7 @@ workspace:
         other_boxes: 'Other result boxes on this form: {boxes}'
         out_of_date_until_applied: out of date until applied
         provisional: provisional
+        redeme_unstated: 'Not settled: the refund needs your REDEME answer'
         redeme_unstated_help: Outside the last period of the year, asking for a refund
           needs you to be on the monthly refund register (REDEME). Your profile does
           not say whether you are, so only the carry-forward is offered. State it

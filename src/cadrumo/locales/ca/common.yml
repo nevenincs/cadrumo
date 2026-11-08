@@ -10015,6 +10015,7 @@ workspace:
         other_boxes: 'Altres caselles de resultat d''aquest model: {boxes}'
         out_of_date_until_applied: desactualitzat fins que ho apliquis
         provisional: provisional
+        redeme_unstated: 'Sense decidir: la devolució necessita la teva dada de REDEME'
         redeme_unstated_help: Fora de l'últim període de l'any, demanar la devolució
           exigeix estar inscrit en el registre de devolució mensual (REDEME). El teu
           perfil no diu si ho estàs, així que només s'ofereix la compensació. Indica-ho

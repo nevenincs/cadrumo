@@ -17,21 +17,42 @@ words nor the export may offer a refund.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
 
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import lookup_translation
 from ....core.modelo_work_progress_state import ModeloWorkProgressState
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.refund_eligibility import resolve_refund_eligibility_policy_for_period
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.filing.schema import ModeloValueKind
 from ....domain.iva.refund_eligibility import RedemeEnrolmentState, RefundEligibilityOutcome
+from ....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+)
 from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnitState, derive_work_unit_id
+from ..declaration_summary import declaration_summary
+from ..declarations_list import declaration_list_rows
+from ..declarations_list_projection import worded_list_row
+from ..declarations_workspace_contracts import (
+    DeclarationsWorkspaceAvailability,
+    DeclarationsWorkspaceDeclarationRefV1,
+    DeclarationsWorkspaceProjectionV1,
+    DeclarationsWorkspaceSource,
+    DeclarationsWorkspaceZone,
+    DeclarationsWorkspaceZoneStateV1,
+)
 from ..work_form import build_modelo_work_form
 from ..work_form_declaration_facts import ModeloFormResultDirection
 from ..work_form_export_offer import (
@@ -319,3 +340,156 @@ def test_a_form_built_without_a_profile_read_offers_only_what_is_certain(
         assert not result.election_may_change, (year, code)
         assert result.refund_eligibility is not None, (year, code)
         assert result.refund_eligibility.outcome is RefundEligibilityOutcome.UNDETERMINED_REDEME_UNSTATED, (year, code)
+
+
+# -- the declarations list row -----------------------------------------------
+#
+# The list and the declaration's own form answer from one resolver, so a row
+# may not promise a refund the form withholds, nor state a carry-forward the
+# law has not yet settled.
+
+_REDEME_UNSTATED_ROW_KEY = "workspace.modelo.header.result.redeme_unstated"
+_LIST_OBSERVED_AT = datetime(2025, 4, 30, 12, tzinfo=UTC)
+_LIST_BUCKET_ID = "13000000-0000-4000-8000-000000000450"
+_RESULT_CASILLA: CasillaId = validated_casilla_id(_RESULT_BOX, surface="m303 refund election list row")
+
+
+def _negative_revision(
+    operation: PinnedAuthorityOperation, year: int, code: str
+) -> tuple[DeclarationsWorkspaceDeclarationRefV1, CalculationRevision]:
+    """A checked declaration whose settlement box holds the negative result, and its stored calculation."""
+    period = Period.from_year_and_code(year, code)
+    revision_id = _snapshot(operation, year, code).revision.id
+    work_unit_id = derive_work_unit_id(
+        bucket_id=_LIST_BUCKET_ID,
+        modelo=_MODELO,
+        filing_year=year,
+        period=period,
+        revision_id=revision_id,
+    )
+    values = {_RESULT_CASILLA: _NEGATIVE}
+    revision = CalculationRevision(
+        calculation_revision_id=derive_calculation_revision_id(
+            work_unit_id=work_unit_id,
+            input_values_by_casilla_id={},
+            binding_overrides={},
+            casilla_values=values,
+            filing_instance_evidence=None,
+            source_provenance=(),
+        ),
+        work_unit_id=work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=ModeloCode(_MODELO),
+            revision_id=revision_id,
+            modelo_year=year,
+            period=period.registry_token,
+        ),
+        state=CalculationRevisionState.VERIFICADO_COMPLETO,
+        casilla_values=values,
+        observations=tuple(
+            CasillaObservation(
+                casilla_id=casilla_id,
+                value=value,
+                legal_refs=("ley-37-1992:art-115",),
+                source_refs=("aeat-modelo-disposition-fixture",),
+            )
+            for casilla_id, value in values.items()
+        ),
+        created_at=_LIST_OBSERVED_AT,
+        updated_at=_LIST_OBSERVED_AT,
+        verified_at=_LIST_OBSERVED_AT,
+        verified_by="operator",
+        filing_instance_evidence=None,
+        source_provenance=(),
+    )
+    declaration = DeclarationsWorkspaceDeclarationRefV1(
+        work_unit_id=work_unit_id,
+        modelo=_MODELO,
+        filing_year=year,
+        period=period,
+        state=WorkUnitState.BORRADOR,
+        has_current_calculation=True,
+        has_current_filing=False,
+    )
+    return declaration, revision
+
+
+def _row_words(
+    operation: PinnedAuthorityOperation, year: int, code: str, *, redeme: RedemeEnrolmentState
+) -> str | None:
+    """What the list says this declaration settles to, through the real summary and list producers."""
+    reference, revision = _negative_revision(operation, year, code)
+    summary = declaration_summary(
+        reference,
+        revisions={revision.calculation_revision_id: revision},
+        verification=None,
+        operation=operation,
+        redeme=redeme,
+    )
+    assert summary.result is not None, (year, code, summary.technical_reason)
+    declaration = reference.model_copy(update={"summary": summary})
+    workspace = DeclarationsWorkspaceProjectionV1(
+        bucket_id=_LIST_BUCKET_ID,
+        zones=tuple(
+            DeclarationsWorkspaceZoneStateV1(
+                zone=zone,
+                availability=DeclarationsWorkspaceAvailability.AVAILABLE,
+                observed_at=_LIST_OBSERVED_AT,
+                sources=tuple(DeclarationsWorkspaceSource),
+                item_count=1 if zone is DeclarationsWorkspaceZone.DECLARATIONS else 0,
+            )
+            for zone in DeclarationsWorkspaceZone
+        ),
+        declarations=(declaration,),
+        calculation_revisions=(),
+        filings=(),
+        lifecycle=(),
+    )
+    rows = declaration_list_rows(workspace, None)
+    row = next(row for row in rows if row.declaration is declaration)
+    return worded_list_row(row, OutputLanguage.ES).result_words
+
+
+def test_the_list_row_offers_the_refund_to_a_redeme_filer_in_a_non_final_period(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """LIVA art. 115.Dos: the row must not hide a refund the filer may ask for."""
+    for year in _supported_years(operation):
+        code = _non_final_quarter(year)
+        words = _row_words(operation, year, code, redeme=RedemeEnrolmentState.ENROLLED)
+        choice = lookup_translation(_CHOICE_PENDING_KEY, locale=OutputLanguage.ES.value)
+
+        assert words is not None and choice is not None, (year, code)
+        assert choice in words, (year, code)
+
+
+def test_the_list_row_says_a_filer_outside_redeme_carries_the_credit_forward(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """LIVA art. 115.Uno: outside the year's last period the row states the carry-forward and nothing else."""
+    for year in _supported_years(operation):
+        code = _non_final_quarter(year)
+        words = _row_words(operation, year, code, redeme=RedemeEnrolmentState.NOT_ENROLLED)
+        carry = lookup_translation(_TO_CARRY_FORWARD_KEY, locale=OutputLanguage.ES.value)
+        choice = lookup_translation(_CHOICE_PENDING_KEY, locale=OutputLanguage.ES.value)
+
+        assert words is not None and carry is not None and choice is not None, (year, code)
+        assert words.startswith(carry), (year, code)
+        assert choice not in words, (year, code)
+
+
+def test_the_list_row_names_the_missing_redeme_fact_rather_than_claiming_a_carry(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """An unstated inscription has settled nothing, so the row must not read as a decided carry-forward."""
+    for year in _supported_years(operation):
+        code = _non_final_quarter(year)
+        words = _row_words(operation, year, code, redeme=RedemeEnrolmentState.UNSTATED)
+        unstated = lookup_translation(_REDEME_UNSTATED_ROW_KEY, locale=OutputLanguage.ES.value)
+        carry = lookup_translation(_TO_CARRY_FORWARD_KEY, locale=OutputLanguage.ES.value)
+        choice = lookup_translation(_CHOICE_PENDING_KEY, locale=OutputLanguage.ES.value)
+
+        assert words is not None and unstated is not None and carry is not None and choice is not None, (year, code)
+        assert words.startswith(unstated), (year, code)
+        assert choice not in words, (year, code)
+        assert not words.startswith(carry), (year, code)
