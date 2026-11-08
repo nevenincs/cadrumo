@@ -227,8 +227,9 @@ impl ItemTrack {
     /// changed, and when it stopped while downloading or installing a part, that part
     /// failed and the parts after it were never reached. A setup that stopped while it
     /// waited for the server began no model part: the parts it had finished stay
-    /// changed and each model part waiting for the server failed.
-    fn settle_parts(&mut self, stopped: Option<wire::Failure>) {
+    /// changed and each model part waiting for the server failed, unless the person
+    /// cancelled, which fails no part and leaves the waiting model parts unreached.
+    fn settle_parts(&mut self, stopped: Option<wire::Failure>, cancelled: bool) {
         if let Some(failure) = stopped.filter(|_| self.waiting_for_server) {
             for part in &mut self.parts {
                 let transferred_bytes = part.progress.map_or(0, |(completed, _)| completed);
@@ -238,7 +239,7 @@ impl ItemTrack {
                         failure: None,
                         transferred_bytes,
                     })
-                } else if part.part != PROGRAM_PART {
+                } else if part.part != PROGRAM_PART && !cancelled {
                     Some(wire::ItemResult {
                         changed: false,
                         failure: Some(failure),
@@ -1279,14 +1280,14 @@ fn settle(track: &mut SetupTrack, report: &Report) {
                 failure: Some(failed),
                 transferred_bytes: transferred,
             });
-            item.settle_parts(Some(failed));
+            item.settle_parts(Some(failed), outcome == Outcome::Cancelled);
         } else if ran && !reached {
             item.result = Some(wire::ItemResult {
                 changed: true,
                 failure: None,
                 transferred_bytes: transferred,
             });
-            item.settle_parts(None);
+            item.settle_parts(None, false);
         }
         item.retry = None;
     }

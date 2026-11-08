@@ -2150,6 +2150,27 @@ fn a_setup_that_stops_waiting_for_the_server_fails_the_model_parts_that_waited()
 }
 
 #[test]
+fn a_cancel_during_the_server_wait_fails_no_part() {
+    for failure in [None, Some(FailureCategory::Cancelled)] {
+        let mut track = local_ai_track();
+        for event in program_then_server_wait() {
+            take_event(&mut track, event);
+        }
+        settle(
+            &mut track,
+            &ended(Ended::Cancelled, Some(ItemId::LocalAi), failure),
+        );
+        // The model parts that waited were never begun, so none shows the failure the
+        // cancel gave the item; the finished program part stays changed.
+        assert_eq!(
+            part_results(&track),
+            [Some((true, None, 100)), None, None],
+            "a cancel with failure {failure:?} left a failure on a model part"
+        );
+    }
+}
+
+#[test]
 fn a_failure_outside_the_server_wait_keeps_its_own_part() {
     let mut downloading = local_ai_track();
     for event in program_then_server_wait().into_iter().take(4) {
