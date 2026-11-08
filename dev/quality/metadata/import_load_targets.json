@@ -2246,7 +2246,6 @@
         "cadrumo.core.time.utc",
         "cadrumo.core.tipos_actividad",
         "cadrumo.core.toml",
-        "cadrumo.core.traceback_summary",
         "cadrumo.core.transport_locus",
         "cadrumo.core.tty",
         "cadrumo.core.type_adapters",

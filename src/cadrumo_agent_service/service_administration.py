@@ -238,10 +238,9 @@ class AgentServiceAdministration(ABC):
             return {"kind": "refused", "code": "service_stopping"}
         # Each reads what the profile and the tree are now; a result is
         # served only for the lease and tree it was read under. The lease is
-        # compared by value: a claim replaces the client's lease object with an
-        # equal one, and claims land during a slow read from any thread (the
-        # status read's generation observation, the main loop's reclaim, the
-        # reread after an inactive lease). Only a newly issued lease differs.
+        # compared by value: every claim, including the one a catalog read
+        # makes for its own store access, replaces the client's lease object
+        # with an equal one, and only a newly issued lease differs.
         key = (self.client.lease, Identity(self._controller))
         read = self._catalog_read if action == "catalog" else self._status_read
         return read.answer(key, within=ADMIN_READ_SECONDS)

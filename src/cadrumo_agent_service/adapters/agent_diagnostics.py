@@ -13,18 +13,13 @@ from datetime import datetime
 from threading import Lock
 from typing import Final
 
-from cadrumo.core.diagnostic_log import DiagnosticValue, diagnostic_event
 from cadrumo.core.hashing import reject_duplicate_json_members, reject_json_constant
-from cadrumo.core.traceback_summary import TRACEBACK_HEADER, TracebackReader, TracebackSummary
 from cadrumo.core.type_guards import is_str_keyed_dict
 
 _LINE_BYTES: Final = 64 * 1024
 _CLI_DETAIL: Final = re.compile(
     rb"^(?:Traceback |[ \t]+|[\w.]+(?:Error|Exception):|During handling |The above exception).*$"
 )
-# A traceback's frames are short lines and Python elides repeated ones, so a
-# block this long is not one; it is abandoned rather than read without end.
-_TRACEBACK_BLOCK_LINES: Final = 4096
 _LEVELS: Final = {
     "DEBUG": logging.DEBUG,
     "INFO": logging.INFO,
@@ -67,8 +62,6 @@ class AgentDiagnosticSink:
         self._seen: OrderedDict[tuple[object, ...], None] = OrderedDict()
         self._lock = Lock()
         self._problems: dict[str, int] = {}
-        self._traceback: TracebackReader | None = None
-        self._traceback_lines = 0
 
     def line(self, data: bytes, *, pid: int, cli: bool = False) -> None:
         """Accept only the agent diagnostic schema or its CLI logger format."""
@@ -90,11 +83,7 @@ class AgentDiagnosticSink:
                     }
                 )
             else:
-                try:
-                    parsed = _schema_diagnostic(text)
-                except json.JSONDecodeError:
-                    self._unstructured(text)
-                    raise
+                parsed = _schema_diagnostic(text)
                 if parsed is None:
                     return
                 record, identity = parsed
@@ -106,45 +95,6 @@ class AgentDiagnosticSink:
                 logging.getLogger(record.name).handle(record)
         except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
             self.problem("agent_diagnostic_record_rejected")
-
-    def _unstructured(self, text: str) -> None:
-        """Follow a traceback block among the lines that are no diagnostic record.
-
-        Only the block's exception type and admitted frame locations are
-        logged. Its message, source lines and every other line are dropped as
-        read, and the block holds no more than its innermost frames.
-        """
-        abandoned = False
-        summary: TracebackSummary | None = None
-        with self._lock:
-            if text.rstrip() == TRACEBACK_HEADER:
-                abandoned = self._traceback is not None
-                self._traceback, self._traceback_lines = TracebackReader(), 0
-            elif self._traceback is not None:
-                self._traceback_lines += 1
-                if self._traceback_lines > _TRACEBACK_BLOCK_LINES:
-                    self._traceback, abandoned = None, True
-                else:
-                    summary = self._traceback.read(text)
-                    if summary is not None:
-                        self._traceback = None
-        if abandoned:
-            self.problem("agent_diagnostic_traceback_abandoned")
-        if summary is not None:
-            self._report_traceback(summary)
-
-    def _report_traceback(self, summary: TracebackSummary) -> None:
-        if summary.error_type is None and not summary.frames:
-            self.problem("agent_diagnostic_traceback_unreadable")
-            return
-        fields: dict[str, DiagnosticValue] = {}
-        if summary.error_type is not None:
-            fields["traceback_type"] = summary.error_type
-        if summary.origin is not None:
-            fields["traceback_origin"] = summary.origin
-        if summary.frames:
-            fields["traceback_frames"] = " <- ".join(summary.frames)
-        diagnostic_event(logging.getLogger(__name__), "agent_traceback_summarized", fields=fields, level=logging.ERROR)
 
     def _remember(self, identity: tuple[object, ...]) -> bool:
         with self._lock:

@@ -27,11 +27,7 @@
 //! agent is ready, so this module does not read it.
 use super::wire::{ModelDownload, Refusal, Stop};
 use crate::{
-    agent::{
-        AgentHost,
-        admin::{EXCHANGE, STATUS_EXCHANGE},
-        local_models,
-    },
+    agent::{AgentHost, local_models},
     shell::provider_settings::{
         outcome, read_status,
         wire::{
@@ -53,13 +49,6 @@ use std::{
 /// How long a read that the service answered with `busy` waits before it asks again.
 const READ_PAUSE: Duration = Duration::from_millis(250);
 const READ_ATTEMPTS: usize = 4;
-
-/// How long a download start waits on the service's three reads, which the track shows as
-/// waiting to begin: a cold status read may take its whole exchange bound, and the
-/// catalogue and the added models then take one ordinary exchange each. A service still
-/// busy after that is not answering, and the start settles as unavailable.
-const ADMISSION_BUDGET: Duration =
-    Duration::from_secs(STATUS_EXCHANGE.as_secs() + 2 * EXCHANGE.as_secs());
 
 /// Only a definite busy answer is safe to collect again. An exchange error or another
 /// refusal is returned unchanged, and the last busy answer remains diagnostic evidence.
@@ -185,7 +174,11 @@ impl Admission {
         request: &ModelDownload,
         cancellation: &Cancellation,
     ) -> Result<LocalModels, Stop> {
-        self.download_with_budget(request, cancellation, ADMISSION_BUDGET)
+        self.download_with_budget(
+            request,
+            cancellation,
+            Duration::from_secs(cadrumo_platform::DEFAULT_ORCHESTRATION_TIMEOUT_SECONDS),
+        )
     }
 
     fn download_with_budget(

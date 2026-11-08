@@ -10,7 +10,10 @@ from typing import Any, cast, override
 
 import httpx
 
-from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
+from cadrumo_client.contracts.deadline_budget import (
+    DEFAULT_TIMEOUT_POLICY,
+    TimeoutDeadline,
+)
 
 from .adapters.agent_background_runs import BackgroundRunEndpoint
 from .adapters.provider_catalog_metadata import DECLARED_CATALOG_KIND
@@ -28,7 +31,6 @@ from .providers.domain.catalog import MAX_CATALOG_LANES
 from .service_scheduling import AgentServiceScheduling
 from .service_support import (
     HOSTED_CERTIFICATION_CACHE_SECONDS,
-    SERVED_CATALOG_READ_POLICY,
     controller_is_ready,
     without_lanes,
 )
@@ -64,7 +66,7 @@ class AgentService(AgentServiceScheduling):
     @override
     def _served_catalog(self, ready: AgentReady) -> dict[str, Any]:
         """Read one bounded declaration under the current tree, waking on close or timeout."""
-        deadline = SERVED_CATALOG_READ_POLICY.deadline()
+        deadline = DEFAULT_TIMEOUT_POLICY.deadline()
         if self._read_cancellation.is_set():
             raise AgentHostError(AgentHostRefusal.CANCELLED)
         try:
@@ -153,11 +155,6 @@ class AgentService(AgentServiceScheduling):
             return self._served_catalog(ready)
         except ProviderCatalogUnavailableError:
             return None
-        except AgentHostError as error:
-            # A read that ran out its bound is one the agent did not answer.
-            if error.reason is AgentHostRefusal.TIMEOUT:
-                return None
-            raise
 
     def _certification_current(self, controller: AgentHostController, expected: AgentReady) -> bool:
         ready = controller.published()

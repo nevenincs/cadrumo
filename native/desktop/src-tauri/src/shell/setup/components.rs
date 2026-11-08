@@ -185,9 +185,6 @@ struct ItemTrack {
     step: Option<SetupStep>,
     progress: Option<(u64, u64)>,
     retry: Option<(u32, u32)>,
-    /// The setup waits for the local AI's server to start, which no part reports: its
-    /// program is set up and no model part has begun. Any later step or part ends it.
-    waiting_for_server: bool,
     result: Option<wire::ItemResult>,
     /// The local AI's parts in the order its plan carries them out.
     parts: Vec<PartTrack>,
@@ -200,7 +197,6 @@ impl ItemTrack {
             step: None,
             progress: None,
             retry: None,
-            waiting_for_server: false,
             result: None,
             parts: Vec::new(),
         }
@@ -225,32 +221,8 @@ impl ItemTrack {
 
     /// The results of the item's parts once its setup ended: every part it finished
     /// changed, and when it stopped while downloading or installing a part, that part
-    /// failed and the parts after it were never reached. A setup that stopped while it
-    /// waited for the server began no model part: the parts it had finished stay
-    /// changed and each model part waiting for the server failed, unless the person
-    /// cancelled, which fails no part and leaves the waiting model parts unreached.
-    fn settle_parts(&mut self, stopped: Option<wire::Failure>, cancelled: bool) {
-        if let Some(failure) = stopped.filter(|_| self.waiting_for_server) {
-            for part in &mut self.parts {
-                let transferred_bytes = part.progress.map_or(0, |(completed, _)| completed);
-                part.result = if part.step.is_some() {
-                    Some(wire::ItemResult {
-                        changed: true,
-                        failure: None,
-                        transferred_bytes,
-                    })
-                } else if part.part != PROGRAM_PART && !cancelled {
-                    Some(wire::ItemResult {
-                        changed: false,
-                        failure: Some(failure),
-                        transferred_bytes,
-                    })
-                } else {
-                    None
-                };
-            }
-            return;
-        }
+    /// failed and the parts after it were never reached.
+    fn settle_parts(&mut self, stopped: Option<wire::Failure>) {
         let began = self.parts.iter().rposition(|part| part.step.is_some());
         let in_part = matches!(self.step, Some(SetupStep::Download | SetupStep::Install));
         let at = stopped.and_then(|failure| Some((began.filter(|_| in_part)?, failure)));
@@ -1142,7 +1114,6 @@ fn take_event(track: &mut SetupTrack, event: Event) {
             let item = track.track_of(item);
             item.step = Some(step);
             item.retry = None;
-            item.waiting_for_server = false;
         }
         Event::Progress {
             item,
@@ -1159,9 +1130,7 @@ fn take_event(track: &mut SetupTrack, event: Event) {
             model,
             step,
         } => {
-            let item = track.track_of(item);
-            item.waiting_for_server = false;
-            let part = item.part(&part);
+            let part = track.track_of(item).part(&part);
             part.step = Some(step);
             if model.is_some() {
                 part.model = model;
@@ -1187,8 +1156,7 @@ fn take_event(track: &mut SetupTrack, event: Event) {
                 track.track_of(item).retry = Some((attempt, seconds.max(1)));
             }
         }
-        Event::WaitingForServer { item } => track.track_of(item).waiting_for_server = true,
-        Event::Following { .. } => {}
+        Event::WaitingForServer { .. } | Event::Following { .. } => {}
     }
 }
 
@@ -1280,14 +1248,14 @@ fn settle(track: &mut SetupTrack, report: &Report) {
                 failure: Some(failed),
                 transferred_bytes: transferred,
             });
-            item.settle_parts(Some(failed), outcome == Outcome::Cancelled);
+            item.settle_parts(Some(failed));
         } else if ran && !reached {
             item.result = Some(wire::ItemResult {
                 changed: true,
                 failure: None,
                 transferred_bytes: transferred,
             });
-            item.settle_parts(None, false);
+            item.settle_parts(None);
         }
         item.retry = None;
     }

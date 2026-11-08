@@ -6,7 +6,7 @@ from typing import Any, cast
 
 from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.contracts import RefusalError
-from cadrumo_client.contracts.deadline_budget import OrchestrationTimeoutError, TimeoutPolicy
+from cadrumo_client.contracts.deadline_budget import OrchestrationTimeoutError
 
 from .adapters.agent_programs import AgentProgramRefusalError
 from .host.controller import AgentHostController, AgentHostError, AgentHostState
@@ -29,17 +29,6 @@ is told busy every time; it stays well inside the desktop's six-second
 catalog exchange."""
 ADMIN_READ_FRESH_SECONDS = 5.0
 """How long a finished catalog or status read is served to the requests that follow it."""
-SERVED_CATALOG_READ_POLICY = TimeoutPolicy(timeout_seconds=6.0)
-"""How long one read of the running agent's served catalog may take before it is refused as timed out.
-
-The agent answers a catalog read in about its bound on one provider probe: it
-probes every lane at once, reports a lane that has not answered as not
-observed, and goes on building that lane's answer for the next read. A read
-that takes longer is a hung or failing gateway, and abandoning it loses
-nothing the agent has not kept. The read is made for a desktop exchange that
-waits six seconds, and while it runs every other catalog request is told the
-service is busy, so it is bounded at that exchange rather than at the
-last-resort orchestration budget."""
 
 
 def service_failure(error: Exception) -> dict[str, Any]:

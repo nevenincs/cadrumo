@@ -1,5 +1,4 @@
-import { useEffect, useId, useRef, type ReactNode } from "react";
-import { Alert } from "@/components/ui/alert";
+import { useId, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
@@ -22,8 +21,6 @@ import {
   failureWords,
   itemName,
   outcomeWords,
-  planningWords,
-  refusalWords,
   retryWords,
   rowSentence,
   rowSizeWords,
@@ -84,70 +81,6 @@ export function RowState({ row }: { row: SetupRow }) {
         />
       )}
       <span data-setup-sentence>{rowSentence(t, row)}</span>
-    </p>
-  );
-}
-
-/** What the window says while the setup status is not a snapshot: that it is
- * being read, why it could not be, with a way to read it again, or that setup
- * is unavailable. The one place that is worded, in the panel and in a model
- * list alike. `checking` says the read is under way though the status has
- * not failed or settled; by default it is while the first read waits. */
-export function SetupReadState({
-  checking,
-  slot,
-}: {
-  checking?: boolean;
-  /** The marker the sentence carries where a surface is told apart by it. */
-  slot?: string;
-}) {
-  const t = useStrings();
-  const { control } = useProvisioning();
-  const { read } = control;
-  if (checking ?? read.kind === "loading")
-    return (
-      <p
-        role="status"
-        data-slot={slot}
-        className="flex items-center gap-2 text-sm text-muted-foreground"
-      >
-        <Spinner />
-        <span>{t("desktop.setup.checking")}</span>
-      </p>
-    );
-  if (read.kind === "failed")
-    return (
-      <Alert role="alert">
-        <span data-slot={slot}>{refusalWords(t, read.code)}</span>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={control.pending}
-          onClick={() => control.check("quick")}
-        >
-          {t("desktop.agent.retry")}
-        </Button>
-      </Alert>
-    );
-  return (
-    <p role="status" data-slot={slot} className="text-sm text-foreground">
-      {t("desktop.setup.unavailable")}
-    </p>
-  );
-}
-
-/** What a setup does while it works out its plan, said with the active
- * marker: the one place that state is worded, in a row and beside a model
- * alike. `step` is what the engine has reported of the item, none yet. */
-export function PlanningFigure({ step }: { step: SetupStep | null }) {
-  const t = useStrings();
-  return (
-    <p
-      data-setup-planning
-      className="flex items-center gap-2 text-sm text-muted-foreground"
-    >
-      <Spinner />
-      <span data-setup-sentence>{planningWords(t, step)}</span>
     </p>
   );
 }
@@ -223,46 +156,14 @@ export function StepFigure({
 
 /** The plan `run` awaits an answer on, inside its row: what it downloads,
  * the space it needs, its parts and where they come from, and the row's
- * own approve and reject. `reveal` brings the plan into view and puts the
- * keyboard on its approve button once, where the plan appears away from the
- * control that asked for it. */
-export function RowReview({
-  run,
-  locale,
-  reveal = false,
-}: {
-  run: SetupRun;
-  locale: string;
-  reveal?: boolean;
-}) {
+ * own approve and reject. */
+function RowReview({ run, locale }: { run: SetupRun; locale: string }) {
   const t = useStrings();
   const store = useProvisioning();
   const review = run.review;
-  const element = useRef<HTMLDivElement>(null);
-  // What this plan has had done for it: brought into view when it first
-  // shows, and given the keyboard once its primary action can take it.
-  const shown = useRef({ id: "", scrolled: false, focused: false });
-  const answering = store.control.busy(run.item);
-  useEffect(() => {
-    const node = element.current;
-    if (!reveal || !node) return;
-    if (shown.current.id !== run.operation_id)
-      shown.current = { id: run.operation_id, scrolled: false, focused: false };
-    if (!shown.current.scrolled) {
-      shown.current.scrolled = true;
-      node.scrollIntoView?.({ block: "nearest" });
-    }
-    if (shown.current.focused) return;
-    const primary = node.querySelector<HTMLElement>(
-      "[data-setup-primary]:not([disabled])",
-    );
-    if (!primary) return;
-    shown.current.focused = true;
-    primary.focus({ preventScroll: true });
-  }, [reveal, run.operation_id, answering, review]);
   if (!review) return null;
   return (
-    <div ref={element} data-setup-review className="grid gap-2">
+    <div data-setup-review className="grid gap-2">
       <p data-setup-sentence className="text-sm text-foreground">
         {t("desktop.setup.lead_review")}
       </p>
@@ -281,15 +182,14 @@ export function RowReview({
         <Button
           variant="outline"
           size="sm"
-          disabled={answering}
+          disabled={store.control.busy(run.item)}
           onClick={() => store.control.answer(run.item, "reject")}
         >
           {t("desktop.setup.reject")}
         </Button>
         <Button
           size="sm"
-          data-setup-primary
-          disabled={answering || !review.space_sufficient}
+          disabled={store.control.busy(run.item) || !review.space_sufficient}
           onClick={() => store.control.answer(run.item, "apply")}
         >
           {approveLabel(t, review, locale)}
@@ -311,7 +211,6 @@ export function ProvisioningRow({
   locale,
   heading,
   progress,
-  reviewElsewhere = false,
   className,
   children,
 }: {
@@ -321,9 +220,6 @@ export function ProvisioningRow({
   /** Null where the running setup has nothing of this row's to show: the
    * row then says its sentence. Absent for the item's own progress. */
   progress?: StepProgress | null;
-  /** Set where a model's own row on this screen answers the row's plan, so
-   * the answer is asked once. */
-  reviewElsewhere?: boolean;
   className?: string;
   children?: ReactNode;
 }) {
@@ -337,8 +233,13 @@ export function ProvisioningRow({
   const action = actionWords(t, row.recovery);
   let status: ReactNode;
   if (run?.stage === "planning")
-    status = <PlanningFigure step={store.progressOf(run.item)?.step ?? null} />;
-  else if (run?.stage === "review" && !reviewElsewhere)
+    status = (
+      <p className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Spinner />
+        <span data-setup-sentence>{t("desktop.setup.planning")}</span>
+      </p>
+    );
+  else if (run?.stage === "review")
     status = <RowReview run={run} locale={locale} />;
   else if (run?.stage === "running" && shown)
     status = <StepFigure progress={shown} name={name} locale={locale} />;

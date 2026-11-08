@@ -3,14 +3,18 @@
 from __future__ import annotations
 
 import contextlib
+import re
 from threading import Lock, Thread
 from typing import BinaryIO, Final
 
 from cadrumo.core.diagnostic_log import DiagnosticValue
-from cadrumo.core.traceback_summary import TRACEBACK_FRAMES, TRACEBACK_HEADER, TracebackReader, TracebackSummary
+from cadrumo.core.log_scrubbing import scrub_text
 
 WORKER_STANDARD_ERROR_BYTES: Final = 4096
 """How much of a worker's standard error is held in memory, only as the source an exit account parses."""
+
+WORKER_ERROR_FRAMES: Final = 8
+"""How many of the final exception's innermost frames an exit account names."""
 
 WORKER_STANDARD_ERROR_SETTLE_SECONDS: Final = 0.5
 """How long an exit account waits for the output's end after the worker exited.
@@ -19,6 +23,28 @@ A descendant that inherited the pipe can hold it open; what arrived by then is u
 """
 
 _READ_CHUNK_BYTES: Final = 4096
+
+_TRACEBACK_HEADER: Final = "Traceback (most recent call last):"
+
+_FRAME_LINE: Final = re.compile(r'^\s+File "(?P<file>[^"]+)", line (?P<line>\d+), in (?P<name>.+?)\s*$')
+
+_FILE_NAME: Final = re.compile(r"^(?:[A-Za-z_][A-Za-z0-9_-]*\.pyw?|<frozen [A-Za-z_][A-Za-z0-9_.]*>)$")
+
+_FUNCTION_NAME: Final = re.compile(
+    r"^(?:[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*|<(?:module|lambda|listcomp|dictcomp|setcomp|genexpr)>)$"
+)
+
+_LINE_NUMBER: Final = re.compile(r"^[1-9][0-9]{0,6}$")
+
+_DIGIT_RUN: Final = re.compile(r"[0-9]{5,}")
+"""Identification, account and telephone numbers carry long digit runs; code identifiers do not."""
+
+_EXCEPTION_LINE: Final = re.compile(r"^(?P<type>[^:\s]+)(?::|$)")
+
+_EXCEPTION_TYPE: Final = re.compile(
+    r"^(?:[A-Za-z_][A-Za-z0-9_]*\.){0,6}"
+    r"[A-Za-z_][A-Za-z0-9_]{0,80}(?:Error|Exception|Exit|Interrupt|Warning|Iteration|Group)$"
+)
 
 
 class WorkerStandardErrorTail:
@@ -72,15 +98,13 @@ def worker_exit_fields(*, exit_code: int | None, standard_error: bytes | None) -
     fields: dict[str, DiagnosticValue] = {"exit_code": exit_code}
     if standard_error is None:
         return fields
-    summary = _final_exception(_held_lines(standard_error))
-    if summary is None:
-        return fields
-    if summary.error_type is not None:
-        fields["worker_error_type"] = summary.error_type
-    if summary.origin is not None:
-        fields["worker_error_origin"] = summary.origin
-    if summary.frames:
-        fields["worker_error_frames"] = " <- ".join(summary.frames[:TRACEBACK_FRAMES])
+    error_type, frames, innermost_admitted = _final_exception(_held_lines(standard_error))
+    if error_type is not None:
+        fields["worker_error_type"] = error_type
+    if frames:
+        if innermost_admitted:
+            fields["worker_error_origin"] = frames[0]
+        fields["worker_error_frames"] = " <- ".join(frames[:WORKER_ERROR_FRAMES])
     return fields
 
 
@@ -94,19 +118,47 @@ def _held_lines(standard_error: bytes) -> tuple[list[str], bool]:
     return [line.rstrip() for line in lines if line.strip()], truncated
 
 
-def _final_exception(held: tuple[list[str], bool]) -> TracebackSummary | None:
-    """Read the last traceback's type and frames, innermost first; never a message or source line."""
+def _final_exception(held: tuple[list[str], bool]) -> tuple[str | None, list[str], bool]:
+    """Read the last traceback's type and its frames, innermost first; never a message or source line."""
     lines, truncated = held
-    starts = [index for index, line in enumerate(lines) if line == TRACEBACK_HEADER]
+    starts = [index for index, line in enumerate(lines) if line == _TRACEBACK_HEADER]
     if starts:
         body = lines[starts[-1] + 1 :]
     elif truncated:
         # A long traceback's header can precede the held bytes; its frames still follow.
         body = lines
     else:
-        return None
-    reader = TracebackReader()
+        return None, [], False
+    frames: list[str] = []
+    innermost_admitted = False
     for line in body:
-        if (summary := reader.read(line)) is not None:
-            return summary
-    return reader.unfinished()
+        frame_line = _FRAME_LINE.match(line)
+        if frame_line is not None:
+            frame = _frame_identity(frame_line)
+            innermost_admitted = frame is not None
+            if frame is not None:
+                frames.append(frame)
+            continue
+        if line[:1].isspace():
+            continue
+        exception = _EXCEPTION_LINE.match(line)
+        error_type = None if exception is None else _admitted(str(exception.group("type")), _EXCEPTION_TYPE)
+        return error_type, frames[::-1], innermost_admitted
+    return None, frames[::-1], innermost_admitted
+
+
+def _frame_identity(frame: re.Match[str]) -> str | None:
+    """A frame as ``file.py:line:function``, the file by name alone, or ``None`` if any token is not admitted."""
+    file_name = _admitted(str(frame.group("file")).replace("\\", "/").rsplit("/", 1)[-1], _FILE_NAME)
+    line = _admitted(str(frame.group("line")), _LINE_NUMBER, numeric=True)
+    name = _admitted(str(frame.group("name")), _FUNCTION_NAME)
+    if file_name is None or line is None or name is None:
+        return None
+    return f"{file_name}:{line}:{name}"
+
+
+def _admitted(token: str, pattern: re.Pattern[str], *, numeric: bool = False) -> str | None:
+    """Admit a token only in its strict shape, without a long digit run, and unchanged by the log scrubber."""
+    if pattern.fullmatch(token) is None or (not numeric and _DIGIT_RUN.search(token) is not None):
+        return None
+    return token if scrub_text(token) == token else None

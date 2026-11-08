@@ -17,18 +17,6 @@ use zeroize::Zeroizing;
 /// the desktop holds the rest back until one ends.
 pub const CAPACITY: usize = 4;
 
-/// How long a connect exchange may take: login preparation must first reap the running
-/// gateway (up to 20 s).
-pub const CONNECT_EXCHANGE: Duration = Duration::from_secs(60);
-
-/// How long a status exchange may take. Status also runs a contained supplier check: five
-/// seconds of execution, ten for tree cleanup, then output drain and profile-authority
-/// reads. Its deadline must encompass that work.
-pub const STATUS_EXCHANGE: Duration = Duration::from_secs(30);
-
-/// How long any other exchange may take. Login polling stays short.
-pub const EXCHANGE: Duration = Duration::from_secs(6);
-
 /// The exchanges in flight with one service, at most [`CAPACITY`].
 #[derive(Default)]
 pub struct Gate {
@@ -237,11 +225,15 @@ impl Endpoint {
             return Err(failed("admin_request_too_large"));
         }
         let address = SocketAddr::from(([127, 0, 0, 1], self.port));
-        let bound = match request["action"].as_str() {
-            Some("connect") => CONNECT_EXCHANGE,
-            Some("status") => STATUS_EXCHANGE,
-            _ => EXCHANGE,
-        };
+        // Login preparation must first reap the running gateway (up to 20 s).
+        // Status also runs a contained supplier check: five seconds of execution,
+        // ten for tree cleanup, then output drain and profile-authority reads.
+        // Its deadline must encompass that work. Login polling stays short.
+        let bound = Duration::from_secs(match request["action"].as_str() {
+            Some("connect") => 60,
+            Some("status") => 30,
+            _ => 6,
+        });
         // The wait for a place is bounded like the exchange, and apart from it.
         let _permit = self.gate.enter(Instant::now() + bound)?;
         let deadline = Instant::now() + bound;

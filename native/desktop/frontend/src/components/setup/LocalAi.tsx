@@ -1,13 +1,9 @@
-import { useState } from "react";
 import type { CatalogLane } from "../../shell/localModelLanes";
 import { Alert } from "../ui/alert";
 import { Button } from "../ui/button";
 import { Icon } from "../ui/icon";
 import { Spinner } from "../ui/spinner";
-import {
-  ReviewClaimContext,
-  type LocalModelHost,
-} from "../../shell/localModels";
+import type { LocalModelHost } from "../../shell/localModels";
 import { useProvisioning } from "../../shell/provisioning";
 import { useStrings } from "../../shell/strings";
 import { LocalModels } from "../settings/LocalModels";
@@ -49,10 +45,6 @@ export function LocalAi({
   const t = useStrings();
   const store = useProvisioning();
   const row = store.localAiRow;
-  // The plan is answered on the row of the model asked for while that row is
-  // on screen showing it, which the row itself says; otherwise on the
-  // program's row, so a plan never waits with no way to answer it.
-  const [claimed, setClaimed] = useState(false);
   return (
     <div data-slot="local-ai" data-testid="local-ai" className="grid gap-2">
       {row && (
@@ -62,7 +54,6 @@ export function LocalAi({
             locale={locale}
             heading={t("desktop.setup.part_program")}
             progress={store.programPart()}
-            reviewElsewhere={claimed}
           >
             <ItemRemoval
               row={row}
@@ -110,17 +101,15 @@ export function LocalAi({
                 )}
               </Alert>
             ) : (
-              <ReviewClaimContext.Provider value={setClaimed}>
-                {(lanes.length > 0 ? lanes : [null]).map((lane) => (
-                  <LocalModels
-                    key={lane?.id ?? "none"}
-                    lane={lane}
-                    host={host}
-                    locale={locale}
-                    onRemoved={onRemoved}
-                  />
-                ))}
-              </ReviewClaimContext.Provider>
+              (lanes.length > 0 ? lanes : [null]).map((lane) => (
+                <LocalModels
+                  key={lane?.id ?? "none"}
+                  lane={lane}
+                  host={host}
+                  locale={locale}
+                  onRemoved={onRemoved}
+                />
+              ))
             )}
           </div>
         )

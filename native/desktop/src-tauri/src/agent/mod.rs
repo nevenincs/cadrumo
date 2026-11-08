@@ -6,7 +6,7 @@
 //! launcher's loopback gateway, with each run's stream on a Tauri channel.
 //! The launcher admits the agent bundled by CMake or returns a typed refusal.
 
-pub(crate) mod admin;
+mod admin;
 mod dropping;
 mod gateway;
 mod launcher;

@@ -4,13 +4,18 @@ from __future__ import annotations
 
 import logging
 from types import SimpleNamespace
-from typing import override
+from typing import cast, override
+from uuid import uuid4
 
 import pytest
 
 from cadrumo.tests.log_records import delivered_text
 from cadrumo_client.contracts import deadline_budget
 from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
+from cadrumo_client.contracts.extension_records import ExtensionRecordReply, ExtensionRecordRequest
+from cadrumo_client.contracts.service_access import ServiceConnect, ServiceConnected, ServiceLease
+from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from ....host.controller import AgentHostError, AgentHostRefusal
 from ....host.launcher_protocol import AgentLauncherRefusal, launcher_refusal_for
@@ -25,7 +30,6 @@ from ..ports import (
 )
 from ..resolution import ProviderCredentialResolver
 from .memory_store import MemoryProviderSettingsStore
-from .runtime_connection import RECORDS_GENERATION, RuntimeConnection, service_client, synthetic_lease
 from .synthetic_catalog import StaticCatalogSource
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -116,14 +120,51 @@ def test_credential_resolution_preserves_one_deadline_through_all_native_reads(m
     now = [1005.0]
     monkeypatch.setattr(deadline_budget, "time", SimpleNamespace(monotonic=lambda: now[0]))
     owner = deadline_budget.TimeoutDeadline(1020.0)
+    lease = ServiceLease(
+        lease_id=uuid4(),
+        session_id=uuid4(),
+        profile_id=uuid4(),
+        parent_session_id=uuid4(),
+        descriptor_digest="a" * 64,
+        service_id="cadrumo-agent-service",
+        runtime_boot_id=uuid4(),
+        connection_id=uuid4(),
+    )
     observed: list[tuple[float, float]] = []
 
-    def observe(deadline: float) -> None:
-        observed.append((deadline, deadline - now[0]))
-        now[0] += 1
+    class Runtime:
+        def service_access(self, request: ServiceConnect, *, deadline: float) -> ServiceConnected:
+            observed.append((deadline, deadline - now[0]))
+            now[0] += 1
+            return ServiceConnected(
+                request_id=request.request_id,
+                runtime_boot_id=lease.runtime_boot_id,
+                connection_id=lease.connection_id,
+                profile_id=lease.profile_id,
+                service_id=lease.service_id,
+                lease=lease,
+            )
 
-    connection = RuntimeConnection(synthetic_lease(), on_request=observe)
-    client = service_client(connection, startup_deadline=deadline_budget.TimeoutDeadline(1030.0))
+        def extension_record(
+            self, request: ExtensionRecordRequest, *, deadline: float
+        ) -> tuple[ExtensionRecordReply, bytearray]:
+            observed.append((deadline, deadline - now[0]))
+            now[0] += 1
+            return ExtensionRecordReply(
+                request_id=request.request_id,
+                runtime_boot_id=lease.runtime_boot_id,
+                connection_id=lease.connection_id,
+                state="generation" if request.action == "extension_record_generation" else "absent",
+                custody_generation="b" * 64,
+                records_generation="c" * 64,
+            ), bytearray()
+
+    client = InstalledServiceClient(
+        cast(VerifiedConnection, Runtime()),
+        profile_id=lease.profile_id,
+        service_id=lease.service_id,
+        startup_deadline=deadline_budget.TimeoutDeadline(1030.0),
+    )
     store = SecureProviderSettingsStore(client=client)
     catalog = StaticCatalogSource()
     source = ProviderSettingsAgentCredentialSource(
@@ -132,7 +173,7 @@ def test_credential_resolution_preserves_one_deadline_through_all_native_reads(m
         resolver=ProviderCredentialResolver(store=store, catalog_source=catalog),
     )
     resolved = source.resolve_for_agent(deadline=owner)
-    assert resolved.generations.provider_settings == RECORDS_GENERATION
+    assert resolved.generations.provider_settings == "c" * 64
     assert len(observed) >= 3, "the claim, generation and provider records must all use the owner's deadline"
     assert all(deadline == owner.instant for deadline, _remaining in observed)
     assert [remaining for _deadline, remaining in observed] == [15.0 - index for index in range(len(observed))]
