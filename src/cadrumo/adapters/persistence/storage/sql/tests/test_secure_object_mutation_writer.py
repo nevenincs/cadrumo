@@ -10,6 +10,7 @@ import pytest
 from sqlalchemy import Connection, event
 
 from ......core.classification.policies import SensitivityClass
+from ......core.errors.hierarchy import InternalInvariantError
 from ......core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
 from ...errors import SecureObjectRevisionConflictError
 from ...tests.ephemeral_bucket_session import EphemeralBucketSession
@@ -129,3 +130,30 @@ def test_rejected_batch_cas_rolls_back_sibling_rows_before_any_confirmation(tmp_
             )
         assert not base.exists(_NAMESPACE, "sibling") and base.exists(_NAMESPACE, "occupied")
     assert attempts == 1 and confirmed == 0
+
+
+def test_a_delete_runs_only_inside_its_admission(tmp_path: Path) -> None:
+    admitted_deletes: list[bool] = []
+
+    with EphemeralBucketSession(), repo_at(tmp_path / "delete.db") as base:
+        base.save_many((_write("removed"),))
+
+        def admitted(write: Callable[[], None]) -> None:
+            write()
+            admitted_deletes.append(not base.exists(_NAMESPACE, "removed"))
+
+        repository = base.with_mutation_writer(admitted)
+        assert repository.delete(_NAMESPACE, "removed") is True
+        assert repository.delete(_NAMESPACE, "removed") is False
+        assert not base.exists(_NAMESPACE, "removed")
+    assert admitted_deletes == [True, True]
+
+
+def test_a_fenced_repository_cannot_take_a_second_writer(tmp_path: Path) -> None:
+    def admitted(write: Callable[[], None]) -> None:
+        write()
+
+    with EphemeralBucketSession(), repo_at(tmp_path / "fenced.db") as base:
+        fenced = base.with_mutation_writer(admitted)
+        with pytest.raises(InternalInvariantError):
+            fenced.with_mutation_writer(admitted)

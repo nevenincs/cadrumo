@@ -137,9 +137,13 @@ def _calculation_ports_factory(work_unit: WorkUnit) -> CalculationActionPortsFac
     )
 
     def build(
-        *, bucket_id: str, operation: PinnedAuthorityOperation, profile_record: object | None = None
+        *,
+        bucket_id: str,
+        operation: PinnedAuthorityOperation,
+        profile_record: object | None = None,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
     ) -> CalculationActionPorts:
-        del bucket_id, operation, profile_record
+        del bucket_id, operation, profile_record, mutation_writer
         return _work_unit_read_ports(SimpleNamespace(work_unit_repository=repository))
 
     return build

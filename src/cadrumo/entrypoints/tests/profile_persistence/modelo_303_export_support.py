@@ -74,6 +74,9 @@ from .file_flow_test_support import calculation_ports_for_test
 from .m303_annual_ledger_support import M303_LEDGER_CUOTA, seed_m303_period_cuotas
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
+#: The quarterly Modelo 303 schedule needs the gran empresa condition (LIVA
+#: art. 121, RIVA art. 71) stated; these synthetic filers state it as a no.
+QUARTERLY_303_FILER_FACTS: dict[str, str] = {"censo.large_company": "false"}
 
 
 def external_filing_observations(*, casilla_values, snapshot):
@@ -455,7 +458,7 @@ def calculate_and_verify_modelo_303_revision(
     taxpayer_nif = synthetic_valid_nif(12_345_678)
     bucket_id = seed_profile(
         tax_id=taxpayer_nif,
-        profile_overrides={"identity.surnames": "Test Surnames"},
+        profile_overrides={"identity.surnames": "Test Surnames", **QUARTERLY_303_FILER_FACTS},
     )
     snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="2T")
     work_repo = WorkUnitCatalogueRepository()
