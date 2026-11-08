@@ -10,6 +10,7 @@ import {
   rejectionSummary,
 } from "./diagnosticSummary";
 import { notifyInternalFailure } from "./internalFailures";
+import { firstAfterEnd, sessionEnded } from "./sessionGate";
 import type {
   HostCommand,
   HostCommands,
@@ -123,8 +124,8 @@ export type CallPlan = {
   /** Whether the caller will ask again after this refusal. */
   scheduled?(): boolean;
   /** Whether the window learned that the signed-in session ended after the
-   * call was made. Nothing is left that wants its answer, so a refusal of any
-   * kind is dropped without a record. */
+   * call was made. Nothing is left that wants its answer, so its refusal is
+   * noted like any refusal for an ended session. */
   sessionEnded?(): boolean;
 };
 
@@ -133,12 +134,20 @@ export type CallPlan = {
 const REFUSAL_LEVEL: Readonly<Record<string, "WARNING">> = {
   // The runtime or host refused the request as asked; nothing failed. A
   // session that ended is not here: one the window did not see coming is an
-  // error, and one it saw is dropped through `sessionEnded`.
+  // error, and one it saw is noted through `endedRefusal`.
   refused: "WARNING",
   review_changed: "WARNING",
   conflict: "WARNING",
   too_large: "WARNING",
 };
+
+/** Native faults, which are reported whatever the session's state. */
+const INTERNAL_FAULT: readonly string[] = [
+  "panic",
+  "webview_failed",
+  "lock_poisoned",
+  "log_unavailable",
+];
 
 function rejectionLevel(
   code: string | null,
@@ -168,8 +177,22 @@ export async function observedInvoke<T>(
         : null;
     const code = field("code");
     const reason = field("reason");
-    // The session the call belonged to ended before it answered.
-    if (plan?.sessionEnded?.()) throw error;
+    if (
+      code !== null &&
+      !INTERNAL_FAULT.includes(code) &&
+      (plan?.sessionEnded?.() || sessionEnded())
+    ) {
+      // The session the call belonged to ended before it answered. The end
+      // is expected, so each operation notes it once, below any error.
+      if (firstAfterEnd(command))
+        reportDiagnostic(token, {
+          event: "command_rejected",
+          level: "INFO",
+          command,
+          code,
+        });
+      throw error;
+    }
     // Backpressure and deliberate cancellation are expected control flow.
     if (code !== "queue_full" && code !== "installation_cancelled") {
       reportDiagnostic(token, {
@@ -181,15 +204,7 @@ export async function observedInvoke<T>(
       });
       // Typed refusals are worded by their owning view. Missing metadata and
       // native faults must also surface when a caller deliberately catches.
-      if (
-        code === null ||
-        [
-          "panic",
-          "webview_failed",
-          "lock_poisoned",
-          "log_unavailable",
-        ].includes(code)
-      )
+      if (code === null || INTERNAL_FAULT.includes(code))
         notifyInternalFailure();
     }
     throw error;
