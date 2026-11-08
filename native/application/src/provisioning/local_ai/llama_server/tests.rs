@@ -368,17 +368,44 @@ fn the_router_runs_from_the_preset_on_its_address_with_no_model_loaded_or_evicte
             OsString::from("--no-models-autoload"),
         ]
     );
+    // No argument names a model to fetch: no Hugging Face repository or file, and no
+    // model URL.
+    const FETCHING: [&str; 12] = [
+        "-hf",
+        "-hfr",
+        "--hf-repo",
+        "-hff",
+        "--hf-file",
+        "-hfd",
+        "-hfrd",
+        "--hf-repo-draft",
+        "-mu",
+        "--model-url",
+        "-dr",
+        "--docker-repo",
+    ];
+    assert!(
+        command.arguments.iter().all(|argument| argument
+            .to_str()
+            .is_none_or(|text| !FETCHING.contains(&text))),
+        "{:?}",
+        command.arguments
+    );
     let environment = |name: &str| command.environment.get(OsStr::new(name)).cloned();
     // The address is the router's alone: the model instances it starts inherit its
-    // environment and must not read it as theirs.
-    assert!(
+    // environment and must not read it as theirs. The one setting they share is the
+    // offline mode, so none of them reaches the network.
+    assert_eq!(
         command
             .environment
             .keys()
-            .all(|name| !name.to_string_lossy().starts_with("LLAMA_ARG_")),
+            .filter(|name| name.to_string_lossy().starts_with("LLAMA_ARG_"))
+            .collect::<Vec<_>>(),
+        [OsStr::new("LLAMA_ARG_OFFLINE")],
         "{:?}",
         command.environment
     );
+    assert_eq!(environment("LLAMA_ARG_OFFLINE"), Some(OsString::from("1")));
     assert_eq!(
         environment("LLAMA_CACHE"),
         Some(folder.join("home").join("cache").into_os_string())

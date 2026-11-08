@@ -1032,6 +1032,11 @@ impl Program {
         // The engine writes a model's blobs before its manifest into the store this server
         // reads, so the server must not clear blobs no manifest names yet when it starts.
         set("OLLAMA_NOPRUNE", OsStr::new("1"));
+        // The server answers from this computer only: without it, it fetches model
+        // recommendations from ollama.com and refreshes cloud model details. Its other
+        // network use is the pull, which the engine never asks of it; it has no
+        // telemetry setting, and only Ollama's desktop app checks for updates.
+        set("OLLAMA_NO_CLOUD", OsStr::new("1"));
         set("OLLAMA_HOME", home.as_os_str());
         set("HOME", home.as_os_str());
         set("USERPROFILE", home.as_os_str());

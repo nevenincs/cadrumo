@@ -396,6 +396,10 @@ fn a_pinned_archive_installs_runs_as_the_engines_child_and_is_stopped_before_it_
         environment["OLLAMA_NOPRUNE"], "1",
         "the server never clears blobs the engine has stored before their manifest"
     );
+    assert_eq!(
+        environment["OLLAMA_NO_CLOUD"], "1",
+        "the server reaches no Ollama cloud service"
+    );
     assert!(
         environment
             .keys()
