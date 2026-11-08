@@ -606,6 +606,10 @@ function Ready({
   };
   const beginCalculation = (shown: ModeloWorkbenchFormProjectionV1) => {
     if (operation.holds.blocking(operation.target)) return;
+    // A new attempt: what the earlier one said no longer stands.
+    operation.holds.newAttempt(operation.target);
+    setNotice(null);
+    setUnresolved(null);
     if (!sameCalculation(shown)) {
       setNotice({
         tone: "warning",
