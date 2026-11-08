@@ -96,7 +96,7 @@ from .work_form_next_step import ModeloFormNextStep
 from .work_form_service import ModeloWorkFormLoadV1
 from .work_form_typing_effect import ModeloFormTypingEffect
 from .work_review import ModeloWorkProgress
-from .workbench_read import ModeloWorkbenchFormReadV1
+from .workbench_read import ModeloFormLedgerHold, ModeloWorkbenchFormReadV1
 
 
 class PublicModeloFormEarlierFiling(BaseModel):
@@ -503,6 +503,8 @@ class ModeloWorkbenchFormProjectionV1(BaseModel):
     profile_requirements: tuple[str, ...] = ()
     #: The recorded filing's AEAT receipt state; ``None`` when the declaration is not recorded as filed.
     receipt: ModeloFormReceipt | None = None
+    #: What in the ledger holds calculating this declaration, in words, with the movement to open.
+    ledger_hold: ModeloFormLedgerHold | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -597,6 +599,7 @@ def _restore(projection: ModeloWorkbenchFormProjectionV1) -> ModeloWorkbenchForm
         export_offer=_restore_export_offer(projection.export_offer),
         receipt=projection.receipt,
         profile_requirements=projection.profile_requirements,
+        ledger_hold=projection.ledger_hold,
     )
 
 
@@ -648,6 +651,7 @@ def project_modelo_workbench_form(
         export_offer=_project_export_offer(read.export_offer),
         receipt=read.receipt,
         profile_requirements=read.profile_requirements,
+        ledger_hold=read.ledger_hold,
     )
     _require_projection_roundtrip(read, projection)
     return projection

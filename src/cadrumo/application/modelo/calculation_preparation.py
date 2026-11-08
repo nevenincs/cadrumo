@@ -405,6 +405,98 @@ def open_movement_step(transaction_id: str) -> OperationNextStepWording:
 _OPEN_MOVEMENT_LOCALE_KEY = "application.modelo.projection_words.next_step.open_movement"
 
 
+@dataclass(frozen=True, slots=True)
+class LedgerPreflightHold:
+    """The first ledger-readiness issue that holds a revision's calculation, with its served words.
+
+    ``movement`` is the movement the issue names, ``None`` for an issue about
+    the whole period; ``context`` carries the words the refusal and the to-do
+    line are rendered with, in the language they were asked in.
+    """
+
+    reason: str
+    issue_transaction_id: str
+    movement: Transaction | None
+    context: Mapping[str, str]
+
+
+def ledger_preflight_hold(
+    *,
+    work_unit: WorkUnit,
+    revision: ModeloRevision,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    invoice_reader: InvoiceCatalogueReader,
+    usage_ratio_profile_loader: UsageRatioProfileLoader,
+    operation: PinnedAuthorityOperation,
+    profile_values: Mapping[str, str],
+    language: OutputLanguage,
+) -> LedgerPreflightHold | None:
+    """The ledger issue that holds this revision's calculation, or ``None`` when its ledger is ready.
+
+    Calculation refuses on it and the workbench's to-do list names it, so the
+    person is told before calculating exactly what calculating would refuse.
+    """
+    ledger_preflight_sources = frozenset(
+        str(binding.source) for binding in revision.bindings if binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES
+    )
+    if not ledger_preflight_sources:
+        return None
+    iva_regime = _iva_regime_from_path_values(profile_values)
+    if iva_regime is not None and iva_regime == iva_regime_simplificado_token():
+        return None
+    from ..ledger.preflight import preflight_ledger_tax_readiness
+
+    report = preflight_ledger_tax_readiness(
+        bucket_id=work_unit.bucket_id,
+        period=work_unit.period,
+        transaction_repository=transaction_repository,
+        usage_ratio_profile_loader=usage_ratio_profile_loader,
+        invoice_reader=invoice_reader,
+        operation=operation,
+    )
+    if report.ready:
+        return None
+    first_issue = next(
+        (
+            issue
+            for issue in report.issues
+            if _preflight_issue_blocks_revision(
+                reason=str(issue.reason.value),
+                ledger_preflight_sources=ledger_preflight_sources,
+            )
+        ),
+        None,
+    )
+    if first_issue is None:
+        return None
+    movement = (
+        None
+        if first_issue.transaction_id == "__period__"
+        else transaction_repository.load_by_ids({first_issue.transaction_id}).get(first_issue.transaction_id)
+    )
+    context = {
+        "need": tr(f"{_LEDGER_PREFLIGHT_NEED_KEY}.{first_issue.reason.value}", locale=language.value),
+        "period": period_words(report.period, language),
+    }
+    if movement is not None:
+        context.update(_movement_words(movement, language))
+    return LedgerPreflightHold(
+        reason=first_issue.reason.value,
+        issue_transaction_id=first_issue.transaction_id,
+        movement=movement,
+        context=context,
+    )
+
+
+_LEDGER_HOLD_WORDS_KEY = "application.modelo.projection_words.ledger_hold"
+
+
+def ledger_hold_words(hold: LedgerPreflightHold, language: OutputLanguage) -> str:
+    """The to-do line for a ledger hold: what to put right before the period can be calculated."""
+    leaf = "period" if hold.movement is None else "movement"
+    return tr(f"{_LEDGER_HOLD_WORDS_KEY}.{leaf}", locale=language.value, **hold.context)
+
+
 def raise_if_ledger_preflight_blocks_calculation(
     *,
     work_unit: WorkUnit,
@@ -428,57 +520,26 @@ def raise_if_ledger_preflight_blocks_calculation(
 
     ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
-    ledger_preflight_sources = frozenset(
-        str(binding.source) for binding in revision.bindings if binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES
-    )
-    if not ledger_preflight_sources:
-        return
-    iva_regime = _iva_regime_from_path_values(profile_values)
-    if iva_regime is not None and iva_regime == iva_regime_simplificado_token():
-        return
-    from ..ledger.preflight import preflight_ledger_tax_readiness
-
-    report = preflight_ledger_tax_readiness(
-        bucket_id=work_unit.bucket_id,
-        period=work_unit.period,
+    hold = ledger_preflight_hold(
+        work_unit=work_unit,
+        revision=revision,
         transaction_repository=transaction_repository,
-        usage_ratio_profile_loader=usage_ratio_profile_loader,
         invoice_reader=invoice_reader,
+        usage_ratio_profile_loader=usage_ratio_profile_loader,
         operation=operation,
+        profile_values=profile_values,
+        language=served_words_language(),
     )
-    if report.ready:
+    if hold is None:
         return
-    blocking_issues = tuple(
-        issue
-        for issue in report.issues
-        if _preflight_issue_blocks_revision(
-            reason=str(issue.reason.value),
-            ledger_preflight_sources=ledger_preflight_sources,
-        )
-    )
-    if not blocking_issues:
-        return
-    first_issue = blocking_issues[0]
-    language = served_words_language()
-    movement = (
-        None
-        if first_issue.transaction_id == "__period__"
-        else transaction_repository.load_by_ids({first_issue.transaction_id}).get(first_issue.transaction_id)
-    )
-    context = {
-        "need": tr(f"{_LEDGER_PREFLIGHT_NEED_KEY}.{first_issue.reason.value}", locale=language.value),
-        "period": period_words(report.period, language),
-        "reason": first_issue.reason.value,
-    }
-    if movement is not None:
-        context.update(_movement_words(movement, language))
+    movement = hold.movement
     raise ModeloLedgerPreflightBlockedError(
         translated_message=(
             "application.modelo.errors.ledger_preflight_blocked_movement"
             if movement is not None
             else "application.modelo.errors.ledger_preflight_blocked_period"
         ),
-        context=context,
+        context={**hold.context, "reason": hold.reason},
         next_step=None if movement is None else open_movement_step(movement.transaction_id),
         precondition_failure=build_modelo_precondition_failure(
             subject_leaf_key="modelo.work.calculate",
@@ -488,10 +549,10 @@ def raise_if_ledger_preflight_blocks_calculation(
             evidence_values={
                 "work_unit_id": work_unit.work_unit_id,
                 "modelo": str(work_unit.modelo),
-                "year": report.period.filing_year,
-                "period": report.period.registry_token,
-                "transaction_id": first_issue.transaction_id,
-                "reason_code": first_issue.reason.value,
+                "year": work_unit.period.filing_year,
+                "period": work_unit.period.registry_token,
+                "transaction_id": hold.issue_transaction_id,
+                "reason_code": hold.reason,
             },
             provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
         ),
