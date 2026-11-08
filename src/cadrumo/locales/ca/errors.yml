@@ -1379,6 +1379,8 @@ errors:
       model té un camp de tipus de declaració, però Cadrumo encara no té un joc de
       codis fonamentat per a aquest camp, així que el resultat no es pot presentar
       sense endevinar-lo.
+    refused_modelo_revision_not_sealed: Aquesta declaració encara no està comprovada;
+      comprova-la abans d'exportar-la o de treure'n l'informe.
     refused_modelo_stored_row_field_input: La revisió de càlcul {calculation_revision_id}
       desa un únic valor d'entrada per a les caselles {casilla_ids}, que prenen un
       valor per cada fila de detall. Torna a calcular la unitat de treball {work_unit_id}

@@ -1,7 +1,8 @@
 """The step a refused operation serves for putting the refusal right.
 
 A refusal can name one thing the filer does next: creating a declaration that
-does not exist yet, calculating one that has no calculation, opening one whose
+does not exist yet, calculating one that has no calculation, checking one whose
+calculation is not yet verified, opening one whose
 own form says what it still lacks, filling in one profile detail the refusal
 named, declaring the profile setup complete, opening the ledger movement
 that stops a calculation, or opening the Saldo de IVA of a Modelo 303 whose
@@ -78,6 +79,16 @@ class OperationCalculateWorkStepV1(BaseModel):
     words: _Words
 
 
+class OperationVerifyWorkStepV1(BaseModel):
+    """Check the declaration one work unit holds, so its calculation is verified."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["verify_work"] = "verify_work"
+    work_unit_id: WorkUnitId
+    words: _Words
+
+
 class OperationOpenWorkStepV1(BaseModel):
     """Open the declaration one work unit holds, where its own form says what it still lacks."""
 
@@ -130,6 +141,7 @@ class OperationOpenIvaWalletStepV1(BaseModel):
 type OperationNextStepV1 = Annotated[
     OperationCreateWorkStepV1
     | OperationCalculateWorkStepV1
+    | OperationVerifyWorkStepV1
     | OperationOpenWorkStepV1
     | OperationOpenProfileFieldStepV1
     | OperationCompleteProfileSetupStepV1
@@ -185,6 +197,7 @@ __all__ = [
     "OperationOpenMovementStepV1",
     "OperationOpenProfileFieldStepV1",
     "OperationOpenWorkStepV1",
+    "OperationVerifyWorkStepV1",
     "error_next_step",
     "is_profile_field_path",
 ]

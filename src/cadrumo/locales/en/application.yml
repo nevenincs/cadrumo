@@ -2813,6 +2813,7 @@ application:
         create_work: Create %{modelo}, %{period}
         open_movement: Open the movement in the Ledger
         open_work: Open %{modelo}, %{period}
+        verify_work: Check %{modelo}, %{period}
       no_m130_revisions: The Modelo 130 declarations for filing year %{year} have
         not been calculated yet, so there is nothing to base an estimate of the annual
         return on. Calculate a quarter, then ask for the estimate again.

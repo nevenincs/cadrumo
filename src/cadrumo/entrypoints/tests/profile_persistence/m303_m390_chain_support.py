@@ -282,6 +282,8 @@ def store_irene_sl_profile(secure_objects: SecureObjectRepository) -> None:
                 UserProfileFact(path="iva.regime", value="GENERAL"),
                 UserProfileFact(path="iva.m303_regime_composition", value="general"),
                 UserProfileFact(path="iva.redeme_enrolled", value=False),
+                # Not a gran empresa, as her workflow profile states: the 303 is quarterly (RIVA art. 71.3).
+                UserProfileFact(path="censo.large_company", value=False),
                 UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
                 UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
                 UserProfileFact(

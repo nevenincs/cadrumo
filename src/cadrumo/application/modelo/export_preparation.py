@@ -94,8 +94,8 @@ from ..filing.producer_snapshot import (
 )
 from ..filing.runtime import RegistrySchemaAccessor, filing_profile_from_taxpayer
 from .action_errors import (
-    CalculationRevisionStateError,
     ModeloPriorDomiciliationElectionRefusedError,
+    ModeloRevisionNotSealedError,
 )
 from .export_contracts import (
     ModeloExportCommand,
@@ -110,6 +110,7 @@ from .m303_regimen_simplificado_scope import (
 from .profile_export_binding import (
     resolve_profile_export_values,
 )
+from .projection_next_steps import verify_work_step
 from .revision_replay_inputs import revision_filing_replay_inputs
 from .row_source_identity_replay import attach_revision_row_source_identities
 
@@ -218,25 +219,27 @@ def raise_if_ledger_export_evidence_missing(revision: CalculationRevision) -> No
     )
 
 
-def require_exportable_revision_state(revision: CalculationRevision) -> None:
+def require_exportable_revision_state(revision: CalculationRevision, *, work_unit: WorkUnit) -> None:
     """Refuse a revision no export artefact may be produced from.
 
     Only a sealed :class:`CalculationRevision` -- verificado-completo, presentado, or a superseded
     presentado -- describes a settled calculation. A draft is still being
     edited, so any artefact rendered from it would claim a state the revision
     does not hold. Every modelo export destination applies this one rule rather
-    than restating the state set.
+    than restating the state set. The filer seals it by checking the
+    declaration ``work_unit`` holds, so the refusal opens that check.
 
     Raises:
-        CalculationRevisionStateError: The revision is not sealed.
+        ModeloRevisionNotSealedError: The revision is not sealed.
     """
     if revision.state not in SEALED_REVISION_STATES:
-        raise CalculationRevisionStateError(
+        raise ModeloRevisionNotSealedError(
             translated_message="application.modelo.errors.export_revision_state_refused",
             context={
                 "calculation_revision_id": revision.calculation_revision_id,
                 "state": revision.state.value,
             },
+            next_step=verify_work_step(work_unit),
         )
 
 

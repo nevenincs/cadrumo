@@ -1275,6 +1275,8 @@ errors:
     refused_modelo_result_disposition_uncodified: This modelo's record design has
       a declaration-type field, but Cadrumo has no grounded code set for it yet, so
       the result cannot be filed without guessing that field.
+    refused_modelo_revision_not_sealed: This declaration has not been checked yet;
+      check it before exporting it or producing its report.
     refused_modelo_stored_row_field_input: Calculation revision {calculation_revision_id}
       stores a single input value for casillas {casilla_ids}, which take one value
       per detail row. Recalculate work unit {work_unit_id} to replace it.

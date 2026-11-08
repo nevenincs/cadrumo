@@ -2926,6 +2926,7 @@ application:
         create_work: 'Hozd létre: %{modelo}, %{period}'
         open_movement: Nyisd meg a tételt a Naplóban
         open_work: 'Nyisd meg: %{modelo}, %{period}'
+        verify_work: 'Ellenőrizd: %{modelo}, %{period}'
       no_m130_revisions: A(z) %{year} adóév Modelo 130 bevallásait még nem számoltad
         ki, így nincs miből becslést készíteni az éves bevallásról. Számolj ki egy
         negyedévet, majd kérd újra a becslést.

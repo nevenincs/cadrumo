@@ -123,6 +123,10 @@ class CalculationRevisionStateError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when a state transition is requested from an incompatible source state."""
 
 
+class ModeloRevisionNotSealedError(OperationNextStepErrorMixin, CalculationRevisionStateError):
+    """Refused: an artefact was asked of a calculation not yet verified, which checking the declaration settles."""
+
+
 class ModeloRecordNotFoundError(ModeloError):
     """Raised when a filing record lookup fails."""
 

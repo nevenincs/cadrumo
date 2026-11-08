@@ -2969,6 +2969,7 @@ application:
         create_work: Crea el %{modelo}, %{period}
         open_movement: Obre el moviment al Llibre
         open_work: Obre el %{modelo}, %{period}
+        verify_work: Comprova el %{modelo}, %{period}
       no_m130_revisions: Les declaracions del Modelo 130 de l'exercici %{year} encara
         no s'han calculat, de manera que no hi ha base per estimar la declaració anual.
         Calcula un trimestre i torna a demanar l'estimació.

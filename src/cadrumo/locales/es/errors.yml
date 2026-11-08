@@ -1370,6 +1370,8 @@ errors:
       tiene un campo de tipo de declaración, pero Cadrumo aún no tiene un juego de
       códigos fundamentado para él, así que el resultado no puede presentarse sin
       adivinar ese campo.
+    refused_modelo_revision_not_sealed: Esta declaración aún no está comprobada; compruébala
+      antes de exportarla o de sacar su informe.
     refused_modelo_stored_row_field_input: La revisión de cálculo {calculation_revision_id}
       guarda un único valor de entrada para las casillas {casilla_ids}, que toman
       un valor por cada fila de detalle. Vuelve a calcular la unidad de trabajo {work_unit_id}

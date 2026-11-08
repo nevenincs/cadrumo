@@ -1298,6 +1298,8 @@ errors:
     refused_modelo_result_disposition_uncodified: Ennek a modellnek a rekordterve
       tartalmaz egy bevallástípus-mezőt, de a Cadrumónak még nincs megalapozott kódkészlete
       hozzá, ezért az eredmény nem nyújtható be a mező kitalálása nélkül.
+    refused_modelo_revision_not_sealed: Ez a bevallás még nincs ellenőrizve; ellenőrizd,
+      mielőtt exportálod vagy elkészíted a jelentését.
     refused_modelo_stored_row_field_input: A(z) {calculation_revision_id} számítási
       változat egyetlen bemeneti értéket tárol a(z) {casilla_ids} mezőkhöz, amelyek
       minden részletsorban külön értéket kapnak. Számítsd újra a(z) {work_unit_id}
