@@ -20,7 +20,11 @@ from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import
 
 
 def seed_ready_capital_payer_profile(*, bucket_id: str, at: datetime, tax_id: str = "12345678Z") -> None:
-    """Store a complete natural-person profile with an IVA general regime and no employees."""
+    """Store a complete natural-person profile, with an IVA general regime and no employees, that pays capital income.
+
+    Paying capital income subject to retención is the payer fact the capital
+    withholding modelos, the 123, 128 and 193 among them, are applicable on.
+    """
     seed_test_profile_record(
         create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
@@ -33,6 +37,7 @@ def seed_ready_capital_payer_profile(*, bucket_id: str, at: datetime, tax_id: st
                     UserProfileFact(path="activities.description", value="capital income payer"),
                     UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
                     UserProfileFact(path="withholding.colegio_concertado", value=False),
+                    UserProfileFact(path="withholding.pays_capital_income_with_retencion", value=True),
                 )
             ),
             created_at=at,
