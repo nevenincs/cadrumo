@@ -70,6 +70,8 @@ export function LedgerPageBody({
     sealed,
     focusDraft,
     setFocusDraft,
+    shownFields,
+    setShownFields,
     editing,
     setRuleTarget,
     rulesVersion,
@@ -262,6 +264,8 @@ export function LedgerPageBody({
               openReview: editing.openReview,
               focusDraft,
               onDraftFocused: () => setFocusDraft(null),
+              shownFields,
+              onFieldsShown: () => setShownFields(null),
               sealed,
             }}
             view={view}

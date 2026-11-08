@@ -96,7 +96,19 @@ export type PlanBlocker =
   | { kind: "suggestion_needs_share"; action: string }
   | { kind: "actions_conflict"; actions: string[] }
   | { kind: "too_large" }
-  | ({ kind: "draft_incomplete"; fields: DraftField[] } & ServedBlockerWords);
+  | ({ kind: "draft_incomplete"; fields: DraftField[] } & ServedBlockerWords)
+  /** The amount was typed with a sign, and a movement's direction already
+   * carries which way the money went. */
+  | ({
+      kind: "amount_signed";
+      fields: (PlanField | DraftField)[];
+    } & ServedBlockerWords)
+  /** The declared base and IVA stand above the cash, which only a declared
+   * withholding category accepts. */
+  | ({
+      kind: "needs_withholding_category";
+      fields: (PlanField | DraftField)[];
+    } & ServedBlockerWords);
 
 /** What the review says about a row's work without holding it back. */
 export type PlanNote =

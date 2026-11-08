@@ -708,7 +708,7 @@ export function ReviewDialog({
   tally: StageTally;
   locale: string;
   onStage: (event: StageEvent) => void;
-  onShowRows: (ids: string[]) => void;
+  onShowRows: (ids: string[], fields?: readonly string[]) => void;
   onGoToDraft: (key: string) => void;
   /** Where the focus goes once the review has gone. */
   onCloseAutoFocus?: (event: Event) => void;
