@@ -594,7 +594,9 @@ def test_an_incomplete_profile_publishes_reasoned_zones_instead_of_failing(
     assert home is not None
     assert home.agenda_state.availability is HomeAvailability.UNAVAILABLE
     assert home.agenda_state.reason_code == "workbench.home.taxpayer_profile_incomplete"
-    assert "iva.m303_regime_composition" in home.agenda_state.missing_profile_paths
+    # A declared general regime settles the Modelo 303 composition, so only the
+    # block's other unanswered facts remain owed.
+    assert "iva.m303_regime_composition" not in home.agenda_state.missing_profile_paths
     assert "iva.redeme_enrolled" in home.agenda_state.missing_profile_paths
     calendar = generation.declarations_calendar.projection
     assert calendar is not None
