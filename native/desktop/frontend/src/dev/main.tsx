@@ -175,6 +175,14 @@ declare global {
         models: typeof import("../shell/readingModel");
         live: typeof import("../shell/agentLive");
       }>;
+      hostCall(): Promise<typeof import("../shell/hostCall")>;
+      sessionGate(): Promise<{
+        react: typeof import("react");
+        dom: typeof import("react-dom");
+        client: typeof import("react-dom/client");
+        gate: typeof import("../shell/sessionGate");
+        run: typeof import("../shell/aeatSyncRun");
+      }>;
     };
   }
 }
@@ -211,6 +219,14 @@ window.__scenarioModules = {
   declarationsList: () =>
     import("../components/modelo/declarations/useDeclarationsList"),
   tauriHost: () => import("../shell/tauriHost"),
+  hostCall: () => import("../shell/hostCall"),
+  sessionGate: async () => ({
+    react: await import("react"),
+    dom: await import("react-dom"),
+    client: await import("react-dom/client"),
+    gate: await import("../shell/sessionGate"),
+    run: await import("../shell/aeatSyncRun"),
+  }),
   profileViews: async () => ({
     react: await import("react"),
     dom: await import("react-dom"),
