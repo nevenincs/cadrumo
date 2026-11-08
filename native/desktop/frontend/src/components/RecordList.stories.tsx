@@ -29,6 +29,14 @@ function View({ records, sourceStates, dropped, filters: initial }: Args) {
         records={records}
         sourceStates={sourceStates}
         dropped={dropped}
+        counts={{
+          errors: (records ?? []).filter(
+            (record) => record.level === "ERROR" || record.level === "CRITICAL",
+          ).length,
+          warnings: (records ?? []).filter(
+            (record) => record.level === "WARNING",
+          ).length,
+        }}
         filters={filters}
         setFilters={setFilters}
         onLevelChange={(minLevel) =>
