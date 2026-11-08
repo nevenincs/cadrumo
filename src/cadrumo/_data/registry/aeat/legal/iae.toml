@@ -180,3 +180,15 @@ retrieved_at = 2026-05-06
 applies_from = 2003-09-19
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/G323/mod840e_es_es.pdf"
 review_status = "pending_review"
+
+[sources."boe-iae-tarifas-rdleg-1175-1990"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/rdleg-1175-1990.html"
+sha256 = "6e6a1f50a7d45e0d37a438f37c3f83046268a4ebd3fbbd12765f3ed344445448"
+bytes = 1172051
+retrieved_at = 2026-11-08
+applies_from = 1990-10-19
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-1990-23930"
+review_status = "agent_reviewed"
