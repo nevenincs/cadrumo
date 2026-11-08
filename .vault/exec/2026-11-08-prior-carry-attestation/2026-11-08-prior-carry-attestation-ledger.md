@@ -5,7 +5,7 @@ tags:
 date: '2026-11-08'
 modified: '2026-11-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:9bfb8a2ca434be21a62a99bad5cdfccee559e519371dda20ca3eba70148cfaab'
+body_hash: 'sha256:8f713da013b3a8b9f64220e1890b47beb22f1dde8fddcb7c4aed5837b65f56c9'
 related:
   - "[[2026-11-08-prior-carry-attestation-plan]]"
 ---
@@ -55,8 +55,32 @@ related:
 - `S01` `verify:` `pytest-test_calculation_revision_operator_layer` -> `pass`
 - `S02` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_m100_carry_attestation.py`
 - `S02` `verify:` `pytest-test_m100_carry_attestation` -> `pass`
+- `S03` `A` `src/cadrumo/application/modelo/work_form_carry_attestation.py`
+- `S03` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S03` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S03` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S03` `M` `src/cadrumo/locales/ca/application.yml`
+- `S03` `M` `src/cadrumo/locales/en/application.yml`
+- `S03` `M` `src/cadrumo/locales/es/application.yml`
+- `S03` `M` `src/cadrumo/locales/hu/application.yml`
+- `S03` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S03` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_m100_carry_attestation.py`
+- `S03` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S03` `M` `dev/quality/metadata/import_load_targets.json`
+- `S03` `verify:` `pytest-test_m100_carry_attestation` -> `pass`
+- `S03` `verify:` `check-operation-contract-manifest` -> `pass`
+- `S04` `M` `native/desktop/frontend/src/components/modelo/form/session.ts`
+- `S04` `M` `native/desktop/frontend/src/components/modelo/form/stagedWords.ts`
+- `S04` `M` `native/desktop/frontend/src/components/modelo/form/FormView.tsx`
+- `S04` `M` `native/desktop/frontend/src/components/modelo/dialogs/ReviewDialog.tsx`
+- `S04` `M` `native/desktop/frontend/src/shell/modeloContract/modeloEditWork.ts`
+- `S04` `M` `native/desktop/frontend/src/shell/modeloContract/modeloWorkForm.ts`
+- `S04` `M` `native/desktop/frontend/tests/modelo-form-model.spec.ts`
+- `S04` `verify:` `tsc` -> `pass`
 
 ## Notes
 
 - `S01` 18-failures-in-payer-fact-and-cli-calculate-suites-reproduce-on-feature/tui-HEAD
 - `S02` `no-production-change:-existing-caller-tier-precedence-screen-raises-precedence_tier_divergence;-attested-mark-lives-on-the-operator-layer,-caller-provenance-stays-operator-entry`
+- `S03` dev/locales/tests-spelling,hungarian-dictionary,aeat-script-cases-need-root-dictionaries-and-installed-script
+- `S04` playwright-modelo-form-model-spec-runs-in-root-at-landing

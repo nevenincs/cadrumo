@@ -8,7 +8,7 @@ related:
   - '[[2026-11-08-prior-carry-attestation-adr]]'
 modified: '2026-11-08'
 body_schema: body-v2
-body_hash: 'sha256:e2755adc1e16d73cfa19e64f0f81053fa65e148e38420d170c6faac5edd913ca'
+body_hash: 'sha256:803224324e4e1ca20f401b4804d641f7df0d0fe9d6db6dbc5583e7229a392a5d'
 ---
 
 # `prior-carry-attestation` plan
@@ -23,8 +23,8 @@ Implement `2026-11-08-prior-carry-attestation-adr` for the four Modelo 100 earli
 
 - [x] `S01` - Record an attested zero on the operator layer and admit the attest_no_amount binding intent; `src/cadrumo/domain/modelos/calculation_revision_operator_layer.py`.
 - [x] `S02` - Resolve an attested carry as attested by the filer and raise the disagreement when a stored earlier return differs; `src/cadrumo/application/calculations/multi_year.py`.
-- [ ] `S03` - Serve the per-declaration attestation action with its words and addresses on the work form; `src/cadrumo/application/modelo/work_form.py`.
-- [ ] `S04` - Render the served action in the window and stage one attest intent per address; `native/desktop/frontend/src/components/modelo/form/session.ts`.
+- [x] `S03` - Serve the per-declaration attestation action with its words and addresses on the work form; `src/cadrumo/application/modelo/work_form.py`.
+- [x] `S04` - Render the served action in the window and stage one attest intent per address; `native/desktop/frontend/src/components/modelo/form/session.ts`.
 - [ ] `S05` - Regenerate the operation contract manifest and wire types and prove every envelope year; `native/desktop/frontend/src/shell/modeloContract`.
 
 ## Parallelization
