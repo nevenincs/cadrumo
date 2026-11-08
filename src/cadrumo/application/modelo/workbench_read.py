@@ -17,11 +17,14 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from pydantic import BaseModel, Field
+
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.casilla_id import CasillaId
 from ...core.external_constants import OutputLanguage
 from ...core.identity.documents import SpanishTaxIdFormat
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.bindings_previous_filing import PreviousFilingProvider
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
@@ -29,6 +32,8 @@ from ...domain.modelos.work_unit import WorkUnit
 from ...domain.user_profile.labels import profile_field_label
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from ..user_profile.projections import record_to_path_values
+from .calculation_preparation import ledger_hold_words, ledger_preflight_hold
 from .casilla_help import ModeloCasillaHelpCardV1, build_casilla_help_card
 from .credit_resolution_repository import CreditResolutionReader
 from .edit_admission import admit_modelo_edit_baseline
@@ -54,10 +59,35 @@ if TYPE_CHECKING:
         VerificationReportCatalogueRepositoryProtocol,
     )
     from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+    from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+    from ..invoices.catalogue_reads_ports import InvoiceCatalogueReader
+    from ..ledger.usage_ratio_repository import UsageRatioProfileLoader
     from ..live.borrador_100 import Borrador100SnapshotRepository
     from ..operations.registry import OperationPublicContractSetV1
     from .export_ports import OwnAccountRegisterReaderProtocol
     from .work_profile import ModeloWorkProfile
+
+
+@dataclass(frozen=True, slots=True)
+class ModeloWorkbenchLedgerPorts:
+    """The profile's ledger, read so the to-do list names the movement calculation would refuse on."""
+
+    transactions: TransactionCatalogueRepositoryProtocol
+    invoices: InvoiceCatalogueReader
+    usage_ratios: UsageRatioProfileLoader
+
+
+class ModeloFormLedgerHold(BaseModel):
+    """What in the ledger holds the declaration's calculation, in the form's language.
+
+    ``transaction_id`` is the movement to open, ``None`` when the hold is about
+    the whole period rather than one movement.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    words: str = Field(min_length=1)
+    transaction_id: str | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -73,7 +103,9 @@ class ModeloWorkbenchReadPorts:
     offer the accounts AEAT debits and pays a refund into; ``credit_resolutions``
     is the store of accepted source disagreements, read so the form holds filing
     exactly where the gate does; ``profile`` loads the taxpayer profile, read so
-    the to-do list names the profile details the readiness gate still asks for.
+    the to-do list names the profile details the readiness gate still asks for;
+    ``ledger`` is the profile's ledger, read so the to-do list names the
+    movement or period fact calculation would be refused for.
     """
 
     work_units: WorkUnitCatalogueRepositoryProtocol
@@ -86,6 +118,7 @@ class ModeloWorkbenchReadPorts:
     own_accounts: OwnAccountRegisterReaderProtocol | None = None
     credit_resolutions: CreditResolutionReader | None = None
     profile: Callable[[], ModeloWorkProfile | None] | None = None
+    ledger: ModeloWorkbenchLedgerPorts | None = None
 
 
 type ModeloWorkbenchReadPortsFactory = Callable[[str, PinnedAuthorityOperation], ModeloWorkbenchReadPorts]
@@ -120,6 +153,8 @@ class ModeloWorkbenchFormReadV1:
     #: The profile details the readiness gate still asks for before this declaration is worked out or filed,
     #: each as its label in the form's language; empty when the profile answers everything the gate asks.
     profile_requirements: tuple[str, ...] = ()
+    #: What in the ledger holds calculating this declaration; ``None`` when its ledger is ready.
+    ledger_hold: ModeloFormLedgerHold | None = None
 
     @property
     def typing_effects(self) -> tuple[ModeloFormTypingEffect, ...]:
@@ -228,6 +263,8 @@ def read_modelo_workbench_form(
         else granting_verification_report(ports.verifications.load(operation=operation), head_id)
     )
     is_m303 = str(unit.modelo) == form_for_role("iva.periodic")
+    load_profile = ports.profile
+    profile = None if load_profile is None else load_profile()
     return ModeloWorkbenchFormReadV1(
         load=loaded,
         admission=admission,
@@ -248,14 +285,51 @@ def read_modelo_workbench_form(
             amended=head is not None and head.amendment_identity is not None,
         ),
         receipt=_receipt(unit, loaded, ports=ports, language=language),
-        profile_requirements=_profile_requirements(unit, ports=ports, operation=operation, language=language),
+        profile_requirements=_profile_requirements(unit, profile, operation=operation, language=language),
+        ledger_hold=_ledger_hold(
+            unit, form.registry_revision_id, profile, ports=ports, operation=operation, language=language
+        ),
+    )
+
+
+def _ledger_hold(
+    unit: WorkUnit,
+    registry_revision_id: str,
+    profile: ModeloWorkProfile | None,
+    *,
+    ports: ModeloWorkbenchReadPorts,
+    operation: PinnedAuthorityOperation,
+    language: OutputLanguage,
+) -> ModeloFormLedgerHold | None:
+    """The ledger issue calculating this declaration would be refused for, read through the refusal's own check."""
+    ledger = ports.ledger
+    if ledger is None:
+        return None
+    hold = ledger_preflight_hold(
+        work_unit=unit,
+        revision=modelo_form_snapshot(
+            operation, unit.modelo, unit.filing_year, unit.period, registry_revision_id
+        ).revision,
+        transaction_repository=ledger.transactions,
+        invoice_reader=ledger.invoices,
+        usage_ratio_profile_loader=ledger.usage_ratios,
+        operation=operation,
+        profile_values={} if profile is None else record_to_path_values(profile.record),
+        language=language,
+    )
+    if hold is None:
+        return None
+    movement = hold.movement
+    return ModeloFormLedgerHold(
+        words=ledger_hold_words(hold, language),
+        transaction_id=None if movement is None else movement.transaction_id,
     )
 
 
 def _profile_requirements(
     unit: WorkUnit,
+    profile: ModeloWorkProfile | None,
     *,
-    ports: ModeloWorkbenchReadPorts,
     operation: PinnedAuthorityOperation,
     language: OutputLanguage,
 ) -> tuple[str, ...]:
@@ -264,8 +338,6 @@ def _profile_requirements(
     Read from the same report the gate enforces, so the to-do list asks exactly what
     calculating or filing would be refused for, such as the fact deciding the period.
     """
-    load_profile = ports.profile
-    profile = None if load_profile is None else load_profile()
     if profile is None:
         return ()
     report = modelo_work_profile_preflight_report(

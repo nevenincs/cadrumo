@@ -32,6 +32,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import IvaWal
 from cadrumo.adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
@@ -58,6 +59,12 @@ from cadrumo.application.modelo.work_calculation_contracts import (
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.application.modelo.workbench_read import (
+    ModeloFormLedgerHold,
+    ModeloWorkbenchLedgerPorts,
+    ModeloWorkbenchReadPorts,
+    read_modelo_workbench_form,
+)
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.next_step import OperationOpenMovementStepV1
 from cadrumo.application.tests.operation_host_fakes import (
@@ -83,6 +90,7 @@ from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from cadrumo.entrypoints.tests.production_operation_registry import production_operation_registry
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
@@ -496,6 +504,68 @@ def test_readiness_and_calculation_refuse_the_same_movement(
     assert step.transaction_id == paying
     assert refused.value.translated_message == "application.modelo.errors.ledger_preflight_blocked_movement"
     assert not quarter.calculations.load(operation=operation).revisions
+
+
+def _workbench_ledger_hold(quarter: _Quarter, *, operation: PinnedAuthorityOperation) -> ModeloFormLedgerHold | None:
+    """The ledger hold the declaration's workbench read serves its to-do list, in Spanish."""
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET,
+        work_unit_repository=quarter.work_units,
+        calculation_repository=quarter.calculations,
+        bucket_event_repository=quarter.events,
+        transaction_repository=quarter.transactions,
+        invoice_repository=quarter.invoices,
+    ) as ports:
+        read = read_modelo_workbench_form(
+            quarter.work_unit.work_unit_id,
+            bucket_id=_BUCKET,
+            ports=ModeloWorkbenchReadPorts(
+                work_units=quarter.work_units,
+                calculations=quarter.calculations,
+                verifications=VerificationReportCatalogueRepository(bucket_id=_BUCKET),
+                bucket_events=quarter.events,
+                ledger=ModeloWorkbenchLedgerPorts(
+                    transactions=quarter.transactions,
+                    invoices=quarter.invoices,
+                    usage_ratios=ports.usage_ratio_profile_loader,
+                ),
+            ),
+            operation=operation,
+            operation_contracts=production_operation_registry().public_contract_set,
+            language=OutputLanguage.ES,
+        )
+    return read.ledger_hold
+
+
+def test_the_to_do_list_names_the_movement_calculation_would_refuse(
+    secure_objects: SecureObjectRepository,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Before calculating, the to-do list names the movement the refusal would name, with its door."""
+    quarter = _seed_linked_quarter(secure_objects, operation=operation, received=(*_RECEIVED, _EQUIPMENT))
+    paying = quarter.movement_by_invoice[_EQUIPMENT[0]]
+
+    hold = _workbench_ledger_hold(quarter, operation=operation)
+
+    assert hold is not None
+    assert hold.transaction_id == paying
+    assert "PAGO Cloud Ejemplo SA CLO-2025-004" in hold.words
+    assert "clasifica el movimiento" in hold.words
+    assert paying not in hold.words
+    assert "invoice_deduction_family_unresolved" not in hold.words
+    assert "application." not in hold.words
+
+
+def test_a_ready_ledger_puts_nothing_on_the_to_do_list(
+    secure_objects: SecureObjectRepository,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """The quarter calculation accepts holds nothing, so the to-do list adds no ledger line."""
+    quarter = _seed_linked_quarter(secure_objects, operation=operation)
+
+    assert _workbench_ledger_hold(quarter, operation=operation) is None
 
 
 def test_a_blocked_calculate_settles_refused_and_reports_no_effect(

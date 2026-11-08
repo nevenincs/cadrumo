@@ -787,6 +787,7 @@ function Ready({
             session={session}
             onPicked={() => setView("form")}
             onOpenCheck={() => setView("check")}
+            onOpenMovement={onOpenMovement}
             onOpenProfile={
               canOpenSurface("profile")
                 ? () => onOpenSurface("profile")
