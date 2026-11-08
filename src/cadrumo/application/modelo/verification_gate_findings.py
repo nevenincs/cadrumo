@@ -16,10 +16,12 @@ from cadrumo.application.calculations.observations_repository import (
     IvaWalletDecisionRepositoryProtocol,
 )
 
+from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
+from ...domain.calculations.registry.binding_selector_utils import provider_member
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.casilla_membership import (
     casillas_by_id,
@@ -27,8 +29,10 @@ from ...domain.calculations.registry.casilla_membership import (
 from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_PENDING_PRIOR_CASILLA as M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
 )
+from ...domain.calculations.registry.ledger_iva_bindings import LedgerIvaProvider
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.iva.components import registry_category_projection
+from ...domain.iva.flow import is_deducible_flow
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.modelos.calculation_revision import (
@@ -93,6 +97,7 @@ from .verification_revision_findings import collect_revision_verification_findin
 if TYPE_CHECKING:
     from ...domain.attachments.protocols import AttachmentStoreProtocol
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.calculations.registry.schema import ModeloRevision
     from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
     from .work_profile import ModeloWorkProfile
 
@@ -324,6 +329,7 @@ def invoice_source_document_findings(
     invoice_repository: InvoiceCatalogueRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
     attachment_store: AttachmentStoreProtocol,
+    registry_revision: ModeloRevision,
 ) -> list[ModeloVerificationFinding]:
     """Block a deduction a declared received invoice claims without its factura.
 
@@ -332,9 +338,13 @@ def invoice_source_document_findings(
     invoice with a cuota needs its document stored with it, or a paying movement
     carrying registered purchase-invoice evidence. Each finding names the invoice,
     so the form can open it to attach the document.
+
+    Only a return that deducts input IVA is held: a revision whose registry
+    declares no deductible IVA binding (a Modelo 347 reads invoices for its
+    counterpart totals) claims no deduction the factura must grant.
     """
     fingerprint = target.invoice_fingerprint
-    if fingerprint is None or not fingerprint.rows:
+    if fingerprint is None or not fingerprint.rows or not _declares_iva_deduction(registry_revision):
         return []
     catalogue = invoice_repository.load()
     declared = tuple(invoice for row in fingerprint.rows if (invoice := catalogue.get(row.invoice_id)) is not None)
@@ -355,8 +365,19 @@ def invoice_source_document_findings(
     ]
 
 
+def _declares_iva_deduction(registry_revision: ModeloRevision) -> bool:
+    """Whether a binding of this registry revision sums deductible input IVA."""
+    return any(
+        is_deducible_flow(provider_member(binding, LedgerIvaProvider).flow_direction)
+        for binding in registry_revision.bindings
+        if binding.source is BindingSourceKind.LEDGER_IVA_AGGREGATION
+    )
+
+
 def _append_invoice_source_document_findings(
     target: CalculationRevision,
+    work_unit: WorkUnit,
+    operation: PinnedAuthorityOperation,
     invoice_repository: InvoiceCatalogueRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
     attachment_store: AttachmentStoreProtocol,
@@ -368,6 +389,11 @@ def _append_invoice_source_document_findings(
         invoice_repository=invoice_repository,
         transaction_repository=transaction_repository,
         attachment_store=attachment_store,
+        registry_revision=operation.snapshot(
+            work_unit.modelo,
+            filing_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ).revision,
     ):
         findings.append(finding)
         failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
@@ -707,7 +733,14 @@ def collect_verification_gate_findings(
         target, work_unit, transaction_repository, operation, findings, failures_by_finding_id
     )
     _append_invoice_source_document_findings(
-        target, invoice_repository, transaction_repository, attachment_store, findings, failures_by_finding_id
+        target,
+        work_unit,
+        operation,
+        invoice_repository,
+        transaction_repository,
+        attachment_store,
+        findings,
+        failures_by_finding_id,
     )
     # Runs beside the evidence gate, not inside it: that gate reads the live
     # ledger while the casilla values come from the stored draft, and this is
