@@ -369,6 +369,50 @@ test("a download still being planned says it is checking, on its row and the loc
   await expect(vision).not.toContainText(label("desktop.setup.step_waiting"));
 });
 
+test("a plan whose asked row leaves the screen is answered on the program's row, and returns to the model's row once the list is read again", async ({
+  page: target,
+}) => {
+  await open(target);
+  const lane = await openLane(target);
+  const vision = lane.locator('li[data-model="synthetic-vision:1"]');
+  await vision
+    .getByRole("button", {
+      name: label("desktop.providers.local_model_download"),
+    })
+    .click();
+  await expect(vision.locator("[data-setup-review]")).toBeVisible();
+  const program = lane.locator(
+    '[data-setup-row="local_ai"] [data-setup-review]',
+  );
+  await expect(program).toHaveCount(0);
+  // The list is changed elsewhere and then cannot be read: the rows go, and
+  // the plan must still be answerable.
+  await target.evaluate(() => {
+    window.__scenarioLocalModelsChangeElsewhere?.();
+    window.__fixtureLocalModelsRead = async () => {
+      throw Object.assign(new Error("fixture read failure"), {
+        code: "agent_gateway_503",
+      });
+    };
+  });
+  await addByName(lane, ADDED);
+  await expect(
+    lane.locator("[data-slot=local-models] li[data-model]"),
+  ).toHaveCount(0);
+  await expect(laneReview(lane)).toHaveCount(1);
+  await expect(program).toBeVisible();
+  // Read again, the model's row owns the plan and the program's row yields.
+  await target.evaluate(() => {
+    window.__fixtureLocalModelsRead = undefined;
+  });
+  await lane
+    .getByRole("button", { name: label("desktop.agent.retry"), exact: true })
+    .click();
+  await expect(vision.locator("[data-setup-review]")).toBeVisible();
+  await expect(laneReview(lane)).toHaveCount(1);
+  await expect(program).toHaveCount(0);
+});
+
 test("while the local AI sets up, no model offers its download again", async ({
   page: target,
 }) => {

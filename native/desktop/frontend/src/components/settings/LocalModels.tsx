@@ -1,4 +1,10 @@
-import { useId, useState, type FormEvent } from "react";
+import {
+  useContext,
+  useId,
+  useLayoutEffect,
+  useState,
+  type FormEvent,
+} from "react";
 import { TextEditor } from "@/components/editors/TextEditor";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +20,11 @@ import {
 } from "../../shell/localModelLanes";
 import { formatSize } from "../../shared/numbers";
 import type { AgentModelLicenceFacts } from "../../shell/agentSession";
-import { useLocalModels, type LocalModelHost } from "../../shell/localModels";
+import {
+  ReviewClaimContext,
+  useLocalModels,
+  type LocalModelHost,
+} from "../../shell/localModels";
 import { useProvisioning } from "../../shell/provisioning";
 import { useStrings, type Translate } from "../../shell/strings";
 import type { SetupRun, SetupStep } from "../../ipc/componentSetup";
@@ -269,6 +279,7 @@ export function LocalModels({
       ? { step: store.progressOf(localAi.item)?.step ?? null }
       : null;
   const reviewed = store.reviewedModel();
+  const claim = useContext(ReviewClaimContext);
   const [removing, setRemoving] = useState<string | null>(null);
   const [removals, setRemovals] = useState<Record<string, string>>({});
   const readable =
@@ -277,6 +288,23 @@ export function LocalModels({
     lane && snapshot.kind === "ready"
       ? laneModelList(lane, addedTo(snapshot.value, lane.id))
       : [];
+  // The plan is shown on the asked model's row only while that row is listed
+  // here, and the one place that is decided is this: the row's own review and
+  // the claim the program's row yields to come from the same value.
+  const reviewRun = (model: LaneModel): SetupRun | null =>
+    lane &&
+    laneStatus === "ready" &&
+    reviewed?.lane === lane.id &&
+    reviewed.model === model.id &&
+    liveRun?.stage === "review"
+      ? liveRun
+      : null;
+  const holdsReview = listed.some(({ model }) => reviewRun(model) !== null);
+  useLayoutEffect(() => {
+    if (!holdsReview || !claim) return;
+    claim(true);
+    return () => claim(false);
+  }, [holdsReview, claim]);
   // Removing deletes the download first, then takes a model the person added
   // off the list; a recommended model stays listed.
   const remove = async (key: string, model: LaneModel, added: boolean) => {
@@ -411,13 +439,7 @@ export function LocalModels({
                     }
                     progress={progressOf(model)}
                     planning={asked === model.id ? planningStep : null}
-                    review={
-                      reviewed?.lane === lane.id &&
-                      reviewed.model === model.id &&
-                      liveRun?.stage === "review"
-                        ? liveRun
-                        : null
-                    }
+                    review={reviewRun(model)}
                     refusal={
                       removals[key]
                         ? removalWords(t, removals[key])

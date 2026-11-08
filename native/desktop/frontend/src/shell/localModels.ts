@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { createContext, useCallback, useEffect, useState } from "react";
 import { failureCode } from "../errors";
 import type { AgentLocalModels } from "../ipc/contract";
 
@@ -22,6 +22,13 @@ export type LocalModelHost = {
   ) => Promise<AgentLocalModels>;
   reset: (expectedRevision: string) => Promise<AgentLocalModels>;
 };
+
+/** Where a model row that is showing the local AI's plan says so, to the
+ * element that would otherwise show the same plan on the program's row.
+ * Absent where no program row shares the screen with the model rows. */
+export const ReviewClaimContext = createContext<
+  ((held: boolean) => void) | null
+>(null);
 
 export type ListSnapshot =
   | { kind: "loading" }
