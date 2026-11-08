@@ -85,6 +85,8 @@ StagedBlockerKind = Literal[
     "share_needs_mixed",
     "transfer_with_tax",
     "draft_incomplete",
+    "amount_signed",
+    "needs_withholding_category",
 ]
 
 _Text = Annotated[str, Field(max_length=4096)]

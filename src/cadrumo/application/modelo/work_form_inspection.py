@@ -148,7 +148,9 @@ def build_inspection_only_form(
         filing_year=review.filing_year,
         period=review.period,
         registry_revision_id=snapshot.revision.id,
-        year_projection=year_projection(snapshot),
+        year_projection=year_projection(
+            snapshot, modelo=str(review.modelo), period=review.period.registry_token, language=context.language
+        ),
         work_unit_id=review.work_unit_id,
         calculation_revision_id=review.calculation_revision_id,
         language=context.language,

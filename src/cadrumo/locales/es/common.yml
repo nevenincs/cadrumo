@@ -1505,6 +1505,7 @@ desktop:
         set_currency: Indicar la moneda
         set_share: Indicar la parte
         show: Mostrar en la tabla
+        show_fields: Muestra los movimientos y la columna
       gone: Eliminado o movido fuera del periodo desde que lo leíste.
       gone_mine: Mantenerlo en mis cambios
       gone_movement: Un movimiento que ya no se lee
@@ -10595,6 +10596,7 @@ workspace:
       failed_lead: Esperan algo que le faltaba al cálculo. Elige una para ver qué.
       none: Nada de este modelo te necesita.
       profile: 'Antes de calcular este periodo, tu perfil tiene que responder:'
+      sources: 'Antes de calcular esta declaración, faltan las declaraciones que resume:'
       title: Pendiente
     value:
       not_applicable: no aplica

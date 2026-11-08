@@ -7,7 +7,7 @@ revision_id = "2022-2024"
 seed_source = "casilla_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "8b2d49e98921db84938f0b5a1278bbc4cd149abc83de16e94da012835c099bab"
+source_state_digest = "b98e054eb1325facc7fceeb7515387d8e92ebe93b39d9e20894c540c6ece2d27"
 placements = [
     { casilla_id = "aportaciones-ejercicio", kind = "on_form" },
     { casilla_id = "base-retencion-practicada", kind = "on_form" },
@@ -18,7 +18,7 @@ placements = [
     { casilla_id = "declarado-nombre", kind = "on_form" },
     { casilla_id = "declarante-nif", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "declarante-razon-social", kind = "on_form" },
-    { casilla_id = "ejercicio-declaracion", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "ejercicio-declaracion", kind = "working_figure" },
     { casilla_id = "extincion-plan", kind = "on_form" },
     { casilla_id = "fecha-apertura", kind = "on_form" },
     { casilla_id = "fecha-extincion", kind = "on_form" },

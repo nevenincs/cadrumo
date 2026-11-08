@@ -57,7 +57,7 @@ from .update_contracts import (
     LedgerUpdateRequest,
     LedgerUpdateValidationMessages,
 )
-from .validation_messages import bounded_validation_messages
+from .validation_messages import ledger_refusal_messages
 
 # Input refusals the canonical action raises while it still holds nothing to write: the
 # replacement is validated in full before its atomic catalogue and event commit.
@@ -295,7 +295,7 @@ def _operation_result(
 
 def _validation_messages(error: Exception) -> LedgerUpdateValidationMessages:
     """Retain only bounded locations and messages from an input refusal."""
-    return bounded_validation_messages(
+    return ledger_refusal_messages(
         error,
         limit=LEDGER_UPDATE_MAX_VALIDATION_MESSAGES,
         fallback="ledger update values did not satisfy transaction validation",

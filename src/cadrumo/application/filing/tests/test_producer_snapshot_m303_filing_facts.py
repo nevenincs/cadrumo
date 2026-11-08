@@ -14,6 +14,7 @@ from cadrumo.core.prorrata_register import ProrrataEspecialTransitionKind, Prorr
 from cadrumo.domain.bienes_inversion.vocabulary import BienInversionKind
 from cadrumo.domain.deadlines.models import IVARegime, M303RegimeComposition, M303TaxTerritory
 
+from ....core.field_origin import FieldOrigin
 from ....core.filing_producer_key import FilingProducerKey
 from ....core.modelo import Modelo
 from ....core.period import Period, PeriodError
@@ -597,7 +598,7 @@ type _NonM303ProducerProfile = Modelo111ProfileFacts | Modelo202ProducerProfile 
 
 
 def _m111_producer_profile() -> Modelo111ProfileFacts:
-    return Modelo111ProfileFacts(colegio_concertado=False)
+    return Modelo111ProfileFacts(colegio_concertado=False, colegio_concertado_origin=FieldOrigin.OPERATOR)
 
 
 def _m202_producer_profile() -> Modelo202ProducerProfile:

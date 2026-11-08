@@ -760,6 +760,12 @@ export interface HostCommands {
         dropped: number;
         line?: number;
         column?: number;
+        /** The backend's closed code beside a relay failure's `code`. */
+        reason?: string;
+        /** The message's authored shape with every value taken out. */
+        template?: string;
+        /** The script the first stack frame names, by file name. */
+        module?: string;
       };
     }>;
     result: null;

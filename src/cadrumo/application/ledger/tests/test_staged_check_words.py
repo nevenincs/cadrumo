@@ -95,6 +95,7 @@ def _check(language: OutputLanguage, authority: PinnedAuthorityOperation) -> Led
         "b" * 64: _stored(classification=BusinessClassification.BUSINESS),
         "c" * 64: _stored(classification=BusinessClassification.BUSINESS, category_id="office_supplies"),
         "d" * 64: _stored(classification=BusinessClassification.BUSINESS),
+        "e" * 64: _stored(direction=TransactionDirection.INCOMING, classification=BusinessClassification.BUSINESS),
     }
     rows = (
         # Clearing a booked date: no write takes a blank date.
@@ -116,8 +117,23 @@ def _check(language: OutputLanguage, authority: PinnedAuthorityOperation) -> Led
         LedgerStagedRow(
             transaction_id="c" * 64, cells=(LedgerStagedCell(field="direction", value="INTERNAL_TRANSFER"),)
         ),
+        # A received invoice whose declared base and IVA stand above the cash:
+        # only a declared withholding category accepts that gap.
+        LedgerStagedRow(
+            transaction_id="e" * 64,
+            cells=(
+                LedgerStagedCell(field="taxable_base", value="35.00"),
+                LedgerStagedCell(field="iva_amount", value="7.35"),
+            ),
+        ),
     )
-    request = LedgerStagedCheckRequest(profile_id=profile, rows=rows, drafts=(_draft(),), output_language=language)
+    request = LedgerStagedCheckRequest(
+        profile_id=profile,
+        rows=rows,
+        # A new movement with nothing filled in, and one whose amount carries a sign.
+        drafts=(_draft(), _draft(amount="-50.00")),
+        output_language=language,
+    )
     return check_staged_work(request, held, operation=authority, profile_id=profile)
 
 
