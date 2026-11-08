@@ -10,14 +10,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Icon } from "@/components/ui/icon";
-import { Spinner } from "@/components/ui/spinner";
 import type { SetupRow } from "../../ipc/componentSetup";
 import { useLocalAiLanes, type LocalAiSource } from "../../shell/localAiLanes";
 import { useProvisioning } from "../../shell/provisioning";
 import { useStrings } from "../../shell/strings";
 import { ItemRemoval } from "./ItemRemoval";
 import { LocalAi } from "./LocalAi";
-import { ProvisioningRow, RowState } from "./ProvisioningRow";
+import { ProvisioningRow, RowState, SetupReadState } from "./ProvisioningRow";
 import { failureWords, itemName, refusalWords } from "./setupWords";
 
 // The one provisioning panel: every element the engine reports, one row
@@ -187,17 +186,8 @@ export function ProvisioningPanel({
           <Alert role="alert">{refusalWords(t, check.refusal)}</Alert>
         )}
 
-        {reading ? (
-          <p className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Spinner />
-            {t("desktop.setup.checking")}
-          </p>
-        ) : control.read.kind === "failed" ? (
-          <Alert role="alert">{refusalWords(t, control.read.code)}</Alert>
-        ) : snapshot === null ? (
-          <p className="text-sm text-foreground">
-            {t("desktop.setup.unavailable")}
-          </p>
+        {reading || control.read.kind === "failed" || snapshot === null ? (
+          <SetupReadState checking={reading} />
         ) : (
           <ul className="setup-components grid gap-2">
             {rows.map((row) =>

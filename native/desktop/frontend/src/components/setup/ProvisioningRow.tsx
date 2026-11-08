@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
@@ -22,6 +23,7 @@ import {
   itemName,
   outcomeWords,
   planningWords,
+  refusalWords,
   retryWords,
   rowSentence,
   rowSizeWords,
@@ -82,6 +84,54 @@ export function RowState({ row }: { row: SetupRow }) {
         />
       )}
       <span data-setup-sentence>{rowSentence(t, row)}</span>
+    </p>
+  );
+}
+
+/** What the window says while the setup status is not a snapshot: that it is
+ * being read, why it could not be, with a way to read it again, or that setup
+ * is unavailable. The one place that is worded, in the panel and in a model
+ * list alike. `checking` says the read is under way though the status has
+ * not failed or settled; by default it is while the first read waits. */
+export function SetupReadState({
+  checking,
+  slot,
+}: {
+  checking?: boolean;
+  /** The marker the sentence carries where a surface is told apart by it. */
+  slot?: string;
+}) {
+  const t = useStrings();
+  const { control } = useProvisioning();
+  const { read } = control;
+  if (checking ?? read.kind === "loading")
+    return (
+      <p
+        role="status"
+        data-slot={slot}
+        className="flex items-center gap-2 text-sm text-muted-foreground"
+      >
+        <Spinner />
+        <span>{t("desktop.setup.checking")}</span>
+      </p>
+    );
+  if (read.kind === "failed")
+    return (
+      <Alert role="alert">
+        <span data-slot={slot}>{refusalWords(t, read.code)}</span>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={control.pending}
+          onClick={() => control.check("quick")}
+        >
+          {t("desktop.agent.retry")}
+        </Button>
+      </Alert>
+    );
+  return (
+    <p role="status" data-slot={slot} className="text-sm text-foreground">
+      {t("desktop.setup.unavailable")}
     </p>
   );
 }
