@@ -10,7 +10,9 @@
 
 use crate::{
     contract::LOCAL_ENGINE_SELECTION,
-    custody::{ensure_local_directory, read_optional_local_record, write_local_record},
+    custody::{
+        clear_local_record, ensure_local_directory, read_optional_local_record, write_local_record,
+    },
 };
 use cadrumo_application::provisioning::local_ai::{LocalEngine, Placement, package_default_engine};
 use serde::{Deserialize, Serialize};
@@ -69,6 +71,20 @@ impl LocalEngineSelection {
         ensure_local_directory(root)?;
         let bytes = serde_json::to_vec(self).map_err(io::Error::other)?;
         write_local_record(&root.join(LOCAL_ENGINE_SELECTION), &bytes, RECORD_BYTES)
+    }
+
+    /// Removes the record, so the person's setting reads as unchosen and the defaults the
+    /// package derives apply again. A record that cannot be read is removed as well, without
+    /// reading it; an absent record, or a storage root that does not exist yet, is already
+    /// clear.
+    pub fn clear(root: &Path) -> io::Result<()> {
+        if !root.is_absolute() {
+            return Err(io::ErrorKind::InvalidInput.into());
+        }
+        match clear_local_record(&root.join(LOCAL_ENGINE_SELECTION)) {
+            Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
+            cleared => cleared,
+        }
     }
 }
 
@@ -243,6 +259,34 @@ mod tests {
         let relative = Path::new("relative-root");
         let selection = LocalEngineSelection::new(LocalEngine::LlamaCpp, Placement::Auto);
         assert!(selection.store(relative).is_err());
+        assert!(LocalEngineSelection::clear(relative).is_err());
         assert!(!relative.exists());
+    }
+
+    #[test]
+    fn clearing_removes_a_stored_or_unreadable_record_and_an_absent_one_is_already_clear() {
+        let root = scratch_root();
+        // No storage root yet, and then a root with no record: both are already clear.
+        LocalEngineSelection::clear(&root).unwrap();
+        std::fs::create_dir_all(&root).unwrap();
+        LocalEngineSelection::clear(&root).unwrap();
+        assert_eq!(LocalEngineSelection::read(&root), Recorded::Absent);
+
+        // A stored choice is removed, and the setting reads unchosen again; clearing twice
+        // changes nothing.
+        LocalEngineSelection::new(LocalEngine::Ollama, Placement::CpuOnly)
+            .store(&root)
+            .unwrap();
+        LocalEngineSelection::clear(&root).unwrap();
+        assert_eq!(LocalEngineSelection::read(&root), Recorded::Absent);
+        assert!(!root.join(LOCAL_ENGINE_SELECTION).exists());
+        LocalEngineSelection::clear(&root).unwrap();
+
+        // A record that cannot be read is removed too.
+        write_local_record(&root.join(LOCAL_ENGINE_SELECTION), b"{", RECORD_BYTES).unwrap();
+        assert_eq!(LocalEngineSelection::read(&root), Recorded::Unreadable);
+        LocalEngineSelection::clear(&root).unwrap();
+        assert_eq!(LocalEngineSelection::read(&root), Recorded::Absent);
+        std::fs::remove_dir_all(root).unwrap();
     }
 }
