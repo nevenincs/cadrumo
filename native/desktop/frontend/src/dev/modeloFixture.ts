@@ -928,6 +928,17 @@ export function modeloFixture(options: Options): ModeloPort {
           `compare-${rentaForm(shape)}`,
           spoken,
         )) as LedgerOutcome<ModeloResult<typeof definition>>;
+      // A profile the application will not file for: the creation is refused
+      // with the door the refusal names, as the backend recorded it, and
+      // nothing is written. A creation names no output language, so the
+      // refusal is worded in the one the window last read in.
+      if (
+        definition === "modelo.work.create" &&
+        (shape === "profile-field" || shape === "profile-setup")
+      )
+        return (await refusedWith(shape, spoken)) as LedgerOutcome<
+          ModeloResult<typeof definition>
+        >;
       const result = await (async (): Promise<unknown> => {
         switch (definition) {
           case "modelo.work.compare_taxation":
@@ -1050,13 +1061,6 @@ export function modeloFixture(options: Options): ModeloPort {
               ? written("reconcile-130")
               : unserved();
           case "modelo.work.create": {
-            // A profile the application will not file for: the creation is
-            // refused with the door the refusal names, as the backend recorded
-            // it. Nothing is written.
-            if (shape === "profile-field" || shape === "profile-setup")
-              return (await refusedWith(shape, language)) as LedgerOutcome<
-                ModeloResult<typeof definition>
-              >;
             // The first quarter, which a refused estimate asks to create.
             if (quarter !== "none" || !shape.startsWith("renta"))
               return unserved();

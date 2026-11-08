@@ -278,7 +278,10 @@ export function ProfileDetails({
     </ul>
   );
 
-  const entriesCard = (section: ProfileSection) => {
+  /** `blank` is the group of details a section holding no entry stands for,
+   * listed where nothing else lists them, so a required one is marked and can
+   * be filled in as the first entry. */
+  const entriesCard = (section: ProfileSection, blank: Row[] = []) => {
     const rows = entries(section);
     const shownRows = needle
       ? rows.filter(([, fields]) =>
@@ -397,14 +400,17 @@ export function ProfileDetails({
               })}
             </ul>
           ) : (
-            <p className="px-2 py-1.5 text-muted-foreground">
-              {t("desktop.profile.entries_none")}
-              {anyRequired && (
-                <span className="ml-2 text-xs">
-                  {t("desktop.profile.entry_required")}
-                </span>
-              )}
-            </p>
+            <>
+              <p className="px-2 py-1.5 text-muted-foreground">
+                {t("desktop.profile.entries_none")}
+                {anyRequired && (
+                  <span className="ml-2 text-xs">
+                    {t("desktop.profile.entry_required")}
+                  </span>
+                )}
+              </p>
+              {blank.length > 0 && detailList(blank)}
+            </>
           )}
         </div>
       ),
@@ -414,7 +420,13 @@ export function ProfileDetails({
   let body: ReactNode;
   if (group === "section")
     body = data.sections.map((section) => {
-      if (section.repeatable) return listsEntries ? entriesCard(section) : null;
+      if (section.repeatable)
+        return listsEntries
+          ? entriesCard(
+              section,
+              visible.filter((row) => row.section.key === section.key),
+            )
+          : null;
       const rows = visible.filter((row) => row.section.key === section.key);
       if (!rows.length) return null;
       return card({
@@ -440,7 +452,9 @@ export function ProfileDetails({
         });
       }),
       ...(listsEntries
-        ? data.sections.filter((s) => s.repeatable).map(entriesCard)
+        ? data.sections
+            .filter((s) => s.repeatable)
+            .map((section) => entriesCard(section))
         : []),
     ];
   else
@@ -453,7 +467,9 @@ export function ProfileDetails({
           })
         : null,
       ...(listsEntries
-        ? data.sections.filter((s) => s.repeatable).map(entriesCard)
+        ? data.sections
+            .filter((s) => s.repeatable)
+            .map((section) => entriesCard(section))
         : []),
     ];
   return <>{body}</>;
