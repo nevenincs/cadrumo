@@ -41,6 +41,8 @@ const AUTH: Record<string, ProviderSettingsRecord["auth_kind"]> = {
   gateway_cli: "api_key_with_base_url",
   relay_cli: "api_key_with_base_url",
   local_api: "none",
+  ollama_api: "none",
+  llamacpp_api: "none",
 };
 
 /** The address a gateway lane is reached at unless the person gives one. */

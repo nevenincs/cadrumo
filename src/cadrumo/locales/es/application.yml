@@ -1882,6 +1882,28 @@ application:
         elemento que no está en tu registro.
       row_unregistered_undated: Un movimiento registra un elemento que no consta en
         tu registro.
+      withholding_invoice_entity_professional_fee: La factura recibida {invoice} de
+        {counterparty} declara una retención de {amount} sobre unos honorarios profesionales,
+        pero quien la emite es una sociedad, y los servicios profesionales de una
+        sociedad no llevan retención. Corrige la factura para que no declare retención.
+      withholding_invoice_incomplete: La factura recibida {invoice} de {counterparty}
+        declara una retención de {amount}, pero le falta el NIF de quien la emite
+        o su importe en euros. Completa la factura.
+      withholding_invoice_kind_undeclared: La factura recibida {invoice} de {counterparty}
+        declara una retención de {amount}, pero su pago no dice si es un alquiler
+        o los honorarios de una actividad. Abre el movimiento que la paga y elige
+        su categoría de IRPF.
+      withholding_invoice_non_resident: La factura recibida {invoice} de {counterparty}
+        declara una retención de {amount}, pero quien la emite no reside en España,
+        así que esa retención no se declara en este modelo. Comprueba el país y el
+        NIF de la factura.
+      withholding_invoice_rate_unrecognised: La factura recibida {invoice} de {counterparty}
+        declara una retención de {amount} que no corresponde a ningún tipo de retención
+        de actividades. Comprueba la base y la retención de la factura.
+      withholding_invoice_recipient_unknown: La factura recibida {invoice} de {counterparty}
+        declara una retención de {amount}, pero su NIF no indica si quien la emite
+        tributa por el IRPF o por el Impuesto sobre Sociedades. Comprueba el NIF de
+        la factura.
     calc_diagnostic_words:
       income_class:
         actividad_economica: actividades económicas
@@ -2225,6 +2247,7 @@ application:
       cross_period_clean_state_incomplete: La prueba de estado limpio entre periodos
         está incompleta para el modelo {modelo} {period} {filing_year}; quedan {finding_count}
         incidencia(s).
+      cross_period_sources_not_filed: 'El %{modelo_words} de %{year} suma las declaraciones de su ejercicio y aún le faltan: %{sources}. Cuando estén presentadas, vuelve a calcularlo.'
       deductible_iva_evidence_missing: 'Los apuntes con IVA deducible de tus registros
         requieren una factura de compra vinculada. Vincula la factura al apunte y
         vuelve a ejecutar aeat app modelo work verify: la comprobación no se completa
@@ -2965,6 +2988,11 @@ application:
       stage_incomplete: La etapa %{stage} de `quickfile` terminó con el estado %{status}.
       stage_refused: '`quickfile` se detuvo en la etapa %{stage}: la etapa se rechazó
         con %{error_code}.'
+    reconciliation_sources:
+      standing:
+        missing: '%{modelo}, %{period}: sin calcular'
+        unfiled: '%{modelo}, %{period}: comprobada, sin presentar'
+        unverified: '%{modelo}, %{period}: calculada, sin comprobar'
     taxation_comparison_words:
       below_materiality: Los dos resultados difieren en {difference}, menos de {threshold},
         así que da igual cuál de las dos modalidades elijas.

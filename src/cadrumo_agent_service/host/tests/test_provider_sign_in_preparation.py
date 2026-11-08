@@ -25,6 +25,7 @@ from ...providers.application.contracts import (
     ProviderStatusEntry,
 )
 from ...providers.application.tests.synthetic_catalog import synthetic_catalog
+from ...providers.domain.record import LocalEngine
 from ...service import AgentService
 from ..auth_attempt import AuthAttempt
 from ..launch_environment import EXTERNAL_BIN_DIRECTORIES_VARIABLE, HOSTED_ROOT_VARIABLE
@@ -76,6 +77,7 @@ def test_sign_in_preparation_preserves_authority_and_never_claims_login(
 ) -> None:
     client = SimpleNamespace(lease=SimpleNamespace(profile_id=uuid4()), connection=SimpleNamespace(close=lambda: None))
     service = AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
         client=cast(InstalledServiceClient, client),
         storage_root=tmp_path,
         gateway_bearer=bytearray(b"synthetic-gateway"),
@@ -183,6 +185,7 @@ def test_sign_in_preparation_preserves_authority_and_never_claims_login(
 
 def test_signed_out_person_cannot_prepare_a_login(tmp_path: Path) -> None:
     service = AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
         client=cast(
             InstalledServiceClient, SimpleNamespace(lease=None, connection=SimpleNamespace(close=lambda: None))
         ),
@@ -198,6 +201,7 @@ def test_signed_out_person_cannot_prepare_a_login(tmp_path: Path) -> None:
 
 def test_submit_code_rejects_stale_attempt_and_retired_owner(tmp_path: Path) -> None:
     service = AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
         client=cast(
             InstalledServiceClient, SimpleNamespace(lease=object(), connection=SimpleNamespace(close=lambda: None))
         ),
@@ -226,6 +230,7 @@ def test_status_preserves_refusal_without_adding_success_metadata(
     code: ProviderSettingsRefusalCode, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     service = AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
         client=cast(
             InstalledServiceClient,
             SimpleNamespace(lease=SimpleNamespace(profile_id=uuid4()), connection=SimpleNamespace(close=lambda: None)),

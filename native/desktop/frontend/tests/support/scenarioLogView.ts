@@ -4,9 +4,9 @@ import { label } from "./strings";
 
 export const openLogs = (target: Page) => openPanelTab(target, "logs");
 
-/** How many error records the log holds, as its bar counts them: a number
- * that grows as records arrive, whatever span is drawn. One generated record
- * in seven is an error. It stops growing once the ring is full. */
+/** How many error records have arrived, as the log's bar counts them: a
+ * number that grows as records arrive, whatever span is drawn and whatever the
+ * ring still holds. One generated record in seven is an error. */
 export const errorsHeld = (target: Page) => async () =>
   Number(
     /\d+/.exec(

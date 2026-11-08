@@ -52,10 +52,10 @@ _IMPORT_ERROR: Final = "import of mcp halted"
 
 
 def test_a_start_whose_setup_fails_before_ready_is_a_refused_event_with_the_reason_kept_out_of_it(
-    tmp_path: Path, caplog: pytest.LogCaptureFixture
+    outside_git_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     interpreter = checkout_interpreter(agent_checkout())
-    root = tmp_path / "profile"
+    root = outside_git_path / "profile"
     root.mkdir()
     environment = system_environment(os.environ) | {HOSTED_ROOT_VARIABLE: str(root)}
     setup = WindowsAgentInvocationRunner().run(

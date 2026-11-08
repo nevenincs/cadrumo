@@ -28,6 +28,7 @@ from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from ...admin import AdminServer
 from ...main import wait_out_recovery
+from ...providers.domain.record import LocalEngine
 from ...service import AgentService
 from .admin_wire_support import read_frame, send_frame
 
@@ -123,6 +124,7 @@ class _Runtime:
 
 def _service(runtime: _Runtime, tmp_path: Path, emitted: list[dict[str, object]] | None = None) -> AgentService:
     return AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
         client=cast(InstalledServiceClient, runtime),
         storage_root=tmp_path,
         gateway_bearer=bytearray(),

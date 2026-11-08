@@ -20,6 +20,7 @@ import { Icon } from "@/components/ui/icon";
 import type { LogRecord, LogSourceStates } from "../ipc/contract";
 import { labelled } from "../shell/compose";
 import { useMetric } from "../shell/metrics";
+import type { LogCounts } from "../shell/useHostLogs";
 import { fromPointer } from "../shell/pointer";
 import {
   DEFAULT_FILTERS,
@@ -146,10 +147,14 @@ export const RecordList = memo(function RecordList({
   onReveal,
   onRetry,
   interrupted = false,
+  counts,
   shown,
 }: {
   /** null until the host's subscription answers. */
   records: LogRecord[] | null;
+  /** Errors and warnings since the log was first followed, which outlast
+   * the records the ring still holds. */
+  counts: LogCounts;
   sourceStates: LogSourceStates | "unavailable" | null;
   dropped: number;
   filters: RecordFilters;
@@ -194,15 +199,6 @@ export const RecordList = memo(function RecordList({
   // The record the keyboard is on, to notice when it leaves the drawn span.
   const focused = useRef<string | null>(null);
   const all = useMemo(() => records ?? [], [records]);
-  const counts = useMemo(() => {
-    let errors = 0;
-    let warnings = 0;
-    for (const record of all) {
-      if (record.level === "ERROR" || record.level === "CRITICAL") errors++;
-      else if (record.level === "WARNING") warnings++;
-    }
-    return { errors, warnings };
-  }, [all]);
   const selected = useMemo(() => {
     const retained = new Set(all);
     return selectedRecords.filter((record) => retained.has(record));

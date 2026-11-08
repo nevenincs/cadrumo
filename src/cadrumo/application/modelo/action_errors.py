@@ -272,8 +272,12 @@ class ModeloLocalObservationError(ModeloError):
     """Raised when an operator-supplied local observation cannot be persisted."""
 
 
-class ModeloCrossPeriodCleanStateError(ModeloPreconditionErrorMixin, ModeloError):
-    """Raised when a filing-grade workflow lacks clean prior-filing proof."""
+class ModeloCrossPeriodCleanStateError(OperationNextStepErrorMixin, ModeloPreconditionErrorMixin, ModeloError):
+    """Raised when a filing-grade workflow lacks clean prior-filing proof.
+
+    When the refusal knows which prior declaration to put right first, it
+    serves that declaration's step.
+    """
 
 
 class ModeloWorkflowGateError(ModeloError):

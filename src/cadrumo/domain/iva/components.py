@@ -658,6 +658,37 @@ def category_components(
         ) from exc
 
 
+def retencion_role_of_kind(
+    kind: InvoiceKind,
+    *,
+    component_catalogue: ComponentCatalogue | None = None,
+) -> IvaRetencionRole | None:
+    """Return the one retención role every arising ``kind`` row that admits a retención declares.
+
+    An invoice whose IVA category is undeclared still has a kind, and a retención
+    can arise only on a row that expects or admits one. When all such rows of the
+    kind agree on whose money the retención is, that role is the answer whatever
+    the category turns out to be. ``None`` when the rows disagree or none admits
+    a retención, so the caller cannot read a role the table does not settle.
+    """
+    if component_catalogue is None:
+        component_catalogue = registry_component_catalogue()
+    vocabulary = registry_component_vocabulary()
+    does_not_arise = vocabulary.require_kind_applicability("does_not_arise")
+    admitting = {
+        vocabulary.require_retencion_expectation("expected"),
+        vocabulary.require_retencion_expectation("possible"),
+    }
+    roles = {
+        vocabulary.require_retencion_role(row.retencion_role)
+        for (_, row_kind), row in component_catalogue.items()
+        if row_kind is kind
+        and vocabulary.require_kind_applicability(row.applicability) != does_not_arise
+        and vocabulary.require_retencion_expectation(row.retencion) in admitting
+    }
+    return next(iter(roles)) if len(roles) == 1 else None
+
+
 def category_bears_taxable_base(
     category: IvaCategory,
     kind: InvoiceKind,
@@ -747,4 +778,5 @@ __all__ = [
     "registry_cuota_settlement_catalogue",
     "registry_kind_applicability_token",
     "registry_retencion_role_token",
+    "retencion_role_of_kind",
 ]

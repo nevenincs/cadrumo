@@ -29,6 +29,7 @@ from ...adapters.provider_catalog_metadata import declared_catalog_envelope
 from ...providers.application.service import ProviderSettingsService
 from ...providers.application.tests.memory_store import MemoryProviderSettingsStore
 from ...providers.application.tests.synthetic_catalog import StaticCatalogSource
+from ...providers.domain.record import LocalEngine
 from ...service import AgentService
 from ...service_support import ADMIN_READ_SECONDS
 from ..controller import AgentGenerations, AgentHostController, AgentHostState, AgentReady
@@ -102,6 +103,7 @@ def test_a_catalog_read_right_after_ready_is_served_while_the_starting_read_ends
     with _gateway(gateway_reads) as port:
         client = SimpleNamespace(lease=object(), connection=SimpleNamespace(close=lambda: None))
         service = AgentService(
+            local_engine_default=LocalEngine.LLAMACPP,
             client=cast(InstalledServiceClient, client),
             storage_root=tmp_path / "storage",
             gateway_bearer=bytearray(b"synthetic-bearer"),

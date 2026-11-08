@@ -5,7 +5,10 @@
 use super::super::{
     admission::{
         Admission,
-        tests::{ADDED, GB, LOCAL, Replies, TEXT, VISION, cause, declared, refusal, requested},
+        tests::{
+            ADDED, GB, LOCAL, Replies, TEXT, VISION, cause, declared, refusal, requested,
+            unpackaged, unselected,
+        },
     },
     wire::{Google, Snapshot},
 };
@@ -17,7 +20,7 @@ use cadrumo_application::provisioning::{
     engine::{EngineConfig, SERVER_WAIT},
     items::FULL_CHECK_BUDGET,
     local_ai::{
-        ServerCall, StartFailureKind,
+        Placement, ServerCall, StartFailureKind,
         loopback::{ExchangeFailure, ExchangePhase},
     },
     pins::{ComponentPins, Platform},
@@ -253,7 +256,7 @@ sha256 = \"{}\"
         let roots = self.certificate.roots();
         let address: Option<SocketAddr> = self.reachable.then(|| self.server.address());
         let free_bytes = self.free_bytes;
-        Arc::new(move || {
+        Arc::new(move |placement: Placement| {
             let resolve: Arc<Resolve> = Arc::new(move |_: &str, _: u16| match address {
                 Some(address) => Ok(vec![address]),
                 None => Err(std::io::Error::new(
@@ -272,6 +275,7 @@ sha256 = \"{}\"
                 local_ai_address: "127.0.0.1:9".parse().expect("an address"),
                 llama_server_folder: root.join("package").join("bin").join("llama"),
                 llama_server_build: "b1".into(),
+                placement,
                 browser_environment: BTreeMap::new(),
                 scratch: root.join("tmp"),
                 free_space: Box::new(move |_| free_bytes),
@@ -299,7 +303,11 @@ sha256 = \"{}\"
 
 /// An admission over a service that answers nothing, as general setup consults none.
 fn unconsulted() -> Arc<Admission> {
-    Arc::new(Admission::new(Arc::new(Replies::default())))
+    Arc::new(Admission::new(
+        Arc::new(Replies::default()),
+        unselected(),
+        unpackaged(),
+    ))
 }
 
 /// The window's component engine over `fixture`, with no download asked for.
@@ -317,7 +325,7 @@ pub(in super::super) fn serving(fixture: &Fixture, replies: Replies) -> (Compone
 /// As [`serving`], with the diagnostics the engine records its failures in.
 fn watching(fixture: &Fixture, replies: Replies) -> (Components, Arc<Replies>, Arc<Diagnostics>) {
     let replies = Arc::new(replies);
-    let admission = Arc::new(Admission::new(replies.clone()));
+    let admission = Arc::new(Admission::new(replies.clone(), unselected(), unpackaged()));
     let diagnostics = Arc::new(Diagnostics::default());
     let components = Components::new(fixture.engines(), admission, diagnostics.clone());
     (components, replies, diagnostics)
@@ -850,9 +858,9 @@ async fn a_cancel_ends_a_setup_whose_planning_does_not_end_and_frees_its_start()
     let held = gate.clone();
     // An engine whose making does not end until the test lets it, as a planning that
     // hangs reads to the window.
-    let hanging: Arc<Engines> = Arc::new(move || {
+    let hanging: Arc<Engines> = Arc::new(move |placement: Placement| {
         held.wait();
-        engines()
+        engines(placement)
     });
     let diagnostics = Arc::new(Diagnostics::default());
     let components = Arc::new(Components::new(hanging, unconsulted(), diagnostics.clone()));
@@ -908,7 +916,7 @@ async fn an_item_this_build_cannot_set_up_settles_with_its_refusal() {
 async fn a_setting_the_engine_cannot_use_gives_the_check_its_category() {
     // What a refused setting looks like to the window: the installation's engine cannot
     // be built, and the error carries the category the engine classified it under.
-    let engines: Arc<Engines> = Arc::new(|| Err(blocked()));
+    let engines: Arc<Engines> = Arc::new(|_: Placement| Err(blocked()));
     let diagnostics = Arc::new(Diagnostics::default());
     let components = Components::new(engines, unconsulted(), diagnostics.clone());
 
@@ -936,7 +944,7 @@ async fn a_setting_the_engine_cannot_use_gives_the_check_its_category() {
 
 #[tokio::test]
 async fn a_setting_the_engine_cannot_use_fails_the_setup_with_its_category_and_records_why() {
-    let engines: Arc<Engines> = Arc::new(|| Err(blocked()));
+    let engines: Arc<Engines> = Arc::new(|_: Placement| Err(blocked()));
     let diagnostics = Arc::new(Diagnostics::default());
     let components = Components::new(engines, unconsulted(), diagnostics.clone());
 
@@ -1132,11 +1140,11 @@ async fn a_cancel_that_cannot_reach_the_followed_setup_says_why_and_may_be_asked
     let real = fixture.engines();
     let lost = Arc::new(std::sync::atomic::AtomicBool::new(false));
     let switch = lost.clone();
-    let engines: Arc<Engines> = Arc::new(move || {
+    let engines: Arc<Engines> = Arc::new(move |placement: Placement| {
         if switch.load(std::sync::atomic::Ordering::Acquire) {
             Err(blocked())
         } else {
-            real()
+            real(placement)
         }
     });
     let follower = Components::new(engines, unconsulted(), Arc::default());
@@ -1170,7 +1178,7 @@ async fn a_cancel_that_cannot_reach_the_followed_setup_says_why_and_may_be_asked
 
 #[tokio::test]
 async fn a_removal_the_engine_could_not_make_ready_says_why() {
-    let engines: Arc<Engines> = Arc::new(|| Err(blocked()));
+    let engines: Arc<Engines> = Arc::new(|_: Placement| Err(blocked()));
     let components = Components::new(engines, unconsulted(), Arc::default());
     let stopped = components.remove_model(TEXT).await;
     assert_eq!(
@@ -1299,7 +1307,7 @@ async fn local_ai_plan(
     replies: Replies,
     download: Option<wire::ModelDownload>,
 ) -> (Components, String, wire::Review) {
-    let (components, _) = serving(fixture, replies);
+    let (components, _, diagnostics) = watching(fixture, replies);
     components
         .start(ItemId::LocalAi, false, download)
         .await
@@ -1312,9 +1320,13 @@ async fn local_ai_plan(
     assert_eq!(
         run.stage,
         RunStage::Review,
-        "the plan waits for the window, but the setup ended {:?} {:?}",
+        "the plan waits for the window, but the setup ended {:?} {:?}, recording {:?} after \
+         asking the publisher for {:?}; details: {}",
         run.outcome,
-        run.failure
+        run.failure,
+        recorded(&diagnostics),
+        fixture.server.targets(),
+        asked.details
     );
     let (operation, plan) = review(&asked);
     (components, operation, plan)
@@ -1768,7 +1780,7 @@ async fn a_setup_counts_what_another_running_setup_still_downloads_against_the_s
         items: Some(vec![ItemId::Browser]),
         approved: None,
     };
-    let browser_bytes = (fixture.engines())()
+    let browser_bytes = (fixture.engines())(Placement::default())
         .unwrap()
         .engine
         .setup(
@@ -2217,4 +2229,118 @@ fn a_failure_outside_the_server_wait_keeps_its_own_part() {
             None,
         ]
     );
+}
+
+/// An admission whose runtime manager selection record nobody can read.
+#[cfg(any(windows, target_os = "macos"))]
+fn unreadable_selection(fixture: &Fixture) -> Arc<Admission> {
+    let root = fixture.root().join("manager");
+    std::fs::create_dir_all(&root).unwrap();
+    cadrumo_manager::custody::write_local_record(
+        &root.join(cadrumo_manager::contract::LOCAL_ENGINE_SELECTION),
+        b"{",
+        4096,
+    )
+    .unwrap();
+    Arc::new(Admission::new(
+        Arc::new(Replies::default()),
+        root,
+        unpackaged(),
+    ))
+}
+
+#[cfg(any(windows, target_os = "macos"))]
+#[tokio::test]
+async fn an_unreadable_engine_selection_refuses_the_local_ai_and_leaves_the_browser_alone() {
+    let fixture = Fixture::new(Serving::Whole);
+    let components = Components::new(
+        fixture.engines(),
+        unreadable_selection(&fixture),
+        Arc::default(),
+    );
+    let finished = |after: Option<String>| {
+        move |view: &View| {
+            view.check.as_ref().is_some_and(|check| {
+                check.stage != CheckStage::Running && Some(&check.operation_id) != after.as_ref()
+            })
+        }
+    };
+
+    // A setup of the local AI is refused before any engine runs, and shows no run.
+    let stopped = components.start(ItemId::LocalAi, false, None).await;
+    assert_eq!(
+        stopped.as_ref().err().and_then(Stop::refusal),
+        Some(Refusal::Unavailable)
+    );
+    assert_eq!(
+        cause(stopped).reason.as_deref(),
+        Some("setup_local_engine_unreadable")
+    );
+    assert!(components.view().runs.is_empty());
+
+    // A status read reads the browser alone and refuses the local AI beside it, quick
+    // or full.
+    components.check(wire::CheckMode::Quick);
+    let read = until(&components, finished(None)).await;
+    let quick = read.check.clone().unwrap();
+    assert_eq!(
+        (quick.stage, quick.refusal),
+        (CheckStage::Failed, Some(Refusal::Unavailable))
+    );
+    assert_eq!(
+        read.rows
+            .iter()
+            .map(|row| row.item.as_str())
+            .collect::<Vec<_>>(),
+        ["browser"]
+    );
+    assert_eq!(read.complete, Some(false));
+    components.check(wire::CheckMode::Full);
+    let read = until(&components, finished(Some(quick.operation_id.clone()))).await;
+    let refused = read.check.clone().unwrap();
+    assert_eq!(
+        (refused.stage, refused.refusal),
+        (CheckStage::Failed, Some(Refusal::Unavailable))
+    );
+    assert_eq!(
+        read.rows
+            .iter()
+            .map(|row| row.item.as_str())
+            .collect::<Vec<_>>(),
+        ["browser"]
+    );
+    // A full check of the local AI is refused before any engine runs.
+    components.verify(vec![ItemId::LocalAi]);
+    let verified = until(&components, finished(Some(refused.operation_id.clone())))
+        .await
+        .check
+        .unwrap();
+    assert_eq!(
+        (verified.stage, verified.refusal),
+        (CheckStage::Failed, Some(Refusal::Unavailable))
+    );
+    assert_eq!(
+        refusal(components.remove(Removal::LocalAiProgram).await),
+        Err(Refusal::Unavailable)
+    );
+
+    // The browser reads no selection: its check, full check, setup and removal proceed.
+    assert!(components.check_browser().await.is_some());
+    components.verify(vec![ItemId::Browser]);
+    let browser = until(&components, finished(Some(verified.operation_id.clone())))
+        .await
+        .check
+        .unwrap();
+    assert_eq!((browser.stage, browser.refusal), (CheckStage::Done, None));
+    let (operation, plan) = reviewing(&components).await;
+    decline(&components, &operation, &plan).await;
+    assert_eq!(refusal(components.remove(Removal::Browser).await), Ok(()));
+}
+
+#[test]
+fn only_a_command_that_names_the_local_ai_or_every_item_reaches_it() {
+    assert!(reaches_local_ai(&[]));
+    assert!(reaches_local_ai(&[ItemId::LocalAi]));
+    assert!(reaches_local_ai(&[ItemId::Browser, ItemId::LocalAi]));
+    assert!(!reaches_local_ai(&[ItemId::Browser]));
 }

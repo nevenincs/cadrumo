@@ -43,6 +43,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.entrypoints.adapter_composition_work_ports import build_filing_action_ports
 from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support import (
+    QUARTERLY_303_FILER_FACTS,
     blocked_wallet_decision,
     filed_history_only_wallet_decision,
     seed_modelo_303_1t_clean_state,
@@ -66,7 +67,7 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_blocked(
     isolated_backend: None, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     taxpayer_nif = "12345678Z"
-    bucket_id = seed_profile(tax_id=taxpayer_nif)
+    bucket_id = seed_profile(tax_id=taxpayer_nif, profile_overrides=QUARTERLY_303_FILER_FACTS)
     _, calc_rev_id = seed_revision(
         bucket_id=bucket_id,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
@@ -101,7 +102,7 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_filed_histo
     isolated_backend: None, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     taxpayer_nif = "X0001502F"
-    bucket_id = seed_profile(tax_id=taxpayer_nif)
+    bucket_id = seed_profile(tax_id=taxpayer_nif, profile_overrides=QUARTERLY_303_FILER_FACTS)
     _, calc_rev_id = seed_revision(
         bucket_id=bucket_id,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
@@ -136,7 +137,7 @@ def test_export_modelo_303_uses_injected_wallet_decision_repository(
     isolated_backend: None, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     taxpayer_nif = "12345678Z"
-    bucket_id = seed_profile(tax_id=taxpayer_nif)
+    bucket_id = seed_profile(tax_id=taxpayer_nif, profile_overrides=QUARTERLY_303_FILER_FACTS)
     _, calc_rev_id = seed_revision(
         bucket_id=bucket_id,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
@@ -182,7 +183,7 @@ def test_verify_modelo_303_surfaces_filed_history_only_wallet_decision_as_blocki
     isolated_backend: None, *, operation: PinnedAuthorityOperation
 ) -> None:
     taxpayer_nif = "X0001502F"
-    bucket_id = seed_profile(tax_id=taxpayer_nif)
+    bucket_id = seed_profile(tax_id=taxpayer_nif, profile_overrides=QUARTERLY_303_FILER_FACTS)
     _, calc_rev_id = seed_revision(
         bucket_id=bucket_id,
         state=CalculationRevisionState.BORRADOR,
@@ -221,7 +222,7 @@ def test_verify_modelo_303_uses_injected_wallet_decision_repository(
     isolated_backend: None, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     taxpayer_nif = "12345678Z"
-    bucket_id = seed_profile(tax_id=taxpayer_nif)
+    bucket_id = seed_profile(tax_id=taxpayer_nif, profile_overrides=QUARTERLY_303_FILER_FACTS)
     _, calc_rev_id = seed_revision(
         bucket_id=bucket_id,
         state=CalculationRevisionState.BORRADOR,
@@ -268,7 +269,7 @@ def test_file_modelo_303_uses_injected_wallet_decision_repository_before_mutatio
     isolated_backend: None, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     taxpayer_nif = "12345678Z"
-    bucket_id = seed_profile(tax_id=taxpayer_nif)
+    bucket_id = seed_profile(tax_id=taxpayer_nif, profile_overrides=QUARTERLY_303_FILER_FACTS)
     work_unit_id, calc_rev_id = seed_revision(
         bucket_id=bucket_id,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,

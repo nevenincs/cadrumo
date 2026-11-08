@@ -9,6 +9,11 @@ import type {
 } from "../ipc/account";
 import type { Host } from "./host";
 import { nameable, targetOf } from "./profiles";
+import {
+  endSession,
+  sessionEnded as windowSessionEnded,
+  startSession,
+} from "./sessionGate";
 import { failureCode } from "../errors";
 
 const unknownStatus: SignInStatus = {
@@ -568,10 +573,19 @@ export function useSignIn(host: Host) {
   const signedInPhase = phase === "signed-in";
   const wasSignedIn = useRef(signedInPhase);
   useEffect(() => {
-    if (signedInPhase && !wasSignedIn.current) sessionEnding.current = false;
+    if (signedInPhase && !wasSignedIn.current) {
+      sessionEnding.current = false;
+      startSession();
+    }
+    // A session that ends without the window asking (an idle expiry) ends
+    // for every read bound to it, as one the person signed out of does.
+    if (!signedInPhase && wasSignedIn.current) endSession();
     wasSignedIn.current = signedInPhase;
   }, [signedInPhase]);
-  const sessionEnded = useCallback(() => sessionEnding.current, []);
+  const sessionEnded = useCallback(
+    () => sessionEnding.current || windowSessionEnded(),
+    [],
+  );
   const startServices = async (scope?: "user" | "machine") => {
     if (!host.startManager || startingManager.current || submitting.current)
       return;
@@ -829,6 +843,7 @@ export function useSignIn(host: Host) {
       )
         return;
       sessionEnding.current = true;
+      endSession();
       const remaining = await host.signOut();
       if (
         !mounted.current ||
@@ -840,6 +855,7 @@ export function useSignIn(host: Host) {
     } catch (error) {
       // A sign-out that failed leaves the session as it was.
       sessionEnding.current = false;
+      startSession();
       if (mounted.current && generation === request.current)
         setSignOutFailure(refusalFrom(error));
     } finally {

@@ -127,12 +127,17 @@ class ReviewPackageSigningKeypairAdapter:
 def build_review_package_signing_keypair_capability(
     *,
     bucket_id: str,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> ReviewPackageSigningKeypairCapability:
-    """Bind the signing-keypair capability to the secure store for ``bucket_id``."""
+    """Bind the signing-keypair capability to the secure store for ``bucket_id``.
+
+    ``mutation_writer`` admits the commit that mints a missing keypair.
+    """
     normalized_bucket_id = canonical_bucket_id(bucket_id)
     return ReviewPackageSigningKeypairAdapter(
         repository=secure_object_repository_for_bucket(normalized_bucket_id),
         bucket_id=normalized_bucket_id,
+        mutation_writer=mutation_writer,
     )
 
 

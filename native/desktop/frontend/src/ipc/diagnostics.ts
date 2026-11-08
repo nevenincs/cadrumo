@@ -96,6 +96,10 @@ export type DesktopDiagnostic = {
   dropped: number;
   line: number | null;
   column: number | null;
+  /** The backend's closed code beside a relay failure's `code`. */
+  reason?: string;
+  /** What the record said, without any of its values. */
+  summary?: { template: string | null; module: string | null };
 };
 
 /** `PanicFact` in `native/application/src/diagnostics/panic.rs`: never the message. */

@@ -305,6 +305,16 @@ desktop:
     key_label: Clau d'API de {provider}
     key_note: Es desa xifrada en aquest ordinador i no es torna a mostrar.
     load_failed: No s’han pogut carregar els proveïdors. Torna-ho a provar.
+    local_engine_change_failed: No s’ha desat el teu canvi. Torna-ho a provar.
+    local_engine_changing: Desant…
+    local_engine_lead: El programa que executa els models en aquest ordinador. La llista de models és la mateixa amb qualsevol dels dos.
+    local_engine_llamacpp: llama.cpp
+    local_engine_llamacpp_detail: Inclòs. No cal instal·lar res.
+    local_engine_ollama: Ollama
+    local_engine_ollama_detail: Es baixa i es configura quan el tries.
+    local_engine_restarts: Canviar el motor o on s’executen els models reinicia l’assistent.
+    local_engine_title: Motor local
+    local_engine_unavailable: llama.cpp no està inclòs en aquesta instal·lació. Tria Ollama.
     local_model_absent: Sense baixar
     local_model_add: Afegeix
     local_model_add_label: Afegeix un model pel nom
@@ -337,6 +347,11 @@ desktop:
     local_models_title: Models en aquest ordinador
     local_models_unreadable: La teva llista de models desada no es pot llegir. Restableix-la
       per tornar a començar amb els models recomanats.
+    local_placement_auto: Automàtic
+    local_placement_auto_detail: Fa servir la targeta gràfica quan hi cap el model.
+    local_placement_cpu_only: Només processador
+    local_placement_cpu_only_detail: Més lent. Fa servir només la memòria d’aquest ordinador.
+    local_placement_title: On s’executen els models
     next_step:
       close_other_sign_in: Tanca l'altre inici de sessió i torna-ho a provar.
       console_sign_in: Inicia la sessió des d'un terminal.
