@@ -48,24 +48,53 @@ function TodoList({
   envelope,
   session,
   onPicked,
+  onOpenProfile,
   onOpenCheck,
 }: {
   envelope: ModeloWorkbenchFormProjectionV1;
   session: FormSession;
   onPicked?: () => void;
+  onOpenProfile?: () => void;
   onOpenCheck?: () => void;
 }) {
   const t = useStrings();
   const [openFailed, setOpenFailed] = useState(false);
+  // The profile facts the read model says must be answered before the period
+  // can be worked out, such as the one that decides its cadence; their door
+  // is the profile.
+  const required = envelope.profile_requirements;
+  const profileLine = required.length > 0 && (
+    <button
+      type="button"
+      data-todo-profile=""
+      onClick={onOpenProfile}
+      disabled={!onOpenProfile}
+      className="flex w-full items-start gap-2 rounded-md border border-border px-2 py-2 text-left hover:bg-accent"
+    >
+      <Icon name="alert" size="xs" className="mt-0.5 text-warning" />
+      <span className="flex flex-col">
+        <span className="text-sm">{t("workspace.modelo.todo.profile")}</span>
+        <ul className="text-xs text-muted-foreground">
+          {required.map((label) => (
+            <li key={label}>{label}</li>
+          ))}
+        </ul>
+      </span>
+      <Icon name="forward" size="xs" className="mt-0.5 ml-auto text-faint" />
+    </button>
+  );
   if (!editsAdmitted(envelope))
     return (
-      <p className="flex gap-2 p-4 text-sm text-muted-foreground">
-        <Icon name="lock" size="xs" className="mt-0.5" />
-        {envelope.rules_incomplete
-          ? t("workspace.modelo.editor.rules_incomplete")
-          : (envelope.admission_refusal_words ??
-            t("workspace.modelo.editability.no_admission"))}
-      </p>
+      <div className="flex flex-col gap-3 p-2">
+        {profileLine}
+        <p className="flex gap-2 p-2 text-sm text-muted-foreground">
+          <Icon name="lock" size="xs" className="mt-0.5" />
+          {envelope.rules_incomplete
+            ? t("workspace.modelo.editor.rules_incomplete")
+            : (envelope.admission_refusal_words ??
+              t("workspace.modelo.editability.no_admission"))}
+        </p>
+      </div>
     );
   const todo = todoOf(envelope.form.form, session);
   // Missing values no box holds are the check's to name; the read model
@@ -84,7 +113,12 @@ function TodoList({
       <Icon name="forward" size="xs" className="mt-0.5 ml-auto text-faint" />
     </button>
   );
-  if (!todo.groups.length && !todo.failed.length && !elsewhereLine)
+  if (
+    !todo.groups.length &&
+    !todo.failed.length &&
+    !elsewhereLine &&
+    !profileLine
+  )
     return (
       <p className="flex gap-2 p-4 text-sm text-muted-foreground">
         <Icon name="check" size="xs" className="mt-0.5 text-success" />
@@ -109,6 +143,7 @@ function TodoList({
   );
   return (
     <div className="flex flex-col gap-3 p-2">
+      {profileLine}
       {elsewhereLine}
       {todo.groups.map(([origin, list]) => {
         const word = t(`workspace.modelo.origin.${origin}`);
@@ -206,6 +241,7 @@ export function TodoRail({
             envelope={envelope}
             session={session}
             onPicked={onPicked}
+            onOpenProfile={onOpenProfile}
             onOpenCheck={onOpenCheck}
           />
         ) : (

@@ -344,6 +344,7 @@ class PublicModeloFormIssue(BaseModel):
     box: str | None
     attention: ModeloFormAttention
     action_locale_key: str
+    open_invoice_id: str | None = None
 
 
 class PublicModeloWorkForm(BaseModel):
@@ -498,6 +499,8 @@ class ModeloWorkbenchFormProjectionV1(BaseModel):
     typing_effects: tuple[ModeloFormTypingEffect, ...] = ()
     #: What exporting offers: the artefacts, whether elections are asked and with which choices, the file format.
     export_offer: PublicModeloFormExportOffer | None = None
+    #: The profile details the readiness gate still asks for, each as its label in the form's language.
+    profile_requirements: tuple[str, ...] = ()
     #: The recorded filing's AEAT receipt state; ``None`` when the declaration is not recorded as filed.
     receipt: ModeloFormReceipt | None = None
 
@@ -593,6 +596,7 @@ def _restore(projection: ModeloWorkbenchFormProjectionV1) -> ModeloWorkbenchForm
         tax_id_format=_restore_tax_id_format(projection.tax_id_format),
         export_offer=_restore_export_offer(projection.export_offer),
         receipt=projection.receipt,
+        profile_requirements=projection.profile_requirements,
     )
 
 
@@ -643,6 +647,7 @@ def project_modelo_workbench_form(
         typing_effects=read.typing_effects,
         export_offer=_project_export_offer(read.export_offer),
         receipt=read.receipt,
+        profile_requirements=read.profile_requirements,
     )
     _require_projection_roundtrip(read, projection)
     return projection

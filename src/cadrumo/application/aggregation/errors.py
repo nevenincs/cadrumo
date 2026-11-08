@@ -14,6 +14,7 @@ from datetime import date
 
 from ...core.errors.hierarchy import CadrumoError, CoreError, TerminalPreconditionErrorMixin
 from ...core.i18n.translatable import Translatable as tr
+from ..operations.next_step import OperationNextStepErrorMixin
 from ..operator_actions.models import PreconditionVerdict
 
 
@@ -78,6 +79,17 @@ class AggregationValidationError(AggregationError):
     """
 
 
+class RetencionesWindowEmptyError(OperationNextStepErrorMixin, AggregationError):
+    """Raised when a withholding modelo's period holds no retención and none was declared absent.
+
+    A refusal the filer can put right, not a failure: either a payment that bore
+    a retención is missing from the records, or the period had none and the
+    profile has not said so. Its words name the modelo and period and offer the
+    profile detail that records a period without retenciones, where the modelo
+    has one; they never name a command.
+    """
+
+
 class UnacceptedLedgerRegistryValueError(AggregationError):
     """Raised when a ledger row carries a registry value the operation's pinned authority does not accept.
 
@@ -110,5 +122,6 @@ __all__ = [
     "AggregationPeriodError",
     "AggregationUnsupportedModeloError",
     "AggregationValidationError",
+    "RetencionesWindowEmptyError",
     "UnacceptedLedgerRegistryValueError",
 ]

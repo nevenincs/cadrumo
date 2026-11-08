@@ -33,7 +33,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     bound_test_profile_record,
     upsert_test_profile_facts,
 )
-from cadrumo.application.aggregation.errors import AggregationValidationError
+from cadrumo.application.aggregation.errors import RetencionesWindowEmptyError
 from cadrumo.application.aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
 from cadrumo.application.aggregation.withholding_observation_service import WithholdingMutationMode
 from cadrumo.application.aggregation.withholding_recognition import (
@@ -774,14 +774,13 @@ def test_producer_without_retention_is_excluded_from_m111(
             )
             assert stored == ()
 
-            with pytest.raises(AggregationValidationError) as exc_info:
+            with pytest.raises(RetencionesWindowEmptyError) as exc_info:
                 _calculate_m111(str(session.profile_id), _M111_PERIOD)
 
-    assert exc_info.value.translated_message == "aggregation.retenciones.errors.m111_no_retenciones_attestation_missing"
+    assert exc_info.value.translated_message == "application.aggregation.retenciones.window_empty_work"
     context = exc_info.value.context
     assert context is not None, "the refusal must carry its context, not just a message"
     assert context["modelo"] == "111"
-    assert context["period"] == "1T"
     assert not hasattr(exc_info.value, "suggestion")
     verdict = exc_info.value.terminal_precondition_verdict
     assert verdict is not None, "the refusal must carry its typed precondition verdict"

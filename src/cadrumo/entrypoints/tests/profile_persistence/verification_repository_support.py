@@ -25,6 +25,7 @@ from cadrumo.adapters.persistence.profile.percepciones_observations import Perce
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.profile.workflow_gate import build_workflow_gate_ports
+from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.runtime_repository import (
     secure_object_repository_for_active_bucket,
 )
@@ -70,6 +71,7 @@ def build_test_verification_repository_bundle() -> VerificationRepositoryBundle:
             bucket_id=bucket_id, transaction_repository=transaction_repository
         ),
         credit_resolution=CreditResolutionRepositoryAdapter(objects=objects),
+        attachment=AttachmentStore(objects=objects),
     )
 
 

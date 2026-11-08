@@ -185,6 +185,8 @@ class CalculationNoteSentence(StrEnum):
     """A profile fact a calculation compares is unrecorded, so the box built on it stays open."""
     PRIOR_FILING_UNRECORDED = "prior_filing_unrecorded"
     """A box is built on a figure of an earlier filing, and that filing is not recorded, so the box stays open."""
+    M347_PROVINCIA_UNRECORDED = "m347_provincia_unrecorded"
+    """Modelo 347 records of Spanish counterparts whose provincia code no record states."""
 
 
 GRADE_CAP_NOTE_SENTENCES: Final[Mapping[BindingGradeCapReason, CalculationNoteSentence]] = MappingProxyType(

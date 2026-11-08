@@ -93,7 +93,9 @@ function Result({
         casillas={projection.unresolved_casillas}
         bindingsTitle={t("desktop.modelo.credits.estimate.unresolved_credits")}
         casillasTitle={t("desktop.modelo.credits.estimate.unresolved_boxes")}
-        boxName={(box) => <BoxName field={named(box)} box={box} />}
+        boxName={(row) => (
+          <BoxName field={named(row.casilla_id)} box={row.box} />
+        )}
       />
       {nothingLeft && (
         <p className="text-sm text-muted-foreground">

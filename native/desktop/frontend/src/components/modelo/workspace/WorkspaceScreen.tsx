@@ -705,12 +705,15 @@ function Ready({
             casillasTitle={t(
               "desktop.modelo.credits.estimate.unresolved_boxes",
             )}
-            boxName={(box) => (
+            boxName={(row) => (
               <BoxName
-                box={box}
+                box={row.box}
                 field={
-                  box
-                    ? session.fieldAt({ kind: "casilla", casilla_id: box })
+                  row.casilla_id
+                    ? session.fieldAt({
+                        kind: "casilla",
+                        casilla_id: row.casilla_id,
+                      })
                     : null
                 }
               />
@@ -1133,6 +1136,7 @@ export function WorkspaceScreen({
         .filter(Boolean)
         .join(" · "),
       filingYear: form.filing_year,
+      readsIvaWallet: form.offers_iva_wallet,
     };
   }, [read, workUnitId]);
   const latest = useRef(0);

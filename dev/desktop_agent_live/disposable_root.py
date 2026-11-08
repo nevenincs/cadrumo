@@ -11,7 +11,8 @@ lane does:
    any ancestor holds ``.git``, and marks it as a development root;
 3. starts the package's ``cadrumo-runtime --configured-root`` on it, creates a
    synthetic profile through the package's ``aeat`` with a fresh random
-   password on standard input only, signs it in with a stored sign-in, states
+   password on standard input only, records its opaque profile id in the
+   results (``profile.json``), signs it in with a stored sign-in, states
    synthetic taxpayer facts, imports :data:`LEDGER_SEED` through
    ``app ledger import`` and requires ``app ledger list`` to show at least
    :data:`MINIMUM_SEEDED_ROWS` movements, then stops that runtime;
@@ -21,9 +22,10 @@ lane does:
    results directory and holds until ``stop`` appears there, a stop signal
    arrives, or the window is closed;
 5. closes the window, signs the profile out through a fresh caller-owned
-   runtime so no sign-in key stays in the account's credential store, copies
-   the root's logs into the results directory, removes every results file
-   that holds the password, and removes the root without following any link,
+   runtime, deletes exactly that profile's stored sign-in keys from the
+   account's credential store so none outlives the run, copies the root's
+   logs into the results directory, removes every results file that holds
+   the password, and removes the root without following any link,
    naming every path it could not remove.
 
 The managed local AI keeps its models below the root
@@ -50,16 +52,18 @@ import sys
 import threading
 import time
 import traceback
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from contextlib import ExitStack, suppress
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from functools import partial
 from pathlib import Path
 from typing import Any, Final
+from uuid import UUID
 
 import httpx
 
+from cadrumo.adapters.persistence.storage.custody.acceleration_keychain import PROFILE_SESSION_KEYCHAIN_SERVICE
 from cadrumo_runtime.application.development_root import mark_development_root
 
 from ..runtime_lifecycle.caller_owned_root import (
@@ -97,6 +101,10 @@ _SIGN_IN_SECONDS: Final = 120.0
 _POLL_SECONDS: Final = 0.1
 _HOLD_SECONDS: Final = 0.5
 _LOG_LEVEL_VARIABLE: Final = "CADRUMO_LOG_LEVEL"
+PROFILE_RECORD: Final = "profile.json"
+"""The run's results file naming the profile's opaque id, so its stored sign-in keys can be attributed."""
+_GENERIC_CREDENTIAL: Final = 1
+_NO_CREDENTIALS: Final = 1168
 
 CliRunner = Callable[..., tuple[int, dict[str, Any]]]
 """Runs one JSON ``aeat`` command: its arguments, and a secret for standard input only."""
@@ -437,6 +445,10 @@ def prepare_profile(programs: Programs, root: Path, results: Path, created: list
         # The password is a fresh random one that exists only here and on the CLI's standard input.
         profile = create_profile(programs, environment, _PROFILE)
         created.append(profile)
+        # Identified before sign-in, so every key the sign-in stores can be attributed and removed.
+        profile = identify_profile(programs, environment, profile)
+        created[-1] = profile
+        record_profile(results, profile)
         persisted = login_profile(programs, environment, profile)
         print(json.dumps({"step": "profile_signed_in", "session_persisted": persisted}), flush=True)
         if not persisted:
@@ -444,12 +456,73 @@ def prepare_profile(programs: Programs, root: Path, results: Path, created: list
                 "this logon's credential store refused the stored sign-in, so the desktop cannot resume it; "
                 "run from an interactive desktop logon"
             )
-        profile = identify_profile(programs, environment, profile)
         state_taxpayer(programs, environment, profile)
         rows = seed_ledger(partial(run_cli, programs, environment), LEDGER_SEED, profile.password)
         print(json.dumps({"step": "ledger_seeded", "rows": rows}), flush=True)
         stopped = runtime.stop()
     require(stopped == _RUNTIME_STOPPED, f"the setup runtime exited with {stopped}")
+
+
+def record_profile(results: Path, profile: Profile) -> Path:
+    """Write the profile's name and opaque id, the random bucket UUID and no taxpayer identifier."""
+    require(profile.profile_id is not None, "the profile was not identified before it was recorded")
+    record = results / PROFILE_RECORD
+    record.write_text(
+        json.dumps({"profile": profile.name, "profile_id": str(profile.profile_id)}) + "\n", encoding="utf-8"
+    )
+    return record
+
+
+def profile_credentials(stored: Iterable[Mapping[str, Any]], profile_id: UUID) -> list[str]:
+    """Target names of the generic credentials holding exactly this profile's stored sign-in keys."""
+    prefix = f"{profile_id}:"
+    service = PROFILE_SESSION_KEYCHAIN_SERVICE
+    return sorted(
+        credential["TargetName"]
+        for credential in stored
+        if credential.get("Type") == _GENERIC_CREDENTIAL
+        and (account := credential.get("UserName") or "").startswith(prefix)
+        and credential.get("TargetName") in {service, f"{account}@{service}"}
+    )
+
+
+def remove_profile_credentials(
+    profile_id: UUID,
+    enumerate_stored: Callable[[], Iterable[Mapping[str, Any]]],
+    delete: Callable[[str], None],
+) -> list[str]:
+    """Delete this profile's stored sign-in keys; return a failure for each one that stays."""
+    failures = []
+    targets = profile_credentials(enumerate_stored(), profile_id)
+    for target in targets:
+        try:
+            delete(target)
+        except OSError as error:
+            failures.append(f"a stored sign-in key of profile {profile_id} was not deleted: {error}")
+    print(json.dumps({"step": "credentials_removed", "count": len(targets) - len(failures)}), flush=True)
+    return failures
+
+
+def _windows_credentials() -> list[Mapping[str, Any]]:
+    import pywintypes
+    import win32cred
+
+    try:
+        return list(win32cred.CredEnumerate(None, 0) or [])
+    except pywintypes.error as error:
+        if error.winerror == _NO_CREDENTIALS:
+            return []
+        raise OSError(error.winerror, error.strerror) from error
+
+
+def _delete_windows_credential(target: str) -> None:
+    import pywintypes
+    import win32cred
+
+    try:
+        win32cred.CredDelete(target, _GENERIC_CREDENTIAL, 0)
+    except pywintypes.error as error:
+        raise OSError(error.winerror, error.strerror) from error
 
 
 def sign_out(programs: Programs, root: Path, results: Path) -> list[str]:
@@ -599,8 +672,17 @@ def run(results: Path, options: Options) -> list[str]:
 
 
 def _teardown(root: Path, parent: Path, results: Path, created: list[Profile]) -> list[str]:
-    """Copy the logs, drop every results file holding the password, and remove the root."""
-    failures = copy_logs(root, results / "logs")
+    """Delete the profile's stored sign-in keys, copy the logs, drop password-bearing results, remove the root."""
+    failures: list[str] = []
+    for profile in created:
+        if profile.profile_id is not None:
+            try:
+                failures.extend(
+                    remove_profile_credentials(profile.profile_id, _windows_credentials, _delete_windows_credential)
+                )
+            except OSError as error:
+                failures.append(f"the credential store could not be read to remove the run's sign-in keys: {error}")
+    failures.extend(copy_logs(root, results / "logs"))
     for profile in created:
         failures.extend(remove_secret_bearing(results, profile.password))
     try:

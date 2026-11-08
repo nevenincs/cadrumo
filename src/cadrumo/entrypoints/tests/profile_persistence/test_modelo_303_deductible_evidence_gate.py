@@ -30,6 +30,7 @@ from ....adapters.persistence.profile.tests.published_authority_support import p
 from ....adapters.persistence.profile.tests.ready_profile_support import seed_persona_profile
 from ....adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.aggregation.ledger_filing_snapshot import (
@@ -61,6 +62,8 @@ from ....application.tests.operator_scope_fakes import (
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
+from ....domain.attachments.enums import AttachmentKind, AttachmentSource
+from ....domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.deadlines.models import TaxpayerProfile
@@ -630,41 +633,17 @@ def test_modelo_303_verify_uses_attached_purchase_invoice_evidence(
         assert purchase_rows[0].purchase_invoice_evidence_id == evidence.record.evidence_id
 
 
-def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
+def test_a_linked_invoice_blocks_until_its_factura_is_stored_then_verifies_and_files(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """A row bound to a real, validated ``Invoice`` passes verify AND survives filing.
+    """A received invoice deducts on its stored factura, not on its typed row.
 
-    This is the real path, not the model boundary: the invoice is minted
-    through :func:`create_catalogue_invoice` -- the sanctioned catalogue
-    writer that runs RD 1619/2012 art. 6 content validation -- and bound to
-    the transaction through :func:`link_manual_transaction_invoice`, the sole
-    invoice-linkage writer. Neither is a mock; both are the production
-    functions an operator's ``aeat app ledger link`` command calls.
-
-    Before the fix this test defends, ``_row_has_deduction_grade_evidence``
-    read only ``purchase_invoice_evidence_id`` and never ``invoice_id``, so a
-    row linked to a fully-validated ``Invoice`` still blocked verification --
-    a validated invoice was treated as no evidence at all. This test fails on
-    that code, and the sibling
-    ``test_advisory_still_fires_when_neither_invoice_id_nor_evidence_id_is_set``
-    in ``test_evidence_advisory.py`` proves the widening did not also silence
-    a row with neither carrier set.
-
-    The ``file_modelo_revision`` step at the end defends the SECOND grading
-    surface this discovery uncovered: ``LedgerEvidenceRow`` (the bundle
-    ``verify`` freezes) never carried ``invoice_id``, so a row credited only
-    through a linked invoice at verify time bundled with
-    ``purchase_invoice_evidence_id`` and ``attachment_ids`` both empty --
-    and ``raise_if_deductible_iva_evidence_missing``
-    (``_ledger_evidence_gate.py``) then blocked local filing on a revision
-    ``verify`` had JUST granted. That is not a hypothetical: it reproduced
-    against the first version of this fix, and is exactly the "permanent dead
-    end" failure class the surrounding campaign was built to close -- a
-    revision that is VERIFICADO_COMPLETO and content-addressed cannot be
-    re-verified or recalculated into a different id, so a fix that only
-    closes the verify-time gate while leaving the bundle-time gate blind
-    would strand the taxpayer worse than before the fix.
+    The invoice is minted through :func:`create_catalogue_invoice`, the catalogue
+    writer that runs RD 1619/2012 art. 6 content validation, and linked to its
+    payment through :func:`link_manual_transaction_invoice`. Its lines are the
+    revision's IVA source. Verification blocks while no document belongs to the
+    invoice (LIVA art. 97) and names the invoice to open; once the document is
+    stored with it, the same revision verifies complete and files.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         revision, _sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = (
@@ -720,52 +699,78 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
         revision = _recalculate_after_a_ledger_write(revision, wu_repo=wu_repo)
 
         # The invoice joined the period after the calculation read its invoices,
-        # so verification refuses the draft until the operator calculates again.
+        # so the draft is calculated again from the catalogue that now holds it.
         revision = _calculate_work_unit(revision.work_unit_id, bucket_id=_BUCKET_ID)
 
-        with bundled_indexed_authority().operation() as operation:
-            report = verify_modelo_revision_with_preconditions(
-                revision.calculation_revision_id,
-                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                actor="operator",
-                workflow_profile=workflow_profile(),
-                settings=ready_clave_settings(_TAX_ID),
-                verification_repositories=_verification_ports(
+        def verify() -> VerificationReport:
+            with bundled_indexed_authority().operation() as operation:
+                return verify_modelo_revision_with_preconditions(
+                    revision.calculation_revision_id,
+                    certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                    actor="operator",
+                    workflow_profile=workflow_profile(),
+                    settings=ready_clave_settings(_TAX_ID),
+                    verification_repositories=_verification_ports(
+                        operation=operation,
+                        wu_repo=wu_repo,
+                        cr_repo=cr_repo,
+                        filing_repo=filing_repo,
+                        vr_repo=vr_repo,
+                        event_repo=event_repo,
+                        tx_repo=tx_repo,
+                    ),
+                    clock=_VERIFIED_AT,
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                     operation=operation,
-                    wu_repo=wu_repo,
-                    cr_repo=cr_repo,
-                    filing_repo=filing_repo,
-                    vr_repo=vr_repo,
-                    event_repo=event_repo,
-                    tx_repo=tx_repo,
-                ),
-                clock=_VERIFIED_AT,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                operation=operation,
-            ).report
+                ).report
 
+        # A typed invoice row is not the factura LIVA art. 97 deducts on: until
+        # its document is stored with it, the deduction it declares blocks.
+        blocked = verify()
+        assert blocked.granted_verificado_completo is False
+        missing = [
+            finding
+            for finding in blocked.findings
+            if finding.message_locale_key == "application.modelo.findings.invoice_source_document_missing"
+        ]
+        assert [(finding.severity, finding.message_facts["invoice_id"]) for finding in missing] == [
+            (ModeloVerificationFindingSeverity.BLOCKING, created.invoice.invoice_id)
+        ]
+
+        add_attachment(
+            AttachmentStore(objects=profile.repository),
+            content=AttachmentBytesContent(data=b"%PDF-1.4 synthetic factura F2026-0042"),
+            request=AttachmentIngestionRequest(
+                kind=AttachmentKind.INVOICE_PDF,
+                source=AttachmentSource.LOCAL_FILE,
+                source_reference="operator-evidence",
+                mime_type="application/pdf",
+                captured_at=_VERIFIED_AT,
+                bucket_id=_BUCKET_ID,
+                link_invoice_ids=(created.invoice.invoice_id,),
+            ),
+        )
+
+        report = verify()
         assert report.granted_verificado_completo is True
         assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
         assert not any(
-            finding.message_locale_key == "application.modelo.findings.transaction_evidence_missing_deductible"
+            finding.message_locale_key
+            in {
+                "application.modelo.findings.transaction_evidence_missing_deductible",
+                "application.modelo.findings.invoice_source_document_missing",
+            }
             for finding in report.findings
         )
 
+        # The invoice, not its payment, is what the revision declared: the paying
+        # movement is no calculation source, so the frozen ledger evidence holds no
+        # row for it that filing could find unsupported.
         stored = cr_repo.load().get(revision.calculation_revision_id)
         assert stored is not None
         assert stored.ledger_filing_evidence is not None
-        purchase_rows = [
-            row for row in stored.ledger_filing_evidence.rows if row.transaction_id == purchase.transaction_id
-        ]
-        assert len(purchase_rows) == 1
-        assert purchase_rows[0].invoice_id == created.invoice.invoice_id
-        assert purchase_rows[0].purchase_invoice_evidence_id is None
+        assert purchase.transaction_id not in {row.transaction_id for row in stored.ledger_filing_evidence.rows}
 
-        # The load-bearing half of this test: filing a VERIFICADO_COMPLETO
-        # revision whose only deductible evidence is a linked invoice must
-        # NOT dead-end. Before the LedgerEvidenceRow.invoice_id fix, this
-        # raised ModeloFilingEvidenceMissingError even though verify had just
-        # granted the same revision.
         with bundled_indexed_authority().operation() as operation:
             filed = file_modelo_revision(
                 revision.calculation_revision_id,

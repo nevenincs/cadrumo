@@ -31,7 +31,6 @@ if TYPE_CHECKING:
     from .models import LedgerRemovalBlocker
     from .rule_repository import LedgerClassificationRuleRepositoryProtocol
 
-from ...core.errors.error_codes import resolve_error_message
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...core.pattern_search import PatternSearchOverrunError, PatternSearchUnreadableError, first_matching_patterns
@@ -63,10 +62,22 @@ from .models import (
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,
 )
+from .validation_messages import ledger_refusal_sentence
 
 _BULK_CLASSIFY_NON_PATCH_COLUMNS = frozenset({"transaction_id"})
 _BULK_CLASSIFY_PATCH_COLUMNS = BULK_CLASSIFY_ALLOWED_COLUMNS - _BULK_CLASSIFY_NON_PATCH_COLUMNS
 type _ParsedBulkClassifyRow = tuple[int, BulkClassifyRow, frozenset[str]]
+
+
+def _row_refusal(error: Exception) -> str:
+    """Say why one row was not taken, in the operator's language.
+
+    A row refused by a registered rule carries that rule's own translated
+    sentence, whether it was raised directly or re-raised across Pydantic's
+    validator protocol. Pydantic's own text, its documentation URL and the
+    cell values it echoes never reach the result a person reads.
+    """
+    return ledger_refusal_sentence(error, fallback=type(error).__name__)
 
 
 def _raw_csv_text(value: object) -> str:
@@ -158,7 +169,7 @@ def _parse_bulk_classify_data_row(
             BulkClassifyFailure(
                 row_index=idx,
                 transaction_id=transaction_id,
-                reason=str(exc),
+                reason=_row_refusal(exc),
             ),
         )
     if not is_classified(parsed.classification):
@@ -283,11 +294,10 @@ def _apply_one_bulk_classify_row(
         updated = replace_transaction(working, old_transaction_id=resolved_transaction_id, replacement=replacement)
         return _BulkRowOutcome(updated, tuple(events), applied=True, skipped=False, failure=None)
     except (CadrumoError, ValidationError, ValueError) as exc:
-        reason = resolve_error_message(exc) if isinstance(exc, CadrumoError) else str(exc)
         failure = BulkClassifyFailure(
             row_index=idx,
             transaction_id=row.transaction_id,
-            reason=reason or type(exc).__name__,
+            reason=_row_refusal(exc),
         )
         return _BulkRowOutcome(working, (), applied=False, skipped=False, failure=failure)
 

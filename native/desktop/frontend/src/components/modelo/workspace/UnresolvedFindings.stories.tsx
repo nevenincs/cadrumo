@@ -18,7 +18,7 @@ const meta: Meta<typeof UnresolvedFindings> = {
     casillas: served.unresolved_casillas,
     bindingsTitle: "Inputs without a value",
     casillasTitle: "Boxes without a figure",
-    boxName: (box) => <span className="font-mono">{box}</span>,
+    boxName: (row) => <span className="font-mono">{row.box}</span>,
   },
   decorators: [
     (Story) => (

@@ -277,6 +277,7 @@ def _runtime_registrations(
 ) -> tuple[FStringKeyRegistration, ...]:
     """Enumerate runtime refusal, action and terminal-condition copy."""
     from cadrumo.application.aggregation.retencion_soportada_repository import RetencionSoportadaRefusalReason
+    from cadrumo.application.ledger.preflight import LedgerPreflightIssueReason
     from cadrumo.application.live.errors import LiveIvaAcquisitionFailureMode
     from cadrumo.application.prorrata_register.projection_contracts import ProrrataRefusalReason
     from cadrumo.application.review.filter import LedgerReviewStatus
@@ -363,6 +364,13 @@ def _runtime_registrations(
             for prefix in ("tui.root.account", "tui.root.account_key", "tui.root.account_help")
         ),
         m303_carry_error_registration(),
+        FStringKeyRegistration(
+            # A blocked ledger preflight names the first issue's need, keyed by the
+            # closed LedgerPreflightIssueReason value (application/modelo/calculation_preparation.py).
+            description="application.modelo.errors.ledger_preflight_need.* (LedgerPreflightIssueReason)",
+            key_factory=lambda v: f"application.modelo.errors.ledger_preflight_need.{v}",
+            values=_enum_values(LedgerPreflightIssueReason),
+        ),
         FStringKeyRegistration(
             # Bounded enumeration: the prorrata register serves one sentence per refusal reason,
             # keyed by the closed ProrrataRefusalReason literal (prorrata_register/refusal_words.py).

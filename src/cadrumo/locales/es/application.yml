@@ -36,6 +36,21 @@ application:
           importe.'
         unnamed_element: un elemento sin nombre
       opening_remedy: Rellena «{field}» para poder calcularlo.
+  aggregation:
+    retenciones:
+      window_empty: 'No hay ninguna retención que declarar en el Modelo %{modelo}
+        de %{period}: no consta ningún pago del periodo que la lleve. Registra la
+        factura recibida y su pago. No se ha guardado nada.'
+      window_empty_lease: 'No hay ninguna retención que declarar en el Modelo %{modelo}
+        de %{period}: no consta ningún pago de alquiler del periodo que la lleve.
+        Si pagaste el alquiler de un local con retención, registra la factura recibida
+        y su pago; si no hubo ninguno, indica en tu perfil que este periodo no tuvo
+        pagos de alquiler con retención. No se ha guardado nada.'
+      window_empty_work: 'No hay ninguna retención que declarar en el Modelo %{modelo}
+        de %{period}: no consta ningún pago del periodo que la lleve. Si pagaste a
+        profesionales o a trabajadores con retención, registra la factura recibida
+        y su pago; si no hubo ninguno, indica en tu perfil que este periodo no tuvo
+        retenciones. No se ha guardado nada.'
   auth:
     acquisition_lock:
       errors:
@@ -1092,6 +1107,8 @@ application:
     staged_check:
       served:
         blocker:
+          amount_signed: 'El importe es una magnitud: el sentido ya dice si el dinero
+            entró o salió.'
           cannot_clear: 'Este valor no se puede vaciar: el campo tiene que tener un
             valor.'
           draft_incomplete: Un movimiento nuevo necesita fecha contable, importe,
@@ -1099,15 +1116,22 @@ application:
           mixed_needs_share: Un movimiento Mixto necesita una parte profesional.
           needs_classification: Este cambio necesita que el movimiento esté clasificado
             antes.
+          needs_withholding_category: La base y el IVA declarados suman más que el
+            dinero que se movió. Esa diferencia es una retención de IRPF y el movimiento
+            no declara ninguna categoría de IRPF.
           share_needs_mixed: La parte profesional solo se aplica a un movimiento Mixto.
           transfer_with_tax: Un traspaso entre tus propias cuentas no lleva datos
             fiscales.
         fix:
+          amount_signed: Escribe el importe sin signo y deja que el sentido diga si
+            entró o salió.
           cannot_clear: Conserva el valor guardado.
           draft_incomplete: Completa lo que le falta al movimiento nuevo.
           mixed_needs_share: Indica la parte profesional como porcentaje, por ejemplo
             50 para el 50 %.
           needs_classification: Clasifica el movimiento como Profesional o Personal.
+          needs_withholding_category: Indica la categoría de IRPF a la que pertenece
+            la retención, o corrige la base y el IVA para que sumen el importe.
           share_needs_mixed: Quita la parte o clasifica el movimiento como Mixto.
           transfer_with_tax: Quita los datos fiscales del traspaso o cambia su sentido.
         share_refusal: 'Eso no es una parte: escribe un porcentaje, como 50 para el
@@ -1549,6 +1573,17 @@ application:
           no tienen una fuente oficial que los confirme.
         what_to_do: Comprueba esos importes con las instrucciones oficiales antes
           de presentar.
+      m347_declarado_provincia_unrecorded:
+        what: 'Falta {box} de algunos declarados: corresponde a su domicilio fiscal
+          y tus facturas no lo indican.'
+        what_to_do: Consigna el código de provincia del domicilio fiscal de cada declarado
+          indicado antes de presentar la declaración.
+      m347_metalico_unrecorded:
+        what: Tus facturas no indican cómo se cobraron, así que {box} queda sin importe
+          en todos los registros.
+        what_to_do: Si algún declarado te pagó en metálico por encima del importe
+          que obliga a declararlo, consigna ese importe en su registro antes de presentar
+          la declaración.
       m349_clave_inferred_from_category:
         what: Cadrumo ha elegido el tipo de operación de una línea del listado de
           operaciones con la UE según la categoría de IVA de la factura, y podría
@@ -1814,6 +1849,7 @@ application:
       instalment_free_gap: '{element}: no hay dotación registrada de {start} a {end}.
         Su método deja el importe a tu elección, así que no suma nada a la casilla
         {box}.'
+      m347_provincia_unrecorded: 'Declarados sin código de provincia: {parties}.'
       possibly_durable_expense: El movimiento del {row_date} por {row_amount} se deduce
         como gasto corriente y su descripción parece la de un elemento duradero.
       prior_filing_unrecorded: Para calcular la casilla {box}, registra tu Modelo
@@ -2341,8 +2377,8 @@ application:
         inadmissible_deduction_classification: su clasificación de deducción no es
           admisible para esta operación
         invoice_cash_accounting_regime_unmodelled: declaras el régimen especial del
-          criterio de caja, en el que el IVA se devenga al cobrar o pagar, y Cadrumo
-          aún no sabe situar el IVA de tus facturas según sus cobros y pagos
+          criterio de caja, en el que el IVA se devenga al cobrar o pagar, y el IVA
+          de tus facturas aún no puede situarse según sus cobros y pagos
         invoice_category_contradicted: la categoría de IVA de su factura no encaja
           con el país de la contraparte
         invoice_deduction_family_unresolved: 'la factura recibida que paga no indica
@@ -2608,6 +2644,9 @@ application:
         compararlas con el modelo %{modelo} %{filing_year}, %{period}, así que no
         se puede confirmar que este cálculo esté al día. Inténtalo de nuevo cuando
         se puedan leer.
+      invoice_source_document_missing: La factura recibida %{invoice_number} deduce
+        IVA, pero tus registros no guardan su documento. Abre la factura y adjunta
+        el PDF o la factura electrónica.
       iva_compensation_annual_source_evidence_failure: El modelo 390 necesita los
         datos de tus modelos 303 del año, y aún hay %{source_issue_count} incidencia(s)
         pendiente(s) con ellos, así que esta declaración no se puede completar.

@@ -39,6 +39,7 @@ import {
 } from "../inspector/inspectorContext";
 import type { LedgerPeriod } from "../../../shell/ledgerGrammar";
 import {
+  servedDraftCurrency,
   useLedgerMembership,
   useOwnAccounts,
   useSearchElsewhere,
@@ -129,6 +130,10 @@ export type SectionEditing = {
   /** A new movement to focus once it is drawn. */
   focusDraft: string | null;
   onDraftFocused: () => void;
+  /** The movements and the column a refusal's door led to, to select and
+   * focus once they are drawn. */
+  shownFields?: { column: ColumnId; ids: readonly string[] } | null;
+  onFieldsShown?: () => void;
   /** Movements a finalized declaration cites, where the page knows. */
   sealed?: ReadonlySet<string>;
 };
@@ -269,6 +274,24 @@ export function MovementsSection({
     reader,
     wantAccounts || filters.account !== null || accountsShown,
   );
+  // A new movement's currency is the one the profile's own accounts are kept
+  // in, as the backend serves it: the visible field is filled in, so the saved
+  // movement carries its currency explicitly rather than taking a writer's
+  // default. A currency already typed is never overwritten, and where the
+  // accounts disagree the person says which.
+  const draftCurrency = servedDraftCurrency(accounts);
+  useEffect(() => {
+    if (!draftCurrency) return;
+    for (const draft of stage.content.drafts)
+      if (!draft.fields.currency)
+        onStage({
+          type: "edit_draft",
+          key: draft.key,
+          field: "currency",
+          value: draftCurrency,
+        });
+  }, [draftCurrency, stage.content.drafts, onStage]);
+
   const elsewhere = useSearchElsewhere(port, reader, period, search);
   // What an import flagged as a likely duplicate: the product keeps it as an
   // import diagnostic, which the list reads by its issue filter. A movement
@@ -478,6 +501,24 @@ export function MovementsSection({
   }, [toast]);
   const [spoken, setSpoken] = useState("");
 
+  // What the live regions last said described a staged cell: "unsaved, the
+  // taxable base is missing". Once the stage is gone -- saved or dropped --
+  // that sentence is about a state the grid no longer holds, and a screen
+  // reader asked to repeat it would read saved work as still unsaved. Both
+  // regions are emptied, and the next keyboard move says the row as it is.
+  const stagedUnits =
+    stage.content.drafts.length +
+    Object.keys(stage.content.rows).length +
+    stage.content.actions.length;
+  const wasStaging = useRef(stagedUnits);
+  useEffect(() => {
+    const before = wasStaging.current;
+    wasStaging.current = stagedUnits;
+    if (before === 0 || stagedUnits > 0) return;
+    grid.current?.clearAnnouncement();
+    setSpoken("");
+  }, [stagedUnits]);
+
   // A filter that leads somewhere selects and focuses its first movement
   // once the rows it keeps are drawn.
   const [focusWanted, setFocusWanted] = useState<{
@@ -520,6 +561,28 @@ export function MovementsSection({
         return column ? { column, reason: filters.reason } : null;
       })()
     : null;
+  // A refusal's door leads to the column the missing fact is typed in: once
+  // that column is shown and the movements it holds are drawn, the first of
+  // them takes the keyboard there, so the person lands on the cell to fill in.
+  const shownFields = pageEditing.shownFields ?? null;
+  const onFieldsShown = pageEditing.onFieldsShown;
+  useEffect(() => {
+    if (!shownFields || membership.kind === "reading") return;
+    if (!order.includes(shownFields.column)) return;
+    const first = shownFields.ids.find((id) => visible.includes(id));
+    onFieldsShown?.();
+    if (!first) return;
+    setSelection(new Set(shownFields.ids));
+    grid.current?.focusCell(first, shownFields.column);
+  }, [
+    shownFields,
+    onFieldsShown,
+    order,
+    visible,
+    membership.kind,
+    setSelection,
+  ]);
+
   const setLayout = (nextOrder: ColumnId[], hidden: ColumnId[]) =>
     onViewChange((current) => ({
       ...current,

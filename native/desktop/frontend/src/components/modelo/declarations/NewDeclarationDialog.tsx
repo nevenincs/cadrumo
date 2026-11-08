@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -87,6 +87,15 @@ export function NewDeclarationDialog({
    * where the window has no profile page to take it to. */
   onProfileStep?: (step: LedgerProfileStep) => void;
 }) {
+  // A door closes the dialog first and hands its step on once the dialog has
+  // left the window: an open dialog holds the window, so a page asked for
+  // while it is still up is refused.
+  const [handedOn, setHandedOn] = useState<LedgerProfileStep | null>(null);
+  useEffect(() => {
+    if (open || handedOn === null) return;
+    setHandedOn(null);
+    onProfileStep?.(handedOn);
+  }, [open, handedOn, onProfileStep]);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {open && (
@@ -101,7 +110,13 @@ export function NewDeclarationDialog({
           onReload={onReload}
           refreshing={refreshing}
           onClose={() => onOpenChange(false)}
-          onProfileStep={onProfileStep}
+          onProfileStep={
+            onProfileStep &&
+            ((step) => {
+              setHandedOn(step);
+              onOpenChange(false);
+            })
+          }
         />
       )}
     </Dialog>
@@ -461,9 +476,7 @@ function Chooser({
                   className="new-declaration-refusal-step mt-1 block px-0"
                   onClick={() => {
                     const step = attempt.step;
-                    if (step === null) return;
-                    onClose();
-                    onProfileStep?.(step);
+                    if (step !== null) onProfileStep?.(step);
                   }}
                 >
                   {attempt.step.words}

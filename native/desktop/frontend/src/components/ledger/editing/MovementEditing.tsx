@@ -30,7 +30,9 @@ import {
   effectiveFacts,
   actionRows,
   reduceStage,
+  storedFieldValue,
   type Draft,
+  type DraftField,
   type StageEvent,
   type StageField,
   type StagedContent,
@@ -64,6 +66,7 @@ import {
 import {
   DRAFT_REQUIRED,
   EDIT_KINDS,
+  backendOwnsRefusal,
   clearRefusal,
   columnField,
   copyCell,
@@ -646,6 +649,39 @@ export function useMovementEditing(input: MovementEditingInput) {
     });
   };
 
+  /** Stage a value the backend owns the refusal of, so the review names the
+   * fact rather than reporting the cell as one nobody filled in. */
+  const stageRefused = (
+    key: string,
+    column: ColumnId,
+    refusal: EditRefusal,
+  ) => {
+    const subject = subjectOf(key);
+    if (!subject) return;
+    const field =
+      subject.kind === "draft"
+        ? draftField(column)
+        : columnField(column, subject.row);
+    if (!field || !backendOwnsRefusal(field, refusal)) return;
+    const typed = refusal.raw.trim();
+    if (subject.kind === "draft") {
+      applyDrafts([{ key, field: field as DraftField, value: typed }]);
+      return;
+    }
+    onStage({
+      type: "stage",
+      label: "set",
+      cells: [
+        {
+          id: key,
+          field: field as StageField,
+          value: { kind: "set", value: typed },
+          stored: storedFieldValue(subject.row, field as StageField),
+        },
+      ],
+    });
+  };
+
   const onCommit = (key: string, column: string, value: unknown) => {
     const id = column as ColumnId;
     const commit = value as EditCommit | null;
@@ -657,6 +693,7 @@ export function useMovementEditing(input: MovementEditingInput) {
     if (commit.kind === "refused") {
       mark([{ key, column: id, refusal: commit.refusal }]);
       say(refusalText(t, commit.refusal));
+      stageRefused(key, id, commit.refusal);
       return;
     }
     commitValue(key, id, commit.value);

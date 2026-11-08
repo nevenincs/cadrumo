@@ -649,6 +649,16 @@ class TaxpayerProfile(BaseModel):
     activity_end_date: date | None = None
     incn_prior_12_months: Decimal | None = None
     iae_epigraph: str = ""
+    activity_iae_epigraphs: tuple[str | None, ...] = ()
+    """Every declared activity's IAE epigraph, in declaration order.
+
+    One entry per activity row the profile declares, ``None`` where that row
+    records no epigraph, and an empty tuple where the profile declares no
+    activity at all. ``iae_epigraph`` carries the unindexed row's value only, so
+    a rule asking whether ANY activity is classified in some group has to read
+    this field: a profile whose activities live in indexed rows leaves the
+    scalar blank, which is not the same as having no classified activity.
+    """
     irpf_special_regime: IrpfSpecialRegime | None = None
     special_regime_start_date: date | None = None
     fiscal_residency: FiscalResidency | None = None

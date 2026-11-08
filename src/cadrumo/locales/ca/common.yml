@@ -353,21 +353,10 @@ aggregation:
     errors:
       filing_year_out_of_range: El exercici %{filing_year} queda fora del rang admès
         %{min_year}-%{max_year}.
-      m111_no_retenciones_attestation_missing: 'No hi ha cap retenció registrada per
-        a cap perceptor al Model 111 %{filing_year} %{period}. No presentis un Model
-        111 en blanc: declara el trimestre com a període sense retencions amb `aeat
-        config profile edit --modelo-111-no-retenciones-periods %{attestation_period}`
-        (l''opció substitueix la llista desada, així que indica també, separats per
-        comes, els períodes que ja hagis declarat), o registra els pagaments als quals
-        has retingut impost amb `aeat app modelo aggregate`, fent servir --received-invoice-retencion
-        per a una factura rebuda o --ledger-payment-withholding per a una nòmina.'
       m193_phase_allocation_collision: 'Model %{modelo} %{filing_year}: les assignacions
         %{source_allocations} consten declarades manualment i també provenen de les
         retencions de capital capturades. Elimina la fila manual.'
       perceptor_nif_blank: El NIF del perceptor no pot estar buit.
-      perceptor_observations_missing: No hi ha observacions de retencions per perceptor
-        per al model %{modelo} %{filing_year} %{period}; la font %{source_kind} no
-        es pot resoldre.
       withholding_annual_source_not_quarterly: 'No es pot elaborar el resum anual:
         el calendari de presentació del declarant no assigna el seu model periòdic
         de retencions a tots els trimestres de l''any (el presenta mensualment), i
@@ -1508,6 +1497,7 @@ desktop:
         set_currency: Indica la moneda
         set_share: Indica la part
         show: Mostra a la taula
+        show_fields: Mostra els moviments i la columna
       gone: Eliminat o mogut fora del període des que el vas llegir.
       gone_mine: Mantén-lo als meus canvis
       gone_movement: Un moviment que ja no es llegeix
@@ -10597,6 +10587,7 @@ workspace:
       failed_lead: Esperen alguna cosa que li faltava al càlcul. Tria'n una per veure
         què.
       none: Res d'aquest model no et necessita.
+      profile: 'Abans de calcular aquest període, el teu perfil ha de respondre:'
       title: Pendent
     value:
       not_applicable: no s'aplica

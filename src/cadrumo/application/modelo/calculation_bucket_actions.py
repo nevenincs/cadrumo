@@ -757,6 +757,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         profile=profile,
     )
     preparation = run.preparation
+    printed = snapshot_printed_boxes(ports.operation, preparation.snapshot)
     memoized_transaction_repository = run.transaction_repository
     channels = run.channels
     calculation = calculate_modelo_revision_with_trusted_mesh_sources(
@@ -798,7 +799,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         source_provenance=calculation_source_provenance_refs(channels.source_resolution.provenance),
         source_issues=unrouted_source_issues(
             channels.reconciliation.source_diagnostics,
-            snapshot_printed_boxes(ports.operation, preparation.snapshot),
+            printed,
         ),
         filing_instance_evidence=filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=(
@@ -840,8 +841,9 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             ),
             channels.reconciliation.source_diagnostics,
             preparation.snapshot.revision,
+            printed,
         ),
-        unresolved_casillas=unresolved_casilla_rows(calculation.engine_result, preparation.snapshot.revision),
+        unresolved_casillas=unresolved_casilla_rows(calculation.engine_result, preparation.snapshot.revision, printed),
     )
 
 

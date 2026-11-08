@@ -373,7 +373,8 @@ export type CalculationNoteSentence =
   | "credit_resolution_applied"
   | "household_rows_incomplete"
   | "profile_fact_unrecorded"
-  | "prior_filing_unrecorded";
+  | "prior_filing_unrecorded"
+  | "m347_provincia_unrecorded";
 
 export type CalculationRevisionId = string;
 
@@ -979,6 +980,7 @@ export type PriorDomiciliationElection = "keep" | "cancel_or_modify";
 export type ProjectUnresolvedBindingProjection = {
   binding_id: string;
   casilla_id: string | null;
+  box: string | null;
   source_kind: string;
   reason: string;
   note: string | null;
@@ -995,6 +997,7 @@ export type ProjectUnresolvedBindingProjection = {
  */
 export type ProjectUnresolvedCasillaProjection = {
   casilla_id: string;
+  box: string | null;
   reason: string;
   reason_words: string;
   formula_id: string;

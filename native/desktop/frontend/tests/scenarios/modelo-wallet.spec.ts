@@ -556,3 +556,114 @@ test("changing the reference year cannot retain figures from the previous read",
   await year.blur();
   await expect(fact(wallet(page), "lot_count")).toHaveText("0");
 });
+
+/** The 130's export is sent again and its settlement lost, so the declaration
+ * holds an operation the window cannot yet place; a later status check finds
+ * it settled. */
+async function loseExport(page: Page) {
+  await page
+    .locator(".declarations-workspace")
+    .getByRole("tab", { name: label("workspace.modelo.filing.title") })
+    .click();
+  await page
+    .getByRole("button", {
+      name: label("workspace.modelo.filing.export_again"),
+    })
+    .click();
+  await expect(
+    page
+      .locator(".modelo-write-hold")
+      .filter({ hasText: label("workspace.modelo.write_hold.unknown") })
+      .first(),
+  ).toBeVisible();
+  await page.evaluate(() => {
+    window.__fixtureModelo!.observe = async (operation) => ({
+      kind: "settled",
+      operation_id: operation,
+      revision: 3,
+      result: {},
+    });
+  });
+}
+
+async function openOtherDeclaration(page: Page, modelo: string) {
+  await page
+    .locator(".declarations-workspace")
+    .getByRole("button", {
+      name: label("workspace.declarations.destination.overview"),
+      exact: true,
+    })
+    .click();
+  await page
+    .getByRole("searchbox", {
+      name: label("desktop.declarations.search.label"),
+    })
+    .fill(modelo);
+  await page
+    .getByRole("grid", {
+      name: label("workspace.declarations.destination.overview"),
+    })
+    .getByRole("row")
+    .filter({ has: page.getByRole("gridcell", { name: modelo, exact: true }) })
+    .first()
+    .dblclick();
+  await page
+    .getByRole("tab", {
+      name: label("desktop.modelo.view.iva_wallet"),
+      exact: true,
+    })
+    .click();
+  await expect(wallet(page)).toBeVisible();
+}
+
+test("another declaration that reads no IVA wallet neither shows its operation on the wallet nor locks it", async ({
+  page,
+}) => {
+  await openWalletForm(page, "en", "export-unknown", "130");
+  await loseExport(page);
+  await openOtherDeclaration(page, "303");
+  // The fixture serves no balance: a read that ran says so; a held one shows nothing.
+  await expect(
+    wallet(page)
+      .getByRole("alert")
+      .filter({ hasText: words("read_failed") }),
+  ).toBeVisible();
+  await expect(wallet(page).locator(".modelo-write-hold")).toHaveCount(0);
+  await expect(
+    wallet(page).getByRole("button", { name: words("reload") }),
+  ).toBeEnabled();
+  await expect(
+    wallet(page).getByRole("button", { name: words("manage") }),
+  ).toBeEnabled();
+});
+
+test("another wallet-reading declaration locks the wallet only until Check status finds its operation finished", async ({
+  page,
+}) => {
+  // Both declarations read the wallet here, so the other's open operation
+  // may still change the basis the wallet's actions read.
+  await openWalletForm(page, "en", "export-unknown", "130", true);
+  await loseExport(page);
+  await openOtherDeclaration(page, "303");
+  const notice = wallet(page).locator(".modelo-write-hold");
+  await expect(notice).toHaveCount(1);
+  await expect(
+    wallet(page).getByRole("button", { name: words("manage") }),
+  ).toBeDisabled();
+  await notice
+    .getByRole("button", {
+      name: label("workspace.modelo.write_hold.check_status"),
+    })
+    .click();
+  // Settled: what stays to reload belongs to the other declaration.
+  await expect(notice).toHaveCount(0);
+  // The fixture serves no balance: a read that ran says so; a held one shows nothing.
+  await expect(
+    wallet(page)
+      .getByRole("alert")
+      .filter({ hasText: words("read_failed") }),
+  ).toBeVisible();
+  await expect(
+    wallet(page).getByRole("button", { name: words("manage") }),
+  ).toBeEnabled();
+});

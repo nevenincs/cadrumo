@@ -187,6 +187,8 @@ class ProjectUnresolvedBindingProjection(BaseModel):
 
     binding_id: _Token
     casilla_id: _Token | None
+    #: The number the form prints for that box; ``None`` for a working figure or when no box is named.
+    box: _Token | None = None
     source_kind: _Token
     reason: _Token
     note: _Token | None
@@ -199,6 +201,7 @@ class ProjectUnresolvedBindingProjection(BaseModel):
         return cls(
             binding_id=row.binding_id,
             casilla_id=row.casilla_id,
+            box=row.box,
             source_kind=row.source_kind,
             reason=row.reason,
             note=str(row.note) if row.note is not None else None,
@@ -216,6 +219,8 @@ class ProjectUnresolvedCasillaProjection(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     casilla_id: _Token
+    #: The number the form prints for the box; ``None`` for a working figure the form does not print.
+    box: _Token | None = None
     reason: _Token
     reason_words: _Words
     formula_id: _Token
@@ -227,6 +232,7 @@ class ProjectUnresolvedCasillaProjection(BaseModel):
         """Carry one unresolved box with the words for its reason in ``language``."""
         return cls(
             casilla_id=row.casilla_id,
+            box=row.box,
             reason=row.reason,
             reason_words=unresolved_casilla_reason_words(row.reason, language=language),
             formula_id=row.formula_id,

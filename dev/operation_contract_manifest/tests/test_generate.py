@@ -6,18 +6,32 @@ case writes its own copy, so the shipped manifest is never touched here.
 
 from __future__ import annotations
 
+import asyncio
+import os
 import re
+import sys
 from pathlib import Path
 
 import pytest
 
 from cadrumo.application.operations.contract_manifest import OperationContractManifestV1
+from dev.paths import REPO_ROOT
 
 from ..generate import main, manifest_drifts, render_manifest, target_path
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 _FINGERPRINT = re.compile(r'("schema_fingerprint":")([0-9a-f]{64})(")')
+
+_GENERATE = """
+import sys
+from dev.operation_contract_manifest.generate import render_manifest
+sys.stdout.buffer.write(render_manifest().encode("utf-8"))
+"""
+
+#: Only what the platform needs to start an interpreter passes through; the
+#: child's home, storage and scratch locations are the test's own directory.
+_PLATFORM_VARIABLES = frozenset({"SYSTEMROOT", "WINDIR", "SYSTEMDRIVE", "PATH", "COMSPEC"})
 
 
 @pytest.fixture(scope="module")
@@ -67,6 +81,57 @@ def test_check_fails_when_an_operation_is_missing(tmp_path: Path, fresh: str) ->
 
 def test_check_fails_when_the_manifest_is_absent(tmp_path: Path) -> None:
     assert main(["--check", "--target", str(tmp_path / "absent.json")]) == 1
+
+
+async def _generate_under(root: Path, seed: str) -> bytes:
+    """Compose every production operation and render the manifest in a fresh interpreter.
+
+    ``-I`` is deliberately absent: isolated mode ignores ``PYTHONHASHSEED``, so
+    the seed would not be the one given.
+    """
+    environment = {key: value for key, value in os.environ.items() if key.upper() in _PLATFORM_VARIABLES}
+    environment.update(
+        {
+            "CADRUMO_STORAGE_ROOT": str(root / "storage"),
+            "PYDANTIC_DISABLE_PLUGINS": "__all__",
+            "PYTHONHASHSEED": seed,
+            "PYTHONPATH": os.pathsep.join((str(REPO_ROOT / "src"), str(REPO_ROOT))),
+            "HOME": str(root),
+            "USERPROFILE": str(root),
+            "APPDATA": str(root),
+            "LOCALAPPDATA": str(root),
+            "TEMP": str(root),
+            "TMP": str(root),
+        }
+    )
+    process = await asyncio.create_subprocess_exec(
+        sys.executable,
+        "-P",
+        "-s",
+        "-B",
+        "-c",
+        _GENERATE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+        cwd=root,
+        env=environment,
+    )
+    try:
+        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=None)
+    finally:
+        if process.returncode is None:
+            process.kill()
+        await process.wait()
+    assert process.returncode == 0, stderr.decode()
+    return stdout
+
+
+@pytest.mark.asyncio
+async def test_generation_does_not_depend_on_the_hash_seed(tmp_path: Path, fresh: str) -> None:
+    first = await _generate_under(tmp_path, "0")
+    second = await _generate_under(tmp_path, "1")
+    assert first == second
+    assert first.decode("utf-8") == fresh
 
 
 def test_target_is_the_shipped_package_data_path() -> None:

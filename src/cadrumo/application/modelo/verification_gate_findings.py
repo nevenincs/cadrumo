@@ -53,6 +53,7 @@ from ..aggregation.evidence_advisory import (
     calculation_revision_claims_ledger_iva,
     missing_evidence_advisory_observations,
 )
+from ..aggregation.invoice_iva_source import documented_invoice_ids, invoices_missing_source_document
 from ..aggregation.ledger_membership import LedgerMembershipPorts, query_ledger_membership
 from ..aggregation.source_mesh import (
     CalculationSourceDiagnostic,
@@ -90,6 +91,7 @@ from .verification_preconditions import (
 from .verification_revision_findings import collect_revision_verification_findings
 
 if TYPE_CHECKING:
+    from ...domain.attachments.protocols import AttachmentStoreProtocol
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
     from .work_profile import ModeloWorkProfile
@@ -314,6 +316,69 @@ def _append_cross_period_findings(
             blocking_finding_observer=_observe_cross_period_finding,
         ),
     )
+
+
+def invoice_source_document_findings(
+    *,
+    target: CalculationRevision,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    attachment_store: AttachmentStoreProtocol,
+) -> list[ModeloVerificationFinding]:
+    """Block a deduction a declared received invoice claims without its factura.
+
+    The invoices are the ones the revision declared, by its invoice fingerprint
+    rows. LIVA art. 97 grants the deduction on the factura itself, so a received
+    invoice with a cuota needs its document stored with it, or a paying movement
+    carrying registered purchase-invoice evidence. Each finding names the invoice,
+    so the form can open it to attach the document.
+    """
+    fingerprint = target.invoice_fingerprint
+    if fingerprint is None or not fingerprint.rows:
+        return []
+    catalogue = invoice_repository.load()
+    declared = tuple(invoice for row in fingerprint.rows if (invoice := catalogue.get(row.invoice_id)) is not None)
+    missing = invoices_missing_source_document(
+        declared,
+        documented=documented_invoice_ids(attachment_store),
+        window=transaction_repository.load(),
+    )
+    return [
+        ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message_locale_key="application.modelo.findings.invoice_source_document_missing",
+            message_facts={"invoice_id": invoice.invoice_id, "invoice_number": invoice.invoice_number},
+            legal_refs=MISSING_EVIDENCE_LEGAL_REFS,
+        )
+        for invoice in missing
+    ]
+
+
+def _append_invoice_source_document_findings(
+    target: CalculationRevision,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    attachment_store: AttachmentStoreProtocol,
+    findings: list[ModeloVerificationFinding],
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+) -> None:
+    for finding in invoice_source_document_findings(
+        target=target,
+        invoice_repository=invoice_repository,
+        transaction_repository=transaction_repository,
+        attachment_store=attachment_store,
+    ):
+        findings.append(finding)
+        failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
+            calculation_revision_id=target.calculation_revision_id,
+            work_unit_id=target.work_unit_id,
+            condition_id="modelo.work.verify.invoice_source_document.present",
+            scenario_id="modelo.work.verify.invoice_source_document.missing",
+            evidence_id="modelo.work.verify.invoice_source_document",
+            evidence_values={"invoice_id": str(finding.message_facts["invoice_id"])},
+            provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+        )
 
 
 def _append_ledger_evidence_findings(
@@ -558,6 +623,7 @@ def collect_verification_gate_findings(
     justificante_repository: JustificanteRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
     invoice_repository: InvoiceCatalogueRepositoryProtocol,
+    attachment_store: AttachmentStoreProtocol,
     iva_compensation_history_repository: IvaCompensationHistoryRepositoryProtocol,
     iva_compensation_decision_repository: IvaWalletDecisionRepositoryProtocol,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
@@ -639,6 +705,9 @@ def collect_verification_gate_findings(
     )
     _append_ledger_evidence_findings(
         target, work_unit, transaction_repository, operation, findings, failures_by_finding_id
+    )
+    _append_invoice_source_document_findings(
+        target, invoice_repository, transaction_repository, attachment_store, findings, failures_by_finding_id
     )
     # Runs beside the evidence gate, not inside it: that gate reads the live
     # ledger while the casilla values come from the stored draft, and this is

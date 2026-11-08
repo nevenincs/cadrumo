@@ -34,6 +34,21 @@ application:
           amount.'
         unnamed_element: an element with no name
       opening_remedy: Fill in “{field}” to work this out.
+  aggregation:
+    retenciones:
+      window_empty: 'There is no withholding to declare on Modelo %{modelo} for %{period}:
+        no payment in the period that carried one is recorded. Record the received
+        invoice and its payment. Nothing has been saved.'
+      window_empty_lease: 'There is no withholding to declare on Modelo %{modelo}
+        for %{period}: no rent payment in the period that carried one is recorded.
+        If you paid rent on business premises with withholding, record the received
+        invoice and its payment; if there were none, say in your profile that this
+        period had no rent payments with withholding. Nothing has been saved.'
+      window_empty_work: 'There is no withholding to declare on Modelo %{modelo} for
+        %{period}: no payment in the period that carried one is recorded. If you paid
+        professionals or employees with withholding, record the received invoice and
+        its payment; if there were none, say in your profile that this period had
+        no withholding. Nothing has been saved.'
   auth:
     acquisition_lock:
       errors:
@@ -1027,19 +1042,28 @@ application:
     staged_check:
       served:
         blocker:
+          amount_signed: 'An amount is a magnitude: the direction already says whether
+            the money came in or went out.'
           cannot_clear: 'This value can''t be cleared: the field has to hold a value.'
           draft_incomplete: A new movement needs a booked date, an amount, a currency,
             a direction and a description before it can be saved.
           mixed_needs_share: A Mixed movement needs a business share.
           needs_classification: This change needs the movement to be classified first.
+          needs_withholding_category: The declared base and IVA add up to more than
+            the money that moved. That gap is an IRPF withholding, and the movement
+            declares no IRPF category.
           share_needs_mixed: A business share only applies to a Mixed movement.
           transfer_with_tax: A transfer between your own accounts carries no tax fields.
         fix:
+          amount_signed: Write the amount without a sign, and let the direction say
+            whether it came in or went out.
           cannot_clear: Keep the stored value.
           draft_incomplete: Fill in what the new movement is missing.
           mixed_needs_share: Enter the business share as a percentage, such as 50
             for 50%.
           needs_classification: Classify the movement as Business or Personal.
+          needs_withholding_category: Name the IRPF category the withholding belongs
+            to, or correct the base and the IVA so they add up to the amount.
           share_needs_mixed: Drop the share, or classify the movement as Mixed.
           transfer_with_tax: Take the tax fields off the transfer, or change its direction.
         share_refusal: 'That is not a share: write a percentage, such as 50 for 50%.'
@@ -1459,6 +1483,16 @@ application:
         what: Some amounts in a record of a payment made in a later year have no official
           source that confirms them.
         what_to_do: Check those amounts against the official instructions before filing.
+      m347_declarado_provincia_unrecorded:
+        what: '{box} is missing for some declarados: it belongs to their domicilio
+          fiscal, which your invoices do not state.'
+        what_to_do: Enter the provincia code of each listed declarado's domicilio
+          fiscal before you file the declaration.
+      m347_metalico_unrecorded:
+        what: Your invoices do not say how they were collected, so {box} holds no
+          amount on any record.
+        what_to_do: If any declarado paid you in cash above the amount that must be
+          declared, enter that amount on its record before you file the declaration.
       m349_clave_inferred_from_category:
         what: Cadrumo chose the operation type of a line in the EU sales listing from
           the invoice's VAT category, and it may be another type.
@@ -1718,6 +1752,7 @@ application:
       household_rows_incomplete: '{group}: {stated} stated, {recorded} recorded.'
       instalment_free_gap: '{element}: no depreciation charge is recorded from {start}
         to {end}. Its method leaves the amount to you, so it adds nothing to box {box}.'
+      m347_provincia_unrecorded: 'Declarados without a provincia code: {parties}.'
       possibly_durable_expense: The ledger entry of {row_date} for {row_amount} deducts
         as a current expense, and its description reads like a long-term asset.
       prior_filing_unrecorded: To calculate box {box}, record your Modelo {modelo}
@@ -2221,8 +2256,8 @@ application:
         inadmissible_deduction_classification: its deduction classification is not
           admissible for this operation
         invoice_cash_accounting_regime_unmodelled: you declare the régimen especial
-          del criterio de caja, where IVA accrues on collection or payment, and Cadrumo
-          cannot yet place your invoices' IVA by their collections and payments
+          del criterio de caja, where IVA accrues on collection or payment, and your
+          invoices' IVA cannot yet be placed by their collections and payments
         invoice_category_contradicted: its invoice's IVA category does not fit the
           counterparty's country
         invoice_deduction_family_unresolved: 'the received invoice it pays does not
@@ -2469,6 +2504,9 @@ application:
       invoice_fingerprint_unavailable: Cadrumo could not read your invoices to compare
         them with modelo %{modelo} %{filing_year}, %{period}, so this calculation
         cannot be shown to be current. Try again once they can be read.
+      invoice_source_document_missing: Received invoice %{invoice_number} deducts
+        IVA, but your records do not hold its document. Open the invoice and attach
+        its PDF or e-invoice.
       iva_compensation_annual_source_evidence_failure: Modelo 390 needs figures from
         your modelo 303 returns for the year, and %{source_issue_count} issue(s) with
         them are still open, so this declaration cannot be completed.

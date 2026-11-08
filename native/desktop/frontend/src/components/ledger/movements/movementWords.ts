@@ -44,6 +44,11 @@ export const ivaCategoryLabel = (t: Translate, id: string) =>
   wordOrToken(t, "desktop.ledger.iva_category.", id);
 export const irpfCategoryLabel = (t: Translate, id: string) =>
   wordOrToken(t, "desktop.ledger.irpf_category.", id);
+/** An IVA deduction kind by the word the backend serves for it, under the
+ * same entry-option family the classify form's served list names. A kind the
+ * catalogue has no word for shows as the stored code, never as a guess. */
+export const deductionKindLabel = (t: Translate, id: string) =>
+  wordOrToken(t, "application.ledger.entry_options.deduction_fact_kind.", id);
 /** What an empty picker of a served list says: that the list is being read
  * or could not be, and `empty` once it was served. */
 export const vocabularyEmpty = (

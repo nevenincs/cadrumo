@@ -147,6 +147,7 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
         "household_rows_incomplete": _M,
         "unconverted_foreign_currency": _M,
         "aggregation_activity_undeclared": _M,
+        "m347_declarado_provincia_unrecorded": _M,
         # Worth checking. A value Cadrumo inferred or kept is among them: no box
         # lists it as assumed, so nothing in the editor can confirm it, and the
         # filer checks it against their records instead.
@@ -166,6 +167,8 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
         "iva_row_placed_on_movement_date": _C,
         "iva_operation_date_after_movement": _C,
         "m349_clave_inferred_from_category": _C,
+        # Owed only where a declarado paid over the threshold in cash, which the filer knows and the records do not.
+        "m347_metalico_unrecorded": _C,
         "unsettled_legal_reading": _C,
         "inferred_retencion_rate_unmatched": _C,
         "inferred_retencion_sectoral_rate_unconfirmed": _C,

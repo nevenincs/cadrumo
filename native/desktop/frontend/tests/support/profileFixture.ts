@@ -28,3 +28,8 @@ export const PROFILE_NAME = `${profileStated("identity.name")} ${PROFILE_SURNAME
 export const PROFILE_SECTION_TITLES = profile.sections.map(
   (section) => section.title,
 );
+
+/** The title the served profile gives the section `key`, or an empty string. */
+export function profileSectionTitle(key: string): string {
+  return profile.sections.find((section) => section.key === key)?.title ?? "";
+}

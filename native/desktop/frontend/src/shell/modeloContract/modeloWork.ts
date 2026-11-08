@@ -77,6 +77,8 @@ export type CalculationSourceDiagnosticSnapshot = {
     | "iva_operation_date_after_movement"
     | "oss_no_live_source"
     | "withholding_detail_absent"
+    | "m347_declarado_provincia_unrecorded"
+    | "m347_metalico_unrecorded"
     | "missing_transaction_evidence"
     | "administrador_retencion_rate_mismatch"
     | "inferred_retencion_rate_unmatched"

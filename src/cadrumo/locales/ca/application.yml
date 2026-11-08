@@ -36,6 +36,21 @@ application:
           import.'
         unnamed_element: un element sense nom
       opening_remedy: Omple «{field}» per poder-ho calcular.
+  aggregation:
+    retenciones:
+      window_empty: 'No hi ha cap retenció per declarar al Model %{modelo} de %{period}:
+        no consta cap pagament del període que en porti. Registra la factura rebuda
+        i el seu pagament. No s''ha desat res.'
+      window_empty_lease: 'No hi ha cap retenció per declarar al Model %{modelo} de
+        %{period}: no consta cap pagament de lloguer del període que en porti. Si
+        vas pagar el lloguer d''un local amb retenció, registra la factura rebuda
+        i el seu pagament; si no n''hi va haver cap, indica al teu perfil que aquest
+        període no va tenir pagaments de lloguer amb retenció. No s''ha desat res.'
+      window_empty_work: 'No hi ha cap retenció per declarar al Model %{modelo} de
+        %{period}: no consta cap pagament del període que en porti. Si vas pagar professionals
+        o treballadors amb retenció, registra la factura rebuda i el seu pagament;
+        si no n''hi va haver cap, indica al teu perfil que aquest període no va tenir
+        retencions. No s''ha desat res.'
   auth:
     acquisition_lock:
       errors:
@@ -1088,21 +1103,30 @@ application:
     staged_check:
       served:
         blocker:
+          amount_signed: 'L''import és una magnitud: el sentit ja diu si el diner
+            va entrar o va sortir.'
           cannot_clear: 'Aquest valor no es pot buidar: el camp ha de tenir un valor.'
           draft_incomplete: Un moviment nou necessita data comptable, import, moneda,
             sentit i descripció abans de poder-se desar.
           mixed_needs_share: Un moviment Mixt necessita una part professional.
           needs_classification: Aquest canvi necessita que el moviment estigui classificat
             abans.
+          needs_withholding_category: La base i l'IVA declarats sumen més que el diner
+            que s'ha mogut. Aquesta diferència és una retenció d'IRPF i el moviment
+            no declara cap categoria d'IRPF.
           share_needs_mixed: La part professional només s'aplica a un moviment Mixt.
           transfer_with_tax: Un traspàs entre els teus propis comptes no porta dades
             fiscals.
         fix:
+          amount_signed: Escriu l'import sense signe i deixa que el sentit digui si
+            va entrar o va sortir.
           cannot_clear: Conserva el valor desat.
           draft_incomplete: Completa el que li falta al moviment nou.
           mixed_needs_share: Indica la part professional com a percentatge, per exemple
             50 per al 50 %.
           needs_classification: Classifica el moviment com a Professional o Personal.
+          needs_withholding_category: Indica la categoria d'IRPF a què pertany la
+            retenció, o corregeix la base i l'IVA perquè sumin l'import.
           share_needs_mixed: Treu la part o classifica el moviment com a Mixt.
           transfer_with_tax: Treu les dades fiscals del traspàs o canvia'n el sentit.
         share_refusal: 'Això no és una part: escriu un percentatge, com 50 per al
@@ -1544,6 +1568,17 @@ application:
           tenen una font oficial que els confirmi.
         what_to_do: Comprova aquests imports amb les instruccions oficials abans de
           presentar.
+      m347_declarado_provincia_unrecorded:
+        what: 'Falta {box} d''alguns declarats: correspon al seu domicili fiscal i
+          les teves factures no l''indiquen.'
+        what_to_do: Consigna el codi de província del domicili fiscal de cada declarat
+          indicat abans de presentar la declaració.
+      m347_metalico_unrecorded:
+        what: Les teves factures no indiquen com es van cobrar, així que {box} queda
+          sense import en tots els registres.
+        what_to_do: Si algun declarat et va pagar en metàl·lic per sobre de l'import
+          que obliga a declarar-lo, consigna aquest import al seu registre abans de
+          presentar la declaració.
       m349_clave_inferred_from_category:
         what: Cadrumo ha triat el tipus d'operació d'una línia del llistat d'operacions
           amb la UE segons la categoria d'IVA de la factura, i podria ser un altre.
@@ -1813,6 +1848,7 @@ application:
       instalment_free_gap: '{element}: no hi ha dotació registrada de {start} a {end}.
         El seu mètode deixa l''import a la teva elecció, de manera que no suma res
         a la casella {box}.'
+      m347_provincia_unrecorded: 'Declarats sense codi de província: {parties}.'
       possibly_durable_expense: El moviment del {row_date} per {row_amount} es dedueix
         com a despesa corrent i la seva descripció sembla la d'un element durador.
       prior_filing_unrecorded: Per calcular la casella {box}, registra el teu Modelo
@@ -2344,8 +2380,8 @@ application:
         inadmissible_deduction_classification: la seva classificació de deducció no
           és admissible per a aquesta operació
         invoice_cash_accounting_regime_unmodelled: declares el règim especial del
-          criteri de caixa, en què l'IVA es merita en cobrar o pagar, i Cadrumo encara
-          no sap situar l'IVA de les teves factures segons els cobraments i pagaments
+          criteri de caixa, en què l'IVA es merita en cobrar o pagar, i l'IVA de les
+          teves factures encara no es pot situar segons els cobraments i pagaments
         invoice_category_contradicted: la categoria d'IVA de la seva factura no encaixa
           amb el país de la contrapart
         invoice_deduction_family_unresolved: 'la factura rebuda que paga no indica
@@ -2611,6 +2647,9 @@ application:
         per comparar-les amb el model %{modelo} %{filing_year}, %{period}, així que
         no es pot confirmar que aquest càlcul estigui al dia. Torna-ho a provar quan
         es puguin llegir.
+      invoice_source_document_missing: La factura rebuda %{invoice_number} dedueix
+        IVA, però els teus registres no en guarden el document. Obre la factura i
+        adjunta'n el PDF o la factura electrònica.
       iva_compensation_annual_source_evidence_failure: El model 390 necessita les
         dades dels teus models 303 de l'any, i encara hi ha %{source_issue_count}
         incidència(es) pendent(s) amb aquestes dades, així que aquesta declaració

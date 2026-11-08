@@ -359,21 +359,10 @@ aggregation:
     errors:
       filing_year_out_of_range: El ejercicio %{filing_year} esta fuera del rango admitido
         %{min_year}-%{max_year}.
-      m111_no_retenciones_attestation_missing: 'No hay ninguna retención registrada
-        para ningún perceptor en el Modelo 111 %{filing_year} %{period}. No presentes
-        un Modelo 111 en blanco: declara el trimestre como periodo sin retenciones
-        con `aeat config profile edit --modelo-111-no-retenciones-periods %{attestation_period}`
-        (la opción sustituye la lista guardada, así que indica también, separados
-        por comas, los periodos que ya hayas declarado), o registra los pagos de los
-        que retuviste impuesto con `aeat app modelo aggregate`, usando --received-invoice-retencion
-        para una factura recibida o --ledger-payment-withholding para nóminas.'
       m193_phase_allocation_collision: 'Modelo %{modelo} %{filing_year}: la(s) asignación(es)
         %{source_allocations} figuran declaradas manualmente y también proceden de
         las retenciones de capital capturadas. Elimina la fila manual.'
       perceptor_nif_blank: El NIF del perceptor no puede estar vacío.
-      perceptor_observations_missing: No existen observaciones de retenciones por
-        perceptor para el modelo %{modelo} %{filing_year} %{period}; la fuente %{source_kind}
-        no puede resolverse.
       withholding_annual_source_not_quarterly: 'No se puede elaborar el resumen anual:
         el calendario de presentación del declarante no asigna su modelo periódico
         de retenciones a todos los trimestres del año (lo presenta mensualmente),
@@ -1516,6 +1505,7 @@ desktop:
         set_currency: Indicar la moneda
         set_share: Indicar la parte
         show: Mostrar en la tabla
+        show_fields: Muestra los movimientos y la columna
       gone: Eliminado o movido fuera del periodo desde que lo leíste.
       gone_mine: Mantenerlo en mis cambios
       gone_movement: Un movimiento que ya no se lee
@@ -10608,6 +10598,7 @@ workspace:
       failed: 'Casillas que no se pudieron calcular: {count}'
       failed_lead: Esperan algo que le faltaba al cálculo. Elige una para ver qué.
       none: Nada de este modelo te necesita.
+      profile: 'Antes de calcular este periodo, tu perfil tiene que responder:'
       title: Pendiente
     value:
       not_applicable: no aplica

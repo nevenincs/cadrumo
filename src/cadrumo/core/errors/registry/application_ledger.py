@@ -88,6 +88,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.aggregation.errors.RetencionesWindowEmptyError",
+        ErrorCode(
+            code="REFUSED_RETENCIONES_WINDOW_EMPTY",
+            category=ErrorCategory.REFUSED,
+            message_key="application.aggregation.retenciones.window_empty",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.aggregation.errors.UnacceptedLedgerRegistryValueError",
         ErrorCode(
             code="REFUSED_LEDGER_REGISTRY_VALUE_UNACCEPTED",

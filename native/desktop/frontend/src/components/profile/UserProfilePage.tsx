@@ -297,7 +297,11 @@ export const UserProfilePage = memo(function UserProfilePage({
     }
     setDraft({ base: data, section, fields, kind });
   };
-  const editRow = (row: Row) => openEditor(row.section, [row.field], "field");
+  // A detail of a section holding no entry is filled in as its first entry.
+  const editRow = (row: Row) =>
+    row.section.repeatable
+      ? openEditor(row.section, columns(row.section), "add_row")
+      : openEditor(row.section, [row.field], "field");
   const editEntry = (section: ProfileSection, entry: string | null) =>
     entry === null
       ? openEditor(section, columns(section), "add_row")
@@ -484,12 +488,20 @@ export const UserProfilePage = memo(function UserProfilePage({
   const answerStep = useRef<(step: LedgerProfileStep) => void>(() => {});
   useLayoutEffect(() => {
     answerStep.current = (step) => {
-      // A field step reveals and focuses that detail's own row. The
-      // completion step runs the action where it is ready, and otherwise
-      // reveals the first detail still outstanding, which is what the action
-      // is waiting for.
-      if (step.kind === "open_profile_field") showDetail(step.path);
-      else if (completeReady) completeSetup();
+      // A field step reveals and focuses that detail's own row; a detail of a
+      // section holding no entry yet is filled in as its first entry, so the
+      // step opens that entry. The completion step runs the action where it
+      // is ready, and otherwise reveals the first detail still outstanding,
+      // which is what the action is waiting for.
+      if (step.kind === "open_profile_field") {
+        const owner = data?.sections.find(
+          (section) =>
+            section.key === step.path.slice(0, step.path.indexOf(".")),
+        );
+        if (owner?.repeatable && entries(owner).length === 0 && writable)
+          editEntry(owner, null);
+        else showDetail(step.path);
+      } else if (completeReady) completeSetup();
       else {
         const first = data?.missing_required[0];
         if (first !== undefined) showDetail(first);

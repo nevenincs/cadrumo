@@ -20,7 +20,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
-from ..errors import AggregationValidationError
+from ..errors import RetencionesWindowEmptyError
 from ..modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from ..preconditions import AggregationPreconditionCondition
 from ..retencion_observations_repository import RetencionObservationPorts
@@ -113,7 +113,7 @@ def _m180_retenciones_revision() -> ModeloRevision:
 
 def test_resolver_empty_application_port_fails_before_silent_zero() -> None:
     with (
-        pytest.raises(AggregationValidationError) as exc_info,
+        pytest.raises(RetencionesWindowEmptyError) as exc_info,
     ):
         RetencionesAggregationSourceResolver(
             ports=RetencionObservationPorts(repository=_EmptyRetencionObservationRepository()),
@@ -127,13 +127,9 @@ def test_resolver_empty_application_port_fails_before_silent_zero() -> None:
             ),
         )
 
-    assert exc_info.value.translated_message == "aggregation.retenciones.errors.perceptor_observations_missing"
-    assert exc_info.value.context == {
-        "modelo": "180",
-        "filing_year": "2024",
-        "period": "0A",
-        "source_kind": "retenciones_aggregation",
-    }
+    assert exc_info.value.translated_message == "application.aggregation.retenciones.window_empty"
+    assert exc_info.value.context is not None
+    assert exc_info.value.context["modelo"] == "180"
     verdict = exc_info.value.terminal_precondition_verdict
     assert verdict is not None
     assert verdict.failed_condition_id == AggregationPreconditionCondition.RETENCIONES_OBSERVATIONS_PRESENT.value

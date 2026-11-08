@@ -338,22 +338,10 @@ aggregation:
     errors:
       filing_year_out_of_range: A(z) %{filing_year} bevallási év a támogatott %{min_year}-%{max_year}
         tartományon kívül van.
-      m111_no_retenciones_attestation_missing: 'A Modelo 111 %{filing_year} %{period}
-        bevallásához egyetlen kedvezményezettre sincs levonás rögzítve. Ne nyújts
-        be üres Modelo 111-et: nyilatkozz a negyedévről mint levonás nélküli (no-retenciones)
-        időszakról az `aeat config profile edit --modelo-111-no-retenciones-periods
-        %{attestation_period}` paranccsal (a kapcsoló felülírja a mentett listát,
-        ezért vesszővel elválasztva add meg a már bejelentett időszakokat is), vagy
-        rögzítsd azokat a kifizetéseket, amelyekből adót vontál le, az `aeat app modelo
-        aggregate` paranccsal: beérkezett számlához a --received-invoice-retencion,
-        bérszámfejtéshez a --ledger-payment-withholding kapcsolóval.'
       m193_phase_allocation_collision: 'Modelo %{modelo}, %{filing_year}: a(z) %{source_allocations}
         felosztás(ok) kézzel is rögzítve vannak, és a rögzített tőkejövedelem-visszatartásból
         is származnak. Töröld a kézi sort.'
       perceptor_nif_blank: A kedvezményezett NIF-je nem lehet üres.
-      perceptor_observations_missing: Nincsenek kedvezményezettenkénti forrásadó-megfigyelések
-        a Modelo %{modelo} (%{filing_year}, %{period}) bevalláshoz; a(z) %{source_kind}
-        forrás nem oldható fel.
       withholding_annual_source_not_quarterly: 'Az éves összesítő nem készíthető el:
         a bevalló benyújtási ütemezése nem rendeli az időszakos forrásadó-levonási
         nyomtatványt az év minden negyedévéhez (havonta nyújtja be), és csak a negyedéves
@@ -1480,6 +1468,7 @@ desktop:
         set_currency: Pénznem megadása
         set_share: Arány megadása
         show: Mutasd a táblázatban
+        show_fields: Mutasd a mozgásokat és az oszlopot
       gone: Beolvasás óta törölték, vagy kikerült az időszakból.
       gone_mine: Maradjon a változtatásaim között
       gone_movement: Már nem olvasható tétel
@@ -10558,6 +10547,7 @@ workspace:
       failed_lead: Valamire várnak, ami hiányzott a számításból. Válassz egyet, hogy
         lásd, mire.
       none: Ezen a nyomtatványon semmi sem vár rád.
+      profile: 'Mielőtt ez az időszak kiszámítható lenne, a profilodnak meg kell válaszolnia:'
       title: Teendők
     value:
       not_applicable: nem alkalmazható

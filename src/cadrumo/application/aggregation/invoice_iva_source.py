@@ -34,7 +34,7 @@ from ...core.identity.hex_ids import InvoiceId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.calculations.registry.iva_deduction_catalogue import is_iva_deduction_kind
-from ...domain.invoices.models import Invoice
+from ...domain.invoices.models import Invoice, InvoiceKind
 from ...domain.invoices.payment_matching import suggest_payments
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from .errors import AggregationValidationError
@@ -42,6 +42,7 @@ from .invoice_devengo import invoice_devengo_in_period
 from .source_mesh import CalculationSourceDiagnostic
 
 if TYPE_CHECKING:
+    from ...domain.attachments.protocols import AttachmentStoreProtocol
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
     from ...domain.user_profile.values import UserProfileRecord
@@ -213,6 +214,42 @@ def with_movement_side_links(invoices: Sequence[Invoice], *, window: Transaction
     )
 
 
+def documented_invoice_ids(store: AttachmentStoreProtocol) -> frozenset[str]:
+    """The invoices a stored document belongs to.
+
+    A confirmed PDF or structured e-invoice, or a document attached to the
+    invoice afterwards, lists the invoice in its manifest's ``linked_invoice_ids``.
+    """
+    return frozenset(invoice_id for manifest in store.iter_manifests() for invoice_id in manifest.linked_invoice_ids)
+
+
+def invoices_missing_source_document(
+    invoices: Sequence[Invoice],
+    *,
+    documented: frozenset[str],
+    window: TransactionCatalogue,
+) -> tuple[Invoice, ...]:
+    """The received invoices claiming a cuota whose factura the records do not hold.
+
+    LIVA art. 97 grants the deduction on the factura itself, so an invoice row
+    typed from the Libro de facturas is not that document. It is held when a
+    stored document belongs to the invoice, or when a movement paying it carries
+    registered purchase-invoice evidence.
+    """
+    linked = with_movement_side_links(invoices, window=window)
+    missing: list[Invoice] = []
+    for invoice in linked:
+        if invoice.kind is not InvoiceKind.RECEIVED or not any(line.iva_amount > 0 for line in invoice.lines):
+            continue
+        if invoice.invoice_id in documented:
+            continue
+        paying = (window.get(transaction_id) for transaction_id in invoice.linked_transaction_ids)
+        if any(movement is not None and movement.purchase_invoice_evidence_id is not None for movement in paying):
+            continue
+        missing.append(invoice)
+    return tuple(sorted(missing, key=lambda invoice: invoice.invoice_id))
+
+
 @dataclass(frozen=True, slots=True)
 class PeriodInvoiceIvaSide:
     """The invoice side of one period, as calculation and ledger readiness both read it."""
@@ -379,8 +416,10 @@ __all__ = [
     "TransactionCatalogueByIdReader",
     "cash_accounting_enrolled",
     "contradicting_linked_invoices",
+    "documented_invoice_ids",
     "invoice_iva_finding_diagnostics",
     "invoice_iva_source",
+    "invoices_missing_source_document",
     "linked_movements_for_period",
     "partition_invoice_payments",
     "period_invoice_iva_findings",

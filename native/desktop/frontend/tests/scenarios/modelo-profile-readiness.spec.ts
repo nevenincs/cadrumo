@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import type { LedgerErrorDetail } from "../../src/shell/ledger";
 import { servedNextStep, servedRefusalWords } from "../../src/shell/ledger";
 import { label } from "../support/strings";
-import { row } from "../support/userProfilePage";
+import { profileSectionTitle } from "../support/profileFixture";
 import { MODELO_FIXTURES } from "../support/windowFixtures";
 
 // Creating a declaration for a profile the application will not file for. The
@@ -47,7 +47,7 @@ async function refuseCreation(target: Page, shape: string) {
   return dialog(target).getByRole("alert");
 }
 
-test("a creation refused for a profile fact opens that fact's own row", async ({
+test("a creation refused for a profile fact opens where that fact is filled in", async ({
   page: target,
 }) => {
   const detail = recorded("profile-field");
@@ -62,11 +62,19 @@ test("a creation refused for a profile fact opens that fact's own row", async ({
   await expect(door).toBeVisible();
   await door.click();
 
-  // The window shows the profile with that detail's row focused; the dialog is
-  // gone, because the step is answered on the page the window moved to.
+  // The window shows the profile; the dialog is gone, because the step is
+  // answered on the page the window moved to. The scenario's profile holds
+  // no entry of the section the detail belongs to, so the detail is filled in
+  // as that section's first entry, and the entry opens.
   await expect(dialog(target)).toBeHidden();
   await expect(profile(target)).toBeVisible();
-  await expect(row(profile(target), step.path)).toBeFocused();
+  const section = step.path.slice(0, step.path.indexOf("."));
+  await expect(
+    target.getByRole("dialog", {
+      name: profileSectionTitle(section),
+      exact: true,
+    }),
+  ).toBeVisible();
 });
 
 test("a creation refused for an undeclared setup opens the profile's completion", async ({

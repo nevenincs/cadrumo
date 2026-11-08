@@ -416,6 +416,13 @@ export function followUps(step: PlanStep, result: JsonObject): PlanStep[] {
   return [];
 }
 
+/** How many of the plan's own steps have reported. A step's follow-ups, such
+ * as the attach after an evidence add, report under their planned step's
+ * index, so the count never passes the plan's length. */
+export function plannedStepsReported(reports: readonly StepReport[]): number {
+  return new Set(reports.map((report) => report.index)).size;
+}
+
 const DONE: ReadonlySet<StepOutcome["kind"]> = new Set([
   "applied",
   "unchanged",
