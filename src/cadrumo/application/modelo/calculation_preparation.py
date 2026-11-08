@@ -370,8 +370,6 @@ _M200_ACCOUNTING_LEDGER_DIRECTIONS = frozenset(
 )
 
 
-_LEDGER_PREFLIGHT_MOVEMENT_KEY = "application.modelo.errors.ledger_preflight_blocked_movement"
-_LEDGER_PREFLIGHT_PERIOD_KEY = "application.modelo.errors.ledger_preflight_blocked_period"
 _LEDGER_PREFLIGHT_NEED_KEY = "application.modelo.errors.ledger_preflight_need"
 
 
@@ -474,7 +472,11 @@ def raise_if_ledger_preflight_blocks_calculation(
     if movement is not None:
         context.update(_movement_words(movement, language))
     raise ModeloLedgerPreflightBlockedError(
-        translated_message=(_LEDGER_PREFLIGHT_MOVEMENT_KEY if movement is not None else _LEDGER_PREFLIGHT_PERIOD_KEY),
+        translated_message=(
+            "application.modelo.errors.ledger_preflight_blocked_movement"
+            if movement is not None
+            else "application.modelo.errors.ledger_preflight_blocked_period"
+        ),
         context=context,
         next_step=None if movement is None else open_movement_step(movement.transaction_id),
         precondition_failure=build_modelo_precondition_failure(

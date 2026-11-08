@@ -2293,8 +2293,8 @@ application:
         inadmissible_deduction_classification: a levonási besorolása erre az ügyletre
           nem alkalmazható
         invoice_cash_accounting_regime_unmodelled: a pénzforgalmi elszámolást (criterio
-          de caja) választottad, amelyben az IVA a fizetéskor keletkezik, és a Cadrumo
-          még nem tudja a számláid IVA-ját a fizetéseik szerint időszakhoz rendelni
+          de caja) választottad, amelyben az IVA a fizetéskor keletkezik, és a számláid
+          IVA-ja még nem rendelhető időszakhoz a fizetéseik szerint
         invoice_category_contradicted: a számla IVA-kategóriája nem illik a partner
           országához
         invoice_deduction_family_unresolved: 'a kifizetett bejövő számlából nem derül

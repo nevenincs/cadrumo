@@ -2221,8 +2221,8 @@ application:
         inadmissible_deduction_classification: its deduction classification is not
           admissible for this operation
         invoice_cash_accounting_regime_unmodelled: you declare the régimen especial
-          del criterio de caja, where IVA accrues on collection or payment, and Cadrumo
-          cannot yet place your invoices' IVA by their collections and payments
+          del criterio de caja, where IVA accrues on collection or payment, and your
+          invoices' IVA cannot yet be placed by their collections and payments
         invoice_category_contradicted: its invoice's IVA category does not fit the
           counterparty's country
         invoice_deduction_family_unresolved: 'the received invoice it pays does not

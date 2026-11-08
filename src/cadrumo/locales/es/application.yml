@@ -2341,8 +2341,8 @@ application:
         inadmissible_deduction_classification: su clasificación de deducción no es
           admisible para esta operación
         invoice_cash_accounting_regime_unmodelled: declaras el régimen especial del
-          criterio de caja, en el que el IVA se devenga al cobrar o pagar, y Cadrumo
-          aún no sabe situar el IVA de tus facturas según sus cobros y pagos
+          criterio de caja, en el que el IVA se devenga al cobrar o pagar, y el IVA
+          de tus facturas aún no puede situarse según sus cobros y pagos
         invoice_category_contradicted: la categoría de IVA de su factura no encaja
           con el país de la contraparte
         invoice_deduction_family_unresolved: 'la factura recibida que paga no indica

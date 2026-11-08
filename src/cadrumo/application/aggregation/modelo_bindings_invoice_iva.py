@@ -181,14 +181,14 @@ def invoice_line_iva_observation(
 ) -> IvaLedgerObservation | None:
     """Project one invoice line into the observation the screen declares from.
 
-    Received invoice evidence never supplies its own deduction identity. Both
-    SOPORTADO and INVERSION_SUJETO_PASIVO observations require the exact
-    statutory deduction family and immutable classification provenance, and an
-    invoice aggregate owns neither. They arrive as ``deduction_authority`` --
-    the frozen transaction-ledger observation the invoice is linked to -- and
-    are copied across unchanged. When no such authority is linked, or the
-    linked ones disagree, the enclosing screen withholds the invoice entirely
-    rather than invite an invented domestic-current default.
+    Both SOPORTADO and INVERSION_SUJETO_PASIVO observations require the exact
+    statutory deduction family and its provenance. They arrive as
+    ``deduction_authority`` and are copied across unchanged: the agreed
+    classification of the movements that pay the invoice, or, for a received
+    domestic invoice whose every cuota line is below the art. 108 escaso-valor
+    threshold, the invoice itself as ``invoice_evidence``. When neither
+    resolves, the enclosing screen withholds the invoice and reports it rather
+    than invent a domestic-current default.
 
     A line carrying a cuota takes the standard-case classification, which
     derives the domestic category from the line's rate slot, unless the invoice
@@ -229,8 +229,8 @@ def invoice_line_iva_observation(
             own native-currency field.
         iva_amount_eur: ``line.iva_amount`` already converted to EUR, same
             shape as *base_amount_eur*.
-        deduction_authority: Exact frozen transaction-ledger authority linked
-            to a received invoice, or ``None`` for an issued invoice.
+        deduction_authority: Deduction identity resolved for a received
+            invoice, or ``None`` for an issued invoice.
         operation: Generation-pinned authority the declared category and the
             counterparty gate are resolved against.
 
@@ -740,10 +740,9 @@ class ScreenedInvoiceIva:
             line carries no rate slot, so no cuota can be derived without
             inventing one.
         deduction_authority_missing: received invoices whose lines contribute
-            IVA evidence but which are linked to no frozen transaction-ledger
-            observation carrying the exact deduction family and immutable
-            evidence provenance an input row requires, or whose linked
-            observations disagree about it.
+            IVA evidence but whose deduction family resolves neither from the
+            paying movements' agreed classification nor from the invoice itself
+            under the escaso-valor threshold.
         recargo_rate_divergences: invoices whose recorded recargo departs from
             the rate art. 161 publishes for that slot. Unlike the two above,
             these are NOT withheld -- the figure is declared exactly as

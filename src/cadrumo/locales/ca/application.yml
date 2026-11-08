@@ -2344,8 +2344,8 @@ application:
         inadmissible_deduction_classification: la seva classificació de deducció no
           és admissible per a aquesta operació
         invoice_cash_accounting_regime_unmodelled: declares el règim especial del
-          criteri de caixa, en què l'IVA es merita en cobrar o pagar, i Cadrumo encara
-          no sap situar l'IVA de les teves factures segons els cobraments i pagaments
+          criteri de caixa, en què l'IVA es merita en cobrar o pagar, i l'IVA de les
+          teves factures encara no es pot situar segons els cobraments i pagaments
         invoice_category_contradicted: la categoria d'IVA de la seva factura no encaixa
           amb el país de la contrapart
         invoice_deduction_family_unresolved: 'la factura rebuda que paga no indica
