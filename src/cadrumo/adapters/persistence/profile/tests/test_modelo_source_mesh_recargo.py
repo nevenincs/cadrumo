@@ -11,7 +11,6 @@ import pytest
 import cadrumo.application.aggregation.modelo_bindings_iva as modelo_bindings
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
-from .....application.aggregation.errors import AggregationValidationError
 from .....application.aggregation.source_mesh import CalculationSourceContext
 from .....application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from .....core.period import Period
@@ -114,23 +113,15 @@ def _recargo_invoice(invoice_number: str, *, issued_at: date, taxable_base: Deci
     )
 
 
-def test_the_screen_now_catches_a_recargo_absent_from_the_ledger(
+def test_an_invoice_recargo_is_declared_though_the_ledger_carries_none(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """A recargo the ledger does not carry is an under-declaration too.
+    """The issued invoice's recargo de equivalencia reaches its 303 casilla with no ledger row.
 
-    The screened set covered the four cuota bindings and stopped there, so an
-    invoice charging recargo de equivalencia could diverge from the ledger by
-    exactly the surcharge and pass. A supplier to a recargo-regime retailer
-    charges it ON TOP of the cuota (LIVA art. 161), so the shortfall is real
-    money owed, not a presentation detail.
-
-    Extending the screened set alone would have been vacuous: the screen builds
-    its observations from LINE metadata, and an invoice's recargo is an
-    invoice-level field, so the comparison would have found zero against zero
-    and never fired. The surcharge had to be carried onto the observation
-    first, through the same canonical bridge the ledger path uses rather than a
-    second construction site.
+    A supplier to a recargo-regime retailer charges it ON TOP of the cuota (LIVA
+    art. 161), so it is money owed. The invoice is the IVA source: its recargo is
+    declared from the invoice itself, under the rate of the line that bears it,
+    whether or not any movement records it.
     """
     revision = _m303_revision()
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
@@ -141,25 +132,18 @@ def test_the_screen_now_catches_a_recargo_absent_from_the_ledger(
         ),
     )
 
-    with pytest.raises(AggregationValidationError) as exc_info:
-        LedgerIvaAggregationSourceResolver(
-            transaction_repository=tx_repo,
-            invoice_repository=invoice_repo,
-            objects=secure_objects,
-        ).resolve(
-            CalculationSourceContext(
-                bucket_id=_BUCKET_ID,
-                modelo="303",
-                filing_year=2025,
-                period=Period.from_year_and_code(2025, "1T"),
-                revision=revision,
-            ),
-        )
+    resolution = LedgerIvaAggregationSourceResolver(
+        transaction_repository=tx_repo,
+        invoice_repository=invoice_repo,
+        objects=secure_objects,
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="303",
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "1T"),
+            revision=revision,
+        ),
+    )
 
-    context = exc_info.value.context
-    assert context is not None, "the refusal must carry its diagnostic context"
-    excess = context["invoice_domestic_iva_excess_by_binding"]
-    assert isinstance(excess, dict)
-    # The recargo tier is named specifically, so the refusal tells the operator
-    # which figure is missing rather than only that something is.
-    assert "modelo-303-recargo-equivalencia-general-cuota" in excess
+    assert resolution.binding_values["modelo-303-recargo-equivalencia-general-cuota"] == Decimal("520.00")
