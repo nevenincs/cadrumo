@@ -36,6 +36,11 @@ from ..evidence_draft_text import (
     TextInvoiceFieldExtractor,
     build_text_field_extraction_prompt,
 )
+from ..invoice_field_contract import (
+    INVOICE_FIELD_CONTRACTS,
+    anchor_key_for_field,
+    role_evidence_key_for_field,
+)
 from ..invoice_field_grounding import (
     ExtractedFieldAnchors,
     ExtractedInvoiceFields,
@@ -364,6 +369,39 @@ class TestExtractorRequestShape:
         assert request.images == ()
         assert "Invoice 42" in request.prompt
         assert extractor.decided_by.startswith("llm:agent-text-extract:configured:")
+
+    def test_the_request_constrains_the_reply_to_the_keys_the_parser_reads(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
+        """Every key the prompt asks for is a nullable string, and no other key is admitted.
+
+        The schema names the same keys as the prompt's reply skeleton, because the
+        parser rejects a key it does not declare; nothing is required, so a field
+        the document never printed may be left out, as the parser allows.
+        """
+        extractor = TextInvoiceFieldExtractor(settings=load_settings(), operation=operation)
+
+        schema = extractor._build_request("Invoice 42").response_schema
+
+        assert schema is not None
+        assert schema["type"] == "object"
+        assert schema["additionalProperties"] is False
+        assert "required" not in schema
+        properties = schema["properties"]
+        assert isinstance(properties, dict)
+        expected = {
+            key
+            for contract in INVOICE_FIELD_CONTRACTS
+            for key in (
+                contract.field_name,
+                anchor_key_for_field(contract.field_name),
+                *((role_evidence_key_for_field(contract.field_name),) if contract.carries_role_evidence else ()),
+            )
+        }
+        assert set(properties) == expected
+        assert all(value == {"type": ["string", "null"]} for value in properties.values())
+        for key in expected:
+            assert f'"{key}"' in extractor._build_request("Invoice 42").prompt
 
     def test_only_the_named_public_corpus_reads_unmarked(self, *, operation: PinnedAuthorityOperation) -> None:
         """Naming the corpus is the deliberate act; saying nothing marks the request as evidence."""

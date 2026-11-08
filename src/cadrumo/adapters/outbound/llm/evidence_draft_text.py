@@ -68,6 +68,7 @@ from .consent import EvidenceConsentToken
 from .invoice_extraction_prompt import (
     CompiledInvoiceExtractionPrompt,
     default_extraction_period,
+    invoice_extraction_response_schema,
     render_invoice_extraction_prompt,
 )
 from .invoice_field_grounding import ground_extracted_fields, parse_invoice_extraction_response
@@ -292,6 +293,7 @@ class TextInvoiceFieldExtractor:
             consent_token=self._consent_token,
             model_role=ModelRole.TEXT_EXTRACTION,
             expects_json=True,
+            response_schema=invoice_extraction_response_schema(self._fields),
         )
 
     def _compiled_prompt(self) -> CompiledInvoiceExtractionPrompt:

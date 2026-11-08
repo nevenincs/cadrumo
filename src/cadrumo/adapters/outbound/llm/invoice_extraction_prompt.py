@@ -80,7 +80,7 @@ from decimal import Decimal
 from functools import lru_cache
 from typing import TYPE_CHECKING, Final
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, JsonValue
 
 from ....core.hashing import sha256_hex
 from ....core.models import STRICT_FROZEN_CONFIG
@@ -108,6 +108,7 @@ __all__ = [
     "CompiledInvoiceExtractionPrompt",
     "default_extraction_period",
     "invoice_extraction_prompt_registry",
+    "invoice_extraction_response_schema",
     "render_invoice_extraction_prompt",
     "selected_invoice_field_contracts",
 ]
@@ -394,6 +395,30 @@ def _role_evidence_lines(contracts: tuple[InvoiceFieldContract, ...]) -> str:
     )
 
 
+def _reply_keys(contract: InvoiceFieldContract) -> tuple[str, ...]:
+    """The reply keys one field is answered under: its value, its anchor and, for an identity, its role evidence."""
+    keys = (contract.field_name, anchor_key_for_field(contract.field_name))
+    if contract.carries_role_evidence:
+        return (*keys, role_evidence_key_for_field(contract.field_name))
+    return keys
+
+
+def invoice_extraction_response_schema(fields: Collection[str] | None = None) -> dict[str, JsonValue]:
+    """The JSON Schema a reading model's reply is constrained to, over the keys the prompt asks for.
+
+    One flat object whose every key is a nullable string, as the reply skeleton
+    shows it, and no other key, because the parser rejects a key it does not
+    declare. Nothing is required: a field the document never printed may be
+    left out, and the parser reads an absent key as null.
+    """
+    properties: dict[str, JsonValue] = {
+        key: {"type": ["string", "null"]}
+        for contract in selected_invoice_field_contracts(fields)
+        for key in _reply_keys(contract)
+    }
+    return {"type": "object", "properties": properties, "additionalProperties": False}
+
+
 def _json_skeleton(contracts: tuple[InvoiceFieldContract, ...]) -> str:
     # Terse by design: every field's meaning and form is already stated once in
     # the Fields block above, and restating it inside the skeleton doubles the
@@ -412,13 +437,7 @@ def _json_skeleton(contracts: tuple[InvoiceFieldContract, ...]) -> str:
     # to a party are one thought about one field, and a small model keeps them
     # together when they are written together.
     def _keys(contract: InvoiceFieldContract) -> str:
-        lines = [
-            f'  "{contract.field_name}": <string or null>',
-            f'  "{anchor_key_for_field(contract.field_name)}": <string or null>',
-        ]
-        if contract.carries_role_evidence:
-            lines.append(f'  "{role_evidence_key_for_field(contract.field_name)}": <string or null>')
-        return ",\n".join(lines)
+        return ",\n".join(f'  "{key}": <string or null>' for key in _reply_keys(contract))
 
     body = ",\n".join(_keys(contract) for contract in contracts)
     return "{\n" + body + "\n}"
