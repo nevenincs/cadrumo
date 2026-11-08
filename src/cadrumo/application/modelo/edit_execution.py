@@ -453,6 +453,23 @@ def _unresolved_binding_edit_refusal(
     return None
 
 
+def _first_box_fed_by(raw: object, revision: ModeloRevision) -> Mapping[str, object] | None:
+    """Name the first box, in the revision's order, that the refused carries feed, with the carries it reads.
+
+    An earlier return that does not show the boxes a carry reads refuses every
+    such carry at once, naming them by binding; the filer answers them in the
+    boxes they feed, so the refusal is addressed to the first of those.
+    """
+    if not isinstance(raw, str):
+        return None
+    refused = set(raw.split(","))
+    for casilla in revision.casillas:
+        fed = tuple(binding_id for binding_id in bound_casilla_binding_ids(casilla) if binding_id in refused)
+        if fed:
+            return {"casilla_id": casilla.id, "binding_id": ",".join(fed)}
+    return None
+
+
 def pre_effect_refusal(
     error: BaseException, *, revision: ModeloRevision | None = None
 ) -> ModeloEditExecutionNoEffectV1:
@@ -461,13 +478,13 @@ def pre_effect_refusal(
     ``revision`` is a :class:`ModeloRevision`.
     """
     code = get_registered_error_code(error).code
-    if (
-        isinstance(error, RegistryValidationError)
-        and error.translated_message == "errors.calc.bound_casilla_binding_value_missing"
-        and revision is not None
-        and error.context is not None
-    ):
-        refusal = _unresolved_binding_edit_refusal(error.context, revision, code)
+    if isinstance(error, RegistryValidationError) and revision is not None and error.context is not None:
+        context: Mapping[str, object] | None = None
+        if error.translated_message == "errors.calc.bound_casilla_binding_value_missing":
+            context = error.context
+        elif error.translated_message == "errors.calc.previous_filing_casillas_unobserved":
+            context = _first_box_fed_by(error.context.get("binding_ids"), revision)
+        refusal = None if context is None else _unresolved_binding_edit_refusal(context, revision, code)
         if refusal is not None:
             return refusal
     if isinstance(error, ModeloClearedCasillaSourceFedError):
