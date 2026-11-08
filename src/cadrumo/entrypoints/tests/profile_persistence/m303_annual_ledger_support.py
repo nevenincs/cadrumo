@@ -374,9 +374,11 @@ def seed_m303_period_cuotas(
 ) -> None:
     """Record one domestic 21 % sale and/or purchase in the work unit's quarter.
 
-    ``repercutido`` and ``soportado`` are 21 % cuotas, zero for no row; the purchase carries its supplier invoice, the evidence a
-    deduction needs (LIVA art. 97.Uno.1). A quarter already holding its row is
-    left as it is, so a recalculation reads the same ledger.
+    ``repercutido`` and ``soportado`` are 21 % cuotas, zero for no row. The
+    purchase is the payment of its supplier invoice, which is the IVA source and
+    the evidence a deduction needs (LIVA art. 97.Uno.1); the two records name
+    each other. A quarter already holding its row is left as it is, so a
+    recalculation reads the same ledger.
     """
     work_unit = WorkUnitCatalogueRepository().load().work_units[work_unit_id]
     quarter = work_unit.period.registry_token
@@ -411,24 +413,31 @@ def seed_m303_period_cuotas(
             currency="EUR",
             rate_provider=catalogue_ports.rate_provider,
         )
+        purchase = iva_transaction(
+            f"wallet-purchase-{year}-{quarter}",
+            direction=TransactionDirection.OUTGOING,
+            taxable_base=_m303_period_cuota_base(soportado),
+            iva_amount=soportado,
+            period=quarter,
+            filing_year=year,
+            purchase_invoice_evidence_id=purchase_invoice.invoice_id,
+            paid_invoice_id=purchase_invoice.invoice_id,
+            deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current"),
+            deduction_provenance=IvaDeductionClassificationProvenance(
+                authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
+                source_locator=f"invoice:{purchase_invoice.invoice_id}",
+                evidence_digest="a" * 64,
+            ),
+        )
         invoices = InvoiceCatalogueRepository()
-        invoices.save(build_invoice_catalogue((*invoices.load().invoices.values(), purchase_invoice)))
-        transactions.append(
-            iva_transaction(
-                f"wallet-purchase-{year}-{quarter}",
-                direction=TransactionDirection.OUTGOING,
-                taxable_base=_m303_period_cuota_base(soportado),
-                iva_amount=soportado,
-                period=quarter,
-                filing_year=year,
-                purchase_invoice_evidence_id=purchase_invoice.invoice_id,
-                deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current"),
-                deduction_provenance=IvaDeductionClassificationProvenance(
-                    authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
-                    source_locator=f"invoice:{purchase_invoice.invoice_id}",
-                    evidence_digest="a" * 64,
-                ),
+        invoices.save(
+            build_invoice_catalogue(
+                (
+                    *invoices.load().invoices.values(),
+                    purchase_invoice.model_copy(update={"linked_transaction_ids": (purchase.transaction_id,)}),
+                )
             )
         )
+        transactions.append(purchase)
     if transactions:
         ledger.save(TransactionCatalogue.from_transactions((*stored, *transactions)))
