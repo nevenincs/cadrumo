@@ -10538,6 +10538,8 @@ workspace:
         profile: A profilod megnyitása
         withholding: A levonások megnyitása
     todo:
+      elsewhere: 'Hiányzó adatok a mezőkön kívül: {count}. Az Ellenőrzés lapon találod
+        őket.'
       failed: 'Ki nem számítható rovatok: {count}'
       failed_lead: Valamire várnak, ami hiányzott a számításból. Válassz egyet, hogy
         lásd, mire.

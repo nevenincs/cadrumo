@@ -49,7 +49,14 @@ from .value_presentation import format_casilla_value
 from .work_form_declaration_facts import AMOUNTLESS_RESULT_DIRECTIONS, ModeloFormResultDirection
 from .work_form_findings import ModeloFormAttention
 from .work_form_models import ModeloFormField, ModeloFormOrigin, ModeloWorkForm
-from .work_form_next_step import blocking_count, check_count, confirm_count, missing_count, result_fields
+from .work_form_next_step import (
+    blocking_count,
+    check_count,
+    confirm_count,
+    missing_count,
+    missing_findings,
+    result_fields,
+)
 from .work_form_wording import date_text, day_text, field_value_text, origin_words
 
 SOON_DAYS: Final[int] = 7
@@ -60,6 +67,7 @@ URGENT_DAYS: Final[int] = 3
 _MONEY: Final[str] = "money"
 _WORD_GAP: Final[str] = "  "
 _OWN_CALCULATION_LOCALE_KEY: Final[str] = "workspace.modelo.header.own_calculation"
+_MISSING_ELSEWHERE_LOCALE_KEY: Final[str] = "workspace.modelo.todo.elsewhere"
 _CHOICE_PENDING_LOCALE_KEY: Final[str] = "workspace.modelo.header.result.choice_pending"
 _CHOICE_PENDING_SHORT_LOCALE_KEY: Final[str] = "workspace.modelo.header.result.choice_pending_short"
 _SIGN_HELP_LOCALE_KEY: Final[str] = "workspace.modelo.header.result.sign_help"
@@ -97,6 +105,16 @@ class ModeloFormAttentionCount(BaseModel):
     level: ModeloFormAttention
     count: int = Field(gt=0)
     #: The count in words, such as "blocking: 2".
+    words: str = Field(min_length=1)
+
+
+class ModeloFormMissingElsewhere(BaseModel):
+    """The missing values no box holds, which the check names, counted as the missing chip counts them."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    count: int = Field(gt=0)
+    #: The count in words, saying where they are named.
     words: str = Field(min_length=1)
 
 
@@ -244,6 +262,9 @@ class ModeloFormHeader(BaseModel):
     file: ModeloFormFileView | None = None
     #: ``None`` when nothing withholds the file, or once the declaration is recorded as filed.
     export_hold: ModeloFormExportHold | None = None
+    #: The missing values the missing chip counts that no box on the form holds; ``None`` when there are none,
+    #: or once the declaration is recorded as filed. A to-do list of boxes states these beside its boxes.
+    missing_elsewhere: ModeloFormMissingElsewhere | None = None
 
 
 def form_recorded(form: ModeloWorkForm, *, filed: bool) -> bool:
@@ -274,6 +295,18 @@ def attention_counts(
         )
         for level, count in counts.items()
         if count
+    )
+
+
+def missing_elsewhere(
+    form: ModeloWorkForm, language: OutputLanguage, *, recorded: bool
+) -> ModeloFormMissingElsewhere | None:
+    """The missing values only a finding or a note names, which the check lists; ``None`` when there are none."""
+    count = 0 if recorded else missing_findings(form)
+    if not count:
+        return None
+    return ModeloFormMissingElsewhere(
+        count=count, words=tr(_MISSING_ELSEWHERE_LOCALE_KEY, count=count, locale=language.value)
     )
 
 
@@ -601,6 +634,7 @@ def form_header(form: ModeloWorkForm, language: OutputLanguage, *, verified: boo
         deadline=deadline_view(form, language, recorded=recorded),
         file=file_view(form, language, recorded=recorded),
         export_hold=export_hold(form, language, verified=verified, recorded=recorded),
+        missing_elsewhere=missing_elsewhere(form, language, recorded=recorded),
     )
 
 
@@ -614,6 +648,7 @@ __all__ = [
     "ModeloFormExportHoldReason",
     "ModeloFormFileView",
     "ModeloFormHeader",
+    "ModeloFormMissingElsewhere",
     "ModeloFormResultState",
     "ModeloFormResultView",
     "attention_counts",
@@ -624,5 +659,6 @@ __all__ = [
     "file_view",
     "form_header",
     "form_recorded",
+    "missing_elsewhere",
     "result_view",
 ]

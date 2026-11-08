@@ -172,7 +172,9 @@ export function CheckView({
           <section
             key={level}
             aria-label={word}
-            className="flex flex-col gap-2"
+            data-attention-level={level}
+            tabIndex={-1}
+            className="flex flex-col gap-2 outline-none"
           >
             <h3
               className={cn(

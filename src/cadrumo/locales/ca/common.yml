@@ -10579,6 +10579,7 @@ workspace:
         profile: Obrir el teu perfil
         withholding: Obrir les retencions
     todo:
+      elsewhere: 'Dades que falten fora de les caselles: {count}. Les tens a Comprovar.'
       failed: 'Caselles que no s''han pogut calcular: {count}'
       failed_lead: Esperen alguna cosa que li faltava al càlcul. Tria'n una per veure
         què.

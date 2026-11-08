@@ -277,3 +277,22 @@ def test_the_public_read_carries_the_header_in_the_forms_language(operation: Pin
     assert projection.header == form_header(form, _ES, verified=False, filed=False)
     assert projection.header.attention
     assert restore_modelo_workbench_form(projection).header == projection.header
+
+
+def test_the_missing_values_no_box_holds_are_stated_for_the_to_do_list(operation: PinnedAuthorityOperation) -> None:
+    """What is missing beside the boxes is counted where the to-do list can say it, so the two never disagree.
+
+    The missing chip counts a missing value only a finding or a note names
+    together with the missing boxes; a to-do list of boxes alone said nothing
+    was needed while the chip said one value was missing.
+    """
+    entered = _calculated(_entered(operation))
+    unboxed = entered.model_copy(update={"calculation_notes": (_note("source_issue"),)})
+
+    header = form_header(unboxed, _EN, verified=False, filed=False)
+
+    assert header.missing_elsewhere is not None
+    assert header.missing_elsewhere.count == 1 == missing_count(unboxed)
+    assert header.missing_elsewhere.words == tr("workspace.modelo.todo.elsewhere", count=1, locale="en")
+    assert form_header(entered, _EN, verified=False, filed=False).missing_elsewhere is None
+    assert form_header(unboxed, _EN, verified=False, filed=True).missing_elsewhere is None

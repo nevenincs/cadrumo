@@ -439,6 +439,7 @@ export type ModeloFormHeader = {
   deadline: ModeloFormDeadlineView | null;
   file: ModeloFormFileView | null;
   export_hold: ModeloFormExportHold | null;
+  missing_elsewhere: ModeloFormMissingElsewhere | null;
 };
 
 /**
@@ -488,6 +489,15 @@ export type ModeloFormIssueLine = {
  */
 export type ModeloFormLayoutProvenance =
   "reviewed" | "generated" | "inspection_only";
+
+/**
+ * The missing values no box holds, which the check names, counted as the
+ * missing chip counts them.
+ */
+export type ModeloFormMissingElsewhere = {
+  count: number;
+  words: string;
+};
 
 /**
  * The one action a form offers the filer next.
