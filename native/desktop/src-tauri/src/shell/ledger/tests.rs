@@ -17,6 +17,10 @@ fn the_window_names_no_profile_directory_or_account_secret() {
             json!({"source_directory":"C:\\"}),
         ),
         (
+            "ledger.invoice.attach_document",
+            json!({"source_directory":"C:\\"}),
+        ),
+        (
             "ledger.retencion_soportada.record",
             json!({"source_directory":"C:\\"}),
         ),
@@ -102,6 +106,7 @@ fn file_tokens_become_paths_only_where_the_definition_reads_a_file() {
     for id in [
         "ledger.evidence.add",
         "ledger.inventory.evidence.add",
+        "ledger.invoice.attach_document",
         "ledger.retencion_soportada.record",
     ] {
         let mut add = object(json!({"source_path":receipt}));

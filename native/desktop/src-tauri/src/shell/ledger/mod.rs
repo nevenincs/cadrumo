@@ -48,7 +48,7 @@ struct PathField {
     purpose: Purpose,
     shape: Shape,
 }
-const PATH_FIELDS: [PathField; 8] = [
+const PATH_FIELDS: [PathField; 9] = [
     PathField {
         definition: "ledger.evidence.add",
         field: "source_path",
@@ -86,6 +86,12 @@ const PATH_FIELDS: [PathField; 8] = [
         shape: Shape::One,
     },
     PathField {
+        definition: "ledger.invoice.attach_document",
+        field: "source_path",
+        purpose: Purpose::Documents,
+        shape: Shape::One,
+    },
+    PathField {
         definition: "ledger.invoice.import",
         field: "source_path",
         purpose: Purpose::InvoiceBooks,
@@ -100,10 +106,11 @@ const PATH_FIELDS: [PathField; 8] = [
     },
 ];
 /// Definitions that also read the directory their sources are under.
-const SOURCE_DIRECTORY: [&str; 4] = [
+const SOURCE_DIRECTORY: [&str; 5] = [
     "ledger.evidence.add",
     "ledger.evidence.batch",
     "ledger.inventory.evidence.add",
+    "ledger.invoice.attach_document",
     "ledger.retencion_soportada.record",
 ];
 const EXPORT: &str = "ledger.export";

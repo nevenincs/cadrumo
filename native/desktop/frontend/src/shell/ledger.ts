@@ -36,6 +36,8 @@ import type {
 import type {
   InvoiceAddRequest,
   InvoiceAddResult,
+  InvoiceDocumentAttachRequest,
+  InvoiceDocumentAttachResult,
   InvoiceImportRequest,
   InvoiceImportResult,
   InvoiceListRequest,
@@ -261,6 +263,7 @@ export const LEDGER_DEFINITIONS = [
   "ledger.inventory.retire",
   "ledger.inventory.valuation.preview",
   "ledger.invoice.add",
+  "ledger.invoice.attach_document",
   "ledger.invoice.duplicate",
   "ledger.invoice.import",
   "ledger.invoice.list",
@@ -968,6 +971,7 @@ export interface LedgerRequests {
   "ledger.staged.check": LedgerStagedCheckRequest;
   "ledger.invoice.update": InvoiceUpdateRequest;
   "ledger.invoice.remove": InvoiceRemoveRequest;
+  "ledger.invoice.attach_document": InvoiceDocumentAttachRequest;
   "ledger.status": LedgerStatusRequest;
   "ledger.preflight": LedgerPreflightRequest;
   "ledger.import": LedgerImportRequest;
@@ -1085,6 +1089,7 @@ export interface LedgerResults {
   "ledger.staged.check": LedgerStagedCheckResult;
   "ledger.invoice.update": InvoiceUpdateResult;
   "ledger.invoice.remove": InvoiceRemoveResult;
+  "ledger.invoice.attach_document": InvoiceDocumentAttachResult;
   "ledger.status": LedgerStatusResult;
   "ledger.preflight": LedgerPreflightResult;
   "ledger.import": LedgerImportResult;

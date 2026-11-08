@@ -40,6 +40,7 @@ from pydantic import BaseModel, Field
 
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
+from ...core.identity.hex_ids import InvoiceId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -206,6 +207,8 @@ class ModeloFormIssueLine(BaseModel):
     #: What answering this way records, in the form's language; ``None`` exactly when ``resolution_answer`` is.
     answer_lead_words: str | None = Field(default=None, min_length=1)
     answer_lead_words_language: OutputLanguage | None = None
+    #: The invoice whose document this line asks for; the line opens it in the Libro de facturas.
+    invoice_id: InvoiceId | None = None
 
 
 class ModeloFormVerdict(BaseModel):
@@ -419,6 +422,7 @@ def _finding_line(issue: ModeloFormIssue, context: _Context) -> ModeloFormIssueL
         address=target.address,
         surface=_owning_surface(target.field),
         recalculates=finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION,
+        invoice_id=issue.open_invoice_id,
     )
 
 
