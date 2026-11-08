@@ -1503,6 +1503,7 @@
         "cadrumo.application.modelo.work_filing_contracts",
         "cadrumo.application.modelo.work_form",
         "cadrumo.application.modelo.work_form_answers",
+        "cadrumo.application.modelo.work_form_carry_attestation",
         "cadrumo.application.modelo.work_form_context",
         "cadrumo.application.modelo.work_form_context_values",
         "cadrumo.application.modelo.work_form_counts",
