@@ -40,6 +40,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimePro
 from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.paths import effective_storage_root
+from cadrumo.core.time.clock import now
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.tests.cli_fixture_ports import ClickInvokeKwargs
 
@@ -274,7 +275,7 @@ def seeded_runtime_profile_origin(
         session = current_active_bucket_session()
         assert session is not None
         dek = bytes(session.dek)
-    yield SealedProfileWorld(origin=root, profile_id=str(profile_id), dek=dek)
+    yield SealedProfileWorld(origin=root, profile_id=str(profile_id), dek=dek, sealed_at=now())
 
 
 @contextmanager
