@@ -279,8 +279,8 @@ errors:
     error_modelo_external_filing_import: The imported external filing could not be
       persisted. Check the casilla values and the evidence reference.
     error_modelo_filing_record_not_found: The requested filing record was not found.
-    error_modelo_iva_wallet_reconciliation_blocked: 'Modelo 303 calculation is blocked:
-      IVA wallet reconciliation is required'
+    error_modelo_iva_wallet_authority_unavailable: The registry the IVA balance needs
+      for this period could not be read.
     error_modelo_metadata_run: The work metadata operation did not return a confirmed
       result. Inspect its operation ID before retrying.
     error_modelo_verification_outcome_incomplete: 'Verification of this calculation
@@ -1207,6 +1207,8 @@ errors:
       (field 114) must be the holder of the account you chose.
     refused_modelo_360_solicitud_undeclared: No Modelo 360 solicitud is declared for
       {filing_year}.
+    refused_modelo_aggregation_input_conflict: A value you entered contradicts what
+      your records give; correct it before calculating.
     refused_modelo_amendment_complementaria_liability_decrease: A complementaria cannot
       lawfully decrease the taxpayer's declared liability before the autoliquidación
       rectificativa unification. Use the request-for-rectification procedure for a
@@ -1244,6 +1246,9 @@ errors:
       that needs a result to pay large enough to leave a second instalment of at least
       one cent, a return that is not corrective and is filed within its filing period,
       and, for a direct-debited second instalment, a Spanish account of yours.'
+    refused_modelo_iva_wallet_reconciliation_blocked: 'The Modelo 303 cannot be calculated
+      until the compensation carried from earlier periods has a source: record it
+      in the IVA balance.'
     refused_modelo_ledger_evidence_recapture: The evidence behind this filing cannot
       be re-bundled because the contributing ledger rows have changed since it was
       sealed. Recalculate the return instead; recapture only picks up evidence attached

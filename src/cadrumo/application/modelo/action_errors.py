@@ -350,6 +350,17 @@ class ModeloAggregationBindingError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when bucket-derived aggregation bindings conflict with caller input."""
 
 
+class ModeloAggregationInputConflictError(ModeloAggregationBindingError):
+    """Raised before anything is written when an input the filer supplied contradicts its own sources.
+
+    A refusal the filer puts right, not a failure: a figure typed over a
+    computed box, a Modelo 210 income type or manual rows chosen against the
+    ledger route, detail rows that disagree with the rows the records give, or
+    a Modelo 200 ledger without its accounting result. The base error remains
+    for resolver wiring the filer never touches.
+    """
+
+
 class ModeloLedgerPreflightBlockedError(OperationNextStepErrorMixin, ModeloPreconditionErrorMixin, ModeloError):
     """Raised before anything is written when the period's ledger readiness blocks a calculation.
 

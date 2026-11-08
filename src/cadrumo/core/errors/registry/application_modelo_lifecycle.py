@@ -538,6 +538,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.action_errors.ModeloAggregationInputConflictError",
+        ErrorCode(
+            code="REFUSED_MODELO_AGGREGATION_INPUT_CONFLICT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_aggregation_input_conflict",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.action_errors.ModeloClearedCasillaSourceFedError",
         ErrorCode(
             code="ERROR_MODELO_CLEARED_CASILLA_SOURCE_FED",
@@ -550,9 +560,19 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "cadrumo.application.modelo.iva_wallet_gate.ModeloIvaWalletReconciliationBlockedError",
         ErrorCode(
-            code="ERROR_MODELO_IVA_WALLET_RECONCILIATION_BLOCKED",
+            code="REFUSED_MODELO_IVA_WALLET_RECONCILIATION_BLOCKED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_iva_wallet_reconciliation_blocked",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.iva_wallet_gate.ModeloIvaWalletAuthorityUnavailableError",
+        ErrorCode(
+            code="ERROR_MODELO_IVA_WALLET_AUTHORITY_UNAVAILABLE",
             category=ErrorCategory.ERROR,
-            message_key="errors.error.error_modelo_iva_wallet_reconciliation_blocked",
+            message_key="errors.error.error_modelo_iva_wallet_authority_unavailable",
             retryable=False,
             runbook_id=None,
         ),

@@ -24,7 +24,7 @@ from ....adapters.persistence.profile.tests.ready_profile_support import seed_pe
 from ....adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....application.modelo.action_errors import ModeloAggregationBindingError
+from ....application.modelo.action_errors import ModeloAggregationInputConflictError
 from ....application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -206,12 +206,12 @@ def _calculate_m200(
 def test_m200_refuses_business_ledger_rows_without_accounting_result_input(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    with pytest.raises(ModeloAggregationBindingError) as exc_info:
+    with pytest.raises(ModeloAggregationInputConflictError) as exc_info:
         _calculate_m200(secure_objects, operation=operation)
 
     error = exc_info.value
     # The refusal is identified by its key and structured context, not by prose.
-    assert error.translated_message == "errors.error.error_modelo_aggregation_binding"
+    assert error.translated_message == "application.modelo.errors.m200_accounting_result_required"
     assert resolve_error_message(error)
     assert error.context is not None
     assert error.context["required_casilla_id"] == _RESULTADO_CONTABLE

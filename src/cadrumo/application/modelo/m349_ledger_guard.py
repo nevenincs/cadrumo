@@ -24,7 +24,7 @@ from ...domain.modelos.work_unit import WorkUnit
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import Transaction
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from .action_errors import ModeloAggregationBindingError
+from .action_errors import ModeloAggregationInputConflictError
 from .preconditions import build_modelo_precondition_failure
 
 
@@ -57,8 +57,8 @@ def is_active_guarded_transaction_in_period(
 def _raise_m349_operator_rows_refusal(work_unit: WorkUnit, transaction_ids: tuple[str, ...]) -> NoReturn:
     """Raise the grounded refusal for raw intracom ledger rows without operator rows."""
     modelo = str(work_unit.modelo)
-    raise ModeloAggregationBindingError(
-        translated_message="errors.error.error_modelo_aggregation_binding",
+    raise ModeloAggregationInputConflictError(
+        translated_message="application.modelo.errors.m349_operator_rows_required",
         context={
             "modelo": modelo,
             "filing_year": work_unit.filing_year,
