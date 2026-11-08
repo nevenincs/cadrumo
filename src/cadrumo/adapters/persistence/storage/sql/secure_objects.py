@@ -11,6 +11,7 @@ from sqlalchemy import Connection, Engine, String, bindparam, delete, select, te
 from sqlalchemy.engine import Result
 
 from .....core.classification.policies import SensitivityClass
+from .....core.errors.hierarchy import InternalInvariantError
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger
 from .....core.secure_object_write import SecureObjectWrite
@@ -111,6 +112,23 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         self._require_secure_active_session = require_secure_active_session
         self._mutation_writer = mutation_writer
         secure_objects_table.create(self._engine, checkfirst=True)
+
+    def with_mutation_writer(self, mutation_writer: Callable[[Callable[[], None]], None]) -> SecureObjectRepository:
+        """Return this repository's twin whose every commit ``mutation_writer`` admits.
+
+        Raises:
+            InternalInvariantError: When this repository already has a writer;
+                one admission owns each commit.
+        """
+        if self._mutation_writer is not None:
+            raise InternalInvariantError("a secure object repository is already fenced by a writer")
+        return SecureObjectRepository(
+            engine=self._engine,
+            namespace_registry=self._namespace_registry,
+            active_session_bucket_id=self._active_session_bucket_id,
+            require_secure_active_session=self._require_secure_active_session,
+            mutation_writer=mutation_writer,
+        )
 
     @staticmethod
     def object_key_digest(object_key: str | bytes) -> bytes:
@@ -1161,22 +1179,29 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         }
 
     def delete(self, namespace: str, object_key: str) -> bool:
-        """Delete one object if it exists."""
+        """Delete one object if it exists, admitted like every other mutation."""
         self._check_session_freshness(namespace)
-        with session_scope(self._engine) as session:
-            # CAST-RATIONALE-SECURE-OBJECTS-SQLALCHEMY-CURSOR-DELETE:
-            # SQLAlchemy types ``Connection.execute()`` as ``Result[Any]``; a
-            # DML DELETE always yields a rowcount-bearing result.
-            result = cast(
-                RowcountResult,
-                session.execute(
-                    delete(secure_objects_table).where(
-                        secure_objects_table.c.namespace == namespace,
-                        secure_objects_table.c.object_key == object_key,
+        deleted = False
+
+        def commit() -> None:
+            nonlocal deleted
+            with session_scope(self._engine) as session:
+                # CAST-RATIONALE-SECURE-OBJECTS-SQLALCHEMY-CURSOR-DELETE:
+                # SQLAlchemy types ``Connection.execute()`` as ``Result[Any]``; a
+                # DML DELETE always yields a rowcount-bearing result.
+                result = cast(
+                    RowcountResult,
+                    session.execute(
+                        delete(secure_objects_table).where(
+                            secure_objects_table.c.namespace == namespace,
+                            secure_objects_table.c.object_key == object_key,
+                        ),
                     ),
-                ),
-            )
-            return bool(result.rowcount and result.rowcount > 0)
+                )
+                deleted = bool(result.rowcount and result.rowcount > 0)
+
+        self._commit_prepared_mutation(commit)
+        return deleted
 
     def _record_from_row(
         self,

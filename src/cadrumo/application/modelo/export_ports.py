@@ -9,6 +9,7 @@ prorrata, investment, and transaction authorities as the rest of the export.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -107,8 +108,14 @@ class ModeloExportPortsFactory(Protocol):
         bucket_id: str,
         m303_rectificativa_taxpayer_tax_id: SubjectTaxId,
         operation: PinnedAuthorityOperation,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
     ) -> ModeloExportPorts:
-        """Return all authorities for one invocation and its held operation."""
+        """Return all authorities for one invocation and its held operation.
+
+        ``mutation_writer``, when supplied, admits every actual persistence
+        commit the bundle's repositories make, so the export can account for
+        its effect from the writes that really began.
+        """
         ...
 
 

@@ -220,7 +220,13 @@ def test_first_activity_2026_m303_calculates_linked_invoices_without_joint_retur
     assert Decimal(result.revision.casilla_values[DEDUCIBLE_TOTAL]) == Decimal("1000.00")
     assert Decimal(result.revision.casilla_values[RESULTADO]) == Decimal("1400.00")
     assert public.calculation_revision_id == result.revision.calculation_revision_id
-    assert len(result.revision.source_transaction_ids) == 2
+    # Both movements are linked payment evidence, so no movement is a source;
+    # the issued and the received invoice are, each traced by its own id.
+    assert result.revision.source_transaction_ids == ()
+    traced = " ".join(ref.source_ref for ref in result.revision.source_provenance)
+    catalogue_ids = set(invoices.load().invoices)
+    assert len(catalogue_ids) == 2
+    assert {invoice_id for invoice_id in catalogue_ids if invoice_id in traced} == catalogue_ids
     assert (
         CalculationRevisionCatalogueRepository(objects=secure_objects)
         .load()
