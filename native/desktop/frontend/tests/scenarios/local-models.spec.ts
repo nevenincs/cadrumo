@@ -291,6 +291,14 @@ test("Download plans that model's setup in the lane, sized by the catalog where 
     .click();
   const review = vision.locator("[data-setup-review]");
   await expect(review).toContainText(label("desktop.setup.lead_review"));
+  // The plan appears where the click was: in view, with the keyboard on its
+  // approve button.
+  await expect(review).toBeInViewport();
+  await expect(
+    review.getByRole("button", {
+      name: label("desktop.setup.approve_size", { size: "3.2 GB" }),
+    }),
+  ).toBeFocused();
   // The asked model's row is the one place the plan is answered, and it does
   // not say the model waits to start while the plan awaits the person.
   await expect(laneReview(lane)).toHaveCount(1);

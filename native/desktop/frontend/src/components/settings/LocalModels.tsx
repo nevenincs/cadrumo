@@ -132,7 +132,7 @@ function LocalModelRow({
       </div>
       <ModelFacts model={model} locale={locale} />
       {review ? (
-        <RowReview run={review} locale={locale} />
+        <RowReview run={review} locale={locale} reveal />
       ) : progress ? (
         <StepFigure progress={progress} name={model.name} locale={locale} />
       ) : (

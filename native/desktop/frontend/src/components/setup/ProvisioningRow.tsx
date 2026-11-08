@@ -1,4 +1,4 @@
-import { useId, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
@@ -173,14 +173,46 @@ export function StepFigure({
 
 /** The plan `run` awaits an answer on, inside its row: what it downloads,
  * the space it needs, its parts and where they come from, and the row's
- * own approve and reject. */
-export function RowReview({ run, locale }: { run: SetupRun; locale: string }) {
+ * own approve and reject. `reveal` brings the plan into view and puts the
+ * keyboard on its approve button once, where the plan appears away from the
+ * control that asked for it. */
+export function RowReview({
+  run,
+  locale,
+  reveal = false,
+}: {
+  run: SetupRun;
+  locale: string;
+  reveal?: boolean;
+}) {
   const t = useStrings();
   const store = useProvisioning();
   const review = run.review;
+  const element = useRef<HTMLDivElement>(null);
+  // What this plan has had done for it: brought into view when it first
+  // shows, and given the keyboard once its primary action can take it.
+  const shown = useRef({ id: "", scrolled: false, focused: false });
+  const answering = store.control.busy(run.item);
+  useEffect(() => {
+    const node = element.current;
+    if (!reveal || !node) return;
+    if (shown.current.id !== run.operation_id)
+      shown.current = { id: run.operation_id, scrolled: false, focused: false };
+    if (!shown.current.scrolled) {
+      shown.current.scrolled = true;
+      node.scrollIntoView?.({ block: "nearest" });
+    }
+    if (shown.current.focused) return;
+    const primary = node.querySelector<HTMLElement>(
+      "[data-setup-primary]:not([disabled])",
+    );
+    if (!primary) return;
+    shown.current.focused = true;
+    primary.focus({ preventScroll: true });
+  }, [reveal, run.operation_id, answering, review]);
   if (!review) return null;
   return (
-    <div data-setup-review className="grid gap-2">
+    <div ref={element} data-setup-review className="grid gap-2">
       <p data-setup-sentence className="text-sm text-foreground">
         {t("desktop.setup.lead_review")}
       </p>
@@ -199,14 +231,15 @@ export function RowReview({ run, locale }: { run: SetupRun; locale: string }) {
         <Button
           variant="outline"
           size="sm"
-          disabled={store.control.busy(run.item)}
+          disabled={answering}
           onClick={() => store.control.answer(run.item, "reject")}
         >
           {t("desktop.setup.reject")}
         </Button>
         <Button
           size="sm"
-          disabled={store.control.busy(run.item) || !review.space_sufficient}
+          data-setup-primary
+          disabled={answering || !review.space_sufficient}
           onClick={() => store.control.answer(run.item, "apply")}
         >
           {approveLabel(t, review, locale)}
