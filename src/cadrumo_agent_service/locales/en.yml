@@ -298,6 +298,15 @@ desktop:
     key_label: '{provider} API key'
     key_note: It's saved encrypted on this computer and never shown again.
     load_failed: Could not load providers. Try again.
+    local_engine_change_failed: 'Your change wasn''t saved. Try again.'
+    local_engine_changing: Saving…
+    local_engine_lead: The program that runs models on this computer. The model list stays the same either way.
+    local_engine_llamacpp: llama.cpp
+    local_engine_llamacpp_detail: Built in. Nothing to install.
+    local_engine_ollama: Ollama
+    local_engine_ollama_detail: Downloaded and set up when you choose it.
+    local_engine_restarts: Changing the engine or where models run restarts the assistant.
+    local_engine_title: Local engine
     local_model_absent: Not downloaded
     local_model_add: Add
     local_model_add_label: Add a model by name
@@ -327,6 +336,11 @@ desktop:
     local_models_title: Models on this computer
     local_models_unreadable: Your saved model list can't be read. Reset it to start
       again from the recommended models.
+    local_placement_auto: Automatic
+    local_placement_auto_detail: Uses the graphics card when the model fits.
+    local_placement_cpu_only: Processor only
+    local_placement_cpu_only_detail: 'Slower. Uses only this computer''s memory.'
+    local_placement_title: Where models run
     reason_check_settings: Check these settings and try again.
     reason_record_unreadable: The saved API key can't be read. Add it again.
     refresh: Try again

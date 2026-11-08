@@ -302,6 +302,15 @@ desktop:
     key_label: API-kulcs ({provider})
     key_note: Titkosítva mentjük ezen a gépen, és többé nem jelenik meg.
     load_failed: Nem sikerült betölteni a szolgáltatókat. Próbáld újra.
+    local_engine_change_failed: A módosítást nem sikerült menteni. Próbáld újra.
+    local_engine_changing: Mentés…
+    local_engine_lead: Az a program, amely a modelleket futtatja ezen a számítógépen. A modelllista mindkettővel ugyanaz marad.
+    local_engine_llamacpp: llama.cpp
+    local_engine_llamacpp_detail: Beépített. Nincs mit telepítened.
+    local_engine_ollama: Ollama
+    local_engine_ollama_detail: Akkor töltjük le és állítjuk be, amikor ezt választod.
+    local_engine_restarts: A motor vagy a futtatás helyének módosítása újraindítja az asszisztenst.
+    local_engine_title: Helyi motor
     local_model_absent: Nincs letöltve
     local_model_add: Hozzáadás
     local_model_add_label: Modell hozzáadása név szerint
@@ -333,6 +342,11 @@ desktop:
     local_models_title: Modellek ezen a számítógépen
     local_models_unreadable: A mentett modelllistád nem olvasható. Állítsd vissza,
       hogy újra az ajánlott modellekkel kezdhess.
+    local_placement_auto: Automatikus
+    local_placement_auto_detail: A videokártyát használja, ha a modell elfér rajta.
+    local_placement_cpu_only: Csak processzor
+    local_placement_cpu_only_detail: Lassabb. Csak a számítógéped memóriáját használja.
+    local_placement_title: Hol futnak a modellek
     reason_check_settings: Ellenőrizd a beállításokat, és próbáld újra.
     reason_record_unreadable: A mentett API-kulcs nem olvasható. Add hozzá újra.
     refresh: Újrapróbálkozás
