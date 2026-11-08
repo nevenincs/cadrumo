@@ -23,6 +23,8 @@ BLOCKER_WORDS_LOCALE_KEYS: Final[Mapping[StagedBlockerKind, str]] = MappingProxy
         "share_needs_mixed": "application.ledger.staged_check.served.blocker.share_needs_mixed",
         "transfer_with_tax": "application.ledger.staged_check.served.blocker.transfer_with_tax",
         "draft_incomplete": "application.ledger.staged_check.served.blocker.draft_incomplete",
+        "amount_signed": "application.ledger.staged_check.served.blocker.amount_signed",
+        "needs_withholding_category": "application.ledger.staged_check.served.blocker.needs_withholding_category",
     }
 )
 """The sentence that explains each kind of blocker."""
@@ -35,6 +37,8 @@ BLOCKER_FIX_LOCALE_KEYS: Final[Mapping[StagedBlockerKind, str]] = MappingProxyTy
         "share_needs_mixed": "application.ledger.staged_check.served.fix.share_needs_mixed",
         "transfer_with_tax": "application.ledger.staged_check.served.fix.transfer_with_tax",
         "draft_incomplete": "application.ledger.staged_check.served.fix.draft_incomplete",
+        "amount_signed": "application.ledger.staged_check.served.fix.amount_signed",
+        "needs_withholding_category": "application.ledger.staged_check.served.fix.needs_withholding_category",
     }
 )
 """The sentence that says what puts each kind of blocker right."""

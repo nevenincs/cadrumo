@@ -9,6 +9,7 @@ from pydantic import ValidationError
 
 from cadrumo.domain.deadlines.models import IVARegime, M303RegimeComposition, M303TaxTerritory
 
+from ....core.field_origin import FieldOrigin
 from ....core.filing_producer_key import FilingProducerKey
 from ....core.modelo import Modelo
 from ....core.period import Period
@@ -107,7 +108,7 @@ def test_presenter_is_required_and_never_derived_from_taxpayer() -> None:
         taxpayer_tax_id=TAXPAYER_TAX_ID,
         taxpayer_identity=taxpayer_identity(),
         presenter=presenter,
-        model_profile=Modelo111ProfileFacts(colegio_concertado=False),
+        model_profile=Modelo111ProfileFacts(colegio_concertado=False, colegio_concertado_origin=FieldOrigin.OPERATOR),
         elections=elections(ResultDisposition.NEGATIVA),
         amendment_evidence=None,
         refund_account=None,
@@ -129,7 +130,7 @@ def test_taxpayer_name_facts_are_required_and_not_derived_from_presenter() -> No
         taxpayer_tax_id=TAXPAYER_TAX_ID,
         taxpayer_identity=taxpayer_identity(),
         presenter=producer_snapshot_presenter(),
-        model_profile=Modelo111ProfileFacts(colegio_concertado=False),
+        model_profile=Modelo111ProfileFacts(colegio_concertado=False, colegio_concertado_origin=FieldOrigin.OPERATOR),
         elections=elections(ResultDisposition.NEGATIVA),
         amendment_evidence=None,
         refund_account=None,
@@ -154,6 +155,45 @@ def test_modelo_111_unknown_profile_fact_refuses_snapshot_but_false_is_valid() -
             charge_account=None,
             m303_filing_facts=None,
         )
+
+
+def test_a_derived_colegio_concertado_no_is_accepted_and_emits_blank() -> None:
+    """The no a declarant never had to answer still files, and files as nothing.
+
+    The header is about a concertado teaching centre's payroll. Where the
+    profile's conditions for it are positively absent -- no employees, or no
+    teaching activity -- the mark follows as a no that nobody attested, carried
+    with :attr:`core.field_origin.FieldOrigin.DERIVED`. The producer must accept
+    it and the layout must render blank, not an ``X`` and not a refusal.
+    """
+    snapshot = build_filing_producer_snapshot(
+        modelo=Modelo("111"),
+        taxpayer_tax_id=TAXPAYER_TAX_ID,
+        taxpayer_identity=taxpayer_identity(),
+        presenter=producer_snapshot_presenter(),
+        model_profile=Modelo111ProfileFacts(
+            colegio_concertado=False,
+            colegio_concertado_origin=FieldOrigin.DERIVED,
+        ),
+        elections=elections(ResultDisposition.NEGATIVA),
+        amendment_evidence=None,
+        refund_account=None,
+        charge_account=None,
+        m303_filing_facts=None,
+    )
+
+    assert filing_producer_values(snapshot)[FilingProducerKey.M111_COLEGIO_CONCERTADO] is False
+
+
+def test_an_attested_colegio_concertado_is_never_derived() -> None:
+    """A yes is the declarant's own statement; nothing concludes it for them."""
+    with pytest.raises(ValidationError, match="never derived"):
+        Modelo111ProfileFacts(colegio_concertado=True, colegio_concertado_origin=FieldOrigin.DERIVED)
+
+
+def test_an_answered_colegio_concertado_records_how_it_was_reached() -> None:
+    with pytest.raises(ValidationError, match="how it was reached"):
+        Modelo111ProfileFacts(colegio_concertado=False)
 
 
 def test_modelo_202_exact_unsupported_inventory_includes_no_silent_filler() -> None:
@@ -413,7 +453,7 @@ def test_amendment_flags_are_derived_from_one_typed_kind() -> None:
         taxpayer_tax_id=TAXPAYER_TAX_ID,
         taxpayer_identity=taxpayer_identity(),
         presenter=producer_snapshot_presenter(),
-        model_profile=Modelo111ProfileFacts(colegio_concertado=False),
+        model_profile=Modelo111ProfileFacts(colegio_concertado=False, colegio_concertado_origin=FieldOrigin.OPERATOR),
         elections=elections(ResultDisposition.NEGATIVA),
         amendment_evidence=evidence,
         refund_account=None,
@@ -471,7 +511,7 @@ def test_taxpayer_tax_id_is_a_distinct_producer_without_presenter_fallback() -> 
         taxpayer_tax_id=TAXPAYER_TAX_ID,
         taxpayer_identity=taxpayer_identity(),
         presenter=producer_snapshot_presenter(),
-        model_profile=Modelo111ProfileFacts(colegio_concertado=False),
+        model_profile=Modelo111ProfileFacts(colegio_concertado=False, colegio_concertado_origin=FieldOrigin.OPERATOR),
         elections=elections(ResultDisposition.NEGATIVA),
         amendment_evidence=None,
         refund_account=None,

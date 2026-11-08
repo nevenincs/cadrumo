@@ -264,6 +264,7 @@ DESKTOP_LEDGER_WORKFLOW_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.apply.fix.set_currency",
         "desktop.ledger.apply.fix.set_share",
         "desktop.ledger.apply.fix.show",
+        "desktop.ledger.apply.fix.show_fields",
         "desktop.ledger.apply.gone",
         "desktop.ledger.apply.gone_mine",
         "desktop.ledger.apply.gone_movement",

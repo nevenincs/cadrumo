@@ -1103,21 +1103,30 @@ application:
     staged_check:
       served:
         blocker:
+          amount_signed: 'L''import és una magnitud: el sentit ja diu si el diner
+            va entrar o va sortir.'
           cannot_clear: 'Aquest valor no es pot buidar: el camp ha de tenir un valor.'
           draft_incomplete: Un moviment nou necessita data comptable, import, moneda,
             sentit i descripció abans de poder-se desar.
           mixed_needs_share: Un moviment Mixt necessita una part professional.
           needs_classification: Aquest canvi necessita que el moviment estigui classificat
             abans.
+          needs_withholding_category: La base i l'IVA declarats sumen més que el diner
+            que s'ha mogut. Aquesta diferència és una retenció d'IRPF i el moviment
+            no declara cap categoria d'IRPF.
           share_needs_mixed: La part professional només s'aplica a un moviment Mixt.
           transfer_with_tax: Un traspàs entre els teus propis comptes no porta dades
             fiscals.
         fix:
+          amount_signed: Escriu l'import sense signe i deixa que el sentit digui si
+            va entrar o va sortir.
           cannot_clear: Conserva el valor desat.
           draft_incomplete: Completa el que li falta al moviment nou.
           mixed_needs_share: Indica la part professional com a percentatge, per exemple
             50 per al 50 %.
           needs_classification: Classifica el moviment com a Professional o Personal.
+          needs_withholding_category: Indica la categoria d'IRPF a què pertany la
+            retenció, o corregeix la base i l'IVA perquè sumin l'import.
           share_needs_mixed: Treu la part o classifica el moviment com a Mixt.
           transfer_with_tax: Treu les dades fiscals del traspàs o canvia'n el sentit.
         share_refusal: 'Això no és una part: escriu un percentatge, com 50 per al

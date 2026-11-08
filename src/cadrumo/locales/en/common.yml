@@ -1450,6 +1450,7 @@ desktop:
         set_currency: Set the currency
         set_share: Set the share
         show: Show in grid
+        show_fields: Show the movements and the column
       gone: Removed or moved out of the period since you read it.
       gone_mine: Keep it in my changes
       gone_movement: A movement no longer read

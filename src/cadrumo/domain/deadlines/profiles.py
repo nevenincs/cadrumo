@@ -52,6 +52,7 @@ from ..contribuyente.entity_type import EntityType, LegalEntityForm, entity_type
 from ..contribuyente.renta_codes import FiscalResidency
 from ..user_profile.quarter_sets import parse_quarter_set
 from ..user_profile.setup_answers import SetupAnswers
+from ..user_profile.values import section_field_key
 from .errors import ProfileError
 from .models import (
     CrossPeriodGroupMemberRoster,
@@ -216,6 +217,7 @@ class _ProfileActivityFields(TypedDict):
 
 class _ProfileEstablishmentFields(TypedDict):
     iae_epigraph: str
+    activity_iae_epigraphs: tuple[str | None, ...]
 
 
 class _ProfileRegimeFields(TypedDict):
@@ -384,9 +386,36 @@ def _resolve_profile_activity_fields(canonical: Mapping[str, str]) -> _ProfileAc
     }
 
 
+_ACTIVITY_IAE_EPIGRAPH_PATH = "activities.iae_epigraph"
+
+
+def _activity_iae_epigraphs(canonical: Mapping[str, str]) -> tuple[str | None, ...]:
+    """Return every declared activity row's IAE epigraph, in row order.
+
+    Rows live at ``activities.INDEX.iae_epigraph``, and the setup wizard writes
+    a single implicit row without an index. Both spellings reduce to the same
+    field through :func:`domain.user_profile.values.section_field_key`, so the
+    rows are collected by that reduction rather than by a second path grammar.
+    The implicit row comes first and indexed rows follow numerically, matching
+    the order a profile surface shows them in. A row recording no epigraph
+    contributes ``None``: a rule reading these must tell an unclassified
+    activity apart from one classified elsewhere.
+    """
+    rows: list[tuple[int, str | None]] = []
+    for path, value in canonical.items():
+        if section_field_key(path) != _ACTIVITY_IAE_EPIGRAPH_PATH:
+            continue
+        index = path.removeprefix("activities.").removesuffix(".iae_epigraph")
+        rows.append((int(index) + 1 if index.isdigit() else 0, value.strip() or None))
+    return tuple(epigraph for _, epigraph in sorted(rows, key=lambda row: row[0]))
+
+
 def _resolve_profile_establishment_fields(canonical: Mapping[str, str]) -> _ProfileEstablishmentFields:
-    """Resolve the activity epigraph."""
-    return {"iae_epigraph": canonical.get("activities.iae_epigraph", "")}
+    """Resolve the activity epigraph, as the unindexed scalar and as every declared row."""
+    return {
+        "iae_epigraph": canonical.get(_ACTIVITY_IAE_EPIGRAPH_PATH, ""),
+        "activity_iae_epigraphs": _activity_iae_epigraphs(canonical),
+    }
 
 
 def _resolve_profile_regime_fields(

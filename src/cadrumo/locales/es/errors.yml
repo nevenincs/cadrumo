@@ -383,6 +383,9 @@ errors:
     error_workflow: Se produjo un error en el flujo de trabajo.
     error_workflow_component: Un componente del flujo de trabajo lanzó una excepción
       inesperada.
+    ledger_gross_above_cash_needs_withholding_category: La base y el IVA declarados
+      suman más que el dinero que se movió; esa diferencia es una retención de IRPF
+      y no se ha declarado ninguna categoría de IRPF.
     m145_communication_record_not_found: Ningún registro local de comunicación del
       Modelo 145 coincide con el id solicitado.
     m145_communication_service: Falló una operación del servicio local de comunicación

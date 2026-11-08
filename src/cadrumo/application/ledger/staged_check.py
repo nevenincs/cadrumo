@@ -10,14 +10,17 @@ still checks itself against the row it finds.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
 from typing import Final
 from uuid import UUID
 
+from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.hashing import content_hash_hex
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.categories.spending_category_catalogue import resolve_spending_category_catalogue
+from ...domain.iva.schema import IvaCategory
 from ...domain.transactions.classification_effects import (
     advises_purchase_evidence,
     fields_cleared_by_classification,
@@ -34,6 +37,7 @@ from ...domain.transactions.enums import (
     is_classified,
     takes_business_share,
 )
+from ...domain.transactions.gross_validation import GrossReconstitutionFinding, gross_reconstitution_finding
 from ...domain.transactions.models import Transaction
 from .actions_common import display_decimal
 from .classify_requests import CLASSIFY_FIELD_NAMES, CLASSIFY_UNCLEARABLE_FIELD_NAMES
@@ -116,6 +120,74 @@ _CLASSIFYING_FIELDS: Final[frozenset[str]] = frozenset(
 )
 
 DRAFT_REQUIRED_FIELDS: Final = ("booked_date", "amount", "currency", "direction", "description")
+
+_SIGNS: Final = ("-", "+", "−")
+"""What a sign written in front of an amount can be, including the typographic minus."""
+
+
+def _signed_amount_blocker(staged_amount: str | None) -> _Blocked | None:
+    """Block an amount written with a sign.
+
+    A movement's amount is a magnitude and its direction carries the economic
+    direction, so a signed amount is not a grammar accident a window can
+    silently drop: it is a staged value the writer would refuse, and the person
+    is told which of the two facts says what.
+    """
+    if staged_amount is None or not staged_amount.strip().startswith(_SIGNS):
+        return None
+    return _Blocked(kind="amount_signed", fields=("amount", "direction"))
+
+
+def _decimal(value: str | None) -> Decimal | None:
+    """Read one staged figure, or nothing when it is absent or not canonical."""
+    return None if not _filled(value) else try_parse_canonical_decimal(str(value))
+
+
+def _day(value: str | None) -> date | None:
+    """Read one staged date, or nothing when it is absent or not an ISO day."""
+    if not _filled(value):
+        return None
+    try:
+        return date.fromisoformat(str(value))
+    except ValueError:
+        return None
+
+
+def _gross_blocker(
+    facts: dict[str, str | None],
+    *,
+    recargo_amount: Decimal | None,
+    direction: TransactionDirection | None,
+    operation: PinnedAuthorityOperation | None,
+) -> _Blocked | None:
+    """Block a row whose declared base and IVA exceed the cash with no IRPF category.
+
+    The identity is the domain's, read here rather than restated: the window
+    asks before it saves so the person meets the missing fact in the review
+    instead of a writer's arithmetic after the save.
+    """
+    amount = _decimal(facts.get("amount"))
+    taxable_base = _decimal(facts.get("taxable_base"))
+    iva_amount = _decimal(facts.get("iva_amount"))
+    settlement_day = _day(facts.get("value_date")) or _day(facts.get("booked_date"))
+    if amount is None or taxable_base is None or iva_amount is None or direction is None or settlement_day is None:
+        return None
+    iva_category = facts.get("iva_category")
+    finding = gross_reconstitution_finding(
+        raw_amount=amount,
+        taxable_base=taxable_base,
+        iva_amount=iva_amount,
+        recargo_amount=recargo_amount,
+        iva_category=None if not _filled(iva_category) else IvaCategory(str(iva_category)),
+        direction=direction,
+        category_id=facts.get("category_id"),
+        irpf_category=facts.get("irpf_category"),
+        effective_date=settlement_day,
+        authority=operation,
+    )
+    if finding is not GrossReconstitutionFinding.NEEDS_IRPF_CATEGORY:
+        return None
+    return _Blocked(kind="needs_withholding_category", fields=("irpf_category",))
 
 
 def route_for_cell(*, field: str, clear: bool, classified: bool) -> tuple[WriteRoute | None, RouteRefusal | None]:
@@ -395,6 +467,7 @@ def _row_findings(
     routes: tuple[LedgerStagedRoute, ...],
     cannot_clear: list[str],
     needs_classification: list[str],
+    operation: PinnedAuthorityOperation | None,
 ) -> tuple[list[_Blocked], list[LedgerStagedNote], tuple[StageFieldName, ...]]:
     """Gather what the staged state of the row would refuse, note, and change about its identity."""
     if row.m210_staged and not state.classified:
@@ -414,6 +487,23 @@ def _row_findings(
     if transfer_blocker is not None:
         blockers.append(transfer_blocker)
 
+    # A signed amount is read from the STAGED cell, never from the stored
+    # facts: what a store holds is the writer's business, and a row already
+    # kept there is not held back by a cell nobody touched.
+    staged_amount = next((cell.value for cell in row.cells if cell.field == "amount"), None)
+    signed = _signed_amount_blocker(staged_amount)
+    if signed is not None:
+        blockers.append(signed)
+    elif row.cells:
+        gross = _gross_blocker(
+            state.after,
+            recargo_amount=transaction.recargo_amount,
+            direction=state.direction,
+            operation=operation,
+        )
+        if gross is not None:
+            blockers.append(gross)
+
     identity = staged_identity_fields(row, state.before, state.after)
     if identity:
         notes.append(LedgerStagedNote(kind="new_identity", fields=identity))
@@ -421,9 +511,18 @@ def _row_findings(
 
 
 def check_stored_row(
-    row: LedgerStagedRow, transaction: Transaction, *, language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
+    row: LedgerStagedRow,
+    transaction: Transaction,
+    *,
+    language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> LedgerStagedRowAnswer:
-    """Answer one stored movement as it would be once its staged work is saved, in ``language``."""
+    """Answer one stored movement as it would be once its staged work is saved, in ``language``.
+
+    ``operation`` is the pinned authority the registry-reading checks resolve
+    their facts from; omitted, they resolve from the generation the validation
+    in progress pinned, and refuse when there is none.
+    """
     state = _staged_state(row, transaction)
     classification = state.classification
     has_evidence = transaction.purchase_invoice_evidence_id is not None or row.evidence_staged
@@ -431,7 +530,9 @@ def check_stored_row(
     takes_category = direction is not None and takes_expense_category(direction, has_purchase_evidence=has_evidence)
 
     routes, _, cannot_clear, needs_classification = _routes_of_row(row, state.classified)
-    blockers, notes, identity = _row_findings(row, transaction, state, routes, cannot_clear, needs_classification)
+    blockers, notes, identity = _row_findings(
+        row, transaction, state, routes, cannot_clear, needs_classification, operation
+    )
     return LedgerStagedRowAnswer(
         transaction_id=row.transaction_id,
         found=True,
@@ -484,9 +585,16 @@ def _draft_transfer_blocker(
 
 
 def check_draft(
-    draft: LedgerStagedDraft, *, language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
+    draft: LedgerStagedDraft,
+    *,
+    language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> LedgerStagedDraftAnswer:
-    """Answer one new movement, in ``language``."""
+    """Answer one new movement, in ``language``.
+
+    ``operation`` is the pinned authority the registry-reading checks resolve
+    their facts from, as for a stored movement.
+    """
     fields: dict[str, str | None] = {item.field: item.value for item in draft.fields}
     missing = tuple(field for field in DRAFT_REQUIRED_FIELDS if not _filled(fields.get(field)))
     blockers: list[_Blocked] = []
@@ -499,6 +607,18 @@ def check_draft(
         transfer_blocker = _draft_transfer_blocker(fields, classification)
         if transfer_blocker is not None:
             blockers.append(transfer_blocker)
+    signed = _signed_amount_blocker(fields.get("amount"))
+    if signed is not None:
+        blockers.append(signed)
+    else:
+        gross = _gross_blocker(
+            fields,
+            recargo_amount=_decimal(fields.get("recargo_amount")),
+            direction=direction,
+            operation=operation,
+        )
+        if gross is not None:
+            blockers.append(gross)
     return LedgerStagedDraftAnswer(
         key=draft.key,
         takes_expense_category=direction is not None and takes_expense_category(direction, has_purchase_evidence=False),
@@ -531,7 +651,7 @@ def check_staged_work(
     """Answer every row, draft and category of ``request`` against the stored rows, in the request's language."""
     language = request.output_language
     rows = tuple(
-        check_stored_row(row, transactions[row.transaction_id], language=language)
+        check_stored_row(row, transactions[row.transaction_id], language=language, operation=operation)
         if row.transaction_id in transactions
         else LedgerStagedRowAnswer(transaction_id=row.transaction_id, found=False)
         for row in request.rows
@@ -540,7 +660,7 @@ def check_staged_work(
         profile_id=profile_id,
         input_digest=request_digest(request),
         rows=rows,
-        drafts=tuple(check_draft(draft, language=language) for draft in request.drafts),
+        drafts=tuple(check_draft(draft, language=language, operation=operation) for draft in request.drafts),
         categories=tuple(_category_fit(category, operation=operation) for category in request.categories),
         share_refusal_words=share_refusal_words(language),
         share_refusal_words_language=language,

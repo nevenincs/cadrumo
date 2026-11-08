@@ -1468,6 +1468,7 @@ desktop:
         set_currency: Pénznem megadása
         set_share: Arány megadása
         show: Mutasd a táblázatban
+        show_fields: Mutasd a mozgásokat és az oszlopot
       gone: Beolvasás óta törölték, vagy kikerült az időszakból.
       gone_mine: Maradjon a változtatásaim között
       gone_movement: Már nem olvasható tétel
