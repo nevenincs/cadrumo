@@ -13,7 +13,7 @@ from collections.abc import Callable, Mapping, Sequence
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from types import SimpleNamespace
-from typing import cast, override
+from typing import Any, cast, override
 
 import pytest
 
@@ -41,7 +41,7 @@ from ...host.native_refusal import NativeLaunchRefusal, NativeLaunchRefusalCode
 from ...host.store_lifecycle import InvocationCancellation
 from ...providers.domain.record import LocalEngine
 from ...service import AgentService
-from ..agent_process import WindowsAgentInvocationRunner, WindowsAgentProcessLauncher
+from ..agent_process import WindowsAgentInvocationRunner, WindowsAgentProcessLauncher, _await_invocation_exit
 from . import agent_host_fixture
 
 pytestmark = [
@@ -539,6 +539,30 @@ def test_service_cancel_before_controller_exists_wakes_its_contained_preparation
         owner.join(10)
         if not owner.is_alive():
             service.close()
+
+
+class _RunningWaiter:
+    """An invocation that is still running: its exit wait returns only once the waiter is closed."""
+
+    def __init__(self) -> None:
+        self.closed = threading.Event()
+
+    def wait(self, *, timeout: float | None) -> int:
+        self.closed.wait(timeout)
+        return 0
+
+    def close(self) -> None:
+        self.closed.set()
+
+
+def test_a_deadline_that_passed_while_the_invocation_started_is_answered_as_a_timeout() -> None:
+    waiter = _RunningWaiter()
+    process = SimpleNamespace(retain_waiter=lambda: waiter)
+
+    status = _await_invocation_exit(cast("Any", process), TimeoutDeadline(time.monotonic() - 1.0), None)
+
+    assert status is None
+    waiter.close()
 
 
 def test_contained_preparation_reports_timeout_and_confirms_termination(tmp_path: Path) -> None:
