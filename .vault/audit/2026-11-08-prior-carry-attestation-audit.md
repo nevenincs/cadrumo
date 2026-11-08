@@ -5,7 +5,7 @@ tags:
 date: '2026-11-08'
 modified: '2026-11-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:f93aa40d964ba770cc97d9f842ed4f8802eadf6641fd69dc3eb7f8c88fb36bb4'
+body_hash: 'sha256:98620c406a30fd4633b4308d3ee189f8d77cc07b235faf50fbace6d5b02aea9c'
 related:
   - "[[2026-11-08-prior-carry-attestation-plan]]"
 ---
@@ -51,3 +51,12 @@ Fixed in `f55e0c3b01` at `src/cadrumo/application/modelo/edit_models.py:790`.
 - attestation-scope: the carry family that may take the statement, and the words it serves, are to be declared in the registry on the binding rather than inferred from source kind or listed in Python. This needs coordinator approval as a registry data change; a follow-on amendment to `2026-11-08-prior-carry-attestation-adr` names the declaration.
 - attested-provenance: surface the statement on the carry's form field with served words, keyed to the same family declaration, and re-pin it in the S02 test.
 - decision-reconciliation: present the D4 amendment of `2026-08-24-modelo-edit-contract-adr` naming the third intent kind and its admission condition.
+
+## Resolutions
+
+Recorded on `renta/d33-m100-carry` after the coordinator approved the registry declaration on 2026-11-08. Each needs re-review before it is treated as settled.
+
+- attestation-scope: resolved by a registry declaration. `absence_attestation` on the binding names a closed family, validated as a decimal earlier-filing carry. Admission (`src/cadrumo/application/modelo/edit_admission.py`) and the form action (`src/cadrumo/application/modelo/work_form_carry_attestation.py`) read only that declaration, and the action's words are served per family. Pinned by `src/cadrumo/entrypoints/tests/profile_persistence/test_m100_carry_attestation.py` (Modelo 130 and 303 are offered nothing) and `src/cadrumo/domain/calculations/registry/tests/test_binding_absence_attestation.py`, both for every envelope year.
+- attested-provenance: resolved. An attested carry's field serves `stated_absent` and its family's origin words (`src/cadrumo/application/modelo/work_form_field_projection.py`, `src/cadrumo/application/modelo/work_form_wording.py`). A typed zero serves neither; the same test file pins this for every Modelo 100 envelope year.
+- review-effect-words: resolved. Each staged statement shows its family's served effect words.
+- decision-reconciliation: open. The D4 amendment of `2026-08-24-modelo-edit-contract-adr` awaits authorization. `2026-11-08-prior-carry-attestation-adr` now names the registry declaration.

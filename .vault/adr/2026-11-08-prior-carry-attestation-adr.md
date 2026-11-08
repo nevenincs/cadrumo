@@ -5,7 +5,7 @@ tags:
 date: '2026-11-08'
 modified: '2026-11-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:fff990f4653da5f692ca32167749013f751ea52ff287872b10b57e957974f3d7'
+body_hash: 'sha256:573cc1ee90e3b55c47d5adcc0693bc3afd33ac1a7f19b355ca3fab32f021a0f0'
 related:
   - "[[2026-08-24-modelo-edit-contract-adr]]"
   - "[[2026-06-13-first-filer-attestation-adr]]"
@@ -66,8 +66,17 @@ We will add a binding edit intent, `attest_no_amount`, that the form serves as o
 action per declaration over its unresolved earlier-ejercicio carries, and record
 its effect on the revision's operator layer as an attested zero.
 
+- Scope: the registry declares which carries take the statement. A binding names
+  its family in `absence_attestation`, a closed set whose one member is
+  `renta_negative_general_bases_pending`
+  (`src/cadrumo/domain/calculations/registry/binding_absence_attestation.py`). The
+  schema refuses it on any binding that is not a decimal read from an earlier filing
+  (`src/cadrumo/domain/calculations/registry/schema.py:292`). The four Modelo 100
+  carries declare it in the 2022 bindings file, and later editions inherit it. No
+  other modelo declares a family, so a Modelo 130 or 303 earlier-filing binding is
+  never offered the statement.
 - Intent: `ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT` carries no value. It is
-  admitted only on a writable binding override whose source is an earlier filing.
+  admitted only on a writable binding override whose binding declares a family.
   It sets the operator override to zero and marks the binding attested.
   `SET_OVERRIDE_VALUE` and `REMOVE_OVERRIDE` on that binding withdraw the attestation.
 - Persistence: `CalculationOperatorLayer` gains `attested_binding_ids`, which must be
@@ -79,10 +88,13 @@ its effect on the revision's operator layer as an attested zero.
 - Contradiction: when an earlier return is later stored with a different amount,
   the existing `precedence_tier_divergence` disagreement is raised against the
   attested zero, with its served accept or revise actions.
-- Form: the work form serves the action, with its words and the binding addresses
-  it attests, while earlier-ejercicio carries are required and neither resolved nor
+- Form: the work form serves one action per declared family, with its action,
+  statement and per-carry effect words and the binding addresses it attests. It
+  serves the action while a carry of that family is neither resolved, entered nor
   attested. The window stages one `attest_no_amount` intent per address and applies
-  them through the ordinary review.
+  them through the ordinary review. The field of an attested carry carries the
+  family as `stated_absent` and served origin words, so it never reads as a zero
+  that was typed.
 - Evidence: real resolvers and real stores, for every Modelo 100 year the registry
   envelope admits.
 
@@ -100,5 +112,7 @@ without a second mechanism.
   operation contract manifest and the window's wire types are regenerated.
 - A filer can complete a first Modelo 100 in the app without an earlier return,
   and a later capture of that return is checked against the statement.
-- Other earlier-filing carries can be served the same action later; this record
-  scopes it to the Modelo 100 carries that D33 found.
+- Another earlier-filing carry takes the action only through a new registry family
+  and its served words. This record scopes it to the Modelo 100 carries that D33 found.
+- Amended 2026-11-08 on the coordinator's approval of the registry declaration,
+  after the plan-close review found the scope inferred from the source kind.

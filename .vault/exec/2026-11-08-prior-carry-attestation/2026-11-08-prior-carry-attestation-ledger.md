@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#prior-carry-attestation'
 date: '2026-11-08'
-modified: '2026-11-08'
+modified: '2026-11-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:fdaca071b0adef697b79347e0014d5565dc5afe0a0916e2d23578654b6f26328'
+body_hash: 'sha256:df241d045e1f8677f326df5ecd7f6dedfd1612dac70c99f9f86ecfcd5dc18d82'
 related:
   - "[[2026-11-08-prior-carry-attestation-plan]]"
 ---
@@ -55,6 +55,19 @@ related:
 - `S05` `M` `native/desktop/frontend/src/shell/modeloContract/modeloWorkForm.ts`
 - `S05` `verify:` `check-operation-contract-manifest` -> `pass`
 - `S05` `verify:` `pytest-test_m100_carry_attestation-every-envelope-year` -> `pass`
+- `S01` `A` `src/cadrumo/domain/calculations/registry/binding_absence_attestation.py`
+- `S01` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/bindings/0001-declarations.toml`
+- `S01` `A` `src/cadrumo/domain/calculations/registry/tests/test_binding_absence_attestation.py`
+- `S01` `verify:` `check-registry-gate` -> `pass`
+- `S01` `verify:` `check-bindings` -> `pass`
+- `S02` `verify:` `test_m100_carry_attestation every envelope year` -> `pass`
+- `S03` `M` `src/cadrumo/application/modelo/work_form_carry_attestation.py`
+- `S03` `M` `src/cadrumo/application/modelo/work_form_context.py`
+- `S03` `M` `src/cadrumo/application/modelo/work_form_field_projection.py`
+- `S03` `M` `src/cadrumo/application/modelo/work_form_wording.py`
+- `S03` `verify:` `operation-contract-manifest --check` -> `pass`
+- `S03` `verify:` `lint-imports` -> `pass`
 
 ## Notes
 
@@ -62,3 +75,7 @@ related:
 - `S02` `no-production-change:-existing-caller-tier-precedence-screen-raises-precedence_tier_divergence;-attested-mark-lives-on-the-operator-layer,-caller-provenance-stays-operator-entry`
 - `S03` dev/locales/tests-spelling,hungarian-dictionary,aeat-script-cases-need-root-dictionaries-and-installed-script
 - `S04` playwright-modelo-form-model-spec-runs-in-root-at-landing
+- `S01` f12fa675a4: attestation scoped by registry family; coordinator-approved registry change
+- `S02` f12fa675a4: stated carry visible on its field
+- `S03` f12fa675a4; locale failures are the root-only dictionary/aeat-script cases
+- `S04` f12fa675a4; Playwright spec needs root `node_modules,` not run
