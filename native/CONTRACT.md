@@ -186,7 +186,8 @@ the verifier's archive-bound release expectation. Both feature selections are
 intentional.
 The same test file also runs the local engines' programs: it starts the package's
 `llama-server` as the manager does and checks that it answers as the pinned build with
-no model loaded, lists the fetched model under its alias and generates a counted token;
+no model loaded, presents the fetched model at the llama.cpp context its pull recorded,
+lists it under its alias and generates a counted token;
 and it starts a real Ollama program and checks that it lists and generates from the same
 model. The model is the one 1.2 MB file the tests pin, fetched by the engine's own Rust
 fetcher from Hugging Face, so these tests need that network access. The package carries

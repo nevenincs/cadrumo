@@ -32,6 +32,8 @@ pub enum InspectionRefusal {
 pub enum LocalAiEngine {
     Ollama,
     LlamaCpp,
+    /// No engine: the person's selection could not be read, so none was chosen to run.
+    Unselected,
 }
 
 /// Why a manager runs no local AI server for the selected engine.
@@ -44,6 +46,8 @@ pub enum LocalAiUnavailable {
     LlamaServerInvalid,
     Address,
     Supervision,
+    /// The record of the person's engine selection exists and cannot be read.
+    SelectionUnreadable,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Deserialize, Serialize)]

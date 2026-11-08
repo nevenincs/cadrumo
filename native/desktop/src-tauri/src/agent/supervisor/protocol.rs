@@ -114,6 +114,8 @@ pub type Launch = Arc<dyn Fn(&str, &str) -> Result<Prepared> + Send + Sync>;
 pub struct Prepared {
     pub command: Command,
     pub person: Option<super::super::person::HeldPerson>,
+    /// The local engine a profile that chose none runs, as the package decides it.
+    pub local_engine_default: cadrumo_application::provisioning::local_ai::LocalEngine,
 }
 
 /// How the gateway of the running launcher is reached. The bearer goes

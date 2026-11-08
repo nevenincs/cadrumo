@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.config_runtime_fields import LOCAL_AI_SERVER_ADDRESS
-from cadrumo_agent_service.host.launch_environment import OLLAMA_BASE_URL
+from cadrumo.core.config_runtime_fields import LLAMA_SERVER_ADDRESS, LOCAL_AI_SERVER_ADDRESS
+from cadrumo_agent_service.host.launch_environment import LLAMACPP_BASE_URL, OLLAMA_BASE_URL
 from dev.env.llamacpp_pins import load_server_pins
 from dev.packaging.native.application_environment import load, parse
 from dev.packaging.native.environment_declaration_primitives import DECLARATION, ApplicationEnvironmentError
@@ -28,6 +28,8 @@ def test_the_declared_addresses_reach_the_native_contract_and_the_agent_launch(t
     assert llama_server != address
     assert address == LOCAL_AI_SERVER_ADDRESS
     assert f"http://{address}" == OLLAMA_BASE_URL
+    assert llama_server == LLAMA_SERVER_ADDRESS
+    assert f"http://{llama_server}" == LLAMACPP_BASE_URL
 
 
 def test_the_native_contract_names_the_pinned_llama_server_build(tmp_path: Path) -> None:
