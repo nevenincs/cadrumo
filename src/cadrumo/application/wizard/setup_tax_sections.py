@@ -17,6 +17,7 @@ from .setup_questions import confirmation_question
 def build_iva_section(
     _iva_block_claimed: WizardVisibility,
     _iva_regime_visible: WizardVisibility,
+    _m303_regime_composition_owed: WizardVisibility,
     wizard_iva_choices: tuple[WizardChoice, ...],
     wizard_m303_regime_composition_choices: tuple[WizardChoice, ...],
 ) -> WizardSection:
@@ -42,7 +43,7 @@ def build_iva_section(
                 prompt=tr("wizard.setup.iva.m303-regime-composition.prompt"),
                 choices=wizard_m303_regime_composition_choices,
                 required=True,
-                visible_when=_iva_block_claimed,
+                visible_when=_m303_regime_composition_owed,
                 answer_type=str,
             ),
             confirmation_question(

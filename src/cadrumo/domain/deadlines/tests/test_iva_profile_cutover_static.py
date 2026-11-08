@@ -101,6 +101,26 @@ _LITERAL_NON_PROFILE_EXCLUSIONS = (
     ),
     _ProfileShapeExclusion(
         "src/cadrumo/application/user_profile/tests/test_iva_block_profile_completeness.py",
+        "test_the_general_regime_settles_the_composition_but_not_the_rest_of_the_block",
+        "deliberately incomplete general-regime profile proves only the composition is settled",
+    ),
+    _ProfileShapeExclusion(
+        "src/cadrumo/domain/deadlines/profiles.py",
+        "iva_regime_owes_m303_regime_composition",
+        "a single-axis probe asks the resolver what one regime settles; it is not a profile",
+    ),
+    _ProfileShapeExclusion(
+        "src/cadrumo/application/wizard/tests/test_iva_block_questions_share_one_claim_gate.py",
+        "test_the_composition_is_asked_under_exactly_the_regimes_whose_completeness_owes_it",
+        "a single-axis probe compares the wizard gate with completeness per regime; it is not a profile",
+    ),
+    _ProfileShapeExclusion(
+        "src/cadrumo/domain/deadlines/tests/test_general_regime_m303_composition.py",
+        "_facts",
+        "the composition is deliberately left unstated to prove the general regime settles it",
+    ),
+    _ProfileShapeExclusion(
+        "src/cadrumo/application/user_profile/tests/test_iva_block_profile_completeness.py",
         "test_completeness_demands_exactly_what_the_resolver_refuses_without",
         "incremental incomplete maps compare completeness demands with resolver refusals",
         expected_count=2,
@@ -132,6 +152,11 @@ _FACT_CONTAINER_NON_PROFILE_EXCLUSIONS = (
         "src/cadrumo/application/user_profile/tests/test_overview_lists_conditional_requirements.py",
         "test_a_claimed_iva_block_lists_every_path_it_owes",
         "deliberately incomplete IVA claim proves the overview lists every path the block owes",
+    ),
+    _ProfileShapeExclusion(
+        "src/cadrumo/application/user_profile/tests/test_overview_lists_conditional_requirements.py",
+        "test_the_general_regime_does_not_ask_for_the_modelo_303_composition",
+        "deliberately incomplete general-regime claim proves the overview owes no composition",
     ),
 )
 

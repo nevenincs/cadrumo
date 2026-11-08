@@ -72,6 +72,55 @@ mod tests {
     }
 
     #[test]
+    fn agent_refusal_codes_survive_as_tokens_and_free_text_does_not() {
+        let commands = RegisteredCommands(BTreeSet::from(["agent_provider_catalog"]));
+        let admit = |code: &str| {
+            let raw = serde_json::json!({
+                "event":"command_rejected", "level":"WARNING",
+                "command":"agent_provider_catalog", "code":code, "dropped":0,
+            });
+            let report: Report = serde_json::from_value(raw).unwrap();
+            serde_json::to_value(report.admit(&commands)).unwrap()
+        };
+        for code in [
+            "agent_service_busy",
+            "agent_reconnecting",
+            "agent_signed_out",
+            "agent_gateway_409",
+            "agent_gateway_attachment_not_found",
+        ] {
+            let encoded = admit(code);
+            assert_eq!(encoded["code"], code);
+            assert_eq!(encoded["level"], "WARNING");
+            let diagnostics = cadrumo_application::diagnostics::Diagnostics::default();
+            diagnostics.desktop_diagnostic(
+                serde_json::from_value::<Report>(serde_json::json!({
+                    "event":"command_rejected", "level":"WARNING",
+                    "command":"agent_provider_catalog", "code":code, "dropped":0,
+                }))
+                .unwrap()
+                .admit(&commands),
+            );
+            let entries = super::super::host::HostEvents::default().poll(&diagnostics);
+            assert_eq!(entries[0].context["reason_code"], code);
+        }
+        let long = format!("agent_{}", "a".repeat(100));
+        for code in [
+            "agent_",
+            "agent",
+            "Agent_Service_Busy",
+            "agent_service busy",
+            "agent_private-canary",
+            "agent_pässword",
+            "agent_service_busy
+secret",
+            long.as_str(),
+        ] {
+            assert!(admit(code)["code"].is_null(), "{code:?}");
+        }
+    }
+
+    #[test]
     fn registered_relay_failure_codes_survive_without_private_failure_fields() {
         let commands = RegisteredCommands(BTreeSet::from(["ledger_submit"]));
         for code in [

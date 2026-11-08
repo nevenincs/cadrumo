@@ -26,6 +26,16 @@ for (const language of LANGUAGES) {
       `amendment-context-130-correction-2-${language}`,
     );
     const grid = await openList(page, { shape: "related-filings", language });
+    // The corrected chain is recorded as filed, so the list's default To do
+    // view does not hold its row.
+    await page
+      .getByRole("radio", {
+        // The radio's name ends with the count of rows it holds.
+        name: new RegExp(
+          `^${label("workspace.declarations.list.filter.recorded", {}, language)}`,
+        ),
+      })
+      .check();
     const row = grid
       .getByRole("row")
       .filter({ hasText: t("title") })

@@ -16,6 +16,11 @@ Asturias (Ley 3/2025, in force 3 December 2025).
 The Comunitat Valenciana's amounts start on 28 October 2022, when Decreto-ley
 14/2022 added them without earlier effect, so they reach the devengo of 31
 December 2022 but no date before the decreto-ley's entry into force.
+
+The territories walked here come from the residence catalogue, so Ceuta and
+Melilla are covered as soon as the fact declares them. Neither city approves a
+mínimo of its own, so both fall to the state amounts like the comunidades absent
+from the manual's table.
 """
 
 from __future__ import annotations
@@ -31,7 +36,7 @@ from cadrumo.domain.calculations.registry.formula_expression import evaluate_exp
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.tests.authored_editions import supported_authored_exercises
 
-from .modelo_100_registry_support import loaded_registry
+from .modelo_100_registry_support import authored_ccaa_choices, loaded_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -70,23 +75,7 @@ _OWN_AMOUNTS = dict(
 )
 #: Decreto-ley 14/2022 (Comunitat Valenciana) enters into force on this date, with no earlier effect.
 _VALENCIA_MINIMO_IN_FORCE = loaded_registry()[1].legal["valenciana-ley-13-1997:art-2-bis"].effective_from
-_CCAA = (
-    "andalucia",
-    "aragon",
-    "asturias",
-    "baleares",
-    "canarias",
-    "cantabria",
-    "castilla_la_mancha",
-    "castilla_y_leon",
-    "cataluna",
-    "comunidad_valenciana",
-    "extremadura",
-    "galicia",
-    "la_rioja",
-    "madrid",
-    "murcia",
-)
+_CCAA = tuple(str(token) for token in authored_ccaa_choices())
 #: Ages at the end of the tax period, including both increment boundaries.
 _AGES = (40, 64, 65, 74, 75, 90)
 

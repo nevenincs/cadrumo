@@ -9,6 +9,7 @@ valid_from = 2007-01-01
 legal_refs = [
     "ley-35-2006:art-9",
     "ley-35-2006:art-74",
+    "ley-35-2006:da-32",
     "trlirnr-rdleg-5-2004:art-2",
 ]
 source_refs = ["boe-lirpf-statutory-facts", "aeat-modelo-100-procedure"]
@@ -26,7 +27,7 @@ required_text = ["Modelo"]
 [fact.variants.payload]
 kind = "mapping"
 entries = [
-  { key = "ccaa.order", value = "andalucia,aragon,asturias,baleares,canarias,cantabria,castilla_la_mancha,castilla_y_leon,cataluna,comunidad_valenciana,extremadura,galicia,la_rioja,madrid,murcia" },
+  { key = "ccaa.order", value = "andalucia,aragon,asturias,baleares,canarias,cantabria,castilla_la_mancha,castilla_y_leon,cataluna,comunidad_valenciana,extremadura,galicia,la_rioja,madrid,murcia,ceuta,melilla" },
   { key = "ccaa.default_token", value = "madrid" },
 
   { key = "ccaa.andalucia.value", value = "andalucia" },
@@ -74,8 +75,14 @@ entries = [
   { key = "ccaa.murcia.value", value = "murcia" },
   { key = "ccaa.murcia.member_name", value = "MURCIA" },
   { key = "ccaa.murcia.description", value = "Región de Murcia" },
+  { key = "ccaa.ceuta.value", value = "ceuta" },
+  { key = "ccaa.ceuta.member_name", value = "CEUTA" },
+  { key = "ccaa.ceuta.description", value = "Ciudad de Ceuta" },
+  { key = "ccaa.melilla.value", value = "melilla" },
+  { key = "ccaa.melilla.member_name", value = "MELILLA" },
+  { key = "ccaa.melilla.description", value = "Ciudad de Melilla" },
 
-  { key = "ccaa.iso_alias.order", value = "AND,ARA,AST,BAL,CAN,CAB,CLM,CYL,CAT,VAL,EXT,GAL,LAR,MAD,MUR" },
+  { key = "ccaa.iso_alias.order", value = "AND,ARA,AST,BAL,CAN,CAB,CLM,CYL,CAT,VAL,EXT,GAL,LAR,MAD,MUR,CEU,MEL" },
   { key = "ccaa.iso_alias.AND.value", value = "andalucia" },
   { key = "ccaa.iso_alias.AND.ccaa", value = "andalucia" },
   { key = "ccaa.iso_alias.ARA.value", value = "aragon" },
@@ -106,6 +113,10 @@ entries = [
   { key = "ccaa.iso_alias.MAD.ccaa", value = "madrid" },
   { key = "ccaa.iso_alias.MUR.value", value = "murcia" },
   { key = "ccaa.iso_alias.MUR.ccaa", value = "murcia" },
+  { key = "ccaa.iso_alias.CEU.value", value = "ceuta" },
+  { key = "ccaa.iso_alias.CEU.ccaa", value = "ceuta" },
+  { key = "ccaa.iso_alias.MEL.value", value = "melilla" },
+  { key = "ccaa.iso_alias.MEL.ccaa", value = "melilla" },
 
   { key = "foral_alias.order", value = "pais_vasco,euskadi,araba,alava,bizkaia,vizcaya,gipuzkoa,guipuzcoa,navarra" },
   { key = "foral_alias.pais_vasco.value", value = "pais_vasco" },
@@ -136,7 +147,7 @@ entries = [
   { key = "foral_alias.navarra.classification", value = "foral_unsupported" },
   { key = "foral_alias.navarra.operator_choice", value = "true" },
 
-  { key = "territory_exclusion.order", value = "pais_vasco,euskadi,araba,alava,bizkaia,vizcaya,gipuzkoa,guipuzcoa,navarra,ceuta,melilla" },
+  { key = "territory_exclusion.order", value = "pais_vasco,euskadi,araba,alava,bizkaia,vizcaya,gipuzkoa,guipuzcoa,navarra" },
   { key = "territory_exclusion.euskadi.classification", value = "foral_unsupported" },
   { key = "territory_exclusion.euskadi.iso_aliases", value = "PVA" },
   { key = "territory_exclusion.pais_vasco.classification", value = "foral_unsupported" },
@@ -155,8 +166,4 @@ entries = [
   { key = "territory_exclusion.guipuzcoa.iso_aliases", value = "PVA" },
   { key = "territory_exclusion.navarra.classification", value = "foral_unsupported" },
   { key = "territory_exclusion.navarra.iso_aliases", value = "NAV" },
-  { key = "territory_exclusion.ceuta.classification", value = "autonomous_city_unsupported" },
-  { key = "territory_exclusion.ceuta.iso_aliases", value = "CEU" },
-  { key = "territory_exclusion.melilla.classification", value = "autonomous_city_unsupported" },
-  { key = "territory_exclusion.melilla.iso_aliases", value = "MEL" },
 ]

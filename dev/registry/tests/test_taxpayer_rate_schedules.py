@@ -78,10 +78,18 @@ def test_natural_person_route_has_irpf_tarifa_bracket_schedules() -> None:
 
     dispatch_table = _first_ccaa_dispatch_table(autonomic_formula.expression)
     assert dispatch_table is not None and dispatch_table, "autonomic IRPF general scale must dispatch by CCAA"
+    # A scale a comunidad approved is grounded in LIRPF art. 74. A residence whose
+    # autonomic scale the law fixes instead -- the two ciudades autónomas, sent by
+    # disposición adicional trigésima segunda to the art. 65 table -- is grounded in
+    # that pair. Every dispatched parameter must carry one of the two groundings, so
+    # a scale with neither is still reported.
+    approved_by_a_comunidad = {"ley-35-2006:art-74"}
+    fixed_by_the_law = {"ley-35-2006:da-32", "ley-35-2006:art-65"}
     for ccaa, parameter_id in dispatch_table.items():
         parameter = parameters[parameter_id]
+        declared = set(parameter.legal_refs)
         assert parameter.data_type == "bracket_table", ccaa
-        assert "ley-35-2006:art-74" in parameter.legal_refs, ccaa
+        assert approved_by_a_comunidad <= declared or fixed_by_the_law <= declared, ccaa
         assert parameter.source_refs, ccaa
 
 

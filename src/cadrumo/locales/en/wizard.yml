@@ -455,8 +455,8 @@ wizard:
       tax-id:
         help: Tax identifier (NIF/CIF/DNI/NIE) for the active profile
       tax-residence-ccaa:
-        help: Tax-residence autonomous community, under the common regime. If the
-          value is not recognised, the error lists the accepted communities.
+        help: Tax-residence autonomous community or city, under the common regime.
+          If the value is not recognised, the error lists the accepted territories.
       tax-residence-jurisdiction-scope:
         help: 'Declared territorial regime: common territory or the not-yet-supported
           foral territory.'
@@ -718,6 +718,8 @@ wizard:
             label: Castile and León
           cataluna:
             label: Catalonia
+          ceuta:
+            label: Ceuta (autonomous city)
           comunidad_valenciana:
             label: Valencian Community
           extremadura:
@@ -728,6 +730,8 @@ wizard:
             label: La Rioja
           madrid:
             label: Madrid
+          melilla:
+            label: Melilla (autonomous city)
           murcia:
             label: Murcia
       country-of-fiscal-residence:
@@ -749,7 +753,7 @@ wizard:
       representante-fiscal-nombre:
         prompt: Name of fiscal representative in Spain
       tax-residence-ccaa:
-        prompt: Tax-residence autonomous community
+        prompt: Tax-residence autonomous community or city
       tax-residence-jurisdiction-scope:
         choices:
           common_regime:

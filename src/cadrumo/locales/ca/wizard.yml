@@ -465,8 +465,8 @@ wizard:
       tax-id:
         help: Identificador fiscal (NIF/NIE) del perfil actiu
       tax-residence-ccaa:
-        help: Comunitat autònoma de residència fiscal, en territori comú. Si el valor
-          no es reconeix, l'error enumera les comunitats acceptades.
+        help: Comunitat o ciutat autònoma de residència fiscal, en territori comú.
+          Si el valor no es reconeix, l'error enumera els territoris acceptats.
       tax-residence-jurisdiction-scope:
         help: 'Règim territorial declarat: territori comú o territori foral encara
           no compatible.'
@@ -740,6 +740,8 @@ wizard:
             label: Castella i Lleó
           cataluna:
             label: Catalunya
+          ceuta:
+            label: Ciutat de Ceuta
           comunidad_valenciana:
             label: Comunitat Valenciana
           extremadura:
@@ -750,6 +752,8 @@ wizard:
             label: La Rioja (CA)
           madrid:
             label: Madrid (CA)
+          melilla:
+            label: Ciutat de Melilla
           murcia:
             label: Múrcia
       country-of-fiscal-residence:
@@ -770,7 +774,7 @@ wizard:
       representante-fiscal-nombre:
         prompt: Nom del representant fiscal a Espanya
       tax-residence-ccaa:
-        prompt: Comunitat autònoma de residència fiscal
+        prompt: Comunitat o ciutat autònoma de residència fiscal
       tax-residence-jurisdiction-scope:
         choices:
           common_regime:

@@ -19,9 +19,11 @@ required_text = ["ECIVIL", "TIPOTRIBUTACION", "E1MED"]
 # The estimation_directa_modalidad entries are casilla 0168's clave (E1MED, tipo_OpcionesSyN:
 # N normal, S simplificada), keyed by the estimation-regime token that selects each.
 # The ccaa entries are the tipo_CCAA numbering of the Modelo 100 record design, not a
-# general CCAA numbering: Modelo 763 and the INE comunidad codes differ. Ceuta, Melilla
-# and no residente are declared by the design but carry no common-regime CCAA token, and
-# the design assigns two numbers to nothing.
+# general CCAA numbering: Modelo 763 and the INE comunidad codes differ. The two ciudades
+# autónomas take the design's own 18 (CIUDAD DE CEUTA) and 19 (CIUDAD DE MELILLA), declared
+# identically in every bundled edition from 2020 to 2025. No residente (20) is declared by
+# the design but carries no common-regime residence token, and the design assigns 14 and 15
+# to nothing.
 [fact.variants.payload]
 kind = "mapping"
 entries = [
@@ -54,6 +56,8 @@ entries = [
   { key = "ccaa.murcia", value = "13" },
   { key = "ccaa.la_rioja", value = "16" },
   { key = "ccaa.comunidad_valenciana", value = "17" },
+  { key = "ccaa.ceuta", value = "18" },
+  { key = "ccaa.melilla", value = "19" },
   { key = "holder.declarante", value = "2" },
   { key = "holder.conyuge", value = "3" },
   { key = "holder.hijo1", value = "4" },

@@ -39,12 +39,48 @@ pub enum RelayFailureCode {
     Conflict,
 }
 
+/// A refusal code of the agent host, such as `agent_service_busy`. The host
+/// words these itself, and the gateway's own code is appended to a fixed
+/// `agent_gateway_` prefix after the host has checked its characters, so a
+/// code is a short snake_case token and never exception or payload text.
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[serde(transparent)]
+pub struct AgentRefusalCode(String);
+
+impl AgentRefusalCode {
+    const PREFIX: &'static str = "agent_";
+    const MAX_LEN: usize = 96;
+
+    pub fn parse(code: &str) -> Option<Self> {
+        let rest = code.strip_prefix(Self::PREFIX)?;
+        let token = !rest.is_empty()
+            && code.len() <= Self::MAX_LEN
+            && rest
+                .bytes()
+                .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'_');
+        token.then(|| Self(code.to_owned()))
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl<'de> Deserialize<'de> for AgentRefusalCode {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let code = String::deserialize(deserializer)?;
+        Self::parse(&code)
+            .ok_or_else(|| serde::de::Error::custom("not an agent refusal code token"))
+    }
+}
+
 /// Only closed host codes may be persisted; exception and payload text never qualify.
-#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(untagged)]
 pub enum DesktopDiagnosticCode {
     Application(ErrorCode),
     Relay(RelayFailureCode),
+    Agent(AgentRefusalCode),
 }
 
 impl From<ErrorCode> for DesktopDiagnosticCode {

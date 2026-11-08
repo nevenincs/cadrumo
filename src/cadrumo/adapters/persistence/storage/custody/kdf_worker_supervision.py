@@ -264,6 +264,9 @@ class SupervisedKdfWorker(KdfWorkerCleanup):
 
     def _close_with_diagnostic(self, *, failed: bool, primary_error: BaseException | None) -> None:
         process = self._process
+        # Cleanup kills a running child, which on Windows also reports 0, so
+        # whether a child that answered had exited by itself is read first.
+        exited_before_cleanup = self._failure_stage == "clean_exit" and process is not None and process.poll() == 0
         try:
             with self._phase("cleanup"):
                 self._close(failed=failed)
@@ -289,6 +292,7 @@ class SupervisedKdfWorker(KdfWorkerCleanup):
             cleanup_error=None,
             primary_error=primary_error,
             exit_code=process.returncode if process is not None else None,
+            exited_before_cleanup=exited_before_cleanup,
         )
 
     def _start(self) -> None:

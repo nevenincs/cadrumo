@@ -35,9 +35,12 @@ from ..calculations.registry.iva_regime_vocabulary import (
     default_iva_regime,
     iva_regime_no_aplica_token,
     iva_regime_recargo_equivalencia_token,
+    iva_regime_simplificado_token,
     require_iva_regime,
+    resolve_iva_regime_catalogue,
 )
 from ..calculations.registry.m303_schema_vocabulary import (
+    m303_general_only_regime_composition,
     m303_regime_composition_choices,
     m303_tax_territory_choices,
     require_m303_regime_composition,
@@ -505,9 +508,20 @@ def modelo_iva_profile_required_paths(values: Mapping[str, object]) -> tuple[str
     """
     if not profile_claims_modelo_iva_block(values):
         return ()
-    if _is_pure_recargo_equivalencia(values):
+    if _is_pure_recargo_equivalencia(values) or _implied_m303_regime_composition(values) is not None:
         return tuple(path for path in MODELO_IVA_BLOCK_REQUIRED_PATHS if path != "iva.m303_regime_composition")
     return MODELO_IVA_BLOCK_REQUIRED_PATHS
+
+
+def iva_regime_owes_m303_regime_composition(regime: str) -> bool:
+    """Report whether a filer declaring ``regime`` and no composition still owes the Modelo 303 composition.
+
+    False when the regime settles it (a general-regime filer) or leaves nothing for it to
+    describe (a pure recargo de equivalencia retailer); the question-asking surfaces gate on
+    this so they ask exactly what :func:`modelo_iva_profile_required_paths` demands.
+    """
+    values = {"iva.regime": regime}
+    return not (_is_pure_recargo_equivalencia(values) or _implied_m303_regime_composition(values) is not None)
 
 
 def _declared(value: object) -> bool:
@@ -528,24 +542,56 @@ def _is_pure_recargo_equivalencia(values: Mapping[str, object]) -> bool:
     composition of general and simplified regimes in that modelo has nothing to describe.
     A composition stated alongside the regime is still honoured.
     """
-    if _declared(values.get("iva.m303_regime_composition")):
+    token = _undeclared_composition_regime_token(values)
+    if token is None:
         return False
-    raw = values.get("iva.regime")
-    if not _declared(raw):
-        return False
-    token = str(raw).strip().upper().replace("-", "_")
     try:
         return token == iva_regime_recargo_equivalencia_token()
     except RegistryValidationError:
         return False
 
 
+def _implied_m303_regime_composition(values: Mapping[str, object]) -> M303RegimeComposition | None:
+    """Return the composition a declared regime settles when no composition is stated.
+
+    Every supported Modelo 303 design answers the "tributa exclusivamente en
+    régimen simplificado" field of a general-regime filer with "3" NO (sólo RG),
+    so a self-assessing regime other than the simplified one files under the
+    general regime alone. The simplified regime settles nothing: its filer may
+    also carry general-regime activities (LIVA art. 122.Dos.1.º) and must say
+    whether the composition is simplified only or mixed.
+    """
+    token = _undeclared_composition_regime_token(values)
+    if token is None:
+        return None
+    try:
+        catalogue = resolve_iva_regime_catalogue()
+        if token not in catalogue.self_assessment_tokens or token == iva_regime_simplificado_token():
+            return None
+        return m303_general_only_regime_composition()
+    except RegistryValidationError:
+        return None
+
+
+def _undeclared_composition_regime_token(values: Mapping[str, object]) -> str | None:
+    """Return the declared IVA regime token when no composition is stated, else ``None``."""
+    if _declared(values.get("iva.m303_regime_composition")):
+        return None
+    raw = values.get("iva.regime")
+    if not _declared(raw):
+        return None
+    return str(raw).strip().upper().replace("-", "_")
+
+
 def _resolve_m303_regime_composition(
     canonical: Mapping[str, str],
     typed: SetupAnswers,
 ) -> M303RegimeComposition | None:
-    """Resolve the declared Modelo 303 composition; a pure recargo retailer states none."""
+    """Resolve the Modelo 303 composition: declared, settled by the regime, or none for a recargo retailer."""
     if not typed.iva_m303_regime_composition:
+        implied = _implied_m303_regime_composition(canonical)
+        if implied is not None:
+            return implied
         if _is_pure_recargo_equivalencia(canonical):
             return None
         raise ProfileError(

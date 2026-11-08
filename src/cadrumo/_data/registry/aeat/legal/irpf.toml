@@ -4952,6 +4952,25 @@ required_text = [
     "anualidades por alimentos a favor de los hijos",
 ]
 
+[legal."ley-35-2006:art-65"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a65"
+document_id = "BOE-A-2006-20764"
+article = "65"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a65"
+published_at = 2006-11-29
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-08
+reviewed_by = "agent-authored from bundled ley-35-2006.html#a65; operator to re-stamp"
+notes = "LIRPF art 65: la escala propia del artículo, aplicada junto con la del apartado 1 del artículo 63 a los contribuyentes con residencia habitual en el extranjero por las circunstancias de los artículos 8.2 y 10.1. Su tabla (0 / 12.450 al 9,50; 12.450 / 20.200 al 12,00; 20.200 / 35.200 al 15,00; 35.200 / 60.000 al 18,50; 60.000 en adelante al 22,50) viene del art. 1.41 de la Ley 26/2014 (BOE-A-2014-12327), con efectos desde el 1 de enero de 2015, y no ha sido modificada después: la Ley 11/2020 art. 58 solo tocó el art. 63.1. La disposición adicional trigésima segunda remite a esta escala como escala autonómica de los residentes en Ceuta o Melilla, de modo que es también la base legal del parámetro renta-escala-autonomica-ceuta-melilla-base-general del Modelo 100."
+required_text = [
+    "Escala aplicable a los residentes en el extranjero.",
+    "las escalas aplicables serán la establecida en el apartado 1 del artículo 63 y la siguiente",
+]
+
 [legal."ley-35-2006:da-11"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -5151,6 +5170,25 @@ notes = "LIRPF DA 30.2, redactada por el art. 2 del Real Decreto-ley 12/2012 (BO
 required_text = [
     "Libertad de amortización en elementos nuevos del activo material fijo",
     "El citado exceso tendrá, para el transmitente, la consideración de rendimiento íntegro de la actividad económica en el período impositivo en que se efectúe la transmisión",
+]
+
+[legal."ley-35-2006:da-32"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#datrigesimasegunda"
+document_id = "BOE-A-2006-20764"
+article = "DA-32"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#datrigesimasegunda"
+published_at = 2006-11-29
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-08
+reviewed_by = "agent-authored from bundled ley-35-2006.html#datrigesimasegunda; operator to re-stamp"
+notes = "LIRPF disposición adicional trigésima segunda: la escala autonómica de los contribuyentes con residencia habitual en Ceuta o Melilla es la del artículo 65 de la Ley. Añadida por la disposición final 49.2 de la Ley 2/2011 (BOE-A-2011-4117), en vigor desde el 06/03/2011, y modificada con efectos desde el 1 de enero de 2015 por el art. 1.5 del Real Decreto-ley 9/2015 (BOE-A-2015-7765). Es la base legal por la que Ceuta y Melilla son residencias de territorio común registrables del Modelo 100 y toman el parámetro renta-escala-autonomica-ceuta-melilla-base-general en vez de una escala aprobada por una comunidad."
+required_text = [
+    "Escala autonómica aplicable a los residentes en Ceuta y Melilla.",
+    "La escala autonómica aplicable a los contribuyentes que tengan su residencia habitual en Ceuta o Melilla será la prevista en el artículo 65 de esta Ley.",
 ]
 
 [legal."ley-35-2006:da-59"]
