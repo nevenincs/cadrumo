@@ -21,6 +21,7 @@ import {
 import { formatSize } from "../../shared/numbers";
 import type { AgentModelLicenceFacts } from "../../shell/agentSession";
 import {
+  planIsFor,
   ReviewClaimContext,
   useLocalModels,
   type LocalModelHost,
@@ -302,6 +303,22 @@ export function LocalModels({
       ? liveRun
       : null;
   const holdsReview = listed.some(({ model }) => reviewRun(model) !== null);
+  // A section with no program row of the local AI above it, as a second
+  // lane has, answers a plan for its lane itself where no row here holds it:
+  // the asked row is not listed, or nothing was asked in this window, as
+  // after a reload.
+  const sectionReview =
+    claim === null &&
+    liveRun?.stage === "review" &&
+    !holdsReview &&
+    planIsFor({
+      lane,
+      models: [...(lane?.models ?? []), ...listed.map(({ model }) => model)],
+      reviewed,
+      planned: (model) => store.modelPart(model) !== null,
+    })
+      ? liveRun
+      : null;
   useLayoutEffect(() => {
     if (!holdsReview || !claim) return;
     claim(true);
@@ -344,6 +361,11 @@ export function LocalModels({
       <p className="text-sm text-muted-foreground">
         {t("desktop.providers.local_models_lead")}
       </p>
+      {sectionReview && (
+        <div data-slot="local-models-review">
+          <RowReview run={sectionReview} locale={locale} reveal />
+        </div>
+      )}
       {laneStatus === "loading" ? (
         <p role="status" className="text-sm text-muted-foreground">
           {t("desktop.providers.local_models_loading")}
