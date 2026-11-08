@@ -950,7 +950,7 @@ impl Components {
         let engines = self.engines.clone();
         let admission = self.admission.clone();
         let removed = tokio::task::spawn_blocking(move || -> Result<Report, Stop> {
-            let mut engine = selected(&engines, &admission, true).map_err(Unready::into_stop)?;
+            let mut engine = selected(&*engines, &admission, true).map_err(Unready::into_stop)?;
             // The local AI is selected as its program alone: a removal pulls nothing.
             engine.select_local_models(LocalModels::default());
             Ok(engine.remove_model(&name, &mut |_| {}))
@@ -984,7 +984,7 @@ impl Components {
         let removed = tokio::task::spawn_blocking(move || -> Result<Report, Stop> {
             let local_ai = !matches!(removal, Removal::Browser);
             let mut engine =
-                selected(&engines, &admission, local_ai).map_err(Unready::into_stop)?;
+                selected(&*engines, &admission, local_ai).map_err(Unready::into_stop)?;
             Ok(match removal {
                 Removal::Browser => engine.remove(&[item], &mut |_| {}),
                 Removal::LocalAi => {
