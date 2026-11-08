@@ -10401,6 +10401,7 @@ workspace:
         what.
       none: Nothing needs you on this form.
       profile: 'Before this period can be calculated, your profile must answer:'
+      sources: 'Before this declaration can be calculated, the declarations it adds up need:'
       title: To do
     value:
       not_applicable: n/a

@@ -10558,6 +10558,7 @@ workspace:
         lásd, mire.
       none: Ezen a nyomtatványon semmi sem vár rád.
       profile: 'Mielőtt ez az időszak kiszámítható lenne, a profilodnak meg kell válaszolnia:'
+      sources: 'Mielőtt ez a bevallás kiszámítható lenne, az általa összesített bevallásoknál ez hiányzik:'
       title: Teendők
     value:
       not_applicable: nem alkalmazható

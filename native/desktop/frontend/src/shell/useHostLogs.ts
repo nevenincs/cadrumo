@@ -5,25 +5,40 @@ import { notifyInternalFailure } from "./internalFailures";
 
 const RECORD_CAP = 10000;
 
+/** How many errors and warnings arrived since the window began following the
+ * log, each counted once by its host sequence, whatever the ring still holds. */
+export type LogCounts = { errors: number; warnings: number };
+
+const NO_LOG = {
+  records: null,
+  dropped: 0,
+  interrupted: false,
+  counts: { errors: 0, warnings: 0 },
+  countedThrough: 0,
+};
+
 export function useHostLogs(host: Host) {
   const [attempt, setAttempt] = useState(0);
   const generation = useRef(0);
   const retrying = useRef(false);
   const owner = useRef(host);
   owner.current = host;
-  // The log ring and what it has lost, held together: a batch changes both.
+  // The log ring, what it has lost and what it has counted, held together:
+  // a batch changes all three.
   const [log, setLog] = useState<{
     owner: Host;
     records: LogRecord[] | null;
     dropped: number;
     interrupted: boolean;
-  }>({ owner: host, records: null, dropped: 0, interrupted: false });
-  const { records, dropped, interrupted } = log;
+    counts: LogCounts;
+    countedThrough: number;
+  }>({ owner: host, ...NO_LOG });
+  const { records, dropped, interrupted, counts } = log;
   const [sourceStates, setSourceStates] = useState<
     LogSourceStates | "unavailable" | null
   >(null);
   if (log.owner !== host) {
-    setLog({ owner: host, records: null, dropped: 0, interrupted: false });
+    setLog({ owner: host, ...NO_LOG });
     setSourceStates(null);
   }
   // Log batches: a bounded ring; a missing or unreadable source keeps its state.
@@ -53,7 +68,18 @@ export function useHostLogs(host: Host) {
           notifyInternalFailure();
         setSourceStates(batch.states);
         setLog((held) => {
-          const previous = held.owner === host ? (held.records ?? []) : [];
+          const mine = held.owner === host;
+          const previous = mine ? (held.records ?? []) : [];
+          // A replayed record was counted when it first arrived.
+          let countedThrough = mine ? held.countedThrough : 0;
+          let { errors, warnings } = mine ? held.counts : NO_LOG.counts;
+          for (const record of batch.records) {
+            if (record.seq <= countedThrough) continue;
+            countedThrough = record.seq;
+            if (record.level === "ERROR" || record.level === "CRITICAL")
+              errors += 1;
+            else if (record.level === "WARNING") warnings += 1;
+          }
           // A new subscription replays a backlog using the same host sequence.
           const last = previous.at(-1)?.seq;
           const next =
@@ -73,6 +99,8 @@ export function useHostLogs(host: Host) {
             owner: host,
             records: over ? next.slice(over) : next,
             dropped: held.dropped + batch.dropped + over,
+            counts: { errors, warnings },
+            countedThrough,
             interrupted:
               held.interrupted ||
               (attempt > 0 &&
@@ -117,5 +145,5 @@ export function useHostLogs(host: Host) {
     setSourceStates(null);
     setAttempt((value) => value + 1);
   };
-  return { records, dropped, sourceStates, interrupted, retry };
+  return { records, dropped, sourceStates, interrupted, counts, retry };
 }

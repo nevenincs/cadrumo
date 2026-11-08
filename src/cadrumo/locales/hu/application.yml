@@ -2209,6 +2209,7 @@ application:
       cross_period_clean_state_incomplete: A keresztidőszaki tiszta állapot igazolása
         hiányos a Modelo {modelo} ({period} {filing_year}) bevalláshoz; {finding_count}
         probléma maradt.
+      cross_period_sources_not_filed: 'A(z) %{modelo_words} (%{year}) az év bevallásait összesíti, és ezek még nincsenek benyújtva: %{sources}. Ha benyújtottad őket, számold újra.'
       deductible_iva_evidence_missing: 'A nyilvántartásaidban szereplő, levonható
         IVA-t tartalmazó tételekhez kapcsolt beszerzési számla szükséges. Kapcsold
         a számlát a tételhez, majd futtasd újra a aeat app modelo work verify parancsot:
@@ -2946,6 +2947,11 @@ application:
         be.
       stage_refused: 'A `quickfile` a(z) %{stage} szakasznál leállt: a szakaszt %{error_code}
         kóddal elutasították.'
+    reconciliation_sources:
+      standing:
+        missing: '%{modelo}, %{period}: nincs kiszámítva'
+        unfiled: '%{modelo}, %{period}: ellenőrizve, nincs benyújtva'
+        unverified: '%{modelo}, %{period}: kiszámítva, nincs ellenőrizve'
     taxation_comparison_words:
       below_materiality: A két eredmény {difference} összeggel tér el, ami kevesebb,
         mint {threshold}, ezért bármelyik adózási mód megfelelő.
