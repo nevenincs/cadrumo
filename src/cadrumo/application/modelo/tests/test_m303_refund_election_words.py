@@ -201,6 +201,7 @@ def test_the_header_says_the_credit_is_carried_forward_and_why(
         assert header.result.words == lookup_translation(_TO_CARRY_FORWARD_KEY, locale=language.value), (year, code)
         assert lookup_translation(_CARRY_FORWARD_HELP_KEY, locale=language.value) in header.result.help, (year, code)
         choice_pending = lookup_translation(_CHOICE_PENDING_KEY, locale=language.value)
+        assert choice_pending is not None, (year, code)
         assert choice_pending not in header.result.text, (year, code)
         assert choice_pending not in header.result.help, (year, code)
 
