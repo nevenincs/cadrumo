@@ -27,6 +27,7 @@ from pydantic import ValidationError
 
 from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..enums import TransactionDirection
+from ..gross_validation import GROSS_NEEDS_WITHHOLDING_CATEGORY_DETAIL
 from ..irpf_categories import (
     has_activity_irpf_category,
     has_non_work_irpf_category,
@@ -123,7 +124,7 @@ def test_unknown_token_does_not_unlock_the_withholding_relaxation() -> None:
             iva_amount=Decimal("420.00"),
         )
 
-    assert "must equal the gross to the cent" in str(excinfo.value)
+    assert GROSS_NEEDS_WITHHOLDING_CATEGORY_DETAIL in str(excinfo.value)
 
 
 def test_outgoing_only_rent_treatment_does_not_relax_an_incoming_row() -> None:
@@ -137,7 +138,7 @@ def test_outgoing_only_rent_treatment_does_not_relax_an_incoming_row() -> None:
             iva_amount=Decimal("420.00"),
         )
 
-    assert "must equal the gross to the cent" in str(excinfo.value)
+    assert GROSS_NEEDS_WITHHOLDING_CATEGORY_DETAIL in str(excinfo.value)
 
 
 def test_renta_income_tag_does_not_unlock_the_relaxation() -> None:

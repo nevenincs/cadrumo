@@ -9,6 +9,7 @@ from functools import cache
 from pathlib import Path
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.field_origin import FieldOrigin
 from ....core.modelo import Modelo
 from ....core.payment_election import PaymentElection
 from ....core.period import Period
@@ -65,7 +66,7 @@ def typed_producer_snapshot(*, complementaria: bool = False) -> FilingProducerSn
             full_name="Ana Prueba",
         ),
         presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoría Prueba"),
-        model_profile=Modelo111ProfileFacts(colegio_concertado=False),
+        model_profile=Modelo111ProfileFacts(colegio_concertado=False, colegio_concertado_origin=FieldOrigin.OPERATOR),
         elections=FilingElectionFacts(
             result_disposition=ResultDisposition.NEGATIVA,
             payment=PaymentElection.INGRESO,

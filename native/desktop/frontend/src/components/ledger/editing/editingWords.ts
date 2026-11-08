@@ -10,6 +10,7 @@ import {
   accountLabel,
   categoryLabel,
   classificationLabel,
+  deductionKindLabel,
   directionLabel,
   irpfCategoryLabel,
   ivaCategoryLabel,
@@ -108,6 +109,8 @@ export function valueText(
       return ivaCategoryLabel(t, value);
     case "irpf_category":
       return irpfCategoryLabel(t, value);
+    case "deduction_fact_kind":
+      return deductionKindLabel(t, value);
     default:
       return value;
   }

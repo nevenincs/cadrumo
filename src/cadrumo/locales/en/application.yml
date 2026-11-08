@@ -1042,19 +1042,28 @@ application:
     staged_check:
       served:
         blocker:
+          amount_signed: 'An amount is a magnitude: the direction already says whether
+            the money came in or went out.'
           cannot_clear: 'This value can''t be cleared: the field has to hold a value.'
           draft_incomplete: A new movement needs a booked date, an amount, a currency,
             a direction and a description before it can be saved.
           mixed_needs_share: A Mixed movement needs a business share.
           needs_classification: This change needs the movement to be classified first.
+          needs_withholding_category: The declared base and IVA add up to more than
+            the money that moved. That gap is an IRPF withholding, and the movement
+            declares no IRPF category.
           share_needs_mixed: A business share only applies to a Mixed movement.
           transfer_with_tax: A transfer between your own accounts carries no tax fields.
         fix:
+          amount_signed: Write the amount without a sign, and let the direction say
+            whether it came in or went out.
           cannot_clear: Keep the stored value.
           draft_incomplete: Fill in what the new movement is missing.
           mixed_needs_share: Enter the business share as a percentage, such as 50
             for 50%.
           needs_classification: Classify the movement as Business or Personal.
+          needs_withholding_category: Name the IRPF category the withholding belongs
+            to, or correct the base and the IVA so they add up to the amount.
           share_needs_mixed: Drop the share, or classify the movement as Mixed.
           transfer_with_tax: Take the tax fields off the transfer, or change its direction.
         share_refusal: 'That is not a share: write a percentage, such as 50 for 50%.'

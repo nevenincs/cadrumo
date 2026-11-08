@@ -1130,7 +1130,22 @@ sensitivity = "financial"
 effective_dated = true
 description = "Whether the withholder is a colegio concertado, which Modelo 111 declares in its own header field."
 model_selectors = ["colegio_concertado"]
+# The design in force for every supported filing year is the 2019-y-siguientes
+# record design (source aeat-dr-111-2019-v18), whose field 44 at position 552,
+# length 1, An, reads: "Reservado. Administracion presentando declaracion de
+# Colegio Concertado (CC)", "X" o blanco. The mark first appeared in the
+# 2012-2015 design (aeat-dr-111-2012, position 732), which is kept cited as its
+# origin. It is about the payroll of a centro docente concertado's teaching
+# staff paid by the Administracion in pago delegado, so it concerns a declarant
+# who both runs a teaching activity and pays employees. Demanding it of every
+# Modelo 111 filer asked a self-employed consultant with no employees to settle
+# whether they are a colegio concertado before their 111 could exist.
 required_for_modelos = ["111"]
+required_for_modelos_when_payer_facts = ["pays_employees"]
+required_for_modelos_when_activity_iae_groups_fact = "rdleg-1175-1990:iae-grupos-ensenanza"
+required_for_modelos_when_activity_iae_epigraph_path = "activities.iae_epigraph"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-586-2011:art-1"]
+source_refs = ["aeat-dr-111-2019-v18", "aeat-dr-111-2012"]
 
 [[sections.fields]]
 key = "pays_professionals_with_retencion"
