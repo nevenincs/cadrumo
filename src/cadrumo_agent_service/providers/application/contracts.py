@@ -10,8 +10,9 @@ key.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import StrEnum
-from typing import Annotated, Self
+from typing import Annotated, Literal, Self
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
@@ -86,6 +87,75 @@ class CliState(StrEnum):
     UNKNOWN = "unknown"
 
 
+HelperCause = Literal[
+    "profile_missing",
+    "unsupported_method",
+    "host_input_invalid",
+    "host_disconnected",
+    "login_already_running",
+    "timed_out",
+    "home_in_git_project",
+    "home_unavailable",
+    "cli_not_found",
+    "browser_relay_unavailable",
+    "cli_start_failed",
+    "cli_exited_early",
+    "cli_protocol_mismatch",
+    "cli_reported_error",
+    "login_not_completed",
+    "cleanup_unconfirmed",
+    "internal_error",
+]
+"""The helper's closed words for why a terminal event is not a success."""
+
+ServiceCause = Literal[
+    "helper_start_failed",
+    "helper_output_invalid",
+    "helper_ended_without_result",
+    "helper_exit_nonzero",
+    "agent_stop_failed",
+    "status_not_confirmed",
+]
+"""The closed words the service adds when it, not the helper, settles an attempt."""
+
+
+class CliStateCause(StrEnum):
+    """Why a cli lane's state is not established or not signed in; one closed word, never provider output."""
+
+    CLI_NOT_FOUND = "cli_not_found"
+    HOME_IN_GIT_PROJECT = "home_in_git_project"
+    HOME_UNAVAILABLE = "home_unavailable"
+    PROBE_START_FAILED = "probe_start_failed"
+    PROBE_TIMED_OUT = "probe_timed_out"
+    PROBE_OUTPUT_UNREADABLE = "probe_output_unreadable"
+    PROBE_CLEANUP_UNCONFIRMED = "probe_cleanup_unconfirmed"
+    STATUS_READ_FAILED = "status_read_failed"
+    """The service could not read the agent's status: a nonzero exit, a refused runner or an operating-system error."""
+    STATUS_UNREADABLE = "status_unreadable"
+    """The agent's status answer was not valid JSON of the declared schema."""
+    STATUS_CONTEXT_UNAVAILABLE = "status_context_unavailable"
+    """No live profile authority could back a status read."""
+
+
+class NextStep(StrEnum):
+    """What a person can do about a sign-in that did not complete; one closed word."""
+
+    RETRY = "retry"
+    INSTALL_CLI = "install_cli"
+    MOVE_PROFILE_OUTSIDE_GIT = "move_profile_outside_git"
+    CLOSE_OTHER_SIGN_IN = "close_other_sign_in"
+    CONSOLE_SIGN_IN = "console_sign_in"
+    UPDATE_APP = "update_app"
+
+
+@dataclass(frozen=True, slots=True)
+class CliObservation:
+    """One cli lane's observed state with the cause when it is not signed in or not established."""
+
+    state: CliState
+    cause: CliStateCause | None = None
+
+
 class ProviderStatusEntry(OutputSchema):
     """Masked status of one provider."""
 
@@ -109,6 +179,10 @@ class ProviderStatusEntry(OutputSchema):
     default_base_url: str | None
     cli_state: CliState | None
     """Whether a cli lane's program is installed and signed in; ``None`` for an api lane."""
+    cli_state_cause: CliStateCause | None = None
+    """Why a cli lane is not established or not signed in, when the probe says; never provider output."""
+    next_step: NextStep | None = None
+    """What the person can do about ``cli_state_cause``; ``None`` when no step is declared for it."""
     revision: ProviderSettingsRevision
 
 

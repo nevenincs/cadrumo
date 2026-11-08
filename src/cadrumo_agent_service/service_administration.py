@@ -45,6 +45,7 @@ from .providers.application.attachment_releases import (
 from .providers.application.contracts import LocalModelListResult, ProviderSettingsRefusal
 from .providers.application.local_model_list import LocalModelListService
 from .providers.application.model_runs import ModelRunService
+from .providers.application.next_steps import CONSOLE_SIGN_IN_COMMAND
 from .providers.application.ports import ProviderCatalogUnavailableError
 from .providers.application.resolution import ProviderCredentialResolver
 from .providers.application.service import AssistantAuthChoice, BaseUrlChange, ProviderSettingsService
@@ -451,6 +452,7 @@ class AgentServiceAdministration(ABC):
         """Serve no kept catalog or status once what they were read from has changed."""
         self._catalog_read.forget()
         self._status_read.forget()
+        self._login_status.forget()
 
     def _provider_status(self) -> dict[str, Any]:
         """Observe settings without waiting for gateway startup after sign-in.
@@ -469,6 +471,7 @@ class AgentServiceAdministration(ABC):
             return observed.model_dump(mode="json")
         status = observed.model_dump(mode="json")
         status["hosted_certifications"] = self._hosted_certifications()
+        status["console_sign_in_command"] = CONSOLE_SIGN_IN_COMMAND
         try:
             methods = self._catalog.gui_sign_in_methods()
             status["sign_in_providers"] = list(methods)

@@ -11,6 +11,7 @@ import pytest
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from ... import service as service_module
+from ...providers.application.next_steps import CONSOLE_SIGN_IN_COMMAND
 from ...providers.application.ports import ProviderCatalogUnavailableError, ProviderCatalogUnavailableReason
 from ...service import AgentService
 from ..controller import AgentGenerations, AgentHostController, AgentHostState, AgentReady
@@ -97,6 +98,7 @@ def test_status_projects_only_valid_certification_from_the_current_served_catalo
         "providers": [{"mode": "provider_sign_in", "cli_state": "installed_signed_in"}],
         "sign_in_providers": [],
         "sign_in_methods": {},
+        "console_sign_in_command": CONSOLE_SIGN_IN_COMMAND,
         "hosted_certifications": [
             {
                 "provider": "example",
@@ -241,6 +243,7 @@ def test_live_certification_does_not_hide_provider_status_catalog_refusal(
         "code": "catalog_unavailable",
         "sign_in_providers": [],
         "sign_in_methods": {},
+        "console_sign_in_command": CONSOLE_SIGN_IN_COMMAND,
         "hosted_certifications": [
             {
                 "provider": "example",

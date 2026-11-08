@@ -57,7 +57,7 @@ from .host.store_lifecycle import (
     AgentStoreLifecycle,
     InvocationCancellation,
 )
-from .providers.application.contracts import ProviderSettingsRefusal
+from .providers.application.contracts import CliState, ProviderSettingsRefusal
 from .providers.application.service import AssistantAuthChoice
 from .service_administration import AgentServiceAdministration
 from .service_support import (
@@ -166,6 +166,17 @@ class AgentServiceStartup(AgentServiceAdministration):
             current = self._credentials.current_generations()
             return current == generations and self.client.lease == lease and not self._closing.is_set()
 
+        root = profile_agent_root(self._root, lease.profile_id)
+        helper_provider = prepared["entry"]["provider"]
+
+        def confirm() -> tuple[bool, str | None]:
+            # A fresh read, so neither a kept answer nor one taken before the login can stand in for it.
+            observed = self._login_status.confirm(helper_provider, root=root)
+            return (
+                observed.state is CliState.INSTALLED_SIGNED_IN,
+                None if observed.cause is None else observed.cause.value,
+            )
+
         launch = prepared["launch"]
         attempt = AuthAttempt(
             provider=prepared["entry"]["provider"],
@@ -182,16 +193,24 @@ class AgentServiceStartup(AgentServiceAdministration):
                 method,
                 "--timeout",
                 "300",
+                "--causes",
             ),
             environment=system_environment(os.environ) | launch["environment"],
             valid=valid,
-            settled=self._wake,
+            settled=self._sign_in_settled,
             prepare=self.stop,
+            confirm=confirm,
         )
         self._auth_attempt = attempt
         self._auth_resume_valid = valid
         self._forget_reads()
         return attempt.observe()
+
+    def _sign_in_settled(self) -> None:
+        """Serve no kept read of a login that has just ended, then wake the service."""
+        self._forget_reads()
+        if self._wake is not None:
+            self._wake()
 
     def hold_for_recovery(self) -> int | None:
         """Say whether the runtime keeps this service's lease suspended, and for how many more whole seconds.
