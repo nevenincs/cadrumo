@@ -748,8 +748,8 @@ fn a_fetch_reaches_only_the_hosts_the_approved_plan_names() {
     let fetched = fetch(&fixture.models, model, &publishers.network(), &storage_only);
     assert!(
         matches!(
-            fetched.result,
-            Err(LocalAiError::Failed(FailureCategory::BlockedByNetwork))
+            &fetched.result,
+            Err(error) if error.category() == FailureCategory::BlockedByNetwork
         ),
         "{:?}",
         fetched.result

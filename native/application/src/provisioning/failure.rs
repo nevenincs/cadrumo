@@ -1,5 +1,6 @@
+use crate::value::HostName;
 use serde::{Deserialize, Serialize};
-use std::fmt;
+use std::{fmt, io};
 
 /// The closed failure categories. Each maps to one plain sentence and at most one action
 /// in the surfaces' locale catalogues; a surface never shows the category itself.
@@ -94,9 +95,37 @@ impl fmt::Display for FailureCategory {
     }
 }
 
-/// One classified transfer failure: its category, whether another attempt may help, and
-/// the locale-neutral facts a surface or a diagnostic report may show.
+/// Where a network exchange stopped: resolving the name, connecting, the TLS handshake,
+/// the proxy's tunnel, reading or writing on the open connection, or the HTTP status the
+/// server answered with.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum FailureStage {
+    Resolve,
+    Connect,
+    Tls,
+    Tunnel,
+    Io,
+    Status,
+}
+
+impl FailureStage {
+    /// A static identifier for this stage, as a diagnostic record keeps it.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Resolve => "resolve",
+            Self::Connect => "connect",
+            Self::Tls => "tls",
+            Self::Tunnel => "tunnel",
+            Self::Io => "io",
+            Self::Status => "status",
+        }
+    }
+}
+
+/// One classified transfer failure: its category, whether another attempt may help, and
+/// the locale-neutral facts a surface or a diagnostic report may show. None of them is a
+/// value of the transfer: the host is a name without a path or a query.
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TransferFailure {
     pub category: FailureCategory,
     pub transient: bool,
@@ -104,16 +133,20 @@ pub struct TransferFailure {
     pub http_status: Option<u16>,
     /// How many attempts were made before the failure became final; 0 while undecided.
     pub attempts: u32,
+    /// Where the network exchange stopped, when the failure came from one.
+    pub stage: Option<FailureStage>,
+    /// The kind of the I/O error that ended the exchange, when one did.
+    pub io_kind: Option<io::ErrorKind>,
+    /// The host of the hop the failure came from.
+    pub host: Option<HostName>,
 }
 
 impl TransferFailure {
     /// A failure that another attempt may cure; a category that is never retried stays final.
     pub fn transient(category: FailureCategory) -> Self {
         Self {
-            category,
             transient: category.may_be_transient(),
-            http_status: None,
-            attempts: 0,
+            ..Self::final_(category)
         }
     }
 
@@ -123,11 +156,32 @@ impl TransferFailure {
             transient: false,
             http_status: None,
             attempts: 0,
+            stage: None,
+            io_kind: None,
+            host: None,
         }
     }
 
     pub fn with_status(mut self, status: u16) -> Self {
         self.http_status = Some(status);
+        self
+    }
+
+    pub fn at_stage(mut self, stage: FailureStage) -> Self {
+        self.stage = Some(stage);
+        self
+    }
+
+    pub fn with_io_kind(mut self, kind: Option<io::ErrorKind>) -> Self {
+        self.io_kind = kind;
+        self
+    }
+
+    /// The failure as it came from `host`, unless an earlier hop already named its own.
+    pub fn from_host(mut self, host: &HostName) -> Self {
+        if self.host.is_none() {
+            self.host = Some(host.clone());
+        }
         self
     }
 
@@ -141,7 +195,7 @@ impl TransferFailure {
             403 | 407 => Self::final_(FailureCategory::BlockedByNetwork),
             _ => Self::final_(FailureCategory::Unexpected),
         };
-        Some(failure.with_status(status))
+        Some(failure.with_status(status).at_stage(FailureStage::Status))
     }
 }
 
@@ -150,6 +204,10 @@ impl fmt::Display for TransferFailure {
         f.write_str(self.category.as_str())
     }
 }
+
+/// A transfer failure is the cause a diagnostic record keeps of a failed download, as its
+/// value-free facts.
+impl std::error::Error for TransferFailure {}
 
 #[cfg(test)]
 mod tests {
@@ -172,6 +230,10 @@ mod tests {
             let failure = TransferFailure::of_status(status).unwrap();
             assert_eq!(failure.category, FailureCategory::ServerError);
             assert!(failure.transient, "{status}");
+            assert_eq!(
+                (failure.http_status, failure.stage),
+                (Some(status), Some(FailureStage::Status))
+            );
         }
         for (status, category) in [
             (403, FailureCategory::BlockedByNetwork),

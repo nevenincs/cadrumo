@@ -33,7 +33,7 @@
 
 use super::{
     connection::{ConnectFailure, Network, Stage, TlsStream},
-    failure::{FailureCategory, TransferFailure},
+    failure::{FailureCategory, FailureStage, TransferFailure},
     http::{self, Body, Framing, ResponseHead},
     url::HttpsUrl,
 };
@@ -204,17 +204,19 @@ pub(crate) enum Round<T> {
     Retry(TransferFailure),
 }
 
-/// The answer a request chain ended at: the first head that is no redirect, and the
-/// connection its body is read from.
+/// The answer a request chain ended at: the first head that is no redirect, the
+/// connection its body is read from, and the host of the hop that answered.
 pub(crate) struct Answer {
     pub head: ResponseHead,
     pub reader: BufReader<TlsStream>,
+    pub host: HostName,
 }
 
 /// Sends one `GET` for `source` with `headers` and follows its redirects under the hop
 /// policy: every hop HTTPS on the default port to a host in `hosts`, at most
-/// [`MAX_REDIRECTS`] of them. The inner `Err` is every network outcome; the outer one is
-/// only a cancellation, which also ends a name lookup at once.
+/// [`MAX_REDIRECTS`] of them. The inner `Err` is every network outcome, naming the host
+/// of the hop it came from; the outer one is only a cancellation, which also ends a name
+/// lookup at once.
 pub(crate) fn request_chain(
     network: &Network,
     hosts: &BTreeSet<HostName>,
@@ -227,32 +229,38 @@ pub(crate) fn request_chain(
     let mut redirects = 0;
     loop {
         cancellation.check()?;
-        if !(url.default_port() && hosts.contains(url.host())) {
+        let host = url.host();
+        if !(url.default_port() && hosts.contains(host)) {
             return Ok(Err(TransferFailure::final_(
                 FailureCategory::BlockedByNetwork,
-            )));
+            )
+            .from_host(host)));
         }
         let mut stream = match network.open_unless_cancelled(&url, None, Some(cancellation)) {
             Ok(stream) => stream,
             Err(failure) => {
                 cancellation.check()?;
-                return Ok(Err(connect_failure(&failure)));
+                return Ok(Err(connect_failure(&failure).from_host(host)));
             }
         };
         if let Err(error) =
             http::write_request(&mut stream, "GET", url.target(), &url.authority(), headers)
         {
-            return Ok(Err(network_failure(&error)));
+            return Ok(Err(network_failure(&error).from_host(host)));
         }
         let mut reader = BufReader::with_capacity(CHUNK_BYTES, stream);
         let head = http::read_head(&mut reader, &stop);
         cancellation.check()?;
         let head = match head {
             Ok(head) => head,
-            Err(error) => return Ok(Err(network_failure(&error))),
+            Err(error) => return Ok(Err(network_failure(&error).from_host(host))),
         };
         if !head.redirect() {
-            return Ok(Ok(Answer { head, reader }));
+            return Ok(Ok(Answer {
+                head,
+                reader,
+                host: host.clone(),
+            }));
         }
         redirects += 1;
         match head
@@ -264,7 +272,8 @@ pub(crate) fn request_chain(
                 return Ok(Err(TransferFailure::final_(
                     FailureCategory::BlockedByNetwork,
                 )
-                .with_status(head.status)));
+                .with_status(head.status)
+                .from_host(url.host())));
             }
         }
     }
@@ -334,8 +343,9 @@ impl Transfer<'_> {
                     }
                 }
             }
-            let failure =
-                last.unwrap_or_else(|| TransferFailure::final_(FailureCategory::Unexpected));
+            let failure = last
+                .clone()
+                .unwrap_or_else(|| TransferFailure::final_(FailureCategory::Unexpected));
             Ok(if retryable {
                 Round::Retry(failure)
             } else {
@@ -383,24 +393,27 @@ impl Transfer<'_> {
         let stop = move || cancellation.check().is_err();
         let range = format!("bytes={held}-");
         let headers: &[(&str, &str)] = if held > 0 { &[("Range", &range)] } else { &[] };
-        let Answer { head, reader } =
+        let Answer { head, reader, host } =
             match request_chain(self.network, self.hosts, source, headers, cancellation)? {
                 Ok(answer) => answer,
                 Err(failure) => return Ok(Attempt::Failed(failure)),
             };
         if let Some(failure) = TransferFailure::of_status(head.status) {
-            return Ok(Attempt::Failed(failure));
+            return Ok(Attempt::Failed(failure.from_host(&host)));
         }
         let framing = match Framing::of(&head) {
             Ok(framing) => framing,
-            Err(error) => return Ok(Attempt::Failed(network_failure(&error))),
+            Err(error) => return Ok(Attempt::Failed(network_failure(&error).from_host(&host))),
         };
         let expected_range = format!("bytes {held}-{}/{}", pinned.size - 1, pinned.size);
         let resumed =
             head.status == 206 && head.header("content-range") == Some(expected_range.as_str());
         if (head.status == 206 && !resumed) || !matches!(head.status, 200 | 206) {
             return Ok(Attempt::Failed(
-                TransferFailure::final_(FailureCategory::Unexpected).with_status(head.status),
+                TransferFailure::final_(FailureCategory::Unexpected)
+                    .with_status(head.status)
+                    .at_stage(FailureStage::Status)
+                    .from_host(&host),
             ));
         }
         if !resumed && held > 0 {
@@ -417,21 +430,22 @@ impl Transfer<'_> {
         if let Framing::Length(length) = framing
             && held.checked_add(length) != Some(pinned.size)
         {
-            return Ok(Attempt::Failed(TransferFailure::final_(
-                FailureCategory::DamagedDownload,
-            )));
+            return Ok(Attempt::Failed(
+                TransferFailure::final_(FailureCategory::DamagedDownload).from_host(&host),
+            ));
         }
         if let Err(error) = file.seek(SeekFrom::End(0)) {
             return Ok(Attempt::Failed(file_failure(&error)));
         }
         let mut body = Body::new(reader, framing, &stop);
-        match self.stream(&mut body, &mut file, &mut hash, held, pinned.size)? {
+        match self.stream(&mut body, &mut file, &mut hash, held, pinned.size, &host)? {
             Some(failure) => Ok(Attempt::Failed(failure)),
             None => finish(file, hash, pinned, partial),
         }
     }
 
-    /// Copies the body into the partial file, hashing and reporting as it goes.
+    /// Copies the body `host` answered into the partial file, hashing and reporting as it
+    /// goes.
     fn stream(
         &mut self,
         body: &mut impl Read,
@@ -439,6 +453,7 @@ impl Transfer<'_> {
         hash: &mut Sha256,
         mut held: u64,
         size: u64,
+        host: &HostName,
     ) -> Result<Option<TransferFailure>, Error> {
         let mut buffer = vec![0u8; CHUNK_BYTES];
         loop {
@@ -448,12 +463,12 @@ impl Transfer<'_> {
             let read = match read {
                 Ok(0) => return Ok(None),
                 Ok(read) => read,
-                Err(error) => return Ok(Some(network_failure(&error))),
+                Err(error) => return Ok(Some(network_failure(&error).from_host(host))),
             };
             if held + read as u64 > size {
-                return Ok(Some(TransferFailure::final_(
-                    FailureCategory::DamagedDownload,
-                )));
+                return Ok(Some(
+                    TransferFailure::final_(FailureCategory::DamagedDownload).from_host(host),
+                ));
             }
             if let Err(error) = file.write_all(&buffer[..read]) {
                 return Ok(Some(file_failure(&error)));
@@ -558,19 +573,28 @@ pub(crate) fn file_failure(error: &io::Error) -> TransferFailure {
 
 /// A failure on an open connection: a broken, stalled, truncated or garbled answer.
 pub(crate) fn network_failure(error: &io::Error) -> TransferFailure {
-    if error.kind() == io::ErrorKind::InvalidData
+    let failure = if error.kind() == io::ErrorKind::InvalidData
         && error
             .get_ref()
             .is_some_and(|inner| inner.is::<rustls::Error>())
     {
-        return TransferFailure::final_(FailureCategory::SecureConnectionFailed);
-    }
-    TransferFailure::transient(FailureCategory::HostUnreachable)
+        TransferFailure::final_(FailureCategory::SecureConnectionFailed).at_stage(FailureStage::Tls)
+    } else {
+        TransferFailure::transient(FailureCategory::HostUnreachable).at_stage(FailureStage::Io)
+    };
+    failure.with_io_kind(Some(error.kind()))
 }
 
 /// A failure before the session was established, classified by the stage it stopped at.
 pub(crate) fn connect_failure(failure: &ConnectFailure) -> TransferFailure {
-    match failure.stage {
+    let stage = match failure.stage {
+        Stage::Resolve => FailureStage::Resolve,
+        Stage::Connect => FailureStage::Connect,
+        Stage::Tunnel(_) => FailureStage::Tunnel,
+        Stage::Tls => FailureStage::Tls,
+        Stage::Io => FailureStage::Io,
+    };
+    let found = match failure.stage {
         Stage::Tls => TransferFailure::final_(FailureCategory::SecureConnectionFailed),
         Stage::Tunnel(Some(status)) => match status {
             403 | 407 => TransferFailure::final_(FailureCategory::BlockedByNetwork),
@@ -584,7 +608,8 @@ pub(crate) fn connect_failure(failure: &ConnectFailure) -> TransferFailure {
         Stage::Resolve | Stage::Connect | Stage::Tunnel(None) | Stage::Io => {
             TransferFailure::transient(FailureCategory::HostUnreachable)
         }
-    }
+    };
+    found.at_stage(stage).with_io_kind(failure.io_kind)
 }
 
 #[cfg(test)]
@@ -733,7 +758,7 @@ mod tests {
 
     fn failure(run: &Run) -> TransferFailure {
         match &run.result {
-            Err(Error::Download(failure)) => *failure,
+            Err(Error::Download(failure)) => failure.clone(),
             other => panic!("expected a download failure, got {other:?}"),
         }
     }
@@ -910,6 +935,11 @@ mod tests {
         let failure = failure(&run);
         assert_eq!(failure.category, FailureCategory::ServerError);
         assert!(!failure.transient);
+        assert_eq!(
+            (failure.stage, failure.host.as_ref().map(HostName::as_str)),
+            (Some(FailureStage::Status), Some("cdn.example.com")),
+            "the record names the host that answered and where it stopped"
+        );
         let waits = waits_for_the_whole_window();
         assert_eq!(waits.len(), 18);
         assert_eq!((failure.attempts, failure.http_status), (19, Some(503)));
@@ -1497,9 +1527,25 @@ mod tests {
             b"x",
             &directory.path().join("b.part"),
         );
+        let unresolved = failure(&run);
         assert_eq!(
-            (failure(&run).category, failure(&run).attempts),
-            (FailureCategory::HostUnreachable, 6)
+            (unresolved.category, unresolved.attempts),
+            (FailureCategory::HostUnreachable, 6),
+            "a host that cannot be reached is no server answering an error"
+        );
+        assert_eq!(
+            (
+                unresolved.stage,
+                unresolved.http_status,
+                unresolved.io_kind,
+                unresolved.host.as_ref().map(HostName::as_str),
+            ),
+            (
+                Some(FailureStage::Resolve),
+                None,
+                Some(io::ErrorKind::NotFound),
+                Some("cdn.example.com"),
+            )
         );
     }
 

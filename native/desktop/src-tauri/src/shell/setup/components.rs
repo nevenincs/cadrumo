@@ -56,7 +56,7 @@ use cadrumo_application::{
     provisioning::{
         browser::failure_category,
         engine::{Answer, Engine, Event, Outcome as Ended, Report, SetupRequest},
-        failure::FailureCategory,
+        failure::{FailureCategory, TransferFailure},
         installation::installation_config,
         items::{Destination, ItemId, Locations, PROGRAM_PART},
         local_ai::{
@@ -1118,6 +1118,7 @@ fn run_setup(
                 item,
                 category,
                 report.failure_cause.as_deref(),
+                report.download_failure.as_deref(),
             ));
         }
         return;
@@ -1193,12 +1194,16 @@ fn take_event(track: &mut SetupTrack, event: Event) {
 }
 
 /// What diagnostics keep of a setup that ended failed: the item, the category the
-/// window words and, for `program_not_running`, which start, wait or request ran out or
-/// broke, so a host too busy to answer in time reads apart from a missing program.
+/// window words; for `program_not_running`, which start, wait or request ran out or
+/// broke, so a host too busy to answer in time reads apart from a missing program; and
+/// for a download that failed, the host it failed at, the stage, the HTTP status and
+/// I/O kind that decided it and the attempts made, so a server answering errors reads
+/// apart from one that cannot be reached.
 fn setup_failed(
     item: ItemId,
     category: FailureCategory,
     cause: Option<&NotRunningCause>,
+    download: Option<&TransferFailure>,
 ) -> ApplicationError {
     let reason = match item {
         ItemId::Browser => "setup_browser_failed",
@@ -1219,6 +1224,9 @@ fn setup_failed(
             why = why.caused_by(std::io::Error::from(kind));
         }
         worded = worded.caused_by(why);
+    }
+    if let Some(download) = download {
+        worded = worded.caused_by(download.clone());
     }
     ApplicationError::new(ErrorCode::SetupFailed, Operation::Cli)
         .with_reason(reason)

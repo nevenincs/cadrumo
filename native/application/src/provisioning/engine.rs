@@ -60,7 +60,7 @@ use super::{
     },
     browser::{self, BrowserLayout, DriverManifest, LaunchContext},
     connection::Network,
-    failure::FailureCategory,
+    failure::{FailureCategory, TransferFailure},
     follow::{self, Changes},
     items::{Destination, ItemId, Locations, PROGRAM_PART},
     local_ai::{
@@ -197,8 +197,9 @@ impl Outcome {
 
 /// What one command found and did. `rows` is every item's state after the command;
 /// `plan` is the plan a setup reports; `item` and `failure` name the item and the
-/// category a refusal or failure is for, and `failure_cause` what ran out or broke when
-/// that category is `program_not_running`, for diagnostics only; `items` are the items a
+/// category a refusal or failure is for, `failure_cause` what ran out or broke when
+/// that category is `program_not_running`, and `download_failure` the facts of a
+/// download that ended the item, both for diagnostics only; `items` are the items a
 /// removal removed, or the items another engine is changing.
 #[derive(Clone, Debug)]
 pub struct Report {
@@ -209,6 +210,7 @@ pub struct Report {
     pub item: Option<ItemId>,
     pub failure: Option<FailureCategory>,
     pub failure_cause: Option<Box<NotRunningCause>>,
+    pub download_failure: Option<Box<TransferFailure>>,
     pub items: Vec<ItemId>,
 }
 
@@ -222,6 +224,7 @@ impl Report {
             item: None,
             failure: None,
             failure_cause: None,
+            download_failure: None,
             items: Vec::new(),
         }
     }
@@ -234,6 +237,11 @@ impl Report {
 
     fn with_cause(mut self, cause: Option<NotRunningCause>) -> Self {
         self.failure_cause = cause.map(Box::new);
+        self
+    }
+
+    fn with_download_failure(mut self, failure: Option<TransferFailure>) -> Self {
+        self.download_failure = failure.map(Box::new);
         self
     }
 
@@ -346,6 +354,8 @@ enum Stop {
     Failed(FailureCategory),
     /// Failed as `program_not_running`, for the cause it keeps.
     NotRunning(NotRunningCause),
+    /// A download failed, as its category, for the facts it keeps.
+    Download(TransferFailure),
 }
 
 impl Stop {
@@ -355,6 +365,15 @@ impl Stop {
             Self::Busy => None,
             Self::Failed(category) => Some((category, None)),
             Self::NotRunning(cause) => Some((FailureCategory::ProgramNotRunning, Some(cause))),
+            Self::Download(failure) => Some((failure.category, None)),
+        }
+    }
+
+    /// The facts of the download this stop failed in, for diagnostics.
+    fn download_failure(&self) -> Option<TransferFailure> {
+        match self {
+            Self::Download(failure) => Some(failure.clone()),
+            _ => None,
         }
     }
 }
@@ -383,6 +402,7 @@ impl From<Error> for Stop {
     fn from(error: Error) -> Self {
         match error {
             Error::Busy => Self::Busy,
+            Error::Download(failure) => Self::Download(failure),
             error => Self::Failed(browser::failure_category(&error)),
         }
     }
@@ -392,6 +412,7 @@ impl From<LocalAiError> for Stop {
     fn from(error: LocalAiError) -> Self {
         match error {
             LocalAiError::Engine(Error::Busy) => Self::Busy,
+            LocalAiError::Engine(Error::Download(failure)) => Self::Download(failure),
             LocalAiError::NotRunning(cause) => Self::NotRunning(cause),
             error => Self::Failed(error.category()),
         }
@@ -786,12 +807,15 @@ impl Engine {
                     removed.push(item);
                     continue;
                 }
-                Err(stop) => match stop.failure() {
-                    None => report(Outcome::Busy, None),
-                    Some((category, cause)) => {
-                        report(Outcome::Failed, Some(category)).with_cause(cause)
+                Err(stop) => {
+                    let download = stop.download_failure();
+                    match stop.failure() {
+                        None => report(Outcome::Busy, None),
+                        Some((category, cause)) => report(Outcome::Failed, Some(category))
+                            .with_cause(cause)
+                            .with_download_failure(download),
                     }
-                },
+                }
             };
             return Report {
                 rows: self.quick_rows(&ItemId::ALL),
@@ -829,12 +853,16 @@ impl Engine {
                 items: vec![item],
                 ..Report::new(Outcome::Removed, rows)
             },
-            Err(stop) => match stop.failure() {
-                None => Report::new(Outcome::Busy, rows).for_item(item, None),
-                Some((category, cause)) => Report::new(Outcome::Failed, rows)
-                    .for_item(item, Some(category))
-                    .with_cause(cause),
-            },
+            Err(stop) => {
+                let download = stop.download_failure();
+                match stop.failure() {
+                    None => Report::new(Outcome::Busy, rows).for_item(item, None),
+                    Some((category, cause)) => Report::new(Outcome::Failed, rows)
+                        .for_item(item, Some(category))
+                        .with_cause(cause)
+                        .with_download_failure(download),
+                }
+            }
         }
     }
 
@@ -1448,6 +1476,7 @@ impl Engine {
         let mut slots = slots.into_iter();
         let mut stopped = None;
         let mut failure_cause = None;
+        let mut download_failure = None;
         for (entry, slot) in plan.entries.iter().zip(&mut slots) {
             let item = entry.item;
             let done = match slot {
@@ -1471,6 +1500,7 @@ impl Engine {
                 },
                 Slot::Failed(category) => Err(Stop::Failed(category)),
             };
+            let download = done.as_ref().err().and_then(Stop::download_failure);
             let (outcome, failure) = match done.map_err(Stop::failure) {
                 Ok(()) => continue,
                 Err(None) => (Outcome::Busy, None),
@@ -1479,6 +1509,7 @@ impl Engine {
                 }
                 Err(Some((category, cause))) => {
                     failure_cause = cause;
+                    download_failure = download;
                     (Outcome::Failed, Some(category))
                 }
             };
@@ -1504,7 +1535,8 @@ impl Engine {
         Some(
             Report::new(ended_outcome(stop.outcome), Vec::new())
                 .for_item(stop.item, stop.failure)
-                .with_cause(failure_cause),
+                .with_cause(failure_cause)
+                .with_download_failure(download_failure),
         )
     }
 
@@ -2036,6 +2068,10 @@ fn finish(writer: ItemWriter<'_>, outcome: Result<(), Stop>) -> Result<(), Stop>
         Err(Stop::NotRunning(cause)) => {
             writer.failed(FailureCategory::ProgramNotRunning)?;
             Err(Stop::NotRunning(cause))
+        }
+        Err(Stop::Download(failure)) => {
+            writer.failed(failure.category)?;
+            Err(Stop::Download(failure))
         }
         Err(Stop::Busy) => {
             writer.held()?;
