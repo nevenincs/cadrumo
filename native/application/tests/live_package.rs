@@ -281,7 +281,19 @@ fn the_packaged_llama_server_answers_as_the_pinned_build_and_generates_from_a_fe
     );
 
     // A load by the model's name, then a completion that reports the tokens it made.
-    llama_server::load(&folder, model.name()).expect("the router loads the model by its name");
+    llama_server::load(&folder, model.name()).expect("the router takes the load by its name");
+    // The router answers a load before the model has loaded: its entry reads loaded later.
+    let loading = Instant::now();
+    while !listed(router).iter().any(|entry| {
+        entry["id"] == llama_server::router_id(&name) && entry["status"]["value"] == "loaded"
+    }) {
+        assert!(
+            loading.elapsed() < FULL_CHECK_BUDGET,
+            "the model never read loaded: {:?}",
+            listed(router)
+        );
+        std::thread::sleep(Duration::from_millis(100));
+    }
     let request = json!({
         "model": name,
         "prompt": "Reply with one word.",

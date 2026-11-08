@@ -14,12 +14,13 @@
 //!
 //! It runs as a router: it holds no model until the agent loads one through
 //! `/models/load`, never loads one by itself (`--no-models-autoload`) and holds at most
-//! one at a time (`--models-max 1`), so no model is loaded or evicted behind the agent's
-//! admission. The models it can load are presented to it in a preset file written from
-//! the store's manifests before each start: one section per whole model, with its model
-//! layer as `model`, its projector layer as `mmproj`, and an explicit `ctx-size`, so a
-//! load never takes the model's full training context. Each start writes the preset
-//! afresh. The model's own name is its `alias`, and the section is named [`router_id`]:
+//! one at a time (`--models-max 1`), so no model is loaded behind the agent's admission.
+//! A load the router takes while it holds another model evicts that one, which its list
+//! then reads unloaded with no `failed` flag. The models it can load are presented to it
+//! in a preset file written from the store's manifests before each start: one section per
+//! whole model, with its model layer as `model`, its projector layer as `mmproj`, and an
+//! explicit `ctx-size`, so a load never takes the model's full training context. Each
+//! start writes the preset afresh. The model's own name is its `alias`, and the section is named [`router_id`]:
 //! the router reads a section name with a colon as a repository and a quantisation and
 //! rewrites it, so a section named `qwen3:1.7b` is listed as `qwen3:7B` and no request
 //! by the name finds it, while an alias is kept as written and answers every request.
@@ -41,9 +42,17 @@
 //! The component engine checks the selected models on it while llama.cpp is the selected
 //! engine: the quick check reads from the files alone whether the running router's
 //! preset presents a model ([`presented_by_router`]), and the full check
-//! ([`check_model`]) finds the model in the router's list, loads it, generates one token
-//! with it and unloads it again. A drain that overtakes the full check is waited out for
-//! at most the check's own budget, after which the router reads `program_not_running`.
+//! ([`check_model`]) finds the model in the router's list, loads it, waits until the list
+//! reads it loaded, generates one token with it and unloads it again. A drain that
+//! overtakes the full check is waited out for at most the check's own budget, after which
+//! the router reads `program_not_running`.
+//!
+//! The router answers a load `200` at once, whether or not the model then loads: the
+//! outcome is only in the model's entry in the list, which reads `loading`, and then
+//! `loaded`, or `unloaded` with `failed` set when the model's process exited. The reason
+//! is on the router's standard error and in no answer, so the full check reads a failed
+//! load as `not_enough_memory`: for a model the store verified and the preset presents, on
+//! the pinned build, memory is the expected cause.
 
 #[cfg(test)]
 use super::program::ServeOverride;
@@ -91,7 +100,8 @@ const COMPLETIONS: &str = "/v1/completions";
 /// The file in the server's folder that is there while the running server drains for a
 /// restart: no load is started while it is there.
 pub const RESTARTING: &str = "restarting";
-/// How often a full check looks again while the router drains for a restart.
+/// How often a full check looks again while the router drains for a restart or is loading
+/// the model.
 const DRAIN_LOOK: Duration = Duration::from_millis(250);
 /// Bound of the preset file a presentation question reads.
 const PRESET_BYTES_LIMIT: u64 = 4 * 1024 * 1024;
@@ -143,12 +153,9 @@ pub enum LoadRefused {
     Restarting,
     /// The running router does not present the model.
     NotPresented,
-    /// The router answered the load with this status, or not at all; `out_of_memory` when
-    /// the refusal's own words say the model did not fit.
-    Failed {
-        status: Option<u16>,
-        out_of_memory: bool,
-    },
+    /// The router refused the load with this status, or did not answer it. A load the
+    /// router takes is answered `200` whether or not the model then loads.
+    Failed { status: Option<u16> },
 }
 
 impl LoadRefused {
@@ -554,6 +561,10 @@ pub fn presentation(folder: &Path, model: &ModelName) -> Presentation {
 
 /// Loads `model` into the router running from the server's `folder`.
 ///
+/// `Ok` says the router took the load, or already holds the model. The router answers a
+/// load at once, so the model is loaded only once its entry in the router's list reads so;
+/// [`check_model`] waits for that.
+///
 /// A load that a restart overtakes is [`LoadRefused::Restarting`], never success: the
 /// record is read again once the router has answered, and a drain begun meanwhile, or
 /// another process or none in the record, means the load did not stay. A load the
@@ -561,6 +572,21 @@ pub fn presentation(folder: &Path, model: &ModelName) -> Presentation {
 /// the drain is not kept waiting for a model nobody uses; a model another caller holds
 /// is never unloaded.
 pub fn load(folder: &Path, model: &ModelName) -> Result<(), LoadRefused> {
+    load_request(folder, model).map(|_| ())
+}
+
+/// How the router took a load.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum Accepted {
+    /// The router started the load.
+    Started,
+    /// The router already holds the model, which is another caller's: it answers `400`
+    /// that the model is already running.
+    AlreadyRunning,
+}
+
+/// The load [`load`] makes, saying whether the router started it or already held the model.
+fn load_request(folder: &Path, model: &ModelName) -> Result<Accepted, LoadRefused> {
     let before = running(folder)?;
     let id = model.to_string();
     if !presents(folder, &id) {
@@ -579,21 +605,17 @@ pub fn load(folder: &Path, model: &ModelName) -> Result<(), LoadRefused> {
         return Err(LoadRefused::Restarting);
     }
     match answered {
-        Ok((200, _)) => Ok(()),
-        Ok((status, body)) => Err(LoadRefused::Failed {
+        Ok((200, _)) => Ok(Accepted::Started),
+        Ok((400, body)) if already_running(&body) => Ok(Accepted::AlreadyRunning),
+        Ok((status, _)) => Err(LoadRefused::Failed {
             status: Some(status),
-            out_of_memory: out_of_memory(&body),
         }),
-        Err(_) => Err(LoadRefused::Failed {
-            status: None,
-            out_of_memory: false,
-        }),
+        Err(_) => Err(LoadRefused::Failed { status: None }),
     }
 }
 
-/// Whether the error a router answered with says in its own words that it ran out of
-/// memory, as the Ollama server's error text is read.
-fn out_of_memory(body: &[u8]) -> bool {
+/// The lower-cased message of the error a router answered with, empty when it has none.
+fn error_text(body: &[u8]) -> String {
     let value: serde_json::Value = serde_json::from_slice(body).unwrap_or_default();
     let error = &value["error"];
     error["message"]
@@ -601,7 +623,17 @@ fn out_of_memory(body: &[u8]) -> bool {
         .or_else(|| error.as_str())
         .unwrap_or_default()
         .to_lowercase()
-        .contains("memory")
+}
+
+/// Whether the error a router answered a completion with says in its own words that it ran
+/// out of memory, as the Ollama server's error text is read.
+fn out_of_memory(body: &[u8]) -> bool {
+    error_text(body).contains("memory")
+}
+
+/// Whether the error a router answered a load with says the model is already running.
+fn already_running(body: &[u8]) -> bool {
+    error_text(body).contains("already running")
 }
 
 /// Whether the preset of the router recorded in `folder` presents `model`, while it runs
@@ -614,15 +646,19 @@ pub fn presented_by_router(folder: &Path, model: &ModelName) -> Option<bool> {
 }
 
 /// The full check of `model` on the router running from `folder`: the router lists it,
-/// loads it through [`load`], generates one token of `prompt` with it within `budget`,
-/// and unloads it again. `false` when the router does not have the model. A model the
-/// router held before the check is another caller's and stays loaded.
+/// loads it through [`load`], waits until the list reads it loaded, generates one token of
+/// `prompt` with it within `budget`, and unloads it again. `false` when the router does not
+/// have the model. A model the router held before the check is another caller's and stays
+/// loaded.
 ///
 /// A router that drains for a restart is looked at again until it has restarted, for at
 /// most `budget` in all; one that is still draining then, that is not running, or that
-/// did not answer a load reads `program_not_running`. A load it refused, and an answer
-/// that holds no generated token, read `unexpected`; a load refused for memory, or a
-/// generation that ran out of it, reads `not_enough_memory`.
+/// stopped answering reads `program_not_running`. The same budget bounds the wait for the
+/// load: a model still loading then is unloaded again and reads `unexpected`. A model whose
+/// entry reads failed, or unloaded again after the load, reads `not_enough_memory`, since
+/// the router gives no reason. A load the router refused, and an answer that holds no
+/// generated token, read `unexpected`; a generation that ran out of memory reads
+/// `not_enough_memory`.
 pub fn check_model(
     folder: &Path,
     model: &ModelName,
@@ -630,26 +666,57 @@ pub fn check_model(
     budget: Duration,
 ) -> Result<bool, LocalAiError> {
     let started = Instant::now();
+    let id = model.to_string();
+    // A load the router took and has not finished: the next look reads the list for it
+    // instead of loading again, which the router would answer as already running.
+    let mut waiting: Option<(Loopback, bool, u32)> = None;
     let (loopback, held_before) = loop {
-        match take(folder, model)? {
+        let taken = match waiting {
+            Some((loopback, held_before, process_id)) => {
+                settle(folder, model, loopback, process_id, held_before)?
+            }
+            None => take(folder, model)?,
+        };
+        match taken {
             Taken::Loaded {
                 loopback,
                 held_before,
             } => break (loopback, held_before),
             Taken::Absent => return Ok(false),
-            Taken::Draining if started.elapsed() < budget => std::thread::sleep(DRAIN_LOOK),
+            Taken::Loading {
+                loopback,
+                held_before,
+                process_id,
+            } => {
+                if started.elapsed() >= budget {
+                    if !held_before {
+                        unload(loopback, &id);
+                    }
+                    return Err(LocalAiError::Failed(FailureCategory::Unexpected));
+                }
+                waiting = Some((loopback, held_before, process_id));
+                std::thread::sleep(DRAIN_LOOK);
+            }
+            Taken::Draining if started.elapsed() < budget => {
+                waiting = None;
+                std::thread::sleep(DRAIN_LOOK);
+            }
             Taken::Draining => {
                 return Err(LocalAiError::Failed(FailureCategory::ProgramNotRunning));
             }
         }
     };
-    let id = model.to_string();
     let generated = generate_one_token(loopback, &id, prompt, budget);
     if !held_before {
-        let request = serde_json::json!({ "model": id });
-        let _ = loopback.post(UNLOAD, request.to_string().as_bytes());
+        unload(loopback, &id);
     }
     generated
+}
+
+/// Asks the router to unload the model `id`; an answer is not waited for.
+fn unload(loopback: Loopback, id: &str) {
+    let request = serde_json::json!({ "model": id });
+    let _ = loopback.post(UNLOAD, request.to_string().as_bytes());
 }
 
 /// What one attempt to take a model from the router's list into memory came to.
@@ -658,6 +725,13 @@ enum Taken {
     Loaded {
         loopback: Loopback,
         held_before: bool,
+    },
+    /// The router took the load, or already held the model, and the list still reads it
+    /// loading. `process_id` is the router's, so a restart is told from a failed load.
+    Loading {
+        loopback: Loopback,
+        held_before: bool,
+        process_id: u32,
     },
     /// The router does not have the model.
     Absent,
@@ -693,24 +767,79 @@ fn take(folder: &Path, model: &ModelName) -> Result<Taken, LocalAiError> {
         return Ok(Taken::Absent);
     };
     let held_before = holds(entry);
-    match load(folder, model) {
-        Ok(()) => Ok(Taken::Loaded {
+    match load_request(folder, model) {
+        // A model another caller loaded between the list and the load is theirs too.
+        Ok(accepted) => settle(
+            folder,
+            model,
+            loopback,
+            router.process_id,
+            held_before || accepted == Accepted::AlreadyRunning,
+        ),
+        Err(LoadRefused::NotPresented) => Ok(Taken::Absent),
+        Err(LoadRefused::Restarting) => Ok(Taken::Draining),
+        Err(LoadRefused::NotRunning | LoadRefused::Failed { status: None }) => Err(not_running()),
+        Err(LoadRefused::Failed { status: Some(_) }) => {
+            Err(LocalAiError::Failed(FailureCategory::Unexpected))
+        }
+    }
+}
+
+/// Reads where the router's list has `model` once the router took its load, which it
+/// answers before the model has loaded. The router process is `process_id`; another one in
+/// the record, or none, means a restart overtook the load. A drain begun meanwhile lets
+/// the model go again unless it was held before, as [`load`] does.
+fn settle(
+    folder: &Path,
+    model: &ModelName,
+    loopback: Loopback,
+    process_id: u32,
+    held_before: bool,
+) -> Result<Taken, LocalAiError> {
+    let id = model.to_string();
+    let same = ServerRecord::read(folder).is_some_and(|record| record.process_id == process_id);
+    if !same {
+        return Ok(Taken::Draining);
+    }
+    if draining(folder) {
+        if !held_before {
+            unload(loopback, &id);
+        }
+        return Ok(Taken::Draining);
+    }
+    let (status, body) = loopback
+        .get(MODELS)
+        .map_err(|error| request_failed(&loopback, ServerCall::ListModels, &error))?;
+    if status != 200 {
+        return Err(LocalAiError::NotRunning(NotRunningCause::ListStatus {
+            status,
+        }));
+    }
+    let listed: serde_json::Value = serde_json::from_slice(&body)
+        .map_err(|_| LocalAiError::Failed(FailureCategory::Unexpected))?;
+    let entry = listed["data"]
+        .as_array()
+        .and_then(|entries| entries.iter().find(|entry| answers_to(entry, &id)))
+        .ok_or(LocalAiError::Failed(FailureCategory::Unexpected))?;
+    let status = &entry["status"];
+    let value = status["value"].as_str().or_else(|| status.as_str());
+    match value {
+        // The router's own process for the model ended and says why only on its standard
+        // error: for a preset model of the pinned build that is memory.
+        _ if status["failed"].as_bool() == Some(true) => {
+            Err(LocalAiError::Failed(FailureCategory::NotEnoughMemory))
+        }
+        Some("loaded") => Ok(Taken::Loaded {
             loopback,
             held_before,
         }),
-        Err(LoadRefused::NotPresented) => Ok(Taken::Absent),
-        Err(LoadRefused::Restarting) => Ok(Taken::Draining),
-        Err(LoadRefused::NotRunning | LoadRefused::Failed { status: None, .. }) => {
-            Err(not_running())
-        }
-        Err(LoadRefused::Failed {
-            status: Some(_),
-            out_of_memory,
-        }) => Err(LocalAiError::Failed(if out_of_memory {
-            FailureCategory::NotEnoughMemory
-        } else {
-            FailureCategory::Unexpected
-        })),
+        Some("loading") => Ok(Taken::Loading {
+            loopback,
+            held_before,
+            process_id,
+        }),
+        Some("unloaded") => Err(LocalAiError::Failed(FailureCategory::NotEnoughMemory)),
+        _ => Err(LocalAiError::Failed(FailureCategory::Unexpected)),
     }
 }
 

@@ -607,6 +607,18 @@ impl World {
         }
     }
 
+    /// Makes each load the stand-in router takes end with the model's process exiting, or
+    /// ends that.
+    fn router_load_fails(&self, fails: bool) {
+        self.llama
+            .as_ref()
+            .unwrap()
+            .state
+            .lock()
+            .unwrap()
+            .load_fails = fails;
+    }
+
     /// A setup of the local AI the person approves as reviewed, whose router the manager
     /// starts once the setup waits for it; with the plan the person reviewed.
     fn set_up_local_ai_routed(&self) -> (Run, SetupPlan) {
@@ -1722,7 +1734,7 @@ fn a_model_the_router_does_not_present_reads_absent_and_its_setup_downloads_noth
 }
 
 #[test]
-fn a_load_the_router_refuses_or_an_answer_without_a_token_fails_the_full_check() {
+fn a_load_that_fails_or_an_answer_without_a_token_fails_the_full_check() {
     let text = StoredModel::new(1);
     let vision = StoredModel::new(9);
     let world = World::llama_cpp(&text, &vision);
@@ -1747,19 +1759,20 @@ fn a_load_the_router_refuses_or_an_answer_without_a_token_fails_the_full_check()
         "nothing generates once the load is refused"
     );
 
-    // A refusal that says in its own words the model did not fit is out of memory.
-    world.script_router(
-        "/models/load",
-        Some((
-            "500 Internal Server Error",
-            json!({ "error": { "message": "failed to allocate memory for the model" } }),
-        )),
-    );
+    // The router takes the load and answers it at once; the model's process then ends,
+    // which only the router's list says, and for a stored model that is memory.
+    world.script_router("/models/load", None);
+    world.router_load_fails(true);
     assert_eq!(
         full(&world),
         ItemState::Failed(FailureCategory::NotEnoughMemory)
     );
-    world.script_router("/models/load", None);
+    assert_eq!(
+        count(&world.router_requests(), "POST /v1/completions"),
+        4,
+        "nothing generates with a model whose load failed"
+    );
+    world.router_load_fails(false);
 
     // The router answers the generation with no token.
     world.script_router(
