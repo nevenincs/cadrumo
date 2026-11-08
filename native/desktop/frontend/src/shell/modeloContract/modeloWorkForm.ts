@@ -774,11 +774,15 @@ export type ModeloFormVerdict = {
  * `authored_filing_year` is the year that edition authors and
  * `reachable_grade` the rung of authority the year reaches. The registry's
  * temporal resolver and grade rule supply all three; a surface renders them.
+ * `words` says, for a carried year only, that the declaration calculates under
+ * that edition's rules and cannot be checked for filing or exported: the same
+ * sentence verification refuses it with, served before any check.
  */
 export type ModeloFormYearProjection = {
   direction: TemporalProjectionDirection;
   authored_filing_year: number;
   reachable_grade: RegistryAuthorityGrade;
+  words: string | null;
 };
 
 /**
