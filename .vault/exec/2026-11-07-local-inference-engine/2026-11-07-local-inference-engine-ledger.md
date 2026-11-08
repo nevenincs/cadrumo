@@ -5,7 +5,7 @@ tags:
 date: '2026-11-07'
 modified: '2026-11-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:f300c067cf94f79f372ed41d454b539ff049533075a46044ca20dd7326c74bd2'
+body_hash: 'sha256:d9ec2b9c170572bac96d17a4f32b50d4818ada1c024fe86c5b680339344dba9c'
 related:
   - "[[2026-11-07-local-inference-engine-plan]]"
 ---
@@ -207,6 +207,27 @@ related:
 - `S18` `verify:` `rustfmt --edition 2024 --check` -> `pass`
 - `S18` `by:` `implementation-engineer-high`
 - `S18` `by:` `opus`
+- `S18` `M` `dev/locales/desktop_chrome.py`
+- `S18` `M` `dev/locales/desktop_interface_keys.py`
+- `S18` `M` `native/application/src/error/application.rs`
+- `S18` `M` `native/application/src/provisioning/failure.rs`
+- `S18` `M` `native/application/src/provisioning/local_ai/fake_ollama.rs`
+- `S18` `M` `native/application/src/provisioning/local_ai/program/tests.rs`
+- `S18` `M` `native/application/src/provisioning/local_ai/registry.rs`
+- `S18` `M` `native/application/src/provisioning/transfer.rs`
+- `S18` `M` `native/application/tests/provisioning_faults.rs`
+- `S18` `M` `native/desktop/frontend/src/dev/setupFixture.ts`
+- `S18` `M` `native/desktop/frontend/src/ipc/componentSetup.ts`
+- `S18` `M` `native/desktop/frontend/tests/scenarios/setup.spec.ts`
+- `S18` `M` `native/desktop/src-tauri/src/shell/setup/components.rs`
+- `S18` `M` `native/desktop/src-tauri/src/shell/setup/wire.rs`
+- `S18` `M` `src/cadrumo/locales/ca/common.yml`
+- `S18` `M` `src/cadrumo/locales/en/common.yml`
+- `S18` `M` `src/cadrumo/locales/es/common.yml`
+- `S18` `M` `src/cadrumo/locales/hu/common.yml`
+- `S18` `M` `src/cadrumo_client/contracts/failure_categories.py`
+- `S18` `verify:` `rustfmt --edition 2024 --check` -> `pass`
+- `S18` `verify:` `pytest dev/locales/tests` -> `fail`
 
 ## Notes
 
@@ -236,6 +257,7 @@ related:
 - `S18` Review-finding fixes (transfer retry window, store reclaim, progress offset, drain marker and bounded check wait, refused-load body, router alias ids, live package tests): Rust build, clippy and cargo tests are pending the root slot; rustfmt --edition 2024 --check passes on the changed files.
 - `S18` Rust build pending the root slot
 - `S18` Not compiled or tested here: the Rust build, clippy and cargo tests run in the root slot
+- `S18` dev/locales/tests: 2882 passed, 3 pre-existing failures in `test_parity` and `test_audit` (ledger preflight keys), unrelated to these keys; Rust not compiled or tested in this worktree, root slot owns the build, clippy and cargo tests
 
 ## Notes
 
