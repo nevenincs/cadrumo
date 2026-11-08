@@ -713,17 +713,11 @@ fn a_load_says_whether_it_stayed_and_a_restart_that_overtakes_it_is_retried_not_
         "/models/load".into(),
         Scripted {
             status: "500 Internal Server Error".into(),
-            body: json!({ "error": { "message": "out of memory" } }),
+            body: json!({ "error": { "message": "failed to load model" } }),
         },
     );
     let failed = load(&folder, &model).unwrap_err();
-    assert_eq!(
-        failed,
-        LoadRefused::Failed {
-            status: Some(500),
-            out_of_memory: true
-        }
-    );
+    assert_eq!(failed, LoadRefused::Failed { status: Some(500) });
     assert!(!failed.retryable());
     fake.state.lock().unwrap().failures.clear();
 
@@ -736,6 +730,10 @@ fn a_load_says_whether_it_stayed_and_a_restart_that_overtakes_it_is_retried_not_
     assert_eq!(load(&folder, &model), Ok(()));
     assert_eq!(status(&fake), ModelStatus::Loaded);
     assert_eq!(presentation(&folder, &model), Presentation::Presented);
+
+    // A model the router already holds answers the load as running: it stays loaded.
+    assert_eq!(load(&folder, &model), Ok(()));
+    assert_eq!(status(&fake), ModelStatus::Loaded);
 }
 
 /// What one check of `model` on a router drained or not, in `folder`, came to.
@@ -789,59 +787,205 @@ fn a_full_check_a_drain_overtakes_waits_for_the_restart_within_its_budget() {
 }
 
 #[test]
-fn a_load_refused_for_memory_reads_not_enough_memory_and_any_other_refusal_unexpected() {
+fn a_load_the_router_refuses_reads_unexpected_whatever_its_words() {
     let root = tempfile::tempdir().unwrap();
     let folder = root.path().join(FOLDER);
     let fake = FakeLlamaCpp::start(BUILD_INFO);
     recorded_router(&folder, &fake, 7, &["qwen3:1.7b"]);
     let model = name("qwen3:1.7b");
-    let refuse = |body: serde_json::Value| {
+    let refuse = |status: &str, body: serde_json::Value| {
         fake.state.lock().unwrap().failures.insert(
             "/models/load".into(),
             Scripted {
-                status: "500 Internal Server Error".into(),
+                status: status.into(),
                 body,
             },
         );
     };
-    let category = |result: Result<bool, LocalAiError>| match result {
+
+    // The real router gives no reason in a load answer, so none is read from one.
+    refuse(
+        "500 Internal Server Error",
+        json!({ "error": { "message": "failed to allocate memory for the model" } }),
+    );
+    assert_eq!(
+        load(&folder, &model),
+        Err(LoadRefused::Failed { status: Some(500) })
+    );
+    assert_eq!(
+        failure_category(check(&folder, &model, Duration::from_secs(5))),
+        FailureCategory::Unexpected
+    );
+    refuse("500 Internal Server Error", json!("no JSON error at all"));
+    assert_eq!(
+        failure_category(check(&folder, &model, Duration::from_secs(5))),
+        FailureCategory::Unexpected
+    );
+    refuse(
+        "400 Bad Request",
+        json!({ "error": { "message": "model is not presented" } }),
+    );
+    assert_eq!(
+        load(&folder, &model),
+        Err(LoadRefused::Failed { status: Some(400) })
+    );
+}
+
+/// The category a check that failed read.
+fn failure_category(result: Result<bool, LocalAiError>) -> FailureCategory {
+    match result {
         Err(LocalAiError::Failed(category)) => category,
         other => panic!("expected a failure, got {other:?}"),
+    }
+}
+
+#[test]
+fn a_load_the_router_took_and_then_failed_reads_not_enough_memory() {
+    let root = tempfile::tempdir().unwrap();
+    let folder = root.path().join(FOLDER);
+    let fake = FakeLlamaCpp::start(BUILD_INFO);
+    recorded_router(&folder, &fake, 7, &["qwen3:1.7b"]);
+    let model = name("qwen3:1.7b");
+    let status = |fake: &FakeLlamaCpp| fake.state.lock().unwrap().models["qwen3:1.7b"];
+
+    // The router answers the load at once and lists the model unloaded and failed.
+    fake.state.lock().unwrap().load_fails = true;
+    assert_eq!(load(&folder, &model), Ok(()));
+    assert_eq!(status(&fake), ModelStatus::Failed);
+    assert_eq!(
+        failure_category(check(&folder, &model, Duration::from_secs(5))),
+        FailureCategory::NotEnoughMemory
+    );
+    assert_eq!(
+        fake.state
+            .lock()
+            .unwrap()
+            .requests
+            .iter()
+            .filter(|line| line.starts_with("POST /v1/completions"))
+            .count(),
+        0,
+        "nothing generates with a model whose load failed"
+    );
+    fake.state.lock().unwrap().load_fails = false;
+
+    // The entry reads loading and then goes back to unloaded, with no failed flag.
+    {
+        let mut state = fake.state.lock().unwrap();
+        state
+            .models
+            .insert("qwen3:1.7b".into(), ModelStatus::Unloaded);
+        state.load_leaves_loading = true;
+    }
+    let gave_up = {
+        let state = fake.state.clone();
+        std::thread::spawn(move || {
+            std::thread::sleep(Duration::from_millis(600));
+            state
+                .lock()
+                .unwrap()
+                .models
+                .insert("qwen3:1.7b".into(), ModelStatus::Unloaded);
+        })
     };
-
-    refuse(json!({ "error": { "message": "failed to allocate memory for the model" } }));
     assert_eq!(
-        load(&folder, &model),
-        Err(LoadRefused::Failed {
-            status: Some(500),
-            out_of_memory: true
-        })
-    );
-    assert_eq!(
-        category(check(&folder, &model, Duration::from_secs(5))),
+        failure_category(check(&folder, &model, Duration::from_secs(30))),
         FailureCategory::NotEnoughMemory
     );
-    refuse(json!({ "error": "Out of MEMORY" }));
-    assert_eq!(
-        category(check(&folder, &model, Duration::from_secs(5))),
-        FailureCategory::NotEnoughMemory
-    );
+    gave_up.join().unwrap();
+    fake.state.lock().unwrap().load_leaves_loading = false;
+}
 
-    refuse(json!({ "error": { "message": "failed to load model" } }));
-    assert_eq!(
-        load(&folder, &model),
-        Err(LoadRefused::Failed {
-            status: Some(500),
-            out_of_memory: false
+#[test]
+fn a_full_check_waits_for_a_loading_model_within_its_budget_and_reads_a_late_one_unexpected() {
+    let root = tempfile::tempdir().unwrap();
+    let folder = root.path().join(FOLDER);
+    let fake = FakeLlamaCpp::start(BUILD_INFO);
+    recorded_router(&folder, &fake, 7, &["qwen3:1.7b"]);
+    let model = name("qwen3:1.7b");
+    let status = |fake: &FakeLlamaCpp| fake.state.lock().unwrap().models["qwen3:1.7b"];
+    let loads = |fake: &FakeLlamaCpp| {
+        fake.state
+            .lock()
+            .unwrap()
+            .requests
+            .iter()
+            .filter(|line| line.starts_with("POST /models/load"))
+            .count()
+    };
+    fake.state.lock().unwrap().load_leaves_loading = true;
+
+    // The model finishes loading while the check waits: it then generates and unloads, and
+    // the load is asked for once.
+    let finished = {
+        let state = fake.state.clone();
+        std::thread::spawn(move || {
+            std::thread::sleep(Duration::from_millis(600));
+            state
+                .lock()
+                .unwrap()
+                .models
+                .insert("qwen3:1.7b".into(), ModelStatus::Loaded);
         })
-    );
-    assert_eq!(
-        category(check(&folder, &model, Duration::from_secs(5))),
-        FailureCategory::Unexpected
-    );
-    refuse(json!("no JSON error at all"));
-    assert_eq!(
-        category(check(&folder, &model, Duration::from_secs(5))),
-        FailureCategory::Unexpected
-    );
+    };
+    let started = Instant::now();
+    assert!(check(&folder, &model, Duration::from_secs(30)).unwrap());
+    assert!(started.elapsed() >= Duration::from_millis(500));
+    finished.join().unwrap();
+    assert_eq!(status(&fake), ModelStatus::Unloaded);
+    assert_eq!(loads(&fake), 1);
+
+    // A model still loading when the budget ends reads unexpected and is let go again.
+    let started = Instant::now();
+    let late = check(&folder, &model, Duration::from_millis(600));
+    assert_eq!(failure_category(late), FailureCategory::Unexpected);
+    assert!(started.elapsed() >= Duration::from_millis(600));
+    assert!(started.elapsed() < Duration::from_secs(10));
+    assert_eq!(status(&fake), ModelStatus::Unloaded);
+    assert_eq!(loads(&fake), 2);
+}
+
+#[test]
+fn a_model_the_router_already_runs_is_checked_and_never_unloaded_by_the_check() {
+    let root = tempfile::tempdir().unwrap();
+    let folder = root.path().join(FOLDER);
+    let fake = FakeLlamaCpp::start(BUILD_INFO);
+    recorded_router(&folder, &fake, 7, &["qwen3:1.7b"]);
+    let model = name("qwen3:1.7b");
+    fake.state
+        .lock()
+        .unwrap()
+        .models
+        .insert("qwen3:1.7b".into(), ModelStatus::Loaded);
+
+    // The router answers the load of a held model that it is already running.
+    assert!(check(&folder, &model, Duration::from_secs(5)).unwrap());
+    {
+        let state = fake.state.lock().unwrap();
+        assert_eq!(state.models["qwen3:1.7b"], ModelStatus::Loaded);
+        assert!(
+            state
+                .requests
+                .iter()
+                .all(|line| !line.starts_with("POST /models/unload")),
+            "{:?}",
+            state.requests
+        );
+    }
+
+    // The same answer to a load of a model the list shows unloaded is still a model held.
+    {
+        let mut state = fake.state.lock().unwrap();
+        state.failures.insert(
+            "/models/load".into(),
+            Scripted {
+                status: "400 Bad Request".into(),
+                body: json!({ "error": { "message": "model is already running" } }),
+            },
+        );
+        state
+            .models
+            .insert("qwen3:1.7b".into(), ModelStatus::Unloaded);
+    }
+    assert_eq!(load(&folder, &model), Ok(()));
 }
