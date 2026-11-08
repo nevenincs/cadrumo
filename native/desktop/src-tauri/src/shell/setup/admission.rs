@@ -238,7 +238,9 @@ impl Admission {
             .and_then(|record| record.stated_size(&request.model))
             .filter(|size| *size > 0);
         // This part identifies the transfer in the engine plan, never a stored task.
-        let model = SelectedModel::new("download", &request.model, size).map_err(|_| unusable())?;
+        // The desktop does not yet state the llama.cpp context.
+        let model =
+            SelectedModel::new("download", &request.model, size, None).map_err(|_| unusable())?;
         if let Some(pending) = pending {
             pending
                 .check(&*self.agent)
@@ -275,7 +277,7 @@ impl Admission {
         let selected = names
             .iter()
             .enumerate()
-            .map(|(index, name)| SelectedModel::new(&format!("listed{index}"), name, None))
+            .map(|(index, name)| SelectedModel::new(&format!("listed{index}"), name, None, None))
             .collect::<Result<Vec<_>, _>>()
             .map_err(|_| Stop::Refused(Refusal::ModelSelectionUnusable))?;
         LocalModels::new(selected).map_err(|_| Stop::Refused(Refusal::ModelSelectionUnusable))

@@ -377,6 +377,7 @@ impl World {
                 .map_or_else(|| "127.0.0.1:23743".parse().unwrap(), FakeOllama::address),
             llama_server_folder: self.llama_package.clone(),
             llama_server_build: LLAMA_BUILD.into(),
+            placement: Placement::default(),
             browser_environment: fake_environment(&format!("version={BROWSER_VERSION}")),
             scratch: root.join("tmp"),
             free_space: Box::new(|_| Some(1024 * GIB)),
@@ -388,7 +389,7 @@ impl World {
         let selected = self
             .selection
             .iter()
-            .map(|(role, name, size)| SelectedModel::new(role, name, Some(*size)))
+            .map(|(role, name, size)| SelectedModel::new(role, name, Some(*size), None))
             .collect::<Result<_, _>>()
             .unwrap();
         engine.select_local_models(LocalModels::new(selected).unwrap());

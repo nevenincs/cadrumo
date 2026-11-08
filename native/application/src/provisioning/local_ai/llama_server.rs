@@ -53,6 +53,11 @@
 //! is on the router's standard error and in no answer, so the full check reads a failed
 //! load as `not_enough_memory`: for a model the store verified and the preset presents, on
 //! the pinned build, memory is the expected cause.
+//!
+//! The router marks the entry `loading` before it answers the load, so an entry that reads
+//! `unloaded` with no `failed` flag after the router took the load means another caller's
+//! load took the router's one place and evicted this one. That is no failure of the model:
+//! the full check looks again, loading it afresh, for as long as its budget lasts.
 
 #[cfg(test)]
 use super::program::ServeOverride;
@@ -653,12 +658,13 @@ pub fn presented_by_router(folder: &Path, model: &ModelName) -> Option<bool> {
 ///
 /// A router that drains for a restart is looked at again until it has restarted, for at
 /// most `budget` in all; one that is still draining then, that is not running, or that
-/// stopped answering reads `program_not_running`. The same budget bounds the wait for the
-/// load: a model still loading then is unloaded again and reads `unexpected`. A model whose
-/// entry reads failed, or unloaded again after the load, reads `not_enough_memory`, since
-/// the router gives no reason. A load the router refused, and an answer that holds no
-/// generated token, read `unexpected`; a generation that ran out of memory reads
-/// `not_enough_memory`.
+/// stopped answering reads `program_not_running`. A load that another caller's load evicted
+/// is asked for again in the same way, and reads `program_not_running` when the budget runs
+/// out. The same budget bounds the wait for the load: a model still loading then is
+/// unloaded again and reads `unexpected`. A model whose entry reads failed reads
+/// `not_enough_memory`, since the router gives no reason. A load the router refused, and an
+/// answer that holds no generated token, read `unexpected`; a generation that ran out of
+/// memory reads `not_enough_memory`.
 pub fn check_model(
     folder: &Path,
     model: &ModelName,
@@ -735,8 +741,9 @@ enum Taken {
     },
     /// The router does not have the model.
     Absent,
-    /// The router drains for a restart, or was started again under the load: nothing of
-    /// the attempt stays loaded, and asking again after the restart can succeed.
+    /// The router drains for a restart, was started again under the load, or another
+    /// caller's load evicted this one: nothing of the attempt stays loaded, and asking
+    /// again can succeed.
     Draining,
 }
 
@@ -789,6 +796,11 @@ fn take(folder: &Path, model: &ModelName) -> Result<Taken, LocalAiError> {
 /// answers before the model has loaded. The router process is `process_id`; another one in
 /// the record, or none, means a restart overtook the load. A drain begun meanwhile lets
 /// the model go again unless it was held before, as [`load`] does.
+///
+/// The router lists the entry `loading` before it answers a load. An entry listed
+/// `unloaded` that has not failed was therefore evicted by another caller's load, and reads
+/// [`Taken::Draining`]: nothing of the attempt stays loaded and asking again can succeed. An
+/// entry that failed is a model whose process ended, which for a stored model is memory.
 fn settle(
     folder: &Path,
     model: &ModelName,
@@ -838,7 +850,7 @@ fn settle(
             held_before,
             process_id,
         }),
-        Some("unloaded") => Err(LocalAiError::Failed(FailureCategory::NotEnoughMemory)),
+        Some("unloaded") => Ok(Taken::Draining),
         _ => Err(LocalAiError::Failed(FailureCategory::Unexpected)),
     }
 }

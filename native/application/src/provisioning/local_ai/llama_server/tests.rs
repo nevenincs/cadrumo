@@ -867,33 +867,64 @@ fn a_load_the_router_took_and_then_failed_reads_not_enough_memory() {
         0,
         "nothing generates with a model whose load failed"
     );
-    fake.state.lock().unwrap().load_fails = false;
+}
 
-    // The entry reads loading and then goes back to unloaded, with no failed flag.
-    {
-        let mut state = fake.state.lock().unwrap();
-        state
-            .models
-            .insert("qwen3:1.7b".into(), ModelStatus::Unloaded);
-        state.load_leaves_loading = true;
-    }
-    let gave_up = {
+#[test]
+fn an_evicted_load_is_asked_for_again_and_reads_program_not_running_when_the_budget_ends() {
+    let root = tempfile::tempdir().unwrap();
+    let folder = root.path().join(FOLDER);
+    let fake = FakeLlamaCpp::start(BUILD_INFO);
+    recorded_router(&folder, &fake, 7, &["qwen3:1.7b"]);
+    let model = name("qwen3:1.7b");
+    let loads = |fake: &FakeLlamaCpp| {
+        fake.state
+            .lock()
+            .unwrap()
+            .requests
+            .iter()
+            .filter(|line| line.starts_with("POST /models/load"))
+            .count()
+    };
+
+    // The router answers the load and lists the entry unloaded with no failed flag: another
+    // caller's load took the router's one place. That is no memory failure: the check asks
+    // again until its budget is spent, and then the router reads as not running.
+    fake.state.lock().unwrap().load_evicted = true;
+    let started = Instant::now();
+    assert_eq!(
+        failure_category(check(&folder, &model, Duration::from_millis(900))),
+        FailureCategory::ProgramNotRunning
+    );
+    assert!(started.elapsed() >= Duration::from_millis(900));
+    assert!(started.elapsed() < Duration::from_secs(10));
+    assert!(loads(&fake) >= 2, "the load was asked for again");
+    assert_eq!(
+        fake.state
+            .lock()
+            .unwrap()
+            .requests
+            .iter()
+            .filter(|line| line.starts_with("POST /v1/completions"))
+            .count(),
+        0,
+        "nothing generates with a model that was evicted"
+    );
+
+    // The eviction ends while the check waits: the load it asks for next stays, and the
+    // check generates and unloads.
+    let ended = {
         let state = fake.state.clone();
         std::thread::spawn(move || {
             std::thread::sleep(Duration::from_millis(600));
-            state
-                .lock()
-                .unwrap()
-                .models
-                .insert("qwen3:1.7b".into(), ModelStatus::Unloaded);
+            state.lock().unwrap().load_evicted = false;
         })
     };
+    assert!(check(&folder, &model, Duration::from_secs(30)).unwrap());
+    ended.join().unwrap();
     assert_eq!(
-        failure_category(check(&folder, &model, Duration::from_secs(30))),
-        FailureCategory::NotEnoughMemory
+        fake.state.lock().unwrap().models["qwen3:1.7b"],
+        ModelStatus::Unloaded
     );
-    gave_up.join().unwrap();
-    fake.state.lock().unwrap().load_leaves_loading = false;
 }
 
 #[test]

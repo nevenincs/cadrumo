@@ -66,6 +66,7 @@ _COMPONENT_PATHS = (
     "webview",
     "manager_log_file",
     "manager_preferences",
+    "local_engine_selection",
     "manager_failed_versions",
     "logs",
     "log_file",

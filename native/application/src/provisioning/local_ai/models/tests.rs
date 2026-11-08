@@ -101,7 +101,7 @@ impl Stored {
 }
 
 fn selected(role: &str, name: &str, size_bytes: u64) -> SelectedModel {
-    SelectedModel::new(role, name, Some(size_bytes)).unwrap()
+    SelectedModel::new(role, name, Some(size_bytes), None).unwrap()
 }
 
 /// The vision role reads with one model and two text roles share another.
@@ -176,7 +176,7 @@ fn a_selection_takes_well_formed_triples_only_and_orders_them_by_role() {
         ("text_extraction", "synthetic-text:", 1),
     ] {
         assert!(
-            SelectedModel::new(role, name, Some(size)).is_err(),
+            SelectedModel::new(role, name, Some(size), None).is_err(),
             "{role} {name} {size}"
         );
     }
@@ -203,13 +203,21 @@ fn a_selection_takes_well_formed_triples_only_and_orders_them_by_role() {
             "text_extraction",
             ModelArtefact::HuggingFace(declared.clone()),
             None,
+            None,
         )
         .unwrap(),
-        SelectedModel::new("column_role_mapping", &declared.name().to_string(), None).unwrap(),
+        SelectedModel::new(
+            "column_role_mapping",
+            &declared.name().to_string(),
+            None,
+            None,
+        )
+        .unwrap(),
     ]);
     assert!(two_sources.is_err(), "one model has one source");
     assert!(
-        SelectedModel::of_artefact("program", ModelArtefact::HuggingFace(declared), None).is_err()
+        SelectedModel::of_artefact("program", ModelArtefact::HuggingFace(declared), None, None)
+            .is_err()
     );
     let ordered = LocalModels::new(vec![
         selected("vision_transcription", VISION, 1),
@@ -342,6 +350,7 @@ fn the_plan_has_a_part_per_selected_role_and_counts_a_shared_model_once() {
             SelectedModel::of_artefact(
                 "vision_transcription",
                 ModelArtefact::HuggingFace(declared.clone()),
+                None,
                 None,
             )
             .unwrap(),
@@ -668,9 +677,12 @@ fn a_registry_model_is_fetched_by_the_engine_into_the_store_with_no_server() {
 fn a_model_of_unknown_size_is_planned_unsized_and_fetched_against_its_manifest_sizes() {
     let root = tempfile::tempdir().unwrap();
     let stored = Stored::new(5);
-    assert!(SelectedModel::new("download", TEXT, Some(0)).is_err());
+    assert!(SelectedModel::new("download", TEXT, Some(0), None).is_err());
     let models = Models::new(
-        LocalModels::new(vec![SelectedModel::new("download", TEXT, None).unwrap()]).unwrap(),
+        LocalModels::new(vec![
+            SelectedModel::new("download", TEXT, None, None).unwrap(),
+        ])
+        .unwrap(),
         root.path().join("models"),
     );
     let model = &models.selection().as_slice()[0];
@@ -792,6 +804,7 @@ fn a_hugging_face_model_is_fetched_from_its_declared_files_into_the_same_store()
             SelectedModel::of_artefact(
                 "vision_transcription",
                 ModelArtefact::HuggingFace(declared.clone()),
+                None,
                 None,
             )
             .unwrap(),
