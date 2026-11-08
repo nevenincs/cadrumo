@@ -295,6 +295,7 @@ desktop:
     change_failed: No se ha podido guardar. Actualiza y vuelve a intentarlo.
     connection_api: Clave API
     connection_app: Aplicación instalada
+    console_command_label: 'Ejecuta este comando en una terminal:'
     detail_app_missing: Instala la aplicación de {provider} y luego inicia sesión.
     detail_off: 'Desactivado: el agente no lo ofrece ni lo usa.'
     detail_off_kept: 'Desactivado: el agente no lo ofrece ni lo usa. Su clave API
@@ -335,6 +336,13 @@ desktop:
     local_models_title: Modelos en este ordenador
     local_models_unreadable: Tu lista de modelos guardada no se puede leer. Restablécela
       para empezar de nuevo con los modelos recomendados.
+    next_step:
+      close_other_sign_in: Cierra el otro inicio de sesión y vuelve a intentarlo.
+      console_sign_in: Inicia sesión desde una terminal.
+      install_cli: Instala la aplicación del proveedor y vuelve a intentarlo.
+      move_profile_outside_git: Mueve la carpeta del perfil fuera del proyecto de Git y vuelve a intentarlo.
+      retry: Vuelve a intentarlo en un momento.
+      update_app: Actualiza esta aplicación a la última versión y vuelve a intentarlo.
     reason_check_settings: Revisa esta configuración y vuelve a intentarlo.
     reason_record_unreadable: No se puede leer la clave API guardada. Vuelve a añadirla.
     refresh: Volver a intentar
@@ -362,6 +370,37 @@ desktop:
     sign_in_cancel_failed: Cadrumo aún no ha podido cancelar el inicio de sesión.
       Mantén este cuadro abierto mientras lo comprueba.
     sign_in_cancelled: Se canceló el inicio de sesión.
+    sign_in_cause:
+      agent_stop_failed: No se pudo detener el agente para terminar el inicio de sesión.
+      browser_relay_unavailable: No se pudo pasar la página de inicio de sesión al navegador.
+      cleanup_unconfirmed: No se pudo confirmar que el inicio de sesión se cerrara correctamente.
+      cli_exited_early: La aplicación del proveedor se detuvo antes de terminar el inicio de sesión.
+      cli_not_found: La aplicación del proveedor no está instalada o no se encontró.
+      cli_protocol_mismatch: La aplicación del proveedor respondió de una forma que esta versión no entiende.
+      cli_reported_error: La aplicación del proveedor indicó un error durante el inicio de sesión.
+      cli_start_failed: No se pudo iniciar la aplicación del proveedor.
+      helper_ended_without_result: El inicio de sesión terminó sin resultado.
+      helper_exit_nonzero: El inicio de sesión terminó con un error.
+      helper_output_invalid: El inicio de sesión dio una respuesta que no se pudo leer.
+      helper_start_failed: No se pudo empezar el inicio de sesión.
+      home_in_git_project: La carpeta del perfil está dentro de un proyecto de Git y la aplicación del proveedor no inicia sesión ahí.
+      home_unavailable: No se pudo usar la carpeta reservada para el inicio de sesión de este proveedor.
+      host_disconnected: Se perdió el contacto con el inicio de sesión mientras se ejecutaba.
+      host_input_invalid: Se dio al inicio de sesión una entrada que no pudo usar.
+      internal_error: El inicio de sesión tuvo un error interno.
+      login_already_running: Ya hay otro inicio de sesión en curso para este perfil.
+      login_not_completed: El inicio de sesión no se completó.
+      probe_cleanup_unconfirmed: No se pudo confirmar que la comprobación del inicio de sesión del proveedor se cerrara correctamente.
+      probe_output_unreadable: La comprobación del inicio de sesión del proveedor dio una respuesta que no se pudo leer.
+      probe_start_failed: No se pudo empezar la comprobación del inicio de sesión del proveedor.
+      probe_timed_out: La comprobación del inicio de sesión del proveedor tardó demasiado.
+      profile_missing: No se encontró el perfil de este inicio de sesión.
+      status_context_unavailable: No había ningún perfil abierto con el que comprobar el inicio de sesión.
+      status_not_confirmed: El inicio de sesión terminó, pero no se pudo confirmar que hayas iniciado sesión.
+      status_read_failed: No se pudo leer si has iniciado sesión.
+      status_unreadable: No se pudo leer la respuesta sobre si has iniciado sesión.
+      timed_out: El inicio de sesión tardó demasiado.
+      unsupported_method: La aplicación del proveedor no admite esta forma de iniciar sesión.
     sign_in_cleanup_failed: Reinicia Cadrumo antes de volver a iniciar sesión.
     sign_in_close: Cerrar el inicio de sesión
     sign_in_code_checking: Comprobando el código de autorización…
@@ -407,6 +446,7 @@ desktop:
     status_saved: Guardado
     status_setup_needed: Sin configurar
     status_sign_in_needed: Sin sesión iniciada
+    status_unconfirmed: Inicio de sesión sin confirmar
     title: Proveedores de IA
     use_in_agent: Usar {provider} ({connection}) en el agente
   rail:

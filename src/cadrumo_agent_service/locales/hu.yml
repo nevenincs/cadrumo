@@ -292,6 +292,7 @@ desktop:
     change_failed: Nem sikerült menteni. Frissíts, és próbáld újra.
     connection_api: API-kulcs
     connection_app: Telepített alkalmazás
+    console_command_label: 'Futtasd ezt a parancsot terminálban:'
     detail_app_missing: Telepítsd a(z) {provider} alkalmazást, majd jelentkezz be.
     detail_off: 'Kikapcsolva: az ügynök nem ajánlja fel és nem használja.'
     detail_off_kept: 'Kikapcsolva: az ügynök nem ajánlja fel és nem használja. Az
@@ -333,6 +334,13 @@ desktop:
     local_models_title: Modellek ezen a számítógépen
     local_models_unreadable: A mentett modelllistád nem olvasható. Állítsd vissza,
       hogy újra az ajánlott modellekkel kezdhess.
+    next_step:
+      close_other_sign_in: Zárd be a másik bejelentkezést, majd próbáld újra.
+      console_sign_in: Jelentkezz be inkább terminálból.
+      install_cli: Telepítsd a szolgáltató alkalmazását, majd próbáld újra.
+      move_profile_outside_git: Told a profil mappáját a Git-projekten kívülre, majd próbáld újra.
+      retry: Próbáld újra egy pillanat múlva.
+      update_app: Frissítsd ezt az alkalmazást a legújabb verzióra, majd próbáld újra.
     reason_check_settings: Ellenőrizd a beállításokat, és próbáld újra.
     reason_record_unreadable: A mentett API-kulcs nem olvasható. Add hozzá újra.
     refresh: Újrapróbálkozás
@@ -360,6 +368,37 @@ desktop:
     sign_in_cancel_failed: A Cadrumo még nem tudta megszakítani a bejelentkezést.
       Hagyd nyitva ezt az ablakot, amíg ellenőrzi.
     sign_in_cancelled: A bejelentkezés megszakadt.
+    sign_in_cause:
+      agent_stop_failed: Az ügynököt nem sikerült leállítani a bejelentkezés befejezéséhez.
+      browser_relay_unavailable: A bejelentkezési oldalt nem sikerült átadni a böngészőnek.
+      cleanup_unconfirmed: Nem sikerült megerősíteni, hogy a bejelentkezés rendben lezárult.
+      cli_exited_early: A szolgáltató alkalmazása leállt, mielőtt a bejelentkezés befejeződött volna.
+      cli_not_found: A szolgáltató alkalmazása nincs telepítve, vagy nem található.
+      cli_protocol_mismatch: A szolgáltató alkalmazása olyan választ adott, amelyet ez a verzió nem ért.
+      cli_reported_error: A szolgáltató alkalmazása hibát jelzett a bejelentkezés közben.
+      cli_start_failed: A szolgáltató alkalmazását nem sikerült elindítani.
+      helper_ended_without_result: A bejelentkezés eredmény nélkül ért véget.
+      helper_exit_nonzero: A bejelentkezés hibával ért véget.
+      helper_output_invalid: A bejelentkezés olyan választ adott, amelyet nem sikerült beolvasni.
+      helper_start_failed: A bejelentkezést nem sikerült elindítani.
+      home_in_git_project: A profil mappája egy Git-projekten belül van, és a szolgáltató alkalmazása ott nem jelentkezik be.
+      home_unavailable: A szolgáltató bejelentkezésére fenntartott mappa nem használható.
+      host_disconnected: A kapcsolat megszakadt a bejelentkezéssel futás közben.
+      host_input_invalid: A bejelentkezés olyan bemenetet kapott, amelyet nem tudott használni.
+      internal_error: A bejelentkezés belső hibába ütközött.
+      login_already_running: Ehhez a profilhoz már fut egy másik bejelentkezés.
+      login_not_completed: A bejelentkezés nem fejeződött be.
+      probe_cleanup_unconfirmed: Nem sikerült megerősíteni, hogy a szolgáltatói bejelentkezés ellenőrzése rendben lezárult.
+      probe_output_unreadable: A szolgáltatói bejelentkezés ellenőrzése olyan választ adott, amelyet nem sikerült beolvasni.
+      probe_start_failed: A szolgáltatói bejelentkezés ellenőrzését nem sikerült elindítani.
+      probe_timed_out: A szolgáltatói bejelentkezés ellenőrzése túl sokáig tartott.
+      profile_missing: A bejelentkezéshez tartozó profil nem található.
+      status_context_unavailable: Nem volt megnyitott profil, amellyel a bejelentkezést ellenőrizni lehetett volna.
+      status_not_confirmed: A bejelentkezés befejeződött, de nem sikerült megerősíteni, hogy be vagy jelentkezve.
+      status_read_failed: Nem sikerült kiolvasni, hogy be vagy-e jelentkezve.
+      status_unreadable: A bejelentkezési állapotra adott választ nem sikerült beolvasni.
+      timed_out: A bejelentkezés túl sokáig tartott.
+      unsupported_method: A szolgáltató alkalmazása nem támogatja ezt a bejelentkezési módot.
     sign_in_cleanup_failed: Indítsd újra a Cadrumót, mielőtt ismét bejelentkezel.
     sign_in_close: Bejelentkezés bezárása
     sign_in_code_checking: Az engedélyezési kód ellenőrzése…
@@ -404,6 +443,7 @@ desktop:
     status_saved: Mentve
     status_setup_needed: Nincs beállítva
     status_sign_in_needed: Nincs bejelentkezve
+    status_unconfirmed: A bejelentkezés nincs megerősítve
     title: MI-szolgáltatók
     use_in_agent: '{provider} ({connection}) használata az ügynökben'
   rail:
