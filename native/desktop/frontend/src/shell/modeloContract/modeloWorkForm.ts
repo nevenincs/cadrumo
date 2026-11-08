@@ -1028,6 +1028,7 @@ export type PublicModeloFormIssue = {
   box: string | null;
   attention: ModeloFormAttention;
   action_locale_key: string;
+  open_invoice_id: string | null;
 };
 
 /**
