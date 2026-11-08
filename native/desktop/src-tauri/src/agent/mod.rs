@@ -200,7 +200,10 @@ impl AgentHost {
         self.supervisor.on_ready(Arc::new(move || {
             let host = host.clone();
             // The read crosses the service's admin channel, and a retry waits, which block.
-            let _ = tauri::async_runtime::spawn_blocking(move || sync_local_engine(&host));
+            // Dropping the handle detaches the sync; nothing awaits it.
+            drop(tauri::async_runtime::spawn_blocking(move || {
+                sync_local_engine(&host)
+            }));
         }));
     }
 
