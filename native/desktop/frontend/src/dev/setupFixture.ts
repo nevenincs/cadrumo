@@ -579,6 +579,10 @@ export function setupFixture({
           return { ...track, step: installs ? "install" : "verify" };
         const done = Math.min(track.total, track.completed + track.total / 4);
         if (done < track.total) return { ...track, completed: done };
+        // A model's bytes end with its part still reporting its download:
+        // the host verifies at the item's own step (see `stepOf`).
+        if (!installs && track.completed < track.total)
+          return { ...track, completed: track.total };
         return {
           ...track,
           step: installs ? "install" : "verify",
@@ -639,15 +643,35 @@ export function setupFixture({
     }
     let next: SetupItemProgress;
     const part = currentPart(entry);
-    if (part) {
+    // A model whose bytes are all fetched: the part keeps reporting its
+    // download while the item verifies, and the part ends on the step after.
+    const fetched =
+      part?.model !== undefined &&
+      part.step === "download" &&
+      part.total !== null &&
+      part.completed === part.total;
+    if (part && fetched && entry.step !== "verify") {
+      next = { ...entry, step: "verify" };
+    } else if (part) {
       const moved: SetupPartProgress = {
         ...part,
-        ...advance(
-          part,
-          partKey(entry.item, part),
-          partSize(part, entry.item),
-          !part.model,
-        ),
+        ...(fetched
+          ? {
+              step: null,
+              completed: null,
+              total: null,
+              result: {
+                changed: true,
+                failure: null,
+                transferred_bytes: partSize(part, entry.item) ?? 0,
+              },
+            }
+          : advance(
+              part,
+              partKey(entry.item, part),
+              partSize(part, entry.item),
+              !part.model,
+            )),
       };
       if (moved.result && !part.model) programReady = true;
       if (moved.result?.failure === null && part.model)

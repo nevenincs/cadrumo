@@ -106,6 +106,9 @@ function LocalModelRow({
 }) {
   const t = useStrings();
   const headingId = useId();
+  // The download is running: the model is not on this computer yet, and
+  // nothing else may start while the setup works on it.
+  const inProgress = progress !== null && progress.result === null;
   return (
     <li
       data-model={model.id}
@@ -121,14 +124,20 @@ function LocalModelRow({
         >
           {model.name}
         </h6>
-        {model.installed !== null && (
-          <Badge variant={model.installed ? "success" : "neutral"}>
-            {t(
-              model.installed
-                ? "desktop.providers.local_model_installed"
-                : "desktop.providers.local_model_absent",
-            )}
+        {inProgress ? (
+          <Badge variant="neutral">
+            {t("desktop.setup.state.provisioning")}
           </Badge>
+        ) : (
+          model.installed !== null && (
+            <Badge variant={model.installed ? "success" : "neutral"}>
+              {t(
+                model.installed
+                  ? "desktop.providers.local_model_installed"
+                  : "desktop.providers.local_model_absent",
+              )}
+            </Badge>
+          )
         )}
       </div>
       <ModelFacts model={model} locale={locale} />
@@ -144,7 +153,7 @@ function LocalModelRow({
           <Button
             variant="outline"
             size="sm"
-            disabled={busy || !onDownload}
+            disabled={busy || inProgress || !onDownload}
             onClick={onDownload}
           >
             {t("desktop.providers.local_model_download")}
@@ -270,7 +279,16 @@ export function LocalModels({
     if (!part) return null;
     // A part planned for the person's review has not begun: it reports no
     // step until the setup runs.
-    if (part.result === null) return liveRun?.stage === "running" ? part : null;
+    if (part.result === null) {
+      if (liveRun?.stage !== "running") return null;
+      // A model part reports its download until it ends; the host then
+      // verifies and tidies at the item's own step, which is what the part
+      // is doing in that tail.
+      const itemStep = store.progressOf(liveRun.item)?.step ?? null;
+      return itemStep === "verify" || itemStep === "cleanup"
+        ? { ...part, step: itemStep }
+        : part;
+    }
     return part.result.failure !== null || model.installed !== true
       ? part
       : null;

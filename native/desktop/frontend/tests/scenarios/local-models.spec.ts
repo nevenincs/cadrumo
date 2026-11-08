@@ -513,6 +513,56 @@ test("a model whose download succeeds is on this computer, as the catalog then r
   await expect(vision).toHaveAttribute("data-installed", "false");
 });
 
+test("once a download's bytes are all fetched and the setup goes on, the model's row says the step, is not called absent and offers no second download", async ({
+  page: target,
+}) => {
+  await open(target);
+  const lane = await openLane(target);
+  const vision = lane.locator('li[data-model="synthetic-vision:1"]');
+  const download = vision.getByRole("button", {
+    name: label("desktop.providers.local_model_download"),
+  });
+  const progress = vision.locator("[data-setup-progress]");
+  const step = () =>
+    target.evaluate(() => window.__scenarioSetup?.step("local_ai"));
+  await download.click();
+  await laneReview(lane)
+    .getByRole("button", {
+      name: label("desktop.setup.approve_size", { size: "3.2 GB" }),
+    })
+    .click();
+  await expect(progress).toBeVisible();
+  const fetched = label("desktop.setup.progress_bytes", {
+    done: "3.2 GB",
+    total: "3.2 GB",
+  });
+  for (
+    let index = 0;
+    index < 12 && !((await progress.textContent()) ?? "").includes(fetched);
+    index += 1
+  )
+    await step();
+  // Every byte is here, and the part still says it downloads.
+  await expect(progress).toContainText(fetched);
+  await expect(progress).toContainText(label("desktop.setup.step_downloading"));
+  await expect(vision).not.toContainText(
+    label("desktop.providers.local_model_absent"),
+  );
+  await expect(download).toBeDisabled();
+  // The host then verifies at the item's step, for as long as that takes:
+  // the row says so instead of staying silent.
+  await step();
+  await expect(progress).toContainText(label("desktop.setup.step_checking"));
+  await expect(progress).not.toContainText(
+    label("desktop.setup.step_downloading"),
+  );
+  await expect(vision).toContainText(label("desktop.setup.state.provisioning"));
+  await expect(vision).not.toContainText(
+    label("desktop.providers.local_model_absent"),
+  );
+  await expect(download).toBeDisabled();
+});
+
 /** Downloads the vision model through to its end, as the made-up setup is
  * stepped, and leaves the setup settled. */
 async function downloadVision(target: Page, lane: Locator) {
