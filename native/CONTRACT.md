@@ -1957,7 +1957,7 @@ defaults to `ON`.
 | `desktop-frontend-dev` | Regenerate chrome strings and palette, then serve the development display from this build until stopped (`just dev`) |
 | `user_docs` | Build and stage the user documentation, as above |
 | `desktop-host-build` | Build the frontend and the documentation, then `cadrumo.exe` with `--locked`; refuse a binary other than `CADRUMO_DESKTOP_HOST_EXECUTABLE` and record it in `generated/desktop-<Config>.json` |
-| `desktop-host-test` | `cargo test` with the live package tests against `CADRUMO_DESKTOP_PACKAGE_ROOT`, one test thread, storage under `desktop/testing/storage` |
+| `desktop-host-test` | `cargo test` with the live package tests against `CADRUMO_DESKTOP_PACKAGE_ROOT`, one test thread, storage under `desktop/testing/storage`; with no package root selected it first assembles the configuration's stage (`app-payload`) |
 | `desktop-host-clippy` | Clippy on all targets with warnings denied |
 | `desktop-headless-test` | Byte-for-byte CLI passthrough parity with the package interpreter, under a hostile Python environment |
 | `desktop-paths-test`, `desktop-configuration-test` | Build-path and generated Tauri configuration checks |
