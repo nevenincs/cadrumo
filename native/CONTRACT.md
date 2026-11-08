@@ -184,6 +184,14 @@ The standalone `application.package` CTest uses `live-package-tests` without a
 release expectation; the artifact probe uses `live-release-tests` and receives
 the verifier's archive-bound release expectation. Both feature selections are
 intentional.
+The same test file also runs the local engines' programs: it starts the package's
+`llama-server` as the manager does and checks that it answers as the pinned build with
+no model loaded, lists the fetched model under its alias and generates a counted token;
+and it starts a real Ollama program and checks that it lists and generates from the same
+model. The model is the one 1.2 MB file the tests pin, fetched by the engine's own Rust
+fetcher from Hugging Face, so these tests need that network access. The package carries
+no Ollama program, so the Ollama check uses one installed outside Cadrumo, found as the
+engine reports one, and fails when there is none.
 For a separately extracted or installed artifact, configure the absolute
 `CADRUMO_APPLICATION_TEST_PACKAGE_ROOT` and run
 `ctest -C Release -R "^application\." --output-on-failure` in that build directory. This verifies that
