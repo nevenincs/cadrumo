@@ -90,6 +90,7 @@ class WorkbenchEditorMixin:
             # Docked, the header stays in view and the panel need not repeat its result line.
             status_line=None if docked else self._status_line(),
             recorded=recorded,
+            calculated=entry.calculated,
             aeat_imported=aeat_imported_on(self.form),
             staged=self._staged_change(entry),
         )
