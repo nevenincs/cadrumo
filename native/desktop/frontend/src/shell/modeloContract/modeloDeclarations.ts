@@ -214,6 +214,52 @@ export type ModeloDeclarationsListZoneV1 = {
 };
 
 /**
+ * Whether a hit is local work, or a declaration that is only due or held by
+ * the AEAT.
+ */
+export type ModeloDeclarationsSearchHitKind = "work" | "declaration";
+
+/**
+ * One match, said in the filer's language, with the address that opens it.
+ */
+export type ModeloDeclarationsSearchHitV1 = {
+  rank: number;
+  score: number;
+  kind: ModeloDeclarationsSearchHitKind;
+  row_key: string;
+  modelo: string;
+  modelo_number: string;
+  title_words: string;
+  filing_year: number;
+  period_code: string;
+  period_words: string | null;
+  state_words: string;
+  work_unit_id: string | null;
+  opens_local_work: boolean;
+};
+
+/**
+ * The exact profile, the language the hits are said in, and what to look for.
+ */
+export type ModeloDeclarationsSearchRequest = {
+  profile_id: string;
+  output_language: OutputLanguage;
+  query: string;
+  limit?: number;
+};
+
+/**
+ * Ranked hits for one query, work before a declaration that has none.
+ */
+export type ModeloDeclarationsSearchResultV1 = {
+  result_version: 1;
+  profile_id: string;
+  output_language: OutputLanguage;
+  hits: ModeloDeclarationsSearchHitV1[];
+  total_matches: number;
+};
+
+/**
  * Observed AEAT-side submission evidence for one calendar obligation.
  *
  * `NOT_OBSERVED` is the default until already-loaded official evidence proves
