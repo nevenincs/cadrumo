@@ -1188,3 +1188,223 @@ fn removal_clears_the_partial_folder_and_the_blobs_no_remaining_manifest_names()
     );
     assert!(partials.iter().all(|path| !path.exists()));
 }
+
+/// A selection of `name` alone, stating `context` as its llama.cpp context.
+fn stating(root: &Path, name: &str, context: Option<u32>) -> Models {
+    Models::new(
+        LocalModels::new(vec![
+            SelectedModel::new(
+                "download",
+                name,
+                None,
+                context.map(|context| NonZeroU32::new(context).unwrap()),
+            )
+            .unwrap(),
+        ])
+        .unwrap(),
+        root.to_path_buf(),
+    )
+}
+
+fn context(value: u32) -> Option<NonZeroU32> {
+    NonZeroU32::new(value)
+}
+
+#[test]
+fn a_context_record_reads_back_is_replaced_and_refuses_what_it_cannot_hold() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path().join("models");
+    let name = ModelName::parse(TEXT).unwrap();
+    assert_eq!(recorded_context(&root, &name), None, "nothing recorded yet");
+
+    record_context(&root, &name, NonZeroU32::new(4096).unwrap()).unwrap();
+    let file = root
+        .join("cadrumo")
+        .join("llamacpp-context")
+        .join("registry.ollama.ai")
+        .join("library")
+        .join("synthetic-text")
+        .join("test.json");
+    assert_eq!(
+        fs::read_to_string(&file).unwrap(),
+        r#"{"schema":1,"llamacpp_context":4096}"#
+    );
+    assert_eq!(recorded_context(&root, &name), context(4096));
+    // Outside the folders Ollama reads.
+    assert!(!root.join("manifests").exists() && !root.join("blobs").exists());
+
+    record_context(&root, &name, NonZeroU32::new(8192).unwrap()).unwrap();
+    assert_eq!(recorded_context(&root, &name), context(8192));
+    assert_eq!(
+        fs::read_dir(file.parent().unwrap()).unwrap().count(),
+        1,
+        "a replacement leaves no other file"
+    );
+
+    // A tag with a dot keeps it: `.json` is added, never put in its place.
+    let dotted = ModelName::parse("synthetic-text:1.5b").unwrap();
+    record_context(&root, &dotted, NonZeroU32::new(2048).unwrap()).unwrap();
+    assert!(file.with_file_name("1.5b.json").is_file());
+    assert_eq!(recorded_context(&root, &dotted), context(2048));
+    assert_eq!(recorded_context(&root, &name), context(8192));
+
+    for bytes in [
+        br#"{"schema":1,"llamacpp_context":0}"#.as_slice(),
+        br#"{"schema":2,"llamacpp_context":4096}"#,
+        br#"{"schema":1,"llamacpp_context":4096,"extra":0}"#,
+        br#"{"schema":1}"#,
+        br#"{"schema":1,"llamacpp_context":-1}"#,
+        br#"{"schema":1,"llamacpp_context":"4096"}"#,
+        b"{",
+    ] {
+        fs::write(&file, bytes).unwrap();
+        assert_eq!(
+            recorded_context(&root, &name),
+            None,
+            "{}",
+            String::from_utf8_lossy(bytes)
+        );
+    }
+    // A record longer than any context record is not read.
+    let mut long = br#"{"schema":1,"llamacpp_context":4096}"#.to_vec();
+    long.resize(8192, b' ');
+    fs::write(&file, long).unwrap();
+    assert_eq!(recorded_context(&root, &name), None);
+}
+
+#[cfg(unix)]
+#[test]
+fn a_context_record_behind_a_link_is_neither_read_nor_written() {
+    use std::os::unix::fs::symlink;
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path().join("models");
+    let name = ModelName::parse(TEXT).unwrap();
+    let outside = directory.path().join("outside");
+    fs::create_dir_all(&outside).unwrap();
+    fs::write(
+        outside.join("test.json"),
+        br#"{"schema":1,"llamacpp_context":4096}"#,
+    )
+    .unwrap();
+    let folder = root
+        .join("cadrumo")
+        .join("llamacpp-context")
+        .join("registry.ollama.ai")
+        .join("library");
+    fs::create_dir_all(&folder).unwrap();
+    symlink(&outside, folder.join("synthetic-text")).unwrap();
+
+    assert_eq!(recorded_context(&root, &name), None);
+    assert!(record_context(&root, &name, NonZeroU32::new(2048).unwrap()).is_err());
+    assert_eq!(
+        fs::read(outside.join("test.json")).unwrap(),
+        br#"{"schema":1,"llamacpp_context":4096}"#,
+        "nothing is written through the link"
+    );
+}
+
+#[test]
+fn a_pull_records_the_stated_context_also_for_a_model_already_stored_and_fetches_nothing() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path().join("models");
+    let name = ModelName::parse(TEXT).unwrap();
+    let stored = Stored::new(5);
+    let publishers = Publishers::start(stored.routes(TEXT), Vec::new());
+
+    // A fetched pull records the context once the model is whole.
+    let models = stating(&root, TEXT, Some(4096));
+    let model = &models.selection().as_slice()[0];
+    let fetched = fetch(
+        &models,
+        model,
+        &publishers.network(),
+        &approved_for(&models, "download"),
+    );
+    assert_eq!(fetched.result.unwrap(), PRESENT);
+    assert_eq!(recorded_context(&root, &name), context(4096));
+    let targets = publishers.server.targets().len();
+    assert!(targets > 0);
+
+    // A pull of a stored model that states another context records it and fetches
+    // nothing.
+    let models = stating(&root, TEXT, Some(2048));
+    let model = &models.selection().as_slice()[0];
+    let again = fetch(
+        &models,
+        model,
+        &publishers.network(),
+        &approved_for(&models, "download"),
+    );
+    assert_eq!(again.result.unwrap(), PRESENT);
+    assert_eq!(recorded_context(&root, &name), context(2048));
+    assert_eq!(
+        publishers.server.targets().len(),
+        targets,
+        "nothing fetched"
+    );
+
+    // A pull that states no context leaves the earlier record as it was.
+    let models = stating(&root, TEXT, None);
+    let model = &models.selection().as_slice()[0];
+    let silent = fetch(
+        &models,
+        model,
+        &publishers.network(),
+        &approved_for(&models, "download"),
+    );
+    assert_eq!(silent.result.unwrap(), PRESENT);
+    assert_eq!(recorded_context(&root, &name), context(2048));
+    assert_eq!(publishers.server.targets().len(), targets);
+
+    // A model stored before any context was stated gets one from its next pull, with no
+    // download.
+    let vision = ModelName::parse(VISION).unwrap();
+    Stored::new(9).write(&root, VISION);
+    assert_eq!(recorded_context(&root, &vision), None);
+    let models = stating(&root, VISION, Some(16384));
+    let model = &models.selection().as_slice()[0];
+    let present = fetch(
+        &models,
+        model,
+        &publishers.network(),
+        &approved_for(&models, "download"),
+    );
+    assert_eq!(present.result.unwrap(), PRESENT);
+    assert_eq!(recorded_context(&root, &vision), context(16384));
+    assert_eq!(publishers.server.targets().len(), targets);
+}
+
+#[test]
+fn removal_deletes_the_removed_models_contexts_and_keeps_a_kept_models() {
+    let fixture = fixture();
+    let root = fixture.models_root();
+    fixture.text.write(&root, TEXT);
+    fixture.vision.write(&root, VISION);
+    let (text, vision) = (
+        ModelName::parse(TEXT).unwrap(),
+        fixture.vision_name().clone(),
+    );
+    let kept = ModelName::parse("synthetic-kept:test").unwrap();
+    Stored::new(3).write(&root, "synthetic-kept:test");
+    for (name, value) in [(&text, 4096), (&vision, 2048), (&kept, 8192)] {
+        record_context(&root, name, NonZeroU32::new(value).unwrap()).unwrap();
+    }
+
+    fixture.models.remove().unwrap();
+    assert_eq!(recorded_context(&root, &text), None);
+    assert_eq!(recorded_context(&root, &vision), None);
+    assert_eq!(
+        recorded_context(&root, &kept),
+        context(8192),
+        "a kept model keeps its context"
+    );
+
+    // A model removed by name loses its context, also when its manifest is already gone.
+    let unselected = Models::new(LocalModels::default(), root.clone());
+    record_context(&root, &text, NonZeroU32::new(4096).unwrap()).unwrap();
+    unselected.remove_named(&text).unwrap();
+    assert_eq!(recorded_context(&root, &text), None);
+    assert_eq!(recorded_context(&root, &kept), context(8192));
+    unselected.remove_named(&kept).unwrap();
+    assert_eq!(recorded_context(&root, &kept), None);
+}

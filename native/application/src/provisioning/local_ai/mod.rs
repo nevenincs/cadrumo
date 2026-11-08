@@ -38,20 +38,43 @@ use super::{
 use crate::error::Error;
 use loopback::{ExchangeFailure, ExchangePhase};
 use serde::{Deserialize, Serialize};
-use std::{fmt, io, process::ExitStatus, time::Duration};
+use std::{fmt, io, path::Path, process::ExitStatus, time::Duration};
 
 /// The engine that serves the local models, and so the one local AI server the runtime
-/// manager runs. Ollama stays the default until the bundled llama-server has passed its
-/// packaged acceptance. Stored as `ollama` or `llamacpp`.
-#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
+/// manager runs. A person who has chosen none is served by `package_default_engine`:
+/// the llama-server where the package carries it, otherwise Ollama. Stored as `ollama` or
+/// `llamacpp`.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum LocalEngine {
     /// The Ollama program the engine downloads on the person's approval.
-    #[default]
     #[serde(rename = "ollama")]
     Ollama,
     /// The llama-server program the package carries.
     #[serde(rename = "llamacpp")]
     LlamaCpp,
+}
+
+/// The engine of a person who has chosen none, from what the package at `package_root`
+/// carries: llama.cpp exactly when the package's `llama_server` folder holds the
+/// llama-server program, since it needs no download, and Ollama otherwise. This is the only
+/// default engine. A chosen engine is kept whatever the package carries: llama.cpp chosen on
+/// a package without the llama-server is refused as not packaged, never served by Ollama.
+#[cfg(feature = "platform")]
+pub fn package_default_engine(package_root: &Path) -> LocalEngine {
+    llama_server_folder_default(&super::installation::package_path(
+        package_root,
+        cadrumo_platform::LLAMA_SERVER,
+    ))
+}
+
+/// `package_default_engine` for the package whose `llama_server` folder is
+/// `llama_server_folder`, for a caller that holds that folder rather than the package root.
+pub(crate) fn llama_server_folder_default(llama_server_folder: &Path) -> LocalEngine {
+    if llama_server::carried(llama_server_folder) {
+        LocalEngine::LlamaCpp
+    } else {
+        LocalEngine::Ollama
+    }
 }
 
 /// Where the local engine runs a model: the device policy of its server's launch. The

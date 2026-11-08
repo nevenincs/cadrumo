@@ -18,19 +18,29 @@
 //! A load the router takes while it holds another model evicts that one, which its list
 //! then reads unloaded with no `failed` flag. The models it can load are presented to it
 //! in a preset file written from the store's manifests before each start: one section per
-//! whole model, with its model layer as `model`, its projector layer as `mmproj`, and an
-//! explicit `ctx-size`, so a load never takes the model's full training context. Each
-//! start writes the preset afresh. The model's own name is its `alias`, and the section is named [`router_id`]:
+//! whole model, with its model layer as `model`, its projector layer as `mmproj`, and the
+//! `ctx-size` recorded for the model, so a load never takes the model's full training
+//! context. Cadrumo supplies no context of its own: a model with no recorded context has no
+//! section and is not presented, so no load of it can start. Each start writes the preset
+//! afresh. The model's own name is its `alias`, and the section is named [`router_id`]:
 //! the router reads a section name with a colon as a repository and a quantisation and
 //! rewrites it, so a section named `qwen3:1.7b` is listed as `qwen3:7B` and no request
 //! by the name finds it, while an alias is kept as written and answers every request.
+//!
+//! The person's [`Placement`] is part of the preset too: `cpu_only` adds `n-gpu-layers = 0`
+//! to every section, so no layer goes to a device, and `auto` adds no key, which leaves the
+//! offload to the router. A change of the recorded contexts or of the placement changes the
+//! preset text, and so is a stale preset like any other: the router drains and starts again
+//! with it once it holds no model. The [`PlacementHandle`] is how the manager passes a
+//! changed placement to the running server.
 //!
 //! A running server whose preset no longer matches the store drains: from that look on
 //! the `restarting` file in its folder makes every [`load`] refuse with
 //! [`LoadRefused::Restarting`], which its caller retries, and the server is started again
 //! at the first look that finds it holding no model. A model in use is never unloaded
 //! for it, and no load through [`load`] can take the router again before the restart,
-//! so a model new in the store waits at most for the model already held to be let go.
+//! so a model new in the store, or a changed context or placement, waits at most for the
+//! model already held to be let go.
 //! A load that a restart overtakes on its way is reported `Restarting` too, never as
 //! done, and [`presentation`] tells whether the running router presents a model. The
 //! drain's marker is written once, at the first look that finds the preset stale, and
@@ -62,11 +72,11 @@
 #[cfg(test)]
 use super::program::ServeOverride;
 use super::{
-    LocalAiError, LocalEngine, NotRunningCause, ServerCall, StartFailureKind,
+    LocalAiError, LocalEngine, NotRunningCause, Placement, ServerCall, StartFailureKind,
     huggingface::{MODEL_MEDIA_TYPE, PROJECTOR_MEDIA_TYPE},
     lease::Leases,
     loopback::Loopback,
-    models::{MANIFEST_BYTES_LIMIT, ModelName, request_failed},
+    models::{MANIFEST_BYTES_LIMIT, ModelName, recorded_context, request_failed},
     program::{
         self, Containment, PASSED_THROUGH, SERVER_RECORD, SERVER_RECORD_SCHEMA, ServeCommand,
         Server, ServerRecord,
@@ -86,7 +96,9 @@ use std::{
     fmt::Write as _,
     fs,
     net::SocketAddr,
+    num::NonZeroU32,
     path::{Path, PathBuf},
+    sync::{Arc, Mutex},
     time::{Duration, Instant},
 };
 
@@ -114,9 +126,6 @@ const PRESET_BYTES_LIMIT: u64 = 4 * 1024 * 1024;
 pub const FOLDER: &str = "llama-server";
 /// The preset file in the server's folder.
 pub const PRESET: &str = "models.ini";
-/// The context every presented model loads with, in tokens. It is the context the
-/// local engine measurement ran every model at on both engines.
-pub const LOAD_CONTEXT: u32 = 8192;
 /// The program's file name in the package's `llama_server` folder.
 #[cfg(windows)]
 const EXECUTABLE: &str = "llama-server.exe";
@@ -129,8 +138,8 @@ pub enum LlamaServerUnavailable {
     /// The package carries no llama-server for this platform. A Linux package carries
     /// none until its source build lands.
     NotPackaged,
-    /// The build the package declares is not a llama.cpp build tag, the load context is
-    /// zero, or the storage folders are not absolute.
+    /// The build the package declares is not a llama.cpp build tag, or the storage folders
+    /// are not absolute.
     Invalid,
 }
 
@@ -171,6 +180,33 @@ impl LoadRefused {
     }
 }
 
+/// Where the router runs a model, shared between the supervised server and whoever holds a
+/// clone, so a change of the person's placement reaches the preset of a running server. The
+/// server reads it at each look and at each start; a changed value is a stale preset and
+/// drains the router like a changed store.
+#[derive(Clone, Debug, Default)]
+pub struct PlacementHandle(Arc<Mutex<Placement>>);
+
+impl PlacementHandle {
+    pub fn new(placement: Placement) -> Self {
+        Self(Arc::new(Mutex::new(placement)))
+    }
+
+    pub fn get(&self) -> Placement {
+        *self.0.lock().unwrap_or_else(|error| error.into_inner())
+    }
+
+    pub fn set(&self, placement: Placement) {
+        *self.0.lock().unwrap_or_else(|error| error.into_inner()) = placement;
+    }
+}
+
+/// Whether `program_folder`, the package's `llama_server` folder, carries the llama-server
+/// program. A package that does not reads [`LlamaServerUnavailable::NotPackaged`].
+pub fn carried(program_folder: &Path) -> bool {
+    filesystem::require_executable(&program_folder.join(EXECUTABLE)).is_ok()
+}
+
 /// `components/llama-server` under the storage `locations`.
 pub fn server_folder(locations: &Locations) -> Option<PathBuf> {
     Some(locations.programs.parent()?.join(FOLDER))
@@ -183,7 +219,7 @@ pub struct LlamaServer {
     /// `components/llama-server`: the record, the preset, the leases and the home.
     folder: PathBuf,
     models: PathBuf,
-    context: u32,
+    placement: PlacementHandle,
     leases: Leases,
     server: Option<Server>,
     /// The preset the running server was started with.
@@ -195,20 +231,21 @@ pub struct LlamaServer {
 
 impl LlamaServer {
     /// The llama-server in `program_folder`, the package's `llama_server` folder, of the
-    /// pinned `build`, serving the models under `locations` at `context` tokens.
+    /// pinned `build`, serving the models under `locations` that have a recorded context,
+    /// placed as `placement` says.
     pub fn packaged(
         program_folder: &Path,
         build: &str,
         locations: &Locations,
-        context: u32,
+        placement: Placement,
     ) -> Result<Self, LlamaServerUnavailable> {
-        if !build_tag(build) || context == 0 {
+        if !build_tag(build) {
             return Err(LlamaServerUnavailable::Invalid);
         }
-        let executable = program_folder.join(EXECUTABLE);
-        if filesystem::require_executable(&executable).is_err() {
+        if !carried(program_folder) {
             return Err(LlamaServerUnavailable::NotPackaged);
         }
+        let executable = program_folder.join(EXECUTABLE);
         let folder = server_folder(locations).ok_or(LlamaServerUnavailable::Invalid)?;
         let leases = Leases::new(folder.clone()).map_err(|_| LlamaServerUnavailable::Invalid)?;
         Ok(Self {
@@ -216,7 +253,7 @@ impl LlamaServer {
             build: build.to_owned(),
             folder,
             models: locations.models.clone(),
-            context,
+            placement: PlacementHandle::new(placement),
             leases,
             server: None,
             served_preset: None,
@@ -227,6 +264,12 @@ impl LlamaServer {
 
     pub fn executable(&self) -> &Path {
         &self.executable
+    }
+
+    /// The placement the server presents its models with, which the holder of this handle
+    /// can change while the server runs.
+    pub fn placement_handle(&self) -> PlacementHandle {
+        self.placement.clone()
     }
 
     pub fn build(&self) -> &str {
@@ -357,7 +400,9 @@ impl Supervised for LlamaServer {
             return false;
         };
         let marker = self.folder.join(RESTARTING);
-        if self.served_preset.as_deref() == Some(preset(&self.models, self.context).as_str()) {
+        if self.served_preset.as_deref()
+            == Some(preset(&self.models, self.placement.get()).as_str())
+        {
             // The store is back to what the server presents: nothing to drain for.
             let _ = fs::remove_file(&marker);
             return false;
@@ -409,7 +454,7 @@ impl Supervised for LlamaServer {
             filesystem::refuse_links(&folder)?;
             fs::create_dir_all(&folder)?;
         }
-        let presented = preset(&self.models, self.context);
+        let presented = preset(&self.models, self.placement.get());
         write_preset(&self.folder.join(PRESET), &presented)?;
         let command = self.serve_command(address, ambient)?;
         let record = self.folder.join(SERVER_RECORD);
@@ -910,10 +955,12 @@ pub(super) fn unload_all(loopback: Loopback) {
     }
 }
 
-/// One model as the preset presents it: its weights and its projector, as preset values.
+/// One model as the preset presents it: its weights and its projector, as preset values,
+/// and the context recorded for it.
 struct Presented {
     model: String,
     projector: Option<String>,
+    context: NonZeroU32,
 }
 
 /// The id the router lists the model `name` under: the preset section's name, which has
@@ -923,9 +970,12 @@ pub fn router_id(name: &str) -> String {
     format!("m-{}", &digest.as_str()[..16])
 }
 
-/// The preset text for the models under `models` at `context` tokens: one section per
-/// whole model, in the order of their names, each model's name as its alias.
-pub fn preset(models: &Path, context: u32) -> String {
+/// The preset text for the models under `models`: one section per whole model that has a
+/// recorded context, in the order of their names, each model's name as its alias and its
+/// recorded context as its `ctx-size`. A model with no recorded context has no section.
+/// `cpu_only` places no layer on a device, with `n-gpu-layers = 0` in every section; `auto`
+/// adds no key.
+pub fn preset(models: &Path, placement: Placement) -> String {
     let mut text = String::new();
     for (name, presented) in presented(models) {
         let _ = writeln!(text, "[{}]", router_id(&name));
@@ -934,15 +984,19 @@ pub fn preset(models: &Path, context: u32) -> String {
         if let Some(projector) = &presented.projector {
             let _ = writeln!(text, "mmproj = {projector}");
         }
-        let _ = writeln!(text, "ctx-size = {context}");
+        let _ = writeln!(text, "ctx-size = {}", presented.context);
+        if placement == Placement::CpuOnly {
+            let _ = writeln!(text, "n-gpu-layers = 0");
+        }
         text.push('\n');
     }
     text
 }
 
-/// Every whole model the store's manifests name, by the name the model reads as. A
-/// manifest that cannot be read, names no model layer or more than one, or names a
-/// layer that is not stored at its size presents nothing.
+/// Every whole model the store's manifests name that has a recorded context, by the name
+/// the model reads as. A manifest that cannot be read, names no model layer or more than
+/// one, or names a layer that is not stored at its size presents nothing, and neither does
+/// a model with no recorded context.
 fn presented(models: &Path) -> BTreeMap<String, Presented> {
     let mut found = BTreeMap::new();
     for (host, host_folder) in children(&models.join("manifests"), true) {
@@ -953,7 +1007,10 @@ fn presented(models: &Path) -> BTreeMap<String, Presented> {
                     else {
                         continue;
                     };
-                    if let Some(entry) = present(models, &manifest) {
+                    let Some(context) = recorded_context(models, &name) else {
+                        continue;
+                    };
+                    if let Some(entry) = present(models, &manifest, context) {
                         found.insert(name.to_string(), entry);
                     }
                 }
@@ -985,8 +1042,8 @@ fn children(folder: &Path, folders: bool) -> Vec<(String, PathBuf)> {
         .collect()
 }
 
-/// The model one manifest names, when it is whole in the store.
-fn present(models: &Path, manifest: &Path) -> Option<Presented> {
+/// The model one manifest names, when it is whole in the store, with its recorded `context`.
+fn present(models: &Path, manifest: &Path, context: NonZeroU32) -> Option<Presented> {
     let bytes = filesystem::bounded_bytes(manifest, MANIFEST_BYTES_LIMIT).ok()?;
     let manifest = RegistryManifest::parse(bytes).ok()?;
     let mut weights = manifest
@@ -1008,6 +1065,7 @@ fn present(models: &Path, manifest: &Path) -> Option<Presented> {
     Some(Presented {
         model: stored(models, model)?,
         projector,
+        context,
     })
 }
 
