@@ -348,24 +348,34 @@ impl Server {
     /// The server `programs`' record names, when it answers there with `version`. The
     /// handle owns nothing: dropping it leaves the server running.
     pub fn observed(programs: &Path, version: &str) -> Option<Self> {
-        let record = ServerRecord::read(programs)?;
+        Self::observed_as(LocalEngine::Ollama, programs, version)
+    }
+
+    /// The server of `engine` the record in `folder` names, when it answers there as
+    /// that engine's program of `version`: Ollama with exactly that version, llama-server
+    /// ready on its readiness route and reporting that build. The handle owns nothing.
+    pub fn observed_as(engine: LocalEngine, folder: &Path, version: &str) -> Option<Self> {
+        let record = ServerRecord::read(folder)?;
         let server = Self {
-            engine: LocalEngine::Ollama,
+            engine,
             child: None,
             stdin: None,
             loopback: record.loopback()?,
             version: record.version.clone(),
             executable: record.executable.clone(),
-            record: programs.join(SERVER_RECORD),
+            record: folder.join(SERVER_RECORD),
             containment: None,
             lease: None,
             proxy: record.proxy_fingerprint(),
         };
-        (record.version == version
-            && server
-                .answers_version()
-                .is_some_and(|found| found == version))
-        .then_some(server)
+        let ready = match engine {
+            LocalEngine::Ollama => true,
+            LocalEngine::LlamaCpp => {
+                matches!(server.loopback.get(llama_server::HEALTH), Ok((200, _)))
+            }
+        };
+        (record.version == version && ready && server.confirm_version(version).is_ok())
+            .then_some(server)
     }
 
     /// Whether the process this handle started has ended. An observed server is never
@@ -546,11 +556,6 @@ impl Server {
             }
             std::thread::sleep(READY_PACE.min(remaining));
         }
-    }
-
-    /// The version the server reports, when it answers.
-    fn answers_version(&self) -> Option<String> {
-        self.reported_version().ok()
     }
 
     /// The version the server reports, or how it failed to: Ollama's `/api/version`, or

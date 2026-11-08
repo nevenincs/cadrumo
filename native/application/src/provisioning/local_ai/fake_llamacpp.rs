@@ -6,8 +6,9 @@
 //! line as the program does, announces itself on standard error as the program does, and
 //! exits once its standard input closes, so it cannot outlive the engine that started it.
 //!
-//! The routes are `GET /health`, `GET /props`, `GET /models`, `POST /models/load` and
-//! `POST /models/unload`, plus `GET /fake/environment`, `GET /fake/arguments` and
+//! The routes are `GET /health`, `GET /props`, `GET /models`, `POST /models/load`,
+//! `POST /models/unload` and `POST /v1/completions`, which generates one token with a
+//! loaded model, plus `GET /fake/environment`, `GET /fake/arguments` and
 //! `POST /fake/exit` for a test to look into, or end, the helper child. A test scripts
 //! the rest through [`FakeState`]: readiness, the models and their statuses, a scripted
 //! answer or a hang-up for any path.
@@ -301,6 +302,25 @@ fn answer(state: &Shared, mut stream: TcpStream) {
             drop(guard);
             respond(&mut stream, reply.0, &reply.1);
         }
+        ("POST", "/v1/completions") => {
+            let reply = match body["model"].as_str().map(|model| guard.models.get(model)) {
+                None => ("400 Bad Request", error_body("the request names no model")),
+                Some(None) => ("404 Not Found", error_body("model not found")),
+                Some(Some(ModelStatus::Unloaded)) => {
+                    ("400 Bad Request", error_body("model is not loaded"))
+                }
+                Some(Some(ModelStatus::Loaded | ModelStatus::Loading)) => (
+                    "200 OK",
+                    json!({
+                        "object": "text_completion",
+                        "choices": [{ "index": 0, "text": "Ok", "finish_reason": "length" }],
+                        "usage": { "prompt_tokens": 4, "completion_tokens": 1, "total_tokens": 5 },
+                    }),
+                ),
+            };
+            drop(guard);
+            respond(&mut stream, reply.0, &reply.1);
+        }
         _ => {
             drop(guard);
             respond(&mut stream, "404 Not Found", &error_body("not found"));
@@ -552,6 +572,35 @@ mod tests {
                 "POST /models/load HTTP/1.1"
             ]
         );
+    }
+
+    #[test]
+    fn a_completion_generates_with_a_loaded_model_only() {
+        let fake = FakeLlamaCpp::start("b1");
+        let loopback = Loopback::new(fake.address()).unwrap();
+        fake.state
+            .lock()
+            .unwrap()
+            .models
+            .insert("m".into(), ModelStatus::Unloaded);
+        let request = json!({ "model": "m", "prompt": "Say one word.", "max_tokens": 1 });
+
+        let (status, _) = loopback
+            .post("/v1/completions", request.to_string().as_bytes())
+            .unwrap();
+        assert_eq!(status, 400, "an unloaded model generates nothing");
+
+        loopback.post("/models/load", br#"{"model":"m"}"#).unwrap();
+        let (status, body) = loopback
+            .post("/v1/completions", request.to_string().as_bytes())
+            .unwrap();
+        assert_eq!(status, 200);
+        assert_eq!(json_of(&body)["usage"]["completion_tokens"], 1);
+
+        let (status, _) = loopback
+            .post("/v1/completions", br#"{"model":"other","prompt":"x"}"#)
+            .unwrap();
+        assert_eq!(status, 404);
     }
 
     #[test]

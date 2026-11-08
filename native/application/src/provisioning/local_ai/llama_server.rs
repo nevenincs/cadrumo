@@ -32,15 +32,21 @@
 //!
 //! It is ready once `/health` answers `200`, and it is the pinned build once the
 //! `build_info` of `/props` is the pinned build tag, alone or followed by its commit.
+//!
+//! The component engine checks the selected models on it while llama.cpp is the selected
+//! engine: the quick check reads from the files alone whether the running router's
+//! preset presents a model ([`presented_by_router`]), and the full check
+//! ([`check_model`]) finds the model in the router's list, loads it, generates one token
+//! with it and unloads it again.
 
 #[cfg(test)]
 use super::program::ServeOverride;
 use super::{
-    LocalAiError, LocalEngine, NotRunningCause,
+    LocalAiError, LocalEngine, NotRunningCause, ServerCall, StartFailureKind,
     huggingface::{MODEL_MEDIA_TYPE, PROJECTOR_MEDIA_TYPE},
     lease::Leases,
     loopback::Loopback,
-    models::{MANIFEST_BYTES_LIMIT, ModelName},
+    models::{MANIFEST_BYTES_LIMIT, ModelName, request_failed},
     program::{
         self, Containment, PASSED_THROUGH, SERVER_RECORD, SERVER_RECORD_SCHEMA, ServeCommand,
         Server, ServerRecord,
@@ -60,6 +66,7 @@ use std::{
     fs,
     net::SocketAddr,
     path::{Path, PathBuf},
+    time::Duration,
 };
 
 /// The readiness route: `503` while the server is not ready, `200` once it is.
@@ -72,6 +79,8 @@ const MODELS: &str = "/models";
 const LOAD: &str = "/models/load";
 /// The router's unload of one model by its id.
 const UNLOAD: &str = "/models/unload";
+/// The router's OpenAI-compatible completion, which it hands to the model named.
+const COMPLETIONS: &str = "/v1/completions";
 /// The file in the server's folder that is there while the running server drains for a
 /// restart: no load is started while it is there.
 pub const RESTARTING: &str = "restarting";
@@ -207,6 +216,18 @@ impl LlamaServer {
     /// The server this program started, when it is running.
     pub fn server(&self) -> Option<&Server> {
         self.server.as_ref()
+    }
+
+    /// The running router answering ready as the pinned build, whoever runs it. The
+    /// handle owns nothing.
+    pub fn running_server(&self) -> Option<Server> {
+        Server::observed_as(LocalEngine::LlamaCpp, &self.folder, &self.build)
+    }
+
+    /// The kind of the latest failed start of the router, whoever started it, until a
+    /// start succeeds.
+    pub fn latest_start_failure(&self) -> Option<StartFailureKind> {
+        program::latest_start_failure(&self.folder)
     }
 
     /// The command a start runs: the router on `address`, with the preset, and the
@@ -450,13 +471,7 @@ fn held(loopback: Loopback) -> Option<Vec<String>> {
         value["data"]
             .as_array()?
             .iter()
-            .filter(|model| {
-                let status = &model["status"];
-                matches!(
-                    status["value"].as_str().or_else(|| status.as_str()),
-                    Some("loaded" | "loading")
-                )
-            })
+            .filter(|model| holds(model))
             .filter_map(|model| model["id"].as_str().map(str::to_owned))
             .collect(),
     )
@@ -542,6 +557,128 @@ pub fn load(folder: &Path, model: &ModelName) -> Result<(), LoadRefused> {
             status: Some(status),
         }),
         Err(_) => Err(LoadRefused::Failed { status: None }),
+    }
+}
+
+/// Whether the preset of the router recorded in `folder` presents `model`, while it runs
+/// or drains for a restart; `None` when no router is recorded there. It reads files only,
+/// for a quick check: a router draining for a restart still presents what it was started
+/// with, and presents a model new in the store once it is started again.
+pub fn presented_by_router(folder: &Path, model: &ModelName) -> Option<bool> {
+    ServerRecord::read(folder)?;
+    Some(presents(folder, &model.to_string()))
+}
+
+/// The full check of `model` on the router running from `folder`: the router lists it,
+/// loads it through [`load`], generates one token of `prompt` with it within `budget`,
+/// and unloads it again. `false` when the router does not have the model. A model the
+/// router held before the check is another caller's and stays loaded.
+///
+/// A router that is not running or drains for a restart reads `program_not_running`, as
+/// does a load it did not answer; a load it refused, and an answer that holds no
+/// generated token, read `unexpected`; a generation that ran out of memory reads
+/// `not_enough_memory`.
+pub fn check_model(
+    folder: &Path,
+    model: &ModelName,
+    prompt: &str,
+    budget: Duration,
+) -> Result<bool, LocalAiError> {
+    let not_running = || LocalAiError::Failed(FailureCategory::ProgramNotRunning);
+    let router = running(folder).map_err(|_| not_running())?;
+    let loopback = router.loopback;
+    let id = model.to_string();
+    let (status, body) = loopback
+        .get(MODELS)
+        .map_err(|error| request_failed(&loopback, ServerCall::ListModels, &error))?;
+    if status != 200 {
+        return Err(LocalAiError::NotRunning(NotRunningCause::ListStatus {
+            status,
+        }));
+    }
+    let listed: serde_json::Value = serde_json::from_slice(&body)
+        .map_err(|_| LocalAiError::Failed(FailureCategory::Unexpected))?;
+    let Some(entries) = listed["data"].as_array() else {
+        return Err(LocalAiError::Failed(FailureCategory::Unexpected));
+    };
+    let Some(entry) = entries
+        .iter()
+        .find(|entry| entry["id"].as_str() == Some(id.as_str()))
+    else {
+        return Ok(false);
+    };
+    let held_before = holds(entry);
+    match load(folder, model) {
+        Ok(()) => {}
+        Err(LoadRefused::NotPresented) => return Ok(false),
+        Err(
+            LoadRefused::NotRunning
+            | LoadRefused::Restarting
+            | LoadRefused::Failed { status: None },
+        ) => return Err(not_running()),
+        Err(LoadRefused::Failed { status: Some(_) }) => {
+            return Err(LocalAiError::Failed(FailureCategory::Unexpected));
+        }
+    }
+    let generated = generate_one_token(loopback, &id, prompt, budget);
+    if !held_before {
+        let request = serde_json::json!({ "model": id });
+        let _ = loopback.post(UNLOAD, request.to_string().as_bytes());
+    }
+    generated
+}
+
+/// Whether one entry of the router's model list is loaded or loading.
+fn holds(entry: &serde_json::Value) -> bool {
+    let status = &entry["status"];
+    matches!(
+        status["value"].as_str().or_else(|| status.as_str()),
+        Some("loaded" | "loading")
+    )
+}
+
+/// Generates one token of `prompt` with the loaded model `id`: `false` when the router
+/// does not have the model.
+fn generate_one_token(
+    loopback: Loopback,
+    id: &str,
+    prompt: &str,
+    budget: Duration,
+) -> Result<bool, LocalAiError> {
+    let request = serde_json::json!({
+        "model": id,
+        "prompt": prompt,
+        "max_tokens": 1,
+        "stream": false,
+    });
+    let loopback = loopback.with_io_timeout(budget);
+    let (status, body) = loopback
+        .post(COMPLETIONS, request.to_string().as_bytes())
+        .map_err(|error| request_failed(&loopback, ServerCall::Generate, &error))?;
+    let value: serde_json::Value = serde_json::from_slice(&body).unwrap_or_default();
+    match status {
+        200 if value["usage"]["completion_tokens"]
+            .as_u64()
+            .is_some_and(|tokens| tokens >= 1) =>
+        {
+            Ok(true)
+        }
+        // An answer without a generated token is no proof the model generates.
+        200 => Err(LocalAiError::Failed(FailureCategory::Unexpected)),
+        404 => Ok(false),
+        _ => {
+            let error = &value["error"];
+            let message = error["message"]
+                .as_str()
+                .or_else(|| error.as_str())
+                .unwrap_or_default()
+                .to_lowercase();
+            Err(LocalAiError::Failed(if message.contains("memory") {
+                FailureCategory::NotEnoughMemory
+            } else {
+                FailureCategory::Unexpected
+            }))
+        }
     }
 }
 

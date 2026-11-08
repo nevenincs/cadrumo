@@ -25,6 +25,12 @@
 //! under that name. The full check looks the model up in the server's own list of
 //! installed models and then generates one token with it.
 //!
+//! Each check asks the selected engine's server only. With Ollama selected the quick
+//! check is the store alone, and the full check asks the Ollama server. With llama.cpp
+//! selected the quick check also needs the running llama-server router's preset to
+//! present the model, and the full check has the router list it, load it, generate one
+//! token with it and unload it ([`llama_server::check_model`]); no Ollama server is asked.
+//!
 //! Role fitness, how well a model answers for its role, is no part of this state: it
 //! is the consumer's admission check.
 
@@ -32,6 +38,7 @@ use super::{
     LocalAiError, NotRunningCause, ServerCall,
     hardware::Hardware,
     huggingface::{self, HuggingFaceFile, HuggingFaceModel},
+    llama_server,
     loopback::Loopback,
     program::Server,
     registry::{self, Registry, RegistryManifest},
@@ -490,6 +497,63 @@ impl Models {
         })
     }
 
+    /// The quick check of `model` while llama.cpp is the selected engine: the quick check
+    /// of the store, then whether the router recorded in `router`, the llama-server's
+    /// folder, presents the model. A model stored whole that the router does not present
+    /// yet is absent, and with no router recorded there it reads `program_not_running`.
+    /// Files only: no server is asked.
+    pub fn observe_presented(
+        &self,
+        model: &SelectedModel,
+        hardware: &Hardware,
+        router: &Path,
+    ) -> Observation {
+        let stored = self.observe_quick(model, hardware);
+        if stored != Observation::Present {
+            return stored;
+        }
+        match llama_server::presented_by_router(router, model.name()) {
+            Some(true) => Observation::Present,
+            Some(false) => Observation::Absent,
+            None => Observation::Failed(FailureCategory::ProgramNotRunning),
+        }
+    }
+
+    /// The full check of `model` on the llama-server router recorded in `router`: the
+    /// quick check as [`Models::observe_presented`] reads it, then the router's own list,
+    /// a load, one generated token and the unload.
+    pub fn observe_full_on_router(
+        &self,
+        router: &Path,
+        model: &SelectedModel,
+        hardware: &Hardware,
+    ) -> Observation {
+        self.check_full_on_router(router, model, hardware)
+            .unwrap_or_else(|error| Observation::Failed(error.category()))
+    }
+
+    /// The full check as [`Models::observe_full_on_router`] reads it, with a failed
+    /// request kept as the error that says what failed, for a setup that records why it
+    /// stopped.
+    pub fn check_full_on_router(
+        &self,
+        router: &Path,
+        model: &SelectedModel,
+        hardware: &Hardware,
+    ) -> Result<Observation, LocalAiError> {
+        let quick = self.observe_presented(model, hardware, router);
+        if quick != Observation::Present {
+            return Ok(quick);
+        }
+        let generated =
+            llama_server::check_model(router, model.name(), CHECK_PROMPT, FULL_CHECK_BUDGET)?;
+        Ok(if generated {
+            Observation::Present
+        } else {
+            Observation::Absent
+        })
+    }
+
     /// Fetches `model` into the models folder unless its manifest is already there whole,
     /// through `transfer`, whose hosts are the plan's approved ones; then reads it back
     /// as the quick check does. No server is asked: the registry client or the Hugging
@@ -652,7 +716,11 @@ fn blob_stored(root: &Path, layer: &Layer) -> bool {
 
 /// The program is not running as far as `call` could tell: the exchange over `loopback`
 /// failed with `error`, under the bound that client enforced.
-fn request_failed(loopback: &Loopback, call: ServerCall, error: &std::io::Error) -> LocalAiError {
+pub(super) fn request_failed(
+    loopback: &Loopback,
+    call: ServerCall,
+    error: &std::io::Error,
+) -> LocalAiError {
     LocalAiError::NotRunning(NotRunningCause::Request {
         call,
         failure: loopback.failure(error),

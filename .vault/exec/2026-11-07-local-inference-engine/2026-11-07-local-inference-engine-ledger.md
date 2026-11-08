@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#local-inference-engine'
 date: '2026-11-07'
-modified: '2026-11-07'
+modified: '2026-11-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:a95ad669eff609779e65425875220d1e5dbf543695590f260773ca09edc35aa8'
+body_hash: 'sha256:2a16bc28ab1bc233a3fc2347548b678ddf3ebe129d7623f327bfde65ff4b2b3f'
 related:
   - "[[2026-11-07-local-inference-engine-plan]]"
 ---
@@ -177,6 +177,17 @@ related:
 - `S33` `verify:` `pytest src/cadrumo_agent_service (706)` -> `pass`
 - `S33` `verify:` `test_catalog_read_lease_refresh fails on the object-identity key` -> `pass`
 - `S33` `verify:` `ruff check, ruff format --check, ty` -> `pass`
+- `S18` `M` `native/application/src/provisioning/engine.rs`
+- `S18` `M` `native/application/src/provisioning/engine/tests.rs`
+- `S18` `M` `native/application/src/provisioning/installation.rs`
+- `S18` `M` `native/application/src/provisioning/items.rs`
+- `S18` `M` `native/application/src/provisioning/plan.rs`
+- `S18` `M` `native/application/src/provisioning/local_ai/fake_llamacpp.rs`
+- `S18` `M` `native/application/src/provisioning/local_ai/llama_server.rs`
+- `S18` `M` `native/application/src/provisioning/local_ai/models.rs`
+- `S18` `M` `native/application/src/provisioning/local_ai/program.rs`
+- `S18` `M` `native/desktop/src-tauri/src/shell/setup/components_tests.rs`
+- `S18` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -200,6 +211,7 @@ related:
 - `S16` cargo build, clippy and tests not run here; Rust verification is deferred to a root slot
 - `S16` `program_proxy_differs` retired; dev/locales audit, parity, chrome and signal tests need a published authority, absent in this worktree, and are owed in a root slot with cargo and the frontend typecheck
 - `S17` Review fixes: llama-server restart drains with typed retryable load refusals, argv host and port, local AI unavailability diagnostic, engine-selection launch proofs. Rust not compiled under root quiet; cargo check, clippy and test owed in a root slot.
+- `S18` Rust compile, clippy and cargo tests not run in the worktree under the operator ban; verification pending the root slot
 
 ## Notes
 

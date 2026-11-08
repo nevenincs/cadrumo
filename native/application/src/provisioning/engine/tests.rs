@@ -13,7 +13,9 @@ use crate::provisioning::{
     items::FULL_CHECK_BUDGET,
     local_ai::{
         ServerCall, StartFailureKind,
+        fake_llamacpp::{FakeLlamaCpp, ModelStatus, Scripted},
         fake_ollama::FakeOllama,
+        llama_server::{PRESET, server_folder},
         loopback::{ExchangeFailure, ExchangePhase},
         models::SelectedModel,
         program::{
@@ -38,6 +40,8 @@ const VISION: &str = "synthetic-vision:test";
 const KEPT: &str = "synthetic-kept:test";
 const PROGRAM_VERSION: &str = "9.9.9";
 const PROGRAM_PATH: &str = "/ollama/ollama/releases/download/v9.9.9/ollama.zip";
+/// The llama.cpp build the package pins its llama-server at, and the router reports.
+const LLAMA_BUILD: &str = "b4242";
 const EXECUTABLE: &str = if cfg!(windows) {
     "ollama.exe"
 } else {
@@ -212,6 +216,12 @@ struct World {
     gates: Arc<Mutex<VecDeque<Arc<Released>>>>,
     server: TlsServer,
     ollama: Option<FakeOllama>,
+    /// The router the test plays the manager's llama-server with.
+    llama: Option<FakeLlamaCpp>,
+    /// The package's llama-server folder; nothing is there unless the world packages it.
+    llama_package: PathBuf,
+    /// The local engine the engines are given.
+    local_engine: LocalEngine,
     driver: bool,
     /// The local models the engines are given, as role, name and size.
     selection: Vec<(String, String, u64)>,
@@ -294,12 +304,16 @@ impl World {
         let certificate = TestCertificate::new(&hosts);
         let gates = Arc::new(Mutex::new(VecDeque::new()));
         let server = publisher(&certificate, served, gates.clone());
+        let llama_package = directory.path().join("package").join("bin").join("llama");
         Self {
             directory,
             certificate,
             gates,
             server,
             ollama,
+            llama: None,
+            llama_package,
+            local_engine: LocalEngine::default(),
             driver,
             selection: Vec::new(),
             memory_bytes: 64 * GIB,
@@ -307,8 +321,25 @@ impl World {
         }
     }
 
+    /// The local AI world whose package also carries the llama-server, with llama.cpp
+    /// selected and the router played by the test. The Ollama program stays pinned and
+    /// its server stands by, so a test sees that neither is ever asked.
+    fn llama_cpp(text: &StoredModel, vision: &StoredModel) -> Self {
+        let mut world = Self::local_ai(text, vision);
+        world.llama_package =
+            crate::provisioning::local_ai::llama_server::tests::package(world.directory.path());
+        world.llama = Some(FakeLlamaCpp::start(LLAMA_BUILD));
+        world.local_engine = LocalEngine::LlamaCpp;
+        world
+    }
+
     fn root(&self) -> PathBuf {
         self.directory.path().join("storage")
+    }
+
+    /// The llama-server's folder: its record, its preset and its home.
+    fn router_folder(&self) -> PathBuf {
+        server_folder(&Locations::under(&self.root())).unwrap()
     }
 
     fn models(&self) -> PathBuf {
@@ -344,6 +375,8 @@ impl World {
                 .ollama
                 .as_ref()
                 .map_or_else(|| "127.0.0.1:23743".parse().unwrap(), FakeOllama::address),
+            llama_server_folder: self.llama_package.clone(),
+            llama_server_build: LLAMA_BUILD.into(),
             browser_environment: fake_environment(&format!("version={BROWSER_VERSION}")),
             scratch: root.join("tmp"),
             free_space: Box::new(|_| Some(1024 * GIB)),
@@ -359,6 +392,7 @@ impl World {
             .collect::<Result<_, _>>()
             .unwrap();
         engine.select_local_models(LocalModels::new(selected).unwrap());
+        engine.select_local_engine(self.local_engine);
         engine
     }
 
@@ -484,6 +518,115 @@ impl World {
     /// Plays the manager stopping its server.
     fn stop_local_ai(&self) {
         fs::remove_file(self.programs().join(SERVER_RECORD)).unwrap();
+    }
+
+    /// Plays the manager starting the llama-server router: writes the preset of the
+    /// models whole in the store, as each start does, has the router list them, and
+    /// records the test's router as the running one.
+    fn serve_router(&self) {
+        let llama = self.llama.as_ref().unwrap();
+        let folder = self.router_folder();
+        fs::create_dir_all(&folder).unwrap();
+        let presented = llama_server::preset(&self.models(), LOAD_CONTEXT);
+        fs::write(folder.join(PRESET), &presented).unwrap();
+        {
+            let mut state = llama.state.lock().unwrap();
+            for id in presented
+                .lines()
+                .filter_map(|line| line.strip_prefix('[')?.strip_suffix(']'))
+            {
+                state
+                    .models
+                    .entry(id.to_owned())
+                    .or_insert(ModelStatus::Unloaded);
+            }
+        }
+        let record = ServerRecord {
+            schema: SERVER_RECORD_SCHEMA,
+            address: llama.address().to_string(),
+            version: LLAMA_BUILD.into(),
+            executable: self.llama_package.join("llama-server"),
+            models: self.models(),
+            process_id: std::process::id(),
+            proxy: None,
+        };
+        fs::write(
+            folder.join(SERVER_RECORD),
+            serde_json::to_vec(&record).unwrap(),
+        )
+        .unwrap();
+    }
+
+    /// Plays the manager stopping the router.
+    fn stop_router(&self) {
+        fs::remove_file(self.router_folder().join(SERVER_RECORD)).unwrap();
+    }
+
+    /// Every request line the stand-in router was sent.
+    fn router_requests(&self) -> Vec<String> {
+        self.llama
+            .as_ref()
+            .unwrap()
+            .state
+            .lock()
+            .unwrap()
+            .requests
+            .clone()
+    }
+
+    /// Each model the stand-in router knows, with where it holds it.
+    fn router_models(&self) -> BTreeMap<String, ModelStatus> {
+        self.llama
+            .as_ref()
+            .unwrap()
+            .state
+            .lock()
+            .unwrap()
+            .models
+            .clone()
+    }
+
+    /// Scripts the router's answer to `path`, or takes the script away with `None`.
+    fn script_router(&self, path: &str, answer: Option<(&str, Value)>) {
+        let mut state = self.llama.as_ref().unwrap().state.lock().unwrap();
+        match answer {
+            Some((status, body)) => {
+                state.failures.insert(
+                    path.to_owned(),
+                    Scripted {
+                        status: status.to_owned(),
+                        body,
+                    },
+                );
+            }
+            None => {
+                state.failures.remove(path);
+            }
+        }
+    }
+
+    /// A setup of the local AI the person approves as reviewed, whose router the manager
+    /// starts once the setup waits for it; with the plan the person reviewed.
+    fn set_up_local_ai_routed(&self) -> (Run, SetupPlan) {
+        let request = SetupRequest {
+            items: Some(vec![ItemId::LocalAi]),
+            approved: None,
+        };
+        let mut reviewed = None;
+        let run = self.run_setup(
+            &request,
+            &mut |plan| {
+                reviewed = Some(plan.clone());
+                Answer::Approve(plan.digest())
+            },
+            &mut |event| {
+                if matches!(event, Event::WaitingForServer { .. }) {
+                    self.serve_router();
+                }
+            },
+            &Cancellation::default(),
+        );
+        (run, reviewed.expect("the setup asked for a review"))
     }
 
     /// Every request line the stand-in local AI server was sent.
@@ -863,7 +1006,7 @@ fn a_wait_that_runs_out_reports_the_latest_failed_start_of_the_server() {
     .unwrap()
     .unwrap();
     let cause = |program: &Program| {
-        let Stop::NotRunning(cause) = no_server_within(program) else {
+        let Stop::NotRunning(cause) = no_server_within(program.latest_start_failure()) else {
             panic!("a wait that runs out stops as not running");
         };
         cause
@@ -1328,4 +1471,309 @@ fn the_plan_digest_binds_every_selected_role_name_and_size() {
     assert_ne!(digest_of(&selection[..1]), digest);
     let program_only = digest_of(&[]);
     assert_ne!(program_only, digest, "no selection plans the program alone");
+}
+
+/// How many of `requests` start with `prefix`.
+fn count(requests: &[String], prefix: &str) -> usize {
+    requests
+        .iter()
+        .filter(|line| line.starts_with(prefix))
+        .count()
+}
+
+#[test]
+fn with_llama_cpp_selected_the_local_ai_plans_no_program_and_checks_each_role_on_the_router() {
+    let text = StoredModel::new(1);
+    let vision = StoredModel::new(9);
+    let world = World::llama_cpp(&text, &vision);
+    let status = world.status();
+    let local_ai = row(&status, ItemId::LocalAi);
+    assert_eq!(local_ai.state, ItemState::Absent);
+    assert_eq!(
+        local_ai.version.as_deref(),
+        Some(LLAMA_BUILD),
+        "the packaged build, never the Ollama program's version"
+    );
+
+    let (done, plan) = world.set_up_local_ai_routed();
+
+    assert_eq!(
+        parts(&plan),
+        [
+            "column_role_mapping",
+            "supply_nature_proposal",
+            "text_extraction",
+            "vision_transcription"
+        ],
+        "no program part: the package carries the llama-server"
+    );
+    assert_eq!(plan.entries[0].destinations(), [Destination::OllamaModels]);
+    assert!(
+        plan.entries[0]
+            .source_hosts
+            .iter()
+            .all(|host| host.as_str() != "github.com"),
+        "no Ollama program host is approved: {:?}",
+        plan.entries[0].source_hosts
+    );
+    let total = plan.entries[0].download_bytes.unwrap();
+    assert_eq!(total, text.size() + vision.size(), "the models alone");
+    assert_eq!(done.report.outcome, Outcome::Completed, "{:?}", done.report);
+    assert_eq!(
+        phases(&done.events, ItemId::LocalAi),
+        [
+            SetupStep::Plan,
+            SetupStep::Preflight,
+            SetupStep::Download,
+            SetupStep::Verify,
+            SetupStep::Cleanup
+        ]
+    );
+    assert!(
+        done.events
+            .iter()
+            .all(|event| !matches!(event, Event::Part { part, .. } if part == PROGRAM_PART))
+    );
+    assert_eq!(last_progress(&done.events), (total, total));
+    assert_eq!(row(&done.report, ItemId::LocalAi).state, ItemState::Ready);
+    assert_eq!(text.stored(&world.models(), TEXT), 3);
+    assert_eq!(vision.stored(&world.models(), VISION), 3);
+
+    // Nothing went through Ollama: no archive, no request, no record, no program folder.
+    assert_eq!(
+        world.archive_requests(),
+        0,
+        "the Ollama program is never fetched"
+    );
+    assert!(
+        world.ollama_requests().is_empty(),
+        "{:?}",
+        world.ollama_requests()
+    );
+    assert!(!world.receipt("local_ai.json").exists());
+    assert!(!world.programs().exists());
+
+    // Each role's model was listed, loaded, asked for one token and unloaded on the router.
+    let requests = world.router_requests();
+    assert_eq!(count(&requests, "POST /v1/completions"), 4, "{requests:?}");
+    assert_eq!(count(&requests, "POST /models/load"), 4, "{requests:?}");
+    assert_eq!(count(&requests, "POST /models/unload"), 4, "{requests:?}");
+    assert!(
+        world
+            .router_models()
+            .values()
+            .all(|status| *status == ModelStatus::Unloaded),
+        "the check leaves no model loaded"
+    );
+
+    // The quick check reads the store and the router's preset, and asks nothing.
+    assert_eq!(
+        row(&world.status(), ItemId::LocalAi).state,
+        ItemState::Ready
+    );
+    assert_eq!(world.router_requests().len(), requests.len());
+
+    let verified = world.verify(&[ItemId::LocalAi]);
+    assert_eq!(row(&verified, ItemId::LocalAi).state, ItemState::Ready);
+    assert_eq!(
+        count(&world.router_requests(), "POST /v1/completions"),
+        8,
+        "the full check generates on the router again"
+    );
+
+    // Without the manager's router neither check can pass.
+    world.stop_router();
+    for report in [world.status(), world.verify(&[ItemId::LocalAi])] {
+        assert_eq!(
+            row(&report, ItemId::LocalAi).state,
+            ItemState::Failed(FailureCategory::ProgramNotRunning),
+            "{:?}",
+            report.mode
+        );
+    }
+    assert!(world.ollama_requests().is_empty());
+    assert_eq!(world.archive_requests(), 0);
+}
+
+#[test]
+fn with_llama_cpp_selected_and_no_model_selected_nothing_is_set_up() {
+    let text = StoredModel::new(1);
+    let vision = StoredModel::new(9);
+    let mut world = World::llama_cpp(&text, &vision);
+    world.selection.clear();
+
+    let status = world.status();
+    assert_eq!(
+        row(&status, ItemId::LocalAi).state,
+        ItemState::Ready,
+        "the packaged llama-server is the local AI"
+    );
+    let planned = world.plan(Some(vec![ItemId::LocalAi]));
+    assert_eq!(planned.outcome, Outcome::NothingToDo, "{planned:?}");
+    assert!(planned.plan.is_none());
+    assert_eq!(world.archive_requests(), 0);
+    assert!(world.ollama_requests().is_empty());
+    assert!(world.router_requests().is_empty());
+
+    // A package that does not carry the llama-server has no local AI to set up.
+    world.llama_package = world.directory.path().join("empty");
+    assert_eq!(
+        row(&world.status(), ItemId::LocalAi).state,
+        ItemState::Blocked(BlockedReason::NotInThisBuild)
+    );
+    let refused = world.plan(Some(vec![ItemId::LocalAi]));
+    assert_eq!(
+        (refused.outcome, refused.failure),
+        (Outcome::Refused, Some(FailureCategory::NotInThisBuild)),
+        "{refused:?}"
+    );
+    assert_eq!(world.archive_requests(), 0);
+}
+
+#[test]
+fn the_selected_engine_alone_decides_the_program_part_and_the_server_checked() {
+    let text = StoredModel::new(1);
+    let vision = StoredModel::new(9);
+    let mut world = World::llama_cpp(&text, &vision);
+
+    let llama = world.plan(Some(vec![ItemId::LocalAi]));
+    assert!(!parts(llama.plan.as_ref().unwrap()).contains(&PROGRAM_PART));
+
+    // With Ollama selected the same installation plans, installs and checks Ollama's
+    // program as before, and never asks the router.
+    world.local_engine = LocalEngine::Ollama;
+    let ollama = world.plan(Some(vec![ItemId::LocalAi]));
+    assert_eq!(parts(ollama.plan.as_ref().unwrap())[0], PROGRAM_PART);
+    assert_ne!(ollama.plan_digest(), llama.plan_digest());
+    let done = world.set_up_local_ai_serving(None);
+    assert_eq!(done.report.outcome, Outcome::Completed, "{:?}", done.report);
+    assert_eq!(
+        count(&world.ollama_requests(), "POST /api/generate"),
+        4,
+        "one token for each role on the Ollama server"
+    );
+    assert!(world.receipt("local_ai.json").is_file());
+    assert!(
+        world.router_requests().is_empty(),
+        "{:?}",
+        world.router_requests()
+    );
+}
+
+#[test]
+fn a_model_the_router_does_not_present_reads_absent_and_its_setup_downloads_nothing() {
+    let text = StoredModel::new(1);
+    let vision = StoredModel::new(9);
+    let world = World::llama_cpp(&text, &vision);
+    text.store(&world.models(), TEXT);
+    vision.store(&world.models(), VISION);
+    world.serve_router();
+    assert_eq!(
+        row(&world.status(), ItemId::LocalAi).state,
+        ItemState::Ready
+    );
+
+    // The router was started before the models arrived, so its preset names none.
+    fs::write(world.router_folder().join(PRESET), "").unwrap();
+    let status = world.status();
+    assert_eq!(row(&status, ItemId::LocalAi).state, ItemState::Absent);
+    let verified = world.verify(&[ItemId::LocalAi]);
+    assert_eq!(row(&verified, ItemId::LocalAi).state, ItemState::Absent);
+    assert_eq!(
+        count(&world.router_requests(), "POST /models/load"),
+        0,
+        "a model the router does not present is never loaded"
+    );
+    let planned = world.plan(Some(vec![ItemId::LocalAi]));
+    let plan = planned.plan.as_ref().unwrap();
+    assert_eq!(
+        plan.entries[0].download_bytes,
+        Some(0),
+        "stored models are not fetched again"
+    );
+    assert!(!parts(plan).contains(&PROGRAM_PART));
+
+    // The setup waits for the router to present them, and checks them on it.
+    let (done, _) = world.set_up_local_ai_routed();
+    assert_eq!(done.report.outcome, Outcome::Completed, "{:?}", done.report);
+    assert!(world.registry_requests().is_empty(), "nothing was fetched");
+    assert_eq!(count(&world.router_requests(), "POST /v1/completions"), 4);
+    assert!(world.ollama_requests().is_empty());
+}
+
+#[test]
+fn a_load_the_router_refuses_or_an_answer_without_a_token_fails_the_full_check() {
+    let text = StoredModel::new(1);
+    let vision = StoredModel::new(9);
+    let world = World::llama_cpp(&text, &vision);
+    text.store(&world.models(), TEXT);
+    vision.store(&world.models(), VISION);
+    world.serve_router();
+    let full = |world: &World| row(&world.verify(&[ItemId::LocalAi]), ItemId::LocalAi).state;
+    assert_eq!(full(&world), ItemState::Ready);
+
+    // The router refuses the load.
+    world.script_router(
+        "/models/load",
+        Some((
+            "500 Internal Server Error",
+            json!({ "error": { "message": "failed to load model" } }),
+        )),
+    );
+    assert_eq!(full(&world), ItemState::Failed(FailureCategory::Unexpected));
+    assert_eq!(
+        count(&world.router_requests(), "POST /v1/completions"),
+        4,
+        "nothing generates once the load is refused"
+    );
+    world.script_router("/models/load", None);
+
+    // The router answers the generation with no token.
+    world.script_router(
+        "/v1/completions",
+        Some((
+            "200 OK",
+            json!({
+                "choices": [{ "index": 0, "text": "", "finish_reason": "stop" }],
+                "usage": { "prompt_tokens": 4, "completion_tokens": 0, "total_tokens": 4 },
+            }),
+        )),
+    );
+    assert_eq!(full(&world), ItemState::Failed(FailureCategory::Unexpected));
+    assert!(
+        world
+            .router_models()
+            .values()
+            .all(|status| *status == ModelStatus::Unloaded),
+        "the model the check loaded is unloaded again"
+    );
+
+    // The model does not fit when it generates.
+    world.script_router(
+        "/v1/completions",
+        Some((
+            "500 Internal Server Error",
+            json!({ "error": { "message": "failed to allocate memory for the context" } }),
+        )),
+    );
+    assert_eq!(
+        full(&world),
+        ItemState::Failed(FailureCategory::NotEnoughMemory)
+    );
+    world.script_router("/v1/completions", None);
+    assert_eq!(full(&world), ItemState::Ready);
+
+    // A model another caller holds is checked and stays loaded for it.
+    world
+        .llama
+        .as_ref()
+        .unwrap()
+        .state
+        .lock()
+        .unwrap()
+        .models
+        .insert(TEXT.into(), ModelStatus::Loaded);
+    assert_eq!(full(&world), ItemState::Ready);
+    assert_eq!(world.router_models()[TEXT], ModelStatus::Loaded);
+    assert!(world.ollama_requests().is_empty());
 }
