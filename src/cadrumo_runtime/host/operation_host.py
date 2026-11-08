@@ -951,6 +951,10 @@ class ProfileWorkerOperationHost:
                 recovery_required=result.recovery_required,
             )
         self._drain_result = result
+        # Calendar projections read for this profile's session end with it, drained or not.
+        from cadrumo.entrypoints.workbench_generation_composition import close_declaration_list_capture_memory
+
+        close_declaration_list_capture_memory()
         # The drain's settlements are reported before the host lets go.
         await await_cancellation_complete(
             asyncio.to_thread(self._progress.close), task_name="profile-operation-progress-close"

@@ -345,6 +345,35 @@ def _first_unit_per_address(work_units: tuple[WorkUnit, ...]) -> tuple[WorkUnit,
     return tuple(first.values())
 
 
+def local_work_unit_entries(
+    work_units: tuple[WorkUnit, ...],
+    *,
+    calendar_range: OverviewCalendarRange,
+    today: date,
+    operation: PinnedAuthorityOperation,
+    engine: ScheduleProducer | None = None,
+    filing_evidence: tuple[OverviewCalendarFilingEvidence, ...] = (),
+    live_censo_verified_profile_keys: tuple[str, ...] | None = None,
+) -> tuple[OverviewCalendarEntry, ...]:
+    """Date each local declaration from its own registry window, with no obligation schedule.
+
+    Used where the taxpayer model is undeclared or its projection was refused:
+    the generic schedule is unknown, yet a declaration the profile holds still
+    has a registry window and a deadline. One entry names each natural address.
+    """
+    due_soon_days = (engine if engine is not None else DeadlineEngine(authority=operation)).due_soon_days
+    return _merge_work_units_into_entries(
+        (),
+        work_units=_first_unit_per_address(work_units),
+        calendar_range=calendar_range,
+        today=today,
+        due_soon_days=due_soon_days,
+        filing_evidence=filing_evidence,
+        live_censo_verified_profile_keys=live_censo_verified_profile_keys,
+        operation=operation,
+    )
+
+
 def _merge_work_units_into_entries(
     entries: tuple[OverviewCalendarEntry, ...],
     *,
@@ -750,16 +779,14 @@ def build_overview_calendar(
         # else, so the report honestly shows the rest of the obligation universe
         # as advised/undetermined rather than empty — an undeclared profile can
         # under-scope the most, so it must not read as "nothing to file".
-        due_soon_days = (engine if engine is not None else DeadlineEngine(authority=operation)).due_soon_days
-        work_entries = _merge_work_units_into_entries(
-            (),
-            work_units=_first_unit_per_address(work_units),
+        work_entries = local_work_unit_entries(
+            work_units,
             calendar_range=calendar_range,
             today=today,
-            due_soon_days=due_soon_days,
+            operation=operation,
+            engine=engine,
             filing_evidence=filing_evidence,
             live_censo_verified_profile_keys=live_censo_verified_profile_keys,
-            operation=operation,
         )
         return OverviewCalendar(
             range=calendar_range,

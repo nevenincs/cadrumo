@@ -83,6 +83,15 @@ _LIST_MEMORY_LOCK = Lock()
 _LIST_MEMORY: tuple[str, WorkbenchCaptureMemory] | None = None
 
 
+def close_declaration_list_capture_memory() -> None:
+    """Drop the held capture memory when the profile session that read it ends."""
+    global _LIST_MEMORY
+    with _LIST_MEMORY_LOCK:
+        held, _LIST_MEMORY = _LIST_MEMORY, None
+    if held is not None:
+        held[1].close()
+
+
 def _declaration_list_capture_memory(profile_id: str) -> WorkbenchCaptureMemory:
     """Return the capture memory the list-shaped reads of one profile share.
 
@@ -91,7 +100,9 @@ def _declaration_list_capture_memory(profile_id: str) -> WorkbenchCaptureMemory:
     still needs the capture's own freshly read profile, work-unit, filing,
     ledger and authority identities to equal the stored ones, so a hit never
     answers for data the exact-profile door did not just read. Only the latest
-    profile's memory is kept; another profile's read closes the previous one.
+    profile's memory is kept; another profile's read closes the previous one,
+    and the worker host closes it with the profile session
+    (:func:`close_declaration_list_capture_memory`).
     """
     global _LIST_MEMORY
     with _LIST_MEMORY_LOCK:
@@ -357,6 +368,7 @@ def resolve_modelo_workspace_graded_snapshot(
 
 __all__ = [
     "MODELO_WORKSPACE_READ_ATTEMPTS",
+    "close_declaration_list_capture_memory",
     "compose_secure_workbench_generation_provider",
     "modelo_workspace_projection_reader",
     "resolve_modelo_workspace_graded_snapshot",

@@ -15,6 +15,7 @@ import pytest
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from ...domain.user_profile.values import UserProfileFact
 from ..modelo.declarations_calendar import DeclarationsCalendarSource
 from ..modelo.declarations_list import DeclarationListGroup, declaration_list_rows
 from ..overview.calendar_models import OverviewCalendarEntrySource
@@ -88,3 +89,25 @@ def test_a_modelo_with_a_local_declaration_is_not_advised(authority_operation: P
         row.modelo for row in declaration_list_rows(workspace, calendar) if row.group is DeclarationListGroup.MAYBE
     }
     assert maybe == advised
+
+
+def test_a_refused_taxpayer_projection_still_dates_each_local_declaration(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """One IVA fact claims the whole IVA block, so the projection refuses until it is answered."""
+    unit = _work_unit(authority_operation, "303", _YEAR, "1T")
+    door = plain_generation_door(
+        authority_operation,
+        profile=Repository(
+            profile_record(authority_operation, facts=(UserProfileFact(path="iva.regime", value="GENERAL"),))
+        ),
+        work_units=cast(Any, Repository(WorkUnitCatalogue.model_construct(work_units={unit.work_unit_id: unit}))),
+    )
+
+    inputs = door.read_declaration_list_inputs()
+
+    assert inputs.calendar.sources[0].reason_code == "workbench.home.taxpayer_profile_incomplete"
+    assert [entry.modelo for entry in inputs.calendar.entries] == ["303"]
+    entry = inputs.calendar.entries[0]
+    assert entry.source is OverviewCalendarEntrySource.LOCAL_WORK_UNIT
+    assert entry.closes_on >= entry.opens_on
