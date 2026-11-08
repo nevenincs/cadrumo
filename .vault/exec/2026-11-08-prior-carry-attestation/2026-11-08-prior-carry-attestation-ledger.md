@@ -5,7 +5,7 @@ tags:
 date: '2026-11-08'
 modified: '2026-11-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:8f713da013b3a8b9f64220e1890b47beb22f1dde8fddcb7c4aed5837b65f56c9'
+body_hash: 'sha256:92efa0459396810fa43835fd4e85f1ce353ac67635d701b2f2371377b5185710'
 related:
   - "[[2026-11-08-prior-carry-attestation-plan]]"
 ---
@@ -77,6 +77,10 @@ related:
 - `S04` `M` `native/desktop/frontend/src/shell/modeloContract/modeloWorkForm.ts`
 - `S04` `M` `native/desktop/frontend/tests/modelo-form-model.spec.ts`
 - `S04` `verify:` `tsc` -> `pass`
+- `S05` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S05` `M` `native/desktop/frontend/src/shell/modeloContract/modeloWorkForm.ts`
+- `S05` `verify:` `check-operation-contract-manifest` -> `pass`
+- `S05` `verify:` `pytest-test_m100_carry_attestation-every-envelope-year` -> `pass`
 
 ## Notes
 
