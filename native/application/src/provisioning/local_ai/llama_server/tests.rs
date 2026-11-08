@@ -494,11 +494,12 @@ fn a_router_that_listens_is_waited_for_until_ready_and_then_its_build_is_confirm
             (HELPER_LOG, log.as_os_str()),
         ],
     );
-    // The router answers 503 until the gate is there, which opens once it has been asked.
+    // The router answers 503 until the gate is there, which opens once a health request
+    // has been answered 503.
     let opener = {
         let (ready, log) = (ready.clone(), log.clone());
         std::thread::spawn(move || {
-            logged(&log, "GET /health");
+            logged(&log, "answered 503");
             fs::write(&ready, b"").unwrap();
         })
     };
@@ -507,8 +508,10 @@ fn a_router_that_listens_is_waited_for_until_ready_and_then_its_build_is_confirm
     opener.join().unwrap();
 
     let written = fs::read_to_string(&log).unwrap();
-    let health = written.matches("GET /health").count();
-    assert!(health >= 2, "asked while unready and once ready: {written}");
+    assert!(
+        written.contains("answered 503") && written.contains("answered 200"),
+        "asked while unready and once ready: {written}"
+    );
     assert!(
         written.find("GET /props").unwrap() > written.rfind("GET /health").unwrap(),
         "the build is asked once it is ready: {written}"
