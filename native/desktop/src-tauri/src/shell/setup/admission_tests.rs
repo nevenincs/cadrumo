@@ -247,7 +247,7 @@ fn admission_collects_busy_catalogue_and_local_model_reads() {
         listed
             .as_slice()
             .iter()
-            .any(|model| model.name.to_string() == ADDED)
+            .any(|model| model.name().to_string() == ADDED)
     );
     assert_eq!(
         service.replies.asked(),
@@ -702,7 +702,7 @@ fn a_removal_selects_every_model_on_a_local_lanes_lists_once() {
     let mut names: Vec<_> = listed
         .as_slice()
         .iter()
-        .map(|model| model.name.to_string())
+        .map(|model| model.name().to_string())
         .collect();
     names.sort();
     assert_eq!(names, [ADDED, TEXT, VISION]);

@@ -19,6 +19,7 @@ use crate::{
 use cadrumo_application::{
     diagnostics::{Diagnostics, EventKind, HostStage, lifecycle::LifecycleFact},
     error::application::{ApplicationError, ErrorCode, Operation},
+    provisioning::local_ai::LocalEngine,
 };
 use std::{
     io,
@@ -62,7 +63,7 @@ pub struct Background {
     control_retry: Option<Instant>,
     /// A refused uninstall stop is retried at the control pace.
     stop_retry: Option<Instant>,
-    /// The local AI server, for a package whose build carries the program.
+    /// The selected engine's local AI server, for a package that carries its program.
     local_ai: Option<LocalAiHost>,
 }
 
@@ -74,10 +75,16 @@ impl Background {
         diagnostics: Arc<Diagnostics>,
         initial: StartKind,
     ) -> io::Result<Self> {
-        let local_ai = installed
-            .target
-            .package_root()
-            .and_then(|package| LocalAiHost::for_package(package, installed.target.storage_root()));
+        // The person's engine selection does not reach the manager yet, so the default
+        // engine's server runs.
+        let engine = LocalEngine::default();
+        let local_ai = installed.target.package_root().and_then(|package| {
+            LocalAiHost::for_package(package, installed.target.storage_root(), engine)
+                .inspect_err(|reason| {
+                    diagnostics::local_ai_unavailable(&diagnostics, engine, *reason);
+                })
+                .ok()
+        });
         let ownership = Ownership::new(
             installed.target.storage_root().to_path_buf(),
             session,

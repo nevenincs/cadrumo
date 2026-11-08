@@ -10,6 +10,7 @@ endif()
 set(platform_contract_inputs "${CADRUMO_SOURCE_ROOT}/native/platforms/${platform_contract_name}.json")
 set(contract_inputs "${CADRUMO_SOURCE_ROOT}/native/package-layout.json"
   "${CADRUMO_SOURCE_ROOT}/native/application-environment.toml" ${platform_contract_inputs}
+  "${CADRUMO_SOURCE_ROOT}/native/llamacpp-pins.json" "${CADRUMO_SOURCE_ROOT}/dev/env/llamacpp_pins.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/application_environment.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/environment_compile.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/environment_declaration_primitives.py"
