@@ -21,6 +21,7 @@ from cadrumo.application.storage.calc_sheets.form_workbook import add_form_workb
 from cadrumo.application.storage.calc_sheets.records import TabName
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.config import override_settings
+from cadrumo.core.field_origin import FieldOrigin
 from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.i18n.render import lookup_translation
 from cadrumo.core.modelo import Modelo
@@ -55,7 +56,7 @@ def _producer(*, modelo: str = "111", complementaria: bool = False) -> FilingPro
             legal_name=None, given_name="Ana", surnames="Prueba", full_name="Ana Prueba"
         ),
         presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoría Prueba"),
-        model_profile=Modelo111ProfileFacts(colegio_concertado=False)
+        model_profile=Modelo111ProfileFacts(colegio_concertado=False, colegio_concertado_origin=FieldOrigin.OPERATOR)
         if modelo == "111"
         else GeneralFilingProfileFacts(),
         elections=FilingElectionFacts(

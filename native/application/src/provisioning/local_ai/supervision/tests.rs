@@ -2,7 +2,10 @@ use super::*;
 use crate::provisioning::{
     items::Locations,
     local_ai::{
+        fake_llamacpp, fake_ollama,
+        huggingface::MODEL_MEDIA_TYPE,
         lease::PROGRAM_CHANGE_BUDGET,
+        llama_server::tests as llama_tests,
         loopback::Loopback,
         program::{
             SERVER_RECORD, ServerRecord,
@@ -15,6 +18,7 @@ use crate::provisioning::{
 use std::{
     ffi::OsString,
     fs,
+    path::{Path, PathBuf},
     process::Child,
     sync::{
         Arc,
@@ -314,4 +318,197 @@ fn the_setting_the_owner_started_with_runs_the_server_and_one_it_cannot_use_runs
         !written.contains("proxy.example") && !written.contains("secret"),
         "the address is a credential; only its digest is recorded: {written}"
     );
+}
+
+/// Both engines' programs set up under one storage, each standing in with its fake and
+/// appending to one launch file whenever a server of its kind starts.
+struct BothEngines {
+    _root: tempfile::TempDir,
+    locations: Locations,
+    launches: PathBuf,
+    ollama: Program,
+    llama: LlamaServer,
+}
+
+fn both_engines() -> BothEngines {
+    let root = tempfile::tempdir().unwrap();
+    let (mut llama, locations) = llama_tests::packaged(root.path());
+    let launches = root.path().join("launches");
+    llama_tests::stand_in(
+        &mut llama,
+        "b12184-c0ab6e5c0",
+        &[(fake_llamacpp::HELPER_LAUNCHES, launches.as_os_str())],
+    );
+    let (mut ollama, _) = installed(&locations, "9.8.7");
+    if let Some(stand_in) = ollama.serve_override.as_mut() {
+        stand_in.environment.push((
+            OsString::from(fake_ollama::HELPER_LAUNCHES),
+            launches.clone().into_os_string(),
+        ));
+    }
+    BothEngines {
+        _root: root,
+        locations,
+        launches,
+        ollama,
+        llama,
+    }
+}
+
+/// The servers ever started, by kind, in order.
+fn launched(launches: &Path) -> Vec<String> {
+    fs::read_to_string(launches)
+        .unwrap_or_default()
+        .lines()
+        .map(str::to_owned)
+        .collect()
+}
+
+/// What a selection supervises and what it left: the storage, the launch file and
+/// which engines' programs were built.
+struct Selected {
+    supervisor: ServerSupervisor<EngineProgram>,
+    root: tempfile::TempDir,
+    launches: PathBuf,
+    locations: Locations,
+    built: (bool, bool),
+}
+
+/// Supervises the program of `engine` as the manager does, noting which programs were
+/// built.
+fn selected(engine: LocalEngine, both: BothEngines) -> Selected {
+    let BothEngines {
+        _root: root,
+        locations,
+        launches,
+        ollama,
+        llama,
+    } = both;
+    let (mut ollama_built, mut llama_built) = (false, false);
+    let program = EngineProgram::select(
+        engine,
+        || {
+            ollama_built = true;
+            Ok::<_, ()>(ollama)
+        },
+        || {
+            llama_built = true;
+            Ok(llama)
+        },
+    )
+    .unwrap();
+    assert_eq!(program.engine(), engine);
+    let supervisor = ServerSupervisor::new(
+        program,
+        free_address(),
+        Box::new(Counting::default()),
+        Box::new(ambient),
+    )
+    .unwrap()
+    .with_policy(RestartPolicy {
+        initial_backoff: Duration::from_secs(1),
+        maximum_backoff: Duration::from_secs(4),
+        crash_loop_limit: 3,
+        crash_loop_window: Duration::from_secs(60),
+    });
+    Selected {
+        supervisor,
+        root,
+        launches,
+        locations,
+        built: (ollama_built, llama_built),
+    }
+}
+
+fn assert_engine_running(supervisor: &mut ServerSupervisor<EngineProgram>, now: Instant) {
+    let state = supervisor.poll(now);
+    assert_eq!(
+        state,
+        ServerState::Running,
+        "the start failed with: {:?}",
+        supervisor.last_start_failure().map(ToString::to_string)
+    );
+}
+
+/// Ends the running server as a crash would, and starts it again after its backoff.
+fn crash_and_restart(supervisor: &mut ServerSupervisor<EngineProgram>, now: Instant) {
+    let _ = Loopback::new(supervisor.address())
+        .unwrap()
+        .post("/fake/exit", b"{}");
+    supervisor
+        .program_mut()
+        .running_mut()
+        .expect("a running server")
+        .wait_exit();
+    let due = now + Duration::from_secs(1);
+    assert_eq!(supervisor.poll(now), ServerState::Restarting { at: due });
+    assert_engine_running(supervisor, due);
+}
+
+/// A model new in the store, as a fetch leaves it.
+fn model_arrives(locations: &Locations) {
+    llama_tests::manifest(
+        &locations.models,
+        ["registry.ollama.ai", "library", "qwen3", "1.7b"],
+        &[llama_tests::blob(
+            &locations.models,
+            MODEL_MEDIA_TYPE,
+            b"text weights",
+        )],
+    );
+}
+
+#[test]
+fn with_ollama_selected_no_llama_server_is_ever_started_through_the_whole_supervision() {
+    let Selected {
+        mut supervisor,
+        root,
+        launches,
+        locations,
+        built,
+    } = selected(LocalEngine::Ollama, both_engines());
+    assert_eq!(built, (true, false), "llama-server is never built");
+    let now = Instant::now();
+
+    assert_engine_running(&mut supervisor, now);
+    crash_and_restart(&mut supervisor, now);
+    // Ollama reads the store as it is: a new model restarts nothing.
+    model_arrives(&locations);
+    let later = now + Duration::from_secs(1);
+    assert_engine_running(&mut supervisor, later);
+    supervisor.stop();
+    assert_eq!(supervisor.state(), ServerState::Stopped);
+    drop(supervisor);
+
+    // Every server ever started was Ollama: started once and once again after the crash.
+    assert_eq!(launched(&launches), [fake_ollama::LAUNCHED; 2]);
+    drop(root);
+}
+
+#[test]
+fn with_llama_server_selected_no_ollama_is_ever_started_through_the_whole_supervision() {
+    let Selected {
+        mut supervisor,
+        root,
+        launches,
+        locations,
+        built,
+    } = selected(LocalEngine::LlamaCpp, both_engines());
+    assert_eq!(built, (false, true), "Ollama is never built");
+    let now = Instant::now();
+
+    assert_engine_running(&mut supervisor, now);
+    crash_and_restart(&mut supervisor, now);
+    // A new model in the store starts the idle router again with it.
+    model_arrives(&locations);
+    let later = now + Duration::from_secs(1);
+    assert_engine_running(&mut supervisor, later);
+    supervisor.stop();
+    assert_eq!(supervisor.state(), ServerState::Stopped);
+    drop(supervisor);
+
+    // Every server ever started was llama-server: started, restarted after the crash and
+    // started again for the new model.
+    assert_eq!(launched(&launches), [fake_llamacpp::LAUNCHED; 3]);
+    drop(root);
 }

@@ -166,8 +166,31 @@ export function useSearchElsewhere(
   return key !== null && state.key === key ? state.count : null;
 }
 
-/** An own account, as a filter names it. */
-export type OwnAccountChoice = { id: string; label: string };
+/** An own account, as a filter names it, in the currency it is kept in. */
+export type OwnAccountChoice = {
+  id: string;
+  label: string;
+  currency: string | null;
+};
+
+/**
+ * The currency a new movement is offered, or null when the accounts do not
+ * settle one.
+ *
+ * It is the currency the profile's own accounts are kept in, as the backend
+ * serves it. Where they disagree, nothing is offered: the person says which,
+ * and the saved movement carries its currency either way.
+ */
+export function servedDraftCurrency(
+  accounts: readonly OwnAccountChoice[] | null,
+): string | null {
+  const said = new Set(
+    (accounts ?? []).flatMap((account) =>
+      account.currency ? [account.currency] : [],
+    ),
+  );
+  return said.size === 1 ? [...said][0]! : null;
+}
 
 /** The profile's own accounts, read when `wanted` first holds. Null while
  * they are not read, or when they could not be. */
@@ -211,8 +234,13 @@ function accountsOf(result: JsonObject): OwnAccountChoice[] {
     if (!entry || typeof entry !== "object" || Array.isArray(entry)) continue;
     const id = entry.own_account_id;
     const label = entry.label;
+    const currency = entry.currency;
     if (typeof id === "string" && typeof label === "string")
-      accounts.push({ id, label });
+      accounts.push({
+        id,
+        label,
+        currency: typeof currency === "string" && currency ? currency : null,
+      });
   }
   return accounts;
 }

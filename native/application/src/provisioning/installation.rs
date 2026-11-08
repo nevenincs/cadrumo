@@ -9,7 +9,8 @@
 //! The image's package names the pins and the bundled browser driver; the storage root
 //! comes from the package's storage rules, the same ones every other process of the
 //! installation reads, and every component location is a fixed path beneath it. The free space comes from the platform's
-//! volume query, and the local AI server's fixed address from the package's contract.
+//! volume query, and the Ollama server's fixed address and the packaged llama-server's
+//! folder and build from the package's contract.
 //! The owner contains the process before the engine starts anything: a kill-on-close job
 //! on Windows, and on Linux and macOS a process scope every browser check and hardware
 //! query is created into, so whatever the engine starts ends with its owner.
@@ -106,6 +107,8 @@ pub fn installation_config() -> Result<EngineConfig, Error> {
         local_ai_address: cadrumo_platform::LOCAL_AI_ADDRESS
             .parse()
             .map_err(|_| Error::Invalid("local AI address".into()))?,
+        llama_server_folder: package_path(&package, cadrumo_platform::LLAMA_SERVER),
+        llama_server_build: cadrumo_platform::LLAMA_SERVER_BUILD.to_owned(),
         browser_environment,
         scratch,
         free_space: Box::new(|path| cadrumo_platform::volume::available_bytes(path).ok()),

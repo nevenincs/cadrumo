@@ -2283,7 +2283,7 @@ modelo:
             title: Modelo 714 Impuesto sobre el Patrimonio cuota
       field:
         official_name: Impuesto sobre el Patrimonio. Declaración
-        title: Modelo 714
+        title: Impuesto sobre el Patrimonio
       revision:
         '2021':
           casilla:

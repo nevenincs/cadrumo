@@ -10,6 +10,7 @@ repository or resolve an implicit global store when a caller forgets a port.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol
 
@@ -120,8 +121,14 @@ class CalculationActionPortsFactory(Protocol):
         bucket_id: str,
         operation: PinnedAuthorityOperation,
         profile_record: object | None = None,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
     ) -> CalculationActionPorts:
-        """Return the complete calculation bundle for ``bucket_id``."""
+        """Return the complete calculation bundle for ``bucket_id``.
+
+        ``mutation_writer``, when supplied, admits every actual persistence
+        commit the bundle's repositories make, so an operation can account
+        for its effect from the writes that really began.
+        """
         ...
 
 

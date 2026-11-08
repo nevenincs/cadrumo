@@ -45,6 +45,7 @@ from decimal import Decimal
 from typing import NamedTuple
 
 from ...core.export_layout_format import ExportLayoutFormat
+from ...core.field_origin import FieldOrigin
 from ...core.filing_timeliness import FilingTimeliness
 from ...core.modelo import Modelo
 from ...core.payment_instalment_election import second_instalment_is_payable
@@ -104,6 +105,12 @@ from ..filing.producer_snapshot import (
 from ..filing.producer_snapshot_m360 import Modelo360RepresentanteAccountChoice, Modelo360SolicitudEntry
 from ..filing.runtime import RegistrySchemaAccessor
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
+from ..user_profile.completeness import pinned_registry_scope
+from ..user_profile.modelo_scoped_conditions import (
+    ModeloScopedRequirementState,
+    field_declaring_selector,
+    modelo_scoped_requirement,
+)
 from .action_errors import (
     ModeloChargeAccountMissingError,
     ModeloDomiciliationPastCutoffError,
@@ -789,8 +796,47 @@ def _resolve_export_model_profile(
     if modelo == form_for_role("sociedades.instalment"):
         return Modelo202ProducerProfile(taxpayer_profile=workflow_profile, activities=()), None
     if modelo == form_for_role("withholding.work_periodic"):
-        return Modelo111ProfileFacts(colegio_concertado=workflow_profile.colegio_concertado), None
+        return _modelo_111_profile_facts(
+            workflow_profile=workflow_profile,
+            work_unit=work_unit,
+            operation=operation,
+        ), None
     return GeneralFilingProfileFacts(), None
+
+
+_COLEGIO_CONCERTADO_SELECTOR = "colegio_concertado"
+
+
+def _modelo_111_profile_facts(
+    *,
+    workflow_profile: TaxpayerProfile,
+    work_unit: WorkUnit,
+    operation: PinnedAuthorityOperation,
+) -> Modelo111ProfileFacts:
+    """Resolve the Modelo 111 header attestation, deriving the no the conditions settle.
+
+    The declarant's own answer is carried as stated. Where there is none, the
+    schema's conditions for the header are read: a positively absent condition
+    -- no employees, or no teaching activity -- makes the mark a derived no that
+    the layout emits blank, and leaves the unanswered case unanswered so the
+    snapshot check still refuses to guess it.
+    """
+    stated = workflow_profile.colegio_concertado
+    if stated is not None:
+        return Modelo111ProfileFacts(colegio_concertado=stated, colegio_concertado_origin=FieldOrigin.OPERATOR)
+    field = field_declaring_selector(operation.profile_schema(), _COLEGIO_CONCERTADO_SELECTOR)
+    if field is None:
+        return Modelo111ProfileFacts(colegio_concertado=None)
+    with pinned_registry_scope():
+        requirement = modelo_scoped_requirement(
+            field,
+            profile=workflow_profile,
+            schema=operation.profile_schema(),
+            effective_date=work_unit.period.end_date,
+        )
+    if requirement.state is ModeloScopedRequirementState.DERIVED_ABSENT:
+        return Modelo111ProfileFacts(colegio_concertado=False, colegio_concertado_origin=FieldOrigin.DERIVED)
+    return Modelo111ProfileFacts(colegio_concertado=None)
 
 
 def _resolve_m303_filing_facts_for_export(

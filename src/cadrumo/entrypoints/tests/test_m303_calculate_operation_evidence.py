@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast
+from uuid import UUID
 
 import pytest
 
@@ -20,6 +21,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     upsert_test_profile_facts,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.modelo.action_errors import ModeloCrossPeriodCleanStateError
 from cadrumo.application.modelo.calculation_operation import ModeloWorkCalculateExecutor
 from cadrumo.application.modelo.calculation_request_fields import (
     ModeloCalculationInputFieldsV1,
@@ -37,8 +39,16 @@ from cadrumo.application.modelo.work_calculation_contracts import (
     ModeloWorkCalculateRequest,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.workbench_projection import project_modelo_workbench_form
+from cadrumo.application.modelo.workbench_read import read_modelo_workbench_form
 from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.next_step import (
+    OperationCreateWorkStepV1,
+    OperationOpenWorkStepV1,
+)
 from cadrumo.application.operations.owner import OperationExecutorContext
+from cadrumo.core.errors.error_codes import ErrorCategory, get_registered_error_code
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.operations import OperationEffect
 from cadrumo.core.period import Period
 from cadrumo.domain.attachments.m303_filing_evidence import M303Exonerado390ApplicabilityAssertion
@@ -47,6 +57,8 @@ from cadrumo.domain.modelos.calculation_revision_m303_handoff import FilingInsta
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
+from cadrumo.entrypoints.operation_composition_inputs import build_modelo_workbench_read_ports
+from cadrumo.entrypoints.tests.production_operation_registry import production_operation_registry
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -132,8 +144,9 @@ def _execute(
     operation: PinnedAuthorityOperation,
     store: AttachmentStore,
     inputs: ModeloCalculationInputFieldsV1 | None = None,
+    context: _Context | None = None,
 ) -> tuple[ModeloWorkCalculatePublicResultV3, _Events]:
-    context = _Context(operation)
+    context = context or _Context(operation)
     executor = ModeloWorkCalculateExecutor(
         calculation_action_ports_factory=build_calculation_action_ports,
         attachment_store_factory=lambda _bucket_id: store,
@@ -242,3 +255,105 @@ def test_other_modelo_calculates_without_m303_evidence(
     assert revision.filing_instance_evidence is None
     assert result.work_unit_id == work_unit.work_unit_id
     assert events.effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]
+
+
+def test_a_calculation_refused_before_any_write_reports_no_effect(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """A Modelo 390 with no Modelo 303 quarter behind it is refused before anything is saved.
+
+    The refusal comes after the calculation has run, because only its figures
+    show which reconciliation boxes would be saved as an unproven zero. Nothing
+    was written by then, so the operation must not say records may have changed.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID):
+        seed_modelo_ready_profile(bucket_id=_PROFILE_ID, at=_CLOCK)
+        with bound_test_profile_record(_PROFILE_ID):
+            work_unit = _work_unit(operation, modelo="390", period=Period.from_year_and_code(2025, "0A"))
+            inputs = ModeloCalculationInputFieldsV1(
+                binding_overrides=(
+                    ModeloCalculationOverride(key="modelo-390-prorrata-regularizacion-anual", value="0"),
+                )
+            )
+            context = _Context(operation)
+            with pytest.raises(ModeloCrossPeriodCleanStateError) as refused:
+                _execute(
+                    work_unit=work_unit,
+                    evidence=None,
+                    operation=operation,
+                    store=AttachmentStore(),
+                    inputs=inputs,
+                    context=context,
+                )
+            revisions = (
+                CalculationRevisionCatalogueRepository(bucket_id=_PROFILE_ID).load(operation=operation).revisions
+            )
+
+    assert get_registered_error_code(refused.value).category is ErrorCategory.REFUSED
+    assert not revisions
+    assert context.events.effects == []
+    assert refused.value.context is not None
+    assert refused.value.context["missing_303_periods"] == ("1T", "2T", "3T", "4T")
+
+
+def test_a_refused_annual_summary_names_where_each_quarter_stands_and_offers_the_first_step(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """The Modelo 390 refusal says, per Modelo 303 quarter, why its filed figures are not there yet.
+
+    The first quarter is calculated and not checked, the second exists without
+    a calculation, and the last two do not exist. The refusal names each in
+    order and offers opening the first quarter, whose own form says what is left.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID):
+        seed_modelo_ready_profile(bucket_id=_PROFILE_ID, at=_CLOCK)
+        upsert_test_profile_facts(_PROFILE_ID, (UserProfileFact(path="censo.activity_start_date", value="2025-01-01"),))
+        with bound_test_profile_record(_PROFILE_ID):
+            first = _work_unit(operation, modelo="303", period=Period.from_year_and_code(2025, "1T"))
+            _execute(
+                work_unit=first,
+                evidence=ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(joint_return_elected=True),
+                operation=operation,
+                store=AttachmentStore(),
+            )
+            second = _work_unit(operation, modelo="303", period=Period.from_year_and_code(2025, "2T"))
+            annual = _work_unit(operation, modelo="390", period=Period.from_year_and_code(2025, "0A"))
+            with pytest.raises(ModeloCrossPeriodCleanStateError) as refused:
+                _execute(
+                    work_unit=annual,
+                    evidence=None,
+                    operation=operation,
+                    store=AttachmentStore(),
+                    inputs=ModeloCalculationInputFieldsV1(
+                        binding_overrides=(
+                            ModeloCalculationOverride(key="modelo-390-prorrata-regularizacion-anual", value="0"),
+                        )
+                    ),
+                )
+            pending = read_modelo_workbench_form(
+                annual.work_unit_id,
+                bucket_id=_PROFILE_ID,
+                ports=build_modelo_workbench_read_ports(_PROFILE_ID, operation),
+                operation=operation,
+                operation_contracts=production_operation_registry().public_contract_set,
+                language=OutputLanguage.ES,
+            )
+            projected = project_modelo_workbench_form(UUID(_PROFILE_ID), annual.work_unit_id, pending)
+
+    context = refused.value.context
+    assert context is not None
+    # The to-do list reads the same answer the refusal names, before any calculation is tried.
+    assert tuple(line.words for line in projected.source_requirements) == tuple(str(context["sources"]).split("; "))
+    steps = [line.next_step for line in projected.source_requirements]
+    assert isinstance(steps[0], OperationOpenWorkStepV1) and steps[0].work_unit_id == first.work_unit_id
+    assert isinstance(steps[1], OperationOpenWorkStepV1) and steps[1].work_unit_id == second.work_unit_id
+    assert all(isinstance(step, OperationCreateWorkStepV1) for step in steps[2:])
+    assert context["missing_303_period_standings"] == ("1T:unverified", "2T:missing", "3T:missing", "4T:missing")
+    sources = str(context["sources"])
+    assert "calculada, sin comprobar" in sources and "sin calcular" in sources
+    assert "{" not in sources
+    step = refused.value.operation_next_step(OutputLanguage.ES)
+    assert isinstance(step, OperationOpenWorkStepV1)
+    assert step.work_unit_id == first.work_unit_id

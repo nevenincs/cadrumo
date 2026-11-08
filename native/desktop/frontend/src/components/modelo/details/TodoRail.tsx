@@ -4,6 +4,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type {
   ModeloFormOrigin,
   ModeloWorkbenchFormProjectionV1,
+  OperationNextStepV1,
   PublicModeloWorkForm,
 } from "../../../shell/modeloContract/modeloWorkForm";
 import { useStrings } from "../../../shell/strings";
@@ -50,12 +51,14 @@ function TodoList({
   onPicked,
   onOpenProfile,
   onOpenCheck,
+  onSourceStep,
 }: {
   envelope: ModeloWorkbenchFormProjectionV1;
   session: FormSession;
   onPicked?: () => void;
   onOpenProfile?: () => void;
   onOpenCheck?: () => void;
+  onSourceStep?: (step: OperationNextStepV1) => void;
 }) {
   const t = useStrings();
   const [openFailed, setOpenFailed] = useState(false);
@@ -83,10 +86,47 @@ function TodoList({
       <Icon name="forward" size="xs" className="mt-0.5 ml-auto text-faint" />
     </button>
   );
+  // The declarations this one sums whose filed figures are not there yet,
+  // each worded by the read model with the step that puts it right; the same
+  // answer a refused calculation names them from.
+  const sources = envelope.source_requirements;
+  const sourcesLine = sources.length > 0 && (
+    <div
+      data-todo-sources=""
+      className="flex flex-col gap-1 rounded-md border border-border px-2 py-2"
+    >
+      <span className="flex items-start gap-2 text-sm">
+        <Icon name="alert" size="xs" className="mt-0.5 text-warning" />
+        {t("workspace.modelo.todo.sources")}
+      </span>
+      <ul className="flex flex-col">
+        {sources.map((source) => (
+          <li key={source.words}>
+            <button
+              type="button"
+              data-todo-source={source.next_step.kind}
+              onClick={() => onSourceStep?.(source.next_step)}
+              disabled={!onSourceStep}
+              title={source.next_step.words}
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs hover:bg-accent"
+            >
+              <span>{source.words}</span>
+              <Icon
+                name="forward"
+                size="xs"
+                className="ml-auto shrink-0 text-faint"
+              />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
   if (!editsAdmitted(envelope))
     return (
       <div className="flex flex-col gap-3 p-2">
         {profileLine}
+        {sourcesLine}
         <p className="flex gap-2 p-2 text-sm text-muted-foreground">
           <Icon name="lock" size="xs" className="mt-0.5" />
           {envelope.rules_incomplete
@@ -117,7 +157,8 @@ function TodoList({
     !todo.groups.length &&
     !todo.failed.length &&
     !elsewhereLine &&
-    !profileLine
+    !profileLine &&
+    !sourcesLine
   )
     return (
       <p className="flex gap-2 p-4 text-sm text-muted-foreground">
@@ -144,6 +185,7 @@ function TodoList({
   return (
     <div className="flex flex-col gap-3 p-2">
       {profileLine}
+      {sourcesLine}
       {elsewhereLine}
       {todo.groups.map(([origin, list]) => {
         const word = t(`workspace.modelo.origin.${origin}`);
@@ -203,6 +245,7 @@ export function TodoRail({
   onPicked,
   onOpenProfile,
   onOpenCheck,
+  onSourceStep,
 }: {
   envelope: ModeloWorkbenchFormProjectionV1;
   session: FormSession;
@@ -211,6 +254,9 @@ export function TodoRail({
   onOpenProfile?: () => void;
   /** Opens the check, which names the missing values no box holds. */
   onOpenCheck?: () => void;
+  /** Takes the step a declaration this one sums needs: creates it, or opens
+   * it, where its own form says what is left. */
+  onSourceStep?: (step: OperationNextStepV1) => void;
 }) {
   const t = useStrings();
   const [rail, setRail] = useState<Rail>("todo");
@@ -243,6 +289,7 @@ export function TodoRail({
             onPicked={onPicked}
             onOpenProfile={onOpenProfile}
             onOpenCheck={onOpenCheck}
+            onSourceStep={onSourceStep}
           />
         ) : (
           <OutlineNavigator

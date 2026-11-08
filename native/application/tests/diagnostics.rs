@@ -872,6 +872,8 @@ fn frontend_diagnostics_are_persisted_with_their_original_severity() {
             dropped: 0,
             line: None,
             column: None,
+            reason: None,
+            summary: None,
         });
     }
     assert!(diagnostics.flush_logs(HANG));

@@ -17,7 +17,7 @@ Core types:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from typing import TYPE_CHECKING, override
 
 if TYPE_CHECKING:
@@ -150,8 +150,12 @@ def build_modelo_export_ports(
     m303_rectificativa_taxpayer_tax_id: SubjectTaxId,
     operation: PinnedAuthorityOperation,
     objects: SecureObjectRepository | None = None,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> ModeloExportPorts:
     """Compose every persisted authority required by one Modelo export.
+
+    ``mutation_writer`` admits each actual secure-object commit; it fences a
+    repository this call opens, so it cannot be combined with ``objects``.
 
     Parameter types: ``objects``
     (:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`).
@@ -175,11 +179,17 @@ def build_modelo_export_ports(
     from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ..application.modelo.export_ports import ModeloExportPorts
+    from ..core.errors.hierarchy import InternalInvariantError
     from ..domain.filing.software_identity import development_mock_software_identity
     from .calculation_revision_composition import bind_calculation_revision_persistence_from_resolved_identity
 
     normalized_bucket_id = bucket_id.strip()
-    objects = objects if objects is not None else secure_object_repository_for_bucket(normalized_bucket_id)
+    if objects is not None and mutation_writer is not None:
+        raise InternalInvariantError("an export writer fences only the repository it opens")
+    if objects is None:
+        objects = secure_object_repository_for_bucket(normalized_bucket_id)
+        if mutation_writer is not None:
+            objects = objects.with_mutation_writer(mutation_writer)
     calculation_binding = bind_calculation_revision_persistence_from_resolved_identity(
         bucket_id=normalized_bucket_id,
         objects=objects,

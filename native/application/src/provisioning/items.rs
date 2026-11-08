@@ -1,11 +1,17 @@
 //! The closed set of setup items and where each one lives under the storage root.
 //!
 //! Two pieces of outside software make Cadrumo work: the browser that reads the tax
-//! agency's website, and the local AI, which is the program that runs models together
-//! with the model the person selected for each local role. Each is one item, set up once
-//! for the whole installation, in this order. The local AI's program and models are parts
-//! of its plan, never items of their own; with no local selection the item is the
-//! program alone.
+//! agency's website, and the local AI, which is the selected local engine's program that
+//! runs models together with the model the person selected for each local role. Each is
+//! one item, set up once for the whole installation, in this order. The local AI's program
+//! and models are parts of its plan, never items of their own; with no local selection the
+//! item is the program alone.
+//!
+//! Only the Ollama program is ever downloaded, and so planned as a part, while Ollama is
+//! the selected engine. The llama-server the package carries is part of the installation:
+//! with llama.cpp selected the local AI plans no program part, and with no local selection
+//! it has nothing to download at all. The llama-server keeps its record, preset and home
+//! in a folder of its own beside the Ollama program's, which no plan downloads into.
 
 use serde::{Deserialize, Serialize};
 use std::{fmt, path::PathBuf, time::Duration};
@@ -47,7 +53,8 @@ impl fmt::Display for ItemId {
     }
 }
 
-/// The local AI's program part.
+/// The local AI's program part: the Ollama program, planned only while Ollama is the
+/// selected engine.
 pub const PROGRAM_PART: &str = "program";
 
 /// Bound for one item's, or one part's, full check.
@@ -97,7 +104,7 @@ pub struct Locations {
     pub browsers: PathBuf,
     pub models: PathBuf,
     pub ollama_home: PathBuf,
-    /// The program's versions, one folder each.
+    /// The Ollama program's versions, one folder each.
     pub programs: PathBuf,
     pub receipts: PathBuf,
     /// The per-item writer locks and activity records.
@@ -163,5 +170,25 @@ mod tests {
             locations.destination(Destination::LocalAiProgram),
             root.join("components/ollama")
         );
+    }
+
+    #[test]
+    fn the_packaged_llama_server_has_a_folder_of_its_own_that_no_plan_downloads_into() {
+        let root = Path::new("/state");
+        let locations = Locations::under(root);
+        let folder = crate::provisioning::local_ai::llama_server::server_folder(&locations)
+            .expect("the components folder holds it");
+        assert_eq!(folder, root.join("components/llama-server"));
+        for destination in [
+            Destination::PlaywrightBrowsers,
+            Destination::OllamaModels,
+            Destination::LocalAiProgram,
+        ] {
+            let stored = locations.destination(destination);
+            assert!(
+                !folder.starts_with(stored) && !stored.starts_with(&folder),
+                "{destination:?} stores nothing in the llama-server's folder"
+            );
+        }
     }
 }

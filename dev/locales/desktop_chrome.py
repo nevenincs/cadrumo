@@ -185,7 +185,6 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "offline",
             "program_missing",
             "program_not_running",
-            "program_proxy_differs",
             "secure_connection_failed",
             "unexpected",
         ),

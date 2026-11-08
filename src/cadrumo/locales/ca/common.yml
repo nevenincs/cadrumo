@@ -1497,6 +1497,7 @@ desktop:
         set_currency: Indica la moneda
         set_share: Indica la part
         show: Mostra a la taula
+        show_fields: Mostra els moviments i la columna
       gone: Eliminat o mogut fora del període des que el vas llegir.
       gone_mine: Mantén-lo als meus canvis
       gone_movement: Un moviment que ja no es llegeix
@@ -4834,9 +4835,6 @@ desktop:
       offline: No tens connexió.
       program_missing: El programa d'IA local no està instal·lat.
       program_not_running: El programa d'IA local no està en marxa.
-      program_proxy_differs: El servei en segon pla de Cadrumo s’està executant amb
-        una altra configuració de proxy. Reinicia Cadrumo, o tanca la sessió i torna
-        a iniciar-la, perquè arrenqui amb l’actual.
       secure_connection_failed: No s'ha pogut establir una connexió segura. Potser
         un filtre de xarxa ho impedeix.
       unexpected: Alguna cosa ha anat malament.
@@ -10586,6 +10584,7 @@ workspace:
         què.
       none: Res d'aquest model no et necessita.
       profile: 'Abans de calcular aquest període, el teu perfil ha de respondre:'
+      sources: 'Abans de calcular aquesta declaració, falten les declaracions que resumeix:'
       title: Pendent
     value:
       not_applicable: no s'aplica

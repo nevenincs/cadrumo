@@ -1042,19 +1042,28 @@ application:
     staged_check:
       served:
         blocker:
+          amount_signed: 'An amount is a magnitude: the direction already says whether
+            the money came in or went out.'
           cannot_clear: 'This value can''t be cleared: the field has to hold a value.'
           draft_incomplete: A new movement needs a booked date, an amount, a currency,
             a direction and a description before it can be saved.
           mixed_needs_share: A Mixed movement needs a business share.
           needs_classification: This change needs the movement to be classified first.
+          needs_withholding_category: The declared base and IVA add up to more than
+            the money that moved. That gap is an IRPF withholding, and the movement
+            declares no IRPF category.
           share_needs_mixed: A business share only applies to a Mixed movement.
           transfer_with_tax: A transfer between your own accounts carries no tax fields.
         fix:
+          amount_signed: Write the amount without a sign, and let the direction say
+            whether it came in or went out.
           cannot_clear: Keep the stored value.
           draft_incomplete: Fill in what the new movement is missing.
           mixed_needs_share: Enter the business share as a percentage, such as 50
             for 50%.
           needs_classification: Classify the movement as Business or Personal.
+          needs_withholding_category: Name the IRPF category the withholding belongs
+            to, or correct the base and the IVA so they add up to the amount.
           share_needs_mixed: Drop the share, or classify the movement as Mixed.
           transfer_with_tax: Take the tax fields off the transfer, or change its direction.
         share_refusal: 'That is not a share: write a percentage, such as 50 for 50%.'
@@ -1776,6 +1785,27 @@ application:
         asset your register does not hold.
       row_unregistered_undated: A ledger entry records an asset your register does
         not hold.
+      withholding_invoice_entity_professional_fee: Received invoice {invoice} from
+        {counterparty} states a withholding of {amount} on a professional fee, but
+        its issuer is a company, and a company's professional services carry no withholding.
+        Correct the invoice so it states no withholding.
+      withholding_invoice_incomplete: Received invoice {invoice} from {counterparty}
+        states a withholding of {amount}, but it lacks the issuer's NIF or its amount
+        in euros. Complete the invoice.
+      withholding_invoice_kind_undeclared: Received invoice {invoice} from {counterparty}
+        states a withholding of {amount}, but its payment does not say whether it
+        is rent or an activity's fee. Open the movement that pays it and choose its
+        IRPF category.
+      withholding_invoice_non_resident: Received invoice {invoice} from {counterparty}
+        states a withholding of {amount}, but its issuer is not resident in Spain,
+        so that withholding is not declared on this modelo. Check the invoice's country
+        and NIF.
+      withholding_invoice_rate_unrecognised: Received invoice {invoice} from {counterparty}
+        states a withholding of {amount} that matches no activity withholding rate.
+        Check the invoice's base and withholding.
+      withholding_invoice_recipient_unknown: Received invoice {invoice} from {counterparty}
+        states a withholding of {amount}, but its NIF does not show whether the issuer
+        pays IRPF or Impuesto sobre Sociedades. Check the invoice's NIF.
     calc_diagnostic_words:
       income_class:
         actividad_economica: economic activities
@@ -2108,6 +2138,7 @@ application:
         boxes and cannot be overridden by an external value. Affected boxes: %{computed}.'
       cross_period_clean_state_incomplete: Cross-period clean-state proof is incomplete
         for modelo {modelo} {period} {filing_year}; {finding_count} issue(s) remain.
+      cross_period_sources_not_filed: '%{modelo_words} %{year} adds up the declarations of its year, and these are not filed yet: %{sources}. Once they are filed, calculate it again.'
       deductible_iva_evidence_missing: 'Deductible IVA entries in your records require
         a linked purchase invoice. Link the invoice to the entry, then run aeat app
         modelo work verify again: the check refuses to complete while a deductible
@@ -2803,6 +2834,11 @@ application:
       stage_incomplete: The `quickfile` %{stage} stage finished with status %{status}.
       stage_refused: '`quickfile` stopped at the %{stage} stage: the stage was refused
         with %{error_code}.'
+    reconciliation_sources:
+      standing:
+        missing: '%{modelo}, %{period}: not calculated'
+        unfiled: '%{modelo}, %{period}: checked, not filed'
+        unverified: '%{modelo}, %{period}: calculated, not checked'
     taxation_comparison_words:
       below_materiality: The two results differ by {difference}, less than {threshold},
         so either filing mode is acceptable.

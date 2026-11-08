@@ -628,6 +628,7 @@ WORKSPACE_KEYS: Final[frozenset[str]] = frozenset(
         "workspace.modelo.todo.failed_lead",
         "workspace.modelo.todo.none",
         "workspace.modelo.todo.profile",
+        "workspace.modelo.todo.sources",
         "workspace.modelo.todo.title",
         "workspace.modelo.value.not_known_yet",
         "workspace.modelo.was",

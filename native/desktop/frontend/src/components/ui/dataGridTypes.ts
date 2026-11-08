@@ -131,6 +131,14 @@ export type DataGridHandle = {
    * cell is chosen. */
   cellRange: () => CellRange | null;
   edit: (key: string, column: string, initial?: string) => void;
+  /** Empties the live region.
+   *
+   * What it last said describes a cell as it was then. Once the rows it
+   * described are written and read again, that sentence is about a state the
+   * grid no longer holds, and a screen reader asked to repeat it would read a
+   * change that is already saved as still unsaved. The owner of the write
+   * empties it; the next keyboard move says the row as it is now. */
+  clearAnnouncement: () => void;
 };
 
 export type DataGridProps<R> = {

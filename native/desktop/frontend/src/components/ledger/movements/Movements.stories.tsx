@@ -156,8 +156,8 @@ function Toolbar({ view, grouped }: ToolbarArgs) {
         density={density}
         onDensity={setDensity}
         accounts={[
-          { id: "main", label: "Main account" },
-          { id: "card", label: "Card account" },
+          { id: "main", label: "Main account", currency: "EUR" },
+          { id: "card", label: "Card account", currency: "EUR" },
         ]}
         onWantAccounts={noop}
         groupLabels={["Studio", "Home office"]}

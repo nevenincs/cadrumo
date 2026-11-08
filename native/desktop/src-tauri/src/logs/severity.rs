@@ -238,7 +238,8 @@ fn lifecycle(fact: LifecycleFact) -> Level {
         | RestartScheduled { .. }
         | Foreign { .. }
         | StoodDown { .. }
-        | EventsDropped { .. } => Level::Warning,
+        | EventsDropped { .. }
+        | LocalAiUnavailable { .. } => Level::Warning,
         Waiting { .. }
         | RestartDeferred { .. }
         | Busy { .. }

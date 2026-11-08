@@ -36,6 +36,7 @@ from cadrumo.application.storage.calc_sheets.records import (
 )
 from cadrumo.application.storage.calc_sheets.theme import StyleRole
 from cadrumo.core.config import override_settings
+from cadrumo.core.field_origin import FieldOrigin
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.payment_election import PaymentElection
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
@@ -150,7 +151,7 @@ def demonstration_producer(case: DemoCase) -> FilingProducerSnapshot | None:
             full_name=entity_name or "Ana Ejemplo",
         ),
         presenter=PresenterIdentity(tax_id="00000000T", full_name="Presentador ficticio"),
-        model_profile=Modelo111ProfileFacts(colegio_concertado=False)
+        model_profile=Modelo111ProfileFacts(colegio_concertado=False, colegio_concertado_origin=FieldOrigin.OPERATOR)
         if case.modelo == "111"
         else GeneralFilingProfileFacts(),
         elections=FilingElectionFacts(

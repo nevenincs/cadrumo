@@ -1468,6 +1468,7 @@ desktop:
         set_currency: Pénznem megadása
         set_share: Arány megadása
         show: Mutasd a táblázatban
+        show_fields: Mutasd a mozgásokat és az oszlopot
       gone: Beolvasás óta törölték, vagy kikerült az időszakból.
       gone_mine: Maradjon a változtatásaim között
       gone_movement: Már nem olvasható tétel
@@ -4806,9 +4807,6 @@ desktop:
       offline: Nincs internetkapcsolatod.
       program_missing: A helyi MI-program nincs telepítve.
       program_not_running: A helyi MI-program nem fut.
-      program_proxy_differs: A Cadrumo háttérszolgáltatása másik proxybeállítással
-        fut. Indítsd újra a Cadrumót, vagy jelentkezz ki és újra be, hogy a mostani
-        beállítással induljon.
       secure_connection_failed: Nem sikerült biztonságos kapcsolatot létesíteni. Lehet,
         hogy egy hálózati szűrő akadályozza.
       unexpected: Valami hiba történt.
@@ -10546,6 +10544,7 @@ workspace:
         lásd, mire.
       none: Ezen a nyomtatványon semmi sem vár rád.
       profile: 'Mielőtt ez az időszak kiszámítható lenne, a profilodnak meg kell válaszolnia:'
+      sources: 'Mielőtt ez a bevallás kiszámítható lenne, az általa összesített bevallásoknál ez hiányzik:'
       title: Teendők
     value:
       not_applicable: nem alkalmazható

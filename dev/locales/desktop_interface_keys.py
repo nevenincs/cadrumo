@@ -1032,7 +1032,6 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = DESKTOP_PROFILE_INTERFACE_KEYS |
         "desktop.setup.failure.offline",
         "desktop.setup.failure.program_missing",
         "desktop.setup.failure.program_not_running",
-        "desktop.setup.failure.program_proxy_differs",
         "desktop.setup.failure.secure_connection_failed",
         "desktop.setup.failure.unexpected",
         "desktop.setup.item.browser",

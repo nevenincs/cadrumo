@@ -262,7 +262,9 @@ export type LedgerStagedBlocker = {
     | "mixed_needs_share"
     | "share_needs_mixed"
     | "transfer_with_tax"
-    | "draft_incomplete";
+    | "draft_incomplete"
+    | "amount_signed"
+    | "needs_withholding_category";
   fields: string[];
   /** The sentence saying why the staged work cannot be sent. */
   words: string;

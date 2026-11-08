@@ -1,16 +1,23 @@
 //! The local AI server, supervised for the manager's whole life.
 //!
-//! The component engine installs the local AI program; the manager runs the one server
-//! every surface and profile uses. While the program is set up the server listens on the
-//! fixed loopback address the package's environment declaration gives it, is restarted
-//! after a crash, is stopped and held off while an engine replaces or removes the
-//! program, and is stopped when the manager quits, closes, is uninstalled or its session
-//! ends. On Windows each server process is created suspended and placed in a
-//! kill-on-close job of its own before any of its code runs, so nothing it starts
-//! outlives its stop. On Linux and macOS each server is created into a process group of
-//! its own whose guardian ends the whole group once the server has stopped or the manager
-//! has ended (see `cadrumo_platform::process_scope`); what the server starts stays in that
-//! group unless it moves itself out.
+//! The manager runs the one server of the selected [`LocalEngine`] that every surface
+//! and profile uses, and never the other engine's: the Ollama program the component
+//! engine installs, or the llama-server the package carries. While the program is set up
+//! the server listens on the engine's own fixed loopback address the package's
+//! environment declaration gives it, is restarted after a crash, is stopped and held off
+//! while an engine replaces or removes the program, and is stopped when the manager
+//! quits, closes, is uninstalled or its session ends. A package that does not carry the
+//! selected engine's program, as a Linux package carries no llama-server until its source
+//! build lands, has the host reported [`Unavailable`] with the reason, and nothing runs.
+//! Another engine is selected by building the host for it once the current host is
+//! dropped, which stops its server first.
+//!
+//! On Windows each server process is created suspended and placed in a kill-on-close job
+//! of its own before any of its code runs, so nothing it starts, such as a llama-server
+//! router's model instances, outlives its stop. On Linux and macOS each server is created
+//! into a process group of its own whose guardian ends the whole group once the server
+//! has stopped or the manager has ended (see `cadrumo_platform::process_scope`); what the
+//! server starts stays in that group unless it moves itself out.
 //!
 //! The supervision runs on a thread of its own, because starting or stopping a server
 //! can take seconds that the manager's own events must not wait for. The manager only
@@ -22,14 +29,18 @@
 //! no profile, credential or tax data. A copy of the program installed outside Cadrumo is
 //! never started, stopped or changed.
 
-use crate::contract::{COMPONENT_PINS, LOCAL_AI_ADDRESS};
+use crate::contract::{
+    COMPONENT_PINS, LLAMA_SERVER, LLAMA_SERVER_ADDRESS, LLAMA_SERVER_BUILD, LOCAL_AI_ADDRESS,
+};
 #[cfg(unix)]
 use cadrumo_application::provisioning::local_ai::program::ProcessGroup;
 use cadrumo_application::provisioning::{
     items::Locations,
     local_ai::{
+        LocalEngine,
+        llama_server::{LOAD_CONTEXT, LlamaServer, LlamaServerUnavailable},
         program::{Containment, Program},
-        supervision::{ServerState, ServerSupervisor},
+        supervision::{EngineProgram, Environment, ServerState, ServerSupervisor, Supervised},
     },
     pins::{ComponentPins, Platform, ProgramIdentity},
 };
@@ -45,15 +56,34 @@ use std::{
 };
 
 /// How often the supervision looks at the server between scheduled restarts: for a
-/// crash, a requested program change, or a program newly set up.
+/// crash, a requested program change, a store whose models changed, or a program newly
+/// set up.
 pub const PACE: Duration = Duration::from_secs(1);
 
-/// The fixed address the package declares for the local AI server.
-pub fn server_address() -> Option<SocketAddr> {
-    LOCAL_AI_ADDRESS
-        .parse::<SocketAddr>()
-        .ok()
-        .filter(|address| address.ip().is_loopback())
+/// The fixed address the package declares for `engine`'s server.
+pub fn server_address(engine: LocalEngine) -> Option<SocketAddr> {
+    match engine {
+        LocalEngine::Ollama => LOCAL_AI_ADDRESS,
+        LocalEngine::LlamaCpp => LLAMA_SERVER_ADDRESS,
+    }
+    .parse::<SocketAddr>()
+    .ok()
+    .filter(|address| address.ip().is_loopback())
+}
+
+/// Why the manager runs no local AI server for the selected engine.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Unavailable {
+    /// No local AI program is pinned for this computer's platform.
+    Platform,
+    /// The package's component pins cannot be read, or pin no Ollama program here.
+    OllamaNotPinned,
+    /// The package does not carry a llama-server that can run, and why.
+    LlamaServer(LlamaServerUnavailable),
+    /// The package declares no loopback address for the engine's server.
+    Address,
+    /// The storage folders, or the supervision's own thread, could not be set up.
+    Supervision,
 }
 
 enum Command {
@@ -81,30 +111,65 @@ pub struct LocalAiHost {
 }
 
 impl LocalAiHost {
-    /// The server of the package at `package_root` for the components under
-    /// `storage_root`; `None` when the build carries no local AI program for this
-    /// platform or its pins cannot be read, so there is nothing to run.
-    pub fn for_package(package_root: &Path, storage_root: &Path) -> Option<Self> {
-        let tables = ComponentPins::load(&package_root.join(COMPONENT_PINS)).ok()?;
-        let pins = tables.program(ProgramIdentity::Ollama)?;
-        let program =
-            Program::new(pins, Platform::current()?, Locations::under(storage_root)).ok()??;
+    /// The server of `engine` from the package at `package_root`, for the components
+    /// under `storage_root`; [`Unavailable`] when the package carries no program of that
+    /// engine that can run here. The other engine's server is never started.
+    ///
+    /// The engine is the person's selection, which the caller reads from where it is
+    /// kept and passes here; until then the default engine is the caller's.
+    pub fn for_package(
+        package_root: &Path,
+        storage_root: &Path,
+        engine: LocalEngine,
+    ) -> Result<Self, Unavailable> {
+        let address = server_address(engine).ok_or(Unavailable::Address)?;
+        let locations = Locations::under(storage_root);
         // The supervisor reads the operator's proxy setting from this manager's own
         // environment, once: a process's environment block cannot be changed from
         // outside it, so a setting changed afterwards reaches the server at this
-        // manager's next start, and one the engine cannot use runs no server at all.
-        let supervisor = ServerSupervisor::new(
-            program,
-            server_address()?,
-            containment(),
-            Box::new(|name: &str| std::env::var_os(name)),
-        )
-        .ok()?;
-        Self::supervise(supervisor).ok()
+        // manager's next start, and one the engine cannot use runs no server that
+        // fetches through it.
+        let environment: Environment = Box::new(|name: &str| std::env::var_os(name));
+        let program = EngineProgram::select(
+            engine,
+            || {
+                let platform = Platform::current().ok_or(Unavailable::Platform)?;
+                let tables = ComponentPins::load(&package_root.join(COMPONENT_PINS))
+                    .map_err(|_| Unavailable::OllamaNotPinned)?;
+                let pins = tables
+                    .program(ProgramIdentity::Ollama)
+                    .ok_or(Unavailable::OllamaNotPinned)?;
+                Program::new(pins, platform, locations.clone())
+                    .map_err(|_| Unavailable::Supervision)?
+                    .ok_or(Unavailable::OllamaNotPinned)
+            },
+            || {
+                LlamaServer::packaged(
+                    &package_root.join(LLAMA_SERVER),
+                    LLAMA_SERVER_BUILD,
+                    &locations,
+                    LOAD_CONTEXT,
+                )
+                .map_err(Unavailable::LlamaServer)
+            },
+        )?;
+        Self::run_server(program, address, environment)
+    }
+
+    fn run_server<P: Supervised + Send + 'static>(
+        program: P,
+        address: SocketAddr,
+        environment: Environment,
+    ) -> Result<Self, Unavailable> {
+        let supervisor = ServerSupervisor::new(program, address, containment(), environment)
+            .map_err(|_| Unavailable::Address)?;
+        Self::supervise(supervisor).map_err(|_| Unavailable::Supervision)
     }
 
     /// Runs `supervisor` on a thread of its own until the host is dropped.
-    pub fn supervise(supervisor: ServerSupervisor) -> std::io::Result<Self> {
+    pub fn supervise<P: Supervised + Send + 'static>(
+        supervisor: ServerSupervisor<P>,
+    ) -> std::io::Result<Self> {
         let (commands, received) = mpsc::channel();
         let published: Shared = Arc::new((
             Mutex::new(Published {
@@ -185,7 +250,11 @@ fn publish(shared: &Shared, state: ServerState, looked: bool) {
 }
 
 /// Looks at the server whenever a look is due and acts on each command as it arrives.
-fn run(mut supervisor: ServerSupervisor, commands: &mpsc::Receiver<Command>, shared: &Shared) {
+fn run<P: Supervised>(
+    mut supervisor: ServerSupervisor<P>,
+    commands: &mpsc::Receiver<Command>,
+    shared: &Shared,
+) {
     let mut next = Instant::now();
     loop {
         let now = Instant::now();
@@ -280,6 +349,7 @@ impl Containment for GroupContainment {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use cadrumo_application::provisioning::local_ai::program::latest_start_failure;
     use std::{fs, path::PathBuf};
 
     /// A folder of this test's own under the temporary folder, removed when dropped.
@@ -308,11 +378,16 @@ mod tests {
     }
 
     #[test]
-    fn the_server_address_is_the_declared_loopback_address_and_never_the_publishers_port() {
-        let address = server_address().expect("the contract declares a loopback address");
-        assert!(address.ip().is_loopback());
-        assert_ne!(address.port(), 11434);
-        assert!((1024..32768).contains(&address.port()));
+    fn each_engine_has_its_own_declared_loopback_address_and_never_the_publishers_port() {
+        let ollama = server_address(LocalEngine::Ollama).expect("a declared loopback address");
+        let llama = server_address(LocalEngine::LlamaCpp).expect("a declared loopback address");
+        for address in [ollama, llama] {
+            assert!(address.ip().is_loopback());
+            assert_ne!(address.port(), 11434);
+            assert!((1024..32768).contains(&address.port()));
+        }
+        assert_ne!(ollama, llama);
+        assert_eq!(LocalEngine::default(), LocalEngine::Ollama);
     }
 
     fn package_with_pins(package: &Path) {
@@ -326,13 +401,82 @@ mod tests {
         fs::copy(committed.join(table), pins.join(table)).unwrap();
     }
 
+    #[cfg(windows)]
+    const LLAMA_SERVER_EXECUTABLE: &str = "llama-server.exe";
+    #[cfg(not(windows))]
+    const LLAMA_SERVER_EXECUTABLE: &str = "llama-server";
+
+    /// A llama-server in the package that cannot get as far as listening: on Windows a
+    /// file no process can be created from, elsewhere a script that exits at once.
+    fn package_with_failing_llama_server(package: &Path) {
+        let folder = package.join(LLAMA_SERVER);
+        fs::create_dir_all(&folder).unwrap();
+        let program = folder.join(LLAMA_SERVER_EXECUTABLE);
+        fs::write(&program, b"#!/bin/sh\nexit 3\n").unwrap();
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            fs::set_permissions(&program, fs::Permissions::from_mode(0o755)).unwrap();
+        }
+    }
+
     #[test]
-    fn a_package_without_a_program_for_this_platform_runs_no_server() {
+    fn a_package_without_the_selected_engines_program_runs_no_server_and_says_why() {
         let root = Scratch::new("absent");
-        assert!(
-            LocalAiHost::for_package(&root.path().join("package"), &root.path().join("state"))
-                .is_none()
+        let (package, state) = (root.path().join("package"), root.path().join("state"));
+        let ollama = LocalAiHost::for_package(&package, &state, LocalEngine::Ollama).err();
+        let expected = if Platform::current().is_some() {
+            Unavailable::OllamaNotPinned
+        } else {
+            Unavailable::Platform
+        };
+        assert_eq!(ollama, Some(expected));
+        // A Linux package carries no llama-server until its source build lands.
+        assert_eq!(
+            LocalAiHost::for_package(&package, &state, LocalEngine::LlamaCpp).err(),
+            Some(Unavailable::LlamaServer(
+                LlamaServerUnavailable::NotPackaged
+            ))
         );
+        assert!(!state.exists(), "nothing ran");
+    }
+
+    #[test]
+    fn only_the_selected_engines_server_is_ever_started() {
+        let root = Scratch::new("selected");
+        let package = root.path().join("package");
+        package_with_pins(&package);
+        package_with_failing_llama_server(&package);
+        let state = root.path().join("state");
+        let llama_folder = state.join("components").join("llama-server");
+        let ollama_folder = state.join("components").join("ollama");
+
+        // Ollama selected and not set up: the packaged llama-server is never started.
+        if let Ok(host) = LocalAiHost::for_package(&package, &state, LocalEngine::Ollama) {
+            let first = host.wait_until(|published| published.looks >= 1);
+            assert_eq!(first.state, ServerState::NotSetUp);
+            drop(host);
+        }
+        assert!(!llama_folder.exists(), "llama-server was never started");
+
+        // llama-server selected: it is started, and fails here, while Ollama is never
+        // looked at.
+        let host = LocalAiHost::for_package(&package, &state, LocalEngine::LlamaCpp)
+            .expect("the package carries llama-server");
+        let tried = host.wait_until(|published| {
+            matches!(
+                published.state,
+                ServerState::Restarting { .. } | ServerState::Failed
+            )
+        });
+        assert_ne!(tried.state, ServerState::Running);
+        drop(host);
+        assert!(
+            latest_start_failure(&llama_folder).is_some(),
+            "llama-server was started"
+        );
+        assert!(!ollama_folder.join("server.json").exists());
+        assert!(!ollama_folder.join("server-start-failure.json").exists());
     }
 
     #[test]
@@ -340,7 +484,9 @@ mod tests {
         let root = Scratch::new("paced");
         let package = root.path().join("package");
         package_with_pins(&package);
-        let Some(mut host) = LocalAiHost::for_package(&package, &root.path().join("state")) else {
+        let Ok(mut host) =
+            LocalAiHost::for_package(&package, &root.path().join("state"), LocalEngine::Ollama)
+        else {
             // The pins carry no archive for this platform.
             assert!(Platform::current().is_none());
             return;

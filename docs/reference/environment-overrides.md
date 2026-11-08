@@ -84,10 +84,10 @@ the per-user default applies: `%LOCALAPPDATA%\cadrumo` on Windows,
 | `CADRUMO_LLM_USAGE_RETENTION_DAYS` | int | `30` | Retention window in days for LLM usage records; older records are pruned |
 | `CADRUMO_LLM_VISION_READ_TIMEOUT_S` | int | `300` | Deadline, in seconds, of one agent run that reads a document; larger than the general LLM timeout because a model on consumer hardware (CPU or a modest GPU) can take one to several minutes to read an invoice |
 | `CADRUMO_LOG_FILE_BACKUP_COUNT` | int | `5` | Number of rotated cadrumo.log backups retained by the rotating file handler |
-| `CADRUMO_LOG_FILE_LEVEL` | str | `DEBUG` | Log level for the file handler installed by ``cadrumo.core.logging`` |
+| `CADRUMO_LOG_FILE_LEVEL` | str | `INFO` | Log level for the file handler installed by ``cadrumo.core.logging`` |
 | `CADRUMO_LOG_FILE_MAX_BYTES` | int | `10485760` | Size cap (bytes) for cadrumo.log before the rotating file handler rolls over; default 10 MiB |
 | `CADRUMO_LOG_LEVEL` | str | empty | Log severity override: DEBUG, INFO, WARNING, ERROR, or CRITICAL. Log views default to INFO and use this as their initial minimum level. CLI verbosity names quiet, default, verbose, and debug remain supported. |
-| `CADRUMO_LOG_ROOT_LEVEL` | str | `DEBUG` | Root logger level installed by ``cadrumo.core.logging`` |
+| `CADRUMO_LOG_ROOT_LEVEL` | str | `INFO` | Root logger level installed by ``cadrumo.core.logging`` |
 | `CADRUMO_LOG_STDERR_LEVEL` | str | `ERROR` | Log level for the stderr handler installed by ``cadrumo.core.logging`` |
 | `CADRUMO_OUTPUT_LANGUAGE` | OutputLanguage | `es` | Target ISO 639-1 language code for user-facing content. Invalid values coerce to None and fall back to the default. |
 | `CADRUMO_PROFILE_KDF_MEASURE_CALIBRATION` | bool | `true` | Whether profile-custody KDF calibration MEASURES the parameter grid on this host. True (the default, and the only production posture) samples real supervised derivations to pick the strongest grid point that still lands inside the operator latency band. False skips the measurement loop and adopts the fixed fallback point the calibrator already falls back to when no point can be confirmed in time. Measuring can only strengthen a wrap: calibration never selects a point weaker than the fallback, so False leaves every new profile at the fallback's strength. The derivation itself is the same real Argon2id through the same supervised worker. |
@@ -153,7 +153,7 @@ Each profile belongs to one program. The host validates a launch parameter again
 #### `kdf-child`
 
 - **Program:** `python`
-- **Started with:** `-S -m cadrumo.adapters.persistence.storage.custody.kdf_worker --request-handle <request:handle> --result-handle <result:handle>` on Windows; `-m cadrumo.adapters.persistence.storage.custody.kdf_worker --request-fd <request:descriptor> --result-fd <result:descriptor> --descriptor-bound <bound:descriptor>` on Linux and macOS
+- **Started with:** `-S -m cadrumo.adapters.persistence.storage.custody.kdf_worker --request-handle <request:handle> --result-handle <result:handle>` on Windows; `-m cadrumo.adapters.persistence.storage.custody.kdf_worker --request-fd <request:descriptor> --result-fd <result:descriptor> --descriptor-bound <bound:descriptor>` on Linux and macOS; `-S -m cadrumo.adapters.persistence.storage.custody.kdf_worker --request-fd <request:descriptor> --result-fd <result:descriptor> --descriptor-bound <bound:descriptor>` on Linux and macOS
 - **Starts from:** its caller's whole environment, unchanged
 - **Sets itself:** nothing
 - **Search path (`PATH`):** left as its caller sets it
