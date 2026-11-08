@@ -2117,6 +2117,7 @@ application:
         boxes and cannot be overridden by an external value. Affected boxes: %{computed}.'
       cross_period_clean_state_incomplete: Cross-period clean-state proof is incomplete
         for modelo {modelo} {period} {filing_year}; {finding_count} issue(s) remain.
+      cross_period_sources_not_filed: '%{modelo_words} %{year} adds up the declarations of its year, and these are not filed yet: %{sources}. Once they are filed, calculate it again.'
       deductible_iva_evidence_missing: 'Deductible IVA entries in your records require
         a linked purchase invoice. Link the invoice to the entry, then run aeat app
         modelo work verify again: the check refuses to complete while a deductible
@@ -2812,6 +2813,11 @@ application:
       stage_incomplete: The `quickfile` %{stage} stage finished with status %{status}.
       stage_refused: '`quickfile` stopped at the %{stage} stage: the stage was refused
         with %{error_code}.'
+    reconciliation_sources:
+      standing:
+        missing: '%{modelo}, %{period}: not calculated'
+        unfiled: '%{modelo}, %{period}: checked, not filed'
+        unverified: '%{modelo}, %{period}: calculated, not checked'
     taxation_comparison_words:
       below_materiality: The two results differ by {difference}, less than {threshold},
         so either filing mode is acceptable.
