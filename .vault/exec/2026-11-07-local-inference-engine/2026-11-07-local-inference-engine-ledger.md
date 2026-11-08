@@ -5,7 +5,7 @@ tags:
 date: '2026-11-07'
 modified: '2026-11-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:6604ff7693f7d0a80df3932ea0e3a126c183d1cb619befe590a2c6552397fc20'
+body_hash: 'sha256:37bbeef1629a7913823cdb3e1df020c7c65df52508bdfb42399d6dd9285d951f'
 related:
   - "[[2026-11-07-local-inference-engine-plan]]"
 ---
@@ -194,6 +194,8 @@ related:
 - `S18` `M` `native/application/tests/live_package.rs`
 - `S18` `M` `native/CONTRACT.md`
 - `S18` `by:` `vaultspec-standard-executor`
+- `S18` `M` `native/application/src/provisioning/local_ai/llama_server/tests.rs`
+- `S18` `by:` `implementation-engineer`
 
 ## Notes
 
@@ -221,6 +223,7 @@ related:
 - `S16` Review-finding fixes (transfer retry window, store reclaim, progress offset, drain marker and bounded check wait, refused-load body, router alias ids, live package tests): Rust build, clippy and cargo tests are pending the root slot; rustfmt --edition 2024 --check passes on the changed files.
 - `S17` Review-finding fixes (transfer retry window, store reclaim, progress offset, drain marker and bounded check wait, refused-load body, router alias ids, live package tests): Rust build, clippy and cargo tests are pending the root slot; rustfmt --edition 2024 --check passes on the changed files.
 - `S18` Review-finding fixes (transfer retry window, store reclaim, progress offset, drain marker and bounded check wait, refused-load body, router alias ids, live package tests): Rust build, clippy and cargo tests are pending the root slot; rustfmt --edition 2024 --check passes on the changed files.
+- `S18` Rust build pending the root slot
 
 ## Notes
 
