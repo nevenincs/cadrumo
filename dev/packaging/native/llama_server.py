@@ -4,9 +4,13 @@ The package ships the upstream ``llama-server`` program and never builds it. One
 archive per build target is pinned by release tag, size and SHA-256 in
 ``native/llamacpp-pins.json``. :func:`acquire_llama_server` is the build action
 that fetches it into the build tree, refuses bytes that differ from the pin,
-keeps the program files it needs and writes a receipt naming them.
+keeps the program files it needs and writes a receipt naming them. It also
+fetches llama.cpp's own MIT licence, pinned beside the archives because not
+every release archive carries it, and keeps it as ``LICENSE`` among the
+archive's notices.
 :func:`stage_llama_server` copies those files into the package during assembly,
-after proving again that the receipt, the files and the committed pin agree.
+after proving again that the receipt, the files and the committed pin agree,
+including that the notices hold exactly the pinned licence.
 
 The program is a small launcher plus shared libraries beside it. What is kept is
 the launcher, every library it needs transitively inside the archive, and the
@@ -37,7 +41,7 @@ import httpx
 from pydantic import BaseModel, Field, PositiveInt, ValidationError
 
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
-from dev.env.llamacpp_pins import ServerArchivePin, ServerPins, load_server_pins
+from dev.env.llamacpp_pins import LicensePin, ServerArchivePin, ServerPins, load_server_pins
 
 from ..runtime_wheelhouse_contract import target_platform
 from .hashing import digest
@@ -52,8 +56,10 @@ PROGRAM_DIRECTORY: Final = "program"
 LICENSE_DIRECTORY: Final = "licenses"
 ARCHIVE_DIRECTORY: Final = "archives"
 """The verified archive stays here between builds, like the CPython archive."""
+LICENSE_NAME: Final = "LICENSE"
+"""llama.cpp's pinned MIT licence among the notices, staged at ``docs/licenses/llama.cpp/LICENSE``."""
 _EXTRACTION_DIRECTORY: Final = "extraction"
-_RECEIPT_SCHEMA: Final = 1
+_RECEIPT_SCHEMA: Final = 2
 _MAX_REDIRECTS: Final = 3
 _TIMEOUT_S: Final = 120.0
 _REDIRECTS: Final = frozenset({301, 302, 303, 307, 308})
@@ -96,7 +102,8 @@ SYSTEM_PREFIXES: Final = ("api-ms-win-", "ext-ms-win-")
 #: whose library fails to load, so an absent loader costs that backend and leaves the CPU backends running.
 DRIVER_LIBRARIES: Final[Mapping[str, frozenset[str]]] = {"vulkan-1.dll": frozenset({"ggml-vulkan.dll"})}
 
-type Fetch = Callable[[ServerArchivePin, tuple[str, ...]], bytes]
+type PinnedDownload = ServerArchivePin | LicensePin
+type Fetch = Callable[[PinnedDownload, tuple[str, ...]], bytes]
 
 
 class LlamaServerError(ValueError):
@@ -142,12 +149,18 @@ def pin_for_target(pins: ServerPins, target: str) -> ServerArchivePin:
     raise ArchiveMismatchError(f"no llama-server archive is pinned for {target}")
 
 
-def verify_archive(content: bytes, pin: ServerArchivePin) -> None:
-    """Refuse archive bytes whose size or SHA-256 differs from the pin."""
+def _named(pin: PinnedDownload) -> str:
+    return (
+        f"the llama-server archive for {pin.target}" if isinstance(pin, ServerArchivePin) else "the llama.cpp licence"
+    )
+
+
+def verify_download(content: bytes, pin: PinnedDownload) -> None:
+    """Refuse downloaded bytes whose size or SHA-256 differs from the pin."""
     actual = hashlib.sha256(content).hexdigest()
     if len(content) != pin.download_bytes or actual != pin.sha256:
         raise ArchiveMismatchError(
-            f"the llama-server archive for {pin.target} does not match its pin: "
+            f"{_named(pin)} does not match its pin: "
             f"expected {pin.download_bytes} bytes with SHA-256 {pin.sha256}, "
             f"got {len(content)} bytes with SHA-256 {actual}"
         )
@@ -158,8 +171,8 @@ def _admit_origin(url: httpx.URL, hosts: frozenset[str]) -> None:
         raise ArchiveMismatchError(f"the llama-server download leaves the pinned HTTPS hosts at {url.host}")
 
 
-def fetch_archive(pin: ServerArchivePin, hosts: tuple[str, ...]) -> bytes:
-    """Download the pinned archive over HTTPS from the pinned hosts, never beyond the pinned size."""
+def fetch_pinned(pin: PinnedDownload, hosts: tuple[str, ...]) -> bytes:
+    """Download a pinned archive or licence over HTTPS from the pinned hosts, never beyond the pinned size."""
     allowed = frozenset(hosts)
     current = httpx.URL(pin.url)
     redirects = 0
@@ -187,13 +200,11 @@ def fetch_archive(pin: ServerArchivePin, hosts: tuple[str, ...]) -> bytes:
                 for chunk in response.iter_bytes():
                     received += len(chunk)
                     if received > pin.download_bytes:
-                        raise ArchiveMismatchError(
-                            f"the llama-server archive for {pin.target} exceeds its pinned {pin.download_bytes} bytes"
-                        )
+                        raise ArchiveMismatchError(f"{_named(pin)} exceeds its pinned {pin.download_bytes} bytes")
                     parts.append(chunk)
                 return b"".join(parts)
     except httpx.HTTPError as error:
-        raise LlamaServerError(f"the llama-server archive for {pin.target} could not be fetched: {error}") from error
+        raise LlamaServerError(f"{_named(pin)} could not be fetched: {error}") from error
 
 
 def _flat_name(raw: str, base: PurePosixPath) -> str | None:
@@ -375,19 +386,19 @@ def _discard_derived(destination: Path) -> None:
     (destination / RECEIPT_NAME).unlink(missing_ok=True)
 
 
-def _cached(archive: Path, pin: ServerArchivePin) -> bool:
+def _cached(archive: Path, pin: PinnedDownload) -> bool:
     if archive.is_symlink() or archive.is_junction() or not archive.is_file():
         return False
     try:
-        verify_archive(archive.read_bytes(), pin)
+        verify_download(archive.read_bytes(), pin)
     except ArchiveMismatchError:
         return False
     return True
 
 
-def _obtain(destination: Path, pins: ServerPins, pin: ServerArchivePin, fetch: Fetch) -> bytes:
-    """Return the verified archive bytes, kept in the build tree and fetched only when absent or damaged."""
-    name = pin.url.rsplit("/", 1)[1]
+def _obtain(destination: Path, pins: ServerPins, pin: PinnedDownload, fetch: Fetch) -> bytes:
+    """Return the verified bytes, kept in the build tree and fetched only when absent or damaged."""
+    name = pin.url.rsplit("/", 1)[1] if isinstance(pin, ServerArchivePin) else f"llama.cpp-{pins.tag}-{LICENSE_NAME}"
     directory = destination / ARCHIVE_DIRECTORY
     archive = directory / name
     if _cached(archive, pin):
@@ -395,7 +406,7 @@ def _obtain(destination: Path, pins: ServerPins, pin: ServerArchivePin, fetch: F
     directory.mkdir(parents=True, exist_ok=True)
     archive.unlink(missing_ok=True)
     content = fetch(pin, pins.hosts)
-    verify_archive(content, pin)
+    verify_download(content, pin)
     partial = archive.with_name(archive.name + ".partial")
     partial.write_bytes(content)
     partial.replace(archive)
@@ -407,7 +418,7 @@ def _tree_digests(root: Path) -> dict[str, str]:
 
 
 def acquire_llama_server(
-    destination: Path, target: str, *, pins: ServerPins | None = None, fetch: Fetch = fetch_archive
+    destination: Path, target: str, *, pins: ServerPins | None = None, fetch: Fetch = fetch_pinned
 ) -> Path:
     """Fetch, verify and unpack the llama-server archive pinned for ``target`` into ``destination``.
 
@@ -420,6 +431,7 @@ def acquire_llama_server(
     destination = destination.resolve()
     destination.mkdir(parents=True, exist_ok=True)
     content = _obtain(destination, pins, pin, fetch)
+    notice = _obtain(destination, pins, pins.license, fetch)
     _discard_derived(destination)
     scratch = destination / _EXTRACTION_DIRECTORY
     scratch.mkdir()
@@ -440,6 +452,7 @@ def acquire_llama_server(
         shutil.copy2(scratch / source, program / name)
     for name in licenses:
         shutil.copy2(scratch / name, notices / name)
+    _keep_pinned_license(notices, notice, pin)
     receipt = LlamaServerReceipt.model_validate(
         {
             "schema": _RECEIPT_SCHEMA,
@@ -460,6 +473,16 @@ def acquire_llama_server(
     )
     shutil.rmtree(scratch)
     return destination
+
+
+def _keep_pinned_license(notices: Path, notice: bytes, pin: ServerArchivePin) -> None:
+    """Write the pinned licence as ``LICENSE``, refusing an archive whose own ``LICENSE`` says something else."""
+    kept = notices / LICENSE_NAME
+    if kept.exists() and kept.read_bytes() != notice:
+        raise ArchiveMismatchError(
+            f"the llama-server archive for {pin.target} carries a {LICENSE_NAME} that differs from the pinned licence"
+        )
+    kept.write_bytes(notice)
 
 
 def verify_acquired(source: Path, target: str, *, pins: ServerPins | None = None) -> LlamaServerReceipt:
@@ -510,6 +533,11 @@ def verify_acquired(source: Path, target: str, *, pins: ServerPins | None = None
             raise ArchiveMismatchError(
                 f"the acquired llama-server {directory} differ from the receipt; build the llama_server step again"
             )
+    if receipt.licenses.get(LICENSE_NAME) != pins.license.sha256:
+        raise ArchiveMismatchError(
+            f"the acquired llama-server notices do not hold the pinned llama.cpp {LICENSE_NAME}; "
+            "build the llama_server step again"
+        )
     return receipt
 
 

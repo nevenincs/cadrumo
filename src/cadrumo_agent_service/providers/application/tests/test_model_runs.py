@@ -25,7 +25,14 @@ from cadrumo_client.contracts.model_runs import (
 
 from ....adapters.agent_background_runs import HostedBackgroundRuns
 from ...domain.catalog import BackgroundOption, parse_provider_catalog
-from ...domain.record import ListedModel, LocalModelListRecord, new_settings_generation
+from ...domain.record import (
+    LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
+    ListedModel,
+    LocalEngine,
+    LocalModelListRecord,
+    LocalPlacement,
+    new_settings_generation,
+)
 from ..contracts import ProviderSettingsActionAccepted, ProviderSettingsStatus
 from ..model_runs import ROLE_CAPABILITIES, ModelRunService
 from ..ports import LiveLaneBackground, StoreRefusal, StoreRefusalCode
@@ -116,7 +123,9 @@ def _harness(
 def _store(model_list: MemoryLocalModelListStore, *added: tuple[str, str], reading: tuple[str, str] | None) -> None:
     """Store the models added to the local lists and the model the person selected to read with."""
     record = LocalModelListRecord(
-        schema_version=2,
+        schema_version=LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
+        engine=LocalEngine.OLLAMA,
+        placement=LocalPlacement.AUTO,
         models=tuple(ListedModel(lane=lane, model=model) for lane, model in added),
         reading=None if reading is None else ListedModel(lane=reading[0], model=reading[1]),
         generation=new_settings_generation(),

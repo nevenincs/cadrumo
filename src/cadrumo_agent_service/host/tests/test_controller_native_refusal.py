@@ -31,6 +31,7 @@ from cadrumo_client.transport.tests.memory_channel import MemoryChannel
 
 from ... import service_startup as service_module
 from ...gateway_credentials import GatewayCredentials
+from ...providers.domain.record import LocalEngine
 from ...service import AgentService
 from ..controller import (
     EXIT_OBSERVATION_SECONDS,
@@ -391,6 +392,7 @@ def test_service_replacement_retirement_consumes_the_existing_startup_deadline(
     controller._state = AgentHostState.READY
     controller._ready = AgentReady(_Credentials.generations, 47001, "test", 1)
     service = AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
         client=cast(
             InstalledServiceClient,
             SimpleNamespace(
@@ -508,6 +510,7 @@ def test_unconfirmed_retirement_never_reports_that_a_timeout_stopped_the_agent(
 ) -> None:
     events: list[dict[str, object]] = []
     service = AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
         client=cast(
             InstalledServiceClient, SimpleNamespace(lease=None, connection=SimpleNamespace(close=lambda: None))
         ),

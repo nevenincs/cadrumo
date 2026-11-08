@@ -1,11 +1,12 @@
 import { useState } from "react";
-import type { CatalogLane } from "../../shell/localModelLanes";
+import { lanesForEngine, type CatalogLane } from "../../shell/localModelLanes";
 import { Alert } from "../ui/alert";
 import { Button } from "../ui/button";
 import { Icon } from "../ui/icon";
 import { Spinner } from "../ui/spinner";
 import {
   ReviewClaimContext,
+  useLocalEngine,
   type LocalModelHost,
 } from "../../shell/localModels";
 import { useProvisioning } from "../../shell/provisioning";
@@ -53,6 +54,8 @@ export function LocalAi({
   // on screen showing it, which the row itself says; otherwise on the
   // program's row, so a plan never waits with no way to answer it.
   const [claimed, setClaimed] = useState(false);
+  const engine = useLocalEngine(host);
+  const shown = lanesForEngine(lanes, engine.value);
   return (
     <div data-slot="local-ai" data-testid="local-ai" className="grid gap-2">
       {row && (
@@ -111,10 +114,11 @@ export function LocalAi({
               </Alert>
             ) : (
               <ReviewClaimContext.Provider value={setClaimed}>
-                {(lanes.length > 0 ? lanes : [null]).map((lane) => (
+                {(shown.length > 0 ? shown : [null]).map((lane, index) => (
                   <LocalModels
                     key={lane?.id ?? "none"}
                     lane={lane}
+                    withEngine={index === 0}
                     host={host}
                     locale={locale}
                     onRemoved={onRemoved}
