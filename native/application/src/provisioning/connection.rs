@@ -8,7 +8,7 @@
 //! consulted.
 
 use super::{http, proxy::ProxySettings, url::HttpsUrl};
-use crate::{component::Cancellation, value::Sha256Digest};
+use crate::component::Cancellation;
 use rustls::{ClientConfig, ClientConnection, RootCertStore, StreamOwned, pki_types::ServerName};
 use std::{
     io::{self, BufReader, Read, Write},
@@ -193,31 +193,16 @@ impl Network {
         }
     }
 
-    /// The digest of the proxy setting this network downloads through; `None` when it
-    /// has none. Compared with a server's record so a server started under another
-    /// setting is never pulled through.
-    pub fn proxy_fingerprint(&self) -> Option<Sha256Digest> {
-        self.proxy.as_ref().map(ProxySettings::fingerprint)
-    }
-
     pub(crate) fn proxied(&self, host: &str) -> Option<&ProxySettings> {
         self.proxy.as_ref().filter(|proxy| !proxy.bypasses(host))
     }
 
     /// Opens a verified TLS session to `url`'s host, through the proxy unless bypassed.
     /// `deadline` bounds every stage together, and every later read and write on the
-    /// stream; without one each stage has its own bound.
-    pub(crate) fn open(
-        &self,
-        url: &HttpsUrl,
-        deadline: Option<Deadline>,
-    ) -> Result<TlsStream, ConnectFailure> {
-        self.open_unless_cancelled(url, deadline, None)
-    }
-
-    /// [`Self::open`] that also gives up, as an interrupted resolution or connection,
-    /// once `cancellation` is cancelled: a name lookup waits no longer, and no further
-    /// address is tried. A connection attempt already under way ends at its own bound.
+    /// stream; without one each stage has its own bound. It also gives up, as an
+    /// interrupted resolution or connection, once `cancellation` is cancelled: a name
+    /// lookup waits no longer, and no further address is tried. A connection attempt
+    /// already under way ends at its own bound.
     pub(crate) fn open_unless_cancelled(
         &self,
         url: &HttpsUrl,

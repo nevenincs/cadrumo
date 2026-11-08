@@ -1136,6 +1136,7 @@ export function WorkspaceScreen({
         .filter(Boolean)
         .join(" · "),
       filingYear: form.filing_year,
+      readsIvaWallet: form.offers_iva_wallet,
     };
   }, [read, workUnitId]);
   const latest = useRef(0);

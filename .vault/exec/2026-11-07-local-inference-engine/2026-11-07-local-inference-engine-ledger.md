@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#local-inference-engine'
 date: '2026-11-07'
-modified: '2026-11-07'
+modified: '2026-11-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:fb99d08ccc38249fc664304c84a6a17a60e2b3a9d36c86c51f9f490b5df814ec'
+body_hash: 'sha256:6604ff7693f7d0a80df3932ea0e3a126c183d1cb619befe590a2c6552397fc20'
 related:
   - "[[2026-11-07-local-inference-engine-plan]]"
 ---
@@ -111,6 +111,89 @@ related:
 - `S13` `verify:` `ctest --preset debug -R application.(rust|fmt|clippy|features.clippy)` -> `pass`
 - `S15` `verify:` `ctest --preset debug -R application.(rust|fmt|clippy|features.clippy)` -> `pass`
 - `S11` `verify:` `pytest S11 packaging focus (156)` -> `pass`
+- `S17` `M` `dev/packaging/native/environment_components.py`
+- `S17` `M` `dev/packaging/native/generate.py`
+- `S17` `M` `dev/packaging/native/tests/test_application_environment.py`
+- `S17` `M` `dev/packaging/native/tests/test_generator_imports.py`
+- `S17` `M` `dev/packaging/tests/test_native_local_ai_address.py`
+- `S17` `M` `native/application-environment.toml`
+- `S17` `M` `native/application/src/provisioning/local_ai/mod.rs`
+- `S17` `M` `native/application/src/provisioning/local_ai/program.rs`
+- `S17` `M` `native/application/src/provisioning/local_ai/program/tests.rs`
+- `S17` `M` `native/application/src/provisioning/local_ai/supervision.rs`
+- `S17` `M` `native/application/src/provisioning/pins.rs`
+- `S17` `M` `native/cmake/Contract.cmake`
+- `S17` `M` `native/manager/src/background.rs`
+- `S17` `M` `native/manager/src/supervision/local_ai.rs`
+- `S17` `A` `native/application/src/provisioning/local_ai/llama_server.rs`
+- `S17` `A` `native/application/src/provisioning/local_ai/llama_server/tests.rs`
+- `S17` `verify:` `pytest dev/packaging/native/tests dev/packaging/tests/test_native_local_ai_address.py` -> `pass`
+- `S17` `by:` `vaultspec-high-executor`
+- `S16` `M` `native/application/src/provisioning/transfer.rs`
+- `S16` `M` `native/application/src/provisioning/engine.rs`
+- `S16` `M` `native/application/src/provisioning/engine/tests.rs`
+- `S16` `M` `native/application/src/provisioning/local_ai/mod.rs`
+- `S16` `M` `native/application/src/provisioning/local_ai/models.rs`
+- `S16` `M` `native/application/src/provisioning/local_ai/models/tests.rs`
+- `S16` `M` `native/application/src/provisioning/local_ai/registry.rs`
+- `S16` `M` `native/application/src/provisioning/local_ai/registry/tests.rs`
+- `S16` `M` `native/application/src/provisioning/local_ai/huggingface.rs`
+- `S16` `M` `native/application/src/provisioning/local_ai/huggingface/tests.rs`
+- `S16` `M` `native/application/src/provisioning/local_ai/program.rs`
+- `S16` `M` `native/application/src/provisioning/local_ai/program/tests.rs`
+- `S16` `M` `native/application/src/provisioning/local_ai/fake_ollama.rs`
+- `S16` `verify:` `rustfmt --edition 2024 --check` -> `pass`
+- `S16` `by:` `vaultspec-high-executor`
+- `S16` `M` `dev/locales/desktop_chrome.py`
+- `S16` `M` `dev/locales/desktop_interface_keys.py`
+- `S16` `M` `dev/locales/tests/test_audit.py`
+- `S16` `M` `native/application/src/provisioning/failure.rs`
+- `S16` `M` `native/desktop/frontend/src/dev/setupFixture.ts`
+- `S16` `M` `native/desktop/frontend/src/ipc/componentSetup.ts`
+- `S16` `M` `native/desktop/src-tauri/src/shell/setup/components.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/setup/wire.rs`
+- `S16` `M` `src/cadrumo/locales/ca/common.yml`
+- `S16` `M` `src/cadrumo/locales/en/common.yml`
+- `S16` `M` `src/cadrumo/locales/es/common.yml`
+- `S16` `M` `src/cadrumo/locales/hu/common.yml`
+- `S16` `M` `src/cadrumo_client/contracts/failure_categories.py`
+- `S16` `verify:` `rustfmt --edition 2024 --check` -> `pass`
+- `S16` `verify:` `ruff check and ruff format --check` -> `pass`
+- `S16` `verify:` `ty check` -> `pass`
+- `S16` `verify:` `pytest test_sign_in_failures.py` -> `pass`
+- `S17` `M` `native/application/src/diagnostics/lifecycle.rs`
+- `S17` `M` `native/application/src/provisioning/local_ai/fake_llamacpp.rs`
+- `S17` `M` `native/application/src/provisioning/local_ai/fake_ollama.rs`
+- `S17` `M` `native/application/src/provisioning/local_ai/llama_server.rs`
+- `S17` `M` `native/application/src/provisioning/local_ai/llama_server/tests.rs`
+- `S17` `M` `native/application/src/provisioning/local_ai/supervision/tests.rs`
+- `S17` `M` `native/desktop/src-tauri/src/logs/manager.rs`
+- `S17` `M` `native/desktop/src-tauri/src/logs/severity.rs`
+- `S17` `M` `native/manager/src/diagnostics.rs`
+- `S17` `verify:` `rustfmt --edition 2024 --check on every touched Rust file` -> `pass`
+- `S33` `M` `src/cadrumo_agent_service/service_administration.py`
+- `S33` `M` `src/cadrumo_agent_service/service_support.py`
+- `S33` `A` `src/cadrumo_agent_service/host/tests/test_catalog_read_lease_refresh.py`
+- `S33` `verify:` `pytest src/cadrumo_agent_service (706)` -> `pass`
+- `S33` `verify:` `test_catalog_read_lease_refresh fails on the object-identity key` -> `pass`
+- `S33` `verify:` `ruff check, ruff format --check, ty` -> `pass`
+- `S18` `M` `native/application/src/provisioning/engine.rs`
+- `S18` `M` `native/application/src/provisioning/engine/tests.rs`
+- `S18` `M` `native/application/src/provisioning/installation.rs`
+- `S18` `M` `native/application/src/provisioning/items.rs`
+- `S18` `M` `native/application/src/provisioning/plan.rs`
+- `S18` `M` `native/application/src/provisioning/local_ai/fake_llamacpp.rs`
+- `S18` `M` `native/application/src/provisioning/local_ai/llama_server.rs`
+- `S18` `M` `native/application/src/provisioning/local_ai/models.rs`
+- `S18` `M` `native/application/src/provisioning/local_ai/program.rs`
+- `S18` `M` `native/desktop/src-tauri/src/shell/setup/components_tests.rs`
+- `S18` `by:` `vaultspec-high-executor`
+- `S16` `M` `.vault/plan/2026-11-07-local-inference-engine-plan.md`
+- `S16` `by:` `vaultspec-standard-executor`
+- `S17` `by:` `vaultspec-standard-executor`
+- `S18` `M` `native/application/tests/live_package.rs`
+- `S18` `M` `native/CONTRACT.md`
+- `S18` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -130,6 +213,14 @@ related:
 - `S11` Pending in the root build slot: CMake configure resolves the redistributable, then bundle build and test-native-bundle
 - `S15` cargo test and clippy for native/application are pending the root build slot; not run in the worktree
 - `S11` configure, bundle and test-native-bundle owed in the DESKTOP proving cycle; Step stays open until it passes
+- `S17` Rust not compiled under root quiet; cargo check, clippy and test owed in a root slot. 12 pytest errors are environmental: no published authority in the worktree.
+- `S16` cargo build, clippy and tests not run here; Rust verification is deferred to a root slot
+- `S16` `program_proxy_differs` retired; dev/locales audit, parity, chrome and signal tests need a published authority, absent in this worktree, and are owed in a root slot with cargo and the frontend typecheck
+- `S17` Review fixes: llama-server restart drains with typed retryable load refusals, argv host and port, local AI unavailability diagnostic, engine-selection launch proofs. Rust not compiled under root quiet; cargo check, clippy and test owed in a root slot.
+- `S18` Rust compile, clippy and cargo tests not run in the worktree under the operator ban; verification pending the root slot
+- `S16` Review-finding fixes (transfer retry window, store reclaim, progress offset, drain marker and bounded check wait, refused-load body, router alias ids, live package tests): Rust build, clippy and cargo tests are pending the root slot; rustfmt --edition 2024 --check passes on the changed files.
+- `S17` Review-finding fixes (transfer retry window, store reclaim, progress offset, drain marker and bounded check wait, refused-load body, router alias ids, live package tests): Rust build, clippy and cargo tests are pending the root slot; rustfmt --edition 2024 --check passes on the changed files.
+- `S18` Review-finding fixes (transfer retry window, store reclaim, progress offset, drain marker and bounded check wait, refused-load body, router alias ids, live package tests): Rust build, clippy and cargo tests are pending the root slot; rustfmt --edition 2024 --check passes on the changed files.
 
 ## Notes
 

@@ -60,6 +60,10 @@ MISSING_EVIDENCE_LEGAL_REFS: tuple[str, ...] = (
     "rd-1619-2012:art-2",
 )
 
+#: A declared received invoice claims a deduction whose factura the records do
+#: not hold; its ``invoice_id`` fact names the invoice to attach it to.
+INVOICE_SOURCE_DOCUMENT_MISSING_KEY = "application.modelo.findings.invoice_source_document_missing"
+
 
 #: Legal grounding for a cuota-less row that declares no base. LIVA art. 164.Uno.6
 #: obliges the taxpayer to declare the operations; the M303 base casillas are

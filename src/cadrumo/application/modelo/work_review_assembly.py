@@ -20,7 +20,7 @@ from ...core.modelo_work_progress_state import ModeloWorkProgressState
 from ...core.period import Period
 from ...domain.calculations.registry.binding_targets import casillas_by_binding
 from ...domain.calculations.registry.binding_value_contract import BindingValueChannel
-from ...domain.calculations.registry.bindings import CasillaObservation
+from ...domain.calculations.registry.bindings import CasillaObservation, CasillaObservationValueKind
 from ...domain.calculations.registry.export import (
     clasificar_casillas_oficiales,
     derive_export_layouts_from_bindings,
@@ -45,6 +45,7 @@ from ...domain.calculations.registry.runtime_graph import (
 )
 from ...domain.calculations.registry.schema import BindingDefinition, FormulaDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_input_kind import InputKind
+from ...domain.calculations.registry.schema_scalars import registry_scalar_value_type
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.source_byte_availability import layout_embedded_source_ids
 from ...domain.filing.schema import ModeloScalar, ModeloValueKind
@@ -293,6 +294,19 @@ def _classify_observed_value(
     return ModeloValueKind.INHERITED, observation.value, None
 
 
+def _holds_date_placeholder(observation: CasillaObservation, data_type: str) -> bool:
+    """Whether a date box holds only the numeric zero calculation seeds for a date nobody supplied.
+
+    No date is zero, so the zero is the absence the filing replay already
+    omits rather than files, and it reads as empty here too.
+    """
+    return (
+        registry_scalar_value_type(data_type) == "date"
+        and observation.value_kind == CasillaObservationValueKind.DECIMAL
+        and observation.value == 0
+    )
+
+
 def _realised_value(
     *,
     casilla_id: CasillaId,
@@ -301,6 +315,7 @@ def _realised_value(
     binding_ids: tuple[BindingId, ...],
     revision: CalculationRevision | None,
     resolved_bindings: Mapping[BindingId, Decimal],
+    data_type: str,
 ) -> tuple[ModeloValueKind, ModeloScalar, ModeloWorkOriginAnomaly | None]:
     """Classify the realised value from persisted observations and replay facts.
 
@@ -314,6 +329,8 @@ def _realised_value(
     if observation is None:
         anomaly = ModeloWorkOriginAnomaly.BROKEN_CALCULATION_CHAIN if input_kind is InputKind.COMPUTED else None
         return ModeloValueKind.EMPTY, None, anomaly
+    if formula_id is None and _holds_date_placeholder(observation, data_type):
+        return ModeloValueKind.EMPTY, None, None
     return _classify_observed_value(
         observation=observation,
         input_kind=input_kind,
@@ -402,6 +419,7 @@ def _review_casilla(
         binding_ids=binding_ids,
         revision=context.revision,
         resolved_bindings=context.persisted_decimal_bindings,
+        data_type=casilla.data_type,
     )
     return ModeloWorkReviewCasilla(
         casilla_id=casilla.id,

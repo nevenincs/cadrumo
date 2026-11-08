@@ -1520,6 +1520,17 @@ application:
         what: Egy későbbi évben teljesített kifizetés tételének egyes összegeit nem
           erősíti meg hivatalos forrás.
         what_to_do: Benyújtás előtt vesd össze ezeket az összegeket a hivatalos útmutatóval.
+      m347_declarado_provincia_unrecorded:
+        what: 'Néhány bejelentett partnernél hiányzik ez: {box}. Az adóügyi lakcímükhöz
+          tartozik, amit a számláid nem tüntetnek fel.'
+        what_to_do: A bevallás benyújtása előtt add meg minden felsorolt partner adóügyi
+          lakcímének tartománykódját.
+      m347_metalico_unrecorded:
+        what: 'A számláid nem mutatják, hogyan fizették ki őket, ezért ez egyik rekordban
+          sem tartalmaz összeget: {box}.'
+        what_to_do: Ha valamelyik partner a bejelentési kötelezettséget kiváltó összeg
+          felett fizetett neked készpénzben, a bevallás benyújtása előtt add meg ezt
+          az összeget a rekordjában.
       m349_clave_inferred_from_category:
         what: A Cadrumo az uniós ügyletek listájának egy sorához a számla áfa-kategóriája
           alapján választott ügylettípust, és az más is lehet.
@@ -1792,6 +1803,7 @@ application:
       household_rows_incomplete: '{group}: {stated} megadva, {recorded} rögzítve.'
       instalment_free_gap: '{element}: {start} és {end} között nincs rögzített értékcsökkenési
         leírás. A módszere rád bízza az összeget, ezért semmit sem ad a(z) {box} mezőhöz.'
+      m347_provincia_unrecorded: 'Tartománykód nélküli partnerek: {parties}.'
       possibly_durable_expense: A(z) {row_date} napi, {row_amount} összegű tétel folyó
         költségként kerül levonásra, a leírása pedig tartós eszközre utal.
       prior_filing_unrecorded: A(z) {box} mező kiszámításához rögzítsd a(z) {year}.
@@ -2603,6 +2615,9 @@ application:
       invoice_fingerprint_unavailable: A Cadrumo nem tudta beolvasni a számláidat,
         hogy összevesse őket a(z) %{modelo} %{filing_year}, %{period} modellel, ezért
         nem igazolható, hogy a számítás naprakész. Próbáld újra, ha már olvashatók.
+      invoice_source_document_missing: A(z) %{invoice_number} beérkezett számla IVA-t
+        von le, de a nyilvántartásod nem őrzi a dokumentumát. Nyisd meg a számlát,
+        és csatold a PDF-et vagy az e-számlát.
       iva_compensation_annual_source_evidence_failure: A Modelo 390-hez szükség van
         az év Modelo 303 bevallásainak adataira, és ezekkel kapcsolatban még %{source_issue_count}
         megoldatlan probléma van, ezért ez a bevallás nem fejezhető be.

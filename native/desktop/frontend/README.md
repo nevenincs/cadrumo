@@ -20,8 +20,10 @@ The packaged app's Logs tab starts at INFO. Set `CADRUMO_LOG_LEVEL` to `DEBUG`,
 initial level. The level selector changes the current view; Reset filters restores
 the environment-selected level. Internal stages and successful helper timings are
 DEBUG, operational state changes are INFO, recoverable degradation is WARNING,
-and failed operations are ERROR. Diagnostic files retain DEBUG by default;
-`CADRUMO_LOG_FILE_LEVEL` and `CADRUMO_LOG_ROOT_LEVEL` govern Python capture separately.
+and failed operations are ERROR. Diagnostic files and the Python root logger
+default to INFO, so DEBUG records are not captured unless
+`CADRUMO_LOG_FILE_LEVEL` and `CADRUMO_LOG_ROOT_LEVEL` select DEBUG; they govern
+Python capture separately.
 
 ## Prerequisites
 

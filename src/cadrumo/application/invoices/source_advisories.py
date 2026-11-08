@@ -12,6 +12,7 @@ from ...core.aggregation import (
     BindingSourceKind,
     ThirdPartyDeclarationRole,
 )
+from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.period import Period
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.invoice_bindings import (
@@ -29,6 +30,7 @@ from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.models import Invoice
 from ...domain.iva.establishment import SPAIN_COUNTRY_CODE
 from ...domain.iva.schema import InvoiceKind
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ..aggregation.source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -412,6 +414,12 @@ def _m347_declared_items(
     )
 
 
+_M347_PROVINCIA_CASILLA: CasillaId = validated_casilla_id("contraparte.provincia-codigo")
+"""The declarado record field CÓDIGO PROVINCIA (2025 design pos. 77-78), filled once per record."""
+_M347_METALICO_CASILLA: CasillaId = validated_casilla_id("contraparte.importe-metalico")
+"""The declarado record field for amounts received in cash (2025 design pos. 101-115), filled once per record."""
+
+
 def _m347_record_field_advisories(
     declarable: M347DeclarableSet,
     m347_items: Sequence[ObservedInvoice],
@@ -468,10 +476,14 @@ def _m347_record_field_advisories(
     if without_provincia:
         diagnostics.append(
             CalculationSourceDiagnostic(
-                reason="source_issue",
+                reason="m347_declarado_provincia_unrecorded",
                 source_kind=BindingSourceKind.M347_THIRD_PARTY_OPERATION.value,
                 resolver_id=resolver_id,
                 source_ref="m347-record:provincia-not-recorded",
+                casilla_id=_M347_PROVINCIA_CASILLA,
+                fact=CalculationNoteFact.of(
+                    CalculationNoteSentence.M347_PROVINCIA_UNRECORDED, parties=", ".join(without_provincia)
+                ),
                 message=(
                     f"Modelo 347 declares the Spanish counterparties {', '.join(without_provincia)} for ejercicio "
                     f"{context.filing_year}, but each record's provincia code is that of the counterparty's "
@@ -484,10 +496,11 @@ def _m347_record_field_advisories(
     if any(invoice.kind is InvoiceKind.ISSUED for invoice, _observation in declared):
         diagnostics.append(
             CalculationSourceDiagnostic(
-                reason="source_issue",
+                reason="m347_metalico_unrecorded",
                 source_kind=BindingSourceKind.M347_THIRD_PARTY_OPERATION.value,
                 resolver_id=resolver_id,
                 source_ref="m347-record:metalico-not-recorded",
+                casilla_id=_M347_METALICO_CASILLA,
                 message=(
                     f"Modelo 347 declares sales for ejercicio {context.filing_year}, and the amounts above "
                     "6.000 EUR received in cash from a declarado belong on its record (RD 1065/2007 art. 34.1.h). "

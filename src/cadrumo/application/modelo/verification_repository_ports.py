@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
+from ...domain.attachments.protocols import AttachmentStoreProtocol
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
@@ -77,6 +78,8 @@ class VerificationRepositoryBundle:
     percepcion_observation_ports: PercepcionObservationPorts
     ledger_membership_ports: LedgerMembershipPorts
     credit_resolution: CreditResolutionRepository
+    #: The stored documents, read for which invoices hold their factura.
+    attachment: AttachmentStoreProtocol
 
 
 class VerificationRepositoryBundleFactory(Protocol):

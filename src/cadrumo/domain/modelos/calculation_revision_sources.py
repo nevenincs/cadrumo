@@ -197,6 +197,8 @@ class CalculationNoteSentence(StrEnum):
     """A received invoice states a retención at a rate no activity rate matches."""
     WITHHOLDING_INVOICE_INCOMPLETE = "withholding_invoice_incomplete"
     """A received invoice states a retención and lacks the supplier's NIF or a euro value."""
+    M347_PROVINCIA_UNRECORDED = "m347_provincia_unrecorded"
+    """Modelo 347 records of Spanish counterparts whose provincia code no record states."""
 
 
 GRADE_CAP_NOTE_SENTENCES: Final[Mapping[BindingGradeCapReason, CalculationNoteSentence]] = MappingProxyType(

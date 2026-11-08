@@ -10,12 +10,14 @@ from typing import Final
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.identity.hex_ids import InvoiceId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
+from .verification_finding_contracts import INVOICE_SOURCE_DOCUMENT_MISSING_KEY
 
 
 class ModeloFormAttention(StrEnum):
@@ -136,6 +138,9 @@ FINDING_MESSAGE_ACTION_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
             "application.modelo.work_form.finding_action.attach_document"
         ),
         "application.modelo.findings.transaction_evidence_missing_deductible": (
+            "application.modelo.work_form.finding_action.attach_document"
+        ),
+        "application.modelo.findings.invoice_source_document_missing": (
             "application.modelo.work_form.finding_action.attach_document"
         ),
         "application.modelo.findings.iva_import_document_unrecordable": (
@@ -278,6 +283,21 @@ def _issue_action(data: dict[str, object]) -> str:
     return finding_action_locale_key(finding)
 
 
+def finding_invoice_to_open(finding: ModeloVerificationFinding) -> InvoiceId | None:
+    """The invoice the filer opens to resolve ``finding``, when the finding names one."""
+    if finding.message_locale_key != INVOICE_SOURCE_DOCUMENT_MISSING_KEY:
+        return None
+    invoice_id = finding.message_facts.get("invoice_id")
+    return invoice_id if isinstance(invoice_id, str) else None
+
+
+def _issue_invoice(data: dict[str, object]) -> InvoiceId | None:
+    finding = data.get("finding")
+    if not isinstance(finding, ModeloVerificationFinding):
+        raise ValueError("an issue's invoice is derived from its finding")
+    return finding_invoice_to_open(finding)
+
+
 class ModeloFormIssue(BaseModel):
     """One finding of the current calculation's latest verification, with the box it concerns.
 
@@ -295,6 +315,8 @@ class ModeloFormIssue(BaseModel):
     box: str | None = None
     attention: ModeloFormAttention = Field(default_factory=_issue_attention)
     action_locale_key: str = Field(default_factory=_issue_action)
+    #: The invoice whose document the action attaches, served as the door to it.
+    open_invoice_id: InvoiceId | None = Field(default_factory=_issue_invoice)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -303,4 +325,6 @@ class ModeloFormIssue(BaseModel):
             raise ValueError("an issue's attention must be the one its finding classifies to")
         if self.action_locale_key != finding_action_locale_key(self.finding):
             raise ValueError("an issue's action must be the one its finding maps to")
+        if self.open_invoice_id != finding_invoice_to_open(self.finding):
+            raise ValueError("an issue's invoice must be the one its finding names")
         return self

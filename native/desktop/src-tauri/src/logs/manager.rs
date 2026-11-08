@@ -266,6 +266,10 @@ pub(super) fn lifecycle_context(fact: LifecycleFact, context: &mut BTreeMap<Stri
         StoodDown { reason } => field(context, "lifecycle_reason", reason),
         Failed { last } => field(context, "restart_class", last),
         EventsDropped { count } => field(context, "events_dropped", count),
+        LocalAiUnavailable { engine, reason } => {
+            field(context, "local_ai_engine", engine);
+            field(context, "lifecycle_reason", reason);
+        }
         SupervisorEnded { result } => {
             let encoded = serde_json::to_value(result).expect("closed outcome serializes");
             context.insert("supervisor_outcome".into(), encoded["outcome"].clone());

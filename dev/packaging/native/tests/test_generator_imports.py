@@ -23,6 +23,8 @@ _NON_ENVIRONMENT_INPUTS = frozenset(
         "dev.paths",
         "dev.locales.manager_chrome",
         "dev.packaging.runtime_wheelhouse_contract",
+        # The build the packaged llama-server is pinned to, which its running server reports.
+        "dev.env.llamacpp_pins",
     }
 )
 

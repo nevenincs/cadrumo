@@ -241,6 +241,33 @@ fn pull(network: &Network, root: &Path) -> Run {
     }
 }
 
+/// Pulls the synthetic model into `root` with every test host approved, each event going
+/// to `observe` as it happens.
+fn pull_observed(
+    network: &Network,
+    root: &Path,
+    mut observe: impl FnMut(TransferEvent),
+) -> Result<RegistryManifest, RegistryError> {
+    let approved: BTreeSet<HostName> = hosts()
+        .iter()
+        .map(|host| HostName::new(*host).unwrap())
+        .collect();
+    let mut pacing = RecordedPacing {
+        now: Duration::ZERO,
+        waits: Vec::new(),
+    };
+    let cancellation = Cancellation::default();
+    let mut transfer = Transfer {
+        network,
+        hosts: &approved,
+        policy: RetryPolicy::default(),
+        pacing: &mut pacing,
+        events: &mut observe,
+        cancellation: &cancellation,
+    };
+    Registry::new(root.to_path_buf()).pull(&ModelName::parse(NAME).unwrap(), &mut transfer)
+}
+
 fn store_requests(server: &TlsServer, served: &Served, index: usize) -> Vec<Request> {
     let target = format!("{STORE_TARGET}{}", served.hex(index));
     server
@@ -631,4 +658,74 @@ fn registry_failures_read_as_the_closed_categories() {
         LocalAiError::from(RegistryError::Cancelled),
         LocalAiError::Engine(Error::Cancelled)
     ));
+}
+
+#[test]
+fn a_blob_cleared_before_the_manifest_is_written_is_fetched_again() {
+    let served = Served::new();
+    let (certificate, server, directory) = setup(registry(
+        Some(served.manifest.clone()),
+        served.blobs.clone(),
+        blob_host(),
+    ));
+    let network = network_to(certificate.roots(), server.address(), None);
+    let root = directory.path();
+    let cleared = served.stored(root, 1);
+    let total = served.total();
+    let mut clears = 0;
+    let mut reported = Vec::new();
+    let result = pull_observed(&network, root, |event| {
+        if let TransferEvent::Progress { completed, .. } = event {
+            reported.push(completed);
+            // A program serving the store starts once every blob is in and clears the
+            // blobs no manifest names yet.
+            if completed == total && clears == 0 && fs::remove_file(&cleared).is_ok() {
+                clears += 1;
+            }
+        }
+    });
+    result.unwrap();
+    assert_eq!(clears, 1);
+    assert_eq!(fs::read(&cleared).unwrap(), served.blobs[1].1);
+    assert_eq!(fs::read(manifest_file(root)).unwrap(), served.manifest);
+    assert_eq!(
+        store_requests(&server, &served, 1).len(),
+        2,
+        "the cleared blob is fetched again"
+    );
+    assert_eq!(store_requests(&server, &served, 2).len(), 1);
+    assert!(reported.windows(2).all(|pair| pair[0] <= pair[1]));
+    assert_eq!(reported.last(), Some(&total));
+    assert_eq!(present(root), Observation::Present);
+}
+
+#[test]
+fn a_blob_that_keeps_being_cleared_publishes_no_manifest() {
+    let served = Served::new();
+    let (certificate, server, directory) = setup(registry(
+        Some(served.manifest.clone()),
+        served.blobs.clone(),
+        blob_host(),
+    ));
+    let network = network_to(certificate.roots(), server.address(), None);
+    let root = directory.path();
+    let cleared = served.stored(root, 1);
+    let total = served.total();
+    let result = pull_observed(&network, root, |event| {
+        if let TransferEvent::Progress { completed, .. } = event
+            && completed == total
+        {
+            let _ = fs::remove_file(&cleared);
+        }
+    });
+    let error = result.unwrap_err();
+    assert!(matches!(error, RegistryError::Engine(_)), "{error:?}");
+    assert_eq!(error.category(), FailureCategory::Unexpected);
+    assert!(!manifest_file(root).exists());
+    assert_eq!(
+        store_requests(&server, &served, 1).len(),
+        1 + RESTORE_ROUNDS,
+        "fetched again a bounded number of times"
+    );
+    assert_eq!(present(root), Observation::Absent);
 }

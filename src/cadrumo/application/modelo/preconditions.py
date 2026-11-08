@@ -468,6 +468,11 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
     ),
     _profile(
         "modelo.work.verify",
+        "modelo.work.verify.invoice_source_document.present",
+        "modelo.work.verify.invoice_source_document.missing",
+    ),
+    _profile(
+        "modelo.work.verify",
         "modelo.work.verify.iva_selected_scope_evidence.complete",
         "modelo.work.verify.iva_selected_scope_evidence.unresolved",
     ),

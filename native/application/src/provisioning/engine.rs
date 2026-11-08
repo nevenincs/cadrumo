@@ -31,17 +31,27 @@
 //! stopped from the items it never reached.
 //!
 //! The engine never runs the local AI server: the runtime manager runs the one server of
-//! the installation on its fixed address while the program is set up. A local AI setup
-//! installs the program, which waits for the manager to stop any server it runs from the
-//! old version, records the program with the fixed address, and then waits, within
-//! [`SERVER_WAIT`], for the manager to start the server before it pulls and checks each
-//! selected model through it. Without a manager the server never comes, and the models
-//! fail as `program_not_running`.
+//! the selected local engine on that engine's fixed address while its program is set up.
+//! The owner hands the engine the same selection with [`Engine::select_local_engine`].
+//!
+//! With Ollama selected, a local AI setup installs the Ollama program, which waits for
+//! the manager to stop any server it runs from the old version, and records the program
+//! with the fixed address. With llama.cpp selected there is no program to download,
+//! install or record: the package carries the llama-server, and the local AI is set up
+//! exactly when the package carries it. Either setup then fetches each selected model
+//! into the store itself, through this engine's own network and only from the hosts the
+//! approved plan names, with no server running for it. Only the check that follows needs
+//! the selected engine's server: the setup waits, within [`SERVER_WAIT`], for the manager
+//! to start it, and for llama-server also to present every selected model, and checks
+//! each selected model on it. Without a manager the server never comes, and the check
+//! fails as `program_not_running`. With llama.cpp selected nothing asks, waits for or
+//! records the Ollama program or its server.
 //!
 //! The owner hands the engine the person's local model selection with
-//! [`Engine::select_local_models`]: role, model name and download size, as the selected
-//! catalogue entries state them. The engine names no model itself, so with an empty
-//! selection the local AI is its program alone.
+//! [`Engine::select_local_models`]: role, model artefact and download size, as the
+//! selected catalogue entries state them. The engine names no model itself, so with an
+//! empty selection the local AI is its program alone, and with llama.cpp selected it has
+//! nothing to set up.
 
 use super::{
     activity::{
@@ -54,14 +64,16 @@ use super::{
     follow::{self, Changes},
     items::{Destination, ItemId, Locations, PROGRAM_PART},
     local_ai::{
-        self, LocalAiError, NotRunningCause,
+        self, LocalAiError, LocalEngine, NotRunningCause, StartFailureKind,
         hardware::Hardware,
-        models::{LocalModels, ModelName, Models, Pull},
+        llama_server::{self, LOAD_CONTEXT, LlamaServer, LlamaServerUnavailable, Presentation},
+        models::{LocalModels, ModelName, Models},
         program::{Program, START_BUDGET, Server},
+        supervision::EngineProgram,
     },
     network::{self, HOST_TIMEOUT, Reachability},
     pins::{ComponentPins, Platform, ProgramIdentity},
-    plan::{PlanEntry, SetupPlan},
+    plan::{PlanEntry, PlanPart, SetupPlan},
     receipts::{ReceiptReading, ReceiptStore},
     state::{
         self, Activity, BlockedReason, CheckMode, ItemState, Observation, Reading, SetupStep,
@@ -276,9 +288,14 @@ pub struct EngineConfig {
     /// The engine's own environment, for the operating system settings its children
     /// need.
     pub ambient: Box<Ambient>,
-    /// The fixed loopback address the manager's local AI server answers on, recorded for
+    /// The fixed loopback address the manager's Ollama server answers on, recorded for
     /// the programs that use it.
     pub local_ai_address: SocketAddr,
+    /// The package's folder for the llama-server it carries; a package without the
+    /// program there has no local AI while llama.cpp is selected.
+    pub llama_server_folder: PathBuf,
+    /// The llama.cpp build tag the package pins its llama-server at.
+    pub llama_server_build: String,
     /// The complete environment a browser check launches the browser with.
     pub browser_environment: BTreeMap<OsString, OsString>,
     /// The owner's temporary folder; a browser check's throwaway profile lives inside it.
@@ -298,9 +315,20 @@ pub struct Engine {
     receipts: ReceiptStore,
     /// The person's local model selection; empty plans the local AI's program alone.
     local_models: LocalModels,
+    /// The local engine whose program and server every later command plans, checks and
+    /// removes; the same selection the runtime manager runs the server of.
+    local_engine: LocalEngine,
     /// Arguments a test's stand-in browser is launched with.
     #[cfg(test)]
     pub(crate) browser_leading: Vec<OsString>,
+}
+
+/// Why this build has no program of the selected local engine to check or set up.
+enum NoProgram {
+    /// No program of the selected engine is pinned or packaged for this computer.
+    NotInThisBuild,
+    /// Its pins or its package could not be read.
+    Unreadable(Error),
 }
 
 /// What one quick look at an item found, with what a setup of it would plan.
@@ -571,6 +599,7 @@ impl Engine {
             activity: ActivityStore::new(config.locations.activity.clone())?,
             receipts: ReceiptStore::new(config.locations.receipts.clone())?,
             local_models: LocalModels::default(),
+            local_engine: LocalEngine::default(),
             config,
             #[cfg(test)]
             browser_leading: Vec::new(),
@@ -585,6 +614,13 @@ impl Engine {
     /// person's selection, as the desktop read it. It replaces any earlier selection.
     pub fn select_local_models(&mut self, models: LocalModels) {
         self.local_models = models;
+    }
+
+    /// Selects the local engine every later command plans, sets up, checks and removes
+    /// the local AI for: the person's selection, the one the runtime manager runs the
+    /// server of. It replaces any earlier selection; until then the default engine is.
+    pub fn select_local_engine(&mut self, engine: LocalEngine) {
+        self.local_engine = engine;
     }
 
     /// Every item's state. A quick check reads local facts only; a full check also runs
@@ -862,21 +898,58 @@ impl Engine {
         ))
     }
 
-    /// The local AI's program and the selected models, when this build pins the program
-    /// for this platform.
-    fn local_ai_parts(&self) -> Option<Result<(Program, Models), Error>> {
-        let platform = self.config.platform?;
-        let pins = self.config.pins.program(ProgramIdentity::Ollama)?;
-        match Program::new(pins, platform, self.config.locations.clone()) {
-            Ok(Some(program)) => Some(Ok((
-                program,
-                Models::new(
-                    self.local_models.clone(),
-                    self.config.locations.models.clone(),
-                ),
-            ))),
-            Ok(None) => None,
-            Err(error) => Some(Err(error)),
+    /// The selected local engine's program and the selected models: the Ollama program
+    /// when this build pins it for this platform, or the llama-server when the package
+    /// carries it. The other engine's program is never built.
+    fn local_ai_parts(&self) -> Result<(EngineProgram, Models), NoProgram> {
+        let program = EngineProgram::select(
+            self.local_engine,
+            || -> Result<Program, NoProgram> {
+                let platform = self.config.platform.ok_or(NoProgram::NotInThisBuild)?;
+                let pins = self
+                    .config
+                    .pins
+                    .program(ProgramIdentity::Ollama)
+                    .ok_or(NoProgram::NotInThisBuild)?;
+                Program::new(pins, platform, self.config.locations.clone())
+                    .map_err(NoProgram::Unreadable)?
+                    .ok_or(NoProgram::NotInThisBuild)
+            },
+            || {
+                LlamaServer::packaged(
+                    &self.config.llama_server_folder,
+                    &self.config.llama_server_build,
+                    &self.config.locations,
+                    LOAD_CONTEXT,
+                )
+                .map_err(|reason| match reason {
+                    LlamaServerUnavailable::NotPackaged => NoProgram::NotInThisBuild,
+                    LlamaServerUnavailable::Invalid => {
+                        NoProgram::Unreadable(Error::Invalid("packaged llama-server".into()))
+                    }
+                })
+            },
+        )?;
+        let models = Models::new(
+            self.local_models.clone(),
+            self.config.locations.models.clone(),
+        );
+        Ok((program, models))
+    }
+
+    /// The hosts the local AI downloads from under the selected engine: the Ollama
+    /// program's pinned hosts and the selected models' with Ollama selected, and the
+    /// selected models' alone with llama.cpp selected; `None` when there is none.
+    fn local_ai_hosts(&self) -> Option<BTreeSet<HostName>> {
+        match self.local_engine {
+            LocalEngine::Ollama => {
+                let mut hosts = network::item_hosts(&self.config.pins, ItemId::LocalAi.as_str())?;
+                hosts.extend(self.local_models.hosts());
+                Some(hosts)
+            }
+            LocalEngine::LlamaCpp => {
+                Some(self.local_models.hosts()).filter(|hosts| !hosts.is_empty())
+            }
         }
     }
 
@@ -915,36 +988,60 @@ impl Engine {
         // An unmeasured capacity must not invent a hardware shortfall.
         let hardware = self.config.hardware.unwrap_or_default();
         let (program, models) = match self.local_ai_parts() {
-            None => return Survey::not_in_this_build(),
-            Some(Err(_)) => return Survey::unreadable(),
-            Some(Ok(parts)) => parts,
+            Err(NoProgram::NotInThisBuild) => return Survey::not_in_this_build(),
+            Err(NoProgram::Unreadable(_)) => return Survey::unreadable(),
+            Ok(parts) => parts,
         };
-        let program_observation = program.observe_quick();
-        let model_observations: Vec<Observation> = models
-            .selection()
-            .as_slice()
+        let present = Observation::Present;
+        let selected = models.selection().as_slice();
+        let stored: Vec<Observation> = selected
             .iter()
             .map(|model| models.observe_quick(model, &hardware))
             .collect();
+        let mut parts = Vec::new();
+        let (program_observation, version, model_observations) = match &program {
+            EngineProgram::Ollama(program) => {
+                let observation = program.observe_quick();
+                if observation != present {
+                    parts.push(program.plan_part());
+                }
+                (observation, program.version().to_owned(), stored.clone())
+            }
+            // The package carries the program: it is there to read, and never planned.
+            EngineProgram::LlamaCpp(router) => {
+                let observed: Vec<Observation> = selected
+                    .iter()
+                    .map(|model| models.observe_presented(model, &hardware, router.folder()))
+                    .collect();
+                (present, router.build().to_owned(), observed)
+            }
+        };
         let reading = local_ai::reading(
             CheckMode::Quick,
             program_observation,
-            Some(program.version().to_owned()),
+            Some(version),
             &model_observations,
         );
-        let present = Observation::Present;
-        let mut parts = Vec::new();
-        if program_observation != present {
-            parts.push(program.plan_part());
+        for ((part, in_store), observed) in models
+            .plan_parts()
+            .into_iter()
+            .zip(&stored)
+            .zip(&model_observations)
+        {
+            if *observed == present {
+                continue;
+            }
+            // A model stored whole that the running router does not present yet downloads
+            // nothing: its setup waits for the router to present it, and checks it.
+            parts.push(if *in_store == present {
+                PlanPart {
+                    download_bytes: Some(0),
+                    ..part
+                }
+            } else {
+                part
+            });
         }
-        parts.extend(
-            models
-                .plan_parts()
-                .into_iter()
-                .zip(&model_observations)
-                .filter(|(_, observation)| **observation != present)
-                .map(|(part, _)| part),
-        );
         let entry = PlanEntry::of_parts(ItemId::LocalAi, parts).ok();
         Survey { reading, entry }
     }
@@ -1018,10 +1115,11 @@ impl Engine {
                     mode: CheckMode::Full,
                     ..survey.reading.clone()
                 });
-                if let Some(mut hosts) = network::item_hosts(&self.config.pins, item.as_str()) {
-                    if item == ItemId::LocalAi {
-                        hosts.extend(self.local_models.hosts());
-                    }
+                let hosts = match item {
+                    ItemId::Browser => network::item_hosts(&self.config.pins, item.as_str()),
+                    ItemId::LocalAi => self.local_ai_hosts(),
+                };
+                if let Some(hosts) = hosts {
                     let hosts: Vec<HostName> = hosts.into_iter().collect();
                     let report = network::preflight(
                         &self.config.network,
@@ -1114,30 +1212,65 @@ impl Engine {
         }
     }
 
-    /// The local AI's full check: the program's files and the manager's server answering
-    /// for it, then one generated token for each selected model on that server. Without a
-    /// running server the program reads `program_not_running` and each model only as its
-    /// files say.
+    /// The local AI's full check on the selected engine's server. With Ollama: the
+    /// program's files and the manager's server answering for it, then one generated
+    /// token for each selected model on that server. With llama.cpp: the manager's router
+    /// answering ready as the packaged build, then for each selected model the router's
+    /// list, a load, one generated token and the unload. Without a running server the
+    /// program reads `program_not_running` and each model only as its quick check says.
     fn full_local_ai(&mut self) -> Option<Reading> {
         let hardware = self.hardware();
-        let (program, models) = self.local_ai_parts()?.ok()?;
-        let program_observation = program.observe_full();
+        let (program, models) = self.local_ai_parts().ok()?;
         let present = Observation::Present;
         let selected = models.selection().as_slice();
-        let models_observed: Vec<Observation> = match program.running_server() {
-            Some(server) if program_observation == present => selected
-                .iter()
-                .map(|model| models.observe_full(&server, model, &hardware))
-                .collect(),
-            _ => selected
-                .iter()
-                .map(|model| models.observe_quick(model, &hardware))
-                .collect(),
+        let (program_observation, version, models_observed) = match &program {
+            EngineProgram::Ollama(program) => {
+                let program_observation = program.observe_full();
+                let models_observed: Vec<Observation> = match program.running_server() {
+                    Some(server) if program_observation == present => selected
+                        .iter()
+                        .map(|model| models.observe_full(&server, model, &hardware))
+                        .collect(),
+                    _ => selected
+                        .iter()
+                        .map(|model| models.observe_quick(model, &hardware))
+                        .collect(),
+                };
+                (
+                    program_observation,
+                    program.version().to_owned(),
+                    models_observed,
+                )
+            }
+            EngineProgram::LlamaCpp(router) => {
+                let folder = router.folder();
+                let running = router.running_server().is_some();
+                let models_observed: Vec<Observation> = selected
+                    .iter()
+                    .map(|model| {
+                        if running {
+                            models.observe_full_on_router(folder, model, &hardware)
+                        } else {
+                            models.observe_presented(model, &hardware, folder)
+                        }
+                    })
+                    .collect();
+                let program_observation = if running {
+                    present
+                } else {
+                    Observation::Failed(FailureCategory::ProgramNotRunning)
+                };
+                (
+                    program_observation,
+                    router.build().to_owned(),
+                    models_observed,
+                )
+            }
         };
         Some(local_ai::reading(
             CheckMode::Full,
             program_observation,
-            Some(program.version().to_owned()),
+            Some(version),
             &models_observed,
         ))
     }
@@ -1568,99 +1701,125 @@ impl Engine {
         let mut pacing = SystemPacing::default();
         let outcome = (|| -> Result<(), Stop> {
             let (mut program, models) = match self.local_ai_parts() {
-                Some(Ok(parts)) => parts,
-                Some(Err(error)) => return Err(error.into()),
-                None => return Err(Stop::Failed(FailureCategory::NotInThisBuild)),
+                Ok(parts) => parts,
+                Err(NoProgram::Unreadable(error)) => return Err(error.into()),
+                Err(NoProgram::NotInThisBuild) => {
+                    return Err(Stop::Failed(FailureCategory::NotInThisBuild));
+                }
             };
             writer.step(SetupStep::Download)?;
-            let program_part = entry.parts.iter().find(|part| part.part_id == PROGRAM_PART);
-            if let Some(part) = program_part {
-                let hosts: BTreeSet<HostName> = part.source_hosts.iter().cloned().collect();
-                let step = |step| Event::Part {
-                    item,
-                    part: PROGRAM_PART.to_owned(),
-                    model: None,
-                    step,
-                };
-                sink.emit(step(SetupStep::Download));
-                reporter.part = Some(PROGRAM_PART.to_owned());
-                let mut on_event = |event| reporter.transfer(event);
-                let mut transfer = Transfer {
-                    network: &self.config.network,
-                    hosts: &hosts,
-                    policy: self.config.policy,
-                    pacing: &mut pacing,
-                    events: &mut on_event,
-                    cancellation,
-                };
-                // Waits for the manager to stop a server running the old version.
-                program.install(&mut transfer)?;
-                reporter.offset += part.download_bytes.unwrap_or(0);
-                reporter.part = None;
-                writer.step(SetupStep::Install)?;
-                sink.emit(step(SetupStep::Install));
+            // Only the Ollama program is downloaded, installed and recorded; the package
+            // carries the llama-server, which no plan names.
+            if let EngineProgram::Ollama(program) = &mut program {
+                let program_part = entry.parts.iter().find(|part| part.part_id == PROGRAM_PART);
+                if let Some(part) = program_part {
+                    let hosts: BTreeSet<HostName> = part.source_hosts.iter().cloned().collect();
+                    let step = |step| Event::Part {
+                        item,
+                        part: PROGRAM_PART.to_owned(),
+                        model: None,
+                        step,
+                    };
+                    sink.emit(step(SetupStep::Download));
+                    reporter.part = Some(PROGRAM_PART.to_owned());
+                    let mut on_event = |event| reporter.transfer(event);
+                    let mut transfer = Transfer {
+                        network: &self.config.network,
+                        hosts: &hosts,
+                        policy: self.config.policy,
+                        pacing: &mut pacing,
+                        events: &mut on_event,
+                        cancellation,
+                    };
+                    // Waits for the manager to stop a server running the old version.
+                    program.install(&mut transfer)?;
+                    reporter.offset += part.download_bytes.unwrap_or(0);
+                    reporter.part = None;
+                    writer.step(SetupStep::Install)?;
+                    sink.emit(step(SetupStep::Install));
+                    if program.observe_quick() != present {
+                        return Err(Stop::Failed(FailureCategory::DamagedDownload));
+                    }
+                    program.prune()?;
+                }
                 if program.observe_quick() != present {
                     return Err(Stop::Failed(FailureCategory::DamagedDownload));
                 }
-                program.prune()?;
-            }
-            if program.observe_quick() != present {
-                return Err(Stop::Failed(FailureCategory::DamagedDownload));
-            }
-            let recorded = matches!(self.receipts.read(item), ReceiptReading::Present(_));
-            if program_part.is_some() || !recorded {
-                program.settle(
-                    &self.receipts,
-                    self.config.local_ai_address,
-                    SystemTime::now(),
-                )?;
+                let recorded = matches!(self.receipts.read(item), ReceiptReading::Present(_));
+                if program_part.is_some() || !recorded {
+                    program.settle(
+                        &self.receipts,
+                        self.config.local_ai_address,
+                        SystemTime::now(),
+                    )?;
+                }
             }
             writer.step(SetupStep::Download)?;
-            let server = server_under_this_proxy(
-                &self.config.network,
-                &program,
-                &mut pacing,
-                cancellation,
-                sink,
-                &writer,
-            )?;
             let mut pulled = BTreeSet::new();
             for part in &entry.parts {
                 let Some(model) = models.selection().for_role(&part.part_id) else {
                     continue;
                 };
-                if !pulled.insert(model.name.to_string()) {
+                if !pulled.insert(model.name().to_string()) {
                     continue;
                 }
                 sink.emit(Event::Part {
                     item,
                     part: part.part_id.clone(),
-                    model: Some(model.name.to_string()),
+                    model: Some(model.name().to_string()),
                     step: SetupStep::Download,
                 });
                 reporter.part = Some(part.part_id.clone());
+                // The model is fetched only from the hosts the person approved for it.
+                let hosts: BTreeSet<HostName> = part.source_hosts.iter().cloned().collect();
                 let mut on_event = |event| reporter.transfer(event);
-                let observation = models.pull(
-                    &server,
+                let pulled = models.pull(
                     model,
-                    &mut Pull {
+                    &mut Transfer {
+                        network: &self.config.network,
+                        hosts: &hosts,
                         policy: self.config.policy,
                         pacing: &mut pacing,
                         events: &mut on_event,
                         cancellation,
                     },
                 )?;
-                if !observation.usable() {
-                    return Err(Stop::Failed(failure_of(observation)));
+                if !pulled.observation.usable() {
+                    return Err(Stop::Failed(failure_of(pulled.observation)));
                 }
-                reporter.offset += models.download_bytes(model).unwrap_or(0);
+                // The offset advances by the total the pull reported its progress against,
+                // never by a size a catalogue stated, which the fetched manifest may
+                // exceed; so the overall figure never goes back. A part planned as already
+                // stored downloads nothing, whatever its size.
+                reporter.offset += if part.download_bytes == Some(0) {
+                    0
+                } else {
+                    pulled.bytes
+                };
             }
             reporter.part = None;
             writer.step(SetupStep::Verify)?;
-            for model in models.selection().as_slice() {
-                let observation = models.check_full(&server, model, &hardware)?;
-                if !observation.usable() {
-                    return Err(Stop::Failed(failure_of(observation)));
+            let selected = models.selection().as_slice();
+            match &program {
+                EngineProgram::Ollama(program) => {
+                    let server =
+                        wait_for_server(program, &mut pacing, cancellation, sink, &writer)?;
+                    for model in selected {
+                        let observation = models.check_full(&server, model, &hardware)?;
+                        if !observation.usable() {
+                            return Err(Stop::Failed(failure_of(observation)));
+                        }
+                    }
+                }
+                EngineProgram::LlamaCpp(router) => {
+                    wait_for_router(router, &models, &mut pacing, cancellation, sink, &writer)?;
+                    for model in selected {
+                        let observation =
+                            models.check_full_on_router(router.folder(), model, &hardware)?;
+                        if !observation.usable() {
+                            return Err(Stop::Failed(failure_of(observation)));
+                        }
+                    }
                 }
             }
             writer.step(SetupStep::Cleanup)?;
@@ -1681,7 +1840,7 @@ impl Engine {
         };
         let parts = match item {
             ItemId::Browser => None,
-            ItemId::LocalAi => self.local_ai_parts(),
+            ItemId::LocalAi => Some(self.local_ai_parts()),
         };
         let observer = |step| sink.emit(Event::Phase { item, step });
         let writer = self
@@ -1692,13 +1851,23 @@ impl Engine {
             if let Some(layout) = layout {
                 layout?.remove(&writer, receipts)?;
             }
-            if let Some(parts) = parts {
-                let (mut program, models) = parts?;
-                // Waits for the manager to stop its server first.
-                program.remove()?;
-                if with_models {
-                    models.remove()?;
+            match parts {
+                Some(Ok((EngineProgram::Ollama(mut program), models))) => {
+                    // Waits for the manager to stop its server first.
+                    program.remove()?;
+                    if with_models {
+                        models.remove()?;
+                    }
                 }
+                // The llama-server is the package's and is never removed; nor is the
+                // Ollama program, which is not the selected engine's.
+                Some(Ok((EngineProgram::LlamaCpp(_), models))) => {
+                    if with_models {
+                        models.remove()?;
+                    }
+                }
+                Some(Err(NoProgram::Unreadable(error))) => return Err(error.into()),
+                Some(Err(NoProgram::NotInThisBuild)) | None => {}
             }
             receipts.remove(item)?;
             Ok(())
@@ -1707,49 +1876,24 @@ impl Engine {
     }
 }
 
-/// The server the models are pulled through, once it answers, and only while it runs
-/// under the proxy setting this engine downloads under.
-///
-/// Looks for the manager's server at once, then at growing intervals within
-/// [`SERVER_WAIT`], reporting the wait once; without a server by then the local AI is
-/// `program_not_running`, which carries the local AI's setup action.
-///
-/// The server fetches the model bytes itself, so a server started under another proxy
-/// setting would fetch them through that one. The supervisor reads its setting from its
-/// own environment at its start, which nothing outside that process can change, so this
-/// engine cannot bring the server onto its setting: it refuses at once with
-/// `program_proxy_differs`, whose sentence names the restart that can.
-fn server_under_this_proxy(
-    network: &Network,
-    program: &Program,
+/// Looks with `look` at once, then at growing intervals within [`SERVER_WAIT`], reporting
+/// the wait once, until it finds what it looks for; `None` once the wait has run out.
+fn wait_until<T>(
+    mut look: impl FnMut() -> Option<T>,
     pacing: &mut dyn Pacing,
     cancellation: &Cancellation,
     sink: &Sink<'_>,
     writer: &ItemWriter<'_>,
-) -> Result<Server, Stop> {
-    let server = wait_for_server(program, pacing, cancellation, sink, writer)?;
-    if server.proxy_fingerprint() == network.proxy_fingerprint() {
-        return Ok(server);
-    }
-    Err(Stop::Failed(FailureCategory::ProgramProxyDiffers))
-}
-
-fn wait_for_server(
-    program: &Program,
-    pacing: &mut dyn Pacing,
-    cancellation: &Cancellation,
-    sink: &Sink<'_>,
-    writer: &ItemWriter<'_>,
-) -> Result<Server, Stop> {
+) -> Result<Option<T>, Stop> {
     let item = writer.item();
     let started = Instant::now();
     let mut delay = SERVER_LOOK_FIRST;
     loop {
-        if let Some(server) = program.running_server() {
-            return Ok(server);
+        if let Some(found) = look() {
+            return Ok(Some(found));
         }
         if started.elapsed() >= SERVER_WAIT {
-            return Err(no_server_within(program));
+            return Ok(None);
         }
         if delay == SERVER_LOOK_FIRST {
             // Best effort, as the progress figure.
@@ -1761,13 +1905,75 @@ fn wait_for_server(
     }
 }
 
+/// The manager's Ollama server, once it answers, for the check of the fetched models.
+///
+/// Looks as [`wait_until`] does; without a server by the end of the wait the local AI is
+/// `program_not_running`, which carries the local AI's setup action. The server fetches
+/// nothing, so the proxy setting it was started under does not matter here.
+fn wait_for_server(
+    program: &Program,
+    pacing: &mut dyn Pacing,
+    cancellation: &Cancellation,
+    sink: &Sink<'_>,
+    writer: &ItemWriter<'_>,
+) -> Result<Server, Stop> {
+    wait_until(
+        || program.running_server(),
+        pacing,
+        cancellation,
+        sink,
+        writer,
+    )?
+    .ok_or_else(|| no_server_within(program.latest_start_failure()))
+}
+
+/// The manager's llama-server router, once it answers ready as the packaged build and
+/// presents every selected model, for the check of the fetched models.
+///
+/// Looks as [`wait_until`] does. A router started before a model arrived in the store
+/// presents it once the manager has started it again, which it does as soon as the router
+/// holds no model. By the end of the wait, a router that runs and takes loads yet does not
+/// present a selected model has that model absent; otherwise the local AI is
+/// `program_not_running`.
+fn wait_for_router(
+    router: &LlamaServer,
+    models: &Models,
+    pacing: &mut dyn Pacing,
+    cancellation: &Cancellation,
+    sink: &Sink<'_>,
+    writer: &ItemWriter<'_>,
+) -> Result<(), Stop> {
+    let presentations = || -> Vec<Presentation> {
+        models
+            .selection()
+            .as_slice()
+            .iter()
+            .map(|model| llama_server::presentation(router.folder(), model.name()))
+            .collect()
+    };
+    let ready = || {
+        (router.running_server().is_some()
+            && presentations()
+                .iter()
+                .all(|presentation| *presentation == Presentation::Presented))
+        .then_some(())
+    };
+    if wait_until(ready, pacing, cancellation, sink, writer)?.is_some() {
+        return Ok(());
+    }
+    if router.running_server().is_some() && presentations().contains(&Presentation::NotPresented) {
+        return Err(Stop::Failed(failure_of(Observation::Absent)));
+    }
+    Err(no_server_within(router.latest_start_failure()))
+}
+
 /// The stop of a wait that ran out with no server: with the kind of the manager's latest
 /// start when that start failed, so a missing or broken program reads apart from one that
 /// is slow to start.
-fn no_server_within(program: &Program) -> Stop {
+fn no_server_within(latest_start: Option<StartFailureKind>) -> Stop {
     Stop::NotRunning(NotRunningCause::NoServerWithin {
         budget: SERVER_WAIT,
-        latest_start: program.latest_start_failure(),
+        latest_start,
     })
 }
 

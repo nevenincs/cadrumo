@@ -13,18 +13,25 @@
 //! Retry follows the setup contract: a transient fault (a reset, refused or timed-out
 //! connection, a resolver failure, an HTTP 5xx or 429, a body that ended early) waits from
 //! 2 s, doubling to at most 60 s, with jitter adding up to half of each wait but never
-//! passing 60 s, for at most 6 attempts inside 15 minutes. Each wait is announced before it starts and observes
-//! cancellation. Cancellation is checked between chunks, not during a blocked read; the
-//! connection's own I/O bound ends such a read.
+//! passing 60 s, for at most 6 attempts inside 15 minutes. The window opens when a fetch
+//! starts and opens again whenever bytes arrive, so one fetch's time never counts against
+//! the next, and a transfer that keeps moving bytes is not cut off for taking long; only
+//! failing attempts with no bytes moving use it up. Each wait is announced before it
+//! starts and observes cancellation. Cancellation is checked between chunks, not during a
+//! blocked read; the connection's own I/O bound ends such a read.
 //!
 //! The partial file belongs to the caller, who holds the item's writer lock. Its bytes
 //! survive an interruption and are resumed with a `Range` request; a server that ignores
 //! the range is read from the start again.
+//!
+//! The hop policy and the retry schedule have one owner here: `request_chain` follows a
+//! request's hops and `Transfer::retrying` runs attempts under the schedule, for a
+//! pinned archive and for any other fetch, such as a model registry's manifest.
 
 use super::{
-    connection::{ConnectFailure, Network, Stage},
+    connection::{ConnectFailure, Network, Stage, TlsStream},
     failure::{FailureCategory, TransferFailure},
-    http::{self, Body, Framing},
+    http::{self, Body, Framing, ResponseHead},
     url::HttpsUrl,
 };
 use crate::{
@@ -88,8 +95,11 @@ impl RetryPolicy {
 /// The clock and randomness the retry loop runs on. The engine uses [`SystemPacing`]; an
 /// owner that must observe the schedule without waiting supplies its own.
 pub trait Pacing {
-    /// Time since the first attempt began.
+    /// Time since the retry window opened: when the fetch began or bytes last arrived.
     fn elapsed(&self) -> Duration;
+    /// Opens the retry window again now. A fetch calls it when it starts and each time bytes
+    /// arrive. A clock that does not model the window may keep this default.
+    fn restart(&mut self) {}
     /// Waits `delay`, returning early with `Error::Cancelled` once `cancellation` is set.
     fn wait(&mut self, delay: Duration, cancellation: &Cancellation) -> Result<(), Error>;
     /// A fraction in `[0, 1]`.
@@ -116,6 +126,10 @@ impl Default for SystemPacing {
 impl Pacing for SystemPacing {
     fn elapsed(&self) -> Duration {
         self.started.elapsed()
+    }
+
+    fn restart(&mut self) {
+        self.started = Instant::now();
     }
 
     fn wait(&mut self, delay: Duration, cancellation: &Cancellation) -> Result<(), Error> {
@@ -169,7 +183,115 @@ enum Attempt {
     Failed(TransferFailure),
 }
 
+/// What one round of attempts came to under the retry schedule.
+pub(crate) enum Round<T> {
+    Done(T),
+    /// No other attempt can cure the failure.
+    Final(TransferFailure),
+    /// Another attempt may cure the failure; the schedule decides whether one is made.
+    Retry(TransferFailure),
+}
+
+/// The answer a request chain ended at: the first head that is no redirect, and the
+/// connection its body is read from.
+pub(crate) struct Answer {
+    pub head: ResponseHead,
+    pub reader: BufReader<TlsStream>,
+}
+
+/// Sends one `GET` for `source` with `headers` and follows its redirects under the hop
+/// policy: every hop HTTPS on the default port to a host in `hosts`, at most
+/// [`MAX_REDIRECTS`] of them. The inner `Err` is every network outcome; the outer one is
+/// only a cancellation, which also ends a name lookup at once.
+pub(crate) fn request_chain(
+    network: &Network,
+    hosts: &BTreeSet<HostName>,
+    source: &HttpsUrl,
+    headers: &[(&str, &str)],
+    cancellation: &Cancellation,
+) -> Result<Result<Answer, TransferFailure>, Error> {
+    let stop = move || cancellation.is_cancelled();
+    let mut url = source.clone();
+    let mut redirects = 0;
+    loop {
+        cancellation.check()?;
+        if !(url.default_port() && hosts.contains(url.host())) {
+            return Ok(Err(TransferFailure::final_(
+                FailureCategory::BlockedByNetwork,
+            )));
+        }
+        let mut stream = match network.open_unless_cancelled(&url, None, Some(cancellation)) {
+            Ok(stream) => stream,
+            Err(failure) => {
+                cancellation.check()?;
+                return Ok(Err(connect_failure(&failure)));
+            }
+        };
+        if let Err(error) =
+            http::write_request(&mut stream, "GET", url.target(), &url.authority(), headers)
+        {
+            return Ok(Err(network_failure(&error)));
+        }
+        let mut reader = BufReader::with_capacity(CHUNK_BYTES, stream);
+        let head = http::read_head(&mut reader, &stop);
+        cancellation.check()?;
+        let head = match head {
+            Ok(head) => head,
+            Err(error) => return Ok(Err(network_failure(&error))),
+        };
+        if !head.redirect() {
+            return Ok(Ok(Answer { head, reader }));
+        }
+        redirects += 1;
+        match head
+            .header("location")
+            .map(|location| url.redirect(location))
+        {
+            Some(Ok(next)) if redirects <= MAX_REDIRECTS => url = next,
+            _ => {
+                return Ok(Err(TransferFailure::final_(
+                    FailureCategory::BlockedByNetwork,
+                )
+                .with_status(head.status)));
+            }
+        }
+    }
+}
+
 impl Transfer<'_> {
+    /// Runs `round` under the retry schedule until it is done, its failure is final, or
+    /// the schedule's attempts or window run out. The window is this call's own and opens
+    /// again whenever bytes arrive. A failure that ends the schedule is returned final,
+    /// with the attempts made. Each wait is announced before it starts and observes
+    /// cancellation.
+    pub(crate) fn retrying<T, E: From<Error>>(
+        &mut self,
+        mut round: impl FnMut(&mut Self) -> Result<Round<T>, E>,
+    ) -> Result<T, E> {
+        self.pacing.restart();
+        for attempt in 1..=self.policy.max_attempts {
+            self.cancellation.check()?;
+            let failure = match round(&mut *self)? {
+                Round::Done(value) => return Ok(value),
+                Round::Final(failure) => return Err(final_failure(failure, attempt).into()),
+                Round::Retry(failure) => failure,
+            };
+            if attempt == self.policy.max_attempts {
+                return Err(final_failure(failure, attempt).into());
+            }
+            let delay = self.policy.delay(attempt, self.pacing.jitter());
+            if self.pacing.elapsed() + delay > self.policy.window {
+                return Err(final_failure(failure, attempt).into());
+            }
+            (self.events)(TransferEvent::Retrying {
+                attempt: attempt + 1,
+                delay,
+            });
+            self.pacing.wait(delay, self.cancellation)?;
+        }
+        Err(Error::Download(TransferFailure::final_(FailureCategory::Unexpected)).into())
+    }
+
     /// Fetches `pinned` into `partial`, which holds exactly the pinned bytes on success.
     /// A failure leaves resumable bytes in place, except damaged bytes, which are removed.
     pub fn fetch(&mut self, pinned: Pinned<'_>, partial: &Path) -> Result<(), Error> {
@@ -181,17 +303,16 @@ impl Transfer<'_> {
         // A source whose failure was final is not asked again; the others are retried.
         let mut exhausted = vec![false; pinned.sources.len()];
         let mut last = None;
-        for attempt in 1..=self.policy.max_attempts {
-            self.cancellation.check()?;
+        self.retrying(|transfer| -> Result<Round<()>, Error> {
             let mut retryable = false;
             for (source, done) in pinned.sources.iter().zip(exhausted.iter_mut()) {
                 if *done {
                     continue;
                 }
-                match self.attempt(source, pinned, partial)? {
-                    Attempt::Done => return Ok(()),
+                match transfer.attempt(source, pinned, partial)? {
+                    Attempt::Done => return Ok(Round::Done(())),
                     Attempt::Failed(found) if stops_every_source(found.category) => {
-                        return Err(final_failure(found, attempt));
+                        return Ok(Round::Final(found));
                     }
                     Attempt::Failed(found) => {
                         retryable |= found.transient;
@@ -202,22 +323,12 @@ impl Transfer<'_> {
             }
             let failure =
                 last.unwrap_or_else(|| TransferFailure::final_(FailureCategory::Unexpected));
-            if !retryable || attempt == self.policy.max_attempts {
-                return Err(final_failure(failure, attempt));
-            }
-            let delay = self.policy.delay(attempt, self.pacing.jitter());
-            if self.pacing.elapsed() + delay > self.policy.window {
-                return Err(final_failure(failure, attempt));
-            }
-            (self.events)(TransferEvent::Retrying {
-                attempt: attempt + 1,
-                delay,
-            });
-            self.pacing.wait(delay, self.cancellation)?;
-        }
-        Err(Error::Download(TransferFailure::final_(
-            FailureCategory::Unexpected,
-        )))
+            Ok(if retryable {
+                Round::Retry(failure)
+            } else {
+                Round::Final(failure)
+            })
+        })
     }
 
     /// One request chain against one source. `Err` is only cancellation or a final local
@@ -257,97 +368,54 @@ impl Transfer<'_> {
         }
         let cancellation = self.cancellation;
         let stop = move || cancellation.check().is_err();
-        let mut url = source.clone();
-        let mut redirects = 0;
-        loop {
-            self.cancellation.check()?;
-            if !self.admitted(&url) {
-                return Ok(Attempt::Failed(TransferFailure::final_(
-                    FailureCategory::BlockedByNetwork,
-                )));
-            }
-            let mut stream = match self.network.open(&url, None) {
-                Ok(stream) => stream,
-                Err(failure) => return Ok(Attempt::Failed(connect_failure(&failure))),
+        let range = format!("bytes={held}-");
+        let headers: &[(&str, &str)] = if held > 0 { &[("Range", &range)] } else { &[] };
+        let Answer { head, reader } =
+            match request_chain(self.network, self.hosts, source, headers, cancellation)? {
+                Ok(answer) => answer,
+                Err(failure) => return Ok(Attempt::Failed(failure)),
             };
-            let range = format!("bytes={held}-");
-            let headers: &[(&str, &str)] = if held > 0 { &[("Range", &range)] } else { &[] };
-            if let Err(error) =
-                http::write_request(&mut stream, "GET", url.target(), &url.authority(), headers)
+        if let Some(failure) = TransferFailure::of_status(head.status) {
+            return Ok(Attempt::Failed(failure));
+        }
+        let framing = match Framing::of(&head) {
+            Ok(framing) => framing,
+            Err(error) => return Ok(Attempt::Failed(network_failure(&error))),
+        };
+        let expected_range = format!("bytes {held}-{}/{}", pinned.size - 1, pinned.size);
+        let resumed =
+            head.status == 206 && head.header("content-range") == Some(expected_range.as_str());
+        if (head.status == 206 && !resumed) || !matches!(head.status, 200 | 206) {
+            return Ok(Attempt::Failed(
+                TransferFailure::final_(FailureCategory::Unexpected).with_status(head.status),
+            ));
+        }
+        if !resumed && held > 0 {
+            // The server sent the whole archive: start over from its first byte.
+            if let Err(error) = file
+                .set_len(0)
+                .and_then(|()| file.seek(SeekFrom::Start(0)).map(|_| ()))
             {
-                return Ok(Attempt::Failed(network_failure(&error)));
-            }
-            let mut reader = BufReader::with_capacity(CHUNK_BYTES, stream);
-            let head = http::read_head(&mut reader, &stop);
-            self.cancellation.check()?;
-            let head = match head {
-                Ok(head) => head,
-                Err(error) => return Ok(Attempt::Failed(network_failure(&error))),
-            };
-            if head.redirect() {
-                redirects += 1;
-                let next = head
-                    .header("location")
-                    .map(|location| url.redirect(location));
-                match next {
-                    Some(Ok(next)) if redirects <= MAX_REDIRECTS => {
-                        url = next;
-                        continue;
-                    }
-                    _ => {
-                        return Ok(Attempt::Failed(
-                            TransferFailure::final_(FailureCategory::BlockedByNetwork)
-                                .with_status(head.status),
-                        ));
-                    }
-                }
-            }
-            if let Some(failure) = TransferFailure::of_status(head.status) {
-                return Ok(Attempt::Failed(failure));
-            }
-            let framing = match Framing::of(&head) {
-                Ok(framing) => framing,
-                Err(error) => return Ok(Attempt::Failed(network_failure(&error))),
-            };
-            let expected_range = format!("bytes {held}-{}/{}", pinned.size - 1, pinned.size);
-            let resumed =
-                head.status == 206 && head.header("content-range") == Some(expected_range.as_str());
-            if (head.status == 206 && !resumed) || !matches!(head.status, 200 | 206) {
-                return Ok(Attempt::Failed(
-                    TransferFailure::final_(FailureCategory::Unexpected).with_status(head.status),
-                ));
-            }
-            if !resumed && held > 0 {
-                // The server sent the whole archive: start over from its first byte.
-                if let Err(error) = file
-                    .set_len(0)
-                    .and_then(|()| file.seek(SeekFrom::Start(0)).map(|_| ()))
-                {
-                    return Ok(Attempt::Failed(file_failure(&error)));
-                }
-                held = 0;
-                hash = Sha256::new();
-            }
-            if let Framing::Length(length) = framing
-                && held.checked_add(length) != Some(pinned.size)
-            {
-                return Ok(Attempt::Failed(TransferFailure::final_(
-                    FailureCategory::DamagedDownload,
-                )));
-            }
-            if let Err(error) = file.seek(SeekFrom::End(0)) {
                 return Ok(Attempt::Failed(file_failure(&error)));
             }
-            let mut body = Body::new(reader, framing, &stop);
-            match self.stream(&mut body, &mut file, &mut hash, held, pinned.size)? {
-                Some(failure) => return Ok(Attempt::Failed(failure)),
-                None => return finish(file, hash, pinned, partial),
-            }
+            held = 0;
+            hash = Sha256::new();
         }
-    }
-
-    fn admitted(&self, url: &HttpsUrl) -> bool {
-        url.default_port() && self.hosts.contains(url.host())
+        if let Framing::Length(length) = framing
+            && held.checked_add(length) != Some(pinned.size)
+        {
+            return Ok(Attempt::Failed(TransferFailure::final_(
+                FailureCategory::DamagedDownload,
+            )));
+        }
+        if let Err(error) = file.seek(SeekFrom::End(0)) {
+            return Ok(Attempt::Failed(file_failure(&error)));
+        }
+        let mut body = Body::new(reader, framing, &stop);
+        match self.stream(&mut body, &mut file, &mut hash, held, pinned.size)? {
+            Some(failure) => Ok(Attempt::Failed(failure)),
+            None => finish(file, hash, pinned, partial),
+        }
     }
 
     /// Copies the body into the partial file, hashing and reporting as it goes.
@@ -379,6 +447,7 @@ impl Transfer<'_> {
             }
             hash.update(&buffer[..read]);
             held += read as u64;
+            self.pacing.restart();
             (self.events)(TransferEvent::Progress {
                 completed: held,
                 total: size,
@@ -530,6 +599,8 @@ mod tests {
     struct RecordedPacing {
         now: Duration,
         waits: Vec<Duration>,
+        /// Whether a restart opens the window again, as the engine's clock does.
+        windowed: bool,
     }
 
     impl RecordedPacing {
@@ -537,6 +608,14 @@ mod tests {
             Self {
                 now: Duration::ZERO,
                 waits: Vec::new(),
+                windowed: false,
+            }
+        }
+
+        fn windowed() -> Self {
+            Self {
+                windowed: true,
+                ..Self::new()
             }
         }
     }
@@ -544,6 +623,11 @@ mod tests {
     impl Pacing for RecordedPacing {
         fn elapsed(&self) -> Duration {
             self.now
+        }
+        fn restart(&mut self) {
+            if self.windowed {
+                self.now = Duration::ZERO;
+            }
         }
         fn wait(&mut self, delay: Duration, cancellation: &Cancellation) -> Result<(), Error> {
             cancellation.check()?;
@@ -845,6 +929,148 @@ mod tests {
         );
         assert_eq!(failure(&run).attempts, 2);
         assert_eq!(run.waits, [Duration::from_millis(2500)]);
+    }
+
+    /// A server that cuts its first `cuts` answers after `chunk` more bytes and then serves
+    /// the rest, honouring the `Range` a resumed attempt sends.
+    fn cutting(
+        bytes: Vec<u8>,
+        cuts: usize,
+        chunk: usize,
+    ) -> impl Fn(&Request) -> Reply + Send + Sync + 'static {
+        let served = AtomicUsize::new(0);
+        let full = serving(bytes.clone());
+        move |request: &Request| {
+            if served.fetch_add(1, Ordering::SeqCst) >= cuts {
+                return full(request);
+            }
+            let size = bytes.len();
+            let start = request
+                .header("range")
+                .and_then(|range| range.strip_prefix("bytes="))
+                .and_then(|range| range.strip_suffix("-"))
+                .and_then(|start| start.parse::<usize>().ok())
+                .unwrap_or(0);
+            let mut cut = if start == 0 {
+                response("200 OK", &[("Content-Length", size.to_string())], b"")
+            } else {
+                response(
+                    "206 Partial Content",
+                    &[
+                        ("Content-Length", (size - start).to_string()),
+                        (
+                            "Content-Range",
+                            format!("bytes {start}-{}/{size}", size - 1),
+                        ),
+                    ],
+                    b"",
+                )
+            };
+            cut.extend_from_slice(&bytes[start..start + chunk]);
+            Reply::Cut(cut)
+        }
+    }
+
+    #[test]
+    fn a_transient_failure_is_retried_past_the_window_while_bytes_keep_arriving() {
+        let bytes = payload(150_000);
+        let policy = RetryPolicy {
+            window: Duration::from_secs(12),
+            ..RetryPolicy::default()
+        };
+        let digest = Sha256Digest::of(&bytes);
+        let hosts = approved(&HOSTS[..1]);
+        let sources = [url(SOURCE)];
+        // Each of three cut answers moves bytes before it fails. The waits that follow, 2.5,
+        // 5 and 10 s, pass the 12 s window together unless the bytes open it again.
+        for (mut pacing, finishes, waits) in [
+            (RecordedPacing::windowed(), true, 3),
+            (RecordedPacing::new(), false, 2),
+        ] {
+            let (certificate, server, directory) = setup(cutting(bytes.clone(), 3, 30_000));
+            let network = network_to(certificate.roots(), server.address(), None);
+            let partial = directory.path().join("a.part");
+            let cancellation = Cancellation::default();
+            let mut sink = |_: TransferEvent| {};
+            let result = Transfer {
+                network: &network,
+                hosts: &hosts,
+                policy,
+                pacing: &mut pacing,
+                events: &mut sink,
+                cancellation: &cancellation,
+            }
+            .fetch(
+                Pinned {
+                    sources: &sources,
+                    size: bytes.len() as u64,
+                    sha256: &digest,
+                },
+                &partial,
+            );
+            assert_eq!(pacing.waits.len(), waits, "windowed: {finishes}");
+            if finishes {
+                result.unwrap();
+                assert_eq!(std::fs::read(&partial).unwrap(), bytes);
+            } else {
+                match result {
+                    Err(Error::Download(failure)) => assert_eq!(failure.attempts, 3),
+                    other => panic!("expected the window to end the retries, got {other:?}"),
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn each_fetch_opens_its_own_retry_window() {
+        let (certificate, server, directory) = setup(|_: &Request| empty("500 Down"));
+        let network = network_to(certificate.roots(), server.address(), None);
+        let hosts = approved(&HOSTS[..1]);
+        let sources = [url(SOURCE)];
+        let digest = Sha256Digest::of(b"bytes");
+        let policy = RetryPolicy {
+            window: Duration::from_secs(4),
+            ..RetryPolicy::default()
+        };
+        // One clock serves both fetches: the time the first spent waiting is not the
+        // second's.
+        let mut pacing = RecordedPacing::windowed();
+        let cancellation = Cancellation::default();
+        let mut sink = |_: TransferEvent| {};
+        for name in ["first.part", "second.part"] {
+            let result = Transfer {
+                network: &network,
+                hosts: &hosts,
+                policy,
+                pacing: &mut pacing,
+                events: &mut sink,
+                cancellation: &cancellation,
+            }
+            .fetch(
+                Pinned {
+                    sources: &sources,
+                    size: 5,
+                    sha256: &digest,
+                },
+                &directory.path().join(name),
+            );
+            match result {
+                Err(Error::Download(failure)) => assert_eq!(failure.attempts, 2, "{name}"),
+                other => panic!("expected a final failure, got {other:?}"),
+            }
+        }
+        assert_eq!(pacing.waits.len(), 2);
+        assert_eq!(server.targets().len(), 4);
+    }
+
+    #[test]
+    fn the_engines_clock_opens_the_window_again_on_a_restart() {
+        let mut pacing = SystemPacing::default();
+        std::thread::sleep(Duration::from_millis(50));
+        let aged = pacing.elapsed();
+        assert!(aged >= Duration::from_millis(50));
+        pacing.restart();
+        assert!(pacing.elapsed() < aged);
     }
 
     #[test]

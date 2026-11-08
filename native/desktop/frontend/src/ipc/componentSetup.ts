@@ -50,7 +50,6 @@ export type SetupFailureCategory =
   | "memory_busy"
   | "program_missing"
   | "program_not_running"
-  | "program_proxy_differs"
   | "interrupted"
   | "needs_sign_in"
   | "not_in_this_build"
