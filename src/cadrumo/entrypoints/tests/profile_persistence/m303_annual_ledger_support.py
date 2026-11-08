@@ -165,7 +165,15 @@ def iva_transaction(
     purchase_invoice_evidence_id: str | None = None,
     deduction_fact_kind: IvaDeductionFactKind | None = None,
     deduction_provenance: IvaDeductionClassificationProvenance | None = None,
+    paid_invoice_id: str | None = None,
 ) -> Transaction:
+    """Book one ledger movement of ``period``.
+
+    With ``paid_invoice_id`` the movement is that invoice's payment: it pays
+    base plus cuota and states no IVA figures of its own, because the invoice
+    is the IVA source and the movement only its payment evidence. Its deduction
+    classification stays, as the invoice's deduction authority.
+    """
     booked = transaction_booked_date(period, filing_year=filing_year)
     payload: dict[str, object] = {
         "raw": RawTransaction(
@@ -191,12 +199,13 @@ def iva_transaction(
         "source_jurisdiction": "ES",
         "group_label": None,
         "category_id": "material_oficina",
-        "taxable_base": taxable_base,
-        "iva_rate": iva_rate,
-        "iva_amount": iva_amount,
         "classified_at": T0,
         "classified_by": "manual",
     }
+    if paid_invoice_id is None:
+        payload.update({"taxable_base": taxable_base, "iva_rate": iva_rate, "iva_amount": iva_amount})
+    else:
+        payload["invoice_id"] = paid_invoice_id
     if iva_category is not None:
         payload["iva_category"] = iva_category
     if counterparty_country is not None:
@@ -268,6 +277,9 @@ def persist_year_of_invoices(
             filing_year=filing_year,
             iva_rate=received_rate_percent / Decimal("100"),
             purchase_invoice_evidence_id=purchase_invoice.invoice_id,
+            # The received invoice is the IVA source (LIVA art. 97, RIVA
+            # art. 99); this movement is its payment, linked on both records.
+            paid_invoice_id=purchase_invoice.invoice_id,
             # Domestic purchase from an ES supplier: cuota soportada established
             # by that supplier's invoice (LIVA art. 97.Uno.1).
             deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current"),
@@ -276,6 +288,9 @@ def persist_year_of_invoices(
                 source_locator=f"invoice:{purchase_invoice.invoice_id}",
                 evidence_digest="a" * 64,
             ),
+        )
+        purchase_invoices[-1] = purchase_invoice.model_copy(
+            update={"linked_transaction_ids": (received.transaction_id,)}
         )
         transactions.extend((issued, received))
         devengada = facts["issued_iva"]
