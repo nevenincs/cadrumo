@@ -7,6 +7,7 @@ use crate::{
         adoption::ForeignReason,
         environment::ManagedLocations,
         exit::{ExitReason, RuntimeExit},
+        local_ai::Unavailable,
         protocol::LineRefusal,
         restart::RestartClass,
         stop::StopSignalError,
@@ -16,6 +17,7 @@ use crate::{
 use cadrumo_application::{
     diagnostics::{Diagnostics, EventKind, HostStage, lifecycle as fact},
     error::application::{ApplicationError, ErrorCode, Operation},
+    provisioning::local_ai::{LocalEngine, llama_server::LlamaServerUnavailable},
     value::RelativePath,
 };
 use std::{io, path::Path};
@@ -260,6 +262,32 @@ pub fn supervision_outcome(diagnostics: &Diagnostics, outcome: Outcome) {
     );
 }
 
+/// Records why no local AI server runs for `engine`: closed tokens only, no path.
+pub fn local_ai_unavailable(diagnostics: &Diagnostics, engine: LocalEngine, reason: Unavailable) {
+    let engine = match engine {
+        LocalEngine::Ollama => fact::LocalAiEngine::Ollama,
+        LocalEngine::LlamaCpp => fact::LocalAiEngine::LlamaCpp,
+    };
+    let reason = match reason {
+        Unavailable::Platform => fact::LocalAiUnavailable::Platform,
+        Unavailable::OllamaNotPinned => fact::LocalAiUnavailable::OllamaNotPinned,
+        Unavailable::LlamaServer(LlamaServerUnavailable::NotPackaged) => {
+            fact::LocalAiUnavailable::LlamaServerNotPackaged
+        }
+        Unavailable::LlamaServer(LlamaServerUnavailable::Invalid) => {
+            fact::LocalAiUnavailable::LlamaServerInvalid
+        }
+        Unavailable::Address => fact::LocalAiUnavailable::Address,
+        Unavailable::Supervision => fact::LocalAiUnavailable::Supervision,
+    };
+    diagnostics.lifecycle(
+        EventKind::StageCompleted,
+        HostStage::Supervision,
+        fact::LifecycleFact::LocalAiUnavailable { engine, reason },
+        None,
+    );
+}
+
 pub fn waiting(role: &Role) -> Option<fact::LifecycleFact> {
     match role {
         Role::Observe(runtime) => Some(fact::LifecycleFact::Observing { pid: runtime.pid() }),
@@ -395,5 +423,39 @@ fn wait_reason(reason: WaitReason) -> fact::WaitReason {
         WaitReason::Inactive => fact::WaitReason::Inactive,
         WaitReason::StartingElsewhere => fact::WaitReason::StartingElsewhere,
         WaitReason::ClaimUnavailable(_) => fact::WaitReason::ClaimUnavailable,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use cadrumo_application::diagnostics::DiagnosticSource;
+
+    #[test]
+    fn a_local_ai_server_that_cannot_run_is_recorded_with_its_engine_and_reason_alone() {
+        let diagnostics = Diagnostics::new(DiagnosticSource::Manager);
+        local_ai_unavailable(
+            &diagnostics,
+            LocalEngine::LlamaCpp,
+            Unavailable::LlamaServer(LlamaServerUnavailable::NotPackaged),
+        );
+        let events = diagnostics.snapshot(0).events;
+        let recorded: Vec<_> = events.iter().filter_map(|event| event.lifecycle).collect();
+        assert_eq!(
+            recorded,
+            [fact::LifecycleFact::LocalAiUnavailable {
+                engine: fact::LocalAiEngine::LlamaCpp,
+                reason: fact::LocalAiUnavailable::LlamaServerNotPackaged,
+            }]
+        );
+        let encoded = serde_json::to_value(recorded[0]).unwrap();
+        assert_eq!(
+            encoded,
+            serde_json::json!({
+                "event": "local_ai_unavailable",
+                "engine": "llama_cpp",
+                "reason": "llama_server_not_packaged",
+            })
+        );
     }
 }

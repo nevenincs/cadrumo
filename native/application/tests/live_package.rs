@@ -6,14 +6,32 @@ use cadrumo_application::{
     package::Readiness,
     provisioning::{
         browser::{BrowserLayout, DRIVER_PACKAGE, DriverManifest},
+        connection::Network,
+        items::{FULL_CHECK_BUDGET, Locations},
+        local_ai::{
+            hardware::Hardware,
+            huggingface::{HuggingFaceFile, HuggingFaceModel},
+            llama_server::{self, LOAD_CONTEXT, LlamaServer, Presentation},
+            loopback::Loopback,
+            models::{LocalModels, ModelArtefact, Models, SelectedModel},
+            program::{self, Uncontained},
+            supervision::Supervised,
+        },
         pins::{ComponentPins, Platform},
         receipts::ReceiptReading,
         state::Observation,
+        transfer::{RetryPolicy, SystemPacing, Transfer, TransferEvent},
     },
     python::{self, PythonExpectation},
     value::RelativePath,
 };
-use std::{path::PathBuf, time::Duration};
+use serde_json::{Value, json};
+use std::{
+    net::{SocketAddr, TcpListener},
+    path::{Path, PathBuf},
+    process::{Child, Command, Stdio},
+    time::{Duration, Instant},
+};
 
 #[tokio::test]
 async fn manifest_cohort_matches_selected_packaged_interpreter() {
@@ -121,5 +139,260 @@ async fn manifest_cohort_matches_selected_packaged_interpreter() {
         "Packaged CPython {}: {} exact distribution versions; browser absent",
         report.version,
         report.distributions.len()
+    );
+}
+
+/// The smallest public GGUF model the local engine tests need, pinned as the catalogue
+/// pins a model: llama.cpp's own test model, one 1.2 MB file at a fixed commit.
+const TINY_REPOSITORY: &str = "ggml-org/test-model-stories260K";
+const TINY_REVISION: &str = "479896ec924af6d40fd419ab8f4d1eb2101de00d";
+const TINY_FILE: &str = "stories260K-f32.gguf";
+const TINY_SHA256: &str = "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d";
+const TINY_BYTES: u64 = 1_185_376;
+/// The most a real program may take to answer after it starts.
+const PROGRAM_WAIT: Duration = Duration::from_secs(120);
+
+/// The package's `llama_server` folder, from the selected layout.
+fn packaged_llama_folder() -> PathBuf {
+    let root = PathBuf::from(
+        std::env::var_os("CADRUMO_TEST_PACKAGE_ROOT")
+            .expect("CADRUMO_TEST_PACKAGE_ROOT is required"),
+    );
+    let manifest_path = RelativePath::new(
+        std::env::var("CADRUMO_TEST_PACKAGE_MANIFEST")
+            .expect("CADRUMO_TEST_PACKAGE_MANIFEST is required from the selected layout"),
+    )
+    .unwrap();
+    let layout: Value =
+        serde_json::from_slice(&std::fs::read(manifest_path.under(&root)).unwrap()).unwrap();
+    RelativePath::new(
+        layout["layout"]["paths"]["llama_server"]
+            .as_str()
+            .expect("projected package path"),
+    )
+    .unwrap()
+    .under(&root)
+}
+
+fn free_address() -> SocketAddr {
+    TcpListener::bind("127.0.0.1:0")
+        .unwrap()
+        .local_addr()
+        .unwrap()
+}
+
+/// Fetches the tiny model into the models folder `root` with the engine's own fetcher,
+/// from Hugging Face itself, and returns it with the folder's `Models`.
+fn fetch_tiny_model(root: &Path) -> (SelectedModel, Models) {
+    let file = HuggingFaceFile::new(TINY_FILE, TINY_SHA256, TINY_BYTES).unwrap();
+    let declared = HuggingFaceModel::new(TINY_REPOSITORY, TINY_REVISION, file, None).unwrap();
+    let model = SelectedModel::of_artefact(
+        "text_extraction",
+        ModelArtefact::HuggingFace(declared),
+        None,
+    )
+    .unwrap();
+    let models = Models::new(
+        LocalModels::new(vec![model.clone()]).unwrap(),
+        root.to_owned(),
+    );
+    // The hosts a plan would name for the model: nothing else may be reached.
+    let hosts = model.artefact.source_hosts();
+    let network = Network::new(None);
+    let mut pacing = SystemPacing::default();
+    let cancellation = Cancellation::default();
+    let mut events = |_: TransferEvent| {};
+    let pulled = models
+        .pull(
+            &model,
+            &mut Transfer {
+                network: &network,
+                hosts: &hosts,
+                policy: RetryPolicy::default(),
+                pacing: &mut pacing,
+                events: &mut events,
+                cancellation: &cancellation,
+            },
+        )
+        .expect("the tiny model is fetched from Hugging Face at its pinned digest");
+    assert_eq!(pulled.observation, Observation::Present);
+    assert_eq!(pulled.bytes, TINY_BYTES);
+    (model, models)
+}
+
+/// The entries of the router's model list: each model's id, aliases and status.
+fn listed(router: Loopback) -> Vec<Value> {
+    let (status, body) = router.get("/models").unwrap();
+    assert_eq!(status, 200);
+    let list: Value = serde_json::from_slice(&body).unwrap();
+    list["data"].as_array().expect("a list of models").clone()
+}
+
+/// The packaged llama-server, started as the manager starts it, answers as the pinned
+/// build while it holds no model, presents the model the Rust fetcher stored, and
+/// generates a counted token with it.
+#[test]
+fn the_packaged_llama_server_answers_as_the_pinned_build_and_generates_from_a_fetched_model() {
+    let storage = tempfile::tempdir_in(env!("CARGO_TARGET_TMPDIR")).unwrap();
+    let locations = Locations::under(storage.path());
+    let (model, models) = fetch_tiny_model(&locations.models);
+    let build = cadrumo_platform::LLAMA_SERVER_BUILD;
+    let mut llama =
+        LlamaServer::packaged(&packaged_llama_folder(), build, &locations, LOAD_CONTEXT)
+            .expect("the selected package carries the llama-server");
+    llama
+        .serve(
+            free_address(),
+            &Uncontained,
+            &|name| std::env::var_os(name),
+            None,
+        )
+        .expect("the router starts, answers ready and reports the pinned build");
+    let folder = llama.folder().to_owned();
+    let router = llama.server().expect("the router runs").loopback();
+    let name = model.name().to_string();
+
+    // The router answers its build while no model is loaded.
+    let (status, body) = router.get(llama_server::PROPERTIES).unwrap();
+    assert_eq!(status, 200);
+    let properties: Value = serde_json::from_slice(&body).unwrap();
+    let reported = properties["build_info"].as_str().expect("a build_info");
+    assert!(
+        reported == build || reported.starts_with(&format!("{build}-")),
+        "{reported}"
+    );
+    assert_eq!(properties["role"], "router");
+    let entries = listed(router);
+    assert!(
+        entries
+            .iter()
+            .all(|entry| entry["status"]["value"] == "unloaded"),
+        "{entries:?}"
+    );
+    // It lists the model under the id the preset names and answers to its name as an alias.
+    let entry = entries
+        .iter()
+        .find(|entry| entry["id"] == llama_server::router_id(&name))
+        .unwrap_or_else(|| panic!("the router lists no model under its id: {entries:?}"));
+    assert!(entry["aliases"].as_array().unwrap().contains(&json!(name)));
+    assert_eq!(
+        llama_server::presentation(&folder, model.name()),
+        Presentation::Presented
+    );
+
+    // A load by the model's name, then a completion that reports the tokens it made.
+    llama_server::load(&folder, model.name()).expect("the router loads the model by its name");
+    let request = json!({
+        "model": name,
+        "prompt": "Reply with one word.",
+        "max_tokens": 1,
+        "stream": false,
+    });
+    let (status, body) = router
+        .with_io_timeout(FULL_CHECK_BUDGET)
+        .post("/v1/completions", request.to_string().as_bytes())
+        .unwrap();
+    assert_eq!(status, 200, "{}", String::from_utf8_lossy(&body));
+    let completion: Value = serde_json::from_slice(&body).unwrap();
+    assert!(
+        completion["usage"]["completion_tokens"]
+            .as_u64()
+            .is_some_and(|tokens| tokens >= 1),
+        "{completion}"
+    );
+    let unload = json!({ "model": name });
+    let (status, _) = router
+        .post("/models/unload", unload.to_string().as_bytes())
+        .unwrap();
+    assert_eq!(status, 200);
+
+    // The engine's own full check, from the store to the unload.
+    assert_eq!(
+        models
+            .check_full_on_router(&folder, &model, &Hardware::default())
+            .expect("the full check reaches an answer"),
+        Observation::Present
+    );
+    assert!(
+        listed(router)
+            .iter()
+            .all(|entry| entry["status"]["value"] == "unloaded"),
+        "the check unloads what it loaded"
+    );
+    llama.halt();
+}
+
+/// An Ollama program that ends with the test, whatever happens in it.
+struct Serving(Child);
+
+impl Drop for Serving {
+    fn drop(&mut self) {
+        let _ = self.0.kill();
+        let _ = self.0.wait();
+    }
+}
+
+/// A real Ollama program lists and generates from a model the Rust fetcher wrote, and
+/// leaves the store whole under `OLLAMA_NOPRUNE`. The program is one installed outside
+/// Cadrumo, found as the engine reports one; the package carries none.
+#[test]
+fn a_real_ollama_lists_and_generates_from_a_model_the_rust_fetcher_wrote() {
+    let storage = tempfile::tempdir_in(env!("CARGO_TARGET_TMPDIR")).unwrap();
+    let locations = Locations::under(storage.path());
+    let (model, models) = fetch_tiny_model(&locations.models);
+    let candidates = program::system_locations(&|name| std::env::var_os(name));
+    let executable = program::system_program(&candidates, &locations.programs)
+        .expect("an Ollama program installed outside Cadrumo is required");
+    let address = free_address();
+    let mut command = Command::new(&executable);
+    command
+        .arg("serve")
+        .env("OLLAMA_HOST", address.to_string())
+        .env("OLLAMA_MODELS", &locations.models)
+        .env("OLLAMA_NOPRUNE", "1")
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null());
+    let _serving = Serving(command.spawn().expect("the Ollama program starts"));
+    let server = Loopback::new(address).unwrap();
+    let started = Instant::now();
+    while !matches!(server.get("/api/version"), Ok((200, _))) {
+        assert!(
+            started.elapsed() < PROGRAM_WAIT,
+            "the Ollama program never answered"
+        );
+        std::thread::sleep(Duration::from_millis(250));
+    }
+
+    let name = model.name().to_string();
+    let (status, body) = server.get("/api/tags").unwrap();
+    assert_eq!(status, 200);
+    let tags: Value = serde_json::from_slice(&body).unwrap();
+    assert!(
+        tags["models"]
+            .as_array()
+            .expect("a list of models")
+            .iter()
+            .any(|listed| listed["name"] == name),
+        "the program does not list the fetched model: {tags}"
+    );
+    let request = json!({
+        "model": name,
+        "prompt": "Reply with one word.",
+        "stream": false,
+        "keep_alive": 0,
+        "options": { "num_predict": 1 },
+    });
+    let (status, body) = server
+        .with_io_timeout(FULL_CHECK_BUDGET)
+        .post("/api/generate", request.to_string().as_bytes())
+        .unwrap();
+    assert_eq!(status, 200, "{}", String::from_utf8_lossy(&body));
+    let generated: Value = serde_json::from_slice(&body).unwrap();
+    assert_eq!(generated["done"], true, "{generated}");
+    assert_eq!(
+        models.observe_quick(&model, &Hardware::default()),
+        Observation::Present,
+        "the program left the store whole"
     );
 }

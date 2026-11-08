@@ -4,7 +4,9 @@
 //! A plan lists, per item, how much it downloads, from which hosts and to where. The local
 //! AI's entry is made of ordered parts, the program and then one per role the person
 //! selected a local model for, and is exactly their sum; roles that share one model count
-//! its download once. A model part is the selection triple itself: its id is the role,
+//! its download once. Only the Ollama program is a program part, while Ollama is the
+//! selected engine: with llama.cpp selected the packaged llama-server is never planned,
+//! and the entry is the models alone. A model part is the selection triple itself: its id is the role,
 //! its target version the model's name and its size the size the selected catalogue
 //! entry states. A plan carries no licence or fit notice: the person saw the catalogue
 //! entry's licence and facts when they selected the model. The digest covers the contract
@@ -464,6 +466,28 @@ mod tests {
         let models_only =
             PlanEntry::of_parts(ItemId::LocalAi, vec![model("a", None, None)]).unwrap();
         assert_eq!(models_only.destinations(), [Destination::OllamaModels]);
+    }
+
+    #[test]
+    fn a_plan_of_models_alone_downloads_no_program_and_needs_its_own_approval() {
+        let with_program = sample();
+        let models: Vec<PlanPart> = with_program.entries[1].parts[1..].to_vec();
+        let alone = PlanEntry::of_parts(ItemId::LocalAi, models).unwrap();
+        assert_eq!(alone.destinations(), [Destination::OllamaModels]);
+        assert_eq!(alone.source_hosts, hosts(&["registry.ollama.ai"]));
+        assert_eq!(
+            alone.download_bytes,
+            Some(12_000),
+            "the models alone, a shared model counted once"
+        );
+        assert!(alone.parts.iter().all(|part| part.part_id != "program"));
+        let plan = SetupPlan::new(vec![alone], None, 0).unwrap();
+        let with_program = SetupPlan::new(vec![with_program.entries[1].clone()], None, 0).unwrap();
+        assert_ne!(
+            plan.digest(),
+            with_program.digest(),
+            "an approval with the program part is no approval of the models alone"
+        );
     }
 
     #[test]

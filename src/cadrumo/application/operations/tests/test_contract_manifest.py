@@ -32,9 +32,14 @@ from cadrumo.application.operations.contract_manifest import load_operation_cont
 sys.stdout.buffer.write(load_operation_contract_manifest().render().encode("utf-8"))
 """
 
+_SEED_PROBE = 'print(hash("operation-contract-manifest-seed-probe"))'
+
 #: Only what the platform needs to start an interpreter passes through; the
 #: child's home, storage and scratch locations are the test's own directory.
 _PLATFORM_VARIABLES = frozenset({"SYSTEMROOT", "WINDIR", "SYSTEMDRIVE", "PATH", "COMSPEC"})
+
+#: The source tree this test imports, so the child renders the same code.
+_SOURCE_ROOT = Path(contract_manifest.__file__).resolve().parents[3]
 
 
 def _shipped() -> bytes:
@@ -48,6 +53,7 @@ def _child_environment(root: Path, seed: str) -> dict[str, str]:
             "CADRUMO_STORAGE_ROOT": str(root / "storage"),
             "PYDANTIC_DISABLE_PLUGINS": "__all__",
             "PYTHONHASHSEED": seed,
+            "PYTHONPATH": str(_SOURCE_ROOT),
             "HOME": str(root),
             "USERPROFILE": str(root),
             "APPDATA": str(root),
@@ -59,13 +65,21 @@ def _child_environment(root: Path, seed: str) -> dict[str, str]:
     return environment
 
 
-async def _render_under(root: Path, seed: str) -> bytes:
+async def _run_under(root: Path, seed: str, code: str) -> bytes:
+    """Run ``code`` in a fresh interpreter under ``seed``.
+
+    ``-I`` is deliberately absent: isolated mode ignores every ``PYTHON*``
+    variable, ``PYTHONHASHSEED`` included, so a seed passed to it is not the
+    seed it runs under. ``-P`` and ``-s`` keep the working directory and the
+    user site off the import path instead.
+    """
     process = await asyncio.create_subprocess_exec(
         sys.executable,
-        "-I",
+        "-P",
+        "-s",
         "-B",
         "-c",
-        _RENDER,
+        code,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
         cwd=root,
@@ -79,6 +93,21 @@ async def _render_under(root: Path, seed: str) -> bytes:
         await process.wait()
     assert process.returncode == 0, stderr.decode()
     return stdout
+
+
+async def _render_under(root: Path, seed: str) -> bytes:
+    return await _run_under(root, seed, _RENDER)
+
+
+@pytest.mark.asyncio
+async def test_the_child_interpreter_runs_under_the_seed_it_is_given(tmp_path: Path) -> None:
+    first, again, other = (
+        await _run_under(tmp_path, "0", _SEED_PROBE),
+        await _run_under(tmp_path, "0", _SEED_PROBE),
+        await _run_under(tmp_path, "1", _SEED_PROBE),
+    )
+    assert first == again
+    assert first != other
 
 
 def test_the_shipped_manifest_validates_and_renders_to_its_own_bytes() -> None:

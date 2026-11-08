@@ -270,6 +270,8 @@ sha256 = \"{}\"
                 network: Network::with_parts(roots.clone(), resolve, None),
                 ambient: Box::new(|_| None),
                 local_ai_address: "127.0.0.1:9".parse().expect("an address"),
+                llama_server_folder: root.join("package").join("bin").join("llama"),
+                llama_server_build: "b1".into(),
                 browser_environment: BTreeMap::new(),
                 scratch: root.join("tmp"),
                 free_space: Box::new(move |_| free_bytes),

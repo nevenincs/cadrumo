@@ -1,5 +1,7 @@
 //! A fake local AI program for the tests: the part of the program's HTTP API the engine
-//! speaks, answered from in-memory state on a real loopback socket.
+//! speaks, answered from in-memory state on a real loopback socket. The engine fetches
+//! models itself, so the fake has no pull: a `POST /api/pull` is recorded like any other
+//! request and answered as not found.
 //!
 //! It runs in the test process, or as the engine's child: the test binary itself started
 //! in the [`serve_helper`] mode, where it binds `OLLAMA_HOST`, announces itself on
@@ -8,10 +10,9 @@
 
 use serde_json::{Value, json};
 use std::{
-    collections::{BTreeMap, BTreeSet, VecDeque},
+    collections::{BTreeMap, BTreeSet},
     io::{BufRead, BufReader, Read, Write},
     net::{SocketAddr, TcpListener, TcpStream},
-    path::PathBuf,
     sync::{
         Arc, Mutex,
         atomic::{AtomicBool, Ordering},
@@ -26,6 +27,11 @@ pub(crate) const HELPER_MODE: &str = "CADRUMO_FAKE_OLLAMA";
 pub(crate) const HELPER_GATE: &str = "CADRUMO_FAKE_OLLAMA_GATE";
 /// The version the helper reports.
 pub(crate) const HELPER_VERSION: &str = "CADRUMO_FAKE_OLLAMA_VERSION";
+/// A file the helper appends a line to each time it starts, shared with the fake
+/// llama-server, so a test counts the servers of each kind that were ever started.
+pub(crate) const HELPER_LAUNCHES: &str = "CADRUMO_FAKE_OLLAMA_LAUNCHES";
+/// The line the helper appends to [`HELPER_LAUNCHES`].
+pub(crate) const LAUNCHED: &str = "ollama";
 /// The arguments that run only the helper in a child test binary.
 pub(crate) const HELPER_ARGUMENTS: [&str; 4] = [
     "--exact",
@@ -49,11 +55,6 @@ pub(crate) struct FakeState {
     pub log: Option<std::path::PathBuf>,
     /// Every request body, in order.
     pub bodies: Vec<Value>,
-    /// The lines each pull answers with, one list per pull in turn; the answer then ends.
-    pub pulls: VecDeque<Vec<Value>>,
-    /// The files a pull of a model writes once it answers `success`; the pull then lists
-    /// the model, as the program does.
-    pub installs: BTreeMap<String, Vec<(PathBuf, Vec<u8>)>>,
     /// The models `/api/tags` reports, by name. The engine reads names only, so the fake
     /// reports no digest.
     pub tags: BTreeSet<String>,
@@ -171,31 +172,6 @@ fn answer(state: &Shared, mut stream: TcpStream) {
                 .collect();
             drop(guard);
             respond(&mut stream, "200 OK", &json!({ "models": models }));
-        }
-        ("POST", "/api/pull") => {
-            let model = body["model"].as_str().unwrap_or_default().to_owned();
-            let lines = guard.pulls.pop_front().unwrap_or_default();
-            let succeeds = lines.iter().any(|line| line["status"] == "success");
-            if succeeds && let Some(files) = guard.installs.get(&model).cloned() {
-                for (path, bytes) in &files {
-                    std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-                    std::fs::write(path, bytes).unwrap();
-                }
-                guard.tags.insert(model);
-            }
-            drop(guard);
-            let _ = write!(
-                stream,
-                "HTTP/1.1 200 OK
-Content-Type: application/x-ndjson
-Connection: close
-
-"
-            );
-            for line in lines {
-                let _ = writeln!(stream, "{line}");
-            }
-            let _ = stream.flush();
         }
         ("POST", "/api/generate")
             if body["keep_alive"] == json!(0) && body["prompt"].is_string() =>
@@ -317,6 +293,14 @@ fn serve_helper() {
         return;
     }
     let host = std::env::var("OLLAMA_HOST").unwrap();
+    if let Some(launches) = std::env::var_os(HELPER_LAUNCHES) {
+        let mut file = std::fs::File::options()
+            .create(true)
+            .append(true)
+            .open(launches)
+            .unwrap();
+        writeln!(file, "{LAUNCHED}").unwrap();
+    }
     let listener = TcpListener::bind(&host).unwrap();
     let state: Shared = Arc::new(Mutex::new(FakeState {
         version: std::env::var(HELPER_VERSION).unwrap(),
