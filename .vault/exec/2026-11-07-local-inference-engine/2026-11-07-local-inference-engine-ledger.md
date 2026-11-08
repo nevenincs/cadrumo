@@ -5,7 +5,7 @@ tags:
 date: '2026-11-07'
 modified: '2026-11-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:9ddfdf35e838d02865b84e888836eaa8fbada0c40fe38f6eed0bb13a006d4869'
+body_hash: 'sha256:f300c067cf94f79f372ed41d454b539ff049533075a46044ca20dd7326c74bd2'
 related:
   - "[[2026-11-07-local-inference-engine-plan]]"
 ---
@@ -206,6 +206,7 @@ related:
 - `S18` `M` `native/manager/src/supervision/local_ai.rs`
 - `S18` `verify:` `rustfmt --edition 2024 --check` -> `pass`
 - `S18` `by:` `implementation-engineer-high`
+- `S18` `by:` `opus`
 
 ## Notes
 
