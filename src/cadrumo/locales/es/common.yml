@@ -3344,6 +3344,13 @@ desktop:
       figures_unavailable: Cifras no disponibles. El libro no ha respondido y tu borrador
         se conserva.
       figures_updating: Actualizando las cifras…
+      finding:
+        received_invoice_entity_professional_fee:
+          detail: '{counterparty} tributa por el Impuesto sobre Sociedades, y sus
+            honorarios profesionales no llevan retención (art. 60.1 del Reglamento
+            del Impuesto sobre Sociedades). La retención de {amount} no se declara
+            en el Modelo 111 hasta que corrijas la factura.'
+          title: La retención de esta factura no corresponde
       fixed: Forma parte de la identidad de la factura. Para cambiarlo, elimínala
         y vuelve a añadirla.
       from_lines: Según las líneas

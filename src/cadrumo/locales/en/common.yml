@@ -3283,6 +3283,13 @@ desktop:
       figures_unavailable: Figures not available. The ledger did not answer, and your
         draft is kept.
       figures_updating: Updating the figures…
+      finding:
+        received_invoice_entity_professional_fee:
+          detail: '{counterparty} pays Impuesto sobre Sociedades, and its professional
+            fees bear no retención (art. 60.1 of the Reglamento del Impuesto sobre
+            Sociedades). The {amount} withheld is left out of Modelo 111 until you
+            correct the invoice.'
+          title: This invoice's withholding does not apply
       fixed: Part of the invoice's identity. Remove it and add it again to change
         it.
       from_lines: From the lines

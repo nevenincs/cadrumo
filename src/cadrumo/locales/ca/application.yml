@@ -1862,6 +1862,27 @@ application:
         que no és al teu registre.
       row_unregistered_undated: Un moviment registra un element que no consta al teu
         registre.
+      withholding_invoice_entity_professional_fee: La factura rebuda {invoice} de
+        {counterparty} declara una retenció de {amount} sobre uns honoraris professionals,
+        però qui l'emet és una societat, i els serveis professionals d'una societat
+        no porten retenció. Corregeix la factura perquè no declari retenció.
+      withholding_invoice_incomplete: La factura rebuda {invoice} de {counterparty}
+        declara una retenció de {amount}, però li falta el NIF de qui l'emet o el
+        seu import en euros. Completa la factura.
+      withholding_invoice_kind_undeclared: La factura rebuda {invoice} de {counterparty}
+        declara una retenció de {amount}, però el seu pagament no diu si és un lloguer
+        o els honoraris d'una activitat. Obre el moviment que la paga i tria'n la
+        categoria d'IRPF.
+      withholding_invoice_non_resident: La factura rebuda {invoice} de {counterparty}
+        declara una retenció de {amount}, però qui l'emet no resideix a Espanya, així
+        que aquesta retenció no es declara en aquest model. Comprova el país i el
+        NIF de la factura.
+      withholding_invoice_rate_unrecognised: La factura rebuda {invoice} de {counterparty}
+        declara una retenció de {amount} que no correspon a cap tipus de retenció
+        d'activitats. Comprova la base i la retenció de la factura.
+      withholding_invoice_recipient_unknown: La factura rebuda {invoice} de {counterparty}
+        declara una retenció de {amount}, però el seu NIF no indica si qui l'emet
+        tributa per l'IRPF o per l'Impost sobre Societats. Comprova el NIF de la factura.
     calc_diagnostic_words:
       income_class:
         actividad_economica: activitats econòmiques

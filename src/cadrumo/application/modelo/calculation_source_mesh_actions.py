@@ -613,6 +613,7 @@ def _resolve_observation_families(
                     work_unit.bucket_id,
                     profile_path_values_reader=profile_read_ports.path_values,
                 ),
+                invoice_catalogue=ports.invoice_catalogue_read_ports,
             ),
         ),
         resolve_declared(
