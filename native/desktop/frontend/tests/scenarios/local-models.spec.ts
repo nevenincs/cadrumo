@@ -7,6 +7,7 @@ import {
   pickWay,
   scenarioOnly,
 } from "../support/agent";
+import { servedLocalLanes } from "../support/servedLocalLanes";
 import { label } from "../support/strings";
 
 // The local lane's model list: the catalog's recommended models, the ones the
@@ -27,6 +28,11 @@ const ADDED = "synthetic-named:test";
 const localLane = catalogLanes(FIXTURE_CATALOG).find(
   (lane) => lane.id === LOCAL,
 )!;
+
+// The setup panel lists the models of every lane the host serves.
+const servedRecommended = servedLocalLanes().flatMap(
+  (lane) => lane.recommended,
+);
 
 const open = (target: Page, setup = "ready") =>
   target.goto(
@@ -219,7 +225,7 @@ for (const source of ["catalog", "settings"] as const) {
       .click();
     await expect(
       localAi.locator("[data-slot=local-models] li[data-model]"),
-    ).toHaveCount(localLane.recommended.length);
+    ).toHaveCount(servedRecommended.length);
   });
 }
 
@@ -785,8 +791,8 @@ test("the panel's local AI holds the same model list without starting a download
     label("desktop.setup.failure.damaged_download"),
   );
   const models = localAi.locator("[data-slot=local-models] li[data-model]");
-  await expect(models).toHaveCount(localLane.recommended.length);
-  for (const model of localLane.recommended)
+  await expect(models).toHaveCount(servedRecommended.length);
+  for (const model of servedRecommended)
     await expect(
       localAi.locator(`[data-slot=local-models] li[data-model="${model}"]`),
     ).toHaveCount(1);
