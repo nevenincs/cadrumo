@@ -1,0 +1,121 @@
+"""A filer states that no earlier-ejercicio carry is pending on a Modelo 100, and it stays a statement.
+
+The Modelo 100 carries the negative general bases still pending from the four
+previous ejercicios (Ley 35/2006 art. 50.3) from the previous return. With no
+earlier return held, those carries are unknown, never zero, so the filer states
+that nothing is pending. The statement is a zero the operator layer marks
+attested, kept apart from a zero typed, and a typed value withdraws it.
+
+Real behaviour throughout: an isolated encrypted profile, the bundled
+authority, the production admission and edit executor, every Modelo 100 year
+the registry's support envelope admits.
+"""
+
+from __future__ import annotations
+
+from decimal import Decimal
+from pathlib import Path
+
+import pytest
+
+from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....application.modelo.edit_models import (
+    ModeloBindingEditIntentV1,
+    ModeloEditBindingAddressV1,
+    ModeloEditBindingIntentKind,
+    ModeloEditWritableBindingOverrideSurfaceEntryV1,
+)
+from ....core.authority_grade import RegistryAuthorityGrade
+from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
+from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
+from ....domain.modelos.calculation_revision_operator_layer import ATTESTED_ZERO
+from ....domain.user_profile.tests.general_regime_facts import RENTA_UNMARRIED_TAXPAYER_FACTS
+from ....domain.user_profile.values import UserProfileFact
+from ...adapter_composition import profile_adapter_composition
+from ..modelo_operator_work_storage import SeededOperatorWork, seeded_operator_work
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+#: The carries of the negative general base still pending from the four previous ejercicios, as the
+#: registry declares them, each read from a box of the previous Modelo 100.
+_PENDING_CARRIES: tuple[BindingId, ...] = (
+    "renta-base-liquidable-negativa-general-anterior",
+    "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
+    "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
+    "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
+)
+_FACTS = (UserProfileFact(path="tax_residence.ccaa", value="madrid"), *RENTA_UNMARRIED_TAXPAYER_FACTS)
+
+
+def _renta_years() -> tuple[int, ...]:
+    """The Modelo 100 years the envelope admits at calculation grade."""
+    support = published_supported_filing_years()
+    assert support is not None
+    admitted: list[int] = []
+    for year in sorted(support.years):
+        try:
+            published_authority_operation().snapshot(
+                "100", filing_year=year, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+            )
+        except FilingYearOutsideSupportEnvelopeError:
+            continue
+        admitted.append(year)
+    return tuple(admitted)
+
+
+def _attest(binding_id: BindingId) -> ModeloBindingEditIntentV1:
+    return ModeloBindingEditIntentV1(
+        address=ModeloEditBindingAddressV1(binding_id=binding_id), kind=ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT
+    )
+
+
+def _attestable(work: SeededOperatorWork) -> frozenset[str]:
+    return frozenset(
+        entry.binding_id
+        for entry in work.baseline().permitted_surface
+        if isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1)
+        and ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT in entry.allowed_intents
+    )
+
+
+@pytest.mark.parametrize("year", _renta_years())
+def test_a_filer_states_no_carry_is_pending_and_the_revision_keeps_it_apart_from_a_typed_zero(
+    tmp_path: Path, year: int
+) -> None:
+    with (
+        profile_adapter_composition(),
+        seeded_operator_work(tmp_path, modelo="100", filing_year=year, period_code="0A", extra_facts=_FACTS) as renta,
+    ):
+        # Only a carry from an earlier filing can be stated to hold nothing.
+        attestable = _attestable(renta)
+        assert set(_PENDING_CARRIES) <= attestable
+
+        applied = renta.apply(binding=tuple(_attest(binding_id) for binding_id in _PENDING_CARRIES))
+        assert applied.refusal is None
+        layer = renta.require_head().operator_layer
+        assert layer is not None
+        assert layer.attested_binding_ids == _PENDING_CARRIES
+        assert all(layer.binding_overrides[binding_id] == ATTESTED_ZERO for binding_id in _PENDING_CARRIES)
+
+        # Calculating the declaration again keeps the statement as the filer made it.
+        recalculated = renta.recalculate().operator_layer
+        assert recalculated is not None
+        assert recalculated.attested_binding_ids == _PENDING_CARRIES
+
+        # A figure typed over one carry is the filer's figure, no longer the statement.
+        typed, *kept = _PENDING_CARRIES
+        retyped = renta.apply(
+            binding=(
+                ModeloBindingEditIntentV1(
+                    address=ModeloEditBindingAddressV1(binding_id=typed),
+                    kind=ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
+                    value=Decimal("0"),
+                ),
+            )
+        )
+        assert retyped.refusal is None
+        relayer = renta.require_head().operator_layer
+        assert relayer is not None
+        assert relayer.attested_binding_ids == tuple(kept)
+        assert relayer.binding_overrides[typed] == ATTESTED_ZERO

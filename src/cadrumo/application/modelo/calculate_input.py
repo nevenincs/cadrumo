@@ -214,6 +214,8 @@ class WorkCalculateInputBundle:
     Only a replay of a head whose layer is known sets it, so explicit
     full-specification inputs are never mistaken for the operator's typed values.
     """
+    attested_binding_ids: tuple[BindingId, ...] = ()
+    """Binding overrides the operator stated hold nothing, replayed from the head's layer."""
 
     @classmethod
     def build(
@@ -232,6 +234,7 @@ class WorkCalculateInputBundle:
         shortcut_diagnostics: tuple[CalculationSourceDiagnostic, ...] = (),
         cleared_casilla_ids: tuple[CasillaId, ...] = (),
         record_operator_layer: bool = False,
+        attested_binding_ids: tuple[BindingId, ...] = (),
     ) -> WorkCalculateInputBundle:
         """Freeze CLI-assembled mappings before crossing into calculation services.
 
@@ -258,6 +261,7 @@ class WorkCalculateInputBundle:
             shortcut_diagnostics=shortcut_diagnostics,
             cleared_casilla_ids=cleared_casilla_ids,
             record_operator_layer=record_operator_layer,
+            attested_binding_ids=attested_binding_ids,
         )
 
     def optional_binding_values(self) -> Mapping[BindingId, Decimal] | None:
@@ -360,6 +364,7 @@ def calculate_modelo_work_revision(
         text_casilla_inputs=inputs.optional_text_casilla_inputs(),
         cleared_casilla_ids=inputs.cleared_casilla_ids,
         record_operator_layer=inputs.record_operator_layer,
+        attested_binding_ids=inputs.attested_binding_ids,
         m210_official_tipo_renta_code=inputs.m210_official_tipo_renta_code,
         m210_gross_income_source_mode=inputs.m210_gross_income_source_mode,
         binding_values=inputs.optional_binding_values(),

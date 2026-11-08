@@ -62,7 +62,7 @@ from .edit_models import (
     ModeloEditWritableScalarSurfaceEntryV1,
 )
 from .edit_services import calculation_head_digest, work_unit_record_digest
-from .edit_value_grammar import binding_value_grammar, casilla_value_grammar
+from .edit_value_grammar import ModeloEditValueChannel, binding_value_grammar, casilla_value_grammar
 from .row_filled_bindings import row_filled_binding_ids
 
 if TYPE_CHECKING:
@@ -232,11 +232,15 @@ def permitted_binding_entry(
         return ModeloEditNonWritableBindingOverrideSurfaceEntryV1(
             binding_id=binding.id, reason=ModeloEditNonWritableReason.NOT_READ_BY_CALCULATION
         )
+    # Only a carry from an earlier filing can be stated to hold nothing: no
+    # earlier return held here shows it, and its absence is never assumed zero.
+    attestable = source is BindingSourceKind.PREVIOUS_FILING and grammar.channel is ModeloEditValueChannel.DECIMAL
     return ModeloEditWritableBindingOverrideSurfaceEntryV1(
         binding_id=binding.id,
         allowed_intents=(
             ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
             ModeloEditBindingIntentKind.REMOVE_OVERRIDE,
+            *((ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT,) if attestable else ()),
         ),
         grammar=grammar,
     )

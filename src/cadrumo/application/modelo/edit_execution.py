@@ -57,7 +57,7 @@ from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ...domain.filing.schema import ModeloScalar
 from ...domain.identifiers import canonical_decimal_string
 from ...domain.modelos.calculation_revision import CalculationRevision
-from ...domain.modelos.calculation_revision_operator_layer import CalculationOperatorLayer
+from ...domain.modelos.calculation_revision_operator_layer import ATTESTED_ZERO, CalculationOperatorLayer
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.row_models import ModeloDetailRow
 from .action_errors import ModeloClearedCasillaSourceFedError
@@ -188,6 +188,7 @@ class _OperatorState:
     text_casilla_inputs: dict[CasillaId, str]
     binding_overrides: dict[BindingId, str]
     cleared_casilla_ids: set[CasillaId] = field(default_factory=set)
+    attested_binding_ids: set[BindingId] = field(default_factory=set)
 
     @classmethod
     def from_context(cls, context: CalculationCallerContext) -> _OperatorState:
@@ -197,6 +198,7 @@ class _OperatorState:
             text_casilla_inputs=dict(layer.text_casilla_inputs),
             binding_overrides=dict(layer.binding_overrides),
             cleared_casilla_ids=set(context.cleared_casilla_ids),
+            attested_binding_ids=set(layer.attested_binding_ids),
         )
 
     def operator_sets(self, casilla_id: CasillaId) -> bool:
@@ -211,6 +213,7 @@ class _OperatorState:
             decimal_casilla_inputs=dict(sorted(self.decimal_casilla_inputs.items())),
             text_casilla_inputs=dict(sorted(self.text_casilla_inputs.items())),
             binding_overrides=dict(sorted(self.binding_overrides.items())),
+            attested_binding_ids=tuple(sorted(self.attested_binding_ids)),
         )
 
 
@@ -289,8 +292,14 @@ def _apply_binding_intents(
     """Apply every binding intent to the operator state, refusing the first invalid one."""
     for intent in submission.binding_intents:
         binding_id = intent.address.binding_id
+        # Whatever the intent, an earlier statement on the binding gives way to it.
+        state.attested_binding_ids.discard(binding_id)
         if intent.kind is ModeloEditBindingIntentKind.REMOVE_OVERRIDE:
             state.binding_overrides.pop(binding_id, None)
+            continue
+        if intent.kind is ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT:
+            state.binding_overrides[binding_id] = ATTESTED_ZERO
+            state.attested_binding_ids.add(binding_id)
             continue
         grammar = modelo_edit_address_grammar(submission.baseline, intent.address)
         if grammar is None:
@@ -556,6 +565,7 @@ def _execute_modelo_edit(
             text_casilla_inputs=replay.text_casilla_inputs,
             cleared_casilla_ids=replay.cleared_casilla_ids,
             record_operator_layer=True,
+            attested_binding_ids=replay.attested_binding_ids,
             binding_values=replay.binding_values,
             enum_binding_values=replay.enum_binding_values,
             detail_rows=replay.detail_rows,
