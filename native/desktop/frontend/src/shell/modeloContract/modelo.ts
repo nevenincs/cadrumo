@@ -374,7 +374,8 @@ export type CalculationNoteSentence =
   | "household_rows_incomplete"
   | "profile_fact_unrecorded"
   | "prior_filing_unrecorded"
-  | "m347_provincia_unrecorded";
+  | "m347_provincia_unrecorded"
+  | "m347_provincia_unstated";
 
 export type CalculationRevisionId = string;
 

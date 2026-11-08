@@ -117,6 +117,8 @@ export type FormUnplacedReason =
   | "anchor_conflicts_with_section"
   | "pending_review";
 
+export type InvoiceId = string;
+
 export type ModeloExportRequestField =
   | "refund_election"
   | "payment_election"
@@ -482,6 +484,7 @@ export type ModeloFormIssueLine = {
   resolution_answer: ModeloFormResolutionAnswer | null;
   answer_lead_words: string | null;
   answer_lead_words_language: OutputLanguage | null;
+  invoice_id: InvoiceId | null;
 };
 
 /**
@@ -489,6 +492,18 @@ export type ModeloFormIssueLine = {
  */
 export type ModeloFormLayoutProvenance =
   "reviewed" | "generated" | "inspection_only";
+
+/**
+ * What in the ledger holds the declaration's calculation, in the form's
+ * language.
+ *
+ * `transaction_id` is the movement to open, `None` when the hold is about the
+ * whole period rather than one movement.
+ */
+export type ModeloFormLedgerHold = {
+  words: string;
+  transaction_id: string | null;
+};
 
 /**
  * The missing values no box holds, which the check names, counted as the
@@ -828,6 +843,7 @@ export type ModeloWorkbenchFormProjectionV1 = {
   export_offer: PublicModeloFormExportOffer | null;
   profile_requirements: string[];
   receipt: ModeloFormReceipt | null;
+  ledger_hold: ModeloFormLedgerHold | null;
 };
 
 /**
