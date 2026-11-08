@@ -105,6 +105,16 @@ _LITERAL_NON_PROFILE_EXCLUSIONS = (
         "deliberately incomplete general-regime profile proves only the composition is settled",
     ),
     _ProfileShapeExclusion(
+        "src/cadrumo/domain/deadlines/profiles.py",
+        "iva_regime_owes_m303_regime_composition",
+        "a single-axis probe asks the resolver what one regime settles; it is not a profile",
+    ),
+    _ProfileShapeExclusion(
+        "src/cadrumo/application/wizard/tests/test_iva_block_questions_share_one_claim_gate.py",
+        "test_the_composition_is_asked_under_exactly_the_regimes_whose_completeness_owes_it",
+        "a single-axis probe compares the wizard gate with completeness per regime; it is not a profile",
+    ),
+    _ProfileShapeExclusion(
         "src/cadrumo/domain/deadlines/tests/test_general_regime_m303_composition.py",
         "_facts",
         "the composition is deliberately left unstated to prove the general regime settles it",

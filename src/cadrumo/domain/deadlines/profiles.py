@@ -513,6 +513,17 @@ def modelo_iva_profile_required_paths(values: Mapping[str, object]) -> tuple[str
     return MODELO_IVA_BLOCK_REQUIRED_PATHS
 
 
+def iva_regime_owes_m303_regime_composition(regime: str) -> bool:
+    """Report whether a filer declaring ``regime`` and no composition still owes the Modelo 303 composition.
+
+    False when the regime settles it (a general-regime filer) or leaves nothing for it to
+    describe (a pure recargo de equivalencia retailer); the question-asking surfaces gate on
+    this so they ask exactly what :func:`modelo_iva_profile_required_paths` demands.
+    """
+    values = {"iva.regime": regime}
+    return not (_is_pure_recargo_equivalencia(values) or _implied_m303_regime_composition(values) is not None)
+
+
 def _declared(value: object) -> bool:
     return value is not None and bool(str(value).strip())
 
