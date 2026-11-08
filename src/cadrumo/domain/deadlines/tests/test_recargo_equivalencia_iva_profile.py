@@ -58,10 +58,9 @@ def test_a_composition_stated_beside_the_recargo_regime_is_kept() -> None:
     assert str(profile.iva.regime_composition) == "mixed"
 
 
-@pytest.mark.parametrize("regime", ["GENERAL", "SIMPLIFICADO"])
-def test_a_self_assessing_regime_without_a_composition_is_still_refused(regime: str) -> None:
+def test_the_simplified_regime_without_a_composition_is_still_refused() -> None:
     with pytest.raises(ProfileError, match="m303_regime_composition"):
-        taxpayer_profile_from_mapping(_facts(regime), tax_id_default="12345678Z")
+        taxpayer_profile_from_mapping(_facts("SIMPLIFICADO"), tax_id_default="12345678Z")
 
 
 def test_an_unknown_composition_is_refused_even_under_the_recargo_regime() -> None:
@@ -74,11 +73,11 @@ def test_an_unknown_composition_is_refused_even_under_the_recargo_regime() -> No
 
 def test_completeness_does_not_ask_a_recargo_retailer_for_a_composition() -> None:
     recargo = modelo_iva_profile_required_paths(_facts("RECARGO_EQUIVALENCIA"))
-    general = modelo_iva_profile_required_paths(_facts("GENERAL"))
+    simplified = modelo_iva_profile_required_paths(_facts("SIMPLIFICADO"))
 
     assert _COMPOSITION not in recargo
-    assert _COMPOSITION in general
-    assert set(general) - set(recargo) == {_COMPOSITION}
+    assert _COMPOSITION in simplified
+    assert set(simplified) - set(recargo) == {_COMPOSITION}
 
 
 def test_completeness_asks_a_recargo_retailer_that_states_one_to_keep_it_valid() -> None:

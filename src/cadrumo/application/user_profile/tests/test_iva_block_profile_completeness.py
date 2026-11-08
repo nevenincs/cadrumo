@@ -47,7 +47,7 @@ def test_declared_iva_regime_reports_the_whole_block_as_missing() -> None:
             {
                 "identity.tax_id": "12345678Z",
                 "activities.description": "consultoria",
-                "iva.regime": "GENERAL",
+                "iva.regime": "SIMPLIFICADO",
                 "tax_residence.ccaa": "madrid",
             },
             operation=_authority_operation_for_test,
@@ -55,6 +55,23 @@ def test_declared_iva_regime_reports_the_whole_block_as_missing() -> None:
 
         assert result.valid is False
         assert "iva.m303_regime_composition" in result.missing_required
+        assert "tax_residence.jurisdiction_scope" in result.missing_required
+
+
+def test_the_general_regime_settles_the_composition_but_not_the_rest_of_the_block() -> None:
+    """A general-regime filer files Modelo 303 under the general regime alone, so only the composition is settled."""
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        values = {
+            "identity.tax_id": "12345678Z",
+            "activities.description": "consultoria",
+            "iva.regime": "GENERAL",
+            "tax_residence.ccaa": "madrid",
+        }
+        result = validate_profile_values(values, operation=_authority_operation_for_test)
+
+        assert result.valid is False
+        assert "iva.m303_regime_composition" not in result.missing_required
+        assert "iva.m303_regime_composition" not in conditional_profile_missing_required(values)
         assert "tax_residence.jurisdiction_scope" in result.missing_required
 
 
@@ -138,7 +155,7 @@ def test_completeness_demands_exactly_what_the_resolver_refuses_without() -> Non
         "iva.voluntary_sii_enrolled": "false",
         "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
     }
-    values: dict[str, str] = {"iva.regime": "GENERAL"}
+    values: dict[str, str] = {"iva.regime": "SIMPLIFICADO"}
 
     demanded: list[str] = []
     for _ in range(len(satisfy) + 1):
@@ -158,4 +175,4 @@ def test_completeness_demands_exactly_what_the_resolver_refuses_without() -> Non
         pytest.fail("resolver never resolved a fully satisfied IVA block")
 
     assert sorted(demanded) == sorted(MODELO_IVA_BLOCK_REQUIRED_PATHS)
-    assert sorted(modelo_iva_profile_required_paths({"iva.regime": "GENERAL"})) == sorted(demanded)
+    assert sorted(modelo_iva_profile_required_paths({"iva.regime": "SIMPLIFICADO"})) == sorted(demanded)
