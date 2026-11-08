@@ -54,6 +54,7 @@ from .....domain.prorrata_register.register import ProrrataRegister, ProrrataReg
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..bienes_inversion import BienesInversionIvaRegisterRepository
 from ..calculation_observations import CalculationObservationRepository
+from ..invoices import InvoiceCatalogueRepository
 from ..prorrata_register import ProrrataRegisterRepository
 from ..transactions import TransactionCatalogueRepository
 from .published_authority_support import published_authority_operation
@@ -119,6 +120,7 @@ def _collect_settlement_diagnostics():
         filing_year=_YEAR,
         prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
         transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
+        invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET),
         bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
     )
 
@@ -164,6 +166,7 @@ def test_collector_uses_the_supplied_pinned_authority(tmp_path: Path, monkeypatc
                 filing_year=_YEAR,
                 prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
                 transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
+                invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET),
                 bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
                 operation=operation,
             )
@@ -188,6 +191,7 @@ def test_no_advisory_when_no_sin_derecho_operations(tmp_path: Path) -> None:
             filing_year=_YEAR,
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET),
             bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
         )
 
@@ -211,6 +215,7 @@ def test_no_advisory_on_mid_year_quarter(tmp_path: Path) -> None:
             filing_year=_YEAR,
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET),
             bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
         )
 
@@ -242,6 +247,7 @@ def test_mid_year_active_prorrata_without_provisional_emits_missing_carry(tmp_pa
             bucket_id=_BUCKET,
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET),
             bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
         )
 
@@ -272,6 +278,7 @@ def test_no_advisory_for_non_m303_modelo(tmp_path: Path) -> None:
             filing_year=_YEAR,
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET),
             bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
         )
 

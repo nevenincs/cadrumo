@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
@@ -29,6 +29,10 @@ from .action_ports import LedgerActionPortsFactory
 from .check_query import LedgerCheckV1, read_ledger_check
 from .preflight import LedgerPreflightIssue, LedgerPreflightIssueReason
 from .read_access import resolve_ledger_request_read_access
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.user_profile.values import UserProfileRecord
 
 LEDGER_CHECK_OPERATION_DEFINITION_ID = "ledger.check"
 
@@ -157,12 +161,27 @@ class LedgerCheckExecutor:
                     invoice_reader=ports.invoice_repository,
                     transaction_reader=ports.transaction_repository,
                 ),
+                profile_record=_bucket_profile_record(bucket_id, operation=operation),
                 operation=operation,
                 period=payload.period.to_period() if payload.period is not None else None,
             )
             return LedgerCheckProjection.from_check(check, profile_id=payload.profile_id, period=payload.period)
 
         return await capture_read_result(context, read, task_name="ledger-check")
+
+
+def _bucket_profile_record(bucket_id: str, *, operation: PinnedAuthorityOperation) -> UserProfileRecord | None:
+    """Decrypt the bucket's own profile record, or return ``None`` when it has none."""
+    from ...domain.user_profile.errors import ProfileNotFoundError
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
+
+    try:
+        return ProfileRecordRepository.for_current_session(
+            bucket_id,
+            profile_decode_context=operation.profile_decode_context(),
+        ).load(bucket_id)
+    except ProfileNotFoundError:
+        return None
 
 
 def build_ledger_check_definition(ports: LedgerActionPortsFactory) -> OperationDefinition:

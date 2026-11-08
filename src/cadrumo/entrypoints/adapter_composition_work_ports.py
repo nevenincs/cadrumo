@@ -87,6 +87,7 @@ def build_state_projection_read_ports(
     Parameter types: ``objects``
     (:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`).
     """
+    from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ..adapters.persistence.profile.state_projection import StateProjectionPersistenceAdapter
     from ..adapters.persistence.profile.usage_ratios import load_usage_ratios
     from ..application.state_projection_ports import StateProjectionReadPorts
@@ -114,6 +115,7 @@ def build_state_projection_read_ports(
         workspace=projection_adapter,
         profile=projection_adapter,
         usage_ratio_profile_loader=load_usage_ratios,
+        invoice_reader_for=InvoiceCatalogueRepository,
     )
 
 

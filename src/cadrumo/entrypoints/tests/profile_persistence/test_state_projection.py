@@ -30,6 +30,7 @@ import pytest
 from pydantic import SecretStr
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.state_projection import StateProjectionPersistenceAdapter
 from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
@@ -151,6 +152,7 @@ def state_projection_dependencies() -> tuple[InMemoryCertificateSecretBackendFac
             workspace=adapter,
             profile=adapter,
             usage_ratio_profile_loader=load_usage_ratios,
+            invoice_reader_for=InvoiceCatalogueRepository,
         ),
     )
 

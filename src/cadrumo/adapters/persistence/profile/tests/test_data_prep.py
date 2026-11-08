@@ -17,6 +17,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.profile.usage_ratios import load_usage_ratios
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import (
@@ -159,10 +160,14 @@ def _walkthrough(
     work_units: tuple[WorkUnit, ...] = (),
     operation: PinnedAuthorityOperation,
 ):
+    invoice_repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID)
+    if invoice_catalogue is not None:
+        invoice_repository.save(invoice_catalogue)
     preflight_report = preflight_ledger_tax_readiness(
         bucket_id=_BUCKET_ID,
         period=_PERIOD_1T_2026,
         usage_ratio_profile_loader=load_usage_ratios,
+        invoice_reader=invoice_repository,
         transaction_repository=tx_repository,
         operation=operation,
     )

@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 import cadrumo.application.aggregation.iva_ledger as iva_ledger
+from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -282,6 +283,7 @@ def test_repository_backed_projection_rejects_bucket_mismatch_before_loading(
                 bucket_id=_OTHER_BUCKET_ID,
                 objects=secure_objects,
             ),
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_OTHER_BUCKET_ID, objects=secure_objects),
             investment_asset_register=_TEST_ASSET_REGISTER,
             investment_asset_profile_id=_BUCKET_ID,
             operation=_authority_operation_for_test,
@@ -311,6 +313,7 @@ def test_repository_backed_projection_refuses_a_real_foreign_prorrata_repository
                 period=_Q2_2026,
                 prorrata_register_repository=foreign_prorrata_repository,
                 transaction_repository=TransactionCatalogueRepository(bucket_id=runtime.primary.bucket_id),
+                invoice_reader=InvoiceCatalogueRepository(bucket_id=runtime.primary.bucket_id),
                 operation=_authority_operation_for_test,
             )
 
@@ -332,6 +335,7 @@ def test_repository_backed_projection_loads_persisted_bucket_catalogue(secure_ob
                 bucket_id=_BUCKET_ID,
                 objects=secure_objects,
             ),
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
             investment_asset_register=_TEST_ASSET_REGISTER,
             investment_asset_profile_id=_BUCKET_ID,
             operation=_authority_operation_for_test,
@@ -347,6 +351,7 @@ def _aggregate_q2_2026(secure_objects: SecureObjectRepository, operation: Pinned
         period=_Q2_2026,
         prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
         transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
         investment_asset_register=_TEST_ASSET_REGISTER,
         investment_asset_profile_id=_BUCKET_ID,
         operation=operation,
@@ -453,6 +458,7 @@ def test_repository_backed_projection_partition_matches_full_scan(
             period=_Q2_2026,
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
             investment_asset_register=_TEST_ASSET_REGISTER,
             investment_asset_profile_id=_BUCKET_ID,
             operation=_authority_operation_for_test,

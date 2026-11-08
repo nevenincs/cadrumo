@@ -107,6 +107,7 @@ def _source_diagnostics(
         prorrata_register_repository=repositories.prorrata_register,
         bienes_inversion_repository=repositories.bienes_inversion,
         transaction_repository=repositories.transactions,
+        invoice_reader=repositories.invoices,
     )
 
 
@@ -194,6 +195,7 @@ def test_the_settlement_advisory_reaches_the_coordinator() -> None:
         prorrata_register_repository=repositories.prorrata_register,
         bienes_inversion_repository=repositories.bienes_inversion,
         transaction_repository=repositories.transactions,
+        invoice_reader=repositories.invoices,
     )
     assert _SETTLEMENT in {diagnostic.source_kind for diagnostic in diagnostics}
 
@@ -218,6 +220,7 @@ def test_the_settlement_advisory_is_absent_where_the_revision_computes_it() -> N
         prorrata_register_repository=repositories.prorrata_register,
         bienes_inversion_repository=repositories.bienes_inversion,
         transaction_repository=repositories.transactions,
+        invoice_reader=repositories.invoices,
     )
     assert _SETTLEMENT not in {diagnostic.source_kind for diagnostic in diagnostics}
 

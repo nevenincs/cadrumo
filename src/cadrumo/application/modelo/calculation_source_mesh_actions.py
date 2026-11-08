@@ -206,6 +206,7 @@ def resolve_bucket_source_mesh(
         bienes_inversion_repository=ports.bienes_inversion_repository,
         observation_repository=ports.observation_repository,
         transaction_repository=memoized_transaction_repository,
+        invoice_reader=ports.invoice_catalogue_read_ports.invoice_reader,
         investment_asset_register=iva_investment_asset_register,
         investment_asset_profile_id=iva_investment_asset_profile_id,
         operation=ports.operation,

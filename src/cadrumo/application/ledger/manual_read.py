@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ..invoices.catalogue_reads_ports import InvoiceCatalogueReader
 
 from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ...core.period import Period
@@ -303,6 +304,7 @@ def _readiness_summary(
     period: Period | None,
     transaction_repository: TransactionCatalogueCoCommitWriterProtocol | None,
     usage_ratio_profile_loader: UsageRatioProfileLoader,
+    invoice_reader: InvoiceCatalogueReader,
     operation: PinnedAuthorityOperation,
     catalogue: TransactionCatalogue,
     preflight: LedgerPreflightReport | None,
@@ -326,6 +328,7 @@ def _readiness_summary(
                 repository=transaction_repository,
             ),
             usage_ratio_profile_loader=usage_ratio_profile_loader,
+            invoice_reader=invoice_reader,
             operation=operation,
             catalogue=catalogue,
         )
@@ -449,6 +452,7 @@ def summarize_manual_transactions(
         period=period,
         transaction_repository=ports.transaction_repository,
         usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
+        invoice_reader=ports.invoice_repository,
         operation=ports.operation,
         catalogue=snapshot,
         preflight=preflight,

@@ -420,6 +420,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.action_errors.ModeloLedgerPreflightBlockedError",
+        ErrorCode(
+            code="REFUSED_MODELO_LEDGER_PREFLIGHT_BLOCKED",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.ledger_preflight_blocked_period",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.action_errors.ModeloProfileReadinessError",
         ErrorCode(
             code="REFUSED_MODELO_PROFILE_READINESS",

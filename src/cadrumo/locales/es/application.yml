@@ -2323,10 +2323,51 @@ application:
         de IVA no coincide con la declaración del Modelo 303.
       iva_wallet_unsupported_decision_type: 'Tipo de decisión de cartera de IVA no
         admitido: %{decision_type}.'
-      ledger_preflight_blocked: 'la comprobación previa de tus registros bloquea el
-        cálculo del modelo: transacción %{transaction_id} %{reason}: %{detail}. Ejecuta
-        la comprobación previa de tus registros para el periodo %{period} y resuelve
-        sus incidencias antes de calcular.'
+      ledger_preflight_blocked_movement: 'No se puede calcular %{period}. El movimiento
+        del %{movement_date}, «%{movement_description}», %{movement_amount}: %{need}.
+        No se ha guardado nada.'
+      ledger_preflight_blocked_period: 'No se puede calcular %{period}: %{need}. No
+        se ha guardado nada.'
+      ledger_preflight_need:
+        anomaly_non_declarable_iva_category: su categoría de IVA no se declara en
+          ningún modelo
+        anomaly_non_declarable_recargo_equivalencia: lleva recargo de equivalencia,
+          que no se declara en este modelo
+        censo_ratio_mismatch: su ratio de uso no coincide con la de tu censo
+        domestic_identification_on_intra_community_transaction: es una operación intracomunitaria
+          con una contraparte identificada en España
+        eu_member_state_on_export_transaction: es una exportación con una contraparte
+          establecida en la UE
+        inadmissible_deduction_classification: su clasificación de deducción no es
+          admisible para esta operación
+        invoice_cash_accounting_regime_unmodelled: declaras el régimen especial del
+          criterio de caja, en el que el IVA se devenga al cobrar o pagar, y Cadrumo
+          aún no sabe situar el IVA de tus facturas según sus cobros y pagos
+        invoice_category_contradicted: la categoría de IVA de su factura no encaja
+          con el país de la contraparte
+        invoice_deduction_family_unresolved: 'la factura recibida que paga no indica
+          qué deducción corresponde: clasifica el movimiento, por ejemplo como gasto
+          corriente o como bien de inversión'
+        linked_movement_contradicts_invoice: su base o su cuota no coinciden con las
+          de la factura que paga
+        missing_business_classification: falta clasificarlo como profesional, personal
+          o mixto
+        missing_category: falta la categoría del gasto
+        missing_counterparty_establishment_on_export: es una exportación y falta dónde
+          está establecida la contraparte
+        missing_counterparty_identification_state: falta dónde está identificada a
+          efectos de IVA la contraparte
+        missing_eur_tax_substrate: faltan sus cifras en euros
+        missing_home_office_afectacion: falta la parte de la vivienda afecta a la
+          actividad
+        missing_iva_amount: falta la cuota de IVA
+        missing_iva_rate: falta el tipo de IVA
+        missing_proportionality_reference: es mixto y falta su ratio de uso
+        missing_taxable_base: falta la base imponible
+        movement_invoice_double_count: 'lleva sus propias cifras de IVA y coincide
+          con una factura que ya declara la operación: vincúlalos o descarta la pareja'
+        unsupported_currency: su moneda no se puede convertir a euros
+        unsupported_period: este periodo no se puede comprobar con el Libro
       local_observation_actor_blank: Una corrección manual de una observación debe
         indicar quién la registra.
       local_observation_override_missing: El modelo %{modelo} %{period} %{filing_year}
@@ -2852,6 +2893,7 @@ application:
       next_step:
         calculate_work: Calcula el %{modelo}, %{period}
         create_work: Crea el %{modelo}, %{period}
+        open_movement: Abre el movimiento en el Libro
         open_work: Abre el %{modelo}, %{period}
       no_m130_revisions: Las declaraciones del Modelo 130 del ejercicio %{year} aún
         no se han calculado, así que no hay base para estimar la declaración anual.

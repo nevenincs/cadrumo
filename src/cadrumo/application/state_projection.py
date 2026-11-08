@@ -107,7 +107,7 @@ from .state_projection_models import (
     ProjectionObligation,
     ProjectionWorkspaceSummary,
 )
-from .state_projection_ports import StateProjectionReadPorts
+from .state_projection_ports import StateProjectionInvoiceReaderFactory, StateProjectionReadPorts
 from .state_projection_readiness import readiness_binding_input_channel
 from .user_profile.commands import ProfilePreflightReport
 from .workflow.profile_health import ActiveProfileHealth, assess_active_profile_health
@@ -385,6 +385,7 @@ def _build_modelo_ledger_stage(
     bucket_id: str,
     period: Period,
     usage_ratio_profile_loader: UsageRatioProfileLoader,
+    invoice_reader_for: StateProjectionInvoiceReaderFactory,
     operation: PinnedAuthorityOperation,
 ) -> _ModeloReadinessLedgerStage:
     """Evaluate ledger preflight only when the registry declares it."""
@@ -394,6 +395,7 @@ def _build_modelo_ledger_stage(
         bucket_id=bucket_id,
         period=period,
         usage_ratio_profile_loader=usage_ratio_profile_loader,
+        invoice_reader=invoice_reader_for(bucket_id=bucket_id),
         operation=operation,
     )
     return _ModeloReadinessLedgerStage(
@@ -410,6 +412,7 @@ def _evaluate_modelo_readiness(
     *,
     context: _ModeloReadinessContext,
     usage_ratio_profile_loader: UsageRatioProfileLoader,
+    invoice_reader_for: StateProjectionInvoiceReaderFactory,
     operation: PinnedAuthorityOperation,
 ) -> _ModeloReadinessEvaluation:
     """Evaluate profile, registry, binding, and ledger axes for one request."""
@@ -427,6 +430,7 @@ def _evaluate_modelo_readiness(
         bucket_id=context.bucket_id,
         period=period,
         usage_ratio_profile_loader=usage_ratio_profile_loader,
+        invoice_reader_for=invoice_reader_for,
         operation=operation,
     )
     missing_bindings = (
@@ -515,6 +519,7 @@ def build_modelo_readiness_reports(
                 request,
                 context=context,
                 usage_ratio_profile_loader=read_ports.usage_ratio_profile_loader,
+                invoice_reader_for=read_ports.invoice_reader_for,
                 operation=operation,
             )
         )

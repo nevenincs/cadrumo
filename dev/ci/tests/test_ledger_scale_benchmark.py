@@ -636,6 +636,7 @@ def quarterly_iva_samples(
                 bucket_id=_BUCKET_ID,
                 period=period,
                 transaction_repository=tx_repo,
+                invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID),
                 prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
                 investment_asset_register=BienesInversionIvaRegister(),
                 investment_asset_profile_id=_BUCKET_ID,

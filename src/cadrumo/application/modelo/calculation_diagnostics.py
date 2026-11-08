@@ -47,6 +47,7 @@ from ...domain.transactions.protocols import TransactionCatalogueRepositoryProto
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
 from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
+from ..invoices.catalogue_reads_ports import InvoiceCatalogueReader
 from ..prorrata_register.ports import ProrrataRegisterServiceRepositoryProtocol
 from .bienes_inversion_advisory import collect_bienes_inversion_regularizacion_diagnostics
 from .m347_uninvoiced_expense_advisory import collect_m347_uninvoiced_expense_diagnostics
@@ -176,6 +177,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
     prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
     bienes_inversion_repository: BienesInversionIvaRegisterRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    invoice_reader: InvoiceCatalogueReader,
     operation: PinnedAuthorityOperation | None = None,
     profile: ModeloWorkProfile | None = None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
@@ -230,6 +232,8 @@ def collect_bucket_aggregation_advisory_diagnostics(
         transaction_repository: Required bucket-bound transaction catalogue
             capability used by the annual IVA settlement advisory and the
             Modelo 347 uninvoiced-expense advisory.
+        invoice_reader: The same bucket's invoice catalogue, the IVA source
+            the annual IVA settlement advisory aggregates with the ledger.
         operation: The caller's pinned authority for an in-progress calculation.
             Standalone diagnostic callers may omit it to lease one locally.
         profile: The bucket's profile when the calculation already loaded it;
@@ -292,6 +296,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
                 bucket_id=bucket_id,
                 prorrata_register_repository=prorrata_register_repository,
                 transaction_repository=transaction_repository,
+                invoice_reader=invoice_reader,
                 bienes_inversion_repository=bienes_inversion_repository,
                 operation=authority,
             )

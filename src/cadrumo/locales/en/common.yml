@@ -80,6 +80,8 @@ aggregation:
         for %{date}. That is the bank movement date, used as the devengo date because
         this entry records no operation date. Record the date the delivery or service
         took place; that may resolve it.
+      linked_movement_contradicts_invoice: The movements paying an invoice state a
+        base or IVA amount that differs from the invoice.
       missing_counterparty_establishment_on_export: An export is exempt because the
         operation leaves the Union, so it turns on where the counterparty is ESTABLISHED.
         Record the counterparty's country; an absent or unassigned code establishes
@@ -3732,6 +3734,10 @@ desktop:
       domestic_identification_on_intra_community_transaction: Spanish id
       eu_member_state_on_export_transaction: Export state
       inadmissible_deduction_classification: Deduction
+      invoice_cash_accounting_regime_unmodelled: Cash basis
+      invoice_category_contradicted: IVA category
+      invoice_deduction_family_unresolved: Deduction
+      linked_movement_contradicts_invoice: Invoice
       missing_business_classification: Classification
       missing_category: Category
       missing_counterparty_establishment_on_export: Establishment
@@ -3742,6 +3748,7 @@ desktop:
       missing_iva_rate: IVA rate
       missing_proportionality_reference: Usage ratio
       missing_taxable_base: Base
+      movement_invoice_double_count: Twice
       unsupported_currency: EUR rate
       unsupported_period: Period
     reason_detail:
@@ -3752,6 +3759,12 @@ desktop:
         intra-community operation
       eu_member_state_on_export_transaction: EU member state on an export
       inadmissible_deduction_classification: Classification not admitted for deduction
+      invoice_cash_accounting_regime_unmodelled: Cash basis not yet supported with
+        invoices
+      invoice_category_contradicted: The IVA category does not fit the country
+      invoice_deduction_family_unresolved: The invoice does not show which deduction
+        applies
+      linked_movement_contradicts_invoice: Differs from its invoice
       missing_business_classification: Classification missing
       missing_category: Category missing
       missing_counterparty_establishment_on_export: Counterparty's establishment missing
@@ -3764,6 +3777,7 @@ desktop:
       missing_iva_rate: IVA rate missing
       missing_proportionality_reference: Mixed without a usage ratio
       missing_taxable_base: Taxable base missing
+      movement_invoice_double_count: Matches an unlinked invoice
       unsupported_currency: Currency not supported
       unsupported_period: Period not supported
     registers:

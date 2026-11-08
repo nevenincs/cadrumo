@@ -24,6 +24,7 @@ export function DeclarationsPane({
   onOpenWork,
   onCensus,
   onProfileStep,
+  onOpenMovement,
   onBack,
   onOpenSurface,
   canOpenSurface,
@@ -58,6 +59,8 @@ export function DeclarationsPane({
   /** Whether the window has a page for the area; only those are linked. */
   canOpenSurface(surface: OpenableSurface): boolean;
   openLink(url: string): void;
+  /** Opens one ledger movement in the Libro, where the window has one. */
+  onOpenMovement?: (transactionId: string) => void;
   /** Hands the shell the guard that asks before staged edits are dropped. */
   guardLeave(guard: LeaveGuard | null): void;
   /** What the list keeps of itself while a declaration is open, for one
@@ -119,6 +122,7 @@ export function DeclarationsPane({
           locale={locale}
           onBack={onBack}
           onOpenWork={onOpenWork}
+          onOpenMovement={onOpenMovement}
           onOpenSurface={onOpenSurface}
           canOpenSurface={canOpenSurface}
           openLink={openLink}

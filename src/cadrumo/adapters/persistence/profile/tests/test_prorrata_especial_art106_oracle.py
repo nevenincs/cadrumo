@@ -38,6 +38,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -173,6 +174,7 @@ def _deducible_cuota(objects: SecureObjectRepository, *, operation: PinnedAuthor
         bucket_id=_BUCKET_ID,
         period=_PERIOD,
         transaction_repository=tx_repo,
+        invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
         prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
         investment_asset_register=BienesInversionIvaRegister(),
         investment_asset_profile_id=_BUCKET_ID,
@@ -248,6 +250,7 @@ def test_each_art106_regla_isolated(
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
             investment_asset_register=BienesInversionIvaRegister(),
             investment_asset_profile_id=_BUCKET_ID,

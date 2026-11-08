@@ -20,6 +20,7 @@ from ...aggregation.iva_ledger import IvaLedgerAggregationIssueReason
 from ..preflight import (
     PREFLIGHT_DETAIL_BY_IVA_ISSUE,
     PREFLIGHT_REASON_BY_IVA_ISSUE,
+    HeldTransactionCatalogue,
     LedgerPreflightIssueReason,
     preflight_detail_for_iva_issue,
     preflight_reason_for_iva_issue,
@@ -37,6 +38,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def test_preflight_refuses_non_span_period_even_with_empty_catalogue(operation: PinnedAuthorityOperation) -> None:
     report = preflight_transaction_catalogue(
+        invoices=(),
+        movement_reader=HeldTransactionCatalogue(TransactionCatalogue.from_transactions(())),
+        cash_accounting_enrolled=False,
         bucket_id=BUCKET_ID,
         period=EVENT_2026,
         transactions=TransactionCatalogue.from_transactions(()),
@@ -51,6 +55,9 @@ def test_preflight_refuses_non_span_period_even_with_empty_catalogue(operation: 
 
 def test_preflight_refuses_non_span_period_before_touching_transactions(operation: PinnedAuthorityOperation) -> None:
     report = preflight_transaction_catalogue(
+        invoices=(),
+        movement_reader=HeldTransactionCatalogue(TransactionCatalogue.from_transactions(())),
+        cash_accounting_enrolled=False,
         bucket_id=BUCKET_ID,
         period=EVENT_2026,
         transactions=TransactionCatalogue.from_transactions((preflight_transaction("row-ready"),)),
@@ -87,6 +94,9 @@ def test_preflight_reports_all_missing_modelo_readiness_facts(operation: PinnedA
     )
 
     report = preflight_transaction_catalogue(
+        invoices=(),
+        movement_reader=HeldTransactionCatalogue(TransactionCatalogue.from_transactions(())),
+        cash_accounting_enrolled=False,
         bucket_id=BUCKET_ID,
         period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions(
@@ -139,6 +149,9 @@ def test_preflight_ignores_personal_internal_transfer_and_out_of_period_rows(
     )
 
     report = preflight_transaction_catalogue(
+        invoices=(),
+        movement_reader=HeldTransactionCatalogue(TransactionCatalogue.from_transactions(())),
+        cash_accounting_enrolled=False,
         bucket_id=BUCKET_ID,
         period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions((personal, transfer, old)),
@@ -170,6 +183,9 @@ def test_preflight_ignores_archived_and_stashed_rows(operation: PinnedAuthorityO
     )
 
     report = preflight_transaction_catalogue(
+        invoices=(),
+        movement_reader=HeldTransactionCatalogue(TransactionCatalogue.from_transactions(())),
+        cash_accounting_enrolled=False,
         bucket_id=BUCKET_ID,
         period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions((ready, archived_missing_facts, stashed_missing_facts)),
@@ -187,6 +203,9 @@ def test_preflight_reports_unsupported_currency_before_modelo_aggregation(
     usd = preflight_transaction("row-usd", currency="USD")
 
     report = preflight_transaction_catalogue(
+        invoices=(),
+        movement_reader=HeldTransactionCatalogue(TransactionCatalogue.from_transactions(())),
+        cash_accounting_enrolled=False,
         bucket_id=BUCKET_ID,
         period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions((usd,)),
@@ -213,6 +232,9 @@ def test_preflight_blocks_intracom_sale_with_domestic_counterparty_before_aggreg
     )
 
     report = preflight_transaction_catalogue(
+        invoices=(),
+        movement_reader=HeldTransactionCatalogue(TransactionCatalogue.from_transactions(())),
+        cash_accounting_enrolled=False,
         bucket_id=BUCKET_ID,
         period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions((transaction,)),
@@ -244,6 +266,9 @@ def test_preflight_renders_intracom_domestic_identification_detail_in_hungarian(
     with override_settings(cadrumo_output_language="hu"):
         clear_output_language_cache()
         report = preflight_transaction_catalogue(
+            invoices=(),
+            movement_reader=HeldTransactionCatalogue(TransactionCatalogue.from_transactions(())),
+            cash_accounting_enrolled=False,
             bucket_id=BUCKET_ID,
             period=Q2_2026,
             transactions=TransactionCatalogue.from_transactions((transaction,)),
@@ -275,6 +300,9 @@ def test_preflight_blocks_export_sale_with_eu_member_state_before_aggregation(
     )
 
     report = preflight_transaction_catalogue(
+        invoices=(),
+        movement_reader=HeldTransactionCatalogue(TransactionCatalogue.from_transactions(())),
+        cash_accounting_enrolled=False,
         bucket_id=BUCKET_ID,
         period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions((transaction,)),

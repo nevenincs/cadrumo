@@ -325,6 +325,14 @@ export const REASON_FIX: Record<
     preset: "iva",
     column: "iva_category",
   },
+  invoice_deduction_family_unresolved: {
+    preset: "review",
+    column: "classification",
+  },
+  invoice_category_contradicted: { preset: "review", column: "invoice" },
+  movement_invoice_double_count: { preset: "review", column: "invoice" },
+  invoice_cash_accounting_regime_unmodelled: { preset: "review", column: null },
+  linked_movement_contradicts_invoice: { preset: "review", column: "invoice" },
 };
 
 /** Movements to classify whose staged change classifies them or approves a

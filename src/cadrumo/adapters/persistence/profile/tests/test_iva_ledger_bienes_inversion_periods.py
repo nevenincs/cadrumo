@@ -37,6 +37,7 @@ from .....domain.transactions.enums import BusinessClassification, TransactionDi
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..invoices import InvoiceCatalogueRepository
 from ..prorrata_register import ProrrataRegisterRepository
 from ..transactions import TransactionCatalogueRepository
 
@@ -127,6 +128,7 @@ def _aggregate(
         period=Period.from_year_and_code(year, code),
         prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=objects),
         transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
+        invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
         investment_asset_register=register,
         investment_asset_profile_id=_BUCKET_ID,
         operation=operation,

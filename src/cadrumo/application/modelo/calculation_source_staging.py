@@ -69,6 +69,7 @@ from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtoco
 from ..calculations.bienes_inversion_regularizacion import BienesInversionRegularizacionSourceResolver
 from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
 from ..calculations.prorrata_regularizacion import ProrrataRegularizacionSourceResolver
+from ..invoices.catalogue_reads_ports import InvoiceCatalogueReader
 from .calculation_modelo_adjustments import m131_objective_estimation_data_base_inputs
 from .calculation_resolution import resolve_calculation_inputs
 from .calculation_route import CALCULATION_ROUTE_PRE_MESH_SOURCES, require_calculation_route_resolver
@@ -133,6 +134,7 @@ def resolve_prorrata_regularizacion_sources(
     bienes_inversion_repository: BienesInversionIvaRegisterRepositoryProtocol,
     observation_repository: CalculationObservationRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    invoice_reader: InvoiceCatalogueReader,
     investment_asset_register: BienesInversionIvaRegister | None,
     investment_asset_profile_id: str | None,
 ) -> CalculationSourceResolution:
@@ -172,6 +174,8 @@ def resolve_prorrata_regularizacion_sources(
         transaction_repository: Bucket-bound transaction catalogue the
             prorrata resolver re-derives earlier liquidations' gross cuotas
             from.
+        invoice_reader: The same bucket's invoice catalogue, the IVA source
+            of every invoiced operation in those liquidations.
         investment_asset_register: Capital-goods authority the ledger
             aggregation proves investment acquisitions against, when loaded.
         investment_asset_profile_id: Profile owning that register.
@@ -211,6 +215,7 @@ def resolve_prorrata_regularizacion_sources(
         prorrata_register_repository=prorrata_register_repository,
         observation_repository=observation_repository,
         transaction_repository=transaction_repository,
+        invoice_reader=invoice_reader,
         investment_asset_register=investment_asset_register,
         investment_asset_profile_id=investment_asset_profile_id,
         registry_snapshot=registry_snapshot,

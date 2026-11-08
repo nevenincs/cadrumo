@@ -472,7 +472,8 @@ class _OverviewReadPorts:
             objects=secure_object_repository_for_bucket(self.bucket_id),
             bucket_id=self.bucket_id,
         )
-        invoices = InvoiceCatalogueRepository(bucket_id=self.bucket_id).load()
+        invoice_repository = InvoiceCatalogueRepository(bucket_id=self.bucket_id)
+        invoices = invoice_repository.load()
         evidence = PurchaseInvoiceEvidenceService(ports=build_ledger_evidence_ports(bucket_id=self.bucket_id)).list_all(
             bucket_id=self.bucket_id
         )
@@ -481,6 +482,7 @@ class _OverviewReadPorts:
             period=period,
             transaction_repository=transactions,
             usage_ratio_profile_loader=read_ports.usage_ratio_profile_loader,
+            invoice_reader=invoice_repository,
             operation=operation,
         )
         units = WorkUnitCatalogueRepository(bucket_id=self.bucket_id).load()

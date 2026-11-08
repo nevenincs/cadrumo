@@ -628,6 +628,7 @@ def _full_scan_status(period: Period | None, operation: PinnedAuthorityOperation
                 period=period,
                 transaction_repository=ports.transaction_repository,
                 usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
+                invoice_reader=ports.invoice_repository,
                 operation=operation,
                 catalogue=readiness_catalogue,
             ),

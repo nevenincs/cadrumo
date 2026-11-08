@@ -26,6 +26,8 @@ from typing import TYPE_CHECKING
 
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
+from ...core.external_constants import DEFAULT_CURRENCY, OutputLanguage
+from ...core.i18n.render import tr
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import (
@@ -47,15 +49,19 @@ from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.period import calculation_filing_date
 from ...domain.transactions.enums import BUSINESS_BEARING_STATES, TransactionDirection, TransactionLifecycleState
+from ...domain.transactions.models import Transaction
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ..calculations.observations_repository import (
     CalculationObservationRepositoryProtocol,
     IvaWalletDecisionRepositoryProtocol,
 )
+from ..invoices.catalogue_reads_ports import InvoiceCatalogueReader
 from ..ledger.usage_ratio_repository import UsageRatioProfileLoader
+from ..operations.error_detail import served_words_language
+from ..operations.next_step import OperationNextStepWording, OperationOpenMovementStepV1
 from ..user_profile.projections import record_to_path_values
-from .action_errors import ModeloAggregationBindingError
+from .action_errors import ModeloAggregationBindingError, ModeloLedgerPreflightBlockedError
 from .calculation_helpers import load_work_unit_for_calculation, resolve_registry_snapshot_for_work_unit
 from .calculation_resolution import ResolvedCalculationChannels, resolve_calculation_binding_channels
 from .iva_wallet_gate import (
@@ -74,6 +80,8 @@ from .required_binding_gate import (
     require_modelo_required_bindings_resolved,
     resolved_required_profile_binding_values,
 )
+from .value_presentation import format_casilla_value
+from .work_form_wording import period_words
 from .work_profile import ModeloWorkProfile
 
 if TYPE_CHECKING:
@@ -345,6 +353,12 @@ _IVA_ONLY_PREFLIGHT_REASONS = frozenset(
         # therefore blocks 303/390 and leaves the annual Renta return computable
         # from the same row.
         "inadmissible_deduction_classification",
+        # The invoice side of the period feeds the IVA aggregation alone.
+        "invoice_deduction_family_unresolved",
+        "invoice_category_contradicted",
+        "movement_invoice_double_count",
+        "invoice_cash_accounting_regime_unmodelled",
+        "linked_movement_contradicts_invoice",
     },
 )
 _M200_ACCOUNTING_RESULT_CASILLA: CasillaId = "DP200012:00501"
@@ -356,16 +370,58 @@ _M200_ACCOUNTING_LEDGER_DIRECTIONS = frozenset(
 )
 
 
+_LEDGER_PREFLIGHT_MOVEMENT_KEY = "application.modelo.errors.ledger_preflight_blocked_movement"
+_LEDGER_PREFLIGHT_PERIOD_KEY = "application.modelo.errors.ledger_preflight_blocked_period"
+_LEDGER_PREFLIGHT_NEED_KEY = "application.modelo.errors.ledger_preflight_need"
+
+
+def _movement_words(movement: Transaction, language: OutputLanguage) -> dict[str, str]:
+    """The date, description and signed amount the person knows the movement by."""
+    raw = movement.raw
+    magnitude = -raw.amount if movement.direction is TransactionDirection.OUTGOING else raw.amount
+    amount = (
+        format_casilla_value(magnitude, data_type="money", language=language)
+        if raw.currency == DEFAULT_CURRENCY
+        else f"{format_casilla_value(magnitude, data_type='decimal', language=language)} {raw.currency}"
+    )
+    return {
+        "movement_date": format_casilla_value(raw.value_date or raw.booked_date, data_type="date", language=language),
+        "movement_description": raw.description.strip() or "-",
+        "movement_amount": amount,
+    }
+
+
+def open_movement_step(transaction_id: str) -> OperationNextStepWording:
+    """Offer opening the movement the refusal names in the Libro."""
+
+    def worded(language: OutputLanguage) -> OperationOpenMovementStepV1:
+        return OperationOpenMovementStepV1(
+            transaction_id=transaction_id,
+            words=tr(_OPEN_MOVEMENT_LOCALE_KEY, locale=language.value),
+        )
+
+    return worded
+
+
+_OPEN_MOVEMENT_LOCALE_KEY = "application.modelo.projection_words.next_step.open_movement"
+
+
 def raise_if_ledger_preflight_blocks_calculation(
     *,
     work_unit: WorkUnit,
     revision: ModeloRevision,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    invoice_reader: InvoiceCatalogueReader,
     usage_ratio_profile_loader: UsageRatioProfileLoader,
     operation: PinnedAuthorityOperation,
     profile_values: Mapping[str, str],
 ) -> None:
     """Refuse ledger-backed calculations whose period ledger readiness blocks.
+
+    The refusal names the movement by its date, description and amount, in the
+    language of the served words, and offers to open it; an issue about the
+    whole period says what the period lacks. Nothing has been written when it
+    is raised.
 
     The bucket calculation runs it before resolving the source mesh, so a row the
     readiness check refuses is named as the row rather than as the aggregate that
@@ -388,6 +444,7 @@ def raise_if_ledger_preflight_blocks_calculation(
         period=work_unit.period,
         transaction_repository=transaction_repository,
         usage_ratio_profile_loader=usage_ratio_profile_loader,
+        invoice_reader=invoice_reader,
         operation=operation,
     )
     if report.ready:
@@ -403,14 +460,23 @@ def raise_if_ledger_preflight_blocks_calculation(
     if not blocking_issues:
         return
     first_issue = blocking_issues[0]
-    raise ModeloAggregationBindingError(
-        translated_message="application.modelo.errors.ledger_preflight_blocked",
-        context={
-            "transaction_id": first_issue.transaction_id,
-            "reason": first_issue.reason.value,
-            "detail": first_issue.detail,
-            "period": str(report.period),
-        },
+    language = served_words_language()
+    movement = (
+        None
+        if first_issue.transaction_id == "__period__"
+        else transaction_repository.load_by_ids({first_issue.transaction_id}).get(first_issue.transaction_id)
+    )
+    context = {
+        "need": tr(f"{_LEDGER_PREFLIGHT_NEED_KEY}.{first_issue.reason.value}", locale=language.value),
+        "period": period_words(report.period, language),
+        "reason": first_issue.reason.value,
+    }
+    if movement is not None:
+        context.update(_movement_words(movement, language))
+    raise ModeloLedgerPreflightBlockedError(
+        translated_message=(_LEDGER_PREFLIGHT_MOVEMENT_KEY if movement is not None else _LEDGER_PREFLIGHT_PERIOD_KEY),
+        context=context,
+        next_step=None if movement is None else open_movement_step(movement.transaction_id),
         precondition_failure=build_modelo_precondition_failure(
             subject_leaf_key="modelo.work.calculate",
             condition_id="modelo.work.calculate.ledger_preflight.ready",

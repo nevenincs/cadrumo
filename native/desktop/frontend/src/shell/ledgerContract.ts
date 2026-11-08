@@ -94,6 +94,11 @@ export const READINESS_REASONS = [
   "missing_home_office_afectacion",
   "anomaly_non_declarable_iva_category",
   "anomaly_non_declarable_recargo_equivalencia",
+  "invoice_deduction_family_unresolved",
+  "invoice_category_contradicted",
+  "movement_invoice_double_count",
+  "invoice_cash_accounting_regime_unmodelled",
+  "linked_movement_contradicts_invoice",
 ] as const;
 export type LedgerPreflightReason = (typeof READINESS_REASONS)[number];
 

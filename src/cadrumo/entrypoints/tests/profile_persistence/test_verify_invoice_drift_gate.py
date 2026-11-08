@@ -482,13 +482,15 @@ def test_m303_invoice_moved_out_of_the_period_registers_and_back_in_clears(tmp_p
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=IRENE_BUCKET) as profile:
         objects = profile.repository
         invoices = InvoiceCatalogueRepository(bucket_id=IRENE_BUCKET, objects=objects)
+        # A sale no seeded movement pays: an unlinked movement with the same
+        # figures would be the same operation counted twice, a blocking finding.
         sale_invoice = _invoice(
             "V-001",
             kind=InvoiceKind.ISSUED,
             issued_at=date(2026, 2, 15),
             bucket_id=IRENE_BUCKET,
-            base=Decimal("1000.00"),
-            iva=Decimal("210.00"),
+            base=Decimal("400.00"),
+            iva=Decimal("84.00"),
         ).model_copy(update={"operation_date": date(2026, 2, 15), "operation_date_role": operation_performed_role()})
         invoices.save(build_invoice_catalogue((sale_invoice,)))
         with bundled_indexed_authority().operation() as operation:

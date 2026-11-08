@@ -336,6 +336,11 @@ OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE: Mapping[
         LedgerPreflightIssueReason.MISSING_HOME_OFFICE_AFECTACION: (OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE),
         LedgerPreflightIssueReason.ANOMALY_NON_DECLARABLE_IVA_CATEGORY: OperatorActionAxis.REVIEW_ADVISORY,
         LedgerPreflightIssueReason.ANOMALY_NON_DECLARABLE_RECARGO_EQUIVALENCIA: (OperatorActionAxis.REVIEW_ADVISORY),
+        LedgerPreflightIssueReason.INVOICE_DEDUCTION_FAMILY_UNRESOLVED: OperatorActionAxis.IMPORT_LEDGER_DATA,
+        LedgerPreflightIssueReason.INVOICE_CATEGORY_CONTRADICTED: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
+        LedgerPreflightIssueReason.MOVEMENT_INVOICE_DOUBLE_COUNT: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
+        LedgerPreflightIssueReason.INVOICE_CASH_ACCOUNTING_REGIME_UNMODELLED: OperatorActionAxis.SET_PROFILE_FACT,
+        LedgerPreflightIssueReason.LINKED_MOVEMENT_CONTRADICTS_INVOICE: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
     },
 )
 """Total action spine for readiness ``ledger_issues`` reasons."""

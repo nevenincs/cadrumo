@@ -21,8 +21,6 @@ from typing import Any
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
-
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.invoice_legal_classification import require_invoice_operation_date_role
@@ -31,13 +29,9 @@ from ....domain.invoices.enums import PaymentStatus, resolve_iva_rate_token
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.lookup import coexisting_tier_rates
 from ....domain.iva.schema import InvoiceKind, IvaRateKind, spanish_eu_member_state
-from ....domain.transactions.date_partition import LedgerDatePartition
-from ....domain.transactions.models import TransactionCatalogue
-from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..errors import AggregationValidationError
 from ..invoice_devengo import invoice_devengo_in_period
 from ..modelo_bindings_invoice_iva import ScreenedInvoiceIva, screened_invoice_iva_observations
-from ..source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -121,25 +115,15 @@ class _StoredInvoices:
         raise AssertionError("the screen must not write the catalogue it reads")
 
 
-class _EmptyTransactions:
-    def load(self) -> TransactionCatalogue:
-        return TransactionCatalogue()
-
-    def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
-        return LedgerDatePartition(in_window=TransactionCatalogue(), index_complete=True)
-
-
 def _screen(period: Period, *records: dict[str, Any]) -> ScreenedInvoiceIva:
-    revision = published_snapshot("303", filing_year=period.filing_year, period=period.registry_token).revision
-    return screened_invoice_iva_observations(
-        context=CalculationSourceContext(
-            bucket_id=_BUCKET_ID, modelo="303", filing_year=period.filing_year, period=period, revision=revision
-        ),
-        period=period,
-        ports=InvoiceCatalogueReadPorts(
-            invoice_reader=_StoredInvoices(*records), transaction_reader=_EmptyTransactions()
-        ),
-    )
+    with bundled_indexed_authority().operation() as operation:
+        return screened_invoice_iva_observations(
+            _StoredInvoices(*records).load(),
+            bucket_id=_BUCKET_ID,
+            period=period,
+            linked_movements={},
+            operation=operation,
+        )
 
 
 def test_the_screen_refuses_a_stored_advance_on_a_partly_collected_price() -> None:

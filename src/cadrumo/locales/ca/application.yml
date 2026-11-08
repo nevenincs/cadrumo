@@ -2326,10 +2326,50 @@ application:
         de compensació d'IVA no coincideix amb el de la declaració del Model 303.
       iva_wallet_unsupported_decision_type: 'Tipus de decisió de la cartera de compensació
         d''IVA no admès: %{decision_type}.'
-      ledger_preflight_blocked: 'la comprovació prèvia dels teus registres bloqueja
-        el càlcul del model: transacció %{transaction_id} %{reason}: %{detail}. Executa
-        la comprovació prèvia dels teus registres per al període %{period} i resol-ne
-        les incidències abans de calcular.'
+      ledger_preflight_blocked_movement: 'No es pot calcular %{period}. El moviment
+        del %{movement_date}, «%{movement_description}», %{movement_amount}: %{need}.
+        No s''ha desat res.'
+      ledger_preflight_blocked_period: 'No es pot calcular %{period}: %{need}. No
+        s''ha desat res.'
+      ledger_preflight_need:
+        anomaly_non_declarable_iva_category: la seva categoria d'IVA no es declara
+          en cap model
+        anomaly_non_declarable_recargo_equivalencia: porta recàrrec d'equivalència,
+          que no es declara en aquest model
+        censo_ratio_mismatch: la seva ràtio d'ús no coincideix amb la del teu cens
+        domestic_identification_on_intra_community_transaction: és una operació intracomunitària
+          amb una contrapart identificada a Espanya
+        eu_member_state_on_export_transaction: és una exportació amb una contrapart
+          establerta a la UE
+        inadmissible_deduction_classification: la seva classificació de deducció no
+          és admissible per a aquesta operació
+        invoice_cash_accounting_regime_unmodelled: declares el règim especial del
+          criteri de caixa, en què l'IVA es merita en cobrar o pagar, i Cadrumo encara
+          no sap situar l'IVA de les teves factures segons els cobraments i pagaments
+        invoice_category_contradicted: la categoria d'IVA de la seva factura no encaixa
+          amb el país de la contrapart
+        invoice_deduction_family_unresolved: 'la factura rebuda que paga no indica
+          quina deducció correspon: classifica el moviment, per exemple com a despesa
+          corrent o com a bé d''inversió'
+        linked_movement_contradicts_invoice: la seva base o la seva quota no coincideixen
+          amb les de la factura que paga
+        missing_business_classification: falta classificar-lo com a professional,
+          personal o mixt
+        missing_category: falta la categoria de la despesa
+        missing_counterparty_establishment_on_export: és una exportació i falta on
+          està establerta la contrapart
+        missing_counterparty_identification_state: falta on està identificada a efectes
+          d'IVA la contrapart
+        missing_eur_tax_substrate: falten les seves xifres en euros
+        missing_home_office_afectacion: falta la part de l'habitatge afecta a l'activitat
+        missing_iva_amount: falta la quota d'IVA
+        missing_iva_rate: falta el tipus d'IVA
+        missing_proportionality_reference: és mixt i falta la seva ràtio d'ús
+        missing_taxable_base: falta la base imposable
+        movement_invoice_double_count: 'porta les seves pròpies xifres d''IVA i coincideix
+          amb una factura que ja declara l''operació: vincula''ls o descarta la parella'
+        unsupported_currency: la seva moneda no es pot convertir a euros
+        unsupported_period: aquest període no es pot comprovar amb el Llibre
       local_observation_actor_blank: Una correcció manual d'una observació ha d'indicar
         qui la registra.
       local_observation_override_missing: El model %{modelo} %{period} %{filing_year}
@@ -2855,6 +2895,7 @@ application:
       next_step:
         calculate_work: Calcula el %{modelo}, %{period}
         create_work: Crea el %{modelo}, %{period}
+        open_movement: Obre el moviment al Llibre
         open_work: Obre el %{modelo}, %{period}
       no_m130_revisions: Les declaracions del Modelo 130 de l'exercici %{year} encara
         no s'han calculat, de manera que no hi ha base per estimar la declaració anual.

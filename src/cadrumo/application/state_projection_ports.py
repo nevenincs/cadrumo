@@ -16,6 +16,7 @@ from typing import Protocol
 
 from ..core.errors.hierarchy import CadrumoError
 from ..domain.user_profile.values import UserProfileRecord
+from .invoices.catalogue_reads_ports import InvoiceCatalogueReader
 from .ledger.usage_ratio_repository import UsageRatioProfileLoader
 
 
@@ -56,6 +57,14 @@ class StateProjectionProfileReadPort(Protocol):
         ...
 
 
+class StateProjectionInvoiceReaderFactory(Protocol):
+    """Bind the invoice catalogue read of one profile bucket."""
+
+    def __call__(self, *, bucket_id: str) -> InvoiceCatalogueReader:
+        """Return the invoice catalogue reader for ``bucket_id``."""
+        ...
+
+
 class StateProjectionReadError(CadrumoError):
     """Stable application error raised when a projection read cannot complete."""
 
@@ -74,9 +83,13 @@ class StateProjectionReadPorts:
     #: The persisted usage-ratio read is carried alongside profile readiness
     #: because the ledger preflight is part of this same projection.
     usage_ratio_profile_loader: UsageRatioProfileLoader
+    #: The ledger preflight reads the bucket's invoices: the invoice is the IVA
+    #: source, so readiness reads it exactly as calculation does.
+    invoice_reader_for: StateProjectionInvoiceReaderFactory
 
 
 __all__ = [
+    "StateProjectionInvoiceReaderFactory",
     "StateProjectionProfileRead",
     "StateProjectionProfileReadPort",
     "StateProjectionReadError",

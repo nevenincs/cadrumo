@@ -61,6 +61,7 @@ from .....domain.transactions.raw_transaction import RawProvenance, RawTransacti
 from ...storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..bienes_inversion import BienesInversionIvaRegisterRepository
 from ..calculation_observations import CalculationObservationRepository
+from ..invoices import InvoiceCatalogueRepository
 from ..prorrata_register import ProrrataRegisterRepository
 from ..transactions import TransactionCatalogueRepository
 from .published_authority_support import published_authority_operation
@@ -176,6 +177,7 @@ def _collect(period_token: str = _SETTLEMENT_PERIOD) -> tuple[CalculationSourceD
         bucket_id=_BUCKET,
         prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
         transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
+        invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET),
         bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
     )
 
@@ -457,6 +459,7 @@ def test_fires_through_live_calculate_fan_out(tmp_path: Path, *, operation: Pinn
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
             bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET),
         )
 
     obligation = [d for d in diagnostics if d.reason == "prorrata_especial_obligatoria"]

@@ -13,7 +13,7 @@ The encrypted repository and profile-capsule roundtrips are covered by the
 profile-persistence adapter tests; this suite isolates the application policy.
 
 Anti-tautology proof: the GENERAL-regime case with the same inputs MUST raise
-``ModeloAggregationBindingError``, confirming the bypass fires only for
+``ModeloLedgerPreflightBlockedError``, confirming the bypass fires only for
 ``SIMPLIFICADO`` and not universally.
 """
 
@@ -25,7 +25,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.modelo.action_errors import ModeloAggregationBindingError
+from cadrumo.application.modelo.action_errors import ModeloLedgerPreflightBlockedError
 from cadrumo.application.modelo.calculation_preparation import raise_if_ledger_preflight_blocks_calculation
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -38,6 +38,7 @@ from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransa
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ...aggregation.tests.ledger_source_mesh_support import InMemoryInvoiceCatalogueRepository
 from ...tests.ledger_partition_support import CatalogueTransactionRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -136,6 +137,7 @@ def test_simplificado_bypasses_ledger_preflight_when_transactions_are_unclassifi
         work_unit=work_unit,
         revision=snapshot.revision,
         transaction_repository=tx_repo,
+        invoice_reader=InMemoryInvoiceCatalogueRepository(),
         usage_ratio_profile_loader=_empty_usage_ratio_profile,
         operation=operation,
         profile_values={"iva.regime": "SIMPLIFICADO"},
@@ -155,13 +157,14 @@ def test_general_profile_raises_preflight_error_when_transactions_are_unclassifi
     work_unit = _build_work_unit(bucket_id)
     snapshot = published_snapshot("303", filing_year=2026, period="1T")
 
-    with pytest.raises(ModeloAggregationBindingError) as exc_info:
+    with pytest.raises(ModeloLedgerPreflightBlockedError) as exc_info:
         raise_if_ledger_preflight_blocks_calculation(
             work_unit=work_unit,
             revision=snapshot.revision,
             transaction_repository=tx_repo,
+            invoice_reader=InMemoryInvoiceCatalogueRepository(),
             usage_ratio_profile_loader=_empty_usage_ratio_profile,
             operation=operation,
             profile_values={"iva.regime": "GENERAL"},
         )
-    assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked"
+    assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked_movement"

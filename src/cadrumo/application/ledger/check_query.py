@@ -28,12 +28,14 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.invoices.service import LinkInconsistency
+from ..aggregation.invoice_iva_source import cash_accounting_enrolled
 from ..invoices.catalogue_reads import verify_invoice_repository_links
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
-from .preflight import LedgerPreflightIssue, preflight_transaction_catalogue
+from .preflight import HeldTransactionCatalogue, LedgerPreflightIssue, preflight_transaction_catalogue
 
 if TYPE_CHECKING:
     from ...domain.transactions.models import TransactionCatalogue
+    from ...domain.user_profile.values import UserProfileRecord
 
 #: The AEAT period code covering a whole filing year, used by the sweep.
 _ANNUAL_PERIOD_CODE = "0A"
@@ -74,6 +76,7 @@ def read_ledger_check(
     bucket_id: str,
     transactions: TransactionCatalogue,
     ports: InvoiceCatalogueReadPorts,
+    profile_record: UserProfileRecord | None,
     operation: PinnedAuthorityOperation,
     period: Period | None = None,
 ) -> LedgerCheckV1:
@@ -85,6 +88,8 @@ def read_ledger_check(
             link check spans every row whatever the period.
         ports: Required invoice catalogue read capability; the transaction
             reader is not read again because ``transactions`` is the catalogue.
+        profile_record: The bucket's decrypted profile, or ``None`` when it has
+            none; read for the criterio de caja the invoice side depends on.
         operation: Caller-owned generation-pinned authority for preflight facts.
         period: One period to check; when omitted, every year the ledger spans
             is swept over its annual period.
@@ -96,12 +101,20 @@ def read_ledger_check(
     :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
     link_inconsistencies = tuple(verify_invoice_repository_links(ports=ports, transactions=transactions))
+    invoices = tuple(ports.invoice_reader.load())
+    movements = HeldTransactionCatalogue(transactions)
+
+    def enrolled(checked: Period) -> bool:
+        return checked.has_date_span() and cash_accounting_enrolled(profile_record, as_of=checked.end_date)
 
     if period is not None:
         report = preflight_transaction_catalogue(
             bucket_id=bucket_id,
             period=period,
             transactions=transactions,
+            invoices=invoices,
+            movement_reader=movements,
+            cash_accounting_enrolled=enrolled(period),
             operation=operation,
         )
         periods = (str(period),)
@@ -113,10 +126,14 @@ def read_ledger_check(
         checked = 0
         collected: list[LedgerPreflightIssue] = []
         for year in years:
+            annual = Period.from_year_and_code(year, _ANNUAL_PERIOD_CODE)
             report = preflight_transaction_catalogue(
                 bucket_id=bucket_id,
-                period=Period.from_year_and_code(year, _ANNUAL_PERIOD_CODE),
+                period=annual,
                 transactions=transactions,
+                invoices=invoices,
+                movement_reader=movements,
+                cash_accounting_enrolled=enrolled(annual),
                 operation=operation,
             )
             checked += report.checked_transaction_count

@@ -173,7 +173,9 @@ def test_an_empty_ledger_spans_no_years() -> None:
 def test_a_clean_ledger_with_no_link_problems_is_ready(operation: PinnedAuthorityOperation) -> None:
     """The baseline both other cases are measured against."""
     with _stored(_transaction(provider_id="a", booked=date(2024, 4, 10))) as catalogue:
-        check = read_ledger_check(bucket_id=_BUCKET, transactions=catalogue, ports=_read_ports(), operation=operation)
+        check = read_ledger_check(
+            bucket_id=_BUCKET, transactions=catalogue, ports=_read_ports(), profile_record=None, operation=operation
+        )
 
     assert check.ready is True
     assert check.link_inconsistencies == ()
@@ -191,6 +193,7 @@ def test_a_one_sided_invoice_link_alone_makes_a_ledger_not_ready(operation: Pinn
             bucket_id=_BUCKET,
             transactions=catalogue,
             ports=_read_ports(),
+            profile_record=None,
             operation=operation,
         )
 
@@ -205,11 +208,14 @@ def test_an_empty_ledger_is_ready_only_when_its_links_are_clean(operation: Pinne
     """The empty branch used the same conjunction, not a shortcut."""
     empty = TransactionCatalogue()
 
-    clean = read_ledger_check(bucket_id=_BUCKET, transactions=empty, ports=_read_ports(), operation=operation)
+    clean = read_ledger_check(
+        bucket_id=_BUCKET, transactions=empty, ports=_read_ports(), profile_record=None, operation=operation
+    )
     dirty = read_ledger_check(
         bucket_id=_BUCKET,
         transactions=empty,
         ports=_read_ports(invoices=_invoice_citing_a_missing_row()),
+        profile_record=None,
         operation=operation,
     )
 
@@ -235,6 +241,7 @@ def test_an_explicit_period_reports_only_that_period(operation: PinnedAuthorityO
             transactions=catalogue,
             period=Period.from_year_and_code(2024, "0A"),
             ports=_read_ports(),
+            profile_record=None,
             operation=operation,
         )
 

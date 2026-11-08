@@ -10,7 +10,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.irpf_categories import has_employment_irpf_category
 from ....domain.transactions.models import TransactionCatalogue
-from ..preflight import LedgerPreflightIssueReason, preflight_transaction_catalogue
+from ..preflight import HeldTransactionCatalogue, LedgerPreflightIssueReason, preflight_transaction_catalogue
 from .preflight_test_support import BUCKET_ID, Q2_2026, preflight_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -30,6 +30,9 @@ def test_preflight_skips_iva_facts_on_trabajo_income_rows(operation: PinnedAutho
     )
 
     report = preflight_transaction_catalogue(
+        invoices=(),
+        movement_reader=HeldTransactionCatalogue(TransactionCatalogue.from_transactions(())),
+        cash_accounting_enrolled=False,
         bucket_id=BUCKET_ID,
         period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions((nomina,)),
@@ -56,6 +59,9 @@ def test_preflight_still_flags_iva_facts_on_non_trabajo_income_rows(
     )
 
     report = preflight_transaction_catalogue(
+        invoices=(),
+        movement_reader=HeldTransactionCatalogue(TransactionCatalogue.from_transactions(())),
+        cash_accounting_enrolled=False,
         bucket_id=BUCKET_ID,
         period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions((income_no_irpf,)),
@@ -97,6 +103,9 @@ def test_preflight_reads_the_same_normalized_trabajo_token_as_the_domain(
     )
 
     report = preflight_transaction_catalogue(
+        invoices=(),
+        movement_reader=HeldTransactionCatalogue(TransactionCatalogue.from_transactions(())),
+        cash_accounting_enrolled=False,
         bucket_id=BUCKET_ID,
         period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions((nomina,)),
@@ -124,6 +133,9 @@ def test_preflight_does_not_treat_a_near_miss_token_as_employment(
     )
 
     report = preflight_transaction_catalogue(
+        invoices=(),
+        movement_reader=HeldTransactionCatalogue(TransactionCatalogue.from_transactions(())),
+        cash_accounting_enrolled=False,
         bucket_id=BUCKET_ID,
         period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions((not_nomina,)),

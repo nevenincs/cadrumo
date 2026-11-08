@@ -115,6 +115,7 @@ def _collect(
         prorrata_register_repository=repositories.prorrata_register,
         bienes_inversion_repository=repositories.bienes_inversion,
         transaction_repository=repositories.transactions,
+        invoice_reader=repositories.invoices,
     )
     return tuple(diagnostic for diagnostic in diagnostics if diagnostic.source_kind in _SHAPE_COLLECTOR_KINDS)
 
@@ -175,6 +176,7 @@ def test_it_reaches_the_operator_through_the_coordinator() -> None:
         prorrata_register_repository=repositories.prorrata_register,
         bienes_inversion_repository=repositories.bienes_inversion,
         transaction_repository=repositories.transactions,
+        invoice_reader=repositories.invoices,
     )
 
     assert _KIND in {d.source_kind for d in diagnostics}

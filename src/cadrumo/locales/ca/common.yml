@@ -87,6 +87,8 @@ aggregation:
         a data de meritació perquè aquest apunt no té data d'operació. Registra la
         data en què es va fer el lliurament o es va prestar el servei; potser així
         es resol.
+      linked_movement_contradicts_invoice: Els moviments que paguen una factura indiquen
+        una base o una quota diferents de les de la factura.
       missing_counterparty_establishment_on_export: Una exportació està exempta perquè
         l'operació surt de la Unió, de manera que depèn d'on estigui ESTABLERTA la
         contrapart. Registra el país de la contrapart; un codi absent o no assignat
@@ -3793,6 +3795,10 @@ desktop:
       domestic_identification_on_intra_community_transaction: NIF espanyol
       eu_member_state_on_export_transaction: Estat exportació
       inadmissible_deduction_classification: Deducció
+      invoice_cash_accounting_regime_unmodelled: Criteri de caixa
+      invoice_category_contradicted: Categoria IVA
+      invoice_deduction_family_unresolved: Deducció
+      linked_movement_contradicts_invoice: Factura
       missing_business_classification: Classificació
       missing_category: Categoria
       missing_counterparty_establishment_on_export: Establiment
@@ -3803,6 +3809,7 @@ desktop:
       missing_iva_rate: Tipus IVA
       missing_proportionality_reference: Ràtio d'ús
       missing_taxable_base: Base
+      movement_invoice_double_count: Doble
       unsupported_currency: Tipus EUR
       unsupported_period: Període
     reason_detail:
@@ -3813,6 +3820,11 @@ desktop:
         operació intracomunitària
       eu_member_state_on_export_transaction: Estat membre de la UE en una exportació
       inadmissible_deduction_classification: Classificació no admesa per deduir
+      invoice_cash_accounting_regime_unmodelled: Criteri de caixa encara no admès
+        amb factures
+      invoice_category_contradicted: La categoria d'IVA no encaixa amb el país
+      invoice_deduction_family_unresolved: La factura no indica quina deducció correspon
+      linked_movement_contradicts_invoice: No coincideix amb la seva factura
       missing_business_classification: Falta la classificació
       missing_category: Falta la categoria
       missing_counterparty_establishment_on_export: Falta l'establiment de la contrapart
@@ -3825,6 +3837,7 @@ desktop:
       missing_iva_rate: Falta el tipus d'IVA
       missing_proportionality_reference: Mixt sense ràtio d'ús
       missing_taxable_base: Falta la base imposable
+      movement_invoice_double_count: Coincideix amb una factura sense vincular
       unsupported_currency: Moneda no admesa
       unsupported_period: Període no admès
     registers:

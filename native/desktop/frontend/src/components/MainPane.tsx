@@ -233,6 +233,20 @@ export function MainPane({
           onProfileStep={
             signedIn && host.userProfile ? askProfileStep : undefined
           }
+          // The movement a calculation refusal names; only a window with a
+          // Libro can open it.
+          onOpenMovement={
+            host.ledger
+              ? (transactionId) =>
+                  guarded(() =>
+                    openView(
+                      "ledger/movements",
+                      { select: transactionId },
+                      null,
+                    ),
+                  )
+              : undefined
+          }
           onBack={() => guarded(() => openWorkUnit(null))}
           onOpenSurface={(surface) => {
             if (surface === "declarations") guarded(() => openWorkUnit(null));

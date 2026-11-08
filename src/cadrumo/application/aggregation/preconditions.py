@@ -14,7 +14,6 @@ from ..operator_actions.preconditions import no_action_precondition_verdict
 class AggregationPreconditionCondition(StrEnum):
     """Closed failed-condition identities for aggregation refusals."""
 
-    INVOICE_LEDGER_COMPLETE = "aggregation.invoice_ledger.complete"
     INVOICE_DEVENGO_ATTRIBUTABLE = "aggregation.invoice_devengo.attributable"
     PER_MODELO_MODELO_SUPPORTED = "aggregation.per_modelo.modelo.supported"
     RETENCIONES_OBSERVATIONS_PRESENT = "aggregation.retenciones.observations.present"

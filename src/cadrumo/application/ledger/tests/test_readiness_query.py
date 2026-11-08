@@ -29,7 +29,7 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ..preflight import preflight_ledger_tax_readiness
 from ..protocols import TransactionCatalogueCoCommitWriterProtocol
 from ..readiness_query import LedgerReadinessIssueV1, ledger_readiness_issues
-from .action_port_fakes import empty_usage_ratio_profile
+from .action_port_fakes import EmptyInvoiceRepository, empty_usage_ratio_profile
 from .in_memory_transaction_repository import InMemoryTransactionRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -94,6 +94,7 @@ def _readiness(
         period=_PERIOD,
         transaction_repository=repository,
         usage_ratio_profile_loader=empty_usage_ratio_profile,
+        invoice_reader=EmptyInvoiceRepository(bucket_id=_BUCKET),
         operation=operation,
         catalogue=catalogue,
     )
@@ -151,6 +152,7 @@ def test_an_issue_whose_row_left_the_catalogue_is_joined_with_its_facts_unset(
             period=_PERIOD,
             transaction_repository=repository,
             usage_ratio_profile_loader=empty_usage_ratio_profile,
+            invoice_reader=EmptyInvoiceRepository(bucket_id=_BUCKET),
             operation=authority_operation,
             catalogue=catalogue,
         )

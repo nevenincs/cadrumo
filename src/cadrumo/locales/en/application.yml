@@ -2203,9 +2203,52 @@ application:
         match the Modelo 303 declaration.
       iva_wallet_unsupported_decision_type: 'Unsupported IVA wallet decision type:
         %{decision_type}.'
-      ledger_preflight_blocked: 'The pre-check of your records blocks the modelo calculation:
-        transaction %{transaction_id} %{reason}: %{detail}. Run the pre-check of your
-        records for period %{period} and resolve its issues before calculating.'
+      ledger_preflight_blocked_movement: '%{period} cannot be calculated. The movement
+        of %{movement_date}, “%{movement_description}”, %{movement_amount}: %{need}.
+        Nothing was saved.'
+      ledger_preflight_blocked_period: '%{period} cannot be calculated: %{need}. Nothing
+        was saved.'
+      ledger_preflight_need:
+        anomaly_non_declarable_iva_category: its IVA category is not declared on any
+          modelo
+        anomaly_non_declarable_recargo_equivalencia: it carries recargo de equivalencia,
+          which this modelo does not declare
+        censo_ratio_mismatch: its usage ratio does not match the one in your censo
+        domestic_identification_on_intra_community_transaction: it is an intra-community
+          operation with a counterparty identified in Spain
+        eu_member_state_on_export_transaction: it is an export with a counterparty
+          established in the EU
+        inadmissible_deduction_classification: its deduction classification is not
+          admissible for this operation
+        invoice_cash_accounting_regime_unmodelled: you declare the régimen especial
+          del criterio de caja, where IVA accrues on collection or payment, and Cadrumo
+          cannot yet place your invoices' IVA by their collections and payments
+        invoice_category_contradicted: its invoice's IVA category does not fit the
+          counterparty's country
+        invoice_deduction_family_unresolved: 'the received invoice it pays does not
+          show which deduction applies: classify the movement, for example as a current
+          expense or as a bien de inversión'
+        linked_movement_contradicts_invoice: its base or IVA amount differs from the
+          invoice it pays
+        missing_business_classification: it is not yet classified as business, personal
+          or mixed
+        missing_category: the expense category is missing
+        missing_counterparty_establishment_on_export: it is an export and where the
+          counterparty is established is missing
+        missing_counterparty_identification_state: where the counterparty is identified
+          for IVA is missing
+        missing_eur_tax_substrate: its figures in euros are missing
+        missing_home_office_afectacion: the share of the home used for the activity
+          is missing
+        missing_iva_amount: the IVA amount is missing
+        missing_iva_rate: the IVA rate is missing
+        missing_proportionality_reference: it is mixed and its usage ratio is missing
+        missing_taxable_base: the taxable base is missing
+        movement_invoice_double_count: 'it carries its own IVA figures and matches
+          an invoice that already declares the operation: link them or dismiss the
+          pair'
+        unsupported_currency: its currency cannot be converted to euros
+        unsupported_period: this period cannot be checked against the Ledger
       local_observation_actor_blank: A manual correction of an observation must name
         the person who records it.
       local_observation_override_missing: Modelo %{modelo} %{period} %{filing_year}
@@ -2698,6 +2741,7 @@ application:
       next_step:
         calculate_work: Calculate %{modelo}, %{period}
         create_work: Create %{modelo}, %{period}
+        open_movement: Open the movement in the Ledger
         open_work: Open %{modelo}, %{period}
       no_m130_revisions: The Modelo 130 declarations for filing year %{year} have
         not been calculated yet, so there is nothing to base an estimate of the annual
