@@ -281,8 +281,14 @@ class _Profile:
             bucket_event_repository=self.events,
         ) as ports:
 
-            def factory(*, bucket_id: str, operation: PinnedAuthorityOperation, profile_record: object | None = None):
-                del operation, profile_record
+            def factory(
+                *,
+                bucket_id: str,
+                operation: PinnedAuthorityOperation,
+                profile_record: object | None = None,
+                mutation_writer: object | None = None,
+            ):
+                del operation, profile_record, mutation_writer
                 assert bucket_id == _BUCKET_ID
                 return ports
 
