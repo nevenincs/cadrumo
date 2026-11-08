@@ -704,8 +704,8 @@ pub fn presented_by_router(folder: &Path, model: &ModelName) -> Option<bool> {
 /// A router that drains for a restart is looked at again until it has restarted, for at
 /// most `budget` in all; one that is still draining then, that is not running, or that
 /// stopped answering reads `program_not_running`. A load that another caller's load evicted
-/// is asked for again in the same way, and reads `program_not_running` when the budget runs
-/// out. The same budget bounds the wait for the load: a model still loading then is
+/// is asked for again in the same way, and reads `memory_busy` when the budget runs out:
+/// the router runs, and another model holds its one place. The same budget bounds the wait for the load: a model still loading then is
 /// unloaded again and reads `unexpected`. A model whose entry reads failed reads
 /// `not_enough_memory`, since the router gives no reason. A load the router refused, and an
 /// answer that holds no generated token, read `unexpected`; a generation that ran out of
@@ -755,6 +755,13 @@ pub fn check_model(
             Taken::Draining => {
                 return Err(LocalAiError::Failed(FailureCategory::ProgramNotRunning));
             }
+            Taken::Evicted if started.elapsed() < budget => {
+                waiting = None;
+                std::thread::sleep(DRAIN_LOOK);
+            }
+            Taken::Evicted => {
+                return Err(LocalAiError::Failed(FailureCategory::MemoryBusy));
+            }
         }
     };
     let generated = generate_one_token(loopback, &id, prompt, budget);
@@ -786,10 +793,13 @@ enum Taken {
     },
     /// The router does not have the model.
     Absent,
-    /// The router drains for a restart, was started again under the load, or another
-    /// caller's load evicted this one: nothing of the attempt stays loaded, and asking
-    /// again can succeed.
+    /// The router drains for a restart, or was started again under the load: nothing of
+    /// the attempt stays loaded, and asking again after the restart can succeed.
     Draining,
+    /// Another caller's load took the router's one place and evicted this one: the router
+    /// runs, nothing of the attempt stays loaded, and asking again can succeed once the
+    /// other model is let go.
+    Evicted,
 }
 
 /// Looks `model` up in the list of the router running from `folder` and loads it.
@@ -844,7 +854,7 @@ fn take(folder: &Path, model: &ModelName) -> Result<Taken, LocalAiError> {
 ///
 /// The router lists the entry `loading` before it answers a load. An entry listed
 /// `unloaded` that has not failed was therefore evicted by another caller's load, and reads
-/// [`Taken::Draining`]: nothing of the attempt stays loaded and asking again can succeed. An
+/// [`Taken::Evicted`]: nothing of the attempt stays loaded and asking again can succeed. An
 /// entry that failed is a model whose process ended, which for a stored model is memory.
 fn settle(
     folder: &Path,
@@ -895,7 +905,7 @@ fn settle(
             held_before,
             process_id,
         }),
-        Some("unloaded") => Ok(Taken::Draining),
+        Some("unloaded") => Ok(Taken::Evicted),
         _ => Err(LocalAiError::Failed(FailureCategory::Unexpected)),
     }
 }
