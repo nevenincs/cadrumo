@@ -82,6 +82,8 @@ aggregation:
         keletkezésének dátumaként szolgált, mert a tételen nincs teljesítési dátum.
         Rögzítsd az értékesítés vagy a szolgáltatás teljesítésének dátumát; ez megoldhatja
         a problémát.'
+      linked_movement_contradicts_invoice: Egy számlát kifizető tételek a számlától
+        eltérő adóalapot vagy IVA-összeget tartalmaznak.
       missing_counterparty_establishment_on_export: Az export azért mentes, mert az
         ügylet elhagyja az Uniót, ezért az számít, hol van az ügyfél LETELEPEDVE.
         Rögzítsd az ügyfél országát; a hiányzó vagy ki nem osztott kód semmit sem
@@ -3767,6 +3769,10 @@ desktop:
       domestic_identification_on_intra_community_transaction: Spanyol adószám
       eu_member_state_on_export_transaction: Exportállam
       inadmissible_deduction_classification: Levonás
+      invoice_cash_accounting_regime_unmodelled: Pénzforgalmi
+      invoice_category_contradicted: IVA-kategória
+      invoice_deduction_family_unresolved: Levonás
+      linked_movement_contradicts_invoice: Számla
       missing_business_classification: Besorolás
       missing_category: Kategória
       missing_counterparty_establishment_on_export: Telephely
@@ -3777,6 +3783,7 @@ desktop:
       missing_iva_rate: IVA-kulcs
       missing_proportionality_reference: Használati arány
       missing_taxable_base: Adóalap
+      movement_invoice_double_count: Kétszer
       unsupported_currency: EUR-árfolyam
       unsupported_period: Időszak
     reason_detail:
@@ -3787,6 +3794,12 @@ desktop:
         belüli ügyleten
       eu_member_state_on_export_transaction: EU-tagállam exportügyleten
       inadmissible_deduction_classification: A besorolás nem levonható
+      invoice_cash_accounting_regime_unmodelled: A pénzforgalmi elszámolás számlákkal
+        még nem támogatott
+      invoice_category_contradicted: Az IVA-kategória nem illik az országhoz
+      invoice_deduction_family_unresolved: A számlából nem derül ki, melyik levonás
+        illeti meg
+      linked_movement_contradicts_invoice: Eltér a számlájától
       missing_business_classification: Hiányzik a besorolás
       missing_category: Hiányzik a kategória
       missing_counterparty_establishment_on_export: Hiányzik a partner telephelye
@@ -3799,6 +3812,7 @@ desktop:
       missing_iva_rate: Hiányzik az IVA-kulcs
       missing_proportionality_reference: Vegyes, használati arány nélkül
       missing_taxable_base: Hiányzik az adóalap
+      movement_invoice_double_count: Egyezik egy össze nem kapcsolt számlával
       unsupported_currency: A pénznem nem támogatott
       unsupported_period: Az időszak nem támogatott
     registers:

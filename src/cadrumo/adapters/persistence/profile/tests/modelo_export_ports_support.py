@@ -117,6 +117,7 @@ def _compose_modelo_export_ports(
         m360_solicitud=Modelo360SolicitudRepository(bucket_id=bucket_id, objects=objects),
         own_accounts=OwnAccountRepository(bucket_id=bucket_id, objects=objects),
         transaction=TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects),
+        invoices=InvoiceCatalogueRepository(bucket_id=bucket_id, objects=objects),
         draft_review_ports=_draft_review_ports_for_test(bucket_id=bucket_id, objects=objects),
         retencion_observation_ports=RetencionObservationPorts(
             repository=RetencionObservationRepositoryAdapter(objects=objects),

@@ -24,7 +24,7 @@ from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue, derive_transaction_id
 from ...aggregation.iva_ledger_classification import iva_ledger_missing_fact_reasons
 from ..llm_classification import derive_iva_substrate
-from ..preflight import LedgerPreflightIssueReason, preflight_transaction_catalogue
+from ..preflight import HeldTransactionCatalogue, LedgerPreflightIssueReason, preflight_transaction_catalogue
 from ..readiness_routes import IVA_DERIVABLE_REASONS, READINESS_REASON_FIELDS
 from ..staged_check import check_stored_row
 from ..staged_check_contracts import LedgerStagedCell, LedgerStagedRow, StageFieldName
@@ -199,6 +199,9 @@ def test_only_a_purchase_can_bear_the_cuota_of_a_capital_good(
     direction: TransactionDirection, operation: PinnedAuthorityOperation
 ) -> None:
     report = preflight_transaction_catalogue(
+        invoices=(),
+        movement_reader=HeldTransactionCatalogue(TransactionCatalogue.from_transactions(())),
+        cash_accounting_enrolled=False,
         bucket_id=BUCKET_ID,
         period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions((_deducting_row(direction),)),

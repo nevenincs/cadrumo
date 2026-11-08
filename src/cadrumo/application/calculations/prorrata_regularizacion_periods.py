@@ -57,6 +57,7 @@ from ..aggregation.iva_ledger_apportionment import (
 )
 from ..aggregation.modelo_bindings import aggregation_period_for_modelo
 from ..aggregation.source_mesh import CalculationSourceContext
+from ..invoices.catalogue_reads_ports import InvoiceCatalogueReader
 from .observations_repository import CalculationObservationRepositoryProtocol, ObservationEnvelopePayload
 from .revision_carry_gate import revision_carry_outcome
 
@@ -439,6 +440,7 @@ class RegularisedPeriodLedger:
         prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
         observation_repository: CalculationObservationRepositoryProtocol,
         transaction_repository: TransactionCatalogueRepositoryProtocol,
+        invoice_reader: InvoiceCatalogueReader,
         investment_asset_register: BienesInversionIvaRegister | None,
         investment_asset_profile_id: str | None,
         operation: PinnedAuthorityOperation,
@@ -447,6 +449,7 @@ class RegularisedPeriodLedger:
         self._prorrata_register_repository = prorrata_register_repository
         self._observation_repository = observation_repository
         self._transaction_repository = transaction_repository
+        self._invoice_reader = invoice_reader
         self._investment_asset_register = investment_asset_register
         self._investment_asset_profile_id = investment_asset_profile_id
         self._operation = operation
@@ -491,6 +494,7 @@ class RegularisedPeriodLedger:
             bucket_id=context.bucket_id,
             period=aggregation_period_for_modelo(filing_year=period.filing_year, code=period.registry_token),
             transaction_repository=self._transaction_repository,
+            invoice_reader=self._invoice_reader,
             prorrata_register_repository=self._prorrata_register_repository,
             investment_asset_register=self._investment_asset_register,
             investment_asset_profile_id=self._investment_asset_profile_id,

@@ -820,6 +820,7 @@ def _resolve_m303_filing_facts_for_export(
         period=work_unit.period,
         prorrata_register_repository=prorrata_register_repository,
         transaction_repository=export_ports.transaction,
+        invoice_reader=export_ports.invoices,
         investment_asset_register=bienes_register,
         investment_asset_profile_id=work_unit.bucket_id,
         operation=operation,

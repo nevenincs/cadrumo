@@ -10,7 +10,7 @@ import pytest
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
-from ..preflight import LedgerPreflightIssueReason, preflight_transaction_catalogue
+from ..preflight import HeldTransactionCatalogue, LedgerPreflightIssueReason, preflight_transaction_catalogue
 from .preflight_test_support import BUCKET_ID, Q2_2026, preflight_transaction, raw_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -31,6 +31,9 @@ def test_preflight_does_not_flag_missing_category_on_income_transaction(
     )
 
     report = preflight_transaction_catalogue(
+        invoices=(),
+        movement_reader=HeldTransactionCatalogue(TransactionCatalogue.from_transactions(())),
+        cash_accounting_enrolled=False,
         bucket_id=BUCKET_ID,
         period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions((income,)),
@@ -54,6 +57,9 @@ def test_preflight_still_flags_missing_category_on_expense_transaction(
     )
 
     report = preflight_transaction_catalogue(
+        invoices=(),
+        movement_reader=HeldTransactionCatalogue(TransactionCatalogue.from_transactions(())),
+        cash_accounting_enrolled=False,
         bucket_id=BUCKET_ID,
         period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions((expense,)),
@@ -88,6 +94,9 @@ def test_preflight_flags_missing_category_on_income_refund_with_purchase_evidenc
     )
 
     report = preflight_transaction_catalogue(
+        invoices=(),
+        movement_reader=HeldTransactionCatalogue(TransactionCatalogue.from_transactions(())),
+        cash_accounting_enrolled=False,
         bucket_id=BUCKET_ID,
         period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions((refund,)),

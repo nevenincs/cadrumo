@@ -10,6 +10,7 @@ from types import FrameType
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.profile.usage_ratios import (
     load_usage_ratios,
@@ -119,6 +120,7 @@ def test_declaring_vivienda_office_facts_clears_the_missing_censo_refusal(
             bucket_id=profile.bucket_id,
             period=_Q2_2026,
             usage_ratio_profile_loader=load_usage_ratios,
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=profile.bucket_id),
             operation=operation,
             transaction_repository=repository,
         )
@@ -132,6 +134,7 @@ def test_declaring_vivienda_office_facts_clears_the_missing_censo_refusal(
             bucket_id=profile.bucket_id,
             period=_Q2_2026,
             usage_ratio_profile_loader=load_usage_ratios,
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=profile.bucket_id),
             operation=operation,
             transaction_repository=repository,
         )
@@ -169,6 +172,7 @@ def test_preflight_flags_home_office_ratio_without_applied_censo(
             bucket_id=profile.bucket_id,
             period=_Q2_2026,
             usage_ratio_profile_loader=load_usage_ratios,
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=profile.bucket_id),
             operation=operation,
             transaction_repository=repository,
         )
@@ -206,6 +210,7 @@ def test_preflight_accepts_home_office_ratio_after_matching_censo_apply(
             bucket_id=profile.bucket_id,
             period=_Q2_2026,
             usage_ratio_profile_loader=load_usage_ratios,
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=profile.bucket_id),
             operation=operation,
             transaction_repository=repository,
         )
@@ -246,6 +251,7 @@ def test_preflight_flags_home_office_ratio_that_disagrees_with_applied_censo(
             bucket_id=profile.bucket_id,
             period=_Q2_2026,
             usage_ratio_profile_loader=load_usage_ratios,
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=profile.bucket_id),
             operation=operation,
             transaction_repository=repository,
         )
@@ -306,6 +312,7 @@ def test_preflight_flags_a_home_office_category_with_no_usage_ratio_id(
             bucket_id=profile.bucket_id,
             period=_Q2_2026,
             usage_ratio_profile_loader=load_usage_ratios,
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=profile.bucket_id),
             operation=operation,
             transaction_repository=repository,
         )
@@ -358,6 +365,7 @@ def test_preflight_stays_silent_for_a_non_home_office_category(
             bucket_id=profile.bucket_id,
             period=_Q2_2026,
             usage_ratio_profile_loader=load_usage_ratios,
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=profile.bucket_id),
             operation=operation,
             transaction_repository=repository,
         )
@@ -415,6 +423,7 @@ def test_preflight_with_home_office_rows_decrypts_the_profile_once(
                     bucket_id=profile.bucket_id,
                     period=_Q2_2026,
                     usage_ratio_profile_loader=load_usage_ratios,
+                    invoice_reader=InvoiceCatalogueRepository(bucket_id=profile.bucket_id),
                     operation=operation,
                     transaction_repository=repository,
                 )

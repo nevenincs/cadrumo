@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.profile.usage_ratios import load_usage_ratios
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -44,6 +45,7 @@ def test_preflight_repository_path_loads_bucket_catalogue(secure_objects: Secure
             period=_Q2_2026,
             usage_ratio_profile_loader=load_usage_ratios,
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
             operation=_authority_operation_for_test,
         )
 
@@ -63,6 +65,7 @@ def test_preflight_default_repository_loads_active_runtime_bucket(tmp_path: Path
                 bucket_id=profile.bucket_id,
                 period=_Q2_2026,
                 usage_ratio_profile_loader=load_usage_ratios,
+                invoice_reader=InvoiceCatalogueRepository(bucket_id=profile.bucket_id),
                 operation=_authority_operation_for_test,
             )
 
@@ -80,5 +83,6 @@ def test_preflight_rejects_repository_bucket_mismatch(secure_objects: SecureObje
                 period=_Q2_2026,
                 usage_ratio_profile_loader=load_usage_ratios,
                 transaction_repository=TransactionCatalogueRepository(bucket_id=_OTHER_BUCKET_ID, objects=objects),
+                invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
                 operation=_authority_operation_for_test,
             )

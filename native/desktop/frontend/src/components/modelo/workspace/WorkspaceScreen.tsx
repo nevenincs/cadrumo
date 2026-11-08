@@ -105,10 +105,19 @@ function runNotice(t: Translate, run: OperationRun<unknown>): HistoryNotice {
     case "saved_unread":
       return null;
     case "refused":
-      // The backend words why; the window shows it as served.
+      // The backend words why; the window shows it as served, with the
+      // movement it names one step away.
       return {
         tone: "warning",
         words: run.words ?? t("workspace.modelo.outcome.refused"),
+        ...(run.step?.kind === "open_movement"
+          ? {
+              movement: {
+                transactionId: run.step.transaction_id,
+                words: run.step.words,
+              },
+            }
+          : {}),
       };
     case "not_sent":
       return {
@@ -138,6 +147,7 @@ function Ready({
   canOpenSurface,
   openLink,
   onOpenWork,
+  onOpenMovement,
   initialView,
   onLeaveGuard,
   profileCompanions,
@@ -155,6 +165,8 @@ function Ready({
   canOpenSurface: (surface: OpenableSurface) => boolean;
   openLink(url: string): void;
   onOpenWork?: (workUnitId: string) => void;
+  /** Opens one ledger movement in the Libro, where the shell has one. */
+  onOpenMovement?: (transactionId: string) => void;
   initialView: WorkspaceView;
   onLeaveGuard?: (guard: LeaveGuard | null) => void;
   profileCompanions?: ProfileCompanionKit;
@@ -665,6 +677,19 @@ function Ready({
         <div className="px-6 pt-3">
           <Alert tone={notice.tone} icon={<Icon name="alert" />}>
             <span>{notice.words}</span>
+            {notice.movement && onOpenMovement && (
+              <Button
+                variant="link"
+                className="min-h-control-xs"
+                data-refusal-step="open_movement"
+                onClick={() =>
+                  notice.movement &&
+                  onOpenMovement(notice.movement.transactionId)
+                }
+              >
+                {notice.movement.words}
+              </Button>
+            )}
           </Alert>
         </div>
       )}
@@ -1051,6 +1076,7 @@ export function WorkspaceScreen({
   canOpenSurface = () => false,
   openLink,
   onOpenWork,
+  onOpenMovement,
   initialView = "form",
   onLeaveGuard,
   onWritten,
@@ -1072,6 +1098,9 @@ export function WorkspaceScreen({
   /** Opens another declaration, where the shell can; the estimate offers the
    * step that opens one only with it. */
   onOpenWork?: (workUnitId: string) => void;
+  /** Opens one ledger movement in the Libro, where the shell has one; a
+   * refusal that names a movement offers it only with this. */
+  onOpenMovement?: (transactionId: string) => void;
   /** The view the declaration opens on. */
   initialView?: WorkspaceView;
   /** Hands the shell the guard that asks before staged edits are dropped. */
@@ -1193,6 +1222,7 @@ export function WorkspaceScreen({
         canOpenSurface={canOpenSurface}
         openLink={openLink}
         onOpenWork={onOpenWork}
+        onOpenMovement={onOpenMovement}
         initialView={initialView}
         onLeaveGuard={onLeaveGuard}
         profileCompanions={profileCompanions}

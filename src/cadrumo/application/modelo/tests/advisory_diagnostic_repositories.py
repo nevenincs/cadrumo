@@ -17,6 +17,7 @@ from ....core.period import Period
 from ....core.secure_object_write import SecureObjectWrite
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.prorrata_register.register import (
     ProrrataOperatorGrossDeclaration,
     ProrrataRegister,
@@ -33,6 +34,7 @@ from ...calculations.observations_repository import (
     ObservationEnvelopePayload,
 )
 from ...calculations.tests.observation_repository_stubs import ObservationRepositoryStubs
+from ...invoices.catalogue_reads_ports import InvoiceCatalogueReader
 from ...prorrata_register.ports import ProrrataPriorSettlementSourceSnapshot, ProrrataRegisterServiceRepositoryProtocol
 
 __all__ = ["AdvisoryDiagnosticRepositories", "advisory_diagnostic_repositories"]
@@ -46,6 +48,7 @@ class AdvisoryDiagnosticRepositories:
     prorrata_register: ProrrataRegisterServiceRepositoryProtocol
     bienes_inversion: BienesInversionIvaRegisterRepositoryProtocol
     transactions: TransactionCatalogueRepositoryProtocol
+    invoices: InvoiceCatalogueReader
 
 
 def advisory_diagnostic_repositories(*, bucket_id: str) -> AdvisoryDiagnosticRepositories:
@@ -55,6 +58,7 @@ def advisory_diagnostic_repositories(*, bucket_id: str) -> AdvisoryDiagnosticRep
         prorrata_register=InMemoryProrrataRegisterRepository(bucket_id=bucket_id),
         bienes_inversion=InMemoryBienesInversionRepository(BienesInversionIvaRegister()),
         transactions=EmptyTransactionCatalogueRepository(bucket_id=bucket_id),
+        invoices=EmptyInvoiceCatalogueReader(bucket_id=bucket_id),
     )
 
 
@@ -195,6 +199,21 @@ class InMemoryBienesInversionRepository:
     def add(self, record: BienInversionIvaRecord) -> BienesInversionIvaRegister:
         self._register = BienesInversionIvaRegister(records=(*self._register.records, record))
         return self._register
+
+
+class EmptyInvoiceCatalogueReader:
+    """Invoice port for a bucket whose Libro de facturas holds nothing."""
+
+    def __init__(self, *, bucket_id: str) -> None:
+        self._bucket_id = bucket_id
+
+    @property
+    def bucket_id(self) -> str:
+        return self._bucket_id
+
+    @staticmethod
+    def load() -> InvoiceCatalogue:
+        return InvoiceCatalogue()
 
 
 class EmptyTransactionCatalogueRepository:

@@ -21,6 +21,7 @@ from .....domain.calculations.registry.iva_legal_vocabulary import require_iva_e
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..bienes_inversion import BienesInversionIvaRegisterRepository
+from ..invoices import InvoiceCatalogueRepository
 from ..prorrata_register import ProrrataRegisterRepository
 from ..transactions import TransactionCatalogueRepository
 from .test_iva_ledger_prorrata_apportionment import fully_taxable_purchase_row, fully_taxable_sale_row
@@ -81,6 +82,7 @@ def test_annual_volume_comparison_preserves_authority_and_marks_incomplete_evide
             bucket_id=_BUCKET,
             period=Period.from_year_and_code(2026, "0A"),
             transaction_repository=transactions,
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET, objects=profile.repository),
             prorrata_register_repository=prorrata,
             investment_asset_register=bienes.load(),
             investment_asset_profile_id=_BUCKET,
@@ -113,6 +115,7 @@ def test_annual_volume_comparison_preserves_authority_and_marks_incomplete_evide
             bucket_id=_BUCKET,
             prorrata_register_repository=prorrata,
             transaction_repository=transactions,
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET, objects=profile.repository),
             bienes_inversion_repository=bienes,
             operation=operation,
         )
@@ -164,6 +167,7 @@ def test_unreadable_register_keeps_its_degraded_storage_advisory(tmp_path: Path,
             bucket_id=_BUCKET,
             prorrata_register_repository=prorrata,
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET, objects=profile.repository),
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET, objects=profile.repository),
             bienes_inversion_repository=BienesInversionIvaRegisterRepository(
                 bucket_id=_BUCKET, objects=profile.repository
             ),

@@ -23,7 +23,7 @@ from ....domain.bienes_inversion.vocabulary import BienInversionKind
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
-from ...ledger.preflight import LedgerPreflightIssueReason, preflight_transaction_catalogue
+from ...ledger.preflight import HeldTransactionCatalogue, LedgerPreflightIssueReason, preflight_transaction_catalogue
 from ..iva_ledger import IvaLedgerAggregation, IvaLedgerAggregationIssueReason, aggregate_iva_ledger_observations
 from .ledger_transaction_support import iva_transaction
 
@@ -132,6 +132,9 @@ def test_an_uncategorized_split_part_is_held_before_any_calculation_reads_its_cu
     operation: PinnedAuthorityOperation,
 ) -> None:
     report = preflight_transaction_catalogue(
+        invoices=(),
+        movement_reader=HeldTransactionCatalogue(TransactionCatalogue.from_transactions(())),
+        cash_accounting_enrolled=False,
         bucket_id="claims",
         period=_Q1,
         transactions=TransactionCatalogue.from_transactions((_purchase(**updates),)),

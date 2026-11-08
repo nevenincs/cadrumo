@@ -27,7 +27,6 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....application.aggregation.errors import AggregationValidationError
 from ....application.aggregation.ledger_filing_snapshot import row_fingerprint
 from ....application.invoices.catalogue_lifecycle import (
     CatalogueInvoicePatch,
@@ -79,7 +78,6 @@ _DEDUCIBLE: CasillaId = validated_casilla_id("iva.cuota-deducible-total")
 _AT = datetime(2026, 4, 6, 10, 0, tzinfo=UTC)
 _MOVEMENT_DATED = "iva_row_placed_on_movement_date"
 _AFTER_MOVEMENT = "iva_operation_date_after_movement"
-_INVOICE_SHORTFALL = "invoice_domestic_iva_not_in_transaction_ledger"
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 _SALE_ON_THE_BOUNDARY = "boundary-sale"
 
@@ -268,31 +266,36 @@ def test_the_fallback_to_the_bank_date_raises_its_advisory_in_the_receiving_quar
         assert sale.transaction_id not in moved.revision.source_transaction_ids
 
 
-def test_a_linked_invoice_of_march_refuses_in_the_first_quarter_until_the_row_is_dated(tmp_path: Path) -> None:
-    """The dead end this field removes: the shortfall had no write path to clear it."""
-    invoice = _issued_invoice()
-    undated = _sale().model_copy(update={"invoice_id": invoice.invoice_id})
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
-        InvoiceCatalogueRepository(bucket_id=BUCKET_ID, objects=profile.repository).save(
-            build_invoice_catalogue((invoice,))
-        )
-        with bundled_indexed_authority().operation() as operation, pytest.raises(AggregationValidationError) as refused:
-            calculate_irene_revision(profile.repository, operation=operation, rows=(undated,))
-        assert (refused.value.context or {})["reason"] == _INVOICE_SHORTFALL
-
-    dated = _sale(operation_date=date(2026, 3, 30)).model_copy(update={"invoice_id": invoice.invoice_id})
-    with isolated_runtime_profile(tmp_path=tmp_path / "dated", bucket_id=BUCKET_ID) as profile:
-        InvoiceCatalogueRepository(bucket_id=BUCKET_ID, objects=profile.repository).save(
-            build_invoice_catalogue((invoice,))
-        )
-        with bundled_indexed_authority().operation() as operation:
-            revision, *_ = calculate_irene_revision(profile.repository, operation=operation, rows=(dated,))
-        assert revision.casilla_values[_DEVENGADA] == Decimal("210.00")
-
-
-def test_the_one_sided_invoice_screen_stays_silent_in_the_receiving_quarter_and_the_advisory_speaks(
+def test_a_linked_invoice_of_march_declares_in_the_first_quarter_whether_or_not_the_row_is_dated(
     tmp_path: Path,
 ) -> None:
+    """The invoice is the IVA source, so its 210.00 lands in 1T once, dated row or not.
+
+    The movement banked on 2 April is payment evidence for a March operation,
+    linked both ways as the linking writer stores it. It neither withholds the
+    invoice's cuota from 1T nor, once the row is dated 30 March, adds a second
+    210.00 beside it.
+    """
+    for label, row in (("undated", _sale()), ("dated", _sale(operation_date=date(2026, 3, 30)))):
+        invoice = _issued_invoice().model_copy(update={"linked_transaction_ids": (row.transaction_id,)})
+        paying = row.model_copy(update={"invoice_id": invoice.invoice_id})
+        with isolated_runtime_profile(tmp_path=tmp_path / label, bucket_id=BUCKET_ID) as profile:
+            InvoiceCatalogueRepository(bucket_id=BUCKET_ID, objects=profile.repository).save(
+                build_invoice_catalogue((invoice,))
+            )
+            with bundled_indexed_authority().operation() as operation:
+                revision, *_ = calculate_irene_revision(profile.repository, operation=operation, rows=(paying,))
+            assert revision.casilla_values[_DEVENGADA] == Decimal("210.00"), label
+
+
+def test_a_january_payment_of_a_december_invoice_declares_nothing_in_the_first_quarter(
+    tmp_path: Path,
+) -> None:
+    """LIVA art. 75: the sale accrued in December, so January's collection is payment evidence only.
+
+    The link is held on the movement alone, as a record written before both sides
+    were stored together can be; it still makes the movement the invoice's payment.
+    """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
         objects = profile.repository
         invoice = _issued_invoice(issued_at=date(2025, 12, 30))
@@ -300,11 +303,9 @@ def test_the_one_sided_invoice_screen_stays_silent_in_the_receiving_quarter_and_
         sale = _sale(booked=date(2026, 1, 2)).model_copy(update={"invoice_id": invoice.invoice_id})
         with bundled_indexed_authority().operation() as operation:
             revision, *_ = calculate_irene_revision(objects, operation=operation, rows=(sale,))
-        reasons = _reasons(_work_unit_of(objects, revision))
 
-        assert revision.casilla_values[_DEVENGADA] == Decimal("210.00")
-        assert _INVOICE_SHORTFALL not in reasons
-        assert _MOVEMENT_DATED in reasons
+        assert revision.casilla_values.get(_DEVENGADA, Decimal("0")) == Decimal("0")
+        assert sale.transaction_id not in revision.source_transaction_ids
 
 
 def test_an_advance_keeps_its_collection_date_and_its_balance_stays_out_of_the_quarter(tmp_path: Path) -> None:

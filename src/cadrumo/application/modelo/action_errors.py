@@ -346,6 +346,15 @@ class ModeloAggregationBindingError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when bucket-derived aggregation bindings conflict with caller input."""
 
 
+class ModeloLedgerPreflightBlockedError(OperationNextStepErrorMixin, ModeloPreconditionErrorMixin, ModeloError):
+    """Raised before anything is written when the period's ledger readiness blocks a calculation.
+
+    A refusal, not a failure: the calculation stops on a movement the person can
+    correct, and nothing has been recorded. Its words name that movement by its
+    date, description and amount, never by its internal identifier.
+    """
+
+
 class ModeloClearedCasillaSourceFedError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised before persistence when an explicitly cleared casilla still receives a source value.
 

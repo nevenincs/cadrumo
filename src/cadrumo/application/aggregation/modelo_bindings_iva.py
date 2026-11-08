@@ -28,15 +28,19 @@ from ...domain.calculations.registry.ledger_iva_bindings import (
     unrouted_ledger_iva_quantities,
     unsupported_ledger_iva_observations,
 )
-from ...domain.calculations.registry.ledger_iva_screen_bindings import invoice_ledger_screen_binding_ids
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.iva.schema import IvaCategory
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
+from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
 from .invoice_devengo import (
     devengo_proxy_attribution_diagnostics,
+)
+from .invoice_iva_source import (
+    cash_accounting_enrolled,
+    invoice_iva_finding_diagnostics,
+    period_invoice_iva_findings,
 )
 from .iva_ledger import (
     IvaLedgerAggregation,
@@ -50,15 +54,14 @@ from .iva_ledger import (
 from .iva_ledger_apportionment import resolve_iva_ledger_binding_values
 from .modelo_bindings import aggregation_period_for_modelo
 from .modelo_bindings_invoice_iva import (
-    InvoiceIvaSilenceReport,
+    ScreenedInvoiceIva,
     category_counterparty_mismatch_diagnostics,
-    missing_invoice_deduction_authority_diagnostics,
+    invoice_screen_of,
     out_of_window_summary_diagnostics,
     recargo_rate_mismatch_diagnostics,
     recargo_unattributable_diagnostics,
     reverse_charge_underivable_diagnostics,
 )
-from .modelo_bindings_invoice_iva_refusal import raise_if_invoice_iva_would_be_silent
 from .modelo_bindings_support import (
     STORAGE_DEGRADATION_ERRORS,
     empty_source_resolution,
@@ -300,12 +303,13 @@ class LedgerIvaAggregationSourceResolver:
                     bucket_id=context.bucket_id,
                     period=aggregation_period,
                     transaction_repository=self._transaction_repository,
+                    invoice_reader=self._invoice_catalogue_read_ports.invoice_reader,
                     prorrata_register_repository=self._prorrata_register_repository,
                     investment_asset_register=self._investment_asset_register,
                     investment_asset_profile_id=self._investment_asset_profile_id,
                     operation=operation,
                 )
-            except STORAGE_DEGRADATION_ERRORS as exc:
+            except (InvoiceCatalogueReadPersistenceError, *STORAGE_DEGRADATION_ERRORS) as exc:
                 return storage_degradation_resolution(
                     resolver_id=self.resolver_id,
                     owned_sources=self.owned_sources,
@@ -313,7 +317,11 @@ class LedgerIvaAggregationSourceResolver:
                     error=exc,
                 )
             aggregation = _with_settlement_apportionment(aggregation, self._settlement)
-            transaction_ids = {observation.ledger_id for observation in aggregation.observations}
+            transaction_ids = {
+                observation.ledger_id
+                for observation in aggregation.observations
+                if not _is_invoice_observation(observation)
+            }
             transaction_ids.update(reference.transaction_id for reference in aggregation.prorrata_references)
             binding_values = resolve_iva_ledger_binding_values(
                 context.revision,
@@ -321,22 +329,8 @@ class LedgerIvaAggregationSourceResolver:
                 prorrata_apportionment=aggregation.prorrata_apportionment,
                 operation=operation,
             )
-            screened_bindings = invoice_ledger_screen_binding_ids(
-                context.revision,
-                modelo=context.modelo,
-            )
-            silence_report = raise_if_invoice_iva_would_be_silent(
-                context=context,
-                period=aggregation_period,
-                operation=operation,
-                transaction_binding_values=binding_values,
-                ledger_observations=aggregation.observations,
-                ports=self._invoice_catalogue_read_ports,
-                prorrata_apportionment=aggregation.prorrata_apportionment,
-                screened_bindings=screened_bindings,
-            )
         return self._assemble_resolution(
-            context, aggregation_period, aggregation, binding_values, transaction_ids, silence_report
+            context, aggregation_period, aggregation, binding_values, transaction_ids, invoice_screen_of(aggregation)
         )
 
     def _assemble_resolution(
@@ -346,7 +340,7 @@ class LedgerIvaAggregationSourceResolver:
         aggregation: IvaLedgerAggregation,
         binding_values: Mapping[BindingId, Decimal],
         transaction_ids: set[str],
-        silence_report: InvoiceIvaSilenceReport,
+        invoice_screen: ScreenedInvoiceIva,
     ) -> CalculationSourceResolution:
         # Report declarable observations that no binding consumes.
         unconsumed = unsupported_ledger_iva_observations(context.revision, aggregation.observations)
@@ -365,29 +359,36 @@ class LedgerIvaAggregationSourceResolver:
                 resolver_id=self.resolver_id,
             )
             + devengo_proxy_attribution_diagnostics(
-                silence_report.compared,
+                invoice_screen.compared,
                 source_kind="ledger_iva_aggregation",
                 resolver_id=self.resolver_id,
             )
             + _iva_row_date_diagnostics(aggregation, resolver_id=self.resolver_id)
             + reverse_charge_underivable_diagnostics(
-                silence_report.reverse_charge_underivable,
-                resolver_id=self.resolver_id,
-            )
-            + missing_invoice_deduction_authority_diagnostics(
-                silence_report.deduction_authority_missing,
+                invoice_screen.reverse_charge_underivable,
                 resolver_id=self.resolver_id,
             )
             + category_counterparty_mismatch_diagnostics(
-                silence_report.category_counterparty_mismatches,
+                invoice_screen.category_counterparty_mismatches,
                 resolver_id=self.resolver_id,
             )
             + recargo_rate_mismatch_diagnostics(
-                silence_report.recargo_rate_divergences,
+                invoice_screen.recargo_rate_divergences,
                 resolver_id=self.resolver_id,
             )
             + recargo_unattributable_diagnostics(
-                silence_report.recargo_unattributable,
+                invoice_screen.recargo_unattributable,
+                resolver_id=self.resolver_id,
+            )
+            + invoice_iva_finding_diagnostics(
+                period_invoice_iva_findings(
+                    aggregation.invoice_findings,
+                    invoice_ids=aggregation.invoice_ids,
+                    cash_accounting_enrolled=cash_accounting_enrolled(
+                        context.profile.record if context.profile is not None else None,
+                        as_of=aggregation_period.end_date,
+                    ),
+                ),
                 resolver_id=self.resolver_id,
             )
             + source_issue_diagnostics(
@@ -460,7 +461,7 @@ class LedgerIvaAggregationSourceResolver:
                         contributor_source_kind="ledger_iva_aggregation",
                         contributor_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
                         lineage_role=CalculationSourceLineageRole.PRIMARY,
-                        source_ref=f"transaction:{observation.ledger_id}",
+                        source_ref=_observation_source_ref(observation),
                         parent_source_ref=None,
                         terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
                     ),
@@ -485,6 +486,17 @@ class LedgerIvaAggregationSourceResolver:
                 )
             ),
         )
+
+
+def _is_invoice_observation(observation: IvaLedgerObservation) -> bool:
+    return observation.ledger_id.startswith("invoice:")
+
+
+def _observation_source_ref(observation: IvaLedgerObservation) -> str:
+    """Name the record an observation came from: its invoice, or the movement that carries its own facts."""
+    if _is_invoice_observation(observation):
+        return "invoice:" + observation.ledger_id.split(":", 2)[1]
+    return f"transaction:{observation.ledger_id}"
 
 
 def _present_unroutable_iva_categories(

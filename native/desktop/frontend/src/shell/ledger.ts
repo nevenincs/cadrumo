@@ -452,7 +452,10 @@ export type LedgerNextStep =
   /** `path` is the profile detail's own schema address, which the profile
    * page already addresses its rows by. */
   | { kind: "open_profile_field"; path: string; words: string }
-  | { kind: "complete_profile_setup"; words: string };
+  | { kind: "complete_profile_setup"; words: string }
+  /** Opens one ledger movement in the Libro, where the fact the refusal
+   * names is recorded. */
+  | { kind: "open_movement"; transaction_id: string; words: string };
 
 /** The steps the profile page answers, the two a readiness refusal serves. */
 export type LedgerProfileStep = Extract<
@@ -460,8 +463,23 @@ export type LedgerProfileStep = Extract<
   { kind: "open_profile_field" } | { kind: "complete_profile_setup" }
 >;
 
+/** The step the Libro answers, naming one movement. */
+export type LedgerMovementStep = Extract<
+  LedgerNextStep,
+  { kind: "open_movement" }
+>;
+
 /** The steps a declaration surface answers, each naming a declaration. */
-export type LedgerWorkStep = Exclude<LedgerNextStep, LedgerProfileStep>;
+export type LedgerWorkStep = Extract<
+  LedgerNextStep,
+  { kind: "create_work" } | { kind: "calculate_work" } | { kind: "open_work" }
+>;
+
+/** Whether a served step is one a declaration surface answers. */
+export const isWorkStep = (step: LedgerNextStep): step is LedgerWorkStep =>
+  step.kind === "create_work" ||
+  step.kind === "calculate_work" ||
+  step.kind === "open_work";
 
 /** Whether a served step is one the profile page answers. */
 export const isProfileStep = (
@@ -495,6 +513,12 @@ export function servedNextStep(detail: unknown): LedgerNextStep | null {
           words,
         }
       : null;
+  }
+  if (served.kind === "open_movement") {
+    const movement = text("transaction_id");
+    return movement === null
+      ? null
+      : { kind: "open_movement", transaction_id: movement, words };
   }
   if (served.kind === "calculate_work" || served.kind === "open_work") {
     const unit = text("work_unit_id");

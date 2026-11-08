@@ -1,15 +1,16 @@
 ---
 tags:
-  - '#adr'
-  - '#iva-workflow'
+  - "#adr"
+  - "#iva-workflow"
 date: '2026-09-21'
-modified: '2026-09-21'
-body_schema: 'body-v2'
-body_hash: 'sha256:ba09257679723157cee17296ac2d816ecd83b55f829bce063c7a75bea708c499'
 related:
   - "[[2026-09-21-iva-workflow-reference]]"
+superseded_by: '2026-11-08-iva-workflow-invoice-iva-source-adr'
+modified: '2026-11-08'
+body_schema: 'body-v2'
+body_hash: 'sha256:a1ce1f571eff6f01e859ea5e4c00a34bcbc82717a33d1c348ac90e7874ac3b40'
 ---
-# `iva-workflow` adr: `Selected-scope IVA completeness issue gating` | (**status:** `accepted`)
+# `iva-workflow` adr: `Selected-scope IVA completeness issue gating` | (**status:** `superseded`)
 
 ## Problem Statement
 

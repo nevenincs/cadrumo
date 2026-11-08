@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -85,6 +86,7 @@ def test_repository_backed_projection_matches_the_pure_projection_for_a_cross_qu
                 period=_Q1_2026,
                 prorrata_register_repository=ProrrataRegisterRepository(bucket_id=profile.bucket_id),
                 transaction_repository=TransactionCatalogueRepository(bucket_id=profile.bucket_id),
+                invoice_reader=InvoiceCatalogueRepository(bucket_id=profile.bucket_id),
                 operation=_authority_operation_for_test,
             )
 

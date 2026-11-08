@@ -41,6 +41,7 @@ from .action_errors import (
 )
 from .calculation_action_ports import CalculationActionPortsFactory
 from .calculation_advisory_projection import ModeloCalculationAdvisories
+from .calculation_bucket_actions import refuse_blocked_ledger_preflight
 from .calculation_projection import ModeloCalculationSnapshot
 from .m303_filing_evidence import m303_filing_evidence_failure
 from .m303_ordinary_filing_evidence_authoring import author_ordinary_m303_evidence_for_work
@@ -342,6 +343,17 @@ class ModeloWorkCalculateExecutor:
             operation=context.authority_operation,
             calculation_action_ports_factory=self._calculation_action_ports_factory,
             attachment_store_factory=self._attachment_store_factory,
+        )
+
+        # A blocked ledger is a refusal with nothing written, so it is checked
+        # before publication declares that records may change.
+        await await_cancellation_complete(
+            asyncio.to_thread(
+                refuse_blocked_ledger_preflight,
+                prepared.work_unit.work_unit_id,
+                ports=prepared.ports,
+            ),
+            task_name="modelo-work-calculate-ledger-preflight",
         )
 
         async def publish() -> str:

@@ -7,7 +7,7 @@ left the recargo out of its comparison with the transaction ledger without a
 word: a ledger that omitted that recargo passed the screen as though checked.
 
 The screen runs for real here, over the published authority and real invoices;
-only the catalogue read is an in-memory boundary.
+the invoices are passed in directly.
 """
 
 from __future__ import annotations
@@ -17,21 +17,15 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
-
 from ....core.period import Period
-from ....domain.invoices.catalogue import InvoiceCatalogue
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.invoices.enums import PaymentStatus, resolve_iva_rate_token
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.schema import InvoiceKind
-from ....domain.transactions.date_partition import LedgerDatePartition
-from ....domain.transactions.models import TransactionCatalogue
-from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..modelo_bindings_invoice_iva import (
     recargo_unattributable_diagnostics,
     screened_invoice_iva_observations,
 )
-from ..source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -87,42 +81,16 @@ def _single() -> Invoice:
     return _issued("RECARGO-SINGLE", (_line("General", "1000.00", "RATE_21", "210.00"),), recargo="52.00")
 
 
-class _InMemoryInvoices:
-    bucket_id: str = _BUCKET_ID
-
-    def __init__(self, *invoices: Invoice) -> None:
-        self._catalogue = InvoiceCatalogue(invoices={invoice.invoice_id: invoice for invoice in invoices})
-
-    def exists(self) -> bool:
-        return True
-
-    def load(self) -> InvoiceCatalogue:
-        return self._catalogue
-
-    def save(self, catalogue: InvoiceCatalogue) -> None:
-        raise AssertionError("the screen must not write the catalogue it reads")
-
-
-class _EmptyTransactions:
-    def load(self) -> TransactionCatalogue:
-        return TransactionCatalogue()
-
-    def partition_by_date_range(self, start, end) -> LedgerDatePartition:
-        return LedgerDatePartition(in_window=TransactionCatalogue(), index_complete=True)
-
-
 def _screen(*invoices: Invoice):
-    revision = published_snapshot("303", filing_year=_YEAR, period=_PERIOD_CODE).revision
     period = Period.from_year_and_code(_YEAR, _PERIOD_CODE)
-    return screened_invoice_iva_observations(
-        context=CalculationSourceContext(
-            bucket_id=_BUCKET_ID, modelo="303", filing_year=_YEAR, period=period, revision=revision
-        ),
-        period=period,
-        ports=InvoiceCatalogueReadPorts(
-            invoice_reader=_InMemoryInvoices(*invoices), transaction_reader=_EmptyTransactions()
-        ),
-    )
+    with bundled_indexed_authority().operation() as operation:
+        return screened_invoice_iva_observations(
+            invoices,
+            bucket_id=_BUCKET_ID,
+            period=period,
+            linked_movements={},
+            operation=operation,
+        )
 
 
 def test_a_recargo_over_several_rates_is_named_by_the_screen() -> None:

@@ -26,7 +26,7 @@ from ....core.period import Period
 from ....domain.iva.schema import IvaCategory, IvaExemptionArticle
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
-from ..preflight import LedgerPreflightIssueReason, preflight_transaction_catalogue
+from ..preflight import HeldTransactionCatalogue, LedgerPreflightIssueReason, preflight_transaction_catalogue
 from .preflight_test_support import BUCKET_ID, Q2_2026, preflight_transaction
 
 type _ZeroCuotaRowFactory = Callable[..., Transaction]
@@ -97,6 +97,9 @@ def _reasons(
     operation: PinnedAuthorityOperation,
 ) -> list[LedgerPreflightIssueReason]:
     report = preflight_transaction_catalogue(
+        invoices=(),
+        movement_reader=HeldTransactionCatalogue(TransactionCatalogue.from_transactions(())),
+        cash_accounting_enrolled=False,
         bucket_id=BUCKET_ID,
         period=period,
         transactions=TransactionCatalogue.from_transactions(transactions),

@@ -37,6 +37,7 @@ from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .calculation_action_ports import CalculationActionPortsFactory
+from .calculation_bucket_actions import refuse_blocked_ledger_preflight
 from .calculation_operation import (
     calculate_prepared_modelo_work,
     calculation_public_result,
@@ -161,6 +162,17 @@ class ModeloWorkWizardAttemptExecutor:
         )
         if prepared.work_unit.bucket_id != str(payload.profile_id):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+
+        # A blocked ledger is a refusal with nothing written, so it is checked
+        # before publication declares that records may change.
+        await await_cancellation_complete(
+            asyncio.to_thread(
+                refuse_blocked_ledger_preflight,
+                prepared.work_unit.work_unit_id,
+                ports=prepared.ports,
+            ),
+            task_name="modelo-work-wizard-ledger-preflight",
+        )
 
         async def publish() -> str:
             async with context.cancellation.irreversible_section():

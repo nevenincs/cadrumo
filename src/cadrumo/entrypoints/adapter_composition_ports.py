@@ -164,6 +164,7 @@ def build_modelo_export_ports(
         IvaWalletDecisionRepository,
     )
     from ..adapters.persistence.profile.credit_resolution_records import CreditResolutionRepositoryAdapter
+    from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ..adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
     from ..adapters.persistence.profile.justificante import JustificanteRepository
     from ..adapters.persistence.profile.modelo_360_solicitud import Modelo360SolicitudRepository
@@ -222,6 +223,7 @@ def build_modelo_export_ports(
             bucket_id=normalized_bucket_id,
             objects=objects,
         ),
+        invoices=InvoiceCatalogueRepository(bucket_id=normalized_bucket_id, objects=objects),
         draft_review_ports=build_draft_review_ports(
             bucket_id=normalized_bucket_id, operation=operation, objects=objects
         ),

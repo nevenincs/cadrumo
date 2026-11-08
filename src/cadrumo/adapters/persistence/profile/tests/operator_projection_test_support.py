@@ -15,6 +15,7 @@ from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING, override
 
+from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.state_projection import StateProjectionPersistenceAdapter
 from cadrumo.adapters.persistence.profile.usage_ratios import load_usage_ratios
 from cadrumo.application.auth.credentials import ActiveAuthProjectionSnapshot
@@ -88,6 +89,7 @@ def state_projection_read_ports() -> StateProjectionReadPorts:
         workspace=adapter,
         profile=adapter,
         usage_ratio_profile_loader=load_usage_ratios,
+        invoice_reader_for=InvoiceCatalogueRepository,
     )
 
 

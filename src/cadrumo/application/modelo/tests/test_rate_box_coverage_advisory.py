@@ -138,6 +138,7 @@ def _coordinator_diagnostics(values: dict[CasillaId, Decimal]) -> tuple[Calculat
         prorrata_register_repository=repositories.prorrata_register,
         bienes_inversion_repository=repositories.bienes_inversion,
         transaction_repository=repositories.transactions,
+        invoice_reader=repositories.invoices,
     )
 
 

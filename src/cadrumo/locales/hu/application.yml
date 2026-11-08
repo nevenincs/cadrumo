@@ -2275,10 +2275,52 @@ application:
         a Modelo 303 bevallással.
       iva_wallet_unsupported_decision_type: 'Nem támogatott IVA-tárca döntéstípus:
         %{decision_type}.'
-      ledger_preflight_blocked: 'A nyilvántartásaid előellenőrzése blokkolja a nyomtatvány
-        számítását: %{transaction_id} tranzakció, %{reason}: %{detail}. Futtasd a
-        nyilvántartások előellenőrzését a(z) %{period} időszakra, és oldd meg a feltárt
-        problémákat számítás előtt.'
+      ledger_preflight_blocked_movement: 'A(z) %{period} nem számítható ki. A(z) %{movement_date}
+        tétel („%{movement_description}”, %{movement_amount}): %{need}. Semmi sem
+        mentődött.'
+      ledger_preflight_blocked_period: 'A(z) %{period} nem számítható ki: %{need}.
+        Semmi sem mentődött.'
+      ledger_preflight_need:
+        anomaly_non_declarable_iva_category: az IVA-kategóriája egyik nyomtatványon
+          sem vallható be
+        anomaly_non_declarable_recargo_equivalencia: recargo de equivalenciát tartalmaz,
+          amely ezen a nyomtatványon nem vallható be
+        censo_ratio_mismatch: a használati aránya eltér a cenzusodban szereplőtől
+        domestic_identification_on_intra_community_transaction: Közösségen belüli
+          ügylet, de a partnert Spanyolországban azonosították
+        eu_member_state_on_export_transaction: exportügylet, de a partner az EU-ban
+          telepedett le
+        inadmissible_deduction_classification: a levonási besorolása erre az ügyletre
+          nem alkalmazható
+        invoice_cash_accounting_regime_unmodelled: a pénzforgalmi elszámolást (criterio
+          de caja) választottad, amelyben az IVA a fizetéskor keletkezik, és a Cadrumo
+          még nem tudja a számláid IVA-ját a fizetéseik szerint időszakhoz rendelni
+        invoice_category_contradicted: a számla IVA-kategóriája nem illik a partner
+          országához
+        invoice_deduction_family_unresolved: 'a kifizetett bejövő számlából nem derül
+          ki, melyik levonás illeti meg: sorold be a tételt, például folyó költségként
+          vagy beruházási javakként'
+        linked_movement_contradicts_invoice: az adóalapja vagy az IVA-összege eltér
+          a kifizetett számláétól
+        missing_business_classification: még nincs besorolva üzleti, magán vagy vegyes
+          tételként
+        missing_category: hiányzik a költség kategóriája
+        missing_counterparty_establishment_on_export: exportügylet, és hiányzik, hol
+          telepedett le a partner
+        missing_counterparty_identification_state: hiányzik, hol azonosították a partnert
+          IVA-célból
+        missing_eur_tax_substrate: hiányoznak az euróban kifejezett összegei
+        missing_home_office_afectacion: hiányzik, a lakás mekkora részét használod
+          a tevékenységhez
+        missing_iva_amount: hiányzik az IVA összege
+        missing_iva_rate: hiányzik az IVA-kulcs
+        missing_proportionality_reference: vegyes tétel, és hiányzik a használati
+          aránya
+        missing_taxable_base: hiányzik az adóalap
+        movement_invoice_double_count: 'saját IVA-adatai vannak, és egyezik egy számlával,
+          amely már bevallja az ügyletet: kapcsold össze őket, vagy vesd el a párosítást'
+        unsupported_currency: a pénzneme nem váltható át euróra
+        unsupported_period: ez az időszak nem ellenőrizhető a Napló alapján
       local_observation_actor_blank: A megfigyelés kézi javításának meg kell neveznie
         a rögzítő személyt.
       local_observation_override_missing: A Modelo %{modelo} nyomtatvány %{period}
@@ -2803,6 +2845,7 @@ application:
       next_step:
         calculate_work: 'Számítsd ki: %{modelo}, %{period}'
         create_work: 'Hozd létre: %{modelo}, %{period}'
+        open_movement: Nyisd meg a tételt a Naplóban
         open_work: 'Nyisd meg: %{modelo}, %{period}'
       no_m130_revisions: A(z) %{year} adóév Modelo 130 bevallásait még nem számoltad
         ki, így nincs miből becslést készíteni az éves bevallásról. Számolj ki egy

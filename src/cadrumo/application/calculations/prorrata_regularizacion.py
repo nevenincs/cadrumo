@@ -67,6 +67,7 @@ from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
 )
+from ...domain.invoices.errors import InvoicePersistenceError
 from ...domain.iva.m303_settlement import is_m303_annual_settlement_period, m303_liquidation_periods
 from ...domain.iva.prorrata import RegularizacionProrrataParticion, compute_regularizacion_prorrata_particionada
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
@@ -89,6 +90,7 @@ from ..aggregation.source_resolution_operations import (
     storage_degradation_resolution,
     unresolved_binding_diagnostics,
 )
+from ..invoices.catalogue_reads_ports import InvoiceCatalogueReader, InvoiceCatalogueReadPersistenceError
 from ..persistence_errors import PersistenceDegradationError
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from .m303_settlement_observation import M303SettlementObservationState, m303_annual_settlement_observation
@@ -754,6 +756,7 @@ class ProrrataRegularizacionSourceResolver:
         prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
         observation_repository: CalculationObservationRepositoryProtocol,
         transaction_repository: TransactionCatalogueRepositoryProtocol,
+        invoice_reader: InvoiceCatalogueReader,
         investment_asset_register: BienesInversionIvaRegister | None = None,
         investment_asset_profile_id: str | None = None,
         operation: PinnedAuthorityOperation,
@@ -781,6 +784,7 @@ class ProrrataRegularizacionSourceResolver:
             prorrata_register_repository=prorrata_register_repository,
             observation_repository=observation_repository,
             transaction_repository=transaction_repository,
+            invoice_reader=invoice_reader,
             investment_asset_register=investment_asset_register,
             investment_asset_profile_id=investment_asset_profile_id,
             operation=operation,
@@ -798,7 +802,13 @@ class ProrrataRegularizacionSourceResolver:
             if ProrrataRegularizacionOutput.MODELO_390_REGULARIZACION_ANUAL in outputs:
                 return self._resolve_annual_summary(context, revision, declared_binding_ids)
             return self._resolve_settlement(context, revision, declared_binding_ids)
-        except (PersistenceDegradationError, ProrrataRegisterError, TransactionPersistenceError) as exc:
+        except (
+            InvoiceCatalogueReadPersistenceError,
+            InvoicePersistenceError,
+            PersistenceDegradationError,
+            ProrrataRegisterError,
+            TransactionPersistenceError,
+        ) as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,

@@ -373,6 +373,31 @@ def _resolved_m210_gross_income_mode(
     return mode
 
 
+def refuse_blocked_ledger_preflight(work_unit_id: str, *, ports: CalculationActionPorts) -> None:
+    """Refuse, before anything is written, a calculation the period's ledger readiness blocks.
+
+    Calculation itself runs the same check after its preparatory writes; this
+    one runs first, so a refusal the person can put right leaves no record
+    changed and is reported as a refusal, not as an operation that may have
+    written.
+    """
+    work_unit, snapshot, checked_profile = load_bucket_aggregation_context(
+        work_unit_id,
+        work_unit_repository=ports.work_unit_repository,
+        profile=None,
+        operation=ports.operation,
+    )
+    raise_if_ledger_preflight_blocks_calculation(
+        work_unit=work_unit,
+        revision=snapshot.revision,
+        transaction_repository=ports.transaction_repository,
+        invoice_reader=ports.invoice_catalogue_read_ports.invoice_reader,
+        usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
+        operation=ports.operation,
+        profile_values=record_to_path_values(checked_profile.record),
+    )
+
+
 def _prepare_bucket_aggregation_calculation(
     *,
     work_unit_id: str,
@@ -661,6 +686,7 @@ def _bucket_aggregation_source_diagnostics(
         observation_repository=ports.observation_repository,
         prorrata_register_repository=ports.prorrata_register_repository,
         transaction_repository=transaction_repository,
+        invoice_reader=ports.invoice_catalogue_read_ports.invoice_reader,
         operation=ports.operation,
         profile=preparation.profile,
     )
@@ -947,6 +973,7 @@ def _resolve_bucket_aggregation_run(
         work_unit=preparation.work_unit,
         revision=preparation.snapshot.revision,
         transaction_repository=memoized_transaction_repository,
+        invoice_reader=ports.invoice_catalogue_read_ports.invoice_reader,
         usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
         operation=ports.operation,
         profile_values=record_to_path_values(preparation.profile.record),

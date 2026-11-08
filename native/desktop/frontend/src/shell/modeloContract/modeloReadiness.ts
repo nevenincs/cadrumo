@@ -36,7 +36,12 @@ export type LedgerPreflightIssueReason =
   | "censo_ratio_mismatch"
   | "missing_home_office_afectacion"
   | "anomaly_non_declarable_iva_category"
-  | "anomaly_non_declarable_recargo_equivalencia";
+  | "anomaly_non_declarable_recargo_equivalencia"
+  | "invoice_deduction_family_unresolved"
+  | "invoice_category_contradicted"
+  | "movement_invoice_double_count"
+  | "invoice_cash_accounting_regime_unmodelled"
+  | "linked_movement_contradicts_invoice";
 
 /**
  * Closed cause of a profile readiness refusal, independent of display prose.

@@ -68,6 +68,7 @@ from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ..calculation_observations import CalculationObservationRepository
+from ..invoices import InvoiceCatalogueRepository
 from ..prorrata_register import ProrrataRegisterRepository
 from ..transactions import TransactionCatalogueRepository
 from .published_authority_support import published_authority_operation
@@ -222,6 +223,7 @@ def _resolve(
         prorrata_register_repository=register_repository,
         observation_repository=observation_repository,
         transaction_repository=transaction_repository,
+        invoice_reader=InvoiceCatalogueRepository(bucket_id=bucket_id, objects=profile_repository),
         registry_snapshot=snapshot,
         operation=authority_operation,
     ).resolve(_context(snapshot, modelo=modelo, period=period, bucket_id=bucket_id))

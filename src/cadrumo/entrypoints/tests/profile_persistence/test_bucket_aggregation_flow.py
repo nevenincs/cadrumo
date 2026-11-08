@@ -19,15 +19,17 @@ from ....adapters.persistence.profile.tests.secure_objects_fixture import secure
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from ....application.modelo.action_errors import ModeloAggregationBindingError
+from ....application.modelo.action_errors import ModeloAggregationBindingError, ModeloLedgerPreflightBlockedError
 from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ....application.modelo.work_addressing import law_selected_revision_for_work_target
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from ....application.operations.error_detail import served_words_language
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.error_codes import resolve_error_message
+from ....core.i18n.render import tr
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
 from ....domain.buckets.event import BucketEventType
@@ -354,7 +356,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_refuses_when_ledger_p
     ).model_copy(update={"category_id": None})
     tx_repo.save(TransactionCatalogue.from_transactions((incomplete,)))
 
-    with pytest.raises(ModeloAggregationBindingError) as exc_info, _calculation_ports() as ports:
+    with pytest.raises(ModeloLedgerPreflightBlockedError) as exc_info, _calculation_ports() as ports:
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=ports,
@@ -362,10 +364,12 @@ def test_calculate_modelo_revision_from_bucket_aggregation_refuses_when_ledger_p
             filing_instance_evidence=_m303_filing_evidence(work_unit.period, operation=operation),
             clock=_T1,
         )
-    assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked"
+    assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked_movement"
     rendered = resolve_error_message(exc_info.value)
-    assert "%{detail}" not in rendered
-    assert "deductible-expense ledger transaction has no category_id" in rendered
+    assert "%{" not in rendered
+    # The refusal is worded in the served language; the need is that language's own words.
+    need = tr("application.modelo.errors.ledger_preflight_need.missing_category", locale=served_words_language().value)
+    assert need in rendered, rendered
 
     assert len(cr_repo.load()) == 0
 
@@ -386,7 +390,7 @@ def test_m303_still_blocks_base_only_rows_missing_iva_facts(
     ).model_copy(update={"iva_amount": None, "iva_rate": None})
     tx_repo.save(TransactionCatalogue.from_transactions((base_only,)))
 
-    with pytest.raises(ModeloAggregationBindingError) as exc_info, _calculation_ports() as ports:
+    with pytest.raises(ModeloLedgerPreflightBlockedError) as exc_info, _calculation_ports() as ports:
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=ports,
@@ -395,7 +399,7 @@ def test_m303_still_blocks_base_only_rows_missing_iva_facts(
             clock=_T1,
         )
 
-    assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked"
+    assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked_movement"
     assert exc_info.value.context is not None
     assert exc_info.value.context["reason"] == "missing_iva_amount"
     assert len(cr_repo.load()) == 0

@@ -58,6 +58,7 @@ from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProt
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.models import Transaction
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..invoices.catalogue_reads_ports import InvoiceCatalogueReader
 from .business_proportion import business_proportion
 from .currency_predicates import effective_eur_taxable_base
 from .iva_ledger import (
@@ -93,6 +94,7 @@ def compute_annual_deducible_totals_by_regime(
     revision: ModeloRevision,
     prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    invoice_reader: InvoiceCatalogueReader,
     investment_asset_register: BienesInversionIvaRegister,
     investment_asset_profile_id: str,
     operation: PinnedAuthorityOperation,
@@ -129,6 +131,8 @@ def compute_annual_deducible_totals_by_regime(
         revision: The target :class:`ModeloRevision` whose deducible cuota
             bindings are summed.
         transaction_repository: Required bucket-bound catalogue capability.
+        invoice_reader: The same bucket's invoice catalogue, the IVA source
+            of every invoiced operation.
         prorrata_register_repository: Canonical register repository for the
             same bucket as the transaction catalogue.
         investment_asset_register: Bienes-inversion authority the year's
@@ -149,6 +153,7 @@ def compute_annual_deducible_totals_by_regime(
         bucket_id=bucket_id,
         period=period,
         transaction_repository=transaction_repository,
+        invoice_reader=invoice_reader,
         investment_asset_register=investment_asset_register,
         investment_asset_profile_id=investment_asset_profile_id,
         operation=operation,
@@ -483,7 +488,7 @@ def iva_category_deductible_proportion(
         return proportion
     if rule.share is IvaMixedUseShare.BIEN_INVERSION_DEGREE_OF_USE:
         base = effective_eur_taxable_base(transaction)
-        threshold = _bien_inversion_threshold(operation_date=operation_date, operation=operation)
+        threshold = bien_inversion_threshold(operation_date=operation_date, operation=operation)
         return proportion if base is not None and base >= threshold else None
     return None
 
@@ -567,7 +572,7 @@ def _stated_vehicle_use_share(
 _BIEN_INVERSION_THRESHOLD_FACT_ID: Final = "iva-bien-inversion-escaso-valor-threshold"
 
 
-def _bien_inversion_threshold(*, operation_date: date, operation: PinnedAuthorityOperation) -> Decimal:
+def bien_inversion_threshold(*, operation_date: date, operation: PinnedAuthorityOperation) -> Decimal:
     """Return the acquisition value below which a good is not a bien de inversión (LIVA art. 108.Dos.5.º)."""
     resolved = operation.resolve_governed_fact(
         ScalarFactQuery(

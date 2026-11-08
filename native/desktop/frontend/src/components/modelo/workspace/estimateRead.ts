@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatAmount, formatDecimal } from "../../../shared/numbers";
 import {
-  isProfileStep,
+  isWorkStep,
   type LedgerNextStep,
   type LedgerOutcome,
   type LedgerWorkStep,
@@ -59,7 +59,7 @@ function runnable(
   step: LedgerNextStep | null,
   open: ((workUnitId: string) => void) | undefined,
 ): LedgerWorkStep | null {
-  if (step === null || isProfileStep(step)) return null;
+  if (step === null || !isWorkStep(step)) return null;
   return step.kind === "open_work" && open === undefined ? null : step;
 }
 

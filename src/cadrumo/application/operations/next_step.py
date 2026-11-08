@@ -3,7 +3,8 @@
 A refusal can name one thing the filer does next: creating a declaration that
 does not exist yet, calculating one that has no calculation, opening one whose
 own form says what it still lacks, filling in one profile detail the refusal
-named, or declaring the profile setup complete. The step says which kind, what
+named, declaring the profile setup complete, or opening the ledger movement
+that stops a calculation. The step says which kind, what
 it concerns and the words that offer it, so a frontend does what it already
 knows for that kind and keeps no table of operator action identifiers. The kind
 is closed; an address that cannot be run is refused when the step is built.
@@ -28,6 +29,7 @@ from pydantic import BaseModel, Field, StringConstraints
 from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FourDigitYear
 from ...core.identity.hex_ids import WorkUnitId
+from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
 _Token = Annotated[str, StringConstraints(min_length=1, max_length=16, pattern=r"^[A-Za-z0-9]+$")]
@@ -104,12 +106,23 @@ class OperationCompleteProfileSetupStepV1(BaseModel):
     words: _Words
 
 
+class OperationOpenMovementStepV1(BaseModel):
+    """Open one ledger movement in the Libro, where the fact the refusal names is recorded."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["open_movement"] = "open_movement"
+    transaction_id: TransactionId
+    words: _Words
+
+
 type OperationNextStepV1 = Annotated[
     OperationCreateWorkStepV1
     | OperationCalculateWorkStepV1
     | OperationOpenWorkStepV1
     | OperationOpenProfileFieldStepV1
-    | OperationCompleteProfileSetupStepV1,
+    | OperationCompleteProfileSetupStepV1
+    | OperationOpenMovementStepV1,
     Field(discriminator="kind"),
 ]
 """The step a refusal serves: a closed kind, what it concerns, and the words that offer it."""
@@ -156,6 +169,7 @@ __all__ = [
     "OperationNextStepErrorMixin",
     "OperationNextStepV1",
     "OperationNextStepWording",
+    "OperationOpenMovementStepV1",
     "OperationOpenProfileFieldStepV1",
     "OperationOpenWorkStepV1",
     "error_next_step",

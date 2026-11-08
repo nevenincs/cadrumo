@@ -37,6 +37,7 @@ from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtoco
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ..filing.draft_review_ports import DraftReviewPorts
 from ..filing.producer_snapshot_m360 import Modelo360SolicitudRegister
+from ..invoices.catalogue_reads_ports import InvoiceCatalogueReader
 from .credit_resolution_repository import CreditResolutionReader
 
 
@@ -81,6 +82,8 @@ class ModeloExportPorts:
     own_accounts: OwnAccountRegisterReaderProtocol
     """The own-account register every charge and refund account is resolved from."""
     transaction: TransactionCatalogueRepositoryProtocol
+    invoices: InvoiceCatalogueReader
+    """The same bucket's invoice catalogue, the IVA source of every invoiced operation."""
     activity_assets: ActivityAssetHistoryRepository
     """Read for the names the export's notes call the taxpayer's elements by."""
     draft_review_ports: DraftReviewPorts

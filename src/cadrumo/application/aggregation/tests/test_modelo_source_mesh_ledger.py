@@ -10,9 +10,9 @@ import pytest
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from ....core.aggregation import BindingSourceKind
-from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
 from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import TransactionKind
 from ....domain.iva.oss import OssIossRegime
 from ....domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
@@ -20,15 +20,11 @@ from ....domain.iva.schema import InvoiceKind as InvoiceKind
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
-from ..errors import (
-    AggregationValidationError,
-)
 from ..iva_ledger import (
     IvaLedgerAggregationIssueReason,
 )
 from ..oss_ioss import OssIossLedgerCandidate, aggregate_oss_ioss_bindings
 from ..oss_ioss_resolver import OssIossLedgerSourceResolver
-from ..preconditions import AggregationPreconditionCondition
 from ..source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -168,10 +164,31 @@ def test_iva_source_mesh_resolver_carries_prorrata_apportionment_provenance() ->
     assert provenance.source_refs
 
 
-def test_iva_source_mesh_resolver_refuses_m303_invoice_domestic_iva_without_transaction_ledger() -> None:
-    revision = m303_revision()
-    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
+def _resolve_invoices_alone(*invoices: Invoice, code: str = "1T") -> CalculationSourceResolution:
+    """Resolve 2025 ``code`` over these invoices with no transaction ledger at all."""
     invoice_repo = InMemoryInvoiceCatalogueRepository()
+    invoice_repo.save(build_invoice_catalogue(invoices))
+    return ledger_iva_resolver(
+        transaction_repository=InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID),
+        invoice_repository=invoice_repo,
+        prorrata_register_repository=empty_prorrata_repository(),
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id=BUCKET_ID,
+            modelo="303",
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, code),
+            revision=m303_revision(),
+        ),
+    )
+
+
+def test_iva_source_mesh_declares_an_issued_invoice_without_a_ledger_movement() -> None:
+    """The invoice is the IVA source (LIVA art. 75, art. 164): no movement is needed to declare it.
+
+    An unpaid sale devengues on its operation and is repercutida all the same;
+    the bank movement is payment evidence, not the source of the cuota.
+    """
     invoice = domestic_iva_invoice(
         "LAURA-1T-SALE",
         kind=InvoiceKind.ISSUED,
@@ -179,69 +196,60 @@ def test_iva_source_mesh_resolver_refuses_m303_invoice_domestic_iva_without_tran
         taxable_base=Decimal("10000.00"),
         iva_amount=Decimal("2100.00"),
     )
-    invoice_repo.save(build_invoice_catalogue((invoice,)))
 
-    with pytest.raises(AggregationValidationError) as exc_info:
-        ledger_iva_resolver(
-            transaction_repository=tx_repo,
-            invoice_repository=invoice_repo,
-            prorrata_register_repository=empty_prorrata_repository(),
-        ).resolve(
-            CalculationSourceContext(
-                bucket_id=BUCKET_ID,
-                modelo="303",
-                filing_year=2025,
-                period=Period.from_year_and_code(2025, "1T"),
-                revision=revision,
-            ),
-        )
+    resolution = _resolve_invoices_alone(invoice)
 
-    assert exc_info.value.context is not None
-    assert exc_info.value.context["reason"] == "invoice_domestic_iva_not_in_transaction_ledger"
-    assert exc_info.value.context["period"] == "1T"
-    verdict = exc_info.value.terminal_precondition_verdict
-    assert verdict is not None
-    assert verdict.failed_condition_id == AggregationPreconditionCondition.INVOICE_LEDGER_COMPLETE.value
-    assert verdict.action is None
-    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
-    assert verdict.evidence[0].values["invoice_count"] == 1
+    assert resolution.binding_values["modelo-303-iva-repercutido-general-base"] == Decimal("10000.00")
+    assert resolution.binding_values["modelo-303-iva-repercutido-general-cuota"] == Decimal("2100.00")
+    assert resolution.source_transaction_ids == ()
+    assert [item.source_ref for item in resolution.provenance] == [f"invoice:{invoice.invoice_id}"]
 
 
-def test_iva_source_mesh_withholds_received_invoice_without_deduction_authority() -> None:
-    """A received invoice reaches no SOPORTADO row until classified authority exists."""
-    revision = m303_revision()
-    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
-    invoice_repo = InMemoryInvoiceCatalogueRepository()
-    invoice = domestic_iva_invoice(
-        "PURCHASE-WITHOUT-DEDUCTION-AUTHORITY",
+def _received(number: str, base: str, cuota: str) -> Invoice:
+    return domestic_iva_invoice(
+        number,
         kind=InvoiceKind.RECEIVED,
         issued_at=date(2025, 2, 10),
-        taxable_base=Decimal("100.00"),
-        iva_amount=Decimal("21.00"),
+        taxable_base=Decimal(base),
+        iva_amount=Decimal(cuota),
     )
-    invoice_repo.save(build_invoice_catalogue((invoice,)))
 
-    with pytest.raises(AggregationValidationError) as refusal:
-        ledger_iva_resolver(
-            transaction_repository=tx_repo,
-            invoice_repository=invoice_repo,
-            prorrata_register_repository=empty_prorrata_repository(),
-        ).resolve(
-            CalculationSourceContext(
-                bucket_id=BUCKET_ID,
-                modelo="303",
-                filing_year=2025,
-                period=Period.from_year_and_code(2025, "1T"),
-                revision=revision,
-            ),
-        )
 
-    # The ledger carries none of the invoice's cuota, so withholding it silently
-    # would under-declare; the filing is refused and names the invoice.
-    assert refusal.value.context is not None
-    assert refusal.value.context["reason"] == "invoice_deduction_authority_missing_from_transaction_ledger"
-    assert refusal.value.context["invoice_ids"] == (invoice.invoice_id,)
-    assert refusal.value.context["invoice_cuota_exceeding_ledger"] == "21.00"
+def test_iva_source_mesh_deducts_a_received_invoice_below_the_investment_threshold() -> None:
+    """Below the art. 108 threshold a domestic purchase is current soportado on its own invoice.
+
+    3005.05 is one cent under the 3005.06 fact; an acquisition that small
+    cannot be a bien de inversion, so the invoice grounds its own deduction
+    family and needs no linked movement.
+    """
+    invoice = _received("PURCHASE-BELOW-THRESHOLD", "3005.05", "631.06")
+
+    resolution = _resolve_invoices_alone(invoice)
+
+    assert resolution.binding_values["modelo-303-iva-soportado-interiores-base"] == Decimal("3005.05")
+    assert resolution.binding_values["modelo-303-iva-soportado-interiores-cuota"] == Decimal("631.06")
+    assert all(diagnostic.reason != "iva_selected_scope_evidence_failure" for diagnostic in resolution.diagnostics)
+
+
+def test_iva_source_mesh_withholds_a_received_invoice_at_the_threshold_without_deduction_authority() -> None:
+    """At the threshold the invoice cannot tell current soportado from a bien de inversion.
+
+    The threshold applies strictly below ("sea inferior a"), so 3005.06 itself
+    needs a classified authority. Without one the cuota reaches no SOPORTADO
+    row, and the withholding is named rather than silent.
+    """
+    invoice = _received("PURCHASE-AT-THRESHOLD", "3005.06", "631.06")
+
+    resolution = _resolve_invoices_alone(invoice)
+
+    assert not any(resolution.binding_values.values())
+    (finding,) = [
+        diagnostic
+        for diagnostic in resolution.diagnostics
+        if diagnostic.reason == "iva_selected_scope_evidence_failure"
+    ]
+    assert finding.source_ref == f"invoice:{invoice.invoice_id}"
+    assert "invoice_deduction_family_unresolved" in finding.message
 
 
 def test_iva_source_mesh_resolver_attributes_a_q1_operation_invoiced_in_q2_to_q1() -> None:
@@ -249,14 +257,10 @@ def test_iva_source_mesh_resolver_attributes_a_q1_operation_invoiced_in_q2_to_q1
 
     RD 1619/2012 art. 11 lets this B2B invoice be issued on 10 April for an
     operation performed on 28 March, so the record is lawful. Its cuota is
-    devengada in Q1: the domestic-IVA screen must see it while calculating Q1
-    and must NOT see it while calculating Q2. Both quarters are asserted,
-    because a change that moved every invoice one quarter earlier would satisfy
-    the Q1 half alone.
+    devengada in Q1: it must be declared while calculating Q1 and must NOT be
+    declared while calculating Q2. Both quarters are asserted, because a change
+    that moved every invoice one quarter earlier would satisfy the Q1 half alone.
     """
-    revision = m303_revision()
-    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
-    invoice_repo = InMemoryInvoiceCatalogueRepository()
     invoice = domestic_iva_invoice(
         "LAURA-Q1-OPERATION-INVOICED-IN-Q2",
         kind=InvoiceKind.ISSUED,
@@ -265,36 +269,15 @@ def test_iva_source_mesh_resolver_attributes_a_q1_operation_invoiced_in_q2_to_q1
         iva_amount=Decimal("2100.00"),
         operation_date=date(2025, 3, 28),
     )
-    invoice_repo.save(build_invoice_catalogue((invoice,)))
 
-    def _resolve(code: str) -> CalculationSourceResolution:
-        return ledger_iva_resolver(
-            transaction_repository=tx_repo,
-            invoice_repository=invoice_repo,
-            prorrata_register_repository=empty_prorrata_repository(),
-        ).resolve(
-            CalculationSourceContext(
-                bucket_id=BUCKET_ID,
-                modelo="303",
-                filing_year=2025,
-                period=Period.from_year_and_code(2025, code),
-                revision=revision,
-            ),
-        )
+    q1_resolution = _resolve_invoices_alone(invoice, code="1T")
+    assert q1_resolution.binding_values["modelo-303-iva-repercutido-general-cuota"] == Decimal("2100.00")
+    assert [item.source_ref for item in q1_resolution.provenance] == [f"invoice:{invoice.invoice_id}"]
 
-    with pytest.raises(AggregationValidationError) as exc_info:
-        _resolve("1T")
-    assert exc_info.value.context is not None
-    assert exc_info.value.context["period"] == "1T"
-    assert exc_info.value.context["invoice_ids"] == (invoice.invoice_id,)
-
-    # Q2 holds the issue date and nothing else: the invoice already devengo'd.
-    q2_resolution = _resolve("2T")
-    assert q2_resolution.diagnostics == ()
-    assert exc_info.value.context["invoice_count"] == "1"
-    assert exc_info.value.context["invoice_domestic_iva_excess_by_binding"] == {
-        "modelo-303-iva-repercutido-general-cuota": "2100.00",
-    }
+    # Q2 holds the issue date and nothing else: the operation devengued in Q1.
+    q2_resolution = _resolve_invoices_alone(invoice, code="2T")
+    assert not any(q2_resolution.binding_values.values())
+    assert q2_resolution.provenance == ()
 
 
 def _resolve_laura_first_quarter_sale(
@@ -339,11 +322,14 @@ def _resolve_laura_first_quarter_sale(
     )
 
 
-def test_iva_source_mesh_resolver_accepts_m303_invoice_domestic_iva_when_transaction_ledger_matches() -> None:
-    transaction, resolution = _resolve_laura_first_quarter_sale()
+def test_iva_source_mesh_resolver_declares_the_invoice_when_its_payment_movement_is_linked() -> None:
+    """The linked movement is payment evidence; the declared figure and its citation are the invoice's."""
+    _transaction, resolution = _resolve_laura_first_quarter_sale()
 
     assert resolution.binding_values["modelo-303-iva-repercutido-general-cuota"] == Decimal("2100.00")
-    assert resolution.source_transaction_ids == (transaction.transaction_id,)
+    (provenance,) = resolution.provenance
+    assert provenance.source_ref.startswith("invoice:")
+    assert resolution.source_transaction_ids == ()
     # The invoice records no fecha de operacion, so its Q1 placement rests on
     # the issue date. LIVA art. 75.Uno binds devengo to the operation date, so
     # the substitution is disclosed rather than passed off as a determination.
@@ -712,23 +698,14 @@ def test_oss_source_mesh_resolver_surfaces_advisory_for_unrouted_observation() -
     assert resolution.binding_values.get("modelo-369-union-de-services-21pct") == Decimal("0")
 
 
-def test_the_screen_now_catches_a_non_es_invoice_carrying_spanish_cuota() -> None:
+def test_a_non_es_invoice_carrying_spanish_cuota_is_declared() -> None:
     """A foreign counterparty does not mean the operation carried no Spanish IVA.
 
-    The screen filtered on the counterparty's COUNTRY, which was standing in
-    for "carries Spanish IVA" and is a poor proxy for it. An invoice to a
-    foreign customer can carry ordinary domestic cuota -- goods that never
-    leave the país, a service localised here, a non-established consumer --
-    and every one of those was exempt from the screen, which is precisely the
-    under-declaration the screen exists to catch.
-
-    Same figures as the domestic refusal case above; only the counterparty's
-    country differs. Before this, changing that one field was enough to walk
-    the invoice past the guard.
+    An invoice to a foreign customer can carry ordinary domestic cuota -- goods
+    that never leave the pais, a service localised here, a non-established
+    consumer. The counterparty's country is not a proxy for "carries Spanish
+    IVA": the invoice's own cuota lines are declared like the domestic case.
     """
-    revision = m303_revision()
-    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
-    invoice_repo = InMemoryInvoiceCatalogueRepository()
     invoice = domestic_iva_invoice(
         "DE-1T-SALE",
         kind=InvoiceKind.ISSUED,
@@ -738,40 +715,20 @@ def test_the_screen_now_catches_a_non_es_invoice_carrying_spanish_cuota() -> Non
         counterparty_country="DE",
         counterparty_tax_id="DE345678901",
     )
-    invoice_repo.save(build_invoice_catalogue((invoice,)))
 
-    with pytest.raises(AggregationValidationError) as exc_info:
-        ledger_iva_resolver(
-            transaction_repository=tx_repo,
-            invoice_repository=invoice_repo,
-            prorrata_register_repository=empty_prorrata_repository(),
-        ).resolve(
-            CalculationSourceContext(
-                bucket_id=BUCKET_ID,
-                modelo="303",
-                filing_year=2025,
-                period=Period.from_year_and_code(2025, "1T"),
-                revision=revision,
-            ),
-        )
+    resolution = _resolve_invoices_alone(invoice)
 
-    assert exc_info.value.context is not None
-    assert exc_info.value.context["reason"] == "invoice_domestic_iva_not_in_transaction_ledger"
+    assert resolution.binding_values["modelo-303-iva-repercutido-general-base"] == Decimal("10000.00")
+    assert resolution.binding_values["modelo-303-iva-repercutido-general-cuota"] == Decimal("2100.00")
 
 
 def test_an_exempt_intracommunity_invoice_does_not_trip_the_widened_screen() -> None:
-    """Positive control: widening the screen must not refuse the ordinary EU case.
+    """Positive control: a non-ES invoice without cuota is not refused.
 
     An entrega intracomunitaria exenta is the commonest non-ES invoice there
-    is, and it carries no cuota at all. Dropping the country filter must not
-    start refusing those, or the widening would block correct filings far more
-    often than it catches wrong ones.
-
-    It passes for a structural reason rather than by luck: the screen compares
-    only lines carrying a positive cuota, so a zero-cuota invoice contributes
-    no observation whatever its counterparty's country. That is why removing
-    the country proxy widens WHICH invoices are considered without widening
-    what is actually compared.
+    is, and it carries no cuota at all. Declaring a foreign customer's Spanish
+    cuota must not start refusing those, or it would block correct filings far
+    more often than it catches wrong ones.
     """
     revision = m303_revision()
     tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)

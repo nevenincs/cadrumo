@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#iva-workflow'
 date: '2026-09-21'
-modified: '2026-09-24'
+modified: '2026-11-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:b932ea69616b22543471c5f0ed7a91bc8c2a318ee11ac8745ad7697b45549845'
+body_hash: 'sha256:3d4f54e94252fe381c9209c7da28695afa1e7675c2cf0cb4e496e7ae718217ba'
 related:
   - '[[2026-09-21-iva-workflow-adr]]'
   - '[[2026-09-21-iva-workflow-cli-invoice-lines-adr]]'
@@ -17,6 +17,7 @@ related:
   - '[[2026-09-23-iva-workflow-ledger]]'
   - '[[2026-09-23-iva-workflow-plan]]'
   - '[[2026-09-24-iva-workflow-settlement-wallet-and-export-identity-research]]'
+  - '[[2026-11-08-iva-workflow-invoice-iva-source-adr]]'
 ---
 
 # `iva-workflow` feature index
@@ -27,10 +28,11 @@ Auto-generated index of all documents tagged with `#iva-workflow`.
 
 ### adr
 
-- `2026-09-21-iva-workflow-adr` - `iva-workflow` adr: `Selected-scope IVA completeness issue gating` | (**status:** `accepted`)
+- `2026-09-21-iva-workflow-adr` - `iva-workflow` adr: `Selected-scope IVA completeness issue gating` | (**status:** `superseded`)
 - `2026-09-21-iva-workflow-cli-invoice-lines-adr` - `iva-workflow` adr: `Repeatable JSON invoice-line CLI input` | (**status:** `accepted`)
 - `2026-09-21-iva-workflow-m303-filing-evidence-authoring-adr` - `iva-workflow` adr: `M303 filing evidence production authoring boundary` | (**status:** `accepted`)
 - `2026-09-21-iva-workflow-settlement-lifecycle-adr` - `iva-workflow` adr: `IVA filing settlement evidence lifecycle` | (**status:** `accepted`)
+- `2026-11-08-iva-workflow-invoice-iva-source-adr` - `iva-workflow` adr: `The invoice is the IVA source; the movement is its payment evidence` | (**status:** `accepted`)
 
 ### exec
 

@@ -64,7 +64,7 @@ from cadrumo.adapters.persistence.profile.transactions import TransactionCatalog
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.calculations.observations_repository import observation_key
-from cadrumo.application.modelo.action_errors import ModeloAggregationBindingError
+from cadrumo.application.modelo.action_errors import ModeloLedgerPreflightBlockedError
 from cadrumo.application.modelo.export_contracts import ModeloExportCommand
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
@@ -562,10 +562,10 @@ def test_m100_base_only_gate_still_blocks_missing_renta_taxable_base(
     )
     InvoiceCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects).save(InvoiceCatalogue())
 
-    with pytest.raises(ModeloAggregationBindingError) as exc_info:
+    with pytest.raises(ModeloLedgerPreflightBlockedError) as exc_info:
         calculate_m100_annual(secure_objects)
 
-    assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked"
+    assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked_movement"
     assert exc_info.value.context is not None
     assert exc_info.value.context["reason"] == "missing_taxable_base"
 

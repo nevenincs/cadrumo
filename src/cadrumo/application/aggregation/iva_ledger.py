@@ -88,9 +88,15 @@ from ...domain.transactions.enums import (
 )
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..invoices.catalogue_reads_ports import BucketBoundCatalogueReader, InvoiceCatalogueReader
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from . import shared_issue_reasons
 from .errors import AggregationValidationError
+from .invoice_iva_source import (
+    InvoiceIvaFinding,
+    period_invoice_iva_side,
+    refuse_contradicting_linked_movements,
+)
 from .invoice_kind import invoice_kind_for_direction
 
 
@@ -480,6 +486,14 @@ class IvaLedgerAggregation(BaseModel):
     # Contributing rows whose recorded operation date is later than the money:
     # the shape of a pago anticipado, which art. 75.Dos dates at the collection.
     operation_after_movement_ledger_ids: tuple[str, ...] = ()
+    # Invoices whose lines are among ``observations``: the invoice is the IVA
+    # source (LIVA art. 75, art. 97), and the movements paying it contribute none.
+    invoice_ids: tuple[str, ...] = ()
+    # What blocks filing grade on the invoice side of the period.
+    invoice_findings: tuple[InvoiceIvaFinding, ...] = ()
+    # The invoice screen's advisories, for the resolver's diagnostics. Read it
+    # through ``invoice_screen_of``; it is process-local and never serialized.
+    invoice_screen: object | None = Field(default=None, exclude=True, repr=False)
 
     @field_validator("observations")
     @classmethod
@@ -532,11 +546,17 @@ def aggregate_iva_ledger_observations_from_repositories(
     period: Period,
     prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    invoice_reader: InvoiceCatalogueReader,
     investment_asset_register: BienesInversionIvaRegister | None = None,
     investment_asset_profile_id: str | None = None,
     operation: PinnedAuthorityOperation,
 ) -> IvaLedgerAggregation:
-    """Load the bucket-local transaction catalogue and project IVA observations.
+    """Load the bucket's invoices and transactions and project IVA observations.
+
+    The invoice is the IVA source: every invoice accruing in ``period``
+    contributes its lines, and a movement an invoice names is its payment
+    evidence, contributing no observation of its own. Movements no invoice
+    names keep their own IVA facts.
 
     Returns an :class:`IvaLedgerAggregation`.
 
@@ -549,6 +569,9 @@ def aggregate_iva_ledger_observations_from_repositories(
             caller can fall back to an implicitly constructed register whose
             bucket nobody checked.
         transaction_repository: Required bucket-bound catalogue capability.
+        invoice_reader: The same bucket's invoice catalogue. Required, so no
+            caller can calculate IVA from movements alone while the person's
+            Libro de facturas holds the operations.
         investment_asset_register: Bienes-inversion authority, mandatory
             whenever ``transaction_repository`` is injected.
         investment_asset_profile_id: Profile owning that register.
@@ -569,6 +592,11 @@ def aggregate_iva_ledger_observations_from_repositories(
             tr("aggregation.iva_ledger.errors.bucket_mismatch"),
             context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
+    if isinstance(invoice_reader, BucketBoundCatalogueReader) and invoice_reader.bucket_id not in (None, bucket_id):
+        raise AggregationValidationError(
+            tr("aggregation.iva_ledger.errors.bucket_mismatch"),
+            context={"bucket_id": bucket_id, "repository_bucket_id": invoice_reader.bucket_id},
+        )
     prorrata_apportionment = _active_prorrata_apportionment(
         bucket_id=bucket_id,
         ejercicio=period.filing_year,
@@ -581,38 +609,52 @@ def aggregate_iva_ledger_observations_from_repositories(
     # for those rows. A period with no calendar span falls back to the
     # unfiltered load.
     if not period.has_date_span():
-        result = aggregate_iva_ledger_observations(
-            repository.load(),
-            period=period,
-            prorrata_apportionment=prorrata_apportionment,
-            ledger_profile_id=bucket_id,
-            investment_asset_register=investment_asset_register,
-            investment_asset_profile_id=investment_asset_profile_id,
-            operation=operation,
-        )
+        window = repository.load()
+        out_of_window_summary = None
     else:
-        partition = repository.partition_by_date_range(period.start_date, period.end_date)
-        result = aggregate_iva_ledger_observations(
-            partition.in_window,
-            period=period,
-            prorrata_apportionment=prorrata_apportionment,
-            ledger_profile_id=bucket_id,
-            investment_asset_register=investment_asset_register,
-            investment_asset_profile_id=investment_asset_profile_id,
-            investment_acquisition_rows=_register_acquisition_rows_outside_window(
-                partition.in_window,
+        date_partition = repository.partition_by_date_range(period.start_date, period.end_date)
+        window = date_partition.in_window
+        out_of_window_summary = (
+            date_partition.out_of_window_summary
+            or OutOfWindowTransactionSummary.from_index_entries(date_partition.out_of_window)
+        )
+    invoice_side = period_invoice_iva_side(
+        tuple(invoice_reader.load()),
+        bucket_id=bucket_id,
+        period=period,
+        window=window,
+        repository=repository,
+        operation=operation,
+    )
+    refuse_contradicting_linked_movements(invoice_side.contradicted)
+    result = aggregate_iva_ledger_observations(
+        invoice_side.unpaid_window,
+        period=period,
+        prorrata_apportionment=prorrata_apportionment,
+        ledger_profile_id=bucket_id,
+        investment_asset_register=investment_asset_register,
+        investment_asset_profile_id=investment_asset_profile_id,
+        investment_acquisition_rows=(
+            _register_acquisition_rows_outside_window(
+                window,
                 filing_year=period.filing_year,
                 investment_asset_register=investment_asset_register,
                 repository=repository,
-            ),
-            operation=operation,
-        )
-        out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_index_entries(
-            partition.out_of_window,
-        )
-        result = result.model_copy(
-            update={"out_of_window_summary": out_of_window_summary},
-        )
+            )
+            if period.has_date_span()
+            else None
+        ),
+        operation=operation,
+    )
+    result = result.model_copy(
+        update={
+            "observations": (*result.observations, *invoice_side.source.observations),
+            "out_of_window_summary": out_of_window_summary,
+            "invoice_ids": invoice_side.source.screen.invoice_ids,
+            "invoice_findings": invoice_side.source.findings,
+            "invoice_screen": invoice_side.source.screen,
+        },
+    )
     _validate_rectifications_consumed_once(result.observations, operation=operation)
     return result
 

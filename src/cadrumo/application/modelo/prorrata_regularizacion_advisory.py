@@ -57,6 +57,7 @@ from ..calculations.prorrata_regularizacion import (
     build_prorrata_missing_provisional_advisory,
     derive_prorrata_applicability,
 )
+from ..invoices.catalogue_reads_ports import InvoiceCatalogueReader
 from ..prorrata_register.ports import ProrrataRegisterServiceRepositoryProtocol
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from .semantic_role_resolution import casilla_id_for_unambiguous_revision_semantic_role
@@ -87,6 +88,7 @@ def _settlement_prorrata_diagnostics(
     missing_carry_diagnostics: tuple[CalculationSourceDiagnostic, ...],
     prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    invoice_reader: InvoiceCatalogueReader,
     bienes_inversion_repository: BienesInversionIvaRegisterRepositoryProtocol,
     bucket_id: str | None,
     operation: PinnedAuthorityOperation,
@@ -98,6 +100,7 @@ def _settlement_prorrata_diagnostics(
         filing_year=filing_year,
         prorrata_register_repository=prorrata_register_repository,
         transaction_repository=transaction_repository,
+        invoice_reader=invoice_reader,
         bienes_inversion_repository=bienes_inversion_repository,
         bucket_id=bucket_id,
         operation=operation,
@@ -114,6 +117,7 @@ def collect_prorrata_regularizacion_diagnostics(
     filing_year: int,
     prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    invoice_reader: InvoiceCatalogueReader,
     bienes_inversion_repository: BienesInversionIvaRegisterRepositoryProtocol,
     bucket_id: str | None = None,
     operation: PinnedAuthorityOperation | None = None,
@@ -133,6 +137,8 @@ def collect_prorrata_regularizacion_diagnostics(
             used for the provisional carry and annual regime comparison.
         transaction_repository: Required bucket-bound transaction catalogue
             capability used by the annual IVA settlement comparison.
+        invoice_reader: The same bucket's invoice catalogue, the IVA source
+            the annual IVA settlement comparison aggregates with the ledger.
         bienes_inversion_repository: Required bucket-bound capital-goods
             register the annual IVA settlement comparison proves the year's
             investment acquisitions against.
@@ -162,6 +168,7 @@ def collect_prorrata_regularizacion_diagnostics(
                 filing_year=filing_year,
                 bucket_id=bucket_id,
                 transaction_repository=transaction_repository,
+                invoice_reader=invoice_reader,
                 prorrata_register_repository=prorrata_register_repository,
                 bienes_inversion_repository=bienes_inversion_repository,
                 operation=authority,
@@ -196,6 +203,7 @@ def collect_prorrata_regularizacion_diagnostics(
                 missing_carry_diagnostics=missing_carry_diagnostics,
                 prorrata_register_repository=prorrata_register_repository,
                 transaction_repository=transaction_repository,
+                invoice_reader=invoice_reader,
                 bienes_inversion_repository=bienes_inversion_repository,
                 bucket_id=bucket_id,
                 operation=authority,
@@ -210,6 +218,7 @@ def _especial_mandatory_diagnostics(
     filing_year: int,
     prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    invoice_reader: InvoiceCatalogueReader,
     bienes_inversion_repository: BienesInversionIvaRegisterRepositoryProtocol,
     bucket_id: str | None,
     operation: PinnedAuthorityOperation,
@@ -242,6 +251,7 @@ def _especial_mandatory_diagnostics(
         revision=revision,
         prorrata_register_repository=prorrata_register_repository,
         transaction_repository=transaction_repository,
+        invoice_reader=invoice_reader,
         investment_asset_register=bienes_inversion_repository.load(),
         investment_asset_profile_id=bucket_id,
         operation=operation,
@@ -381,6 +391,7 @@ def _annual_volume_rollup(
     filing_year: int,
     bucket_id: str | None,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    invoice_reader: InvoiceCatalogueReader,
     prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
     bienes_inversion_repository: BienesInversionIvaRegisterRepositoryProtocol,
     operation: PinnedAuthorityOperation,
@@ -402,6 +413,7 @@ def _annual_volume_rollup(
         period=Period.from_year_and_code(filing_year, "0A"),
         prorrata_register_repository=prorrata_register_repository,
         transaction_repository=transaction_repository,
+        invoice_reader=invoice_reader,
         investment_asset_register=bienes_inversion_repository.load(),
         investment_asset_profile_id=bucket_id,
         operation=operation,

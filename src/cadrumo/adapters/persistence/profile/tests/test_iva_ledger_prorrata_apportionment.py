@@ -26,6 +26,7 @@ from typing import Any, cast
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -86,6 +87,7 @@ def aggregate_iva_ledger_observations_from_repositories(
     bucket_id: str,
     period: Period,
     transaction_repository: TransactionCatalogueRepository,
+    invoice_reader: InvoiceCatalogueRepository,
     operation: PinnedAuthorityOperation,
 ):
     """Exercise the injected-repository path with its explicit asset authority."""
@@ -93,6 +95,7 @@ def aggregate_iva_ledger_observations_from_repositories(
         bucket_id=bucket_id,
         period=period,
         transaction_repository=transaction_repository,
+        invoice_reader=invoice_reader,
         prorrata_register_repository=ProrrataRegisterRepository(bucket_id=bucket_id),
         investment_asset_register=BienesInversionIvaRegister(),
         investment_asset_profile_id=bucket_id,
@@ -232,6 +235,7 @@ def test_non_prorrata_register_keeps_fully_taxable_deducible_aggregation_byte_id
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
             operation=authority_operation,
         )
         baseline_binding_bytes = _canonical_binding_bytes(
@@ -260,6 +264,7 @@ def test_non_prorrata_register_keeps_fully_taxable_deducible_aggregation_byte_id
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
             operation=authority_operation,
         )
         non_prorrata_binding_bytes = _canonical_binding_bytes(
@@ -297,6 +302,7 @@ def test_general_prorrata_register_reduces_deducible_cuota_without_reducing_base
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
             operation=authority_operation,
         )
         baseline_values = resolve_iva_ledger_binding_values(
@@ -325,6 +331,7 @@ def test_general_prorrata_register_reduces_deducible_cuota_without_reducing_base
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
             operation=authority_operation,
         )
         apportioned_values = resolve_iva_ledger_binding_values(
@@ -396,6 +403,7 @@ def test_general_regime_apportionment_is_byte_identical_to_pre_especial(
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
             operation=authority_operation,
         )
         values = resolve_iva_ledger_binding_values(
@@ -448,6 +456,7 @@ def test_especial_regime_routes_each_input_by_art_106_classification(
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
             operation=authority_operation,
         )
         values = resolve_iva_ledger_binding_values(
@@ -498,6 +507,7 @@ def test_especial_all_common_reduces_to_general_byte_identical(
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
             operation=authority_operation,
         )
         especial_bytes = _canonical_binding_bytes(
@@ -514,6 +524,7 @@ def test_especial_all_common_reduces_to_general_byte_identical(
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
             operation=authority_operation,
         )
         general_bytes = _canonical_binding_bytes(
@@ -560,6 +571,7 @@ def test_especial_refuses_an_unclassified_deducible_input(
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
             operation=authority_operation,
         )
         with pytest.raises(AggregationValidationError) as raised:
@@ -660,6 +672,7 @@ def test_single_sector_all_inputs_equals_whole_entity_general_byte_identical(
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
             operation=authority_operation,
         )
         sectored_bytes = _canonical_binding_bytes(
@@ -688,6 +701,7 @@ def test_single_sector_all_inputs_equals_whole_entity_general_byte_identical(
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
             operation=authority_operation,
         )
         whole_entity_bytes = _canonical_binding_bytes(
@@ -759,6 +773,7 @@ def test_each_input_routes_to_its_own_sector_percentage(
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
             operation=authority_operation,
         )
         values = resolve_iva_ledger_binding_values(
@@ -861,6 +876,7 @@ def test_sectorized_register_refuses_missing_inactive_or_unresolved_sector_entry
                 period=_PERIOD,
                 prorrata_register_repository=repository,
                 transaction_repository=tx_repo,
+                invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository),
                 operation=authority_operation,
             )
 
@@ -899,6 +915,7 @@ def test_especial_settlement_applies_the_definitive_percentage_to_the_common_sli
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
             operation=authority_operation,
         )
         assert aggregation.prorrata_apportionment is not None
@@ -965,6 +982,7 @@ def test_sectorized_settlement_applies_each_sector_definitive_and_refuses_a_part
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
             operation=authority_operation,
         )
         assert aggregation.prorrata_apportionment is not None

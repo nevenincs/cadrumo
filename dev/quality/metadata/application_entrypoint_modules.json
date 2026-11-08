@@ -57,7 +57,6 @@
         "cadrumo.application.aggregation.grouping",
         "cadrumo.application.aggregation.iva_transaction",
         "cadrumo.application.aggregation.modelo_bindings_invoice_iva",
-        "cadrumo.application.aggregation.modelo_bindings_invoice_iva_refusal",
         "cadrumo.application.aggregation.modelo_bindings_support",
         "cadrumo.application.aggregation.models",
         "cadrumo.application.aggregation.preconditions",

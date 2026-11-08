@@ -36,6 +36,9 @@ export type HistoryUnit = {
 export type HistoryNotice = {
   tone: "warning" | "danger";
   words: string;
+  /** The movement a refusal names for putting it right, and the words that
+   * offer opening it. */
+  movement?: { transactionId: string; words: string };
 } | null;
 
 const KIND_ICON: Record<string, IconName> = {
