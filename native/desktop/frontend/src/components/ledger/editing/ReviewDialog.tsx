@@ -26,7 +26,10 @@ import type {
   OutputLanguage,
 } from "../../../shell/ledger";
 import { useInvoiceMatches } from "../../../shell/ledgerInvoiceMatch";
-import type { StepOutcome } from "../../../shell/ledgerApply";
+import {
+  plannedStepsReported,
+  type StepOutcome,
+} from "../../../shell/ledgerApply";
 import {
   stagedCheckRequest,
   useStagedCheck,
@@ -1053,12 +1056,12 @@ export function ReviewDialog({
       <div className="grid gap-3">
         <Progress
           aria-label={t("desktop.ledger.apply.progress")}
-          value={state.reports.length}
+          value={plannedStepsReported(state.reports)}
           max={state.plan.steps.length}
         />
         <p role="status" className="text-sm text-muted-foreground">
           {t("desktop.ledger.apply.progress_count", {
-            done: state.reports.length,
+            done: plannedStepsReported(state.reports),
             total: state.plan.steps.length,
           })}
         </p>

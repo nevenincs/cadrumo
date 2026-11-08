@@ -10,6 +10,7 @@ import {
   changedSinceRead,
   keepAfterApply,
   askReview,
+  plannedStepsReported,
   prepareApply,
   RELEASE_OBSERVATIONS,
   releaseReview,
@@ -855,6 +856,35 @@ test("a document added as evidence is attached by the evidence id it settled wit
     "ledger.attach": [{ refuse: "validation_error" }],
   });
   expect(keepAfterApply(content, kept.report).actions).toEqual(["doc"]);
+});
+
+test("progress counts the plan's own steps, never the follow-ups a settled step adds", async () => {
+  const add: StagedAction = {
+    id: "doc",
+    kind: "attach_file",
+    transactionId: A,
+    file: "file-1" as never,
+    name: "ticket.pdf",
+    idempotencyKey: "desktop-evidence-1",
+    supplementary: false,
+  };
+  const content: StagedContent = { rows: {}, drafts: [], actions: [add] };
+  const done = await apply(content, rowsOf(business(A)), {
+    "ledger.evidence.add": [
+      {
+        settle: {
+          profile_id: PROFILE,
+          record: { evidence_id: "0123456789abcdef" },
+        },
+      },
+    ],
+    "ledger.attach": [{ settle: { profile_id: PROFILE } }],
+  });
+  // The attach follows the add: two reports for one planned step.
+  expect(done.report.steps.length).toBeGreaterThan(done.plan.steps.length);
+  expect(plannedStepsReported(done.report.steps.slice(0, 1))).toBe(1);
+  expect(plannedStepsReported(done.report.steps)).toBe(done.plan.steps.length);
+  expect(plannedStepsReported([])).toBe(0);
 });
 
 test("a new file supplements an existing purchase reference by its stored blob", async () => {
