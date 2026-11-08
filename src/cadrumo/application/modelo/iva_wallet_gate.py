@@ -311,6 +311,7 @@ def _persisted_decision_for_calculation(
     history_repository: IvaCompensationHistoryRepositoryProtocol,
     profile_values: Mapping[str, str] | None,
     evaluated_at: datetime | None = None,
+    persist_blocked: bool = True,
 ) -> IvaCompensationReconciliationDecision | None:
     persisted = load_persisted_iva_compensation_decision_for_work_unit(
         work_unit,
@@ -329,6 +330,7 @@ def _persisted_decision_for_calculation(
         history_repository=history_repository,
         profile_values=profile_values,
         evaluated_at=evaluated_at,
+        persist_blocked=persist_blocked,
     )
     return _require_first_period_zero_decision_grounded(
         work_unit,
@@ -377,7 +379,7 @@ def _resolve_caller_supplied_prior_compensation(
             subject_leaf_key="modelo.work.calculate",
             profile_values=profile_values,
         )
-    _save_iva_compensation_decision(decision, repository=repository)
+        _save_iva_compensation_decision(decision, repository=repository)
     return decision
 
 
@@ -458,6 +460,9 @@ def resolve_iva_compensation_decision_for_calculation(
             repository=repository,
             profile_values=profile_values,
         )
+    # A blocked decision is refused right after this returns, so the
+    # calculation stores none: the refusal then writes nothing and settles with
+    # no effect. Verification, filing and export still store a blocked refresh.
     persisted = _persisted_decision_for_calculation(
         work_unit,
         snapshot=snapshot,
@@ -467,6 +472,7 @@ def resolve_iva_compensation_decision_for_calculation(
         history_repository=history_repository,
         profile_values=profile_values,
         evaluated_at=evaluated_at,
+        persist_blocked=False,
     )
     if persisted is not None:
         return persisted
@@ -883,6 +889,7 @@ def _refresh_local_iva_compensation_decision_if_evidence_changed(
     history_repository: IvaCompensationHistoryRepositoryProtocol,
     profile_values: Mapping[str, str] | None,
     evaluated_at: datetime | None = None,
+    persist_blocked: bool = True,
 ) -> IvaCompensationReconciliationDecision:
     if decision.selected_authority == "taxpayer_override":
         return decision
@@ -900,7 +907,8 @@ def _refresh_local_iva_compensation_decision_if_evidence_changed(
     )
     if refreshed is None or _decision_replay_basis(refreshed) == _decision_replay_basis(decision):
         return decision
-    _save_iva_compensation_decision(refreshed, repository=repository)
+    if persist_blocked or not refreshed.blocked:
+        _save_iva_compensation_decision(refreshed, repository=repository)
     return refreshed
 
 
@@ -1161,7 +1169,7 @@ def _reconcile_local_iva_compensation(
         subject_leaf_key="modelo.work.calculate",
         profile_values=profile_values,
     )
-    if persist:
+    if persist and not decision.blocked:
         _save_iva_compensation_decision(decision, repository=repository)
     return decision
 
