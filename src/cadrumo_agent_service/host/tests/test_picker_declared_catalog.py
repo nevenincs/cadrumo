@@ -19,7 +19,7 @@ import pytest
 
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
-from ... import service as service_module
+from ... import service_administration as administration_module
 from ...adapters.agent_process import WindowsAgentInvocationRunner
 from ...adapters.provider_catalog_metadata import DECLARED_CATALOG_MODULE, declared_catalog_envelope
 from ...providers.application.service import ProviderSettingsService
@@ -66,7 +66,10 @@ def test_the_fallback_serves_the_agents_declared_document_unchanged_in_its_envel
 ) -> None:
     document = _declared_document()
     service = AgentService(
-        client=cast(InstalledServiceClient, SimpleNamespace(lease=object())),
+        client=cast(
+            InstalledServiceClient,
+            SimpleNamespace(lease=object(), connection=SimpleNamespace(close=lambda: None)),
+        ),
         storage_root=tmp_path,
         gateway_bearer=bytearray(b"synthetic-gateway-bearer"),
         emit=lambda _event: None,
@@ -76,7 +79,7 @@ def test_the_fallback_serves_the_agents_declared_document_unchanged_in_its_envel
         catalog_source=StaticCatalogSource(),
     )
     monkeypatch.setattr(
-        service_module, "declared_provider_catalog_response", lambda: declared_catalog_envelope(document)
+        administration_module, "declared_provider_catalog_response", lambda: declared_catalog_envelope(document)
     )
 
     catalog = service.admin("catalog")

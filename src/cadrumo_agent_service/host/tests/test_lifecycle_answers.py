@@ -132,11 +132,13 @@ def _service(storage_root: Path, events: _Events) -> AgentService:
     )
 
 
-def test_a_stop_is_answered_at_once_and_its_end_follows_as_the_stopped_event(tmp_path: Path) -> None:
+def test_a_stop_is_answered_at_once_and_its_end_follows_as_the_stopped_event(
+    tmp_path: Path, outside_git_path: Path
+) -> None:
     checkout = agent_checkout()
     events = _Events()
     service = _service(tmp_path / "storage", events)
-    controller = _running_tree(checkout, tmp_path / "tree")
+    controller = _running_tree(checkout, outside_git_path / "tree")
     service._controller = controller
     try:
         started = time.monotonic()
@@ -158,7 +160,7 @@ def test_a_stop_is_answered_at_once_and_its_end_follows_as_the_stopped_event(tmp
 
 
 def test_unsupported_sign_in_is_refused_before_retirement_or_auth_work(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, outside_git_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     checkout = agent_checkout()
     monkeypatch.setenv(PACKAGE_AGENT_VARIABLE, str(checkout_interpreter(checkout)))
@@ -180,7 +182,7 @@ def test_unsupported_sign_in_is_refused_before_retirement_or_auth_work(
     methods = service._catalog.gui_sign_in_methods()
     assert "claude" in methods
     assert "device" not in methods["claude"]
-    controller = _running_tree(checkout, tmp_path / "tree")
+    controller = _running_tree(checkout, outside_git_path / "tree")
     service._controller = controller
     try:
         started = time.monotonic()
