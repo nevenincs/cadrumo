@@ -36,6 +36,21 @@ application:
           importe.'
         unnamed_element: un elemento sin nombre
       opening_remedy: Rellena «{field}» para poder calcularlo.
+  aggregation:
+    retenciones:
+      window_empty: 'No hay ninguna retención que declarar en el Modelo %{modelo}
+        de %{period}: no consta ningún pago del periodo que la lleve. Registra la
+        factura recibida y su pago. No se ha guardado nada.'
+      window_empty_lease: 'No hay ninguna retención que declarar en el Modelo %{modelo}
+        de %{period}: no consta ningún pago de alquiler del periodo que la lleve.
+        Si pagaste el alquiler de un local con retención, registra la factura recibida
+        y su pago; si no hubo ninguno, indica en tu perfil que este periodo no tuvo
+        pagos de alquiler con retención. No se ha guardado nada.'
+      window_empty_work: 'No hay ninguna retención que declarar en el Modelo %{modelo}
+        de %{period}: no consta ningún pago del periodo que la lleve. Si pagaste a
+        profesionales o a trabajadores con retención, registra la factura recibida
+        y su pago; si no hubo ninguno, indica en tu perfil que este periodo no tuvo
+        retenciones. No se ha guardado nada.'
   auth:
     acquisition_lock:
       errors:

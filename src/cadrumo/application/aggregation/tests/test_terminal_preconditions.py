@@ -26,7 +26,7 @@ from .. import errors as errors_module
 from .. import modelo_bindings_invoice_iva, preconditions
 from .. import modelo_bindings_retenciones as modelo_bindings_retenciones_module
 from .. import service as service_module
-from ..errors import AggregationError, AggregationUnsupportedModeloError, AggregationValidationError
+from ..errors import AggregationError, AggregationUnsupportedModeloError, RetencionesWindowEmptyError
 from ..modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from ..preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
 from ..retencion_observations_repository import RetencionObservationPorts
@@ -97,7 +97,7 @@ _AGGREGATION_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         AggregationPreconditionCondition.PER_MODELO_MODELO_SUPPORTED,
         (("modelo", "modelo"), ("supported_modelos", "'|'.join(supported)")),
     ),
-    "modelo_bindings_retenciones:RetencionesAggregationSourceResolver.resolve:1": _contract(
+    "modelo_bindings_retenciones:_empty_window_refusal:1": _contract(
         AggregationPreconditionCondition.RETENCIONES_OBSERVATIONS_PRESENT,
         (
             ("modelo", "str(context.modelo)"),
@@ -149,7 +149,11 @@ def _aggregation_carriers() -> dict[str, ast.Call]:
 
             @override
             def visit_Call(self, node: ast.Call) -> None:
-                if call_name(node.func) in {"AggregationUnsupportedModeloError", "AggregationValidationError"}:
+                if call_name(node.func) in {
+                    "AggregationUnsupportedModeloError",
+                    "AggregationValidationError",
+                    "RetencionesWindowEmptyError",
+                }:
                     verdict = next(
                         (keyword.value for keyword in node.keywords if keyword.arg == "precondition_verdict"),
                         None,
@@ -313,7 +317,7 @@ def test_missing_retenciones_observations_has_an_exact_application_state_operato
         ),
     )
 
-    with pytest.raises(AggregationValidationError) as raised:
+    with pytest.raises(RetencionesWindowEmptyError) as raised:
         RetencionesAggregationSourceResolver(
             ports=RetencionObservationPorts(repository=_EmptyRetencionObservationRepository()),
         ).resolve(context)

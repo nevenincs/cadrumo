@@ -24,12 +24,14 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 
 from ....core.aggregation import AggregationCaptureKind, BindingSourceKind, RetencionScheme
 from ....core.casilla_id import validated_casilla_id
+from ....core.external_constants import OutputLanguage
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
-from ..errors import AggregationValidationError
+from ...operations.next_step import OperationOpenProfileFieldStepV1
+from ..errors import RetencionesWindowEmptyError
 from ..modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from ..preconditions import AggregationPreconditionCondition
 from ..retencion_observations_repository import RetencionObservationPorts
@@ -370,15 +372,17 @@ def test_resolver_materialises_modelo_111_scheme_filtered_bindings_from_applicat
 def test_resolver_empty_modelo_115_store_fails_before_silent_zero() -> None:
     """A declaring M115 revision without per-perceptor evidence refuses zero materialisation."""
     snapshot = _authority_snapshot("115", 2026, "1T")
-    with pytest.raises(AggregationValidationError) as exc_info:
+    with pytest.raises(RetencionesWindowEmptyError) as exc_info:
         _resolver(_InMemoryRetencionObservationRepository()).resolve(
             _context_for(modelo="115", filing_year=2026, period="1T", revision=snapshot.revision),
         )
 
-    assert exc_info.value.translated_message == "aggregation.retenciones.errors.perceptor_observations_missing"
+    assert exc_info.value.translated_message == "application.aggregation.retenciones.window_empty_lease"
     context = exc_info.value.context or {}
     assert context["modelo"] == "115"
-    assert context["period"] == "1T"
+    door = exc_info.value.operation_next_step(OutputLanguage.ES)
+    assert isinstance(door, OperationOpenProfileFieldStepV1)
+    assert door.path == "withholding.modelo_115_no_relevant_payment_periods"
     verdict = exc_info.value.terminal_precondition_verdict
     assert verdict is not None
     assert verdict.failed_condition_id == AggregationPreconditionCondition.RETENCIONES_OBSERVATIONS_PRESENT.value
@@ -406,7 +410,7 @@ def test_resolver_materialises_empty_modelo_115_only_for_exact_no_relevant_payme
     }
     assert len(resolution.diagnostics) == 1
     assert "explicit no-relevant-payment attestation" in resolution.diagnostics[0].message
-    with pytest.raises(AggregationValidationError):
+    with pytest.raises(RetencionesWindowEmptyError):
         resolver.resolve(
             _context_for(
                 modelo="115",
@@ -419,13 +423,13 @@ def test_resolver_materialises_empty_modelo_115_only_for_exact_no_relevant_payme
 
 def test_resolver_empty_store_fails_before_silent_zero() -> None:
     """An empty store on a declaring revision refuses calculation, never materialises 0."""
-    with pytest.raises(AggregationValidationError) as exc_info:
+    with pytest.raises(RetencionesWindowEmptyError) as exc_info:
         _resolver(_InMemoryRetencionObservationRepository()).resolve(_context(_m180_revision_with_retenciones_source()))
 
-    assert exc_info.value.translated_message == "aggregation.retenciones.errors.perceptor_observations_missing"
+    assert exc_info.value.translated_message == "application.aggregation.retenciones.window_empty"
     context = exc_info.value.context or {}
     assert context["modelo"] == "180"
-    assert context["period"] == "0A"
+    assert exc_info.value.operation_next_step(OutputLanguage.ES) is None
     verdict = exc_info.value.terminal_precondition_verdict
     assert verdict is not None
     assert verdict.failed_condition_id == AggregationPreconditionCondition.RETENCIONES_OBSERVATIONS_PRESENT.value

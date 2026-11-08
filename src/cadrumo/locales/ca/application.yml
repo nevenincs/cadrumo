@@ -36,6 +36,21 @@ application:
           import.'
         unnamed_element: un element sense nom
       opening_remedy: Omple «{field}» per poder-ho calcular.
+  aggregation:
+    retenciones:
+      window_empty: 'No hi ha cap retenció per declarar al Model %{modelo} de %{period}:
+        no consta cap pagament del període que en porti. Registra la factura rebuda
+        i el seu pagament. No s''ha desat res.'
+      window_empty_lease: 'No hi ha cap retenció per declarar al Model %{modelo} de
+        %{period}: no consta cap pagament de lloguer del període que en porti. Si
+        vas pagar el lloguer d''un local amb retenció, registra la factura rebuda
+        i el seu pagament; si no n''hi va haver cap, indica al teu perfil que aquest
+        període no va tenir pagaments de lloguer amb retenció. No s''ha desat res.'
+      window_empty_work: 'No hi ha cap retenció per declarar al Model %{modelo} de
+        %{period}: no consta cap pagament del període que en porti. Si vas pagar professionals
+        o treballadors amb retenció, registra la factura rebuda i el seu pagament;
+        si no n''hi va haver cap, indica al teu perfil que aquest període no va tenir
+        retencions. No s''ha desat res.'
   auth:
     acquisition_lock:
       errors:

@@ -333,21 +333,10 @@ aggregation:
     errors:
       filing_year_out_of_range: Filing year %{filing_year} is outside the supported
         range %{min_year}-%{max_year}.
-      m111_no_retenciones_attestation_missing: 'No withholding is recorded for any
-        payee on Modelo 111 %{filing_year} %{period}. Do not file a blank Modelo 111:
-        declare the quarter as a no-retenciones period with `aeat config profile edit
-        --modelo-111-no-retenciones-periods %{attestation_period}` (the option replaces
-        the saved list, so also list, comma-separated, any periods you already declared),
-        or record the payments you withheld tax from with `aeat app modelo aggregate`,
-        using --received-invoice-retencion for a received invoice or --ledger-payment-withholding
-        for payroll.'
       m193_phase_allocation_collision: 'Modelo %{modelo} %{filing_year}: allocation(s)
         %{source_allocations} are declared manually and also come from captured capital
         withholding. Remove the manual row.'
       perceptor_nif_blank: The recipient's NIF must not be blank.
-      perceptor_observations_missing: No per-recipient withholding observations exist
-        for modelo %{modelo} %{filing_year} %{period}; source %{source_kind} cannot
-        resolve.
       withholding_annual_source_not_quarterly: 'The annual summary cannot be built:
         the filer''s filing schedule does not assign its periodic withholding modelo
         every quarter of the year (it files monthly), and totalling only the quarterly

@@ -45,6 +45,7 @@ from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.contribuyente.entity_type import entity_type_natural_person_token
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.user_profile.errors import ProfileNotFoundError
+from ...domain.user_profile.labels import profile_field_label_key
 from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord, section_field_key
 from ..operations.next_step import (
     OperationCompleteProfileSetupStepV1,
@@ -160,6 +161,20 @@ def open_profile_field_step(*, path: str, label: str) -> OperationNextStepWordin
     """Offer filling in the profile detail at ``path``, named by its schema ``label``."""
 
     def worded(language: OutputLanguage) -> OperationOpenProfileFieldStepV1:
+        return OperationOpenProfileFieldStepV1(
+            path=path,
+            words=tr(_OPEN_PROFILE_FIELD_LOCALE_KEY, field=label, locale=language.value),
+        )
+
+    return worded
+
+
+def open_profile_path_step(path: str) -> OperationNextStepWording:
+    """Offer filling in the profile detail at ``path``, its label worded in the step's own language."""
+    section_key, _, field_key = path.partition(".")
+
+    def worded(language: OutputLanguage) -> OperationOpenProfileFieldStepV1:
+        label = tr(profile_field_label_key(section_key, field_key), locale=language.value)
         return OperationOpenProfileFieldStepV1(
             path=path,
             words=tr(_OPEN_PROFILE_FIELD_LOCALE_KEY, field=label, locale=language.value),
@@ -891,6 +906,7 @@ __all__ = [
     "modelo_work_profile_baseline_validation_issues",
     "modelo_work_profile_preflight_report",
     "open_profile_field_step",
+    "open_profile_path_step",
     "pre_activity_period_refusal",
     "profile_activity_start_date",
     "require_existing_profile_baseline_ready_for_modelo_work",

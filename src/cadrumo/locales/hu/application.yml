@@ -34,6 +34,24 @@ application:
           összegből.'
         unnamed_element: egy név nélküli elem
       opening_remedy: 'A kiszámításhoz add meg ezt: „{field}”.'
+  aggregation:
+    retenciones:
+      window_empty: 'A Modelo %{modelo} bevallásban %{period} időszakra nincs bevallandó
+        forrásadó-levonás (retención): az időszakban nincs rögzítve olyan kifizetés,
+        amely levonással járt. Rögzítsd a kapott számlát és a kifizetését. Semmi sem
+        lett mentve.'
+      window_empty_lease: 'A Modelo %{modelo} bevallásban %{period} időszakra nincs
+        bevallandó forrásadó-levonás (retención): az időszakban nincs rögzítve olyan
+        bérleti díj kifizetése, amely levonással járt. Ha levonással fizetted egy
+        üzlethelyiség bérleti díját, rögzítsd a kapott számlát és a kifizetését; ha
+        nem volt ilyen, jelöld a profilodban, hogy ebben az időszakban nem volt levonással
+        járó bérletidíj-fizetés. Semmi sem lett mentve.'
+      window_empty_work: 'A Modelo %{modelo} bevallásban %{period} időszakra nincs
+        bevallandó forrásadó-levonás (retención): az időszakban nincs rögzítve olyan
+        kifizetés, amely levonással járt. Ha levonással fizettél szakembereknek vagy
+        munkavállalóknak, rögzítsd a kapott számlát és a kifizetését; ha nem volt
+        ilyen, jelöld a profilodban, hogy ebben az időszakban nem volt levonás. Semmi
+        sem lett mentve.'
   auth:
     acquisition_lock:
       errors:

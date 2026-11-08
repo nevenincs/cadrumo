@@ -34,6 +34,21 @@ application:
           amount.'
         unnamed_element: an element with no name
       opening_remedy: Fill in “{field}” to work this out.
+  aggregation:
+    retenciones:
+      window_empty: 'There is no withholding to declare on Modelo %{modelo} for %{period}:
+        no payment in the period that carried one is recorded. Record the received
+        invoice and its payment. Nothing has been saved.'
+      window_empty_lease: 'There is no withholding to declare on Modelo %{modelo}
+        for %{period}: no rent payment in the period that carried one is recorded.
+        If you paid rent on business premises with withholding, record the received
+        invoice and its payment; if there were none, say in your profile that this
+        period had no rent payments with withholding. Nothing has been saved.'
+      window_empty_work: 'There is no withholding to declare on Modelo %{modelo} for
+        %{period}: no payment in the period that carried one is recorded. If you paid
+        professionals or employees with withholding, record the received invoice and
+        its payment; if there were none, say in your profile that this period had
+        no withholding. Nothing has been saved.'
   auth:
     acquisition_lock:
       errors:

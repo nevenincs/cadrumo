@@ -15,7 +15,7 @@ from ...domain.calculations.registry.retenciones_bindings import (
     resolve_retenciones_aggregation_binding_values,
 )
 from ..calculations.m115_no_relevant_payments import is_m115_no_relevant_payment_period
-from .errors import AggregationValidationError
+from .errors import RetencionesWindowEmptyError
 from .modelo_bindings_support import (
     STORAGE_DEGRADATION_ERRORS,
     empty_source_resolution,
@@ -194,40 +194,7 @@ class RetencionesAggregationSourceResolver:
                         ),
                     ),
                 )
-            # Modelo 111 is the one retenciones modelo with a prescribed remedy:
-            # a quarter with no retenciones is ATTESTED, never filed blank. Name
-            # that path, following the Modelo 180 precedent of carrying the flag
-            # in the message. The typed action channel cannot express it -- the
-            # wizard setup command projects no inputs to bind against.
-            is_m111 = context.modelo == form_for_role("withholding.work_periodic")
-            message = tr(
-                "aggregation.retenciones.errors.m111_no_retenciones_attestation_missing"
-                if is_m111
-                else "aggregation.retenciones.errors.perceptor_observations_missing",
-            )
-            # ``Translatable`` carries only the key; the renderer interpolates
-            # from this context, so the attestation period travels there.
-            refusal_context: dict[str, object] = {
-                "modelo": context.modelo,
-                "filing_year": str(context.filing_year),
-                "period": context.period.registry_token,
-                "source_kind": "retenciones_aggregation",
-            }
-            if is_m111:
-                refusal_context["attestation_period"] = f"{context.filing_year}:{context.period.registry_token}"
-            raise AggregationValidationError(
-                message,
-                context=refusal_context,
-                precondition_verdict=aggregation_no_recovery_verdict(
-                    AggregationPreconditionCondition.RETENCIONES_OBSERVATIONS_PRESENT,
-                    facts={
-                        "modelo": str(context.modelo),
-                        "filing_year": str(context.filing_year),
-                        "period": context.period.registry_token,
-                        "source_kind": "retenciones_aggregation",
-                    },
-                ),
-            )
+            raise _empty_window_refusal(context)
         with source_context_operation(context) as operation:
             aggregation = self.aggregate(
                 context.modelo,
@@ -257,3 +224,42 @@ class RetencionesAggregationSourceResolver:
                 ),
             ),
         )
+
+
+def _empty_window_refusal(context: CalculationSourceContext) -> RetencionesWindowEmptyError:
+    """Refuse a withholding period that holds no retención, offering the profile detail that records none.
+
+    Modelo 111 and Modelo 115 each have a profile detail saying the period paid
+    nothing subject to retención; a period recorded there is never filed blank,
+    so it is the door. Any other withholding modelo has no such detail, and its
+    words say only what is missing.
+    """
+    from ..calculations.m111_no_retenciones import M111_NO_RETENCIONES_PROFILE_PATH
+    from ..calculations.m115_no_relevant_payments import M115_NO_RELEVANT_PAYMENT_PROFILE_PATH
+    from ..modelo.profile_readiness_gate import open_profile_path_step
+    from ..modelo.work_form_wording import period_words
+    from ..operations.error_detail import served_words_language
+
+    if context.modelo == form_for_role("withholding.work_periodic"):
+        message = tr("application.aggregation.retenciones.window_empty_work")
+        profile_path: str | None = M111_NO_RETENCIONES_PROFILE_PATH
+    elif context.modelo == form_for_role("withholding.lease_periodic"):
+        message = tr("application.aggregation.retenciones.window_empty_lease")
+        profile_path = M115_NO_RELEVANT_PAYMENT_PROFILE_PATH
+    else:
+        message = tr("application.aggregation.retenciones.window_empty")
+        profile_path = None
+    return RetencionesWindowEmptyError(
+        message,
+        context={"modelo": str(context.modelo), "period": period_words(context.period, served_words_language())},
+        precondition_verdict=aggregation_no_recovery_verdict(
+            AggregationPreconditionCondition.RETENCIONES_OBSERVATIONS_PRESENT,
+            facts={
+                "modelo": str(context.modelo),
+                "filing_year": str(context.filing_year),
+                "period": context.period.registry_token,
+                "source_kind": "retenciones_aggregation",
+            },
+        ),
+        next_step=None if profile_path is None else open_profile_path_step(profile_path),
+    )
