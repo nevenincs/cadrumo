@@ -5,7 +5,7 @@ tags:
 date: '2026-11-07'
 modified: '2026-11-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:f300c067cf94f79f372ed41d454b539ff049533075a46044ca20dd7326c74bd2'
+body_hash: 'sha256:a2a7633016fcaddff848ebeaa93e379bbf81bddab51c5794cfdb59aa1b511dee'
 related:
   - "[[2026-11-07-local-inference-engine-plan]]"
 ---
@@ -207,6 +207,12 @@ related:
 - `S18` `verify:` `rustfmt --edition 2024 --check` -> `pass`
 - `S18` `by:` `implementation-engineer-high`
 - `S18` `by:` `opus`
+- `S21` `M` `native/desktop/src-tauri/src/shell/setup/components_tests.rs`
+- `S21` `verify:` `just test-native Debug (manager.rust, application.rust)` -> `fail`
+- `S21` `verify:` `just check-rust Debug` -> `pass`
+- `S21` `verify:` `cmake --build --preset debug --target desktop-host-unit-test` -> `fail`
+- `S23` `M` `native/desktop/frontend/src/dev/providerSettingsFixture.ts`
+- `S23` `verify:` `just test-frontend Debug` -> `fail`
 
 ## Notes
 
@@ -236,6 +242,8 @@ related:
 - `S18` Review-finding fixes (transfer retry window, store reclaim, progress offset, drain marker and bounded check wait, refused-load body, router alias ids, live package tests): Rust build, clippy and cargo tests are pending the root slot; rustfmt --edition 2024 --check passes on the changed files.
 - `S18` Rust build pending the root slot
 - `S18` Not compiled or tested here: the Rust build, clippy and cargo tests run in the root slot
+- `S21` UNPROVEN manager.rust: fixed-port waits in `only_the_selected_engines_server_is_ever_started` hang (owner LIE, fix 6c106f3630 not in p04), PID 66512 stopped. UNPROVEN application.rust `a_router_that_listens_is_waited_for_until_ready_and_then_its_build_is_confirmed:` `fake_llamacpp.rs:194` logs the request before the ready gate at :253 (owner LIE). OPEN desktop-host-unit-test (owner LLAMA-DESKTOP): stalled at `shell::setup::components::tests::explicit_download_plans_only_that_model_and_a_resume_keeps_it` (PID 32956 stopped); `a_size_the_catalogue_states_differently_is_a_plan_the_person_approves_anew` and `an_added_model_no_catalogue_sizes_is_planned_with_an_unknown_download` fail alone, Failed/SecureConnectionFailed before Review; `agent::runner::tests::a_launcher_that_overruns_its_grace_is_ended_with_its_tree` fails alone, process alive after Terminated; 2 manager helper tests failed under load, pass alone. Landed on integration/build-candidate open by coordinator ruling 2026-11-08.
+- `S23` OPEN (owner LLAMA-DESKTOP): 65 failed, 2488 passed, 9 skipped. 56 provider-reads.spec.ts failures plus local-models, ledger-provisioning, setup and providers specs receive lanes `local_api` and `llamacpp_api,` since 77b60a63fb serves both engine lanes; the window must render served lanes. log-viewport and modelo-calculate-unresolved failures untraced.
 
 ## Notes
 
