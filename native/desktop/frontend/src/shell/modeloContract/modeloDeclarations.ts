@@ -114,6 +114,8 @@ export type ModeloDeclarationCreationTargetV1 = {
   expected: boolean;
   suggested: boolean;
   existing: ModeloDeclarationExistingV1 | null;
+  profile_requirements: string[];
+  profile_requirements_words: string | null;
 };
 
 /**

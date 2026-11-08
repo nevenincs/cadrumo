@@ -9301,6 +9301,8 @@ workspace:
         open_count: 'open: {count}'
         open_it: Open it
         other: Other modelos
+        profile_requirements: 'Whether this period is yours depends on what your profile
+          says about:'
         refused: Cadrumo did not create the declaration.
         search_placeholder: Search
         show_all: Show all modelos, not only yours

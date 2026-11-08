@@ -609,10 +609,22 @@ def creation_targets(
     )
 
 
+def _due_not_started(rows: tuple[DeclarationListRow, ...]) -> list[DeclarationListRow]:
+    return sorted((row for row in rows if row.state == "not_started"), key=lambda row: row.deadline or date.max)
+
+
 def preferred_creation_target(rows: tuple[DeclarationListRow, ...]) -> DeclarationTarget | None:
     """The first return due and not started, when it names its period."""
-    due = sorted((row for row in rows if row.state == "not_started"), key=lambda row: row.deadline or date.max)
+    due = _due_not_started(rows)
     return DeclarationTarget(due[0].modelo, due[0].period) if due and due[0].period is not None else None
+
+
+def next_due_creation_targets(rows: tuple[DeclarationListRow, ...]) -> frozenset[tuple[str, Period]]:
+    """Each modelo's first return due and not started, as its modelo and period, when it names its period."""
+    first: dict[str, DeclarationListRow] = {}
+    for row in _due_not_started(rows):
+        first.setdefault(row.modelo, row)
+    return frozenset((row.modelo, row.period) for row in first.values() if row.period is not None)
 
 
 def existing_declaration(
@@ -663,6 +675,7 @@ __all__ = [
     "existing_declaration",
     "group_words",
     "is_unlinked_local_draft",
+    "next_due_creation_targets",
     "next_step",
     "next_step_words",
     "observed_text",

@@ -27,6 +27,7 @@ from .declarations_workspace_contracts import (
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.user_profile.values import UserProfileRecord
 
 
 def project_declarations_portfolio(
@@ -38,6 +39,7 @@ def project_declarations_portfolio(
     filing_records: ModeloRecordCatalogue,
     lifecycle_facts: tuple[DeclarationsSanitizedLifecycleFactV1, ...],
     zone_observations: tuple[DeclarationsWorkspaceZoneObservationV1, ...],
+    profile: UserProfileRecord | None,
     result_casilla_reader: DeclarationResultCasillaReaderV1 | None = None,
 ) -> DeclarationsWorkspaceProjectionV1:
     """Keep each row visible; invalid joins or registry coordinates refuse only that row.
@@ -45,6 +47,8 @@ def project_declarations_portfolio(
     The strict projector still admits every readable partition. A refused
     declaration carries only its natural address and an unreadable summary;
     its calculation, amount and filing history never become trusted facts.
+    ``profile`` narrows the new-declaration choices to the filing schedules
+    its facts select.
     """
     empty = project_declarations_workspace(
         operation=operation,
@@ -126,7 +130,7 @@ def project_declarations_portfolio(
         calculation_revisions=tuple(revisions),
         filings=tuple(filings),
         lifecycle=tuple(lifecycle),
-        creation_targets=declaration_targets(operation),
+        creation_targets=declaration_targets(operation, profile=profile),
     )
 
 

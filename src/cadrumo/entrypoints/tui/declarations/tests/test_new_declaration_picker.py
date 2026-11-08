@@ -71,7 +71,7 @@ async def test_picker_requires_modelo_period_and_confirmation_in_every_locale_an
     locale: OutputLanguage, theme: str, size: tuple[int, int]
 ) -> None:
     with bundled_indexed_authority().operation() as operation:
-        admitted = declaration_targets(operation)
+        admitted = declaration_targets(operation, profile=None)
     selected = DeclarationTarget("111", Period.from_year_and_code(2025, "2T"))
     targets = (
         DeclarationTarget("111", Period.from_year_and_code(2025, "1T")),
