@@ -171,7 +171,7 @@ function PhaseNotice({ phase }: { phase: ReviewPhase }) {
     case "not_applied":
       return (
         <Alert tone="warning" icon={<Icon name="alert" />}>
-          {t("workspace.modelo.operation.not_done")}
+          {phase.words ?? t("workspace.modelo.operation.not_done")}
         </Alert>
       );
     case "still_moving":
