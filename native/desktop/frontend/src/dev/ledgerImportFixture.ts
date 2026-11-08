@@ -178,17 +178,12 @@ export function importOperations(
       rows += read.length;
       const days = new Set<string>();
       const fresh: string[] = [];
+      let stored = 0;
       for (const row of read) {
         const day = `${row.date}:${row.amount}`;
         if (transactionOf(row.id)) {
           skipped.push(ref(row.id));
-          if (verify)
-            diagnostics.push({
-              kind: "duplicate",
-              severity: "info",
-              message: "transactions.import.message_082074",
-              affected_transaction_ids: [row.id],
-            });
+          stored += 1;
           continue;
         }
         const likely =
@@ -226,6 +221,17 @@ export function importOperations(
           idempotency_key: null,
         });
       }
+      // The rows already stored are named once, as the application does.
+      if (verify && stored > 0)
+        diagnostics.push({
+          kind: "duplicate",
+          severity: "info",
+          message:
+            stored === read.length
+              ? "transactions.import.all_rows_already_in_ledger"
+              : "transactions.import.some_rows_already_in_ledger",
+          affected_transaction_ids: [],
+        });
       if (verify && spec.gap && read.length > 0)
         diagnostics.push({
           kind: "gap",

@@ -37,7 +37,8 @@ export function importRefusal(
 
 const DIAGNOSTICS: Record<LedgerImportDiagnosticMessage, string> = {
   "transactions.import.message_185962": "no_rows",
-  "transactions.import.message_082074": "already_in_ledger",
+  "transactions.import.all_rows_already_in_ledger": "all_already_in_ledger",
+  "transactions.import.some_rows_already_in_ledger": "already_in_ledger",
   "transactions.import.batch_id_collision": "same_identity",
   "transactions.import.message_053465": "repeated",
   "transactions.import.message_829073": "gap",

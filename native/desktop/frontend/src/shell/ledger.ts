@@ -821,7 +821,8 @@ export type LedgerImportDiagnosticKind =
 /** The translation keys a diagnostic names, from the product's closed set. */
 export type LedgerImportDiagnosticMessage =
   | "transactions.import.message_185962"
-  | "transactions.import.message_082074"
+  | "transactions.import.all_rows_already_in_ledger"
+  | "transactions.import.some_rows_already_in_ledger"
   | "transactions.import.batch_id_collision"
   | "transactions.import.message_053465"
   | "transactions.import.message_829073"

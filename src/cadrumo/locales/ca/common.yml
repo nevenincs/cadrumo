@@ -2824,6 +2824,7 @@ desktop:
       description: Extractes bancaris, llibres de factures i documents, des de fitxers
         d'aquest ordinador.
       diagnostic:
+        all_already_in_ledger: Totes les files ja són al llibre i s'ometen.
         already_in_ledger: Algunes files ja són al llibre i s'ometen.
         gap: Més de 35 dies entre dos moviments.
         no_rows: El fitxer no conté moviments vàlids.
@@ -6502,12 +6503,14 @@ topic:
     title: VERI*FACTU
 transactions:
   import:
+    all_rows_already_in_ledger: Totes les files ja són al llibre major i s'ometen.
     batch_id_collision: 'Fila omesa: coincideix amb l''identificador d''una altra
       fila del mateix fitxer.'
     message_053465: Transacció duplicada detectada dins de l'arxiu importat.
     message_082074: Transacció duplicada ja present al llibre major.
     message_185962: L'arxiu d'origen no conté transaccions vàlides.
     message_829073: 'Possible buit: més de 35 dies entre transaccions.'
+    some_rows_already_in_ledger: Algunes files ja són al llibre major i s'ometen.
     unreadable: Arxiu il·legible o format no suportat
     verified: Importació verificada amb èxit
 tui:
