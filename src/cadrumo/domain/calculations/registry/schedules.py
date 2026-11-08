@@ -23,6 +23,7 @@ __all__ = [
     "applicable_filing_schedules",
     "evaluate_profile_conditions",
     "profile_condition_matches",
+    "unresolved_schedule_deciding_fields",
 ]
 
 IVA_REGIME_PATH: Final[str] = "iva.regime"
@@ -75,6 +76,44 @@ def applicable_filing_schedules(
         ):
             matched.append(schedule)
     return tuple(matched)
+
+
+def unresolved_schedule_deciding_fields(
+    revision: FilingScheduleCarrier,
+    profile_facts: Mapping[str, object] | object,
+    *,
+    period: str,
+) -> tuple[str, ...]:
+    """Return the unanswered predicate facts that leave ``period`` without a filing schedule.
+
+    A schedule that admits the period but fails only on facts the profile has not
+    answered is undecided rather than inapplicable: answering those facts can select
+    it. When some schedule already matches, or every schedule for the period fails
+    on an answered fact (a genuine cadence mismatch), nothing is unresolved.
+
+    Args:
+        revision: The revision, or its selection metadata, whose schedules decide.
+        profile_facts: Profile facts consulted by each schedule's predicates.
+        period: The period token the filing is for.
+    """
+    if not revision.filing_schedules or applicable_filing_schedules(revision, profile_facts, period=period):
+        return ()
+    fields: dict[str, None] = {}
+    for schedule in revision.filing_schedules:
+        if period not in schedule.periods:
+            continue
+        failing = [
+            condition
+            for condition in schedule.profile_conditions
+            if not profile_condition_matches(condition, profile_facts)
+        ]
+        unanswered = [
+            condition.field for condition in failing if resolve_profile_fact(profile_facts, condition.field) is None
+        ]
+        decidable = bool(unanswered) if schedule.profile_condition_mode == "any" else len(unanswered) == len(failing)
+        if decidable:
+            fields.update(dict.fromkeys(unanswered))
+    return tuple(fields)
 
 
 def evaluate_profile_conditions(

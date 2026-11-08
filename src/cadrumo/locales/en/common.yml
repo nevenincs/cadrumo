@@ -10400,6 +10400,7 @@ workspace:
       failed_lead: They wait on something the calculation lacked. Choose one to see
         what.
       none: Nothing needs you on this form.
+      profile: 'Before this period can be calculated, your profile must answer:'
       title: To do
     value:
       not_applicable: n/a

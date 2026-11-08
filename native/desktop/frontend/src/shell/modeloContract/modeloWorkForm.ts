@@ -826,6 +826,7 @@ export type ModeloWorkbenchFormProjectionV1 = {
   tax_id_format: PublicSpanishTaxIdFormat;
   typing_effects: ModeloFormTypingEffect[];
   export_offer: PublicModeloFormExportOffer | null;
+  profile_requirements: string[];
   receipt: ModeloFormReceipt | null;
 };
 

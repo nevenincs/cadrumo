@@ -10608,6 +10608,7 @@ workspace:
       failed: 'Casillas que no se pudieron calcular: {count}'
       failed_lead: Esperan algo que le faltaba al cálculo. Elige una para ver qué.
       none: Nada de este modelo te necesita.
+      profile: 'Antes de calcular este periodo, tu perfil tiene que responder:'
       title: Pendiente
     value:
       not_applicable: no aplica

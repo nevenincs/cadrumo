@@ -10597,6 +10597,7 @@ workspace:
       failed_lead: Esperen alguna cosa que li faltava al càlcul. Tria'n una per veure
         què.
       none: Res d'aquest model no et necessita.
+      profile: 'Abans de calcular aquest període, el teu perfil ha de respondre:'
       title: Pendent
     value:
       not_applicable: no s'aplica

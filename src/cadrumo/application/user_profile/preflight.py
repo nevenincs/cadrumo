@@ -18,6 +18,8 @@ from ...domain.calculations.registry.profile_grounding import (
     ProfileKeyGrounding,
     build_profile_grounding_index,
 )
+from ...domain.calculations.registry.schedules import unresolved_schedule_deciding_fields
+from ...domain.deadlines.errors import ProfileError
 from ...domain.user_profile.errors import UserProfileNotFoundError
 from ...domain.user_profile.labels import profile_field_label
 from ...domain.user_profile.schema import ProfileSchemaDefinition
@@ -27,7 +29,7 @@ from .commands import (
     ProfilePreflightRequirement,
 )
 from .completeness import conditional_profile_missing_required
-from .projections import record_to_path_values
+from .projections import projection_for_taxpayer, record_to_path_values
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.schema import ModeloRevision
@@ -373,6 +375,16 @@ class ProfilePreflightService:
                     ),
                 )
         missing.extend(self._missing_conditional_profile_requirements(values, missing, grounding_index))
+        if revision is not None:
+            missing.extend(
+                self._missing_schedule_deciding_requirements(
+                    record,
+                    revision=revision,
+                    period=period,
+                    existing=missing,
+                    grounding_index=grounding_index,
+                ),
+            )
         return ProfilePreflightReport(
             profile_id=record.profile_id,
             modelo=modelo,
@@ -419,6 +431,51 @@ class ProfilePreflightService:
                 ),
             )
         return missing
+
+    def _missing_schedule_deciding_requirements(
+        self,
+        record: UserProfileRecord,
+        *,
+        revision: ModeloRevision,
+        period: Period,
+        existing: list[ProfilePreflightRequirement],
+        grounding_index: Mapping[str, ProfileKeyGrounding],
+    ) -> list[ProfilePreflightRequirement]:
+        """Name the unanswered profile facts that decide which filing schedule covers ``period``.
+
+        A revision with filing schedules files a period only under the schedule the
+        taxpayer's own facts select (for Modelo 303, RIVA art. 71.3: monthly for a gran
+        empresa or a REDEME enrolee, quarterly otherwise). Until the deciding fact is
+        answered no schedule is selected, and the fact is required for this filing. A
+        profile the taxpayer projection still refuses is left to the requirements that
+        name what it lacks.
+        """
+        try:
+            taxpayer = projection_for_taxpayer(record, schema=self._schema)
+        except ProfileError:
+            return []
+        already_missing = {(item.section_key, item.field_key) for item in existing}
+        missing: list[ProfilePreflightRequirement] = []
+        for predicate in unresolved_schedule_deciding_fields(revision, taxpayer, period=period.registry_token):
+            path = self._path_for_schedule_predicate(predicate)
+            if path is None or self._split_path(path) in already_missing:
+                continue
+            missing.append(
+                build_profile_preflight_requirement(
+                    path,
+                    schema=self._schema,
+                    selector=predicate,
+                    grounding_index=grounding_index,
+                ),
+            )
+        return missing
+
+    def _path_for_schedule_predicate(self, predicate: str) -> str | None:
+        for section in self._schema.sections:
+            for field in section.fields:
+                if predicate in field.schedule_predicates:
+                    return f"{section.key}.{field.key}"
+        return None
 
     def _selector_for_path(self, path: str) -> str:
         section_key, field_key = self._split_path(path)

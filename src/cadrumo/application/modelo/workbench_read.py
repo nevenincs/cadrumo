@@ -26,6 +26,7 @@ from ...domain.calculations.registry.bindings_previous_filing import PreviousFil
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ...domain.modelos.work_unit import WorkUnit
+from ...domain.user_profile.labels import profile_field_label
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .casilla_help import ModeloCasillaHelpCardV1, build_casilla_help_card
@@ -35,6 +36,7 @@ from .edit_models import ModeloEditAdmissionResultV1, ModeloEditRefusedV1
 from .edit_refusal_projection import ModeloEditCalculationPrerequisiteV1
 from .edit_review_wording import edit_refusal_words
 from .m303_exonerado_390_applicability_attestation import modelo_390_question_asked
+from .profile_readiness_gate import modelo_work_profile_preflight_report
 from .verification_report_facts import granting_verification_report
 from .work_form_export_offer import ModeloFormExportOffer, ModeloFormReceipt, form_export_offer, form_receipt
 from .work_form_header import ModeloFormHeader, form_header, form_recorded
@@ -55,6 +57,7 @@ if TYPE_CHECKING:
     from ..live.borrador_100 import Borrador100SnapshotRepository
     from ..operations.registry import OperationPublicContractSetV1
     from .export_ports import OwnAccountRegisterReaderProtocol
+    from .work_profile import ModeloWorkProfile
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,7 +72,8 @@ class ModeloWorkbenchReadPorts:
     verified; ``own_accounts`` is the taxpayer's own-account register, read to
     offer the accounts AEAT debits and pays a refund into; ``credit_resolutions``
     is the store of accepted source disagreements, read so the form holds filing
-    exactly where the gate does.
+    exactly where the gate does; ``profile`` loads the taxpayer profile, read so
+    the to-do list names the profile details the readiness gate still asks for.
     """
 
     work_units: WorkUnitCatalogueRepositoryProtocol
@@ -81,6 +85,7 @@ class ModeloWorkbenchReadPorts:
     filings: ModeloRecordCatalogueRepositoryProtocol | None = None
     own_accounts: OwnAccountRegisterReaderProtocol | None = None
     credit_resolutions: CreditResolutionReader | None = None
+    profile: Callable[[], ModeloWorkProfile | None] | None = None
 
 
 type ModeloWorkbenchReadPortsFactory = Callable[[str, PinnedAuthorityOperation], ModeloWorkbenchReadPorts]
@@ -112,6 +117,9 @@ class ModeloWorkbenchFormReadV1:
     export_offer: ModeloFormExportOffer | None = None
     #: The recorded filing's AEAT receipt state; ``None`` when the declaration is not recorded as filed.
     receipt: ModeloFormReceipt | None = None
+    #: The profile details the readiness gate still asks for before this declaration is worked out or filed,
+    #: each as its label in the form's language; empty when the profile answers everything the gate asks.
+    profile_requirements: tuple[str, ...] = ()
 
     @property
     def typing_effects(self) -> tuple[ModeloFormTypingEffect, ...]:
@@ -240,7 +248,46 @@ def read_modelo_workbench_form(
             amended=head is not None and head.amendment_identity is not None,
         ),
         receipt=_receipt(unit, loaded, ports=ports, language=language),
+        profile_requirements=_profile_requirements(unit, ports=ports, operation=operation, language=language),
     )
+
+
+def _profile_requirements(
+    unit: WorkUnit,
+    *,
+    ports: ModeloWorkbenchReadPorts,
+    operation: PinnedAuthorityOperation,
+    language: OutputLanguage,
+) -> tuple[str, ...]:
+    """The labels of the profile details the readiness gate refuses this declaration's work without.
+
+    Read from the same report the gate enforces, so the to-do list asks exactly what
+    calculating or filing would be refused for, such as the fact deciding the period.
+    """
+    load_profile = ports.profile
+    profile = None if load_profile is None else load_profile()
+    if profile is None:
+        return ()
+    report = modelo_work_profile_preflight_report(
+        record=profile.record,
+        modelo=str(unit.modelo),
+        revision_id=unit.revision_id,
+        filing_year=unit.filing_year,
+        period=unit.period,
+        profile_decode_context=profile.profile_decode_context,
+        operation=operation,
+    )
+    schema = profile.profile_decode_context.schema
+    labels: list[str] = []
+    for requirement in report.missing:
+        section = next((item for item in schema.sections if item.key == requirement.section_key), None)
+        field = None if section is None else next((f for f in section.fields if f.key == requirement.field_key), None)
+        labels.append(
+            requirement.label
+            if field is None
+            else profile_field_label(requirement.section_key, field, locale=language.value)
+        )
+    return tuple(labels)
 
 
 def _receipt(
