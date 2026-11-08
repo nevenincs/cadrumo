@@ -18,6 +18,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....application.modelo.edit_models import (
     ModeloBindingEditIntentV1,
@@ -25,15 +26,19 @@ from ....application.modelo.edit_models import (
     ModeloEditBindingIntentKind,
     ModeloEditWritableBindingOverrideSurfaceEntryV1,
 )
+from ....core.aggregation import BindingSourceKind
 from ....core.authority_grade import RegistryAuthorityGrade
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ....domain.modelos.calculation_revision_operator_layer import ATTESTED_ZERO
 from ....domain.user_profile.tests.general_regime_facts import RENTA_UNMARRIED_TAXPAYER_FACTS
 from ....domain.user_profile.values import UserProfileFact
 from ...adapter_composition import profile_adapter_composition
 from ..modelo_operator_work_storage import SeededOperatorWork, seeded_operator_work
+from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -44,6 +49,10 @@ _PENDING_CARRIES: tuple[BindingId, ...] = (
     "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
     "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
     "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
+)
+#: The previous return's Anexo C boxes each carry is read from, in the order of ``_PENDING_CARRIES``.
+_CARRIED_FROM: tuple[CasillaId, ...] = tuple(
+    validated_casilla_id(token, surface="_CARRIED_FROM") for token in ("1391", "1390", "1387", "1384")
 )
 _FACTS = (UserProfileFact(path="tax_residence.ccaa", value="madrid"), *RENTA_UNMARRIED_TAXPAYER_FACTS)
 
@@ -62,6 +71,12 @@ def _renta_years() -> tuple[int, ...]:
             continue
         admitted.append(year)
     return tuple(admitted)
+
+
+def _renta_years_with_a_prior_return() -> tuple[int, ...]:
+    """The admitted Modelo 100 years whose previous year the envelope admits too, so its return can be stored."""
+    years = _renta_years()
+    return tuple(year for year in years if year - 1 in years)
 
 
 def _attest(binding_id: BindingId) -> ModeloBindingEditIntentV1:
@@ -97,6 +112,12 @@ def test_a_filer_states_no_carry_is_pending_and_the_revision_keeps_it_apart_from
         assert layer is not None
         assert layer.attested_binding_ids == _PENDING_CARRIES
         assert all(layer.binding_overrides[binding_id] == ATTESTED_ZERO for binding_id in _PENDING_CARRIES)
+        # The statement answers the carries: none is left standing as an earlier filing nobody recorded.
+        assert not [
+            issue
+            for issue in renta.require_head().source_issues
+            if issue.reason == "unresolved_binding" and issue.binding_source is BindingSourceKind.PREVIOUS_FILING
+        ]
 
         # Calculating the declaration again keeps the statement as the filer made it.
         recalculated = renta.recalculate().operator_layer
@@ -119,3 +140,42 @@ def test_a_filer_states_no_carry_is_pending_and_the_revision_keeps_it_apart_from
         assert relayer is not None
         assert relayer.attested_binding_ids == tuple(kept)
         assert relayer.binding_overrides[typed] == ATTESTED_ZERO
+
+
+@pytest.mark.parametrize("year", _renta_years_with_a_prior_return())
+def test_an_earlier_return_stored_later_with_a_pending_amount_contradicts_the_statement(
+    tmp_path: Path, year: int
+) -> None:
+    contradicted, *agreeing = _PENDING_CARRIES
+    with (
+        profile_adapter_composition(),
+        seeded_operator_work(tmp_path, modelo="100", filing_year=year, period_code="0A", extra_facts=_FACTS) as renta,
+    ):
+        assert renta.apply(binding=tuple(_attest(binding_id) for binding_id in _PENDING_CARRIES)).refusal is None
+
+        # The earlier return turns up afterwards, and it shows a negative base still pending.
+        save_stamped_observation(
+            CalculationObservationRepository(),
+            registry_grounded_modelo_observation(
+                modelo="100",
+                filing_year=year - 1,
+                period="0A",
+                casilla_values={
+                    casilla_id: Decimal("1500.00") if index == 0 else Decimal("0")
+                    for index, casilla_id in enumerate(_CARRIED_FROM)
+                },
+            ),
+            source_kind="app_filing",
+        )
+        head = renta.recalculate()
+
+    layer = head.operator_layer
+    assert layer is not None
+    assert layer.attested_binding_ids == _PENDING_CARRIES
+    disputed = {
+        issue.disagreement.key
+        for issue in head.source_issues
+        if issue.reason == "precedence_tier_divergence" and issue.disagreement is not None
+    }
+    assert contradicted in disputed, [(issue.reason, issue.disagreement) for issue in head.source_issues]
+    assert not disputed & set(agreeing)
