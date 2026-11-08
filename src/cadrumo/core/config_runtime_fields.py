@@ -19,6 +19,11 @@ from .config_timeouts import CadrumoTimeoutSettings
 #: same address for the native side; a package-side test keeps the two equal.
 LOCAL_AI_SERVER_ADDRESS: Final = "127.0.0.1:23743"
 
+#: The loopback address the runtime manager's bundled llama-server listens on, which the agent
+#: service hands to the agent it hosts. The package's environment declaration states the same
+#: address for the native side; a package-side test keeps the two equal.
+LLAMA_SERVER_ADDRESS: Final = "127.0.0.1:23744"
+
 
 class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
     """LLM runtime tuning fields layered on top of timeouts."""
