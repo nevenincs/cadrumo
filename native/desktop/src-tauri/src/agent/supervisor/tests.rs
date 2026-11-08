@@ -455,6 +455,8 @@ async fn startup_timeout_is_observed_while_canonical_status_is_pending() {
         Ok(Prepared {
             command: Command::new("cadrumo-timed-out-preparation-must-never-launch"),
             person: None,
+            local_engine_default:
+                cadrumo_application::provisioning::local_ai::LocalEngine::LlamaCpp,
         })
     });
     let supervisor = Supervisor::new(
@@ -511,6 +513,8 @@ async fn a_profile_change_invalidates_preparation_before_its_result_can_launch()
         Ok(Prepared {
             command: Command::new("cadrumo-cancelled-preparation-must-never-launch"),
             person: None,
+            local_engine_default:
+                cadrumo_application::provisioning::local_ai::LocalEngine::LlamaCpp,
         })
     });
     let supervisor = Supervisor::new(

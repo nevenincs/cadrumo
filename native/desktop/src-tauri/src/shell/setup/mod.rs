@@ -279,9 +279,12 @@ pub struct SetupHost {
 
 impl SetupHost {
     pub fn new(sign_in: Arc<SignIn>, agent: Arc<AgentHost>, diagnostics: Arc<Diagnostics>) -> Self {
+        // The runtime manager reads its local engine selection from the root the agent
+        // host hands it on under.
+        let selection_root = agent.storage_root().to_path_buf();
         let components = Components::new(
             components::installation(),
-            Arc::new(Admission::new(agent)),
+            Arc::new(Admission::new(agent, selection_root)),
             diagnostics.clone(),
         );
         Self::with_components(sign_in, components, diagnostics)

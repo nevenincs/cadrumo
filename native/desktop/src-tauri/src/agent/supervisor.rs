@@ -21,7 +21,7 @@ use self::protocol::{
     service_refusal, start_reply,
 };
 use self::retry::{RETRY, RetryBudget};
-use super::launcher::Event;
+use super::launcher::{Event, Startup};
 use super::runner::{self, Signal, Supervised};
 use cadrumo_application::diagnostics::service::AgentRefusal as Refusal;
 use cadrumo_application::diagnostics::service::{AgentStopCause, ServiceFact};
@@ -497,17 +497,23 @@ async fn prepare_start(
     shared
         .diagnostics
         .service(None, ServiceFact::AgentStarting { generation });
-    let (Prepared { command, person }, person_failure) =
-        tauri::async_runtime::spawn_blocking(move || {
-            let prepared = launch(&prepare_bearer, &prepare_profile)?;
-            let failure = prepared
-                .person
-                .as_ref()
-                .map(|person| lock(person).failures());
-            Ok::<_, ApplicationError>((prepared, failure))
-        })
-        .await
-        .map_err(|_| ApplicationError::new(ErrorCode::Panic, Operation::Cli))??;
+    let (
+        Prepared {
+            command,
+            person,
+            local_engine_default,
+        },
+        person_failure,
+    ) = tauri::async_runtime::spawn_blocking(move || {
+        let prepared = launch(&prepare_bearer, &prepare_profile)?;
+        let failure = prepared
+            .person
+            .as_ref()
+            .map(|person| lock(person).failures());
+        Ok::<_, ApplicationError>((prepared, failure))
+    })
+    .await
+    .map_err(|_| ApplicationError::new(ErrorCode::Panic, Operation::Cli))??;
     let prepared_at = Instant::now();
     if cancelled.load(Ordering::Acquire) || shared.closed.load(Ordering::Acquire) {
         return Err(
@@ -522,7 +528,11 @@ async fn prepare_start(
     let supervised = tauri::async_runtime::spawn_blocking(move || {
         runner::start_child(
             command,
-            Some((secret.as_str(), gateway_secret.as_str())),
+            Some(Startup {
+                bearer: secret.as_str(),
+                gateway_bearer: gateway_secret.as_str(),
+                local_engine_default,
+            }),
             move |signal| {
                 let _ = sender.send((generation, signal));
             },
