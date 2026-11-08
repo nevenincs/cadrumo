@@ -153,6 +153,29 @@ test("the staged edits make one submission of typed values only", () => {
   expect(input.submission.lexemes).toBeUndefined();
 });
 
+test("a carry stated to hold nothing is sent as the statement, with no value", () => {
+  const fed = box(m130, "05");
+  const statement = {
+    kind: "attest_no_amount",
+    change: "set",
+    words: "served action",
+    statement: "served statement",
+  } as const;
+  const edit = staged(fed, statement);
+  expect(
+    editSubmission(m130.admitted_baseline!, [edit], "en").submission
+      .binding_intents,
+  ).toEqual([{ address: editAddress(fed), kind: "attest_no_amount" }]);
+  // The staged edit says what the form served, never words of its own.
+  expect(stagedText(((key: string) => key) as Translate, edit)).toBe(
+    "served action",
+  );
+  expect(restaged(edit, { ...fed, takes_typed_value: true })).toEqual(
+    statement,
+  );
+  expect(restaged(edit, { ...fed, takes_typed_value: false })).toBeNull();
+});
+
 test("an entry is read by a preflight carrying only what was typed", () => {
   const baseline = m130.admitted_baseline!;
   const input = entrySubmission(baseline, box(m130, "06"), "1.234,56", "es");
