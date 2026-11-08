@@ -79,6 +79,7 @@ from .work_form_models import (
     ModeloFormAddressV1,
     ModeloFormBinding,
     ModeloFormBlocker,
+    ModeloFormCarryAttestation,
     ModeloFormCounts,
     ModeloFormCredit,
     ModeloFormEditability,
@@ -390,6 +391,7 @@ class PublicModeloWorkForm(BaseModel):
     filing: ModeloFormFiling | None
     last_export: ModeloFormExport | None
     edit_closure: ModeloFormEditClosure | None
+    carry_attestation: ModeloFormCarryAttestation | None = None
     modelo_title: str | None
     modelo_name: str | None
     modelo_number: str | None

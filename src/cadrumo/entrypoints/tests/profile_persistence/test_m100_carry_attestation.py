@@ -26,9 +26,12 @@ from ....application.modelo.edit_models import (
     ModeloEditBindingIntentKind,
     ModeloEditWritableBindingOverrideSurfaceEntryV1,
 )
+from ....application.modelo.work_form_models import ModeloWorkForm
+from ....application.modelo.work_form_service import load_modelo_work_form
 from ....core.aggregation import BindingSourceKind
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
@@ -179,3 +182,40 @@ def test_an_earlier_return_stored_later_with_a_pending_amount_contradicts_the_st
     }
     assert contradicted in disputed, [(issue.reason, issue.disagreement) for issue in head.source_issues]
     assert not disputed & set(agreeing)
+
+
+def _form(work: SeededOperatorWork, language: OutputLanguage) -> ModeloWorkForm:
+    unit = work.work_unit
+    return load_modelo_work_form(
+        unit.bucket_id,
+        unit.modelo,
+        unit.filing_year,
+        unit.period,
+        operation=work.operation,
+        work_unit_repository=work.ports.work_unit_repository,
+        calculation_repository=work.ports.calculation_repository,
+        verification_repository=work.ports.verification_repository,
+        admission=work.admit(),
+        language=language,
+    ).form
+
+
+@pytest.mark.parametrize("year", _renta_years())
+def test_the_form_offers_the_statement_while_a_carry_is_open_and_applying_it_closes_it(
+    tmp_path: Path, year: int
+) -> None:
+    with (
+        profile_adapter_composition(),
+        seeded_operator_work(tmp_path, modelo="100", filing_year=year, period_code="0A", extra_facts=_FACTS) as renta,
+    ):
+        offered = _form(renta, OutputLanguage.EN).carry_attestation
+        assert offered is not None
+        assert set(_PENDING_CARRIES) <= set(offered.binding_ids)
+        spanish = _form(renta, OutputLanguage.ES).carry_attestation
+        assert spanish is not None
+        assert spanish.binding_ids == offered.binding_ids
+        assert spanish.action_words != offered.action_words
+
+        # The window stages one statement per binding the form names, and nothing is left to state.
+        assert renta.apply(binding=tuple(_attest(binding_id) for binding_id in offered.binding_ids)).refusal is None
+        assert _form(renta, OutputLanguage.EN).carry_attestation is None

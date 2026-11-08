@@ -991,6 +991,30 @@ class ModeloFormCredit(ModeloFormBase):
     dependents: tuple[ModeloFormCasillaAddressV1, ...] | None
 
 
+class ModeloFormCarryAttestation(ModeloFormBase):
+    """The statement a filer can make that no amount from an earlier ejercicio is still pending.
+
+    It is offered while a carry the declaration reads from an earlier filing
+    holds no value: no stored earlier return supplied it, and the filer has
+    neither entered it nor stated it. Applying it stages one ``attest_no_amount``
+    intent per binding, which records each as a zero the filer stated.
+    """
+
+    #: The carries the statement answers, each a binding override the edit admits the statement on.
+    binding_ids: tuple[BindingId, ...] = Field(min_length=1)
+    #: The action, in the form's language.
+    action_words: str = Field(min_length=1)
+    #: What the statement records and what happens when an earlier return later shows an amount.
+    statement_words: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _bindings_are_unique_and_sorted(self) -> ModeloFormCarryAttestation:
+        if list(self.binding_ids) != sorted(set(self.binding_ids)):
+            raise ValueError("a carry attestation names each binding once, in order")
+        return self
+
+
 class ModeloWorkForm(ModeloFormBase):
     """The editor form of one work target in one language."""
 
@@ -1064,6 +1088,8 @@ class ModeloWorkForm(ModeloFormBase):
     last_export: ModeloFormExport | None = None
     #: Why nothing may be edited, when something other than the admission closes the form.
     edit_closure: ModeloFormEditClosure | None = None
+    #: The statement that no earlier-ejercicio amount is pending, while a carry it answers holds no value.
+    carry_attestation: ModeloFormCarryAttestation | None = None
     #: The modelo's number and title, its number alone, and the period, in the form's language.
     modelo_title: str | None = None
     #: The modelo's own title without its number, beside the number a frontend shows apart; ``None`` without one.
