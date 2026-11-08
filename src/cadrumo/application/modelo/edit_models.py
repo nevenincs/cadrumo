@@ -792,8 +792,9 @@ class ModeloBindingEditIntentV1(EditModel):
     """One binding-override edit intent; zero and false remain distinct from UNCHANGED.
 
     Addresses ``CalculationRevision.binding_overrides`` directly by
-    ``BindingId``. Never carries a value for ``REMOVE_OVERRIDE``: withdrawing
-    an override is expressed by absence of a value, not a typed zero.
+    ``BindingId``. Never carries a value for ``REMOVE_OVERRIDE`` or
+    ``ATTEST_NO_AMOUNT``: withdrawing an override, and stating that a carry
+    holds no amount, are expressed by absence of a value, not a typed zero.
     """
 
     address: ModeloEditBindingAddressV1

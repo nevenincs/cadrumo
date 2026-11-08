@@ -170,10 +170,15 @@ test("a carry stated to hold nothing is sent as the statement, with no value", (
   expect(stagedText(((key: string) => key) as Translate, edit)).toBe(
     "served action",
   );
-  expect(restaged(edit, { ...fed, takes_typed_value: true })).toEqual(
-    statement,
-  );
-  expect(restaged(edit, { ...fed, takes_typed_value: false })).toBeNull();
+  const open = {
+    ...fed,
+    takes_typed_value: true,
+    origin: "not_imported_yet",
+  } as const;
+  expect(restaged(edit, open)).toEqual(statement);
+  expect(restaged(edit, { ...open, takes_typed_value: false })).toBeNull();
+  // An earlier return stored meanwhile supplies the carry: the statement goes.
+  expect(restaged(edit, { ...open, origin: "imported" })).toBeNull();
 });
 
 test("an entry is read by a preflight carrying only what was typed", () => {

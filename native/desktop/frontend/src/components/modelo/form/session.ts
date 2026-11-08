@@ -357,9 +357,12 @@ export function restaged(
   field: PublicModeloFormField,
 ): StagedIntent | null {
   const { intent } = edit;
-  // A statement is the same statement on the box as it now stands.
+  // A statement stands only while the carry still holds no value: one an
+  // earlier return now supplies is dropped, never staged over it.
   if (intent.kind === "attest_no_amount")
-    return field.takes_typed_value ? intent : null;
+    return field.takes_typed_value && field.origin !== "imported"
+      ? intent
+      : null;
   if (intent.change === "set") {
     if (!field.takes_typed_value) return null;
     if (
@@ -815,11 +818,12 @@ export function useFormSession({
         statement: attestation.statement_words,
       });
   }, [attestation, carries, stage]);
-  const carriesStated =
-    carries.length > 0 &&
-    carries.every(
-      (field) => staged.get(editKey(field))?.intent.kind === "attest_no_amount",
-    );
+  // Stated only once every carry the form served is staged as stated: a
+  // served carry the window cannot place keeps the offer standing.
+  const carriesStated = (attestation?.binding_ids ?? []).every(
+    (bindingId) =>
+      staged.get(`b:${bindingId}`)?.intent.kind === "attest_no_amount",
+  );
 
   return {
     baseline,
@@ -829,10 +833,7 @@ export function useFormSession({
     stage,
     unstage,
     carryAttestation:
-      attestation &&
-      carries.length > 0 &&
-      !carriesStated &&
-      editsAdmitted(envelope)
+      attestation && !carriesStated && editsAdmitted(envelope)
         ? attestation
         : null,
     attestCarries,
