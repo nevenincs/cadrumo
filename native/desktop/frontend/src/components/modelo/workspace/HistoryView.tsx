@@ -39,6 +39,14 @@ export type HistoryNotice = {
   /** The movement a refusal names for putting it right, and the words that
    * offer opening it. */
   movement?: { transactionId: string; words: string };
+  /** The declaration whose opening IVA balance a refusal names, and the words
+   * that offer recording it. */
+  openingBalance?: {
+    modelo: string;
+    filingYear: number;
+    periodCode: string;
+    words: string;
+  };
 } | null;
 
 const KIND_ICON: Record<string, IconName> = {

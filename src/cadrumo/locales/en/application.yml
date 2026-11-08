@@ -2724,6 +2724,8 @@ application:
       correct_sealed_blocked: 'Correction refused: a Modelo 303 already recorded as
         filed (%{blocking_period} %{blocking_filing_year}) has used this starting
         compensation basis. Changing it would alter a declaration recorded as filed.'
+      next_step:
+        open_opening_balance: Record the opening IVA balance for %{modelo}, %{period}
       override_fresh_wallet_blocked: 'Override refused: a current AEAT wallet reading
         already resolves Modelo 303 %{period} %{filing_year}. Fresh AEAT evidence
         is authoritative and an override must not overrule it.'
