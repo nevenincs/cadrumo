@@ -3317,13 +3317,6 @@ desktop:
       figures_unavailable: A számok nem érhetők el. A főkönyv nem válaszolt, a piszkozatod
         megmaradt.
       figures_updating: A számok frissülnek…
-      finding:
-        received_invoice_entity_professional_fee:
-          detail: '{counterparty} a társasági adó (Impuesto sobre Sociedades) alanya,
-            ezért szakmai díjaira nem vonatkozik visszatartás (a Reglamento del Impuesto
-            sobre Sociedades 60.1. cikke). A(z) {amount} összegű visszatartás nem
-            kerül a Modelo 111-be, amíg ki nem javítod a számlát.'
-          title: A számlán szereplő visszatartás nem alkalmazható
       fixed: A számla azonosítójának része. Módosításhoz töröld, majd add hozzá újra.
       from_lines: A tételsorok szerint
       gone: Ez a számla már nincs a katalógusban.

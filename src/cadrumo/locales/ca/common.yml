@@ -3341,13 +3341,6 @@ desktop:
       figures_unavailable: Xifres no disponibles. El llibre no ha respost i el teu
         esborrany es conserva.
       figures_updating: S'estan actualitzant les xifres…
-      finding:
-        received_invoice_entity_professional_fee:
-          detail: '{counterparty} tributa per l''Impost sobre Societats, i els seus
-            honoraris professionals no porten retenció (art. 60.1 del Reglament de
-            l''Impost sobre Societats). La retenció de {amount} no es declara al Model
-            111 fins que corregeixis la factura.'
-          title: La retenció d'aquesta factura no correspon
       fixed: Forma part de la identitat de la factura. Per canviar-ho, elimina-la
         i torna-la a afegir.
       from_lines: Segons les línies

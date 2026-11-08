@@ -656,8 +656,6 @@ DESKTOP_LEDGER_DOCUMENT_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.invoices.figures_unavailable",
         "desktop.ledger.invoices.figures_retry",
         "desktop.ledger.invoices.figures_updating",
-        "desktop.ledger.invoices.finding.received_invoice_entity_professional_fee.detail",
-        "desktop.ledger.invoices.finding.received_invoice_entity_professional_fee.title",
         "desktop.ledger.invoices.not_available",
         "desktop.ledger.invoices.would_refuse",
         "desktop.ledger.invoices.line.calculated",
