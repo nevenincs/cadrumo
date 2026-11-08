@@ -68,6 +68,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.contribuyente.entity_type import EntityType
 from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
@@ -101,6 +102,7 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
 )
 
 from .general_iva_profile_facts_support import renta_single_taxpayer_facts
+from .m130_m100_annual_support import expense_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -144,7 +146,7 @@ def bucket_id() -> str:
     return _BUCKET_ID
 
 
-def _seed_taxpayer_profile() -> None:
+def _seed_taxpayer_profile(estimation_regime: str = "directa_simplificada") -> None:
     seed_test_profile_record(
         create_user_profile_record(
             context=profile_creation_context_for_test(),
@@ -158,7 +160,7 @@ def _seed_taxpayer_profile() -> None:
                     UserProfileFact(path="activities.description", value="design services"),
                     UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
                     *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
-                    *cash_criterion_facts(_WITHHELD_YEAR, _ZERO_YEAR),
+                    *cash_criterion_facts(_WITHHELD_YEAR, _ZERO_YEAR, estimation_regime=estimation_regime),
                 )
             ),
             created_at=_T0,
@@ -528,3 +530,133 @@ def test_a_revision_filed_before_screen_stamps_with_a_casilla_06_figure_still_ex
         load = _form(secure_objects, _WITHHELD_YEAR, operation)
         assert load.filed
         assert not [item for item in load.form.calculation_notes if item.reason == FILED_BEFORE_GRADE_CAP_REASON]
+
+
+# APP-QA's first quarter in miniature, as the Libro de facturas leaves it: three Spanish
+# invoices of 2.000,00 base, 21 % IVA and a stated 15 % retención of 300,00, each collected
+# net at 2.000,00 + 420,00 - 300,00 = 2.120,00, and one 1.500,00 intra-community service
+# invoice with no retención. The import sets no IVA treatment, and the last Spanish link is
+# held on the movement alone. One 2.797,50 deductible expense, in estimación directa normal,
+# which adds no provision for gastos de difícil justificación (RIRPF art. 30.2.4.ª).
+# Hand-derived (AEAT Modelo 130 instructions, casillas 01 to 07; RIRPF art. 110.3.a):
+# 01 = 3 x 2.000,00 + 1.500,00 = 7.500,00; 03 = 7.500,00 - 2.797,50 = 4.702,50;
+# 04 = 20 % x 4.702,50 = 940,50; 06 = 3 x 300,00 = 900,00; 07 = 940,50 - 0 - 900,00 = 40,50.
+_BOOK_BASE: Final = Decimal("2000.00")
+_BOOK_CUOTA: Final = Decimal("420.00")
+_BOOK_RETENCION: Final = Decimal("300.00")
+_BOOK_NET_COBRO: Final = Decimal("2120.00")
+_BOOK_INTRA_COMMUNITY_BASE: Final = Decimal("1500.00")
+_BOOK_EXPENSE: Final = Decimal("2797.50")
+_BOOK_ORACLE: Final[dict[str, Decimal]] = {
+    "01": Decimal("7500.00"),
+    "02": Decimal("2797.50"),
+    "03": Decimal("4702.50"),
+    "04": Decimal("940.50"),
+    "05": Decimal("0"),
+    "06": Decimal("900.00"),
+    "07": Decimal("40.50"),
+}
+
+
+def _book_invoice(
+    number: str, day: date, *, base: Decimal, cuota: Decimal, spanish: bool, linked: str | None
+) -> Invoice:
+    line = InvoiceLine(
+        description="Servicios profesionales",
+        quantity=Decimal("1"),
+        unit_price=base,
+        subtotal=base,
+        iva_rate=IvaRate.from_registry("RATE_21" if cuota else "RATE_0"),
+        iva_amount=cuota,
+    )
+    return Invoice.model_validate(
+        {
+            "kind": InvoiceKind.ISSUED,
+            "invoice_number": number,
+            "issued_at": day,
+            "counterparty_name": f"Cliente {number}",
+            "counterparty_tax_id": "B00015016" if spanish else "DE123456788",
+            "counterparty_country": "ES" if spanish else "DE",
+            "bucket_id": _BUCKET_ID,
+            "base_total": base,
+            "iva_total": cuota,
+            "grand_total": base + cuota,
+            "currency": "EUR",
+            "lines": (line,),
+            "payment_status": PaymentStatus.PAID,
+            "iva_category": None,
+            "retention_rate": Decimal("0.15") if spanish else None,
+            "retention_amount": _BOOK_RETENCION if spanish else None,
+            "linked_transaction_ids": () if linked is None else (linked,),
+        },
+    )
+
+
+def _persist_invoice_book_quarter(secure_objects: SecureObjectRepository) -> None:
+    spanish = (
+        ("2026-001", date(_WITHHELD_YEAR, 1, 15)),
+        ("2026-003", date(_WITHHELD_YEAR, 2, 14)),
+        ("2026-004", date(_WITHHELD_YEAR, 3, 14)),
+    )
+    cobros = [
+        _receipt(number, value_date=day, cash=_BOOK_NET_COBRO, taxable_base=_BOOK_BASE, iva=_BOOK_CUOTA)
+        for number, day in spanish
+    ]
+    kunde = _receipt(
+        "2026-002",
+        value_date=date(_WITHHELD_YEAR, 1, 31),
+        cash=_BOOK_INTRA_COMMUNITY_BASE,
+        taxable_base=_BOOK_INTRA_COMMUNITY_BASE,
+    )
+    invoices = [
+        _book_invoice(
+            number,
+            day,
+            base=_BOOK_BASE,
+            cuota=_BOOK_CUOTA,
+            spanish=True,
+            linked=None if number == "2026-004" else cobro.transaction_id,
+        )
+        for (number, day), cobro in zip(spanish, cobros, strict=True)
+    ]
+    invoices.append(
+        _book_invoice(
+            "2026-002",
+            date(_WITHHELD_YEAR, 1, 31),
+            base=_BOOK_INTRA_COMMUNITY_BASE,
+            cuota=Decimal("0"),
+            spanish=False,
+            linked=kunde.transaction_id,
+        )
+    )
+    catalogue = TransactionCatalogue.from_transactions(
+        (
+            *cobros,
+            kunde,
+            expense_transaction(
+                "gasto-trimestre",
+                value_date=date(_WITHHELD_YEAR, 2, 20),
+                category=SpendingCategory.from_registry("material_oficina"),
+                taxable_base=_BOOK_EXPENSE,
+            ),
+        )
+    )
+    for movement, invoice in zip((*cobros, kunde), invoices, strict=True):
+        catalogue = link_invoice(catalogue, movement.transaction_id, invoice.invoice_id)
+    TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(catalogue)
+    InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(build_invoice_catalogue(invoices))
+
+
+def test_an_invoice_book_quarter_credits_its_retenciones_and_pays_the_remainder(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    _seed_taxpayer_profile(estimation_regime="directa_normal")
+    _persist_invoice_book_quarter(secure_objects)
+
+    with bundled_indexed_authority().operation() as operation:
+        revision = _calculate(_work_unit(secure_objects, _WITHHELD_YEAR, operation), operation)
+
+        assert {
+            box: Decimal(revision.casilla_values[validated_casilla_id(box)]) for box in _BOOK_ORACLE
+        } == _BOOK_ORACLE, revision.casilla_values
+        assert not [issue for issue in revision.source_issues if issue.reason == _REASON]

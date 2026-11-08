@@ -1845,6 +1845,30 @@ application:
         rögzít, amely nincs a nyilvántartásodban.
       row_unregistered_undated: Egy könyvelt tétel a nyilvántartásban nem szereplő
         eszközt rögzít.
+      withholding_invoice_entity_professional_fee: A(z) {counterparty} által kiállított
+        {invoice} számú kapott számla {amount} forrásadó-levonást (retención) tartalmaz
+        egy szakmai díjon, de a kiállító társaság, és egy társaság szakmai szolgáltatásai
+        után nincs levonás. Javítsd a számlát, hogy ne tartalmazzon levonást.
+      withholding_invoice_incomplete: A(z) {counterparty} által kiállított {invoice}
+        számú kapott számla {amount} forrásadó-levonást (retención) tartalmaz, de
+        hiányzik róla a kiállító adószáma vagy az euróban kifejezett összege. Egészítsd
+        ki a számlát.
+      withholding_invoice_kind_undeclared: A(z) {counterparty} által kiállított {invoice}
+        számú kapott számla {amount} forrásadó-levonást (retención) tartalmaz, de
+        a kifizetéséből nem derül ki, hogy bérleti díjról vagy egy tevékenység díjáról
+        van-e szó. Nyisd meg a kifizetés tételét, és válaszd ki az IRPF-kategóriáját.
+      withholding_invoice_non_resident: A(z) {counterparty} által kiállított {invoice}
+        számú kapott számla {amount} forrásadó-levonást (retención) tartalmaz, de
+        a kiállító nem spanyol illetőségű, így ez a levonás nem ebben a bevallásban
+        szerepel. Ellenőrizd a számla országát és adószámát.
+      withholding_invoice_rate_unrecognised: A(z) {counterparty} által kiállított
+        {invoice} számú kapott számla {amount} forrásadó-levonást (retención) tartalmaz,
+        amely egyetlen tevékenységi levonási kulcsnak sem felel meg. Ellenőrizd a
+        számla alapját és levonását.
+      withholding_invoice_recipient_unknown: A(z) {counterparty} által kiállított
+        {invoice} számú kapott számla {amount} forrásadó-levonást (retención) tartalmaz,
+        de az adószámából (NIF) nem derül ki, hogy a kiállító IRPF vagy társasági
+        adó (Impuesto sobre Sociedades) alá tartozik. Ellenőrizd a számla adószámát.
     calc_diagnostic_words:
       income_class:
         actividad_economica: Gazdasági tevékenységből származó
