@@ -142,10 +142,12 @@ def build_calculation_action_ports(
         migrate_stored_relation_overrides_to_binding_ids,
     )
     from ..adapters.persistence.profile.catalogue_reads import build_invoice_catalogue_read_ports
+    from ..adapters.persistence.profile.counterparty_establishment import CounterpartyEstablishmentRepository
     from ..adapters.persistence.profile.credit_resolution_records import CreditResolutionRepositoryAdapter
     from ..adapters.persistence.profile.foreign_assets import ForeignAssetRegisterRepository
     from ..adapters.persistence.profile.inventory import InventoryLedgerRepository
     from ..adapters.persistence.profile.invoice_source_resolver import (
+        CounterpartyProvinciaAdapter,
         InvoiceCatalogueSourceResolverAdapter,
         M349FiledDeclarationAdapter,
     )
@@ -234,6 +236,9 @@ def build_calculation_action_ports(
             m349_filed_declarations=M349FiledDeclarationAdapter(
                 repository=calculation_binding.calculation_repository(),
                 operation=operation,
+            ),
+            counterparty_provincias=CounterpartyProvinciaAdapter(
+                repository=CounterpartyEstablishmentRepository(bucket_id=normalized_bucket_id, objects=objects),
             ),
         ),
         filing_repository=ModeloRecordCatalogueRepository(

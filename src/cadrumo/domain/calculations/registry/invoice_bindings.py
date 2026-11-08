@@ -183,6 +183,13 @@ class InvoiceObservation(BaseModel):
     """The leased premises' SITUACIÓN DEL INMUEBLE code, when the lease records it."""
     referencia_catastral: str | None = Field(default=None, min_length=1, max_length=32)
     """The leased premises' referencia catastral, when the lease records it."""
+    party_provincia_code: str | None = Field(default=None, pattern=r"^[0-9]{2}$")
+    """The INE code of the province of a Spanish counterparty's domicilio fiscal, when the person stated it.
+
+    Modelo 347 declares it as the declarado's CÓDIGO PROVINCIA (pos. 77-78). No
+    invoice holds it as a fact, so it comes only from the counterparty's stated
+    facts and is never read out of an address.
+    """
 
     _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))
     _clave_uppercase = field_validator("intracommunity_clave")(intracommunity_clave_validator())

@@ -37,6 +37,7 @@ import {
   wired,
   type ControlProps,
 } from "./InvoiceFields";
+import { InvoiceCounterpartyProvincia } from "./InvoiceCounterpartyProvincia";
 import { InvoiceDocument } from "./InvoiceDocument";
 import { StoredLines } from "./InvoiceLines";
 import { TotalsList, Retention } from "./InvoiceTotals";
@@ -142,6 +143,12 @@ export function StoredInvoice({
           </FormField>
         </div>
       </EditorSection>
+
+      <InvoiceCounterpartyProvincia
+        port={port}
+        taxId={invoice.counterparty_tax_id}
+        country={invoice.counterparty_country}
+      />
 
       <EditorSection title={t("desktop.ledger.invoices.document")}>
         <div className="grid grid-cols-2 gap-3">

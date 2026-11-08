@@ -265,9 +265,10 @@ _DECLARABLE_FACTS: frozenset[str] = frozenset(
 
 #: The Modelo 347 record-key facts the slim store never carried: the operations
 #: RD 1065/2007 art. 34.1.d, j and k relate separately, the leased premises of
-#: art. 34.1.d, and the annual basis of art. 33.1. Their canonical reachability is
-#: proven through the real resolver by the declarado and inmueble record tests over
-#: the compiled registry, not by the slim-store contract.
+#: art. 34.1.d, the annual basis of art. 33.1, and the declarado's provincia the
+#: person stated for the counterparty. Their canonical reachability is proven
+#: through the real resolver by the declarado and inmueble record tests over the
+#: compiled registry, not by the slim-store contract.
 
 
 _M347_RECORD_KEY_FACTS: frozenset[str] = frozenset(
@@ -278,6 +279,7 @@ _M347_RECORD_KEY_FACTS: frozenset[str] = frozenset(
         "arrendamiento_local_negocio",
         "situacion_inmueble",
         "referencia_catastral",
+        "party_provincia_code",
     },
 )
 

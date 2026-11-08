@@ -42,6 +42,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.identity.hex_ids import InvoiceId
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...domain.modelos.calculation_revision_sources import CalculationNoteSentence
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -207,7 +208,8 @@ class ModeloFormIssueLine(BaseModel):
     #: What answering this way records, in the form's language; ``None`` exactly when ``resolution_answer`` is.
     answer_lead_words: str | None = Field(default=None, min_length=1)
     answer_lead_words_language: OutputLanguage | None = None
-    #: The invoice whose document this line asks for; the line opens it in the Libro de facturas.
+    #: The invoice this line opens in the Libro de facturas: the one whose document it asks for, or one of
+    #: the counterparty whose fact it lacks.
     invoice_id: InvoiceId | None = None
 
 
@@ -506,7 +508,20 @@ def _note_line(note: ModeloFormCalculationNote, context: _Context) -> ModeloForm
         answer_lead_words_language=None if note.resolution_answer is None else context.language,
         # A revision the gate refuses before reading its notes is put right by calculating again.
         recalculates=note.reason in DERIVED_GATE_REASONS,
+        invoice_id=_note_invoice(note),
     )
+
+
+_INVOICE_ROW_SENTENCES: Final = frozenset({CalculationNoteSentence.M347_PROVINCIA_UNSTATED})
+"""The note sentences whose one row is an invoice of the counterparty the note is about."""
+
+
+def _note_invoice(note: ModeloFormCalculationNote) -> str | None:
+    """The invoice a note opens, where its fact names one."""
+    fact = note.fact
+    if fact is None or fact.sentence not in _INVOICE_ROW_SENTENCES or len(fact.row_refs) != 1:
+        return None
+    return fact.row_refs[0]
 
 
 def _answer_lead(answer: ModeloFormResolutionAnswer, context: _Context) -> str:
