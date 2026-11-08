@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
-import type { LedgerNextStep } from "../../../shell/ledger";
+import type { LedgerWorkStep } from "../../../shell/ledger";
 import type { ModeloFormAddressV1 } from "../../../shell/modeloContract/modeloEditWork";
 import type { ModeloProjectOperationProjection } from "../../../shell/modeloContract/modeloProject";
 import type { PublicModeloFormField } from "../../../shell/modeloContract/modeloWorkForm";
@@ -130,7 +130,7 @@ export function Estimate({
   /** Asks for the estimate, or null where this window cannot. */
   onAsk: (() => void) | null;
   /** Runs the step a refusal names, or null where this window cannot. */
-  onStep: ((step: LedgerNextStep) => void) | null;
+  onStep: ((step: LedgerWorkStep) => void) | null;
   locale: string;
   fieldAt(address: ModeloFormAddressV1): PublicModeloFormField | null;
   results: readonly string[];

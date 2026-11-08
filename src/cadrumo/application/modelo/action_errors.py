@@ -35,6 +35,7 @@ from typing import TYPE_CHECKING, override
 from ...core.errors.not_found import CoreNotFoundError
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.modelos.errors import ModeloError
+from ..operations.next_step import OperationNextStepErrorMixin, OperationNextStepWording
 from ..operator_actions.models import PreconditionVerdict
 from ..workflow.abort import WorkflowAbortReason
 from ..workflow.run_models import WorkflowResult
@@ -358,7 +359,7 @@ class ModeloRequiredBindingsMissingError(ModeloPreconditionErrorMixin, ModeloErr
     """Raised when Modelo 202 lifecycle work lacks required calculation bindings."""
 
 
-class ModeloProfileReadinessError(ModeloPreconditionErrorMixin, ModeloError):
+class ModeloProfileReadinessError(OperationNextStepErrorMixin, ModeloPreconditionErrorMixin, ModeloError):
     """Raised when filing-grade modelo work starts with missing active-profile facts.
 
     Carries the declared precondition failure so the operator surface resolves
@@ -369,6 +370,11 @@ class ModeloProfileReadinessError(ModeloPreconditionErrorMixin, ModeloError):
     unfinished profile setup, which every filing-grade verb re-checks - carries
     ``profile_precondition_verdict`` instead: the gate that raises it does not
     know which leaf called it, so it cannot honestly name a leaf scenario.
+
+    ``next_step`` is the one operation the refusal offers for putting it right -
+    filling in the first profile detail it names, or declaring the setup
+    complete - chosen where the refusal is raised, because that is the only
+    place that knows which of the two stopped the work.
     """
 
     def __init__(
@@ -379,6 +385,7 @@ class ModeloProfileReadinessError(ModeloPreconditionErrorMixin, ModeloError):
         translated_message: str | None = None,
         precondition_failure: ModeloPreconditionFailure | None = None,
         profile_precondition_verdict: PreconditionVerdict | None = None,
+        next_step: OperationNextStepWording | None = None,
     ) -> None:
         """Initialize the refusal with at most one leaf-scoped or profile-scoped decision."""
         if precondition_failure is not None and profile_precondition_verdict is not None:
@@ -388,6 +395,7 @@ class ModeloProfileReadinessError(ModeloPreconditionErrorMixin, ModeloError):
             context=context,
             translated_message=translated_message,
             precondition_failure=precondition_failure,
+            next_step=next_step,
         )
         self._profile_precondition_verdict = profile_precondition_verdict
 

@@ -2815,6 +2815,10 @@ application:
           canal decimal %{binding_id} té un tipus no suportat: %{value_type}.'
         enum_boolean_invalid: La dada de perfil per a l'origen de valor %{binding_id}
           ha resolt a booleà; els booleans no són claus vàlides.
+    profile_readiness:
+      next_step:
+        complete_profile_setup: Declara completa la configuració del perfil
+        open_profile_field: Omple %{field}
     projection_words:
       binding_unresolved: No s'ha pogut treure cap valor per a aquesta xifra a partir
         dels teus registres, així que queda sense resoldre en lloc de comptar com

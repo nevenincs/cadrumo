@@ -2811,6 +2811,10 @@ application:
           canal decimal %{binding_id} tiene un tipo no soportado: %{value_type}.'
         enum_boolean_invalid: El dato de perfil para el origen de valor %{binding_id}
           resolvió a booleano; los booleanos no son claves válidas.
+    profile_readiness:
+      next_step:
+        complete_profile_setup: Declara completa la configuración del perfil
+        open_profile_field: Rellena %{field}
     projection_words:
       binding_unresolved: No se ha podido sacar ningún valor para esta cifra a partir
         de tus registros, así que queda sin resolver en lugar de contar como cero.

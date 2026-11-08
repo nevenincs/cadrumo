@@ -27,6 +27,8 @@ from datetime import date
 from typing import TYPE_CHECKING
 
 from ...core.errors.severity import BaseSeverity
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import tr
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.period import Period
 from ...domain.calculations.registry.applicability import derive_modelo_applicability
@@ -44,6 +46,12 @@ from ...domain.contribuyente.entity_type import entity_type_natural_person_token
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord, section_field_key
+from ..operations.next_step import (
+    OperationCompleteProfileSetupStepV1,
+    OperationNextStepWording,
+    OperationOpenProfileFieldStepV1,
+    is_profile_field_path,
+)
 from ..operator_actions.preconditions import profile_setup_incomplete_verdict
 from ..user_profile.commands import ProfilePreflightReport, ProfilePreflightRequirement, ProfileValidationIssue
 from ..user_profile.completeness import missing_required_field_paths
@@ -142,6 +150,64 @@ def _modelo_work_baseline_paths(record: UserProfileRecord, *, modelo: str | None
     if modelo.strip() != form_for_role("renta.annual") or not income_categories or declares_economic_activity:
         return (*_FILING_BASELINE_PROFILE_PATHS, _PROFILE_ACTIVITY_DESCRIPTION_PATH)
     return _FILING_BASELINE_PROFILE_PATHS
+
+
+_OPEN_PROFILE_FIELD_LOCALE_KEY = "application.modelo.profile_readiness.next_step.open_profile_field"
+_COMPLETE_PROFILE_SETUP_LOCALE_KEY = "application.modelo.profile_readiness.next_step.complete_profile_setup"
+
+
+def open_profile_field_step(*, path: str, label: str) -> OperationNextStepWording:
+    """Offer filling in the profile detail at ``path``, named by its schema ``label``."""
+
+    def worded(language: OutputLanguage) -> OperationOpenProfileFieldStepV1:
+        return OperationOpenProfileFieldStepV1(
+            path=path,
+            words=tr(_OPEN_PROFILE_FIELD_LOCALE_KEY, field=label, locale=language.value),
+        )
+
+    return worded
+
+
+def complete_profile_setup_step() -> OperationNextStepWording:
+    """Offer declaring the profile setup complete, the one door that ends it."""
+
+    def worded(language: OutputLanguage) -> OperationCompleteProfileSetupStepV1:
+        return OperationCompleteProfileSetupStepV1(
+            words=tr(_COMPLETE_PROFILE_SETUP_LOCALE_KEY, locale=language.value),
+        )
+
+    return worded
+
+
+def _first_missing_field_step(
+    missing: tuple[ProfilePreflightRequirement, ...] | list[ProfilePreflightRequirement],
+) -> OperationNextStepWording | None:
+    """Offer the first detail a readiness refusal names, or nothing where it names none."""
+    for requirement in missing:
+        path = f"{requirement.section_key}.{requirement.field_key}"
+        # A requirement whose selector is not a profile fact's own address has
+        # no row for a profile surface to open; the refusal's words still name
+        # it, and offering an address nothing can show would be worse.
+        if is_profile_field_path(path):
+            return open_profile_field_step(path=path, label=requirement.label)
+    return None
+
+
+def modelo_work_profile_baseline_paths(
+    record: UserProfileRecord,
+    *,
+    modelo: str | None = None,
+) -> tuple[str, ...]:
+    """Return every profile fact filing-grade work for a target requires, filled or not.
+
+    The requirement itself, where
+    :func:`modelo_work_profile_baseline_missing_paths` returns the subset the
+    record leaves blank. A completeness surface needs both: which fields are
+    required decides what it marks, and which are missing decides what it
+    counts. Deriving the mark from the missing set alone would unmark a field
+    the moment it was filled in.
+    """
+    return _modelo_work_baseline_paths(record, modelo=modelo)
 
 
 def modelo_work_profile_baseline_missing_paths(
@@ -526,6 +592,7 @@ def _require_profile_filing_ready(
                 format_profile_preflight_requirement(requirement) for requirement in missing
             ),
         },
+        next_step=_first_missing_field_step(missing),
     )
 
 
@@ -591,12 +658,11 @@ def _require_profile_setup_complete(
     missing_paths = missing_required_field_paths(schema, record_to_path_values(record))
     if missing_paths:
         grounding = grounding_index or {}
-        missing_labels = ", ".join(
-            _render_missing_requirement(
-                build_profile_preflight_requirement(path, schema=schema, grounding_index=grounding),
-            )
+        requirements = tuple(
+            build_profile_preflight_requirement(path, schema=schema, grounding_index=grounding)
             for path in missing_paths
         )
+        missing_labels = ", ".join(_render_missing_requirement(requirement) for requirement in requirements)
         raise ModeloProfileReadinessError(
             translated_message="application.modelo.errors.profile_readiness_setup_incomplete_missing",
             context={"bucket_id": bucket_id, "modelo": modelo, "profile_requirements": missing_labels},
@@ -604,6 +670,9 @@ def _require_profile_setup_complete(
                 modelo=modelo,
                 missing_required_field_count=len(missing_paths),
             ),
+            # A setup still missing facts is put right by filling them in, not
+            # by declaring it complete: that door refuses while any is blank.
+            next_step=_first_missing_field_step(requirements),
         )
     raise ModeloProfileReadinessError(
         translated_message="application.modelo.errors.profile_readiness_setup_incomplete",
@@ -612,6 +681,7 @@ def _require_profile_setup_complete(
             modelo=modelo,
             missing_required_field_count=0,
         ),
+        next_step=complete_profile_setup_step(),
     )
 
 
@@ -634,6 +704,7 @@ def _raise_if_profile_preflight_missing(
                 format_profile_preflight_requirement(requirement) for requirement in report.missing
             ),
         },
+        next_step=_first_missing_field_step(report.missing),
     )
 
 
@@ -812,11 +883,14 @@ def require_profile_ready_for_work_unit(
 
 __all__ = [
     "BLOCKING_APPLICABILITY_VERDICTS",
+    "complete_profile_setup_step",
     "load_modelo_work_profile",
     "modelo_applicability_refusal",
     "modelo_work_profile_baseline_missing_paths",
+    "modelo_work_profile_baseline_paths",
     "modelo_work_profile_baseline_validation_issues",
     "modelo_work_profile_preflight_report",
+    "open_profile_field_step",
     "pre_activity_period_refusal",
     "profile_activity_start_date",
     "require_existing_profile_baseline_ready_for_modelo_work",

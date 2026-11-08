@@ -5,13 +5,15 @@ import {
   type RefObject,
   type SetStateAction,
 } from "react";
+import type { LedgerProfileStep } from "./ledger";
 import type { Layout } from "./layout";
 import { mountedNow } from "./navigation/windowViews";
 import type { useNavigator } from "./navigation/useNavigator";
 
 /** What the profile page is asked to open once it has the profile, from any
- * page: the census pull and the AEAT access editor. Leaving the page
- * withdraws both asks. */
+ * page: the census pull, the AEAT access editor, and the step a refusal
+ * elsewhere served for putting an unready profile right. Leaving the page
+ * withdraws every ask. */
 export function useProfilePageAsks({
   page,
   layoutNow,
@@ -52,10 +54,41 @@ export function useProfilePageAsks({
   // has the profile.
   const [aeatAsked, setAeatAsked] = useState(false);
   const aeatHandled = useCallback(() => setAeatAsked(false), []);
+  // A refusal on another page served one step for putting the profile right.
+  // The step is held as the backend served it, so the page answers its kind
+  // and nothing here interprets what the refusal meant.
+  const [profileStep, setProfileStep] = useState<LedgerProfileStep | null>(
+    null,
+  );
+  const profileStepHandled = useCallback(() => setProfileStep(null), []);
+  const askProfileStep = useCallback(
+    (step: LedgerProfileStep) => {
+      const shown = layoutNow.current;
+      const proceed = () => {
+        setProfileStep(step);
+        setLayout((current) => ({
+          ...current,
+          page: "profile",
+          maximized: null,
+        }));
+      };
+      if (shown.page === "profile") proceed();
+      else
+        guardNavigation(
+          {
+            kind: "navigate",
+            unmounted: mountedNow(shown.page, shown.ledgerView.section),
+          },
+          proceed,
+        );
+    },
+    [guardNavigation, setLayout, layoutNow],
+  );
   useEffect(() => {
     if (page !== "profile") {
       setAeatAsked(false);
       setCensoAsked(false);
+      setProfileStep(null);
     }
   }, [page]);
   return {
@@ -65,5 +98,8 @@ export function useProfilePageAsks({
     aeatAsked,
     setAeatAsked,
     aeatHandled,
+    profileStep,
+    profileStepHandled,
+    askProfileStep,
   };
 }

@@ -10,6 +10,7 @@ import type { Action } from "../shell/actions";
 import { ModelListContext, type ModelList } from "../shell/agentModelList";
 import type { useFilingCalendar } from "../shell/calendar";
 import type { Host } from "../shell/host";
+import type { LedgerProfileStep } from "../shell/ledger";
 import type {
   Layout,
   LedgerView,
@@ -69,6 +70,7 @@ export function MainPane({
   openWorkUnit,
   guarded,
   askCenso,
+  askProfileStep,
   askSignIn,
   runAction,
   openView,
@@ -108,6 +110,8 @@ export function MainPane({
   aeatHandled,
   censoAsked,
   censoHandled,
+  profileStep,
+  profileStepHandled,
   calendar,
   calendarProfile,
   calendarMemory,
@@ -148,6 +152,7 @@ export function MainPane({
   openWorkUnit: (workUnitId: string | null) => void;
   guarded: (proceed: () => void) => void;
   askCenso: () => void;
+  askProfileStep: (step: LedgerProfileStep) => void;
   askSignIn: () => void;
   runAction: (id: string) => void;
   openView: Navigator["openView"];
@@ -187,6 +192,8 @@ export function MainPane({
   aeatHandled: () => void;
   censoAsked: boolean;
   censoHandled: () => void;
+  profileStep: LedgerProfileStep | null;
+  profileStepHandled: () => void;
   calendar: ReturnType<typeof useFilingCalendar>;
   calendarProfile: ReturnType<typeof useUserProfile>;
   calendarMemory: { current: CalendarMemory };
@@ -220,6 +227,11 @@ export function MainPane({
           // The one census flow, as the palette offers it.
           onCensus={
             signedIn && host.censo && host.userProfile ? askCenso : undefined
+          }
+          // The door a readiness refusal here names; only the window that has
+          // a profile page can offer it.
+          onProfileStep={
+            signedIn && host.userProfile ? askProfileStep : undefined
           }
           onBack={() => guarded(() => openWorkUnit(null))}
           onOpenSurface={(surface) => {
@@ -397,6 +409,8 @@ export function MainPane({
             onAeatHandled={aeatHandled}
             censoAsked={censoAsked}
             onCensoHandled={censoHandled}
+            profileStep={profileStep}
+            onProfileStepHandled={profileStepHandled}
           />
         ) : (
           <SignedOut

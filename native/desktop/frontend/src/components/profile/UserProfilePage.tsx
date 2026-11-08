@@ -3,6 +3,7 @@ import {
   useCallback,
   useDeferredValue,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -17,6 +18,7 @@ import { chordMatches, type ChordKeys } from "@/shared/chords";
 import type { Action, Chord } from "../../shell/actions";
 import type { Host } from "../../shell/host";
 import type { ProfileView } from "../../shell/layout";
+import type { LedgerProfileStep } from "../../shell/ledger";
 import { facts } from "../../shell/compose";
 import { useNavigationGuard } from "../../shell/navigation/hooks";
 import { useCensoSync, type CensoSnapshot } from "../../shell/profileCenso";
@@ -77,6 +79,8 @@ export const UserProfilePage = memo(function UserProfilePage({
   onAeatHandled,
   censoAsked,
   onCensoHandled,
+  profileStep,
+  onProfileStepHandled,
   contribute,
   openMenu,
   accountActions,
@@ -103,6 +107,11 @@ export const UserProfilePage = memo(function UserProfilePage({
   onAeatHandled(): void;
   censoAsked: boolean;
   onCensoHandled(): void;
+  /** The step a refusal elsewhere served for putting this profile right,
+   * held as the backend served it; the page answers its kind once it has the
+   * profile, then says it did. Null when none is asked for. */
+  profileStep: LedgerProfileStep | null;
+  onProfileStepHandled(): void;
   /** Hands the window's palette what the page offers, read when it opens. */
   contribute(actions: (() => Action[]) | null): void;
   openMenu: OpenMenu;
@@ -459,6 +468,40 @@ export const UserProfilePage = memo(function UserProfilePage({
     sync,
     syncReady,
   ]);
+  // Declaring the setup complete: the one door that ends it, offered as a
+  // page action and run by the step a refusal elsewhere served.
+  const completeReady =
+    writable &&
+    !!data &&
+    data.setup_state !== "complete" &&
+    missing.size === 0 &&
+    data.valid;
+  const completeSetup = () => {
+    if (data) void profile.save(data, { kind: "complete" });
+  };
+  // How a step is answered, kept on a ref so the ask is answered once per ask
+  // rather than on every redraw the page's own handlers are rebuilt in.
+  const answerStep = useRef<(step: LedgerProfileStep) => void>(() => {});
+  useLayoutEffect(() => {
+    answerStep.current = (step) => {
+      // A field step reveals and focuses that detail's own row. The
+      // completion step runs the action where it is ready, and otherwise
+      // reveals the first detail still outstanding, which is what the action
+      // is waiting for.
+      if (step.kind === "open_profile_field") showDetail(step.path);
+      else if (completeReady) completeSetup();
+      else {
+        const first = data?.missing_required[0];
+        if (first !== undefined) showDetail(first);
+      }
+    };
+  });
+  // Asked for from outside the page: answered once the profile is read.
+  useEffect(() => {
+    if (profileStep === null || !data || !shown) return;
+    answerStep.current(profileStep);
+    onProfileStepHandled();
+  }, [profileStep, data, shown, onProfileStepHandled]);
   const changePassword = host.profiles?.changePassword;
   const profileActions: PageAction[] = [
     ...(host.censo
@@ -495,16 +538,9 @@ export const UserProfilePage = memo(function UserProfilePage({
       "complete",
       t("desktop.profile.complete"),
       "selectAll",
-      () => {
-        if (data) void profile.save(data, { kind: "complete" });
-      },
+      completeSetup,
       {
-        enabled: () =>
-          writable &&
-          !!data &&
-          data.setup_state !== "complete" &&
-          missing.size === 0 &&
-          data.valid,
+        enabled: () => completeReady,
       },
     ),
     action(

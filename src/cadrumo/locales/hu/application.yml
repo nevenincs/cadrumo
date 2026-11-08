@@ -2765,6 +2765,10 @@ application:
           profiladata nem támogatott típusú: %{value_type}.'
         enum_boolean_invalid: A(z) %{binding_id} értékforrás profiladata logikai értékre
           oldódott fel; a logikai adatok nem érvényes kulcsok.
+    profile_readiness:
+      next_step:
+        complete_profile_setup: Nyilvánítsd befejezettnek a profil beállítását
+        open_profile_field: 'Töltsd ki: %{field}'
     projection_words:
       binding_unresolved: Ehhez az értékhez a nyilvántartásaidból nem sikerült értéket
         kiszámolni, ezért feloldatlan marad, és nem számít nullának. Rögzítsd a hiányzó

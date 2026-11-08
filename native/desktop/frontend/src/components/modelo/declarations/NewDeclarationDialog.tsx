@@ -23,6 +23,7 @@ import {
   creationWriteKey,
   type ModeloWriteHolds,
 } from "../../../shell/modeloWriteHolds";
+import { isProfileStep, type LedgerProfileStep } from "../../../shell/ledger";
 import { runOperation } from "../dialogs/operationRun";
 import { WriteHoldNotice, useModeloWriteHold } from "../WriteHoldNotice";
 import type { PublicPeriod } from "../../../shell/modeloContract/modelo";
@@ -40,8 +41,10 @@ export type NewDeclarationStart = {
 
 type Attempt =
   | { kind: "idle" }
-  /** `words` is why, as the backend served it; null when it served none. */
-  | { kind: "refused"; words: string | null }
+  /** `words` is why, as the backend served it; null when it served none.
+   * `step` is the door the backend served for putting the refusal right, with
+   * its own words; null when it served none this dialog answers. */
+  | { kind: "refused"; words: string | null; step: LedgerProfileStep | null }
   | { kind: "failed" };
 
 const at = (target: Target, period: PublicPeriod | null) =>
@@ -66,6 +69,7 @@ export function NewDeclarationDialog({
   holds,
   onReload,
   refreshing,
+  onProfileStep,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -79,6 +83,9 @@ export function NewDeclarationDialog({
   holds: ModeloWriteHolds;
   onReload: () => void;
   refreshing: boolean;
+  /** Takes the profile step a refusal served to the profile page; absent
+   * where the window has no profile page to take it to. */
+  onProfileStep?: (step: LedgerProfileStep) => void;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -94,6 +101,7 @@ export function NewDeclarationDialog({
           onReload={onReload}
           refreshing={refreshing}
           onClose={() => onOpenChange(false)}
+          onProfileStep={onProfileStep}
         />
       )}
     </Dialog>
@@ -111,6 +119,7 @@ function Chooser({
   holds,
   onReload,
   refreshing,
+  onProfileStep,
 }: {
   port: ModeloPort;
   targets: readonly Target[];
@@ -122,6 +131,7 @@ function Chooser({
   holds: ModeloWriteHolds;
   onReload: () => void;
   refreshing: boolean;
+  onProfileStep?: (step: LedgerProfileStep) => void;
 }) {
   const t = useStrings();
   const [modelo, setModelo] = useState<string | null>(start?.modelo ?? null);
@@ -210,7 +220,7 @@ function Chooser({
         }
       } else {
         holds.notWritten(lease);
-        if (current()) setAttempt({ kind: "refused", words: null });
+        if (current()) setAttempt({ kind: "refused", words: null, step: null });
       }
     } else if (outcome.kind === "unknown") {
       holds.unknown(lease, outcome.operationId);
@@ -223,7 +233,19 @@ function Chooser({
       if (current())
         setAttempt(
           outcome.kind === "refused"
-            ? { kind: "refused", words: outcome.words }
+            ? {
+                kind: "refused",
+                words: outcome.words,
+                // The step is kept only where this dialog has somewhere to
+                // take it; an unanswered kind leaves the refusal's words
+                // standing on their own.
+                step:
+                  outcome.step !== null &&
+                  isProfileStep(outcome.step) &&
+                  onProfileStep
+                    ? outcome.step
+                    : null,
+              }
             : { kind: "failed" },
         );
     }
@@ -430,6 +452,23 @@ function Chooser({
                 ? (attempt.words ??
                   t("workspace.declarations.list.new.refused"))
                 : t("workspace.declarations.list.new.failed")}
+              {attempt.kind === "refused" && attempt.step !== null && (
+                // The door the backend named, offered in its own served
+                // words. The dialog closes behind it: the step is answered on
+                // the profile page, which the window shows instead.
+                <Button
+                  variant="link"
+                  className="new-declaration-refusal-step mt-1 block px-0"
+                  onClick={() => {
+                    const step = attempt.step;
+                    if (step === null) return;
+                    onClose();
+                    onProfileStep?.(step);
+                  }}
+                >
+                  {attempt.step.words}
+                </Button>
+              )}
             </Alert>
           ) : null}
           <WriteHoldNotice

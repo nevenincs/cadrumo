@@ -62,13 +62,18 @@ def participe_clave_bearing_country() -> str:
 
 
 @contextmanager
-def _pinned_registry_scope() -> Generator[None]:
+def pinned_registry_scope() -> Generator[None]:
     """Pin the published generation these rules read their vocabularies from.
 
     Entity type, legal form, IRPF income category and fiscal residency are
     governed facts, and their resolvers refuse outside a generation-pinned
     scope rather than reading a mutable default. A caller already holding one
     keeps it, so a whole fact set is judged against a single generation.
+
+    Public because the completeness rules are not the only reader of governed
+    profile facts a readiness surface joins them with: the modelo-work baseline
+    reads the entity type and the income categories through the same resolvers,
+    and must be judged against the same generation in the same walk.
     """
     if governed_facts_in_scope() is not None:
         yield
@@ -93,7 +98,7 @@ def conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[st
     no readiness surface asked for, so ``config profile status`` reported a
     profile ready and pointed the operator at a command that refused it.
     """
-    with _pinned_registry_scope():
+    with pinned_registry_scope():
         return _conditional_profile_required_paths(values)
 
 
@@ -222,7 +227,7 @@ def iva_regime_required(values: Mapping[str, object]) -> bool:
     pure-landlord profile must not be forced into ``GENERAL`` just to pass
     profile persistence.
     """
-    with _pinned_registry_scope():
+    with pinned_registry_scope():
         entity_type = _token(values.get(ENTITY_TYPE_PATH))
         if entity_type != entity_type_natural_person_token().value:
             return True
@@ -370,6 +375,7 @@ __all__ = [
     "conditional_profile_required_paths",
     "iva_regime_required",
     "missing_required_field_paths",
+    "pinned_registry_scope",
     "profile_section_rows",
     "profile_value_is_present",
 ]

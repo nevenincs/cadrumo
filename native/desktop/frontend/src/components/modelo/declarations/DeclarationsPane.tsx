@@ -3,6 +3,7 @@ import { PaneHeader, type PaneControl } from "../../PaneHeader";
 import type { LeaveGuard } from "../../ledger/editing/LedgerEditing";
 import type { OpenableSurface } from "../details/Details";
 import type { BorradorPort } from "../../../shell/borrador";
+import type { LedgerProfileStep } from "../../../shell/ledger";
 import type { ProfileCompanionKit } from "../workspace/ProfileCompanions";
 import { WorkspaceScreen } from "../workspace/WorkspaceScreen";
 import type { ModeloPort } from "../../../shell/modelo";
@@ -22,6 +23,7 @@ export function DeclarationsPane({
   onOpen,
   onOpenWork,
   onCensus,
+  onProfileStep,
   onBack,
   onOpenSurface,
   canOpenSurface,
@@ -47,6 +49,9 @@ export function DeclarationsPane({
   onOpenWork?: (workUnitId: string) => void;
   /** Asks for the window's one census flow, where it has one. */
   onCensus?: () => void;
+  /** Takes the profile step a refusal here served to the profile page, where
+   * the window has one. */
+  onProfileStep?: (step: LedgerProfileStep) => void;
   /** Back to the list; the shell asks first where edits are staged. */
   onBack(): void;
   onOpenSurface(surface: OpenableSurface): void;
@@ -89,6 +94,7 @@ export function DeclarationsPane({
         memory={memory}
         onOpen={onOpen}
         onCensus={onCensus}
+        onProfileStep={onProfileStep}
       />
     );
   return (

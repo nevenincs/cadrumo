@@ -54,18 +54,33 @@ export const columns = (section: ProfileSection) => [
   ).values(),
 ];
 
-/** A section asks for something where one of its own details is required.
- * A repeatable section's requirements hold per entry, and are said there. */
+/** The details a section contributes to the list and to its counts.
+ *
+ * A repeatable section's details belong to its entries, and are listed and
+ * counted there. A section holding NO entry is the exception: the product
+ * reports one unindexed group of the details an entry would have, and that is
+ * the group the filer fills the first entry in. Leaving it out is what let the
+ * header say every required detail was filled while creating a declaration
+ * was refused for want of one of them. */
+export const countedFields = (section: ProfileSection) =>
+  section.repeatable && entries(section).length > 0
+    ? section.fields.filter((field) => field.row_index !== null)
+    : section.fields;
+
+/** A section asks for something where one of its own counted details is
+ * required. A repeatable section's requirements hold per entry, and are said
+ * there, except on the one group a section with no entry stands for. */
 export const requiredSection = (section: ProfileSection) =>
-  !section.repeatable && section.fields.some((field) => field.required);
+  (!section.repeatable || entries(section).length === 0) &&
+  countedFields(section).some((field) => field.required);
 
 export function rowsOf(data: UserProfile): Row[] {
   const missing = new Set(data.missing_required);
   let order = 0;
   return data.sections.flatMap((section) =>
-    section.repeatable
+    section.repeatable && entries(section).length > 0
       ? []
-      : section.fields.map((field) => ({
+      : countedFields(section).map((field) => ({
           id: field.path,
           section,
           field,
@@ -81,11 +96,7 @@ export function rowsOf(data: UserProfile): Row[] {
 
 /** Every detail the profile holds, entries included, and how many are filled. */
 export function counts(data: UserProfile) {
-  const fields = data.sections.flatMap((section) =>
-    section.repeatable
-      ? section.fields.filter((field) => field.row_index !== null)
-      : section.fields,
-  );
+  const fields = data.sections.flatMap(countedFields);
   return {
     total: fields.length,
     filled: fields.filter((field) => !isEmpty(field)).length,
@@ -94,9 +105,7 @@ export function counts(data: UserProfile) {
 }
 
 export function sectionCounts(section: ProfileSection, missing: Set<string>) {
-  const fields = section.repeatable
-    ? section.fields.filter((field) => field.row_index !== null)
-    : section.fields;
+  const fields = countedFields(section);
   return {
     total: fields.length,
     filled: fields.filter((field) => !isEmpty(field)).length,
