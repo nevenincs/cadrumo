@@ -42,6 +42,7 @@ from ....application.modelo.export import export_modelo_revision
 from ....application.modelo.export_amendment_evidence import resolve_persisted_amendment_export_evidence
 from ....application.modelo.export_contracts import ModeloExportCommand
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
+from ....core.field_origin import FieldOrigin
 from ....core.filing_producer_key import FilingProducerKey
 from ....core.modelo import Modelo
 from ....core.payment_election import PaymentElection
@@ -916,7 +917,9 @@ def test_m303_motive_is_refused_for_another_modelo_snapshot() -> None:
                 full_name="Ana Prueba",
             ),
             presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoría Prueba"),
-            model_profile=Modelo111ProfileFacts(colegio_concertado=False),
+            model_profile=Modelo111ProfileFacts(
+                colegio_concertado=False, colegio_concertado_origin=FieldOrigin.OPERATOR
+            ),
             elections=FilingElectionFacts(
                 result_disposition=ResultDisposition.NEGATIVA,
                 payment=PaymentElection.INGRESO,
