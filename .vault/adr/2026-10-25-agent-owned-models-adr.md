@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#agent-owned-models'
 date: '2026-10-25'
-modified: '2026-11-07'
+modified: '2026-11-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:1bfbf4c2a24ef09ac566ab72b6cd613bb164961b817645aaa302eefda5fa502d'
+body_hash: 'sha256:f3c264e3eb74be36e48f442a36dd3ccd04565db714e0987cddf3970d86e2141a'
 related:
   - "[[2026-10-24-rust-component-provisioning-reference]]"
   - "[[2026-10-24-rust-component-provisioning-adr]]"
@@ -142,3 +142,12 @@ Basis: the operator's first-hand ruling to the orchestrating session on 2026-11-
 
 - **Constraint 9.** Rust fetches the model itself, so download progress follows the sizes the fetched manifest declares rather than the totals a server streams. The changed sentence carries its earlier text inline.
 - **Unchanged.** Constraints 6, 7 and 10 stand: each local lane keeps a model list, `num_ctx` remains a run option, and no engine or device stands in silently.
+
+## Amendment 2026-11-08: the recommended local text model is qwen3:4b-instruct
+
+Basis: the coordinator's acceptance on 2026-11-08, which applies rulings already made and is recorded here as coordinator-accepted: cadrumo-agent owns the recommended set (constraint 7), a recommended model keeps a route on both engines (`2026-11-07-local-inference-engine-adr`, amendment of 2026-11-07, D4), and the llama.cpp lane must return an answer for structured extraction (the same amendment, D3). The evidence is the P02.S05 acceptance re-run of the invoice measurement cell, five runs per cell. The status of this record is unchanged.
+
+- **Finding.** The thinking `qwen3:4b` (Qwen3 4B Thinking 2507) reasons whatever a request asks on llama-server b12184. Its template opens the reasoning in the prompt, and no per-request or launch setting stopped it. The invoice reading with a JSON schema and a 400-token reply was schema-valid 0/5 under every control. On Ollama 0.40.13 with `think:false` the same model was 5/5 at 42 tokens, so the failure is specific to llama.cpp.
+- **Measured replacement.** `qwen3:4b-instruct` is Qwen3 4B Instruct 2507 Q4_K_M, model layer 2,497,280,480 B. It does not reason. The same reading was schema-valid 5/5 on Ollama with `think:false`, at 56 tokens and 0.5 s warm. It was also 5/5 on llama-server b12184 from the same registry model layer, at 40 tokens and 0.6 to 0.7 s, with or without `enable_thinking:false`. The product's 38-key extraction schema was separately measured 5/5 on llama-server.
+- **Recommended set.** For local text reading, cadrumo-agent's catalogue recommends `qwen3:4b-instruct` in place of `qwen3:4b`. It is the text slot, the default and the recommendation on both engines. The catalogue routes llama.cpp through the Ollama registry too, using the same layer, with `llamacpp_default_context` 8192. No third-party Hugging Face repository is pinned. The official `Qwen/Qwen3-4B-Instruct-2507-GGUF` did not resolve (401), and a measured community GGUF was not adopted.
+- **Unchanged.** Cadrumo still names no model (constraint 6), and the catalogue schema shape is unchanged. Vision reading is unaffected, because this slot covers text only.
