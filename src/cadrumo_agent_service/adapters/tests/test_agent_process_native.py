@@ -39,6 +39,7 @@ from ...host.launch_environment import HOSTED_ROOT_VARIABLE
 from ...host.launcher_protocol import AgentLauncherRefusal, launcher_refusal_for
 from ...host.native_refusal import NativeLaunchRefusal, NativeLaunchRefusalCode
 from ...host.store_lifecycle import InvocationCancellation
+from ...providers.domain.record import LocalEngine
 from ...service import AgentService
 from ..agent_process import WindowsAgentInvocationRunner, WindowsAgentProcessLauncher
 from . import agent_host_fixture
@@ -434,6 +435,7 @@ def test_cancel_wakes_readiness_and_startup_owner_retires_the_tree(
 
     monkeypatch.setattr(controller._launcher, "launch", observed_launch)
     service = AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
         client=cast(
             InstalledServiceClient, SimpleNamespace(lease=None, connection=SimpleNamespace(close=lambda: None))
         ),
@@ -488,6 +490,7 @@ def test_service_cancel_before_controller_exists_wakes_its_contained_preparation
 
     monkeypatch.setattr(cancellation, "subscribe", subscribed)
     service = AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
         client=cast(
             InstalledServiceClient, SimpleNamespace(lease=object(), connection=SimpleNamespace(close=lambda: None))
         ),
@@ -576,6 +579,7 @@ def test_service_close_wakes_a_pending_served_catalogue_body(tmp_path: Path, can
     server_owner = threading.Thread(target=server.serve_forever)
     server_owner.start()
     service = AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
         client=cast(
             InstalledServiceClient, SimpleNamespace(lease=None, connection=SimpleNamespace(close=lambda: None))
         ),

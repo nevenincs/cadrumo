@@ -893,6 +893,7 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = DESKTOP_PROFILE_INTERFACE_KEYS |
         "desktop.providers.local_engine_ollama_detail",
         "desktop.providers.local_engine_restarts",
         "desktop.providers.local_engine_title",
+        "desktop.providers.local_engine_unavailable",
         "desktop.providers.local_model_absent",
         "desktop.providers.local_model_add",
         "desktop.providers.local_model_add_label",

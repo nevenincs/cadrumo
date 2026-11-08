@@ -72,7 +72,7 @@ class _AdminRecorder:
     ],
 )
 def test_gateway_frame_secret_is_refused_and_parent_admin_secret_dispatches(action: str) -> None:
-    startup = ServiceStartupFrame(bearer="a" * 64, gateway_bearer="b" * 64)
+    startup = ServiceStartupFrame(bearer="a" * 64, gateway_bearer="b" * 64, local_engine_default="llamacpp")
     parent = bytearray(startup.bearer, "ascii")
     gateway = bytearray(startup.gateway_bearer, "ascii")
     host_token = bytearray(b"c" * 43)
@@ -138,14 +138,35 @@ def test_gateway_frame_secret_is_refused_and_parent_admin_secret_dispatches(acti
 @pytest.mark.parametrize(
     "document",
     [
-        {"bearer": "a" * 64},
-        {"gateway_bearer": "b" * 64},
-        {"bearer": "a" * 64, "gateway_bearer": "a" * 64},
+        {"bearer": "a" * 64, "local_engine_default": "llamacpp"},
+        {"gateway_bearer": "b" * 64, "local_engine_default": "llamacpp"},
+        {"bearer": "a" * 64, "gateway_bearer": "a" * 64, "local_engine_default": "llamacpp"},
     ],
 )
 def test_startup_refuses_missing_or_shared_authority(document: dict[str, str]) -> None:
     with pytest.raises(ValidationError):
         ServiceStartupFrame.model_validate(document)
+
+
+def test_startup_refuses_a_frame_that_names_no_default_engine() -> None:
+    with pytest.raises(ValidationError):
+        ServiceStartupFrame.model_validate({"bearer": "a" * 64, "gateway_bearer": "b" * 64})
+
+
+@pytest.mark.parametrize("engine", ["vllm", "", "LLAMACPP", None])
+def test_startup_refuses_an_unknown_default_engine(engine: object) -> None:
+    with pytest.raises(ValidationError):
+        ServiceStartupFrame.model_validate(
+            {"bearer": "a" * 64, "gateway_bearer": "b" * 64, "local_engine_default": engine}
+        )
+
+
+@pytest.mark.parametrize("engine", ["llamacpp", "ollama"])
+def test_startup_accepts_each_supported_default_engine(engine: str) -> None:
+    frame = ServiceStartupFrame.model_validate(
+        {"bearer": "a" * 64, "gateway_bearer": "b" * 64, "local_engine_default": engine}
+    )
+    assert frame.local_engine_default == engine
 
 
 @pytest.mark.parametrize("model", ["synthetic-vision:1", "synthetic vision/1", "m" * 512, "é" * 512])

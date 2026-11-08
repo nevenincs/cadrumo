@@ -32,6 +32,7 @@ from ...providers.application.contracts import ProviderSettingsRefusalCode
 from ...providers.application.local_model_list import LocalModelListService
 from ...providers.application.tests.memory_store import MemoryLocalModelListStore
 from ...providers.application.tests.synthetic_catalog import ProvidedProviderCatalogSource, synthetic_catalog
+from ...providers.domain.record import LocalEngine
 from ...service import AgentService
 from ...service_support import LIFECYCLE_ADMISSION_SECONDS
 from ..controller import (
@@ -85,6 +86,7 @@ def _running_service(
 ) -> tuple[AgentService, list[dict[str, Any]], int]:
     events: list[dict[str, Any]] = []
     service = AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
         client=cast(
             InstalledServiceClient,
             SimpleNamespace(lease=SimpleNamespace(profile_id=uuid4()), connection=SimpleNamespace(close=lambda: None)),
@@ -229,7 +231,9 @@ def _with_memory_model_list(service: AgentService) -> MemoryLocalModelListStore:
     """Back the service's local engine setting with an in-memory record, as the real store would hold it."""
     store = MemoryLocalModelListStore()
     service._local_models = LocalModelListService(
-        store=store, catalog_source=ProvidedProviderCatalogSource(synthetic_catalog())
+        store=store,
+        catalog_source=ProvidedProviderCatalogSource(synthetic_catalog()),
+        default_engine=LocalEngine.LLAMACPP,
     )
     return store
 

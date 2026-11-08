@@ -220,6 +220,8 @@ export function engineRefusalWords(t: Translate, code: string): string {
     case "agent_local_models_catalog_unavailable":
     case "agent_local_models_unknown":
       return listRefusalWords(t, code);
+    case "agent_local_engine_unavailable":
+      return t("desktop.providers.local_engine_unavailable");
     default:
       return t("desktop.providers.local_engine_change_failed");
   }

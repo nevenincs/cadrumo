@@ -84,9 +84,14 @@ class AgentServiceAdministration(ABC):
         storage_root: Path,
         gateway_bearer: bytearray,
         emit: Callable[[dict[str, Any]], None],
+        local_engine_default: LocalEngine,
         wake: Callable[[], None] | None = None,
     ) -> None:
-        """Bind provider custody and process ownership to the verified service connection."""
+        """Bind provider custody and process ownership to the verified service connection.
+
+        ``local_engine_default`` is the engine a profile that chose none runs,
+        as the desktop derived it from the package.
+        """
         self.client = client
         self._root = storage_root
         self._guard = RLock()
@@ -141,7 +146,9 @@ class AgentServiceAdministration(ABC):
             catalog_source=self._catalog,
             cli_state_probe=self._login_status.probe,
         )
-        self._local_models = LocalModelListService(store=model_list, catalog_source=self._catalog)
+        self._local_models = LocalModelListService(
+            store=model_list, catalog_source=self._catalog, default_engine=local_engine_default
+        )
         self._controller: AgentHostController | None = None
         self._auth_attempt: AuthAttempt | None = None
         self._auth_resume_valid: Callable[[], bool] | None = None

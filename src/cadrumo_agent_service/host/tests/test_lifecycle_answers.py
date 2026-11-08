@@ -38,6 +38,7 @@ from ...providers.application.ports import StoreGenerations
 from ...providers.application.resolution import ProviderCredentialResolver
 from ...providers.application.service import ProviderSettingsService
 from ...providers.application.tests.memory_store import MemoryProviderSettingsStore
+from ...providers.domain.record import LocalEngine
 from ...service import AgentService
 from ..controller import (
     AgentHostController,
@@ -125,6 +126,7 @@ def _service(storage_root: Path, events: _Events) -> AgentService:
         lease=SimpleNamespace(profile_id=uuid4(), lease_id=uuid4()), connection=SimpleNamespace(close=lambda: None)
     )
     return AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
         client=cast(InstalledServiceClient, client),
         storage_root=storage_root,
         gateway_bearer=bytearray(secrets.token_urlsafe(32), "ascii"),

@@ -313,6 +313,7 @@ desktop:
     local_engine_ollama_detail: Es baixa i es configura quan el tries.
     local_engine_restarts: Canviar el motor o on s’executen els models reinicia l’assistent.
     local_engine_title: Motor local
+    local_engine_unavailable: llama.cpp no està inclòs en aquesta instal·lació. Tria Ollama.
     local_model_absent: Sense baixar
     local_model_add: Afegeix
     local_model_add_label: Afegeix un model pel nom

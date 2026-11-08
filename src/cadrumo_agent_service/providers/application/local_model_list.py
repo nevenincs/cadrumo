@@ -40,7 +40,6 @@ from cadrumo.core.time.clock import now
 
 from ..domain.catalog import ProviderAuthKind, ProviderCatalog, ProviderCatalogEntry
 from ..domain.record import (
-    DEFAULT_LOCAL_ENGINE,
     DEFAULT_LOCAL_PLACEMENT,
     LOCAL_MODEL_LIST_MAX_MODELS,
     LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
@@ -91,11 +90,18 @@ class LocalModelListService:
         *,
         store: LocalModelListStore,
         catalog_source: ProviderCatalogSource,
+        default_engine: LocalEngine,
         clock: Callable[[], datetime] = now,
     ) -> None:
-        """Bind the service to one profile's model list store and the agent's declared catalog."""
+        """Bind the service to one profile's model list store and the agent's declared catalog.
+
+        ``default_engine`` is the engine a profile that chose none runs: the
+        desktop derives it from what the package carries and hands it over at
+        start, so no default engine is decided here.
+        """
         self._store = store
         self._catalog_source = catalog_source
+        self._default_engine = default_engine
         self._clock = clock
 
     def status(self) -> LocalModelListResult:
@@ -176,7 +182,7 @@ class LocalModelListService:
         read = self._store.read()
         if isinstance(read, StoreRefusal):
             return _refused(ProviderSettingsRefusalCode(read.code.value))
-        return _engine_status(read)
+        return _engine_status(read, self._default_engine)
 
     def choose_engine(
         self, engine: LocalEngine, placement: LocalPlacement, *, expected_revision: str
@@ -193,10 +199,12 @@ class LocalModelListService:
             return current
         record, read = current
         if _setting_of(record) == (engine, placement):
-            return _engine_status(read)
+            return _engine_status(read, self._default_engine)
         added = () if record is None else record.models
         committed = self._commit(added, _reading_of(record), (engine, placement), expected_revision)
-        return committed if isinstance(committed, ProviderSettingsRefusal) else _engine_status(committed)
+        if isinstance(committed, ProviderSettingsRefusal):
+            return committed
+        return _engine_status(committed, self._default_engine)
 
     def reset(self, *, expected_revision: str) -> LocalModelListResult:
         """Delete the model list record, readable or not, at the revision the caller read."""
@@ -295,20 +303,20 @@ def _setting_of(record: LocalModelListRecord | None) -> tuple[LocalEngine | None
     return record.engine, record.placement
 
 
-def _resolved(record: LocalModelListRecord | None) -> tuple[LocalEngine, LocalPlacement]:
-    """Return the setting a profile runs under: the person's choice, else the default."""
+def _resolved(record: LocalModelListRecord | None, default_engine: LocalEngine) -> tuple[LocalEngine, LocalPlacement]:
+    """Return the setting a profile runs under: the person's choice, else the defaults."""
     engine, placement = _setting_of(record)
     return (
-        DEFAULT_LOCAL_ENGINE if engine is None else engine,
+        default_engine if engine is None else engine,
         DEFAULT_LOCAL_PLACEMENT if placement is None else placement,
     )
 
 
-def _engine_status(read: LocalModelListRead) -> LocalEngineStatus:
+def _engine_status(read: LocalModelListRead, default_engine: LocalEngine) -> LocalEngineStatus:
     """Project a list read onto its local engine setting; an unreadable record names none."""
     if isinstance(read, UnreadableLocalModelList):
         return LocalEngineStatus(unreadable=True, engine=None, placement=None, revision=read.revision)
-    engine, placement = _resolved(read.record if isinstance(read, StoredLocalModelList) else None)
+    engine, placement = _resolved(read.record if isinstance(read, StoredLocalModelList) else None, default_engine)
     return LocalEngineStatus(unreadable=False, engine=engine, placement=placement, revision=_list_revision(read))
 
 

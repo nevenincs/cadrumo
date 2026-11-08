@@ -198,9 +198,6 @@ class LocalPlacement(StrEnum):
     CPU_ONLY = "cpu_only"
 
 
-DEFAULT_LOCAL_ENGINE: Final[LocalEngine] = LocalEngine.LLAMACPP
-"""The engine a profile runs while the person has chosen none: the one the package carries."""
-
 DEFAULT_LOCAL_PLACEMENT: Final[LocalPlacement] = LocalPlacement.AUTO
 
 
@@ -224,7 +221,7 @@ class LocalModelListRecord(BaseModel):
     picker, on any lane, local or not; ``None`` when none is stored.
     ``engine`` and ``placement`` are the local engine setting as the person
     chose it; ``None`` where the person chose none, which reads as the default
-    and follows a later default.
+    engine the package serves and follows it.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -357,7 +354,6 @@ def parse_provider_settings_record(payload: bytes) -> ProviderSettingsRecord:
 __all__ = [
     "CREDENTIAL_SECRET_MAX_LENGTH",
     "CREDENTIAL_SECRET_MIN_LENGTH",
-    "DEFAULT_LOCAL_ENGINE",
     "DEFAULT_LOCAL_PLACEMENT",
     "LOCAL_MODEL_LIST_MAX_MODELS",
     "LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION",

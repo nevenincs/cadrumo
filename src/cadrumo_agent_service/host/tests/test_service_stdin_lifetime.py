@@ -235,7 +235,12 @@ print(f"claims={client.claims}", file=sys.stderr)
     assert process.stdin is not None
     assert process.stdout is not None
     try:
-        startup = json.dumps({"bearer": "A" * 32, "gateway_bearer": "B" * 32}).encode("ascii") + b"\n"
+        startup = (
+            json.dumps({"bearer": "A" * 32, "gateway_bearer": "B" * 32, "local_engine_default": "llamacpp"}).encode(
+                "ascii"
+            )
+            + b"\n"
+        )
         process.stdin.write(startup + (b"unexpected" if ending == "extra_input" else b""))
         await process.stdin.drain()
         if ending == "eof":
@@ -380,7 +385,12 @@ print(f"claims={client.claims} observes={FakeService.observes} stops={FakeServic
     assert process.stdin is not None
     assert process.stdout is not None
     try:
-        startup = json.dumps({"bearer": "A" * 32, "gateway_bearer": "B" * 32}).encode("ascii") + b"\n"
+        startup = (
+            json.dumps({"bearer": "A" * 32, "gateway_bearer": "B" * 32, "local_engine_default": "llamacpp"}).encode(
+                "ascii"
+            )
+            + b"\n"
+        )
         process.stdin.write(startup)
         await process.stdin.drain()
         published = await _read_through_event(process.stdout, b'"event":"service_ready"')

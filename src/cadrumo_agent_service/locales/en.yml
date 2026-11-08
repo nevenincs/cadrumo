@@ -307,6 +307,7 @@ desktop:
     local_engine_ollama_detail: Downloaded and set up when you choose it.
     local_engine_restarts: Changing the engine or where models run restarts the assistant.
     local_engine_title: Local engine
+    local_engine_unavailable: 'llama.cpp isn''t included in this installation. Choose Ollama instead.'
     local_model_absent: Not downloaded
     local_model_add: Add
     local_model_add_label: Add a model by name

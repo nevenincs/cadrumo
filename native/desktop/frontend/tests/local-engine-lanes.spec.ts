@@ -60,6 +60,9 @@ test("a refusal with a word of its own says it, any other says the change failed
   expect(engineRefusalWords(t, "agent_local_models_unknown")).toBe(
     "desktop.providers.local_models_refused_unknown",
   );
+  expect(engineRefusalWords(t, "agent_local_engine_unavailable")).toBe(
+    "desktop.providers.local_engine_unavailable",
+  );
   expect(engineRefusalWords(t, "agent_local_models_full")).toBe(
     "desktop.providers.local_engine_change_failed",
   );

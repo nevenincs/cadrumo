@@ -24,6 +24,7 @@ from ...providers.application.ports import (
 from ...providers.application.service import ProviderSettingsService
 from ...providers.application.tests.memory_store import MemoryProviderSettingsStore
 from ...providers.application.tests.synthetic_catalog import KEY_LANE, StaticCatalogSource
+from ...providers.domain.record import LocalEngine
 from ...service import AgentService
 from ..controller import AgentGenerations, AgentHostController, AgentHostState, AgentReady
 
@@ -83,6 +84,7 @@ class _Controller:
 
 def _service(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, store: MemoryProviderSettingsStore) -> AgentService:
     service = AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
         client=cast(
             InstalledServiceClient, SimpleNamespace(lease=object(), connection=SimpleNamespace(close=lambda: None))
         ),

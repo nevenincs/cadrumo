@@ -314,6 +314,7 @@ desktop:
     local_engine_ollama_detail: Se descarga y se configura cuando lo eliges.
     local_engine_restarts: Cambiar el motor o dónde se ejecutan los modelos reinicia el asistente.
     local_engine_title: Motor local
+    local_engine_unavailable: llama.cpp no está incluido en esta instalación. Elige Ollama.
     local_model_absent: Sin descargar
     local_model_add: Añadir
     local_model_add_label: Añadir un modelo por su nombre

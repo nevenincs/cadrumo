@@ -17,7 +17,6 @@ from cadrumo_client.contracts.model_runs import (
 
 from ...domain.catalog import BackgroundOption
 from ...domain.record import (
-    DEFAULT_LOCAL_ENGINE,
     LOCAL_MODEL_LIST_MAX_MODELS,
     LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
     ListedModel,
@@ -55,8 +54,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _ADDED = "custom-model:test"
 
 
-def _service(store: MemoryLocalModelListStore) -> LocalModelListService:
-    return LocalModelListService(store=store, catalog_source=ProvidedProviderCatalogSource(synthetic_catalog()))
+def _service(
+    store: MemoryLocalModelListStore, default_engine: LocalEngine = LocalEngine.LLAMACPP
+) -> LocalModelListService:
+    return LocalModelListService(
+        store=store,
+        catalog_source=ProvidedProviderCatalogSource(synthetic_catalog()),
+        default_engine=default_engine,
+    )
 
 
 def _status(result: LocalModelListStatus | ProviderSettingsRefusal) -> LocalModelListStatus:
@@ -203,7 +208,9 @@ def test_a_write_drops_models_on_lanes_the_catalogue_reports_as_not_local_and_ke
 
 def test_a_catalogue_the_agent_cannot_report_refuses_changes() -> None:
     store = MemoryLocalModelListStore()
-    service = LocalModelListService(store=store, catalog_source=UnavailableCatalogSource())
+    service = LocalModelListService(
+        store=store, catalog_source=UnavailableCatalogSource(), default_engine=LocalEngine.LLAMACPP
+    )
     unavailable = _refused(ProviderSettingsRefusalCode.CATALOG_UNAVAILABLE)
 
     assert service.add(KEYLESS_LANE, model=_ADDED, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID) == unavailable
@@ -341,7 +348,7 @@ def test_a_model_added_and_selected_through_the_service_is_the_one_a_model_run_r
         gateway=_NoGateway(),
     )
     assert runs.lookup("text_extraction") == ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
-    service = LocalModelListService(store=store, catalog_source=source)
+    service = LocalModelListService(store=store, catalog_source=source, default_engine=LocalEngine.LLAMACPP)
 
     added = _status(service.add(KEYLESS_LANE, model=_ADDED, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID))
     assert runs.lookup("text_extraction") == ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
@@ -380,6 +387,36 @@ def test_a_record_written_without_an_engine_choice_stays_unchosen_and_reads_as_l
     setting = _engine(service.engine_status())
     assert (setting.engine, setting.placement) == (LocalEngine.LLAMACPP, LocalPlacement.AUTO)
     assert setting.revision == added.revision
+
+
+@pytest.mark.parametrize("default", [LocalEngine.LLAMACPP, LocalEngine.OLLAMA])
+def test_a_fresh_profile_reads_the_engine_the_package_defaults_to(default: LocalEngine) -> None:
+    setting = _engine(_service(MemoryLocalModelListStore(), default).engine_status())
+
+    assert (setting.engine, setting.placement) == (default, LocalPlacement.AUTO)
+    assert setting.revision == ABSENT_SECURE_OBJECT_REVISION_ID
+
+
+@pytest.mark.parametrize("default", [LocalEngine.LLAMACPP, LocalEngine.OLLAMA])
+def test_an_unchosen_stored_record_reads_as_the_package_default_and_stays_unchosen(default: LocalEngine) -> None:
+    store = MemoryLocalModelListStore()
+    revision = _put(store, (KEYLESS_LANE, _ADDED))
+    service = _service(store, default)
+
+    setting = _engine(service.engine_status())
+
+    assert (setting.engine, setting.placement, setting.revision) == (default, LocalPlacement.AUTO, revision)
+    assert store.stored is not None
+    assert (store.stored.record.engine, store.stored.record.placement) == (None, None)
+
+
+def test_a_stored_llamacpp_choice_is_not_overruled_by_an_ollama_package_default() -> None:
+    store = MemoryLocalModelListStore()
+    _put(store, engine=LocalEngine.LLAMACPP, placement=LocalPlacement.AUTO)
+
+    setting = _engine(_service(store, LocalEngine.OLLAMA).engine_status())
+
+    assert (setting.engine, setting.placement) == (LocalEngine.LLAMACPP, LocalPlacement.AUTO)
 
 
 def test_a_stored_ollama_choice_is_kept_through_list_changes() -> None:
@@ -476,7 +513,7 @@ def test_choosing_the_engine_against_a_stale_revision_is_refused_and_changes_not
     refused = service.choose_engine(LocalEngine.LLAMACPP, LocalPlacement.AUTO, expected_revision="f" * 64)
 
     assert refused == _refused(ProviderSettingsRefusalCode.REVISION_CONFLICT)
-    assert _engine(service.engine_status()).engine == DEFAULT_LOCAL_ENGINE
+    assert _engine(service.engine_status()).engine == LocalEngine.LLAMACPP
     assert _engine(service.engine_status()).revision == revision
 
 
