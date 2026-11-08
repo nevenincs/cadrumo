@@ -3472,12 +3472,21 @@ def _form_fields(envelope: Mapping[str, Any]) -> list[dict[str, Any]]:
 
 def _refusals() -> tuple[tuple[str, BaseException], ...]:
     """The refusals the scenarios settle, each as its executor raises it, for the declarations' first 130."""
-    from cadrumo.application.modelo.action_errors import ModeloDomiciliationPastCutoffError
+    from cadrumo.application.modelo.action_errors import (
+        ModeloDomiciliationPastCutoffError,
+        ModeloProfileReadinessError,
+    )
     from cadrumo.application.modelo.calculation_note_gate import ModeloCalculationBlockedError
     from cadrumo.application.modelo.calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON
     from cadrumo.application.modelo.calculation_screen import calculation_screen_outdated_message_key
+    from cadrumo.application.modelo.profile_readiness_gate import (
+        complete_profile_setup_step,
+        open_profile_field_step,
+    )
+    from cadrumo.application.operator_actions.preconditions import profile_setup_incomplete_verdict
 
     year = declarations_year()
+    activity_description = "Descripción de la actividad"
     return (
         (
             "report-outdated",
@@ -3505,6 +3514,37 @@ def _refusals() -> tuple[tuple[str, BaseException], ...]:
                     "payment_cutoff_legal_refs": "Orden HAC/3625/2003, art. 3",
                     "export_on": f"{year}-04-16",
                 },
+            ),
+        ),
+        # The two profile-readiness refusals that stop a creation, each with the
+        # door it serves: the first names the profile fact it wants, the second
+        # the setup declaration that is its only door.
+        (
+            "profile-field",
+            ModeloProfileReadinessError(
+                translated_message="application.modelo.errors.profile_readiness_missing",
+                context={
+                    "modelo": "303",
+                    "filing_year": str(year),
+                    "period": "1T",
+                    "profile_requirements": activity_description,
+                },
+                next_step=open_profile_field_step(
+                    path="activities.description",
+                    label=activity_description,
+                ),
+            ),
+        ),
+        (
+            "profile-setup",
+            ModeloProfileReadinessError(
+                translated_message="application.modelo.errors.profile_readiness_setup_incomplete",
+                context={"bucket_id": "b" * 24, "modelo": "303"},
+                profile_precondition_verdict=profile_setup_incomplete_verdict(
+                    modelo="303",
+                    missing_required_field_count=0,
+                ),
+                next_step=complete_profile_setup_step(),
             ),
         ),
     )

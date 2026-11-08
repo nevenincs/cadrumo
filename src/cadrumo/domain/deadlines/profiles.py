@@ -143,9 +143,11 @@ _BARE_PROFILE_FLAG_KEYS: tuple[tuple[str, str], ...] = (
     ("art109_activity_income_withholding_ge_70pct", "irpf.art109_activity_income_withholding_ge_70pct"),
     ("pays_rent_with_retencion", "withholding.pays_rent_with_retencion"),
     ("pays_capital_income_with_retencion", "withholding.pays_capital_income_with_retencion"),
+    ("pays_non_resident_income_with_retencion", "withholding.pays_non_resident_income_with_retencion"),
     ("does_intracomunitario", "iva.does_intracomunitario"),
     ("bienes_extranjero_above_threshold", "obligations.bienes_extranjero_above_threshold"),
     ("monedas_virtuales_extranjero_above_threshold", "obligations.monedas_virtuales_extranjero_above_threshold"),
+    ("patrimonio_declaration_threshold_met", "obligations.patrimonio_declaration_threshold_met"),
     (
         "premio_loteria_gravamen_especial_sin_retencion",
         "obligations.premio_loteria_gravamen_especial_sin_retencion",
@@ -187,6 +189,7 @@ class _ProfileWithholdingFields(TypedDict):
     art109_activity_income_withholding_ge_70pct: bool | None
     pays_rent_with_retencion: bool | None
     pays_capital_income_with_retencion: bool | None
+    pays_non_resident_income_with_retencion: bool | None
 
 
 class _ProfileObligationFields(TypedDict):
@@ -194,6 +197,7 @@ class _ProfileObligationFields(TypedDict):
     third_party_transactions_above_347_threshold: bool | None
     bienes_extranjero_above_threshold: bool | None
     monedas_virtuales_extranjero_above_threshold: bool | None
+    patrimonio_declaration_threshold_met: bool | None
     premio_loteria_gravamen_especial_sin_retencion: bool | None
     premio_loteria_gravamen_especial_trimestres: frozenset[str] | None
 
@@ -285,10 +289,14 @@ def _resolve_profile_axes(
     """Resolve identity, tax axes, and the profile-level IVA default."""
     entity_type = typed.entity_type or None
     legal_entity_form = typed.legal_entity_form or None
-    income_categories = _resolve_income_categories(typed.irpf_income_categories)
     declaration_roles = _resolve_declaration_roles(typed.declaration_roles)
     estimation_regime = typed.irpf_estimation_regime or None
     activity_kind = typed.irpf_activity_kind or None
+    income_categories = _income_categories_with_proven_activity(
+        _resolve_income_categories(typed.irpf_income_categories),
+        entity_type=entity_type,
+        activity_axis_declared=estimation_regime is not None or activity_kind is not None,
+    )
     tax_id = canonical.get("identity.tax_id") or canonical.get("tax.id") or tax_id_default
     iva_regime = _resolve_iva_regime(
         canonical.get("iva.regime"),
@@ -322,6 +330,7 @@ def _resolve_profile_withholding_fields(typed: SetupAnswers) -> _ProfileWithhold
         ),
         "pays_rent_with_retencion": _declared_bool(typed.pays_rent_with_retencion),
         "pays_capital_income_with_retencion": _declared_bool(typed.pays_capital_income_with_retencion),
+        "pays_non_resident_income_with_retencion": _declared_bool(typed.pays_non_resident_income_with_retencion),
     }
 
 
@@ -341,6 +350,7 @@ def _resolve_profile_obligation_fields(typed: SetupAnswers) -> _ProfileObligatio
         "monedas_virtuales_extranjero_above_threshold": _declared_bool(
             typed.monedas_virtuales_extranjero_above_threshold,
         ),
+        "patrimonio_declaration_threshold_met": _declared_bool(typed.patrimonio_declaration_threshold_met),
         "premio_loteria_gravamen_especial_sin_retencion": _declared_bool(
             typed.premio_loteria_gravamen_especial_sin_retencion,
         ),
@@ -720,6 +730,25 @@ def _resolve_income_categories(raw: str) -> frozenset[IrpfIncomeCategory]:
     """
     tokens = [token.strip() for token in raw.split(",") if token.strip()]
     return frozenset(require_irpf_income_category(token) for token in tokens)
+
+
+def _income_categories_with_proven_activity(
+    declared: frozenset[IrpfIncomeCategory],
+    *,
+    entity_type: EntityType | None,
+    activity_axis_declared: bool,
+) -> frozenset[IrpfIncomeCategory]:
+    """Complete undeclared categories that the activity axes already prove.
+
+    An IRPF estimation regime determines rendimientos de actividades
+    económicas (LIRPF arts. 28 and 31) and the profesional/sectorial axis
+    classifies an economic activity (RIRPF art. 95), so a natural person who
+    declares either has economic-activity income. A category set the operator
+    did declare is their statement and is kept as declared.
+    """
+    if declared or not activity_axis_declared or entity_type != entity_type_natural_person_token():
+        return declared
+    return frozenset({irpf_income_category_actividad_economica_token()})
 
 
 def _resolve_declaration_roles(raw: str) -> frozenset[ThirdPartyDeclarationRole]:

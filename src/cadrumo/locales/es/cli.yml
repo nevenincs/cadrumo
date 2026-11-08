@@ -4213,6 +4213,9 @@ cli:
         virtuales situadas en el extranjero superan el umbral de declaración.
       oss_unset: En tu perfil aún no consta si estás dado de alta en el régimen de
         ventanilla única (OSS/IOSS).
+      patrimonio_umbral_unset: En tu perfil aún no consta si tu cuota del Impuesto
+        sobre el Patrimonio resulta a ingresar o si tus bienes y derechos superan
+        2.000.000 euros.
       premio_loteria_trimestres_unset: En tu perfil aún no consta en qué trimestres
         cobraste un premio de lotería sujeto al gravamen especial sin retención.
       premio_loteria_unset: En tu perfil aún no consta si has cobrado un premio de
@@ -4225,6 +4228,8 @@ cli:
         y practicas retenciones sobre ellos.
       retencion_capital_unset: En tu perfil aún no consta si pagas rendimientos del
         capital sujetos a retención.
+      retencion_no_residentes_unset: En tu perfil aún no consta si pagas a no residentes
+        sin establecimiento permanente rentas sujetas a retención del IRNR.
       retencion_profesionales_unset: En tu perfil aún no consta si pagas honorarios
         a profesionales y practicas retenciones.
       sii_unset: En tu perfil aún no consta si llevas los libros registro del IVA

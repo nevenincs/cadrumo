@@ -366,6 +366,7 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
         "desktop.ledger.import.diagnostic.": (
             "no_rows",
             "already_in_ledger",
+            "all_already_in_ledger",
             "same_identity",
             "repeated",
             "gap",

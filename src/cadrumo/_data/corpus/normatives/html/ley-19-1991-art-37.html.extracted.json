@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-19-1991-art-37.html",
+  "source_sha256": "0c01c3c30931287bfd93f6478ac1a70e51f90ec56a6047e7cb80466382a72abc",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.4",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Ley 19/1991 Art. 37 — Impuesto sobre el Patrimonio: personas obligadas a presentar declaración\nArtículo 37. Personas obligadas a presentar declaración.\nEstán obligados a presentar declaración los sujetos pasivos cuya cuota tributaria, determinada de acuerdo con las normas reguladoras del Impuesto y una vez aplicadas las deducciones o bonificaciones que procedieren, resulte a ingresar, o cuando, no dándose esta circunstancia, el valor de sus bienes o derechos, determinado de acuerdo con las normas reguladoras del impuesto, resulte superior a 2.000.000 euros.\nTexto consolidado del BOE (BOE-A-1991-14392), redacción en vigor a partir del 01/01/2021.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

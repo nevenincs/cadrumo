@@ -2765,6 +2765,10 @@ application:
           profiladata nem támogatott típusú: %{value_type}.'
         enum_boolean_invalid: A(z) %{binding_id} értékforrás profiladata logikai értékre
           oldódott fel; a logikai adatok nem érvényes kulcsok.
+    profile_readiness:
+      next_step:
+        complete_profile_setup: Nyilvánítsd befejezettnek a profil beállítását
+        open_profile_field: 'Töltsd ki: %{field}'
     projection_words:
       binding_unresolved: Ehhez az értékhez a nyilvántartásaidból nem sikerült értéket
         kiszámolni, ezért feloldatlan marad, és nem számít nullának. Rögzítsd a hiányzó
@@ -2978,6 +2982,11 @@ application:
         domingo: Vasárnap
         modelo_exception: Nyomtatvány-kivétel
         sabado: Szombat
+      taxpayer_model_undeclared:
+        entity_type: A naptár addig nem tudja megmutatni a határidőidet, amíg a profilod
+          nem adja meg, milyen típusú adózó vagy (magánszemély vagy szervezet).
+        irpf_income_categories: A naptár addig nem tudja megmutatni a határidőidet,
+          amíg a profilod nem adja meg az IRPF-jövedelemkategóriáidat.
     errors:
       horizon_days_not_positive: 'a horizon_days értékének pozitívnak kell lennie;
         a kapott érték: %{horizon_days}'

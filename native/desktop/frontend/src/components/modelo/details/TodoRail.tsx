@@ -48,10 +48,12 @@ function TodoList({
   envelope,
   session,
   onPicked,
+  onOpenCheck,
 }: {
   envelope: ModeloWorkbenchFormProjectionV1;
   session: FormSession;
   onPicked?: () => void;
+  onOpenCheck?: () => void;
 }) {
   const t = useStrings();
   const [openFailed, setOpenFailed] = useState(false);
@@ -66,7 +68,23 @@ function TodoList({
       </p>
     );
   const todo = todoOf(envelope.form.form, session);
-  if (!todo.groups.length && !todo.failed.length)
+  // Missing values no box holds are the check's to name; the read model
+  // counts them with the missing boxes, so the list states them too.
+  const elsewhere = envelope.header.missing_elsewhere;
+  const elsewhereLine = elsewhere && (
+    <button
+      type="button"
+      data-todo-elsewhere=""
+      onClick={onOpenCheck}
+      disabled={!onOpenCheck}
+      className="flex w-full items-start gap-2 rounded-md border border-border px-2 py-2 text-left hover:bg-accent"
+    >
+      <Icon name="alert" size="xs" className="mt-0.5 text-warning" />
+      <span className="text-sm">{elsewhere.words}</span>
+      <Icon name="forward" size="xs" className="mt-0.5 ml-auto text-faint" />
+    </button>
+  );
+  if (!todo.groups.length && !todo.failed.length && !elsewhereLine)
     return (
       <p className="flex gap-2 p-4 text-sm text-muted-foreground">
         <Icon name="check" size="xs" className="mt-0.5 text-success" />
@@ -91,6 +109,7 @@ function TodoList({
   );
   return (
     <div className="flex flex-col gap-3 p-2">
+      {elsewhereLine}
       {todo.groups.map(([origin, list]) => {
         const word = t(`workspace.modelo.origin.${origin}`);
         return (
@@ -148,12 +167,15 @@ export function TodoRail({
   session,
   onPicked,
   onOpenProfile,
+  onOpenCheck,
 }: {
   envelope: ModeloWorkbenchFormProjectionV1;
   session: FormSession;
   onPicked?: () => void;
   /** Opens the profile, where the boxes it keeps are corrected. */
   onOpenProfile?: () => void;
+  /** Opens the check, which names the missing values no box holds. */
+  onOpenCheck?: () => void;
 }) {
   const t = useStrings();
   const [rail, setRail] = useState<Rail>("todo");
@@ -180,7 +202,12 @@ export function TodoRail({
         className="min-h-0 flex-1 overflow-y-auto border-t border-border"
       >
         {rail === "todo" ? (
-          <TodoList envelope={envelope} session={session} onPicked={onPicked} />
+          <TodoList
+            envelope={envelope}
+            session={session}
+            onPicked={onPicked}
+            onOpenCheck={onOpenCheck}
+          />
         ) : (
           <OutlineNavigator
             form={envelope.form.form}

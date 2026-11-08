@@ -120,6 +120,7 @@ DESKTOP_LEDGER_WORKFLOW_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.import.country_invalid",
         "desktop.ledger.import.country_none",
         "desktop.ledger.import.description",
+        "desktop.ledger.import.diagnostic.all_already_in_ledger",
         "desktop.ledger.import.diagnostic.already_in_ledger",
         "desktop.ledger.import.diagnostic.gap",
         "desktop.ledger.import.diagnostic.no_rows",

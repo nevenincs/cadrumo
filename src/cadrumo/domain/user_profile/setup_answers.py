@@ -258,6 +258,8 @@ class SetupAnswers(BaseModel):
     """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
     pays_capital_income_with_retencion: OptionalWizardBool = ""
     """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
+    pays_non_resident_income_with_retencion: OptionalWizardBool = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
     modelo_111_no_retenciones_periods: str = ""
     modelo_115_no_relevant_payment_periods: str = ""
     irpf_estimation_regime: OptionalIrpfEstimationRegime = ""
@@ -279,6 +281,8 @@ class SetupAnswers(BaseModel):
     bienes_extranjero_above_threshold: OptionalWizardBool = ""
     """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
     monedas_virtuales_extranjero_above_threshold: OptionalWizardBool = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
+    patrimonio_declaration_threshold_met: OptionalWizardBool = ""
     """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
     premio_loteria_gravamen_especial_sin_retencion: OptionalWizardBool = ""
     """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
@@ -352,11 +356,13 @@ class SetupAnswers(BaseModel):
         "pays_professionals_with_retencion",
         "pays_rent_with_retencion",
         "pays_capital_income_with_retencion",
+        "pays_non_resident_income_with_retencion",
         "art109_activity_income_withholding_ge_70pct",
         "does_intracomunitario",
         "third_party_transactions_above_347_threshold",
         "bienes_extranjero_above_threshold",
         "monedas_virtuales_extranjero_above_threshold",
+        "patrimonio_declaration_threshold_met",
         "premio_loteria_gravamen_especial_sin_retencion",
         "enrollment_large_company",
         mode="before",

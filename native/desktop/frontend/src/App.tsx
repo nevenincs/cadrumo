@@ -478,6 +478,7 @@ export function App({ host }: { host: Host }) {
       openWorkUnit={memories.openWorkUnit}
       guarded={guarded}
       askCenso={pageAsks.askCenso}
+      askProfileStep={pageAsks.askProfileStep}
       askSignIn={signIn.askSignIn}
       runAction={runAction}
       openView={openView}
@@ -517,6 +518,8 @@ export function App({ host }: { host: Host }) {
       aeatHandled={pageAsks.aeatHandled}
       censoAsked={pageAsks.censoAsked}
       censoHandled={pageAsks.censoHandled}
+      profileStep={pageAsks.profileStep}
+      profileStepHandled={pageAsks.profileStepHandled}
       calendar={reads.calendar}
       calendarProfile={reads.calendarProfile}
       calendarMemory={memories.calendarMemory}

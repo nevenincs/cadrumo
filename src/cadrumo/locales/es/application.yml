@@ -2811,6 +2811,10 @@ application:
           canal decimal %{binding_id} tiene un tipo no soportado: %{value_type}.'
         enum_boolean_invalid: El dato de perfil para el origen de valor %{binding_id}
           resolvió a booleano; los booleanos no son claves válidas.
+    profile_readiness:
+      next_step:
+        complete_profile_setup: Declara completa la configuración del perfil
+        open_profile_field: Rellena %{field}
     projection_words:
       binding_unresolved: No se ha podido sacar ningún valor para esta cifra a partir
         de tus registros, así que queda sin resolver en lugar de contar como cero.
@@ -3022,6 +3026,11 @@ application:
         domingo: Domingo
         modelo_exception: Excepción del modelo
         sabado: Sábado
+      taxpayer_model_undeclared:
+        entity_type: El calendario no puede mostrar tus plazos hasta que tu perfil
+          indique qué tipo de contribuyente eres (persona física o entidad).
+        irpf_income_categories: El calendario no puede mostrar tus plazos hasta que
+          tu perfil indique tus categorías de renta del IRPF.
     errors:
       horizon_days_not_positive: horizon_days debe ser positivo; se recibió %{horizon_days}
     explain:

@@ -250,8 +250,15 @@ export function ModeloWorkspace({
   const runNext = () => {
     if (!action) return;
     if (action === "apply") onReview();
-    else if (findingsLead) onViewChange("check");
-    else if (target) {
+    else if (findingsLead) {
+      // Already on the check, the step is its first listed finding.
+      if (view === "check")
+        document
+          .getElementById(panel)
+          ?.querySelector<HTMLElement>("[data-attention-level]")
+          ?.focus();
+      else onViewChange("check");
+    } else if (target) {
       onViewChange(target);
       if (target === "form") onJumpToNext();
     } else onRun(action);

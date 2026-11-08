@@ -394,8 +394,14 @@ wizard:
           rate. Optional; unset leaves the entity on its otherwise-applicable rate.
       output-language:
         help: CLI output language for this profile
+      patrimonio-declaration-threshold-met:
+        help: Your Impuesto sobre el Patrimonio tax is payable or, if not, your assets
+          and rights are worth more than 2,000,000 euros
       pays-capital-income-with-retencion:
         help: Pays capital income subject to withholding
+      pays-non-resident-income-with-retencion:
+        help: Pays income subject to IRNR withholding to non-residents without a permanent
+          establishment
       pays-professionals-with-retencion:
         help: Pays professionals subject to withholding
       pays-rent-with-retencion:
@@ -610,8 +616,14 @@ wizard:
         prompt: Modelo 115 no-relevant-payment periods
       monedas-virtuales-extranjero-above-threshold:
         prompt: Virtual currencies held abroad above Modelo 721 threshold
+      patrimonio-declaration-threshold-met:
+        prompt: Your Impuesto sobre el Patrimonio tax is payable, or your assets and
+          rights are worth more than 2,000,000 euros
       pays-capital-income-with-retencion:
         prompt: Do you pay capital income subject to withholding?
+      pays-non-resident-income-with-retencion:
+        prompt: Pays income subject to withholding to non-residents without a permanent
+          establishment
       pays-professionals-with-retencion:
         prompt: Do you pay professionals subject to withholding?
       pays-rent-with-retencion:

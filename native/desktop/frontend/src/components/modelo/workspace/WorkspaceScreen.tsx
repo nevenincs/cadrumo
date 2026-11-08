@@ -756,6 +756,7 @@ function Ready({
             envelope={envelope}
             session={session}
             onPicked={() => setView("form")}
+            onOpenCheck={() => setView("check")}
             onOpenProfile={
               canOpenSurface("profile")
                 ? () => onOpenSurface("profile")

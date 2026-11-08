@@ -76,6 +76,8 @@ profile:
         threshold
       monedas_virtuales_extranjero_above_threshold: Virtual currencies held abroad
         above Modelo 721 threshold
+      patrimonio_declaration_threshold_met: 'Required to file Impuesto sobre el Patrimonio:
+        tax payable or assets and rights above 2,000,000 euros'
       premio_loteria_gravamen_especial_sin_retencion: Lottery or betting prize subject
         to the gravamen especial obtained without withholding or a payment on account
         (Modelo 136)
@@ -139,6 +141,8 @@ profile:
       modelo_115_no_relevant_payment_periods: Modelo 115 periods with no relevant
         payment
       pays_capital_income_with_retencion: Pays capital income with withholding
+      pays_non_resident_income_with_retencion: Pays income subject to withholding
+        to non-residents without a permanent establishment
       pays_professionals_with_retencion: Pays professionals with withholding
       pays_rent_with_retencion: Pays local rent with withholding
   schema:
@@ -384,6 +388,8 @@ profile:
           label: Modelo 720 threshold exceeded
         monedas_virtuales_extranjero_above_threshold:
           label: Modelo 721 threshold exceeded
+        patrimonio_declaration_threshold_met:
+          label: Required to file Impuesto sobre el Patrimonio (Modelo 714)
         premio_loteria_gravamen_especial_sin_retencion:
           label: Lottery prize without withholding (Modelo 136)
         premio_loteria_gravamen_especial_trimestres:
@@ -580,6 +586,9 @@ profile:
           label: Modelo 115 no-relevant-payment periods
         pays_capital_income_with_retencion:
           label: Pays capital income with withholding
+        pays_non_resident_income_with_retencion:
+          label: Pays income subject to withholding to non-residents (Modelos 216
+            and 296)
         pays_professionals_with_retencion:
           label: Pays professionals with withholding
         pays_rent_with_retencion:

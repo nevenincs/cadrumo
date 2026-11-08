@@ -1,12 +1,16 @@
 """The step a refused operation serves for putting the refusal right.
 
 A refusal can name one thing the filer does next: creating a declaration that
-does not exist yet, calculating one that has no calculation, or opening one
-whose own form says what it still lacks. The step says which of the three, which
-declaration it concerns and the words that offer it, so a frontend does what it
-already knows for that kind and keeps no table of operator action identifiers.
-The kind is closed; an address that cannot be run is refused when the step is
-built.
+does not exist yet, calculating one that has no calculation, opening one whose
+own form says what it still lacks, filling in one profile detail the refusal
+named, or declaring the profile setup complete. The step says which kind, what
+it concerns and the words that offer it, so a frontend does what it already
+knows for that kind and keeps no table of operator action identifiers. The kind
+is closed; an address that cannot be run is refused when the step is built.
+
+A profile step addresses the schema path the profile's own facts live at -
+``activities.description`` - never a private wizard question id, because the
+path is what a profile surface already addresses its own rows by.
 
 The words are in the language the refusal's own sentence is in
 (``refusal_words_language`` of the error detail that carries the step): the
@@ -15,8 +19,9 @@ detail words both when it is built.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, Field, StringConstraints
 
@@ -27,6 +32,25 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
 _Token = Annotated[str, StringConstraints(min_length=1, max_length=16, pattern=r"^[A-Za-z0-9]+$")]
 _Words = Annotated[str, StringConstraints(min_length=1, max_length=512)]
+#: A profile fact's own schema address: a section, a field, and the row index a
+#: repeatable section's fact carries. Never a wizard question id. Public so a
+#: producer choosing a step can ask whether a selector it holds is one, rather
+#: than restating the shape or discovering it as a validation error.
+PROFILE_FIELD_PATH_PATTERN: Final[str] = r"^[a-z][a-z0-9_]*(?:\.[a-z0-9_]+)+$"
+MAX_PROFILE_FIELD_PATH_LENGTH: Final[int] = 128
+
+_ProfilePath = Annotated[
+    str,
+    StringConstraints(min_length=3, max_length=MAX_PROFILE_FIELD_PATH_LENGTH, pattern=PROFILE_FIELD_PATH_PATTERN),
+]
+
+
+def is_profile_field_path(candidate: str) -> bool:
+    """Whether ``candidate`` is a profile fact's own schema address."""
+    return (
+        len(candidate) <= MAX_PROFILE_FIELD_PATH_LENGTH
+        and re.fullmatch(PROFILE_FIELD_PATH_PATTERN, candidate) is not None
+    )
 
 
 class OperationCreateWorkStepV1(BaseModel):
@@ -61,11 +85,34 @@ class OperationOpenWorkStepV1(BaseModel):
     words: _Words
 
 
+class OperationOpenProfileFieldStepV1(BaseModel):
+    """Fill in one profile detail the refusal named, at the schema path it lives at."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["open_profile_field"] = "open_profile_field"
+    path: _ProfilePath
+    words: _Words
+
+
+class OperationCompleteProfileSetupStepV1(BaseModel):
+    """Declare the profile setup complete, which every filing-grade verb re-checks."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["complete_profile_setup"] = "complete_profile_setup"
+    words: _Words
+
+
 type OperationNextStepV1 = Annotated[
-    OperationCreateWorkStepV1 | OperationCalculateWorkStepV1 | OperationOpenWorkStepV1,
+    OperationCreateWorkStepV1
+    | OperationCalculateWorkStepV1
+    | OperationOpenWorkStepV1
+    | OperationOpenProfileFieldStepV1
+    | OperationCompleteProfileSetupStepV1,
     Field(discriminator="kind"),
 ]
-"""The step a refusal serves: a closed kind, the declaration it concerns, and the words that offer it."""
+"""The step a refusal serves: a closed kind, what it concerns, and the words that offer it."""
 
 
 type OperationNextStepWording = Callable[[OutputLanguage], OperationNextStepV1]
@@ -101,11 +148,16 @@ def error_next_step(error: BaseException, language: OutputLanguage) -> Operation
 
 
 __all__ = [
+    "MAX_PROFILE_FIELD_PATH_LENGTH",
+    "PROFILE_FIELD_PATH_PATTERN",
     "OperationCalculateWorkStepV1",
+    "OperationCompleteProfileSetupStepV1",
     "OperationCreateWorkStepV1",
     "OperationNextStepErrorMixin",
     "OperationNextStepV1",
     "OperationNextStepWording",
+    "OperationOpenProfileFieldStepV1",
     "OperationOpenWorkStepV1",
     "error_next_step",
+    "is_profile_field_path",
 ]

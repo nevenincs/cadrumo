@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { LedgerNextStep } from "../../../shell/ledger";
+import type { LedgerWorkStep } from "../../../shell/ledger";
 import type { ModeloFormAddressV1 } from "../../../shell/modeloContract/modeloEditWork";
 import type {
   ModeloFormIssueLine,
@@ -44,7 +44,7 @@ export function CreditsPanel({
   estimate: {
     read: EstimateRead;
     ask: (() => void) | null;
-    take: ((step: LedgerNextStep) => void) | null;
+    take: ((step: LedgerWorkStep) => void) | null;
   };
   locale: string;
   onGo(address: ModeloFormAddressV1): void;

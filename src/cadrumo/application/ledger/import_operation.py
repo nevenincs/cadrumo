@@ -16,6 +16,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.errors.severity import BaseSeverity
 from ...core.hex import Hex64Str
+from ...core.i18n.translatable import Translatable as tr
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -66,16 +67,23 @@ MAX_LEDGER_IMPORT_EVENTS = 4 * MAX_LEDGER_IMPORT_ROWS
 
 type LedgerImportDiagnosticMessage = Literal[
     "transactions.import.message_185962",
-    "transactions.import.message_082074",
+    "transactions.import.all_rows_already_in_ledger",
+    "transactions.import.some_rows_already_in_ledger",
     "transactions.import.batch_id_collision",
     "transactions.import.message_053465",
     "transactions.import.message_829073",
     "transactions.import.verified",
     "transactions.import.unreadable",
 ]
+# One canonical diagnostic per row already stored. The public result names the
+# fact once, for the whole import, and says whether it holds for every row.
+_STORED_DUPLICATE_MESSAGE = str(tr("transactions.import.message_082074"))
+_ALL_ROWS_STORED_MESSAGE = str(tr("transactions.import.all_rows_already_in_ledger"))
+_SOME_ROWS_STORED_MESSAGE = str(tr("transactions.import.some_rows_already_in_ledger"))
 _DIAGNOSTIC_MESSAGE_KEYS: dict[str, LedgerImportDiagnosticMessage] = {
     "transactions.import.message_185962": "transactions.import.message_185962",
-    "transactions.import.message_082074": "transactions.import.message_082074",
+    "transactions.import.all_rows_already_in_ledger": "transactions.import.all_rows_already_in_ledger",
+    "transactions.import.some_rows_already_in_ledger": "transactions.import.some_rows_already_in_ledger",
     "transactions.import.batch_id_collision": "transactions.import.batch_id_collision",
     "transactions.import.message_053465": "transactions.import.message_053465",
     "transactions.import.message_829073": "transactions.import.message_829073",
@@ -331,7 +339,14 @@ def _project_result_facts(
 ) -> _LedgerImportResultFacts:
     """Copy the explicitly public portions of one canonical backend result."""
     diagnostics: list[LedgerImportDiagnosticProjection] = []
+    stored_duplicates = 0
+    stored_duplicates_at: int | None = None
     for report in result.diagnostics:
+        if report.message == _STORED_DUPLICATE_MESSAGE:
+            stored_duplicates += 1
+            if stored_duplicates_at is None:
+                stored_duplicates_at = len(diagnostics)
+            continue
         try:
             message = _DIAGNOSTIC_MESSAGE_KEYS[report.message]
             kind = LedgerImportDiagnosticKind(report.kind)
@@ -346,6 +361,17 @@ def _project_result_facts(
                 severity=severity,
                 message=message,
                 affected_transaction_ids=report.affected_transaction_ids,
+            ),
+        )
+    if stored_duplicates_at is not None:
+        diagnostics.insert(
+            stored_duplicates_at,
+            LedgerImportDiagnosticProjection(
+                kind=LedgerImportDiagnosticKind.DUPLICATE,
+                severity=BaseSeverity.INFO,
+                message=_DIAGNOSTIC_MESSAGE_KEYS[
+                    _ALL_ROWS_STORED_MESSAGE if stored_duplicates == result.rows else _SOME_ROWS_STORED_MESSAGE
+                ],
             ),
         )
     return _LedgerImportResultFacts(

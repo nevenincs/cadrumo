@@ -184,6 +184,12 @@ export const MODELO_SHAPES = [
   "renta-parent",
   "renta-parentapart",
   "refused",
+  /** A creation refused for a profile fact the application wants, which names
+   * that fact's own row as the way on. */
+  "profile-field",
+  /** A creation refused for a profile whose setup was never declared
+   * complete, which names that declaration as the way on. */
+  "profile-setup",
   "unknown",
   "unavailable",
   "slow",
@@ -1044,6 +1050,13 @@ export function modeloFixture(options: Options): ModeloPort {
               ? written("reconcile-130")
               : unserved();
           case "modelo.work.create": {
+            // A profile the application will not file for: the creation is
+            // refused with the door the refusal names, as the backend recorded
+            // it. Nothing is written.
+            if (shape === "profile-field" || shape === "profile-setup")
+              return (await refusedWith(shape, language)) as LedgerOutcome<
+                ModeloResult<typeof definition>
+              >;
             // The first quarter, which a refused estimate asks to create.
             if (quarter !== "none" || !shape.startsWith("renta"))
               return unserved();

@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/components/ui/cn";
 import { PaneHeader, type PaneControl } from "../../PaneHeader";
+import type { LedgerProfileStep } from "../../../shell/ledger";
 import type { ModeloPort } from "../../../shell/modelo";
 import { modeloWritesFor } from "../../../shell/modeloWriteHolds";
 import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
@@ -310,6 +311,7 @@ export function DeclarationsPage({
   memory,
   onOpen,
   onCensus,
+  onProfileStep,
 }: {
   port: ModeloPort;
   /** Whose declarations, or null while the account withholds them. */
@@ -333,6 +335,9 @@ export function DeclarationsPage({
   /** Asks for the window's one census flow; absent where the window has
    * none to offer. */
   onCensus?: () => void;
+  /** Takes the profile step a refusal served here to the profile page;
+   * absent where the window has no profile page to take it to. */
+  onProfileStep?: (step: LedgerProfileStep) => void;
 }) {
   const t = useStrings();
   const { read, reread } = useDeclarationsList(
@@ -681,6 +686,7 @@ export function DeclarationsPage({
           rows={rows}
           start={creating || null}
           onOpen={onOpen}
+          onProfileStep={onProfileStep}
           onWritten={() => {
             // Stale even if the page goes before the read: the next one
             // reads again.

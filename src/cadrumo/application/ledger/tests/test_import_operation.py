@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 from uuid import UUID
@@ -12,13 +13,18 @@ from uuid import UUID
 import pytest
 from pydantic import ValidationError
 
-from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.currency.service import CurrencyNormalizationService
 from ....domain.transactions.models import TransactionCatalogue
 from ....domain.transactions.own_accounts import OwnAccountRegister
 from ...operations.execution_actor import OperationExecutionCaller
-from ...operations.models import OperationIdentity, OperationRequest
+from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...tests.operation_host_fakes import RecordingEvents, executor_context
 from ...user_profile.access_contracts import SessionKind
 from ..actions_import import LedgerProviderID
@@ -30,9 +36,11 @@ from ..import_operation import (
     LedgerImportExecutor,
     LedgerImportOperationPorts,
     LedgerImportRequest,
+    project_ledger_import_result,
 )
 from ..import_ports import LedgerImportPorts
 from ..models import (
+    LedgerImportDiagnosticReport,
     LedgerSourceImportResult,
     LedgerSourceValidationReport,
     LedgerSourceVerificationReport,
@@ -352,3 +360,96 @@ def test_each_source_is_staged_under_the_session_label_for_automation_and_the_pr
     assert asyncio.run(executor.execute(request, context)) == "secure-result-reference"
 
     assert actors == [recorded, recorded]
+
+
+def _stored_duplicate(transaction_id: str) -> LedgerImportDiagnosticReport:
+    """The canonical record of one row the ledger already holds, as the import writes it per row."""
+    return LedgerImportDiagnosticReport(
+        kind="duplicate",
+        severity="info",
+        message="transactions.import.message_082074",
+        affected_transaction_ids=(transaction_id,),
+    )
+
+
+def _imported_once(operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch, *, rows: int, stored: int):
+    """Preview one statement of ``rows`` rows of which ``stored`` are already in the ledger, and project it."""
+    repository = ProfileOnlyCatalogueRepository[TransactionCatalogue](str(_PROFILE))
+    results: list[LedgerImportExecutionResult] = []
+
+    def prepare(command, *, ports, own_accounts):
+        del ports, own_accounts
+        return SimpleNamespace(command=command, source=SimpleNamespace(parsed_rows=_parsed_rows(rows, "a" * 64)))
+
+    def persist(staged, *, transaction_repository, bucket_event_repository, currency_normalizer):
+        del staged, transaction_repository, bucket_event_repository, currency_normalizer
+        return LedgerSourceImportResult(
+            rows=rows,
+            imported=rows - stored,
+            skipped=stored,
+            likely_duplicates=0,
+            dry_run=True,
+            verify=False,
+            bucket_id=str(_PROFILE),
+            validations=(LedgerSourceValidationReport(valid=True),),
+            sources=(LedgerSourceVerificationReport(requested=False),),
+            diagnostics=tuple(_stored_duplicate(f"tx-{index}") for index in range(stored)),
+        )
+
+    _install_import_pipeline(monkeypatch, prepare=prepare, persist=persist)
+    subject = profile_operation_subject(str(_PROFILE))
+    context = executor_context(
+        LEDGER_IMPORT_OPERATION_DEFINITION_ID,
+        profile_id=str(_PROFILE),
+        operation=operation,
+        cancellation=_Cancellation(),
+        events=RecordingEvents(),
+        operands=_StoringOperands(results),
+    )
+    request = OperationRequest(
+        definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,
+        subject_ref=subject,
+        payload=LedgerImportRequest(
+            profile_id=_PROFILE, files=(_SOURCES / "statement.csv",), provider=LedgerProviderID.CSV, dry_run=True
+        ),
+    )
+    asyncio.run(LedgerImportExecutor(_PortsFactory(operation, repository)).execute(request, context))
+    receipt = OperationTerminalReceipt(
+        identity=OperationIdentity(
+            operation_id="a" * 64, definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID, subject_ref=subject
+        ),
+        revision=1,
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.NONE,
+        settled_at=datetime(2026, 11, 8, 12, 0, tzinfo=UTC),
+        result_ref="secure-result-reference",
+    )
+    return project_ledger_import_result(results[0], receipt)
+
+
+def test_a_preview_whose_every_row_is_stored_names_that_once(
+    monkeypatch: pytest.MonkeyPatch, operation: PinnedAuthorityOperation
+) -> None:
+    """DISCRIMINATING: 39 stored rows are one notice that every row is stored, not 39 notices that some are."""
+    projected = _imported_once(operation, monkeypatch, rows=39, stored=39)
+
+    assert projected.skipped == 39
+    assert [(item.kind, item.message, item.affected_transaction_ids) for item in projected.diagnostics] == [
+        ("duplicate", "transactions.import.all_rows_already_in_ledger", ()),
+    ]
+
+
+def test_a_preview_with_some_rows_stored_names_that_once(
+    monkeypatch: pytest.MonkeyPatch, operation: PinnedAuthorityOperation
+) -> None:
+    projected = _imported_once(operation, monkeypatch, rows=39, stored=3)
+
+    assert [item.message for item in projected.diagnostics] == ["transactions.import.some_rows_already_in_ledger"]
+
+
+def test_a_preview_with_no_row_stored_names_none(
+    monkeypatch: pytest.MonkeyPatch, operation: PinnedAuthorityOperation
+) -> None:
+    projected = _imported_once(operation, monkeypatch, rows=39, stored=0)
+
+    assert projected.diagnostics == ()

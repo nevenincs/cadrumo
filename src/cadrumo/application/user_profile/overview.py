@@ -61,12 +61,13 @@ from ...domain.user_profile.labels import (
 # construction raises. The rest of the domain surface is annotation-only.
 from ...domain.user_profile.schema import ProfileFieldCodeList, ProfileFieldType, derived_selector_for_path
 from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from ...domain.user_profile.values import ProfileSetupState
+from ...domain.user_profile.values import ProfileSetupState, section_field_key
 from ..wizard.models import WizardWidget
 from .completeness import (
     conditional_profile_missing_required,
     conditional_profile_required_paths,
     missing_required_field_paths,
+    pinned_registry_scope,
     profile_section_rows,
     profile_value_is_present,
 )
@@ -547,11 +548,24 @@ def _field_view(
     )
 
 
+def _required_row_paths(
+    section: ProfileSectionDefinition,
+    row: str,
+    field: ProfileFieldDefinition,
+    conditionally_required: frozenset[str],
+) -> frozenset[str]:
+    """The row path to mark required, where the section's own field is required."""
+    if f"{section.key}.{field.key}" not in conditionally_required:
+        return frozenset[str]()
+    return frozenset({f"{section.key}.{row}.{field.key}" if row else f"{section.key}.{field.key}"})
+
+
 def _repeatable_section_views(
     section: ProfileSectionDefinition,
     values: Mapping[str, str],
     present: frozenset[str],
     field_help: Mapping[str, tuple[str, ...]],
+    conditionally_required: frozenset[str] = frozenset(),
     code_lists: Mapping[ProfileFieldCodeList, tuple[str, ...]] = _NO_CODE_LISTS,
     wizard_choices: Mapping[str, tuple[ProfileFieldChoice, ...]] = _NO_WIZARD_CHOICES,
 ) -> list[ProfileFieldView]:
@@ -576,6 +590,12 @@ def _repeatable_section_views(
             field=field,
             values=values,
             help_lines=field_help.get(f"{section.key}.{field.key}"),
+            # A requirement declared for a repeatable section's field holds for
+            # every row of it, the single blank row a section with no rows
+            # stands for included -- and that is the row the filer fills in.
+            # Reading only the indexed path left it unmarked, so the page
+            # offered no required entry while the filing gate demanded one.
+            conditionally_required=_required_row_paths(section, row, field, conditionally_required),
             row_index=row or None,
             code_lists=code_lists,
             wizard_choices=wizard_choices,
@@ -759,7 +779,15 @@ def _section_field_views(
     exists to prevent, reintroduced at the point of entry.
     """
     if section.repeatable:
-        return _repeatable_section_views(section, values, present, field_help, code_lists, wizard_choices)
+        return _repeatable_section_views(
+            section,
+            values,
+            present,
+            field_help,
+            conditionally_required,
+            code_lists,
+            wizard_choices,
+        )
     views: list[ProfileFieldView] = []
     for field in section.fields:
         if derived_selector_for_path(f"{section.key}.{field.key}", derived_selectors) is not None:
@@ -846,10 +874,41 @@ def build_profile_overview(
     # Cross-field requirements come from the same completeness contract the
     # taxpayer projection enforces, so the manager never lists fewer required
     # fields than a filing or the workbench will demand.
-    conditionally_required = frozenset(conditional_profile_required_paths(values))
-    missing_required.extend(
-        path for path in conditional_profile_missing_required(values) if path not in missing_required
+    # The profile-status baseline for modelo work is READ from the gate that
+    # refuses on it rather than restated here. That gate is the authority on
+    # what filing-grade work needs, and while this surface held its own answer
+    # the header said every required detail was filled in and creating a
+    # declaration was refused for want of one of them. The import is local
+    # because the gate reads this package's own completeness and preflight
+    # contracts, so a module-level one would close a cycle.
+    from ..modelo.profile_readiness_gate import (
+        modelo_work_profile_baseline_missing_paths,
+        modelo_work_profile_baseline_paths,
     )
+
+    # Only a path this schema declares: a baseline fact the resolved schema has
+    # no field for has no row to fill in either, and naming it would report a
+    # blank the page cannot show.
+    declared = {f"{section.key}.{field.key}" for section in resolved_schema.sections for field in section.fields}
+    # One pinned generation for the whole walk: the conditional rules and the
+    # baseline read the same governed entity-type and income-category
+    # vocabularies, and two scopes could judge them against two generations.
+    with pinned_registry_scope():
+        baseline_required = tuple(
+            path for path in modelo_work_profile_baseline_paths(record) if section_field_key(path) in declared
+        )
+        conditionally_required = frozenset((*conditional_profile_required_paths(values), *baseline_required))
+        missing_required.extend(
+            path for path in conditional_profile_missing_required(values) if path not in missing_required
+        )
+        # A baseline path is unindexed, so a blank fact already reported at its
+        # own row path is the same unfilled detail, not counted twice.
+        reported = {section_field_key(path) for path in missing_required}
+        missing_required.extend(
+            path
+            for path in modelo_work_profile_baseline_missing_paths(record)
+            if section_field_key(path) in declared and section_field_key(path) not in reported
+        )
     # The same presence rule the completeness check reads, so the rows this
     # renders and the rows it reports missing fields for are one set.
     present = frozenset(path for path, value in values.items() if profile_value_is_present(value))

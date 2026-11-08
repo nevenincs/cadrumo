@@ -2773,6 +2773,7 @@ desktop:
       description: Bank statements, invoice books and documents, from files on this
         computer.
       diagnostic:
+        all_already_in_ledger: Every row is already in the ledger and is skipped.
         already_in_ledger: Some rows are already in the ledger and are skipped.
         gap: More than 35 days between two movements.
         no_rows: The file holds no valid movements.
@@ -6366,6 +6367,7 @@ topic:
     title: VERI*FACTU
 transactions:
   import:
+    all_rows_already_in_ledger: Every row is already in the ledger and is skipped.
     batch_id_collision: 'Row skipped: it carries the same transaction identifier as
       another row in this file.'
     message_053465: Repeated transaction signature within the imported file; both
@@ -6373,6 +6375,7 @@ transactions:
     message_082074: Duplicate transaction already in ledger.
     message_185962: The source file contains no valid transactions.
     message_829073: 'Potential gap: more than 35 days between transactions.'
+    some_rows_already_in_ledger: Some rows are already in the ledger and are skipped.
     unreadable: Unreadable file or unsupported format
     verified: Import verified successfully
 tui:
@@ -10374,6 +10377,8 @@ workspace:
         profile: Open your profile
         withholding: Open withholdings
     todo:
+      elsewhere: 'Missing values outside the boxes: {count}. You will find them under
+        Check.'
       failed: 'Boxes that could not be worked out: {count}'
       failed_lead: They wait on something the calculation lacked. Choose one to see
         what.

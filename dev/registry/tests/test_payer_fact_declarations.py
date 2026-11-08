@@ -28,6 +28,7 @@ from cadrumo.domain.calculations.registry.applicability_payer_facts import (
     resolve_payer_fact,
     resolve_payer_fact_catalogue,
 )
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority as CompiledAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.payloads import MappingFactEntry
 from cadrumo.domain.calculations.registry.facts.resolution import (
@@ -494,3 +495,55 @@ def test_the_same_exclusion_over_the_authored_three_state_fact_hydrates() -> Non
         rule = hydrate_applicability_rule(Modelo("136"), _declared_no_exclusion_rule(_M136_FACT))
 
     assert [exclusion.id for exclusion in rule.exclusions] == ["m999-excluded"]
+
+
+_SUPPORTED_YEARS = filing_year_envelope().years
+
+
+@pytest.mark.usefixtures("governed_fact_scope")
+@pytest.mark.parametrize("year", _SUPPORTED_YEARS)
+@pytest.mark.parametrize("modelo", ("216", "296"))
+def test_resident_withholding_alone_does_not_open_the_irnr_modelos(
+    registry_authority: CompiledAuthority, modelo: str, year: int
+) -> None:
+    """An employer or payer of professional fees withholds IRPF (Modelo 111), not IRNR.
+
+    TRLIRNR art. 31 binds the payer of income subject to IRNR, so 216 and 296 turn on
+    paying non-residents, which only the taxpayer can state.
+    """
+    profile = _natural_person(has_employees=True, pays_professionals_with_retencion=True)
+
+    result = derive_modelo_applicability(profile, modelo, today=date(int(year), 6, 30), authority=registry_authority)
+
+    assert result.verdict is ApplicabilityVerdict.INCOMPLETE
+    assert "trlirnr-rdleg-5-2004:art-31" in result.legal_refs
+
+
+@pytest.mark.usefixtures("governed_fact_scope")
+@pytest.mark.parametrize("year", _SUPPORTED_YEARS)
+@pytest.mark.parametrize(
+    ("modelo", "field"),
+    (
+        ("216", "pays_non_resident_income_with_retencion"),
+        ("296", "pays_non_resident_income_with_retencion"),
+        ("714", "patrimonio_declaration_threshold_met"),
+    ),
+)
+def test_the_new_payer_facts_decide_their_modelos_in_every_supported_year(
+    registry_authority: CompiledAuthority, modelo: str, field: str, year: int
+) -> None:
+    """Unanswered is undetermined, a no excludes and a yes obliges, in every supported year.
+
+    Read through the authority compiled from the authored registry, so the proof does
+    not wait on a publish.
+    """
+    today = date(int(year), 6, 30)
+
+    def verdict(**facts: object) -> ApplicabilityVerdict:
+        return derive_modelo_applicability(
+            _natural_person(**facts), modelo, today=today, authority=registry_authority
+        ).verdict
+
+    assert verdict() is ApplicabilityVerdict.INCOMPLETE
+    assert verdict(**{field: False}) is ApplicabilityVerdict.NOT_APPLICABLE
+    assert verdict(**{field: True}) is ApplicabilityVerdict.APPLICABLE

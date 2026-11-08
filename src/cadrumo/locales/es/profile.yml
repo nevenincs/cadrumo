@@ -75,6 +75,8 @@ profile:
         del Modelo 720
       monedas_virtuales_extranjero_above_threshold: Monedas virtuales en el extranjero
         superan el umbral del Modelo 721
+      patrimonio_declaration_threshold_met: 'Obligado a declarar el Impuesto sobre
+        el Patrimonio: cuota a ingresar o bienes y derechos de más de 2.000.000 euros'
       premio_loteria_gravamen_especial_sin_retencion: Premio de loterías o apuestas
         sujeto al gravamen especial obtenido sin retención ni ingreso a cuenta (Modelo
         136)
@@ -139,6 +141,8 @@ profile:
       modelo_111_no_retenciones_periods: Periodos Modelo 111 sin retenciones
       modelo_115_no_relevant_payment_periods: Periodos Modelo 115 sin pago relevante
       pays_capital_income_with_retencion: Paga rentas de capital con retención
+      pays_non_resident_income_with_retencion: Paga a no residentes sin establecimiento
+        permanente rentas sujetas a retención
       pays_professionals_with_retencion: Paga a profesionales con retención
       pays_rent_with_retencion: Paga alquiler de local con retención
   schema:
@@ -383,6 +387,8 @@ profile:
           label: Umbral del Modelo 720 superado
         monedas_virtuales_extranjero_above_threshold:
           label: Umbral del Modelo 721 superado
+        patrimonio_declaration_threshold_met:
+          label: Obligación de declarar el Impuesto sobre el Patrimonio (Modelo 714)
         premio_loteria_gravamen_especial_sin_retencion:
           label: Premio de lotería sin retención (Modelo 136)
         premio_loteria_gravamen_especial_trimestres:
@@ -579,6 +585,8 @@ profile:
           label: Períodos Modelo 115 sin pago relevante
         pays_capital_income_with_retencion:
           label: Paga rendimientos de capital con retención
+        pays_non_resident_income_with_retencion:
+          label: Paga rentas sujetas a retención a no residentes (Modelos 216 y 296)
         pays_professionals_with_retencion:
           label: Paga a profesionales con retención
         pays_rent_with_retencion:

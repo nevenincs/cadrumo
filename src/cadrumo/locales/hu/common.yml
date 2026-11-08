@@ -2801,6 +2801,7 @@ desktop:
       country_purpose: Akkor használjuk, ha a könyvben nincs ország oszlop. Nem kötelező.
       description: Bankszámlakivonatok, számlakönyvek és dokumentumok a gép fájljaiból.
       diagnostic:
+        all_already_in_ledger: Minden sor már szerepel a naplóban, ezek kimaradnak.
         already_in_ledger: Néhány sor már szerepel a naplóban, ezek kimaradnak.
         gap: Két tétel között több mint 35 nap telt el.
         no_rows: A fájl nem tartalmaz érvényes tételt.
@@ -6471,6 +6472,7 @@ topic:
     title: VERI*FACTU
 transactions:
   import:
+    all_rows_already_in_ledger: Minden sor már szerepel a főkönyvben, ezek kimaradnak.
     batch_id_collision: 'Kihagyott sor: ugyanazzal az azonosítóval rendelkezik, mint
       egy másik sor ebben a fájlban.'
     message_053465: Ismétlődő tranzakció észlelve az importált fájlban.
@@ -6478,6 +6480,7 @@ transactions:
     message_185962: A forrásfájl nem tartalmaz érvényes tranzakciót.
     message_829073: 'Lehetséges hiány: a tranzakciók között több mint 35 nap telt
       el.'
+    some_rows_already_in_ledger: Néhány sor már szerepel a főkönyvben, ezek kimaradnak.
     unreadable: Olvashatatlan fájl vagy nem támogatott formátum.
     verified: Az import sikeresen ellenőrizve.
 tui:
@@ -10532,6 +10535,8 @@ workspace:
         profile: A profilod megnyitása
         withholding: A levonások megnyitása
     todo:
+      elsewhere: 'Hiányzó adatok a mezőkön kívül: {count}. Az Ellenőrzés lapon találod
+        őket.'
       failed: 'Ki nem számítható rovatok: {count}'
       failed_lead: Valamire várnak, ami hiányzott a számításból. Válassz egyet, hogy
         lásd, mire.

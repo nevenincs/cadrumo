@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatAmount, formatDecimal } from "../../../shared/numbers";
-import type { LedgerNextStep, LedgerOutcome } from "../../../shell/ledger";
+import {
+  isProfileStep,
+  type LedgerNextStep,
+  type LedgerOutcome,
+  type LedgerWorkStep,
+} from "../../../shell/ledger";
 import {
   calculateWorkRequest,
   createWorkRequest,
@@ -21,7 +26,7 @@ export type EstimateRead =
   | { phase: "ready"; projection: ModeloProjectOperationProjection }
   /** The application settled it without estimating, in its own words, and
    * perhaps naming the step that puts it right. */
-  | { phase: "refused"; words: string | null; step: LedgerNextStep | null }
+  | { phase: "refused"; words: string | null; step: LedgerWorkStep | null }
   /** The request did not reach the application, or its answer was lost. */
   | { phase: "failed" };
 
@@ -48,12 +53,14 @@ function afterStep<Result>(
 }
 
 /** The step, where this window can do what it names; opening another
- * declaration needs the shell to open it. */
+ * declaration needs the shell to open it, and a step naming a profile detail
+ * is not this surface's to offer. */
 function runnable(
   step: LedgerNextStep | null,
   open: ((workUnitId: string) => void) | undefined,
-): LedgerNextStep | null {
-  return step?.kind === "open_work" && open === undefined ? null : step;
+): LedgerWorkStep | null {
+  if (step === null || isProfileStep(step)) return null;
+  return step.kind === "open_work" && open === undefined ? null : step;
 }
 
 /**
@@ -103,7 +110,7 @@ export function useEstimate({
   // The step the application named, run as the window runs it anywhere else.
   // Once it has settled the estimate is asked for again, not shown stale.
   const take = useCallback(
-    async (step: LedgerNextStep) => {
+    async (step: LedgerWorkStep) => {
       if (step.kind === "open_work") {
         // Nothing is sent: the declaration's own form says what it lacks, and
         // the shell opens it.

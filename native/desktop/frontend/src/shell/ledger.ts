@@ -433,11 +433,12 @@ export type LedgerErrorDetail = {
   next_step?: LedgerNextStep | null;
 };
 
-/** The step a refusal serves for putting it right: a closed kind, the
- * declaration it concerns and the words that offer it, in the language of the
- * refusal's own sentence. The window does what it already knows for the kind:
- * runs the creation or the calculation, or opens the declaration whose own
- * form says what it lacks. It holds no table of operator actions. */
+/** The step a refusal serves for putting it right: a closed kind, what it
+ * concerns and the words that offer it, in the language of the refusal's own
+ * sentence. The window does what it already knows for the kind: runs the
+ * creation or the calculation, opens the declaration whose own form says what
+ * it lacks, opens the profile at one detail, or offers declaring the profile
+ * setup complete. It holds no table of operator actions. */
 export type LedgerNextStep =
   | {
       kind: "create_work";
@@ -447,7 +448,26 @@ export type LedgerNextStep =
       words: string;
     }
   | { kind: "calculate_work"; work_unit_id: string; words: string }
-  | { kind: "open_work"; work_unit_id: string; words: string };
+  | { kind: "open_work"; work_unit_id: string; words: string }
+  /** `path` is the profile detail's own schema address, which the profile
+   * page already addresses its rows by. */
+  | { kind: "open_profile_field"; path: string; words: string }
+  | { kind: "complete_profile_setup"; words: string };
+
+/** The steps the profile page answers, the two a readiness refusal serves. */
+export type LedgerProfileStep = Extract<
+  LedgerNextStep,
+  { kind: "open_profile_field" } | { kind: "complete_profile_setup" }
+>;
+
+/** The steps a declaration surface answers, each naming a declaration. */
+export type LedgerWorkStep = Exclude<LedgerNextStep, LedgerProfileStep>;
+
+/** Whether a served step is one the profile page answers. */
+export const isProfileStep = (
+  step: LedgerNextStep,
+): step is LedgerProfileStep =>
+  step.kind === "open_profile_field" || step.kind === "complete_profile_setup";
 
 /** The step the backend served on a refusal's detail; null when it served
  * none, or one of a kind this window does not run. */
@@ -482,6 +502,12 @@ export function servedNextStep(detail: unknown): LedgerNextStep | null {
       ? null
       : { kind: served.kind, work_unit_id: unit, words };
   }
+  if (served.kind === "open_profile_field") {
+    const path = text("path");
+    return path === null ? null : { kind: "open_profile_field", path, words };
+  }
+  if (served.kind === "complete_profile_setup")
+    return { kind: "complete_profile_setup", words };
   return null;
 }
 
@@ -821,7 +847,8 @@ export type LedgerImportDiagnosticKind =
 /** The translation keys a diagnostic names, from the product's closed set. */
 export type LedgerImportDiagnosticMessage =
   | "transactions.import.message_185962"
-  | "transactions.import.message_082074"
+  | "transactions.import.all_rows_already_in_ledger"
+  | "transactions.import.some_rows_already_in_ledger"
   | "transactions.import.batch_id_collision"
   | "transactions.import.message_053465"
   | "transactions.import.message_829073"

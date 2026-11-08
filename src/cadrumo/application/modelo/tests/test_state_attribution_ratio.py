@@ -22,14 +22,19 @@ import pytest
 
 from cadrumo.domain.user_profile.values import create_user_profile_record
 
+from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context,
     published_snapshot,
+    published_supported_filing_years,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileFactValue, UserProfileRecord
+from ..edit_value_grammar import ModeloEditRatioUnit, ratio_unit
 from ..profile_binding import resolve_profile_sourced_bindings
 from ..profile_derived_facts import ProfileBindingResolutionError, inject_derived_state_attribution_facts
+from ..value_presentation import format_casilla_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -155,3 +160,35 @@ def test_303_state_attribution_binding_resolves_to_100_for_common_profile(
         "M303 state-attribution ratio must resolve to 100 for a común-territory profile; "
         f"got {result.binding_values.get(_BINDING_ID)!r} (binding excluded or defaulted to 0 = the B2 bug)"
     )
+
+
+def test_casilla_65_reads_as_a_percentage_in_every_supported_year() -> None:
+    """Box 65 is the State's share in percent (66 = 64 x 65 / 100), so a form can show 100 % rather than hide it.
+
+    A ratio whose bounds declare no unit is withheld from the form, since the
+    reader could take it a hundredfold wrong; that is how a común-territory
+    filer saw an empty box 65 beside a box 66 worked out from 100.
+    """
+    support = published_supported_filing_years()
+    assert support is not None
+    checked: set[str] = set()
+    for year in sorted(support.years):
+        for period in ("1T", "2T", "3T", "4T"):
+            try:
+                snapshot = published_snapshot("303", filing_year=year, period=period)
+            except FilingYearOutsideSupportEnvelopeError:
+                continue
+            (casilla,) = (item for item in snapshot.revision.casillas if item.id == "65")
+            maximum = None if casilla.constraints is None else casilla.constraints.max_value
+            unit = ratio_unit(casilla.data_type, maximum)
+            assert unit is ModeloEditRatioUnit.PERCENT, (year, period, snapshot.revision.id, maximum)
+            assert casilla.constraints is not None
+            assert casilla.constraints.min_value == Decimal(0)
+            checked.add(snapshot.revision.id)
+            assert (
+                format_casilla_value(
+                    Decimal("100"), data_type=casilla.data_type, language=OutputLanguage.ES, ratio_unit=unit
+                )
+                == "100\u00a0%"
+            )
+    assert len(checked) > 1
