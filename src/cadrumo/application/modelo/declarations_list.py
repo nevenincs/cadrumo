@@ -614,6 +614,30 @@ def preferred_creation_target(rows: tuple[DeclarationListRow, ...]) -> Declarati
     return DeclarationTarget(due[0].modelo, due[0].period) if due and due[0].period is not None else None
 
 
+def starting_creation_targets(
+    rows: tuple[DeclarationListRow, ...], targets: tuple[DeclarationTarget, ...], *, as_of: date
+) -> frozenset[DeclarationTarget]:
+    """For each modelo offered, the address the dialog starts on.
+
+    That is the modelo's first return due and not started; else its latest period already ended on
+    ``as_of``, the last one a filer can owe; else its earliest offered period.
+    """
+    offered = set(targets)
+    starting: dict[str, DeclarationTarget] = {}
+    for row in sorted((row for row in rows if row.state == "not_started"), key=lambda row: row.deadline or date.max):
+        if row.period is not None and (target := DeclarationTarget(row.modelo, row.period)) in offered:
+            starting.setdefault(row.modelo, target)
+    by_modelo: dict[str, list[DeclarationTarget]] = {}
+    for target in targets:
+        by_modelo.setdefault(target.modelo, []).append(target)
+    for modelo, own in by_modelo.items():
+        if modelo in starting:
+            continue
+        ended = [target for target in own if target.period.has_date_span() and target.period.end_date < as_of]
+        starting[modelo] = max(ended, key=lambda target: target.period.end_date) if ended else own[0]
+    return frozenset(starting.values())
+
+
 def existing_declaration(
     rows: tuple[DeclarationListRow, ...], target: DeclarationTarget
 ) -> DeclarationsWorkspaceDeclarationRefV1 | None:
@@ -673,6 +697,7 @@ __all__ = [
     "row_help_words",
     "source_notices",
     "source_words",
+    "starting_creation_targets",
     "state_words",
     "zone_states",
 ]
