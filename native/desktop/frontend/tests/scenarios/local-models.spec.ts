@@ -469,28 +469,12 @@ test("a model whose download succeeds is on this computer, as the catalog then r
 }) => {
   await open(target);
   const lane = await openLane(target);
-  const vision = lane.locator('li[data-model="synthetic-vision:1"]');
-  await expect(vision).toContainText(
-    label("desktop.providers.local_model_absent"),
-  );
-  await vision
-    .getByRole("button", {
-      name: label("desktop.providers.local_model_download"),
-    })
-    .click();
-  await laneReview(lane)
-    .getByRole("button", {
-      name: label("desktop.setup.approve_size", { size: "3.2 GB" }),
-    })
-    .click();
+  await expect(
+    lane.locator('li[data-model="synthetic-vision:1"]'),
+  ).toContainText(label("desktop.providers.local_model_absent"));
   // The made-up setup moves only when the scenario steps it, and a step
-  // before the approval has started it is lost: wait for the run to show.
-  await expect(vision.locator("[data-setup-progress]")).toBeVisible();
-  const settled = async () =>
-    (await vision.getAttribute("data-installed")) === "true";
-  for (let index = 0; index < 40 && !(await settled()); index += 1)
-    await target.evaluate(() => window.__scenarioSetup?.step("local_ai"));
-  await expect(vision).toHaveAttribute("data-installed", "true");
+  // before the approval has started it is lost: the run shows first.
+  const vision = await downloadVision(target, lane);
   await expect(vision).toContainText(
     label("desktop.providers.local_model_installed"),
   );
@@ -509,6 +493,82 @@ test("a model whose download succeeds is on this computer, as the catalog then r
     })
     .click();
   await expect(vision).toHaveAttribute("data-installed", "false");
+});
+
+/** Downloads the vision model through to its end, as the made-up setup is
+ * stepped, and leaves the setup settled. */
+async function downloadVision(target: Page, lane: Locator) {
+  const vision = lane.locator('li[data-model="synthetic-vision:1"]');
+  await vision
+    .getByRole("button", {
+      name: label("desktop.providers.local_model_download"),
+    })
+    .click();
+  await laneReview(lane)
+    .getByRole("button", {
+      name: label("desktop.setup.approve_size", { size: "3.2 GB" }),
+    })
+    .click();
+  await expect(vision.locator("[data-setup-progress]")).toBeVisible();
+  for (
+    let index = 0;
+    index < 40 && (await vision.getAttribute("data-installed")) !== "true";
+    index += 1
+  )
+    await target.evaluate(() => window.__scenarioSetup?.step("local_ai"));
+  await expect(vision).toHaveAttribute("data-installed", "true");
+  return vision;
+}
+
+/** Asks for a check of the setup from the command palette. */
+async function checkFromPalette(target: Page) {
+  const palette = target.getByRole("dialog", {
+    name: label("desktop.palette.label"),
+  });
+  await target.keyboard.press("Control+k");
+  await expect(palette).toBeVisible();
+  await target.keyboard.type(label("desktop.setup.palette_check"));
+  await palette
+    .getByRole("option", {
+      name: label("desktop.setup.palette_check"),
+      exact: true,
+    })
+    .click();
+}
+
+test("a check after a finished download shows no Checking on that model's row", async ({
+  page: target,
+}) => {
+  await open(target);
+  const lane = await openLane(target);
+  const vision = await downloadVision(target, lane);
+  await target.evaluate(() => window.__scenarioSetup?.holdChecks());
+  await checkFromPalette(target);
+  await expect.poll(() => calls(target)).toContain("setup.check full");
+  // The check waits for its answer; it is not the download's.
+  await expect(vision.locator("[data-setup-planning]")).toHaveCount(0);
+  await target.evaluate(() => window.__scenarioSetup?.releaseChecks());
+  await expect(vision.locator("[data-setup-planning]")).toHaveCount(0);
+});
+
+test("a check the setup refuses is not told as a model's download refusal", async ({
+  page: target,
+}) => {
+  await open(target);
+  const lane = await openLane(target);
+  await downloadVision(target, lane);
+  await target.evaluate(() => window.__scenarioSetup?.holdChecks());
+  await checkFromPalette(target);
+  await expect.poll(() => calls(target)).toContain("setup.check full");
+  await target.evaluate(() => window.__scenarioSetup?.releaseChecks("busy"));
+  // The panel the check opened says it; no model row does.
+  await expect(
+    target
+      .getByRole("dialog", { name: label("desktop.setup.title") })
+      .getByRole("alert")
+      .filter({ hasText: label("desktop.setup.refused_busy") }),
+  ).toBeVisible();
+  await expect(lane.locator('li[data-model] [role="alert"]')).toHaveCount(0);
 });
 
 test("an added model downloads with its size unknown", async ({

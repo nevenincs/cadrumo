@@ -84,9 +84,14 @@ export type SetupFixtureControls = {
   setGoogle(account: GoogleAccount): void;
   /** The first status read settles: an `unread` setup has its rows. */
   readRows(): void;
-  /** The planning a `start_held` start waits in ends: its plan awaits an
-   * answer, and the start returns. */
+  /** The planning a `start_held` or `start_unreported` start waits in
+   * ends: its plan awaits an answer, and the start returns. */
   finishPlanning(): void;
+  /** The next status reads and verifications stay unanswered until
+   * `releaseChecks`, as while the host reads a slow status. */
+  holdChecks(): void;
+  /** Answers the checks held: with the refusal's code, or as asked. */
+  releaseChecks(refusal?: string): void;
   /** The host reads again after the sign-in status changed, as it does on
    * the session's cue. */
   reread(): void;
@@ -314,6 +319,20 @@ export function setupFixture({
   // The starts a `start_held` setup keeps in planning, by operation id; each
   // returns its start, with the plan reached or not.
   const heldStarts = new Map<string, (planned: boolean) => void>();
+  // The status reads and verifications `holdChecks` keeps unanswered, each
+  // answering with a refusal's code or none.
+  let checksHeld = false;
+  const heldChecks: ((refusal: string | null) => void)[] = [];
+  const afterHold = (
+    act: () => Promise<DesktopSetup>,
+  ): Promise<DesktopSetup> =>
+    checksHeld
+      ? new Promise<DesktopSetup>((resolve, reject) => {
+          heldChecks.push((refusal) =>
+            refusal ? reject({ code: refusal }) : act().then(resolve, reject),
+          );
+        })
+      : act();
   // The setups asked to stop, by operation id.
   const pendingCancel = new Set<string>();
   // Each planned row as it stood before its setup ran, for an item a setup
@@ -827,6 +846,13 @@ export function setupFixture({
     finishPlanning() {
       [...heldStarts.values()].forEach((finish) => finish(true));
     },
+    holdChecks() {
+      checksHeld = true;
+    },
+    releaseChecks(refusal) {
+      checksHeld = false;
+      heldChecks.splice(0).forEach((answer) => answer(refusal ?? null));
+    },
     reread() {
       publish();
     },
@@ -858,41 +884,46 @@ export function setupFixture({
       say(`setup.check ${checkMode}`);
       const refused = ready();
       if (refused) return refused;
-      operations += 1;
-      const id = `check-${operations}`;
-      mode = checkMode;
-      check = {
-        operation_id: id,
-        kind: checkMode === "full" ? "status_full" : "status_quick",
-        stage: "done",
-        failure: null,
-        refusal: null,
-      };
-      return Promise.resolve(publish());
+      return afterHold(() => {
+        operations += 1;
+        const id = `check-${operations}`;
+        mode = checkMode;
+        check = {
+          operation_id: id,
+          kind: checkMode === "full" ? "status_full" : "status_quick",
+          stage: "done",
+          failure: null,
+          refusal: null,
+        };
+        return Promise.resolve(publish());
+      });
     },
     verify(wanted) {
       say(`setup.verify ${wanted?.join(",") ?? "all"}`);
       const refused = ready();
       if (refused) return refused;
-      operations += 1;
-      mode = "full";
-      // The full check launches builds no receipt recorded, and records them.
-      if (shape === "unrecorded")
-        items
-          .filter(
-            (seed) =>
-              seed.row.state === "unknown" &&
-              (wanted ?? [seed.row.item]).includes(seed.row.item),
-          )
-          .forEach((seed) => (seed.row = readied(seed.row)));
-      check = {
-        operation_id: `verify-${operations}`,
-        kind: "verify",
-        stage: "done",
-        failure: null,
-        refusal: null,
-      };
-      return Promise.resolve(publish());
+      return afterHold(() => {
+        operations += 1;
+        mode = "full";
+        // The full check launches builds no receipt recorded, and records
+        // them.
+        if (shape === "unrecorded")
+          items
+            .filter(
+              (seed) =>
+                seed.row.state === "unknown" &&
+                (wanted ?? [seed.row.item]).includes(seed.row.item),
+            )
+            .forEach((seed) => (seed.row = readied(seed.row)));
+        check = {
+          operation_id: `verify-${operations}`,
+          kind: "verify",
+          stage: "done",
+          failure: null,
+          refusal: null,
+        };
+        return Promise.resolve(publish());
+      });
     },
     start(wanted, options) {
       say(`setup.start ${wanted}${options?.resume ? " resume" : ""}`);

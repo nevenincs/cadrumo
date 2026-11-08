@@ -246,11 +246,13 @@ export function LocalModels({
   const settingUp = liveRun !== null;
   // A start that no snapshot shows yet is as much a setup under way as one
   // that does, and a second click would send it again.
-  const starting = localAi !== null && store.control.busy(localAi.item);
-  // The model whose download was asked for last: the start's refusal, which
-  // the control holds once for the window, is said on its row.
+  const starting = localAi !== null && store.control.startingOf(localAi.item);
+  // The model whose download is under way: its row says what the setup is
+  // doing before the setup names a part.
   const asked =
     lane && store.asked?.lane === lane.id ? store.asked.model : null;
+  // A refused start is said on the row of the model it asked for.
+  const refused = store.control.refusal;
   const onSetUp =
     store.offered && localAi !== null
       ? (model: string) => {
@@ -445,8 +447,9 @@ export function LocalModels({
                         ? removalWords(t, removals[key])
                         : outcome?.kind === "refused"
                           ? listRefusalWords(t, outcome.code)
-                          : asked === model.id && store.control.refusal
-                            ? refusalWords(t, store.control.refusal)
+                          : refused?.download?.lane === lane.id &&
+                              refused.download.model === model.id
+                            ? refusalWords(t, refused.code)
                             : null
                     }
                     onDownload={onSetUp ? () => onSetUp(model.id) : undefined}

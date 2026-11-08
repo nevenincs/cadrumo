@@ -67,7 +67,8 @@ export type ProvisioningStore = {
   modelPart(model: string): SetupPartProgress | null;
   /** The local AI's program part in its latest setup. */
   programPart(): SetupPartProgress | null;
-  /** The model whose download the person asked for last, in this window. */
+  /** The model whose download the person asked for, held from the click
+   * until that setup settles or its start is refused. */
   asked: AskedModel | null;
   /** The model whose row answers the local AI's plan now: the model last
    * asked for, while the local AI's setup awaits the answer on a plan that
@@ -110,6 +111,7 @@ const NO_CONTROL: SetupControl = {
   snapshot: null,
   pending: false,
   busy: () => false,
+  startingOf: () => false,
   refusal: null,
   check: () => undefined,
   verify: () => undefined,
@@ -200,7 +202,8 @@ export function useProvisioningStore(
   const { offered, snapshot } = control;
   const rows = useMemo(() => snapshot?.rows ?? [], [snapshot]);
   const [panel, setPanel] = useState<PanelState>(CLOSED);
-  // The model whose download the person asked for last, for this profile.
+  // The model whose download the person asked for, for this profile, while
+  // that setup is under way.
   const [asked, setAsked] = useState<AskedModel | null>(null);
   const opened = useRef(onOpen);
   opened.current = onOpen;
@@ -292,6 +295,18 @@ export function useProvisioningStore(
   const localAiRow = useMemo(() => localAiOf(rows), [rows]);
   const live = anyLive(snapshot);
   const { start, verify, removeModel } = control;
+  // The asked model is the one whose download is under way: from the click,
+  // while its start waits for an answer or the local AI's setup has not
+  // settled. Once neither holds, the download ended or its start was
+  // refused, and what runs next is not that model's.
+  const localAiItem = localAiRow?.item ?? null;
+  const underway =
+    localAiItem !== null &&
+    (control.startingOf(localAiItem) ||
+      liveRunOf(snapshot, localAiItem) !== null);
+  useEffect(() => {
+    if (asked !== null && !underway) setAsked(null);
+  }, [asked, underway]);
 
   return useMemo((): ProvisioningStore => {
     const progressOf = (item: SetupItemId) =>

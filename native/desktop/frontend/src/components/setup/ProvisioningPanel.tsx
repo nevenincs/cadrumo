@@ -221,7 +221,7 @@ export function ProvisioningPanel({
         )}
 
         {control.refusal && (
-          <Alert role="alert">{refusalWords(t, control.refusal)}</Alert>
+          <Alert role="alert">{refusalWords(t, control.refusal.code)}</Alert>
         )}
 
         <DialogFooter>
