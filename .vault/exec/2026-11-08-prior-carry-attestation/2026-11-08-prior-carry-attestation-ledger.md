@@ -5,7 +5,7 @@ tags:
 date: '2026-11-08'
 modified: '2026-11-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:ca37abd2caff0a001da7ee48a9426dc18dbb78b70d592637c578bd1ab350d535'
+body_hash: 'sha256:9bfb8a2ca434be21a62a99bad5cdfccee559e519371dda20ca3eba70148cfaab'
 related:
   - "[[2026-11-08-prior-carry-attestation-plan]]"
 ---
@@ -53,7 +53,10 @@ related:
 - `S01` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_m100_carry_attestation.py`
 - `S01` `verify:` `pytest-test_m100_carry_attestation` -> `pass`
 - `S01` `verify:` `pytest-test_calculation_revision_operator_layer` -> `pass`
+- `S02` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_m100_carry_attestation.py`
+- `S02` `verify:` `pytest-test_m100_carry_attestation` -> `pass`
 
 ## Notes
 
 - `S01` 18-failures-in-payer-fact-and-cli-calculate-suites-reproduce-on-feature/tui-HEAD
+- `S02` `no-production-change:-existing-caller-tier-precedence-screen-raises-precedence_tier_divergence;-attested-mark-lives-on-the-operator-layer,-caller-provenance-stays-operator-entry`
