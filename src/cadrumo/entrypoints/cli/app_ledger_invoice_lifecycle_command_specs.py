@@ -19,6 +19,7 @@ from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
 from cadrumo_client.contracts.command_ports import CommandNodeKind
 
 from ...application.ledger.operator_input_contracts import NOTES_INPUT
+from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .app_ledger_command_spec_policies import (
     POLICY_2,
     POLICY_4,
@@ -45,6 +46,42 @@ REQUIRED_INVOICE_ID_ARGUMENT: Final[ArgumentSpec] = ArgumentSpec(
 )
 
 LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
+    CommandSpec(
+        "app_ledger_invoice_attach_document",
+        "app_ledger_invoice",
+        "attach-document",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.app.ledger.invoice.attach_document_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
+        parameters=(
+            REQUIRED_INVOICE_ID_ARGUMENT,
+            ArgumentSpec(
+                name="source_path",
+                value=ValueContract(DeferredTarget("builtins", "str")),
+                default=ParameterDefault.required(),
+                help_key=TranslationKey("cli.app.ledger.invoice.attach_document_source_help"),
+                metavar=None,
+                constraint=ParameterConstraint(),
+                show_default=True,
+                hidden=False,
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
+            ),
+        ),
+        policy=POLICY_4,
+        handler=LazyBinding.available(
+            DeferredTarget(".ledger_business_invoice_commands", "invoice_attach_document", __package__)
+        ),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget(
+                ".ledger_catalogue_invoice_results", "CatalogueInvoiceDocumentAttachPayload", __package__
+            ),
+            identity="ledger.invoice.attach_document",
+        ),
+    ),
     CommandSpec(
         "app_ledger_invoice_list",
         "app_ledger_invoice",

@@ -148,6 +148,7 @@ function Ready({
   openLink,
   onOpenWork,
   onOpenMovement,
+  onOpenInvoice,
   initialView,
   onLeaveGuard,
   profileCompanions,
@@ -167,6 +168,7 @@ function Ready({
   onOpenWork?: (workUnitId: string) => void;
   /** Opens one ledger movement in the Libro, where the shell has one. */
   onOpenMovement?: (transactionId: string) => void;
+  onOpenInvoice?: (invoiceId: string) => void;
   initialView: WorkspaceView;
   onLeaveGuard?: (guard: LeaveGuard | null) => void;
   profileCompanions?: ProfileCompanionKit;
@@ -833,6 +835,7 @@ function Ready({
                 : null
             }
             onAnswer={onAnswer}
+            onOpenInvoice={onOpenInvoice ?? null}
             answers={<DisagreementAnswers read={disagreements} />}
           />
         ),
@@ -1080,6 +1083,7 @@ export function WorkspaceScreen({
   openLink,
   onOpenWork,
   onOpenMovement,
+  onOpenInvoice,
   initialView = "form",
   onLeaveGuard,
   onWritten,
@@ -1104,6 +1108,8 @@ export function WorkspaceScreen({
   /** Opens one ledger movement in the Libro, where the shell has one; a
    * refusal that names a movement offers it only with this. */
   onOpenMovement?: (transactionId: string) => void;
+  /** The invoice a check line asks a document for; only a window with a Libro can open it. */
+  onOpenInvoice?: (invoiceId: string) => void;
   /** The view the declaration opens on. */
   initialView?: WorkspaceView;
   /** Hands the shell the guard that asks before staged edits are dropped. */
@@ -1227,6 +1233,7 @@ export function WorkspaceScreen({
         openLink={openLink}
         onOpenWork={onOpenWork}
         onOpenMovement={onOpenMovement}
+        onOpenInvoice={onOpenInvoice}
         initialView={initialView}
         onLeaveGuard={onLeaveGuard}
         profileCompanions={profileCompanions}

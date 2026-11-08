@@ -28,6 +28,7 @@ function Line({
   canOpenSurface,
   onRecalculate,
   onAnswer,
+  onOpenInvoice,
 }: {
   line: ModeloFormIssueLine;
   onGo(line: ModeloFormIssueLine): void;
@@ -35,8 +36,10 @@ function Line({
   canOpenSurface(surface: OpenableSurface): boolean;
   onRecalculate: (() => void) | null;
   onAnswer: ((line: ModeloFormIssueLine) => void) | null;
+  onOpenInvoice: ((invoiceId: string) => void) | null;
 }) {
   const t = useStrings();
+  const invoice = onOpenInvoice ? (line.invoice_id ?? null) : null;
   const surface =
     line.surface && line.surface !== "none" && canOpenSurface(line.surface)
       ? line.surface
@@ -59,9 +62,21 @@ function Line({
   // disagreement, or revoke the acceptance that covers it.
   const offered = onAnswer ? (line.resolution_answer ?? null) : null;
   const actions = (surface ||
+    invoice ||
     (line.recalculates && onRecalculate) ||
     offered) && (
     <div className="flex flex-wrap gap-3 px-4 pb-3">
+      {invoice && onOpenInvoice && (
+        <Button
+          size="sm"
+          variant="link"
+          data-line-door="open_invoice"
+          onClick={() => onOpenInvoice(invoice)}
+        >
+          {t("workspace.modelo.open_invoice")}
+          <Icon name="forward" size="xs" />
+        </Button>
+      )}
       {surface && (
         <Button size="sm" variant="link" onClick={() => onOpenSurface(surface)}>
           {t(`workspace.modelo.surface.open.${surface}`)}
@@ -128,6 +143,7 @@ export function CheckView({
   canOpenSurface,
   onRecalculate,
   onAnswer = null,
+  onOpenInvoice = null,
   answers,
 }: {
   verdict: ModeloFormVerdict;
@@ -143,6 +159,9 @@ export function CheckView({
   /** Opens the answer a disagreement's line offers, or null while none can
    * be sent from here. */
   onAnswer?: ((line: ModeloFormIssueLine) => void) | null;
+  /** Opens the invoice a line asks a document for, or null while this window
+   * has no Libro de facturas. */
+  onOpenInvoice?: ((invoiceId: string) => void) | null;
   /** The answers given to the declaration's disagreements, drawn under the
    * lines. */
   answers?: ReactNode;
@@ -195,6 +214,7 @@ export function CheckView({
                   canOpenSurface={canOpenSurface}
                   onRecalculate={onRecalculate}
                   onAnswer={onAnswer}
+                  onOpenInvoice={onOpenInvoice}
                 />
               ))}
             </ul>

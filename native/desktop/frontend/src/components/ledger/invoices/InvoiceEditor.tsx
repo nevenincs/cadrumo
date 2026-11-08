@@ -131,6 +131,7 @@ export function InvoiceEditor({
   else
     body = (
       <StoredInvoice
+        port={port}
         invoice={stored!}
         preview={preview}
         invoices={invoices}
@@ -139,6 +140,7 @@ export function InvoiceEditor({
         shown={shown}
         touch={touch}
         correct={correct}
+        say={say}
       />
     );
 

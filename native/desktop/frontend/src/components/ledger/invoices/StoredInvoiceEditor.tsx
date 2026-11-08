@@ -7,6 +7,7 @@ import { NativeSelect } from "@/components/ui/native-select";
 import type { Suggestion } from "@/components/ui/suggestions";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount } from "../../../shared/numbers";
+import type { LedgerPort } from "../../../shell/ledger";
 import type { CatalogueInvoice } from "../../../shell/ledgerInvoiceOperations";
 import {
   PAYMENT_STATUSES,
@@ -36,6 +37,7 @@ import {
   wired,
   type ControlProps,
 } from "./InvoiceFields";
+import { InvoiceDocument } from "./InvoiceDocument";
 import { StoredLines } from "./InvoiceLines";
 import { TotalsList, Retention } from "./InvoiceTotals";
 import { isPaymentId, type CorrectionDraft } from "./invoiceModel";
@@ -45,6 +47,7 @@ import { classLabel, kindChoice, paymentLabel } from "./invoiceWords";
 // ---- A stored invoice --------------------------------------------------------------
 
 export function StoredInvoice({
+  port,
   invoice,
   preview,
   invoices,
@@ -53,7 +56,9 @@ export function StoredInvoice({
   shown,
   touch,
   correct,
+  say,
 }: {
+  port: LedgerPort;
   invoice: CatalogueInvoice;
   preview: PreviewView;
   /** The catalogue, for what a field can offer. */
@@ -66,6 +71,8 @@ export function StoredInvoice({
     key: K,
     value: CorrectionDraft[K],
   ): void;
+  /** Confirms a write in a toast. */
+  say(text: string): void;
 }) {
   const t = useStrings();
   const vocabulary = useVocabulary();
@@ -323,6 +330,8 @@ export function StoredInvoice({
         value={correction.notes}
         onChange={(value) => correct("notes", value)}
       />
+
+      <InvoiceDocument port={port} invoiceId={invoice.invoice_id} say={say} />
 
       <EditorSection title={t("desktop.ledger.invoices.linked")}>
         <p className="flex items-center gap-1.5 text-base">
