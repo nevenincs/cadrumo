@@ -5,7 +5,7 @@ tags:
 date: '2026-11-07'
 modified: '2026-11-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:2a16bc28ab1bc233a3fc2347548b678ddf3ebe129d7623f327bfde65ff4b2b3f'
+body_hash: 'sha256:6604ff7693f7d0a80df3932ea0e3a126c183d1cb619befe590a2c6552397fc20'
 related:
   - "[[2026-11-07-local-inference-engine-plan]]"
 ---
@@ -188,6 +188,12 @@ related:
 - `S18` `M` `native/application/src/provisioning/local_ai/program.rs`
 - `S18` `M` `native/desktop/src-tauri/src/shell/setup/components_tests.rs`
 - `S18` `by:` `vaultspec-high-executor`
+- `S16` `M` `.vault/plan/2026-11-07-local-inference-engine-plan.md`
+- `S16` `by:` `vaultspec-standard-executor`
+- `S17` `by:` `vaultspec-standard-executor`
+- `S18` `M` `native/application/tests/live_package.rs`
+- `S18` `M` `native/CONTRACT.md`
+- `S18` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -212,6 +218,9 @@ related:
 - `S16` `program_proxy_differs` retired; dev/locales audit, parity, chrome and signal tests need a published authority, absent in this worktree, and are owed in a root slot with cargo and the frontend typecheck
 - `S17` Review fixes: llama-server restart drains with typed retryable load refusals, argv host and port, local AI unavailability diagnostic, engine-selection launch proofs. Rust not compiled under root quiet; cargo check, clippy and test owed in a root slot.
 - `S18` Rust compile, clippy and cargo tests not run in the worktree under the operator ban; verification pending the root slot
+- `S16` Review-finding fixes (transfer retry window, store reclaim, progress offset, drain marker and bounded check wait, refused-load body, router alias ids, live package tests): Rust build, clippy and cargo tests are pending the root slot; rustfmt --edition 2024 --check passes on the changed files.
+- `S17` Review-finding fixes (transfer retry window, store reclaim, progress offset, drain marker and bounded check wait, refused-load body, router alias ids, live package tests): Rust build, clippy and cargo tests are pending the root slot; rustfmt --edition 2024 --check passes on the changed files.
+- `S18` Review-finding fixes (transfer retry window, store reclaim, progress offset, drain marker and bounded check wait, refused-load body, router alias ids, live package tests): Rust build, clippy and cargo tests are pending the root slot; rustfmt --edition 2024 --check passes on the changed files.
 
 ## Notes
 
