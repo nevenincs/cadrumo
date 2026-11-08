@@ -20,6 +20,7 @@ use super::{
     connection::Network,
     engine::EngineConfig,
     items::Locations,
+    local_ai::Placement,
     pins::{ComponentPins, Platform},
     proxy::ProxySettings,
     transfer::RetryPolicy,
@@ -51,7 +52,8 @@ const BROWSER_PASSED_THROUGH: &[&str] = &[
     "LC_ALL",
 ];
 
-fn package_path(package: &Path, relative: &str) -> PathBuf {
+/// `relative`, a `/`-separated package path, under the package root `package`.
+pub(crate) fn package_path(package: &Path, relative: &str) -> PathBuf {
     relative
         .split('/')
         .filter(|part| !part.is_empty() && *part != ".")
@@ -109,6 +111,7 @@ pub fn installation_config() -> Result<EngineConfig, Error> {
             .map_err(|_| Error::Invalid("local AI address".into()))?,
         llama_server_folder: package_path(&package, cadrumo_platform::LLAMA_SERVER),
         llama_server_build: cadrumo_platform::LLAMA_SERVER_BUILD.to_owned(),
+        placement: Placement::default(),
         browser_environment,
         scratch,
         free_space: Box::new(|path| cadrumo_platform::volume::available_bytes(path).ok()),

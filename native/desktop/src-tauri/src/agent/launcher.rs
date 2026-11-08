@@ -1,6 +1,7 @@
 //! The launcher's line protocol: distinct authority secrets in, JSON event lines out.
 
-use serde::Deserialize;
+use cadrumo_application::provisioning::local_ai::LocalEngine;
+use serde::{Deserialize, Serialize};
 use zeroize::Zeroizing;
 
 /// The longest event line the launcher may write; a longer one is a fault.
@@ -39,24 +40,23 @@ pub enum Event {
 #[derive(Debug, PartialEq, Eq)]
 pub struct Violation;
 
-/// The private admin and gateway frame: one JSON line followed by an open stream.
-pub fn bearer_frame(bearer: &str, gateway_bearer: &str) -> Zeroizing<Vec<u8>> {
-    #[derive(serde::Serialize)]
-    struct Frame<'a> {
-        bearer: &'a str,
-        gateway_bearer: &'a str,
-    }
-    let mut encoded = Zeroizing::new(Vec::with_capacity(bearer.len() + gateway_bearer.len() + 64));
-    // Writing to a vector cannot fail, and a string serializes infallibly.
-    if serde_json::to_writer(
-        &mut *encoded,
-        &Frame {
-            bearer,
-            gateway_bearer,
-        },
-    )
-    .is_ok()
-    {
+/// What the service is started with: its admin and gateway secrets, and the local engine
+/// a profile that chose none runs, which the package decides.
+#[derive(Clone, Copy, Serialize)]
+pub struct Startup<'a> {
+    pub bearer: &'a str,
+    pub gateway_bearer: &'a str,
+    pub local_engine_default: LocalEngine,
+}
+
+/// The private startup frame: one JSON line followed by an open stream.
+pub fn bearer_frame(startup: Startup<'_>) -> Zeroizing<Vec<u8>> {
+    let mut encoded = Zeroizing::new(Vec::with_capacity(
+        startup.bearer.len() + startup.gateway_bearer.len() + 96,
+    ));
+    // Writing to a vector cannot fail, and strings and a unit variant serialize
+    // infallibly.
+    if serde_json::to_writer(&mut *encoded, &startup).is_ok() {
         encoded.push(b'\n');
     }
     encoded
@@ -177,10 +177,23 @@ mod tests {
 
     #[test]
     fn the_bearer_is_one_json_line() {
-        let frame = bearer_frame("ab\"c", "gateway-secret");
+        let frame = bearer_frame(Startup {
+            bearer: "ab\"c",
+            gateway_bearer: "gateway-secret",
+            local_engine_default: LocalEngine::LlamaCpp,
+        });
         assert_eq!(
             &*frame,
-            b"{\"bearer\":\"ab\\\"c\",\"gateway_bearer\":\"gateway-secret\"}\n"
+            b"{\"bearer\":\"ab\\\"c\",\"gateway_bearer\":\"gateway-secret\",\"local_engine_default\":\"llamacpp\"}\n"
+        );
+        let frame = bearer_frame(Startup {
+            bearer: "b",
+            gateway_bearer: "g",
+            local_engine_default: LocalEngine::Ollama,
+        });
+        assert_eq!(
+            &*frame,
+            b"{\"bearer\":\"b\",\"gateway_bearer\":\"g\",\"local_engine_default\":\"ollama\"}\n"
         );
     }
 

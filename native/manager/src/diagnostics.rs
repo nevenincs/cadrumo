@@ -288,6 +288,21 @@ pub fn local_ai_unavailable(diagnostics: &Diagnostics, engine: LocalEngine, reas
     );
 }
 
+/// Records that no local AI server runs because the person's engine selection is there and
+/// cannot be read: no engine is chosen, since running one could be the one the person did
+/// not select.
+pub fn local_ai_selection_unreadable(diagnostics: &Diagnostics) {
+    diagnostics.lifecycle(
+        EventKind::StageCompleted,
+        HostStage::Supervision,
+        fact::LifecycleFact::LocalAiUnavailable {
+            engine: fact::LocalAiEngine::Unselected,
+            reason: fact::LocalAiUnavailable::SelectionUnreadable,
+        },
+        None,
+    );
+}
+
 pub fn waiting(role: &Role) -> Option<fact::LifecycleFact> {
     match role {
         Role::Observe(runtime) => Some(fact::LifecycleFact::Observing { pid: runtime.pid() }),
@@ -455,6 +470,29 @@ mod tests {
                 "event": "local_ai_unavailable",
                 "engine": "llama_cpp",
                 "reason": "llama_server_not_packaged",
+            })
+        );
+    }
+
+    #[test]
+    fn an_unreadable_engine_selection_is_recorded_with_no_engine_and_its_own_reason() {
+        let diagnostics = Diagnostics::new(DiagnosticSource::Manager);
+        local_ai_selection_unreadable(&diagnostics);
+        let events = diagnostics.snapshot(0).events;
+        let recorded: Vec<_> = events.iter().filter_map(|event| event.lifecycle).collect();
+        assert_eq!(
+            recorded,
+            [fact::LifecycleFact::LocalAiUnavailable {
+                engine: fact::LocalAiEngine::Unselected,
+                reason: fact::LocalAiUnavailable::SelectionUnreadable,
+            }]
+        );
+        assert_eq!(
+            serde_json::to_value(recorded[0]).unwrap(),
+            serde_json::json!({
+                "event": "local_ai_unavailable",
+                "engine": "unselected",
+                "reason": "selection_unreadable",
             })
         );
     }

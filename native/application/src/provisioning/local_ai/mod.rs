@@ -37,18 +37,57 @@ use super::{
 };
 use crate::error::Error;
 use loopback::{ExchangeFailure, ExchangePhase};
-use std::{fmt, io, process::ExitStatus, time::Duration};
+use serde::{Deserialize, Serialize};
+use std::{fmt, io, path::Path, process::ExitStatus, time::Duration};
 
 /// The engine that serves the local models, and so the one local AI server the runtime
-/// manager runs. Ollama stays the default until the bundled llama-server has passed its
-/// packaged acceptance.
-#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
+/// manager runs. A person who has chosen none is served by `package_default_engine`:
+/// the llama-server where the package carries it, otherwise Ollama. Stored as `ollama` or
+/// `llamacpp`.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum LocalEngine {
     /// The Ollama program the engine downloads on the person's approval.
-    #[default]
+    #[serde(rename = "ollama")]
     Ollama,
     /// The llama-server program the package carries.
+    #[serde(rename = "llamacpp")]
     LlamaCpp,
+}
+
+/// The engine of a person who has chosen none, from what the package at `package_root`
+/// carries: llama.cpp exactly when the package's `llama_server` folder holds the
+/// llama-server program, since it needs no download, and Ollama otherwise. This is the only
+/// default engine. A chosen engine is kept whatever the package carries: llama.cpp chosen on
+/// a package without the llama-server is refused as not packaged, never served by Ollama.
+#[cfg(feature = "platform")]
+pub fn package_default_engine(package_root: &Path) -> LocalEngine {
+    llama_server_folder_default(&super::installation::package_path(
+        package_root,
+        cadrumo_platform::LLAMA_SERVER,
+    ))
+}
+
+/// `package_default_engine` for the package whose `llama_server` folder is
+/// `llama_server_folder`, for a caller that holds that folder rather than the package root.
+pub(crate) fn llama_server_folder_default(llama_server_folder: &Path) -> LocalEngine {
+    if llama_server::carried(llama_server_folder) {
+        LocalEngine::LlamaCpp
+    } else {
+        LocalEngine::Ollama
+    }
+}
+
+/// Where the local engine runs a model: the device policy of its server's launch. The
+/// same model files serve either, so no placement has a model list of its own. Stored as
+/// `auto` or `cpu_only`.
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Placement {
+    /// The engine offloads layers to a device when one is present and the load fits.
+    #[default]
+    Auto,
+    /// The engine keeps every layer on the processor.
+    CpuOnly,
 }
 
 /// The local AI's one reading from its program's observation and version and each selected

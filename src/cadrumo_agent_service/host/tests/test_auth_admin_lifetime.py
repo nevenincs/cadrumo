@@ -14,6 +14,7 @@ import pytest
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from ...admin import AdminServer
+from ...providers.domain.record import LocalEngine
 from ...service import AgentService
 from ..auth_attempt import AuthAttempt
 
@@ -37,6 +38,7 @@ def _read_frame(stream: socket.socket) -> bytes:
 @pytest.mark.parametrize("closing", [False, True])
 def test_settings_read_reports_lost_authority_while_the_gateway_is_stopping(tmp_path: Path, closing: bool) -> None:
     service = AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
         client=cast(
             InstalledServiceClient, SimpleNamespace(lease=None, connection=SimpleNamespace(close=lambda: None))
         ),
@@ -70,6 +72,7 @@ def test_existing_attempt_is_observed_without_the_gateway_lifecycle_lock(
 ) -> None:
     client = SimpleNamespace(lease=object(), connection=SimpleNamespace(close=lambda: None))
     service = AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
         client=cast(InstalledServiceClient, client),
         storage_root=tmp_path,
         gateway_bearer=bytearray(),
