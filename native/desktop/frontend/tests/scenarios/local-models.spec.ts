@@ -421,33 +421,43 @@ test("a plan whose asked row leaves the screen is answered on the program's row,
   await expect(program).toHaveCount(0);
 });
 
-test("while the local AI sets up, no model offers its download again", async ({
+test("from the click on, while the local AI sets up, no model offers its download again", async ({
   page: target,
 }) => {
-  await open(target);
+  // The start is in flight and no snapshot names its setup yet.
+  await open(target, "start_unreported");
   const lane = await openLane(target);
   const downloads = lane.getByRole("button", {
     name: label("desktop.providers.local_model_download"),
   });
   const vision = lane.locator('li[data-model="synthetic-vision:1"]');
+  const starts = async () =>
+    (await calls(target)).filter((call) => call.startsWith("setup.start"));
+  await expect(downloads).toHaveCount(1);
+  await expect(downloads).toBeEnabled();
+  await downloads.click();
+  await expect
+    .poll(() => calls(target))
+    .toContain("setup.download local_api synthetic-vision:1");
+  // Nothing the window reads carries the run: the program's row shows no
+  // planning, yet the model's button is already disabled and says why.
   await expect(
-    vision.getByRole("button", {
-      name: label("desktop.providers.local_model_download"),
-    }),
-  ).toBeEnabled();
-  await vision
-    .getByRole("button", {
-      name: label("desktop.providers.local_model_download"),
-    })
-    .click();
+    lane.locator('[data-setup-row="local_ai"] [data-setup-planning]'),
+  ).toHaveCount(0);
+  await expect(downloads).toBeDisabled();
+  await expect(vision.locator("[data-setup-planning]")).toHaveText(
+    label("desktop.setup.step_checking"),
+  );
+  // Repeat clicks reach nothing: one start was sent.
+  await downloads.click({ force: true });
+  await downloads.click({ force: true });
+  expect(await starts()).toHaveLength(1);
+  // Once the plan awaits its answer the setup is live, and still one start.
+  await target.evaluate(() => window.__scenarioSetup?.finishPlanning());
   await expect(laneReview(lane)).toBeVisible();
-  // The plan awaits its approval: the setup is live, so another click would
-  // start nothing and say nothing.
-  for (const button of await downloads.all())
-    await expect(button).toBeDisabled();
-  expect(
-    (await calls(target)).filter((call) => call.startsWith("setup.start")),
-  ).toHaveLength(1);
+  await expect(downloads).toBeDisabled();
+  await downloads.click({ force: true });
+  expect(await starts()).toHaveLength(1);
 });
 
 test("a download the setup refuses says why on that model's row alone", async ({

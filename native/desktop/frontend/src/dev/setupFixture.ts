@@ -64,6 +64,10 @@ export const SETUP_SHAPES = [
    * as while the host checks a model with the agent service, until
    * `finishPlanning` lets its plan reach review. */
   "start_held",
+  /** As `start_held`, but the start is in flight before any snapshot names
+   * its setup: nothing the window reads carries the run until
+   * `finishPlanning`, which lets the plan reach review and the start return. */
+  "start_unreported",
 ] as const;
 export type SetupShape = (typeof SETUP_SHAPES)[number];
 
@@ -225,6 +229,7 @@ function shaped(shape: SetupShape): Seed[] {
   switch (shape) {
     case "ready":
     case "start_held":
+    case "start_unreported":
       all.forEach((seed) => (seed.row = readied(seed.row)));
       break;
     case "google_signed_out":
@@ -302,6 +307,7 @@ export function setupFixture({
   const signedIn =
     shape === "ready" ||
     shape === "start_held" ||
+    shape === "start_unreported" ||
     shape === "partial" ||
     shape === "hardware";
   let google: GoogleAccount = {
@@ -346,6 +352,7 @@ export function setupFixture({
   let programReady =
     shape === "ready" ||
     shape === "start_held" ||
+    shape === "start_unreported" ||
     shape === "google_signed_out" ||
     shape === "partial" ||
     shape === "hardware";
@@ -980,6 +987,29 @@ export function setupFixture({
           failure,
         });
         return Promise.resolve(publish());
+      }
+      if (shape === "start_unreported" && chosen.length > 0) {
+        const id = `setup-${operations}`;
+        // The host is still checking the request: it has published nothing
+        // of this setup, so the start is in flight with no run to read.
+        return new Promise<DesktopSetup>((resolve) => {
+          heldStarts.set(id, (planned) => {
+            heldStarts.delete(id);
+            if (planned)
+              put({
+                item: wanted,
+                operation_id: id,
+                stage: "review",
+                review: review(chosen),
+                items: chosen.map(progress),
+                cancellable: true,
+                cancel_requested: false,
+                outcome: null,
+                failure: null,
+              });
+            resolve(publish());
+          });
+        });
       }
       if (shape === "start_held" && chosen.length > 0) {
         const id = `setup-${operations}`;
