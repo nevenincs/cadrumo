@@ -7,6 +7,8 @@ use crate::{
                 FakeLlamaCpp, HELPER_ARGUMENTS, HELPER_BUILD, HELPER_LOG, HELPER_MODE,
                 HELPER_MODELS, HELPER_READY_GATE, ModelStatus, Scripted,
             },
+            llama_server_folder_default,
+            models::record_context,
             program::{
                 Uncontained, announcement, announces, latest_start_failure,
                 tests::{ambient, answers, free_address},
@@ -19,6 +21,7 @@ use crate::{
 };
 use serde_json::json;
 use std::{
+    num::NonZeroU32,
     path::Path,
     time::{Duration, Instant},
 };
@@ -36,7 +39,7 @@ pub(crate) fn package(root: &Path) -> PathBuf {
 
 pub(crate) fn packaged(root: &Path) -> (LlamaServer, Locations) {
     let locations = Locations::under(&root.join("storage"));
-    let server = LlamaServer::packaged(&package(root), BUILD, &locations, LOAD_CONTEXT).unwrap();
+    let server = LlamaServer::packaged(&package(root), BUILD, &locations, Placement::Auto).unwrap();
     (server, locations)
 }
 
@@ -90,6 +93,18 @@ pub(crate) fn manifest(models: &Path, path: [&str; 4], layers: &[serde_json::Val
     fs::write(folder.join(tag), document.to_string()).unwrap();
 }
 
+/// Records `context` as the llama.cpp context of the model under
+/// `host/namespace/model/tag`, as a pull of a model that states one does.
+pub(crate) fn record(models: &Path, path: [&str; 4], context: u32) {
+    let [host, namespace, model, tag] = path;
+    record_context(
+        models,
+        &ModelName::parse(&format!("{host}/{namespace}/{model}:{tag}")).unwrap(),
+        NonZeroU32::new(context).unwrap(),
+    )
+    .unwrap();
+}
+
 /// Where the store keeps `bytes`, as a preset names it.
 fn value_of(models: &Path, bytes: &[u8]) -> String {
     let path = models
@@ -110,26 +125,71 @@ fn a_package_without_the_program_reports_it_not_packaged_and_never_starts_it() {
     let empty = root.path().join("package").join("bin").join("llama");
     fs::create_dir_all(&empty).unwrap();
     assert_eq!(
-        LlamaServer::packaged(&empty, BUILD, &locations, LOAD_CONTEXT).err(),
+        LlamaServer::packaged(&empty, BUILD, &locations, Placement::Auto).err(),
         Some(LlamaServerUnavailable::NotPackaged)
     );
     let folder = package(root.path());
     for build in ["12184", "b", "b12x", "0.40.10"] {
         assert_eq!(
-            LlamaServer::packaged(&folder, build, &locations, LOAD_CONTEXT).err(),
+            LlamaServer::packaged(&folder, build, &locations, Placement::Auto).err(),
             Some(LlamaServerUnavailable::Invalid),
             "{build}"
         );
     }
-    assert_eq!(
-        LlamaServer::packaged(&folder, BUILD, &locations, 0).err(),
-        Some(LlamaServerUnavailable::Invalid)
-    );
     assert!(!locations.programs.parent().unwrap().join(FOLDER).exists());
 }
 
 #[test]
-fn the_preset_presents_each_whole_model_with_its_context_and_projector() {
+fn the_default_engine_is_the_llama_server_where_the_package_carries_it_and_ollama_elsewhere() {
+    let root = tempfile::tempdir().unwrap();
+    let empty = root.path().join("empty");
+    fs::create_dir_all(&empty).unwrap();
+    for folder in [empty.as_path(), &root.path().join("absent")] {
+        assert!(!carried(folder));
+        assert_eq!(llama_server_folder_default(folder), LocalEngine::Ollama);
+    }
+    let folder = package(root.path());
+    assert!(carried(&folder));
+    assert_eq!(llama_server_folder_default(&folder), LocalEngine::LlamaCpp);
+    // The same check decides whether the package carries the program to run.
+    assert!(
+        LlamaServer::packaged(
+            &folder,
+            BUILD,
+            &Locations::under(root.path()),
+            Placement::Auto
+        )
+        .is_ok()
+    );
+    assert_eq!(
+        LlamaServer::packaged(
+            &empty,
+            BUILD,
+            &Locations::under(root.path()),
+            Placement::Auto
+        )
+        .err(),
+        Some(LlamaServerUnavailable::NotPackaged)
+    );
+}
+
+#[cfg(feature = "platform")]
+#[test]
+fn a_package_root_defaults_to_the_llama_server_it_carries_and_to_ollama_without_it() {
+    use crate::provisioning::{installation::package_path, local_ai::package_default_engine};
+    let root = tempfile::tempdir().unwrap();
+    let package = root.path().join("package");
+    fs::create_dir_all(&package).unwrap();
+    assert_eq!(package_default_engine(&package), LocalEngine::Ollama);
+    let folder = package_path(&package, cadrumo_platform::LLAMA_SERVER);
+    fs::create_dir_all(&folder).unwrap();
+    assert_eq!(package_default_engine(&package), LocalEngine::Ollama);
+    fs::copy(std::env::current_exe().unwrap(), folder.join(EXECUTABLE)).unwrap();
+    assert_eq!(package_default_engine(&package), LocalEngine::LlamaCpp);
+}
+
+#[test]
+fn the_preset_presents_each_whole_model_with_its_recorded_context_and_projector() {
     let root = tempfile::tempdir().unwrap();
     let models = root.path().join("models");
     let registry = ["registry.ollama.ai", "library"];
@@ -161,8 +221,27 @@ fn the_preset_presents_each_whole_model_with_its_context_and_projector() {
             blob(&models, PROJECTOR_MEDIA_TYPE, b"hf projector"),
         ],
     );
+    // Each of them states its own context.
+    record(
+        &models,
+        [registry[0], registry[1], "qwen3-vl", "4b-instruct"],
+        16384,
+    );
+    record(&models, [registry[0], registry[1], "qwen3", "1.7b"], 2048);
+    record(
+        &models,
+        ["huggingface.co", "Owner", "Model-GGUF", "Model-Q4_K_M"],
+        32768,
+    );
+    // A whole model whose pull stated no context presents nothing: no context is supplied
+    // for it.
+    manifest(
+        &models,
+        [registry[0], registry[1], "unrecorded", "latest"],
+        &[blob(&models, MODEL_MEDIA_TYPE, b"unrecorded weights")],
+    );
     // A model with a layer missing, one with no model layer and one with two present
-    // nothing.
+    // nothing, recorded context or not.
     let mut missing = blob(&models, MODEL_MEDIA_TYPE, b"gone");
     missing["size"] = json!(9999);
     manifest(
@@ -183,12 +262,16 @@ fn the_preset_presents_each_whole_model_with_its_context_and_projector() {
             blob(&models, MODEL_MEDIA_TYPE, b"second"),
         ],
     );
+    for broken in ["partial", "nothing", "twice"] {
+        record(&models, [registry[0], registry[1], broken, "latest"], 4096);
+    }
 
     let hf = "huggingface.co/Owner/Model-GGUF:Model-Q4_K_M";
+    // Automatic placement adds no key: the offload is the router's.
     let expected = format!(
-        "[{}]\nalias = {hf}\nmodel = {}\nmmproj = {}\nctx-size = 4096\n\n\
-         [{}]\nalias = qwen3-vl:4b-instruct\nmodel = {}\nmmproj = {}\nctx-size = 4096\n\n\
-         [{}]\nalias = qwen3:1.7b\nmodel = {}\nctx-size = 4096\n\n",
+        "[{}]\nalias = {hf}\nmodel = {}\nmmproj = {}\nctx-size = 32768\n\n\
+         [{}]\nalias = qwen3-vl:4b-instruct\nmodel = {}\nmmproj = {}\nctx-size = 16384\n\n\
+         [{}]\nalias = qwen3:1.7b\nmodel = {}\nctx-size = 2048\n\n",
         router_id(hf),
         value_of(&models, b"hf weights"),
         value_of(&models, b"hf projector"),
@@ -198,8 +281,39 @@ fn the_preset_presents_each_whole_model_with_its_context_and_projector() {
         router_id("qwen3:1.7b"),
         value_of(&models, b"text weights"),
     );
-    assert_eq!(preset(&models, 4096), expected);
-    assert_eq!(preset(&root.path().join("no-store"), 4096), "");
+    assert_eq!(preset(&models, Placement::Auto), expected);
+    // Processor only places no layer on a device, in every section.
+    let cpu_only = format!(
+        "[{}]\nalias = {hf}\nmodel = {}\nmmproj = {}\nctx-size = 32768\nn-gpu-layers = 0\n\n\
+         [{}]\nalias = qwen3-vl:4b-instruct\nmodel = {}\nmmproj = {}\nctx-size = 16384\n\
+         n-gpu-layers = 0\n\n\
+         [{}]\nalias = qwen3:1.7b\nmodel = {}\nctx-size = 2048\nn-gpu-layers = 0\n\n",
+        router_id(hf),
+        value_of(&models, b"hf weights"),
+        value_of(&models, b"hf projector"),
+        router_id("qwen3-vl:4b-instruct"),
+        value_of(&models, b"vision weights"),
+        value_of(&models, b"vision projector"),
+        router_id("qwen3:1.7b"),
+        value_of(&models, b"text weights"),
+    );
+    assert_eq!(preset(&models, Placement::CpuOnly), cpu_only);
+    for placement in [Placement::Auto, Placement::CpuOnly] {
+        assert_eq!(preset(&root.path().join("no-store"), placement), "");
+    }
+
+    // A record that cannot be read is no context, and its model is not presented.
+    let record_file = models
+        .join("cadrumo")
+        .join("llamacpp-context")
+        .join(registry[0])
+        .join(registry[1])
+        .join("qwen3")
+        .join("1.7b.json");
+    assert!(record_file.is_file());
+    fs::write(&record_file, br#"{"schema":1,"llamacpp_context":0}"#).unwrap();
+    assert!(!preset(&models, Placement::Auto).contains("alias = qwen3:1.7b\n"));
+    assert!(preset(&models, Placement::Auto).contains("alias = qwen3-vl:4b-instruct\n"));
 }
 
 #[test]
@@ -532,11 +646,16 @@ fn a_model_new_in_the_store_restarts_an_idle_router_and_waits_for_a_held_one_to_
     assert_eq!(process_id(&supervisor), idle);
 
     // A model arrives while nothing is loaded: the router is started again with it.
+    let small_path = ["registry.ollama.ai", "library", "qwen3", "1.7b"];
     manifest(
         &locations.models,
-        ["registry.ollama.ai", "library", "qwen3", "1.7b"],
+        small_path,
         &[blob(&locations.models, MODEL_MEDIA_TYPE, b"text weights")],
     );
+    // Until its pull records its context the store does not present it.
+    assert_running(&mut supervisor, now);
+    assert_eq!(process_id(&supervisor), idle);
+    record(&locations.models, small_path, 4096);
     // Until the next look the running router does not present it, and says so.
     assert_eq!(load(&folder, &small), Err(LoadRefused::NotPresented));
     assert_running(&mut supervisor, now);
@@ -560,11 +679,13 @@ fn a_model_new_in_the_store_restarts_an_idle_router_and_waits_for_a_held_one_to_
 
     // Another arrives while the router holds a model: the model in use is never
     // unloaded for it, and the router drains, refusing every new load for a retry.
+    let large_path = ["registry.ollama.ai", "library", "qwen3", "4b"];
     manifest(
         &locations.models,
-        ["registry.ollama.ai", "library", "qwen3", "4b"],
+        large_path,
         &[blob(&locations.models, MODEL_MEDIA_TYPE, b"more weights")],
     );
+    record(&locations.models, large_path, 4096);
     assert_running(&mut supervisor, now);
     assert_eq!(process_id(&supervisor), restarted);
     // The drain's marker is written at the first look; the looks after it leave it alone.
@@ -605,6 +726,82 @@ fn a_model_new_in_the_store_restarts_an_idle_router_and_waits_for_a_held_one_to_
     assert_eq!(load(&folder, &large), Ok(()));
 }
 
+#[test]
+fn a_changed_placement_or_context_restarts_an_idle_router_and_waits_for_a_held_model() {
+    let root = tempfile::tempdir().unwrap();
+    let (mut server, locations) = packaged(root.path());
+    stand_in(
+        &mut server,
+        BUILD_INFO,
+        &[(HELPER_MODELS, OsStr::new("qwen3:1.7b"))],
+    );
+    let path = ["registry.ollama.ai", "library", "qwen3", "1.7b"];
+    manifest(
+        &locations.models,
+        path,
+        &[blob(&locations.models, MODEL_MEDIA_TYPE, b"text weights")],
+    );
+    record(&locations.models, path, 4096);
+    // The manager keeps the handle and the supervisor the server.
+    let placement = server.placement_handle();
+    assert_eq!(placement.get(), Placement::Auto);
+    let mut supervisor = supervisor(server, free_address());
+    let now = Instant::now();
+    assert_running(&mut supervisor, now);
+    let first = process_id(&supervisor);
+    let folder = server_folder(&locations).unwrap();
+    let preset_file = folder.join(PRESET);
+    let model = name("qwen3:1.7b");
+    let served = || fs::read_to_string(&preset_file).unwrap();
+    assert!(served().contains("ctx-size = 4096\n"));
+    assert!(!served().contains("n-gpu-layers"));
+
+    // The placement changes while nothing is loaded: the router starts again with it.
+    placement.set(Placement::CpuOnly);
+    assert_eq!(placement.get(), Placement::CpuOnly);
+    assert_running(&mut supervisor, now);
+    let processor = process_id(&supervisor);
+    assert_ne!(processor, first);
+    assert!(served().contains("ctx-size = 4096\nn-gpu-layers = 0\n"));
+    assert_eq!(
+        supervisor.next_due(),
+        None,
+        "a fresh start is no crash and schedules nothing"
+    );
+
+    // The placement changes back while the router holds the model: the model in use is
+    // never unloaded for it, and the router drains as for a changed store.
+    assert_eq!(load(&folder, &model), Ok(()));
+    placement.set(Placement::Auto);
+    assert_running(&mut supervisor, now);
+    assert_eq!(process_id(&supervisor), processor);
+    assert!(folder.join(RESTARTING).exists());
+    assert_eq!(presentation(&folder, &model), Presentation::Restarting);
+    assert_eq!(load(&folder, &model), Err(LoadRefused::Restarting));
+    let router = supervisor.program().server().unwrap().loopback();
+    let (status, _) = router
+        .post("/models/unload", br#"{"model":"qwen3:1.7b"}"#)
+        .unwrap();
+    assert_eq!(status, 200);
+    assert_running(&mut supervisor, now);
+    let automatic = process_id(&supervisor);
+    assert_ne!(automatic, processor);
+    assert!(!folder.join(RESTARTING).exists());
+    assert!(!served().contains("n-gpu-layers"));
+
+    // A placement set to what the router already serves is no change.
+    placement.set(Placement::Auto);
+    assert_running(&mut supervisor, now);
+    assert_eq!(process_id(&supervisor), automatic);
+
+    // A new context recorded for the model is a changed preset too.
+    record(&locations.models, path, 2048);
+    assert_running(&mut supervisor, now);
+    assert_ne!(process_id(&supervisor), automatic);
+    assert!(served().contains("ctx-size = 2048\n"));
+    assert_eq!(presentation(&folder, &model), Presentation::Presented);
+}
+
 /// A router answered from the test process, recorded in `folder` as the running server
 /// of process `process_id`, presenting `models`.
 fn recorded_router(folder: &Path, fake: &FakeLlamaCpp, process_id: u32, models: &[&str]) {
@@ -627,7 +824,7 @@ fn recorded_router(folder: &Path, fake: &FakeLlamaCpp, process_id: u32, models: 
     for model in models {
         let _ = write!(
             preset,
-            "[{}]\nalias = {model}\nmodel = /m\nctx-size = 8192\n\n",
+            "[{}]\nalias = {model}\nmodel = /m\nctx-size = 4096\n\n",
             router_id(model)
         );
         state

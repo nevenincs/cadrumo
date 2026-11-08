@@ -52,7 +52,8 @@ const BROWSER_PASSED_THROUGH: &[&str] = &[
     "LC_ALL",
 ];
 
-fn package_path(package: &Path, relative: &str) -> PathBuf {
+/// `relative`, a `/`-separated package path, under the package root `package`.
+pub(crate) fn package_path(package: &Path, relative: &str) -> PathBuf {
     relative
         .split('/')
         .filter(|part| !part.is_empty() && *part != ".")

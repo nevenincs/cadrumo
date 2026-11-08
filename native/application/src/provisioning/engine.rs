@@ -66,7 +66,7 @@ use super::{
     local_ai::{
         self, LocalAiError, LocalEngine, NotRunningCause, Placement, StartFailureKind,
         hardware::Hardware,
-        llama_server::{self, LOAD_CONTEXT, LlamaServer, LlamaServerUnavailable, Presentation},
+        llama_server::{self, LlamaServer, LlamaServerUnavailable, Presentation},
         models::{LocalModels, ModelName, Models},
         program::{Program, START_BUDGET, Server},
         supervision::EngineProgram,
@@ -602,7 +602,9 @@ impl Engine {
             activity: ActivityStore::new(config.locations.activity.clone())?,
             receipts: ReceiptStore::new(config.locations.receipts.clone())?,
             local_models: LocalModels::default(),
-            local_engine: LocalEngine::default(),
+            // Until the person's choice is selected, the default follows what the
+            // package carries.
+            local_engine: local_ai::llama_server_folder_default(&config.llama_server_folder),
             config,
             #[cfg(test)]
             browser_leading: Vec::new(),
@@ -621,7 +623,8 @@ impl Engine {
 
     /// Selects the local engine every later command plans, sets up, checks and removes
     /// the local AI for: the person's selection, the one the runtime manager runs the
-    /// server of. It replaces any earlier selection; until then the default engine is.
+    /// server of. It replaces any earlier selection; until then the engine is the package's
+    /// default, as `local_ai::package_default_engine` reads it.
     pub fn select_local_engine(&mut self, engine: LocalEngine) {
         self.local_engine = engine;
     }
@@ -923,7 +926,7 @@ impl Engine {
                     &self.config.llama_server_folder,
                     &self.config.llama_server_build,
                     &self.config.locations,
-                    LOAD_CONTEXT,
+                    self.config.placement,
                 )
                 .map_err(|reason| match reason {
                     LlamaServerUnavailable::NotPackaged => NoProgram::NotInThisBuild,

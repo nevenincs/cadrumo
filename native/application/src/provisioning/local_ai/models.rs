@@ -31,6 +31,14 @@
 //! present the model, and the full check has the router list it, load it, generate one
 //! token with it and unload it ([`llama_server::check_model`]); no Ollama server is asked.
 //!
+//! Beside the store the engine keeps one record of its own for each model that states a
+//! llama.cpp context: the context the llama-server router loads it with. It lies outside
+//! `manifests/` and `blobs/`, the only folders Ollama reads, so Ollama never sees it. A pull
+//! records the context of the model it was given, also when the model is already stored
+//! whole and nothing is fetched, a new value replaces the old one, and removing a model
+//! removes its record. A model with no recorded context is stored and checked as the store
+//! reads it, and is not presented to the router, so no context is ever supplied for it.
+//!
 //! Role fitness, how well a model answers for its role, is no part of this state: it
 //! is the consumer's admission check.
 
@@ -55,7 +63,7 @@ use crate::{
     },
     value::{HostName, Sha256Digest},
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::{
     collections::BTreeSet,
     fmt, io,
@@ -75,6 +83,24 @@ const ROLE_LIMIT: usize = 64;
 pub(super) const MANIFEST_BYTES_LIMIT: u64 = 1024 * 1024;
 /// What the one-token check asks.
 const CHECK_PROMPT: &str = "Reply with one word.";
+/// The folder in the models folder that holds the engine's own records about stored models.
+/// Ollama reads only `manifests` and `blobs`, so nothing here reaches it.
+pub(super) const CADRUMO_FOLDER: &str = "cadrumo";
+/// The folder in [`CADRUMO_FOLDER`] that holds one record of the llama.cpp context of each
+/// model that states one, at the model's own `<host>/<namespace>/<model>/<tag>.json`.
+pub(super) const CONTEXT_FOLDER: &str = "llamacpp-context";
+/// The schema of a context record.
+const CONTEXT_SCHEMA: u32 = 1;
+/// The longest context record the engine reads.
+const CONTEXT_BYTES_LIMIT: u64 = 4096;
+
+/// What the context record of one model holds. Zero cannot be recorded or read.
+#[derive(Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+struct ContextRecord {
+    schema: u32,
+    llamacpp_context: NonZeroU32,
+}
 
 #[derive(Deserialize)]
 struct Layer {
@@ -170,14 +196,70 @@ impl ModelName {
         &self.tag
     }
 
-    /// Where the models folder under `root` keeps this model's manifest.
-    pub(super) fn manifest_path(&self, root: &Path) -> PathBuf {
-        root.join("manifests")
-            .join(self.host.as_str())
+    /// The model's place in the store, `<host>/<namespace>/<model>/<tag>`: where its
+    /// manifest lies under `manifests`.
+    fn stored_place(&self) -> PathBuf {
+        Path::new(self.host.as_str())
             .join(&self.namespace)
             .join(&self.model)
             .join(&self.tag)
     }
+
+    /// Where the models folder under `root` keeps this model's manifest.
+    pub(super) fn manifest_path(&self, root: &Path) -> PathBuf {
+        root.join("manifests").join(self.stored_place())
+    }
+
+    /// Where the models folder under `root` keeps the llama.cpp context recorded for this
+    /// model.
+    fn context_path(&self, root: &Path) -> PathBuf {
+        context_record_path(root, &self.stored_place())
+    }
+}
+
+/// Where the models folder `root` keeps the llama.cpp context of the model whose manifest
+/// lies at `place` under `manifests`: the same place under the context folder, with
+/// `.json` added to the tag. The tag is added to, never replaced, since a tag may hold a
+/// dot.
+fn context_record_path(root: &Path, place: &Path) -> PathBuf {
+    let mut record = root
+        .join(CADRUMO_FOLDER)
+        .join(CONTEXT_FOLDER)
+        .join(place)
+        .into_os_string();
+    record.push(".json");
+    PathBuf::from(record)
+}
+
+/// Records `context` as the llama.cpp context of the model `name` in the models folder
+/// `root`, replacing any earlier value atomically. A link in the way is refused.
+pub(crate) fn record_context(
+    root: &Path,
+    name: &ModelName,
+    context: NonZeroU32,
+) -> Result<(), Error> {
+    let path = name.context_path(root);
+    let folder = path
+        .parent()
+        .ok_or_else(|| invalid("context record location"))?;
+    filesystem::refuse_links(folder)?;
+    std::fs::create_dir_all(folder)?;
+    filesystem::replace_json(
+        &path,
+        &ContextRecord {
+            schema: CONTEXT_SCHEMA,
+            llamacpp_context: context,
+        },
+    )
+}
+
+/// The llama.cpp context recorded for the model `name` in the models folder `root`; `None`
+/// when there is none, or the record is a link, too long, of another schema, holds more than
+/// it should or is zero.
+pub(crate) fn recorded_context(root: &Path, name: &ModelName) -> Option<NonZeroU32> {
+    let bytes = filesystem::bounded_bytes(&name.context_path(root), CONTEXT_BYTES_LIMIT).ok()?;
+    let record: ContextRecord = serde_json::from_slice(&bytes).ok()?;
+    (record.schema == CONTEXT_SCHEMA).then_some(record.llamacpp_context)
 }
 
 /// The shortest spelling the program reads as this model: the default registry and
@@ -584,12 +666,17 @@ impl Models {
     /// fetched manifest or the declaration states, and [`Pulled::bytes`] is that total, so
     /// a setup that fetches several models advances its running offset by what each
     /// reported rather than by the size a catalogue stated.
+    ///
+    /// The llama.cpp context the model states is recorded whether or not anything was
+    /// fetched, so a model stored before it had one needs no new download to be presented. A
+    /// pull of a model that states none leaves any earlier record as it was.
     pub fn pull(
         &self,
         model: &SelectedModel,
         transfer: &mut Transfer<'_>,
     ) -> Result<Pulled, LocalAiError> {
         if self.installed(model.name()) == Observation::Present {
+            self.record_stated_context(model)?;
             let bytes = self.download_bytes(model);
             if let Some(size) = bytes {
                 (transfer.events)(TransferEvent::Progress {
@@ -615,18 +702,29 @@ impl Models {
         if self.installed(model.name()) != Observation::Present {
             return Err(LocalAiError::Failed(FailureCategory::DamagedDownload));
         }
+        self.record_stated_context(model)?;
         Ok(Pulled {
             observation: Observation::Present,
             bytes,
         })
     }
 
-    /// Removes every selected model the models folder holds: its manifest, then the
-    /// partial bytes of any fetch that never finished and every layer that no manifest left
-    /// there uses, which includes layers an earlier removal or fetch left unused. A model
-    /// kept beside them keeps its layers, and when any kept manifest cannot be read, every
-    /// layer stays. The caller holds the local AI item's writer lock, so no fetch is
-    /// writing to the store.
+    /// Records the llama.cpp context `model` states, if it states one.
+    fn record_stated_context(&self, model: &SelectedModel) -> Result<(), LocalAiError> {
+        match model.llamacpp_context {
+            Some(context) => {
+                record_context(&self.root, model.name(), context).map_err(LocalAiError::Engine)
+            }
+            None => Ok(()),
+        }
+    }
+
+    /// Removes every selected model the models folder holds: its manifest and its recorded
+    /// llama.cpp context, then the partial bytes of any fetch that never finished and every
+    /// layer that no manifest left there uses, which includes layers an earlier removal or
+    /// fetch left unused. A model kept beside them keeps its layers and its context, and when
+    /// any kept manifest cannot be read, every layer stays. The caller holds the local AI
+    /// item's writer lock, so no fetch is writing to the store.
     pub fn remove(&self) -> Result<(), Error> {
         self.remove_manifests(
             &self
@@ -684,12 +782,27 @@ impl Models {
                 );
             }
         }
+        // A removed model keeps no context record, whether or not its manifest was there.
+        for manifest in selected {
+            self.remove_context_of(manifest)?;
+        }
         // Bytes of a fetch that never finished belong to no manifest, kept or not.
         self.clear_partial()?;
         if unreadable {
             return Ok(());
         }
         self.remove_unreferenced_blobs(&kept)
+    }
+
+    /// Deletes the recorded llama.cpp context of the model whose manifest was at `manifest`,
+    /// when it has one.
+    fn remove_context_of(&self, manifest: &Path) -> Result<(), Error> {
+        let Ok(place) = manifest.strip_prefix(self.root.join("manifests")) else {
+            return Ok(());
+        };
+        let record = context_record_path(&self.root, place);
+        filesystem::refuse_links(&record)?;
+        remove_if_present(&record)
     }
 
     /// Deletes the files the partial folder holds: blobs still arriving and manifests not
