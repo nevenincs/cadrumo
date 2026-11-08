@@ -207,6 +207,10 @@ export function useSignIn(host: Host) {
   const [signOutFailure, setSignOutFailure] = useState<SignInRefusal | null>(
     null,
   );
+  // Whether this window asked the signed-in session to end. The views of that
+  // session stop reading from the ask, not from the status read that follows:
+  // the host announces the end to every observer before that read answers.
+  const sessionEnding = useRef(false);
   const request = useRef(0);
   const invalidation = useRef(0);
   const transport = useRef(host);
@@ -560,6 +564,14 @@ export function useSignIn(host: Host) {
           (settledPhase === "checking" || settledPhase === "services-down")
         ? "starting"
         : settledPhase;
+  // A session signed in to after the ask is a new one, not the one that ended.
+  const signedInPhase = phase === "signed-in";
+  const wasSignedIn = useRef(signedInPhase);
+  useEffect(() => {
+    if (signedInPhase && !wasSignedIn.current) sessionEnding.current = false;
+    wasSignedIn.current = signedInPhase;
+  }, [signedInPhase]);
+  const sessionEnded = useCallback(() => sessionEnding.current, []);
   const startServices = async (scope?: "user" | "machine") => {
     if (!host.startManager || startingManager.current || submitting.current)
       return;
@@ -816,6 +828,7 @@ export function useSignIn(host: Host) {
         !managerAllows()
       )
         return;
+      sessionEnding.current = true;
       const remaining = await host.signOut();
       if (
         !mounted.current ||
@@ -825,6 +838,8 @@ export function useSignIn(host: Host) {
         return;
       setRemaining(remaining);
     } catch (error) {
+      // A sign-out that failed leaves the session as it was.
+      sessionEnding.current = false;
       if (mounted.current && generation === request.current)
         setSignOutFailure(refusalFrom(error));
     } finally {
@@ -876,6 +891,10 @@ export function useSignIn(host: Host) {
     startServices,
     remaining,
     signOutFailure,
+    /** Whether this window asked the signed-in session to end and it has not
+     * been signed in to since. A read of that session that is refused for it
+     * is no longer wanted by anyone. */
+    sessionEnded,
     gated: GATED.has(phase),
     canSignIn: canSignIn(phase),
     submit,

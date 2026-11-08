@@ -41,11 +41,23 @@ def _overview(facts: tuple[UserProfileFact, ...]):
 
 def test_a_claimed_iva_block_lists_every_path_it_owes() -> None:
     """DISCRIMINATING: the paths the projection refuses without are reported missing."""
-    overview = _overview((UserProfileFact(path="iva.regime", value="GENERAL"),))
+    overview = _overview((UserProfileFact(path="iva.regime", value="SIMPLIFICADO"),))
 
     assert set(_IVA_BLOCK_OWED) <= set(overview.missing_required)
     rows = {field.path: field for section in overview.sections for field in section.fields}
     assert all(rows[path].required for path in _IVA_BLOCK_OWED)
+
+
+def test_the_general_regime_does_not_ask_for_the_modelo_303_composition() -> None:
+    """DISCRIMINATING: a general-regime filer's composition is settled, so only the rest of the block is owed."""
+    overview = _overview((UserProfileFact(path="iva.regime", value="GENERAL"),))
+
+    rows = {field.path: field for section in overview.sections for field in section.fields}
+    assert "iva.m303_regime_composition" not in overview.missing_required
+    assert not rows["iva.m303_regime_composition"].required
+    rest = set(_IVA_BLOCK_OWED) - {"iva.m303_regime_composition"}
+    assert rest <= set(overview.missing_required)
+    assert all(rows[path].required for path in rest)
 
 
 def test_an_unclaimed_iva_block_owes_nothing() -> None:

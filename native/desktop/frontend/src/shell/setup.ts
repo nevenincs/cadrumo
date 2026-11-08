@@ -24,6 +24,18 @@ import type { Setup } from "./host";
 // sign-in and sign-out, so the newest revision wins, whichever way it came,
 // and a sign-in keeps every setup on screen.
 
+/** A command's refusal, tagged with what it asked for, so the surface that
+ * asked says it and no other does. */
+export type SetupRefusal = {
+  /** The item the refused command named; null for a check, a verification
+   * or the Google account's sign-in. */
+  item: SetupItemId | null;
+  /** The model download the refused start asked for, if it asked for one. */
+  download: SetupModelDownload | null;
+  /** The host's code; never shown as it is. */
+  code: string;
+};
+
 export type SetupControl = {
   /** Whether this window offers setup now: the host serves it. */
   offered: boolean;
@@ -37,9 +49,13 @@ export type SetupControl = {
    * while its plan is worked out, or one naming no item, is waiting for its
    * answer. Another item's command leaves them free. */
   busy(item: SetupItemId): boolean;
-  /** Why the last command was refused, as its code; null once another one
-   * is sent or it is put away. Never shown as it is. */
-  refusal: string | null;
+  /** Whether a start naming `item` is waiting for its answer: from the click
+   * until the host answers, whether or not a snapshot carries its run yet. A
+   * check, a verification or the Google account's command is not one. */
+  startingOf(item: SetupItemId): boolean;
+  /** Why the last command was refused, and what it asked for; null once
+   * another one is sent or it is put away. */
+  refusal: SetupRefusal | null;
   check(mode: SetupCheckMode): void;
   verify(items: SetupItemId[] | null): void;
   /** Sets up one item, beside any other item's setup. `resume` after an
@@ -185,7 +201,8 @@ export function useSetup(
   const [commands, setCommands] = useState({
     pending: 0,
     items: {} as Partial<Record<SetupItemId, number>>,
-    refusal: null as string | null,
+    starts: {} as Partial<Record<SetupItemId, number>>,
+    refusal: null as SetupRefusal | null,
   });
 
   const accept = useCallback(
@@ -246,7 +263,13 @@ export function useSetup(
   const send = useCallback(
     (
       act: (served: Setup) => Promise<DesktopSetup>,
-      item: SetupItemId | null = null,
+      scope: {
+        item: SetupItemId;
+        /** The model download a start asks for. */
+        download?: SetupModelDownload;
+        /** Whether the command is the item's start. */
+        start?: boolean;
+      } | null = null,
     ) => {
       if (!setup) return;
       // A command naming an item holds that item's controls alone, so a
@@ -254,16 +277,28 @@ export function useSetup(
       const counted = (
         held: typeof commands,
         by: number,
-      ): Pick<typeof commands, "pending" | "items"> =>
-        item === null
-          ? { pending: Math.max(0, held.pending + by), items: held.items }
-          : {
-              pending: held.pending,
-              items: {
-                ...held.items,
-                [item]: Math.max(0, (held.items[item] ?? 0) + by),
-              },
-            };
+      ): Pick<typeof commands, "pending" | "items" | "starts"> => {
+        if (scope === null)
+          return {
+            pending: Math.max(0, held.pending + by),
+            items: held.items,
+            starts: held.starts,
+          };
+        const { item } = scope;
+        return {
+          pending: held.pending,
+          items: {
+            ...held.items,
+            [item]: Math.max(0, (held.items[item] ?? 0) + by),
+          },
+          starts: scope.start
+            ? {
+                ...held.starts,
+                [item]: Math.max(0, (held.starts[item] ?? 0) + by),
+              }
+            : held.starts,
+        };
+      };
       setCommands((held) => ({ ...held, ...counted(held, 1), refusal: null }));
       act(setup)
         .then(checked)
@@ -276,7 +311,11 @@ export function useSetup(
             setCommands((held) => ({
               ...held,
               ...counted(held, -1),
-              refusal: failureCode(error),
+              refusal: {
+                item: scope?.item ?? null,
+                download: scope?.download ?? null,
+                code: failureCode(error),
+              },
             })),
         );
     },
@@ -300,7 +339,7 @@ export function useSetup(
   );
 
   const pending = commands.pending > 0;
-  const { items: waiting, refusal } = commands;
+  const { items: waiting, starts: starting, refusal } = commands;
   return useMemo(
     (): SetupControl => ({
       offered,
@@ -308,25 +347,29 @@ export function useSetup(
       snapshot,
       pending,
       busy: (item) => pending || (waiting[item] ?? 0) > 0,
+      startingOf: (item) => (starting[item] ?? 0) > 0,
       refusal,
       check: (mode) => send((served) => served.check(mode)),
       verify: (items) => send((served) => served.verify(items)),
       start: (item, options) =>
-        send((served) => served.start(item, options), item),
+        send((served) => served.start(item, options), {
+          item,
+          download: options?.download,
+          start: true,
+        }),
       answer: (item, decision) => {
         const run = runOf(current.current, item);
         if (!run || run.stage !== "review" || !run.review) return;
         const { operation_id: operationId } = run;
         const { plan_digest: planDigest } = run.review;
-        send(
-          (served) => served.answer(operationId, planDigest, decision),
+        send((served) => served.answer(operationId, planDigest, decision), {
           item,
-        );
+        });
       },
       cancel: (item) => {
         const run = liveRunOf(current.current, item);
         if (!run) return;
-        send((served) => served.cancel(run.operation_id), item);
+        send((served) => served.cancel(run.operation_id), { item });
       },
       removeModel: (model) => removal(setup?.removeModel(model)),
       remove: (what) => removal(setup?.remove(what)),
@@ -337,6 +380,17 @@ export function useSetup(
           held.refusal === null ? held : { ...held, refusal: null },
         ),
     }),
-    [offered, read, snapshot, pending, waiting, refusal, send, setup, removal],
+    [
+      offered,
+      read,
+      snapshot,
+      pending,
+      waiting,
+      starting,
+      refusal,
+      send,
+      setup,
+      removal,
+    ],
   );
 }

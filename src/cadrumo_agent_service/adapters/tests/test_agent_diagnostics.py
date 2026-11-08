@@ -15,6 +15,7 @@ from cadrumo.core import logging as project_logging
 from cadrumo.core.config import override_settings
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_path
+from cadrumo.core.traceback_summary import TRACEBACK_FRAMES
 from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS, eventually, finishes
 
 from ..agent_diagnostics import AgentDiagnosticLines, AgentDiagnosticSink
@@ -190,6 +191,114 @@ def test_a_relayed_worker_record_keeps_its_exception_detail(log_file: Path) -> N
     assert written.count("relayed probe") == 1
     assert "RuntimeError: diagnostic failure" in written
     assert "PRIVATE-TOOL-CANARY" not in written
+
+
+_SINK_LOGGER = "cadrumo_agent_service.adapters.agent_diagnostics"
+
+_CANARIES = ("Lucía Fernández", "12345678Z", "hunter2", "ES9121000418450200051332", "PRIVATE-PROMPT-CANARY")
+
+_GATEWAY_HEAD = (
+    "Traceback (most recent call last):\n"
+    '  File "C:\\Users\\Lucía Fernández\\gateway\\app.py", line 214, in handle_chat\n'
+    "    reply = await send(prompt='PRIVATE-PROMPT-CANARY')\n"
+)
+
+_GATEWAY_TAIL = (
+    '  File "/srv/gateway/provider.py", line 88, in Provider.send\n'
+    "    raise ProviderError(message)\n"
+    "gateway.errors.ProviderError: Lucía Fernández NIF 12345678Z password=hunter2 IBAN ES9121000418450200051332\n"
+)
+
+
+class _Records(logging.Handler):
+    def __init__(self) -> None:
+        super().__init__(logging.DEBUG)
+        self.records: list[logging.LogRecord] = []
+
+    @override
+    def emit(self, record: logging.LogRecord) -> None:
+        self.records.append(record)
+
+
+@pytest.fixture
+def sink_records() -> Iterator[_Records]:
+    handler = _Records()
+    logger = logging.getLogger(_SINK_LOGGER)
+    logger.addHandler(handler)
+    try:
+        yield handler
+    finally:
+        logger.removeHandler(handler)
+
+
+def _summaries(handler: _Records) -> list[logging.LogRecord]:
+    return [record for record in handler.records if record.getMessage() == "agent_traceback_summarized"]
+
+
+def test_a_gateway_traceback_is_recorded_as_its_type_and_frames_without_its_message(
+    log_file: Path, sink_records: _Records
+) -> None:
+    """The cause of a gateway failure reaches the log as identifiers alone, with every canary of its message absent."""
+    framing = AgentDiagnosticLines(AgentDiagnosticSink(), pid=77)
+    # A diagnostic record another thread wrote arrives between two lines of the block.
+    framing.feed(_GATEWAY_HEAD.encode())
+    framing.feed(_line(2, message="interleaved diagnostic"))
+    framing.feed(_GATEWAY_TAIL.encode())
+    framing.finish()
+    written = _read(log_file)
+    (record,) = _summaries(sink_records)
+    assert record.__dict__["traceback_type"] == "gateway.errors.ProviderError"
+    assert record.__dict__["traceback_origin"] == "provider.py:88:Provider.send"
+    assert record.__dict__["traceback_frames"] == "provider.py:88:Provider.send <- app.py:214:handle_chat"
+    assert "interleaved diagnostic" in written
+    assert "provider.py:88:Provider.send" in written
+    for canary in _CANARIES:
+        assert canary not in written
+        assert canary not in str(record.__dict__)
+        assert canary not in record.getMessage()
+
+
+def test_a_traceback_names_only_its_innermost_frames(log_file: Path, sink_records: _Records) -> None:
+    frames = "".join(f'  File "deep.py", line {line}, in step_{line}\n    step()\n' for line in range(1, 400))
+    framing = AgentDiagnosticLines(AgentDiagnosticSink(), pid=77)
+    framing.feed(f"Traceback (most recent call last):\n{frames}RecursionError: depth\n".encode())
+    framing.finish()
+    (record,) = _summaries(sink_records)
+    named = str(record.__dict__["traceback_frames"]).split(" <- ")
+    assert len(named) == TRACEBACK_FRAMES
+    assert named[0] == "deep.py:399:step_399"
+    assert named[-1] == f"deep.py:{400 - TRACEBACK_FRAMES}:step_{400 - TRACEBACK_FRAMES}"
+
+
+def test_a_block_that_never_ends_is_abandoned_and_counted(log_file: Path, sink_records: _Records) -> None:
+    framing = AgentDiagnosticLines(AgentDiagnosticSink(), pid=77)
+    framing.feed(b"Traceback (most recent call last):\n")
+    for _ in range(5000):
+        framing.feed(b'  File "loop.py", line 3, in spin\n')
+    framing.feed(b"RuntimeError: PRIVATE-LATE-CANARY\n")
+    framing.finish()
+    written = _read(log_file)
+    assert not _summaries(sink_records)
+    assert "agent_diagnostic_traceback_abandoned" in written
+    assert "PRIVATE-LATE-CANARY" not in written
+
+
+def test_a_block_that_is_not_a_traceback_names_no_frames_and_is_counted(log_file: Path, sink_records: _Records) -> None:
+    framing = AgentDiagnosticLines(AgentDiagnosticSink(), pid=77)
+    framing.feed(b"fatal: cannot open store for PRIVATE-JUNK-CANARY\n")
+    framing.feed(b'  File "junk.py", line 3, in orphan\n')
+    framing.feed(b"Traceback (most recent call last):\n")
+    framing.feed(b"PRIVATE-HEADERLESS-CANARY\n")
+    framing.feed(b"Traceback (most recent call last):\n")
+    framing.feed(b"  not a frame PRIVATE-INDENTED-CANARY\n")
+    framing.feed(b"123456789Z: PRIVATE-TYPE-CANARY\n")
+    framing.finish()
+    written = _read(log_file)
+    assert not _summaries(sink_records)
+    assert "agent_diagnostic_record_rejected" in written
+    assert "agent_diagnostic_traceback_unreadable" in written
+    assert "PRIVATE-" not in written
+    assert "junk.py" not in written
 
 
 class _StalledLog(logging.Handler):

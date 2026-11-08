@@ -62,10 +62,6 @@ _grounding_index_flights: dict[str, threading.Event] = {}
 _grounding_index_cache_lock = threading.Lock()
 
 
-class _GroundingWalkAbandonedError(Exception):
-    """A background walk stopped early because its owner is shutting down."""
-
-
 def build_profile_grounding_index(
     operation: PinnedAuthorityOperation,
 ) -> Mapping[str, ProfileKeyGrounding]:
@@ -94,11 +90,15 @@ def build_profile_grounding_index(
         claim = _claim_grounding_walk(cache_key)
         if isinstance(claim, _CachedGrounding):
             return claim.index
-        if isinstance(claim, _OwnedWalk):
-            return _walk_and_cache(operation, claim, abandoned=None)
-        # The owner sets its flight whether it cached or failed; a failed walk
-        # leaves no cache entry, so this caller then claims the next walk.
-        claim.flight.wait()
+        if isinstance(claim, _WalkUnderWay):
+            # The owner sets its flight whether it cached, failed or was
+            # abandoned; without a cache entry this caller claims the next walk.
+            claim.flight.wait()
+            continue
+        # This walk polls no abandonment, so it returns an index or raises.
+        index = _walk_and_cache(operation, claim, abandoned=None)
+        if index is not None:
+            return index
 
 
 def warm_profile_grounding_index(
@@ -119,11 +119,7 @@ def warm_profile_grounding_index(
     claim = _claim_grounding_walk(operation.generation.logical_generation)
     if not isinstance(claim, _OwnedWalk):
         return False
-    try:
-        _walk_and_cache(operation, claim, abandoned=abandoned)
-    except _GroundingWalkAbandonedError:
-        return False
-    return True
+    return _walk_and_cache(operation, claim, abandoned=abandoned) is not None
 
 
 @dataclass(frozen=True, slots=True)
@@ -161,10 +157,15 @@ def _walk_and_cache(
     claim: _OwnedWalk,
     *,
     abandoned: Callable[[], bool] | None,
-) -> Mapping[str, ProfileKeyGrounding]:
-    """Run the claimed walk, cache a completed index and always release the claim."""
+) -> Mapping[str, ProfileKeyGrounding] | None:
+    """Run the claimed walk, cache a completed index and always release the claim.
+
+    Returns ``None``, caching nothing, when ``abandoned`` stopped the walk.
+    """
     try:
         index = _compute_profile_grounding_index(operation, abandoned=abandoned)
+        if index is None:
+            return None
         with _grounding_index_cache_lock:
             _grounding_index_cache[claim.cache_key] = index
             while len(_grounding_index_cache) > _GROUNDING_INDEX_CACHE_MAXSIZE:
@@ -181,15 +182,18 @@ def _compute_profile_grounding_index(
     operation: PinnedAuthorityOperation,
     *,
     abandoned: Callable[[], bool] | None = None,
-) -> Mapping[str, ProfileKeyGrounding]:
-    """Perform the uncached registry walk :func:`build_profile_grounding_index` memoises."""
+) -> Mapping[str, ProfileKeyGrounding] | None:
+    """Perform the uncached registry walk :func:`build_profile_grounding_index` memoises.
+
+    Returns ``None`` once ``abandoned`` answers true between revisions.
+    """
     modelos: dict[str, set[str]] = {}
     legal_refs: dict[str, set[str]] = {}
     source_refs: dict[str, set[str]] = {}
 
     for modelo_id, revision_id in operation.revision_ids():
         if abandoned is not None and abandoned():
-            raise _GroundingWalkAbandonedError
+            return None
         revision = operation.revision(modelo_id, revision_id)
         for binding in revision.bindings:
             if binding.source is not BindingSourceKind.PROFILE:

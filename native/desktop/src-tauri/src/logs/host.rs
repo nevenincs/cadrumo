@@ -347,7 +347,7 @@ pub(super) fn entry(event: &Event) -> Entry {
             message.push_str(&format!(": {command}"));
             context.insert("command".into(), Value::from(command.clone()));
         }
-        if let Some(code) = fact.code {
+        if let Some(code) = fact.code.as_ref() {
             message.push_str(&format!(": {}", token(code)));
             context.insert("reason_code".into(), Value::from(token(code)));
         }

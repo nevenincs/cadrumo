@@ -48,18 +48,20 @@ _AEAT_NOMBRE: dict[CCAA, str] = {
     CCAA.from_registry("murcia"): "REGIÓN DE MURCIA",
     CCAA.from_registry("la_rioja"): "LA RIOJA",
     CCAA.from_registry("comunidad_valenciana"): "C. VALENCIANA",
+    CCAA.from_registry("ceuta"): "CIUDAD DE CEUTA",
+    CCAA.from_registry("melilla"): "CIUDAD DE MELILLA",
 }
 
 
-class _CommunityWithoutCodigo(StrEnum):
-    """A community outside :class:`CCAA`'s ordinary common-regime catalogue.
+class _TerritoryWithoutCodigo(StrEnum):
+    """A residence territory outside :class:`CCAA`'s common-regime catalogue.
 
-    Ceuta is a real AEAT código (18) that :class:`CCAA` deliberately excludes, so
-    this stands in for the case the mapper must refuse: something community-shaped
-    that carries no Modelo 100 código reachable from the enum.
+    "No residente" is a real AEAT código (20) that the catalogue carries no token
+    for, so this stands in for the case the mapper must refuse: something
+    territory-shaped that carries no Modelo 100 código reachable from the enum.
     """
 
-    CEUTA = "ceuta"
+    NO_RESIDENTE = "no_residente"
 
 
 def _bundled_xsds() -> tuple[Path, ...]:
@@ -188,19 +190,22 @@ def test_production_codigos_are_accepted_by_the_xsd_enumeration() -> None:
     assert set(renta_modelo100_ccaa_codigos().values()) <= enumeration
 
 
-def test_codigos_reachable_from_the_enum_exclude_the_non_comunidad_entries() -> None:
-    """18, 19 and 20 are AEAT códigos that no :class:`CCAA` member may claim.
+def test_the_two_ciudades_autonomas_are_reachable_and_no_residente_is_not() -> None:
+    """18 and 19 are claimed by the two ciudades autónomas; 20 is claimed by nothing.
 
-    Ceuta and Melilla are autonomous cities and "no residente" is not a comunidad;
-    all three are outside the ordinary common-regime catalogue the enum models.
+    Ceuta and Melilla are territorio común for IRPF and file Modelo 100, so their
+    códigos are exported like any comunidad's. "No residente" is not a residence
+    this catalogue records, so no member may claim it.
     """
     documented = _authoritative_table()
-    exported = set(renta_modelo100_ccaa_codigos().values())
+    exported = renta_modelo100_ccaa_codigos()
 
     assert documented["18"] == "CIUDAD DE CEUTA"
     assert documented["19"] == "CIUDAD DE MELILLA"
     assert documented["20"] == "NO RESIDENTE"
-    assert exported.isdisjoint({"18", "19", "20"})
+    assert exported[CCAA.from_registry("ceuta")] == "18"
+    assert exported[CCAA.from_registry("melilla")] == "19"
+    assert "20" not in set(exported.values())
 
 
 def test_codigos_14_and_15_are_assigned_to_nothing() -> None:
@@ -214,20 +219,20 @@ def test_codigos_14_and_15_are_assigned_to_nothing() -> None:
     assert "15" not in documented
 
 
-def test_modelo100_ccaa_codigo_refuses_a_community_with_no_codigo() -> None:
-    """An unmappable community fails the export instead of defaulting.
+def test_modelo100_ccaa_codigo_refuses_a_territory_with_no_codigo() -> None:
+    """An unmappable territory fails the export instead of defaulting.
 
-    The control the grounding needs: a community-shaped value carrying no Modelo
+    The control the grounding needs: a territory-shaped value carrying no Modelo
     100 código must raise rather than return a fallback, because a declaration
-    naming the wrong comunidad still validates against AEAT's schema.
+    naming the wrong territory still validates against AEAT's schema.
     """
     with pytest.raises(ValueError, match="no Modelo 100 CCAA código is assigned"):
-        modelo100_ccaa_codigo(_CommunityWithoutCodigo.CEUTA)
+        modelo100_ccaa_codigo(_TerritoryWithoutCodigo.NO_RESIDENTE)
 
 
-@pytest.mark.parametrize("token", ["pais_vasco", "navarra", "ceuta", "melilla", "no_residente", "", "MADRID"])
+@pytest.mark.parametrize("token", ["pais_vasco", "navarra", "no_residente", "", "MADRID"])
 def test_modelo100_ccaa_codigo_refuses_tokens_outside_the_catalogue(token: str) -> None:
-    """Foral regimes, the autonomous cities, and non-canonical spellings refuse."""
+    """Foral regimes and non-canonical spellings refuse."""
     with pytest.raises(ValueError, match="no Modelo 100 CCAA código is assigned"):
         modelo100_ccaa_codigo(token)
 

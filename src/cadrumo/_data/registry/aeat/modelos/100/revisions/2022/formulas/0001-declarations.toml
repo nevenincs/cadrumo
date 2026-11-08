@@ -284,6 +284,8 @@ expression = { op = "sum", args = [
             { key = "la_rioja", parameter = "renta-minimo-contribuyente-base" },
             { key = "madrid", parameter = "renta-minimo-contribuyente-base-madrid" },
             { key = "murcia", parameter = "renta-minimo-contribuyente-base" },
+            { key = "ceuta", parameter = "renta-minimo-contribuyente-base" },
+            { key = "melilla", parameter = "renta-minimo-contribuyente-base" },
         ] },
     ] },
     { op = "if_then_else", args = [
@@ -308,6 +310,8 @@ expression = { op = "sum", args = [
                     { key = "la_rioja", parameter = "renta-minimo-contribuyente-edad-65-74" },
                     { key = "madrid", parameter = "renta-minimo-contribuyente-edad-65-74-madrid" },
                     { key = "murcia", parameter = "renta-minimo-contribuyente-edad-65-74" },
+                    { key = "ceuta", parameter = "renta-minimo-contribuyente-edad-65-74" },
+                    { key = "melilla", parameter = "renta-minimo-contribuyente-edad-65-74" },
                 ] },
             ] },
             { op = "if_then_else", args = [
@@ -331,6 +335,8 @@ expression = { op = "sum", args = [
                         { key = "la_rioja", parameter = "renta-minimo-contribuyente-edad-75" },
                         { key = "madrid", parameter = "renta-minimo-contribuyente-edad-75-madrid" },
                         { key = "murcia", parameter = "renta-minimo-contribuyente-edad-75" },
+                        { key = "ceuta", parameter = "renta-minimo-contribuyente-edad-75" },
+                        { key = "melilla", parameter = "renta-minimo-contribuyente-edad-75" },
                     ] },
                 ] },
                 { literal = "0" },

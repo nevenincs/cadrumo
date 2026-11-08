@@ -60,6 +60,14 @@ export const SETUP_SHAPES = [
    * downloads from unreachable: the setup settles failed before its review,
    * leaving its row as it was. */
   "unreachable",
+  /** As `ready`, but a start stays in its planning with nothing reported,
+   * as while the host checks a model with the agent service, until
+   * `finishPlanning` lets its plan reach review. */
+  "start_held",
+  /** As `start_held`, but the start is in flight before any snapshot names
+   * its setup: nothing the window reads carries the run until
+   * `finishPlanning`, which lets the plan reach review and the start return. */
+  "start_unreported",
 ] as const;
 export type SetupShape = (typeof SETUP_SHAPES)[number];
 
@@ -80,6 +88,14 @@ export type SetupFixtureControls = {
   setGoogle(account: GoogleAccount): void;
   /** The first status read settles: an `unread` setup has its rows. */
   readRows(): void;
+  /** The planning a `start_held` or `start_unreported` start waits in
+   * ends: its plan awaits an answer, and the start returns. */
+  finishPlanning(): void;
+  /** The next status reads and verifications stay unanswered until
+   * `releaseChecks`, as while the host reads a slow status. */
+  holdChecks(): void;
+  /** Answers the checks held: with the refusal's code, or as asked. */
+  releaseChecks(refusal?: string): void;
   /** The host reads again after the sign-in status changed, as it does on
    * the session's cue. */
   reread(): void;
@@ -211,6 +227,8 @@ function shaped(shape: SetupShape): Seed[] {
   };
   switch (shape) {
     case "ready":
+    case "start_held":
+    case "start_unreported":
       all.forEach((seed) => (seed.row = readied(seed.row)));
       break;
     case "google_signed_out":
@@ -286,7 +304,11 @@ export function setupFixture({
   // The profile's Google account: signed in on a computer that is otherwise
   // set up, not yet on one where setup has only begun.
   const signedIn =
-    shape === "ready" || shape === "partial" || shape === "hardware";
+    shape === "ready" ||
+    shape === "start_held" ||
+    shape === "start_unreported" ||
+    shape === "partial" ||
+    shape === "hardware";
   let google: GoogleAccount = {
     state: signedIn ? "signed_in" : "signed_out",
     email: signedIn ? GOOGLE_EMAIL : null,
@@ -299,6 +321,23 @@ export function setupFixture({
   let unread = shape === "unread";
   const listeners = new Set<(state: DesktopSetup) => void>();
   const timers = new Set<number>();
+  // The starts a `start_held` setup keeps in planning, by operation id; each
+  // returns its start, with the plan reached or not.
+  const heldStarts = new Map<string, (planned: boolean) => void>();
+  // The status reads and verifications `holdChecks` keeps unanswered, each
+  // answering with a refusal's code or none.
+  let checksHeld = false;
+  const heldChecks: ((refusal: string | null) => void)[] = [];
+  const afterHold = (
+    act: () => Promise<DesktopSetup>,
+  ): Promise<DesktopSetup> =>
+    checksHeld
+      ? new Promise<DesktopSetup>((resolve, reject) => {
+          heldChecks.push((refusal) =>
+            refusal ? reject({ code: refusal }) : act().then(resolve, reject),
+          );
+        })
+      : act();
   // The setups asked to stop, by operation id.
   const pendingCancel = new Set<string>();
   // Each planned row as it stood before its setup ran, for an item a setup
@@ -311,6 +350,8 @@ export function setupFixture({
   // local AI was set up once has it, whatever became of its models.
   let programReady =
     shape === "ready" ||
+    shape === "start_held" ||
+    shape === "start_unreported" ||
     shape === "google_signed_out" ||
     shape === "partial" ||
     shape === "hardware";
@@ -537,6 +578,10 @@ export function setupFixture({
           return { ...track, step: installs ? "install" : "verify" };
         const done = Math.min(track.total, track.completed + track.total / 4);
         if (done < track.total) return { ...track, completed: done };
+        // A model's bytes end with its part still reporting its download:
+        // the host verifies at the item's own step (see `stepOf`).
+        if (!installs && track.completed < track.total)
+          return { ...track, completed: track.total };
         return {
           ...track,
           step: installs ? "install" : "verify",
@@ -597,15 +642,35 @@ export function setupFixture({
     }
     let next: SetupItemProgress;
     const part = currentPart(entry);
-    if (part) {
+    // A model whose bytes are all fetched: the part keeps reporting its
+    // download while the item verifies, and the part ends on the step after.
+    const fetched =
+      part?.model !== undefined &&
+      part.step === "download" &&
+      part.total !== null &&
+      part.completed === part.total;
+    if (part && fetched && entry.step !== "verify") {
+      next = { ...entry, step: "verify" };
+    } else if (part) {
       const moved: SetupPartProgress = {
         ...part,
-        ...advance(
-          part,
-          partKey(entry.item, part),
-          partSize(part, entry.item),
-          !part.model,
-        ),
+        ...(fetched
+          ? {
+              step: null,
+              completed: null,
+              total: null,
+              result: {
+                changed: true,
+                failure: null,
+                transferred_bytes: partSize(part, entry.item) ?? 0,
+              },
+            }
+          : advance(
+              part,
+              partKey(entry.item, part),
+              partSize(part, entry.item),
+              !part.model,
+            )),
       };
       if (moved.result && !part.model) programReady = true;
       if (moved.result?.failure === null && part.model)
@@ -808,6 +873,16 @@ export function setupFixture({
       unread = false;
       publish();
     },
+    finishPlanning() {
+      [...heldStarts.values()].forEach((finish) => finish(true));
+    },
+    holdChecks() {
+      checksHeld = true;
+    },
+    releaseChecks(refusal) {
+      checksHeld = false;
+      heldChecks.splice(0).forEach((answer) => answer(refusal ?? null));
+    },
     reread() {
       publish();
     },
@@ -839,41 +914,46 @@ export function setupFixture({
       say(`setup.check ${checkMode}`);
       const refused = ready();
       if (refused) return refused;
-      operations += 1;
-      const id = `check-${operations}`;
-      mode = checkMode;
-      check = {
-        operation_id: id,
-        kind: checkMode === "full" ? "status_full" : "status_quick",
-        stage: "done",
-        failure: null,
-        refusal: null,
-      };
-      return Promise.resolve(publish());
+      return afterHold(() => {
+        operations += 1;
+        const id = `check-${operations}`;
+        mode = checkMode;
+        check = {
+          operation_id: id,
+          kind: checkMode === "full" ? "status_full" : "status_quick",
+          stage: "done",
+          failure: null,
+          refusal: null,
+        };
+        return Promise.resolve(publish());
+      });
     },
     verify(wanted) {
       say(`setup.verify ${wanted?.join(",") ?? "all"}`);
       const refused = ready();
       if (refused) return refused;
-      operations += 1;
-      mode = "full";
-      // The full check launches builds no receipt recorded, and records them.
-      if (shape === "unrecorded")
-        items
-          .filter(
-            (seed) =>
-              seed.row.state === "unknown" &&
-              (wanted ?? [seed.row.item]).includes(seed.row.item),
-          )
-          .forEach((seed) => (seed.row = readied(seed.row)));
-      check = {
-        operation_id: `verify-${operations}`,
-        kind: "verify",
-        stage: "done",
-        failure: null,
-        refusal: null,
-      };
-      return Promise.resolve(publish());
+      return afterHold(() => {
+        operations += 1;
+        mode = "full";
+        // The full check launches builds no receipt recorded, and records
+        // them.
+        if (shape === "unrecorded")
+          items
+            .filter(
+              (seed) =>
+                seed.row.state === "unknown" &&
+                (wanted ?? [seed.row.item]).includes(seed.row.item),
+            )
+            .forEach((seed) => (seed.row = readied(seed.row)));
+        check = {
+          operation_id: `verify-${operations}`,
+          kind: "verify",
+          stage: "done",
+          failure: null,
+          refusal: null,
+        };
+        return Promise.resolve(publish());
+      });
     },
     start(wanted, options) {
       say(`setup.start ${wanted}${options?.resume ? " resume" : ""}`);
@@ -931,6 +1011,59 @@ export function setupFixture({
         });
         return Promise.resolve(publish());
       }
+      if (shape === "start_unreported" && chosen.length > 0) {
+        const id = `setup-${operations}`;
+        // The host is still checking the request: it has published nothing
+        // of this setup, so the start is in flight with no run to read.
+        return new Promise<DesktopSetup>((resolve) => {
+          heldStarts.set(id, (planned) => {
+            heldStarts.delete(id);
+            if (planned)
+              put({
+                item: wanted,
+                operation_id: id,
+                stage: "review",
+                review: review(chosen),
+                items: chosen.map(progress),
+                cancellable: true,
+                cancel_requested: false,
+                outcome: null,
+                failure: null,
+              });
+            resolve(publish());
+          });
+        });
+      }
+      if (shape === "start_held" && chosen.length > 0) {
+        const id = `setup-${operations}`;
+        put({
+          item: wanted,
+          operation_id: id,
+          stage: "planning",
+          review: null,
+          // The host names no part before its engine has planned.
+          items: chosen.map((seed) => ({ ...progress(seed), parts: [] })),
+          cancellable: true,
+          cancel_requested: false,
+          outcome: null,
+          failure: null,
+        });
+        publish();
+        return new Promise<DesktopSetup>((resolve) => {
+          heldStarts.set(id, (planned) => {
+            heldStarts.delete(id);
+            const run = runById(id);
+            if (run && run.stage === "planning" && planned)
+              put({
+                ...run,
+                stage: "review",
+                review: review(chosen),
+                items: chosen.map(progress),
+              });
+            resolve(publish());
+          });
+        });
+      }
       const plan = chosen.length === 0 ? null : review(chosen);
       const run = put({
         item: wanted,
@@ -981,6 +1114,13 @@ export function setupFixture({
       if (refused) return refused;
       const run = runById(operationId);
       if (!run || run.stage === "settled") return refuse("not_cancellable");
+      const held = heldStarts.get(operationId);
+      if (held) {
+        // A setup cancelled before anything is approved ends at once.
+        settle(run, "cancelled");
+        held(false);
+        return Promise.resolve(publish());
+      }
       if (run.stage === "review") {
         settle(run, "cancelled");
         return Promise.resolve(publish());

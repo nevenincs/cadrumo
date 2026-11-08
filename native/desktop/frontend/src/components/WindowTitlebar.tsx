@@ -75,7 +75,11 @@ export function WindowTitlebar({
             <GoogleAccount
               google={setupSnapshot.google}
               disabled={setup.setup.pending || account.busy}
-              refusal={setup.setup.refusal}
+              refusal={
+                setup.setup.refusal?.item === null
+                  ? setup.setup.refusal.code
+                  : null
+              }
               onSignIn={setup.setup.signInGoogle}
               onSignOut={setup.setup.signOutGoogle}
             />

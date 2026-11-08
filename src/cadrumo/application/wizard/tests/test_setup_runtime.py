@@ -452,3 +452,26 @@ def test_a_malformed_quarter_answer_is_refused_at_the_boundary(*, registry_setup
     assert refused.value.context["blocking_count"] == 1
     # The same walk with a well-formed quarter submits (see the yes/no test above),
     # so the one blocking issue is the malformed quarter.
+
+
+def test_a_general_regime_walk_is_not_asked_the_modelo_303_composition(*, registry_setup_flow: WizardFlow) -> None:
+    """The general regime settles the composition, so the walk never visits that question."""
+    canonical = individual_declaration_canonical()
+    del canonical["iva-m303-regime-composition"]
+
+    _answers, committed = _drive_scripted(canonical, registry_setup_flow=registry_setup_flow)
+
+    assert committed["iva-regime"] == "GENERAL"
+    assert "iva-m303-regime-composition" not in committed
+
+
+def test_a_simplified_regime_walk_is_still_asked_the_modelo_303_composition(*, registry_setup_flow: WizardFlow) -> None:
+    """A simplified filer may also carry general-regime activities, so the walk asks."""
+    canonical = individual_declaration_canonical()
+    canonical["iva-regime"] = "SIMPLIFICADO"
+    canonical["iva-m303-regime-composition"] = "mixed"
+
+    answers, committed = _drive_scripted(canonical, registry_setup_flow=registry_setup_flow)
+
+    assert committed["iva-m303-regime-composition"] == "mixed"
+    assert answers.iva_m303_regime_composition == "mixed"

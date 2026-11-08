@@ -410,6 +410,26 @@ def _build_activity_visibility(
     return _has_activity, _iva_regime_visible, _iva_block_claimed
 
 
+def _build_m303_regime_composition_visibility(
+    operation: PinnedAuthorityOperation,
+    _iva_regime_tokens: Sequence[_RegistryToken],
+) -> WizardVisibility:
+    """Ask the Modelo 303 composition only under a regime that leaves it open.
+
+    The set is the profile resolver's own answer, so the wizard asks exactly what
+    completeness demands: a general-regime filer's composition is settled and a pure
+    recargo retailer files no Modelo 303 for those activities.
+    """
+    from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+    from ...domain.deadlines.profiles import iva_regime_owes_m303_regime_composition
+
+    with validating_governed_facts(operation):
+        owing = tuple(token for token in _iva_regime_tokens if iva_regime_owes_m303_regime_composition(token.value))
+    return WizardVisibility(
+        any_of=tuple(WizardCondition(question_id="iva-regime", equals=token.value) for token in owing),
+    )
+
+
 def _entity_token_readers(
     operation: PinnedAuthorityOperation,
 ) -> tuple[
@@ -581,7 +601,11 @@ def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
     )
 
     _iva_section = build_iva_section(
-        _iva_block_claimed, _iva_regime_visible, wizard_iva_choices, wizard_m303_regime_composition_choices
+        _iva_block_claimed,
+        _iva_regime_visible,
+        _build_m303_regime_composition_visibility(operation, _iva_regime_tokens),
+        wizard_iva_choices,
+        wizard_m303_regime_composition_choices,
     )
 
     _enrollment_section = build_enrollment_section()

@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#autonomic-deduccion-framework'
 date: '2026-07-04'
-modified: '2026-11-04'
-body_hash: 'sha256:d9ca8b733c0a9e29f8c1e8f4beab1d0228189403b50709e2de2d621259aeec3b'
+modified: '2026-11-08'
+body_hash: 'sha256:8db2f817c080a9e2b5767566448accf4b18f058ac101dbc1970eb33695904eb7'
 related:
   - "[[2026-07-01-autonomic-deduccion-auto-trigger-adr]]"
   - "[[2026-07-01-autonomic-deduccion-auto-trigger-research]]"
@@ -55,7 +55,7 @@ Re-running the Madrid slice's design once per comunidad -- a bespoke Python meth
 - Not every one of the 25+ nacimiento/adopcion-shaped casillas shares Madrid's exact predicate (double income-limit, 3-year window, split-in-two prorrateo). Enrolling a new CCAA against this framework requires per-casilla verification of its actual regulatory shape against its own comunidad's law and the bundled manual -- the framework's axis vocabulary must stay small and composable (Considerations) rather than assuming uniformity; forcing a mismatched casilla onto the wrong axis is a correctness risk, not a mechanical one.
 - The registry formula/parameter per-enrollment additions are per-filing-year (`revision-resolution-is-law-determined`); a comunidad enrollment authored against one revision does not automatically apply to other editions -- each year's revision needs its own parameter values (and, where the law changed, its own eligibility predicate), consistent with how the Madrid 600/721,70-euro split is already modelled.
 - Parent stability: this ADR depends on the Madrid slice's runtime surfaces (`_profile_binding.py`, `_autonomic_deduccion_advisory.py`, `_semantic_role_resolution.py`) remaining the enrolled mesh entry points -- all already merged and test-covered at HEAD (`aa51249a9a`, `8ea7ef3a78`). No frontier dependency; this is a generalization of shipped, tested code.
-- CCAA scope is bounded to the 15 ordinary common-regime comunidades already in the CCAA enum; the foral regimes (Pais Vasco, Navarra) and the autonomous cities (Ceuta, Melilla) are explicitly out of scope for this framework, consistent with `2026-04-28-ccaa-in-profile-adr`'s existing exclusion (they raise a ForalRegimeError / are not modelled by this profile axis at all).
+- CCAA scope is bounded to the 15 ordinary common-regime comunidades of the residence catalogue; the foral regimes (Pais Vasco, Navarra) stay out of scope and raise a ForalRegimeError. Amended 2026-11-08 by `2026-11-08-renta-ceuta-melilla-residence-adr`: Ceuta and Melilla are residence-catalogue members, but they enrol no autonomic deducciones because they have no comunidad deduction law (LIRPF art. 77, Ley 22/2009 art. 46), so this framework yields none for them.
 
 ## Implementation
 

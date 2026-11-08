@@ -85,6 +85,7 @@ class KdfWorkerObservation:
         cleanup_error: BaseException | None,
         primary_error: BaseException | None,
         exit_code: int | None = None,
+        exited_before_cleanup: bool = False,
     ) -> None:
         """Attempt one summary after cleanup; elapsed time excludes this emission."""
         if self._diagnostic_emitted:
@@ -98,7 +99,7 @@ class KdfWorkerObservation:
             kdf_cleanup_pipes_elapsed_ms=self._cleanup_elapsed_ms["pipes"],
             kdf_cleanup_directory_elapsed_ms=self._cleanup_elapsed_ms["directory"],
         )
-        outcome = self._diagnostic_outcome(cleanup_status, cleanup_error, primary_error)
+        outcome = self._diagnostic_outcome(cleanup_status, cleanup_error, primary_error, exited_before_cleanup)
         finished_ns = time.monotonic_ns()
         if self._adopted_ns is not None:
             # A prestarted child may wait minutes for a password. Preserve that
@@ -137,6 +138,7 @@ class KdfWorkerObservation:
         cleanup_status: KdfWorkerCleanupStatus,
         cleanup_error: BaseException | None,
         primary_error: BaseException | None,
+        exited_before_cleanup: bool,
     ) -> str:
         outcome = "completed"
         if self._failure_type is not None or cleanup_error is not None:
@@ -152,15 +154,27 @@ class KdfWorkerObservation:
         ):
             outcome = "cancelled"
         # A calibration probe exceeding its sample budget is an expected
-        # rejection of that grid point, not a failed password operation.
-        if self._sample_rejected(cleanup_status, cleanup_error):
+        # rejection of that grid point, not a failed password operation. The
+        # budget can also end between a frame that arrived at the bound and
+        # the child's own exit. A child still running when cleanup starts is
+        # killed, and a Windows job kill also reports 0, so only a child that
+        # had already exited by itself counts; a stalled one stays a failure.
+        if self._sample_rejected(cleanup_status, cleanup_error, exited_before_cleanup):
             outcome = "sample_rejected"
         return outcome
 
-    def _sample_rejected(self, cleanup_status: KdfWorkerCleanupStatus, cleanup_error: BaseException | None) -> bool:
+    def _sample_rejected(
+        self,
+        cleanup_status: KdfWorkerCleanupStatus,
+        cleanup_error: BaseException | None,
+        exited_before_cleanup: bool,
+    ) -> bool:
+        stage_budget_elapsed = self._failure_stage in {"request_write", "result_wait"} or (
+            self._failure_stage == "clean_exit" and exited_before_cleanup
+        )
         return (
             self._operation is KdfOperation.CALIBRATE
-            and self._failure_stage == "result_wait"
+            and stage_budget_elapsed
             and self._failure_type == "TimeoutError"
             and cleanup_status == "completed"
             and cleanup_error is None

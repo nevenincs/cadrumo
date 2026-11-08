@@ -275,7 +275,14 @@ test("the local AI's plan names the folder of its program and of its model, each
       name: label("desktop.providers.local_model_download"),
     })
     .click();
-  const plan = programRow(target).locator('[data-setup-plan="local_ai"]');
+  // The model asked for answers the plan on its own row while that row is
+  // listed, and the program's row yields to it: the plan stands once in the
+  // local AI's element, beneath the model it was asked for.
+  const plan = localAi(target).locator('[data-setup-plan="local_ai"]');
+  await expect(plan).toHaveCount(1);
+  await expect(programRow(target).locator("[data-setup-review]")).toHaveCount(
+    0,
+  );
   const program = plan.locator('[data-setup-part="program"]');
   const model = plan.locator('[data-setup-part="download"]');
   await expect(program).toContainText(

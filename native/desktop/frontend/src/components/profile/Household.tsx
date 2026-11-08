@@ -133,6 +133,9 @@ export type HouseholdProps = {
   language: string;
   /** Whether this window may write the profile now. */
   writable?: boolean;
+  /** Whether the window asked the signed-in session to end. The host tells
+   * every observer of the end, and nothing wants a household read after it. */
+  sessionEnded?: () => boolean;
 };
 
 /** The facts one person states, in the order their group serves its leaves. */
@@ -421,6 +424,7 @@ export function Household({
   observe,
   language,
   writable = true,
+  sessionEnded,
 }: HouseholdProps) {
   const t = useStrings();
   const heading = useId();
@@ -433,11 +437,18 @@ export function Household({
   const shown = useRef(false);
   const alive = useRef(true);
   const busy = useRef(false);
+  const windowEnded = useRef(sessionEnded);
+  windowEnded.current = sessionEnded;
 
   const load = useCallback(async (): Promise<boolean> => {
+    // The read is wanted by this element, and only while its session lasts.
+    const ended = () => !alive.current || windowEnded.current?.() === true;
+    if (ended()) return false;
     const ticket = ++latest.current;
     try {
-      const household = await reads.household(language);
+      const household = await reads.household(language, {
+        sessionEnded: ended,
+      });
       if (ticket !== latest.current) return false;
       shown.current = true;
       setRead({ phase: "ready", household });

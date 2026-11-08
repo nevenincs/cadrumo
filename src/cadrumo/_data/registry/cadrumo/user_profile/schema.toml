@@ -315,7 +315,7 @@ type = "enum"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Comunidad autónoma de residencia fiscal en territorio común para el Modelo 100."
+description = "Residencia fiscal en territorio común (comunidad autónoma o ciudad autónoma) para el Modelo 100."
 enum_values = [
   "andalucia",
   "aragon",
@@ -332,6 +332,8 @@ enum_values = [
   "la_rioja",
   "madrid",
   "murcia",
+  "ceuta",
+  "melilla",
 ]
 model_selectors = ["TaxResidenceProfile.ccaa"]
 

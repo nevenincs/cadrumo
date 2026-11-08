@@ -110,10 +110,14 @@ _RESIDENCE_REGION_LABELS: dict[str, dict[str, tuple[str, ...]]] = {
         "cantabria": ("Cantabria",),
         "castilla_la_mancha": ("Castilla-La Mancha", "Castile-La Mancha"),
         "castilla_y_leon": ("Castilla y León", "Castile and León"),
+        # The two ciudades autónomas keep their Spanish proper names, which the
+        # English dictionary does not carry; the gloss names what they are.
+        "ceuta": ("Ceuta (autonomous city)",),
         "comunidad_valenciana": ("Valencian Community",),
         "extremadura": ("Extremadura",),
         "galicia": ("Galicia",),
         "la_rioja": ("La Rioja",),
+        "melilla": ("Melilla (autonomous city)",),
     },
     "hu": {
         # The European Commission's Hungarian regional designations:
@@ -121,9 +125,13 @@ _RESIDENCE_REGION_LABELS: dict[str, dict[str, tuple[str, ...]]] = {
         "asturias": ("Asztúria",),
         "cantabria": ("Kantábria",),
         "castilla_la_mancha": ("Kasztília-La Mancha",),
+        # The two ciudades autónomas keep their Spanish proper names, which the
+        # Hungarian dictionary does not carry; the gloss names what they are.
+        "ceuta": ("Ceuta (autonóm város)",),
         "extremadura": ("Extremadura",),
         "galicia": ("Galicia",),
         "la_rioja": ("La Rioja",),
+        "melilla": ("Melilla (autonóm város)",),
         # https://eur-lex.europa.eu/legal-content/HU/TXT/?uri=CELEX%3A02003D0467-20210101
         "murcia": ("Murcia",),
     },

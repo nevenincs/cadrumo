@@ -4,7 +4,7 @@ import { buildPath } from "../../../scripts/build-paths.mjs";
 
 // Expected chrome text comes from the generated catalogue, the same file the
 // shell is built from: an output of the build directory in use.
-const catalogue = JSON.parse(
+export const catalogue = JSON.parse(
   readFileSync(
     resolve(buildPath("desktop_frontend_generated"), "chrome-strings.json"),
     "utf8",
