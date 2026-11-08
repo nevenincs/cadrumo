@@ -56,7 +56,7 @@ function BlockerFixes({
   content: StagedContent;
   rows: ReadonlyMap<string, LedgerRow>;
   onStage: (event: StageEvent) => void;
-  onShowRows: (ids: string[]) => void;
+  onShowRows: (ids: string[], fields?: readonly string[]) => void;
   onGoToDraft: (key: string) => void;
   /** Reads again the sealed state the review could not read. */
   onRereadSealed: () => void;
@@ -124,7 +124,36 @@ function BlockerFixes({
   const show = ids.length
     ? button(t("desktop.ledger.apply.fix.show"), () => onShowRows(ids), "show")
     : null;
+  /** Shows the movements the blocker holds, with the columns it names: the
+   * person's own column choice, or a preset, may be hiding one of them. */
+  const showFields = () => {
+    const fields = held.flatMap((entry) =>
+      "fields" in entry.blocker ? [...entry.blocker.fields] : [],
+    );
+    const draft = held.find((entry) => entry.draft);
+    return (
+      <>
+        {ids.length
+          ? button(
+              t("desktop.ledger.apply.fix.show_fields"),
+              () => onShowRows(ids, fields),
+              "show-fields",
+            )
+          : null}
+        {draft
+          ? button(
+              t("desktop.ledger.apply.fix.go_to_draft"),
+              () => onGoToDraft(draft.id),
+              "go-to-draft",
+            )
+          : null}
+      </>
+    );
+  };
   switch (kind) {
+    case "amount_signed":
+    case "needs_withholding_category":
+      return showFields();
     case "needs_classification":
       return (
         <>
@@ -431,7 +460,7 @@ export function NeedsYouFirst({
   content: StagedContent;
   rows: ReadonlyMap<string, LedgerRow>;
   onStage: (event: StageEvent) => void;
-  onShowRows: (ids: string[]) => void;
+  onShowRows: (ids: string[], fields?: readonly string[]) => void;
   onGoToDraft: (key: string) => void;
   onRereadSealed: () => void;
   /** While the locks not read are read again, how far it has got. */

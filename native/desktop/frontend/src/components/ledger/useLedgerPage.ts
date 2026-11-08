@@ -45,7 +45,11 @@ import { usePagePause } from "./WritePause";
 import { useLedgerEditing } from "./editing/LedgerEditing";
 import type { EditorTarget } from "./invoices/InvoiceEditor";
 import { SECTION_ICONS, periodText, sectionName } from "./ledgerWords";
-import { readinessSets } from "./movements/movementsModel";
+import {
+  columnsOfFields,
+  readinessSets,
+  type ColumnId,
+} from "./movements/movementsModel";
 import { useMovementsView, windowScope } from "./movements/useMovementsView";
 import type { RuleDialogTarget } from "./setup/RuleDialog";
 import type { RulesArea } from "./setup/RulesSection";
@@ -245,6 +249,12 @@ export function useLedgerPage({
   // The staged work of every section: the tray, the review and apply,
   // and the guard before leaving.
   const [focusDraft, setFocusDraft] = useState<string | null>(null);
+  // The movements and the column a refusal led to, until the grid has shown
+  // them. Each lead replaces the last.
+  const [shownFields, setShownFields] = useState<{
+    column: ColumnId;
+    ids: readonly string[];
+  } | null>(null);
   const editing = useLedgerEditing({
     port,
     period,
@@ -257,9 +267,22 @@ export function useLedgerPage({
         rekeyMovementSelection(current, from, to),
       );
     },
-    onShowRows: (ids) => {
+    onShowRows: (ids, fields) => {
       setSection("movements");
       movements.setSelection(new Set(ids));
+      // A refusal that names a field leads to the column it is typed in,
+      // which the person's own column choice or a preset may be hiding.
+      const wanted = columnsOfFields(fields ?? []);
+      if (wanted.length === 0) return;
+      onViewChange((current) => {
+        const hidden = current.columns.hidden.filter(
+          (column) => !(wanted as readonly string[]).includes(column),
+        );
+        return hidden.length === current.columns.hidden.length
+          ? current
+          : { ...current, columns: { ...current.columns, hidden } };
+      });
+      setShownFields({ column: wanted[0]!, ids: [...ids] });
     },
     onGoToDraft: (key) => {
       setSection("movements");
@@ -557,6 +580,8 @@ export function useLedgerPage({
     unread,
     focusDraft,
     setFocusDraft,
+    shownFields,
+    setShownFields,
     editing,
     ruleTarget,
     setRuleTarget,
