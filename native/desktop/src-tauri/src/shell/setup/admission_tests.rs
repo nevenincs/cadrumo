@@ -380,6 +380,69 @@ fn pending_download_stops_at_its_deadline_and_keeps_busy() {
     assert_eq!(service.replies.asked(), ["status", "catalog"]);
 }
 
+/// A service that answers one action busy every time it is asked, and the rest as served.
+struct BusyForever {
+    replies: Replies,
+    action: &'static str,
+}
+
+impl Agent for BusyForever {
+    fn generation(&self) -> Result<u64, ApplicationError> {
+        Ok(0)
+    }
+    fn exchange(&self, request: Value) -> Result<Value, ApplicationError> {
+        if request["action"] == self.action {
+            return busy();
+        }
+        self.replies.exchange(request)
+    }
+}
+
+#[test]
+fn a_download_start_budget_covers_a_cold_status_read_and_is_far_below_the_orchestration_wait() {
+    assert!(ADMISSION_BUDGET > STATUS_EXCHANGE + EXCHANGE);
+    assert_eq!(ADMISSION_BUDGET, STATUS_EXCHANGE + EXCHANGE + EXCHANGE);
+    assert!(
+        ADMISSION_BUDGET
+            < Duration::from_secs(cadrumo_platform::DEFAULT_ORCHESTRATION_TIMEOUT_SECONDS)
+    );
+}
+
+#[test]
+fn a_service_busy_past_the_budget_settles_the_download_start_as_unavailable() {
+    for (action, reason) in [
+        ("status", "setup_provider_status_refused"),
+        ("catalog", "setup_catalogue_refused"),
+        ("local_models", "setup_local_models_refused"),
+    ] {
+        let admission = Admission::new(Arc::new(BusyForever {
+            replies: Replies::serving(&[TEXT], &[ADDED], &[(TEXT, Some(GB))]),
+            action,
+        }));
+        let began = Instant::now();
+        let result = admission.download_with_budget(
+            &requested(LOCAL, ADDED),
+            &Cancellation::default(),
+            Duration::from_millis(600),
+        );
+        assert!(
+            began.elapsed() < Duration::from_secs(10),
+            "{action}: the start outlived its budget"
+        );
+        assert_eq!(
+            result.as_ref().err().and_then(Stop::refusal),
+            Some(Refusal::Unavailable),
+            "{action}"
+        );
+        let error = cause(result);
+        assert_eq!(error.reason.as_deref(), Some(reason), "{action}");
+        assert!(
+            matches!(first_link(&error), Cause::Child(refusal) if refusal.code.as_deref() == Some("busy")),
+            "{action}: {error}"
+        );
+    }
+}
+
 #[test]
 fn pending_download_collects_added_models_and_stops_on_other_answers() {
     let cancellation = Cancellation::default();

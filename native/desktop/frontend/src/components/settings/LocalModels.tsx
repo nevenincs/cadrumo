@@ -1,4 +1,10 @@
-import { useId, useState, type FormEvent } from "react";
+import {
+  useContext,
+  useId,
+  useLayoutEffect,
+  useState,
+  type FormEvent,
+} from "react";
 import { TextEditor } from "@/components/editors/TextEditor";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,10 +19,22 @@ import {
 } from "../../shell/localModelLanes";
 import { formatSize } from "../../shared/numbers";
 import type { AgentModelLicenceFacts } from "../../shell/agentSession";
-import { useLocalModels, type LocalModelHost } from "../../shell/localModels";
+import {
+  planIsFor,
+  ReviewClaimContext,
+  useLocalModels,
+  type LocalModelHost,
+} from "../../shell/localModels";
 import { useProvisioning } from "../../shell/provisioning";
 import { useStrings, type Translate } from "../../shell/strings";
-import { StepFigure, type StepProgress } from "../setup/ProvisioningRow";
+import type { SetupRun, SetupStep } from "../../ipc/componentSetup";
+import {
+  PlanningFigure,
+  RowReview,
+  SetupReadState,
+  StepFigure,
+  type StepProgress,
+} from "../setup/ProvisioningRow";
 import { refusalWords } from "../setup/setupWords";
 
 const licenceWords = (licence: AgentModelLicenceFacts) =>
@@ -64,6 +82,8 @@ function LocalModelRow({
   busy,
   refusal,
   progress,
+  planning,
+  review,
   onDownload,
   onRemove,
 }: {
@@ -75,11 +95,20 @@ function LocalModelRow({
   /** What the local AI's latest setup reports of this model, where it
    * planned it and its outcome is still news. */
   progress: StepProgress | null;
+  /** Set while this model's download is still being planned, which names no
+   * part yet: what the engine has reported of the local AI, none at first. */
+  planning: { step: SetupStep | null } | null;
+  /** The local AI's setup while it awaits the person's answer on a plan for
+   * this model: the row carries the answer, the one place it is asked. */
+  review: SetupRun | null;
   onDownload?: () => void;
   onRemove?: () => void;
 }) {
   const t = useStrings();
   const headingId = useId();
+  // The download is running: the model is not on this computer yet, and
+  // nothing else may start while the setup works on it.
+  const inProgress = progress !== null && progress.result === null;
   return (
     <li
       data-model={model.id}
@@ -95,26 +124,36 @@ function LocalModelRow({
         >
           {model.name}
         </h6>
-        {model.installed !== null && (
-          <Badge variant={model.installed ? "success" : "neutral"}>
-            {t(
-              model.installed
-                ? "desktop.providers.local_model_installed"
-                : "desktop.providers.local_model_absent",
-            )}
+        {inProgress ? (
+          <Badge variant="neutral">
+            {t("desktop.setup.state.provisioning")}
           </Badge>
+        ) : (
+          model.installed !== null && (
+            <Badge variant={model.installed ? "success" : "neutral"}>
+              {t(
+                model.installed
+                  ? "desktop.providers.local_model_installed"
+                  : "desktop.providers.local_model_absent",
+              )}
+            </Badge>
+          )
         )}
       </div>
       <ModelFacts model={model} locale={locale} />
-      {progress && (
+      {review ? (
+        <RowReview run={review} locale={locale} reveal />
+      ) : progress ? (
         <StepFigure progress={progress} name={model.name} locale={locale} />
+      ) : (
+        planning && <PlanningFigure step={planning.step} />
       )}
       <div className="flex flex-wrap gap-2">
         {model.installed !== true && (
           <Button
             variant="outline"
             size="sm"
-            disabled={busy || !onDownload}
+            disabled={busy || inProgress || !onDownload}
             onClick={onDownload}
           >
             {t("desktop.providers.local_model_download")}
@@ -213,11 +252,22 @@ export function LocalModels({
   // Downloading and removing are setup's: offered only where this window
   // offers setup, and a download waits while the local AI sets up.
   const localAi = store.localAiRow;
-  const settingUp = localAi !== null && store.liveRunOf(localAi.item) !== null;
+  const liveRun = localAi ? store.liveRunOf(localAi.item) : null;
+  const settingUp = liveRun !== null;
+  // A start that no snapshot shows yet is as much a setup under way as one
+  // that does, and a second click would send it again.
+  const starting = localAi !== null && store.control.startingOf(localAi.item);
+  // The model whose download is under way: its row says what the setup is
+  // doing before the setup names a part.
+  const asked =
+    lane && store.asked?.lane === lane.id ? store.asked.model : null;
+  // A refused start is said on the row of the model it asked for.
+  const refused = store.control.refusal;
   const onSetUp =
     store.offered && localAi !== null
       ? (model: string) => {
-          if (lane) store.downloadModel(lane.id, model);
+          if (!lane) return;
+          store.downloadModel(lane.id, model);
         }
       : undefined;
   const onRemove = store.offered ? store.removeModel : undefined;
@@ -227,11 +277,30 @@ export function LocalModels({
   const progressOf = (model: LaneModel): StepProgress | null => {
     const part = store.modelPart(model.id);
     if (!part) return null;
-    if (part.result === null) return settingUp ? part : null;
+    // A part planned for the person's review has not begun: it reports no
+    // step until the setup runs.
+    if (part.result === null) {
+      if (liveRun?.stage !== "running") return null;
+      // A model part reports its download until it ends; the host then
+      // verifies and tidies at the item's own step, which is what the part
+      // is doing in that tail.
+      const itemStep = store.progressOf(liveRun.item)?.step ?? null;
+      return itemStep === "verify" || itemStep === "cleanup"
+        ? { ...part, step: itemStep }
+        : part;
+    }
     return part.result.failure !== null || model.installed !== true
       ? part
       : null;
   };
+  // From the click until the engine's plan awaits the person's answer, the
+  // setup names no part, so the asked model's row says what it is doing.
+  const planningStep =
+    localAi && (liveRun ? liveRun.stage === "planning" : starting)
+      ? { step: store.progressOf(localAi.item)?.step ?? null }
+      : null;
+  const reviewed = store.reviewedModel();
+  const claim = useContext(ReviewClaimContext);
   const [removing, setRemoving] = useState<string | null>(null);
   const [removals, setRemovals] = useState<Record<string, string>>({});
   const readable =
@@ -240,6 +309,39 @@ export function LocalModels({
     lane && snapshot.kind === "ready"
       ? laneModelList(lane, addedTo(snapshot.value, lane.id))
       : [];
+  // The plan is shown on the asked model's row only while that row is listed
+  // here, and the one place that is decided is this: the row's own review and
+  // the claim the program's row yields to come from the same value.
+  const reviewRun = (model: LaneModel): SetupRun | null =>
+    lane &&
+    laneStatus === "ready" &&
+    reviewed?.lane === lane.id &&
+    reviewed.model === model.id &&
+    liveRun?.stage === "review"
+      ? liveRun
+      : null;
+  const holdsReview = listed.some(({ model }) => reviewRun(model) !== null);
+  // A section with no program row of the local AI above it, as a second
+  // lane has, answers a plan for its lane itself where no row here holds it:
+  // the asked row is not listed, or nothing was asked in this window, as
+  // after a reload.
+  const sectionReview =
+    claim === null &&
+    liveRun?.stage === "review" &&
+    !holdsReview &&
+    planIsFor({
+      lane,
+      models: [...(lane?.models ?? []), ...listed.map(({ model }) => model)],
+      reviewed,
+      planned: (model) => store.modelPart(model) !== null,
+    })
+      ? liveRun
+      : null;
+  useLayoutEffect(() => {
+    if (!holdsReview || !claim) return;
+    claim(true);
+    return () => claim(false);
+  }, [holdsReview, claim]);
   // Removing deletes the download first, then takes a model the person added
   // off the list; a recommended model stays listed.
   const remove = async (key: string, model: LaneModel, added: boolean) => {
@@ -277,6 +379,11 @@ export function LocalModels({
       <p className="text-sm text-muted-foreground">
         {t("desktop.providers.local_models_lead")}
       </p>
+      {sectionReview && (
+        <div data-slot="local-models-review">
+          <RowReview run={sectionReview} locale={locale} reveal />
+        </div>
+      )}
       {laneStatus === "loading" ? (
         <p role="status" className="text-sm text-muted-foreground">
           {t("desktop.providers.local_models_loading")}
@@ -334,6 +441,9 @@ export function LocalModels({
               )}
             </div>
           )}
+          {store.offered && localAi === null && (
+            <SetupReadState slot="local-models-setup-unread" />
+          )}
           {listed.length > 0 && (
             <ul className="grid gap-2">
               {listed.map(({ model, added }) => {
@@ -348,14 +458,22 @@ export function LocalModels({
                     model={model}
                     added={added}
                     locale={locale}
-                    busy={working || (settingUp && model.installed !== true)}
+                    busy={
+                      working ||
+                      ((settingUp || starting) && model.installed !== true)
+                    }
                     progress={progressOf(model)}
+                    planning={asked === model.id ? planningStep : null}
+                    review={reviewRun(model)}
                     refusal={
                       removals[key]
                         ? removalWords(t, removals[key])
                         : outcome?.kind === "refused"
                           ? listRefusalWords(t, outcome.code)
-                          : null
+                          : refused?.download?.lane === lane.id &&
+                              refused.download.model === model.id
+                            ? refusalWords(t, refused.code)
+                            : null
                     }
                     onDownload={onSetUp ? () => onSetUp(model.id) : undefined}
                     onRemove={

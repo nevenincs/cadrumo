@@ -6,7 +6,9 @@ from collections.abc import Mapping
 
 import pytest
 
-from ..worker_exit_reason import WORKER_ERROR_FRAMES, WORKER_STANDARD_ERROR_BYTES, worker_exit_fields
+from cadrumo.core.traceback_summary import TRACEBACK_FRAMES
+
+from ..worker_exit_reason import WORKER_STANDARD_ERROR_BYTES, worker_exit_fields
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -45,35 +47,15 @@ def test_the_last_traceback_names_its_type_and_frames_innermost_first_without_an
         assert private not in _text(fields)
 
 
-@pytest.mark.parametrize(
-    "crafted",
-    [
-        f'  File "C:\\Users\\{_NAME}\\{_NAME}.py", line 4, in <module>',
-        f'  File "clock.py", line 4, in {_NAME}',
-        '  File "clock.py", line 4, in password=hunter2',
-        '  File "clock.py", line 4, in 12345678Z',
-        '  File "12345678Z.py", line 4, in <module>',
-        '  File "clock.py", line 4, in ES9121000418450200051332',
-        '  File "clock.py", line 99999999, in start',
-        '  File "clock.py", line 4, in <Lucia>',
-        '  File "clock.py", line 4, in call_600123456',
-    ],
-)
-def test_a_frame_whose_tokens_are_not_strict_identifiers_is_dropped(crafted: str) -> None:
+def test_a_refused_innermost_frame_names_no_origin_and_an_unnamed_type_names_no_type() -> None:
     standard_error = (
-        f'Traceback (most recent call last):\n  File "boot.py", line 2, in <module>\n{crafted}\nLookupError: x\n'
+        "Traceback (most recent call last):\n"
+        '  File "boot.py", line 2, in <module>\n'
+        f'  File "clock.py", line 4, in {_NAME}\n'
+        f"{_NAME}: x\n"
     )
     fields = worker_exit_fields(exit_code=1, standard_error=standard_error.encode())
-    # The innermost frame was refused, so no origin is named; the admitted outer frame remains.
-    assert fields == {"exit_code": 1, "worker_error_type": "LookupError", "worker_error_frames": "boot.py:2:<module>"}
-
-
-@pytest.mark.parametrize("type_line", [f"{_NAME}: x", "LuciaFernandez: x", "ES9121000418450200051332Error: x"])
-def test_an_exception_line_that_does_not_name_an_exception_type_names_no_type(type_line: str) -> None:
-    standard_error = f'Traceback (most recent call last):\n  File "boot.py", line 2, in <module>\n{type_line}\n'
-    fields = worker_exit_fields(exit_code=1, standard_error=standard_error.encode())
-    assert "worker_error_type" not in fields
-    assert fields["worker_error_origin"] == "boot.py:2:<module>"
+    assert fields == {"exit_code": 1, "worker_error_frames": "boot.py:2:<module>"}
 
 
 def test_output_without_a_traceback_reports_only_the_exit_status() -> None:
@@ -92,5 +74,5 @@ def test_a_traceback_longer_than_the_held_bytes_still_names_its_innermost_frames
     assert fields["worker_error_type"] == "RecursionError"
     assert fields["worker_error_origin"] == "deep.py:399:step_399"
     named = str(fields["worker_error_frames"]).split(" <- ")
-    assert len(named) == WORKER_ERROR_FRAMES
-    assert named[-1] == f"deep.py:{400 - WORKER_ERROR_FRAMES}:step_{400 - WORKER_ERROR_FRAMES}"
+    assert len(named) == TRACEBACK_FRAMES
+    assert named[-1] == f"deep.py:{400 - TRACEBACK_FRAMES}:step_{400 - TRACEBACK_FRAMES}"

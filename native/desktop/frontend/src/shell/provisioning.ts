@@ -43,6 +43,9 @@ export type PanelState = {
   request: number;
 };
 
+/** A model of a local lane whose download the person asked for. */
+export type AskedModel = { lane: string; model: string };
+
 export type ProvisioningStore = {
   /** Whether this window offers setup now. */
   offered: boolean;
@@ -64,6 +67,13 @@ export type ProvisioningStore = {
   modelPart(model: string): SetupPartProgress | null;
   /** The local AI's program part in its latest setup. */
   programPart(): SetupPartProgress | null;
+  /** The model whose download the person asked for, held from the click
+   * until that setup settles or its start is refused. */
+  asked: AskedModel | null;
+  /** The model whose row answers the local AI's plan now: the model last
+   * asked for, while the local AI's setup awaits the answer on a plan that
+   * holds a part for it. Null leaves the answer on the local AI's own row. */
+  reviewedModel(): AskedModel | null;
   /** A row's own button: check it again, or set it up. */
   act(row: SetupRow): void;
   /** Downloads one model of a local lane's list through the local AI's
@@ -101,6 +111,7 @@ const NO_CONTROL: SetupControl = {
   snapshot: null,
   pending: false,
   busy: () => false,
+  startingOf: () => false,
   refusal: null,
   check: () => undefined,
   verify: () => undefined,
@@ -129,6 +140,8 @@ const NO_PROVISIONING: ProvisioningStore = {
   progressOf: () => null,
   modelPart: () => null,
   programPart: () => null,
+  asked: null,
+  reviewedModel: () => null,
   act: () => undefined,
   downloadModel: () => false,
   removeModel: () => Promise.resolve("unavailable"),
@@ -189,6 +202,9 @@ export function useProvisioningStore(
   const { offered, snapshot } = control;
   const rows = useMemo(() => snapshot?.rows ?? [], [snapshot]);
   const [panel, setPanel] = useState<PanelState>(CLOSED);
+  // The model whose download the person asked for, for this profile, while
+  // that setup is under way.
+  const [asked, setAsked] = useState<AskedModel | null>(null);
   const opened = useRef(onOpen);
   opened.current = onOpen;
   // The launch's opening, decided by the first status read and still owed
@@ -218,8 +234,6 @@ export function useProvisioningStore(
   rowsRef.current = rows;
   const offeredRef = useRef(offered);
   offeredRef.current = offered;
-  const snapshotRef = useRef(snapshot);
-  snapshotRef.current = snapshot;
 
   const offer = useCallback(
     (action: string): boolean => {
@@ -251,6 +265,7 @@ export function useProvisioningStore(
   );
   useEffect(() => {
     deferred.current = null;
+    setAsked(null);
   }, [owner]);
   useEffect(() => {
     const action = deferred.current;
@@ -280,6 +295,18 @@ export function useProvisioningStore(
   const localAiRow = useMemo(() => localAiOf(rows), [rows]);
   const live = anyLive(snapshot);
   const { start, verify, removeModel } = control;
+  // The asked model is the one whose download is under way: from the click,
+  // while its start waits for an answer or the local AI's setup has not
+  // settled. Once neither holds, the download ended or its start was
+  // refused, and what runs next is not that model's.
+  const localAiItem = localAiRow?.item ?? null;
+  const underway =
+    localAiItem !== null &&
+    (control.startingOf(localAiItem) ||
+      liveRunOf(snapshot, localAiItem) !== null);
+  useEffect(() => {
+    if (asked !== null && !underway) setAsked(null);
+  }, [asked, underway]);
 
   return useMemo((): ProvisioningStore => {
     const progressOf = (item: SetupItemId) =>
@@ -300,6 +327,14 @@ export function useProvisioningStore(
       modelPart: (model) =>
         localParts().find((part) => part.model === model) ?? null,
       programPart: () => localParts().find((part) => !part.model) ?? null,
+      asked,
+      reviewedModel: () =>
+        asked !== null &&
+        localAiRow !== null &&
+        runOf(snapshot, localAiRow.item)?.stage === "review" &&
+        localParts().some((part) => part.model === asked.model)
+          ? asked
+          : null,
       act: (row) => {
         control.clearRefusal();
         if (row.recovery === "check_again") verify([row.item]);
@@ -307,12 +342,16 @@ export function useProvisioningStore(
           start(row.item, { resume: row.recovery === "resume" });
       },
       downloadModel: (lane, model) => {
-        const row = localAiOf(rowsRef.current);
+        // Read from the snapshot this store was built from, which is the one
+        // the model's Download was enabled by: a click the button offered
+        // is never ignored here.
+        const row = localAiRow;
         // A start while the local AI sets up joins that setup, which would
         // not pull this model: it waits until that one settles.
-        if (!row || liveRunOf(snapshotRef.current, row.item)) return false;
+        if (!row || liveRunOf(snapshot, row.item)) return false;
         control.clearRefusal();
         start(row.item, { download: { lane, model } });
+        setAsked({ lane, model });
         return true;
       },
       removeModel,
@@ -326,6 +365,7 @@ export function useProvisioningStore(
   }, [
     offered,
     control,
+    asked,
     snapshot,
     rows,
     live,
