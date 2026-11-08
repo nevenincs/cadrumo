@@ -36,9 +36,10 @@ class _ObservedWalks:
     _lock: threading.Lock = field(default_factory=threading.Lock)
 
     def wrap(
-        self, walk: Callable[..., Mapping[str, ProfileKeyGrounding]]
-    ) -> Callable[..., Mapping[str, ProfileKeyGrounding]]:
-        def observed(*args: object, **kwargs: object) -> Mapping[str, ProfileKeyGrounding]:
+        self, walk: Callable[..., Mapping[str, ProfileKeyGrounding] | None]
+    ) -> Callable[..., Mapping[str, ProfileKeyGrounding] | None]:
+        # An abandoned walk returns None; the wrapper passes the walk's own result through.
+        def observed(*args: object, **kwargs: object) -> Mapping[str, ProfileKeyGrounding] | None:
             with self._lock:
                 self.count += 1
                 first = self.count == 1
