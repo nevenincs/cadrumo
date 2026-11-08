@@ -81,6 +81,7 @@ from .calculation_route import require_calculation_route_resolver
 from .calculation_source_guards import reject_caller_overrides_of_source_bindings
 from .calculation_source_staging import add_expected_missing_binding_diagnostics
 from .preconditions import build_modelo_precondition_failure_for_scenario
+from .printed_boxes import PrintedBoxes, snapshot_printed_boxes
 from .profile_binding import resolve_profile_sourced_bindings
 from .profile_readiness_gate import load_modelo_work_profile
 from .projection_declaration import ProjectionDeclaration, modelo_projection_available, registry_projection_declaration
@@ -231,6 +232,8 @@ class ModeloProjectionUnresolvedBinding(BaseModel):
 
     binding_id: BindingId
     casilla_id: CasillaId | None
+    #: The number the form prints for that box; ``None`` for a working figure or when no box is named.
+    box: str | None = None
     source_kind: str = Field(min_length=1)
     reason: str = Field(min_length=1)
     note: CalculationNoteSentence | None = None
@@ -251,6 +254,8 @@ class ModeloProjectionUnresolvedCasilla(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
+    #: The number the form prints for the box; ``None`` for a working figure the form does not print.
+    box: str | None = None
     reason: str = Field(min_length=1)
     formula_id: FormulaId
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
@@ -874,6 +879,7 @@ def unresolved_binding_rows(
     unresolved_binding_ids: Iterable[BindingId],
     diagnostics: Iterable[CalculationSourceDiagnostic],
     revision: ModeloRevision,
+    boxes: PrintedBoxes,
 ) -> tuple[ModeloProjectionUnresolvedBinding, ...]:
     """Report each unresolved binding once, by the diagnostic that names its box.
 
@@ -886,6 +892,7 @@ def unresolved_binding_rows(
         diagnostics: The diagnostics that resolution raised.
         revision: The pinned :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
             whose bindings name the box each unresolved binding feeds.
+        boxes: The boxes that revision's form prints, which name each box by its printed number.
     """
     bindings_by_id = revision_bindings_by_id(revision)
     by_binding = {
@@ -897,19 +904,23 @@ def unresolved_binding_rows(
     for binding_id in unresolved_binding_ids:
         diagnostic = by_binding.get(binding_id)
         if diagnostic is None:
+            casilla_id = sole_bound_casilla(revision, binding_id)
             rows.append(
                 ModeloProjectionUnresolvedBinding(
                     binding_id=binding_id,
-                    casilla_id=sole_bound_casilla(revision, binding_id),
+                    casilla_id=casilla_id,
+                    box=boxes.number(casilla_id),
                     source_kind=str(bindings_by_id[binding_id].source),
                     reason="unresolved_binding",
                 )
             )
             continue
+        casilla_id = diagnostic.casilla_id or sole_bound_casilla(revision, binding_id)
         rows.append(
             ModeloProjectionUnresolvedBinding(
                 binding_id=binding_id,
-                casilla_id=diagnostic.casilla_id or sole_bound_casilla(revision, binding_id),
+                casilla_id=casilla_id,
+                box=boxes.number(casilla_id),
                 source_kind=diagnostic.source_kind,
                 reason=diagnostic.reason,
                 note=diagnostic.fact.sentence if diagnostic.fact is not None else None,
@@ -922,6 +933,7 @@ def unresolved_binding_rows(
 def unresolved_casilla_rows(
     engine_result: RegistryCalculationResult,
     revision: ModeloRevision,
+    boxes: PrintedBoxes,
 ) -> tuple[ModeloProjectionUnresolvedCasilla, ...]:
     """Report every formula target the engine left without a value.
 
@@ -934,12 +946,14 @@ def unresolved_casilla_rows(
         engine_result: The engine's observations and unresolved outcomes.
         revision: The pinned :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
             whose formulas name every target.
+        boxes: The boxes that revision's form prints, which name each box by its printed number.
     """
     observed = {observation.casilla_id for observation in engine_result.observations}
     outcomes = {outcome.casilla_id: outcome for outcome in engine_result.unresolved_outcomes}
     rows = [
         ModeloProjectionUnresolvedCasilla(
             casilla_id=formula.target_casilla_id,
+            box=boxes.number(formula.target_casilla_id),
             reason=(
                 str(outcomes[formula.target_casilla_id].reason)
                 if formula.target_casilla_id in outcomes
@@ -1066,6 +1080,7 @@ def _projection_service_result(
     credits: CalculationSourceResolution,
     revision: ModeloRevision,
     declaration: ProjectionDeclaration,
+    boxes: PrintedBoxes,
 ) -> ModeloProjectServiceResult:
     """Assemble the projection result from the annual M130 figures and the engine's observations."""
     return ModeloProjectServiceResult(
@@ -1088,8 +1103,10 @@ def _projection_service_result(
             source_casilla_ids=_source_resolved_casilla_ids(credits, revision),
         ),
         m100_projection=m100_projection_result(engine_result.values, declaration=declaration),
-        unresolved_bindings=unresolved_binding_rows(credits.unresolved_binding_ids, credits.diagnostics, revision),
-        unresolved_casillas=unresolved_casilla_rows(engine_result, revision),
+        unresolved_bindings=unresolved_binding_rows(
+            credits.unresolved_binding_ids, credits.diagnostics, revision, boxes
+        ),
+        unresolved_casillas=unresolved_casilla_rows(engine_result, revision, boxes),
     )
 
 
@@ -1283,6 +1300,7 @@ def project_modelo_100_from_m130(
         credits=credits,
         revision=m100_snapshot.revision,
         declaration=declaration,
+        boxes=snapshot_printed_boxes(operation, m100_snapshot),
     )
 
 
