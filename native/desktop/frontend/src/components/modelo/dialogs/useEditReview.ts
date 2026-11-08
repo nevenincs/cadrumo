@@ -29,9 +29,10 @@ import { mayRenew } from "./operationRun";
 // stale baseline is renewed once, as the application allows only when nothing
 // moved under it; either way the declaration is read again and the edits are
 // checked on the baseline left, the renewed one or the one the new read
-// admits, and that check says what became of each held edit. The baseline
-// is renewed again just before the apply is sent, so taking time over the
-// review never refuses it; a renewal refused because the declaration moved
+// admits, and that check says what became of each held edit. An apply
+// refused only because its baseline went stale changed nothing, so its
+// baseline is renewed once and the apply sent again: taking time over the
+// review never refuses it. A renewal refused because the declaration moved
 // checks the edits again instead of applying them. An
 // apply whose settlement was not observed is unknown: it may have committed,
 // so it is never sent again, and nothing more is applied until the
@@ -74,6 +75,10 @@ type Checked = {
   phase: ReviewPhase;
   report: ModeloFormRebaseEntryV1[] | null;
 };
+
+/** The refusal an apply settles with when its baseline went stale: nothing
+ * was written, so it may be sent again on a renewed baseline. */
+const BASELINE_STALE = "REFUSED_MODELO_EDIT_BASELINE_STALE";
 
 /** What one renewal came to, for every check that waited on it. */
 type Renewal = Promise<ReviewPhase | null>;
@@ -371,36 +376,36 @@ export function useEditReview({
 
   const apply = useCallback(async () => {
     if (!baseline || holds.blocking(target) || phase.kind !== "checked") return;
-    const ticket = ++checks.current;
+    ++checks.current;
     setPhase({ kind: "applying" });
-    // Renewed just before it is sent: the check passed on this baseline, and
-    // a renewal stands for it only when nothing but its lifetime changed.
-    const renewal = await renewBaseline(port, baseline, language);
-    if (!alive.current || ticket !== checks.current) return;
-    if (renewal.kind === "moved") {
-      // The declaration moved since the check: the edits are checked again
-      // on it, which renews or reads it again, and nothing is applied.
-      moved.current = false;
-      void check();
-      return;
+    const send = (on: ModeloEditApplyBaselineV1) =>
+      runWrite(
+        () =>
+          port.edit(
+            "modelo.edit.apply",
+            modeloEditBody(
+              editSubmission(on, session.staged.values(), language),
+            ),
+          ),
+        () => alive.current,
+      );
+    let on = baseline;
+    let run = await send(on);
+    if (run?.kind === "refused" && run.reason === BASELINE_STALE) {
+      const renewal = await renewBaseline(port, on, language);
+      if (!alive.current) return;
+      if (renewal.kind === "moved") {
+        // The declaration moved since the check: the edits are checked
+        // again on it, and nothing is applied.
+        moved.current = false;
+        void check();
+        return;
+      }
+      if (renewal.kind === "renewed") {
+        on = renewal.baseline;
+        run = await send(on);
+      }
     }
-    if (renewal.kind === "failed") {
-      setPhase({
-        kind: "not_applied",
-        code: renewal.code,
-        words: null,
-      });
-      return;
-    }
-    const on = renewal.baseline;
-    const run = await runWrite(
-      () =>
-        port.edit(
-          "modelo.edit.apply",
-          modeloEditBody(editSubmission(on, session.staged.values(), language)),
-        ),
-      () => alive.current,
-    );
     if (!run || !alive.current) return;
     if (run.kind === "settled" || run.kind === "saved_unread") {
       session.discardAll();
