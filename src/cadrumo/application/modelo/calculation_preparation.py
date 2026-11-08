@@ -359,6 +359,7 @@ _IVA_ONLY_PREFLIGHT_REASONS = frozenset(
         "movement_invoice_double_count",
         "invoice_cash_accounting_regime_unmodelled",
         "linked_movement_contradicts_invoice",
+        "invoice_recargo_split_unresolved",
     },
 )
 _M200_ACCOUNTING_RESULT_CASILLA: CasillaId = "DP200012:00501"

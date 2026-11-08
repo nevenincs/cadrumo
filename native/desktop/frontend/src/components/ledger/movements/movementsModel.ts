@@ -333,6 +333,7 @@ export const REASON_FIX: Record<
   movement_invoice_double_count: { preset: "review", column: "invoice" },
   invoice_cash_accounting_regime_unmodelled: { preset: "review", column: null },
   linked_movement_contradicts_invoice: { preset: "review", column: "invoice" },
+  invoice_recargo_split_unresolved: { preset: "review", column: "invoice" },
 };
 
 /** Movements to classify whose staged change classifies them or approves a
