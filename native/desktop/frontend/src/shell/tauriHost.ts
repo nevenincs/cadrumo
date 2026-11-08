@@ -601,6 +601,13 @@ function tauriAgent(call: HostCall): {
         call("agent_local_model_remove", { lane, model, expectedRevision }),
       resetLocalModels: (expectedRevision) =>
         call("agent_local_models_reset", { expectedRevision }),
+      localEngine: () => call("agent_local_engine", {}),
+      chooseLocalEngine: (engine, placement, expectedRevision) =>
+        call("agent_local_engine_choose", {
+          engine,
+          placement,
+          expectedRevision,
+        }),
       chooseReadingModel: (lane, model, expectedRevision) =>
         call("agent_reading_model_choose", { lane, model, expectedRevision }),
       modelLicence: (provider, transport, model) =>

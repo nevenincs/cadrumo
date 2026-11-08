@@ -25,7 +25,12 @@ import {
   type AgentToolStatus,
   type AgentViews,
 } from "../shell/agentViews";
-import type { AgentLocalModels } from "../ipc/contract";
+import type {
+  AgentLocalEngine,
+  AgentLocalEngineToken,
+  AgentLocalModels,
+  AgentLocalPlacement,
+} from "../ipc/contract";
 import {
   FIXTURE_CATALOG,
   FIXTURE_DECLARED_CATALOG,
@@ -258,6 +263,17 @@ export function fixtureAgent({
   const added: { lane: string; model: string }[] = [];
   let reading: { lane: string; model: string } | null = null;
   let committed = 0;
+  // The engine record shares the lists' revision, as one stored record
+  // holds both. Ollama stays the default engine.
+  let engine: {
+    engine: AgentLocalEngineToken;
+    placement: AgentLocalPlacement;
+  } = { engine: "ollama", placement: "auto" };
+  const engineSnapshot = (): AgentLocalEngine => ({
+    state: "readable",
+    ...engine,
+    revision: revisionOf(committed),
+  });
   const listSnapshot = (): AgentLocalModels => ({
     state: "readable",
     models: added.map((entry) => ({ ...entry })),
@@ -938,6 +954,20 @@ export function fixtureAgent({
       reading = null;
       committed += 1;
       return listSnapshot();
+    },
+    async localEngine() {
+      say("agentLocalEngine");
+      await check();
+      return engineSnapshot();
+    },
+    async chooseLocalEngine(chosen, placement, expectedRevision) {
+      say(`agentLocalEngineChoose ${chosen} ${placement} ${expectedRevision}`);
+      await guarded(expectedRevision);
+      if (engine.engine === chosen && engine.placement === placement)
+        return engineSnapshot();
+      engine = { engine: chosen, placement };
+      committed += 1;
+      return engineSnapshot();
     },
     async chooseReadingModel(lane, model, expectedRevision) {
       say(`agentReadingModelChoose ${lane} ${model}`);
