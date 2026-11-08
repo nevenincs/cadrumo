@@ -531,13 +531,15 @@ impl World {
         fs::write(folder.join(PRESET), &presented).unwrap();
         {
             let mut state = llama.state.lock().unwrap();
-            for id in presented
+            // The stand-in lists each model under its name, which the preset gives as its
+            // alias.
+            for name in presented
                 .lines()
-                .filter_map(|line| line.strip_prefix('[')?.strip_suffix(']'))
+                .filter_map(|line| line.strip_prefix("alias = "))
             {
                 state
                     .models
-                    .entry(id.to_owned())
+                    .entry(name.to_owned())
                     .or_insert(ModelStatus::Unloaded);
             }
         }
@@ -1743,6 +1745,19 @@ fn a_load_the_router_refuses_or_an_answer_without_a_token_fails_the_full_check()
         count(&world.router_requests(), "POST /v1/completions"),
         4,
         "nothing generates once the load is refused"
+    );
+
+    // A refusal that says in its own words the model did not fit is out of memory.
+    world.script_router(
+        "/models/load",
+        Some((
+            "500 Internal Server Error",
+            json!({ "error": { "message": "failed to allocate memory for the model" } }),
+        )),
+    );
+    assert_eq!(
+        full(&world),
+        ItemState::Failed(FailureCategory::NotEnoughMemory)
     );
     world.script_router("/models/load", None);
 

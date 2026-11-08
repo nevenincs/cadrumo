@@ -184,18 +184,52 @@ fn the_preset_presents_each_whole_model_with_its_context_and_projector() {
         ],
     );
 
+    let hf = "huggingface.co/Owner/Model-GGUF:Model-Q4_K_M";
     let expected = format!(
-        "[huggingface.co/Owner/Model-GGUF:Model-Q4_K_M]\nmodel = {}\nmmproj = {}\nctx-size = 4096\n\n\
-         [qwen3-vl:4b-instruct]\nmodel = {}\nmmproj = {}\nctx-size = 4096\n\n\
-         [qwen3:1.7b]\nmodel = {}\nctx-size = 4096\n\n",
+        "[{}]\nalias = {hf}\nmodel = {}\nmmproj = {}\nctx-size = 4096\n\n\
+         [{}]\nalias = qwen3-vl:4b-instruct\nmodel = {}\nmmproj = {}\nctx-size = 4096\n\n\
+         [{}]\nalias = qwen3:1.7b\nmodel = {}\nctx-size = 4096\n\n",
+        router_id(hf),
         value_of(&models, b"hf weights"),
         value_of(&models, b"hf projector"),
+        router_id("qwen3-vl:4b-instruct"),
         value_of(&models, b"vision weights"),
         value_of(&models, b"vision projector"),
+        router_id("qwen3:1.7b"),
         value_of(&models, b"text weights"),
     );
     assert_eq!(preset(&models, 4096), expected);
     assert_eq!(preset(&root.path().join("no-store"), 4096), "");
+}
+
+#[test]
+fn a_section_the_router_cannot_rewrite_names_each_model_and_the_alias_is_its_name() {
+    let names = [
+        "qwen3:1.7b",
+        "qwen3:1.7B",
+        "qwen3-vl:4b-instruct",
+        "huggingface.co/Owner/Model-GGUF:Model-Q4_K_M",
+    ];
+    let ids: Vec<String> = names.iter().map(|name| router_id(name)).collect();
+    for (id, name) in ids.iter().zip(names) {
+        // The router reads a colon as a repository and a quantisation and rewrites the
+        // section's name, so no id has one, nor anything but a plain token.
+        assert!(
+            id.starts_with("m-") && id[2..].bytes().all(|c| c.is_ascii_hexdigit()),
+            "{name}: {id}"
+        );
+        assert_eq!(*id, router_id(name), "one name has one id every time");
+    }
+    let distinct: std::collections::BTreeSet<&String> = ids.iter().collect();
+    assert_eq!(distinct.len(), names.len(), "{ids:?}");
+
+    // A model is found by the id the router lists it under or by an alias, and by no
+    // other name.
+    let entry = json!({ "id": ids[0], "aliases": [names[0]], "status": { "value": "unloaded" } });
+    assert!(answers_to(&entry, names[0]));
+    assert!(answers_to(&entry, &ids[0]));
+    assert!(!answers_to(&entry, names[1]));
+    assert!(!answers_to(&json!({ "id": ids[0] }), names[0]));
 }
 
 #[test]
@@ -511,7 +545,10 @@ fn a_model_new_in_the_store_restarts_an_idle_router_and_waits_for_a_held_one_to_
     assert!(
         fs::read_to_string(&preset_file)
             .unwrap()
-            .starts_with("[qwen3:1.7b]\n")
+            .starts_with(&format!(
+                "[{}]\nalias = qwen3:1.7b\n",
+                router_id("qwen3:1.7b")
+            ))
     );
     assert_eq!(
         supervisor.next_due(),
@@ -528,10 +565,16 @@ fn a_model_new_in_the_store_restarts_an_idle_router_and_waits_for_a_held_one_to_
         ["registry.ollama.ai", "library", "qwen3", "4b"],
         &[blob(&locations.models, MODEL_MEDIA_TYPE, b"more weights")],
     );
+    assert_running(&mut supervisor, now);
+    assert_eq!(process_id(&supervisor), restarted);
+    // The drain's marker is written at the first look; the looks after it leave it alone.
+    let marker = folder.join(RESTARTING);
+    fs::write(&marker, b"written once").unwrap();
     for _ in 0..3 {
         assert_running(&mut supervisor, now);
         assert_eq!(process_id(&supervisor), restarted);
     }
+    assert_eq!(fs::read(&marker).unwrap(), b"written once");
     assert!(folder.join(RESTARTING).exists());
     assert_eq!(presentation(&folder, &large), Presentation::Restarting);
     assert_eq!(presentation(&folder, &small), Presentation::Restarting);
@@ -582,7 +625,11 @@ fn recorded_router(folder: &Path, fake: &FakeLlamaCpp, process_id: u32, models: 
     let mut preset = String::new();
     let mut state = fake.state.lock().unwrap();
     for model in models {
-        let _ = write!(preset, "[{model}]\nmodel = /m\nctx-size = 8192\n\n");
+        let _ = write!(
+            preset,
+            "[{}]\nalias = {model}\nmodel = /m\nctx-size = 8192\n\n",
+            router_id(model)
+        );
         state
             .models
             .insert((*model).to_owned(), ModelStatus::Unloaded);
@@ -670,7 +717,13 @@ fn a_load_says_whether_it_stayed_and_a_restart_that_overtakes_it_is_retried_not_
         },
     );
     let failed = load(&folder, &model).unwrap_err();
-    assert_eq!(failed, LoadRefused::Failed { status: Some(500) });
+    assert_eq!(
+        failed,
+        LoadRefused::Failed {
+            status: Some(500),
+            out_of_memory: true
+        }
+    );
     assert!(!failed.retryable());
     fake.state.lock().unwrap().failures.clear();
 
@@ -683,4 +736,112 @@ fn a_load_says_whether_it_stayed_and_a_restart_that_overtakes_it_is_retried_not_
     assert_eq!(load(&folder, &model), Ok(()));
     assert_eq!(status(&fake), ModelStatus::Loaded);
     assert_eq!(presentation(&folder, &model), Presentation::Presented);
+}
+
+/// What one check of `model` on a router drained or not, in `folder`, came to.
+fn check(folder: &Path, model: &ModelName, budget: Duration) -> Result<bool, LocalAiError> {
+    check_model(folder, model, "Reply with one word.", budget)
+}
+
+#[test]
+fn a_full_check_a_drain_overtakes_waits_for_the_restart_within_its_budget() {
+    let root = tempfile::tempdir().unwrap();
+    let folder = root.path().join(FOLDER);
+    let fake = FakeLlamaCpp::start(BUILD_INFO);
+    recorded_router(&folder, &fake, 7, &["qwen3:1.7b"]);
+    let model = name("qwen3:1.7b");
+    let marker = folder.join(RESTARTING);
+    fs::write(&marker, b"").unwrap();
+    let requests = |fake: &FakeLlamaCpp| fake.state.lock().unwrap().requests.len();
+
+    // The drain ends while the check waits: it then loads, generates and unloads.
+    let ended = {
+        let marker = marker.clone();
+        std::thread::spawn(move || {
+            std::thread::sleep(Duration::from_millis(600));
+            fs::remove_file(&marker).unwrap();
+        })
+    };
+    let started = Instant::now();
+    assert!(check(&folder, &model, Duration::from_secs(30)).unwrap());
+    assert!(started.elapsed() >= Duration::from_millis(500));
+    ended.join().unwrap();
+    assert_eq!(
+        fake.state.lock().unwrap().models["qwen3:1.7b"],
+        ModelStatus::Unloaded
+    );
+
+    // A drain that outlasts the budget ends the wait there, asking the router nothing.
+    fs::write(&marker, b"").unwrap();
+    let asked = requests(&fake);
+    let started = Instant::now();
+    let refused = check(&folder, &model, Duration::from_millis(600)).unwrap_err();
+    assert!(
+        matches!(
+            refused,
+            LocalAiError::Failed(FailureCategory::ProgramNotRunning)
+        ),
+        "{refused:?}"
+    );
+    assert!(started.elapsed() >= Duration::from_millis(600));
+    assert!(started.elapsed() < Duration::from_secs(10));
+    assert_eq!(requests(&fake), asked);
+}
+
+#[test]
+fn a_load_refused_for_memory_reads_not_enough_memory_and_any_other_refusal_unexpected() {
+    let root = tempfile::tempdir().unwrap();
+    let folder = root.path().join(FOLDER);
+    let fake = FakeLlamaCpp::start(BUILD_INFO);
+    recorded_router(&folder, &fake, 7, &["qwen3:1.7b"]);
+    let model = name("qwen3:1.7b");
+    let refuse = |body: serde_json::Value| {
+        fake.state.lock().unwrap().failures.insert(
+            "/models/load".into(),
+            Scripted {
+                status: "500 Internal Server Error".into(),
+                body,
+            },
+        );
+    };
+    let category = |result: Result<bool, LocalAiError>| match result {
+        Err(LocalAiError::Failed(category)) => category,
+        other => panic!("expected a failure, got {other:?}"),
+    };
+
+    refuse(json!({ "error": { "message": "failed to allocate memory for the model" } }));
+    assert_eq!(
+        load(&folder, &model),
+        Err(LoadRefused::Failed {
+            status: Some(500),
+            out_of_memory: true
+        })
+    );
+    assert_eq!(
+        category(check(&folder, &model, Duration::from_secs(5))),
+        FailureCategory::NotEnoughMemory
+    );
+    refuse(json!({ "error": "Out of MEMORY" }));
+    assert_eq!(
+        category(check(&folder, &model, Duration::from_secs(5))),
+        FailureCategory::NotEnoughMemory
+    );
+
+    refuse(json!({ "error": { "message": "failed to load model" } }));
+    assert_eq!(
+        load(&folder, &model),
+        Err(LoadRefused::Failed {
+            status: Some(500),
+            out_of_memory: false
+        })
+    );
+    assert_eq!(
+        category(check(&folder, &model, Duration::from_secs(5))),
+        FailureCategory::Unexpected
+    );
+    refuse(json!("no JSON error at all"));
+    assert_eq!(
+        category(check(&folder, &model, Duration::from_secs(5))),
+        FailureCategory::Unexpected
+    );
 }

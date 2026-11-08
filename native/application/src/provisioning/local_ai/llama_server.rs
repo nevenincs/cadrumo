@@ -16,10 +16,13 @@
 //! `/models/load`, never loads one by itself (`--no-models-autoload`) and holds at most
 //! one at a time (`--models-max 1`), so no model is loaded or evicted behind the agent's
 //! admission. The models it can load are presented to it in a preset file written from
-//! the store's manifests before each start: one section per whole model, named as the
-//! model's own name reads, with its model layer as `model`, its projector layer as
-//! `mmproj`, and an explicit `ctx-size`, so a load never takes the model's full
-//! training context. Each start writes the preset afresh.
+//! the store's manifests before each start: one section per whole model, with its model
+//! layer as `model`, its projector layer as `mmproj`, and an explicit `ctx-size`, so a
+//! load never takes the model's full training context. Each start writes the preset
+//! afresh. The model's own name is its `alias`, and the section is named [`router_id`]:
+//! the router reads a section name with a colon as a repository and a quantisation and
+//! rewrites it, so a section named `qwen3:1.7b` is listed as `qwen3:7B` and no request
+//! by the name finds it, while an alias is kept as written and answers every request.
 //!
 //! A running server whose preset no longer matches the store drains: from that look on
 //! the `restarting` file in its folder makes every [`load`] refuse with
@@ -28,7 +31,9 @@
 //! for it, and no load through [`load`] can take the router again before the restart,
 //! so a model new in the store waits at most for the model already held to be let go.
 //! A load that a restart overtakes on its way is reported `Restarting` too, never as
-//! done, and [`presentation`] tells whether the running router presents a model.
+//! done, and [`presentation`] tells whether the running router presents a model. The
+//! drain's marker is written once, at the first look that finds the preset stale, and
+//! left alone until the drain is over.
 //!
 //! It is ready once `/health` answers `200`, and it is the pinned build once the
 //! `build_info` of `/props` is the pinned build tag, alone or followed by its commit.
@@ -37,7 +42,8 @@
 //! engine: the quick check reads from the files alone whether the running router's
 //! preset presents a model ([`presented_by_router`]), and the full check
 //! ([`check_model`]) finds the model in the router's list, loads it, generates one token
-//! with it and unloads it again.
+//! with it and unloads it again. A drain that overtakes the full check is waited out for
+//! at most the check's own budget, after which the router reads `program_not_running`.
 
 #[cfg(test)]
 use super::program::ServeOverride;
@@ -58,6 +64,7 @@ use crate::{
     error::Error,
     filesystem,
     provisioning::{failure::FailureCategory, items::Locations, proxy::ProxySettings},
+    value::Sha256Digest,
 };
 use std::{
     collections::BTreeMap,
@@ -66,7 +73,7 @@ use std::{
     fs,
     net::SocketAddr,
     path::{Path, PathBuf},
-    time::Duration,
+    time::{Duration, Instant},
 };
 
 /// The readiness route: `503` while the server is not ready, `200` once it is.
@@ -75,15 +82,17 @@ pub const HEALTH: &str = "/health";
 pub const PROPERTIES: &str = "/props";
 /// The router's models and their statuses.
 const MODELS: &str = "/models";
-/// The router's load of one model by its id.
+/// The router's load of one model by its id or alias.
 const LOAD: &str = "/models/load";
-/// The router's unload of one model by its id.
+/// The router's unload of one model by its id or alias.
 const UNLOAD: &str = "/models/unload";
 /// The router's OpenAI-compatible completion, which it hands to the model named.
 const COMPLETIONS: &str = "/v1/completions";
 /// The file in the server's folder that is there while the running server drains for a
 /// restart: no load is started while it is there.
 pub const RESTARTING: &str = "restarting";
+/// How often a full check looks again while the router drains for a restart.
+const DRAIN_LOOK: Duration = Duration::from_millis(250);
 /// Bound of the preset file a presentation question reads.
 const PRESET_BYTES_LIMIT: u64 = 4 * 1024 * 1024;
 /// The server's folder under the components folder.
@@ -134,8 +143,12 @@ pub enum LoadRefused {
     Restarting,
     /// The running router does not present the model.
     NotPresented,
-    /// The router answered the load with this status, or not at all.
-    Failed { status: Option<u16> },
+    /// The router answered the load with this status, or not at all; `out_of_memory` when
+    /// the refusal's own words say the model did not fit.
+    Failed {
+        status: Option<u16>,
+        out_of_memory: bool,
+    },
 }
 
 impl LoadRefused {
@@ -337,7 +350,11 @@ impl Supervised for LlamaServer {
             let _ = fs::remove_file(&marker);
             return false;
         }
-        if filesystem::refuse_links(&marker).is_err() || fs::write(&marker, b"").is_err() {
+        if filesystem::refuse_links(&marker).is_err() {
+            return false;
+        }
+        // The marker is written once per drain; a look that finds it has nothing to add.
+        if fs::symlink_metadata(&marker).is_err() && fs::write(&marker, b"").is_err() {
             // Without the file a load could start under the restart: wait for a look
             // that can write it.
             return false;
@@ -460,9 +477,9 @@ pub(super) fn build_matches(found: &str, expected: &str) -> bool {
             .is_some_and(|rest| rest.starts_with('-'))
 }
 
-/// The ids of the models the router holds or is loading; `None` when it does not
+/// The entries of the models the router holds or is loading; `None` when it does not
 /// answer with its list.
-fn held(loopback: Loopback) -> Option<Vec<String>> {
+fn held(loopback: Loopback) -> Option<Vec<serde_json::Value>> {
     let Ok((200, body)) = loopback.get(MODELS) else {
         return None;
     };
@@ -471,10 +488,19 @@ fn held(loopback: Loopback) -> Option<Vec<String>> {
         value["data"]
             .as_array()?
             .iter()
-            .filter(|model| holds(model))
-            .filter_map(|model| model["id"].as_str().map(str::to_owned))
+            .filter(|entry| holds(entry))
+            .cloned()
             .collect(),
     )
+}
+
+/// Whether one entry of the router's model list is the model `name`: listed under it or
+/// answering to it as an alias.
+fn answers_to(entry: &serde_json::Value, name: &str) -> bool {
+    entry["id"].as_str() == Some(name)
+        || entry["aliases"]
+            .as_array()
+            .is_some_and(|aliases| aliases.iter().any(|alias| alias.as_str() == Some(name)))
 }
 
 /// The running router in the server's `folder`, unless it drains for a restart.
@@ -503,15 +529,15 @@ fn draining(folder: &Path) -> bool {
     fs::symlink_metadata(folder.join(RESTARTING)).is_ok()
 }
 
-/// Whether the preset the running router was started with presents the model `id`.
-fn presents(folder: &Path, id: &str) -> bool {
+/// Whether the preset the running router was started with presents the model `name`.
+fn presents(folder: &Path, name: &str) -> bool {
     let Ok(bytes) = filesystem::bounded_bytes(&folder.join(PRESET), PRESET_BYTES_LIMIT) else {
         return false;
     };
-    let section = format!("[{id}]");
+    let alias = format!("alias = {name}");
     String::from_utf8_lossy(&bytes)
         .lines()
-        .any(|line| line == section)
+        .any(|line| line == alias)
 }
 
 /// Whether the router running from the server's `folder` presents `model` and takes
@@ -540,7 +566,8 @@ pub fn load(folder: &Path, model: &ModelName) -> Result<(), LoadRefused> {
     if !presents(folder, &id) {
         return Err(LoadRefused::NotPresented);
     }
-    let held_before = held(before.loopback).is_some_and(|held| held.contains(&id));
+    let held_before =
+        held(before.loopback).is_some_and(|held| held.iter().any(|entry| answers_to(entry, &id)));
     let request = serde_json::json!({ "model": id }).to_string();
     let answered = before.loopback.post(LOAD, request.as_bytes());
     let same =
@@ -553,11 +580,28 @@ pub fn load(folder: &Path, model: &ModelName) -> Result<(), LoadRefused> {
     }
     match answered {
         Ok((200, _)) => Ok(()),
-        Ok((status, _)) => Err(LoadRefused::Failed {
+        Ok((status, body)) => Err(LoadRefused::Failed {
             status: Some(status),
+            out_of_memory: out_of_memory(&body),
         }),
-        Err(_) => Err(LoadRefused::Failed { status: None }),
+        Err(_) => Err(LoadRefused::Failed {
+            status: None,
+            out_of_memory: false,
+        }),
     }
+}
+
+/// Whether the error a router answered with says in its own words that it ran out of
+/// memory, as the Ollama server's error text is read.
+fn out_of_memory(body: &[u8]) -> bool {
+    let value: serde_json::Value = serde_json::from_slice(body).unwrap_or_default();
+    let error = &value["error"];
+    error["message"]
+        .as_str()
+        .or_else(|| error.as_str())
+        .unwrap_or_default()
+        .to_lowercase()
+        .contains("memory")
 }
 
 /// Whether the preset of the router recorded in `folder` presents `model`, while it runs
@@ -574,18 +618,62 @@ pub fn presented_by_router(folder: &Path, model: &ModelName) -> Option<bool> {
 /// and unloads it again. `false` when the router does not have the model. A model the
 /// router held before the check is another caller's and stays loaded.
 ///
-/// A router that is not running or drains for a restart reads `program_not_running`, as
-/// does a load it did not answer; a load it refused, and an answer that holds no
-/// generated token, read `unexpected`; a generation that ran out of memory reads
-/// `not_enough_memory`.
+/// A router that drains for a restart is looked at again until it has restarted, for at
+/// most `budget` in all; one that is still draining then, that is not running, or that
+/// did not answer a load reads `program_not_running`. A load it refused, and an answer
+/// that holds no generated token, read `unexpected`; a load refused for memory, or a
+/// generation that ran out of it, reads `not_enough_memory`.
 pub fn check_model(
     folder: &Path,
     model: &ModelName,
     prompt: &str,
     budget: Duration,
 ) -> Result<bool, LocalAiError> {
+    let started = Instant::now();
+    let (loopback, held_before) = loop {
+        match take(folder, model)? {
+            Taken::Loaded {
+                loopback,
+                held_before,
+            } => break (loopback, held_before),
+            Taken::Absent => return Ok(false),
+            Taken::Draining if started.elapsed() < budget => std::thread::sleep(DRAIN_LOOK),
+            Taken::Draining => {
+                return Err(LocalAiError::Failed(FailureCategory::ProgramNotRunning));
+            }
+        }
+    };
+    let id = model.to_string();
+    let generated = generate_one_token(loopback, &id, prompt, budget);
+    if !held_before {
+        let request = serde_json::json!({ "model": id });
+        let _ = loopback.post(UNLOAD, request.to_string().as_bytes());
+    }
+    generated
+}
+
+/// What one attempt to take a model from the router's list into memory came to.
+enum Taken {
+    /// The model is loaded, and was or was not held before the attempt.
+    Loaded {
+        loopback: Loopback,
+        held_before: bool,
+    },
+    /// The router does not have the model.
+    Absent,
+    /// The router drains for a restart, or was started again under the load: nothing of
+    /// the attempt stays loaded, and asking again after the restart can succeed.
+    Draining,
+}
+
+/// Looks `model` up in the list of the router running from `folder` and loads it.
+fn take(folder: &Path, model: &ModelName) -> Result<Taken, LocalAiError> {
     let not_running = || LocalAiError::Failed(FailureCategory::ProgramNotRunning);
-    let router = running(folder).map_err(|_| not_running())?;
+    let router = match running(folder) {
+        Ok(router) => router,
+        Err(LoadRefused::Restarting) => return Ok(Taken::Draining),
+        Err(_) => return Err(not_running()),
+    };
     let loopback = router.loopback;
     let id = model.to_string();
     let (status, body) = loopback
@@ -601,31 +689,29 @@ pub fn check_model(
     let Some(entries) = listed["data"].as_array() else {
         return Err(LocalAiError::Failed(FailureCategory::Unexpected));
     };
-    let Some(entry) = entries
-        .iter()
-        .find(|entry| entry["id"].as_str() == Some(id.as_str()))
-    else {
-        return Ok(false);
+    let Some(entry) = entries.iter().find(|entry| answers_to(entry, &id)) else {
+        return Ok(Taken::Absent);
     };
     let held_before = holds(entry);
     match load(folder, model) {
-        Ok(()) => {}
-        Err(LoadRefused::NotPresented) => return Ok(false),
-        Err(
-            LoadRefused::NotRunning
-            | LoadRefused::Restarting
-            | LoadRefused::Failed { status: None },
-        ) => return Err(not_running()),
-        Err(LoadRefused::Failed { status: Some(_) }) => {
-            return Err(LocalAiError::Failed(FailureCategory::Unexpected));
+        Ok(()) => Ok(Taken::Loaded {
+            loopback,
+            held_before,
+        }),
+        Err(LoadRefused::NotPresented) => Ok(Taken::Absent),
+        Err(LoadRefused::Restarting) => Ok(Taken::Draining),
+        Err(LoadRefused::NotRunning | LoadRefused::Failed { status: None, .. }) => {
+            Err(not_running())
         }
+        Err(LoadRefused::Failed {
+            status: Some(_),
+            out_of_memory,
+        }) => Err(LocalAiError::Failed(if out_of_memory {
+            FailureCategory::NotEnoughMemory
+        } else {
+            FailureCategory::Unexpected
+        })),
     }
-    let generated = generate_one_token(loopback, &id, prompt, budget);
-    if !held_before {
-        let request = serde_json::json!({ "model": id });
-        let _ = loopback.post(UNLOAD, request.to_string().as_bytes());
-    }
-    generated
 }
 
 /// Whether one entry of the router's model list is loaded or loading.
@@ -637,8 +723,8 @@ fn holds(entry: &serde_json::Value) -> bool {
     )
 }
 
-/// Generates one token of `prompt` with the loaded model `id`: `false` when the router
-/// does not have the model.
+/// Generates one token of `prompt` with the loaded model `id`, by the name the router
+/// answers to: `false` when the router does not have the model.
 fn generate_one_token(
     loopback: Loopback,
     id: &str,
@@ -666,27 +752,19 @@ fn generate_one_token(
         // An answer without a generated token is no proof the model generates.
         200 => Err(LocalAiError::Failed(FailureCategory::Unexpected)),
         404 => Ok(false),
-        _ => {
-            let error = &value["error"];
-            let message = error["message"]
-                .as_str()
-                .or_else(|| error.as_str())
-                .unwrap_or_default()
-                .to_lowercase();
-            Err(LocalAiError::Failed(if message.contains("memory") {
-                FailureCategory::NotEnoughMemory
-            } else {
-                FailureCategory::Unexpected
-            }))
-        }
+        _ => Err(LocalAiError::Failed(if out_of_memory(&body) {
+            FailureCategory::NotEnoughMemory
+        } else {
+            FailureCategory::Unexpected
+        })),
     }
 }
 
 /// Unloads every model the router holds; a server that does not answer is left to the
 /// termination that follows.
 pub(super) fn unload_all(loopback: Loopback) {
-    for id in held(loopback).unwrap_or_default() {
-        let request = serde_json::json!({ "model": id });
+    for entry in held(loopback).unwrap_or_default() {
+        let request = serde_json::json!({ "model": entry["id"] });
         let _ = loopback.post(UNLOAD, request.to_string().as_bytes());
     }
 }
@@ -697,12 +775,20 @@ struct Presented {
     projector: Option<String>,
 }
 
+/// The id the router lists the model `name` under: the preset section's name, which has
+/// no colon for the router to rewrite and is the same for one name every time.
+pub fn router_id(name: &str) -> String {
+    let digest = Sha256Digest::of(name.as_bytes());
+    format!("m-{}", &digest.as_str()[..16])
+}
+
 /// The preset text for the models under `models` at `context` tokens: one section per
-/// whole model, in the order of their names.
+/// whole model, in the order of their names, each model's name as its alias.
 pub fn preset(models: &Path, context: u32) -> String {
     let mut text = String::new();
-    for (id, presented) in presented(models) {
-        let _ = writeln!(text, "[{id}]");
+    for (name, presented) in presented(models) {
+        let _ = writeln!(text, "[{}]", router_id(&name));
+        let _ = writeln!(text, "alias = {name}");
         let _ = writeln!(text, "model = {}", presented.model);
         if let Some(projector) = &presented.projector {
             let _ = writeln!(text, "mmproj = {projector}");
