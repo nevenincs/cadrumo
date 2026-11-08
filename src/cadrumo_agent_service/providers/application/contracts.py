@@ -21,7 +21,7 @@ from cadrumo.core.json_contract import OutputSchema
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 
 from ..domain.catalog import LaneId, ProviderAuthKind, ProviderConsumer, ProviderId, ProviderTransport
-from ..domain.record import ModelId
+from ..domain.record import LocalEngine, LocalPlacement, ModelId
 
 ProviderSettingsRevision = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")]
 """A status revision: the stored row's opaque revision, or all zeros when no record exists."""
@@ -196,8 +196,36 @@ class LocalModelListStatus(OutputSchema):
 type LocalModelListResult = LocalModelListStatus | ProviderSettingsRefusal
 
 
+class LocalEngineStatus(OutputSchema):
+    """The local engine setting: the engine that runs models on this computer and where it runs them.
+
+    It is kept in the model list record, so ``revision`` is that record's
+    guard and a change to either sends it back. An absent record reads as the
+    default engine and placement. ``unreadable`` means the stored record
+    cannot be read: then no engine or placement is known and none is
+    assumed, and ``revision`` guards the reset that removes the record.
+    """
+
+    unreadable: bool
+    engine: LocalEngine | None
+    placement: LocalPlacement | None
+    revision: ProviderSettingsRevision
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _setting_follows_readability(self) -> Self:
+        if self.unreadable != (self.engine is None) or self.unreadable != (self.placement is None):
+            raise ValueError("an unreadable record names no engine or placement, and a readable one names both")
+        return self
+
+
+type LocalEngineResult = LocalEngineStatus | ProviderSettingsRefusal
+
+
 __all__ = [
     "CliState",
+    "LocalEngineResult",
+    "LocalEngineStatus",
     "LocalModelListEntry",
     "LocalModelListResult",
     "LocalModelListStatus",

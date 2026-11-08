@@ -34,10 +34,12 @@ class _AdminRecorder:
     def __init__(self) -> None:
         self.actions: list[str] = []
         self.secret: bytearray | None = None
+        self.metadata: dict[str, object] = {}
 
     def admin(self, action: str, *, secret: bytearray | None = None, **metadata: object) -> dict[str, JsonValue]:
         self.actions.append(action)
         self.secret = secret
+        self.metadata = metadata
         if action == "set":
             assert secret == bytearray(b"synthetic-provider-secret")
         return {"kind": "served", "action": action}
@@ -65,6 +67,8 @@ class _AdminRecorder:
         "local_model_remove",
         "local_models_reset",
         "reading_model_choose",
+        "local_engine",
+        "local_engine_choose",
     ],
 )
 def test_gateway_frame_secret_is_refused_and_parent_admin_secret_dispatches(action: str) -> None:
@@ -94,6 +98,8 @@ def test_gateway_frame_secret_is_refused_and_parent_admin_secret_dispatches(acti
         request["expected_revision"] = "0" * 64
     if action in {"local_model_add", "local_model_remove", "reading_model_choose"}:
         request.update(provider="synthetic_api", model="synthetic-model-1")
+    if action == "local_engine_choose":
+        request.update(engine="llamacpp", placement="cpu_only", expected_revision="0" * 64)
     secret = b"synthetic-provider-secret"
     if action in {"set", "connect_submit_code"}:
         request["secret_bytes"] = len(secret)
@@ -114,6 +120,10 @@ def test_gateway_frame_secret_is_refused_and_parent_admin_secret_dispatches(acti
                 "result": {"kind": "served", "action": action},
             }
         assert target.actions == [action]
+        if action == "local_engine_choose":
+            assert target.metadata["engine"] == "llamacpp"
+            assert target.metadata["placement"] == "cpu_only"
+            assert target.metadata["expected_revision"] == "0" * 64
         if action in {"set", "connect_submit_code"}:
             assert target.secret == bytearray()
     finally:
@@ -148,3 +158,30 @@ def test_a_model_added_to_the_list_is_any_model_id_the_catalogues_carry(model: s
 def test_a_model_id_outside_the_shared_rule_is_refused(model: str) -> None:
     with pytest.raises(ValidationError):
         AdminRequest(version=1, request_id=uuid4(), action="local_model_add", model=model)
+
+
+def _engine_request(engine: str, placement: str) -> dict[str, object]:
+    return {
+        "version": 1,
+        "request_id": uuid4(),
+        "action": "local_engine_choose",
+        "engine": engine,
+        "placement": placement,
+        "expected_revision": "0" * 64,
+    }
+
+
+@pytest.mark.parametrize(("engine", "placement"), [("llamacpp", "cpu_only"), ("ollama", "auto")])
+def test_the_local_engine_is_chosen_by_a_known_engine_and_placement(engine: str, placement: str) -> None:
+    request = AdminRequest.model_validate(_engine_request(engine, placement))
+
+    assert (request.engine, request.placement) == (engine, placement)
+
+
+@pytest.mark.parametrize(
+    ("engine", "placement"),
+    [("vllm", "auto"), ("", "auto"), ("LLAMACPP", "auto"), ("llamacpp", "gpu_only"), ("llamacpp", "CPU_ONLY")],
+)
+def test_an_unknown_engine_or_placement_token_is_refused_at_ingress(engine: str, placement: str) -> None:
+    with pytest.raises(ValidationError):
+        AdminRequest.model_validate(_engine_request(engine, placement))

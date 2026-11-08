@@ -9,7 +9,8 @@ kept in a record capability of its own, apart from the provider records.
 
 The same record keeps the model the person selected in the agent's model
 picker, on any lane the catalogue reports, local or not. Document reading runs
-with that one model.
+with that one model. It also keeps the local engine setting: which engine runs
+models on this computer and where it runs them.
 
 The service is bound to one profile's list store and performs the person's
 acts:
@@ -17,6 +18,7 @@ acts:
 * add a model to a local lane's list by name;
 * remove a model the person added;
 * store the model the person selected to read with;
+* choose the local engine and its placement;
 * reset the record, readable or not, at the revision the caller read.
 
 Every change carries the revision the caller read as its guard, is committed
@@ -38,14 +40,20 @@ from cadrumo.core.time.clock import now
 
 from ..domain.catalog import ProviderAuthKind, ProviderCatalog, ProviderCatalogEntry
 from ..domain.record import (
+    DEFAULT_LOCAL_ENGINE,
+    DEFAULT_LOCAL_PLACEMENT,
     LOCAL_MODEL_LIST_MAX_MODELS,
     LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
     ListedModel,
+    LocalEngine,
     LocalModelListRecord,
+    LocalPlacement,
     ModelId,
     new_settings_generation,
 )
 from .contracts import (
+    LocalEngineResult,
+    LocalEngineStatus,
     LocalModelListEntry,
     LocalModelListResult,
     LocalModelListStatus,
@@ -121,7 +129,8 @@ class LocalModelListService:
         kept = _kept(added, catalog)
         if len(kept) >= LOCAL_MODEL_LIST_MAX_MODELS:
             return _refused(ProviderSettingsRefusalCode.MODEL_LIST_FULL)
-        return self._commit((*kept, ListedModel(lane=entry.id, model=model)), _reading_of(record), expected_revision)
+        listed = (*kept, ListedModel(lane=entry.id, model=model))
+        return self._list_answer(self._commit(listed, _reading_of(record), _setting_of(record), expected_revision))
 
     def remove(self, lane: str, *, model: str, expected_revision: str) -> LocalModelListResult:
         """Remove ``model``, which the person added to ``lane``'s list; a recommended model stays listed."""
@@ -136,7 +145,7 @@ class LocalModelListService:
         if not any(held.lane == lane and held.model == model for held in added):
             return _refused(ProviderSettingsRefusalCode.UNKNOWN)
         kept = tuple(held for held in _kept(added, catalog) if (held.lane, held.model) != (lane, model))
-        return self._commit(kept, _reading_of(record), expected_revision)
+        return self._list_answer(self._commit(kept, _reading_of(record), _setting_of(record), expected_revision))
 
     def choose_reading(self, lane: str, *, model: str, expected_revision: str) -> LocalModelListResult:
         """Store ``model`` on ``lane`` as the model documents are read with.
@@ -160,7 +169,32 @@ class LocalModelListService:
         if _reading_of(record) == chosen:
             return _list_status(read, self._local_lane_ids())
         added = () if record is None else record.models
-        return self._commit(_kept(added, catalog), chosen, expected_revision)
+        return self._list_answer(self._commit(_kept(added, catalog), chosen, _setting_of(record), expected_revision))
+
+    def engine_status(self) -> LocalEngineResult:
+        """Return the local engine setting, or a typed refusal."""
+        read = self._store.read()
+        if isinstance(read, StoreRefusal):
+            return _refused(ProviderSettingsRefusalCode(read.code.value))
+        return _engine_status(read)
+
+    def choose_engine(
+        self, engine: LocalEngine, placement: LocalPlacement, *, expected_revision: str
+    ) -> LocalEngineResult:
+        """Store ``engine`` and ``placement`` as the local engine setting.
+
+        The added models and the reading model are kept as stored. Storing
+        the setting already stored answers it unchanged.
+        """
+        current = self._current(expected_revision)
+        if isinstance(current, ProviderSettingsRefusal):
+            return current
+        record, read = current
+        if _setting_of(record) == (engine, placement):
+            return _engine_status(read)
+        added = () if record is None else record.models
+        committed = self._commit(added, _reading_of(record), (engine, placement), expected_revision)
+        return committed if isinstance(committed, ProviderSettingsRefusal) else _engine_status(committed)
 
     def reset(self, *, expected_revision: str) -> LocalModelListResult:
         """Delete the model list record, readable or not, at the revision the caller read."""
@@ -204,12 +238,19 @@ class LocalModelListService:
         return (read.record if isinstance(read, StoredLocalModelList) else None), read
 
     def _commit(
-        self, models: tuple[ListedModel, ...], reading: ListedModel | None, expected_revision: str
-    ) -> LocalModelListResult:
+        self,
+        models: tuple[ListedModel, ...],
+        reading: ListedModel | None,
+        setting: tuple[LocalEngine, LocalPlacement],
+        expected_revision: str,
+    ) -> StoredLocalModelList | ProviderSettingsRefusal:
+        engine, placement = setting
         record = LocalModelListRecord(
             schema_version=LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
             models=models,
             reading=reading,
+            engine=engine,
+            placement=placement,
             generation=new_settings_generation(),
             updated_at=self._clock(),
         )
@@ -219,7 +260,12 @@ class LocalModelListService:
         read = self._store.read()
         if not isinstance(read, StoredLocalModelList) or read.record.generation != record.generation:
             return _refused(ProviderSettingsRefusalCode.COMMITTED_READBACK_FAILED)
-        return _list_status(read, self._local_lane_ids())
+        return read
+
+    def _list_answer(self, committed: StoredLocalModelList | ProviderSettingsRefusal) -> LocalModelListResult:
+        if isinstance(committed, ProviderSettingsRefusal):
+            return committed
+        return _list_status(committed, self._local_lane_ids())
 
 
 def _model_is_listed(entry: ProviderCatalogEntry, model: str, added: tuple[ListedModel, ...]) -> bool:
@@ -238,6 +284,21 @@ def _kept(added: Iterable[ListedModel], catalog: ProviderCatalog) -> tuple[Liste
 
 def _reading_of(record: LocalModelListRecord | None) -> ListedModel | None:
     return None if record is None else record.reading
+
+
+def _setting_of(record: LocalModelListRecord | None) -> tuple[LocalEngine, LocalPlacement]:
+    """Return the record's local engine setting; an absent record means the defaults."""
+    if record is None:
+        return DEFAULT_LOCAL_ENGINE, DEFAULT_LOCAL_PLACEMENT
+    return record.engine, record.placement
+
+
+def _engine_status(read: LocalModelListRead) -> LocalEngineStatus:
+    """Project a list read onto its local engine setting; an unreadable record names none."""
+    if isinstance(read, UnreadableLocalModelList):
+        return LocalEngineStatus(unreadable=True, engine=None, placement=None, revision=read.revision)
+    engine, placement = _setting_of(read.record if isinstance(read, StoredLocalModelList) else None)
+    return LocalEngineStatus(unreadable=False, engine=engine, placement=placement, revision=_list_revision(read))
 
 
 def _is_model_id(model: str) -> bool:

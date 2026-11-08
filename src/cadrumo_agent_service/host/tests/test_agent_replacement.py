@@ -19,6 +19,7 @@ from uuid import uuid4
 
 import pytest
 
+from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo.tests.process_support import fixture_arguments, fixture_environment, native_python
 from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 from cadrumo_client.transport.service_client import InstalledServiceClient
@@ -28,6 +29,9 @@ from ...adapters.agent_programs import PACKAGE_AGENT_VARIABLE
 from ...gateway_credentials import GatewayCredentials
 from ...host.launcher_protocol import AgentLauncherRefusal
 from ...providers.application.contracts import ProviderSettingsRefusalCode
+from ...providers.application.local_model_list import LocalModelListService
+from ...providers.application.tests.memory_store import MemoryLocalModelListStore
+from ...providers.application.tests.synthetic_catalog import ProvidedProviderCatalogSource, synthetic_catalog
 from ...service import AgentService
 from ...service_support import LIFECYCLE_ADMISSION_SECONDS
 from ..controller import (
@@ -219,3 +223,132 @@ def test_administration_answers_busy_while_lifecycle_work_holds_the_tree_instead
         controller.stop()
         service._ownership.close()
     assert not _alive(grandchild, within=5)
+
+
+def _with_memory_model_list(service: AgentService) -> MemoryLocalModelListStore:
+    """Back the service's local engine setting with an in-memory record, as the real store would hold it."""
+    store = MemoryLocalModelListStore()
+    service._local_models = LocalModelListService(
+        store=store, catalog_source=ProvidedProviderCatalogSource(synthetic_catalog())
+    )
+    return store
+
+
+def test_a_ready_tree_marked_superseded_is_withheld_while_a_later_ready_tree_is_not(tmp_path: Path) -> None:
+    service, _, grandchild = _running_service(tmp_path, _CredentialSource())
+    controller = service._controller
+    assert controller is not None
+    try:
+        assert controller.published() is not None
+        assert controller.superseded() is False
+
+        controller.supersede()
+
+        assert controller.superseded() is True
+        assert controller.published() is None
+        assert controller.state is AgentHostState.READY
+
+        controller.stop()
+        controller.start()
+        assert controller.superseded() is False
+        assert controller.published() is not None
+    finally:
+        controller.stop()
+        service._ownership.close()
+    assert not _alive(grandchild, within=5)
+
+
+def test_choosing_the_local_engine_retires_the_running_agent_and_schedules_its_replacement(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv(PACKAGE_AGENT_VARIABLE, raising=False)
+    service, events, grandchild = _running_service(tmp_path, _CredentialSource())
+    store = _with_memory_model_list(service)
+    try:
+        assert service.admin("local_engine") == {
+            "unreadable": False,
+            "engine": "ollama",
+            "placement": "auto",
+            "revision": ABSENT_SECURE_OBJECT_REVISION_ID,
+        }
+        assert service.observe() is True
+
+        answer = service.admin(
+            "local_engine_choose",
+            engine="llamacpp",
+            placement="cpu_only",
+            expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID,
+        )
+
+        assert store.stored is not None
+        assert answer == {
+            "unreadable": False,
+            "engine": "llamacpp",
+            "placement": "cpu_only",
+            "revision": store.stored.revision,
+        }
+        thread = service._start_thread
+        assert thread is not None
+        thread.join(60)
+        assert not thread.is_alive()
+        assert events == [
+            {"event": "stopped", "code": "agent_retired"},
+            {"event": "refused", "code": AgentLauncherRefusal.SERVICE_ABSENT.value},
+        ]
+        assert service._controller is None
+        assert not _alive(grandchild, within=5)
+    finally:
+        controller = service._controller
+        if controller is not None:
+            controller.stop()
+        service._ownership.close()
+
+
+def test_choosing_the_stored_local_engine_setting_again_leaves_the_running_agent_alone(tmp_path: Path) -> None:
+    service, events, grandchild = _running_service(tmp_path, _CredentialSource())
+    _with_memory_model_list(service)
+    controller = service._controller
+    assert controller is not None
+    try:
+        answer = service.admin(
+            "local_engine_choose",
+            engine="ollama",
+            placement="auto",
+            expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID,
+        )
+
+        assert answer["revision"] == ABSENT_SECURE_OBJECT_REVISION_ID
+        assert service._start_thread is None
+        assert controller.superseded() is False
+        assert controller.published() is not None
+        assert service._controller is controller
+        assert events == []
+        assert _alive(grandchild)
+    finally:
+        controller.stop()
+        service._ownership.close()
+
+
+@pytest.mark.parametrize("missing", ["engine", "placement", "expected_revision"])
+def test_choosing_the_local_engine_without_every_argument_is_refused_and_leaves_the_agent_alone(
+    tmp_path: Path, missing: str
+) -> None:
+    service, events, grandchild = _running_service(tmp_path, _CredentialSource())
+    store = _with_memory_model_list(service)
+    controller = service._controller
+    assert controller is not None
+    arguments: dict[str, Any] = {
+        "engine": "llamacpp",
+        "placement": "cpu_only",
+        "expected_revision": ABSENT_SECURE_OBJECT_REVISION_ID,
+    }
+    del arguments[missing]
+    try:
+        assert service.admin("local_engine_choose", **arguments) == {"kind": "refused", "code": "invalid_request"}
+        assert store.stored is None
+        assert controller.superseded() is False
+        assert events == []
+        assert _alive(grandchild)
+    finally:
+        controller.stop()
+        service._ownership.close()
