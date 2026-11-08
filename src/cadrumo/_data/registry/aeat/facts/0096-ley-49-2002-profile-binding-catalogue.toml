@@ -66,6 +66,8 @@ entries = [
   { key = "setup.field.new_entity_first_two_profit_periods", value = "taxpayer_type.new_entity_first_two_profit_periods|bool|" },
   { key = "setup.field.output_language", value = "preferences.output_language|str|es" },
   { key = "setup.field.pays_capital_income_with_retencion", value = "withholding.pays_capital_income_with_retencion|bool|" },
+  { key = "setup.field.pays_non_resident_income_with_retencion", value = "withholding.pays_non_resident_income_with_retencion|bool|" },
+  { key = "setup.field.patrimonio_declaration_threshold_met", value = "obligations.patrimonio_declaration_threshold_met|bool|" },
   { key = "setup.field.pays_professionals_with_retencion", value = "withholding.pays_professionals_with_retencion|bool|" },
   { key = "setup.field.pays_rent_with_retencion", value = "withholding.pays_rent_with_retencion|bool|" },
   { key = "setup.field.premio_loteria_gravamen_especial_sin_retencion", value = "obligations.premio_loteria_gravamen_especial_sin_retencion|bool|" },

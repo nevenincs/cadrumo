@@ -75,6 +75,8 @@ profile:
         Model 720
       monedas_virtuales_extranjero_above_threshold: Monedes virtuals a l'estranger
         superen el llindar del Model 721
+      patrimonio_declaration_threshold_met: 'Obligat a declarar l''Impost sobre el
+        Patrimoni: quota a ingressar o béns i drets de més de 2.000.000 euros'
       premio_loteria_gravamen_especial_sin_retencion: Premi de loteries o apostes
         subjecte al gravamen especial obtingut sense retenció ni ingrés a compte (Model
         136)
@@ -138,6 +140,8 @@ profile:
       modelo_111_no_retenciones_periods: Períodes Model 111 sense retencions
       modelo_115_no_relevant_payment_periods: Períodes Model 115 sense pagament rellevant
       pays_capital_income_with_retencion: Paga rendes de capital amb retenció
+      pays_non_resident_income_with_retencion: Pagues a no residents sense establiment
+        permanent rendes subjectes a retenció
       pays_professionals_with_retencion: Paga a professionals amb retenció
       pays_rent_with_retencion: Paga lloguer de local amb retenció
   schema:
@@ -382,6 +386,8 @@ profile:
           label: Llindar del Model 720 superat
         monedas_virtuales_extranjero_above_threshold:
           label: Llindar del Model 721 superat
+        patrimonio_declaration_threshold_met:
+          label: Obligació de declarar l'Impost sobre el Patrimoni (Model 714)
         premio_loteria_gravamen_especial_sin_retencion:
           label: Premi de loteria sense retenció (Model 136)
         premio_loteria_gravamen_especial_trimestres:
@@ -578,6 +584,8 @@ profile:
           label: Períodes Model 115 sense pagament rellevant
         pays_capital_income_with_retencion:
           label: Paga rendiments de capital amb retenció
+        pays_non_resident_income_with_retencion:
+          label: Pagues rendes subjectes a retenció a no residents (Models 216 i 296)
         pays_professionals_with_retencion:
           label: Paga a professionals amb retenció
         pays_rent_with_retencion:

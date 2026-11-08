@@ -3919,6 +3919,9 @@ cli:
         your virtual currencies held abroad exceed the reporting threshold.
       oss_unset: Your profile does not yet record whether you are registered for the
         one-stop-shop VAT regime.
+      patrimonio_umbral_unset: Your profile does not yet say whether your Impuesto
+        sobre el Patrimonio tax is payable or your assets and rights exceed 2,000,000
+        euros.
       premio_loteria_trimestres_unset: Your profile does not yet record in which quarters
         you collected a lottery prize taxed by the special levy without withholding.
       premio_loteria_unset: Your profile does not yet record whether you collected
@@ -3932,6 +3935,8 @@ cli:
         pay rent and withhold tax from the rent.
       retencion_capital_unset: Your profile does not yet record whether you pay investment
         income subject to withholding.
+      retencion_no_residentes_unset: Your profile does not yet say whether you pay
+        income subject to IRNR withholding to non-residents without a permanent establishment.
       retencion_profesionales_unset: Your profile does not yet record whether you
         pay professionals and withhold tax from their fees.
       sii_unset: Your profile does not yet record whether you keep your VAT ledgers

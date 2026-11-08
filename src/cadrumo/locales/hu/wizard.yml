@@ -422,8 +422,14 @@ wizard:
           érvényes.
       output-language:
         help: CLI kimeneti nyelv ehhez a profilhoz
+      patrimonio-declaration-threshold-met:
+        help: Az Impuesto sobre el Patrimonio szerinti adód fizetendő, vagy ha nem,
+          a vagyonod és jogaid értéke meghaladja a 2 000 000 eurót
       pays-capital-income-with-retencion:
         help: Forrásadóval terhelt tőkejövedelmet fizet
+      pays-non-resident-income-with-retencion:
+        help: IRNR-forrásadó alá eső jövedelmet fizetsz állandó telephely nélküli
+          külföldi illetőségűeknek
       pays-professionals-with-retencion:
         help: Forrásadóval terhelt díjazást fizet szakembereknek
       pays-rent-with-retencion:
@@ -643,8 +649,14 @@ wizard:
         prompt: Modelo 115 releváns kifizetés nélküli időszakai
       monedas-virtuales-extranjero-above-threshold:
         prompt: Külföldi virtuális valuták meghaladják a Modelo 721 küszöbértékét
+      patrimonio-declaration-threshold-met:
+        prompt: Az Impuesto sobre el Patrimonio szerinti adód fizetendő, vagy a vagyonod
+          és jogaid értéke meghaladja a 2 000 000 eurót
       pays-capital-income-with-retencion:
         prompt: Forrásadóval terhelt tőkejövedelmet fizet
+      pays-non-resident-income-with-retencion:
+        prompt: Forrásadó-köteles jövedelmet fizetsz állandó telephely nélküli külföldi
+          illetőségűeknek
       pays-professionals-with-retencion:
         prompt: Forrásadóval terhelt díjazást fizet szakembereknek
       pays-rent-with-retencion:

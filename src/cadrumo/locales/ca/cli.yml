@@ -4182,6 +4182,9 @@ cli:
         monedes virtuals situades a l’estranger superen el llindar de declaració.
       oss_unset: Al teu perfil encara no consta si estàs donat d’alta al règim de
         finestreta única (OSS/IOSS).
+      patrimonio_umbral_unset: Al teu perfil encara no consta si la teva quota de
+        l'Impost sobre el Patrimoni resulta a ingressar o si els teus béns i drets
+        superen 2.000.000 euros.
       premio_loteria_trimestres_unset: Al teu perfil encara no consta en quins trimestres
         vas cobrar un premi de loteria subjecte al gravamen especial sense retenció.
       premio_loteria_unset: Al teu perfil encara no consta si has cobrat un premi
@@ -4194,6 +4197,8 @@ cli:
         i hi practiques retencions.
       retencion_capital_unset: Al teu perfil encara no consta si pagues rendiments
         del capital subjectes a retenció.
+      retencion_no_residentes_unset: Al teu perfil encara no consta si pagues a no
+        residents sense establiment permanent rendes subjectes a retenció de l'IRNR.
       retencion_profesionales_unset: Al teu perfil encara no consta si pagues honoraris
         a professionals i hi practiques retencions.
       sii_unset: Al teu perfil encara no consta si portes els llibres registre de

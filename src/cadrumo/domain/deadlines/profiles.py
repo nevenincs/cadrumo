@@ -143,9 +143,11 @@ _BARE_PROFILE_FLAG_KEYS: tuple[tuple[str, str], ...] = (
     ("art109_activity_income_withholding_ge_70pct", "irpf.art109_activity_income_withholding_ge_70pct"),
     ("pays_rent_with_retencion", "withholding.pays_rent_with_retencion"),
     ("pays_capital_income_with_retencion", "withholding.pays_capital_income_with_retencion"),
+    ("pays_non_resident_income_with_retencion", "withholding.pays_non_resident_income_with_retencion"),
     ("does_intracomunitario", "iva.does_intracomunitario"),
     ("bienes_extranjero_above_threshold", "obligations.bienes_extranjero_above_threshold"),
     ("monedas_virtuales_extranjero_above_threshold", "obligations.monedas_virtuales_extranjero_above_threshold"),
+    ("patrimonio_declaration_threshold_met", "obligations.patrimonio_declaration_threshold_met"),
     (
         "premio_loteria_gravamen_especial_sin_retencion",
         "obligations.premio_loteria_gravamen_especial_sin_retencion",
@@ -187,6 +189,7 @@ class _ProfileWithholdingFields(TypedDict):
     art109_activity_income_withholding_ge_70pct: bool | None
     pays_rent_with_retencion: bool | None
     pays_capital_income_with_retencion: bool | None
+    pays_non_resident_income_with_retencion: bool | None
 
 
 class _ProfileObligationFields(TypedDict):
@@ -194,6 +197,7 @@ class _ProfileObligationFields(TypedDict):
     third_party_transactions_above_347_threshold: bool | None
     bienes_extranjero_above_threshold: bool | None
     monedas_virtuales_extranjero_above_threshold: bool | None
+    patrimonio_declaration_threshold_met: bool | None
     premio_loteria_gravamen_especial_sin_retencion: bool | None
     premio_loteria_gravamen_especial_trimestres: frozenset[str] | None
 
@@ -326,6 +330,7 @@ def _resolve_profile_withholding_fields(typed: SetupAnswers) -> _ProfileWithhold
         ),
         "pays_rent_with_retencion": _declared_bool(typed.pays_rent_with_retencion),
         "pays_capital_income_with_retencion": _declared_bool(typed.pays_capital_income_with_retencion),
+        "pays_non_resident_income_with_retencion": _declared_bool(typed.pays_non_resident_income_with_retencion),
     }
 
 
@@ -345,6 +350,7 @@ def _resolve_profile_obligation_fields(typed: SetupAnswers) -> _ProfileObligatio
         "monedas_virtuales_extranjero_above_threshold": _declared_bool(
             typed.monedas_virtuales_extranjero_above_threshold,
         ),
+        "patrimonio_declaration_threshold_met": _declared_bool(typed.patrimonio_declaration_threshold_met),
         "premio_loteria_gravamen_especial_sin_retencion": _declared_bool(
             typed.premio_loteria_gravamen_especial_sin_retencion,
         ),

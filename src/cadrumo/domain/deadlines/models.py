@@ -573,6 +573,10 @@ class TaxpayerProfile(BaseModel):
         monedas_virtuales_extranjero_above_threshold: Whether the
             taxpayer holds virtual currencies abroad above the Modelo
             721 threshold; ``None`` when unanswered.
+        patrimonio_declaration_threshold_met: Whether the Impuesto sobre
+            el Patrimonio cuota is payable or, failing that, the assets
+            and rights exceed 2.000.000 euros (Ley 19/1991 art. 37,
+            Modelo 714); ``None`` when unanswered.
         premio_loteria_gravamen_especial_sin_retencion: Whether the
             taxpayer obtained a lottery or betting prize subject to the
             gravamen especial that was not subject to retención or
@@ -626,6 +630,7 @@ class TaxpayerProfile(BaseModel):
     art109_activity_income_withholding_ge_70pct: bool | None = None
     pays_rent_with_retencion: bool | None = None
     pays_capital_income_with_retencion: bool | None = None
+    pays_non_resident_income_with_retencion: bool | None = None
     objective_estimation_prior_year_gross_income_eur: Decimal | None = None
     objective_estimation_prior_year_invoice_gross_income_eur: Decimal | None = None
     objective_estimation_prior_year_agri_livestock_forest_gross_eur: Decimal | None = None
@@ -634,6 +639,7 @@ class TaxpayerProfile(BaseModel):
     third_party_transactions_above_347_threshold: bool | None = None
     bienes_extranjero_above_threshold: bool | None = None
     monedas_virtuales_extranjero_above_threshold: bool | None = None
+    patrimonio_declaration_threshold_met: bool | None = None
     premio_loteria_gravamen_especial_sin_retencion: bool | None = None
     premio_loteria_gravamen_especial_trimestres: frozenset[str] | None = None
     iva: ModeloIVAProfile | None = None

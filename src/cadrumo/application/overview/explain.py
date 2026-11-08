@@ -168,10 +168,12 @@ _DEADLINE_RELEVANT_FIELDS: tuple[str, ...] = (
     "art109_activity_income_withholding_ge_70pct",
     "pays_rent_with_retencion",
     "pays_capital_income_with_retencion",
+    "pays_non_resident_income_with_retencion",
     "does_intracomunitario",
     "third_party_transactions_above_347_threshold",
     "bienes_extranjero_above_threshold",
     "monedas_virtuales_extranjero_above_threshold",
+    "patrimonio_declaration_threshold_met",
     "premio_loteria_gravamen_especial_sin_retencion",
 )
 

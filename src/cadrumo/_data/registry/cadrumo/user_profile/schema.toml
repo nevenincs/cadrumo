@@ -1163,6 +1163,17 @@ model_selectors = ["pays_capital_income_with_retencion"]
 schedule_predicates = ["pays_capital_income_with_retencion"]
 
 [[sections.fields]]
+key = "pays_non_resident_income_with_retencion"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the taxpayer pays income subject to Impuesto sobre la Renta de no Residentes to non-residents without a permanent establishment and must withhold on it (TRLIRNR art. 31), which brings the Modelo 216 autoliquidaciones and the Modelo 296 annual summary. Separate from resident withholding (employees, professionals, rent): those are IRPF retenciones. Operator-declared; absent means undeclared."
+model_selectors = ["pays_non_resident_income_with_retencion"]
+schedule_predicates = ["pays_non_resident_income_with_retencion"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-31"]
+
+[[sections.fields]]
 key = "modelo_111_no_retenciones_periods"
 type = "string"
 required = false
@@ -1373,6 +1384,17 @@ effective_dated = true
 description = "Modelo 721 eligibility: virtual currencies held abroad declared above the legal threshold."
 model_selectors = ["monedas_virtuales_extranjero_above_threshold"]
 schedule_predicates = ["monedas_virtuales_extranjero_above_threshold"]
+
+[[sections.fields]]
+key = "patrimonio_declaration_threshold_met"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Modelo 714 eligibility: the Impuesto sobre el Patrimonio cuota, after deductions and bonificaciones, is payable, or otherwise the value of the taxpayer's assets and rights exceeds 2.000.000 euros (Ley 19/1991 art. 37). Operator-declared; absent means undeclared."
+model_selectors = ["patrimonio_declaration_threshold_met"]
+schedule_predicates = ["patrimonio_declaration_threshold_met"]
+legal_refs = ["ley-19-1991:art-37"]
 
 [[sections.fields]]
 key = "premio_loteria_gravamen_especial_sin_retencion"

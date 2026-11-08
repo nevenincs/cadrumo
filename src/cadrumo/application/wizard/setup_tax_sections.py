@@ -183,6 +183,12 @@ def _obligations_withholding_questions(
             suffix="obligations",
             default=None,
         ),
+        confirmation_question(
+            "pays-non-resident-income-with-retencion",
+            "withholding.pays_non_resident_income_with_retencion",
+            suffix="obligations",
+            default=None,
+        ),
         WizardQuestion(
             id="modelo-111-no-retenciones-periods",
             profile_key="withholding.modelo_111_no_retenciones_periods",
@@ -304,6 +310,13 @@ def build_obligations_section(
                 "obligations.monedas_virtuales_extranjero_above_threshold",
                 suffix="obligations",
                 default=None,
+            ),
+            confirmation_question(
+                "patrimonio-declaration-threshold-met",
+                "obligations.patrimonio_declaration_threshold_met",
+                suffix="obligations",
+                default=None,
+                visible_when=_natural_person,
             ),
             confirmation_question(
                 "premio-loteria-gravamen-especial-sin-retencion",

@@ -75,6 +75,8 @@ profile:
       bienes_extranjero_above_threshold: Külföldi vagyon meghaladja a Modelo 720 küszöbértékét
       monedas_virtuales_extranjero_above_threshold: Külföldi virtuális valuták meghaladják
         a Modelo 721 küszöbértékét
+      patrimonio_declaration_threshold_met: 'Bevallásra kötelezett az Impuesto sobre
+        el Patrimonio alapján: fizetendő adó, vagy 2 000 000 eurót meghaladó vagyon'
       premio_loteria_gravamen_especial_sin_retencion: Különadó alá eső lottó- vagy
         fogadási nyeremény forrásadó-levonás és adóelőleg nélkül (Modelo 136)
       premio_loteria_gravamen_especial_trimestres: Negyedévek, amelyekben az ilyen
@@ -138,6 +140,8 @@ profile:
       modelo_115_no_relevant_payment_periods: Modelo 115 releváns kifizetés nélküli
         időszakai
       pays_capital_income_with_retencion: Forrásadóval terhelt tőkejövedelmet fizet
+      pays_non_resident_income_with_retencion: Forrásadó-köteles jövedelmet fizetsz
+        állandó telephely nélküli külföldi illetőségűeknek
       pays_professionals_with_retencion: Forrásadóval terhelt díjazást fizet szakembereknek
       pays_rent_with_retencion: Forrásadóval terhelt helyi bérleti díjat fizet
   schema:
@@ -384,6 +388,8 @@ profile:
           label: Modelo 720 küszöbérték túllépve
         monedas_virtuales_extranjero_above_threshold:
           label: Modelo 721 küszöbérték túllépve
+        patrimonio_declaration_threshold_met:
+          label: Impuesto sobre el Patrimonio bevallási kötelezettség (714-es modelo)
         premio_loteria_gravamen_especial_sin_retencion:
           label: Lottónyeremény forrásadó-levonás nélkül (Modelo 136)
         premio_loteria_gravamen_especial_trimestres:
@@ -581,6 +587,9 @@ profile:
           label: Modelo 115 releváns kifizetés nélküli időszakai
         pays_capital_income_with_retencion:
           label: Tőkejövedelmet forrásadóval fizet
+        pays_non_resident_income_with_retencion:
+          label: Forrásadó-köteles jövedelmet fizetsz külföldi illetőségűeknek (216-os
+            és 296-os modelo)
         pays_professionals_with_retencion:
           label: Szakembereknek forrásadóval fizet
         pays_rent_with_retencion:

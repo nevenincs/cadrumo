@@ -406,8 +406,14 @@ wizard:
           del 15 per cent. Opcional; sense marcar no s'aplica el tipus reduït.
       output-language:
         help: Idioma de sortida de la CLI per a aquest perfil
+      patrimonio-declaration-threshold-met:
+        help: La teva quota de l'Impost sobre el Patrimoni resulta a ingressar o,
+          si no, els teus béns i drets valen més de 2.000.000 euros
       pays-capital-income-with-retencion:
         help: Paga rendes de capital amb retenció
+      pays-non-resident-income-with-retencion:
+        help: Pagues a no residents sense establiment permanent rendes subjectes a
+          retenció de l'IRNR
       pays-professionals-with-retencion:
         help: Paga a professionals amb retenció
       pays-rent-with-retencion:
@@ -629,8 +635,14 @@ wizard:
         prompt: Períodes Model 115 sense pagament rellevant
       monedas-virtuales-extranjero-above-threshold:
         prompt: Monedes virtuals a l'estranger superen el llindar del Model 721
+      patrimonio-declaration-threshold-met:
+        prompt: La teva quota de l'Impost sobre el Patrimoni resulta a ingressar,
+          o els teus béns i drets valen més de 2.000.000 euros
       pays-capital-income-with-retencion:
         prompt: Paga rendes de capital amb retenció
+      pays-non-resident-income-with-retencion:
+        prompt: Pagues a no residents sense establiment permanent rendes subjectes
+          a retenció
       pays-professionals-with-retencion:
         prompt: Paga a professionals amb retenció
       pays-rent-with-retencion:

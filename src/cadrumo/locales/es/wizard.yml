@@ -406,8 +406,14 @@ wizard:
           tipo reducido.
       output-language:
         help: Idioma de salida de la CLI para este perfil
+      patrimonio-declaration-threshold-met:
+        help: Tu cuota del Impuesto sobre el Patrimonio resulta a ingresar o, si no,
+          tus bienes y derechos valen más de 2.000.000 euros
       pays-capital-income-with-retencion:
         help: Paga rentas de capital con retención
+      pays-non-resident-income-with-retencion:
+        help: Paga a no residentes sin establecimiento permanente rentas sujetas a
+          retención del IRNR
       pays-professionals-with-retencion:
         help: Paga a profesionales con retención
       pays-rent-with-retencion:
@@ -632,8 +638,14 @@ wizard:
         prompt: Periodos Modelo 115 sin pago relevante
       monedas-virtuales-extranjero-above-threshold:
         prompt: Monedas virtuales en el extranjero superan el umbral del Modelo 721
+      patrimonio-declaration-threshold-met:
+        prompt: Tu cuota del Impuesto sobre el Patrimonio resulta a ingresar, o tus
+          bienes y derechos valen más de 2.000.000 euros
       pays-capital-income-with-retencion:
         prompt: Paga rentas de capital con retención
+      pays-non-resident-income-with-retencion:
+        prompt: Paga a no residentes sin establecimiento permanente rentas sujetas
+          a retención
       pays-professionals-with-retencion:
         prompt: Paga a profesionales con retención
       pays-rent-with-retencion:

@@ -1055,3 +1055,23 @@ required_text = [
     "declaración informativa modelo 296",
     "correspondiente al ejercicio 2026",
 ]
+
+[legal."trlirnr-rdleg-5-2004:art-31"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_legislativo"
+corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004-art-31.html#a31"
+document_id = "BOE-A-2004-4527"
+article = "31"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4527#a31"
+published_at = 2004-03-12
+effective_from = 2016-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-08
+reviewed_by = "agent-review"
+notes = "TRLIRNR art 31: obligación de retener e ingresar a cuenta sobre rentas sujetas al IRNR. Apartado 1 enumera los obligados (entidades residentes, personas físicas residentes que realizan actividades económicas respecto de las rentas que satisfacen en su ejercicio, y otros). Apartado 5 impone la declaración e ingreso de lo retenido (Modelo 216) y el resumen anual (Modelo 296). Redacción consolidada en vigor desde el 01/01/2016."
+required_text = [
+    "Estarán obligados a practicar retención e ingreso a cuenta",
+    "personas físicas residentes en territorio español que realicen actividades económicas",
+    "resumen anual de retenciones e ingresos a cuenta",
+]

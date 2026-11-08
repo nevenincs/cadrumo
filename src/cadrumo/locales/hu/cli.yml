@@ -4143,6 +4143,9 @@ cli:
         tartott virtuális valutáid meghaladják-e a bejelentési értékhatárt.
       oss_unset: A profilodban még nem szerepel, hogy be vagy-e jelentkezve az egyablakos
         áfaszabályozásba.
+      patrimonio_umbral_unset: A profilodban még nem szerepel, hogy az Impuesto sobre
+        el Patrimonio szerinti adód fizetendő-e, vagy hogy a vagyonod és jogaid meghaladják-e
+        a 2 000 000 eurót.
       premio_loteria_trimestres_unset: A profilodban még nem szerepel, hogy mely negyedévekben
         vettél fel levonás nélkül a különadó alá tartozó lottónyereményt.
       premio_loteria_unset: A profilodban még nem szerepel, hogy felvettél-e olyan
@@ -4156,6 +4159,8 @@ cli:
         olyan bérleti díjat, amelyből adóelőleget vonsz le.
       retencion_capital_unset: A profilodban még nem szerepel, hogy fizetsz-e adólevonással
         járó tőkejövedelmet.
+      retencion_no_residentes_unset: A profilodban még nem szerepel, hogy fizetsz-e
+        IRNR-forrásadó alá eső jövedelmet állandó telephely nélküli külföldi illetőségűeknek.
       retencion_profesionales_unset: A profilodban még nem szerepel, hogy fizetsz-e
         szakembereknek olyan díjat, amelyből adóelőleget vonsz le.
       sii_unset: A profilodban még nem szerepel, hogy az áfanyilvántartásaidat az

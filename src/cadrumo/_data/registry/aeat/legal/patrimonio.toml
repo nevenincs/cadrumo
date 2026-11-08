@@ -496,3 +496,23 @@ notes = "orden-hac-277-2026 art 4: aprobación del modelo de declaración del Im
 required_text = [
     "Aprobación del modelo de declaración del Impuesto sobre el Patrimonio",
 ]
+
+[legal."ley-19-1991:art-37"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-19-1991-art-37.html#art-37"
+document_id = "BOE-A-1991-14392"
+article = "37"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1991-14392#a37"
+published_at = 1991-06-06
+effective_from = 2021-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-08
+reviewed_by = "agent-review"
+notes = "Ley 19/1991 Art. 37 — personas obligadas a presentar declaración del Impuesto sobre el Patrimonio (Modelo 714): quien resulte con cuota a ingresar tras deducciones y bonificaciones o, no dándose esta circunstancia, cuyo valor de bienes o derechos supere 2.000.000 euros. Redacción consolidada en vigor desde el 01/01/2021."
+required_text = [
+    "Están obligados a presentar declaración",
+    "resulte a ingresar",
+    "2.000.000 euros",
+]
