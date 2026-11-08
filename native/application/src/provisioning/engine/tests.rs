@@ -1596,6 +1596,24 @@ fn with_llama_cpp_selected_the_local_ai_plans_no_program_and_checks_each_role_on
 }
 
 #[test]
+fn the_overall_progress_never_goes_back_when_a_catalogue_understates_a_model() {
+    let text = StoredModel::new(1);
+    let vision = StoredModel::new(9);
+    let mut world = World::llama_cpp(&text, &vision);
+    // The catalogue states 10 bytes for each model, and each fetched manifest names more:
+    // the next model's progress starts where the last one's manifest left off.
+    for (_, _, size) in &mut world.selection {
+        *size = 10;
+    }
+
+    let (done, _) = world.set_up_local_ai_routed();
+
+    assert_eq!(done.report.outcome, Outcome::Completed, "{:?}", done.report);
+    let whole = text.size() + vision.size();
+    assert_eq!(last_progress(&done.events), (whole, whole));
+}
+
+#[test]
 fn with_llama_cpp_selected_and_no_model_selected_nothing_is_set_up() {
     let text = StoredModel::new(1);
     let vision = StoredModel::new(9);

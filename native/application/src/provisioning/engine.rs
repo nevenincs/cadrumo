@@ -1773,7 +1773,7 @@ impl Engine {
                 // The model is fetched only from the hosts the person approved for it.
                 let hosts: BTreeSet<HostName> = part.source_hosts.iter().cloned().collect();
                 let mut on_event = |event| reporter.transfer(event);
-                let observation = models.pull(
+                let pulled = models.pull(
                     model,
                     &mut Transfer {
                         network: &self.config.network,
@@ -1784,14 +1784,18 @@ impl Engine {
                         cancellation,
                     },
                 )?;
-                if !observation.usable() {
-                    return Err(Stop::Failed(failure_of(observation)));
+                if !pulled.observation.usable() {
+                    return Err(Stop::Failed(failure_of(pulled.observation)));
                 }
-                // A part planned as already stored downloads nothing, whatever its size.
-                reporter.offset += part
-                    .download_bytes
-                    .or_else(|| models.download_bytes(model))
-                    .unwrap_or(0);
+                // The offset advances by the total the pull reported its progress against,
+                // never by a size a catalogue stated, which the fetched manifest may
+                // exceed; so the overall figure never goes back. A part planned as already
+                // stored downloads nothing, whatever its size.
+                reporter.offset += if part.download_bytes == Some(0) {
+                    0
+                } else {
+                    pulled.bytes
+                };
             }
             reporter.part = None;
             writer.step(SetupStep::Verify)?;

@@ -413,6 +413,14 @@ impl LocalModels {
     }
 }
 
+/// A model the store holds whole after a pull, and the bytes its progress was reported
+/// against: the sizes its fetched manifest or declaration states, each distinct blob once.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct Pulled {
+    pub observation: Observation,
+    pub bytes: u64,
+}
+
 /// The selected models and where the program keeps them.
 #[derive(Clone, Debug)]
 pub struct Models {
@@ -558,41 +566,52 @@ impl Models {
     /// through `transfer`, whose hosts are the plan's approved ones; then reads it back
     /// as the quick check does. No server is asked: the registry client or the Hugging
     /// Face source fetches and verifies every byte. Progress counts against the sizes the
-    /// fetched manifest or the declaration states.
+    /// fetched manifest or the declaration states, and [`Pulled::bytes`] is that total, so
+    /// a setup that fetches several models advances its running offset by what each
+    /// reported rather than by the size a catalogue stated.
     pub fn pull(
         &self,
         model: &SelectedModel,
         transfer: &mut Transfer<'_>,
-    ) -> Result<Observation, LocalAiError> {
+    ) -> Result<Pulled, LocalAiError> {
         if self.installed(model.name()) == Observation::Present {
-            if let Some(size) = self.download_bytes(model) {
+            let bytes = self.download_bytes(model);
+            if let Some(size) = bytes {
                 (transfer.events)(TransferEvent::Progress {
                     completed: size,
                     total: size,
                 });
             }
-            return Ok(Observation::Present);
+            return Ok(Pulled {
+                observation: Observation::Present,
+                bytes: bytes.unwrap_or(0),
+            });
         }
         transfer.cancellation.check()?;
         let registry = Registry::new(self.root.clone());
-        match &model.artefact {
-            ModelArtefact::Registry(name) => {
-                registry.pull(name, transfer)?;
-            }
+        let bytes = match &model.artefact {
+            ModelArtefact::Registry(name) => registry.pull(name, transfer)?.total_bytes(),
             ModelArtefact::HuggingFace(declared) => {
                 registry.pull_hugging_face(declared, transfer)?;
+                declared.download_bytes()
             }
-        }
+        };
         // A manifest the store does not hold whole is not the model the plan named.
         if self.installed(model.name()) != Observation::Present {
             return Err(LocalAiError::Failed(FailureCategory::DamagedDownload));
         }
-        Ok(Observation::Present)
+        Ok(Pulled {
+            observation: Observation::Present,
+            bytes,
+        })
     }
 
-    /// Removes every selected model the models folder holds: its manifest, then each
-    /// layer that no manifest left there uses. A model kept beside them keeps its layers,
-    /// and when any kept manifest cannot be read, every layer stays.
+    /// Removes every selected model the models folder holds: its manifest, then the
+    /// partial bytes of any fetch that never finished and every layer that no manifest left
+    /// there uses, which includes layers an earlier removal or fetch left unused. A model
+    /// kept beside them keeps its layers, and when any kept manifest cannot be read, every
+    /// layer stays. The caller holds the local AI item's writer lock, so no fetch is
+    /// writing to the store.
     pub fn remove(&self) -> Result<(), Error> {
         self.remove_manifests(
             &self
@@ -613,13 +632,12 @@ impl Models {
     fn remove_manifests(&self, selected: &BTreeSet<PathBuf>) -> Result<(), Error> {
         let manifests = self.root.join("manifests");
         filesystem::refuse_links(&manifests)?;
-        if std::fs::symlink_metadata(&manifests).is_err() {
-            return Ok(());
-        }
-        let mut released = BTreeSet::new();
         let mut kept = BTreeSet::new();
         let mut unreadable = false;
-        let mut pending = vec![manifests];
+        let mut pending = Vec::new();
+        if std::fs::symlink_metadata(&manifests).is_ok() {
+            pending.push(manifests);
+        }
         while let Some(folder) = pending.pop() {
             for entry in std::fs::read_dir(&folder)? {
                 let path = entry?.path();
@@ -627,6 +645,10 @@ impl Models {
                 filesystem::refuse_metadata_links(&meta)?;
                 if meta.is_dir() {
                     pending.push(path);
+                    continue;
+                }
+                if selected.contains(&path) {
+                    std::fs::remove_file(&path)?;
                     continue;
                 }
                 let layers = filesystem::bounded_bytes(&path, MANIFEST_BYTES_LIMIT)
@@ -638,31 +660,68 @@ impl Models {
                             .map(|layer| layer.digest)
                             .collect::<Vec<_>>()
                     });
-                if selected.contains(&path) {
-                    released.extend(layers.into_iter().flatten());
-                    std::fs::remove_file(&path)?;
-                } else {
-                    unreadable |= layers.is_none();
-                    kept.extend(layers.into_iter().flatten());
-                }
+                unreadable |= layers.is_none();
+                kept.extend(
+                    layers
+                        .into_iter()
+                        .flatten()
+                        .filter_map(|digest| layer_hex(&digest)),
+                );
             }
         }
+        // Bytes of a fetch that never finished belong to no manifest, kept or not.
+        self.clear_partial()?;
         if unreadable {
             return Ok(());
         }
-        for digest in released.difference(&kept) {
-            let Some(hex) = digest.strip_prefix("sha256:") else {
+        self.remove_unreferenced_blobs(&kept)
+    }
+
+    /// Deletes the files the partial folder holds: blobs still arriving and manifests not
+    /// yet published.
+    fn clear_partial(&self) -> Result<(), Error> {
+        let folder = self.root.join(registry::PARTIAL);
+        filesystem::refuse_links(&folder)?;
+        let entries = match std::fs::read_dir(&folder) {
+            Ok(entries) => entries,
+            Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
+            Err(error) => return Err(error.into()),
+        };
+        for entry in entries {
+            let path = entry?.path();
+            let meta = std::fs::symlink_metadata(&path)?;
+            filesystem::refuse_metadata_links(&meta)?;
+            if meta.is_file() {
+                remove_if_present(&path)?;
+            }
+        }
+        Ok(())
+    }
+
+    /// Deletes each stored blob whose digest no manifest in `kept` names.
+    fn remove_unreferenced_blobs(&self, kept: &BTreeSet<String>) -> Result<(), Error> {
+        let folder = self.root.join("blobs");
+        filesystem::refuse_links(&folder)?;
+        let entries = match std::fs::read_dir(&folder) {
+            Ok(entries) => entries,
+            Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
+            Err(error) => return Err(error.into()),
+        };
+        for entry in entries {
+            let path = entry?.path();
+            let hex = path
+                .file_name()
+                .and_then(|name| name.to_str())
+                .and_then(|name| name.strip_prefix("sha256-"))
+                .and_then(|hex| Sha256Digest::new(hex).ok());
+            let Some(hex) = hex else {
                 continue;
             };
-            if Sha256Digest::new(hex).is_err() {
+            if kept.contains(hex.as_str()) {
                 continue;
             }
-            let blob = self.root.join("blobs").join(format!("sha256-{hex}"));
-            filesystem::refuse_links(&blob)?;
-            match std::fs::remove_file(&blob) {
-                Err(error) if error.kind() != io::ErrorKind::NotFound => return Err(error.into()),
-                _ => {}
-            }
+            filesystem::refuse_links(&path)?;
+            remove_if_present(&path)?;
         }
         Ok(())
     }
@@ -702,13 +761,23 @@ impl Models {
     }
 }
 
+/// The lowercase hex of a manifest's layer `digest`, `None` when it is not a SHA-256 one.
+fn layer_hex(digest: &str) -> Option<String> {
+    let hex = digest.strip_prefix("sha256:")?;
+    Some(Sha256Digest::new(hex).ok()?.as_str().to_owned())
+}
+
+fn remove_if_present(path: &Path) -> Result<(), Error> {
+    match std::fs::remove_file(path) {
+        Err(error) if error.kind() != io::ErrorKind::NotFound => Err(error.into()),
+        _ => Ok(()),
+    }
+}
+
 fn blob_stored(root: &Path, layer: &Layer) -> bool {
-    let Some(hex) = layer.digest.strip_prefix("sha256:") else {
+    let Some(hex) = layer_hex(&layer.digest) else {
         return false;
     };
-    if Sha256Digest::new(hex).is_err() {
-        return false;
-    }
     let path = root.join("blobs").join(format!("sha256-{hex}"));
     filesystem::refuse_links(&path).is_ok()
         && std::fs::metadata(&path).is_ok_and(|meta| meta.is_file() && meta.len() == layer.size)

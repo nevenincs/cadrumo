@@ -142,6 +142,14 @@ impl Fixture {
     fn text_model(&self) -> &SelectedModel {
         self.models.selection().for_role("text_extraction").unwrap()
     }
+
+    fn vision_name(&self) -> &ModelName {
+        self.models
+            .selection()
+            .for_role("vision_transcription")
+            .unwrap()
+            .name()
+    }
 }
 
 const ROOMY: Hardware = Hardware {
@@ -547,6 +555,8 @@ impl Publishers {
 
 struct Fetched {
     result: Result<Observation, LocalAiError>,
+    /// The bytes the pull reported its progress against, when it finished.
+    bytes: Option<u64>,
     events: Vec<TransferEvent>,
 }
 
@@ -561,7 +571,7 @@ fn fetch(
     let mut pacing = RecordedPacing::default();
     let mut events = Vec::new();
     let cancellation = Cancellation::default();
-    let result = {
+    let pulled = {
         let mut sink = |event| events.push(event);
         models.pull(
             model,
@@ -575,7 +585,12 @@ fn fetch(
             },
         )
     };
-    Fetched { result, events }
+    let bytes = pulled.as_ref().ok().map(|pulled| pulled.bytes);
+    Fetched {
+        result: pulled.map(|pulled| pulled.observation),
+        bytes,
+        events,
+    }
 }
 
 /// The progress a fetch reported, as completed and total bytes.
@@ -684,6 +699,28 @@ fn a_model_of_unknown_size_is_planned_unsized_and_fetched_against_its_manifest_s
     );
     assert_eq!(reported.last(), Some(&(stored.size(), stored.size())));
     assert_eq!(models.download_bytes(model), Some(stored.size()));
+}
+
+#[test]
+fn a_pull_reports_the_total_its_manifest_states_not_the_size_a_catalogue_gave() {
+    let root = tempfile::tempdir().unwrap();
+    let stored = Stored::new(5);
+    let models = Models::new(
+        LocalModels::new(vec![selected("download", TEXT, 7)]).unwrap(),
+        root.path().join("models"),
+    );
+    let model = &models.selection().as_slice()[0];
+    let publishers = Publishers::start(stored.routes(TEXT), Vec::new());
+    let approved = approved_for(&models, "download");
+    let fetched = fetch(&models, model, &publishers.network(), &approved);
+    assert_eq!(fetched.result.unwrap(), PRESENT);
+    assert_eq!(fetched.bytes, Some(stored.size()));
+    let reported = progress(&fetched.events);
+    assert_eq!(reported.last(), Some(&(stored.size(), stored.size())));
+    assert!(
+        reported.iter().all(|(_, total)| *total == stored.size()),
+        "{reported:?}"
+    );
 }
 
 #[test]
@@ -1057,4 +1094,84 @@ fn a_named_model_is_removed_alone_and_the_layers_others_use_stay() {
         4,
         "a model not stored removes nothing"
     );
+}
+
+/// A blob file the store holds that no manifest names, and the bytes it holds.
+fn orphan_blob(root: &Path, seed: u8) -> PathBuf {
+    let bytes = vec![seed; 13];
+    let path = root
+        .join("blobs")
+        .join(format!("sha256-{}", Sha256Digest::of(&bytes)));
+    fs::create_dir_all(path.parent().unwrap()).unwrap();
+    fs::write(&path, bytes).unwrap();
+    path
+}
+
+/// Writes bytes of a fetch that never finished, and returns their paths.
+fn partial_files(root: &Path) -> Vec<PathBuf> {
+    let folder = root.join(registry::PARTIAL);
+    fs::create_dir_all(&folder).unwrap();
+    ["sha256-0000", "manifest-1-0"]
+        .into_iter()
+        .map(|name| {
+            let path = folder.join(name);
+            fs::write(&path, b"unfinished").unwrap();
+            path
+        })
+        .collect()
+}
+
+#[test]
+fn removal_clears_the_partial_folder_and_the_blobs_no_remaining_manifest_names() {
+    let fixture = fixture();
+    let root = fixture.models_root();
+    fixture.text.write(&root, TEXT);
+    fixture.vision.write(&root, VISION);
+    // A model the person keeps shares the text model's first layer.
+    let shared = &fixture.text.blobs[0];
+    let kept = root.join("manifests/registry.ollama.ai/library/kept/latest");
+    fs::create_dir_all(kept.parent().unwrap()).unwrap();
+    let kept_manifest = json!({
+        "schemaVersion": 2,
+        "config": { "digest": shared.0, "size": shared.1.len() },
+        "layers": [],
+    })
+    .to_string();
+    fs::write(&kept, &kept_manifest).unwrap();
+    // A blob an earlier fetch or removal left behind, and a file that is no blob.
+    let orphan = orphan_blob(&root, 40);
+    let stray = root.join("blobs/notes.txt");
+    fs::write(&stray, b"not a blob").unwrap();
+    let partials = partial_files(&root);
+
+    fixture.models.remove_named(fixture.vision_name()).unwrap();
+    assert!(!orphan.exists(), "an unreferenced blob is reclaimed");
+    assert!(stray.is_file(), "a file that is no blob stays");
+    assert!(partials.iter().all(|path| !path.exists()));
+    assert!(root.join(registry::PARTIAL).is_dir());
+    let present = |stored: &Stored, name: &str| {
+        stored
+            .files(&root, name)
+            .into_iter()
+            .filter(|(path, _)| path.exists())
+            .count()
+    };
+    assert_eq!(present(&fixture.vision, VISION), 0);
+    assert_eq!(
+        present(&fixture.text, TEXT),
+        4,
+        "a stored model other than the removed one keeps its manifest and layers"
+    );
+    assert!(kept.is_file());
+
+    // Unreadable kept manifests keep every blob, but unfinished bytes are no model's.
+    let orphan = orphan_blob(&root, 41);
+    let partials = partial_files(&root);
+    fs::write(&kept, b"{").unwrap();
+    fixture.models.remove().unwrap();
+    assert!(
+        orphan.is_file(),
+        "an unreadable kept manifest keeps every blob"
+    );
+    assert!(partials.iter().all(|path| !path.exists()));
 }
