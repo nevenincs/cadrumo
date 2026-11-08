@@ -13,7 +13,7 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ....core.external_constants import OutputLanguage
-from ....core.operations import OperationFrontendProjection, profile_operation_subject
+from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
@@ -36,6 +36,7 @@ from ...modelo.declarations_workspace_contracts import (
     DeclarationsWorkspaceZoneStateV1,
 )
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
+from ...operations.capabilities import OperationRequestStoragePolicy
 from ...operations.models import OperationRequest
 from ...operations.registry import OperationRegistry
 from ...overview.calendar_models import (
@@ -226,6 +227,22 @@ def test_nothing_matching_is_an_empty_result_not_a_refusal() -> None:
 def test_a_query_without_words_is_refused_at_the_request(query: str) -> None:
     with pytest.raises(ValidationError):
         ModeloDeclarationsSearchRequest(profile_id=_PROFILE, output_language=OutputLanguage.ES, query=query)
+
+
+def test_a_query_longer_than_the_search_bound_is_refused_at_the_request() -> None:
+    with pytest.raises(ValidationError):
+        ModeloDeclarationsSearchRequest(profile_id=_PROFILE, output_language=OutputLanguage.ES, query="3" * 201)
+
+
+def test_what_the_filer_typed_stays_out_of_the_plain_journal_and_the_request_text() -> None:
+    definition = build_modelo_declarations_search_definition(_unread)
+    request = ModeloDeclarationsSearchRequest(
+        profile_id=_PROFILE, output_language=OutputLanguage.ES, query="Suministros Delta"
+    )
+
+    assert definition.capabilities.request_storage is OperationRequestStoragePolicy.SECURE_REFERENCE
+    assert definition.capabilities.permitted_effects == frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
+    assert "Suministros" not in repr(request) and "Suministros" not in str(request)
 
 
 def _unread(profile_id: str, operation: PinnedAuthorityOperation) -> Callable[[], DeclarationListInputs]:

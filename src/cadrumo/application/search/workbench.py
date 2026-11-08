@@ -41,10 +41,11 @@ def _runtime_object(value: object) -> object:
     return value
 
 
-_TransientQuery = Annotated[
+WorkbenchSearchQuery = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=_MAX_QUERY_LENGTH),
 ]
+"""What someone typed to search: bounded, stripped and never empty."""
 
 
 def _reject_control_characters(value: str) -> str:
@@ -435,7 +436,7 @@ class WorkbenchSearchRequest(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    query: _TransientQuery = Field(exclude=True, repr=False)
+    query: WorkbenchSearchQuery = Field(exclude=True, repr=False)
     limit: Annotated[int, Field(gt=0, le=_MAX_SEARCH_RESULTS)] = 20
 
     @field_validator("query")
@@ -618,6 +619,7 @@ __all__ = [
     "WorkbenchSearchDocument",
     "WorkbenchSearchKind",
     "WorkbenchSearchLabelKey",
+    "WorkbenchSearchQuery",
     "WorkbenchSearchRequest",
     "WorkbenchSearchResponse",
     "WorkbenchSearchResult",

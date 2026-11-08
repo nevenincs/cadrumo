@@ -6,6 +6,10 @@ modelo's number and title, the period in the filer's language and the state.
 It returns ranked hits, each with the words the window shows and the address
 that opens it. Local work ranks before a declaration that is only due or held
 by the AEAT. It writes nothing and settles with no effect.
+
+The query is what the filer typed, so the request is kept by secure reference
+and never in the plain operation journal, and the request never repeats it in
+its representation.
 """
 
 from __future__ import annotations
@@ -18,7 +22,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, field_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
-from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
 from ...core.external_constants import OutputLanguage
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
@@ -33,7 +37,7 @@ from ..operations.access_resolution import (
     ResolvedOperationAccess,
     bind_replayed_period_independent_access,
 )
-from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
+from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_STORED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
@@ -50,6 +54,7 @@ from .workbench import (
     WorkbenchDestinationAdmission,
     WorkbenchDestinationAdmissionState,
     WorkbenchModeloAddress,
+    WorkbenchSearchQuery,
     WorkbenchSearchRequest,
     WorkbenchSearchService,
 )
@@ -72,7 +77,7 @@ class ModeloDeclarationsSearchRequest(CredentialFreeOperationRequest):
 
     profile_id: UUID
     output_language: OutputLanguage
-    query: str
+    query: WorkbenchSearchQuery = Field(repr=False)
     limit: Annotated[int, Field(gt=0, le=_MAX_HITS)] = 20
 
     @field_validator("query")
@@ -162,8 +167,8 @@ def project_declarations_search(
     hits: list[ModeloDeclarationsSearchHitV1] = []
     for result in response.results:
         address = result.address
-        if not isinstance(address, WorkbenchModeloAddress):  # pragma: no cover - documents carry this address
-            continue
+        if not isinstance(address, WorkbenchModeloAddress):
+            raise InternalInvariantError("a declarations search hit lost the declaration address it was indexed under")
         year, code = int(address.filing_year), str(address.period.code)
         row = rows[(str(address.modelo), year, code)]
         hits.append(_hit(result.rank, result.score, row, year, code))
@@ -205,7 +210,7 @@ class ModeloDeclarationsSearchExecutor:
 
 
 def build_modelo_declarations_search_definition(reader_factory: DeclarationListReaderFactory) -> OperationDefinition:
-    """Declare one credential-free request with an encrypted result."""
+    """Declare one securely stored request, which carries what the filer typed, with an encrypted result."""
     return build_single_phase_definition(
         definition_id=MODELO_DECLARATIONS_SEARCH_OPERATION_DEFINITION_ID,
         request_type=ModeloDeclarationsSearchRequest,
@@ -213,7 +218,7 @@ def build_modelo_declarations_search_definition(reader_factory: DeclarationListR
         result_type=ModeloDeclarationsSearchResultV1,
         executor_type=ModeloDeclarationsSearchExecutor,
         build=lambda: ModeloDeclarationsSearchExecutor(reader_factory),
-        capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
+        capabilities=RECORDED_IDEMPOTENT_SECURE_STORED_READ_CAPABILITIES,
     )
 
 
