@@ -403,10 +403,16 @@ def test_an_invoice_from_another_bucket_is_refused() -> None:
     assert aggregation.casilla_aggregation.casilla_values["01"] == Decimal("1060.00")
 
 
-def test_a_one_directional_link_is_refused() -> None:
-    """The invoice must name the transaction back, or the pairing is unconfirmed."""
+def test_a_link_held_on_the_movement_alone_still_pairs_the_receipt() -> None:
+    """A link is one fact on two records, read from either side.
+
+    The movement names its invoice while the invoice does not yet list the
+    movement back, as a record written before both sides were kept together.
+    The receipt is still that invoice's payment, so its stated base grounds
+    casilla 01: hand-derived, 1000.00 rather than the 1060.00 cash.
+    """
     transaction = _transaction(cash="1060.00")
-    invoice = _invoice(linked_transaction_ids=("f" * 64,))
+    invoice = _invoice(linked_transaction_ids=())
     transactions = link_invoice(
         TransactionCatalogue.from_transactions((transaction,)),
         transaction.transaction_id,
@@ -424,8 +430,8 @@ def test_a_one_directional_link_is_refused() -> None:
         employment_category_matcher=_is_employment_income,
     )
 
-    assert aggregation.observations[0].sales_invoice_refusal is SalesInvoiceEvidenceRefusal.LINK_NOT_RECIPROCAL
-    assert aggregation.casilla_aggregation.casilla_values["01"] == Decimal("1060.00")
+    assert aggregation.observations[0].sales_invoice_refusal is None
+    assert aggregation.casilla_aggregation.casilla_values["01"] == Decimal("1000.00")
 
 
 def test_an_invoice_spanning_several_transactions_is_refused() -> None:
@@ -564,18 +570,15 @@ def test_no_evidence_guard_ever_removes_income_from_the_aggregation() -> None:
         assert aggregation.casilla_aggregation.casilla_values["01"] > Decimal("0")
 
 
-def test_an_uncategorised_invoice_is_refused_even_though_it_reconciles_perfectly() -> None:
-    """Linkage and coherence are different questions, and passing one is not passing the other.
+def test_an_uncategorised_invoice_grounds_its_irpf_base_and_retencion() -> None:
+    """An undeclared IVA treatment is an IVA defect, not an IRPF one.
 
     This invoice satisfies every linkage guard: same bucket, ISSUED, reciprocal
-    single link, and a credit matching its total net of retención exactly. What
-    it does not do is declare an IVA treatment, so its base is ambiguous between
-    untagged and exempt — the distinction the grounding contract exists to
-    preserve, and one no amount reconciliation can settle.
-
-    Before the coherence check, this row folded its 1000.00 base into casilla 01
-    with no diagnostic at all, which is the grounding contract's own D1 rule
-    being bypassed by the path that reads invoices.
+    single link, and a credit matching its total net of retención exactly. It
+    declares no IVA treatment, which keeps it out of the IVA source, but the
+    base it states and the retención it says the client practised are IRPF
+    facts that treatment does not change. Hand-derived: base 1000.00 enters
+    casilla 01 and the stated 150.00 is a declared retención.
     """
     transactions, invoices = _linked(iva_category=None)
 
@@ -591,9 +594,35 @@ def test_an_uncategorised_invoice_is_refused_even_though_it_reconciles_perfectly
     )
 
     (observation,) = result.observations
+    assert observation.sales_invoice_refusal is None
+    assert result.casilla_aggregation.casilla_values["01"] == Decimal("1000.00")
+    assert observation.grounding is LedgerIncomeGrounding.SUBSTRATE_DECLARED
+    assert observation.withheld_amount == Decimal("150.00")
+    assert observation.withheld_derivation is LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE
+
+
+def test_a_category_that_contradicts_its_cuota_is_still_refused() -> None:
+    """The IRPF reading admits only the undeclared treatment, not every defect.
+
+    An exempt category carries no cuota by law, so this invoice's 21 per cent
+    cuota contradicts it: the record is not interpretable and the row degrades
+    to its cash with the refusal named.
+    """
+    transactions, invoices = _linked(iva_category=IvaCategory("domestic_exempt"))
+
+    result = aggregate_renta_income_ledger(
+        transactions,
+        period=Period.from_year_and_code(2024, "1T"),
+        bucket_id=_BUCKET,
+        invoices=invoices,
+        modelo="130",
+        target_casilla_id=M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
+    )
+
+    (observation,) = result.observations
     assert observation.sales_invoice_refusal is SalesInvoiceEvidenceRefusal.UNGROUNDED_DECOMPOSITION
-    # Degraded, not dropped: the income is still declared, on its cash.
-    assert result.casilla_aggregation.casilla_values["01"] == Decimal("1060.00")
     assert observation.grounding is LedgerIncomeGrounding.CASH_FALLBACK
 
 

@@ -46,6 +46,7 @@ from .catalogue_read_binding import require_catalogue_reads_bound_to
 from .concepto_ingreso_admission import row_counts_toward_volumen_de_ingresos
 from .errors import AggregationPeriodError
 from .grouping import cumulative_year_to_date_window, fold_casilla_observations
+from .invoice_iva_source import with_movement_side_links
 from .models import CasillaAggregation, LedgerAggregationResultBase
 from .renta_imputation import (
     ImputationCriteria,
@@ -114,6 +115,21 @@ def _load_income_invoices(
     grounding differently -- the asymmetry this evidence path exists to remove.
     """
     return ports.invoice_reader.load()
+
+
+def _invoices_linked_from_either_side(
+    invoices: InvoiceCatalogue | None, *, window: TransactionCatalogue
+) -> InvoiceCatalogue:
+    """Return the catalogue with each link read from either record, as the invoice IVA source reads it.
+
+    A receipt that names its invoice is that invoice's payment even when the
+    invoice does not yet list it back, so the retención and base the invoice
+    states reach the receipt either way.
+    """
+    if invoices is None:
+        return InvoiceCatalogue()
+    linked = with_movement_side_links(tuple(invoices.values()), window=window)
+    return InvoiceCatalogue(invoices={invoice.invoice_id: invoice for invoice in linked})
 
 
 def aggregate_renta_income_ledger_from_repositories(
@@ -228,7 +244,7 @@ def aggregate_renta_income_ledger(
     fraccionados (RD 439/2007 art. 110.2).
     """
     window = cumulative_year_to_date_window(period)
-    resolved_invoices = invoices if invoices is not None else InvoiceCatalogue()
+    resolved_invoices = _invoices_linked_from_either_side(invoices, window=transactions)
 
     observations: list[RentaIncomeObservation] = []
     issues: list[RentaIncomeLedgerAggregationIssue] = []
@@ -447,7 +463,7 @@ def aggregate_renta_m100_income_ledger(
         )
     window_start = date(period.filing_year, 1, 1)
     window_end = date(period.filing_year, 12, 31)
-    resolved_invoices = invoices if invoices is not None else InvoiceCatalogue()
+    resolved_invoices = _invoices_linked_from_either_side(invoices, window=transactions)
 
     # The classifier is retargeted to the selected annual destination.
     projected = _project_income_onto_casilla(
@@ -563,7 +579,7 @@ def payment_dated_renta_m100_income_observations(
     paid = ports.transaction_reader.partition_by_date_range(period.start_date, period.end_date).in_window
     projected = _project_income_onto_casilla(
         paid,
-        invoices=_load_income_invoices(ports=ports),
+        invoices=_invoices_linked_from_either_side(_load_income_invoices(ports=ports), window=paid),
         bucket_id=bucket_id,
         window_start=date(period.filing_year, 1, 1),
         window_end=date(period.filing_year, 12, 31),
@@ -761,7 +777,7 @@ def aggregate_renta_m131_agrario_income_ledger(
             tr("aggregation.renta_ledger.errors.unsupported_period"),
             context={"period": str(period)},
         )
-    resolved_invoices = invoices if invoices is not None else InvoiceCatalogue()
+    resolved_invoices = _invoices_linked_from_either_side(invoices, window=transactions)
     projected = _project_income_onto_casilla(
         transactions,
         invoices=resolved_invoices,

@@ -339,9 +339,9 @@ def _whole_invoice_refusal(invoice: Invoice, transaction: Transaction) -> SalesI
     # Linkage is established by this point; coherence is a separate question and
     # the guards above cannot answer it. Delegated rather than re-derived: the
     # decomposition contract is the single authority on whether an invoice's own
-    # figures are legally interpretable, and consulting it here is what makes a
-    # correctly-linked but untagged invoice visible instead of silently grounded.
-    if not decompose_invoice(invoice).is_grounded:
+    # figures are legally interpretable. This path reads the IRPF figures alone,
+    # so an undeclared IVA treatment, which stays an IVA defect, does not refuse.
+    if not decompose_invoice(invoice).irpf_figures_grounded:
         return SalesInvoiceEvidenceRefusal.UNGROUNDED_DECOMPOSITION
     return None
 

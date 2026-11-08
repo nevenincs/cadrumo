@@ -221,6 +221,17 @@ class InvoiceDecomposition(BaseModel):
         """Whether the record may feed enrichment and aggregation."""
         return self.components is not None
 
+    @property
+    def irpf_figures_grounded(self) -> bool:
+        """Whether the record's base and retención may feed an IRPF figure.
+
+        The IVA treatment decides how the IVA side reads; it does not change the
+        base the invoice states or the retención it says was practised, which are
+        IRPF facts. A record whose only defect is an undeclared IVA treatment
+        therefore grounds those figures while still being excluded from IVA.
+        """
+        return self.is_grounded or self.defects == (InvoiceDecompositionDefect.IVA_TREATMENT_UNDECLARED,)
+
 
 def decompose_invoice(invoice: Invoice) -> InvoiceDecomposition:
     """Return the decomposition verdict for one invoice record.
