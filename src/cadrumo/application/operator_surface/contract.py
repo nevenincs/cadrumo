@@ -46,6 +46,7 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
             "profile",
             "login",
             "logout",
+            "provider-login",
             "repair",
             "storage",
             "google",

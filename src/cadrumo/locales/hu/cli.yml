@@ -2881,10 +2881,10 @@ cli:
       device_unsupported: 'A --device csak ezekhez érhető el: %{supported}.'
       help: 'Jelentkezz be kézzel egy mesterséges intelligencia szolgáltatóhoz ebből a konzolból.'
       json_unsupported: 'A --format json nem érhető el a provider-login parancshoz: interaktív terminálparancs. Futtasd --format nélkül.'
-      no_profile: 'Nincs kiválasztott profil. Válassz profilt a Cadrumóban, vagy add meg a --profile kapcsolót.'
+      no_profile: 'Nincs kiválasztott profil. Válassz profilt az alkalmazásban, vagy add meg a --profile kapcsolót.'
       profile_help: 'A profil UUID-ja vagy pontos címkéje; hagyd el a kiválasztott profil használatához.'
       provider_help: 'A szolgáltató, amelyhez bejelentkezel: claude, codex vagy antigravity.'
-      signed_in: 'Bejelentkeztél: %{provider}. Nyisd meg újra a szolgáltatói beállításokat a Cadrumóban.'
+      signed_in: 'Bejelentkeztél: %{provider}. Nyisd meg újra a szolgáltatói beállításokat az alkalmazásban.'
       unsupported_provider: 'A(z) %{provider} szolgáltatóhoz nem lehet kézzel bejelentkezni. Használj egyet ezek közül: %{supported}.'
     repair:
       connectivity_help: Böngésző és AEAT Sede kapcsolhatóság ellenőrzése.
