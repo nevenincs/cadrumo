@@ -106,6 +106,16 @@ CalculationSourceDiagnosticReason = Literal[
     # never reach filing grade unattended, and a shared advisory reason cannot
     # be told apart from the advisories that legitimately pass.
     "withholding_detail_absent",
+    # A Spanish declarado's CÓDIGO PROVINCIA on a Modelo 347 record, which the
+    # 2025 design fills from its domicilio fiscal and the invoices record only
+    # inside free-text addresses. Its own reason, naming the counterparts and the
+    # record field, because the filer must supply it: the generic "source_issue"
+    # names neither and reads as the whole declaration missing something.
+    "m347_declarado_provincia_unrecorded",
+    # The cash amount above 6.000 EUR a Modelo 347 declarado record carries (RD
+    # 1065/2007 art. 34.1.h), which no invoice records. Owed only where such cash
+    # was received, so it is worth checking and never classes as missing.
+    "m347_metalico_unrecorded",
     "missing_transaction_evidence",
     "administrador_retencion_rate_mismatch",
     # An ISSUED-side retención the ledger INFERRED from a cash shortfall whose

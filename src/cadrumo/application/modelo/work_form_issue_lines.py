@@ -461,6 +461,8 @@ def _note_identifiers(
 def _note_line(note: ModeloFormCalculationNote, context: _Context) -> ModeloFormIssueLine:
     """One thing the latest calculation noticed, in the same parts as a finding."""
     field, box_text, codes = _note_identifiers(note, context)
+    # A note about a value every record of a table carries leads to that table, named by its heading.
+    record = None if field is not None or note.casilla_id is None else context.records.get(str(note.casilla_id))
     what = context.say(what_locale_key(note.reason), box=box_text)
     # What this note is about comes first, so it is read without opening anything; the kind explains it.
     # A note without facts keeps its catalogue sentence first, and the calculation's own account follows it:
@@ -474,7 +476,7 @@ def _note_line(note: ModeloFormCalculationNote, context: _Context) -> ModeloForm
         # A note the filing gate refuses on is listed with what blocks filing, as the counts count it.
         level=ModeloFormAttention.BLOCKS if note.withholds_filing else note.attention,
         box=note.box or None,
-        where=_note_where(note, field, context),
+        where=record.heading if record is not None else _note_where(note, field, context),
         message=message,
         action=_action_words(
             _SERVED_NOTE_ACTION_LOCALE_KEYS.get(note.reason) or what_to_do_locale_key(note.reason),
@@ -484,7 +486,14 @@ def _note_line(note: ModeloFormCalculationNote, context: _Context) -> ModeloForm
         ),
         detail=detail,
         technical=f"{context.say(_TECHNICAL_LOCALE_KEY)}: {' · '.join(codes)}",
-        address=None if field is None else field.address,
+        address=(
+            field.address
+            if field is not None
+            else None
+            if record is None or note.casilla_id is None
+            else ModeloFormCasillaAddressV1(casilla_id=note.casilla_id)
+        ),
+        in_records=record is not None,
         surface=_note_surface(note, field),
         from_calculation=True,
         finding_id=note.finding_id,

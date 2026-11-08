@@ -1474,6 +1474,16 @@ application:
         what: Some amounts in a record of a payment made in a later year have no official
           source that confirms them.
         what_to_do: Check those amounts against the official instructions before filing.
+      m347_declarado_provincia_unrecorded:
+        what: '{box} is missing for some declarados: it belongs to their domicilio
+          fiscal, which your invoices do not state.'
+        what_to_do: Enter the provincia code of each listed declarado's domicilio
+          fiscal before you file the declaration.
+      m347_metalico_unrecorded:
+        what: Your invoices do not say how they were collected, so {box} holds no
+          amount on any record.
+        what_to_do: If any declarado paid you in cash above the amount that must be
+          declared, enter that amount on its record before you file the declaration.
       m349_clave_inferred_from_category:
         what: Cadrumo chose the operation type of a line in the EU sales listing from
           the invoice's VAT category, and it may be another type.
@@ -1733,6 +1743,7 @@ application:
       household_rows_incomplete: '{group}: {stated} stated, {recorded} recorded.'
       instalment_free_gap: '{element}: no depreciation charge is recorded from {start}
         to {end}. Its method leaves the amount to you, so it adds nothing to box {box}.'
+      m347_provincia_unrecorded: 'Declarados without a provincia code: {parties}.'
       possibly_durable_expense: The ledger entry of {row_date} for {row_amount} deducts
         as a current expense, and its description reads like a long-term asset.
       prior_filing_unrecorded: To calculate box {box}, record your Modelo {modelo}
