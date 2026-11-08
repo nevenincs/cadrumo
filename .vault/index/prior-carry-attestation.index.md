@@ -6,9 +6,10 @@ tags:
 date: '2026-11-08'
 modified: '2026-11-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:80f836c03796d2f4513e75d742ef324e4f85e2ce394502855535b8009a1a91f9'
+body_hash: 'sha256:698013c1062969002a5fe32f79c6972fa982bd83b40a1387a54e65b554a54410'
 related:
   - '[[2026-11-08-prior-carry-attestation-adr]]'
+  - '[[2026-11-08-prior-carry-attestation-plan]]'
   - '[[2026-11-08-prior-carry-attestation-reference]]'
 ---
 
@@ -21,6 +22,10 @@ Auto-generated index of all documents tagged with `#prior-carry-attestation`.
 ### adr
 
 - `2026-11-08-prior-carry-attestation-adr` - `prior-carry-attestation` adr: `operator-attested zero for an absent prior-year carry` | (**status:** `accepted`)
+
+### plan
+
+- `2026-11-08-prior-carry-attestation-plan` - `prior-carry-attestation` plan
 
 ### reference
 
