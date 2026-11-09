@@ -153,6 +153,7 @@ _EXPECTED_NAMESPACE_KEYS_IN_ORDER = (
     "modelo_verification_report_catalogue",
     "modelo_filing_record_catalogue",
     "modelo_calculation_revision_catalogue",
+    "modelo_calculation_rendering_snapshot",
     "transaction_participation_index",
 )
 

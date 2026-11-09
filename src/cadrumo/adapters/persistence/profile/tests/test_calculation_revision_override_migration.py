@@ -19,6 +19,7 @@ that would fail if the property were absent:
 
 from __future__ import annotations
 
+import json
 import re
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -38,6 +39,7 @@ from .....domain.modelos.calculation_revision import (
     derive_calculation_revision_id_from_revision,
 )
 from .....domain.modelos.work_unit import WorkUnit
+from ...storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ...storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, secure_object_select_log
 from ..calculation_revision_override_migration import (
     OrphanedRelationOverrideError,
@@ -311,15 +313,42 @@ def test_a_new_repository_reads_no_payload_for_a_catalogue_published_without_ove
     assert _stored_catalogue_payload_selects(selects) == []
 
 
+def _catalogue_bytes_written_by_another_process(tmp_path: Path) -> bytes:
+    """An override-free catalogue in bytes this process never wrote.
+
+    The same envelope with different JSON spacing stands in for another
+    process's writer: the meaning is equal while the exact bytes are new here.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path / "writer", bucket_id=BUCKET_ID) as writer:
+        seed_parent_work_unit(writer)
+        CalculationRevisionCatalogueRepository(objects=writer.repository).save(
+            override_migration_catalogue(revision(relation_overrides={}))
+        )
+        record = writer.repository.load(
+            MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+            MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
+            expected_class=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.sensitivity,
+            max_supported_version=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version,
+        )
+    assert record is not None
+    return json.dumps(json.loads(record.payload), indent=1).encode()
+
+
 def test_a_catalogue_learned_override_free_by_a_read_needs_no_second_read(tmp_path: Path) -> None:
     """A row this process did not write is read once, then its exact bytes are known."""
+    payload = _catalogue_bytes_written_by_another_process(tmp_path)
     with (
         bundled_indexed_authority().operation() as operation,
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile,
+        isolated_runtime_profile(tmp_path=tmp_path / "reader", bucket_id=BUCKET_ID) as profile,
     ):
         seed_parent_work_unit(profile)
-        CalculationRevisionCatalogueRepository(objects=profile.repository).save(
-            override_migration_catalogue(revision(relation_overrides={}))
+        profile.repository.save(
+            namespace=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+            object_key=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
+            classification=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.sensitivity,
+            schema_version=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version,
+            written_at=datetime(2026, 11, 9, 12, 0, 0, tzinfo=UTC),
+            payload=payload,
         )
 
         first = migrate_stored_relation_overrides_to_binding_ids(
