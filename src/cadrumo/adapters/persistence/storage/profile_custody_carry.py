@@ -78,6 +78,7 @@ from .envelope.contract import Envelope
 from .namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .runtime_repository import secure_object_repository_for_bucket
 from .secure_object_namespaces import (
+    MODELO_CALCULATION_RENDERING_SNAPSHOT_NAMESPACE,
     MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
     MODELO_FILING_RECORD_CATALOGUE_NAMESPACE,
     MODELO_WORK_UNIT_CATALOGUE_NAMESPACE,
@@ -97,6 +98,9 @@ _TYPED_CATEGORY_NAMESPACES: frozenset[str] = frozenset(
         TRANSACTION_CATALOGUE_NAMESPACE.namespace,
         MODELO_WORK_UNIT_CATALOGUE_NAMESPACE.namespace,
         MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+        # Rendering bodies travel inside the typed calculation revisions, which
+        # export each rendering whole; the importing save stores them again.
+        MODELO_CALCULATION_RENDERING_SNAPSHOT_NAMESPACE.namespace,
         MODELO_FILING_RECORD_CATALOGUE_NAMESPACE.namespace,
     },
 )
