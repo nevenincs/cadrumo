@@ -28,7 +28,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, TypeGuard
 
-from cadrumo.core.config_runtime_fields import LOCAL_AI_SERVER_ADDRESS
+from cadrumo.core.config_runtime_fields import LLAMA_SERVER_ADDRESS, LOCAL_AI_SERVER_ADDRESS
 from cadrumo.core.profile_root_environment import PROFILE_ROOT_VARIABLE
 from cadrumo.core.storage_environment import (
     STORAGE_ROOT,
@@ -70,6 +70,9 @@ FORWARD_VARIABLE: Final = "CADRUMO_AGENT_FORWARD"
 OLLAMA_BASE_URL_VARIABLE: Final = "CADRUMO_AGENT_OLLAMA_BASE_URL"
 """The loopback origin of the local AI server the runtime manager supervises."""
 OLLAMA_BASE_URL: Final = f"http://{LOCAL_AI_SERVER_ADDRESS}"
+LLAMACPP_BASE_URL_VARIABLE: Final = "CADRUMO_AGENT_LLAMACPP_BASE_URL"
+"""The loopback origin of the bundled llama-server the runtime manager supervises."""
+LLAMACPP_BASE_URL: Final = f"http://{LLAMA_SERVER_ADDRESS}"
 ADVERTISED_VARIABLES: Final = frozenset(
     {
         PROGRAM_AEAT_VARIABLE,
@@ -78,6 +81,7 @@ ADVERTISED_VARIABLES: Final = frozenset(
         TOOL_SERVER_ARGUMENTS_VARIABLE,
         FORWARD_VARIABLE,
         OLLAMA_BASE_URL_VARIABLE,
+        LLAMACPP_BASE_URL_VARIABLE,
     }
 )
 """What the service advertises to the gateway under the agent's prefix."""
@@ -320,4 +324,5 @@ def agent_launch_environment(
         forwarded.append(PROFILE_ROOT_VARIABLE)
     environment[FORWARD_VARIABLE] = ",".join(forwarded)
     environment[OLLAMA_BASE_URL_VARIABLE] = OLLAMA_BASE_URL
+    environment[LLAMACPP_BASE_URL_VARIABLE] = LLAMACPP_BASE_URL
     return environment

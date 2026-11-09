@@ -6,6 +6,7 @@ import json
 from typing import Any
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.core.errors.hierarchy import CoreValidationError
 
@@ -23,7 +24,7 @@ from ..catalog import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _document(*lanes: dict[str, Any], schema_version: int = 5) -> str:
+def _document(*lanes: dict[str, Any], schema_version: int = 6) -> str:
     return json.dumps({"schema_version": schema_version, "providers": list(lanes), "icon_attribution": {}})
 
 
@@ -41,6 +42,7 @@ def _model(model_id: str, **overrides: Any) -> dict[str, Any]:
         "size_bytes": None,
         "context_length": None,
         "licence": None,
+        "artefacts": None,
     }
     model.update(overrides)
     return model
@@ -66,12 +68,70 @@ def _with_model(**overrides: Any) -> str:
     return _document(_keyless_lane(models=[{**_local_model("synthetic-reader:1", vision=False), **overrides}]))
 
 
-def _with_background(lane: dict[str, Any], background: dict[str, Any]) -> str:
-    return _document({**lane, "background": background})
-
-
 def _without(lane: dict[str, Any], field: str) -> dict[str, Any]:
     return {key: value for key, value in lane.items() if key != field}
+
+
+_SHA_A = "a" * 64
+_SHA_B = "b" * 64
+_COMMIT = "0123456789abcdef0123456789abcdef01234567"
+_REGISTRY: dict[str, Any] = {"source": "registry", "name": "synthetic-reader:1"}
+_MODEL_FILE: dict[str, Any] = {"file": "Synthetic-Q4_K_M.gguf", "sha256": _SHA_A, "size_bytes": 1_107_409_952}
+_PROJECTOR_FILE: dict[str, Any] = {"file": "mmproj-Synthetic-Q8_0.gguf", "sha256": _SHA_B, "size_bytes": 445_053_216}
+_HUGGINGFACE: dict[str, Any] = {
+    "source": "huggingface",
+    "repository": "Owner/Synthetic-GGUF",
+    "revision": _COMMIT,
+    "model": _MODEL_FILE,
+}
+
+
+def _artefacts(**overrides: Any) -> dict[str, Any]:
+    stated: dict[str, Any] = {"ollama": _REGISTRY, "llamacpp": _HUGGINGFACE, "llamacpp_default_context": 8192}
+    stated.update(overrides)
+    return stated
+
+
+def _with_artefacts(artefacts: dict[str, Any] | None) -> str:
+    return _with_model(artefacts=artefacts)
+
+
+_REFUSED_ARTEFACTS: dict[str, dict[str, Any]] = {
+    "artefacts-unknown-field": _artefacts(extra=1),
+    "artefacts-missing-ollama": _without(_artefacts(), "ollama"),
+    "artefacts-missing-llamacpp": _without(_artefacts(), "llamacpp"),
+    "artefacts-missing-default-context": _without(_artefacts(), "llamacpp_default_context"),
+    "artefacts-name-no-engine": _artefacts(ollama=None, llamacpp=None, llamacpp_default_context=None),
+    "artefacts-context-without-llamacpp": _artefacts(llamacpp=None),
+    "artefacts-context-zero": _artefacts(llamacpp_default_context=0),
+    "artefacts-ollama-huggingface-form": _artefacts(ollama=_HUGGINGFACE),
+    "artefacts-unknown-source": _artefacts(llamacpp={"source": "url", "name": "x"}),
+    "registry-unknown-field": _artefacts(ollama={**_REGISTRY, "digest": _SHA_A}),
+    "registry-name-traversal": _artefacts(ollama={**_REGISTRY, "name": "../models:1"}),
+    "registry-name-empty": _artefacts(ollama={**_REGISTRY, "name": ""}),
+    "registry-name-too-many-parts": _artefacts(ollama={**_REGISTRY, "name": "a/b/c/d:1"}),
+    "huggingface-unknown-field": _artefacts(llamacpp={**_HUGGINGFACE, "branch": "main"}),
+    "huggingface-missing-model": _artefacts(llamacpp=_without(_HUGGINGFACE, "model")),
+    "huggingface-branch-revision": _artefacts(llamacpp={**_HUGGINGFACE, "revision": "main"}),
+    "huggingface-uppercase-revision": _artefacts(llamacpp={**_HUGGINGFACE, "revision": _COMMIT.upper()}),
+    "huggingface-repository-without-owner": _artefacts(llamacpp={**_HUGGINGFACE, "repository": "Synthetic-GGUF"}),
+    "huggingface-file-not-gguf": _artefacts(llamacpp={**_HUGGINGFACE, "model": {**_MODEL_FILE, "file": "model.bin"}}),
+    "huggingface-file-in-subfolder": _artefacts(
+        llamacpp={**_HUGGINGFACE, "model": {**_MODEL_FILE, "file": "sub/model.gguf"}}
+    ),
+    "huggingface-short-digest": _artefacts(llamacpp={**_HUGGINGFACE, "model": {**_MODEL_FILE, "sha256": "a" * 63}}),
+    "huggingface-size-zero": _artefacts(llamacpp={**_HUGGINGFACE, "model": {**_MODEL_FILE, "size_bytes": 0}}),
+    "huggingface-size-beyond-u64": _artefacts(llamacpp={**_HUGGINGFACE, "model": {**_MODEL_FILE, "size_bytes": 2**64}}),
+    "huggingface-file-unknown-field": _artefacts(llamacpp={**_HUGGINGFACE, "model": {**_MODEL_FILE, "url": "x"}}),
+    "huggingface-projector-is-the-model": _artefacts(llamacpp={**_HUGGINGFACE, "projector": _MODEL_FILE}),
+    "huggingface-projector-same-digest": _artefacts(
+        llamacpp={**_HUGGINGFACE, "projector": {**_PROJECTOR_FILE, "sha256": _SHA_A}}
+    ),
+}
+
+
+def _with_background(lane: dict[str, Any], background: dict[str, Any]) -> str:
+    return _document({**lane, "background": background})
 
 
 def _key_lane(**overrides: Any) -> dict[str, Any]:
@@ -497,7 +557,8 @@ def test_acceptable_base_url_passes() -> None:
 @pytest.mark.parametrize(
     "document",
     [
-        pytest.param(_document(_key_lane(), schema_version=6), id="unknown-schema-version"),
+        pytest.param(_document(_key_lane(), schema_version=7), id="unknown-schema-version"),
+        pytest.param(_document(_key_lane(), schema_version=5), id="retired-schema-version-five"),
         pytest.param(_document(_key_lane(), schema_version=4), id="retired-schema-version-four"),
         pytest.param(_document(_key_lane(), schema_version=3), id="retired-schema-version-three"),
         pytest.param(
@@ -582,6 +643,11 @@ def test_acceptable_base_url_passes() -> None:
         pytest.param(_with_model(size_bytes=1.5), id="size-fractional"),
         pytest.param(_with_model(context_length=0), id="context-length-zero"),
         pytest.param(_with_model(vision="yes"), id="vision-not-a-bool"),
+        pytest.param(
+            _document(_keyless_lane(models=[_without(_local_model("synthetic-reader:1", vision=False), "artefacts")])),
+            id="model-missing-artefacts",
+        ),
+        *[pytest.param(_with_artefacts(value), id=name) for name, value in _REFUSED_ARTEFACTS.items()],
         pytest.param(_with_model(installed=True), id="model-unknown-field"),
         pytest.param(
             _document(_keyless_lane(models=[_without(_local_model("synthetic-reader:1", vision=False), "licence")])),
@@ -648,3 +714,72 @@ def test_acceptable_base_url_passes() -> None:
 def test_malformed_catalog_is_refused(document: str) -> None:
     with pytest.raises(CoreValidationError):
         parse_provider_catalog(document)
+
+
+def _artefacts_of(document: str, model_id: str = "synthetic-reader:1") -> Any:
+    entry = parse_provider_catalog(document).entry("local_api")
+    assert entry is not None
+    model = entry.model(model_id)
+    assert model is not None
+    return model.artefacts
+
+
+def test_a_model_with_registry_artefacts_for_both_engines_parses() -> None:
+    artefacts = _artefacts_of(_with_artefacts(_artefacts(llamacpp=_REGISTRY, llamacpp_default_context=8192)))
+
+    assert artefacts.ollama.name == "synthetic-reader:1"
+    assert artefacts.llamacpp.source == "registry"
+    assert artefacts.llamacpp.name == "synthetic-reader:1"
+    assert artefacts.llamacpp_default_context == 8192
+
+
+def test_a_huggingface_artefact_with_a_projector_parses() -> None:
+    projected = {**_HUGGINGFACE, "projector": _PROJECTOR_FILE}
+
+    artefacts = _artefacts_of(_with_artefacts(_artefacts(llamacpp=projected)))
+
+    assert artefacts.llamacpp.source == "huggingface"
+    assert artefacts.llamacpp.repository == "Owner/Synthetic-GGUF"
+    assert artefacts.llamacpp.revision == _COMMIT
+    assert artefacts.llamacpp.model.size_bytes == 1_107_409_952
+    assert artefacts.llamacpp.projector.file == "mmproj-Synthetic-Q8_0.gguf"
+    assert artefacts.llamacpp.projector.sha256 == _SHA_B
+
+
+def test_a_huggingface_artefact_leaves_a_missing_projector_out() -> None:
+    assert "projector" not in _HUGGINGFACE
+
+    artefacts = _artefacts_of(_with_artefacts(_artefacts()))
+
+    assert artefacts.llamacpp.projector is None
+
+
+def test_a_single_engine_artefact_set_parses() -> None:
+    ollama_only = _artefacts_of(_with_artefacts(_artefacts(llamacpp=None, llamacpp_default_context=None)))
+    llamacpp_only = _artefacts_of(_with_artefacts(_artefacts(ollama=None)))
+
+    assert ollama_only.llamacpp is None
+    assert ollama_only.llamacpp_default_context is None
+    assert llamacpp_only.ollama is None
+    assert llamacpp_only.llamacpp.source == "huggingface"
+
+
+def test_a_registry_name_with_a_host_and_a_tag_parses() -> None:
+    name = "registry.example.com/library/synthetic:q4_0"
+
+    artefacts = _artefacts_of(_with_artefacts(_artefacts(ollama={**_REGISTRY, "name": name})))
+
+    assert artefacts.ollama.name == name
+
+
+def test_a_model_with_no_artefacts_parses_with_none() -> None:
+    assert _artefacts_of(_with_artefacts(None)) is None
+
+
+def test_artefacts_are_frozen() -> None:
+    artefacts = _artefacts_of(_with_artefacts(_artefacts()))
+
+    with pytest.raises(ValidationError):
+        artefacts.llamacpp_default_context = 1
+    with pytest.raises(ValidationError):
+        artefacts.ollama.name = "other"

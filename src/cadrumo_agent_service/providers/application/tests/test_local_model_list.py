@@ -16,8 +16,17 @@ from cadrumo_client.contracts.model_runs import (
 )
 
 from ...domain.catalog import BackgroundOption
-from ...domain.record import LOCAL_MODEL_LIST_MAX_MODELS, ListedModel, LocalModelListRecord, new_settings_generation
+from ...domain.record import (
+    LOCAL_MODEL_LIST_MAX_MODELS,
+    LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
+    ListedModel,
+    LocalEngine,
+    LocalModelListRecord,
+    LocalPlacement,
+    new_settings_generation,
+)
 from ..contracts import (
+    LocalEngineStatus,
     LocalModelListStatus,
     ProviderSettingsRefusal,
     ProviderSettingsRefusalCode,
@@ -45,8 +54,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _ADDED = "custom-model:test"
 
 
-def _service(store: MemoryLocalModelListStore) -> LocalModelListService:
-    return LocalModelListService(store=store, catalog_source=ProvidedProviderCatalogSource(synthetic_catalog()))
+def _service(
+    store: MemoryLocalModelListStore, default_engine: LocalEngine = LocalEngine.LLAMACPP
+) -> LocalModelListService:
+    return LocalModelListService(
+        store=store,
+        catalog_source=ProvidedProviderCatalogSource(synthetic_catalog()),
+        default_engine=default_engine,
+    )
 
 
 def _status(result: LocalModelListStatus | ProviderSettingsRefusal) -> LocalModelListStatus:
@@ -62,11 +77,19 @@ def _refused(code: ProviderSettingsRefusalCode) -> ProviderSettingsRefusal:
     return ProviderSettingsRefusal(code=code)
 
 
-def _put(store: MemoryLocalModelListStore, *models: tuple[str, str], reading: ListedModel | None = None) -> str:
+def _put(
+    store: MemoryLocalModelListStore,
+    *models: tuple[str, str],
+    reading: ListedModel | None = None,
+    engine: LocalEngine | None = None,
+    placement: LocalPlacement | None = None,
+) -> str:
     record = LocalModelListRecord(
-        schema_version=2,
+        schema_version=LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
         models=tuple(ListedModel(lane=lane, model=model) for lane, model in models),
         reading=reading,
+        engine=engine,
+        placement=placement,
         generation=new_settings_generation(),
         updated_at=datetime(2026, 10, 27, 9, 0, tzinfo=UTC),
     )
@@ -185,7 +208,9 @@ def test_a_write_drops_models_on_lanes_the_catalogue_reports_as_not_local_and_ke
 
 def test_a_catalogue_the_agent_cannot_report_refuses_changes() -> None:
     store = MemoryLocalModelListStore()
-    service = LocalModelListService(store=store, catalog_source=UnavailableCatalogSource())
+    service = LocalModelListService(
+        store=store, catalog_source=UnavailableCatalogSource(), default_engine=LocalEngine.LLAMACPP
+    )
     unavailable = _refused(ProviderSettingsRefusalCode.CATALOG_UNAVAILABLE)
 
     assert service.add(KEYLESS_LANE, model=_ADDED, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID) == unavailable
@@ -323,7 +348,7 @@ def test_a_model_added_and_selected_through_the_service_is_the_one_a_model_run_r
         gateway=_NoGateway(),
     )
     assert runs.lookup("text_extraction") == ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
-    service = LocalModelListService(store=store, catalog_source=source)
+    service = LocalModelListService(store=store, catalog_source=source, default_engine=LocalEngine.LLAMACPP)
 
     added = _status(service.add(KEYLESS_LANE, model=_ADDED, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID))
     assert runs.lookup("text_extraction") == ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
@@ -335,3 +360,204 @@ def test_a_model_added_and_selected_through_the_service_is_the_one_a_model_run_r
         model=_ADDED,
         reads_off_host=False,
     )
+
+
+def _engine(result: LocalEngineStatus | ProviderSettingsRefusal) -> LocalEngineStatus:
+    assert isinstance(result, LocalEngineStatus), result
+    return result
+
+
+def test_a_fresh_profile_reads_the_bundled_llamacpp_engine_with_automatic_placement() -> None:
+    assert _service(MemoryLocalModelListStore()).engine_status() == LocalEngineStatus(
+        unreadable=False,
+        chosen=False,
+        engine=LocalEngine.LLAMACPP,
+        placement=LocalPlacement.AUTO,
+        revision=ABSENT_SECURE_OBJECT_REVISION_ID,
+    )
+
+
+def test_a_record_written_without_an_engine_choice_stays_unchosen_and_reads_as_llamacpp() -> None:
+    store = MemoryLocalModelListStore()
+    service = _service(store)
+
+    added = _status(service.add(KEYLESS_LANE, model=_ADDED, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID))
+
+    assert store.stored is not None
+    assert (store.stored.record.engine, store.stored.record.placement) == (None, None)
+    setting = _engine(service.engine_status())
+    assert (setting.chosen, setting.engine, setting.placement) == (False, LocalEngine.LLAMACPP, LocalPlacement.AUTO)
+    assert setting.revision == added.revision
+
+
+@pytest.mark.parametrize("default", [LocalEngine.LLAMACPP, LocalEngine.OLLAMA])
+def test_a_fresh_profile_reads_the_engine_the_package_defaults_to(default: LocalEngine) -> None:
+    setting = _engine(_service(MemoryLocalModelListStore(), default).engine_status())
+
+    assert (setting.chosen, setting.engine, setting.placement) == (False, default, LocalPlacement.AUTO)
+    assert setting.revision == ABSENT_SECURE_OBJECT_REVISION_ID
+
+
+@pytest.mark.parametrize("default", [LocalEngine.LLAMACPP, LocalEngine.OLLAMA])
+def test_an_unchosen_stored_record_reads_as_the_package_default_and_stays_unchosen(default: LocalEngine) -> None:
+    store = MemoryLocalModelListStore()
+    revision = _put(store, (KEYLESS_LANE, _ADDED))
+    service = _service(store, default)
+
+    setting = _engine(service.engine_status())
+
+    assert (setting.chosen, setting.engine, setting.placement, setting.revision) == (
+        False,
+        default,
+        LocalPlacement.AUTO,
+        revision,
+    )
+    assert store.stored is not None
+    assert (store.stored.record.engine, store.stored.record.placement) == (None, None)
+
+
+def test_a_stored_llamacpp_choice_is_not_overruled_by_an_ollama_package_default() -> None:
+    store = MemoryLocalModelListStore()
+    _put(store, engine=LocalEngine.LLAMACPP, placement=LocalPlacement.AUTO)
+
+    setting = _engine(_service(store, LocalEngine.OLLAMA).engine_status())
+
+    assert (setting.chosen, setting.engine, setting.placement) == (True, LocalEngine.LLAMACPP, LocalPlacement.AUTO)
+
+
+def test_a_stored_ollama_choice_is_kept_through_list_changes() -> None:
+    store = MemoryLocalModelListStore()
+    revision = _put(store, engine=LocalEngine.OLLAMA, placement=LocalPlacement.AUTO)
+    service = _service(store)
+
+    added = _status(service.add(KEYLESS_LANE, model=_ADDED, expected_revision=revision))
+    _status(service.remove(KEYLESS_LANE, model=_ADDED, expected_revision=added.revision))
+
+    kept = _engine(service.engine_status())
+    assert (kept.engine, kept.placement) == (LocalEngine.OLLAMA, LocalPlacement.AUTO)
+
+
+def test_choosing_the_engine_stores_it_with_its_placement_and_reads_back() -> None:
+    service = _service(MemoryLocalModelListStore())
+
+    chosen = _engine(
+        service.choose_engine(
+            LocalEngine.LLAMACPP, LocalPlacement.CPU_ONLY, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+        )
+    )
+
+    assert (chosen.engine, chosen.placement) == (LocalEngine.LLAMACPP, LocalPlacement.CPU_ONLY)
+    assert chosen.revision != ABSENT_SECURE_OBJECT_REVISION_ID
+    assert service.engine_status() == chosen
+
+
+def test_choosing_the_engine_keeps_the_added_models_and_the_reading_model() -> None:
+    store = MemoryLocalModelListStore()
+    reading = ListedModel(lane=KEYLESS_LANE, model=KEYLESS_TEXT_MODEL)
+    revision = _put(store, (KEYLESS_LANE, _ADDED), reading=reading)
+    service = _service(store)
+
+    chosen = _engine(service.choose_engine(LocalEngine.LLAMACPP, LocalPlacement.AUTO, expected_revision=revision))
+
+    listed = _status(service.status())
+    assert _added(listed) == [(KEYLESS_LANE, _ADDED)]
+    assert _reading(listed) == (KEYLESS_LANE, KEYLESS_TEXT_MODEL)
+    assert listed.revision == chosen.revision
+
+
+def test_list_changes_and_the_reading_choice_keep_the_stored_engine_setting() -> None:
+    service = _service(MemoryLocalModelListStore())
+    chosen = _engine(
+        service.choose_engine(
+            LocalEngine.LLAMACPP, LocalPlacement.CPU_ONLY, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+        )
+    )
+    added = _status(service.add(KEYLESS_LANE, model=_ADDED, expected_revision=chosen.revision))
+    assert _engine(service.engine_status()).model_copy(update={"revision": chosen.revision}) == chosen
+
+    picked = _status(service.choose_reading(KEYLESS_LANE, model=_ADDED, expected_revision=added.revision))
+    removed = _status(service.remove(KEYLESS_LANE, model=_ADDED, expected_revision=picked.revision))
+
+    kept = _engine(service.engine_status())
+    assert (kept.engine, kept.placement) == (LocalEngine.LLAMACPP, LocalPlacement.CPU_ONLY)
+    assert kept.revision == removed.revision
+
+
+def test_choosing_the_stored_engine_setting_again_writes_nothing() -> None:
+    store = MemoryLocalModelListStore()
+    revision = _put(store, engine=LocalEngine.LLAMACPP, placement=LocalPlacement.CPU_ONLY)
+    stored = store.stored
+
+    unchanged = _engine(
+        _service(store).choose_engine(LocalEngine.LLAMACPP, LocalPlacement.CPU_ONLY, expected_revision=revision)
+    )
+
+    assert unchanged.revision == revision
+    assert store.stored is stored
+
+
+def test_choosing_the_setting_an_unchosen_profile_reads_stores_it_as_the_person_s_choice() -> None:
+    store = MemoryLocalModelListStore()
+
+    chosen = _engine(
+        _service(store).choose_engine(
+            LocalEngine.LLAMACPP, LocalPlacement.AUTO, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+        )
+    )
+
+    assert (chosen.chosen, chosen.engine, chosen.placement) == (True, LocalEngine.LLAMACPP, LocalPlacement.AUTO)
+    assert chosen.revision != ABSENT_SECURE_OBJECT_REVISION_ID
+    assert store.stored is not None
+    assert (store.stored.record.engine, store.stored.record.placement) == (LocalEngine.LLAMACPP, LocalPlacement.AUTO)
+
+
+def test_choosing_the_engine_against_a_stale_revision_is_refused_and_changes_nothing() -> None:
+    store = MemoryLocalModelListStore()
+    revision = _put(store)
+    service = _service(store)
+
+    refused = service.choose_engine(LocalEngine.LLAMACPP, LocalPlacement.AUTO, expected_revision="f" * 64)
+
+    assert refused == _refused(ProviderSettingsRefusalCode.REVISION_CONFLICT)
+    assert _engine(service.engine_status()).engine == LocalEngine.LLAMACPP
+    assert _engine(service.engine_status()).revision == revision
+
+
+def test_an_unreadable_record_names_no_engine_and_refuses_choosing_one() -> None:
+    store = MemoryLocalModelListStore()
+    store.unreadable = "d" * 64
+    service = _service(store)
+
+    assert service.engine_status() == LocalEngineStatus(
+        unreadable=True, chosen=False, engine=None, placement=None, revision="d" * 64
+    )
+    refused = service.choose_engine(LocalEngine.LLAMACPP, LocalPlacement.AUTO, expected_revision="d" * 64)
+    assert refused == _refused(ProviderSettingsRefusalCode.UNKNOWN)
+    assert store.unreadable == "d" * 64
+
+
+def test_a_profile_that_is_not_signed_in_refuses_the_engine_read_and_change() -> None:
+    store = MemoryLocalModelListStore()
+    store.refusal = StoreRefusal(code=StoreRefusalCode.NOT_SIGNED_IN)
+    service = _service(store)
+    signed_out = _refused(ProviderSettingsRefusalCode.NOT_SIGNED_IN)
+
+    assert service.engine_status() == signed_out
+    assert (
+        service.choose_engine(
+            LocalEngine.LLAMACPP, LocalPlacement.AUTO, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+        )
+        == signed_out
+    )
+
+
+def test_an_engine_status_names_an_engine_and_placement_exactly_when_the_record_is_readable() -> None:
+    revision = ABSENT_SECURE_OBJECT_REVISION_ID
+    with pytest.raises(ValueError, match="engine"):
+        LocalEngineStatus(unreadable=True, chosen=False, engine=LocalEngine.OLLAMA, placement=None, revision=revision)
+    with pytest.raises(ValueError, match="engine"):
+        LocalEngineStatus(unreadable=False, chosen=False, engine=None, placement=None, revision=revision)
+    with pytest.raises(ValueError, match="engine"):
+        LocalEngineStatus(unreadable=False, chosen=False, engine=LocalEngine.OLLAMA, placement=None, revision=revision)
+    with pytest.raises(ValueError, match="choice"):
+        LocalEngineStatus(unreadable=True, chosen=True, engine=None, placement=None, revision=revision)

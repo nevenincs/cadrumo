@@ -11,7 +11,7 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.core.config_runtime_fields import LOCAL_AI_SERVER_ADDRESS
+from cadrumo.core.config_runtime_fields import LLAMA_SERVER_ADDRESS, LOCAL_AI_SERVER_ADDRESS
 from cadrumo.core.storage_environment import STORAGE_ROOT, normalize_storage_path
 from cadrumo_mcp.mcp.surfaces import DEFAULT_MCP_SURFACE
 
@@ -25,6 +25,7 @@ from ..launch_environment import (
     GATEWAY_PORT_VARIABLE,
     GATEWAY_SLOTS,
     HOSTED_ROOT_VARIABLE,
+    LLAMACPP_BASE_URL_VARIABLE,
     OLLAMA_BASE_URL_VARIABLE,
     PROGRAM_AEAT_VARIABLE,
     PROGRAM_PYTHON_VARIABLE,
@@ -430,11 +431,16 @@ def test_the_agent_reaches_the_supervised_local_ai_server_and_no_inherited_one(t
     environment = _launch_environment(
         tmp_path,
         python=None,
-        received={OLLAMA_BASE_URL_VARIABLE: "http://127.0.0.1:1", "OLLAMA_HOST": "192.0.2.1:1"},
+        received={
+            OLLAMA_BASE_URL_VARIABLE: "http://127.0.0.1:1",
+            LLAMACPP_BASE_URL_VARIABLE: "http://127.0.0.1:2",
+            "OLLAMA_HOST": "192.0.2.1:1",
+        },
         sys_platform=platform,
     )
     assert environment[OLLAMA_BASE_URL_VARIABLE] == f"http://{LOCAL_AI_SERVER_ADDRESS}"
-    assert (
-        validate_loopback_http_base_url(environment[OLLAMA_BASE_URL_VARIABLE]) == environment[OLLAMA_BASE_URL_VARIABLE]
-    )
+    assert environment[LLAMACPP_BASE_URL_VARIABLE] == f"http://{LLAMA_SERVER_ADDRESS}"
+    assert LLAMA_SERVER_ADDRESS != LOCAL_AI_SERVER_ADDRESS
+    for variable in (OLLAMA_BASE_URL_VARIABLE, LLAMACPP_BASE_URL_VARIABLE):
+        assert validate_loopback_http_base_url(environment[variable]) == environment[variable]
     assert "OLLAMA_HOST" not in environment

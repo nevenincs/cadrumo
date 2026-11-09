@@ -378,8 +378,9 @@ pub struct Check {
     /// the check runs, when it is done, and when a failure carried no category.
     pub failure: Option<Failure>,
     /// Why the check was refused before the engine ran: the person's selection of local
-    /// models could not be handed to it. Present only on a failed check, and never with a
-    /// `failure`.
+    /// models could not be handed to it, or the local engine record cannot be read, when a
+    /// status read still reads the browser alone. Present only on a failed check, and never
+    /// with a `failure`.
     pub refusal: Option<Refusal>,
 }
 

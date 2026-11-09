@@ -19,6 +19,7 @@ from typing import Annotated, Final, Literal, Self
 from urllib.parse import SplitResult, urlsplit
 
 from pydantic import (
+    AfterValidator,
     BaseModel,
     Field,
     JsonValue,
@@ -64,6 +65,18 @@ CliProgram = Annotated[
     StringConstraints(min_length=1, max_length=CLI_PROGRAM_MAX_LENGTH, pattern=r'^[^\x00-\x1f\x7f/\\:*?"<>|]+$'),
 ]
 """The executable name a cli lane resolves on the search path: one file name, without a path separator."""
+
+_MAX_ARTEFACT_NAME_LENGTH: Final[int] = 512
+_MAX_ARTEFACT_PART_LENGTH: Final[int] = 128
+_MAX_ARTEFACT_FILE_SIZE: Final[int] = 2**64 - 1
+_GGUF_SUFFIX: Final[str] = ".gguf"
+_ARTEFACT_SEGMENT_CHARACTERS: Final[frozenset[str]] = frozenset(
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-"
+)
+_ARTEFACT_ALPHANUMERIC: Final[frozenset[str]] = frozenset(
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+)
+_HOST_LABEL_CHARACTERS: Final[frozenset[str]] = frozenset("abcdefghijklmnopqrstuvwxyz0123456789-")
 
 LicenceDigest = Annotated[str, StringConstraints(pattern=r"^sha256:[0-9a-f]{64}$")]
 """The digest of a licence text the agent ships: ``sha256:`` and 64 lowercase hex digits."""
@@ -197,6 +210,120 @@ class ModelLicence(BaseModel):
     """The digest of the licence text the agent serves for this model."""
 
 
+def _is_artefact_host(value: str) -> bool:
+    labels = value.split(".")
+    return (
+        len(value) <= 253
+        and len(labels) >= 2
+        and not labels[-1].isdigit()
+        and all(
+            0 < len(label) <= 63
+            and not label.startswith("-")
+            and not label.endswith("-")
+            and set(label) <= _HOST_LABEL_CHARACTERS
+            for label in labels
+        )
+    )
+
+
+def _is_artefact_segment(value: str, *, first: frozenset[str]) -> bool:
+    return (
+        0 < len(value) <= _MAX_ARTEFACT_PART_LENGTH and value[0] in first and set(value) <= _ARTEFACT_SEGMENT_CHARACTERS
+    )
+
+
+def _registry_name(value: str) -> str:
+    """Accept a registry name as the host reads one: ``[[host/]namespace/]model[:tag]``."""
+    path, tag = value, "latest"
+    head, separator, tail = value.rpartition(":")
+    if separator and "/" not in tail:
+        path, tag = head, tail
+    parts = path.split("/")
+    if len(parts) > 3:
+        raise ValueError("must be [[host/]namespace/]model[:tag]")
+    if len(parts) == 3 and not _is_artefact_host(parts[0]):
+        raise ValueError("a three-part name starts with a lowercase host name")
+    if not all(_is_artefact_segment(part, first=_ARTEFACT_ALPHANUMERIC) for part in parts[-2:]):
+        raise ValueError("a namespace and a model are plain names")
+    if not _is_artefact_segment(tag, first=_ARTEFACT_ALPHANUMERIC | {"_"}):
+        raise ValueError("a tag is a plain name")
+    return value
+
+
+class RegistryArtefact(BaseModel):
+    """A model the Ollama model registry serves under ``name``."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    source: Literal["registry"]
+    name: Annotated[
+        str,
+        StringConstraints(min_length=1, max_length=_MAX_ARTEFACT_NAME_LENGTH),
+        AfterValidator(_registry_name),
+    ]
+
+
+class ArtefactFile(BaseModel):
+    """One GGUF file of a Hugging Face repository, pinned by digest and size."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    file: str = Field(
+        min_length=len(_GGUF_SUFFIX) + 1,
+        max_length=_MAX_ARTEFACT_PART_LENGTH + len(_GGUF_SUFFIX),
+        pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]*\.gguf$",
+    )
+    sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    size_bytes: int = Field(gt=0, le=_MAX_ARTEFACT_FILE_SIZE)
+
+
+class HuggingFaceArtefact(BaseModel):
+    """A GGUF model, and the projector it loads with, at one commit of a Hugging Face repository."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    source: Literal["huggingface"]
+    repository: str = Field(
+        min_length=3,
+        max_length=2 * _MAX_ARTEFACT_PART_LENGTH + 1,
+        pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}/[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$",
+    )
+    revision: str = Field(pattern=r"^[0-9a-f]{40}$")
+    model: ArtefactFile
+    projector: ArtefactFile | None = None
+    """Absent, never null, for a model without a projector; a present projector is never the model file."""
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _projector_is_another_file(self) -> Self:
+        projector = self.projector
+        if projector is not None and (projector.file == self.model.file or projector.sha256 == self.model.sha256):
+            raise ValueError("the projector is not the model file")
+        return self
+
+
+type EngineArtefact = Annotated[RegistryArtefact | HuggingFaceArtefact, Field(discriminator="source")]
+
+
+class ModelArtefacts(BaseModel):
+    """How each local engine obtains one model, as the agent declares it; the service only carries it."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    ollama: RegistryArtefact | None
+    llamacpp: EngineArtefact | None
+    llamacpp_default_context: int | None = Field(gt=0)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _states_something(self) -> Self:
+        if self.ollama is None and self.llamacpp is None:
+            raise ValueError("an artefact set names at least one engine's artefact")
+        if self.llamacpp is None and self.llamacpp_default_context is not None:
+            raise ValueError("a context size is declared with the llama.cpp artefact")
+        return self
+
+
 class CatalogModelFacts(BaseModel):
     """One model a lane's catalogue lists and the facts the agent states for it.
 
@@ -234,6 +361,8 @@ class ProviderCatalogModel(CatalogModelFacts):
     display_name: str = Field(min_length=1)
     effort: dict[str, JsonValue]
     """The agent's effort control for the model, carried as declared."""
+    artefacts: ModelArtefacts | None
+    """How each local engine obtains the model; ``None`` where the agent declares none."""
 
 
 class ModelCapability(StrEnum):
@@ -372,7 +501,7 @@ class ProviderCatalog(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    schema_version: Literal[5]
+    schema_version: Literal[6]
     providers: tuple[ProviderCatalogEntry, ...] = Field(min_length=1, max_length=MAX_CATALOG_LANES)
     icon_attribution: dict[str, JsonValue]
 
@@ -436,14 +565,18 @@ __all__ = [
     "MODEL_ID_MAX_LENGTH",
     "RECOMMENDED_KEY_MAX_LENGTH",
     "RECOMMENDED_VALUE_MAX_LENGTH",
+    "ArtefactFile",
     "BackgroundInput",
     "BackgroundOption",
     "CatalogModelFacts",
     "CliProgram",
+    "EngineArtefact",
+    "HuggingFaceArtefact",
     "LaneBackground",
     "LaneId",
     "LicenceDigest",
     "LiveCatalogModel",
+    "ModelArtefacts",
     "ModelCapability",
     "ModelLicence",
     "ProviderAuthKind",
@@ -453,6 +586,7 @@ __all__ = [
     "ProviderConsumer",
     "ProviderId",
     "ProviderTransport",
+    "RegistryArtefact",
     "parse_provider_catalog",
     "validate_https_base_url",
     "validate_loopback_http_base_url",
