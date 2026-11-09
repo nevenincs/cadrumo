@@ -293,14 +293,23 @@ def assemble_totals(collected: InvoiceLabelCollection, assembly: InvoiceLabelAss
         "suplidos_amount", (a for a, _ in collected.amounts.get(InvoiceLabelKind.SUPLIDOS, [])), assembly
     )
     assembly.put("suplidos_amount", suplidos)
+    retention_entries = collected.amounts.get(InvoiceLabelKind.RETENCION, [])
+    retention = single_consensus("retencion_amount", (a for a, _ in retention_entries), assembly)
+    payable = single_consensus(
+        "grand_total", (a for a, _ in collected.amounts.get(InvoiceLabelKind.PAYABLE, [])), assembly
+    )
+    derived_from_payable = grand_total is None and payable is not None and retention is not None
+    if grand_total is None and payable is not None:
+        grand_total = _total_from_payable(payable, retention)
     base = assembly.value("taxable_base")
     grand_total = _check_grand_total(grand_total, base, assembly)
-    if base is not None:
+    if base is not None and grand_total is not None and derived_from_payable:
+        assembly.values["grand_total"] = grand_total.value
+        assembly.derived["grand_total"] = ("payable", "retencion_amount")
+    elif base is not None:
         # A total with no base has nothing to be checked against.
         assembly.put("grand_total", grand_total)
 
-    retention_entries = collected.amounts.get(InvoiceLabelKind.RETENCION, [])
-    retention = single_consensus("retencion_amount", (a for a, _ in retention_entries), assembly)
     retention = _match_retention_sign(retention, assembly.value("grand_total"))
     retention_rate = single_consensus(
         "retencion_rate",
@@ -309,13 +318,26 @@ def assemble_totals(collected: InvoiceLabelCollection, assembly: InvoiceLabelAss
     )
     base = assembly.value("taxable_base")
     retention, retention_rate = _check_retention_rate(retention, retention_rate, base, assembly)
-    payable = single_consensus(
-        "grand_total", (a for a, _ in collected.amounts.get(InvoiceLabelKind.PAYABLE, [])), assembly
-    )
     total = assembly.value("grand_total")
     retention, retention_rate = _check_payable(payable, total, retention, retention_rate, assembly)
     assembly.put("retencion_amount", retention)
     assembly.put("retencion_rate", retention_rate)
+
+
+def _total_from_payable(
+    payable: PrintedValue[Decimal],
+    retention: PrintedValue[Decimal] | None,
+) -> PrintedValue[Decimal]:
+    """The total an invoice that prints only its amount payable states: that amount plus the retención.
+
+    The amount payable is the total less the retención withheld from it, so with
+    no retención printed it is the total itself, as printed. Its sign follows the
+    payable, so a rectificativa's negative payable gives a negative total.
+    """
+    if retention is None:
+        return payable
+    withheld = abs(retention.value) if payable.value >= 0 else -abs(retention.value)
+    return PrintedValue(payable.value + withheld, payable.anchor)
 
 
 def _check_grand_total(
@@ -439,6 +461,12 @@ def record_ambiguous_amounts(collected: InvoiceLabelCollection, assembly: Invoic
         )
 
 
+_DERIVATION_NOTES: dict[tuple[str, ...], str] = {
+    ("iva_breakdown",): "summed from the per-rate figures the document prints",
+    ("payable", "retencion_amount"): "the amount payable the document prints plus the retención it prints",
+}
+
+
 def field_provenance(assembly: InvoiceLabelAssembly) -> tuple[FieldProvenance, ...]:
     """Build provenance envelopes for observed, derived, and ambiguous fields."""
     envelopes: list[FieldProvenance] = []
@@ -450,7 +478,7 @@ def field_provenance(assembly: InvoiceLabelAssembly) -> tuple[FieldProvenance, .
                     origin=FieldOrigin.DERIVED,
                     grounding=FieldGroundingOutcome.RECONCILED,
                     derived_from=assembly.derived[name],
-                    note="summed from the per-rate figures the document prints",
+                    note=_DERIVATION_NOTES[assembly.derived[name]],
                 ),
             )
         elif name == "iva_breakdown" and name in assembly.values:

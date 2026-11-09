@@ -17,6 +17,7 @@ import iconArtwork from "virtual:desktop-provider-icons";
 import { useStrings, type Translate } from "../../shell/strings";
 import { ProviderMark } from "../agent/ProviderMark";
 import { ProviderSignInDialog } from "./ProviderSignInDialog";
+import { SignInAdvice } from "./SignInAdvice";
 import type {
   ProviderSignIn,
   ProviderSignInMethod,
@@ -25,7 +26,13 @@ import type { ProviderOutcome, ProviderSecret, ProviderStatus } from "./types";
 
 /** One status for a connection, in the same words wherever it is shown. */
 type ConnectionStatus =
-  "ready" | "saved" | "not_checked" | "setup_needed" | "sign_in_needed" | "off";
+  | "ready"
+  | "saved"
+  | "not_checked"
+  | "setup_needed"
+  | "sign_in_needed"
+  | "unconfirmed"
+  | "off";
 
 /** Describe what is set, without claiming more than the reading says. */
 function connectionStatus(provider: ProviderStatus): ConnectionStatus {
@@ -43,6 +50,9 @@ function connectionStatus(provider: ProviderStatus): ConnectionStatus {
       provider.readiness === "ready"
     )
       return "ready";
+    // The probe could not say, and said why: that is not "signed out".
+    if (provider.cliState === "unknown" && provider.cliStateCause)
+      return "unconfirmed";
     if (
       provider.cliState === "installed_signed_out" ||
       provider.readiness === "sign_in_required"
@@ -67,6 +77,7 @@ const STATUS_WORDS = {
   not_checked: "desktop.providers.status_not_checked",
   setup_needed: "desktop.providers.status_setup_needed",
   sign_in_needed: "desktop.providers.status_sign_in_needed",
+  unconfirmed: "desktop.providers.status_unconfirmed",
   off: "desktop.providers.status_off",
 } as const satisfies Record<ConnectionStatus, string>;
 
@@ -84,6 +95,7 @@ const GLYPHS: Partial<
 > = {
   ready: { icon: "check", tone: "text-success" },
   sign_in_needed: { icon: "alert", tone: "text-warning" },
+  unconfirmed: { icon: "alert", tone: "text-warning" },
 };
 
 /** The text colour of a connection's name. */
@@ -156,6 +168,7 @@ function detailWords(t: Translate, provider: ProviderStatus): string | null {
       provider: provider.name,
     });
   if (provider.authKind === "none") return null;
+  if (status === "unconfirmed") return statusWords(t, status);
   if (provider.authKind === "provider_sign_in_only") {
     if (status === "setup_needed")
       return t("desktop.providers.reason_check_settings");
@@ -299,6 +312,7 @@ function WayRow({
   onRefresh,
   signInSupported,
   onSignIn,
+  consoleSignInCommand,
   models,
 }: {
   provider: ProviderStatus;
@@ -312,6 +326,8 @@ function WayRow({
   onRefresh: () => void;
   signInSupported: boolean;
   onSignIn: () => void;
+  /** The served console command template, with its `{provider}` slot. */
+  consoleSignInCommand?: string;
   /** The models of a keyless lane on this computer, shown while it is on. */
   models?: ReactNode;
 }) {
@@ -365,6 +381,14 @@ function WayRow({
         />
       </div>
       {detail && <p className="text-sm text-foreground">{detail}</p>}
+      {state === "unconfirmed" && (
+        <SignInAdvice
+          causes={[provider.cliStateCause]}
+          step={provider.nextStep}
+          command={consoleSignInCommand}
+          provider={provider.provider}
+        />
+      )}
       {address && !off && (
         <p className="text-sm text-muted-foreground wrap-anywhere">
           {t("desktop.providers.address", { url: address })}
@@ -564,6 +588,7 @@ export function ProviderSettings({
   signInProviders = [],
   signInMethods = {},
   revisions = {},
+  consoleSignInCommand,
   identity = null,
   localModels,
   query = "",
@@ -595,6 +620,9 @@ export function ProviderSettings({
   >;
   /** Current lane revisions from the same provider status read. */
   revisions?: Readonly<Record<string, string>>;
+  /** The console command that signs a provider in by hand, with a
+   * `{provider}` slot, as the service serves it. */
+  consoleSignInCommand?: string;
   /** Signed-in profile identity, used to discard an open attempt on switch. */
   identity?: string | null;
   /** The model controls of a keyless lane, where the host offers them: a
@@ -680,6 +708,7 @@ export function ProviderSettings({
                   (signInMethods[lane.provider]?.length ?? 0) > 0,
                 )}
                 onSignIn={() => setSelection({ laneId: lane.id, identity })}
+                consoleSignInCommand={consoleSignInCommand}
                 onSave={(secret) => onSave(lane.id, secret)}
                 onTurnOff={() => onTurnOff(lane.id)}
                 onTurnOn={() => onTurnOn(lane.id)}
@@ -712,6 +741,7 @@ export function ProviderSettings({
           revision={selectedRevision}
           signIn={signIn}
           methods={selectedMethods}
+          consoleSignInCommand={consoleSignInCommand}
           onOpenChange={(open) => {
             if (!open) setSelection(null);
           }}

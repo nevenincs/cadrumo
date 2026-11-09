@@ -13,6 +13,7 @@ from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.windows_process import WindowsProcessScope
 
 from ...host.store_lifecycle import AgentInvocationResult
+from ...providers.application.contracts import CliStateCause
 from ...providers.application.ports import ProviderCatalogUnavailableError
 from .. import agent_provider_auth_status, agent_provider_catalog
 from ..agent_process import WindowsAgentInvocationRunner
@@ -99,8 +100,8 @@ def test_auth_probe_retains_the_exact_unconfirmed_scope_and_refuses_replacement(
     monkeypatch.setattr(agent_provider_auth_status, "hosted_python", lambda: tmp_path / "python.exe")
     monkeypatch.setattr(agent_provider_auth_status, "agent_binary_directories", lambda **_arguments: None)
     probe = agent_provider_auth_status.AgentProviderAuthStatusProbe(context=lambda: None)
-    assert probe._read(tmp_path) == {}
-    assert probe._read(tmp_path) == {}
+    assert probe._read(tmp_path, 20.0).failure is CliStateCause.STATUS_READ_FAILED
+    assert probe._read(tmp_path, 20.0).failure is CliStateCause.STATUS_READ_FAILED
     assert len(started) == 1
     assert not started[0].settled and scope.attempts == 1
     probe.close()

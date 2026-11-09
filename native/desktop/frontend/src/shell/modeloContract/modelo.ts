@@ -380,7 +380,8 @@ export type CalculationNoteSentence =
   | "withholding_invoice_non_resident"
   | "withholding_invoice_rate_unrecognised"
   | "withholding_invoice_incomplete"
-  | "m347_provincia_unrecorded";
+  | "m347_provincia_unrecorded"
+  | "m347_provincia_unstated";
 
 export type CalculationRevisionId = string;
 

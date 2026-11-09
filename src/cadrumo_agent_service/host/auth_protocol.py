@@ -8,6 +8,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, field_validator
 
+from ..providers.application.contracts import HelperCause
+from ..providers.application.next_steps import next_step_for
+
 MAX_AUTH_LINE = 16 * 1024
 TERMINAL_EVENTS = frozenset({"succeeded", "cancelled", "failed"})
 
@@ -36,6 +39,8 @@ class AuthEvent(BaseModel):
         ]
         | None
     ) = None
+    cause: HelperCause | None = None
+    """The helper's closed word for why a terminal event is not a success."""
     url: str | None = Field(default=None, max_length=8192, repr=False)
     user_code: str | None = Field(default=None, pattern=r"^[A-Za-z0-9-]{4,32}$", repr=False)
 
@@ -78,7 +83,7 @@ class AuthProtocol:
     def _validate_transition_state(self, event: AuthEvent) -> None:
         if self.previous in TERMINAL_EVENTS:
             raise ValueError
-        if event.reason is not None and event.event not in {"failed", "cancelled"}:
+        if (event.reason is not None or event.cause is not None) and event.event not in {"failed", "cancelled"}:
             raise ValueError
         _validate_predecessor(event, self.previous)
         if event.event == "succeeded" and self.previous == "authorization_code_required" and not self.code_submitted:
@@ -95,11 +100,30 @@ class AuthProtocol:
             raise ValueError
 
 
-def snapshot(attempt_id: str, provider: str, event: str, *, reason: str | None = None) -> dict[str, JsonValue]:
-    """Build a secret-free outcome; browser data is added only while awaiting login."""
+def snapshot(
+    attempt_id: str,
+    provider: str,
+    event: str,
+    *,
+    reason: str | None = None,
+    cause: str | None = None,
+    status_cause: str | None = None,
+) -> dict[str, JsonValue]:
+    """Build a secret-free outcome; browser data is added only while awaiting login.
+
+    ``cause`` and ``status_cause`` are closed words, and the next step is the
+    one declared for the cause.
+    """
     result: dict[str, JsonValue] = {"attempt_id": attempt_id, "provider": provider, "event": event}
     if reason is not None:
         result["reason"] = reason
+    if cause is not None:
+        result["cause"] = cause
+        step = next_step_for(cause)
+        if step is not None:
+            result["next_step"] = step.value
+    if status_cause is not None:
+        result["status_cause"] = status_cause
     return result
 
 

@@ -85,8 +85,10 @@ pub const MAX_ARCHIVE_ENTRIES: usize = 1024;
 /// The component store's bound on any component's unpacked size.
 const STORE_UNPACKED_LIMIT: u64 = 32 * 1024 * 1024 * 1024;
 /// Bound for the server to announce that it listens, for llama-server to answer ready,
-/// and for either to answer with its version. Exceeding it ends the server.
-pub const START_BUDGET: Duration = Duration::from_secs(30);
+/// and for either to answer with its version. Exceeding it ends the server. Ollama first
+/// answers only after its hardware discovery, which takes some twenty seconds on an idle
+/// computer, so the bound leaves room for a computer that is busy as well.
+pub const START_BUDGET: Duration = Duration::from_secs(60);
 /// What Ollama writes on standard error once it accepts connections.
 const OLLAMA_LISTENING: &str = "Listening on ";
 /// What llama-server writes on standard error once it accepts connections. Build b12184

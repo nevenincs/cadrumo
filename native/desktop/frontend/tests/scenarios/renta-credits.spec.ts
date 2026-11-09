@@ -64,7 +64,9 @@ async function openCredits(
     )!.existing!.work_unit_id;
     return (await port.form(unit, asked)).form.form.withholding_credits_heading;
   }, language);
-  expect(heading).not.toBeNull();
+  expect(heading, "the form serves its credits heading").toEqual(
+    expect.any(String),
+  );
   await expect(panel.getByRole("heading", { name: heading! })).toBeVisible();
   return panel;
 }

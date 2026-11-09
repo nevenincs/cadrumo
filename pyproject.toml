@@ -1003,6 +1003,11 @@ convention = "google"
 # The pattern search child's argv is the interpreter prefix and this package's own
 # worker module; the patterns and texts travel on its stdin, never its command line.
 "src/cadrumo/core/pattern_search.py" = ["S603"]
+# The manual sign-in door starts this interpreter with the service's own sign-in
+# module, and that module starts the bundled agent image with fixed arguments;
+# the provider name is checked against a closed list first and no shell is used.
+"src/cadrumo/entrypoints/cli/config/provider_login_cli.py" = ["S603"]
+"src/cadrumo_agent_service/adapters/provider_login.py" = ["S603"]
 "src/cadrumo/domain/auth/apoderamientos/catalogue.py" = ["S105"]
 "dev/registry/_workbook_parity.py" = ["S603"]
 "src/cadrumo/domain/deadlines/festivos.py" = ["S105"]

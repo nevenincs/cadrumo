@@ -8,6 +8,7 @@ import pytest
 
 from ..counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
 from ..counterparty_operation import (
+    CounterpartyProvinciaChoice,
     CounterpartyResolutionProjection,
     LedgerCounterpartyRequest,
     LedgerCounterpartyResult,
@@ -47,6 +48,11 @@ def test_counterparty_public_schema_binds_and_round_trips_scalar_projection() ->
             confirmed_scope="es_canarias",
             evidenced_scope="es_mainland",
             contradiction_detail="The printed evidence disagrees with the prior confirmation.",
+        ),
+        provincia_code="35",
+        provincia_choices=(
+            CounterpartyProvinciaChoice(code="35", name="Palmas, Las"),
+            CounterpartyProvinciaChoice(code="38", name="Santa Cruz de Tenerife"),
         ),
     )
     assert LedgerCounterpartyResult.model_validate_json(result.model_dump_json()) == result

@@ -75,6 +75,7 @@ _VALUES = {
     "net_value": "11702.47",
     "row_amount": "1452.00",
     "box": "0208",
+    "party": "Cloud Ejemplo SL (B00015016)",
     "modelo": "100",
     "year": "2024",
     "count": "2",

@@ -10,10 +10,16 @@ from __future__ import annotations
 from typing import Protocol, override
 
 from ....application.invoices.source_resolver_ports import (
+    CounterpartyProvinciaReader,
     InvoiceSourceCatalogueReader,
     InvoiceSourcePersistenceError,
     M349FiledDeclaration,
     M349FiledDeclarationReader,
+)
+from ....application.ledger.counterparty_establishment import stated_counterparty_provincia
+from ....application.ledger.counterparty_establishment_ports import (
+    CounterpartyEstablishmentPersistenceError,
+    CounterpartyEstablishmentRepositoryProtocol,
 )
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -44,6 +50,22 @@ class InvoiceCatalogueSourceResolverAdapter(InvoiceSourceCatalogueReader):
             return self._repository.load()
         except STORAGE_DEGRADATION_ERRORS as exc:
             raise InvoiceSourcePersistenceError("invoice_catalogue_load") from exc
+
+
+class CounterpartyProvinciaAdapter(CounterpartyProvinciaReader):
+    """Read the provincia stated for a counterparty from the encrypted counterparty facts."""
+
+    def __init__(self, *, repository: CounterpartyEstablishmentRepositoryProtocol) -> None:
+        """Bind an already-composed counterparty-facts repository."""
+        self._repository = repository
+
+    @override
+    def provincia_of(self, tax_identifier: str) -> str | None:
+        """Return the stated provincia while translating storage failures."""
+        try:
+            return stated_counterparty_provincia(tax_identifier, repository=self._repository)
+        except CounterpartyEstablishmentPersistenceError as exc:
+            raise InvoiceSourcePersistenceError("counterparty_provincia_load") from exc
 
 
 class _CalculationCatalogueLoader(Protocol):
