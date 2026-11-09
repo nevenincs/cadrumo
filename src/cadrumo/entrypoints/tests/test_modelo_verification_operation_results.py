@@ -102,7 +102,7 @@ def test_verification_projects_persisted_report_and_authoritative_noop(
             )
         assert denied.value.reason is AccessDenialCode.OPERATION_DENIED
         repositories = build_verification_repository_bundle(str(profile_id), operation=operation)
-        bound = compose_modelo_revision_access(lambda _profile_id, *, operation: repositories)
+        bound = compose_modelo_revision_access(lambda _profile_id, *, operation, mutation_writer=None: repositories)
         with pytest.raises(ProfileAccessRefusedError) as foreign:
             bound(request, replace(context, profile_id=uuid4()))
         assert foreign.value.reason is AccessDenialCode.PROFILE_MISMATCH
@@ -293,7 +293,7 @@ def test_amendment_access_uses_exact_filing_source_profile_subject_and_period(
         assert AccessAction.COMMIT in access.policy.actions
 
         repositories = build_verification_repository_bundle(str(profile_id), operation=operation)
-        bound = compose_modelo_revision_access(lambda _profile_id, *, operation: repositories)
+        bound = compose_modelo_revision_access(lambda _profile_id, *, operation, mutation_writer=None: repositories)
         with pytest.raises(ProfileAccessRefusedError) as foreign_profile:
             bound(request, replace(context, profile_id=uuid4()))
         assert foreign_profile.value.reason is AccessDenialCode.PROFILE_MISMATCH

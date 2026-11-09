@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import cast
@@ -95,7 +96,12 @@ def _bundle(
 
 
 def _build(bundle: VerificationRepositoryBundle):
-    def factory(profile_id: str, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
+    def factory(
+        profile_id: str,
+        *,
+        operation: PinnedAuthorityOperation,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    ) -> VerificationRepositoryBundle:
         assert profile_id == str(_PROFILE)
         assert isinstance(operation, PinnedAuthorityOperation)
         return bundle
@@ -134,7 +140,12 @@ def test_fresh_filing_reads_refuse_missing_pin_before_repository_creation(kind: 
     unit, record = _source()
     calls = 0
 
-    def unavailable_factory(_bucket_id: str, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
+    def unavailable_factory(
+        _bucket_id: str,
+        *,
+        operation: PinnedAuthorityOperation,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    ) -> VerificationRepositoryBundle:
         nonlocal calls
         calls += 1
         raise AssertionError("a fresh read needs pinned authority before private repository access")
@@ -285,7 +296,12 @@ def test_filing_and_amendment_access_refuse_identity_before_pin_or_shape(kind: s
         request = _request(record)
     else:
 
-        def factory(profile_id: str, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
+        def factory(
+            profile_id: str,
+            *,
+            operation: PinnedAuthorityOperation,
+            mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+        ) -> VerificationRepositoryBundle:
             assert profile_id == str(_PROFILE)
             assert isinstance(operation, PinnedAuthorityOperation)
             return bundle
