@@ -5,16 +5,22 @@ import { expect, test } from "@playwright/test";
 // session to end, the household asks no more, and a read that was already with
 // the host when the window asked is refused for an end the log notes once, at
 // INFO, without an error or the internal-failure notice behind the Errores
-// badge. A session that ended without being asked (an idle expiry) is noted the
-// same way, once per operation. A refusal the window did not see coming stays
-// an error. The real Tauri adapter runs against a recording invoke boundary.
+// badge. After a session ended without being asked (an idle expiry) the window
+// sends the household no read at all. A refusal that arrives before the window
+// heard of such an end is noted the same way once the sign-in state finds the
+// session gone; one for a session that is still there stays an error. The real
+// Tauri adapter runs against a recording invoke boundary.
 
 type Report = { level: string; command: string | null; code: string | null };
 
 async function run(
   page: import("@playwright/test").Page,
   scenario:
-    "ended-before-news" | "ended-in-flight" | "expired" | "not-foreseen",
+    | "ended-before-news"
+    | "ended-in-flight"
+    | "expired"
+    | "expired-unheard"
+    | "not-foreseen",
 ) {
   await page.goto("/scenarios.html?scenario=signed-out&bar=off");
   await page.waitForFunction(() => Boolean(window.__scenarioModules));
@@ -23,6 +29,13 @@ async function run(
       await window.__scenarioModules!.profileHousehold();
     const { gate } = await window.__scenarioModules!.sessionGate();
     gate.startSession();
+    // The sign-in state's own read of the session: it finds the session gone
+    // only where the session expired unheard.
+    let confirmations = 0;
+    const release = gate.confirmSessionWith(async () => {
+      confirmations += 1;
+      if (scenario === "expired-unheard") gate.endSession();
+    });
     let failures = 0;
     window.addEventListener("cadrumo-internal-failure", () => (failures += 1));
     const stated = await fixture
@@ -93,16 +106,18 @@ async function run(
         await settle();
         news();
       }
-      if (scenario === "not-foreseen") news();
+      if (scenario === "expired-unheard" || scenario === "not-foreseen") news();
       await settle();
       return {
         reads,
         failures,
+        confirmations,
         reports: reports.filter(
           (report) => report.command === "user_profile_household",
         ),
       };
     } finally {
+      release();
       dom.flushSync(() => root.unmount());
       container.remove();
     }
@@ -129,14 +144,25 @@ test("a household read refused for an end the window asked for is noted once, no
   expect(result.failures).toBe(0);
 });
 
-test("household reads refused after an expiry are noted once per operation, not as errors", async ({
+test("a household sends no read after an expiry the window heard of", async ({
   page,
 }) => {
   const result = await run(page, "expired");
-  expect(result.reads).toBe(3);
+  expect(result.reads).toBe(1);
+  expect(result.reports).toEqual([]);
+  expect(result.failures).toBe(0);
+});
+
+test("a household read refused before the window heard of an expiry is noted once, not as an error", async ({
+  page,
+}) => {
+  const result = await run(page, "expired-unheard");
+  expect(result.reads).toBe(2);
+  expect(result.confirmations).toBe(1);
   expect(result.reports).toMatchObject([
     { level: "INFO", command: "user_profile_household", code: "not_signed_in" },
   ]);
+  expect(result.reports).toHaveLength(1);
   expect(result.failures).toBe(0);
 });
 
@@ -145,6 +171,7 @@ test("a household refusal the window did not see coming stays an error", async (
 }) => {
   const result = await run(page, "not-foreseen");
   expect(result.reads).toBe(2);
+  expect(result.confirmations).toBe(1);
   expect(result.reports).toMatchObject([
     {
       level: "ERROR",

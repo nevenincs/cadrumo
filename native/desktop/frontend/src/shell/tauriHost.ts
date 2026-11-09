@@ -20,6 +20,7 @@ import type { AeatSignInStage } from "./aeatSyncPrepare";
 import type { Host } from "./host";
 import type { CallPlan, HostCall } from "./hostCall";
 import { hostCall, observedInvoke } from "./hostCall";
+import { refuseIfEnded, sessionBound } from "./sessionGate";
 import type {
   ProviderSignInSnapshot,
   ProviderSettings,
@@ -49,6 +50,9 @@ function takeToken(): ShellToken | null {
 export function tauriHost(): Host {
   const token = takeToken();
   const call = hostCall(token);
+  // Commands only a signed-in session can ask. Subscriptions and their
+  // release are never refused for the session and stay on `call`.
+  const bound = sessionBound(call);
   // One cue serves the overview and the run: it says only that a read may
   // answer differently.
   const observeAeatSync = async (changed: () => void) => {
@@ -106,12 +110,12 @@ export function tauriHost(): Host {
           );
         };
       },
-      readiness: (profile) => call("profile_censo_readiness", { profile }),
-      start: (profile) => call("profile_censo_start", { profile }),
+      readiness: (profile) => bound("profile_censo_readiness", { profile }),
+      start: (profile) => bound("profile_censo_start", { profile }),
       status: (profile, operation) =>
-        call("profile_censo_status", { profile, operation }),
+        bound("profile_censo_status", { profile, operation }),
       answer: (profile, operation, reviewDigest, decision) =>
-        call("profile_censo_answer", {
+        bound("profile_censo_answer", {
           profile,
           operation,
           reviewDigest,
@@ -119,9 +123,9 @@ export function tauriHost(): Host {
         }),
     },
     userProfile: {
-      read: (language) => call("user_profile_read", { language }),
+      read: (language) => bound("user_profile_read", { language }),
       change: (change) =>
-        call("user_profile_change", { change }).then(() => undefined),
+        bound("user_profile_change", { change }).then(() => undefined),
       async observe(changed) {
         let active = true;
         const updates = new Channel<null>();
@@ -137,10 +141,11 @@ export function tauriHost(): Host {
         };
       },
       aeat: {
-        pickCertificate: () => call("profile_aeat_certificate_pick", {}),
+        pickCertificate: () => bound("profile_aeat_certificate_pick", {}),
         async saveCredential(credential) {
           const body = new TextEncoder().encode(JSON.stringify(credential));
           try {
+            refuseIfEnded();
             await submit("profile_aeat_credential_save", body);
           } finally {
             body.fill(0);
@@ -150,9 +155,9 @@ export function tauriHost(): Host {
     },
     profileCompanions: {
       household: (language, plan) =>
-        call("user_profile_household", { language }, plan),
+        bound("user_profile_household", { language }, plan),
       imputationElection: (profile, taxYear, language) =>
-        call("user_profile_imputation_election", {
+        bound("user_profile_imputation_election", {
           profile,
           taxYear,
           language,
@@ -160,66 +165,66 @@ export function tauriHost(): Host {
     },
     borrador: {
       read: (profile, selector) =>
-        call("aeat_sync_borrador_read", { profile, selector }),
+        bound("aeat_sync_borrador_read", { profile, selector }),
       query: (profile, selector) =>
-        call("aeat_sync_borrador_query", { profile, selector }),
+        bound("aeat_sync_borrador_query", { profile, selector }),
       compare: (profile, year, language) =>
-        call("aeat_sync_borrador_compare", { profile, year, language }),
+        bound("aeat_sync_borrador_compare", { profile, year, language }),
     },
     aeatSync: {
-      status: (language) => call("aeat_sync_status", { language }),
+      status: (language) => bound("aeat_sync_status", { language }),
       observe: observeAeatSync,
       start: (profile, request) =>
-        call("aeat_sync_start", { profile, request }).then(() => undefined),
+        bound("aeat_sync_start", { profile, request }).then(() => undefined),
     },
     aeatSyncResults: {
       async results(profile, language) {
         const [served, notifications] = await Promise.all([
-          call("aeat_sync_results", { profile, language }),
-          call("aeat_sync_notifications", { profile }),
+          bound("aeat_sync_results", { profile, language }),
+          bound("aeat_sync_notifications", { profile }),
         ]);
         return { ...served, notifications };
       },
       retry: (profile, area, part, acknowledgedUnknown) =>
-        call("aeat_sync_retry", {
+        bound("aeat_sync_retry", {
           profile,
           area,
           item: part,
           acknowledgedUnknown,
         }).then(() => undefined),
-      pickBorrador: () => call("aeat_sync_borrador_pick", {}),
+      pickBorrador: () => bound("aeat_sync_borrador_pick", {}),
       importBorrador: (profile, file, year) =>
-        call("aeat_sync_borrador_import", { profile, file, year }),
+        bound("aeat_sync_borrador_import", { profile, file, year }),
     },
     aeatSyncRun: {
-      progress: (profile) => call("aeat_sync_progress", { profile }),
+      progress: (profile) => bound("aeat_sync_progress", { profile }),
       observe: observeAeatSync,
       stop: (profile) =>
-        call("aeat_sync_stop", { profile }).then(() => undefined),
+        bound("aeat_sync_stop", { profile }).then(() => undefined),
       retry: (profile, area, item, acknowledgedUnknown) =>
-        call("aeat_sync_retry", {
+        bound("aeat_sync_retry", {
           profile,
           area,
           item,
           acknowledgedUnknown,
         }).then(() => undefined),
       resume: (profile) =>
-        call("aeat_sync_resume", { profile }).then(() => undefined),
+        bound("aeat_sync_resume", { profile }).then(() => undefined),
     },
     aeatSyncPrepare: {
-      prepare: () => call("aeat_sync_prepare", {}),
+      prepare: () => bound("aeat_sync_prepare", {}),
       async signIn(stage) {
         const progress = new Channel<AeatSignInStage>();
         progress.onmessage = stage;
-        await call("aeat_sync_sign_in", { progress });
+        await bound("aeat_sync_sign_in", { progress });
       },
       cancelSignIn: () =>
         call("aeat_sync_sign_in_cancel", {}).then(() => undefined),
     },
     views: {
-      notifications: () => call("profile_views_notifications", {}),
+      notifications: () => bound("profile_views_notifications", {}),
       filingCalendar: (range, language) =>
-        call("profile_views_calendar", {
+        bound("profile_views_calendar", {
           from: range.from,
           to: range.to,
           language,
