@@ -46,6 +46,7 @@ from ....core.hex import HEX_PATTERN_64
 from ....core.identity.digest import ContentDigest
 from ....core.link_safety import is_link_like
 from ....core.locks import exclusive_file_lock
+from ....core.logging import get_logger
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import OperationLifecycle
 from ....core.storage_taxonomy import StorageCategory
@@ -55,6 +56,20 @@ from ..storage.master_key.login_handover_journal import handover_journal_path
 from .financial_journal_purge import FinancialEditJournalPurgeRefusedError, purge_legacy_financial_edit_journal
 from .journal_validation import OperationJournalRecord, validate_advance, validate_lease
 from .lease import OperationLeaseStorage
+
+_log = get_logger(__name__)
+
+
+def _unreadable_reason(error: RepositoryError) -> str:
+    """Where and how a record failed validation, naming fields and error types but no value."""
+    cause = error.__cause__
+    if isinstance(cause, ValidationError):
+        failures = (
+            f"{'.'.join(str(part) for part in failure['loc'])}:{failure['type']}"
+            for failure in cause.errors(include_url=False, include_input=False, include_context=False)
+        )
+        return ";".join(failures)[:512]
+    return type(cause if cause is not None else error).__name__
 
 
 class OperationReplayRequest(BaseModel):
@@ -323,9 +338,14 @@ class SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
         """Classify one present journal row while refusing an inventory race."""
         try:
             record = self._load_unlocked(operation_id)
-        except RepositoryError:
+        except RepositoryError as error:
             if not self._validate_existing_root() or self.is_absent(operation_id):
                 raise RepositoryError("operation journal inventory changed during read") from None
+            _log.warning(
+                "operation journal record unreadable operation=%s reason=%s",
+                operation_id,
+                _unreadable_reason(error),
+            )
             return OperationRecoveryInventoryEntry(
                 operation_id=operation_id,
                 disposition=OperationRecoveryInventoryDisposition.REFUSED,

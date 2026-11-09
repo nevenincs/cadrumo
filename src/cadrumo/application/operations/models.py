@@ -11,7 +11,7 @@ from pathlib import PurePath
 from typing import TYPE_CHECKING, Annotated
 from uuid import UUID
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hex import HEX_PATTERN_64, Hex64Str
@@ -45,6 +45,16 @@ type OperationDefinitionId = Annotated[
     ),
 ]
 """Stable registered operation-definition identity."""
+
+
+def _current_failure_code(value: object) -> object:
+    """Read a retired code a persisted record holds as the code that succeeded it."""
+    if not isinstance(value, str):
+        return value
+    from ...core.errors.error_codes import current_error_code
+
+    return current_error_code(value)
+
 
 type OperationFailureErrorCode = Annotated[str, Field(pattern=r"^[A-Z][A-Z0-9_]+$")]
 """Upper-case machine error code a terminal failure reports."""
@@ -135,6 +145,11 @@ class OperationTerminalReceipt(BaseModel):
     diagnostic_ref: OperationDiagnosticReference | None = None
     #: Encrypted public detail of the error that stopped a refused or failed executor.
     error_detail_ref: ContentDigest | None = None
+
+    @field_validator("failure_error_code", mode="before")
+    @classmethod
+    def _read_retired_code_as_its_successor(cls, value: object) -> object:
+        return _current_failure_code(value)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

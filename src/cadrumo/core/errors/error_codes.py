@@ -234,6 +234,25 @@ def get_registered_error_code_by_code(code: str) -> ErrorCode:
     return matches[0]
 
 
+RETIRED_ERROR_CODE_SUCCESSORS: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        # A blocked IVA wallet became a refusal with no effect rather than a failure.
+        "ERROR_MODELO_IVA_WALLET_RECONCILIATION_BLOCKED": "REFUSED_MODELO_IVA_WALLET_RECONCILIATION_BLOCKED",
+    }
+)
+"""Every code no longer declared that a persisted record can still hold, with the code it now reads as.
+
+Operation journals, receipts and refusal evidence keep the code they were
+settled under for as long as the record lives. Retiring a code therefore
+names its successor here, so that history still reads as settled.
+"""
+
+
+def current_error_code(code: str) -> str:
+    """The code a persisted record's ``code`` reads as today: itself, or a retired code's successor."""
+    return RETIRED_ERROR_CODE_SUCCESSORS.get(code, code)
+
+
 def flush_deferred_binds() -> None:
     """Bind every class created before the declared-code catalogue loaded.
 
@@ -676,11 +695,13 @@ _install_binder()
 
 __all__ = [
     "ERROR_CONTEXT_LABEL_KEYS",
+    "RETIRED_ERROR_CODE_SUCCESSORS",
     "ErrorCategory",
     "ErrorCode",
     "ErrorEnvelope",
     "bind_error_code",
     "build_error_envelope",
+    "current_error_code",
     "get_error_exit_code",
     "get_registered_error_code",
     "get_registered_error_code_by_code",
