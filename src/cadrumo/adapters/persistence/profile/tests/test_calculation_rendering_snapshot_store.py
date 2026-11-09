@@ -181,6 +181,18 @@ def test_a_missing_rendering_row_refuses(tmp_path: Path) -> None:
         assert _refusal(profile, operation) == {"reason": "rendering_snapshot_missing"}
 
 
+def test_a_warm_reader_refuses_once_a_referenced_row_is_gone(tmp_path: Path) -> None:
+    with _converted_fixture(tmp_path) as (profile, operation, digests):
+        reader = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        warm, _revision_id = reader.load_revisioned(operation=operation)
+        assert reader.load_revisioned(operation=operation)[0] == warm
+        assert profile.repository.delete(_SNAPSHOTS.namespace, digests[1])
+        with pytest.raises(CalculationRevisionPersistenceError) as refused:
+            reader.load_revisioned(operation=operation)
+
+    assert refused.value.context == {"reason": "rendering_snapshot_missing"}
+
+
 def test_a_tampered_rendering_row_refuses(tmp_path: Path) -> None:
     with _converted_fixture(tmp_path) as (profile, operation, digests):
         row = {"ns": _SNAPSHOTS.namespace, "key": _key(digests[0])}
