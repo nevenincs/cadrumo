@@ -1120,8 +1120,7 @@ mod tests {
     const ATTEMPT: &str = "123e4567-e89b-42d3-a456-426614174000";
 
     fn terminal(event: &str, extra: Value) -> Value {
-        let mut snapshot =
-            json!({"attempt_id": ATTEMPT, "provider": "codex_cli", "event": event});
+        let mut snapshot = json!({"attempt_id": ATTEMPT, "provider": "codex_cli", "event": event});
         snapshot
             .as_object_mut()
             .unwrap()
@@ -1204,7 +1203,10 @@ mod tests {
             "console_sign_in",
             "update_app",
         ] {
-            let failed = terminal("failed", json!({"reason": "provider_error", "next_step": word}));
+            let failed = terminal(
+                "failed",
+                json!({"reason": "provider_error", "next_step": word}),
+            );
             assert_eq!(sent_snapshot(failed)["next_step"], word);
         }
         for word in [
@@ -1294,7 +1296,7 @@ mod tests {
             helper_word,
         ] {
             assert_eq!(
-                failed(status(success(envelope(&[entry.clone()]))))["code"],
+                failed(status(success(envelope(std::slice::from_ref(&entry)))))["code"],
                 "read_failed",
                 "{entry}"
             );
