@@ -120,7 +120,7 @@ export type ProviderLaneFixtureState = Pick<
 
 /** The console command the made-up service serves, as the real one does. */
 const CONSOLE_SIGN_IN_COMMAND =
-  "aeat config provider-login --provider {provider}";
+  "cadrumo-agent-service provider-login --provider {provider}";
 
 export type ProviderSignInFixtureControls = {
   failNextSettingsRead: () => void;

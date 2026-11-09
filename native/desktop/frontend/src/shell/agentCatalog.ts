@@ -180,8 +180,15 @@ function modelOption(t: Translate, entry: AgentCatalogEntry): ModelOption {
     ...(entry.description ? { description: entry.description } : {}),
     efforts: (entry.efforts ?? []).map((effort) => effortChoice(t, effort)),
     ...(entry.default_effort ? { defaultEffort: entry.default_effort } : {}),
+    // The served catalog marks only a model this computer lacks.
+    ...(entry.installed === false ? { installed: false } : {}),
   };
 }
+
+/** A model the catalog does not say this computer lacks, so a run can name
+ * it. Whether it is held is the catalog's to say; the column never decides. */
+export const heldModel = (model: Pick<ModelOption, "installed">) =>
+  model.installed !== false;
 
 export type CatalogChoices = {
   providers: ProviderOption[];
@@ -193,6 +200,8 @@ export type CatalogChoices = {
   /** False while the lanes are only the agent's declared ones, which no
    * running agent has observed yet. */
   observed: boolean;
+  /** Some way lists a model this computer does not hold yet. */
+  modelsToDownload: boolean;
 };
 
 const declaredUnderstood = (lane: AgentDeclaredLane) =>
@@ -242,6 +251,7 @@ function declaredChoices(
     models,
     incompatible: declared.length > 0 && lanes.length === 0,
     observed: false,
+    modelsToDownload: false,
   };
 }
 
@@ -308,16 +318,32 @@ export function catalogChoices(
               .filter((entry) => !local || listedOn(lane, local, entry))
               .map((entry) => modelOption(t, entry));
         models[wayId(lane)] = listed;
-        const usable =
+        const runs =
           lane.health.selectable &&
           hasRunAuthentication(lane) &&
-          lane.executable &&
-          (writesModel(lane) || listed.length > 0);
+          lane.executable;
+        // A lane whose listed models this computer holds none of runs
+        // nothing until one is downloaded.
+        const noneHeld =
+          !writesModel(lane) &&
+          listed.length > 0 &&
+          !listed.some((model) => heldModel(model));
+        const usable =
+          runs && (writesModel(lane) || (listed.length > 0 && !noneHeld));
+        const toDownload = listed.some((model) => !heldModel(model));
         return {
           id: wayId(lane),
           transport: lane.transport,
           selectable: usable,
-          ...(usable ? {} : { unavailableReason: laneHeldBy(t, lane) }),
+          ...(usable
+            ? {}
+            : {
+                unavailableReason:
+                  runs && noneHeld
+                    ? t("desktop.agent.lane_no_installed_model")
+                    : laneHeldBy(t, lane),
+              }),
+          ...(toDownload ? { modelsToDownload: true } : {}),
           ...(capabilities.length > 0 ? { capabilities } : {}),
           ...(lane.catalog.recommended_entry_id
             ? { defaultModelId: lane.catalog.recommended_entry_id }
@@ -346,16 +372,20 @@ export function catalogChoices(
     models,
     incompatible: served.length > 0 && lanes.length === 0,
     observed: true,
+    modelsToDownload: providers.some((provider) =>
+      provider.ways.some((way) => way.modelsToDownload === true),
+    ),
   };
 }
 
 /** The model a way starts with: the catalog's recommendation where it lists
- * it, else its first. */
+ * it, else its first, each only where this computer holds it. */
 export function startingModel(
   way: ProviderWay,
   models: readonly ModelOption[],
 ): ModelOption | undefined {
-  return models.find((model) => model.id === way.defaultModelId) ?? models[0];
+  const held = models.filter((model) => heldModel(model));
+  return held.find((model) => model.id === way.defaultModelId) ?? held[0];
 }
 
 /** What a provider starts with once `way` is chosen: its starting model, or,
@@ -382,7 +412,7 @@ function offeredParts(choices: CatalogChoices, selection: AgentSelection) {
   );
   const way = provider?.ways.find((held) => held.id === selection.wayId);
   const model = choices.models[selection.wayId]?.find(
-    (held) => held.id === selection.modelId,
+    (held) => held.id === selection.modelId && heldModel(held),
   );
   if (!way?.selectable || !(way.modelWritten || model)) return null;
   return { efforts: way.modelWritten?.efforts ?? model?.efforts ?? [] };
@@ -449,7 +479,8 @@ const isModelId = (id: string) =>
   });
 
 /** What a send runs with, as a run start takes it; null while the model is
- * not one the way offers or the person has written. */
+ * not one the way offers or the person has written, or one the catalog says
+ * this computer does not hold. */
 export function selectionRecord(
   catalog: AgentCatalogAnswer,
   selection: AgentSelection,
@@ -468,7 +499,8 @@ export function selectionRecord(
   const entry = lane.catalog.models?.find(
     (held) => held.entry_id === selection.modelId,
   );
-  if (!entry) return null;
+  // A model the catalog says this computer lacks is not run.
+  if (!entry || entry.installed === false) return null;
   const effort = entry.efforts?.find((held) => held === selection.effort);
   return { ...base, model: entry.model, ...(effort ? { effort } : {}) };
 }

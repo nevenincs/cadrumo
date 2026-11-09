@@ -207,6 +207,7 @@ mod tests {
             "agent_signed_out",
             "agent_gateway_409",
             "agent_gateway_attachment_not_found",
+            "agent_gateway_model_not_installed",
         ] {
             let encoded = admit(code);
             assert_eq!(encoded["code"], code);

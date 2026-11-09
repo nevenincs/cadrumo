@@ -138,4 +138,4 @@ def test_a_row_without_a_cause_serves_neither_word() -> None:
 
 
 def test_the_console_command_is_value_free_words_with_a_provider_slot() -> None:
-    assert CONSOLE_SIGN_IN_COMMAND == "aeat config provider-login --provider {provider}"
+    assert CONSOLE_SIGN_IN_COMMAND == "cadrumo-agent-service provider-login --provider {provider}"

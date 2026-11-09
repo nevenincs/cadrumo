@@ -38,6 +38,9 @@ export type ServedVocabulary = {
   /** The statement formats an import offers: those whose parser this
    * installation carries. */
   importFormats: readonly string[];
+  /** The currency a new movement is offered when no own account names one;
+   * null until it is served. */
+  defaultCurrency: string | null;
 };
 
 const NONE: readonly string[] = [];
@@ -61,6 +64,7 @@ export const NO_VOCABULARY: ServedVocabulary = {
   capitalKinds: NONE,
   capitalDisposals: NONE,
   importFormats: NONE,
+  defaultCurrency: null,
 };
 
 /** The lists out of a served answer; with none, the state says why there are
@@ -105,6 +109,7 @@ export function servedVocabulary(
     capitalKinds: values("capital_good_kind"),
     capitalDisposals: values("capital_good_disposal"),
     importFormats: values("import_format"),
+    defaultCurrency: result.default_currency || null,
   };
 }
 

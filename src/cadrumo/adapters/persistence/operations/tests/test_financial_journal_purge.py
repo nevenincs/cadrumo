@@ -52,7 +52,7 @@ def _write_legacy(
     return OperationJournalRepository(storage_root=tmp_path), path
 
 
-@pytest.mark.parametrize("reader", ("load", "replay", "observation", "inventory"))
+@pytest.mark.parametrize("reader", ("load", "replay", "observation", "inventory", "full_inventory"))
 @pytest.mark.parametrize("policy", ("credential_free_journal", "secure_reference"))
 @pytest.mark.parametrize("definition", ("modelo.edit.apply", "modelo.edit.preflight"))
 def test_every_read_surface_purges_before_returning_any_operation_fact(
@@ -69,8 +69,10 @@ def test_every_read_surface_purges_before_returning_any_operation_fact(
             await repository.read_after("a" * 64, 0, limit=10)
         elif reader == "observation":
             await repository.read_observation("a" * 64, 0, limit=10)
-        else:
+        elif reader == "inventory":
             await repository.inventory_page(after=None, limit=10)
+        else:
+            await repository.inventory_delta(known=frozenset())
 
     asyncio.run(read())
     purged = path.read_bytes()

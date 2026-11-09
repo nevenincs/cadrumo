@@ -13,8 +13,14 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.domain.user_profile.errors import ProfileNotFoundError
+from cadrumo_client.commands import profile_selection
+from cadrumo_client.commands.profile_selection import LoginTarget
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
+from .. import provider_login
 from ..agent_programs import PACKAGE_AGENT_VARIABLE, profile_agent_root
-from ..provider_login import ProviderLoginRefusalError, main, prepare_provider_login
+from ..provider_login import ProviderLoginRefusalError, main, prepare_provider_login, selected_profile_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -188,7 +194,7 @@ def test_the_console_door_inherits_the_terminal_and_records_the_hosted_root_and_
     storage = outside_git / "storage"
     root = _agent_root(storage)
     shim = _shim(outside_git / "package", status=0)
-    status = _door(monkeypatch, storage, shim, "--profile-id", str(_PROFILE), "--provider", "codex", "--device")
+    status = _door(monkeypatch, storage, shim, "--profile", str(_PROFILE), "--provider", "codex", "--device")
     assert status == 0
     assert "shim-output-line" in capfd.readouterr().out
     assert "--provider codex --device" in (root / "arguments.txt").read_text()
@@ -205,7 +211,7 @@ def test_the_agents_exit_status_is_the_commands_exit_status(
     storage = outside_git / "storage"
     _agent_root(storage)
     shim = _shim(outside_git / "package", status=status)
-    done = _door(monkeypatch, storage, shim, "--profile-id", str(_PROFILE), "--provider", "claude")
+    done = _door(monkeypatch, storage, shim, "--profile", str(_PROFILE), "--provider", "claude")
     assert done == status
 
 
@@ -215,8 +221,70 @@ def test_a_refusal_ends_the_door_with_its_reason_on_standard_error_and_status_tw
     storage = outside_git / "storage"
     storage.mkdir()
     shim = _shim(outside_git / "package", status=0)
-    status = _door(monkeypatch, storage, shim, "--profile-id", str(_PROFILE), "--provider", "codex")
+    status = _door(monkeypatch, storage, shim, "--profile", str(_PROFILE), "--provider", "codex")
     captured = capfd.readouterr()
     assert status == 2
     assert "has not started" in captured.err
     assert "shim-output-line" not in captured.out
+
+
+def test_a_profile_uuid_is_used_as_given_without_asking_the_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
+    def unreachable(*_: object) -> None:
+        raise AssertionError("the runtime was asked")
+
+    monkeypatch.setattr(profile_selection, "require_runtime_login_target", unreachable)
+    monkeypatch.setattr(profile_selection, "command_profile_id", unreachable)
+    assert selected_profile_id(f" {_PROFILE} ") == _PROFILE
+
+
+def test_a_label_is_resolved_by_the_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
+    asked: list[str] = []
+
+    def resolve(name: str) -> LoginTarget:
+        asked.append(name)
+        return LoginTarget(str(_PROFILE), name)
+
+    monkeypatch.setattr(profile_selection, "require_runtime_login_target", resolve)
+    assert selected_profile_id("Mi perfil") == _PROFILE
+    assert asked == ["Mi perfil"]
+
+
+def test_without_a_profile_the_runtimes_selection_is_used(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(profile_selection, "command_profile_id", lambda: str(_PROFILE))
+    assert selected_profile_id(None) == _PROFILE
+
+
+def test_no_selected_profile_unknown_label_or_silent_runtime_is_refused_with_its_reason(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(profile_selection, "command_profile_id", lambda: None)
+    with pytest.raises(ProviderLoginRefusalError, match="No profile is selected"):
+        selected_profile_id("  ")
+
+    def unknown(name: str) -> LoginTarget:
+        raise ProfileNotFoundError(translated_message="cli.config.profile.unknown_profile", context={"name": name})
+
+    monkeypatch.setattr(profile_selection, "require_runtime_login_target", unknown)
+    with pytest.raises(ProviderLoginRefusalError, match="No profile is named"):
+        selected_profile_id("Otro")
+
+    def unavailable() -> str | None:
+        raise RefusalError(RefusalCode.UNAVAILABLE)
+
+    monkeypatch.setattr(profile_selection, "command_profile_id", unavailable)
+    with pytest.raises(ProviderLoginRefusalError, match="could not say which profile"):
+        selected_profile_id(None)
+
+
+def test_the_service_executable_dispatches_provider_login_before_the_service_imports(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from ... import bootstrap
+
+    received: list[list[str]] = []
+    monkeypatch.setattr(provider_login, "main", lambda argv: received.append(list(argv)) or 5)
+    monkeypatch.setattr(sys, "argv", ["cadrumo-agent-service", "provider-login", "--provider", "codex"])
+    with pytest.raises(SystemExit) as ended:
+        bootstrap.main()
+    assert ended.value.code == 5
+    assert received == [["--provider", "codex"]]

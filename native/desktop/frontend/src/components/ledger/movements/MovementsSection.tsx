@@ -278,8 +278,13 @@ export function MovementsSection({
   // in, as the backend serves it: the visible field is filled in, so the saved
   // movement carries its currency explicitly rather than taking a writer's
   // default. A currency already typed is never overwritten, and where the
-  // accounts disagree the person says which.
-  const draftCurrency = servedDraftCurrency(accounts);
+  // accounts disagree the person says which. With no account naming one, the
+  // ledger's functional currency, as served, is offered.
+  const vocabulary = useVocabulary();
+  const draftCurrency = servedDraftCurrency(
+    accounts,
+    vocabulary.defaultCurrency,
+  );
   useEffect(() => {
     if (!draftCurrency) return;
     for (const draft of stage.content.drafts)
@@ -332,7 +337,6 @@ export function MovementsSection({
     [rows],
   );
   const { ratios } = useConfiguredRatios(port, reader, years);
-  const vocabulary = useVocabulary();
   // The words for a classification with its share depend on what the backend
   // serves for it, so the section is drawn again once that arrives.
   useLedgerClassifications();

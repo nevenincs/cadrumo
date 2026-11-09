@@ -93,6 +93,7 @@ desktop:
     documents: Dokumentumok
     documents_attached: 'Ebben a beszélgetésben: {count}'
     documents_empty: Ebben a beszélgetésben még nincs dokumentum
+    download_models: Modellek letöltése
     drop_accepts: 'Elfogadott típusok: {types}'
     drop_hint: 'Elengedéskor tartsd lenyomva: {key}'
     drop_release: Engedd el a fájlok hozzáadásához
@@ -113,6 +114,7 @@ desktop:
     history_empty: Még nincs beszélgetés
     history_no_match: 'Egy beszélgetés sem felel meg ennek: „{query}”.'
     lane_no_catalog: Nem sikerült betölteni a modelleket. Próbáld újra.
+    lane_no_installed_model: Még nincs letöltött modell. Tölts le egyet a beállításokban.
     lane_not_admitted: Ezen a gépen nem érhető el. Válassz másikat.
     lane_not_configured: Állítsd be ezt a szolgáltatót a beállításokban.
     lane_not_observed: Még nincs ellenőrizve. Akkor választhatod ki, amikor az ügynök
@@ -130,10 +132,16 @@ desktop:
     message_label: Üzenet
     message_placeholder: Kérdezz egy Modelóról, egy határidőről vagy a nyilvántartásaidról
     model: Modell
+    model_not_installed: '{name} (nincs letöltve)'
+    model_not_installed_refused: A választott modell nincs ezen a gépen. Töltsd le,
+      vagy válassz másik modellt.
     model_written: Ez a szolgáltató nem sorolja fel a modelljeit. Írd be a modell
       nevét pontosan úgy, ahogy a szolgáltató írja.
+    models_to_download: Néhány modell még nincs ezen a gépen. Töltsd le őket a helyi
+      MI beállításaiban.
     more_files: +{count} további
     new_conversation: Új beszélgetés
+    no_installed_model: Még nincs letöltött MI-modell. A kezdéshez tölts le egyet.
     no_models: Nincs választható modell
     no_provider: A kezdéshez állíts be egy MI-szolgáltatót.
     platform_unsupported: Az MI-ügynök ezen a platformon még nem támogatott.
@@ -305,14 +313,17 @@ desktop:
     load_failed: Nem sikerült betölteni a szolgáltatókat. Próbáld újra.
     local_engine_change_failed: A módosítást nem sikerült menteni. Próbáld újra.
     local_engine_changing: Mentés…
-    local_engine_lead: Az a program, amely a modelleket futtatja ezen a számítógépen. A modelllista mindkettővel ugyanaz marad.
+    local_engine_lead: Az a program, amely a modelleket futtatja ezen a számítógépen.
+      A modelllista mindkettővel ugyanaz marad.
     local_engine_llamacpp: llama.cpp
     local_engine_llamacpp_detail: Beépített. Nincs mit telepítened.
     local_engine_ollama: Ollama
     local_engine_ollama_detail: Akkor töltjük le és állítjuk be, amikor ezt választod.
-    local_engine_restarts: A motor vagy a futtatás helyének módosítása újraindítja az asszisztenst.
+    local_engine_restarts: A motor vagy a futtatás helyének módosítása újraindítja
+      az asszisztenst.
     local_engine_title: Helyi motor
-    local_engine_unavailable: A llama.cpp nem része ennek a telepítésnek. Válaszd az Ollamát.
+    local_engine_unavailable: A llama.cpp nem része ennek a telepítésnek. Válaszd
+      az Ollamát.
     local_model_absent: Nincs letöltve
     local_model_add: Hozzáadás
     local_model_add_label: Modell hozzáadása név szerint
@@ -353,7 +364,8 @@ desktop:
       close_other_sign_in: Zárd be a másik bejelentkezést, majd próbáld újra.
       console_sign_in: Jelentkezz be inkább terminálból.
       install_cli: Telepítsd a szolgáltató alkalmazását, majd próbáld újra.
-      move_profile_outside_git: Told a profil mappáját a Git-projekten kívülre, majd próbáld újra.
+      move_profile_outside_git: Told a profil mappáját a Git-projekten kívülre, majd
+        próbáld újra.
       retry: Próbáld újra egy pillanat múlva.
       update_app: Frissítsd ezt az alkalmazást a legújabb verzióra, majd próbáld újra.
     reason_check_settings: Ellenőrizd a beállításokat, és próbáld újra.
@@ -386,34 +398,46 @@ desktop:
     sign_in_cause:
       agent_stop_failed: Az ügynököt nem sikerült leállítani a bejelentkezés befejezéséhez.
       browser_relay_unavailable: A bejelentkezési oldalt nem sikerült átadni a böngészőnek.
-      cleanup_unconfirmed: Nem sikerült megerősíteni, hogy a bejelentkezés rendben lezárult.
-      cli_exited_early: A szolgáltató alkalmazása leállt, mielőtt a bejelentkezés befejeződött volna.
+      cleanup_unconfirmed: Nem sikerült megerősíteni, hogy a bejelentkezés rendben
+        lezárult.
+      cli_exited_early: A szolgáltató alkalmazása leállt, mielőtt a bejelentkezés
+        befejeződött volna.
       cli_not_found: A szolgáltató alkalmazása nincs telepítve, vagy nem található.
-      cli_protocol_mismatch: A szolgáltató alkalmazása olyan választ adott, amelyet ez a verzió nem ért.
-      cli_reported_error: A szolgáltató alkalmazása hibát jelzett a bejelentkezés közben.
+      cli_protocol_mismatch: A szolgáltató alkalmazása olyan választ adott, amelyet
+        ez a verzió nem ért.
+      cli_reported_error: A szolgáltató alkalmazása hibát jelzett a bejelentkezés
+        közben.
       cli_start_failed: A szolgáltató alkalmazását nem sikerült elindítani.
       helper_ended_without_result: A bejelentkezés eredmény nélkül ért véget.
       helper_exit_nonzero: A bejelentkezés hibával ért véget.
-      helper_output_invalid: A bejelentkezés olyan választ adott, amelyet nem sikerült beolvasni.
+      helper_output_invalid: A bejelentkezés olyan választ adott, amelyet nem sikerült
+        beolvasni.
       helper_start_failed: A bejelentkezést nem sikerült elindítani.
-      home_in_git_project: A profil mappája egy Git-projekten belül van, és a szolgáltató alkalmazása ott nem jelentkezik be.
+      home_in_git_project: A profil mappája egy Git-projekten belül van, és a szolgáltató
+        alkalmazása ott nem jelentkezik be.
       home_unavailable: A szolgáltató bejelentkezésére fenntartott mappa nem használható.
       host_disconnected: A kapcsolat megszakadt a bejelentkezéssel futás közben.
-      host_input_invalid: A bejelentkezés olyan bemenetet kapott, amelyet nem tudott használni.
+      host_input_invalid: A bejelentkezés olyan bemenetet kapott, amelyet nem tudott
+        használni.
       internal_error: A bejelentkezés belső hibába ütközött.
       login_already_running: Ehhez a profilhoz már fut egy másik bejelentkezés.
       login_not_completed: A bejelentkezés nem fejeződött be.
-      probe_cleanup_unconfirmed: Nem sikerült megerősíteni, hogy a szolgáltatói bejelentkezés ellenőrzése rendben lezárult.
-      probe_output_unreadable: A szolgáltatói bejelentkezés ellenőrzése olyan választ adott, amelyet nem sikerült beolvasni.
+      probe_cleanup_unconfirmed: Nem sikerült megerősíteni, hogy a szolgáltatói bejelentkezés
+        ellenőrzése rendben lezárult.
+      probe_output_unreadable: A szolgáltatói bejelentkezés ellenőrzése olyan választ
+        adott, amelyet nem sikerült beolvasni.
       probe_start_failed: A szolgáltatói bejelentkezés ellenőrzését nem sikerült elindítani.
       probe_timed_out: A szolgáltatói bejelentkezés ellenőrzése túl sokáig tartott.
       profile_missing: A bejelentkezéshez tartozó profil nem található.
-      status_context_unavailable: Nem volt megnyitott profil, amellyel a bejelentkezést ellenőrizni lehetett volna.
-      status_not_confirmed: A bejelentkezés befejeződött, de nem sikerült megerősíteni, hogy be vagy jelentkezve.
+      status_context_unavailable: Nem volt megnyitott profil, amellyel a bejelentkezést
+        ellenőrizni lehetett volna.
+      status_not_confirmed: A bejelentkezés befejeződött, de nem sikerült megerősíteni,
+        hogy be vagy jelentkezve.
       status_read_failed: Nem sikerült kiolvasni, hogy be vagy-e jelentkezve.
       status_unreadable: A bejelentkezési állapotra adott választ nem sikerült beolvasni.
       timed_out: A bejelentkezés túl sokáig tartott.
-      unsupported_method: A szolgáltató alkalmazása nem támogatja ezt a bejelentkezési módot.
+      unsupported_method: A szolgáltató alkalmazása nem támogatja ezt a bejelentkezési
+        módot.
     sign_in_cleanup_failed: Indítsd újra a Cadrumót, mielőtt ismét bejelentkezel.
     sign_in_close: Bejelentkezés bezárása
     sign_in_code_checking: Az engedélyezési kód ellenőrzése…

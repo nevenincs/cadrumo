@@ -262,7 +262,7 @@ def _search_path_text(declaration: ApplicationEnvironment, profile: Mapping[str,
 _PROFILE_NOTES = {
     "agent-auth": (
         "To sign in by hand when the desktop application's sign-in fails, run "
-        "`aeat config provider-login --provider <provider>`; see "
+        "`cadrumo-agent-service provider-login --provider <provider>`; see "
         "[Sign in to an AI provider by hand](../how-to/sign-in-to-an-ai-provider-by-hand.md)."
     ),
 }

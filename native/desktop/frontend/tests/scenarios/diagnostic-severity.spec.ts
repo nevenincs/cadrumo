@@ -176,3 +176,49 @@ for (const busyReads of [1, 4])
           },
     );
   });
+
+// A send the agent refuses for a model this computer does not hold is said
+// to the person with its next step: it is noted as a warning with its code.
+// A send refusal the column has no next step for stays an error.
+for (const [code, level] of [
+  ["agent_gateway_model_not_installed", "WARNING"],
+  ["agent_gateway_422", "ERROR"],
+] as const)
+  test(`a send refused with ${code} is reported at ${level}`, async ({
+    page,
+  }) => {
+    await page.goto("/scenarios.html");
+    const reports = await page.evaluate(async (code) => {
+      const reports: Report[] = [];
+      Object.assign(window, {
+        __CADRUMO_SHELL__: { token: "e".repeat(64) },
+        __TAURI_INTERNALS__: {
+          async invoke(command: string, args: unknown) {
+            if (command === "desktop_frontend_diagnostic") {
+              reports.push((args as { report: Report }).report);
+              return null;
+            }
+            throw { code };
+          },
+        },
+      });
+      const { tauriHost } = await window.__scenarioModules!.tauriHost();
+      const refused = await tauriHost()
+        .agentSession!.send({
+          conversation_id: "c",
+          text: "Hello",
+          selection: { provider: "local", transport: "api", model: "m" },
+        })
+        .then(
+          () => null,
+          (error: { code?: string }) => error.code ?? null,
+        );
+      // The record is made once the refusal is known.
+      await new Promise((resolve) => window.setTimeout(resolve, 0));
+      return { refused, reports };
+    }, code);
+    expect(reports.refused).toBe(code);
+    expect(reports.reports).toMatchObject([
+      { level, command: "agent_send", code },
+    ]);
+  });

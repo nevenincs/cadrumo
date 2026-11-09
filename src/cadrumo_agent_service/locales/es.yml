@@ -95,6 +95,7 @@ desktop:
     documents: Documentos
     documents_attached: 'En esta conversación: {count}'
     documents_empty: Todavía no hay documentos en esta conversación
+    download_models: Descargar modelos
     drop_accepts: 'Se aceptan: {types}'
     drop_hint: Mantén pulsada la tecla {key} para soltar
     drop_release: Suelta para añadir los archivos
@@ -115,6 +116,8 @@ desktop:
     history_empty: Todavía no hay conversaciones
     history_no_match: Ninguna conversación coincide con «{query}».
     lane_no_catalog: No se han podido cargar los modelos. Vuelve a intentarlo.
+    lane_no_installed_model: Todavía no hay ningún modelo descargado. Descarga uno
+      en los ajustes.
     lane_not_admitted: No está disponible en este equipo. Elige otro.
     lane_not_configured: Configura este proveedor en los ajustes.
     lane_not_observed: Aún sin comprobar. Podrás elegirlo cuando el agente esté listo.
@@ -131,10 +134,17 @@ desktop:
     message_label: Mensaje
     message_placeholder: Pregunta por un modelo, un plazo o tus registros
     model: Modelo
+    model_not_installed: '{name} (sin descargar)'
+    model_not_installed_refused: El modelo elegido no está en este equipo. Descárgalo
+      o elige otro modelo.
     model_written: Este proveedor no lista sus modelos. Escribe el nombre del modelo
       tal como lo escribe el proveedor.
+    models_to_download: Algunos modelos aún no están en este equipo. Descárgalos en
+      los ajustes de la IA local.
     more_files: +{count} más
     new_conversation: Nueva conversación
+    no_installed_model: Todavía no hay ningún modelo de IA descargado. Descarga uno
+      para empezar.
     no_models: No hay modelos para elegir
     no_provider: Configura un proveedor de IA para empezar.
     platform_unsupported: El agente de IA aún no está disponible en esta plataforma.
@@ -308,14 +318,17 @@ desktop:
     load_failed: No se han podido cargar los proveedores. Vuelve a intentarlo.
     local_engine_change_failed: No se ha guardado tu cambio. Vuelve a intentarlo.
     local_engine_changing: Guardando…
-    local_engine_lead: El programa que ejecuta los modelos en este ordenador. La lista de modelos es la misma con cualquiera de los dos.
+    local_engine_lead: El programa que ejecuta los modelos en este ordenador. La lista
+      de modelos es la misma con cualquiera de los dos.
     local_engine_llamacpp: llama.cpp
     local_engine_llamacpp_detail: Incluido. No hay nada que instalar.
     local_engine_ollama: Ollama
     local_engine_ollama_detail: Se descarga y se configura cuando lo eliges.
-    local_engine_restarts: Cambiar el motor o dónde se ejecutan los modelos reinicia el asistente.
+    local_engine_restarts: Cambiar el motor o dónde se ejecutan los modelos reinicia
+      el asistente.
     local_engine_title: Motor local
-    local_engine_unavailable: llama.cpp no está incluido en esta instalación. Elige Ollama.
+    local_engine_unavailable: llama.cpp no está incluido en esta instalación. Elige
+      Ollama.
     local_model_absent: Sin descargar
     local_model_add: Añadir
     local_model_add_label: Añadir un modelo por su nombre
@@ -355,7 +368,8 @@ desktop:
       close_other_sign_in: Cierra el otro inicio de sesión y vuelve a intentarlo.
       console_sign_in: Inicia sesión desde una terminal.
       install_cli: Instala la aplicación del proveedor y vuelve a intentarlo.
-      move_profile_outside_git: Mueve la carpeta del perfil fuera del proyecto de Git y vuelve a intentarlo.
+      move_profile_outside_git: Mueve la carpeta del perfil fuera del proyecto de
+        Git y vuelve a intentarlo.
       retry: Vuelve a intentarlo en un momento.
       update_app: Actualiza esta aplicación a la última versión y vuelve a intentarlo.
     reason_check_settings: Revisa esta configuración y vuelve a intentarlo.
@@ -387,35 +401,50 @@ desktop:
     sign_in_cancelled: Se canceló el inicio de sesión.
     sign_in_cause:
       agent_stop_failed: No se pudo detener el agente para terminar el inicio de sesión.
-      browser_relay_unavailable: No se pudo pasar la página de inicio de sesión al navegador.
-      cleanup_unconfirmed: No se pudo confirmar que el inicio de sesión se cerrara correctamente.
-      cli_exited_early: La aplicación del proveedor se detuvo antes de terminar el inicio de sesión.
+      browser_relay_unavailable: No se pudo pasar la página de inicio de sesión al
+        navegador.
+      cleanup_unconfirmed: No se pudo confirmar que el inicio de sesión se cerrara
+        correctamente.
+      cli_exited_early: La aplicación del proveedor se detuvo antes de terminar el
+        inicio de sesión.
       cli_not_found: La aplicación del proveedor no está instalada o no se encontró.
-      cli_protocol_mismatch: La aplicación del proveedor respondió de una forma que esta versión no entiende.
-      cli_reported_error: La aplicación del proveedor indicó un error durante el inicio de sesión.
+      cli_protocol_mismatch: La aplicación del proveedor respondió de una forma que
+        esta versión no entiende.
+      cli_reported_error: La aplicación del proveedor indicó un error durante el inicio
+        de sesión.
       cli_start_failed: No se pudo iniciar la aplicación del proveedor.
       helper_ended_without_result: El inicio de sesión terminó sin resultado.
       helper_exit_nonzero: El inicio de sesión terminó con un error.
-      helper_output_invalid: El inicio de sesión dio una respuesta que no se pudo leer.
+      helper_output_invalid: El inicio de sesión dio una respuesta que no se pudo
+        leer.
       helper_start_failed: No se pudo empezar el inicio de sesión.
-      home_in_git_project: La carpeta del perfil está dentro de un proyecto de Git y la aplicación del proveedor no inicia sesión ahí.
-      home_unavailable: No se pudo usar la carpeta reservada para el inicio de sesión de este proveedor.
-      host_disconnected: Se perdió el contacto con el inicio de sesión mientras se ejecutaba.
+      home_in_git_project: La carpeta del perfil está dentro de un proyecto de Git
+        y la aplicación del proveedor no inicia sesión ahí.
+      home_unavailable: No se pudo usar la carpeta reservada para el inicio de sesión
+        de este proveedor.
+      host_disconnected: Se perdió el contacto con el inicio de sesión mientras se
+        ejecutaba.
       host_input_invalid: Se dio al inicio de sesión una entrada que no pudo usar.
       internal_error: El inicio de sesión tuvo un error interno.
       login_already_running: Ya hay otro inicio de sesión en curso para este perfil.
       login_not_completed: El inicio de sesión no se completó.
-      probe_cleanup_unconfirmed: No se pudo confirmar que la comprobación del inicio de sesión del proveedor se cerrara correctamente.
-      probe_output_unreadable: La comprobación del inicio de sesión del proveedor dio una respuesta que no se pudo leer.
-      probe_start_failed: No se pudo empezar la comprobación del inicio de sesión del proveedor.
+      probe_cleanup_unconfirmed: No se pudo confirmar que la comprobación del inicio
+        de sesión del proveedor se cerrara correctamente.
+      probe_output_unreadable: La comprobación del inicio de sesión del proveedor
+        dio una respuesta que no se pudo leer.
+      probe_start_failed: No se pudo empezar la comprobación del inicio de sesión
+        del proveedor.
       probe_timed_out: La comprobación del inicio de sesión del proveedor tardó demasiado.
       profile_missing: No se encontró el perfil de este inicio de sesión.
-      status_context_unavailable: No había ningún perfil abierto con el que comprobar el inicio de sesión.
-      status_not_confirmed: El inicio de sesión terminó, pero no se pudo confirmar que hayas iniciado sesión.
+      status_context_unavailable: No había ningún perfil abierto con el que comprobar
+        el inicio de sesión.
+      status_not_confirmed: El inicio de sesión terminó, pero no se pudo confirmar
+        que hayas iniciado sesión.
       status_read_failed: No se pudo leer si has iniciado sesión.
       status_unreadable: No se pudo leer la respuesta sobre si has iniciado sesión.
       timed_out: El inicio de sesión tardó demasiado.
-      unsupported_method: La aplicación del proveedor no admite esta forma de iniciar sesión.
+      unsupported_method: La aplicación del proveedor no admite esta forma de iniciar
+        sesión.
     sign_in_cleanup_failed: Reinicia Cadrumo antes de volver a iniciar sesión.
     sign_in_close: Cerrar el inicio de sesión
     sign_in_code_checking: Comprobando el código de autorización…

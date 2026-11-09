@@ -113,13 +113,22 @@ export type FixtureAsks = "questions" | "approval" | "review";
 /** What the conversations have stored: the fixture documents, nothing at
  * all, storage the host does not serve, or storage that cannot be read. */
 export type FixtureDocuments = "stored" | "none" | "unavailable" | "failed";
+/** Which of the local lane's models the made-up computer holds: none, as
+ * before any setup, or all, as after every download. */
+export type FixtureLocalModels = "none" | "all";
 /** How the service answers the catalog: served, busy starting the agent
  * until the scenario publishes the agent's status, busy while the agent
  * starts and for a moment after the scenario publishes it ready, or starting
  * with only the agent's declared catalog until the scenario publishes it
- * ready. */
+ * ready, or served with the local lane alone, as on a computer where no
+ * other provider is set up. */
 export type FixtureCatalog =
-  "served" | "busy" | "busy-past-ready" | "declared" | "unsupported";
+  | "served"
+  | "busy"
+  | "busy-past-ready"
+  | "declared"
+  | "unsupported"
+  | "local-only";
 
 /** How long a `busy-past-ready` service stays busy once it reports ready,
  * as work begun before it was ready ends: longer than reads asked back to
@@ -220,6 +229,7 @@ export function fixtureAgent({
   skills = "bundled",
   catalog = "served",
   models,
+  localModels,
 }: {
   say: (call: string) => void;
   wait: () => Promise<void>;
@@ -241,6 +251,9 @@ export function fixtureAgent({
   catalog?: FixtureCatalog;
   /** Which models this computer holds, as the served catalog reports them. */
   models?: FixtureModelPresence;
+  /** The local lane holds none of its models yet, as before any setup, or
+   * all of them, as after every download; where left out, as written. */
+  localModels?: FixtureLocalModels;
 }): {
   agent: AgentViews;
   session: AgentSession;
@@ -294,6 +307,12 @@ export function fixtureAgent({
           `${held.provider_id}_${held.transport}` === FIXTURE_LOCAL_LANE,
       )?.catalog.recommended ?? {},
     );
+  // The local lane's program holds none of its models, or all of them.
+  if (localModels)
+    for (const entry of (FIXTURE_CATALOG.providers ?? []).find(
+      (held) => `${held.provider_id}_${held.transport}` === FIXTURE_LOCAL_LANE,
+    )?.catalog.models ?? [])
+      models?.mark(entry.model, localModels === "all");
   /** The models of a lane of the catalog the service would answer now, by
    * catalogue lane id, as a run names them. */
   const laneModels = (laneId: string) => {
@@ -805,6 +824,21 @@ export function fixtureAgent({
     emit(held, { type: "resolved", reply_id: replyId, request_id: requestId });
   };
 
+  /** Whether the catalog served now says this computer lacks the model a
+   * run names, as cadrumo-agent's run start refuses it. */
+  const notHeld = (request: AgentSendRequest): boolean => {
+    const { provider, transport, model } = request.selection;
+    const served = models ? models.report(FIXTURE_CATALOG) : FIXTURE_CATALOG;
+    return (served.providers ?? []).some(
+      (held) =>
+        held.provider_id === provider &&
+        held.transport === transport &&
+        held.catalog.models?.some(
+          (entry) => entry.model === model && entry.installed === false,
+        ),
+    );
+  };
+
   /** What a run ran with, by the display names its lane's catalog gives. */
   const ranWith = (request: AgentSendRequest): AgentRanWith => {
     const { provider, transport, model, effort } = request.selection;
@@ -908,9 +942,13 @@ export function fixtureAgent({
         };
       const served = {
         ...FIXTURE_CATALOG,
-        providers: (FIXTURE_CATALOG.providers ?? []).filter(
-          (lane) => !off.has(`${lane.provider_id}_${lane.transport}`),
-        ),
+        providers: (FIXTURE_CATALOG.providers ?? []).filter((lane) => {
+          const id = `${lane.provider_id}_${lane.transport}`;
+          return (
+            !off.has(id) &&
+            (catalog !== "local-only" || id === FIXTURE_LOCAL_LANE)
+          );
+        }),
       };
       return models ? models.report(served) : served;
     },
@@ -1164,6 +1202,8 @@ export function fixtureAgent({
       // A reply still going takes no second message, and none is queued.
       if ((last && isLiveStatus(last.status)) || BUSY_ELSEWHERE.test(text))
         throw coded("agent_reply_in_progress");
+      // A model this computer does not hold is refused before a run starts.
+      if (notHeld(request)) throw coded("agent_gateway_model_not_installed");
       // Each named document is read where the conversation stored it, as
       // it was when it was named.
       const named: AgentDocumentReference[] = [];

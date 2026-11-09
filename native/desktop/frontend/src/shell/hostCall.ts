@@ -127,6 +127,10 @@ export type CallPlan = {
   retryable?(code: string): boolean;
   /** Whether the caller will ask again after this refusal. */
   scheduled?(): boolean;
+  /** Whether a refusal with this code is one the calling view says in words
+   * and offers the next step for: the person is told what to do, and
+   * nothing failed. */
+  answered?(code: string): boolean;
   /** Whether the window learned that the signed-in session ended after the
    * call was made. Nothing is left that wants its answer, so its refusal is
    * noted like any refusal for an ended session. */
@@ -159,6 +163,7 @@ function rejectionLevel(
 ): "WARNING" | "ERROR" {
   if (code === null) return "ERROR";
   if (plan?.retryable?.(code) && plan.scheduled?.()) return "WARNING";
+  if (plan?.answered?.(code)) return "WARNING";
   return REFUSAL_LEVEL[code] ?? "ERROR";
 }
 

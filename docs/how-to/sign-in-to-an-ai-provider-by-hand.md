@@ -28,16 +28,16 @@ The command runs against the profile you have selected in Cadrumo. Pass
 Run the command for your provider:
 
 ```text
-aeat config provider-login --provider claude
-aeat config provider-login --provider codex
-aeat config provider-login --provider antigravity
+cadrumo-agent-service provider-login --provider claude
+cadrumo-agent-service provider-login --provider codex
+cadrumo-agent-service provider-login --provider antigravity
 ```
 
 Codex also offers a device-code sign-in, for a machine where the browser
 cannot open a local address:
 
 ```text
-aeat config provider-login --provider codex --device
+cadrumo-agent-service provider-login --provider codex --device
 ```
 
 The provider's own login takes over the terminal. It may open your browser or

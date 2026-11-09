@@ -72,13 +72,13 @@ test("a word outside a closed set is dropped, never passed on", () => {
 });
 
 test("the console command is a bounded printable template with one provider slot", () => {
-  const served = "aeat config provider-login --provider {provider}";
+  const served = "cadrumo-agent-service provider-login --provider {provider}";
   assert.equal(consoleCommandTemplate(served), served);
   for (const refused of [
     undefined,
     7,
     "",
-    "aeat config provider-login",
+    "cadrumo-agent-service provider-login",
     "aeat {provider} {provider}",
     "cat /etc/passwd {provider}",
     "type C:\\x {provider}",
@@ -88,7 +88,7 @@ test("the console command is a bounded printable template with one provider slot
     assert.equal(consoleCommandTemplate(refused), undefined, String(refused));
   assert.equal(
     consoleCommand(served, "codex"),
-    "aeat config provider-login --provider codex",
+    "cadrumo-agent-service provider-login --provider codex",
   );
   assert.equal(consoleCommand(served, "Codex CLI; rm"), undefined);
   assert.equal(consoleCommand(undefined, "codex"), undefined);
