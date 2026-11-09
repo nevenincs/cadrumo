@@ -52,9 +52,14 @@ async function openAnnualSummary(target: Page) {
     .locator("[data-kind=data]");
   // The list is one large read; under a loaded host it takes a while.
   await expect(rows.first()).toBeVisible({ timeout: 15_000 });
-  // The modelo has a row for every year it is due, and only this one opens
-  // the recorded work, so the row is picked by its period as well as its title.
+  // The list is grouped in the read model's work order and the grid shows
+  // only the rows in view, so the summary's group sits below the attention
+  // rows. A filer finds it by typing its modelo and period into the search,
+  // which narrows the list to the one row that opens the recorded work.
   const row = summaryRow();
+  await target
+    .locator(".declarations-search")
+    .fill(`${row.modelo} ${row.period_words ?? row.modelo_title}`);
   await rows
     .filter({ hasText: row.modelo_title })
     .filter({ hasText: row.period_words ?? row.modelo_title })
