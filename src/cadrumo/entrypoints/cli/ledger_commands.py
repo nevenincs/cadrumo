@@ -20,6 +20,8 @@ from typing import TYPE_CHECKING
 import typer
 from pydantic import ValidationError
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
 from ...application.ledger.classify_result_contracts import (
     LedgerClassifyOperationResult,
 )
@@ -628,7 +630,7 @@ def ledger_classify(
         )
     except ValidationError as exc:
         raise ledger_validation_bad(exc) from exc
-    _emit_single_classification(ctx, result, reaffirm)
+    _emit_single_classification(ctx, result, reaffirm, transaction_id=transaction_id)
 
 
 def ledger_allocate(
@@ -737,9 +739,37 @@ def ledger_link(
     )
 
 
-def _emit_single_classification(ctx: typer.Context, result: LedgerClassifyOperationResult, reaffirm: bool) -> None:
+def _refuse_needs_withholding_category(transaction_id: str) -> CliRefusedBoundaryError:
+    """Say what the movement is missing, and attach the command that supplies it.
+
+    The sentence and its fix are the catalogue words the window serves for the
+    same refusal; the command path and its inputs are resolved from the live
+    command tree, never written here.
+    """
+    from ...application.ledger.classify_validation import needs_withholding_category_verdict
+    from ...application.ledger.staged_check_words import BLOCKER_FIX_LOCALE_KEYS
+    from ...domain.transactions.gross_validation import GROSS_NEEDS_WITHHOLDING_CATEGORY_MESSAGE_KEY
+    from .common import attach_cli_policy_verdict
+
+    refusal = tr(GROSS_NEEDS_WITHHOLDING_CATEGORY_MESSAGE_KEY)
+    fix = tr(BLOCKER_FIX_LOCALE_KEYS["needs_withholding_category"])
+    details = f"{refusal} {fix}"
+    return attach_cli_policy_verdict(
+        CliRefusedBoundaryError(
+            translated_message="cli.ledger.errors.command_input_invalid",
+            context={"details": details},
+        ),
+        verdict=needs_withholding_category_verdict(transaction_id=transaction_id),
+    )
+
+
+def _emit_single_classification(
+    ctx: typer.Context, result: LedgerClassifyOperationResult, reaffirm: bool, *, transaction_id: str
+) -> None:
     """Refuse an incomplete result before emitting its settled classification."""
     if result.outcome == "validation_error":
+        if result.validation_kind == "needs_withholding_category":
+            raise _refuse_needs_withholding_category(transaction_id)
         if result.validation_kind == "m210_incoming_only":
             raise bad(tr("cli.ledger.classify.m210_incoming_only"))
         if result.validation_kind == "m210_required_options":
