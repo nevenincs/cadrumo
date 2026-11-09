@@ -99,6 +99,20 @@ def test_a_completed_run_returns_the_reply_and_names_the_lane_that_served_it(tmp
     assert body.prompt == "Classify these lines."
 
 
+def test_a_reply_schema_the_request_states_reaches_the_service_unchanged(tmp_path: Path) -> None:
+    """The lane constrains the reply to the schema; Cadrumo still extracts and validates what comes back."""
+    schema = {
+        "type": "object",
+        "properties": {"nature": {"type": ["string", "null"]}},
+        "additionalProperties": False,
+    }
+    with serving_agent(replies=('{"nature": "goods"}',)) as service:
+        asyncio.run(_client(_settings(tmp_path)).complete(_consented(response_schema=schema)))
+
+    ((_, body),) = service.runs
+    assert body.response_schema == schema
+
+
 def test_a_request_that_states_no_run_option_sends_none_to_the_service(tmp_path: Path) -> None:
     """Cadrumo defaults no reply bound and no sampling temperature: the lane's own behaviour applies."""
     with serving_agent(replies=("{}",)) as service:
@@ -108,6 +122,7 @@ def test_a_request_that_states_no_run_option_sends_none_to_the_service(tmp_path:
     assert body.max_output_tokens is None
     assert body.temperature is None
     assert body.context_tokens is None
+    assert body.response_schema is None
 
 
 def test_the_run_options_a_request_states_reach_the_service_unchanged(tmp_path: Path) -> None:

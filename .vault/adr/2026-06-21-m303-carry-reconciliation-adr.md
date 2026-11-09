@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#m303-carry-reconciliation'
 date: '2026-06-21'
-modified: '2026-11-04'
-body_hash: 'sha256:a293bed524fd0846b619f04b590225e259e5cacab14d812560ad569d0c21fb62'
+modified: '2026-11-09'
+body_hash: 'sha256:261abe426f26fe45e250064934a6dd4fac5002b303b58b50fbc37c6390c21bbc'
 related:
   - "[[2026-06-21-redeme-company-refund-adr]]"
   - "[[2026-06-21-redeme-company-refund-research]]"
@@ -232,3 +232,9 @@ invariant is retained rather than inventing a combined-account precedence rule.
 ## Amendment (2026-10-04): charge and refund accounts come from the ledger register
 
 Applied under `2026-10-04-taxpayer-bank-accounts-adr`. Where this record calls `ChargeAccount` "distinct encrypted durable profile data", read: a CHARGE designation (or per-filing choice) of an own account in the encrypted ledger register `cadrumo.ledger.own_accounts`; the refund account is the REFUND designation of the same register. Charge and refund stay distinct roles and neither is inferred from the other. U admissibility moves from a 303-only branch to each modelo's declared disposition keys, and U refuses after the window's `payment_cutoff_on`. Receipts and events may carry the role and opaque `own_account_id`, still never account material.
+
+## Amendment (2026-11-09): a calculated, unfiled prior period feeds the next at calculation grade
+
+Applied under the D24 operator ruling. Where no AEAT wallet capture, filed observation or declared opening balance records the prior Modelo 303 period, the wallet gate reads the taxpayer's own newest live calculation revision of that period and carries its `iva.compensacion-disponible-fin-periodo` as `selected_authority: local_calculation`, divergence `local_calculation_only`, with the source locator `calculation-revision:303:{year}:{period}:{revision}` (`src/cadrumo/application/modelo/iva_wallet_prior_period.py`). A positive prior result carries zero. A credit is carried in full only where LIVA art. 115 admits no refund, as `resolve_refund_eligibility` answers from fact `0144-iva-refund-eligibility-policy`: not the year's last period, and a taxpayer outside REDEME. A credit whose refund the law leaves open blocks the calculation as `local_calculation_refund_undecided`, and an unstated REDEME inscription as `local_calculation_redeme_unstated`; both refuse with no effect and the Saldo de IVA door. The Modelo 303 readiness gate already requires the REDEME answer, so the second refusal is fail-closed rather than a normal route.
+
+The carry reaches calculation grade only. Verification, internal filing and export read no prior calculation: they keep a stored local-calculation decision while no other authority appears, and refuse it as `local_calculation_only` with the Saldo de IVA door. The wallet, a filed declaration or a declared amount replaces it through the evidence-change refresh, and recalculating the prior period refreshes the next one the same way. The 390 gate reads are unchanged.

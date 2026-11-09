@@ -87,7 +87,7 @@ from ..operations.next_step import (
 )
 from ..user_profile.projections import profile_path_values_for_bucket
 from .action_errors import ModeloPreconditionErrorMixin
-from .iva_wallet_prior_period import prior_period_carry_evidence
+from .iva_wallet_prior_period import PriorModeloCalculations, prior_period_carry_evidence
 from .iva_wallet_values import revision_iva_compensation_amount, taxpayer_nif_from_path_values
 from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure
 from .work_form_wording import modelo_number, period_words
@@ -271,6 +271,16 @@ def _blocked_refusal(decision: IvaCompensationReconciliationDecision) -> tuple[s
             "wallet_local_recurrence_divergence",
             "application.iva_wallet.decision_reason.wallet_local_recurrence_divergence",
         )
+    if decision.reason_identity is IvaCompensationDecisionReason.LOCAL_CALCULATION_REFUND_UNDECIDED:
+        return (
+            "local_calculation_refund_undecided",
+            "application.iva_wallet.decision_reason.local_calculation_refund_undecided",
+        )
+    if decision.reason_identity is IvaCompensationDecisionReason.LOCAL_CALCULATION_REDEME_UNSTATED:
+        return (
+            "local_calculation_redeme_unstated",
+            "application.iva_wallet.decision_reason.local_calculation_redeme_unstated",
+        )
     raise ValueError(
         f"blocked IVA wallet decision has non-blocking reason {decision.reason_identity.value!r}",
     )
@@ -368,6 +378,7 @@ def _persisted_decision_for_calculation(
     profile_values: Mapping[str, str] | None,
     evaluated_at: datetime | None = None,
     persist_blocked: bool = True,
+    prior_calculations: PriorModeloCalculations | None = None,
 ) -> IvaCompensationReconciliationDecision | None:
     persisted = load_persisted_iva_compensation_decision_for_work_unit(
         work_unit,
@@ -387,6 +398,7 @@ def _persisted_decision_for_calculation(
         profile_values=profile_values,
         evaluated_at=evaluated_at,
         persist_blocked=persist_blocked,
+        prior_calculations=prior_calculations,
     )
     return _require_first_period_zero_decision_grounded(
         work_unit,
@@ -492,6 +504,7 @@ def resolve_iva_compensation_decision_for_calculation(
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None,
     profile_values: Mapping[str, str] | None,
     evaluated_at: datetime | None = None,
+    prior_calculations: PriorModeloCalculations | None = None,
 ) -> object | None:
     """Resolve the Modelo 303 IVA wallet decision that may feed calculation bindings.
 
@@ -507,7 +520,9 @@ def resolve_iva_compensation_decision_for_calculation(
     refusal; an otherwise ungrounded zero still returns ``None`` for the
     first-profile seed/reconcile guidance. ``profile_values`` is the path
     projection of the profile the calculation already loaded, or ``None`` when
-    it has none.
+    it has none. ``prior_calculations`` reads the taxpayer's own calculation of
+    the previous period where nothing filed records it; its credit then feeds
+    this period at calculation grade only.
     """
     if supplied_decision is not None:
         require_persisted_iva_compensation_decision_for_work_unit(
@@ -530,6 +545,7 @@ def resolve_iva_compensation_decision_for_calculation(
         profile_values=profile_values,
         evaluated_at=evaluated_at,
         persist_blocked=False,
+        prior_calculations=prior_calculations,
     )
     if persisted is not None:
         return persisted
@@ -561,6 +577,7 @@ def resolve_iva_compensation_decision_for_calculation(
         persist=True,
         profile_values=profile_values,
         evaluated_at=evaluated_at,
+        prior_calculations=prior_calculations,
     )
 
 
@@ -950,6 +967,7 @@ def _refresh_local_iva_compensation_decision_if_evidence_changed(
     profile_values: Mapping[str, str] | None,
     evaluated_at: datetime | None = None,
     persist_blocked: bool = True,
+    prior_calculations: PriorModeloCalculations | None = None,
 ) -> IvaCompensationReconciliationDecision:
     if decision.selected_authority == "taxpayer_override":
         return decision
@@ -964,12 +982,36 @@ def _refresh_local_iva_compensation_decision_if_evidence_changed(
         wallet=_wallet_evidence_from_decision(decision),
         profile_values=profile_values,
         evaluated_at=evaluated_at,
+        prior_calculations=prior_calculations,
     )
     if refreshed is None or _decision_replay_basis(refreshed) == _decision_replay_basis(decision):
+        return decision
+    if _keeps_local_calculation(decision, refreshed, prior_calculations=prior_calculations):
         return decision
     if persist_blocked or not refreshed.blocked:
         _save_iva_compensation_decision(refreshed, repository=repository)
     return refreshed
+
+
+def _keeps_local_calculation(
+    decision: IvaCompensationReconciliationDecision,
+    refreshed: IvaCompensationReconciliationDecision,
+    *,
+    prior_calculations: PriorModeloCalculations | None,
+) -> bool:
+    """Whether a stored local-calculation carry stands because this reader cannot see calculations.
+
+    Verification, filing and export read no prior calculation, so a refresh
+    there that finds no other authority has not learnt the carry is gone; it
+    keeps the stored decision and refuses it as a local calculation instead.
+    Any authority it does find -- the wallet, a filed return, a declared
+    opening balance -- replaces it.
+    """
+    return (
+        prior_calculations is None
+        and decision.selected_authority == "local_calculation"
+        and refreshed.selected_authority == "missing"
+    )
 
 
 def _decision_replay_basis(decision: IvaCompensationReconciliationDecision) -> tuple[object, ...]:
@@ -1179,6 +1221,7 @@ def _reconcile_local_iva_compensation(
     profile_values: Mapping[str, str] | None,
     wallet: IvaCompensationWalletObservationProtocol | None = None,
     evaluated_at: datetime | None = None,
+    prior_calculations: PriorModeloCalculations | None = None,
 ) -> IvaCompensationReconciliationDecision | None:
     if work_unit.modelo != form_for_role("iva.periodic"):
         return None
@@ -1194,6 +1237,10 @@ def _reconcile_local_iva_compensation(
         operation=operation,
         repository=observation_repository,
         history_repository=history_repository,
+        # The taxpayer's own calculation stands in only where AEAT's wallet is
+        # absent too; a wallet is the authority, never checked against it.
+        prior_calculations=prior_calculations if wallet is None else None,
+        profile_values=profile_values,
     )
     report = reconcile_modelo_303_iva_compensation(
         snapshot,
@@ -1220,6 +1267,7 @@ def _reconcile_local_iva_compensation(
         # outcome states that nothing is available while the taxpayer's own
         # prior record sits in the store.
         local_evidence_found_but_unusable=(evidence.prior_period_observation_found and evidence.recurrence is None),
+        local_calculation_refusal=evidence.local_calculation_refusal,
         persist=False,
         decided_at=evaluated_at,
     )
@@ -1334,6 +1382,14 @@ def _persisted_decision_matching_revision(
                 "divergence": "authority_target_mismatch",
                 "reason": "target_mismatch",
             },
+        )
+    if decision.selected_authority == "local_calculation":
+        _raise_iva_wallet_precondition(
+            subject_leaf_key=subject_leaf_key,
+            reason_code="local_calculation_only",
+            translated_message="application.iva_wallet.decision_reason.local_calculation_only",
+            evidence_values={"divergence_code": str(decision.divergence), "wallet_blocked": True},
+            context={"divergence": str(decision.divergence), "reason": "local_calculation_only"},
         )
     if _decision_is_first_period_zero(decision):
         _require_first_period_zero_decision_grounded(

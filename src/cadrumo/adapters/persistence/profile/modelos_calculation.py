@@ -481,7 +481,7 @@ class CalculationRevisionCatalogueRepository:
                     "saved rendering snapshot row is unreadable", "rendering_snapshot_unreadable"
                 )
             body = self._decoded_rendering_body(stored.payload)
-            if body.rendering_digest != digest:
+            if not body.holds_rendering_digest(digest):
                 raise _persistence_refusal(
                     "saved rendering snapshot row does not hold the body of its digest",
                     "rendering_snapshot_digest_mismatch",

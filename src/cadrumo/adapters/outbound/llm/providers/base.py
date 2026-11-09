@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, JsonValue
 
 from .....core.config_support import LLMProvider
 from .....core.models import STRICT_FROZEN_CONFIG
@@ -64,6 +64,10 @@ class ProviderRequest(BaseModel):
     images: tuple[MultimodalImageInput, ...] = Field(
         default=(),
         description="On-host image inputs for a multimodal request; empty for text-only.",
+    )
+    response_schema: dict[str, JsonValue] | None = Field(
+        default=None,
+        description="JSON Schema object the reply is constrained to, or None for an unconstrained reply.",
     )
 
 

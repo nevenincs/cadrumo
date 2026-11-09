@@ -6,7 +6,9 @@ authority, before ``BindingDefinition.absence_attestation`` was declared. Each
 revision embeds its registry snapshot and binds it by digests of that
 snapshot's dumps, so a field the current models add must not change those dumps
 for a snapshot that never held it: if it did, every revision the taxpayer had
-saved would refuse to load after the upgrade.
+saved would refuse to load after the upgrade. Builds between the field's
+declaration and its exclusion while absent dumped it as ``null`` and bound their
+snapshots by digests of that form; those catalogues must stay readable too.
 
 The payload goes into an encrypted profile through the same secure-object store
 the application uses and is read back through the production repository.
@@ -15,6 +17,8 @@ the application uses and is read back through the production repository.
 from __future__ import annotations
 
 import gzip
+import json
+import lzma
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -25,6 +29,11 @@ from .....core.classification.policies import SensitivityClass
 from ...storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ...storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
+from .embedded_rendering_fixture import (
+    EMBEDDED_RENDERING_FIXTURE,
+    EMBEDDED_RENDERING_FIXTURE_BUCKET_ID,
+    install_embedded_rendering_fixture,
+)
 from .test_calculation_repository_roundtrip import _BUCKET_ID, _seed_parent_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
@@ -46,7 +55,7 @@ class _SavedRendering(BaseModel):
 
 class _SavedRevision(BaseModel):
     model_config = ConfigDict(extra="ignore", frozen=True)
-    rendering_snapshot: _SavedRendering
+    rendering_snapshot: _SavedRendering | None = None
 
 
 class _SavedCatalogue(BaseModel):
@@ -71,6 +80,7 @@ def _saved_renderings(payload: bytes) -> dict[str, tuple[str, str, str]]:
             revision.rendering_snapshot.rendering_digest,
         )
         for revision_id, revision in revisions.items()
+        if revision.rendering_snapshot is not None
     }
 
 
@@ -133,5 +143,46 @@ def test_a_catalogue_saved_before_a_registry_field_existed_is_written_again_unch
 
     assert reread == legacy
     assert record is not None
+    assert _saved_renderings(record.payload) == saved
+    assert b"absence_attestation" not in record.payload
+
+
+def _absent_as_null_payload() -> bytes:
+    """The catalogue a build that dumped absent registry fields as ``null`` stored."""
+    rows = json.loads(lzma.decompress(EMBEDDED_RENDERING_FIXTURE.read_bytes()))
+    return str(rows["calculation_revision_catalogue"]["payload"]).encode()
+
+
+def test_a_catalogue_saved_while_absent_fields_were_written_as_null_loads_and_is_written_again(
+    tmp_path: Path,
+) -> None:
+    payload = _absent_as_null_payload()
+    assert b'"absence_attestation":null' in payload, "the fixture was saved by a build that wrote the null"
+    saved = _saved_renderings(payload)
+    assert saved
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=EMBEDDED_RENDERING_FIXTURE_BUCKET_ID) as profile:
+        install_embedded_rendering_fixture(profile)
+        loaded = CalculationRevisionCatalogueRepository(objects=profile.repository).load()
+        CalculationRevisionCatalogueRepository(objects=profile.repository).save(loaded)
+        reread = CalculationRevisionCatalogueRepository(objects=profile.repository).load()
+        record = profile.repository.load(
+            MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+            MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
+            expected_class=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.sensitivity,
+            max_supported_version=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version,
+        )
+
+    for revision_id, (generation, registry_digest, rendering_digest) in saved.items():
+        rendering = loaded.revisions[revision_id].rendering_snapshot
+        assert rendering is not None
+        assert (rendering.authority_generation, rendering.registry_digest, rendering.rendering_digest) == (
+            generation,
+            registry_digest,
+            rendering_digest,
+        )
+    assert reread == loaded
+    assert record is not None
+    # Written again without the nulls, each snapshot keeps the digests it was saved under.
     assert _saved_renderings(record.payload) == saved
     assert b"absence_attestation" not in record.payload

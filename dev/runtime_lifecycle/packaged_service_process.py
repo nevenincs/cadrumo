@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 import time
 from collections.abc import Mapping
 from pathlib import Path
 from queue import Empty, Full, Queue
 from threading import Event, Lock, Thread
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID
 
 from pydantic import JsonValue, TypeAdapter
@@ -25,6 +26,7 @@ from cadrumo_agent_service.host.native_refusal import NativeLaunchRefusalCode
 from cadrumo_agent_service.host.store_lifecycle import StoreOutcome, StoreStep
 from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.transport.windows_process import WindowsProcessScope, unreturned_windows_process_scope
+from dev.packaging.native.layout import load_layout
 
 from .caller_owned_root import (
     AcceptanceError,
@@ -56,6 +58,17 @@ _STORE_STEPS = frozenset(step.value for step in StoreStep)
 _STORE_OUTCOMES = frozenset(outcome.value for outcome in StoreOutcome)
 
 
+def package_default_engine(package: Path) -> Literal["llamacpp", "ollama"]:
+    """The engine the desktop states for a profile that chose none, from what ``package`` carries.
+
+    llama.cpp exactly when the package's llama-server folder holds the program, as the
+    desktop decides it, so the service under test starts as the window would start it.
+    """
+    executable = "llama-server.exe" if sys.platform == "win32" else "llama-server"
+    carried = (package / load_layout()["paths"]["llama_server"] / executable).is_file()
+    return "llamacpp" if carried else "ollama"
+
+
 class PackagedServiceProcess:
     """Contain one packaged service tree and its bounded startup event stream."""
 
@@ -68,6 +81,7 @@ class PackagedServiceProcess:
         directory: Path,
         bearer: bytearray,
         gateway_bearer: bytearray,
+        local_engine_default: Literal["llamacpp", "ollama"],
     ) -> None:
         """Launch and retain the service and its bounded event readers."""
         self._scope: WindowsProcessScope | None = None
@@ -104,6 +118,7 @@ class PackagedServiceProcess:
             frame = ServiceStartupFrame(
                 bearer=bearer.decode("ascii"),
                 gateway_bearer=gateway_bearer.decode("ascii"),
+                local_engine_default=local_engine_default,
             )
             stdin.write(frame.model_dump_json().encode("utf-8") + b"\n")
             stdin.flush()
