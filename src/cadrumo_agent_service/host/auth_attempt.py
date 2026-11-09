@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+import logging
 import time
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
@@ -23,6 +24,21 @@ from .credential_frame import wipe
 
 _LOGGER = get_logger(__name__)
 
+EXCHANGE_SECONDS = 305
+"""The bound on one helper exchange: a little past the helper's own 300 second login timeout."""
+
+_Settlement = tuple[str, str | None, str | None]
+"""An outcome event, its reason and its cause."""
+
+
+class HelperStreamError(ValueError):
+    """The helper's stream broke the protocol; carries only the service's closed cause word."""
+
+    def __init__(self, cause: str) -> None:
+        """Keep the cause beside the content-free message."""
+        super().__init__("invalid_auth_event")
+        self.cause = cause
+
 
 class AuthAttempt:
     """Own the helper until its whole job is gone, including after host loss."""
@@ -39,6 +55,7 @@ class AuthAttempt:
         valid: Callable[[], bool],
         settled: Callable[[], None] | None = None,
         prepare: Callable[[], None] | None = None,
+        confirm: Callable[[], tuple[bool, str | None]] | None = None,
     ) -> None:
         """Launch one bounded worker with the caller's exact authority predicate.
 
@@ -46,6 +63,11 @@ class AuthAttempt:
         while the attempt reads ``starting``: work such as retiring the agent's
         tree, which takes longer than the request that began the attempt may
         wait. A failure in it ends the attempt as a failed cleanup.
+
+        ``confirm`` runs on the attempt's own thread once the helper reported
+        success and its job is gone. It answers whether the provider now reads
+        as signed in, with the cause when it does not; a success it does not
+        confirm is served as a failure.
         """
         self.id = str(uuid4())
         self._lane = lane
@@ -57,6 +79,7 @@ class AuthAttempt:
         self._valid = valid
         self._settled = settled
         self._prepare = prepare
+        self._confirm = confirm
         self._lock = Lock()
         self._cancel = Event()
         self._done = Event()
@@ -197,8 +220,8 @@ class AuthAttempt:
                 return None
             raise
 
-    def _exchange(self, input_stream: BinaryIO, queue: Queue[bytes | None]) -> tuple[str, str | None]:
-        deadline = time.monotonic() + 305
+    def _exchange(self, input_stream: BinaryIO, queue: Queue[bytes | None]) -> _Settlement:
+        deadline = time.monotonic() + EXCHANGE_SECONDS
         with self._lock:
             self._deadline = deadline
         checked = 0.0
@@ -211,20 +234,25 @@ class AuthAttempt:
                 return self._cancel_exchange(input_stream)
             if now >= deadline:
                 self._publish(snapshot(self.id, self._lane, "started"))
-                return "failed", "timeout"
+                return "failed", "timeout", "timed_out"
             try:
                 raw = queue.get(timeout=0.25)
             except Empty:
                 continue
-            event = self._read_event(raw)
+            try:
+                event = self._read_event(raw)
+            except ValueError:
+                raise HelperStreamError(
+                    "helper_ended_without_result" if raw is None else "helper_output_invalid"
+                ) from None
             if event.event == "ready":
                 input_stream.write(b'{"version":1,"action":"start"}\n')
                 input_stream.flush()
             elif event.event in TERMINAL_EVENTS:
-                return event.event, event.reason
+                return event.event, event.reason, event.cause
             else:
                 if not self._publish_action(event):
-                    return "cancelled", None
+                    return "cancelled", None, None
 
     def _recheck_scope(self, now: float, checked: float) -> float:
         if now >= checked:
@@ -233,11 +261,13 @@ class AuthAttempt:
             return now + 1
         return checked
 
-    def _cancel_exchange(self, input_stream: BinaryIO) -> tuple[str, str | None]:
+    def _cancel_exchange(self, input_stream: BinaryIO) -> _Settlement:
         with self._lock, contextlib.suppress(OSError, ValueError):
             input_stream.write(b'{"version":1,"action":"cancel"}\n')
             input_stream.flush()
-        return "cancelled", "host_disconnected" if not self._cancel.is_set() else None
+        if self._cancel.is_set():
+            return "cancelled", None, None
+        return "cancelled", "host_disconnected", "host_disconnected"
 
     def _read_event(self, raw: bytes | None) -> AuthEvent:
         with self._lock:
@@ -274,19 +304,20 @@ class AuthAttempt:
     def _run(self) -> None:
         process: WindowsOwnedProcess | None = None
         input_stream: BinaryIO | None = None
-        outcome, reason = "failed", "provider_error"
+        outcome, reason, cause = "failed", "provider_error", None
+        launched = False
         try:
             if not self._valid() or self._cancel.is_set():
-                outcome, reason = "cancelled", None
+                outcome, reason, cause = "cancelled", None, None
                 return
             if self._prepare is not None:
                 try:
                     self._prepare()
                 except BaseException:
-                    outcome, reason = "failed", "cleanup_failed"
+                    outcome, reason, cause = "failed", "cleanup_failed", "agent_stop_failed"
                     return
                 if not self._valid() or self._cancel.is_set():
-                    outcome, reason = "cancelled", None
+                    outcome, reason, cause = "cancelled", None, None
                     return
             try:
                 self._scope = WindowsProcessScope()
@@ -299,6 +330,7 @@ class AuthAttempt:
                 directory=self._directory,
                 environment=self._environment,
             )
+            launched = True
             with self._lock:
                 self._input = input_stream
             queue: Queue[bytes | None] = Queue(maxsize=8)
@@ -308,20 +340,22 @@ class AuthAttempt:
             ]
             for reader in self._readers:
                 reader.start()
-            outcome, reason = self._exchange(input_stream, queue)
+            outcome, reason, cause = self._exchange(input_stream, queue)
+        except HelperStreamError as error:
+            outcome, reason, cause = "failed", "provider_error", error.cause
         except BaseException:
             # The exception may contain pipe or provider contents; never retain it.
             outcome, reason = "failed", "provider_error"
+            cause = "helper_ended_without_result" if launched else "helper_start_failed"
         finally:
-            self._finish_run(process, input_stream, outcome, reason)
+            self._finish_run(process, input_stream, outcome, reason, cause)
 
     def _close_and_wait(
         self,
         process: WindowsOwnedProcess | None,
         input_stream: BinaryIO | None,
-        outcome: str,
-        reason: str | None,
-    ) -> tuple[str, str | None]:
+        settlement: _Settlement,
+    ) -> _Settlement:
         try:
             if input_stream is not None:
                 with self._lock:
@@ -330,11 +364,22 @@ class AuthAttempt:
                     input_stream.close()
             if process is not None:
                 status = self._wait(process, 3)
-                if outcome == "succeeded" and status != 0:
-                    outcome, reason = "failed", "provider_error"
+                # A helper that has not exited after its success is not a clean one either.
+                if settlement[0] == "succeeded" and status != 0:
+                    return "failed", "provider_error", "helper_exit_nonzero"
         except Exception:
-            outcome, reason = "failed", "provider_error"
-        return outcome, reason
+            return "failed", "provider_error", "cleanup_unconfirmed"
+        return settlement
+
+    def _confirmed(self) -> tuple[bool, str | None]:
+        """Ask whether the provider reads as signed in; a read that cannot be made is a failure to confirm."""
+        if self._confirm is None:
+            return True, None
+        try:
+            return self._confirm()
+        except Exception:
+            # The exception may carry provider output; only its closed kind is kept.
+            return False, "status_read_failed"
 
     def _finish_run(
         self,
@@ -342,26 +387,37 @@ class AuthAttempt:
         input_stream: BinaryIO | None,
         outcome: str,
         reason: str | None,
+        cause: str | None,
     ) -> None:
+        status_cause: str | None = None
         try:
             try:
-                outcome, reason = self._close_and_wait(process, input_stream, outcome, reason)
+                outcome, reason, cause = self._close_and_wait(process, input_stream, (outcome, reason, cause))
             finally:
                 # Even a failed wait or pipe close must retire the whole job.
                 self._retire_scope()
             self._settle_readers()
             self._clean = True
-            if outcome == "succeeded" and (self._cancel.is_set() or not self._valid()):
-                outcome, reason = "cancelled", None
         except Exception:
-            outcome, reason = "failed", "cleanup_failed"
-        self._publish(snapshot(self.id, self._lane, outcome, reason=reason))
+            outcome, reason, cause = "failed", "cleanup_failed", "cleanup_unconfirmed"
+        if outcome == "succeeded" and (self._cancel.is_set() or not self._valid()):
+            outcome, reason, cause = "cancelled", None, None
+        if outcome == "succeeded" and self._confirm is not None:
+            signed_in, status_cause = self._confirmed()
+            if not signed_in:
+                outcome, reason, cause = "failed", "provider_error", "status_not_confirmed"
+            elif self._cancel.is_set() or not self._valid():
+                outcome, reason, cause = "cancelled", None, None
+        self._publish(snapshot(self.id, self._lane, outcome, reason=reason, cause=cause, status_cause=status_cause))
         self._done.set()
-        _LOGGER.info(
-            "provider sign-in settled provider=%s event=%s reason=%s cleanup_confirmed=%s",
+        _LOGGER.log(
+            logging.WARNING if outcome == "failed" else logging.INFO,
+            "provider sign-in settled provider=%s event=%s reason=%s cause=%s status_cause=%s cleanup_confirmed=%s",
             self._lane,
             outcome,
             reason or "none",
+            cause or "none",
+            status_cause or "none",
             self._clean,
         )
         if self._settled is not None:

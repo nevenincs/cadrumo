@@ -2147,6 +2147,10 @@ desktop:
         introducido. Tu borrador se conserva.
       note: Nota
       proposed: Tu valor propuesto
+      provincia: Provincia del domicilio fiscal
+      provincia_save: Guardar provincia
+      provincia_unstated: 'Sin indicar: el Modelo 347 la declara para cada contraparte
+        española.'
       scope:
         es_canarias: Canarias
         es_ceuta_melilla: Ceuta y Melilla
@@ -3275,6 +3279,7 @@ desktop:
       added_no_rate: Factura {number} añadida · aún sin tipo de cambio a EUR
       any_class: Cualquier clase
       any_payment: Cualquier pago
+      attach_document: Adjuntar documento
       back: Volver
       base: Base imponible
       cancel: Cancelar
@@ -3312,6 +3317,8 @@ desktop:
       discard_new: ¿Descartar esta factura?
       discard_note: Todavía no se ha guardado nada.
       document: Documento
+      document_already: Ese documento ya estaba guardado con la factura.
+      document_attached: Documento guardado con la factura.
       duplicate: Ya está en el catálogo.
       empty: Aún no hay facturas. Añade una o importa un libro de facturas.
       empty_filtered: Ninguna factura coincide.
@@ -3476,6 +3483,9 @@ desktop:
         s2: País Vasco o Navarra
         s3: España sin referencia catastral
         s4: En el extranjero
+      source_document: Documento de la factura
+      source_document_hint: 'Adjunta el PDF o la factura electrónica: es el documento
+        que permite deducir su IVA.'
       stored_note: '{kind} · {payment} · vinculada: {count}'
       this_is: Es una
       title: Factura {number}
@@ -3791,6 +3801,7 @@ desktop:
       invoice_cash_accounting_regime_unmodelled: Criterio de caja
       invoice_category_contradicted: Categoría IVA
       invoice_deduction_family_unresolved: Deducción
+      invoice_recargo_split_unresolved: Recargo
       linked_movement_contradicts_invoice: Factura
       missing_business_classification: Clasificación
       missing_category: Categoría
@@ -3817,6 +3828,8 @@ desktop:
         con facturas
       invoice_category_contradicted: La categoría de IVA no encaja con el país
       invoice_deduction_family_unresolved: La factura no indica qué deducción corresponde
+      invoice_recargo_split_unresolved: El recargo no se reparte entre sus tipos de
+        IVA
       linked_movement_contradicts_invoice: No coincide con su factura
       missing_business_classification: Falta la clasificación
       missing_category: Falta la categoría
@@ -9855,6 +9868,9 @@ workspace:
         registrar la presentación (por confirmar: {count}).'
       election:
         amendment: Una autoliquidación rectificativa no se puede pagar en dos plazos.
+        carry_forward_only: La devolución solo se puede pedir en el último periodo
+          del año, salvo que estés inscrito en el registro de devolución mensual (REDEME).
+          Este saldo se compensa en los periodos siguientes.
         filing_window_unknown: No se conoce el plazo de presentación de esta declaración,
           así que no se puede ofrecer el pago en dos plazos.
         no_open_account: Ninguna de tus cuentas bancarias propias está abierta. Añade
@@ -9866,6 +9882,9 @@ workspace:
         nothing_to_refund: El resultado no es una devolución, así que esto no se aplica.
         past_filing_window: El plazo de presentación ha terminado, y pagar en dos
           plazos exige presentar la declaración dentro de él.
+        redeme_unstated: Indica en tu perfil si estás inscrito en el registro de devolución
+          mensual (REDEME). Fuera del último periodo del año la devolución depende
+          de ello, así que solo se ofrece la compensación.
         result_unknown: 'Calcula antes la declaración: su resultado lo decide.'
         second_instalment_nothing: Este importe es tan pequeño que el segundo plazo
           quedaría en cero, así que se paga de una sola vez.
@@ -10019,6 +10038,8 @@ workspace:
       no_deadline_short: No consta el plazo
       own_calculation: Cálculo de Cadrumo. La AEAT no lo ha visto.
       result:
+        carry_forward_only_help: La devolución solo se puede pedir en el último periodo
+          del año. Este saldo a tu favor se compensa en los periodos siguientes.
         choice_pending: 'A compensar o a devolver: lo eliges al generar el fichero'
         choice_pending_short: A compensar o a devolver
         direction_unknown_help: Cadrumo aún no indica si este importe es a ingresar
@@ -10032,6 +10053,11 @@ workspace:
         other_boxes: 'Otras casillas de resultado de este modelo: {boxes}'
         out_of_date_until_applied: desactualizado hasta que lo apliques
         provisional: provisional
+        redeme_unstated: 'Sin decidir: la devolución necesita tu dato de REDEME'
+        redeme_unstated_help: Fuera del último periodo del año, pedir la devolución
+          exige estar inscrito en el registro de devolución mensual (REDEME). Tu perfil
+          no dice si lo estás, así que solo se ofrece la compensación. Indícalo en
+          tu perfil.
         sign_help: La casilla [{box}] figura en el modelo oficial como {value}. Arriba
           se muestra el importe sin signo y el sentido en palabras.
         to_carry_forward: A compensar
@@ -10321,6 +10347,7 @@ workspace:
       lead: Esto no impide el archivo. Dice qué dejan fuera las dotaciones de tus
         elementos, para que decidas qué añadir.
       title: Conviene saber antes de presentar
+    open_invoice: Abrir la factura
     operation:
       calculated: Calculada. {direction} {value}.
       checked:

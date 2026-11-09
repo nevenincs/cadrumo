@@ -294,6 +294,7 @@ desktop:
     change_failed: No s’ha pogut desar. Actualitza i torna-ho a provar.
     connection_api: Clau API
     connection_app: Aplicació instal·lada
+    console_command_label: 'Executa aquesta ordre en un terminal:'
     detail_app_missing: Instal·la l'aplicació de {provider} i després inicia la sessió.
     detail_off: 'Desactivat: l''agent no l''ofereix ni el fa servir.'
     detail_off_kept: 'Desactivat: l''agent no l''ofereix ni el fa servir. La seva
@@ -351,6 +352,13 @@ desktop:
     local_placement_cpu_only: Només processador
     local_placement_cpu_only_detail: Més lent. Fa servir només la memòria d’aquest ordinador.
     local_placement_title: On s’executen els models
+    next_step:
+      close_other_sign_in: Tanca l'altre inici de sessió i torna-ho a provar.
+      console_sign_in: Inicia la sessió des d'un terminal.
+      install_cli: Instal·la l'aplicació del proveïdor i torna-ho a provar.
+      move_profile_outside_git: Mou la carpeta del perfil fora del projecte de Git i torna-ho a provar.
+      retry: Torna-ho a provar d'aquí a un moment.
+      update_app: Actualitza aquesta aplicació a l'última versió i torna-ho a provar.
     reason_check_settings: Revisa aquesta configuració i torna-ho a provar.
     reason_record_unreadable: No es pot llegir la clau API desada. Torna-la a afegir.
     refresh: Torna-ho a provar
@@ -378,6 +386,37 @@ desktop:
     sign_in_cancel_failed: El Cadrumo encara no ha pogut cancel·lar l'inici de sessió.
       Mantén aquest diàleg obert mentre ho comprova.
     sign_in_cancelled: S'ha cancel·lat l'inici de sessió.
+    sign_in_cause:
+      agent_stop_failed: No s'ha pogut aturar l'agent per acabar l'inici de sessió.
+      browser_relay_unavailable: No s'ha pogut passar la pàgina d'inici de sessió al navegador.
+      cleanup_unconfirmed: No s'ha pogut confirmar que l'inici de sessió s'hagi tancat correctament.
+      cli_exited_early: L'aplicació del proveïdor s'ha aturat abans d'acabar l'inici de sessió.
+      cli_not_found: L'aplicació del proveïdor no està instal·lada o no s'ha trobat.
+      cli_protocol_mismatch: L'aplicació del proveïdor ha respost d'una manera que aquesta versió no entén.
+      cli_reported_error: L'aplicació del proveïdor ha indicat un error durant l'inici de sessió.
+      cli_start_failed: No s'ha pogut iniciar l'aplicació del proveïdor.
+      helper_ended_without_result: L'inici de sessió ha acabat sense resultat.
+      helper_exit_nonzero: L'inici de sessió ha acabat amb un error.
+      helper_output_invalid: L'inici de sessió ha donat una resposta que no s'ha pogut llegir.
+      helper_start_failed: No s'ha pogut començar l'inici de sessió.
+      home_in_git_project: La carpeta del perfil és dins d'un projecte de Git i l'aplicació del proveïdor no hi inicia la sessió.
+      home_unavailable: No s'ha pogut usar la carpeta reservada per a l'inici de sessió d'aquest proveïdor.
+      host_disconnected: S'ha perdut el contacte amb l'inici de sessió mentre s'executava.
+      host_input_invalid: L'inici de sessió ha rebut una entrada que no ha pogut usar.
+      internal_error: L'inici de sessió ha tingut un error intern.
+      login_already_running: Ja hi ha un altre inici de sessió en curs per a aquest perfil.
+      login_not_completed: L'inici de sessió no s'ha completat.
+      probe_cleanup_unconfirmed: No s'ha pogut confirmar que la comprovació de l'inici de sessió del proveïdor s'hagi tancat correctament.
+      probe_output_unreadable: La comprovació de l'inici de sessió del proveïdor ha donat una resposta que no s'ha pogut llegir.
+      probe_start_failed: No s'ha pogut començar la comprovació de l'inici de sessió del proveïdor.
+      probe_timed_out: La comprovació de l'inici de sessió del proveïdor ha trigat massa.
+      profile_missing: No s'ha trobat el perfil d'aquest inici de sessió.
+      status_context_unavailable: No hi havia cap perfil obert amb què comprovar l'inici de sessió.
+      status_not_confirmed: L'inici de sessió ha acabat, però no s'ha pogut confirmar que hagis iniciat la sessió.
+      status_read_failed: No s'ha pogut llegir si has iniciat la sessió.
+      status_unreadable: No s'ha pogut llegir la resposta sobre si has iniciat la sessió.
+      timed_out: L'inici de sessió ha trigat massa.
+      unsupported_method: L'aplicació del proveïdor no admet aquesta manera d'iniciar la sessió.
     sign_in_cleanup_failed: Reinicia Cadrumo abans de tornar a iniciar la sessió.
     sign_in_close: Tanca l'inici de sessió
     sign_in_code_checking: Comprovant el codi d’autorització…
@@ -424,6 +463,7 @@ desktop:
     status_saved: Desat
     status_setup_needed: Sense configurar
     status_sign_in_needed: Sense sessió iniciada
+    status_unconfirmed: Inici de sessió sense confirmar
     title: Proveïdors d'IA
     use_in_agent: Fes servir {provider} ({connection}) a l'agent
   rail:

@@ -231,6 +231,7 @@ _LOCAL_WRITES: Final = (
     "ledger.inventory.retire",
     # The preview records valuation events despite its name.
     "ledger.inventory.valuation.preview",
+    "ledger.invoice.attach_document",
     "ledger.invoice.remove",
     "ledger.invoice.update",
     "ledger.link",

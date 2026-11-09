@@ -185,6 +185,37 @@ class RetencionesAggregationSourceResolver:
             captured_invoice_ids=captured_invoice_ids(stored),
         )
 
+    def empty_window_refusal(self, context: CalculationSourceContext) -> RetencionesWindowEmptyError | None:
+        """Return the refusal :meth:`resolve` raises for ``context``'s window, without resolving it.
+
+        The window is refused when it holds no stored or invoice-stated
+        retención, no finding about one, and is not an attested Modelo 115
+        period without relevant payments. A store that cannot be read is not
+        judged here: :meth:`resolve` reports it as degraded.
+        """
+        try:
+            stored = self.load_calculation_observations(
+                modelo=context.modelo,
+                period=context.period,
+                revision=context.revision,
+            )
+        except (RetencionObservationPersistenceError, *STORAGE_DEGRADATION_ERRORS):
+            return None
+        if stored is None or stored:
+            return None
+        invoices = self._received_invoice_withholding(context, stored)
+        if invoices.observations or invoices.findings or self._m115_attested(context):
+            return None
+        return _empty_window_refusal(context)
+
+    def _m115_attested(self, context: CalculationSourceContext) -> bool:
+        """Report whether ``context`` is a Modelo 115 period attested to have no relevant payment."""
+        return context.modelo == form_for_role("withholding.lease_periodic") and is_m115_no_relevant_payment_period(
+            filing_year=context.filing_year,
+            period_token=context.period.registry_token,
+            attested_periods=self._m115_no_relevant_payment_periods,
+        )
+
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve the retenciones binding values for the declared modelo context."""
         try:
@@ -213,13 +244,7 @@ class RetencionesAggregationSourceResolver:
                 diagnostics=findings,
             )
         if not observations:
-            is_m115 = context.modelo == form_for_role("withholding.lease_periodic")
-            is_m115_no_relevant_payment = is_m115 and is_m115_no_relevant_payment_period(
-                filing_year=context.filing_year,
-                period_token=context.period.registry_token,
-                attested_periods=self._m115_no_relevant_payment_periods,
-            )
-            if is_m115_no_relevant_payment:
+            if self._m115_attested(context):
                 with source_context_operation(context) as operation:
                     aggregation = self.aggregate(context.modelo, (), period=context.period, operation=operation)
                 return CalculationSourceResolution(

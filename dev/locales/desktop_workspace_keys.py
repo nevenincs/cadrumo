@@ -528,6 +528,7 @@ WORKSPACE_KEYS: Final[frozenset[str]] = frozenset(
         "workspace.modelo.next_button.apply",
         "workspace.modelo.notes.lead",
         "workspace.modelo.notes.title",
+        "workspace.modelo.open_invoice",
         "workspace.modelo.operation.checked.complete",
         "workspace.modelo.operation.done",
         "workspace.modelo.operation.not_done",

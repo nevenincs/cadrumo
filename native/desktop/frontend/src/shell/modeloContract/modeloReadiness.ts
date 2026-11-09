@@ -41,7 +41,8 @@ export type LedgerPreflightIssueReason =
   | "invoice_category_contradicted"
   | "movement_invoice_double_count"
   | "invoice_cash_accounting_regime_unmodelled"
-  | "linked_movement_contradicts_invoice";
+  | "linked_movement_contradicts_invoice"
+  | "invoice_recargo_split_unresolved";
 
 /**
  * Closed cause of a profile readiness refusal, independent of display prose.

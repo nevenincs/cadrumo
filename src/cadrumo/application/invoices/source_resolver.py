@@ -25,6 +25,7 @@ from ...domain.calculations.registry.iva_category_catalogue import (
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.decomposition import InvoiceDecomposition, InvoiceDecompositionDefect, decompose_invoice
 from ...domain.invoices.models import Invoice
+from ...domain.iva.establishment import SPAIN_COUNTRY_CODE
 from ...domain.iva.schema import InvoiceKind
 from ..aggregation.source_mesh import (
     CalculationSourceContext,
@@ -58,7 +59,11 @@ from .source_observations import (
     row_values_not_carried_by_detail_rows,
 )
 from .source_rectifications import place_rectifications
-from .source_resolver_ports import InvoiceSourcePersistenceError, InvoiceSourceResolverPorts
+from .source_resolver_ports import (
+    CounterpartyProvinciaReader,
+    InvoiceSourcePersistenceError,
+    InvoiceSourceResolverPorts,
+)
 
 _IncoherentInvoice = tuple[Invoice, InvoiceDecomposition]
 
@@ -97,6 +102,33 @@ def _observe_invoice_sources(
             continue
         observed_items.append((invoice, observation))
     return tuple(observed_items), tuple(incoherent), tuple(withheld_for_conversion)
+
+
+def _with_stated_provincias(
+    observed_items: tuple[ObservedInvoice, ...],
+    provincias: CounterpartyProvinciaReader | None,
+) -> tuple[ObservedInvoice, ...]:
+    """Give each Spanish Modelo 347 declarado the provincia the person stated for it.
+
+    Only a stated fact is used: a counterparty with none keeps no provincia, and
+    the declaration names it as a gap rather than reading one out of an address.
+    """
+    if provincias is None:
+        return observed_items
+    stated: dict[str, str | None] = {}
+    placed: list[ObservedInvoice] = []
+    for invoice, observation in observed_items:
+        if observation.operation_clave is None or observation.country_code != SPAIN_COUNTRY_CODE:
+            placed.append((invoice, observation))
+            continue
+        party = str(observation.party_tax_id)
+        if party not in stated:
+            stated[party] = provincias.provincia_of(party)
+        code = stated[party]
+        placed.append(
+            (invoice, observation if code is None else observation.model_copy(update={"party_provincia_code": code}))
+        )
+    return tuple(placed)
 
 
 def _invoice_resolution_from_observations(
@@ -247,6 +279,7 @@ class InvoiceCatalogueSourceResolver:
             m347_filer=m347_filer,
         )
         try:
+            observed_items = _with_stated_provincias(observed_items, self._ports.counterparty_provincias)
             placed_items, rectification_refusals = place_rectifications(
                 observed_items,
                 catalogue=catalogue,

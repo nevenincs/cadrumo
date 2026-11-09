@@ -7,6 +7,14 @@ import type {
 import { failureCode } from "../errors";
 import type { CallPlan } from "./hostCall";
 import { useCachedRead, type AgentRead } from "./agentViews";
+import {
+  cliStateCause,
+  consoleCommandTemplate,
+  nextStep,
+  type CliStateCause,
+  type NextStep,
+  type SignInCause,
+} from "./providerSignInWords";
 
 // The model providers of the signed-in profile, as a host serves them: the
 // masked status of each lane (a provider's API, or its command-line app),
@@ -43,6 +51,11 @@ export type ProviderSettingsRecord = {
   /** Where the lane's command-line app stands on this computer; only a
    * command-line lane has one. */
   cli_state?: ProviderStatus["cliState"] | null;
+  /** Why the app's state is not established, as a closed word; a word this
+   * window does not know is dropped. */
+  cli_state_cause?: CliStateCause | null;
+  /** What to do about `cli_state_cause`, as a closed word. */
+  next_step?: NextStep | null;
   /** Whether a key is stored for the lane, whatever its mode: one that is
    * turned off keeps it for when it is turned on again. */
   credential_saved?: boolean;
@@ -55,6 +68,9 @@ export type ProviderSettingsAnswer = {
   sign_in_providers?: string[];
   /** GUI sign-in methods supported per canonical provider slug. */
   sign_in_methods?: Record<string, ProviderSignInMethod[]>;
+  /** The console command that signs a provider in by hand, with a
+   * `{provider}` slot for the provider's id. Absent when not served. */
+  console_sign_in_command?: string;
 };
 
 export type ProviderSignInMethod = "browser" | "device" | "browser-code";
@@ -74,6 +90,13 @@ export type ProviderSignInSnapshot = {
   provider: string;
   event: ProviderSignInEvent;
   reason?: string;
+  /** Why the attempt did not succeed, as a closed word, on a failed or
+   * cancelled attempt. */
+  cause?: SignInCause;
+  /** What to do about `cause`, as a closed word. */
+  next_step?: NextStep;
+  /** Why the status read after the attempt did not establish a sign-in. */
+  status_cause?: CliStateCause;
   /** Present only while the person can open the provider's sign-in page. */
   url?: string;
   /** Device-flow code; shown only while this attempt is active. */
@@ -150,6 +173,13 @@ const providerStatus = (record: ProviderSettingsRecord): ProviderStatus => ({
   readiness: record.readiness,
   source: record.source,
   ...(record.cli_state ? { cliState: record.cli_state } : {}),
+  // A cause is the service's closed word or nothing: another word is dropped.
+  ...(cliStateCause(record.cli_state_cause)
+    ? { cliStateCause: cliStateCause(record.cli_state_cause) }
+    : {}),
+  ...(nextStep(record.next_step)
+    ? { nextStep: nextStep(record.next_step) }
+    : {}),
   ...(record.credential_saved ? { credentialSaved: true } : {}),
   ...(record.reason ? { reason: record.reason } : {}),
   ...(record.base_url ? { baseUrl: record.base_url } : {}),
@@ -163,6 +193,7 @@ export type ProviderSettingsView = {
     providers: ProviderStatus[];
     signInProviders: string[];
     signInMethods: Readonly<Record<string, readonly ProviderSignInMethod[]>>;
+    consoleSignInCommand?: string;
     revisions: Readonly<Record<string, string>>;
   }>;
   busyId: string | null;
@@ -250,6 +281,11 @@ export function useProviderSettings(
                       : [],
                 ),
               ),
+              ...(consoleCommandTemplate(answer.value.console_sign_in_command)
+                ? {
+                    consoleSignInCommand: answer.value.console_sign_in_command,
+                  }
+                : {}),
               revisions: Object.fromEntries(
                 answer.value.providers.map(
                   ({ id, revision }) => [id, revision] as const,

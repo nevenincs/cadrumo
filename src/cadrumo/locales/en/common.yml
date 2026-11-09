@@ -2099,6 +2099,9 @@ desktop:
         Your draft has been kept.
       note: Note
       proposed: Your proposed value
+      provincia: Provincia of the domicilio fiscal
+      provincia_save: Save provincia
+      provincia_unstated: 'Not stated: Modelo 347 declares it for each Spanish counterparty.'
       scope:
         es_canarias: Canary Islands
         es_ceuta_melilla: Ceuta and Melilla
@@ -3214,6 +3217,7 @@ desktop:
       added_no_rate: Invoice {number} added · no EUR rate yet
       any_class: Any class
       any_payment: Any payment
+      attach_document: Attach document
       back: Back
       base: Taxable base
       cancel: Cancel
@@ -3251,6 +3255,8 @@ desktop:
       discard_new: Discard this invoice?
       discard_note: Nothing has been saved yet.
       document: Document
+      document_already: That document was already stored with the invoice.
+      document_attached: Document stored with the invoice.
       duplicate: Already in the catalogue.
       empty: No invoices yet. Add one or import an invoice book.
       empty_filtered: No invoices match.
@@ -3414,6 +3420,9 @@ desktop:
         s2: Basque Country or Navarre
         s3: Spain without a cadastral reference
         s4: Abroad
+      source_document: Invoice document
+      source_document_hint: 'Attach the PDF or e-invoice: it is the document that
+        lets you deduct its IVA.'
       stored_note: '{kind} · {payment} · linked: {count}'
       this_is: This is
       title: Invoice {number}
@@ -3726,6 +3735,7 @@ desktop:
       invoice_cash_accounting_regime_unmodelled: Cash basis
       invoice_category_contradicted: IVA category
       invoice_deduction_family_unresolved: Deduction
+      invoice_recargo_split_unresolved: Surcharge
       linked_movement_contradicts_invoice: Invoice
       missing_business_classification: Classification
       missing_category: Category
@@ -3753,6 +3763,8 @@ desktop:
       invoice_category_contradicted: The IVA category does not fit the country
       invoice_deduction_family_unresolved: The invoice does not show which deduction
         applies
+      invoice_recargo_split_unresolved: The surcharge does not divide between its
+        VAT rates
       linked_movement_contradicts_invoice: Differs from its invoice
       missing_business_classification: Classification missing
       missing_category: Category missing
@@ -9652,6 +9664,9 @@ workspace:
         the filing (to confirm: {count}).'
       election:
         amendment: A corrective return cannot be paid in two instalments.
+        carry_forward_only: A refund can only be asked for in the last period of the
+          year, unless you are on the monthly refund register (REDEME). This credit
+          is carried forward instead.
         filing_window_unknown: The filing period of this declaration is not known,
           so paying in two instalments cannot be offered.
         no_open_account: None of your own bank accounts is open. Add one to your own
@@ -9662,6 +9677,9 @@ workspace:
         nothing_to_refund: The result is not a refund, so this does not apply.
         past_filing_window: The filing period has ended, and paying in two instalments
           needs the return filed within it.
+        redeme_unstated: State in your profile whether you are on the monthly refund
+          register (REDEME). Outside the last period of the year the refund depends
+          on it, so only the carry-forward is offered.
         result_unknown: 'Calculate the declaration first: its result decides this.'
         second_instalment_nothing: This amount is so small that the second instalment
           would come to nothing, so it is paid in one payment.
@@ -9813,6 +9831,8 @@ workspace:
       no_deadline_short: No deadline on record
       own_calculation: Cadrumo's calculation. AEAT has not seen it.
       result:
+        carry_forward_only_help: A refund can only be asked for in the last period
+          of the year. This credit is carried forward and offset against later periods.
         choice_pending: 'To carry forward or to be refunded: you choose when you create
           the file'
         choice_pending_short: To carry forward or refund
@@ -9826,6 +9846,11 @@ workspace:
         other_boxes: 'Other result boxes on this form: {boxes}'
         out_of_date_until_applied: out of date until applied
         provisional: provisional
+        redeme_unstated: 'Not settled: the refund needs your REDEME answer'
+        redeme_unstated_help: Outside the last period of the year, asking for a refund
+          needs you to be on the monthly refund register (REDEME). Your profile does
+          not say whether you are, so only the carry-forward is offered. State it
+          in your profile.
         sign_help: Box [{box}] shows {value} on the official form. The header shows
           the amount without its sign and says the direction in words.
         to_carry_forward: To carry forward
@@ -10113,6 +10138,7 @@ workspace:
       lead: These do not stop the file. They say what the depreciation charges of
         your assets leave out, so you can decide what to add.
       title: Worth knowing before you file
+    open_invoice: Open the invoice
     operation:
       calculated: Calculated. {direction} {value}.
       checked:

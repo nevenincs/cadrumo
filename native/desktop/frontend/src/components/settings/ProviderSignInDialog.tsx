@@ -18,6 +18,12 @@ import type {
   ProviderSignInMethod,
   ProviderSignInSnapshot,
 } from "../../shell/providerSettings";
+import {
+  cliStateCause,
+  nextStep,
+  signInCause,
+} from "../../shell/providerSignInWords";
+import { SignInAdvice } from "./SignInAdvice";
 import type { ProviderStatus } from "./types";
 
 const EVENTS: readonly ProviderSignInEvent[] = [
@@ -143,6 +149,9 @@ type Props = {
   revision: string;
   signIn: ProviderSignIn;
   methods: readonly ProviderSignInMethod[];
+  /** The served console command template, for a failure whose next step is
+   * to sign in from a console. */
+  consoleSignInCommand?: string;
   onOpenChange: (open: boolean) => void;
   onTerminal: (providerId: string) => Promise<string | undefined>;
 };
@@ -194,12 +203,21 @@ function snapshotOf(
     isProviderSignInFailureCode(raw.reason)
       ? raw.reason
       : undefined;
+  // Why and what next are the service's closed words, on a failed or
+  // cancelled attempt only; any other word is dropped.
+  const advised = event === "failed" || event === "cancelled";
+  const cause = advised ? signInCause(raw.cause) : undefined;
+  const step = advised ? nextStep(raw.next_step) : undefined;
+  const statusCause = advised ? cliStateCause(raw.status_cause) : undefined;
   if (terminal)
     return {
       attempt_id: raw.attempt_id,
       provider: providerId,
       event,
       ...(reason ? { reason } : {}),
+      ...(cause ? { cause } : {}),
+      ...(step ? { next_step: step } : {}),
+      ...(statusCause ? { status_cause: statusCause } : {}),
     };
 
   // During cancellation the service may still report browser_action while it
@@ -352,6 +370,7 @@ export function ProviderSignInDialog({
   revision,
   signIn,
   methods,
+  consoleSignInCommand,
   onOpenChange,
   onTerminal,
 }: Props) {
@@ -877,6 +896,14 @@ export function ProviderSignInDialog({
               method,
             )}
           </p>
+        )}
+        {terminalFailureReason && snapshot && (
+          <SignInAdvice
+            causes={[snapshot.cause, snapshot.status_cause]}
+            step={snapshot.next_step}
+            command={consoleSignInCommand}
+            provider={provider.provider}
+          />
         )}
         {retryState === "checking" && (
           <p role="status" className="text-sm text-muted-foreground">

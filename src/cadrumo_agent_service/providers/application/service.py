@@ -40,6 +40,7 @@ from ..domain.record import (
     new_settings_generation,
 )
 from .contracts import (
+    CliObservation,
     CliState,
     ProviderSettingsActionAccepted,
     ProviderSettingsActionResult,
@@ -47,6 +48,7 @@ from .contracts import (
     ProviderSettingsRefusal,
     ProviderSettingsRefusalCode,
     ProviderSettingsStatus,
+    ProviderStatusEntry,
     is_provider_settings_revision,
 )
 from .ports import (
@@ -85,7 +87,7 @@ class ProviderSettingsService:
         store: ProviderSettingsStore,
         catalog_source: ProviderCatalogSource,
         clock: Callable[[], datetime] = now,
-        cli_state_probe: Callable[[ProviderCatalogEntry], CliState] | None = None,
+        cli_state_probe: Callable[[ProviderCatalogEntry], CliObservation] | None = None,
     ) -> None:
         """Bind the service to one profile's store and its catalog."""
         self._store = store
@@ -104,12 +106,7 @@ class ProviderSettingsService:
             return _refusal_for_store(reads.code)
         return ProviderSettingsStatus(
             providers=tuple(
-                status_entry(
-                    entry,
-                    read,
-                    cli_state=self._cli_state(entry),
-                )
-                for entry, read in zip(catalog.providers, reads, strict=True)
+                self._status_entry(entry, read) for entry, read in zip(catalog.providers, reads, strict=True)
             ),
         )
 
@@ -344,22 +341,27 @@ class ProviderSettingsService:
             return _refused(ProviderSettingsRefusalCode.COMMITTED_READBACK_FAILED)
         return self._accepted(entry, read)
 
-    def _cli_state(self, entry: ProviderCatalogEntry) -> CliState | None:
+    def _status_entry(self, entry: ProviderCatalogEntry, read: ProviderRecordRead) -> ProviderStatusEntry:
+        observed = self._cli_observation(entry)
+        return status_entry(
+            entry,
+            read,
+            cli_state=None if observed is None else observed.state,
+            cli_state_cause=None if observed is None else observed.cause,
+        )
+
+    def _cli_observation(self, entry: ProviderCatalogEntry) -> CliObservation | None:
         """Return a cli lane's program state; ``unknown`` until a safe probe is supplied."""
         if not entry.cli_programs:
             return None
         if self._cli_state_probe is None:
-            return CliState.UNKNOWN
+            return CliObservation(CliState.UNKNOWN)
         # The lane's primary program is the first the agent lists.
         return self._cli_state_probe(entry)
 
     def _accepted(self, entry: ProviderCatalogEntry, read: ProviderRecordRead) -> ProviderSettingsActionAccepted:
         return ProviderSettingsActionAccepted(
-            entry=status_entry(
-                entry,
-                read,
-                cli_state=self._cli_state(entry),
-            ),
+            entry=self._status_entry(entry, read),
         )
 
 

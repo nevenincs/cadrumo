@@ -249,6 +249,15 @@ export function MainPane({
                   )
               : undefined
           }
+          // The invoice a check line asks a document for.
+          onOpenInvoice={
+            host.ledger
+              ? (invoiceId) =>
+                  guarded(() =>
+                    openView("ledger/invoices", { select: invoiceId }, null),
+                  )
+              : undefined
+          }
           onBack={() => guarded(() => openWorkUnit(null))}
           onOpenSurface={(surface) => {
             if (surface === "declarations") guarded(() => openWorkUnit(null));

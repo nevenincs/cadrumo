@@ -10,6 +10,69 @@
 
 import type { BindingSourceKind } from "./modelo";
 import type { SourceSurface } from "./modeloWork";
+import type { OperationNextStepV1 } from "./modeloWorkForm";
+
+/**
+ * Typed local-human view of RefundEligibility: whether the IVA refund may be
+ * asked for, and why.
+ *
+ * `legal_refs` are the registry's declared references for the provisions the
+ * outcome rests on. A frontend renders the header's words; this carries the
+ * machine-readable outcome beside them so none of it is re-derived there.
+ */
+export type PublicRefundEligibility = {
+  outcome: RefundEligibilityOutcome;
+  basis: RefundEligibilityBasis;
+  legal_refs: string[];
+};
+
+/**
+ * Preserve scalar kind and decimal precision across the public schema.
+ */
+export type PublicScalarValueV1 = {
+  kind: "string" | "integer" | "boolean" | "decimal" | "date" | "null";
+  text: string;
+};
+
+/**
+ * Typed local-human workbench view of the governed SpanishTaxIdFormat.
+ */
+export type PublicSpanishTaxIdFormat = {
+  width: number;
+  country_prefix: string;
+  country_prefixed_width: number;
+  country_prefix_strip_width: number;
+  prefixed_nif_leaders: string;
+  nie_leaders: string;
+  cif_leaders: string;
+  nif_letters: string;
+  nif_check_modulus: number;
+  nie_prefix_substitutions: [string, string][];
+  cif_digit_only_kinds: string;
+  cif_letter_only_kinds: string;
+  cif_letter_table: string;
+};
+
+/**
+ * One source declaration the to-do list names before the summary can be worked
+ * out, and its door.
+ */
+export type ReconciliationSourceRequirementV1 = {
+  words: string;
+  next_step: OperationNextStepV1;
+};
+
+/**
+ * Which fact settled the outcome.
+ */
+export type RefundEligibilityBasis =
+  "final_period" | "redeme" | "non_final_period";
+
+/**
+ * What may be done with a negative Modelo 303 result in one period.
+ */
+export type RefundEligibilityOutcome =
+  "refund_allowed" | "carry_forward_only" | "undetermined_redeme_unstated";
 
 /**
  * How far one modelo registry revision's declared authority reaches.

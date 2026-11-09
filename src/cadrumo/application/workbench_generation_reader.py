@@ -47,6 +47,7 @@ from ..domain.buckets.event import (
 from ..domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ..domain.invoices.catalogue import InvoiceCatalogue
 from ..domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
+from ..domain.iva.refund_eligibility import RedemeEnrolmentState, redeme_enrolment_state
 from ..domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -102,7 +103,7 @@ from .overview.evidence import (
 from .overview.home import HomeAccountSession
 from .user_profile.censal_observation import CensalObservation
 from .user_profile.censal_readback import CensalHistoryRead, CensalHistoryReader
-from .user_profile.projections import record_to_path_values
+from .user_profile.projections import declared_redeme_enrolment, record_to_path_values
 from .workbench_capture_memory import WorkbenchCalendarMemoKey, WorkbenchCaptureMemory
 from .workbench_generation_calendar import (
     CalendarMemo,
@@ -563,6 +564,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             verification,
             bucket_events,
         ) = catalogues
+        raw_values = record_to_path_values(record)
         declarations = self._read_declarations_projection(
             work_units=work_units,
             revisions=revisions,
@@ -571,8 +573,8 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             bucket_events=bucket_events,
             observed_at=observed_at,
             profile=record,
+            redeme=redeme_enrolment_state(declared_redeme_enrolment(raw_values)),
         )
-        raw_values = record_to_path_values(record)
         # The ledger is read before the calendar: its invoices answer the
         # ledger-derived obligation signals the calendar decides on.
         ledger_revision = _timed("ledger_revision", self._ledger_revision)
@@ -616,6 +618,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         bucket_events: BucketEventHistoryCatalogue | None,
         observed_at: UtcInstant,
         profile: UserProfileRecord,
+        redeme: RedemeEnrolmentState = RedemeEnrolmentState.UNSTATED,
     ) -> DeclarationsWorkspaceProjectionV1 | None:
         lifecycle_facts = (
             None
@@ -665,6 +668,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                                     verification=verification,
                                     operation=self.operation,
                                     resolutions=self._resolutions_of(ref),
+                                    redeme=redeme,
                                 )
                             }
                         )
