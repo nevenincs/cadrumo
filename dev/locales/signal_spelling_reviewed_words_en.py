@@ -226,6 +226,7 @@ REVIEWED_ENGLISH_SPELLINGS: frozenset[str] = frozenset(
         # Preserve only the observed forms and casing.
         "claude",
         "antigravity",
+        "Antigravity",
         "keychain",
         "unencrypted",
         "keypair",

@@ -67,7 +67,7 @@ def _bundled_agent(received: Mapping[str, str], interpreter: Path) -> Path:
     if not image.is_absolute() or not image.is_file():
         raise ProviderLoginRefusalError(
             "This installation has no bundled agent to sign in with. Run the command from an installed "
-            "Cadrumo package, or sign in from the desktop application under Ajustes > Proveedores de IA."
+            "Cadrumo package, or sign in from the desktop application under Settings > AI providers."
         )
     return image
 

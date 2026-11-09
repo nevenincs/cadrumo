@@ -11,6 +11,7 @@ def test_attested_english_cli_and_application_terms_are_exact_and_scoped() -> No
     terms = (
         "claude",
         "antigravity",
+        "Antigravity",
         "keychain",
         "unencrypted",
         "keypair",

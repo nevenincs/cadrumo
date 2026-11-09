@@ -706,9 +706,9 @@ def test_spanish_cli_and_operator_terms_are_exact_and_language_scoped() -> None:
 
 def test_platform_and_product_names_are_exact_and_language_scoped() -> None:
     for locale in ("es", "ca", "hu"):
-        for name in ("Windows", "macOS", "Homebrew", "Scoop", "PyPI", "Claude"):
+        for name in ("Windows", "macOS", "Homebrew", "Scoop", "PyPI", "Claude", "Codex", "Antigravity"):
             assert is_project_spelling(locale, name)
-        for near_miss in ("Windowss", "MacOS", "Homebreww", "Scooop", "PyP1", "Claudee"):
+        for near_miss in ("Windowss", "MacOS", "Homebreww", "Scooop", "PyP1", "Claudee", "Codexx", "Antigravty"):
             assert not is_project_spelling(locale, near_miss)
 
     assert is_project_spelling("es", "Excel")
@@ -721,9 +721,8 @@ def test_platform_and_product_names_are_exact_and_language_scoped() -> None:
         assert not is_project_spelling(locale, "SQLlite")
     assert not is_project_spelling("ca", "SQLite")
 
-    for locale in ("en", "ca", "hu"):
-        assert not is_project_spelling(locale, "Codex")
-    assert not is_project_spelling("es", "Codex")
+    assert is_project_spelling("es", "Git")
+    assert not is_project_spelling("es", "Gitt")
 
 
 def test_cli_provider_ids_are_exact_lowercase_and_language_scoped() -> None:
@@ -734,8 +733,6 @@ def test_cli_provider_ids_are_exact_lowercase_and_language_scoped() -> None:
             "claudee",
             "antigravty",
             "codx",
-            "Antigravity",
-            "Codex",
         ):
             assert not is_project_spelling(locale, near_miss)
 
