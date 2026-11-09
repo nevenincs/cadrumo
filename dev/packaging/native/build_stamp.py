@@ -157,6 +157,26 @@ def display_version(version: str, build_id: str, kind: str) -> str:
     return f"{version}+{build_id}" + (".debug" if kind == "debug" else "")
 
 
+SOURCE_COMMIT_VARIABLE = "CADRUMO_SOURCE_COMMIT"
+"""The variable through which the builder names the commit a stage is built from."""
+
+_SOURCE_COMMIT = re.compile(r"[0-9a-f]{40}")
+
+
+def supplied_source_commit(environment: Mapping[str, str]) -> str | None:
+    """Return the full commit hash the builder supplied for this build, or None when none was.
+
+    The build never asks a version-control tool for it: the builder supplies it, so a build
+    from an exported tree or an archive records no commit rather than a guessed one.
+    """
+    value = environment.get(SOURCE_COMMIT_VARIABLE, "").strip()
+    if value == "":
+        return None
+    if not _SOURCE_COMMIT.fullmatch(value):
+        raise ValueError(f"{SOURCE_COMMIT_VARIABLE} must be a full lowercase 40-character commit hash: {value!r}")
+    return value
+
+
 def _validate(stamp: BuildStamp) -> BuildStamp:
     if not isinstance(stamp.build_id, str) or not _BUILD_ID.fullmatch(stamp.build_id):
         raise ValueError(f"Build id must be YYYYMMDD and a two-or-more-digit iteration: {stamp.build_id!r}")

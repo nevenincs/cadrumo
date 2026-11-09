@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import importlib.metadata
 import json
+import os
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path, PurePath, PurePosixPath
@@ -27,6 +28,7 @@ from .build_stamp import (
     read_identity,
     read_record,
     settle_record,
+    supplied_source_commit,
 )
 from .layout import (
     ApplicationImage,
@@ -245,11 +247,15 @@ def record_staging(binary_dir: Path, staged: StagedRecords) -> None:
         )
 
 
-def package_build_record(shared: Mapping[str, Any], stamp: BuildStamp, build_type: str) -> dict[str, Any]:
+def package_build_record(
+    shared: Mapping[str, Any], stamp: BuildStamp, build_type: str, *, source_commit: str | None
+) -> dict[str, Any]:
     """Return the staged build record: the shared metadata plus this package's own identity and build type.
 
     ``shared`` keeps the interpreter hosts' identity under ``interpreter``; the top-level
     identity is the package's, allocated at staging time and compiled into no binary.
+    ``source_commit`` is the commit the builder supplied, recorded as null when none was,
+    so whoever tests the stage reads its commit instead of inferring it.
     """
     if build_type not in BUILD_TYPES.values():
         raise ValueError(f"Unknown build type: {build_type!r}")
@@ -261,6 +267,7 @@ def package_build_record(shared: Mapping[str, Any], stamp: BuildStamp, build_typ
         "build_date": stamp.build_date,
         "build_type": build_type,
         "display_version": display_version(shared["version"], stamp.build_id, build_type),
+        "source_commit": source_commit,
     }
 
 
@@ -303,7 +310,7 @@ def stamp_package(
         settled=native_settled(binary_dir, sorted(identities), configuration=configuration),
     )
     return (
-        package_build_record(shared, stamp, build_type),
+        package_build_record(shared, stamp, build_type, source_commit=supplied_source_commit(os.environ)),
         package_components(staged, identities, build_type),
         records,
     )
