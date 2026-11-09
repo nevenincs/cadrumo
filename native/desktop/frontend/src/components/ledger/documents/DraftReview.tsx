@@ -34,7 +34,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { facts } from "../../../shell/compose";
-import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
+import {
+  servedRefusalWords,
+  type LedgerPort,
+  type LedgerRow,
+} from "../../../shell/ledger";
 import type {
   EvidenceConfirmResult,
   EvidenceDraft,
@@ -291,6 +295,7 @@ export function DraftReview({
                 kind: "refused",
                 code: sent.reason ?? "refused",
                 recovery: provisionActionOf(sent.detail),
+                words: servedRefusalWords(sent.detail),
               }
             : { kind: "failed", code: sent.code },
       );
@@ -421,6 +426,7 @@ export function DraftReview({
             kind: "refused",
             code: sent.reason ?? "refused",
             recovery: provisionActionOf(sent.detail),
+            words: servedRefusalWords(sent.detail),
           }
         : { kind: "failed", code: sent.code },
     );
@@ -624,17 +630,20 @@ export function DraftReview({
             {t("desktop.ledger.documents.read_again")}
           </Button>
         </WriteHold>
-        {reference.kind === "evidence" && (
-          <Button
-            size="sm"
-            variant="ghost"
-            className="ledger-draft-off-host"
-            disabled={busy !== null}
-            onClick={() => setOffHost(true)}
-          >
-            {t("desktop.ledger.documents.read_off_host")}
-          </Button>
-        )}
+        {/* Offered only where the backend says this profile may be asked;
+            each read still asks for its own acknowledgement. */}
+        {reference.kind === "evidence" &&
+          view.off_host_read_offered === true && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="ledger-draft-off-host"
+              disabled={busy !== null}
+              onClick={() => setOffHost(true)}
+            >
+              {t("desktop.ledger.documents.read_off_host")}
+            </Button>
+          )}
       </div>
 
       <ReviewNotices

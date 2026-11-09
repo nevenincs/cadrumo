@@ -4,8 +4,10 @@
 // by its evidence record, or by its attachment where it has none; its
 // review digest is the digest of the reading itself, so a reading that
 // changes refuses a confirmation bound to the old one. A read off this
-// computer needs a stored record, the provider and the acknowledgement of
-// that one call, and is recorded as a dispatch. Results are the flat public
+// computer is offered while the deployment and the profile permit one; it
+// needs a stored record, the provider and the acknowledgement of that one
+// call, is refused with the consent gate's sentence once they no longer
+// permit it, and is recorded as a dispatch. Results are the flat public
 // projections, naming files by name only. The `documents` shape adds the
 // documents, attachments and pairs the Documents and Matching sections
 // exercise. Without the local AI, readings stand on what the labels print and
@@ -56,6 +58,10 @@ declare global {
       /** Makes drawing a page of the named document refuse with the
        * page read's `reason`, such as `TOO_LARGE`; `null` lifts it. */
       refusePage(fileName: string, reason: string | null): void;
+      /** Closes off-host reads, as the deployment or the profile turning
+       * them off would: reviews stop offering one and a read sent anyway
+       * is refused by the consent gate. */
+      closeOffHost(): void;
     };
   }
 }
@@ -119,6 +125,25 @@ const readerRefusal = () =>
     precondition_verdict_json: null,
   });
 
+/** The consent gate's refusal of a read off this computer that the
+ * deployment or the profile does not permit, with the sentence it serves. */
+const consentRefusal = (language: string) => {
+  const byLanguage: Record<string, string> =
+    servedWords.off_host_consent.mint_refused;
+  const served = byLanguage[language] ? language : "en";
+  return new InvoiceStopped("REFUSED_LLM_CONSENT", {
+    detail_version: 1,
+    kind: "registered_error",
+    error_code: "REFUSED_LLM_CONSENT",
+    message_key: "llm.evidence.consent.mint_refused",
+    context: [],
+    context_entries_omitted: 0,
+    precondition_verdict_json: null,
+    refusal_words: byLanguage[served]!,
+    refusal_words_language: served,
+  });
+};
+
 /** A value of any shape in one comparable text, keys sorted. */
 function stable(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(stable).join(",")}]`;
@@ -147,6 +172,9 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
   const attachments: AttachmentReviewItem[] = [];
   /** The page read's refusal, by file name, a document is held to. */
   const pageRefusals = new Map<string, string>();
+  /** Whether the deployment and the profile permit a read off this
+   * computer. */
+  let offHostOpen = true;
   const dispatches: {
     profile_bucket_id: string;
     evidence_content_address: string;
@@ -651,6 +679,7 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
       blockers: reading!.blockers as unknown as JsonValue,
       party_attribution_advisory: null,
       country_vocabulary_advisory: null,
+      off_host_read_offered: offHostOpen,
     };
   }
 
@@ -688,6 +717,7 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
     )
       invalid();
     const source = sourceOf(request);
+    if (provider !== null && !offHostOpen) throw consentRefusal(tools.language);
     // A scan has no text for the labels: it cannot be read here at all.
     if (
       tools.readerMissing &&
@@ -1166,12 +1196,16 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
       if (reason === null) pageRefusals.delete(name);
       else pageRefusals.set(name, reason);
     },
+    closeOffHost() {
+      offHostOpen = false;
+    },
   });
   window.__scenarioDocuments = {
     changeReading: (name) => made.forEach((one) => one.changeReading(name)),
     changeSource: (name) => made.forEach((one) => one.changeSource(name)),
     refusePage: (name, reason) =>
       made.forEach((one) => one.refusePage(name, reason)),
+    closeOffHost: () => made.forEach((one) => one.closeOffHost()),
   };
   return {
     reads: {

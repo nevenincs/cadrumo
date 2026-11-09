@@ -13,7 +13,11 @@ import type {
   EvidenceRecord,
   EvidenceUpdateRequest,
 } from "../../../shell/ledgerDocumentOperations";
-import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
+import {
+  servedRefusalWords,
+  type LedgerPort,
+  type LedgerRow,
+} from "../../../shell/ledger";
 import {
   EVIDENCE_UPDATE_FIELDS,
   type EvidenceUpdateField,
@@ -46,7 +50,8 @@ import {
 
 type Notice =
   | { kind: "saved" }
-  | { kind: "refused"; code: string }
+  /** `words` is the sentence the backend served for the refusal, if any. */
+  | { kind: "refused"; code: string; words: string | null }
   | { kind: "unknown"; asked: "update" | "remove" | "read" }
   | { kind: "checked"; saved: boolean };
 
@@ -137,6 +142,7 @@ function RecordDetail({
       setNotice({
         kind: "refused",
         code: sent.kind === "refused" ? (sent.reason ?? "refused") : sent.code,
+        words: sent.kind === "refused" ? servedRefusalWords(sent.detail) : null,
       });
   }
   async function remove() {
@@ -157,6 +163,7 @@ function RecordDetail({
       setNotice({
         kind: "refused",
         code: sent.kind === "refused" ? (sent.reason ?? "refused") : sent.code,
+        words: sent.kind === "refused" ? servedRefusalWords(sent.detail) : null,
       });
   }
   async function readIt() {
@@ -177,6 +184,7 @@ function RecordDetail({
       setNotice({
         kind: "refused",
         code: sent.kind === "refused" ? (sent.reason ?? "refused") : sent.code,
+        words: sent.kind === "refused" ? servedRefusalWords(sent.detail) : null,
       });
   }
   /** Learns what an unseen outcome came to by reading the record back. */
@@ -252,6 +260,11 @@ function RecordDetail({
       {notice?.kind === "refused" && (
         <Alert tone="danger" role="alert" icon={<Icon name="refused" />}>
           <AlertTitle>{t("desktop.ledger.documents.not_done")}</AlertTitle>
+          {notice.words && (
+            <AlertDescription className="ledger-record-refusal">
+              {notice.words}
+            </AlertDescription>
+          )}
         </Alert>
       )}
       {notice?.kind === "unknown" && (

@@ -5,16 +5,20 @@ import { fileURLToPath } from "node:url";
 import { VALUE_COLUMN_MIN_PX } from "../../src/components/ledger/documents/documentsModel";
 import { label } from "../support/strings";
 
+/** The sentences the Ledger operations serve, as the generated fixture
+ * records them. */
+const SERVED_WORDS = JSON.parse(
+  readFileSync(
+    windowFixture("ledger-served-words", "ledgerServedWords"),
+    "utf8",
+  ),
+) as {
+  confirmation_block: Record<string, Record<string, string>>;
+  off_host_consent: Record<string, Record<string, string>>;
+};
 /** The sentences the backend serves for a confirmation block, by reason and
- * language, as the generated fixture records them. */
-const SERVED_REASONS = (
-  JSON.parse(
-    readFileSync(
-      windowFixture("ledger-served-words", "ledgerServedWords"),
-      "utf8",
-    ),
-  ) as { confirmation_block: Record<string, Record<string, string>> }
-).confirmation_block;
+ * language. */
+const SERVED_REASONS = SERVED_WORDS.confirmation_block;
 
 // The Documents section over the scenario's `documents` ledger: readings
 // waiting for review, their findings, the confirmation bound to the reading
@@ -428,6 +432,50 @@ test("a read off this computer needs its own acknowledgement every time", async 
   const sent = section(target).locator(".ledger-consent-dispatch");
   await expect(sent).toHaveCount(2);
   await expect(sent.filter({ hasText: DOMESTIKA })).toHaveCount(1);
+});
+
+test("a read off this computer is offered only while it is permitted, and a refusal says why", async ({
+  page: target,
+}) => {
+  await openDocuments(target);
+  await choose(target, DOMESTIKA);
+  const offHost = draft(target).locator(".ledger-draft-off-host");
+  await expect(offHost).toBeVisible();
+  // The deployment or the profile turns off-host reads off after the review
+  // was read: the read sent anyway is refused by the consent gate, and the
+  // window says the reason the backend served, not only that it was not done.
+  await target.evaluate(() =>
+    (
+      window as unknown as {
+        __scenarioDocuments: { closeOffHost(): void };
+      }
+    ).__scenarioDocuments.closeOffHost(),
+  );
+  await offHost.click();
+  const dialog = target.locator(".ledger-off-host");
+  await dialog.locator(".ledger-off-host-agree").check();
+  await dialog.locator(".ledger-off-host-send").click();
+  await expect(dialog).toHaveCount(0);
+  const refused = draft(target)
+    .getByRole("alert")
+    .filter({
+      hasText: label("desktop.ledger.documents.not_done"),
+    });
+  await expect(refused.locator(".ledger-draft-refusal")).toHaveText(
+    SERVED_WORDS.off_host_consent.mint_refused!.en!,
+  );
+  // Nothing left this computer.
+  await tab(target, "sent").click();
+  await expect(section(target).locator(".ledger-consent-dispatch")).toHaveCount(
+    1,
+  );
+
+  // Read again, the review no longer offers a read off this computer.
+  await tab(target, "review").click();
+  await choose(target, ARROYO);
+  await choose(target, DOMESTIKA);
+  await expect(draft(target).locator(".ledger-draft-reread")).toBeVisible();
+  await expect(offHost).toHaveCount(0);
 });
 
 test("folder intake asks for a direction and says each document's outcome", async ({

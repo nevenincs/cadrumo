@@ -21,7 +21,12 @@ import type {
   EvidenceConsentListResult,
   EvidenceRecord,
 } from "../../../shell/ledgerDocumentOperations";
-import type { FilePick, LedgerPort, PickedFile } from "../../../shell/ledger";
+import {
+  servedRefusalWords,
+  type FilePick,
+  type LedgerPort,
+  type PickedFile,
+} from "../../../shell/ledger";
 import type { InvoiceKind } from "../../../shell/ledgerInvoiceOperations";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { formatTime } from "../../../shared/dateFormats";
@@ -138,6 +143,8 @@ export function AttachmentQueue({
     id: string;
     code: string;
     recovery: string | null;
+    /** The sentence the backend served for a refusal, if any. */
+    words: string | null;
   } | null>(null);
   if (read.phase === "failed")
     return <Failed t={t} read={read} onRetry={onRetry} />;
@@ -175,6 +182,7 @@ export function AttachmentQueue({
               : sent.code,
         recovery:
           sent.kind === "refused" ? provisionActionOf(sent.detail) : null,
+        words: sent.kind === "refused" ? servedRefusalWords(sent.detail) : null,
       });
   }
   if (rows.length === 0)
@@ -256,7 +264,7 @@ export function AttachmentQueue({
               {state(item)}
               {failed?.id === item.attachment_id && (
                 <span role="alert" className="block text-destructive">
-                  {t("desktop.ledger.form.failed")}
+                  {failed.words ?? t("desktop.ledger.form.failed")}
                 </span>
               )}
               {failed?.id === item.attachment_id && (
