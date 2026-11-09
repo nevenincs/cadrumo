@@ -55,6 +55,17 @@ export type ModeloAggregateGenerationAudit = {
 };
 
 /**
+ * How many received invoices state a retención the window cannot place, for
+ * one reason.
+ *
+ * The invoices themselves stay in custody; the calculation names each one.
+ */
+export type ModeloAggregateInvoiceFindingCount = {
+  kind: ReceivedInvoiceWithholdingFindingKind;
+  invoice_count: number;
+};
+
+/**
  * Confidential typed aggregation operands and optional ledger payment
  * evidence.
  */
@@ -71,6 +82,9 @@ export type ModeloAggregateOperationRequest = {
  * calculation reads that holds no row, so an empty summary reads as missing
  * data rather than as a proven zero. `calculation_revision_id` identifies the
  * revision whose calculation rows were read and is present whenever any are.
+ * `received_invoice_findings` counts, by reason, the received invoices whose
+ * stated retención holds a periodic window's calculation back, exactly as the
+ * calculation finds them.
  */
 export type ModeloAggregateProjection = {
   outcome: "aggregated" | "refused";
@@ -85,6 +99,7 @@ export type ModeloAggregateProjection = {
   absent_source_families: BindingSourceKind[] | null;
   calculation_revision_id: string | null;
   withholding_window: ModeloAggregateWindow | null;
+  received_invoice_findings: ModeloAggregateInvoiceFindingCount[];
   refusal_reason: string | null;
 };
 
@@ -440,6 +455,17 @@ export type PublicWithholdingBaseline = {
   scope_token: string;
   generation_id: string;
 };
+
+/**
+ * Why a received invoice's stated retención reaches no declaration.
+ */
+export type ReceivedInvoiceWithholdingFindingKind =
+  | "received_invoice_income_kind_undeclared"
+  | "received_invoice_entity_professional_fee"
+  | "received_invoice_recipient_unknown"
+  | "received_invoice_non_resident"
+  | "received_invoice_rate_unrecognised"
+  | "received_invoice_invoice_incomplete";
 
 /**
  * Income kinds with a distinct recognition treatment.

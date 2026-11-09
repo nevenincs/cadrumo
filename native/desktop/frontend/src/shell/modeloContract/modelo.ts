@@ -381,7 +381,10 @@ export type CalculationNoteSentence =
   | "withholding_invoice_rate_unrecognised"
   | "withholding_invoice_incomplete"
   | "m347_provincia_unrecorded"
-  | "m347_provincia_unstated";
+  | "m347_provincia_unstated"
+  | "unrouted_iva_base"
+  | "unrouted_iva_cuota"
+  | "unrouted_iva_recargo";
 
 export type CalculationRevisionId = string;
 
