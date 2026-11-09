@@ -164,24 +164,33 @@ class RetencionesAggregationSourceResolver:
             return self._ports.repository.load_annual_source_observations(source_modelo, period.filing_year)
         return self._ports.repository.load_observations(modelo, period)
 
-    def _received_invoice_withholding(
+    def invoice_stated_withholding(
         self,
-        context: CalculationSourceContext,
+        *,
+        bucket_id: str,
+        modelo: str,
+        period: Period,
         stored: tuple[RetencionObservation, ...],
     ) -> ReceivedInvoiceWithholding:
-        """Read the received invoices a periodic modelo declares, beside what the store holds."""
+        """Read the received invoices a periodic modelo declares, beside the ``stored`` rows.
+
+        The calculation and the per-modelo aggregate report both read through
+        here, so the report counts and holds back exactly what the calculation
+        does. Annual summaries, and a resolver composed without the invoice
+        catalogue, read no invoice.
+        """
         if (
             self._invoice_catalogue is None
-            or annual_source_observations_modelo(context.modelo) is not None
-            or context.modelo not in invoice_evidence_modelos()
+            or annual_source_observations_modelo(modelo) is not None
+            or modelo not in invoice_evidence_modelos()
         ):
             return ReceivedInvoiceWithholding(observations=(), findings=())
         return received_invoice_withholding(
             self._invoice_catalogue.invoice_reader.load(),
             self._invoice_catalogue.transaction_reader.load(),
-            bucket_id=context.bucket_id,
-            modelo=context.modelo,
-            period=context.period,
+            bucket_id=bucket_id,
+            modelo=modelo,
+            period=period,
             captured_invoice_ids=captured_invoice_ids(stored),
         )
 
@@ -203,7 +212,9 @@ class RetencionesAggregationSourceResolver:
             return None
         if stored is None or stored:
             return None
-        invoices = self._received_invoice_withholding(context, stored)
+        invoices = self.invoice_stated_withholding(
+            bucket_id=context.bucket_id, modelo=context.modelo, period=context.period, stored=stored
+        )
         if invoices.observations or invoices.findings or self._m115_attested(context):
             return None
         return _empty_window_refusal(context)
@@ -233,7 +244,9 @@ class RetencionesAggregationSourceResolver:
             )
         if observations is None:
             return empty_source_resolution(self.resolver_id, self.owned_sources)
-        invoices = self._received_invoice_withholding(context, observations)
+        invoices = self.invoice_stated_withholding(
+            bucket_id=context.bucket_id, modelo=context.modelo, period=context.period, stored=observations
+        )
         observations = (*observations, *invoices.observations)
         findings = tuple(_finding_diagnostic(self.resolver_id, finding) for finding in invoices.findings)
         if not observations and findings:

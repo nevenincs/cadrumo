@@ -28,6 +28,10 @@ from ..aggregation.modelo_bindings_retenciones import RetencionesAggregationSour
 from ..aggregation.percepciones_observations_repository import (
     PercepcionObservationPorts,
 )
+from ..aggregation.received_invoice_withholding import (
+    ReceivedInvoiceWithholdingFinding,
+    ReceivedInvoiceWithholdingFindingKind,
+)
 from ..aggregation.retencion_observations_repository import (
     RetencionObservationPorts,
 )
@@ -91,6 +95,7 @@ from .aggregate_contracts import (
 from .aggregate_ports import ModeloAggregateOperationPorts, ModeloAggregateOperationPortsFactory
 from .aggregate_projection import (
     ModeloAggregateClaveTotals,
+    ModeloAggregateInvoiceFindingCount,
     ModeloAggregateProjection,
     ModeloAggregateReport,
     ModeloAggregateWindow,
@@ -167,6 +172,7 @@ class ModeloAggregateExecutor:
                 context=context,
                 aggregate_result=prepared.preflight_result,
                 window_state=prepared.window_state,
+                invoice_findings=prepared.invoice_findings,
                 local_write_performed=False,
             )
 
@@ -227,7 +233,9 @@ class ModeloAggregateExecutor:
                     prepared.ports.withholding_observation_service.read_window,
                     capture.scope,
                 )
-                aggregate_command = self._withholding_command(prepared.aggregate_command, window_state)
+                aggregate_command, invoice_findings = await asyncio.to_thread(
+                    self._withholding_command, prepared.aggregate_command, window_state, prepared.ports
+                )
                 aggregate_result = await asyncio.to_thread(self._aggregate, aggregate_command, operation)
                 return await self._publish_aggregate(
                     prepared=prepared,
@@ -235,6 +243,7 @@ class ModeloAggregateExecutor:
                     context=context,
                     aggregate_result=aggregate_result,
                     window_state=window_state,
+                    invoice_findings=invoice_findings,
                     local_write_performed=local_write_performed,
                 )
 
@@ -272,7 +281,7 @@ class ModeloAggregateExecutor:
                 if command.modelo in periodic_withholding_modelos()
                 else None
             )
-            command = self._withholding_command(command, window_state)
+            command, invoice_findings = self._withholding_command(command, window_state, ports)
             calculation_rows = self._calculation_rows(command, ports, profile_id, operation)
             if calculation_rows is not None:
                 command = command.model_copy(update={"retencion_observations": calculation_rows.retenciones or ()})
@@ -287,6 +296,7 @@ class ModeloAggregateExecutor:
                 preflight_result=preflight_result,
                 window_state=window_state,
                 calculation_rows=calculation_rows,
+                invoice_findings=invoice_findings,
             )
 
         if provider is not PerModeloAggregationContributor.RETENCIONES:
@@ -396,13 +406,45 @@ class ModeloAggregateExecutor:
     def _withholding_command(
         command: PerModeloAggregationCommand,
         state: WithholdingWindowState | None,
-    ) -> PerModeloAggregationCommand:
+        ports: ModeloAggregateOperationPorts,
+    ) -> tuple[PerModeloAggregationCommand, tuple[ReceivedInvoiceWithholdingFinding, ...]]:
+        """Aggregate a periodic window's stored rows with the received invoices its calculation reads.
+
+        The invoice-stated rows and findings come from the calculation's own
+        resolver, so the report counts and holds back what the calculation does.
+        """
         if state is None:
-            return command
+            return command, ()
         if state.scope != WithholdingWindowScope(modelo=command.modelo, period=command.period):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-        observations = tuple(entry.retencion for entry in state.entries if entry.retencion is not None)
-        return command.model_copy(update={"retencion_observations": observations})
+        stored = tuple(entry.retencion for entry in state.entries if entry.retencion is not None)
+        invoices = RetencionesAggregationSourceResolver(
+            ports=RetencionObservationPorts(repository=ports.retencion_observation_repository),
+            invoice_catalogue=ports.invoice_catalogue,
+        ).invoice_stated_withholding(
+            bucket_id=ports.profile_id,
+            modelo=command.modelo,
+            period=command.period,
+            stored=stored,
+        )
+        return (
+            command.model_copy(update={"retencion_observations": (*stored, *invoices.observations)}),
+            invoices.findings,
+        )
+
+    @staticmethod
+    def _invoice_finding_counts(
+        findings: tuple[ReceivedInvoiceWithholdingFinding, ...],
+    ) -> tuple[ModeloAggregateInvoiceFindingCount, ...]:
+        """Count the held-back invoices by reason, in the reasons' declared order."""
+        invoices: dict[ReceivedInvoiceWithholdingFindingKind, set[str]] = {}
+        for finding in findings:
+            invoices.setdefault(finding.kind, set()).add(finding.invoice_id)
+        return tuple(
+            ModeloAggregateInvoiceFindingCount(kind=kind, invoice_count=len(invoices[kind]))
+            for kind in ReceivedInvoiceWithholdingFindingKind
+            if kind in invoices
+        )
 
     @staticmethod
     def _aggregate(
@@ -420,6 +462,7 @@ class ModeloAggregateExecutor:
         context: OperationExecutorContext,
         aggregate_result: PerModeloAggregationResult,
         window_state: WithholdingWindowState | None,
+        invoice_findings: tuple[ReceivedInvoiceWithholdingFinding, ...],
         local_write_performed: bool,
     ) -> str | OperationRefusalEvidence:
         if (
@@ -451,6 +494,7 @@ class ModeloAggregateExecutor:
                 None if prepared.calculation_rows is None else prepared.calculation_rows.revision_id
             ),
             withholding_window=window,
+            received_invoice_findings=self._invoice_finding_counts(invoice_findings),
         )
         await context.events.phase(AGGREGATE_RESULT_PHASE)
         report = ModeloAggregateReport(projection=projection, local_write_performed=local_write_performed)
@@ -524,6 +568,7 @@ class _PreparedModeloAggregate:
     preflight_result: PerModeloAggregationResult
     window_state: WithholdingWindowState | None = None
     calculation_rows: CalculationWithholdingRows | None = None
+    invoice_findings: tuple[ReceivedInvoiceWithholdingFinding, ...] = ()
     capture: LedgerPaymentWithholdingCapture | None = None
     cadence: WithholdingFilerCadence | None = None
 

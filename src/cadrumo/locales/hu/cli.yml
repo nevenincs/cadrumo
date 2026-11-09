@@ -957,6 +957,10 @@ cli:
         modelo_help: A háttéraggregálási szolgáltatás által támogatott nyomtatványkód
           (111, 115, 123, 180, 190, 193, 347, 349 vagy 720).
         period_help: 'Aggregációs időszaktoken: 0A éves, 1T-4T negyedévek, 01-12 hónapok.'
+        received_invoice_finding: 'Modelo {modelo} {period} {filing_year}: {invoice_count}
+          beérkezett számla olyan visszatartást (retención) tüntet fel, amelyet ez
+          az időszak nem tud bevallani ({reason}), ezért a számítása visszatartva
+          marad. Számold ki a modelót, hogy lásd az egyes számlákat, és javítsd őket.'
         received_invoice_retencion_help: 'JSON `InvoiceWithholdingEvidenceRequest`:
           egy beérkezett számla egy levonás-felosztása, a fizetési vagy esedékességi
           bizonyítékával. Parancsonként egy felosztás; a `scheme` értéke a jövedelem

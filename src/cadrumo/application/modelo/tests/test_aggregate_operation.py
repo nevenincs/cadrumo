@@ -24,7 +24,10 @@ from cadrumo.core.aggregation import (
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_values
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.transactions.models import TransactionCatalogue
 from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
@@ -36,8 +39,24 @@ from ....domain.foreign_assets.valuation import M720ValuationEvent
 from ...aggregation.counterpart import CounterpartObservation
 from ...aggregation.foreign_assets import ForeignAssetIngestObservation
 from ...aggregation.ledger_payment_withholding import LedgerPaymentWithholdingEvidenceRequest
-from ...aggregation.retenciones import RetencionObservation
-from ...aggregation.service import PerModeloAggregationCommand, PerModeloAggregationContributor, aggregate_per_modelo
+from ...aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
+from ...aggregation.received_invoice_withholding import ReceivedInvoiceWithholdingFindingKind
+from ...aggregation.retencion_observations_repository import RetencionObservationPorts
+from ...aggregation.retenciones import RetencionesAggregation, RetencionObservation
+from ...aggregation.service import (
+    PerModeloAggregationCommand,
+    PerModeloAggregationContributor,
+    PerModeloAggregationResult,
+    aggregate_per_modelo,
+)
+from ...aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
+from ...aggregation.tests.received_invoice_withholding_support import (
+    NATURAL_PERSON_PROFESSIONAL_NIF,
+    PROFESSIONAL_COMPANY_NIF,
+    EmptyRetencionStore,
+    invoice_catalogue_ports,
+    professional_fee_quarter,
+)
 from ...aggregation.tests.withholding_filer_profile_support import withholding_filer_cadence
 from ...aggregation.withholding_observation_service import (
     WithholdingObservationMutationError,
@@ -49,6 +68,7 @@ from ...aggregation.withholding_recognition import (
     WithholdingRecipientTaxRegime,
     WithholdingRecipientTaxStatus,
 )
+from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.capabilities import OperationRequestStoragePolicy, OperationSensitiveInputPolicy
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
@@ -68,7 +88,12 @@ from ..aggregate_operation import (
     resolve_modelo_aggregate_access,
 )
 from ..aggregate_ports import ModeloAggregateOperationPorts, ModeloAggregateOperationPortsFactory
-from ..aggregate_projection import ModeloAggregateProjection, ModeloAggregateReport, project_modelo_aggregate_result
+from ..aggregate_projection import (
+    ModeloAggregateInvoiceFindingCount,
+    ModeloAggregateProjection,
+    ModeloAggregateReport,
+    project_modelo_aggregate_result,
+)
 from ..aggregate_public import PublicModeloAggregateCommand
 from ..aggregate_request import ModeloAggregateOperationRequest
 from .withholding_window_operation_test_support import WithholdingWindowServiceFixture
@@ -225,6 +250,7 @@ def _ports(
     window_service: _WindowService | None = None,
     transaction_repository: _TransactionRepository | None = None,
     percepciones: _PercepcionRepository | None = None,
+    invoice_catalogue: InvoiceCatalogueReadPorts | None = None,
 ) -> ModeloAggregateOperationPorts:
     return ModeloAggregateOperationPorts(
         profile_id=str(_PROFILE),
@@ -232,7 +258,12 @@ def _ports(
         retencion_observation_repository=_RetencionRepository(observations),
         percepcion_observation_repository=percepciones or _PercepcionRepository(),
         withholding_observation_service=window_service or _WindowService(observations=observations),
+        invoice_catalogue=invoice_catalogue or _no_invoices(),
     )
+
+
+def _no_invoices() -> InvoiceCatalogueReadPorts:
+    return invoice_catalogue_ports(build_invoice_catalogue(()), TransactionCatalogue.from_transactions(()))
 
 
 def _executor_context(
@@ -432,6 +463,7 @@ def test_regular_aggregate_reads_profile_rows_and_publishes_no_evidence(
         retencion_observation_repository=retenciones,
         percepcion_observation_repository=_PercepcionRepository(),
         withholding_observation_service=window_service,
+        invoice_catalogue=_no_invoices(),
     )
     executor = ModeloAggregateExecutor(cast(ModeloAggregateOperationPortsFactory, cast(object, lambda **_kw: ports)))
     request = _request()
@@ -812,3 +844,100 @@ def test_canonically_invalid_public_ledger_operands_refuse_before_capture(
     )
     assert isinstance(projection, ModeloAggregateProjection)
     assert projection.refusal_reason == "invalid_evidence"
+
+
+def _row_17_report_and_calculation(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+    *,
+    professional_nif: str,
+) -> tuple[ModeloAggregateProjection, RetencionesAggregation, CalculationSourceResolution]:
+    """Run the aggregate report and the calculation's resolver over one APP-QA row 17 quarter."""
+    invoices, movements = professional_fee_quarter(
+        _PERIOD.filing_year, tax_id=professional_nif, irpf_category="actividad_economica", bucket_id=str(_PROFILE)
+    )
+    catalogue = invoice_catalogue_ports(invoices, movements)
+    reported: list[PerModeloAggregationResult] = []
+
+    def recording_aggregate(
+        command: PerModeloAggregationCommand, *, operation: PinnedAuthorityOperation
+    ) -> PerModeloAggregationResult:
+        result = aggregate_per_modelo(command, operation=operation)
+        reported.append(result)
+        return result
+
+    monkeypatch.setattr("cadrumo.application.modelo.aggregate_operation.aggregate_per_modelo", recording_aggregate)
+    monkeypatch.setattr(
+        "cadrumo.application.modelo.aggregate_operation.require_active_bucket_id", lambda: str(_PROFILE)
+    )
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
+    ports = _ports(invoice_catalogue=catalogue)
+    executor = ModeloAggregateExecutor(cast(ModeloAggregateOperationPortsFactory, cast(object, lambda **_kw: ports)))
+    operands = _Operands()
+    context = _executor_context(RecordingEvents(), operands, authority_operation=authority_operation)
+
+    asyncio.run(executor.execute(_request(), context))
+
+    report = operands.values[0]
+    assert isinstance(report, ModeloAggregateReport)
+    projection = project_modelo_aggregate_result(report, _terminal_receipt(effect=OperationEffect.NONE))
+    assert isinstance(projection, ModeloAggregateProjection)
+    (result,) = reported
+    assert isinstance(result.aggregation, RetencionesAggregation)
+    snapshot = published_snapshot("111", filing_year=_PERIOD.filing_year, period="1T")
+    calculation = RetencionesAggregationSourceResolver(
+        ports=RetencionObservationPorts(repository=EmptyRetencionStore()),
+        invoice_catalogue=catalogue,
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id=str(_PROFILE),
+            modelo="111",
+            filing_year=_PERIOD.filing_year,
+            period=_PERIOD,
+            revision=snapshot.revision,
+        )
+    )
+    return projection, result.aggregation, calculation
+
+
+def test_the_modelo_111_report_counts_a_professionals_invoice_retencion_as_its_calculation_does(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    projection, aggregation, calculation = _row_17_report_and_calculation(
+        monkeypatch, authority_operation, professional_nif=NATURAL_PERSON_PROFESSIONAL_NIF
+    )
+    snapshot = published_snapshot("111", filing_year=_PERIOD.filing_year, period="1T")
+
+    assert projection.observation_count == 1
+    assert projection.result_row_count == 1
+    assert projection.source_kinds == (BindingSourceKind.PAYABLE_INVOICE,)
+    assert projection.received_invoice_findings == ()
+    assert [(row.perceptor_nif, row.total_taxable_base, row.total_retencion) for row in aggregation.rollups] == [
+        (NATURAL_PERSON_PROFESSIONAL_NIF, Decimal("300.00"), Decimal("45.00"))
+    ]
+    assert calculation.diagnostics == ()
+    assert calculation.binding_values
+    assert resolve_retenciones_aggregation_binding_values(snapshot.revision, aggregation) == calculation.binding_values
+
+
+def test_the_modelo_111_report_holds_an_slps_fee_back_as_its_calculation_does(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    projection, aggregation, calculation = _row_17_report_and_calculation(
+        monkeypatch, authority_operation, professional_nif=PROFESSIONAL_COMPANY_NIF
+    )
+
+    assert projection.observation_count == 0
+    assert aggregation.rollups == ()
+    assert projection.received_invoice_findings == (
+        ModeloAggregateInvoiceFindingCount(
+            kind=ReceivedInvoiceWithholdingFindingKind.ENTITY_PROFESSIONAL_FEE, invoice_count=1
+        ),
+    )
+    assert calculation.binding_values == {}
+    assert calculation.unresolved_binding_ids
+    assert [item.message.rsplit(": ", 1)[-1] for item in calculation.diagnostics] == [
+        ReceivedInvoiceWithholdingFindingKind.ENTITY_PROFESSIONAL_FEE.value
+    ]

@@ -973,6 +973,10 @@ cli:
           (111, 115, 123, 180, 190, 193, 347, 349 o 720).
         period_help: 'Token de periodo de agregación: 0A anual, 1T-4T trimestres,
           01-12 meses.'
+        received_invoice_finding: 'Modelo {modelo} {period} {filing_year}: {invoice_count}
+          factura(s) recibida(s) declaran una retención que este periodo no puede
+          declarar ({reason}), así que su cálculo queda retenido. Calcula el modelo
+          para ver cada factura y corrígela.'
         received_invoice_retencion_help: 'JSON `InvoiceWithholdingEvidenceRequest`:
           una asignación de retención de una factura recibida, con su prueba de pago
           o de exigibilidad. Una asignación por comando; el valor del campo `scheme`

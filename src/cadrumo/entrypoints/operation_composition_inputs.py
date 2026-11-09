@@ -160,6 +160,7 @@ def build_modelo_workbench_read_ports(bucket_id: str, operation: PinnedAuthority
 
 def build_modelo_aggregate_operation_ports(*, profile_id: str) -> ModeloAggregateOperationPorts:
     """Bind the existing aggregate and ledger-payment services to one profile."""
+    from ..adapters.persistence.profile.catalogue_reads import build_invoice_catalogue_read_ports
     from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ..application.modelo.aggregate_ports import ModeloAggregateOperationPorts
     from .adapter_composition_ports import (
@@ -174,6 +175,7 @@ def build_modelo_aggregate_operation_ports(*, profile_id: str) -> ModeloAggregat
         retencion_observation_repository=build_retencion_observation_ports(bucket_id=profile_id).repository,
         percepcion_observation_repository=build_percepcion_observation_ports(bucket_id=profile_id).repository,
         withholding_observation_service=build_withholding_observation_service(bucket_id=profile_id),
+        invoice_catalogue=build_invoice_catalogue_read_ports(bucket_id=profile_id),
     )
 
 

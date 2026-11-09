@@ -6,13 +6,14 @@ import re
 from typing import Literal, Self
 from uuid import UUID
 
-from pydantic import BaseModel, Field, NonNegativeInt, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, PositiveInt, model_validator
 
 from ...core.aggregation import BindingSourceKind
 from ...core.hashing import canonical_json_bytes
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ..aggregation.received_invoice_withholding import ReceivedInvoiceWithholdingFindingKind
 from ..aggregation.service import (
     PerModeloAggregationContributor,
 )
@@ -79,6 +80,18 @@ class ModeloAggregateClaveTotals(BaseModel):
     retencion_total: PublicDecimal
 
 
+class ModeloAggregateInvoiceFindingCount(BaseModel):
+    """How many received invoices state a retención the window cannot place, for one reason.
+
+    The invoices themselves stay in custody; the calculation names each one.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    kind: ReceivedInvoiceWithholdingFindingKind
+    invoice_count: PositiveInt
+
+
 class ModeloAggregateProjection(BaseModel):
     """Allowlisted aggregation summary; raw observation rows never leave custody.
 
@@ -86,6 +99,9 @@ class ModeloAggregateProjection(BaseModel):
     calculation reads that holds no row, so an empty summary reads as missing
     data rather than as a proven zero. ``calculation_revision_id`` identifies the
     revision whose calculation rows were read and is present whenever any are.
+    ``received_invoice_findings`` counts, by reason, the received invoices whose
+    stated retención holds a periodic window's calculation back, exactly as the
+    calculation finds them.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -104,6 +120,9 @@ class ModeloAggregateProjection(BaseModel):
     absent_source_families: tuple[BindingSourceKind, ...] | None = None
     calculation_revision_id: str | None = Field(default=None, min_length=1, max_length=128)
     withholding_window: ModeloAggregateWindow | None = None
+    received_invoice_findings: tuple[ModeloAggregateInvoiceFindingCount, ...] = Field(
+        default=(), max_length=len(ReceivedInvoiceWithholdingFindingKind)
+    )
     refusal_reason: AGGREGATE_SAFE_REFUSAL_REASON | None = None
 
     @model_validator(mode="after")
@@ -121,8 +140,12 @@ class ModeloAggregateProjection(BaseModel):
             _require_aggregate_row_metadata(self)
         elif self.refusal_reason is None or any(value is not None for value in aggregate_fields):
             raise ValueError("refused result requires only a bounded refusal reason")
-        elif self.withholding_window is not None or self.calculation_revision_id is not None:
-            raise ValueError("refused result cannot carry a withholding window or calculation rows")
+        elif (
+            self.withholding_window is not None
+            or self.calculation_revision_id is not None
+            or self.received_invoice_findings
+        ):
+            raise ValueError("refused result cannot carry a withholding window, calculation rows or findings")
         return self
 
 
@@ -210,6 +233,10 @@ def _require_aggregated_summary_fields(self: ModeloAggregateProjection, aggregat
         raise ValueError("aggregated result requires the canonical summary fields")
     if self.modelo in periodic_withholding_modelos_in_scope() and self.withholding_window is None:
         raise ValueError("withholding aggregate requires its exact window readback")
+    if self.received_invoice_findings and self.withholding_window is None:
+        raise ValueError("received invoice findings belong to a periodic withholding window")
+    if len({finding.kind for finding in self.received_invoice_findings}) != len(self.received_invoice_findings):
+        raise ValueError("received invoice findings are counted once per reason")
 
 
 def _require_aggregate_row_metadata(self: ModeloAggregateProjection) -> None:

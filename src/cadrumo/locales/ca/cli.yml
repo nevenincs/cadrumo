@@ -966,6 +966,10 @@ cli:
           720)
         period_help: 'Token de període d''agregació: 0A anual, 1T-4T trimestres, 01-12
           mesos.'
+        received_invoice_finding: 'Model {modelo} {period} {filing_year}: {invoice_count}
+          factura(es) rebuda(es) declaren una retenció que aquest període no pot declarar
+          ({reason}), de manera que el seu càlcul queda retingut. Calcula el model
+          per veure cada factura i corregeix-la.'
         received_invoice_retencion_help: 'JSON `InvoiceWithholdingEvidenceRequest`:
           una assignació de retenció d''una factura rebuda, amb la seva prova de pagament
           o d''exigibilitat. Una assignació per ordre; el valor del camp `scheme`
