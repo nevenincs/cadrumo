@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:01+0200\n"
+"POT-Creation-Date: 2026-11-09 13:10+0100\n"
 "PO-Revision-Date: 2026-07-18 13:20+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -111,7 +111,20 @@ msgstr ""
 "generálva. Haladó telepítési és fejlesztési konfiguráció; egyetlen "
 "felhasználói munkafolyamatnak sincs rájuk szüksége."
 
-#: ../../reference/index.md:32
+#: ../../reference/index.md:31
+msgid ""
+"[Third-party notices for Windows](third-party-notices-windows-x86-64.md) "
+"- every third-party component the Windows package installs, from the "
+"interpreter and its programs to the Python and JavaScript packages, with "
+"its version and declared licence, generated from the assembled package."
+msgstr ""
+"[Harmadik féltől származó összetevők közleményei Windowshoz](third-party-"
+"notices-windows-x86-64.md) - a Windows-csomag által telepített minden "
+"harmadik féltől származó összetevő az értelmezőtől és a programjaitól a "
+"Python- és JavaScript-csomagokig, a verziójával és a bejelentett "
+"licencével, az összeállított csomagból generálva."
+
+#: ../../reference/index.md:36
 #, python-brace-format
 msgid ""
 "Terms are defined in the {doc}`glossary </_generated/glossary>`. For "

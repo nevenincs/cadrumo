@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-31 22:16+0100\n"
+"POT-Creation-Date: 2026-11-09 13:17+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
@@ -503,20 +503,32 @@ msgstr ""
 "manteniendo intacto el límite de seguridad."
 
 #: ../../how-to/index.md:312
+msgid "Sign in to an AI provider by hand"
+msgstr "Iniciar sesión en un proveedor de IA a mano"
+
+#: ../../how-to/index.md:316
+msgid ""
+"Sign in from a console when the in-app sign-in under Ajustes > "
+"Proveedores de IA fails."
+msgstr ""
+"Inicia sesión desde una consola cuando falla el inicio de sesión de la "
+"aplicación en Ajustes > Proveedores de IA."
+
+#: ../../how-to/index.md:319
 msgid "Troubleshooting"
 msgstr "Resolución de problemas"
 
-#: ../../how-to/index.md:316
+#: ../../how-to/index.md:323
 msgid "Fix active-profile, storage, tax-rules, and authentication problems."
 msgstr ""
 "Corrige problemas de perfil activo, almacenamiento, reglas fiscales y "
 "autenticación."
 
-#: ../../how-to/index.md:319
+#: ../../how-to/index.md:326
 msgid "How to publish a validated runtime authority"
 msgstr "Cómo publicar una autoridad de ejecución validada"
 
-#: ../../how-to/index.md:323
+#: ../../how-to/index.md:330
 msgid ""
 "Publish and check the signed tax rules that Cadrumo reads, as a release "
 "maintainer."
