@@ -33,7 +33,7 @@ from .caller_owned_root import (
     require,
     run_cli,
 )
-from .packaged_service_process import PackagedServiceProcess
+from .packaged_service_process import PackagedServiceProcess, package_default_engine
 from .proof_support import Profile, create_profile, identify_profile, login_profile, state_taxpayer
 from .windows_holder import WindowsRuntimeSessionHolder
 
@@ -207,6 +207,7 @@ def agent_service_session(
             directory=root,
             bearer=bearer,
             gateway_bearer=gateway_bearer,
+            local_engine_default=package_default_engine(package),
         )
         cleanup.callback(service.close)
         counts["service_start"] += 1
