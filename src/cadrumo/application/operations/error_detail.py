@@ -35,19 +35,10 @@ from enum import StrEnum
 from functools import cache
 from typing import TYPE_CHECKING, Annotated, Final, Literal, Self
 
-from pydantic import (
-    BaseModel,
-    Field,
-    NonNegativeInt,
-    StringConstraints,
-    ValidationError,
-    field_validator,
-    model_validator,
-)
+from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints, ValidationError, model_validator
 
 from ...core.errors.error_codes import (
     ErrorCode,
-    current_error_code,
     get_registered_error_code,
     get_registered_error_code_by_code,
     public_error_context,
@@ -177,12 +168,6 @@ class OperationErrorDetailV1(BaseModel):
     #: The registered operation the refusal names for putting it right, as a closed kind with the declaration
     #: it concerns and the words that offer it, in ``refusal_words_language``. ``None`` when the refusal names none.
     next_step: OperationNextStepV1 | None = None
-
-    @field_validator("error_code", mode="before")
-    @classmethod
-    def _read_retired_code_as_its_successor(cls, value: object) -> object:
-        """A detail persisted under a retired code reads as the code that succeeded it."""
-        return current_error_code(value) if isinstance(value, str) else value
 
     @model_validator(mode="after")
     def _closed_shape(self) -> Self:
