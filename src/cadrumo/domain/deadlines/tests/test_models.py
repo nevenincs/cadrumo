@@ -16,6 +16,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.period import Period
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..festivos import DeadlineHolidayCoverage
 from ..models import (
     IVARegime,
@@ -31,7 +32,8 @@ from ..models import (
 from ..profiles import taxpayer_profile_from_mapping
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
-_P_2026_1T = Period.from_year_and_code(2026, "1T")
+_YEAR = filing_year_envelope().horizon
+_P_YEAR_1T = Period.from_year_and_code(_YEAR, "1T")
 
 
 def _profile() -> TaxpayerProfile:
@@ -173,10 +175,10 @@ class TestModeloDeadline:
         with pytest.raises(ValidationError, match=r"opens_on .* is after closes_on"):
             ModeloDeadline(
                 modelo="303",
-                period=_P_2026_1T,
-                opens_on=date(2026, 4, 21),
-                closes_on=date(2026, 4, 20),
-                adjusted_closes_on=date(2026, 4, 20),
+                period=_P_YEAR_1T,
+                opens_on=date(_YEAR, 4, 21),
+                closes_on=date(_YEAR, 4, 20),
+                adjusted_closes_on=date(_YEAR, 4, 20),
                 holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
                 shift_reason="business_day",
                 payment_cutoff_on=None,
@@ -187,13 +189,13 @@ class TestModeloDeadline:
         with pytest.raises(ValidationError, match=r"payment_cutoff_on .* is after closes_on"):
             ModeloDeadline(
                 modelo="303",
-                period=_P_2026_1T,
-                opens_on=date(2026, 4, 1),
-                closes_on=date(2026, 4, 20),
-                adjusted_closes_on=date(2026, 4, 20),
+                period=_P_YEAR_1T,
+                opens_on=date(_YEAR, 4, 1),
+                closes_on=date(_YEAR, 4, 20),
+                adjusted_closes_on=date(_YEAR, 4, 20),
                 holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
                 shift_reason="business_day",
-                payment_cutoff_on=date(2026, 4, 25),
+                payment_cutoff_on=date(_YEAR, 4, 25),
                 status=ObligationStatus.UPCOMING,
             )
 
@@ -204,21 +206,21 @@ class TestScheduleRoundTrip:
     def test_round_trip_equality(self) -> None:
         obligation = ModeloDeadline(
             modelo="303",
-            period=_P_2026_1T,
-            opens_on=date(2026, 4, 1),
-            closes_on=date(2026, 4, 20),
-            adjusted_closes_on=date(2026, 4, 20),
+            period=_P_YEAR_1T,
+            opens_on=date(_YEAR, 4, 1),
+            closes_on=date(_YEAR, 4, 20),
+            adjusted_closes_on=date(_YEAR, 4, 20),
             holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
             shift_reason="business_day",
-            payment_cutoff_on=date(2026, 4, 15),
+            payment_cutoff_on=date(_YEAR, 4, 15),
             status=ObligationStatus.UPCOMING,
             boe_references=("BOE-Orden-IVA-autoliquidacion",),
         )
         schedule = Schedule(
             profile=_profile(),
-            year=2026,
+            year=_YEAR,
             obligations=(obligation,),
-            generated_at=datetime(2026, 1, 1, 12, 0, 0, tzinfo=UTC),
+            generated_at=datetime(_YEAR, 1, 1, 12, 0, 0, tzinfo=UTC),
         )
         payload = schedule.model_dump_json()
         restored = Schedule.model_validate_json(payload)

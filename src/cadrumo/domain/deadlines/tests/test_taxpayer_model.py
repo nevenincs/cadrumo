@@ -23,6 +23,7 @@ from ...calculations.registry.applicability import derive_tax_route
 from ...calculations.registry.applicability_routes import TaxRoute
 from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.schema_base import DateAxis
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
     published_supported_filing_years,
@@ -46,6 +47,10 @@ from ..models import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
+
+_YEAR = filing_year_envelope().horizon
+_ELECTION_DATE = date(filing_year_envelope().floor, 1, 15)
+"""The day an impatriado election starts: any date inside the envelope serves the window arithmetic."""
 
 
 def _deadline_facts(filing_year: int) -> DeadlineFactResolutionContext:
@@ -94,8 +99,8 @@ def _fully_populated_taxpayer() -> TaxpayerProfile:
         cross_period_group_member_rosters=(
             CrossPeriodGroupMemberRoster(
                 source_modelo="322",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "12"),
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "12"),
                 member_nifs=("B00010082", "A00010009"),
             ),
         ),
@@ -133,8 +138,8 @@ class TestTaxpayerModelRoundTrip:
         assert restored.cross_period_group_member_rosters == (
             CrossPeriodGroupMemberRoster(
                 source_modelo="322",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "12"),
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "12"),
                 member_nifs=("A00010009", "B00010082"),
             ),
         )
@@ -260,17 +265,15 @@ class TestImpatriado:
     def test_impatriado_with_start_date_is_accepted(self) -> None:
         """IMPATRIADO with a start date is a valid profile."""
 
-        from datetime import date
-
         profile = TaxpayerProfile(
             tax_id="X0001500M",
             entity_type=EntityType.from_registry("natural_person"),
             iva_regime=IVARegime("GENERAL"),
             irpf_special_regime=IrpfSpecialRegime.from_registry("impatriado"),
-            special_regime_start_date=date(2023, 1, 15),
+            special_regime_start_date=_ELECTION_DATE,
         )
         assert profile.irpf_special_regime == IrpfSpecialRegime.from_registry("impatriado")
-        assert profile.special_regime_start_date == date(2023, 1, 15)
+        assert profile.special_regime_start_date == _ELECTION_DATE
 
     def test_general_regime_without_start_date_is_accepted(self) -> None:
         """General-regime profile with no start date is fine — the validator
@@ -305,14 +308,12 @@ class TestImpatriado:
         ISO strings for date fields.
         """
 
-        from datetime import date
-
         original = TaxpayerProfile(
             tax_id="X0001500M",
             entity_type=EntityType.from_registry("natural_person"),
             iva_regime=IVARegime("GENERAL"),
             irpf_special_regime=IrpfSpecialRegime.from_registry("impatriado"),
-            special_regime_start_date=date(2023, 1, 15),
+            special_regime_start_date=_ELECTION_DATE,
         )
         restored = TaxpayerProfile.model_validate(original.model_dump())
         assert restored == original
@@ -325,14 +326,12 @@ class TestImpatriado:
         but no start_date, which is the exact regression the guard prevents.
         """
 
-        from datetime import date
-
         original = TaxpayerProfile(
             tax_id="X0001500M",
             entity_type=EntityType.from_registry("natural_person"),
             iva_regime=IVARegime("GENERAL"),
             irpf_special_regime=IrpfSpecialRegime.from_registry("impatriado"),
-            special_regime_start_date=date(2023, 1, 15),
+            special_regime_start_date=_ELECTION_DATE,
         )
         payload = original.model_dump()
         del payload["special_regime_start_date"]
@@ -345,7 +344,7 @@ class TestBeckhamWindow:
     """WINDOW-001: beckham_window_active oracle tests (RIRPF Art. 116.1).
 
     Window = start_date.year <= today.year <= start_date.year + 5.
-    Election year 2023 → window 2023-2028 inclusive; 2029 is year 7 = expired.
+    The election year opens a six-year window, inclusive; the seventh year is expired.
     """
 
     def _impatriado(self) -> TaxpayerProfile:
@@ -354,16 +353,16 @@ class TestBeckhamWindow:
             entity_type=EntityType.from_registry("natural_person"),
             iva_regime=IVARegime("GENERAL"),
             irpf_special_regime=IrpfSpecialRegime.from_registry("impatriado"),
-            special_regime_start_date=date(2023, 1, 15),
+            special_regime_start_date=_ELECTION_DATE,
         )
 
     def test_impatriado_window_boundaries(self) -> None:
         cases = (
-            (date(2023, 6, 1), True),
-            (date(2027, 12, 31), True),
-            (date(2028, 12, 31), True),
-            (date(2029, 1, 1), False),
-            (date(2022, 12, 31), False),
+            (date(_ELECTION_DATE.year, 6, 1), True),
+            (date(_ELECTION_DATE.year + 4, 12, 31), True),
+            (date(_ELECTION_DATE.year + 5, 12, 31), True),
+            (date(_ELECTION_DATE.year + 6, 1, 1), False),
+            (date(_ELECTION_DATE.year - 1, 12, 31), False),
         )
         profile = self._impatriado()
         for today, expected in cases:
@@ -377,13 +376,13 @@ class TestBeckhamWindow:
             iva_regime=IVARegime("GENERAL"),
             irpf_special_regime=IrpfSpecialRegime.from_registry("general"),
         )
-        assert profile.beckham_window_active(date(2026, 5, 27)) is False
+        assert profile.beckham_window_active(date(_YEAR, 5, 27)) is False
 
     def test_profile_without_special_regime_is_always_outside_window(self) -> None:
         from datetime import date
 
         profile = TaxpayerProfile(tax_id="X0001500M", iva_regime=IVARegime("GENERAL"))
-        assert profile.beckham_window_active(date(2026, 5, 27)) is False
+        assert profile.beckham_window_active(date(_YEAR, 5, 27)) is False
 
 
 class TestNonResidentAxis:
@@ -577,8 +576,8 @@ class TestMultiplePagadoresObligation:
                     pagadores_count,
                     secondary_income,
                     None,
-                    filing_year=2024,
-                    facts=_deadline_facts(2024),
+                    filing_year=_YEAR,
+                    facts=_deadline_facts(_YEAR),
                 )
                 is expected
             ), (
@@ -621,9 +620,9 @@ class TestMultiplePagadoresReducedLimitSchedule:
             resolve_multiple_pagadores_reduced_limit(filing_year, facts=_deadline_facts(filing_year))
 
     def test_reduced_limit_resolution_retains_mapping_provenance(self) -> None:
-        resolved = _deadline_facts(2024).resolved_mapping("lirpf-work-income-multiple-pagadores-reduced-limit")
+        resolved = _deadline_facts(_YEAR).resolved_mapping("lirpf-work-income-multiple-pagadores-reduced-limit")
         assert resolved.date_axis is DateAxis.FILING_PERIOD
-        assert resolved.effective_date == date(2024, 12, 31)
+        assert resolved.effective_date == date(_YEAR, 12, 31)
         assert resolved.legal_refs == ("ley-35-2006:art-96",)
         assert resolved.source_refs
 
@@ -686,7 +685,7 @@ class TestThirdPartyDeclarationRoleOrthogonality:
         )
         assert derive_tax_route(baseline) is TaxRoute.IMPUESTO_SOCIEDADES
 
-        role_choices = third_party_declaration_role_choices(effective_date=date(2024, 12, 31))
+        role_choices = third_party_declaration_role_choices(effective_date=date(_YEAR, 12, 31))
         all_roles = frozenset(role_choices)
         for role in (*role_choices, None):
             roles = all_roles if role is None else frozenset({role})
@@ -701,7 +700,7 @@ class TestThirdPartyDeclarationRoleOrthogonality:
 
     def test_every_role_combination_leaves_the_natural_person_tax_route_unchanged(self) -> None:
         """The same proof for IRPF, so the axis is orthogonal on both routes it could distort."""
-        role_choices = third_party_declaration_role_choices(effective_date=date(2024, 12, 31))
+        role_choices = third_party_declaration_role_choices(effective_date=date(_YEAR, 12, 31))
         all_roles = frozenset(role_choices)
         for role in (*role_choices, None):
             roles = all_roles if role is None else frozenset({role})

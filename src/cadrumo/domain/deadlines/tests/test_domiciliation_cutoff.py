@@ -22,6 +22,7 @@ oracle for every Modelo 303 row it prints.
 
 from __future__ import annotations
 
+import calendar
 import re
 from collections.abc import Callable, Iterator
 from datetime import date, timedelta
@@ -35,7 +36,7 @@ from ...calculations.registry.authority import PinnedAuthorityOperation, bundled
 from ...calculations.registry.calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
 from ...calculations.registry.schema_deadlines import DeadlineWindowDefinition
 from ...calculations.registry.schema_references import TemporalProjectionDirection
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
+from ...calculations.registry.tests.authored_editions import filing_year_envelope, source_exercise
 from ...calculations.registry.tests.published_authority import published_source_reference
 from ..domiciliation_cutoff import (
     AuthoredPaymentCutoff,
@@ -55,10 +56,14 @@ from ..domiciliation_cutoff import (
 from ..errors import DeadlineValidationError
 from ..festivos import Holiday, HolidayCalendar, HolidayJurisdiction
 from ..plazo import resolve_filing_window
+from .calendar_shapes import first_year_where
+from .effective_close_scan import first_unpublished_calendar_year
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _DOMICILIATION_CALENDAR_SOURCE = "aeat-calendario-contribuyente-2026-domiciliacion"
+_CALENDAR_YEAR = source_exercise(published_source_reference(_DOMICILIATION_CALENDAR_SOURCE))
+"""The exercise of the AEAT domiciliación calendar the hand-worked Anexo II days below are read from."""
 _MONTHS = {
     "enero": 1,
     "febrero": 2,
@@ -130,78 +135,106 @@ def _window(modelo: str, year: int, code: str, operation: PinnedAuthorityOperati
 # ---------------------------------------------------------------------------
 
 
+def _april(year: int, day: int) -> date:
+    return date(year, 4, day)
+
+
+_THURSDAY_30_APRIL = first_year_where(lambda candidate: _april(candidate, 30).weekday() == 3)
+
+
 def test_natural_days_are_counted_strictly_between_the_domiciliation_end_and_the_close() -> None:
-    # 1T 2025: 20 April is a Sunday, so filing closes Monday 21 April and the
+    # A first quarter whose 20 April is a Sunday, so filing closes Monday 21 April and the
     # Anexo II day 15 moves one day to Wednesday 16. Jueves Santo (17, Madrid)
     # and Viernes Santo (18, national) leave one business day after the 16th and
     # four natural days strictly before the close, so the 16th fails both counts.
-    # Tuesday 15 leaves five natural days, the "o" of the Orden, and AEAT's 2025
-    # calendar publishes "1T 25: 1 al 15 de abril".
+    # Tuesday 15 leaves five natural days, the "o" of the Orden, as AEAT's calendar
+    # publishes for such a year ("1 al 15 de abril").
+    year = first_year_where(lambda candidate: _april(candidate, 20).weekday() == 6)
     arithmetic = derive_domiciliation_cutoff(
         clause=_QUARTERLY,
         procedure=_ORDEN_MARGIN,
-        period_end=date(2025, 3, 31),
-        closes_on=date(2025, 4, 21),
-        business_day=_weekdays_except(date(2025, 4, 17), date(2025, 4, 18)),
+        period_end=date(year, 3, 31),
+        closes_on=_april(year, 21),
+        business_day=_weekdays_except(_april(year, 17), _april(year, 18)),
     )
 
     assert arithmetic.extension_days == 1
-    assert arithmetic.base_on == date(2025, 4, 16)
-    assert arithmetic.margin_cap_on == date(2025, 4, 15)
-    assert arithmetic.cutoff_on == date(2025, 4, 15)
+    assert arithmetic.base_on == _april(year, 16)
+    assert arithmetic.margin_cap_on == _april(year, 15)
+    assert arithmetic.cutoff_on == _april(year, 15)
 
 
 def test_the_margin_is_met_by_three_business_days_with_fewer_than_five_natural_days() -> None:
-    # Filing closes Thursday 30 April 2026. Monday 27 leaves 28, 29 and 30: three
+    # Filing closes on a Thursday 30 April. Monday 27 leaves 28, 29 and 30: three
     # business days in three natural days, so 27 is the latest compliant day.
+    year = _THURSDAY_30_APRIL
     arithmetic = derive_domiciliation_cutoff(
         clause=_MONTHLY,
         procedure=_ORDEN_MARGIN,
-        period_end=date(2026, 3, 31),
-        closes_on=date(2026, 4, 30),
+        period_end=date(year, 3, 31),
+        closes_on=_april(year, 30),
         business_day=_weekdays_except(),
     )
 
-    assert arithmetic.margin_cap_on == date(2026, 4, 27)
+    assert arithmetic.margin_cap_on == _april(year, 27)
 
 
 def test_the_orden_keeps_an_inhabil_anexo_day_and_the_aeat_practice_moves_it() -> None:
-    # 3M 2026: Anexo II day 25 April 2026 is a Saturday. The Orden moves nothing,
-    # so the day stays; AEAT's calendar publishes Monday 27, the latest business
-    # day that leaves three business days before Thursday 30.
+    # 3M: Anexo II day 25 April is a Saturday when 30 April is a Thursday. The Orden
+    # moves nothing, so the day stays; AEAT's calendar publishes Monday 27, the
+    # latest business day that leaves three business days before Thursday 30.
+    year = _THURSDAY_30_APRIL
     common = {
         "clause": _MONTHLY,
-        "period_end": date(2026, 3, 31),
-        "closes_on": date(2026, 4, 30),
+        "period_end": date(year, 3, 31),
+        "closes_on": _april(year, 30),
         "business_day": _weekdays_except(),
     }
 
-    assert derive_domiciliation_cutoff(procedure=_ORDEN_MARGIN, **common).cutoff_on == date(2026, 4, 25)
-    assert derive_domiciliation_cutoff(procedure=_PRACTICE, **common).cutoff_on == date(2026, 4, 27)
+    assert derive_domiciliation_cutoff(procedure=_ORDEN_MARGIN, **common).cutoff_on == _april(year, 25)
+    assert derive_domiciliation_cutoff(procedure=_PRACTICE, **common).cutoff_on == _april(year, 27)
 
 
 def test_a_holiday_anexo_day_moves_back_to_the_latest_business_day_with_the_margin() -> None:
-    # 11M 2026: 25 December is a national holiday and filing closes Wednesday
+    # 11M: 25 December is a national holiday (a Friday) and filing closes Wednesday
     # 30 December. Monday 28 and Tuesday 29 leave too little; Thursday 24 leaves
     # six natural days.
+    year = first_year_where(lambda candidate: date(candidate, 12, 30).weekday() == 2)
     arithmetic = derive_domiciliation_cutoff(
         clause=_MONTHLY,
         procedure=_PRACTICE,
-        period_end=date(2026, 11, 30),
-        closes_on=date(2026, 12, 30),
-        business_day=_weekdays_except(date(2026, 12, 25)),
+        period_end=date(year, 11, 30),
+        closes_on=date(year, 12, 30),
+        business_day=_weekdays_except(date(year, 12, 25)),
     )
 
-    assert arithmetic.cutoff_on == date(2026, 12, 24)
+    assert arithmetic.cutoff_on == date(year, 12, 24)
+
+
+# A leap year whose 29 February is a weekday, and a common year whose 28 February is a Sunday.
+_LEAP_WEEKDAY_FEBRUARY = first_year_where(
+    lambda candidate: calendar.isleap(candidate) and date(candidate, 2, 29).weekday() < 5
+)
+_COMMON_SUNDAY_FEBRUARY = first_year_where(
+    lambda candidate: not calendar.isleap(candidate) and date(candidate, 2, 28).weekday() == 6
+)
 
 
 @pytest.mark.parametrize(
     ("period_end", "closes_on", "expected"),
     (
-        # 2028 is a leap year: February has 29 days, a Tuesday, so nothing extends.
-        (date(2028, 1, 31), date(2028, 2, 29), date(2028, 2, 24)),
-        # 2027: 28 February is a Sunday, filing closes Monday 1 March, one day later.
-        (date(2027, 1, 31), date(2027, 3, 1), date(2027, 2, 24)),
+        # A leap year: February has 29 days, a weekday, so nothing extends.
+        (
+            date(_LEAP_WEEKDAY_FEBRUARY, 1, 31),
+            date(_LEAP_WEEKDAY_FEBRUARY, 2, 29),
+            date(_LEAP_WEEKDAY_FEBRUARY, 2, 24),
+        ),
+        # A common year whose 28 February is a Sunday: filing closes Monday 1 March, one day later.
+        (
+            date(_COMMON_SUNDAY_FEBRUARY, 1, 31),
+            date(_COMMON_SUNDAY_FEBRUARY, 3, 1),
+            date(_COMMON_SUNDAY_FEBRUARY, 2, 24),
+        ),
     ),
     ids=("leap-year-day-24", "common-year-day-23-plus-one"),
 )
@@ -299,22 +332,23 @@ def test_a_business_day_only_margin_ignores_natural_days() -> None:
 
 
 def test_the_margin_walk_crosses_into_the_previous_year() -> None:
-    # A clause closing on Wednesday 3 January 2029 with an Anexo day of Monday
+    # A clause closing on a Wednesday 3 January with an Anexo day of Monday
     # 1 January (a holiday): Tuesday 2 January leaves too little, 30 and 31
     # December are a weekend, Friday 29 December of the year before leaves two
     # business days and four natural days strictly before the close, and
     # Thursday 28 December leaves three business days, so it is the cap.
+    year = first_year_where(lambda candidate: date(candidate + 1, 1, 3).weekday() == 2)
     clause = DomiciliationClause(deadline_month_offset=1, filing_last_day=3, domiciliation_last_day=1)
     arithmetic = derive_domiciliation_cutoff(
         clause=clause,
         procedure=_ORDEN_MARGIN,
-        period_end=date(2028, 12, 31),
-        closes_on=date(2029, 1, 3),
-        business_day=_weekdays_except(date(2029, 1, 1)),
+        period_end=date(year, 12, 31),
+        closes_on=date(year + 1, 1, 3),
+        business_day=_weekdays_except(date(year + 1, 1, 1)),
     )
 
-    assert arithmetic.margin_cap_on == date(2028, 12, 28)
-    assert arithmetic.cutoff_on == date(2028, 12, 28)
+    assert arithmetic.margin_cap_on == date(year, 12, 28)
+    assert arithmetic.cutoff_on == date(year, 12, 28)
 
 
 def test_a_window_closing_before_its_nominal_close_is_a_registry_inconsistency() -> None:
@@ -322,8 +356,8 @@ def test_a_window_closing_before_its_nominal_close_is_a_registry_inconsistency()
         derive_domiciliation_cutoff(
             clause=_QUARTERLY,
             procedure=_PRE_MARGIN,
-            period_end=date(2026, 3, 31),
-            closes_on=date(2026, 4, 19),
+            period_end=date(_CALENDAR_YEAR, 3, 31),
+            closes_on=date(_CALENDAR_YEAR, 4, 19),
             business_day=_never_consulted,
         )
 
@@ -347,7 +381,7 @@ def _published_303_domiciliation_rows() -> tuple[tuple[int, str, date], ...]:
         for count, kind, year, day, month in re.findall(
             r"<li>(\d+)([MT]) (\d{2}): 1(?: de \w+)? al (\d+) de (\w+)</li>", cells[1]
         ):
-            filing_year = 2000 + int(year)
+            filing_year = _CALENDAR_YEAR - _CALENDAR_YEAR % 100 + int(year)
             code = f"{int(count):02d}" if kind == "M" else f"{count}T"
             period_end = Period.from_year_and_code(filing_year, code).end_date
             month_number = _MONTHS[month]
@@ -372,14 +406,14 @@ def test_every_modelo_303_row_of_the_published_domiciliation_calendar_is_derived
 
 @pytest.mark.parametrize(
     ("code", "expected"),
-    (("1T", date(2026, 4, 15)), ("2T", date(2026, 7, 15)), ("3T", date(2026, 10, 15))),
+    (("1T", date(_CALENDAR_YEAR, 4, 15)), ("2T", date(_CALENDAR_YEAR, 7, 15)), ("3T", date(_CALENDAR_YEAR, 10, 15))),
 )
-def test_2026_quarters_without_an_authored_cutoff_resolve_a_derived_one(
+def test_calendar_year_quarters_without_an_authored_cutoff_resolve_a_derived_one(
     code: str,
     expected: date,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    window = _window("303", 2026, code, operation)
+    window = _window("303", _CALENDAR_YEAR, code, operation)
     assert window.payment_cutoff_on is None
 
     resolved = resolve_payment_cutoff("303", window, operation=operation)
@@ -398,31 +432,31 @@ def test_2026_quarters_without_an_authored_cutoff_resolve_a_derived_one(
 
 
 def test_an_authored_cutoff_wins_over_a_different_derived_one(operation: PinnedAuthorityOperation) -> None:
-    # Modelo 111 2M 26: AEAT publishes 16 March; the rule gives Tuesday 17, which
+    # Modelo 111 2M of the calendar year: AEAT publishes 16 March; the rule gives Tuesday 17, which
     # leaves 18, 19 and 20 before the Friday close with no Madrid holiday between
     # (the expected discrepancy of the calendar-backed retention census). The
     # authored date is an explicit override.
-    window = _window("111", 2026, "02", operation)
+    window = _window("111", _CALENDAR_YEAR, "02", operation)
 
     resolved = resolve_payment_cutoff("111", window, operation=operation)
     derived = derive_payment_cutoff("111", window, operation=operation)
 
     assert isinstance(resolved, AuthoredPaymentCutoff)
-    assert resolved.cutoff_on == date(2026, 3, 16)
+    assert resolved.cutoff_on == date(_CALENDAR_YEAR, 3, 16)
     assert resolved.legal_refs == tuple(window.legal_refs)
-    assert derived.cutoff_on == date(2026, 3, 17)
+    assert derived.cutoff_on == date(_CALENDAR_YEAR, 3, 17)
 
 
 def test_a_past_period_under_the_orden_margin_derives_against_its_published_calendar(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    # 3T 2025: Anexo day Wednesday 15 October, filing closes Monday 20 October;
+    # 3T of the year before the calendar year: Anexo day Wednesday 15 October, filing closes Monday 20 October;
     # 16, 17 and 20 are business days in Madrid, so the 15th stands. The margin is
     # the Orden's; the weekend replacement the variant carries is AEAT's practice.
-    derived = derive_payment_cutoff("303", _window("303", 2025, "3T", operation), operation=operation)
+    derived = derive_payment_cutoff("303", _window("303", _CALENDAR_YEAR - 1, "3T", operation), operation=operation)
 
     assert isinstance(derived, DerivedPaymentCutoff)
-    assert derived.cutoff_on == date(2025, 10, 15)
+    assert derived.cutoff_on == date(_CALENDAR_YEAR - 1, 10, 15)
     assert derived.procedure.variant_id == "domiciliation-procedure:hac-241-2025"
     assert derived.inhabil_base_authority is InhabilBaseAuthority.AEAT_ADMINISTRATIVE_PRACTICE
     assert derived.procedure.projection_direction is TemporalProjectionDirection.AUTHORED
@@ -431,14 +465,15 @@ def test_a_past_period_under_the_orden_margin_derives_against_its_published_cale
 def test_the_floor_period_derives_from_the_floor_reaching_variants_without_a_calendar(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    # 1T 2022: before the margin existed the Anexo day stands even on Viernes
-    # Santo, 15 April 2022, and no holiday calendar is read.
-    window = _window("303", 2022, "1T", operation)
+    # 1T of the floor year: before the margin existed the Anexo day stands even on
+    # Viernes Santo, and no holiday calendar is read.
+    floor = filing_year_envelope().floor
+    window = _window("303", floor, "1T", operation)
 
     derived = derive_payment_cutoff("303", window, operation=operation)
 
     assert isinstance(derived, DerivedPaymentCutoff)
-    assert derived.cutoff_on == date(2022, 4, 15)
+    assert derived.cutoff_on == date(floor, 4, 15)
     assert derived.cutoff_on == window.payment_cutoff_on
     assert derived.procedure.variant_id == "domiciliation-procedure:orden-text-pre-margin"
     assert derived.holiday_coverage is DomiciliationHolidayCoverage.NOT_CONSULTED
@@ -446,30 +481,34 @@ def test_the_floor_period_derives_from_the_floor_reaching_variants_without_a_cal
 
 
 @pytest.mark.parametrize("code", ("4T", "12"))
-def test_the_2026_year_end_cutoffs_derive_from_the_published_2027_calendar(
+def test_the_calendar_year_end_cutoffs_derive_from_the_next_years_published_calendar(
     code: str,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    # The Anexo II day is 25 January. The filing period ends Saturday 30 January 2027,
-    # so it runs to Monday 1 February (two days) and art. 3.2.b extends the Anexo II
-    # day by the same two days to Wednesday 27 January. That day leaves five natural
-    # days and three business days (28, 29 January and 1 February) before the close.
-    # The 2026 domiciliación calendar prints no row for 12M 2026, so none is authored.
-    window = _window("303", 2026, code, operation)
-    assert window.closes_on == date(2027, 2, 1)
+    # The Anexo II day is 25 January. The filing period ends Saturday 30 January of
+    # the next year, so it runs to Monday 1 February (two days) and art. 3.2.b extends
+    # the Anexo II day by the same two days to Wednesday 27 January. That day leaves
+    # five natural days and three business days (28, 29 January and 1 February) before
+    # the close. The calendar prints no row for 12M of its year, so none is authored.
+    window = _window("303", _CALENDAR_YEAR, code, operation)
+    assert window.closes_on == date(_CALENDAR_YEAR + 1, 2, 1)
     assert window.payment_cutoff_on is None
 
     resolved = resolve_payment_cutoff("303", window, operation=operation)
 
     assert isinstance(resolved, DerivedPaymentCutoff)
     assert resolved.extension_days == 2
-    assert resolved.cutoff_on == date(2027, 1, 27)
-    assert resolved.base_on == date(2027, 1, 27)
+    assert resolved.cutoff_on == date(_CALENDAR_YEAR + 1, 1, 27)
+    assert resolved.base_on == date(_CALENDAR_YEAR + 1, 1, 27)
 
 
-# A filing year well beyond the support horizon, chosen so that 15 July is a
-# Saturday and 20 July a Thursday.
-_PROJECTED_YEAR = 2034
+# A filing year the authority publishes no holiday calendar for, chosen so that
+# 15 July is a Saturday and 20 July a Thursday.
+with bundled_indexed_authority().operation() as _published:
+    _FIRST_UNPUBLISHED_YEAR = first_unpublished_calendar_year(_published)
+_PROJECTED_YEAR = first_year_where(
+    lambda candidate: date(candidate, 7, 15).weekday() == 5, start=_FIRST_UNPUBLISHED_YEAR
+)
 
 
 def _projected_window() -> DeadlineWindowDefinition:
@@ -568,13 +607,13 @@ def test_an_unverified_territory_is_unavailable_rather_than_national_only(operat
 @pytest.mark.parametrize(
     ("year", "code", "expected"),
     (
-        # Wednesday 15 April 2026; filing closes Monday 20 April, so nothing
+        # Wednesday 15 April of the calendar year; filing closes Monday 20 April, so nothing
         # extends and 16, 17 and 20 April leave the margin.
-        (2026, "1T", date(2026, 4, 15)),
-        # Thursday 15 January 2026; filing closes Tuesday 20 January.
-        (2025, "4T", date(2026, 1, 15)),
+        (_CALENDAR_YEAR, "1T", date(_CALENDAR_YEAR, 4, 15)),
+        # Thursday 15 January of the calendar year; filing closes Tuesday 20 January.
+        (_CALENDAR_YEAR - 1, "4T", date(_CALENDAR_YEAR, 1, 15)),
     ),
-    ids=("1t-2026", "4t-2025"),
+    ids=("1t-calendar-year", "4t-previous-year"),
 )
 def test_a_quarterly_withholding_modelo_derives_day_15_of_the_filing_month(
     modelo: str,
@@ -596,14 +635,14 @@ def test_a_quarterly_withholding_modelo_derives_day_15_of_the_filing_month(
 @pytest.mark.parametrize(
     ("code", "expected"),
     (
-        # Anexo day Sunday 15 February 2026; filing closes Friday 20 February.
+        # Anexo day Sunday 15 February of the calendar year; filing closes Friday 20 February.
         # AEAT's practice takes the latest business day leaving three business
         # days: Tuesday 17 (18, 19 and 20). The 2026 calendar prints 17.
-        ("01", date(2026, 2, 17)),
+        ("01", date(_CALENDAR_YEAR, 2, 17)),
         # Nominal close Saturday 20 June 2026 moves to Monday 22, two days, so
         # the Anexo day moves from 15 to Wednesday 17 June, which leaves 18, 19
         # and 22. The 2026 calendar prints 17.
-        ("05", date(2026, 6, 17)),
+        ("05", date(_CALENDAR_YEAR, 6, 17)),
     ),
     ids=("01-weekend-anexo-day", "05-extended-close"),
 )
@@ -612,7 +651,7 @@ def test_a_monthly_modelo_111_derives_from_day_15_of_the_following_month(
     expected: date,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    derived = derive_payment_cutoff("111", _window("111", 2026, code, operation), operation=operation)
+    derived = derive_payment_cutoff("111", _window("111", _CALENDAR_YEAR, code, operation), operation=operation)
 
     assert isinstance(derived, DerivedPaymentCutoff), derived
     assert derived.cutoff_on == expected
@@ -620,27 +659,27 @@ def test_a_monthly_modelo_111_derives_from_day_15_of_the_following_month(
 
 
 def test_a_monthly_modelo_111_period_12_cuts_off_on_15_january(operation: PinnedAuthorityOperation) -> None:
-    # Period 12 of 2025 is filed in January 2026, whose Anexo day is Thursday 15
-    # January; filing closes Tuesday 20 January.
-    derived = derive_payment_cutoff("111", _window("111", 2025, "12", operation), operation=operation)
+    # Period 12 of the year before the calendar year is filed in January of the
+    # calendar year, whose Anexo day is Thursday 15 January; filing closes Tuesday 20 January.
+    derived = derive_payment_cutoff("111", _window("111", _CALENDAR_YEAR - 1, "12", operation), operation=operation)
 
     assert isinstance(derived, DerivedPaymentCutoff), derived
-    assert derived.anexo_on == date(2026, 1, 15)
-    assert derived.cutoff_on == date(2026, 1, 15)
+    assert derived.anexo_on == date(_CALENDAR_YEAR, 1, 15)
+    assert derived.cutoff_on == date(_CALENDAR_YEAR, 1, 15)
 
 
 @pytest.mark.parametrize("modelo", ("130", "131"))
 @pytest.mark.parametrize(
     ("year", "code", "expected_anexo", "expected"),
     (
-        # Wednesday 15 July 2026; filing closes Monday 20 July.
-        (2026, "2T", date(2026, 7, 15), date(2026, 7, 15)),
-        # Anexo day Sunday 25 January 2026; filing closes Friday 30 January.
-        # AEAT's practice takes Tuesday 27, which leaves 28, 29 and 30; the 2026
-        # calendar prints "4T 25: 1 al 27 de enero" for both modelos.
-        (2025, "4T", date(2026, 1, 25), date(2026, 1, 27)),
+        # Wednesday 15 July of the calendar year; filing closes Monday 20 July.
+        (_CALENDAR_YEAR, "2T", date(_CALENDAR_YEAR, 7, 15), date(_CALENDAR_YEAR, 7, 15)),
+        # Anexo day Sunday 25 January of the calendar year; filing closes Friday 30 January.
+        # AEAT's practice takes Tuesday 27, which leaves 28, 29 and 30; the calendar
+        # prints "1 al 27 de enero" for the fourth quarter of both modelos.
+        (_CALENDAR_YEAR - 1, "4T", date(_CALENDAR_YEAR, 1, 25), date(_CALENDAR_YEAR, 1, 27)),
     ),
-    ids=("2t-2026", "4t-2025"),
+    ids=("2t-calendar-year", "4t-previous-year"),
 )
 def test_a_pago_fraccionado_modelo_derives_the_303_quarterly_days(
     modelo: str,
@@ -661,7 +700,7 @@ def test_a_pago_fraccionado_modelo_derives_the_303_quarterly_days(
 
 def test_a_modelo_without_a_declared_clause_has_no_cutoff(operation: PinnedAuthorityOperation) -> None:
     # Anexo II lists Modelo 216, but the registry declares no clause for it.
-    window = _window("216", 2026, "1T", operation).model_copy(update={"payment_cutoff_on": None})
+    window = _window("216", _CALENDAR_YEAR, "1T", operation).model_copy(update={"payment_cutoff_on": None})
 
     resolved = resolve_payment_cutoff("216", window, operation=operation)
 
