@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from ..application.workbench_capture_memory import WorkbenchCaptureMemory
+from ..application.workbench_capture_memory import WorkbenchCaptureMemory, WorkbenchCensusMemo
 from ..application.workbench_generation import (
     InstalledWorkbenchGenerationProviderV1,
 )
@@ -42,12 +42,16 @@ def compose_secure_workbench_generation_provider(
     operation: PinnedAuthorityOperation,
     operation_contracts: OperationPublicContractSetV1,
     account_session_reader: Callable[[], HomeAccountSession],
+    census_memory: WorkbenchCensusMemo | None = None,
 ) -> Callable[[], WorkbenchGenerationV1]:
     """Bind one explicit profile and pinned authority to the existing read door.
 
     The caller owns authentication and the exact profile session. A fresh
     session check precedes each capture and the repository composition it
     performs; neither this builder nor its readers select an active profile.
+    ``census_memory`` is the session's kept census classification, so a
+    capture classifies only the journal records created since the previous
+    one; ``None`` classifies the whole journal every time.
     """
     account_session_reader()
     read_door = _secure_read_door(
@@ -55,6 +59,7 @@ def compose_secure_workbench_generation_provider(
         operation=operation,
         operation_contracts=operation_contracts,
         account_session_reader=account_session_reader,
+        census_memory=census_memory,
     )
 
     def capture() -> WorkbenchGenerationV1:
@@ -94,6 +99,7 @@ def _secure_read_door(
     operation_contracts: OperationPublicContractSetV1 | None,
     account_session_reader: Callable[[], HomeAccountSession] | None,
     capture_memory: WorkbenchCaptureMemory | None = None,
+    census_memory: WorkbenchCensusMemo | None = None,
 ) -> Callable[[], SecureProfileWorkbenchGenerationReadDoorV1]:
     """Compose the read door over one profile's secure repositories, afresh for each capture."""
     from ..adapters.persistence.profile.credit_resolution_records import CreditResolutionRepositoryAdapter
@@ -149,7 +155,7 @@ def _secure_read_door(
             credit_resolution_reader=CreditResolutionRepositoryAdapter(objects=objects),
             reconciliation_reader=lambda: tuple(ModeloReconciliationRecordRepository(objects=objects).iter_records()),
             notification_custody_reader=StoredNotificationCustodyCounter(profile_id),
-            census_observation_reader=StoredCensalHistoryReader(UUID(profile_id)),
+            census_observation_reader=StoredCensalHistoryReader(UUID(profile_id), memo=census_memory),
             result_casilla_reader=_declaration_result_casilla_reader(operation),
             operation_contracts=operation_contracts,
             modelo_projection_reader=modelo_workspace_projection_reader(operation),

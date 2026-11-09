@@ -184,6 +184,11 @@ def _profile(tmp_path: Path) -> Generator[OperationSecureReferenceStore]:
 @pytest.fixture
 def decodes(monkeypatch: pytest.MonkeyPatch) -> list[str]:
     """The journal records the real repository decodes, by operation id."""
+    return journal_decodes(monkeypatch)
+
+
+def journal_decodes(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    """Record, by operation id, every journal record the real repository decodes from now on."""
     decoded: list[str] = []
     original = journal_module.SnapshotJournalRepository._decode_payload
 
