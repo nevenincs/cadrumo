@@ -318,6 +318,7 @@ class CasillaEditorPanel(Vertical):
         calculation: str | None = None,
         status_line: StatusLine | None = None,
         recorded: bool = False,
+        calculated: bool = True,
         aeat_imported: date | None = None,
         staged: StagedChange | None = None,
     ) -> None:
@@ -331,6 +332,8 @@ class CasillaEditorPanel(Vertical):
         is the header's result line, shown first when the host covers it.
         ``recorded`` is the declaration being recorded as filed, whose "Now"
         line says what a box holds rather than asking the filer for a value.
+        ``calculated`` says whether the declaration has been calculated; before
+        then a box waiting on a source says it waits on the calculation.
         ``aeat_imported`` is the day the AEAT tax data the calculation took
         values from was imported, which a value taken from it names.
         """
@@ -338,6 +341,7 @@ class CasillaEditorPanel(Vertical):
         self._field = field
         self._staged = staged
         self._recorded = recorded
+        self._calculated = calculated
         self._aeat_imported = aeat_imported
         self._parse = parse
         self._language = language
@@ -402,7 +406,13 @@ class CasillaEditorPanel(Vertical):
     def _saved_text(self) -> str:
         """The saved value and its original provenance, distinct from the current draft."""
         field = self._field
-        origin = origin_text(field, recorded=self._recorded, aeat_imported=self._aeat_imported, language=self._language)
+        origin = origin_text(
+            field,
+            recorded=self._recorded,
+            aeat_imported=self._aeat_imported,
+            language=self._language,
+            calculated=self._calculated,
+        )
         held = stated_value_text(CasillaListEntry(field, recorded=self._recorded), self._language)
         return origin if held is None else f"{held} · {origin}"
 

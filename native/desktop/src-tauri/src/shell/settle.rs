@@ -448,6 +448,12 @@ async fn outcome(relayed: &Relayed<'_>, p: &Value, tracked: &Tracked) -> Result<
         }
         Phase::Unknown => {
             let mut unresolved = failure("unknown");
+            // The runtime's closed code says why it stopped; the effect it
+            // may have left is what keeps the outcome unknown.
+            unresolved.reason = p["failure_error_code"]
+                .as_str()
+                .or_else(|| p["refusal_ref"].as_str())
+                .map(str::to_owned);
             if let Some(mut stopped) = terminal_failure(p, tracked) {
                 // RESULT authority and the declared error schema own this
                 // sentence. No exception/context is copied into the failure.
@@ -1328,6 +1334,7 @@ mod tests {
                 .await
                 .unwrap_err();
                 assert_eq!(lost.code, "unknown", "{effect}");
+                assert_eq!(lost.reason.as_deref(), Some("REFUSED_EXAMPLE"), "{effect}");
                 assert_eq!(
                     lost.terminal_failure.map(|failure| failure.effect),
                     kept,
@@ -1348,7 +1355,8 @@ mod tests {
                             REVIEWED.id,
                             &subject(),
                             "terminal",
-                            json!({"terminal_condition":"failed","effect":"unknown"}),
+                            json!({"terminal_condition":"failed","effect":"unknown",
+                                "failure_error_code":"ERROR_FINANCIAL_AGGREGATION_VALIDATION"}),
                         ),
                         false,
                     ),
@@ -1372,6 +1380,10 @@ mod tests {
             .await
             .unwrap_err();
             assert_eq!(failure.code, "unknown");
+            assert_eq!(
+                failure.reason.as_deref(),
+                Some("ERROR_FINANCIAL_AGGREGATION_VALIDATION")
+            );
             let terminal = failure.terminal_failure.as_ref().unwrap();
             assert_eq!(terminal.operation_id, OPERATION);
             assert_eq!(terminal.definition_id, REVIEWED.id);

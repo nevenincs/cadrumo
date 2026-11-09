@@ -106,14 +106,14 @@ def test_the_agent_is_asked_for_its_offline_declaration_in_a_credential_free_env
         pytest.param(OSError("denied"), ProviderCatalogUnavailableReason.AGENT_FAILED),
         pytest.param(_ok("not json"), ProviderCatalogUnavailableReason.CATALOG_MALFORMED),
         pytest.param(
-            _ok(json.dumps({"schema_version": 4, "providers": json.loads(synthetic_document())["providers"]})),
+            _ok(json.dumps({"schema_version": 5, "providers": json.loads(synthetic_document())["providers"]})),
             ProviderCatalogUnavailableReason.CATALOG_MALFORMED,
         ),
         pytest.param(
             _ok(
                 json.dumps(
                     {
-                        "schema_version": 5,
+                        "schema_version": 6,
                         "providers": [
                             {key: value for key, value in lane.items() if key != "reads_off_host"}
                             for lane in json.loads(synthetic_document())["providers"]

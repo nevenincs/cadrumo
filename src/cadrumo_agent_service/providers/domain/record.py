@@ -16,8 +16,9 @@ and string rendering masks it. Only :func:`provider_settings_record_document`
 reveals it, for the one caller that encrypts the record at rest.
 
 A separate per-profile record, kept in a record capability of its own, holds
-the models the person added by name to a local lane's model list. It holds no
-secret.
+the models the person added by name to a local lane's model list and the local
+engine setting: which engine runs models on this computer and where they run.
+It holds no secret.
 """
 
 from __future__ import annotations
@@ -174,13 +175,30 @@ class ProviderSettingsRecord(BaseModel):
         return self
 
 
-LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION: Final[Literal[2]] = 2
+LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION: Final[Literal[3]] = 3
 
 LOCAL_MODEL_LIST_MAX_MODELS: Final[int] = 64
 """The most models a person adds to the local model list."""
 
 ModelId = Annotated[str, StringConstraints(pattern=MODEL_RUN_MODEL_ID_PATTERN)]
 """A model id exactly as the lane names it, under the catalogue's own id rule."""
+
+
+class LocalEngine(StrEnum):
+    """The engine that runs models on this computer."""
+
+    LLAMACPP = "llamacpp"
+    OLLAMA = "ollama"
+
+
+class LocalPlacement(StrEnum):
+    """Where the local engine runs a model: on a graphics device when the load fits, or on the processor only."""
+
+    AUTO = "auto"
+    CPU_ONLY = "cpu_only"
+
+
+DEFAULT_LOCAL_PLACEMENT: Final[LocalPlacement] = LocalPlacement.AUTO
 
 
 class ListedModel(BaseModel):
@@ -194,20 +212,25 @@ class ListedModel(BaseModel):
 
 
 class LocalModelListRecord(BaseModel):
-    """The models one profile added to its local lanes' model lists, and the model it reads documents with.
+    """The models one profile added to its local lanes' model lists, the model it reads with and its local engine.
 
     ``models`` holds the models added by name, in the order they were added.
     The lane's recommended models are listed by cadrumo-agent's catalogue and
     are not stored here; a model the record does not name was not added.
     ``reading`` is the lane and model the person selected in the agent's model
     picker, on any lane, local or not; ``None`` when none is stored.
+    ``engine`` and ``placement`` are the local engine setting as the person
+    chose it; ``None`` where the person chose none, which reads as the default
+    engine the package serves and follows it.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
-    schema_version: Literal[2]
+    schema_version: Literal[3]
     models: tuple[ListedModel, ...] = Field(max_length=LOCAL_MODEL_LIST_MAX_MODELS)
     reading: ListedModel | None = None
+    engine: LocalEngine | None = None
+    placement: LocalPlacement | None = None
     generation: Hex64Str
     updated_at: UtcInstant
 
@@ -222,6 +245,18 @@ class LocalModelListRecord(BaseModel):
     def lane_models(self, lane: str) -> tuple[str, ...]:
         """Return the models added to ``lane``'s list, in the order they were added."""
         return tuple(entry.model for entry in self.models if entry.lane == lane)
+
+
+class _ModelListRecord(BaseModel):
+    """Schema version 2 of the record: the model list and the reading model, before the local engine setting."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    schema_version: Literal[2]
+    models: tuple[ListedModel, ...] = Field(max_length=LOCAL_MODEL_LIST_MAX_MODELS)
+    reading: ListedModel | None = None
+    generation: Hex64Str
+    updated_at: UtcInstant
 
 
 class _RoleChoice(BaseModel):
@@ -254,22 +289,40 @@ def local_model_list_record_document(record: LocalModelListRecord) -> bytes:
 def parse_local_model_list_record(payload: bytes) -> LocalModelListRecord:
     """Parse at-rest JSON back into a model list record.
 
+    A schema version 2 record holds no local engine setting: the person chose
+    none, so it is read with none chosen.
+
     A schema version 1 record names a lane and a model per role. Each model it
     names is one the person chose, so it is read as a model on that lane's
     list, in the order stored and once per lane. It names no single model to
     read with, so none is read as selected; the desktop stores the picker's
-    model on its next change. The stored bytes are not rewritten here; the
-    next change writes version 2 under the revision read.
+    model on its next change.
+
+    The stored bytes are not rewritten here; the next change writes the
+    current version under the revision read.
 
     Raises:
-        pydantic.ValidationError: When the payload is not a valid record of either version.
+        pydantic.ValidationError: When the payload is not a valid record of any version.
         UnicodeDecodeError: When the payload is not UTF-8.
     """
     text = payload.decode("utf-8")
     try:
         return LocalModelListRecord.model_validate_json(text)
     except ValidationError:
-        earlier = _RoleChoicesRecord.model_validate_json(text)
+        pass
+    try:
+        listed_record = _ModelListRecord.model_validate_json(text)
+    except ValidationError:
+        pass
+    else:
+        return LocalModelListRecord(
+            schema_version=LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
+            models=listed_record.models,
+            reading=listed_record.reading,
+            generation=listed_record.generation,
+            updated_at=listed_record.updated_at,
+        )
+    earlier = _RoleChoicesRecord.model_validate_json(text)
     listed: dict[tuple[str, str], ListedModel] = {}
     for choice in earlier.selections:
         listed.setdefault((choice.lane, choice.model), ListedModel(lane=choice.lane, model=choice.model))
@@ -301,6 +354,7 @@ def parse_provider_settings_record(payload: bytes) -> ProviderSettingsRecord:
 __all__ = [
     "CREDENTIAL_SECRET_MAX_LENGTH",
     "CREDENTIAL_SECRET_MIN_LENGTH",
+    "DEFAULT_LOCAL_PLACEMENT",
     "LOCAL_MODEL_LIST_MAX_MODELS",
     "LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION",
     "PROVIDER_SETTINGS_RECORD_SCHEMA_VERSION",
@@ -309,7 +363,9 @@ __all__ = [
     "CredentialSecretRefusal",
     "CredentialState",
     "ListedModel",
+    "LocalEngine",
     "LocalModelListRecord",
+    "LocalPlacement",
     "ModelId",
     "ProviderCredential",
     "ProviderPreferences",

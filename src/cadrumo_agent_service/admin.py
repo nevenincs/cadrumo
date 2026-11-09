@@ -55,6 +55,8 @@ type AdminAction = Literal[
     "local_model_remove",
     "local_models_reset",
     "reading_model_choose",
+    "local_engine",
+    "local_engine_choose",
     "attachment_card",
     "attachment_release",
     "attachment_grants",
@@ -83,6 +85,8 @@ class AdminTarget(Protocol):
         scope: Literal["once", "session", "remember"] | None = None,
         grant_id: str | None = None,
         conversation_id: str | None = None,
+        engine: Literal["llamacpp", "ollama"] | None = None,
+        placement: Literal["auto", "cpu_only"] | None = None,
     ) -> JsonValue:
         """Apply validated metadata and separately framed secret bytes under service authority."""
         ...
@@ -108,6 +112,8 @@ class AdminRequest(BaseModel):
     scope: Literal["once", "session", "remember"] | None = None
     grant_id: Annotated[str, Field(pattern=r"^[0-9a-f]{32}$")] | None = None
     conversation_id: Annotated[str, Field(pattern=_AGENT_IDENTIFIER_PATTERN)] | None = None
+    engine: Literal["llamacpp", "ollama"] | None = None
+    placement: Literal["auto", "cpu_only"] | None = None
 
 
 def _read_exact(stream: socket.socket, size: int, *, deadline: float) -> bytearray:
@@ -294,6 +300,8 @@ class AdminServer:
             scope=request.scope,
             grant_id=request.grant_id,
             conversation_id=request.conversation_id,
+            engine=request.engine,
+            placement=request.placement,
         )
 
     def close(self) -> None:

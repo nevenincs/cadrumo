@@ -768,6 +768,7 @@
         "dev.packaging.native.stdlib",
         "dev.packaging.native.storage_vectors",
         "dev.packaging.native.target",
+        "dev.packaging.native.third_party_notices",
         "dev.packaging.native.trace_analysis",
         "dev.packaging.native.transport_contract",
         "dev.packaging.native.tree_copy",

@@ -10,19 +10,28 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
 import {
   addedTo,
+  engineRefusalWords,
+  heldBackByEngine,
   laneModelList,
   listRefusalWords,
   type CatalogLane,
   type LaneModel,
 } from "../../shell/localModelLanes";
+import type {
+  AgentLocalEngineToken,
+  AgentLocalPlacement,
+} from "../../ipc/contract";
 import { formatSize } from "../../shared/numbers";
 import type { AgentModelLicenceFacts } from "../../shell/agentSession";
 import {
   planIsFor,
   ReviewClaimContext,
+  useLocalEngine,
   useLocalModels,
+  type LocalEngineState,
   type LocalModelHost,
 } from "../../shell/localModels";
 import { useProvisioning } from "../../shell/provisioning";
@@ -175,6 +184,156 @@ function LocalModelRow({
   );
 }
 
+/** The words of an engine and of a placement. Each key is named whole, so
+ * the shell's key check sees every one. */
+function engineWords(t: Translate, engine: AgentLocalEngineToken) {
+  return engine === "llamacpp"
+    ? {
+        label: t("desktop.providers.local_engine_llamacpp"),
+        detail: t("desktop.providers.local_engine_llamacpp_detail"),
+      }
+    : {
+        label: t("desktop.providers.local_engine_ollama"),
+        detail: t("desktop.providers.local_engine_ollama_detail"),
+      };
+}
+
+function placementWords(t: Translate, placement: AgentLocalPlacement) {
+  return placement === "auto"
+    ? {
+        label: t("desktop.providers.local_placement_auto"),
+        detail: t("desktop.providers.local_placement_auto_detail"),
+      }
+    : {
+        label: t("desktop.providers.local_placement_cpu_only"),
+        detail: t("desktop.providers.local_placement_cpu_only_detail"),
+      };
+}
+
+const ENGINE_CHOICES: readonly AgentLocalEngineToken[] = ["llamacpp", "ollama"];
+const PLACEMENT_CHOICES: readonly AgentLocalPlacement[] = ["auto", "cpu_only"];
+
+/** One choice among a few, each with its label and the detail beneath it. */
+function Choice<T extends string>({
+  name,
+  title,
+  value,
+  values,
+  words,
+  disabled,
+  onChoose,
+}: {
+  name: string;
+  title: string;
+  value: T;
+  values: readonly T[];
+  words: (value: T) => { label: string; detail: string };
+  disabled: boolean;
+  onChoose: (value: T) => void;
+}) {
+  const titleId = useId();
+  const base = useId();
+  return (
+    <div data-slot={name} className="grid gap-1">
+      <h6 id={titleId} className="text-sm font-medium text-foreground">
+        {title}
+      </h6>
+      <RadioGroup
+        aria-labelledby={titleId}
+        value={value}
+        disabled={disabled}
+        onValueChange={(next) => onChoose(next as T)}
+      >
+        {values.map((option) => {
+          const { label, detail } = words(option);
+          const labelId = `${base}-${option}`;
+          return (
+            <label
+              key={option}
+              data-choice={option}
+              className="flex items-start gap-2 text-sm"
+            >
+              <RadioGroupItem
+                value={option}
+                aria-labelledby={labelId}
+                aria-describedby={`${labelId}-detail`}
+                className="mt-0.5"
+              />
+              <span className="grid">
+                <span id={labelId} className="font-medium text-foreground">
+                  {label}
+                </span>
+                <span
+                  id={`${labelId}-detail`}
+                  className="text-muted-foreground"
+                >
+                  {detail}
+                </span>
+              </span>
+            </label>
+          );
+        })}
+      </RadioGroup>
+    </div>
+  );
+}
+
+/** The local engine and the placement the models run on, stored together.
+ * A change restarts the assistant, which the note says. */
+function LocalEngineChoice({ engine }: { engine: LocalEngineState }) {
+  const t = useStrings();
+  const value = engine.value;
+  if (value?.state !== "readable") return null;
+  const choose = (
+    next: AgentLocalEngineToken,
+    placement: AgentLocalPlacement,
+  ) => void engine.change(next, placement);
+  return (
+    <div data-slot="local-engine" className="grid gap-3">
+      <div className="grid gap-1">
+        <h6 className="text-sm font-medium text-foreground">
+          {t("desktop.providers.local_engine_title")}
+        </h6>
+        <p className="text-sm text-muted-foreground">
+          {t("desktop.providers.local_engine_lead")}
+        </p>
+      </div>
+      <Choice
+        name="local-engine-choice"
+        title={t("desktop.providers.local_engine_title")}
+        value={value.engine}
+        values={ENGINE_CHOICES}
+        words={(option) => engineWords(t, option)}
+        disabled={engine.busy}
+        onChoose={(next) => choose(next, value.placement)}
+      />
+      <Choice
+        name="local-placement-choice"
+        title={t("desktop.providers.local_placement_title")}
+        value={value.placement}
+        values={PLACEMENT_CHOICES}
+        words={(option) => placementWords(t, option)}
+        disabled={engine.busy}
+        onChoose={(next) => choose(value.engine, next)}
+      />
+      <p className="text-sm text-muted-foreground">
+        {t("desktop.providers.local_engine_restarts")}
+      </p>
+      {engine.busy && (
+        <p role="status" className="text-sm text-muted-foreground">
+          {t("desktop.providers.local_engine_changing")}
+        </p>
+      )}
+      {engine.refusal && (
+        <p role="alert" className="flex items-start gap-2 text-sm">
+          <Icon name="alert" className="mt-0.5 text-destructive" />
+          <span>{engineRefusalWords(t, engine.refusal)}</span>
+        </p>
+      )}
+    </div>
+  );
+}
+
 /** Adds a model to the lane's list by the name the local AI pulls it by. */
 function AddModel({
   busy,
@@ -230,7 +389,8 @@ function AddModel({
  * picker offers of the lane; the model the person picks there is the one the
  * agent and document reading run with. */
 export function LocalModels({
-  lane,
+  lane: offered,
+  withEngine = false,
   host,
   locale,
   onRemoved,
@@ -238,6 +398,9 @@ export function LocalModels({
   onRetryLane,
 }: {
   lane: CatalogLane | null;
+  /** Offers the local engine and placement choice here: set on the one
+   * section that stands for the local AI. */
+  withEngine?: boolean;
   host: LocalModelHost;
   locale: string;
   /** Told once a model is removed from this computer. */
@@ -248,6 +411,10 @@ export function LocalModels({
 }) {
   const t = useStrings();
   const store = useProvisioning();
+  const engine = useLocalEngine(host);
+  // The lane of the engine that is not selected is not offered.
+  const heldBack = offered !== null && heldBackByEngine(offered, engine.value);
+  const lane = heldBack ? null : offered;
   const { snapshot, retry, busy, outcomes, change } = useLocalModels(host);
   // Downloading and removing are setup's: offered only where this window
   // offers setup, and a download waits while the local AI sets up.
@@ -371,6 +538,7 @@ export function LocalModels({
     }
   };
   const working = busy !== null || removing !== null;
+  if (heldBack && !withEngine) return null;
   return (
     <section data-slot="local-models" className="grid gap-2 pt-1">
       <h6 className="text-sm font-medium text-foreground">
@@ -379,6 +547,7 @@ export function LocalModels({
       <p className="text-sm text-muted-foreground">
         {t("desktop.providers.local_models_lead")}
       </p>
+      {withEngine && <LocalEngineChoice engine={engine} />}
       {sectionReview && (
         <div data-slot="local-models-review">
           <RowReview run={sectionReview} locale={locale} reveal />

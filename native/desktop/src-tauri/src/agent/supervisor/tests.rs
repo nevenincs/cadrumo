@@ -46,6 +46,44 @@ fn unavailable_supervisor_does_not_observe_or_retry() {
 }
 
 #[test]
+fn the_ready_hook_runs_each_time_the_agent_becomes_ready_and_only_then() {
+    let observe: Observe = Arc::new(|| Box::pin(async { observed(false, true, None) }));
+    let changed: Changed = Arc::new(|| Box::pin(async {}));
+    let supervisor = Supervisor::unavailable(
+        observe,
+        changed,
+        Refusal::ServiceAbsent,
+        Arc::new(Diagnostics::default()),
+    );
+    let calls = Arc::new(AtomicU64::new(0));
+    let counted = calls.clone();
+    supervisor.on_ready(Arc::new(move || {
+        counted.fetch_add(1, Ordering::Relaxed);
+    }));
+    let ready = |version: &str| State::Ready {
+        agent_version: version.to_owned(),
+    };
+    super::publish(&supervisor.shared, State::Starting);
+    assert_eq!(calls.load(Ordering::Relaxed), 0);
+    super::publish(&supervisor.shared, ready("1"));
+    assert_eq!(calls.load(Ordering::Relaxed), 1);
+    // The same status again is no new readiness.
+    super::publish(&supervisor.shared, ready("1"));
+    assert_eq!(calls.load(Ordering::Relaxed), 1);
+    // A restart, or another profile's agent, is ready again.
+    super::publish(&supervisor.shared, State::Starting);
+    super::publish(&supervisor.shared, ready("1"));
+    assert_eq!(calls.load(Ordering::Relaxed), 2);
+    super::publish(
+        &supervisor.shared,
+        State::Refused {
+            code: Refusal::ServiceFailed,
+        },
+    );
+    assert_eq!(calls.load(Ordering::Relaxed), 2);
+}
+
+#[test]
 fn bound_administration_rejects_replacement_before_and_during_an_exchange() {
     use std::io::{Read, Write};
     use std::net::TcpListener;
@@ -455,6 +493,8 @@ async fn startup_timeout_is_observed_while_canonical_status_is_pending() {
         Ok(Prepared {
             command: Command::new("cadrumo-timed-out-preparation-must-never-launch"),
             person: None,
+            local_engine_default:
+                cadrumo_application::provisioning::local_ai::LocalEngine::LlamaCpp,
         })
     });
     let supervisor = Supervisor::new(
@@ -511,6 +551,8 @@ async fn a_profile_change_invalidates_preparation_before_its_result_can_launch()
         Ok(Prepared {
             command: Command::new("cadrumo-cancelled-preparation-must-never-launch"),
             person: None,
+            local_engine_default:
+                cadrumo_application::provisioning::local_ai::LocalEngine::LlamaCpp,
         })
     });
     let supervisor = Supervisor::new(

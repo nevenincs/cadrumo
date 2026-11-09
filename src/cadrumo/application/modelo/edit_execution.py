@@ -57,7 +57,7 @@ from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ...domain.filing.schema import ModeloScalar
 from ...domain.identifiers import canonical_decimal_string
 from ...domain.modelos.calculation_revision import CalculationRevision
-from ...domain.modelos.calculation_revision_operator_layer import CalculationOperatorLayer
+from ...domain.modelos.calculation_revision_operator_layer import ATTESTED_ZERO, CalculationOperatorLayer
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.row_models import ModeloDetailRow
 from .action_errors import ModeloClearedCasillaSourceFedError
@@ -188,6 +188,7 @@ class _OperatorState:
     text_casilla_inputs: dict[CasillaId, str]
     binding_overrides: dict[BindingId, str]
     cleared_casilla_ids: set[CasillaId] = field(default_factory=set)
+    attested_binding_ids: set[BindingId] = field(default_factory=set)
 
     @classmethod
     def from_context(cls, context: CalculationCallerContext) -> _OperatorState:
@@ -197,6 +198,7 @@ class _OperatorState:
             text_casilla_inputs=dict(layer.text_casilla_inputs),
             binding_overrides=dict(layer.binding_overrides),
             cleared_casilla_ids=set(context.cleared_casilla_ids),
+            attested_binding_ids=set(layer.attested_binding_ids),
         )
 
     def operator_sets(self, casilla_id: CasillaId) -> bool:
@@ -211,6 +213,7 @@ class _OperatorState:
             decimal_casilla_inputs=dict(sorted(self.decimal_casilla_inputs.items())),
             text_casilla_inputs=dict(sorted(self.text_casilla_inputs.items())),
             binding_overrides=dict(sorted(self.binding_overrides.items())),
+            attested_binding_ids=tuple(sorted(self.attested_binding_ids)),
         )
 
 
@@ -289,8 +292,14 @@ def _apply_binding_intents(
     """Apply every binding intent to the operator state, refusing the first invalid one."""
     for intent in submission.binding_intents:
         binding_id = intent.address.binding_id
+        # Whatever the intent, an earlier statement on the binding gives way to it.
+        state.attested_binding_ids.discard(binding_id)
         if intent.kind is ModeloEditBindingIntentKind.REMOVE_OVERRIDE:
             state.binding_overrides.pop(binding_id, None)
+            continue
+        if intent.kind is ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT:
+            state.binding_overrides[binding_id] = ATTESTED_ZERO
+            state.attested_binding_ids.add(binding_id)
             continue
         grammar = modelo_edit_address_grammar(submission.baseline, intent.address)
         if grammar is None:
@@ -453,6 +462,23 @@ def _unresolved_binding_edit_refusal(
     return None
 
 
+def _first_box_fed_by(raw: object, revision: ModeloRevision) -> Mapping[str, object] | None:
+    """Name the first box, in the revision's order, that the refused carries feed, with the carries it reads.
+
+    An earlier return that does not show the boxes a carry reads refuses every
+    such carry at once, naming them by binding; the filer answers them in the
+    boxes they feed, so the refusal is addressed to the first of those.
+    """
+    if not isinstance(raw, str):
+        return None
+    refused = set(raw.split(","))
+    for casilla in revision.casillas:
+        fed = tuple(binding_id for binding_id in bound_casilla_binding_ids(casilla) if binding_id in refused)
+        if fed:
+            return {"casilla_id": casilla.id, "binding_id": ",".join(fed)}
+    return None
+
+
 def pre_effect_refusal(
     error: BaseException, *, revision: ModeloRevision | None = None
 ) -> ModeloEditExecutionNoEffectV1:
@@ -461,13 +487,13 @@ def pre_effect_refusal(
     ``revision`` is a :class:`ModeloRevision`.
     """
     code = get_registered_error_code(error).code
-    if (
-        isinstance(error, RegistryValidationError)
-        and error.translated_message == "errors.calc.bound_casilla_binding_value_missing"
-        and revision is not None
-        and error.context is not None
-    ):
-        refusal = _unresolved_binding_edit_refusal(error.context, revision, code)
+    if isinstance(error, RegistryValidationError) and revision is not None and error.context is not None:
+        context: Mapping[str, object] | None = None
+        if error.translated_message == "errors.calc.bound_casilla_binding_value_missing":
+            context = error.context
+        elif error.translated_message == "errors.calc.previous_filing_casillas_unobserved":
+            context = _first_box_fed_by(error.context.get("binding_ids"), revision)
+        refusal = None if context is None else _unresolved_binding_edit_refusal(context, revision, code)
         if refusal is not None:
             return refusal
     if isinstance(error, ModeloClearedCasillaSourceFedError):
@@ -539,6 +565,7 @@ def _execute_modelo_edit(
             text_casilla_inputs=replay.text_casilla_inputs,
             cleared_casilla_ids=replay.cleared_casilla_ids,
             record_operator_layer=True,
+            attested_binding_ids=replay.attested_binding_ids,
             binding_values=replay.binding_values,
             enum_binding_values=replay.enum_binding_values,
             detail_rows=replay.detail_rows,

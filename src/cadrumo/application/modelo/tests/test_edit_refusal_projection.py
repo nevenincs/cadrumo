@@ -12,10 +12,16 @@ from uuid import UUID
 
 import pytest
 
+from ....core.aggregation import BindingSourceKind
+from ....core.authority_grade import RegistryAuthorityGrade
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.binding_targets import bound_casilla_binding_ids
+from ....domain.calculations.registry.bindings_previous_filing import previous_filing_binding_source_casilla_ids
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
+from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.tests.financial_operand_delivery import deliver_financial_operand
 from .. import edit_operation as operation_definitions
@@ -82,6 +88,44 @@ def test_unknown_or_malformed_producer_context_retains_only_the_safe_family(cont
     assert isinstance(refusal, ModeloEditDomainRefusalV1)
     assert refusal.address is None and refusal.evidence == ()
     assert "calculation_source_unresolved" not in refusal.facts
+
+
+def _modelo_100_years() -> tuple[int, ...]:
+    support = published_supported_filing_years()
+    assert support is not None
+    return tuple(sorted(support.years))
+
+
+@pytest.mark.parametrize("year", _modelo_100_years())
+def test_an_earlier_return_that_cannot_show_a_carry_names_the_first_box_the_carries_feed(
+    year: int, *, operation: PinnedAuthorityOperation
+) -> None:
+    revision = operation.snapshot(
+        "100", filing_year=year, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+    ).revision
+    carried = ("1384", "1387", "1390", "1391")
+    carries = tuple(
+        binding.id
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.PREVIOUS_FILING
+        and set(previous_filing_binding_source_casilla_ids(binding)) & set(carried)
+    )
+    assert carries, "the Modelo 100 carries the negative general base pending from the earlier return"
+    error = RegistryValidationError.for_previous_filing_casillas_unobserved(
+        source_modelo="100",
+        source_filing_year=year - 1,
+        source_period="0A",
+        casilla_ids=carried,
+        binding_ids=carries,
+    )
+
+    refusal = pre_effect_refusal(error, revision=revision).refusal
+
+    first = next(casilla for casilla in revision.casillas if set(bound_casilla_binding_ids(casilla)) & set(carries))
+    assert isinstance(refusal, ModeloEditDomainRefusalV1)
+    assert refusal.address == ModeloEditScalarAddressV1(casilla_id=first.id)
+    assert set(refusal.evidence) == set(bound_casilla_binding_ids(first)) & set(carries)
+    assert "calculation_source_unresolved" in refusal.facts
 
 
 def _prerequisite() -> ModeloEditCalculationPrerequisiteV1:

@@ -25,11 +25,15 @@ import type { InvoiceKind } from "../../../shell/ledgerInvoiceOperations";
 import type { LedgerPeriod } from "../../../shell/ledgerGrammar";
 import { periodsHoldingToday, usePeriods } from "../../../shell/ledgerPeriods";
 import type { Translate } from "../../../shell/strings";
+import { listOf } from "../../../shared/lists";
 import { formatSize } from "../../../shared/numbers";
 import { PeriodSelector } from "../PeriodSelector";
-import { useFieldSuggestions } from "../suggestions/SuggestionsProvider";
+import {
+  useFieldSuggestions,
+  useVocabulary,
+} from "../suggestions/SuggestionsProvider";
 import { FileRow } from "./ImportFileRow";
-import { IMPORT_KINDS, LEDGER_PROVIDERS, type ImportKind } from "./importModel";
+import { IMPORT_KINDS, type ImportKind } from "./importModel";
 import { providerName } from "./transferWords";
 
 /**
@@ -99,6 +103,9 @@ export function ImportWhatStep({
   // The quarter that holds today is served; the switch offers it once it is.
   usePeriods();
   const countries = useFieldSuggestions("country");
+  // The formats are those this installation parses, as the ledger serves them.
+  const formats = useVocabulary().importFormats as readonly LedgerProvider[];
+  const named = formats.filter((format) => format !== "auto");
   const directionChoice = (
     value: InvoiceKind | null,
     onChange: (next: InvoiceKind) => void,
@@ -175,9 +182,17 @@ export function ImportWhatStep({
             </Button>
           )}
         </div>
-        <p className="text-xs text-muted-foreground">
-          {t(`desktop.ledger.import.accepts.${kind}`)}
-        </p>
+        {(kind !== "bank" || named.length > 0) && (
+          <p className="text-xs text-muted-foreground">
+            {t(`desktop.ledger.import.accepts.${kind}`, {
+              formats: listOf(
+                locale,
+                named.map((format) => providerName(t, format)),
+                "or",
+              ),
+            })}
+          </p>
+        )}
       </div>
       {pickFailed && (
         <p role="alert" className="text-sm">
@@ -229,7 +244,7 @@ export function ImportWhatStep({
                 onProvider(event.target.value as LedgerProvider)
               }
             >
-              {LEDGER_PROVIDERS.map((value) => (
+              {formats.map((value) => (
                 <option key={value} value={value}>
                   {providerName(t, value)}
                 </option>

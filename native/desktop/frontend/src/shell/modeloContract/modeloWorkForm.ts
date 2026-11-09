@@ -21,6 +21,7 @@ import type {
   ResultDisposition,
   RevisionId,
   SourceRefId,
+  TransactionId,
   VerificationCompletenessStatus,
   WorkUnitId,
 } from "./modelo";
@@ -37,6 +38,18 @@ import type {
   ModeloWorkProgressState,
   SourceSurface,
 } from "./modeloWork";
+import type {
+  RegistryAuthorityGrade,
+  SourceFamily,
+  SourcePolicyV1,
+  TemporalProjectionDirection,
+} from "./modeloWorkFormPart2";
+
+/**
+ * The closed families of earlier-filing carries a filer may state hold
+ * nothing.
+ */
+export type AbsenceAttestationFamily = "renta_negative_general_bases_pending";
 
 /**
  * What one reported row does in the declaration.
@@ -223,6 +236,23 @@ export type ModeloFormCalculationNote = {
   fact: CalculationNoteFact | null;
   element_names: [string, string][];
   message: string | null;
+};
+
+/**
+ * The statement a filer can make that no amount from an earlier ejercicio is
+ * still pending.
+ *
+ * It is offered while a carry the declaration reads from an earlier filing
+ * holds no value: no stored earlier return supplied it, and the filer has
+ * neither entered it nor stated it. Applying it stages one `attest_no_amount`
+ * intent per binding, which records each as a zero the filer stated.
+ */
+export type ModeloFormCarryAttestation = {
+  family: AbsenceAttestationFamily;
+  binding_ids: BindingId[];
+  action_words: string;
+  statement_words: string;
+  effect_words: string;
 };
 
 /**
@@ -772,11 +802,15 @@ export type ModeloFormVerdict = {
  * `authored_filing_year` is the year that edition authors and
  * `reachable_grade` the rung of authority the year reaches. The registry's
  * temporal resolver and grade rule supply all three; a surface renders them.
+ * `words` says, for a carried year only, that the declaration calculates under
+ * that edition's rules and cannot be checked for filing or exported: the same
+ * sentence verification refuses it with, served before any check.
  */
 export type ModeloFormYearProjection = {
   direction: TemporalProjectionDirection;
   authored_filing_year: number;
   reachable_grade: RegistryAuthorityGrade;
+  words: string | null;
 };
 
 /**
@@ -827,6 +861,7 @@ export type ModeloWorkbenchFormProjectionV1 = {
   typing_effects: ModeloFormTypingEffect[];
   export_offer: PublicModeloFormExportOffer | null;
   profile_requirements: string[];
+  source_requirements: ReconciliationSourceRequirementV1[];
   receipt: ModeloFormReceipt | null;
 };
 
@@ -837,6 +872,72 @@ export type ModeloWorkbenchFormRequest = {
   profile_id: string;
   work_unit_id: WorkUnitId;
   output_language: OutputLanguage;
+};
+
+/**
+ * Calculate the declaration one work unit holds.
+ */
+export type OperationCalculateWorkStepV1 = {
+  kind: "calculate_work";
+  work_unit_id: WorkUnitId;
+  words: string;
+};
+
+/**
+ * Declare the profile setup complete, which every filing-grade verb re-checks.
+ */
+export type OperationCompleteProfileSetupStepV1 = {
+  kind: "complete_profile_setup";
+  words: string;
+};
+
+/**
+ * Create the declaration of one modelo, filing year and period.
+ */
+export type OperationCreateWorkStepV1 = {
+  kind: "create_work";
+  modelo: string;
+  filing_year: number;
+  period_code: string;
+  words: string;
+};
+
+export type OperationNextStepV1 =
+  | OperationCreateWorkStepV1
+  | OperationCalculateWorkStepV1
+  | OperationOpenWorkStepV1
+  | OperationOpenProfileFieldStepV1
+  | OperationCompleteProfileSetupStepV1
+  | OperationOpenMovementStepV1;
+
+/**
+ * Open one ledger movement in the Libro, where the fact the refusal names is
+ * recorded.
+ */
+export type OperationOpenMovementStepV1 = {
+  kind: "open_movement";
+  transaction_id: TransactionId;
+  words: string;
+};
+
+/**
+ * Fill in one profile detail the refusal named, at the schema path it lives
+ * at.
+ */
+export type OperationOpenProfileFieldStepV1 = {
+  kind: "open_profile_field";
+  path: string;
+  words: string;
+};
+
+/**
+ * Open the declaration one work unit holds, where its own form says what it
+ * still lacks.
+ */
+export type OperationOpenWorkStepV1 = {
+  kind: "open_work";
+  work_unit_id: WorkUnitId;
+  words: string;
 };
 
 /**
@@ -975,6 +1076,7 @@ export type PublicModeloFormField = {
   value_text: string | null;
   restorable: boolean;
   filers_own: boolean;
+  stated_absent: AbsenceAttestationFamily | null;
   confirm_value: ModeloEditWireScalar;
   takes_typed_value: boolean;
   clearable: boolean;
@@ -1188,6 +1290,7 @@ export type PublicModeloWorkForm = {
   filing: ModeloFormFiling | null;
   last_export: ModeloFormExport | null;
   edit_closure: ModeloFormEditClosure | null;
+  carry_attestations: ModeloFormCarryAttestation[];
   modelo_title: string | null;
   modelo_name: string | null;
   modelo_number: string | null;
@@ -1231,52 +1334,10 @@ export type PublicSpanishTaxIdFormat = {
 };
 
 /**
- * How far one modelo registry revision's declared authority reaches.
- *
- * The members form a ladder of increasing claim, each rung requiring
- * everything the rung below it requires. Which families a rung demands is a
- * question about *dispositions*, not raw population - a family may be honestly
- * resolved as not applicable, with a reason and legal references - so an
- * informative modelo carrying export layouts and no formulas can legitimately
- * reach `FILING`. Registry build validation owns that rule; this enum owns
- * only the vocabulary.
+ * One source declaration the to-do list names before the summary can be worked
+ * out, and its door.
  */
-export type RegistryAuthorityGrade = "applicability" | "calculation" | "filing";
-
-/**
- * The kind of place a value comes from, as a filer thinks of it.
- */
-export type SourceFamily =
-  | "records"
-  | "registers"
-  | "profile"
-  | "earlier_filings"
-  | "aeat_draft"
-  | "your_entries"
-  | "fixed_by_design";
-
-/**
- * What a filer may do about a value this source supplies.
- */
-export type SourceOverridePolicy =
-  | "fix_at_source"
-  | "override_with_reason"
-  | "edit_at_home"
-  | "enter"
-  | "fixed"
-  | "undecided";
-
-/**
- * The family, policy and owning surface of one binding source kind.
- */
-export type SourcePolicyV1 = {
-  source_kind: BindingSourceKind;
-  family: SourceFamily;
-  override_policy: SourceOverridePolicy;
-  surface: SourceSurface;
+export type ReconciliationSourceRequirementV1 = {
+  words: string;
+  next_step: OperationNextStepV1;
 };
-
-/**
- * How a resolved coordinate relates to the declaration supplying it.
- */
-export type TemporalProjectionDirection = "authored" | "backward" | "forward";

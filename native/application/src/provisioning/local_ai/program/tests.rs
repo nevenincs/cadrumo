@@ -3,7 +3,9 @@ use crate::{
     component::Cancellation,
     provisioning::{
         items::ItemId,
-        local_ai::fake_ollama::{HELPER_ARGUMENTS, HELPER_GATE, HELPER_MODE, HELPER_VERSION},
+        local_ai::fake_ollama::{
+            HELPER_ARGUMENTS, HELPER_GATE, HELPER_MODE, HELPER_SILENCE, HELPER_VERSION,
+        },
         pins::{ComponentPins, ProgramIdentity},
         plan::PlanEntry,
         receipts::ReceiptReading,
@@ -394,6 +396,10 @@ fn a_pinned_archive_installs_runs_as_the_engines_child_and_is_stopped_before_it_
         environment["OLLAMA_NOPRUNE"], "1",
         "the server never clears blobs the engine has stored before their manifest"
     );
+    assert_eq!(
+        environment["OLLAMA_NO_CLOUD"], "1",
+        "the server reaches no Ollama cloud service"
+    );
     assert!(
         environment
             .keys()
@@ -757,6 +763,18 @@ fn a_program_that_never_listens_or_answers_otherwise_is_ended_and_not_running() 
         Some(StartFailureKind::VersionUnconfirmed),
         "the record holds the latest failed start"
     );
+    let record: serde_json::Value =
+        serde_json::from_slice(&fs::read(locations.programs.join(START_FAILURE_RECORD)).unwrap())
+            .unwrap();
+    assert_eq!(
+        record,
+        serde_json::json!({
+            "schema": 1,
+            "reason": "server_version_unconfirmed",
+            "last_check": "different_version",
+        }),
+        "the record says what the last check got, and not the version the server sent"
+    );
     assert_eq!(other.category(), FailureCategory::ProgramNotRunning);
     assert_eq!(
         other.to_string(),
@@ -812,6 +830,120 @@ fn a_program_that_never_listens_or_answers_otherwise_is_ended_and_not_running() 
     assert!(
         !answers(address),
         "dropping the engine's program ends its server"
+    );
+}
+
+#[test]
+fn a_program_that_announces_before_it_answers_is_waited_for_within_the_start_budget() {
+    let bytes = archive(b"only");
+    let (certificate, publisher) = publisher(vec![("9.8.7".into(), bytes.clone())]);
+    let network = network_to(certificate.roots(), publisher.address(), None);
+    let hosts: BTreeSet<HostName> = [HostName::new("github.com").unwrap()].into();
+    let mut pacing = SystemPacing::default();
+    let cancellation = Cancellation::default();
+    let mut events = |_| {};
+    let mut transfer = Transfer {
+        network: &network,
+        hosts: &hosts,
+        policy: RetryPolicy::default(),
+        pacing: &mut pacing,
+        events: &mut events,
+        cancellation: &cancellation,
+    };
+    let root = tempfile::tempdir().unwrap();
+    let locations = Locations::under(root.path());
+    let mut program = Program::new(
+        &pins_for(&bytes, "9.8.7", EXECUTABLE),
+        Platform::current().unwrap(),
+        locations.clone(),
+    )
+    .unwrap()
+    .unwrap();
+    program.install(&mut transfer).unwrap();
+
+    // Silent for longer than one unbounded loopback question waits, and well inside the
+    // start budget.
+    let silence = Loopback::new(free_address()).unwrap().io_timeout + Duration::from_secs(2);
+    assert!(silence < START_BUDGET);
+    stand_in(&mut program, "9.8.7");
+    if let Some(stand_in) = program.serve_override.as_mut() {
+        stand_in.environment.push((
+            OsString::from(HELPER_SILENCE),
+            OsString::from(silence.as_millis().to_string()),
+        ));
+    }
+    let began = std::time::Instant::now();
+    let address = program
+        .start(free_address(), &Uncontained, &ambient, None)
+        .map(|server| server.address())
+        .expect("a server that answers within the start budget runs");
+    let waited = began.elapsed();
+    assert!(
+        waited >= silence && waited < START_BUDGET,
+        "the start waited {waited:?} for a server silent for {silence:?}"
+    );
+    assert_eq!(program.latest_start_failure(), None);
+    assert!(answers(address));
+    drop(program);
+    assert!(!answers(address), "dropping the program ends its server");
+}
+
+#[test]
+fn the_start_failure_record_keeps_what_the_last_check_got_and_reads_records_without_it() {
+    let root = tempfile::tempdir().unwrap();
+    let programs = root.path();
+    record_start_failure(
+        programs,
+        &ServerStartFailure::Version(VersionFailure::Status(503)),
+    );
+    let record: serde_json::Value =
+        serde_json::from_slice(&fs::read(programs.join(START_FAILURE_RECORD)).unwrap()).unwrap();
+    assert_eq!(
+        record,
+        serde_json::json!({
+            "schema": 1,
+            "reason": "server_version_unconfirmed",
+            "last_check": "status_503",
+        })
+    );
+    assert_eq!(
+        latest_start_failure(programs),
+        Some(StartFailureKind::VersionUnconfirmed)
+    );
+
+    record_start_failure(
+        programs,
+        &ServerStartFailure::Version(VersionFailure::Unreachable("timed out".into())),
+    );
+    let written = fs::read_to_string(programs.join(START_FAILURE_RECORD)).unwrap();
+    assert!(
+        written.contains(r#""last_check":"unreachable""#),
+        "{written}"
+    );
+    assert!(
+        !written.contains("timed out"),
+        "the record keeps no error text"
+    );
+
+    // A kind other than an unconfirmed version has no last check.
+    record_start_failure(programs, &ServerStartFailure::LogUnreadable);
+    let record: serde_json::Value =
+        serde_json::from_slice(&fs::read(programs.join(START_FAILURE_RECORD)).unwrap()).unwrap();
+    assert!(record.get("last_check").is_none(), "{record}");
+    assert_eq!(
+        latest_start_failure(programs),
+        Some(StartFailureKind::LogUnreadable)
+    );
+
+    // A record an earlier build wrote reads as before.
+    earlier_failure(programs);
+    assert_eq!(
+        latest_start_failure(programs),
+        Some(StartFailureKind::Launch)
+    );
+    assert_eq!(
+        StartFailureKind::from_reason("server_version_unconfirmed"),
+        Some(StartFailureKind::VersionUnconfirmed)
     );
 }
 

@@ -2760,8 +2760,7 @@ desktop:
       whole_counts: Moviments · tot el llibre
     import:
       accepts:
-        bank: CSV, XLSX, XLS, OFX, QFX o PDF · fins a 128 fitxers · no es llegeixen
-          les carpetes de dins
+        bank: '{formats} · fins a 128 fitxers · no es llegeixen les carpetes de dins'
         book: CSV, TSV, XLSX, XLSM o XLS
         documents: PDF, PNG, JPG, TIFF, WEBP, HEIC o XML Facturae, UBL o CII · no
           es llegeixen les carpetes de dins
@@ -4825,7 +4824,8 @@ desktop:
       cancelled: Has cancel·lat la configuració.
       damaged_download: La baixada estava malmesa i no s'ha pogut fer servir.
       disk_full: No hi ha prou espai lliure al disc.
-      host_unreachable: No s'ha pogut contactar amb el servidor de baixada.
+      host_unreachable: No s'ha pogut contactar amb el servidor de baixada. Comprova
+        la teva connexió a internet i torna-ho a provar.
       interrupted: La configuració es va interrompre abans d'acabar.
       memory_busy: Ara mateix hi ha massa memòria en ús. Tanca altres programes i
         torna-ho a provar.
@@ -4838,6 +4838,8 @@ desktop:
       program_not_running: El programa d'IA local no està en marxa.
       secure_connection_failed: No s'ha pogut establir una connexió segura. Potser
         un filtre de xarxa ho impedeix.
+      server_error: El servidor de baixada té un problema. Torna-ho a provar d'aquí
+        a uns minuts.
       unexpected: Alguna cosa ha anat malament.
     item:
       browser: Navegador
@@ -10585,6 +10587,7 @@ workspace:
         què.
       none: Res d'aquest model no et necessita.
       profile: 'Abans de calcular aquest període, el teu perfil ha de respondre:'
+      sources: 'Abans de calcular aquesta declaració, falten les declaracions que resumeix:'
       title: Pendent
     value:
       not_applicable: no s'aplica

@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#local-inference-engine'
 date: '2026-11-07'
-modified: '2026-11-08'
+modified: '2026-11-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:efe0dc3607f2bf12dc57bd12b5d5d023f342071980a2d3013b68e91553ffadd5'
+body_hash: 'sha256:aee52db55aa4f076fa3bd42d9f0086ca122b8752f151fc77a9671308ed338fd2'
 related:
   - "[[2026-11-07-local-inference-engine-plan]]"
 ---
@@ -194,6 +194,47 @@ related:
 - `S18` `M` `native/application/tests/live_package.rs`
 - `S18` `M` `native/CONTRACT.md`
 - `S18` `by:` `vaultspec-standard-executor`
+- `S18` `M` `native/application/src/provisioning/local_ai/llama_server/tests.rs`
+- `S18` `by:` `implementation-engineer`
+- `S18` `M` `native/application/src/diagnostics/lifecycle.rs`
+- `S18` `M` `native/application/src/provisioning/local_ai/mod.rs`
+- `S18` `M` `native/application/src/provisioning/local_ai/models/tests.rs`
+- `S18` `M` `native/application/src/provisioning/local_ai/supervision/tests.rs`
+- `S18` `M` `native/manager/src/background.rs`
+- `S18` `M` `native/manager/src/diagnostics.rs`
+- `S18` `M` `native/manager/src/local_engine.rs`
+- `S18` `M` `native/manager/src/supervision/local_ai.rs`
+- `S18` `verify:` `rustfmt --edition 2024 --check` -> `pass`
+- `S18` `by:` `implementation-engineer-high`
+- `S18` `by:` `opus`
+- `S18` `M` `dev/locales/desktop_chrome.py`
+- `S18` `M` `dev/locales/desktop_interface_keys.py`
+- `S18` `M` `native/application/src/error/application.rs`
+- `S18` `M` `native/application/src/provisioning/failure.rs`
+- `S18` `M` `native/application/src/provisioning/local_ai/fake_ollama.rs`
+- `S18` `M` `native/application/src/provisioning/local_ai/program/tests.rs`
+- `S18` `M` `native/application/src/provisioning/local_ai/registry.rs`
+- `S18` `M` `native/application/src/provisioning/transfer.rs`
+- `S18` `M` `native/application/tests/provisioning_faults.rs`
+- `S18` `M` `native/desktop/frontend/src/dev/setupFixture.ts`
+- `S18` `M` `native/desktop/frontend/src/ipc/componentSetup.ts`
+- `S18` `M` `native/desktop/frontend/tests/scenarios/setup.spec.ts`
+- `S18` `M` `native/desktop/src-tauri/src/shell/setup/components.rs`
+- `S18` `M` `native/desktop/src-tauri/src/shell/setup/wire.rs`
+- `S18` `M` `src/cadrumo/locales/ca/common.yml`
+- `S18` `M` `src/cadrumo/locales/en/common.yml`
+- `S18` `M` `src/cadrumo/locales/es/common.yml`
+- `S18` `M` `src/cadrumo/locales/hu/common.yml`
+- `S18` `M` `src/cadrumo_client/contracts/failure_categories.py`
+- `S18` `verify:` `rustfmt --edition 2024 --check` -> `pass`
+- `S18` `verify:` `pytest dev/locales/tests` -> `fail`
+- `S18` `verify:` `rustfmt --edition 2024 --check` -> `pass`
+- `S21` `M` `native/desktop/src-tauri/src/shell/setup/components_tests.rs`
+- `S21` `verify:` `just test-native Debug (manager.rust, application.rust)` -> `fail`
+- `S21` `verify:` `just check-rust Debug` -> `pass`
+- `S21` `verify:` `cmake --build --preset debug --target desktop-host-unit-test` -> `fail`
+- `S23` `M` `native/desktop/frontend/src/dev/providerSettingsFixture.ts`
+- `S23` `verify:` `just test-frontend Debug` -> `fail`
 - `S02` `M` `cadrumo-agent:.env.example`
 - `S02` `M` `cadrumo-agent:dev/package_runner/lanes.py`
 - `S02` `M` `cadrumo-agent:dev/provider_metadata/inputs/manual_lanes.json`
@@ -456,6 +497,11 @@ related:
 - `S16` Review-finding fixes (transfer retry window, store reclaim, progress offset, drain marker and bounded check wait, refused-load body, router alias ids, live package tests): Rust build, clippy and cargo tests are pending the root slot; rustfmt --edition 2024 --check passes on the changed files.
 - `S17` Review-finding fixes (transfer retry window, store reclaim, progress offset, drain marker and bounded check wait, refused-load body, router alias ids, live package tests): Rust build, clippy and cargo tests are pending the root slot; rustfmt --edition 2024 --check passes on the changed files.
 - `S18` Review-finding fixes (transfer retry window, store reclaim, progress offset, drain marker and bounded check wait, refused-load body, router alias ids, live package tests): Rust build, clippy and cargo tests are pending the root slot; rustfmt --edition 2024 --check passes on the changed files.
+- `S18` Rust build pending the root slot
+- `S18` Not compiled or tested here: the Rust build, clippy and cargo tests run in the root slot
+- `S18` dev/locales/tests: 2882 passed, 3 pre-existing failures in `test_parity` and `test_audit` (ledger preflight keys), unrelated to these keys; Rust not compiled or tested in this worktree, root slot owns the build, clippy and cargo tests
+- `S21` UNPROVEN manager.rust: fixed-port waits in `only_the_selected_engines_server_is_ever_started` hang (owner LIE, fix 6c106f3630 not in p04), PID 66512 stopped. UNPROVEN application.rust `a_router_that_listens_is_waited_for_until_ready_and_then_its_build_is_confirmed:` `fake_llamacpp.rs:194` logs the request before the ready gate at :253 (owner LIE). OPEN desktop-host-unit-test (owner LLAMA-DESKTOP): stalled at `shell::setup::components::tests::explicit_download_plans_only_that_model_and_a_resume_keeps_it` (PID 32956 stopped); `a_size_the_catalogue_states_differently_is_a_plan_the_person_approves_anew` and `an_added_model_no_catalogue_sizes_is_planned_with_an_unknown_download` fail alone, Failed/SecureConnectionFailed before Review; `agent::runner::tests::a_launcher_that_overruns_its_grace_is_ended_with_its_tree` fails alone, process alive after Terminated; 2 manager helper tests failed under load, pass alone. Landed on integration/build-candidate open by coordinator ruling 2026-11-08.
+- `S23` OPEN (owner LLAMA-DESKTOP): 65 failed, 2488 passed, 9 skipped. 56 provider-reads.spec.ts failures plus local-models, ledger-provisioning, setup and providers specs receive lanes `local_api` and `llamacpp_api,` since 77b60a63fb serves both engine lanes; the window must render served lanes. log-viewport and modelo-calculate-unresolved failures untraced.
 - `S03` Opus review done before close. The text slot, default and recommendation moved from qwen3:4b to qwen3:4b-instruct on both engines through the registry route, `llamacpp_default_context` 8192, under the 2026-11-08 amendment to 2026-10-25-agent-owned-models-adr
 - `S04` Router /models, /models/load and /models/unload were extended with the S07 residency work in cadrumo-agent main de56a46
 - `S05` Acceptance cell re-run on llama-server b12184: the thinking qwen3:4b stayed schema-valid 0/5 under every reasoning control, so the catalogue recommends qwen3:4b-instruct, which was 5/5 on Ollama with think off and 5/5 on llama-server from the same registry layer (2026-11-08 amendment to 2026-10-25-agent-owned-models-adr); BACKEND-LEDGER measured the product's 38-key extraction schema 5/5 on llama-server
