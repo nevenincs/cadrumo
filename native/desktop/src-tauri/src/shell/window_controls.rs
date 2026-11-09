@@ -185,6 +185,7 @@ fn perform_action<R: Runtime>(window: Window<R>, action: Action) -> Result<()> {
             Ok(())
         }
         Action::Drag => window.start_dragging(),
+        Action::Focus if !crate::launch::ShowMode::current().activates() => Ok(()),
         Action::Focus => window
             .unminimize()
             .and_then(|()| window.show())

@@ -21,6 +21,11 @@ import {
   within,
   queuePickerSelection,
   prepareResume,
+  inspectionPlatform,
+  isHostCommand,
+  parseNetstatListeners,
+  parseWindowsProcess,
+  verifyListener,
 } from "./session.mjs";
 
 test("readiness reports a signal exit that happened before subscription", async () => {
@@ -312,4 +317,123 @@ test("resume discards only a stale picker answer after the former host has exite
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
+});
+
+const NETSTAT = [
+  "",
+  "Active Connections",
+  "",
+  "  Proto  Local Address          Foreign Address        State           PID",
+  "  TCP    0.0.0.0:135            0.0.0.0:0              LISTENING       1008",
+  "  TCP    127.0.0.1:4444         0.0.0.0:0              LISTENING       4242",
+  "  TCP    127.0.0.1:4444         127.0.0.1:50000        ESTABLISHED     4242",
+  "  TCP    [::1]:5555             [::]:0                 LISTENING       777",
+  "  TCP    garbage line",
+].join("\r\n");
+const HOST = "C:\\Program Files\\Cadrumo\\cadrumo.exe";
+const OTHER = "D:\\other\\other.exe";
+
+test("platform selection uses Windows tools only on win32", () => {
+  assert.equal(inspectionPlatform("win32"), "windows");
+  assert.equal(inspectionPlatform("darwin"), "unix");
+  assert.equal(inspectionPlatform("linux"), "unix");
+});
+
+test("netstat parsing keeps only listening TCP sockets with their address and PID", () => {
+  assert.deepEqual(parseNetstatListeners(NETSTAT), [
+    { address: "0.0.0.0", port: 135, pid: 1008 },
+    { address: "127.0.0.1", port: 4444, pid: 4242 },
+    { address: "[::1]", port: 5555, pid: 777 },
+  ]);
+  assert.deepEqual(parseNetstatListeners(""), []);
+});
+
+test("Windows process parsing requires the command line to name the OS-reported image", () => {
+  const quoted = JSON.stringify({ path: HOST, command: `"${HOST}" --gui` });
+  assert.equal(parseWindowsProcess(quoted), `${HOST} --gui`);
+  const plain = JSON.stringify({
+    path: "C:\\h.exe",
+    command: "c:/h.exe --gui",
+  });
+  assert.equal(parseWindowsProcess(plain), "C:\\h.exe --gui");
+  const other = JSON.stringify({ path: HOST, command: `"${OTHER}" --gui` });
+  assert.equal(parseWindowsProcess(other), null);
+  assert.equal(parseWindowsProcess("not json"), null);
+  assert.equal(
+    parseWindowsProcess(JSON.stringify({ path: "", command: "x" })),
+    null,
+  );
+  assert.equal(
+    parseWindowsProcess(JSON.stringify({ path: null, command: null })),
+    null,
+  );
+});
+
+test("host commands match their image exactly, ignoring Windows case only", () => {
+  const unix = (command) => isHostCommand(command, "/synthetic/host", "darwin");
+  assert.equal(unix("/synthetic/host --gui\n"), true);
+  assert.equal(unix("/Synthetic/host --gui"), false);
+  assert.equal(unix("/synthetic/host --gui --extra"), false);
+  assert.equal(
+    isHostCommand(`${HOST.toUpperCase()} --gui`, HOST, "win32"),
+    true,
+  );
+  assert.equal(isHostCommand(`${HOST}x --gui`, HOST, "win32"), false);
+});
+
+function windowsTools({
+  netstat = NETSTAT,
+  command = `"${HOST}" --gui`,
+  path = HOST,
+  processStatus = 0,
+  netstatStatus = 0,
+} = {}) {
+  return (tool) =>
+    tool === "powershell.exe"
+      ? {
+          status: processStatus,
+          stdout: JSON.stringify({ path, command }),
+          stderr: "",
+        }
+      : { status: netstatStatus, stdout: netstat, stderr: "" };
+}
+
+test("Windows listener verification requires the exact PID, its image and an unshared port", () => {
+  const state = { pid: 4242, port: 4444, executable: HOST };
+  const refused = /does not belong to this native test host/;
+  const verify = (changed, tools) =>
+    verifyListener({ ...state, ...changed }, "win32", windowsTools(tools));
+  verify({}, {});
+  assert.throws(() => verify({ pid: 4243 }, {}), refused);
+  assert.throws(() => verify({ port: 6666 }, {}), refused);
+  assert.throws(() => verify({}, { netstatStatus: 1 }), refused);
+  assert.throws(() => verify({}, { processStatus: 1 }), refused);
+  assert.throws(
+    () => verify({}, { path: OTHER, command: `"${OTHER}" --gui` }),
+    refused,
+  );
+  assert.throws(
+    () => verify({}, { command: `"${HOST}" --gui --extra` }),
+    refused,
+  );
+  const shared = `${NETSTAT}\r\n  TCP    0.0.0.0:4444          0.0.0.0:0              LISTENING       999`;
+  assert.throws(() => verify({}, { netstat: shared }), refused);
+  const wildcard = NETSTAT.replace(
+    "127.0.0.1:4444         0.0.0.0:0",
+    "0.0.0.0:4444           0.0.0.0:0",
+  );
+  assert.throws(() => verify({}, { netstat: wildcard }), refused);
+});
+
+test("unix listener verification keeps the ps and lsof path", () => {
+  const state = { pid: 7, port: 4444, executable: "/synthetic/host" };
+  const tools = (tool) =>
+    tool === "ps"
+      ? { status: 0, stdout: "/synthetic/host --gui\n", stderr: "" }
+      : { status: 0, stdout: "p7\nn127.0.0.1:4444\n", stderr: "" };
+  verifyListener(state, "darwin", tools);
+  assert.throws(
+    () => verifyListener({ ...state, pid: 8 }, "darwin", tools),
+    /does not belong/,
+  );
 });
