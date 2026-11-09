@@ -3598,6 +3598,34 @@ desktop:
     no_rate: Sense tipus de canvi
     no_rate_detail: 'No hi ha tipus de canvi per a aquesta data: el valor en EUR no
       es coneix i no és zero.'
+    overview:
+      close: Tanca el resum
+      group:
+        amounts: Imports
+        links: Vincles
+        origin: Origen
+        reading: Lectura
+        recorded: El que indica el registre
+        tax: IVA i IRPF
+      kind:
+        document: Document
+        invoice: Factura
+        movement: Moviment
+      no_reading: Cap lectura pendent de revisió
+      no_tax_facts: No hi ha dades d'IVA ni d'IRPF registrades
+      not_attached_here: No adjuntat a cap moviment d'aquest període
+      not_linked: Sense vincular
+      nothing_to_fix: No hi ha res a corregir
+      open_movement: Obre a l'inspector
+      open_record: Obre el registre
+      read_only: Només lectura. Obre'l per canviar qualsevol cosa.
+      reading_waiting: Llegit el {date}, pendent de revisió
+      reason: Motiu
+      settlement: Import a liquidar
+      show: Resum
+      state: Estat
+      used_in: Usat a
+      used_nowhere: No s'usa en cap declaració
     paste:
       apply: Enganxa {count}
       blanks: Cel·les en blanc

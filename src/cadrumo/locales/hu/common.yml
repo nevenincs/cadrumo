@@ -3571,6 +3571,34 @@ desktop:
     no_rate: Nincs árfolyam
     no_rate_detail: 'Erre a napra nincs árfolyam: az EUR-érték nem ismert, és nem
       nulla.'
+    overview:
+      close: Áttekintés bezárása
+      group:
+        amounts: Összegek
+        links: Kapcsolatok
+        origin: Eredet
+        reading: Beolvasás
+        recorded: Amit a nyilvántartás rögzít
+        tax: IVA és IRPF
+      kind:
+        document: Dokumentum
+        invoice: Számla
+        movement: Tétel
+      no_reading: Nincs ellenőrzésre váró beolvasás
+      no_tax_facts: Nincs rögzített IVA- vagy IRPF-adat
+      not_attached_here: Nincs csatolva ennek az időszaknak egyik tételéhez sem
+      not_linked: Nincs összekapcsolva
+      nothing_to_fix: Nincs javítanivaló
+      open_movement: Megnyitás a részletek panelen
+      open_record: Nyilvántartás megnyitása
+      read_only: Csak olvasható. Nyisd meg, ha módosítanál rajta.
+      reading_waiting: 'Beolvasva: {date}, ellenőrzésre vár'
+      reason: Indok
+      settlement: Kiegyenlítendő összeg
+      show: Áttekintés
+      state: Állapot
+      used_in: Felhasználva
+      used_nowhere: Egyik bevallásban sincs felhasználva
     paste:
       apply: Beillesztés · {count}
       blanks: Üres cellák
