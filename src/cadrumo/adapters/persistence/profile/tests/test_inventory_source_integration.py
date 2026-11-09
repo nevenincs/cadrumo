@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from decimal import Decimal
 from typing import Any
 
@@ -81,7 +82,8 @@ def test_real_encrypted_multi_activity_success_absence_conflict_and_corruption(
         row_statement=statement,
         mutate=orphan_authority,
     )
-    corrupted = InventorySourceResolver(inventory_repository=repository).resolve(_context(revision, activities=2))
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.persistence.profile.inventory"):
+        corrupted = InventorySourceResolver(inventory_repository=repository).resolve(_context(revision, activities=2))
 
     assert absent.row_binding_values == {}
     assert absent.diagnostics[0].reason == "source_domain_not_ready"
