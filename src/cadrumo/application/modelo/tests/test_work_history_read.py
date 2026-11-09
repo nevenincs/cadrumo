@@ -19,7 +19,7 @@ from ....core.i18n.render import tr
 from ....domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType, derive_bucket_event_id
 from ..declarations_workspace_contracts import DeclarationsLifecycleKind
 from ..history import WorkUnitHistory
-from ..work_history_read import LIFECYCLE_KIND_BY_EVENT, OTHER_HISTORY_KIND, worded_history
+from ..work_history_read import LIFECYCLE_KIND_BY_ACTOR, LIFECYCLE_KIND_BY_EVENT, OTHER_HISTORY_KIND, worded_history
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -96,5 +96,8 @@ def test_each_event_reads_newest_first_with_its_meaning_and_words(language: Outp
 
 
 def test_every_lifecycle_meaning_is_carried_by_some_declaration_event() -> None:
-    assert set(LIFECYCLE_KIND_BY_EVENT.values()) == set(DeclarationsLifecycleKind)
+    carried = set(LIFECYCLE_KIND_BY_EVENT.values()) | set(LIFECYCLE_KIND_BY_ACTOR.values())
+    assert carried == set(DeclarationsLifecycleKind)
+    # An actor only ever refines the meaning its event type already has.
+    assert all(event_type in LIFECYCLE_KIND_BY_EVENT for event_type, _actor in LIFECYCLE_KIND_BY_ACTOR)
     assert all(event.name.startswith("MODELO_") for event in LIFECYCLE_KIND_BY_EVENT)
