@@ -45,6 +45,10 @@ _EFFECT_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = MappingProx
     }
 )
 
+for _family_words in (_ACTION_LOCALE_KEYS, _STATEMENT_LOCALE_KEYS, _EFFECT_LOCALE_KEYS):
+    if frozenset(_family_words) != frozenset(AbsenceAttestationFamily):
+        raise RuntimeError("every statement family the registry can declare needs its words")
+
 
 def form_carry_attestations(context: WorkFormContext) -> tuple[ModeloFormCarryAttestation, ...]:
     """One statement per declared family with a carry that holds no value; none on a form that admits no edit.

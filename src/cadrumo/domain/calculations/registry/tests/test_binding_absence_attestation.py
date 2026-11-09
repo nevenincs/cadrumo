@@ -73,3 +73,14 @@ def test_a_statement_on_a_binding_not_read_from_an_earlier_filing_is_refused(yea
     with pytest.raises((RegistryValidationError, ValidationError)) as refused:
         BindingDefinition.model_validate({**elsewhere.model_dump(), "absence_attestation": _FAMILY.value})
     assert "absence_attestation" in str(refused.value)
+
+
+@pytest.mark.parametrize("year", _renta_years())
+def test_a_statement_on_an_earlier_filing_read_that_is_not_an_amount_is_refused(year: int) -> None:
+    carry = _renta_bindings(year)[_DECLARED[0]].model_dump()
+    counted = {**carry, "value": {"data_type": "integer", "channel": BindingValueChannel.INTEGER.value}}
+    # The same earlier-filing read as a count is a valid binding, until it declares the statement.
+    assert BindingDefinition.model_validate({**counted, "absence_attestation": None}).absence_attestation is None
+    with pytest.raises((RegistryValidationError, ValidationError)) as refused:
+        BindingDefinition.model_validate(counted)
+    assert "absence_attestation" in str(refused.value)
