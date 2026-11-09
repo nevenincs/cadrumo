@@ -194,6 +194,13 @@ export function createModeloWriteHolds() {
       publish();
       return true;
     },
+    /** The person started a new attempt on this declaration, which may ask
+     * for more before any write is admitted. The reviewed failure belonged to
+     * the earlier attempt, so its words go; nothing is admitted or released. */
+    newAttempt(key: string) {
+      if (!reviewed.delete(key)) return;
+      publish();
+    },
     /** Only a definitive refusal/no-send path may release without a read. */
     notWritten(lease: ModeloWriteLease) {
       if (!owns(lease)) return;

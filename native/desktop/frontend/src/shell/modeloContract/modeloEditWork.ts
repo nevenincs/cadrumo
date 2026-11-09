@@ -83,15 +83,17 @@ export type ModeloEditBindingAddressV1 = {
 };
 
 /**
- * The two distinct binding-override edit intents; address absence means
- * UNCHANGED.
+ * The distinct binding-override edit intents; address absence means UNCHANGED.
  *
- * Both act on the `BindingId`-keyed binding overrides of the revision's
+ * Each acts on the `BindingId`-keyed binding overrides of the revision's
  * operator layer: `SET_OVERRIDE_VALUE` replaces the operator's override and
  * `REMOVE_OVERRIDE` withdraws it, so the binding's source tiers win again.
+ * `ATTEST_NO_AMOUNT` records the operator's statement that a carry from an
+ * earlier filing holds no amount: an override of zero the operator layer marks
+ * attested, kept apart from a zero typed. Either other intent withdraws it.
  */
 export type ModeloEditBindingIntentKind =
-  "set_override_value" | "remove_override";
+  "set_override_value" | "remove_override" | "attest_no_amount";
 
 /**
  * One offered choice: the stored code, never translated, and the catalogue id

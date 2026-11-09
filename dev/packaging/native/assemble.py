@@ -25,6 +25,7 @@ from .build_timing import BuildTimings
 from .layout import (
     load_layout,
 )
+from .third_party_notices import require_current_notices
 
 
 def assemble(
@@ -152,7 +153,7 @@ def _assemble_candidate(
         build_identity,
         native_manifest,
     )
-    return write_package_manifest(
+    records = write_package_manifest(
         layout,
         entrypoints,
         staged_images,
@@ -182,6 +183,9 @@ def _assemble_candidate(
         user_docs,
         modules,
     )
+    if not interpreter:
+        require_current_notices(target, root, layout, files, binary_dir)
+    return records
 
 
 if __name__ == "__main__":

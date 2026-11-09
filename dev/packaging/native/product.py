@@ -19,6 +19,7 @@ from typing import Literal, cast
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 
+from cadrumo.core.optional_extras import OFX_EXTRA, OPTIONAL_EXTRAS
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.toml import parse_toml
 from dev.paths import AUTHORITY_ROOT_ENV, REPO_ROOT
@@ -36,13 +37,24 @@ from .product_hatch_types import HatchHook, HatchWheelBuilder
 from .product_snapshot import capture_product_source_snapshot
 from .target import uv_environment, uv_platform
 
-BUNDLED_EXTRAS: tuple[str, ...] = ("browser",)
+BUNDLE_EXCLUDED_EXTRAS: Mapping[str, str] = {
+    OFX_EXTRA.extra: (
+        "ofxtools is GPL-3.0-only and the installer carries no strong-copyleft component; "
+        "the application serves its import formats from what is installed, so OFX/QFX is not offered"
+    ),
+}
+"""Optional extras the native application deliberately leaves out, each with its reason."""
+
+BUNDLED_EXTRAS: tuple[str, ...] = tuple(
+    extra.extra for extra in OPTIONAL_EXTRAS if extra.extra not in BUNDLE_EXCLUDED_EXTRAS
+)
 """Optional extras the native application ships with its core closure.
 
-The application serves the AEAT browser sessions, which refuse without
-``browser``. Playwright's Node driver ships with it; the Chromium builds are
+Every declared optional extra ships unless it is named, with a reason, in
+:data:`BUNDLE_EXCLUDED_EXTRAS`: whatever the application offers, the package
+carries. Playwright's Node driver ships with ``browser``; the Chromium builds are
 provisioned into profile storage on demand. The wheel's core install stays
-without the extra.
+without the extras.
 """
 
 

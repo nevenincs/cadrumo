@@ -18,6 +18,7 @@ import json
 import os
 import secrets
 import socket
+import time
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from http.client import HTTPConnection
@@ -49,6 +50,7 @@ from ...providers.application.model_runs import ModelRunService
 from ...providers.application.resolution import ProviderCredentialResolver
 from ...providers.application.tests.memory_store import MemoryLocalModelListStore, MemoryProviderSettingsStore
 from ...providers.domain.catalog import BackgroundOption
+from ...providers.domain.record import LocalEngine
 from ..agent_background_runs import HOST_ADMISSION_HEADER, BackgroundRunEndpoint, HostedBackgroundRuns
 from ..agent_process import WindowsAgentProcessLauncher
 from ..agent_programs import PACKAGE_AGENT_VARIABLE
@@ -65,6 +67,8 @@ pytestmark = [
 CHECKOUT_VARIABLE: Final = "CADRUMO_DEV_AGENT_CHECKOUT"
 _READY_BOUND_SECONDS: Final = 120.0
 _EXIT_OBSERVATION_SECONDS: Final = 0.25
+_HEALTH_SETTLE_READS: Final = 30
+_HEALTH_SETTLE_PAUSE_SECONDS: Final = 1.0
 _ENVIRONMENT_NAMES_PROBE: Final = """
 import json, sys
 from cadrumo_agent.control.config import Settings
@@ -78,12 +82,6 @@ _INSTALLED_MODEL: Final = "synthetic-installed:1"
 _INSTALLED_SIZE: Final = 4_096
 _INSTALLED_CONTEXT: Final = 2_048
 _INSTALLED_LICENCE: Final = "Synthetic licence text for a synthetic model."
-_TOOL_LESS_LANE: Final = ModelRunLane(
-    provider_id="claude",
-    transport="cli",
-    model="haiku",
-    reads_off_host=True,
-)
 _PNG: Final = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
 )
@@ -96,11 +94,34 @@ class _Gateway:
     host_token: str
 
     def lane_that_is_not_selectable(self) -> ModelRunLane:
-        """Choose an executable lane the agent's own health does not offer for selection on this computer."""
+        """Choose the first served lane the agent's own health does not offer for selection on this computer."""
         for record in self._lane_records():
-            if record["executable"] is True and record["health"]["selectable"] is not True:
+            if record["health"]["selectable"] is not True and record["catalog"]["models"]:
                 return self._lane_of(record)
-        pytest.fail("the agent catalog lists no executable lane that is unselectable here")
+        pytest.fail("the agent catalog lists no lane with a declared model that is unselectable here")
+
+    def lane_that_runs_off_host(self, *, takes_image: bool = False, honours_no_option: bool = False) -> ModelRunLane:
+        """Choose the first selectable, background-runnable lane that reads off host, by its served properties.
+
+        The disposable profile holds no sign-in, so an off-host lane fails at the
+        provider; the on-host local lane is excluded because it has its own tests.
+        """
+        for record in self._lane_records():
+            support = record["background_requests"]
+            if record["health"]["selectable"] is not True or record["executable"] is not True:
+                continue
+            if support["text"] == "unsupported" or not record["catalog"]["models"]:
+                continue
+            if takes_image and support["image"] == "unsupported":
+                continue
+            if honours_no_option and support["options"]:
+                continue
+            lane = self._lane_of(record)
+            if lane.reads_off_host:
+                return lane
+        wanted = ["selectable", "executable", "background text", "off-host"]
+        wanted += ["background image"] * takes_image + ["no honoured reply option"] * honours_no_option
+        pytest.fail("the agent catalog serves no lane with: " + ", ".join(wanted))
 
     def lane_that_takes_no_image(self) -> ModelRunLane:
         """Choose a selectable lane whose own background support states that it takes text but no image."""
@@ -113,6 +134,24 @@ class _Gateway:
         pytest.fail("the agent catalog provides no selectable lane that takes no image")
 
     def _lane_records(self) -> list[dict[str, Any]]:
+        """The lane records once the agent's health probes have settled.
+
+        A lane's health is probed on demand, so a read just after start-up can
+        show a lane unselectable that a later read admits. Two successive reads
+        that agree on every lane's selectability are taken as settled.
+        """
+        previous: list[tuple[Any, Any, Any]] | None = None
+        records: list[dict[str, Any]] = []
+        for _ in range(_HEALTH_SETTLE_READS):
+            records = self._read_lane_records()
+            state = [(r["provider_id"], r["transport"], r["health"]["selectable"]) for r in records]
+            if state == previous:
+                break
+            previous = state
+            time.sleep(_HEALTH_SETTLE_PAUSE_SECONDS)
+        return records
+
+    def _read_lane_records(self) -> list[dict[str, Any]]:
         records = self.served_catalog()["providers"]
         assert isinstance(records, list)
         return records
@@ -392,9 +431,9 @@ def test_without_the_host_s_own_token_the_agent_refuses_and_the_run_is_unavailab
     assert (status, _refusal_code(answer)) == (403, "background_not_admitted")
 
     runs = gateway.runs(host_token=secrets.token_urlsafe(32), run_id=run_id)
-    assert runs.run(lane=_TOOL_LESS_LANE, body=_body(), deadline_seconds=30, options=()) == ModelRunRefusal(
-        code=ModelRunRefusalCode.SERVICE_UNAVAILABLE
-    )
+    assert runs.run(
+        lane=gateway.lane_that_runs_off_host(), body=_body(), deadline_seconds=30, options=()
+    ) == ModelRunRefusal(code=ModelRunRefusalCode.SERVICE_UNAVAILABLE)
     assert gateway.exchange("GET", f"/v1/runs/{run_id}/reply")[0] == 404
 
 
@@ -425,14 +464,16 @@ def test_an_image_on_a_lane_that_takes_none_is_refused_and_its_upload_removed(ga
 
 
 def test_a_background_request_that_continues_a_run_is_refused_as_invalid(gateway: _Gateway) -> None:
-    status, answer = gateway.background(secrets.token_hex(16), _TOOL_LESS_LANE, continues_run_id=secrets.token_hex(16))
+    status, answer = gateway.background(
+        secrets.token_hex(16), gateway.lane_that_runs_off_host(), continues_run_id=secrets.token_hex(16)
+    )
 
     assert (status, _refusal_code(answer)) == (422, "background_request_invalid")
 
 
 def test_an_admitted_run_is_hidden_from_the_run_listing_and_settles_without_a_provider(gateway: _Gateway) -> None:
     run_id = secrets.token_hex(16)
-    status, started = gateway.background(run_id, _TOOL_LESS_LANE)
+    status, started = gateway.background(run_id, gateway.lane_that_runs_off_host())
     assert status == 201, started
     try:
         listed = gateway.exchange("GET", "/v1/runs")[1]
@@ -454,7 +495,10 @@ def test_a_run_uploads_starts_reads_its_reply_and_deletes_what_it_left(gateway: 
     run_id = secrets.token_hex(16)
 
     outcome = gateway.runs(run_id=run_id).run(
-        lane=_TOOL_LESS_LANE, body=_body(("image/png", _PNG)), deadline_seconds=60, options=()
+        lane=gateway.lane_that_runs_off_host(takes_image=True),
+        body=_body(("image/png", _PNG)),
+        deadline_seconds=60,
+        options=(),
     )
 
     # The disposable profile holds no provider sign-in, so the admitted run fails at the provider.
@@ -466,9 +510,10 @@ def test_a_run_uploads_starts_reads_its_reply_and_deletes_what_it_left(gateway: 
 
 def test_a_reply_option_the_lane_does_not_honour_is_refused_by_the_agent_and_never_sent(gateway: _Gateway) -> None:
     run_id = secrets.token_hex(16)
+    lane = gateway.lane_that_runs_off_host(honours_no_option=True)
     status, answer = gateway.background(
         run_id,
-        _TOOL_LESS_LANE,
+        lane,
         background={"system": "", "max_output_tokens": 16, "deadline_seconds": 30, "temperature": 0.0},
     )
     assert (status, _refusal_code(answer)) == (422, "background_option_unsupported"), (status, answer)
@@ -476,9 +521,9 @@ def test_a_reply_option_the_lane_does_not_honour_is_refused_by_the_agent_and_nev
     body = _body().model_copy(
         update={"temperature": 0.0, "context_tokens": 4096, "response_schema": {"type": "object"}}
     )
-    honoured = gateway.honoured(_TOOL_LESS_LANE)
+    honoured = gateway.honoured(lane)
     assert honoured == ()
-    outcome = gateway.runs().run(lane=_TOOL_LESS_LANE, body=body, deadline_seconds=30, options=honoured)
+    outcome = gateway.runs().run(lane=lane, body=body, deadline_seconds=30, options=honoured)
 
     # Admitted without the options, the run then fails at the provider the disposable profile is not signed in to.
     assert outcome == ModelRunRefusal(code=ModelRunRefusalCode.RUN_FAILED), outcome
@@ -516,7 +561,7 @@ def test_a_model_installed_on_the_local_server_is_read_with_through_the_live_cat
     assert installed.licence.spdx is None
 
     model_list = MemoryLocalModelListStore()
-    service = LocalModelListService(store=model_list, catalog_source=declared)
+    service = LocalModelListService(store=model_list, catalog_source=declared, default_engine=LocalEngine.LLAMACPP)
     added = service.add("ollama_api", model=_INSTALLED_MODEL, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID)
     assert isinstance(added, LocalModelListStatus), added
     chosen = service.choose_reading("ollama_api", model=_INSTALLED_MODEL, expected_revision=added.revision)

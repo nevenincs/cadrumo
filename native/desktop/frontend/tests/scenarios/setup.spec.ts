@@ -31,6 +31,7 @@ const INTERNAL = [
   "not_in_this_build",
   "damaged_download",
   "host_unreachable",
+  "server_error",
   "blocked_by_network",
   "disk_full",
   "interrupted",
@@ -524,6 +525,24 @@ test("a setup its network check refuses says why in its row and offers its setup
   await expect(programRow(target)).not.toContainText(NOT_SET_UP);
   await expect(setUpButton(programRow(target))).toBeEnabled();
   await expect(setUpButton(browserRow(target))).toBeEnabled();
+  expect(await hostCalls(target)).toContain("setup.start local_ai");
+  await noInternalWords(target);
+});
+
+test("a setup whose download server answers with errors says to try again later and offers its setup again", async ({
+  page: target,
+}) => {
+  await open(target, "server_error");
+  await openLocalAi(target);
+  await setUpButton(programRow(target)).click();
+  await expect(programRow(target).getByRole("alert")).toHaveText(
+    label("desktop.setup.failure.server_error"),
+  );
+  expect(label("desktop.setup.failure.server_error")).not.toBe(
+    label("desktop.setup.failure.host_unreachable"),
+  );
+  await expect(programRow(target)).not.toContainText(NOT_SET_UP);
+  await expect(setUpButton(programRow(target))).toBeEnabled();
   expect(await hostCalls(target)).toContain("setup.start local_ai");
   await noInternalWords(target);
 });

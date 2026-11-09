@@ -25,6 +25,7 @@ from .contracts import ServiceStartupFrame
 from .host.credential_frame import wipe
 from .host.model_run_relay import ModelRunRelay
 from .installed_client import SERVICE_ID, open_service_client
+from .providers.domain.record import LocalEngine
 from .service import AgentService
 from .service_support import service_failure
 
@@ -108,6 +109,7 @@ def _serve() -> None:
             frame = ServiceStartupFrame.model_validate_json(line)
             bearer = bytearray(frame.bearer, "ascii")
             gateway_bearer = bytearray(frame.gateway_bearer, "ascii")
+            local_engine_default = LocalEngine(frame.local_engine_default)
             del frame
         finally:
             wipe(line)
@@ -119,6 +121,7 @@ def _serve() -> None:
             storage_root=effective_storage_root(),
             gateway_bearer=gateway_bearer,
             emit=_publish,
+            local_engine_default=local_engine_default,
             wake=wake.set,
         )
         server = AdminServer(service, bearer=bearer)

@@ -49,9 +49,14 @@ def test_the_agents_declaration_parses_with_typed_models_and_background_runs() -
         assert entry.background.runnable or not entry.background.inputs, entry.id
     on_host = [entry for entry in catalog.providers if entry.auth_kind is ProviderAuthKind.NONE]
     assert on_host, "the agent declares no keyless lane on this computer"
+    assert any(entry.background.runnable for entry in on_host), "no keyless lane is background-runnable"
+    # The agent's llama.cpp lane takes background requests only once it lands; then this set empties and the
+    # test must change.
+    assert {entry.id for entry in on_host if not entry.background.runnable} == {"llamacpp_api"}
     for entry in on_host:
         assert entry.reads_off_host is False, entry.id
-        assert entry.background.runnable, entry.id
+        if not entry.background.runnable:
+            continue
         assert entry.recommended, entry.id
         stated = [model for model in entry.models if model.licence is not None and model.size_bytes is not None]
         assert stated, entry.id

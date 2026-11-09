@@ -34,6 +34,8 @@ async fn launcher_refusal_is_handled_while_status_read_is_pending() {
     let launch: Launch = Arc::new(|_, _| {
         Ok(Prepared {
             person: None,
+            local_engine_default:
+                cadrumo_application::provisioning::local_ai::LocalEngine::LlamaCpp,
             command: powershell(
                 "$null = [Console]::In.ReadLine(); Start-Sleep -Milliseconds 500; [Console]::Out.WriteLine('{\"event\":\"agent_refused\",\"code\":\"agent_service_incompatible\"}'); exit 3",
             ),
@@ -207,6 +209,8 @@ fn held_protocol_fixture(
         Prepared {
             person: Some(Arc::new(Mutex::new(person))),
             command: powershell(&script),
+            local_engine_default:
+                cadrumo_application::provisioning::local_ai::LocalEngine::LlamaCpp,
         },
         witness,
     )
@@ -894,6 +898,8 @@ async fn a_launcher_that_ends_unasked_is_a_failed_service_and_is_not_restarted_a
         counted.fetch_add(1, Ordering::AcqRel);
         Ok(Prepared {
             person: None,
+            local_engine_default:
+                cadrumo_application::provisioning::local_ai::LocalEngine::LlamaCpp,
             command: powershell(
                 "$null = [Console]::In.ReadLine(); [Console]::Out.WriteLine('{\"event\":\"agent_refused\",\"code\":\"agent_service_incompatible\"}'); exit 3",
             ),

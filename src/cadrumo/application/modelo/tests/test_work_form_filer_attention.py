@@ -344,8 +344,11 @@ def test_on_a_declaration_recorded_as_filed_an_empty_box_says_what_it_holds(
 def test_the_carried_words_are_the_ones_the_rule_gives_for_the_box(operation: PinnedAuthorityOperation) -> None:
     """Every frontend shows the carried words; the rule a terminal applies live gives the same ones."""
     form = built_form(operation, "130", 2026, "1T", held={"05": Decimal("0")})
+    calculated = form.calculation_revision_id is not None
     for field in form.fields():
-        assert field.origin_words == origin_words(field, recorded=False, language=OutputLanguage.EN)
+        assert field.origin_words == origin_words(
+            field, recorded=False, language=OutputLanguage.EN, calculated=calculated
+        )
         assert field.origin_explanation == origin_explanation(field, OutputLanguage.EN)
 
 

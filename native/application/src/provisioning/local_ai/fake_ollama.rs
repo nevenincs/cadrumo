@@ -27,6 +27,9 @@ pub(crate) const HELPER_MODE: &str = "CADRUMO_FAKE_OLLAMA";
 pub(crate) const HELPER_GATE: &str = "CADRUMO_FAKE_OLLAMA_GATE";
 /// The version the helper reports.
 pub(crate) const HELPER_VERSION: &str = "CADRUMO_FAKE_OLLAMA_VERSION";
+/// Milliseconds the helper leaves every request unanswered once it has announced that it
+/// listens, as the program does while it discovers the computer's GPUs.
+pub(crate) const HELPER_SILENCE: &str = "CADRUMO_FAKE_OLLAMA_SILENCE";
 /// A file the helper appends a line to each time it starts, shared with the fake
 /// llama-server, so a test counts the servers of each kind that were ever started.
 pub(crate) const HELPER_LAUNCHES: &str = "CADRUMO_FAKE_OLLAMA_LAUNCHES";
@@ -65,6 +68,8 @@ pub(crate) struct FakeState {
     pub generation_hangs_up: bool,
     /// Whether `POST /fake/exit` ends the process, as a crash would: only in the helper.
     pub exits_on_request: bool,
+    /// Until when every request waits before it is answered.
+    pub silent_until: Option<std::time::Instant>,
 }
 
 pub(crate) type Shared = Arc<Mutex<FakeState>>;
@@ -112,6 +117,10 @@ fn answer(state: &Shared, mut stream: TcpStream) {
     let Ok(request) = read_request(&stream) else {
         return;
     };
+    let silent_until = state.lock().unwrap().silent_until;
+    if let Some(until) = silent_until {
+        std::thread::sleep(until.saturating_duration_since(std::time::Instant::now()));
+    }
     let mut guard = state.lock().unwrap();
     guard.requests.push(request.line.clone());
     if let Some(log) = &guard.log {
@@ -315,6 +324,10 @@ fn serve_helper() {
         while !std::path::Path::new(&gate).exists() {
             std::thread::sleep(std::time::Duration::from_millis(20));
         }
+    }
+    if let Some(silence) = std::env::var_os(HELPER_SILENCE) {
+        let silence = std::time::Duration::from_millis(silence.to_str().unwrap().parse().unwrap());
+        state.lock().unwrap().silent_until = Some(std::time::Instant::now() + silence);
     }
     // The program's own announcement, which the engine waits for.
     eprintln!(
