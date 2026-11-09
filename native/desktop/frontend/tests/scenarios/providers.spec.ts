@@ -3,6 +3,7 @@ import {
   FIXTURE_SETTINGS_LANES,
   FIXTURE_SIGN_IN_PROVIDERS,
 } from "../../src/dev/providerSettingsFixture";
+import { SERVED_ENGINE } from "../support/servedLocalLanes";
 import { label } from "../support/strings";
 
 // The agent's settings: the signed-in profile's model providers, one card
@@ -233,7 +234,18 @@ test("providers start collapsed and keep each connection separately accessible",
     ).toHaveCount(1);
 
   // The row label names the kind of connection; nothing merges two lanes' status.
-  await expect(settings(target).getByRole("radio")).toHaveCount(0);
+  // The engine selector and placement switch hold the only radios; a lane row has none.
+  const engineChoice = settings(target).locator('[data-slot="local-engine"]');
+  await expect(
+    settings(target).locator(
+      '[role="radio"]:not([data-slot="local-engine"] [role="radio"])',
+    ),
+  ).toHaveCount(0);
+  await expect(
+    engineChoice.locator(
+      `[data-choice="${SERVED_ENGINE}"] [role="radio"][aria-checked="true"]`,
+    ),
+  ).toHaveCount(1);
   const words: string[] = [];
   for (const declared of FIXTURE_SETTINGS_LANES) {
     const card = lane(target, declared.id);

@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import shutil
 import tempfile
+import time
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -38,4 +39,26 @@ def outside_git_path() -> Iterator[Path]:
             pytest.fail(f"the agent's test root {directory} sits inside the Git checkout {ancestor}", pytrace=False)
         yield directory
     finally:
-        shutil.rmtree(directory)
+        _remove(directory)
+
+
+# How long a directory the agent ran in may stay held after its tree has ended.
+_RELEASE_BOUND_SECONDS = 10.0
+
+
+def _remove(directory: Path) -> None:
+    """Remove ``directory``, waiting while Windows still holds it after the agent's tree ended.
+
+    The tree's job is empty when a stop returns, but the system can release a
+    handle on the directory the tree ran in a moment later, so its removal is
+    refused as in use by another process until then.
+    """
+    deadline = time.monotonic() + _RELEASE_BOUND_SECONDS
+    while True:
+        try:
+            shutil.rmtree(directory)
+            return
+        except PermissionError:
+            if time.monotonic() >= deadline:
+                raise
+            time.sleep(0.1)
