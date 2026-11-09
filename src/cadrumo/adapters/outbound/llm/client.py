@@ -356,6 +356,7 @@ class LLMClient:
             temperature=request.temperature,
             timeout_s=self.settings.cadrumo_llm_default_timeout_s,
             images=request.images,
+            response_schema=request.response_schema,
         )
         self._require_image_support(adapter, provider_request)
         provider_request = self.omit_unsupported_parameters(adapter, provider_request)

@@ -25,7 +25,7 @@ from cadrumo_agent_service.host.model_run_relay import ModelRunRelay
 from cadrumo_agent_service.providers.application.ports import StoredLocalModelList
 from cadrumo_agent_service.providers.application.tests.synthetic_catalog import synthetic_document
 from cadrumo_agent_service.providers.domain.catalog import ProviderCatalog, parse_provider_catalog
-from cadrumo_agent_service.providers.domain.record import ListedModel
+from cadrumo_agent_service.providers.domain.record import ListedModel, LocalEngine
 from cadrumo_agent_service.providers.persistence.store import (
     LOCAL_MODEL_LIST_CAPABILITY,
     PROVIDER_RECORD_CAPABILITY,
@@ -135,6 +135,7 @@ def test_authenticated_desktop_model_list_survives_new_store_and_runtime_lookup(
             storage_root=runtime.root,
             gateway_bearer=bytearray(b"g" * 64),
             emit=lambda _event: None,
+            local_engine_default=LocalEngine.OLLAMA,
         )
         scope.callback(service.close)
         bearer = b"a" * 64

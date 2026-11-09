@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Final, NamedTuple
+from collections.abc import Mapping
+from decimal import Decimal
+from typing import TYPE_CHECKING, Final, NamedTuple, Protocol
 
 from ...core.modelo import Modelo
 from ...core.period import Period
@@ -13,16 +15,25 @@ from ...domain.calculations.registry.iva_compensation_annual_partition_bindings 
 )
 from ...domain.calculations.registry.relations import RegistryFoldRequirement
 from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.iva.refund_eligibility import (
+    RefundEligibilityOutcome,
+    redeme_enrolment_state,
+    refund_eligibility_for_period,
+)
 from ...domain.iva_compensation.carry_forward import OPERATOR_DECLARED_PROVENANCES, IvaCompensationPeriodState
-from ...domain.modelos.work_unit import WorkUnit
+from ...domain.iva_compensation.reconciliation import LOCAL_CALCULATION_SOURCE_KIND, IvaCompensationDecisionReason
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState
 from ..calculations.binding_prefill import LocalIvaCompensationRecurrence
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ..calculations.m303_carry_ingress import M303CarryIngressError, validate_normalized_m303_carry_observation_envelope
 from ..calculations.observations_repository import CalculationObservationRepositoryProtocol, ObservationEnvelopePayload
 from ..calculations.revision_carry_gate import revision_carry_outcome
+from ..user_profile.projections import declared_redeme_enrolment
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 
 _M303_PRIOR_COMPENSATION_BINDING_ID = "modelo-303-compensacion-pendiente-anteriores"
 _M303_AVAILABLE_COMPENSATION_CASILLA_ID = M303_COMPENSATION_AVAILABLE_CASILLA
@@ -41,6 +52,69 @@ class _PriorPeriodCarryEvidence(NamedTuple):
 
     recurrence: LocalIvaCompensationRecurrence | None
     prior_period_observation_found: bool
+    local_calculation_refusal: IvaCompensationDecisionReason | None = None
+
+
+class PriorModeloCalculations(Protocol):
+    """The taxpayer's own calculations of earlier periods, read where nothing filed records one."""
+
+    def latest_revision(self, modelo: str, period: Period) -> CalculationRevision | None:
+        """Return the newest live calculation revision of ``modelo`` for ``period``, or ``None``."""
+        ...
+
+
+_DEAD_REVISION_STATES: Final = frozenset(
+    {CalculationRevisionState.DESCARTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO}
+)
+
+
+class CataloguePriorModeloCalculations:
+    """:class:`PriorModeloCalculations` over the bucket's work and calculation catalogues.
+
+    The calculation catalogue is read once, and only when a prior period has a
+    work unit to look up.
+    """
+
+    def __init__(
+        self,
+        *,
+        work_units: WorkUnitCatalogue,
+        calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+        operation: PinnedAuthorityOperation,
+    ) -> None:
+        """Read ``work_units`` as loaded and the calculations through ``calculation_repository`` on demand."""
+        self._work_units = work_units
+        self._calculation_repository = calculation_repository
+        self._operation = operation
+        self._revisions: dict[str, tuple[CalculationRevision, ...]] | None = None
+
+    def latest_revision(self, modelo: str, period: Period) -> CalculationRevision | None:
+        """Return the newest live calculation revision of ``modelo`` for ``period``, or ``None``."""
+        unit_ids = tuple(
+            unit.work_unit_id
+            for unit in self._work_units
+            if unit.modelo == modelo and unit.period == period and unit.state is not WorkUnitState.DESCARTADO
+        )
+        if not unit_ids:
+            return None
+        revisions = self._revisions_by_work_unit()
+        live = tuple(
+            revision
+            for unit_id in unit_ids
+            for revision in revisions.get(unit_id, ())
+            if revision.state not in _DEAD_REVISION_STATES
+        )
+        if not live:
+            return None
+        return max(live, key=lambda revision: (revision.created_at, revision.calculation_revision_id))
+
+    def _revisions_by_work_unit(self) -> dict[str, tuple[CalculationRevision, ...]]:
+        if self._revisions is None:
+            grouped: dict[str, list[CalculationRevision]] = {}
+            for revision in self._calculation_repository.load(operation=self._operation):
+                grouped.setdefault(revision.work_unit_id, []).append(revision)
+            self._revisions = {unit_id: tuple(revisions) for unit_id, revisions in grouped.items()}
+        return self._revisions
 
 
 _NO_PRIOR_PERIOD_OBSERVATION: Final = _PriorPeriodCarryEvidence(
@@ -161,6 +235,75 @@ def _operator_declared_carry_evidence(
     )
 
 
+def _local_calculation_refusal(
+    amount: Decimal,
+    *,
+    source_period: Period,
+    profile_values: Mapping[str, str] | None,
+) -> IvaCompensationDecisionReason | None:
+    """Why a calculated credit of ``source_period`` cannot be carried, or ``None`` where the law leaves only carrying.
+
+    LIVA art. 115 carries the credit in full only outside the year's last
+    period and outside REDEME. Elsewhere the unfiled calculation has not made
+    the choice between refund and compensation the law leaves open.
+    """
+    if amount <= 0:
+        return None
+    eligibility = refund_eligibility_for_period(
+        period=source_period,
+        redeme=redeme_enrolment_state(declared_redeme_enrolment(profile_values)),
+    )
+    if eligibility.outcome is RefundEligibilityOutcome.CARRY_FORWARD_ONLY:
+        return None
+    if eligibility.outcome is RefundEligibilityOutcome.UNDETERMINED_REDEME_UNSTATED:
+        return IvaCompensationDecisionReason.LOCAL_CALCULATION_REDEME_UNSTATED
+    return IvaCompensationDecisionReason.LOCAL_CALCULATION_REFUND_UNDECIDED
+
+
+def _local_calculation_carry_evidence(
+    prior_calculations: PriorModeloCalculations | None,
+    *,
+    requirement: RegistryFoldRequirement,
+    source_period: Period,
+    profile_values: Mapping[str, str] | None,
+) -> _PriorPeriodCarryEvidence:
+    """Project the taxpayer's calculation of ``source_period`` into evidence where nothing filed records it.
+
+    The carried amount is that calculation's compensación disponible a final de
+    periodo. It is a local calculation, never AEAT's wallet or a filed return,
+    so it feeds the next period at calculation grade only.
+    """
+    if prior_calculations is None:
+        return _NO_PRIOR_PERIOD_OBSERVATION
+    modelo = Modelo("303").value
+    revision = prior_calculations.latest_revision(modelo, source_period)
+    if revision is None:
+        return _NO_PRIOR_PERIOD_OBSERVATION
+    amount = revision.casilla_values.get(_M303_AVAILABLE_COMPENSATION_CASILLA_ID)
+    if amount is None:
+        return _PriorPeriodCarryEvidence(recurrence=None, prior_period_observation_found=True)
+    return _PriorPeriodCarryEvidence(
+        recurrence=LocalIvaCompensationRecurrence(
+            binding_id=_M303_PRIOR_COMPENSATION_BINDING_ID,
+            amount=amount,
+            source_kind=LOCAL_CALCULATION_SOURCE_KIND,
+            source_modelo=modelo,
+            source_filing_year=requirement.filing_year,
+            source_periods=(source_period,),
+            source_registry_snapshot_refs=(revision.registry_snapshot_ref,),
+            resolved_at=revision.updated_at,
+            source_locator=(
+                f"calculation-revision:{modelo}:{source_period.filing_year}:"
+                f"{source_period.registry_token}:{revision.calculation_revision_id}"
+            ),
+        ),
+        prior_period_observation_found=True,
+        local_calculation_refusal=_local_calculation_refusal(
+            amount, source_period=source_period, profile_values=profile_values
+        ),
+    )
+
+
 def prior_period_carry_evidence(
     work_unit: WorkUnit,
     *,
@@ -168,6 +311,8 @@ def prior_period_carry_evidence(
     operation: PinnedAuthorityOperation,
     repository: CalculationObservationRepositoryProtocol,
     history_repository: IvaCompensationHistoryRepositoryProtocol,
+    prior_calculations: PriorModeloCalculations | None = None,
+    profile_values: Mapping[str, str] | None = None,
 ) -> _PriorPeriodCarryEvidence:
     """Return validated filed M303 envelope recurrence, and whether one was stored.
 
@@ -186,6 +331,11 @@ def prior_period_carry_evidence(
     docstring claimed the gate blocked in those cases, which was true of every
     path except the one that mattered.
 
+    Where neither a filed observation nor a declared opening balance records
+    the prior period, ``prior_calculations`` supplies the taxpayer's own
+    calculation of it at calculation grade, and ``profile_values`` answers the
+    REDEME question that decides whether its credit may be carried.
+
     Takes ``snapshot`` as a :class:`RegistrySnapshot`.
     """
     requirement = _prior_period_observation_requirement(snapshot)
@@ -194,10 +344,18 @@ def prior_period_carry_evidence(
     source_period = _prior_period_source_period(requirement)
     payload = repository.load_observation(Modelo("303").value, source_period)
     if payload is None:
-        return _operator_declared_carry_evidence(
+        declared = _operator_declared_carry_evidence(
             history_repository.load_period(source_period),
             requirement=requirement,
             source_period=source_period,
+        )
+        if declared.prior_period_observation_found:
+            return declared
+        return _local_calculation_carry_evidence(
+            prior_calculations,
+            requirement=requirement,
+            source_period=source_period,
+            profile_values=profile_values,
         )
     found = _PriorPeriodCarryEvidence(recurrence=None, prior_period_observation_found=True)
     if not _prior_period_observation_is_usable(

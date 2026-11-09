@@ -287,7 +287,7 @@ def test_missing_wallet_filed_history_decision_blocks_real_modelo_303_engine(
         assert len(calc_repo.load()) == 0
 
 
-def test_prior_calculated_303_cannot_unblock_next_period_without_validated_filed_envelope(
+def test_a_filed_envelope_replaces_the_calculation_grade_carry_of_a_calculated_prior_303(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     taxpayer_nif = "X0001500M"
@@ -325,17 +325,15 @@ def test_prior_calculated_303_cannot_unblock_next_period_without_validated_filed
         assert revision_1t.casilla_values[M303_RESULTADO_CASILLA] == Decimal("84.00")
         assert revision_1t.casilla_values[M303_DISPONIBLE_CASILLA] == Decimal("0.00")
 
+        # Before 1T is filed, its calculation feeds 2T at calculation grade.
         snapshot_2t = snapshot_303(period="2T")
         work_unit_2t = create_modelo_303_work_unit(snapshot_2t, work_unit_repository=work_repo, operation=operation)
-        with (
-            pytest.raises(ModeloIvaWalletReconciliationBlocked, match="no_usable_authority"),
-            calculation_ports_for_test(
-                bucket_id=work_unit_2t.bucket_id,
-                work_unit_repository=work_repo,
-                calculation_repository=calc_repo,
-                bucket_event_repository=event_repo,
-            ) as _calculation_ports_300,
-        ):
+        with calculation_ports_for_test(
+            bucket_id=work_unit_2t.bucket_id,
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            bucket_event_repository=event_repo,
+        ) as _calculation_ports_300:
             seed_m303_period_cuotas(work_unit_2t.work_unit_id, repercutido=M303_LEDGER_CUOTA)
             calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit_2t.work_unit_id,
@@ -350,7 +348,12 @@ def test_prior_calculated_303_cannot_unblock_next_period_without_validated_filed
                     work_unit_2t.period, reference="test:iva-wallet-engine-integration", operation=operation
                 ),
             )
+        calculated = IvaWalletDecisionRepository().load_decision(taxpayer_nif, period(TARGET_YEAR, "2T"))
+        assert calculated is not None
+        assert calculated.selected_authority == "local_calculation"
+        assert calculated.selected_amount == Decimal("0.00")
 
+        # Once 1T's filed envelope exists, recalculating 2T reads it instead.
         observation_repository = CalculationObservationRepository()
         persist_filed_revision_observation(
             revision=revision_1t,

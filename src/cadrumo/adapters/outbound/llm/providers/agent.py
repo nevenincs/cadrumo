@@ -147,6 +147,7 @@ class AgentAdapter(ProviderAdapter):
             ),
             max_output_tokens=request.max_tokens,
             temperature=request.temperature,
+            response_schema=request.response_schema,
         )
         output = await self._run(body)
         if self._expects_json and first_json_object(output.text) is None:

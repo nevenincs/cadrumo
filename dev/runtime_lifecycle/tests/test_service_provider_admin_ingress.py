@@ -23,6 +23,7 @@ from cadrumo_agent_service.providers.application.tests.synthetic_catalog import 
     KEYLESS_LANE,
     synthetic_document,
 )
+from cadrumo_agent_service.providers.domain.record import LocalEngine
 from cadrumo_agent_service.providers.persistence.store import (
     LOCAL_MODEL_LIST_CAPABILITY,
     LOCAL_MODEL_LIST_KEY,
@@ -70,6 +71,8 @@ class _AdminRecorder:
         scope: Literal["once", "session", "remember"] | None = None,
         grant_id: str | None = None,
         conversation_id: str | None = None,
+        engine: Literal["llamacpp", "ollama"] | None = None,
+        placement: Literal["auto", "cpu_only"] | None = None,
     ) -> dict[str, JsonValue]:
         values: dict[str, str | bytearray | None] = {
             "provider": provider,
@@ -176,6 +179,7 @@ def test_actual_service_provider_actions_require_parent_authority_and_live_encry
             storage_root=runtime.root,
             gateway_bearer=gateway,
             emit=lambda _event: None,
+            local_engine_default=LocalEngine.OLLAMA,
         )
         server = AdminServer(service, bearer=admin)
         try:
@@ -258,6 +262,7 @@ def _admitted_admin_server(
             storage_root=runtime.root,
             gateway_bearer=bytearray(b"synthetic-gateway"),
             emit=lambda _: None,
+            local_engine_default=LocalEngine.OLLAMA,
         )
         server = AdminServer(service, bearer=admin)
         try:
