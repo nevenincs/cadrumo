@@ -22,8 +22,8 @@ import type {
   ModeloWorkbenchFormProjectionV1,
   PublicModeloFormField,
   ModeloFormCarryAttestation,
-  PublicModeloWorkForm,
 } from "../../../shell/modeloContract/modeloWorkForm";
+import type { PublicModeloWorkForm } from "../../../shell/modeloContract/modeloWorkFormPart2";
 import { takesEntry } from "./entryField";
 
 // The form's working state: the edits staged on it and the box chosen. It
