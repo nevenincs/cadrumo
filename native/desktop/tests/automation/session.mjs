@@ -232,11 +232,145 @@ export function readSession(path) {
   return state;
 }
 
-export function verifyListener(state) {
-  const process = spawnSync("ps", ["-p", String(state.pid), "-o", "command="], {
-    encoding: "utf8",
-  });
-  const listener = spawnSync(
+/** Which process-inspection tools apply: Windows has no `ps` or `lsof`. */
+export function inspectionPlatform(platform = process.platform) {
+  return platform === "win32" ? "windows" : "unix";
+}
+
+/** Paths on Windows compare without case or separator differences. */
+function samePath(left, right, platform) {
+  if (inspectionPlatform(platform) !== "windows") return left === right;
+  const normal = (value) => value.replaceAll("/", "\\").toLowerCase();
+  return normal(left) === normal(right);
+}
+
+/** Whether `command` (as `inspectProcess` reports it) is this host's `--gui` launch. */
+export function isHostCommand(
+  command,
+  executable,
+  platform = process.platform,
+) {
+  const suffix = " --gui";
+  const text = command.trim();
+  return (
+    text.endsWith(suffix) &&
+    samePath(text.slice(0, -suffix.length), executable, platform)
+  );
+}
+
+/**
+ * Parse `netstat -ano -p tcp` into the listening sockets it reports. Local
+ * addresses keep their host part so a non-loopback bind is not mistaken for
+ * a loopback one.
+ */
+export function parseNetstatListeners(output) {
+  const listeners = [];
+  for (const line of output.split(/\r?\n/)) {
+    const fields = line.trim().split(/\s+/);
+    if (fields.length !== 5 || fields[0].toUpperCase() !== "TCP") continue;
+    if (fields[3].toUpperCase() !== "LISTENING") continue;
+    const split = fields[1].lastIndexOf(":");
+    const port = Number(fields[1].slice(split + 1));
+    const pid = Number(fields[4]);
+    if (split < 1 || !Number.isInteger(port) || !Number.isInteger(pid))
+      continue;
+    listeners.push({ address: fields[1].slice(0, split), port, pid });
+  }
+  return listeners;
+}
+
+/**
+ * Parse the JSON the Windows process query prints. A process whose image path
+ * and command line disagree, or whose command line carries other arguments, is
+ * reported as a command that cannot match a host launch.
+ */
+export function parseWindowsProcess(output) {
+  let record;
+  try {
+    record = JSON.parse(output);
+  } catch {
+    return null;
+  }
+  if (
+    typeof record?.path !== "string" ||
+    typeof record?.command !== "string" ||
+    record.path === ""
+  )
+    return null;
+  const quoted = /^"([^"]*)"(.*)$/.exec(record.command);
+  const image = quoted ? quoted[1] : record.command.split(" ")[0];
+  const rest = quoted ? quoted[2] : record.command.slice(image.length);
+  return samePath(image, record.path, "win32") ? `${record.path}${rest}` : null;
+}
+
+const WINDOWS_PROCESS_QUERY = (pid) =>
+  `$p = Get-CimInstance Win32_Process -Filter "ProcessId=${Number(pid)}"; ` +
+  `if ($null -eq $p) { exit 1 }; ` +
+  `[Console]::Out.Write((@{ path = $p.ExecutablePath; command = $p.CommandLine } | ConvertTo-Json -Compress))`;
+
+/**
+ * `spawnSync`-shaped answer for one process: status 0 with its command, status
+ * 1 with no output when it does not exist, anything else when it cannot be
+ * confirmed.
+ */
+export function inspectProcess(
+  pid,
+  platform = process.platform,
+  run = spawnSync,
+) {
+  if (inspectionPlatform(platform) !== "windows")
+    return run("ps", ["-p", String(pid), "-o", "command="], {
+      encoding: "utf8",
+    });
+  const queried = run(
+    "powershell.exe",
+    ["-NoProfile", "-NonInteractive", "-Command", WINDOWS_PROCESS_QUERY(pid)],
+    { encoding: "utf8" },
+  );
+  if (queried.status !== 0) return queried;
+  const command = parseWindowsProcess(queried.stdout || "");
+  return command === null
+    ? { status: 3, stdout: "", stderr: "unconfirmed process identity" }
+    : { status: 0, stdout: command, stderr: "" };
+}
+
+function refuseListener() {
+  throw new Error(
+    "The loopback WebDriver listener does not belong to this native test host.",
+  );
+}
+
+/**
+ * Windows: the exact launched PID, running the packaged host image, owns the
+ * loopback listener, and no other process listens on that port. Anything the
+ * tools cannot confirm refuses.
+ */
+function verifyWindowsListener(state, run) {
+  const process = inspectProcess(state.pid, "win32", run);
+  const sockets = run("netstat", ["-ano", "-p", "tcp"], { encoding: "utf8" });
+  if (
+    process.status !== 0 ||
+    !isHostCommand(process.stdout, state.executable, "win32") ||
+    sockets.status !== 0
+  )
+    refuseListener();
+  const onPort = parseNetstatListeners(sockets.stdout || "").filter(
+    (listener) => listener.port === state.port,
+  );
+  if (
+    onPort.length === 0 ||
+    !onPort.some(
+      (listener) =>
+        listener.pid === state.pid && listener.address === "127.0.0.1",
+    ) ||
+    onPort.some((listener) => listener.pid !== state.pid)
+  )
+    refuseListener();
+}
+
+function verifyUnixListener(state, run) {
+  const process = inspectProcess(state.pid, "darwin", run);
+  const listener = run(
     "lsof",
     [
       "-nP",
@@ -252,14 +386,22 @@ export function verifyListener(state) {
   const records = (listener.stdout || "").trim().split("\n");
   if (
     process.status !== 0 ||
-    process.stdout.trim() !== `${state.executable} --gui` ||
+    !isHostCommand(process.stdout, state.executable, "darwin") ||
     listener.status !== 0 ||
     !records.includes(`p${state.pid}`) ||
     !records.includes(`n127.0.0.1:${state.port}`)
   )
-    throw new Error(
-      "The loopback WebDriver listener does not belong to this native test host.",
-    );
+    refuseListener();
+}
+
+export function verifyListener(
+  state,
+  platform = process.platform,
+  run = spawnSync,
+) {
+  if (inspectionPlatform(platform) === "windows")
+    verifyWindowsListener(state, run);
+  else verifyUnixListener(state, run);
 }
 
 export async function connect(path) {
@@ -277,17 +419,11 @@ export async function connect(path) {
 }
 
 /** Resume only after the former host is gone, discarding its queued answer. */
-export function prepareResume(
-  previous,
-  inspect = (pid) =>
-    spawnSync("ps", ["-p", String(pid), "-o", "command="], {
-      encoding: "utf8",
-    }),
-) {
+export function prepareResume(previous, inspect = inspectProcess) {
   const running = inspect(previous.pid);
   if (
     running.status === 0 &&
-    running.stdout.trim() === `${previous.executable} --gui`
+    isHostCommand(running.stdout, previous.executable)
   )
     throw new Error(
       "Stop this session before resuming it with a rebuilt package.",
@@ -322,7 +458,12 @@ export async function start(previousSession) {
   const previous = previousSession ? readSession(previousSession) : null;
   if (previous) prepareResume(previous);
   const staged = spawnSync(
-    resolve(repository, ".venv/bin/python"),
+    resolve(
+      repository,
+      inspectionPlatform() === "windows"
+        ? ".venv/Scripts/python.exe"
+        : ".venv/bin/python",
+    ),
     [
       "-m",
       "dev.desktop_automation_stage",
@@ -412,10 +553,8 @@ export async function stop(path) {
   await browser.deleteSession();
   // A persisted PID alone is not ownership: confirm its exact executable before
   // requesting normal process termination, and never kill a process group.
-  const check = spawnSync("ps", ["-p", String(state.pid), "-o", "command="], {
-    encoding: "utf8",
-  });
-  if (check.status === 0 && check.stdout.trim() === `${state.executable} --gui`)
+  const check = inspectProcess(state.pid);
+  if (check.status === 0 && isHostCommand(check.stdout, state.executable))
     process.kill(state.pid, "SIGTERM");
   else
     throw new Error(

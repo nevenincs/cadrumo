@@ -1,5 +1,5 @@
 use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation, Result};
-use std::ffi::OsString;
+use std::ffi::{OsStr, OsString};
 
 #[derive(Debug, PartialEq)]
 pub enum Mode {
@@ -32,6 +32,40 @@ pub fn desktop_available() -> Result<()> {
         graphical_session()
             .map(drop)
             .map_err(|error| unavailable().caused_by(error))
+    }
+}
+
+/// How the host puts its windows on the operator's desktop.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ShowMode {
+    /// A window is shown, restored and focused as the operator expects.
+    Activate,
+    /// The isolated WebDriver test host: a window appears but never takes the
+    /// foreground or focus, because the automation plugin drives the page
+    /// through the webview and needs neither.
+    NoActivate,
+}
+
+impl ShowMode {
+    /// `NoActivate` only for a host compiled with `native-automation` whose launcher
+    /// supplied `TAURI_WEBDRIVER_PORT`. Every other host activates.
+    pub fn decide(automation_feature: bool, webdriver_port: Option<&OsStr>) -> Self {
+        if automation_feature && webdriver_port.is_some() {
+            Self::NoActivate
+        } else {
+            Self::Activate
+        }
+    }
+
+    pub fn current() -> Self {
+        Self::decide(
+            cfg!(feature = "native-automation"),
+            std::env::var_os("TAURI_WEBDRIVER_PORT").as_deref(),
+        )
+    }
+
+    pub fn activates(self) -> bool {
+        self == Self::Activate
     }
 }
 
@@ -93,6 +127,18 @@ pub fn select(mut arguments: Vec<OsString>, desktop: bool) -> Result<Mode> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn only_the_automation_host_with_a_webdriver_port_shows_without_activating() {
+        let port = OsStr::new("4444");
+        assert_eq!(ShowMode::decide(true, Some(port)), ShowMode::NoActivate);
+        assert_eq!(ShowMode::decide(true, None), ShowMode::Activate);
+        assert_eq!(ShowMode::decide(false, Some(port)), ShowMode::Activate);
+        assert_eq!(ShowMode::decide(false, None), ShowMode::Activate);
+        assert!(!ShowMode::NoActivate.activates());
+        assert!(ShowMode::Activate.activates());
+    }
+
     #[test]
     fn mode_selection_preserves_cli_arguments_and_refuses_forced_headless_gui() {
         assert_eq!(

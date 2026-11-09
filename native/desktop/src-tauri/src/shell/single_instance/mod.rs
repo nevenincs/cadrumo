@@ -285,6 +285,10 @@ pub fn attach<R: Runtime>(window: &Window<R>, diagnostics: Arc<Diagnostics>) {
     }
     let window = window.clone();
     activation.attach(Box::new(move || {
+        // The automation host never takes the foreground for a second launch.
+        if !crate::launch::ShowMode::current().activates() {
+            return;
+        }
         for result in [window.unminimize(), window.show(), window.set_focus()] {
             if let Err(error) = result {
                 diagnostics.failure(
