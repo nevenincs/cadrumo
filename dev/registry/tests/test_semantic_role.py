@@ -21,6 +21,7 @@ from pydantic import ValidationError
 
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaAlias, CasillaConstraints, CasillaDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.validate_semantic_roles import (
     semantic_role_cardinality_failures,
@@ -36,6 +37,10 @@ from .synthetic_locale_fixtures import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+# Three consecutive exercises of the support envelope name the editions of the synthetic one-revision trees.
+_EDITIONS = tuple(str(year) for year in filing_year_envelope().years[-3:])
+_ED_1, _ED_2, _ED_3 = _EDITIONS
 
 
 __all__ = ["synthetic_locale_scope"]
@@ -155,21 +160,21 @@ class TestSemanticRoleFieldShape:
 
 class TestValidateSemanticRoleConsistency:
     def test_no_role_declarations_passes(self) -> None:
-        m = registry_modelo("180", "2023", [semantic_role_casilla()])
+        m = registry_modelo("180", _ED_1, [semantic_role_casilla()])
         assert semantic_role_consistency_failures([m]) == ()
 
     def test_matching_role_declarations_pass(self) -> None:
         a = semantic_role_casilla(cid="a", semantic_role="taxpayer_nif", data_type="nif")
         b = semantic_role_casilla(cid="b", semantic_role="taxpayer_nif", data_type="nif")
-        m1 = registry_modelo("180", "2023", [a])
-        m2 = registry_modelo("184", "2023", [b])
+        m1 = registry_modelo("180", _ED_1, [a])
+        m2 = registry_modelo("184", _ED_1, [b])
         assert semantic_role_consistency_failures([m1, m2]) == ()
 
     def test_diverging_data_type_rejected(self) -> None:
         a = semantic_role_casilla(cid="a", semantic_role="taxpayer_nif", data_type="nif")
         b = semantic_role_casilla(cid="b", semantic_role="taxpayer_nif", data_type="text")
-        m1 = registry_modelo("180", "2023", [a])
-        m2 = registry_modelo("184", "2023", [b])
+        m1 = registry_modelo("180", _ED_1, [a])
+        m2 = registry_modelo("184", _ED_1, [b])
         failures = semantic_role_consistency_failures([m1, m2])
         assert any("data_type" in f for f in failures)
         assert any("taxpayer_nif" in f for f in failures)
@@ -181,8 +186,8 @@ class TestValidateSemanticRoleConsistency:
         unconstrained = CasillaConstraints(sign="any", legal_refs=common_legal, source_refs=common_source)
         a = semantic_role_casilla(cid="a", semantic_role="retenciones", data_type="money", constraints=constrained)
         b = semantic_role_casilla(cid="b", semantic_role="retenciones", data_type="money", constraints=unconstrained)
-        m1 = registry_modelo("180", "2023", [a])
-        m2 = registry_modelo("184", "2023", [b])
+        m1 = registry_modelo("180", _ED_1, [a])
+        m2 = registry_modelo("184", _ED_1, [b])
         failures = semantic_role_consistency_failures([m1, m2])
         assert any("constraints" in f for f in failures)
 
@@ -206,7 +211,7 @@ class TestValidateSemanticRoleConsistency:
         )
 
         failures = semantic_role_consistency_failures(
-            [registry_modelo("303", "2025", [historical]), registry_modelo("303", "2026", [widened])]
+            [registry_modelo("303", _ED_2, [historical]), registry_modelo("303", _ED_3, [widened])]
         )
 
         assert any("constraints incompatible" in failure for failure in failures)
@@ -232,7 +237,7 @@ class TestValidateSemanticRoleConsistency:
 
         assert (
             semantic_role_consistency_failures(
-                [registry_modelo("322", "2022", [historical]), registry_modelo("322", "2026", [widened])]
+                [registry_modelo("322", _ED_1, [historical]), registry_modelo("322", _ED_3, [widened])]
             )
             == ()
         )
@@ -251,9 +256,9 @@ class TestValidateSemanticRoleConsistency:
             constraints=CasillaConstraints(enum=("1", "2"), legal_refs=legal, source_refs=("aeat-manual",)),
         )
         modelos = (
-            [registry_modelo("180", "2023", [first, second])]
+            [registry_modelo("180", _ED_1, [first, second])]
             if scope == "same_revision"
-            else [registry_modelo("180", "2023", [first]), registry_modelo("184", "2024", [second])]
+            else [registry_modelo("180", _ED_1, [first]), registry_modelo("184", _ED_2, [second])]
         )
 
         assert any("constraints incompatible" in failure for failure in semantic_role_consistency_failures(modelos))
@@ -272,7 +277,7 @@ class TestValidateSemanticRoleConsistency:
         )
 
         failures = semantic_role_consistency_failures(
-            [registry_modelo("180", "2023", [historical]), registry_modelo("180", "2024", [recoded])]
+            [registry_modelo("180", _ED_1, [historical]), registry_modelo("180", _ED_2, [recoded])]
         )
         assert any("constraints incompatible" in failure for failure in failures)
 
@@ -292,7 +297,7 @@ class TestValidateSemanticRoleConsistency:
         )
 
         failures = semantic_role_consistency_failures(
-            [registry_modelo("180", "2023", [historical]), registry_modelo("180", "2024", [widened_and_reshaped])]
+            [registry_modelo("180", _ED_1, [historical]), registry_modelo("180", _ED_2, [widened_and_reshaped])]
         )
         assert any("constraints incompatible" in failure for failure in failures)
 
@@ -300,15 +305,15 @@ class TestValidateSemanticRoleConsistency:
         legal = ("ley-58-2003:art-29",)
         observations = [
             semantic_role_casilla(
-                cid=f"enum-observation-{year}",
+                cid=f"enum-observation-{edition}",
                 semantic_role="enum_branch_guard",
                 constraints=CasillaConstraints(enum=values, legal_refs=legal, source_refs=("aeat-manual",)),
             )
-            for year, values in ((2022, ("1",)), (2023, ("1", "2")), (2024, ("1", "3")))
+            for edition, values in zip(_EDITIONS, (("1",), ("1", "2"), ("1", "3")), strict=True)
         ]
         modelos = [
-            registry_modelo("180", str(year), [observation])
-            for year, observation in zip((2022, 2023, 2024), observations, strict=True)
+            registry_modelo("180", edition, [observation])
+            for edition, observation in zip(_EDITIONS, observations, strict=True)
         ]
 
         assert any("constraints incompatible" in failure for failure in semantic_role_consistency_failures(modelos))
@@ -321,7 +326,7 @@ class TestValidateSemanticRoleCardinality:
             semantic_role_cardinality="intentional_singleton",
             semantic_role_cardinality_reason="2025-only legal slot",
         )
-        m = registry_modelo("202", "2025-y-siguientes", [c])
+        m = registry_modelo("202", f"{_ED_2}-y-siguientes", [c])
         assert semantic_role_cardinality_failures([m]) == ()
 
     def test_intentional_singleton_role_repeated_within_one_revision_fails(self) -> None:
@@ -339,11 +344,11 @@ class TestValidateSemanticRoleCardinality:
             semantic_role_cardinality_reason="2025-only legal slot",
         )
         b = semantic_role_casilla(cid="b", semantic_role="is_pf_mod_40_3_b2_base_tipo_3")
-        m = registry_modelo("202", "2025-y-siguientes", [a, b])
+        m = registry_modelo("202", f"{_ED_2}-y-siguientes", [a, b])
         failures = semantic_role_cardinality_failures([m])
         assert failures == (
             "semantic_role 'is_pf_mod_40_3_b2_base_tipo_3': casilla "
-            "202.2025-y-siguientes.a declares semantic_role_cardinality "
+            f"202.{_ED_2}-y-siguientes.a declares semantic_role_cardinality "
             "'intentional_singleton' but role is shared by co-applying casillas "
             "(2 in one revision, 1 modelo(s))",
         )
@@ -362,12 +367,12 @@ class TestValidateSemanticRoleCardinality:
             semantic_role_cardinality_reason="2025-only legal slot",
         )
         b = semantic_role_casilla(cid="b", semantic_role="is_pf_mod_40_3_b2_base_tipo_3")
-        m1 = registry_modelo("202", "2025-y-siguientes", [a])
-        m2 = registry_modelo("303", "2025-y-siguientes", [b])
+        m1 = registry_modelo("202", f"{_ED_2}-y-siguientes", [a])
+        m2 = registry_modelo("303", f"{_ED_2}-y-siguientes", [b])
         failures = semantic_role_cardinality_failures([m1, m2])
         assert failures == (
             "semantic_role 'is_pf_mod_40_3_b2_base_tipo_3': casilla "
-            "202.2025-y-siguientes.a declares semantic_role_cardinality "
+            f"202.{_ED_2}-y-siguientes.a declares semantic_role_cardinality "
             "'intentional_singleton' but role is shared by co-applying casillas "
             "(1 in one revision, 2 modelo(s))",
         )
@@ -394,6 +399,6 @@ class TestValidateSemanticRoleCardinality:
             semantic_role_cardinality="intentional_singleton",
             semantic_role_cardinality_reason="2025-only legal slot",
         )
-        m1 = registry_modelo("202", "2025-y-siguientes", [a])
-        m2 = registry_modelo("202", "2026-y-siguientes", [b])
+        m1 = registry_modelo("202", f"{_ED_2}-y-siguientes", [a])
+        m2 = registry_modelo("202", f"{_ED_3}-y-siguientes", [b])
         assert semantic_role_cardinality_failures([m1, m2]) == ()
