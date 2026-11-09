@@ -196,7 +196,7 @@ fn the_preset_presents_each_whole_model_with_its_recorded_context_and_projector(
     // A registry vision model with a projector layer, and a text model.
     manifest(
         &models,
-        [registry[0], registry[1], "vision-reader", "4b-instruct"],
+        [registry[0], registry[1], "vision-reader", "instruct"],
         &[
             blob(&models, MODEL_MEDIA_TYPE, b"vision weights"),
             blob(&models, PROJECTOR_MEDIA_TYPE, b"vision projector"),
@@ -224,7 +224,7 @@ fn the_preset_presents_each_whole_model_with_its_recorded_context_and_projector(
     // Each of them states its own context.
     record(
         &models,
-        [registry[0], registry[1], "vision-reader", "4b-instruct"],
+        [registry[0], registry[1], "vision-reader", "instruct"],
         16384,
     );
     record(
@@ -274,32 +274,32 @@ fn the_preset_presents_each_whole_model_with_its_recorded_context_and_projector(
     // Automatic placement adds no key: the offload is the router's.
     let expected = format!(
         "[{}]\nalias = {hf}\nmodel = {}\nmmproj = {}\nctx-size = 32768\n\n\
-         [{}]\nalias = vision-reader:instruct\nmodel = {}\nmmproj = {}\nctx-size = 16384\n\n\
-         [{}]\nalias = text-reader:small\nmodel = {}\nctx-size = 2048\n\n",
+         [{}]\nalias = text-reader:small\nmodel = {}\nctx-size = 2048\n\n\
+         [{}]\nalias = vision-reader:instruct\nmodel = {}\nmmproj = {}\nctx-size = 16384\n\n",
         router_id(hf),
         value_of(&models, b"hf weights"),
         value_of(&models, b"hf projector"),
+        router_id("text-reader:small"),
+        value_of(&models, b"text weights"),
         router_id("vision-reader:instruct"),
         value_of(&models, b"vision weights"),
         value_of(&models, b"vision projector"),
-        router_id("text-reader:small"),
-        value_of(&models, b"text weights"),
     );
     assert_eq!(preset(&models, Placement::Auto), expected);
     // Processor only places no layer on a device, in every section.
     let cpu_only = format!(
         "[{}]\nalias = {hf}\nmodel = {}\nmmproj = {}\nctx-size = 32768\nn-gpu-layers = 0\n\n\
+         [{}]\nalias = text-reader:small\nmodel = {}\nctx-size = 2048\nn-gpu-layers = 0\n\n\
          [{}]\nalias = vision-reader:instruct\nmodel = {}\nmmproj = {}\nctx-size = 16384\n\
-         n-gpu-layers = 0\n\n\
-         [{}]\nalias = text-reader:small\nmodel = {}\nctx-size = 2048\nn-gpu-layers = 0\n\n",
+         n-gpu-layers = 0\n\n",
         router_id(hf),
         value_of(&models, b"hf weights"),
         value_of(&models, b"hf projector"),
+        router_id("text-reader:small"),
+        value_of(&models, b"text weights"),
         router_id("vision-reader:instruct"),
         value_of(&models, b"vision weights"),
         value_of(&models, b"vision projector"),
-        router_id("text-reader:small"),
-        value_of(&models, b"text weights"),
     );
     assert_eq!(preset(&models, Placement::CpuOnly), cpu_only);
     for placement in [Placement::Auto, Placement::CpuOnly] {
@@ -716,7 +716,7 @@ fn a_model_new_in_the_store_restarts_an_idle_router_and_waits_for_a_held_one_to_
 
     // Another arrives while the router holds a model: the model in use is never
     // unloaded for it, and the router drains, refusing every new load for a retry.
-    let large_path = ["registry.ollama.ai", "library", "text-reader", "4b"];
+    let large_path = ["registry.ollama.ai", "library", "text-reader", "large"];
     manifest(
         &locations.models,
         large_path,
