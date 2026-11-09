@@ -455,6 +455,24 @@ export function FormView({
             <Icon name="splitColumn" />
           </IconButton>
         </div>
+        {session.carryAttestations.map((attestation) => (
+          <div
+            key={attestation.family}
+            data-carry-attestation={attestation.family}
+            className="flex flex-none items-start gap-3 border-b border-border px-6 py-3"
+          >
+            <p className="min-w-0 flex-1 text-sm text-muted-foreground">
+              {attestation.statement_words}
+            </p>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => session.attestCarries(attestation)}
+            >
+              {attestation.action_words}
+            </Button>
+          </div>
+        ))}
         {pages.length > 1 && page && (
           <Tabs
             value={page.id}

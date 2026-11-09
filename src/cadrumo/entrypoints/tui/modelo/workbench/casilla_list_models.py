@@ -102,6 +102,8 @@ class CasillaListEntry:
     row_base_empty: bool | None = None
     #: The declaration is recorded as filed: its values are facts, and nothing on it asks for the filer.
     recorded: bool = False
+    #: The declaration has been calculated; before then no source has been read, so a box waits on the calculation.
+    calculated: bool = True
     #: ``False`` on a page the read model states does not apply this period, which asks for no value.
     applies: bool = True
     #: In an official grid, the heading of the row the box sits in, and of its column.
@@ -143,7 +145,11 @@ class CasillaListEntry:
     @property
     def origin_words(self) -> str:
         """The origin in words, as the row and the box panel say it; a recorded declaration asks nothing."""
-        return "" if self.staged_replaces_absence else origin_words(self.field, recorded=self.recorded)
+        return (
+            ""
+            if self.staged_replaces_absence
+            else origin_words(self.field, recorded=self.recorded, calculated=self.calculated)
+        )
 
     @property
     def staged_replaces_absence(self) -> bool:

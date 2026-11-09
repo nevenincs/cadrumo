@@ -2741,8 +2741,7 @@ desktop:
       whole_counts: Tételek · teljes napló
     import:
       accepts:
-        bank: CSV, XLSX, XLS, OFX, QFX vagy PDF · legfeljebb 128 fájl · a mappán belüli
-          mappákat nem olvassa
+        bank: '{formats} · legfeljebb 128 fájl · a mappán belüli mappákat nem olvassa'
         book: CSV, TSV, XLSX, XLSM vagy XLS
         documents: PDF, PNG, JPG, TIFF, WEBP, HEIC vagy Facturae, UBL, CII XML · a
           mappán belüli mappákat nem olvassa
@@ -4809,7 +4808,8 @@ desktop:
       cancelled: Leállítottad a beállítást.
       damaged_download: A letöltés sérült volt, ezért nem használható.
       disk_full: Nincs elég szabad hely a lemezen.
-      host_unreachable: A letöltési kiszolgáló nem érhető el.
+      host_unreachable: A letöltési kiszolgáló nem érhető el. Ellenőrizd az internetkapcsolatodat,
+        majd próbáld újra.
       interrupted: A beállítás a befejezés előtt megszakadt.
       memory_busy: Most túl sok memória van használatban. Zárj be más programokat,
         és próbáld újra.
@@ -4822,6 +4822,8 @@ desktop:
       program_not_running: A helyi MI-program nem fut.
       secure_connection_failed: Nem sikerült biztonságos kapcsolatot létesíteni. Lehet,
         hogy egy hálózati szűrő akadályozza.
+      server_error: A letöltési kiszolgálónál probléma lépett fel. Próbáld újra néhány
+        perc múlva.
       unexpected: Valami hiba történt.
     item:
       browser: Böngésző

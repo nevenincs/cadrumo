@@ -3060,6 +3060,17 @@ application:
         one_year: Casilla {box} del modelo {modelo}, ejercicio {years}.
         onwards: Casilla {box} del modelo {modelo}, ejercicio {years} y siguientes.
         year_span: Casilla {box} del modelo {modelo}, ejercicio {years}.
+      carry_attestation:
+        renta_negative_general_bases_pending:
+          action: No tengo importes pendientes de ejercicios anteriores
+          effect: 'Se registra como un 0 que has declarado: nada pendiente de ejercicios
+            anteriores.'
+          origin: Has declarado que no queda nada pendiente
+          statement: Indica que no te queda ninguna base liquidable general negativa
+            de los cuatro ejercicios anteriores pendiente de compensar (art. 50.3
+            de la Ley 35/2006). Cada importe se registra como un 0 que has declarado,
+            distinto de una cifra escrita; si después una declaración anterior muestra
+            un importe, la declaración señala la diferencia.
       finding_action:
         add_activity_start: Añade a tu perfil la fecha en que empezó tu actividad
           y vuelve a calcular.

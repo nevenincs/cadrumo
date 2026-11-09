@@ -39,10 +39,19 @@ import type {
   SourceSurface,
 } from "./modeloWork";
 import type {
+  PublicSpanishTaxIdFormat,
+  ReconciliationSourceRequirementV1,
+  RegistryAuthorityGrade,
   SourceFamily,
   SourcePolicyV1,
   TemporalProjectionDirection,
 } from "./modeloWorkFormPart2";
+
+/**
+ * The closed families of earlier-filing carries a filer may state hold
+ * nothing.
+ */
+export type AbsenceAttestationFamily = "renta_negative_general_bases_pending";
 
 /**
  * What one reported row does in the declaration.
@@ -231,6 +240,23 @@ export type ModeloFormCalculationNote = {
   fact: CalculationNoteFact | null;
   element_names: [string, string][];
   message: string | null;
+};
+
+/**
+ * The statement a filer can make that no amount from an earlier ejercicio is
+ * still pending.
+ *
+ * It is offered while a carry the declaration reads from an earlier filing
+ * holds no value: no stored earlier return supplied it, and the filer has
+ * neither entered it nor stated it. Applying it stages one `attest_no_amount`
+ * intent per binding, which records each as a zero the filer stated.
+ */
+export type ModeloFormCarryAttestation = {
+  family: AbsenceAttestationFamily;
+  binding_ids: BindingId[];
+  action_words: string;
+  statement_words: string;
+  effect_words: string;
 };
 
 /**
@@ -1068,6 +1094,7 @@ export type PublicModeloFormField = {
   value_text: string | null;
   restorable: boolean;
   filers_own: boolean;
+  stated_absent: AbsenceAttestationFamily | null;
   confirm_value: ModeloEditWireScalar;
   takes_typed_value: boolean;
   clearable: boolean;
@@ -1281,6 +1308,7 @@ export type PublicModeloWorkForm = {
   filing: ModeloFormFiling | null;
   last_export: ModeloFormExport | null;
   edit_closure: ModeloFormEditClosure | null;
+  carry_attestations: ModeloFormCarryAttestation[];
   modelo_title: string | null;
   modelo_name: string | null;
   modelo_number: string | null;
@@ -1303,44 +1331,3 @@ export type PublicScalarValueV1 = {
   kind: "string" | "integer" | "boolean" | "decimal" | "date" | "null";
   text: string;
 };
-
-/**
- * Typed local-human workbench view of the governed SpanishTaxIdFormat.
- */
-export type PublicSpanishTaxIdFormat = {
-  width: number;
-  country_prefix: string;
-  country_prefixed_width: number;
-  country_prefix_strip_width: number;
-  prefixed_nif_leaders: string;
-  nie_leaders: string;
-  cif_leaders: string;
-  nif_letters: string;
-  nif_check_modulus: number;
-  nie_prefix_substitutions: [string, string][];
-  cif_digit_only_kinds: string;
-  cif_letter_only_kinds: string;
-  cif_letter_table: string;
-};
-
-/**
- * One source declaration the to-do list names before the summary can be worked
- * out, and its door.
- */
-export type ReconciliationSourceRequirementV1 = {
-  words: string;
-  next_step: OperationNextStepV1;
-};
-
-/**
- * How far one modelo registry revision's declared authority reaches.
- *
- * The members form a ladder of increasing claim, each rung requiring
- * everything the rung below it requires. Which families a rung demands is a
- * question about *dispositions*, not raw population - a family may be honestly
- * resolved as not applicable, with a reason and legal references - so an
- * informative modelo carrying export layouts and no formulas can legitimately
- * reach `FILING`. Registry build validation owns that rule; this enum owns
- * only the vocabulary.
- */
-export type RegistryAuthorityGrade = "applicability" | "calculation" | "filing";

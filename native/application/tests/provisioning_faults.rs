@@ -321,7 +321,7 @@ fn a_full_disk_is_final_and_tries_no_other_source() {
         &Cancellation::default(),
         |_| {},
     );
-    let Err(Error::Download(failure)) = run.result else {
+    let Err(Error::Download(failure)) = &run.result else {
         panic!("expected a download failure, got {:?}", run.result);
     };
     assert_eq!(failure.category, FailureCategory::DiskFull);

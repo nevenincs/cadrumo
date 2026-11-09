@@ -980,6 +980,7 @@ fn a_local_ai_check_that_timed_out_is_recorded_with_the_request_and_its_timeout(
         ItemId::LocalAi,
         FailureCategory::ProgramNotRunning,
         Some(&cause),
+        None,
     );
     assert_eq!(error.reason.as_deref(), Some("setup_local_ai_failed"));
     assert_eq!(error.io_kind, Some(std::io::ErrorKind::TimedOut));
@@ -1009,6 +1010,7 @@ fn a_local_ai_server_that_never_came_is_recorded_apart_from_a_request_that_timed
         ItemId::LocalAi,
         FailureCategory::ProgramNotRunning,
         Some(&cause),
+        None,
     );
     assert_eq!(error.io_kind, None);
     assert!(
@@ -1034,6 +1036,7 @@ fn a_wait_that_ran_out_after_a_failed_start_is_recorded_with_that_start() {
         ItemId::LocalAi,
         FailureCategory::ProgramNotRunning,
         Some(&cause),
+        None,
     );
     assert_eq!(error.io_kind, None);
     assert!(
@@ -1053,12 +1056,74 @@ fn a_wait_that_ran_out_after_a_failed_start_is_recorded_with_that_start() {
 }
 
 #[test]
+fn a_failed_download_is_recorded_with_its_host_stage_status_and_attempts() {
+    use cadrumo_application::{
+        provisioning::failure::{FailureStage, TransferFailure},
+        value::HostName,
+    };
+    let mut answered = TransferFailure::transient(FailureCategory::ServerError)
+        .with_status(504)
+        .at_stage(FailureStage::Status)
+        .from_host(&HostName::new("github.com").unwrap());
+    answered.attempts = 19;
+    let error = setup_failed(
+        ItemId::LocalAi,
+        FailureCategory::ServerError,
+        None,
+        Some(&answered),
+    );
+    assert_eq!(error.reason.as_deref(), Some("setup_local_ai_failed"));
+    assert!(
+        matches!(
+            &error.causes[..],
+            [
+                Cause::Application { reason: Some(category), .. },
+                Cause::Download { host: Some(host), stage: Some(stage), status: Some(504), io_kind: None, attempts: 19 },
+            ] if category == "server_error" && host == "github.com" && stage == "status"
+        ),
+        "{:?}",
+        error.causes
+    );
+    assert!(error.causes.iter().all(Cause::admissible));
+
+    let mut refused = TransferFailure::transient(FailureCategory::HostUnreachable)
+        .at_stage(FailureStage::Connect)
+        .with_io_kind(Some(std::io::ErrorKind::ConnectionRefused))
+        .from_host(&HostName::new("github.com").unwrap());
+    refused.attempts = 6;
+    let error = setup_failed(
+        ItemId::Browser,
+        FailureCategory::HostUnreachable,
+        None,
+        Some(&refused),
+    );
+    assert!(
+        matches!(
+            &error.causes[..],
+            [
+                Cause::Application { reason: Some(category), .. },
+                Cause::Download { status: None, io_kind: Some(kind), attempts: 6, .. },
+            ] if category == "host_unreachable" && kind == "ConnectionRefused"
+        ),
+        "{:?}",
+        error.causes
+    );
+    assert!(
+        error.chain_summary().unwrap().ends_with(
+            "download from github.com stopped at connect (io ConnectionRefused) after 6 attempts"
+        ),
+        "{:?}",
+        error.chain_summary()
+    );
+}
+
+#[test]
 fn a_failed_setup_is_recorded_as_a_setup_failure_for_either_component_with_its_category() {
     for (item, reason) in [
         (ItemId::Browser, "setup_browser_failed"),
         (ItemId::LocalAi, "setup_local_ai_failed"),
     ] {
-        let error = setup_failed(item, FailureCategory::Offline, None);
+        let error = setup_failed(item, FailureCategory::Offline, None, None);
         assert_eq!(error.code, ErrorCode::SetupFailed, "{reason}");
         assert_eq!(error.reason.as_deref(), Some(reason));
         assert_eq!(
@@ -2058,6 +2123,7 @@ fn ended(outcome: Ended, item: Option<ItemId>, failure: Option<FailureCategory>)
         item,
         failure,
         failure_cause: None,
+        download_failure: None,
         items: Vec::new(),
     }
 }

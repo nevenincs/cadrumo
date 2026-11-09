@@ -232,6 +232,7 @@ def _replayed_head_inputs(
         m210_gross_income_source_mode=replay.m210_gross_income_source_mode,
         cleared_casilla_ids=replay.cleared_casilla_ids,
         record_operator_layer=caller_context.operator_layer_known,
+        attested_binding_ids=replay.attested_binding_ids,
     )
 
 

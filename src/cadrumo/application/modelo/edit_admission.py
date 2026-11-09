@@ -232,11 +232,15 @@ def permitted_binding_entry(
         return ModeloEditNonWritableBindingOverrideSurfaceEntryV1(
             binding_id=binding.id, reason=ModeloEditNonWritableReason.NOT_READ_BY_CALCULATION
         )
+    # Only a carry the registry declares a statement of absence for can be
+    # stated to hold nothing; on any other binding the statement would assert a figure.
+    attestable = binding.absence_attestation is not None
     return ModeloEditWritableBindingOverrideSurfaceEntryV1(
         binding_id=binding.id,
         allowed_intents=(
             ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
             ModeloEditBindingIntentKind.REMOVE_OVERRIDE,
+            *((ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT,) if attestable else ()),
         ),
         grammar=grammar,
     )

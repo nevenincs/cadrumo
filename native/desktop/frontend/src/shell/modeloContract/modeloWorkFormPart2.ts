@@ -10,6 +10,48 @@
 
 import type { BindingSourceKind } from "./modelo";
 import type { SourceSurface } from "./modeloWork";
+import type { OperationNextStepV1 } from "./modeloWorkForm";
+
+/**
+ * Typed local-human workbench view of the governed SpanishTaxIdFormat.
+ */
+export type PublicSpanishTaxIdFormat = {
+  width: number;
+  country_prefix: string;
+  country_prefixed_width: number;
+  country_prefix_strip_width: number;
+  prefixed_nif_leaders: string;
+  nie_leaders: string;
+  cif_leaders: string;
+  nif_letters: string;
+  nif_check_modulus: number;
+  nie_prefix_substitutions: [string, string][];
+  cif_digit_only_kinds: string;
+  cif_letter_only_kinds: string;
+  cif_letter_table: string;
+};
+
+/**
+ * One source declaration the to-do list names before the summary can be worked
+ * out, and its door.
+ */
+export type ReconciliationSourceRequirementV1 = {
+  words: string;
+  next_step: OperationNextStepV1;
+};
+
+/**
+ * How far one modelo registry revision's declared authority reaches.
+ *
+ * The members form a ladder of increasing claim, each rung requiring
+ * everything the rung below it requires. Which families a rung demands is a
+ * question about *dispositions*, not raw population - a family may be honestly
+ * resolved as not applicable, with a reason and legal references - so an
+ * informative modelo carrying export layouts and no formulas can legitimately
+ * reach `FILING`. Registry build validation owns that rule; this enum owns
+ * only the vocabulary.
+ */
+export type RegistryAuthorityGrade = "applicability" | "calculation" | "filing";
 
 /**
  * The kind of place a value comes from, as a filer thinks of it.

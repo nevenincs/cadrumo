@@ -11,6 +11,7 @@ from collections.abc import Mapping
 
 from ...core.casilla_id import CasillaId
 from ...core.external_constants import OutputLanguage
+from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ...domain.calculations.registry.export_field_casilla import (
     export_field_casilla_id,
     layout_fields_in_emission_order,
@@ -156,8 +157,22 @@ class WorkFormContext:
         self.entered = entered_casilla_ids
         self.overridden = overridden_binding_ids
         self.cleared: frozenset[str] = frozenset(() if revision is None else revision.cleared_casilla_ids)
+        self.stated = _stated_absences(revision, self.bindings)
         self.placed_boxes: dict[str, str] = {}
         self.casillas_by_export_position = _export_position_index(snapshot, self.bindings)
+
+
+def _stated_absences(
+    revision: CalculationRevision | None, bindings: Mapping[str, BindingDefinition]
+) -> dict[BindingId, AbsenceAttestationFamily]:
+    """The carries the filer stated hold nothing, each with the family of the statement its binding declares."""
+    layer = None if revision is None else revision.operator_layer
+    stated: dict[BindingId, AbsenceAttestationFamily] = {}
+    for binding_id in () if layer is None else layer.attested_binding_ids:
+        binding = bindings.get(binding_id)
+        if binding is not None and binding.absence_attestation is not None:
+            stated[binding_id] = binding.absence_attestation
+    return stated
 
 
 def _surface_key(entry: ModeloEditPermittedSurfaceEntryV1) -> tuple[str, str]:

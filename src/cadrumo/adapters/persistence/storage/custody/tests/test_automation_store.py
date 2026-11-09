@@ -205,13 +205,13 @@ def test_binding_substitution_refuses(subject: Subject, field: str, value: objec
 
 
 @pytest.mark.skipif(os.name != "nt", reason="the Windows anchor exists only on Windows")
-def test_an_authority_read_verifies_the_storage_ancestry_twice_per_root_lock(
+def test_an_authority_read_verifies_the_storage_ancestry_once_per_root_lock(
     subject: Subject, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """The lock and enrollment reads each take one root lock, whatever number of records they anchor.
 
-    Per root lock the ancestry is verified once to create the root and once for
-    the lock that then holds it; every anchor inside stands on that hold.
+    Per root lock the ancestry is verified once, where the root is provisioned;
+    the lock and every anchor inside stand on that hold.
     """
     subject.publish()
     opened: list[str] = []
@@ -229,7 +229,7 @@ def test_an_authority_read_verifies_the_storage_ancestry_twice_per_root_lock(
 
     below_root = [path for path in opened if path.startswith(str(subject.store.root) + os.sep)]
     assert len(below_root) > 2 * 2
-    assert Counter(path for path in opened if path in ancestry) == dict.fromkeys(ancestry, 2 * 2)
+    assert Counter(path for path in opened if path in ancestry) == dict.fromkeys(ancestry, 2)
 
 
 def test_incorrect_expired_revoked_and_suspended_authority(subject: Subject) -> None:
