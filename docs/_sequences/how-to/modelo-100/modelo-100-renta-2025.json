@@ -182,7 +182,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "624390c2066ee25f69e08aeeaa7b2248516691f9bd0e1bd56f9346d281fcce98"
+          "value": "25d420a21fb921ae83f7f43952123239a8ffabc6347f087c71eee7a171f5a024"
         }
       ],
       "envelope": {
@@ -384,7 +384,7 @@
             "renta-retencion-soportada-ganancia-patrimonial": "0",
             "renta-retencion-soportada-trabajo": "2400"
           },
-          "calculation_revision_id": "624390c2066ee25f69e08aeeaa7b2248516691f9bd0e1bd56f9346d281fcce98",
+          "calculation_revision_id": "25d420a21fb921ae83f7f43952123239a8ffabc6347f087c71eee7a171f5a024",
           "casilla_values": {
             "0002": "0",
             "0003": "24000",
@@ -4340,7 +4340,7 @@
             {"casilla_id":"0586","label":"Increased net regional tax liability","role":"key_figure","value":"1616.62"}
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 624390c2066ee25f69e08aeeaa7b2248516691f9bd0e1bd56f9346d281fcce98 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 25d420a21fb921ae83f7f43952123239a8ffabc6347f087c71eee7a171f5a024 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {"contributor_binding_source":"retencion_soportada","contributor_source_kind":"retencion_soportada","dependency_treatment":"","fingerprint":null,"lineage_role":"primary","parent_source_ref":null,"resolved_binding_source":"retencion_soportada","resolver_id":"retencion_soportada","source_ref":"retencion-soportada:2025:trabajo:03db3aff10f31f9bc6be483d4dae776ac1f39a4bc8b5139b29a5592c96bf7e47"},
             {"contributor_binding_source":"retencion_soportada","contributor_source_kind":"retencion_soportada","dependency_treatment":"","fingerprint":null,"lineage_role":"primary","parent_source_ref":null,"resolved_binding_source":"retencion_soportada","resolver_id":"retencion_soportada","source_ref":"profile:<profile-id>:taxpayer_type.irpf_income_categories:2025:capital_mobiliario"},
@@ -4402,7 +4402,7 @@
         "modelo",
         "work",
         "verify",
-        "624390c2066ee25f69e08aeeaa7b2248516691f9bd0e1bd56f9346d281fcce98"
+        "25d420a21fb921ae83f7f43952123239a8ffabc6347f087c71eee7a171f5a024"
       ],
       "captures": [],
       "envelope": {
@@ -4535,7 +4535,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "624390c2066ee25f69e08aeeaa7b2248516691f9bd0e1bd56f9346d281fcce98",
+          "calculation_revision_id": "25d420a21fb921ae83f7f43952123239a8ffabc6347f087c71eee7a171f5a024",
           "completeness_status": "complete",
           "findings": [
             {
@@ -4603,7 +4603,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "745f72226f62637e176b39ee660434b729fbe2e3dc88c57ab67490121227d6b1",
+          "verification_report_id": "5114cfad0dfb738c24af901f8e1f79717c497bd025d25ee7f9804e596720b29d",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

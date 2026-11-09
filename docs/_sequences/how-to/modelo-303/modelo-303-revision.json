@@ -355,7 +355,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.revisions\nwork_unit_id_filter\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\nrevision_count\t1\nshort_calculation_revision_id\tcalculation_revision_id\tshort_work_unit_id\twork_unit_id\tstate\tcreated_at\ne1fa9593d491\tc30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491\tb7a7592ccc53\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\tborrador\t2026-04-01T09:00:00+00:00\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "operation\tmodelo.work.revisions\nwork_unit_id_filter\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\nrevision_count\t1\nshort_calculation_revision_id\tcalculation_revision_id\tshort_work_unit_id\twork_unit_id\tstate\tcreated_at\n80642cdab61e\tc21c66281fbc7c81345f4bea7f14d97afc29dffc4c0adce54d7d80642cdab61e\tb7a7592ccc53\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\tborrador\t2026-04-01T09:00:00+00:00\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -439,7 +439,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491",
+          "calculation_revision_id": "c21c66281fbc7c81345f4bea7f14d97afc29dffc4c0adce54d7d80642cdab61e",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -1007,7 +1007,7 @@
               "parent_source_ref": null,
               "resolved_binding_source": "ledger_iva_aggregation",
               "resolver_id": "ledger_iva_aggregation",
-              "source_ref": "transaction:c866d7043d518f43f8d261b5c7d6437f1363d6dc16be0d68184bc64e5b0a9860"
+              "source_ref": "<object-key>"
             },
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -1018,7 +1018,7 @@
               "parent_source_ref": null,
               "resolved_binding_source": "ledger_iva_aggregation",
               "resolver_id": "ledger_iva_aggregation",
-              "source_ref": "transaction:fcd9d7ce87ab885ff0fdb3b1f1041c2640b0c4e2927f43b79da5d9d4fcd36990"
+              "source_ref": "<object-key>"
             },
             {
               "contributor_binding_source": "prorrata_regularizacion",

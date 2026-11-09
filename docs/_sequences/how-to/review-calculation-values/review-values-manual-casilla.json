@@ -398,7 +398,7 @@
             "modelo-130-retenciones-agrarias": "0",
             "modelo-130-volumen-ingresos-agrario": "0"
           },
-          "calculation_revision_id": "03b0468d1641bf7b557e43c69b830fb1be636e01f83412ff6b40141955e4f583",
+          "calculation_revision_id": "9d9e4bdcdd41a879294f7040781a854c3ebf039aeede3a41d901c3c606b92961",
           "casilla_values": {
             "01": "1000.00",
             "02": "525.00",
@@ -548,7 +548,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 03b0468d1641bf7b557e43c69b830fb1be636e01f83412ff6b40141955e4f583 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 9d9e4bdcdd41a879294f7040781a854c3ebf039aeede3a41d901c3c606b92961 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
