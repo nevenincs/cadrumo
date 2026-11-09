@@ -203,6 +203,14 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
             ),
         )
 
+    def stored_keys(self) -> tuple[str, ...]:
+        """Name every stored row by its hashed lookup key, without decrypting any of them.
+
+        Equal key sets mean the same rows are stored, so a caller that counted
+        the snapshots can tell the count still holds without reading them again.
+        """
+        return self._objects.list_keys(self._namespace_definition.namespace)
+
     def list_snapshots_with_outdated_count(self) -> tuple[tuple[TPayload, ...], int]:
         """Return the current-schema snapshots and how many older-schema rows were skipped.
 

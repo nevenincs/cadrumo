@@ -946,3 +946,14 @@ def test_revocation_returns_normally_when_the_receipt_is_cleared(tmp_path: Path)
     delete_profile_session(storage_root=tmp_path, profile_id=profile_id)
 
     assert not path.exists(), "an unobstructed revocation removes the receipt"
+
+
+def test_a_receipt_for_another_profile_is_never_published(tmp_path: Path) -> None:
+    """The publication refuses a record that names a different profile than its target path."""
+    profile_id = _profile_id()
+    foreign = _wrap(session_key=secrets.token_bytes(32), dek=secrets.token_bytes(32), profile_id=_profile_id())
+
+    with pytest.raises(StorageValidationError, match="does not match target profile"):
+        write_acceleration_receipt(storage_root=tmp_path, profile_id=profile_id, record=foreign, predecessor=None)
+
+    assert not profile_session_path(storage_root=tmp_path, profile_id=profile_id).exists()

@@ -387,6 +387,38 @@ class OperationRecoveryInventoryPage(BaseModel):
         return self
 
 
+class OperationRecoveryInventoryDelta(BaseModel):
+    """Every record a journal holds at one instant, classifying only those outside a caller's known set.
+
+    ``present`` names every record identifier, so a known record that is gone
+    shows as absent; ``entries`` classifies exactly the present records the
+    caller did not already know, in identifier order.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    present: frozenset[OperationId]
+    entries: tuple[OperationRecoveryInventoryEntry, ...]
+
+    @model_validator(mode="after")
+    def _validate_entries(self) -> OperationRecoveryInventoryDelta:
+        ids = tuple(entry.operation_id for entry in self.entries)
+        if ids != tuple(sorted(set(ids))):
+            raise ValueError("operation inventory delta entries must be unique and ordered")
+        if not self.present.issuperset(ids):
+            raise ValueError("operation inventory delta classifies only present records")
+        return self
+
+
+@runtime_checkable
+class OperationRecoveryInventoryDeltaReader(Protocol):
+    """Name every journal record and classify only those a caller has not classified yet."""
+
+    async def inventory_delta(self, *, known: frozenset[OperationId]) -> OperationRecoveryInventoryDelta:
+        """List every present record and classify each one outside ``known``, under one journal exclusion."""
+        ...
+
+
 @runtime_checkable
 class OperationRecoveryInventoryReader(Protocol):
     """Read credential-free journal identities before authorized recovery."""
