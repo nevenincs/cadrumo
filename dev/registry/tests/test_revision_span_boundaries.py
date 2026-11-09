@@ -156,6 +156,7 @@ import pytest
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.revision_span_declaration_support import (
     NON_EJERCICIO_COVERAGE_AXIS,
     OPEN_BOUNDED_ERA_DESIGNS,
@@ -195,6 +196,11 @@ from .revision_span_design_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+# Five consecutive exercises of the support envelope name the synthetic design filenames; the year
+# below the floor stands in for the year of an orden, which is never coverage.
+_Y = filing_year_envelope().years[-5:]
+_ORDEN = filing_year_envelope().floor - 1
 
 
 def test_no_revision_spans_a_design_relayout() -> None:
@@ -300,6 +306,13 @@ def test_both_occupancy_directions_have_a_positive_case_in_the_corpus() -> None:
     )
 
 
+def _year_in_name(pattern: str, name: str) -> int:
+    """Return the year a design filename states under ``pattern``, read independently of the code under test."""
+    match = re.search(pattern, name)
+    assert match is not None, f"corpus anchor moved: {name}"
+    return int(match.group(1))
+
+
 def test_every_ejercicio_a_design_names_is_attributed_to_it() -> None:
     """A design naming two ejercicios must be attributed to BOTH.
 
@@ -314,8 +327,16 @@ def test_every_ejercicio_a_design_names_is_attributed_to_it() -> None:
     """
     by_year = designs_by_year("303")
     assert by_year, "no Modelo 303 design was enumerated at all; the assertions below would be vacuous"
-    for year in (2015, 2016, 2019, 2020):
-        assert year in by_year, f"{year} is covered by a bundled design but attributed to nothing"
+    # The two-year designs are found by an independent reading of their filenames.
+    named_pairs = [
+        match
+        for path in sorted((design_dir("303") / "files").iterdir())
+        if (match := re.search(r"ejercicio-(\d{4})-y-(\d{4})(?!\d)", path.name))
+    ]
+    assert named_pairs, "no Modelo 303 design names two ejercicios in its filename; the loop below would be vacuous"
+    for match in named_pairs:
+        for year in map(int, match.groups()):
+            assert year in by_year, f"{year} is covered by a bundled design but attributed to nothing"
 
 
 def test_a_year_aeat_split_mid_course_keeps_both_of_its_designs() -> None:
@@ -331,7 +352,15 @@ def test_a_year_aeat_split_mid_course_keeps_both_of_its_designs() -> None:
     """
     by_year = designs_by_year("303")
     assert by_year, "no Modelo 303 design was enumerated at all"
-    for year in (2018, 2021, 2024):
+    # A split ejercicio is one that two distinct design payloads each claim, attributed file by file
+    # rather than through the year-keyed map under test.
+    claimed: dict[int, set[bytes]] = {}
+    for path in design_sources("303"):
+        for year in design_coverage_years(path):
+            claimed.setdefault(year, set()).add(path.read_bytes())
+    split_years = sorted(year for year, payloads in claimed.items() if len(payloads) >= 2)
+    assert split_years, "no Modelo 303 ejercicio carries two distinct designs, so the assertion below would be vacuous"
+    for year in split_years:
         distinct = {path.read_bytes() for path in by_year.get(year, ())}
         assert len(distinct) >= 2, (
             f"{year} should carry two distinct Modelo 303 designs (AEAT split it mid-course) "
@@ -748,10 +777,13 @@ def test_a_mid_split_ejercicio_orders_its_halves_by_declared_coverage_not_by_fil
             "earlier periods is the one AEAT bounds with 'hasta'"
         )
 
-    assert 2018 in unorderable, (
-        "Modelo 303's 2018 pair declares no period bound on either half ('ejercicio-2018' "
-        "and 'ejercicio-2018-salvo-ultimo-periodo-12m-4t'), so it must be reported as "
-        "unorderable rather than silently ordered by filename"
+    unbounded = {
+        year for year, paths in multi.items() if any(coverage_start_period(path.name) is None for path in paths)
+    }
+    assert unbounded, "every Modelo 303 pair declares its period bounds, so the unorderable report is untested"
+    assert unbounded <= set(unorderable), (
+        f"ejercicio(s) {sorted(unbounded - set(unorderable))} have a pair declaring no period bound on a half, "
+        "so each must be reported as unorderable rather than silently ordered by filename"
     )
 
 
@@ -819,16 +851,15 @@ def test_the_orden_year_in_a_filename_is_not_read_as_a_coverage_year() -> None:
     instrument's own year out of the coverage map.
     """
     assert revision_span_design_design_years(
-        "13-303-orden-hap-2373-2014-de-9-de-diciembre-ejercicio-2018-salvo.xlsx"
-    ) == (2018,)
-    assert revision_span_design_design_years("10-303-orden-hap-2373-2014-ejercicio-2015-y-2016-247-kb-xlsx.xlsx") == (
-        2015,
-        2016,
-    )
-    assert revision_span_design_design_years("02-303-ejercicio-2022-y-siguientes-actualizado-27-12-2021.xlsx") == (
-        2022,
-    )
-    assert revision_span_design_design_years("07-303-orden-eha-3786-2008-v1-1-36-kb-pdf.pdf") == ()
+        f"13-303-orden-hap-2373-{_ORDEN}-de-9-de-diciembre-ejercicio-{_Y[2]}-salvo.xlsx"
+    ) == (_Y[2],)
+    assert revision_span_design_design_years(
+        f"10-303-orden-hap-2373-{_ORDEN}-ejercicio-{_Y[0]}-y-{_Y[1]}-247-kb-xlsx.xlsx"
+    ) == (_Y[0], _Y[1])
+    assert revision_span_design_design_years(
+        f"02-303-ejercicio-{_Y[3]}-y-siguientes-actualizado-27-12-{_ORDEN}.xlsx"
+    ) == (_Y[3],)
+    assert revision_span_design_design_years(f"07-303-orden-eha-3786-{_ORDEN}-v1-1-36-kb-pdf.pdf") == ()
 
 
 def test_the_plural_and_range_naming_variants_are_read() -> None:
@@ -840,21 +871,18 @@ def test_the_plural_and_range_naming_variants_are_read() -> None:
     unenumerated design is indistinguishable from an absent one.
     """
     # plural, single year
-    assert revision_span_design_design_years("01-115-orden-eha-3435-2007-ejercicios-2019-y-siguientes.xlsx") == (2019,)
+    assert revision_span_design_design_years(
+        f"01-115-orden-eha-3435-{_ORDEN}-ejercicios-{_Y[3]}-y-siguientes.xlsx"
+    ) == (_Y[3],)
     # "y" is AND -- two discrete years, nothing between them
-    assert revision_span_design_design_years("10-303-ejercicio-2015-y-2016.xlsx") == (2015, 2016)
+    assert revision_span_design_design_years(f"10-303-ejercicio-{_Y[0]}-y-{_Y[1]}.xlsx") == (_Y[0], _Y[1])
     # "a" and "hasta" are THROUGH -- an inclusive range
-    assert revision_span_design_design_years("02-111-ejercicios-2004-a-2009-49-kb-pdf.pdf") == (
-        2004,
-        2005,
-        2006,
-        2007,
-        2008,
-        2009,
-    )
-    assert revision_span_design_design_years("06-111-ejercicios-2016-hasta-2018.pdf") == (2016, 2017, 2018)
+    assert revision_span_design_design_years(f"02-111-ejercicios-{_Y[0]}-a-{_Y[4]}-49-kb-pdf.pdf") == _Y
+    assert revision_span_design_design_years(f"06-111-ejercicios-{_Y[0]}-hasta-{_Y[2]}.pdf") == _Y[:3]
     # the orden year is still never coverage
-    assert revision_span_design_design_years("01-111-orden-eha-3127-2009-ejercicios-2019-y-siguientes.xlsx") == (2019,)
+    assert revision_span_design_design_years(
+        f"01-111-orden-eha-3127-{_ORDEN}-ejercicios-{_Y[3]}-y-siguientes.xlsx"
+    ) == (_Y[3],)
 
 
 def test_a_period_qualified_designation_yields_its_ejercicio() -> None:
@@ -866,21 +894,21 @@ def test_a_period_qualified_designation_yields_its_ejercicio() -> None:
     relaxation: the anchor is still an explicit coverage designation, which is why
     the negative controls below keep passing.
     """
-    assert revision_span_design_design_years("07-202-orden-hap-1552-2016-ejercicio-2p-y-3p-2016-128-kb-xlsx.xlsx") == (
-        2016,
-    )
-    assert revision_span_design_design_years("09-202-orden-hap-2214-2013-ejercicios-3p-2013-y-2014-46-kb-pdf.pdf") == (
-        2013,
-        2014,
-    )
-    assert revision_span_design_design_years("10-202-orden-hap-523-2015-1p-2016-124-kb-xlsx.xlsx") == (2016,)
+    assert revision_span_design_design_years(
+        f"07-202-orden-hap-1552-{_ORDEN}-ejercicio-2p-y-3p-{_Y[1]}-128-kb-xlsx.xlsx"
+    ) == (_Y[1],)
+    assert revision_span_design_design_years(
+        f"09-202-orden-hap-2214-{_ORDEN}-ejercicios-3p-{_Y[0]}-y-{_Y[1]}-46-kb-pdf.pdf"
+    ) == (_Y[0], _Y[1])
+    assert revision_span_design_design_years(f"10-202-orden-hap-523-{_ORDEN}-1p-{_Y[1]}-124-kb-xlsx.xlsx") == (_Y[1],)
     # An orden number carries no period token, so it still supplies no year, and a
     # period-scoped span with no year attached still enumerates nothing rather than
     # borrowing the update year beside it.
     assert (
-        revision_span_design_design_years("14-202-orden-eha-664-2010-adaptada-a-la-ultima-normativa-vigente.pdf") == ()
+        revision_span_design_design_years(f"14-202-orden-eha-664-{_ORDEN}-adaptada-a-la-ultima-normativa-vigente.pdf")
+        == ()
     )
-    assert revision_span_design_design_years("01-763-desde-2018-4t-y-siguientes-actualizado-en-2023.xlsx") == ()
+    assert revision_span_design_design_years(f"01-763-desde-{_Y[0]}-4t-y-siguientes-actualizado-en-{_Y[1]}.xlsx") == ()
 
 
 def test_a_design_title_is_read_as_coverage_where_the_filename_states_nothing() -> None:
@@ -941,20 +969,24 @@ def test_a_constant_ejercicio_slot_is_read_and_a_filer_supplied_one_is_not() -> 
     designs to whatever year sat beside that slot; keyed on the constant, it
     attributes none of them and their filenames continue to carry the coverage.
     """
-    m714 = design_dir("714") / "files" / "DR714_2025.xls"
+    # The anchors are the newest design files of each name shape; the year each states is read
+    # independently from its filename.
+    m714 = max((design_dir("714") / "files").glob("DR714_*.xls"))
+    m714_year = _year_in_name(r"DR714_(\d{4})\.xls", m714.name)
     assert m714.is_file(), f"corpus anchor moved: {m714}"
     assert revision_span_design_design_years(m714.name) == ()
     assert title_ejercicio_years(m714) == ()
-    assert constant_ejercicio_years(m714) == (2025,)
-    assert design_coverage_years(m714) == (2025,)
+    assert constant_ejercicio_years(m714) == (m714_year,)
+    assert design_coverage_years(m714) == (m714_year,)
 
-    m303 = design_dir("303") / "files" / "01-303-ejercicio-2026-y-siguientes-actualizado-28-01-26-378-kb-xlsx.xlsx"
+    m303 = max((design_dir("303") / "files").glob("01-303-ejercicio-*-y-siguientes-*.xlsx"))
+    m303_year = _year_in_name(r"ejercicio-(\d{4})-y-siguientes", m303.name)
     assert m303.is_file(), f"corpus anchor moved: {m303}"
     assert constant_ejercicio_years(m303) == (), (
         "Modelo 303's 'Ejercicio de devengo' slot is filled by the FILER, so reading it as "
         "the design's own coverage would attribute the design to an arbitrary year"
     )
-    assert design_coverage_years(m303) == (2026,)
+    assert design_coverage_years(m303) == (m303_year,)
 
 
 def test_a_title_naming_one_ejercicio_does_not_shorten_a_filename_naming_a_span() -> None:
