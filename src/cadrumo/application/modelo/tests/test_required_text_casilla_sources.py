@@ -387,3 +387,24 @@ def test_an_identity_casilla_left_unbound_is_caught() -> None:
 
     assert _DECLARANTE_NIF not in _unsupplied_required_text_casillas(snapshot)
     assert _DECLARANTE_NIF in _unsupplied_required_text_casillas(defective)
+
+
+def test_a_filing_year_role_on_a_typed_casilla_refuses_assembly(*, operation: PinnedAuthorityOperation) -> None:
+    """Detector teeth: a design that leaves the declaration's ejercicio for the person to type stops the calculation.
+
+    Modelo 189 once mapped its ejercicio that way; the published revision now fills it
+    from the declaration, so the refusal is shown on a copy that restores the defect.
+    """
+    filing_year = operation.supported_filing_years().horizon
+    snapshot = operation.snapshot("189", filing_year=filing_year, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
+    typed = tuple(
+        casilla.model_copy(update={"input_kind": InputKind.MANUAL})
+        if casilla.semantic_role == "filing_year"
+        else casilla
+        for casilla in snapshot.revision.casillas
+    )
+    defective = snapshot.model_copy(update={"revision": snapshot.revision.model_copy(update={"casillas": typed})})
+
+    _unsupplied_required_text_casillas(snapshot)
+    with pytest.raises(ModeloError):
+        _unsupplied_required_text_casillas(defective)
