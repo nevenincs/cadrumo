@@ -53,6 +53,9 @@ REVIEWED_CATALAN_SPELLINGS: frozenset[str] = frozenset(
         "Scoop",
         "PyPI",
         "Claude",
+        # The provider sign-in guide names these AI clients by product name.
+        "Codex",
+        "Antigravity",
         # These lowercase provider IDs are shown in CLI provider-help
         # examples across current locales; preserve the canonical IDs.
         "claude",

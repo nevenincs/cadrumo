@@ -1,7 +1,7 @@
 # Sign in to an AI provider by hand
 
 Cadrumo signs in to an AI provider (Claude, Codex or Antigravity) from the
-desktop application, under Ajustes > Proveedores de IA. When that sign-in
+desktop application, under Settings > AI providers. When that sign-in
 fails, it names this guide. The command below does the same sign-in from a
 console, with the provider's own login in your terminal. You sign in once; the
 application finds the result the next time it reads the provider's status.

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-09 13:17+0100\n"
+"POT-Creation-Date: 2026-11-09 22:19+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -507,11 +507,11 @@ msgstr "Inicia la sessió en un proveïdor d'IA a mà"
 
 #: ../../how-to/index.md:316
 msgid ""
-"Sign in from a console when the in-app sign-in under Ajustes > "
-"Proveedores de IA fails."
+"Sign in from a console when the in-app sign-in under Settings > AI "
+"providers fails."
 msgstr ""
 "Inicia la sessió des d'una consola quan falla l'inici de sessió de "
-"l'aplicació a Ajustes > Proveedores de IA."
+"l'aplicació a Configuració > Proveïdors d'IA."
 
 #: ../../how-to/index.md:319
 msgid "Troubleshooting"
