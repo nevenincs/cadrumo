@@ -195,3 +195,51 @@ def test_update_manual_transaction_fields_clears_tax_facts_for_personal_reclassi
         BucketEventType.LEDGER_TRANSACTION_CLASSIFIED,
         BucketEventType.LEDGER_TRANSACTION_ALLOCATED,
     ]
+
+
+def test_update_manual_transaction_fields_clears_a_business_category_and_keeps_the_classification(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    transaction_repository, event_repository = repositories(secure_objects)
+    with ledger_ports_for_test(
+        bucket_id=BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        created = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=BUCKET_ID,
+                booked_date=date(2026, 5, 1),
+                amount=Decimal("40.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="office supplies",
+                business_classification=BusinessClassification.BUSINESS,
+                category_id="office-supplies",
+                idempotency_key="category-clear",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+        )
+        assert created.transaction.category_id == "office-supplies"
+
+    with ledger_ports_for_test(
+        bucket_id=BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        updated = update_manual_transaction_fields(
+            bucket_id=BUCKET_ID,
+            transaction_id=created.ref.transaction_id,
+            patch=ManualLedgerTransactionPatch(category_id=None),
+            actor="operator-C",
+            source_command="aeat app ledger classify",
+            ports=ports,
+            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+        )
+
+    stored = transaction_repository.load().transactions[created.ref.transaction_id]
+    assert updated.transaction.category_id is None
+    assert stored.category_id is None
+    assert stored.business_classification is BusinessClassification.BUSINESS

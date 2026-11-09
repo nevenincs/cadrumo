@@ -459,3 +459,45 @@ def test_the_recorded_actor_is_the_session_label_for_automation_and_the_typed_on
     stored = subject.repository.current.transactions[first.transaction_id]
     assert stored.business_classification is BusinessClassification.BUSINESS
     assert {entry.actor for entry in stored.edit_lineage} == {recorded}
+
+
+def test_a_bulk_row_made_personal_persists_no_category_share_or_business_figures(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+    transactions: tuple[Transaction, Transaction],
+) -> None:
+    monkeypatch.setattr(
+        "cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(PROFILE_ID)
+    )
+    business, mixed = transactions
+    business = business.model_copy(
+        update={
+            "business_classification": BusinessClassification.BUSINESS,
+            "category_id": "office-supplies",
+            "irpf_category": "activity-expense",
+            "taxable_base": Decimal("8.26"),
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": Decimal("1.74"),
+        }
+    )
+    mixed = mixed.model_copy(
+        update={
+            "business_classification": BusinessClassification.MIXED,
+            "business_pct": Decimal("0.30"),
+            "category_id": "office-supplies",
+        }
+    )
+    subject = BulkClassifySubject(operation=authority_operation, transactions=(business, mixed))
+    source = f"transaction_id,classification\n{business.transaction_id},PERSONAL\n{mixed.transaction_id},PERSONAL\n"
+
+    asyncio.run(operation.LedgerBulkClassifyExecutor(subject.compose).execute(_request(source), subject.context))
+
+    for before in (business, mixed):
+        stored = subject.repository.current.transactions[before.transaction_id]
+        assert stored.business_classification is BusinessClassification.PERSONAL
+        assert stored.category_id is None
+        assert stored.business_pct is None
+        assert stored.irpf_category is None
+        assert stored.taxable_base is None
+        assert stored.iva_rate is None
+        assert stored.iva_amount is None
