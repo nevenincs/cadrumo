@@ -50,6 +50,8 @@ export function WindowOverlays({
   pastedLink,
   searchDocs,
   openDoc,
+  searchDeclarations,
+  openDeclarationHit,
   focusRail,
   copy,
   say,
@@ -75,6 +77,12 @@ export function WindowOverlays({
   pastedLink: ComponentProps<typeof CommandPalette>["pastedLink"];
   searchDocs: Docs["searchDocs"];
   openDoc: Docs["openDoc"];
+  searchDeclarations: ComponentProps<
+    typeof CommandPalette
+  >["searchDeclarations"];
+  openDeclarationHit: ComponentProps<
+    typeof CommandPalette
+  >["openDeclarationHit"];
   focusRail: () => void;
   copy: (text: string) => void;
   say: (text: string) => void;
@@ -164,6 +172,8 @@ export function WindowOverlays({
           language={languageControl}
           searchDocs={searchDocs}
           openDoc={openDoc}
+          searchDeclarations={searchDeclarations}
+          openDeclarationHit={openDeclarationHit}
           close={() => setPaletteOpen(false)}
           fallbackFocus={focusRail}
         />

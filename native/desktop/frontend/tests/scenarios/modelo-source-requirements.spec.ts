@@ -50,8 +50,16 @@ async function openAnnualSummary(target: Page) {
     .locator(".declarations-page")
     .getByRole("grid")
     .locator("[data-kind=data]");
-  await expect(rows.first()).toBeVisible();
-  await rows.filter({ hasText: summaryRow().modelo_title }).first().dblclick();
+  // The list is one large read; under a loaded host it takes a while.
+  await expect(rows.first()).toBeVisible({ timeout: 15_000 });
+  // The modelo has a row for every year it is due, and only this one opens
+  // the recorded work, so the row is picked by its period as well as its title.
+  const row = summaryRow();
+  await rows
+    .filter({ hasText: row.modelo_title })
+    .filter({ hasText: row.period_words ?? row.modelo_title })
+    .first()
+    .dblclick();
   await expect(target.locator(".declarations-workspace")).toBeVisible();
 }
 

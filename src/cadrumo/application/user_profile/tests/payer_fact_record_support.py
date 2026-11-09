@@ -1,7 +1,7 @@
 """A declared profile record whose three-state payer facts are the only variable.
 
 The withholding and intracommunity payer facts gate Modelos 111, 115, 180,
-190, 216, 296 and 349, the Art. 109 RIRPF coverage fact gates Modelo 130, the
+190 and 349, the IRNR withholding fact gates Modelos 216 and 296, the Art. 109 RIRPF coverage fact gates Modelo 130, the
 capital-income retención fact gates Modelos 117, 123, 126, 128, 187, 188, 193
 and 194, the IVA enrolment facts gate Modelos 322, 353 and 369, and the
 fiscal-residency category gates Modelos 100, 130, 151, 200, 202, 210 and 840.
@@ -33,12 +33,17 @@ PAYER_FACT_PATHS = (
     "withholding.pays_professionals_with_retencion",
     "withholding.pays_rent_with_retencion",
     CAPITAL_PATH,
+    "withholding.pays_non_resident_income_with_retencion",
     "iva.does_intracomunitario",
 )
 """The payer facts whose declared yes makes their modelos applicable.
 
+Withholding on income paid to non-residents without a permanent establishment
+is its own fact (TRLIRNR art. 31): it brings Modelos 216 and 296, which the
+resident IRPF withholding facts do not.
+
 The Art. 109 coverage fact is kept out: it is an exclusion, so its yes and no
-run the other way and a record cannot answer it together with these five.
+run the other way and a record cannot answer it together with these six.
 """
 
 PAYER_FACT_GATED_MODELOS = (
@@ -51,7 +56,7 @@ PAYER_FACT_GATED_MODELOS = (
     "296",
     "349",
 )
-"""Every modelo these five payer facts gate through the three-state contract."""
+"""Every modelo these six payer facts gate through the three-state contract."""
 
 ART109_PATH = "irpf.art109_activity_income_withholding_ge_70pct"
 """The Art. 109 RIRPF coverage fact, which excludes Modelo 130 on a declared yes."""
@@ -172,7 +177,7 @@ def large_company_record(operation: PinnedAuthorityOperation, *, answer: bool | 
 
 
 def payer_fact_record(operation: PinnedAuthorityOperation, *, answer: bool | None) -> UserProfileRecord:
-    """Return a declared record whose five payer facts carry ``answer``, or nothing."""
+    """Return a declared record whose six payer facts carry ``answer``, or nothing."""
     return _record(operation, paths=PAYER_FACT_PATHS, answer=answer)
 
 

@@ -491,6 +491,14 @@ class ProfileSchemaDefinition(BaseModel):
         """Canonical dotted field paths declared by the schema."""
         return tuple(f"{section.key}.{field.key}" for section in self.sections for field in section.fields)
 
+    def schedule_predicate_path(self, predicate: str) -> str | None:
+        """Return the dotted path of the field that answers a filing-schedule predicate, if one declares it."""
+        for section in self.sections:
+            for field in section.fields:
+                if predicate in field.schedule_predicates:
+                    return f"{section.key}.{field.key}"
+        return None
+
     def section(self, key: str) -> ProfileSectionDefinition:
         """Return a :class:`ProfileSectionDefinition` by canonical section key."""
         for section in self.sections:

@@ -2254,6 +2254,9 @@ application:
         vuelve a ejecutar aeat app modelo work verify: la comprobación no se completa
         mientras un apunte deducible carezca de factura, por lo que el borrador sigue
         abierto y recoge el justificante.'
+      detail_row_identity_conflict: Una fila de detalle que has introducido no coincide
+        con la que dan tus registros para el mismo declarado; corrígela o quítala
+        antes de calcular.
       export_cross_bucket_refused: La revisión indicada pertenece a un bucket distinto
         del bucket del perfil activo. Cambia de perfil antes de exportar.
       export_draft_approval_failed: No se pudo aprobar el borrador para la revisión
@@ -2441,6 +2444,8 @@ application:
         filas inutilizables: %{malformed_rows}'
       m036_declaration_profile_bucket_mismatch: La declaración del modelo 036 indica
         un perfil distinto del bucket en el que se registraría
+      m200_accounting_result_required: El Modelo 200 necesita el resultado contable
+        del ejercicio antes de calcularse a partir del libro.
       m210_ledger_manual_agrupacion_rows: El Modelo 210 en modo registros deriva las
         filas anuales de agrupación de rentas de las clasificaciones de tus registros;
         no aportes filas manuales de agrupación de rentas.
@@ -2459,6 +2464,8 @@ application:
         MARCA_DE_TIEMPO` para registrarla y luego reintenta el cálculo.'
       m303_filing_evidence_invalid: La evidencia de la instancia de declaración del
         modelo 303 no superó la validación.
+      m349_operator_rows_required: El libro de este periodo tiene operaciones intracomunitarias
+        sin sus filas de operador del Modelo 349; añádelas antes de calcular.
       novel_source_kind_rejected: 'Tipo(s) de origen de cálculo no reconocido(s) %{novel_source_kinds}
         en la versión %{revision_id}: las definiciones del modelo declaran un origen
         de valor que ningún resolutor de cálculo gestiona. Añade un resolutor o márcalo
@@ -2522,6 +2529,8 @@ application:
         calculation_revision_id.
       revision_pick_id_requires_explicit_selector: calculation_revision_id solo es
         válido con el selector de revisión explícita.
+      source_owned_binding_override: Has introducido un valor en una casilla que se
+        obtiene de tus registros; quítalo o corrige el registro del que procede.
       verification_report_not_found: No existe ningún informe de comprobación con
         id=%{verification_report_id}.
       work_period_token_invalid: '--period ''%{token}'' no es un token de periodo
@@ -2879,6 +2888,7 @@ application:
         de compensación inicial. Cambiarla alteraría una declaración registrada como
         presentada.'
       next_step:
+        open: Abrir el Saldo de IVA
         open_opening_balance: Registra el saldo inicial de IVA del %{modelo}, %{period}
       override_fresh_wallet_blocked: 'Anulación rechazada: una lectura actual de la
         cartera de AEAT ya resuelve el Modelo 303 %{period} %{filing_year}. La evidencia
@@ -2967,6 +2977,7 @@ application:
         create_work: Crea el %{modelo}, %{period}
         open_movement: Abre el movimiento en el Libro
         open_work: Abre el %{modelo}, %{period}
+        verify_work: Comprueba el %{modelo}, %{period}
       no_m130_revisions: Las declaraciones del Modelo 130 del ejercicio %{year} aún
         no se han calculado, así que no hay base para estimar la declaración anual.
         Calcula un trimestre y vuelve a pedir la estimación.

@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { showLedgerColumn } from "../support/ledgerPage";
+import { captureUnrecordedQuestions } from "../support/stagedCheckCapture";
 import { label } from "../support/strings";
 
 // What the Ledger says when a staged change cannot be saved. Each refusal
@@ -9,6 +10,7 @@ import { label } from "../support/strings";
 // the grid holds now, never what it held before a save.
 
 async function openLedger(target: Page, extra = "") {
+  await captureUnrecordedQuestions(target);
   await target.goto(
     `/scenarios.html?scenario=ledger&latency=0&bar=off${extra}`,
   );
@@ -78,7 +80,8 @@ test("an amount typed with a sign is refused for its sign, not reported as a mis
 }) => {
   await openLedger(target);
   await find(target, "bazar el faro");
-  const row = rowOf(target, "BAZAR EL FARO");
+  // The fixture draws several Bazar El Faro purchases; the first will do.
+  const row = rowOf(target, "BAZAR EL FARO").first();
   // The movement already goes out; the sign repeats what the direction says.
   await typeInto(target, cellOf(row, "amount"), "-50,00");
   // The cell keeps what was typed, marked as refused.

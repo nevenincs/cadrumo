@@ -61,11 +61,12 @@ from ..ledger.usage_ratio_repository import UsageRatioProfileLoader
 from ..operations.error_detail import served_words_language
 from ..operations.next_step import OperationNextStepWording, OperationOpenMovementStepV1
 from ..user_profile.projections import record_to_path_values
-from .action_errors import ModeloAggregationBindingError, ModeloLedgerPreflightBlockedError
+from .action_errors import ModeloAggregationInputConflictError, ModeloLedgerPreflightBlockedError
 from .calculation_helpers import load_work_unit_for_calculation, resolve_registry_snapshot_for_work_unit
 from .calculation_resolution import ResolvedCalculationChannels, resolve_calculation_binding_channels
 from .iva_wallet_gate import (
     apply_iva_compensation_decision_binding,
+    iva_wallet_door,
     resolve_iva_compensation_decision_for_calculation,
 )
 from .iva_wallet_values import taxpayer_nif_from_path_values
@@ -223,38 +224,39 @@ def prepare_calculation(
         backend_casilla_inputs=backend_casilla_inputs,
         transaction_repository=ledger_preflight_transaction_repository,
     )
-    iva_compensation_decision = resolve_iva_compensation_decision_for_calculation(
-        work_unit,
-        evaluated_at=evaluated_at,
-        snapshot=snapshot,
-        supplied_decision=iva_compensation_decision,
-        observation_repository=observation_repository,
-        repository=iva_compensation_decision_repository,
-        history_repository=iva_compensation_history_repository,
-        binding_values=binding_values,
-        backend_binding_values=backend_binding_values,
-        casilla_inputs=casilla_inputs,
-        backend_casilla_inputs=backend_casilla_inputs,
-        operation=operation,
-        profile_values=profile_values,
-    )
     period_date = filing_period_date or calculation_filing_date(work_unit.period)
     caller_binding_values = dict(binding_values or {})
     caller_enum_binding_values = dict(enum_binding_values or {})
     lower_precedence_binding_values = dict(backend_binding_values or {})
-    _apply_iva_compensation_decision_binding(
-        work_unit.modelo,
-        work_unit.filing_year,
-        work_unit.period,
-        bucket_id=work_unit.bucket_id,
-        revision=snapshot.revision,
-        taxpayer_nif=taxpayer_nif_from_path_values(profile_values),
-        casilla_inputs=casilla_inputs,
-        backend_casilla_inputs=backend_casilla_inputs,
-        caller_binding_values=caller_binding_values,
-        backend_binding_values=lower_precedence_binding_values,
-        decision=iva_compensation_decision,
-    )
+    with iva_wallet_door(work_unit.work_unit_id):
+        iva_compensation_decision = resolve_iva_compensation_decision_for_calculation(
+            work_unit,
+            evaluated_at=evaluated_at,
+            snapshot=snapshot,
+            supplied_decision=iva_compensation_decision,
+            observation_repository=observation_repository,
+            repository=iva_compensation_decision_repository,
+            history_repository=iva_compensation_history_repository,
+            binding_values=binding_values,
+            backend_binding_values=backend_binding_values,
+            casilla_inputs=casilla_inputs,
+            backend_casilla_inputs=backend_casilla_inputs,
+            operation=operation,
+            profile_values=profile_values,
+        )
+        _apply_iva_compensation_decision_binding(
+            work_unit.modelo,
+            work_unit.filing_year,
+            work_unit.period,
+            bucket_id=work_unit.bucket_id,
+            revision=snapshot.revision,
+            taxpayer_nif=taxpayer_nif_from_path_values(profile_values),
+            casilla_inputs=casilla_inputs,
+            backend_casilla_inputs=backend_casilla_inputs,
+            caller_binding_values=caller_binding_values,
+            backend_binding_values=lower_precedence_binding_values,
+            decision=iva_compensation_decision,
+        )
     channels = resolve_calculation_binding_channels(
         work_unit=work_unit,
         snapshot=snapshot,
@@ -600,8 +602,8 @@ def _raise_if_m200_ledger_requires_accounting_result_input(
     )
     if ledger_transaction_count == 0:
         return
-    raise ModeloAggregationBindingError(
-        translated_message="errors.error.error_modelo_aggregation_binding",
+    raise ModeloAggregationInputConflictError(
+        translated_message="application.modelo.errors.m200_accounting_result_required",
         context={
             "modelo": str(work_unit.modelo),
             "filing_year": work_unit.filing_year,

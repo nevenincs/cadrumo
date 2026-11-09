@@ -26,6 +26,7 @@ from ...domain.modelos.row_models import ModeloDetailRow
 from ...domain.modelos.work_unit import WorkUnit
 from .action_errors import (
     ModeloAggregationBindingError,
+    ModeloAggregationInputConflictError,
 )
 from .calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
 from .m210_agrupacion_renta import validate_m210_agrupacion_renta_rows_for_calculation
@@ -206,8 +207,8 @@ def reject_caller_overrides_of_source_bindings(
         (set(caller_binding_values) | set(caller_enum_binding_values or {})).intersection(protected_binding_ids),
     )
     if rejected_bindings:
-        raise ModeloAggregationBindingError(
-            translated_message="errors.error.error_modelo_aggregation_binding",
+        raise ModeloAggregationInputConflictError(
+            translated_message="application.modelo.errors.source_owned_binding_override",
             context={"rejected_binding_ids": rejected_bindings},
             precondition_failure=build_modelo_precondition_failure(
                 subject_leaf_key=subject_leaf_key,
@@ -224,7 +225,7 @@ def reject_caller_overrides_of_source_bindings(
     protected_casilla_ids = _bound_casilla_ids_for_bindings(revision, protected_binding_ids)
     rejected_casillas = sorted(set(caller_casilla_inputs).intersection(protected_casilla_ids))
     if rejected_casillas:
-        raise ModeloAggregationBindingError(
+        raise ModeloAggregationInputConflictError(
             translated_message="application.modelo.errors.caller_casilla_source_binding_conflict",
             context={"casillas": rejected_casillas},
             precondition_failure=build_modelo_precondition_failure(
@@ -249,7 +250,7 @@ def m210_gross_source_mode(
     if str(work_unit.modelo) == form_for_role("irnr.income"):
         return mode or M210GrossIncomeSourceMode.MANUAL
     if mode is M210GrossIncomeSourceMode.LEDGER:
-        raise ModeloAggregationBindingError(
+        raise ModeloAggregationInputConflictError(
             translated_message="application.modelo.errors.m210_ledger_source_requires_modelo_210",
         )
     return None

@@ -2,10 +2,12 @@ import { expect, test } from "@playwright/test";
 
 // The signed-in session can end while the Local AI lanes are being read. A read
 // still pending when the window learns of the end is not followed by the
-// provider-status read at all. A provider-status refusal the window did not see
-// coming stays an error and is not asked again: an earlier admitted catalog
-// read does not prove the runtime session was still valid. The real Tauri
-// adapter runs against a recording invoke boundary.
+// provider-status read at all; one already with the host when the window
+// learns of the end is refused for an end the log notes once, at INFO, like
+// every refusal for an ended session. A provider-status refusal the window did
+// not see coming stays an error and is not asked again: an earlier admitted
+// catalog read does not prove the runtime session was still valid. The real
+// Tauri adapter runs against a recording invoke boundary.
 
 type Report = { level: string; command: string | null; code: string | null };
 
@@ -166,11 +168,18 @@ test("no provider-status read follows once the session has ended", async ({
   expect(result.errors).toBe(0);
 });
 
-test("a provider-status read already asked when the session ends is dropped without a record", async ({
+test("a provider-status read already asked when the session ends is noted once, not as an error", async ({
   page,
 }) => {
   const result = await run(page, "ended-in-flight");
   expect(result.settingsReads).toBe(1);
-  expect(result.reports).toEqual([]);
+  expect(result.reports).toMatchObject([
+    {
+      level: "INFO",
+      command: "provider_settings_status",
+      code: "not_signed_in",
+    },
+  ]);
+  expect(result.reports).toHaveLength(1);
   expect(result.errors).toBe(0);
 });

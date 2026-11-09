@@ -501,6 +501,15 @@ class ProfileWorkerOperationHost:
         if services is not None:
             services.forget_settled_ephemeral()
 
+    def end_session_reads(self) -> None:
+        """Drop what reads kept for reuse: a session that locked, signed out or lapsed ends that reuse.
+
+        The composed services also drop it when they drain, so a closed host keeps none.
+        """
+        services = self.services
+        if services is not None:
+            services.end_session_reads()
+
     async def _settle_lapsed_operations(self) -> None:
         await settle_lapsed_operations(self)
 

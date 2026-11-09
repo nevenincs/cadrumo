@@ -1242,9 +1242,9 @@ fn a_context_record_reads_back_is_replaced_and_refuses_what_it_cannot_hold() {
     );
 
     // A tag with a dot keeps it: `.json` is added, never put in its place.
-    let dotted = ModelName::parse("synthetic-text:1.5b").unwrap();
+    let dotted = ModelName::parse("synthetic-text:v1.5").unwrap();
     record_context(&root, &dotted, NonZeroU32::new(2048).unwrap()).unwrap();
-    assert!(file.with_file_name("1.5b.json").is_file());
+    assert!(file.with_file_name("v1.5.json").is_file());
     assert_eq!(recorded_context(&root, &dotted), context(2048));
     assert_eq!(recorded_context(&root, &name), context(8192));
 
