@@ -14,9 +14,9 @@ const served = JSON.parse(
 
 const dialog = (target: Page) => target.locator(".new-declaration");
 
-async function choose(target: Page, modelo: string) {
+async function choose(target: Page, modelo: string, shape = "default") {
   await target.goto(
-    "/scenarios.html?scenario=ledger&latency=0&bar=off&modelo=default",
+    `/scenarios.html?scenario=ledger&latency=0&bar=off&modelo=${shape}`,
   );
   await target.locator("[data-rail=declarations]").click();
   await target.locator(".declarations-page .declarations-new").click();
@@ -30,16 +30,11 @@ async function choose(target: Page, modelo: string) {
 test("a modelo without a served suggestion starts with no period chosen", async ({
   page: target,
 }) => {
-  const unsuggested = [
-    ...new Set(served.creation_targets.map((x) => x.modelo)),
-  ].find((modelo) =>
-    served.creation_targets.every((x) => x.modelo !== modelo || !x.suggested),
-  );
-  // The recorded list must hold a modelo the backend suggests nothing for;
-  // should it ever suggest one for every modelo, this case needs a list that
-  // does not.
+  // The backend suggests a period for every modelo it offers, so this list
+  // is the served one with no suggestion for its first modelo.
+  const unsuggested = served.creation_targets[0]?.modelo;
   expect(unsuggested).toBeDefined();
-  await choose(target, unsuggested!);
+  await choose(target, unsuggested!, "unsuggested");
   await expect(
     dialog(target).locator(".new-declaration-period"),
   ).not.toHaveCount(0);
