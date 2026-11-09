@@ -302,6 +302,23 @@ def test_currency_codes_are_sorted_and_carry_no_word(served: dict[str, tuple[tup
     assert {key for _, key in served["currency"]} == {None}
 
 
+def test_the_functional_currency_is_served_and_is_one_of_the_served_currencies(
+    served: dict[str, tuple[tuple[str, str | None], ...]], operation: PinnedAuthorityOperation
+) -> None:
+    default = ledger_entry_options(_PROFILE, operation=operation).default_currency
+
+    assert default == "EUR"
+    assert default in {code for code, _ in served["currency"]}
+
+
+def test_every_deduction_kind_is_served_with_a_word_key_naming_its_own_token(
+    served: dict[str, tuple[tuple[str, str | None], ...]],
+) -> None:
+    assert served["deduction_fact_kind"]
+    for kind, key in served["deduction_fact_kind"]:
+        assert key == f"application.ledger.entry_options.deduction_fact_kind.{kind}"
+
+
 def test_deduction_kinds_are_the_ones_a_row_may_state_in_their_registry_order(
     served: dict[str, tuple[tuple[str, str | None], ...]], operation: PinnedAuthorityOperation
 ) -> None:

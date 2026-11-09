@@ -34,7 +34,7 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.bucket_pointer import require_active_bucket_id
-from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
+from ...core.external_constants import DEFAULT_CURRENCY, DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.time.clock import now
@@ -152,11 +152,16 @@ class LedgerEntryClassificationProjection(BaseModel):
 
 
 class LedgerEntryOptionsProjection(BaseModel):
-    """The vocabularies a ledger entry form offers, what each classification takes, and its text limits."""
+    """The vocabularies a ledger entry form offers, what each classification takes, and its text limits.
+
+    ``default_currency`` is the ledger's functional currency, one of the served ``currency``
+    codes: the currency a new movement is offered when the profile's own accounts name none.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
+    default_currency: str
     families: tuple[LedgerEntryOptionFamilyProjection, ...]
     classifications: tuple[LedgerEntryClassificationProjection, ...]
     limits: LedgerEntryLimitsProjection
@@ -314,6 +319,7 @@ def ledger_entry_options(
     )
     return LedgerEntryOptionsProjection(
         profile_id=profile_id,
+        default_currency=DEFAULT_CURRENCY,
         families=tuple(
             LedgerEntryOptionFamilyProjection(family=family, options=options) for family, options in families
         ),
