@@ -13,6 +13,7 @@ import {
   noteMoved,
   rebasedEdits,
   rebasedOf,
+  removeIntent,
   restaged,
   restoreIntent,
   UNPLACED_PAGE,
@@ -290,6 +291,25 @@ test("a staged intent says the kind of change a renewal is told", () => {
   expect(clearIntent(own).change).toBe("clear");
   expect(clearIntent(fed).change).toBe("clear");
   expect(restoreIntent({ ...fed, restorable: true })?.change).toBe("restore");
+});
+
+test("the filer's own entry or clear is taken out only where the read offers it, and said as a removal", () => {
+  const own = box(m130, "06");
+  expect(removeIntent({ ...own, removable: false })).toBeNull();
+  const remove = removeIntent({ ...own, removable: true });
+  expect(remove).toEqual({ kind: "restore_source_value", change: "remove" });
+  if (!remove) throw new Error("the box offers removal");
+  const held = staged({ ...own, removable: true }, remove);
+  expect(restaged(held, { ...own, removable: true })).toEqual(remove);
+  expect(restaged(held, { ...own, removable: false })).toBeNull();
+  const words: Translate = (key) => key;
+  expect(stagedText(words, held)).toBe("workspace.modelo.staged.remove");
+  expect(
+    stagedText(
+      words,
+      staged(own, { kind: "restore_source_value", change: "restore" }),
+    ),
+  ).toBe("workspace.modelo.staged.restore");
 });
 
 test("the notice counts each box a report moved once, until acknowledged", () => {

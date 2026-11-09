@@ -492,6 +492,13 @@ def _clearable_of(data: dict[str, object]) -> bool:
     return data["editability"] is ModeloFormEditability.EDITABLE_VALUE and data["origin"] is ModeloFormOrigin.ENTERED
 
 
+_REMOVABLE_ORIGINS = frozenset({ModeloFormOrigin.ENTERED, ModeloFormOrigin.CLEARED})
+
+
+def _removable_of(data: dict[str, object]) -> bool:
+    return data["editability"] is ModeloFormEditability.EDITABLE_VALUE and data["origin"] in _REMOVABLE_ORIGINS
+
+
 def _own_value_of(data: dict[str, object]) -> ModeloEditWireScalar:
     return comparable_entry(_factory_value(data)) if data["origin"] in _FILERS_OWN_ORIGINS else None
 
@@ -569,6 +576,9 @@ class ModeloFormField(ModeloFormBase):
     takes_typed_value: bool = Field(default_factory=_takes_typed_value_of)
     #: Whether the box holds a value the filer entered that they can remove.
     clearable: bool = Field(default_factory=_clearable_of)
+    #: Whether the filer's own entry or clear on a box they type can be taken out, so the box holds
+    #: what the declaration gives without it, as it did before the filer touched it.
+    removable: bool = Field(default_factory=_removable_of)
     #: The filer's own value as an entry of it compares (see
     #: :func:`~cadrumo.application.modelo.work_form_scalar_values.comparable_entry`); typing it again
     #: changes nothing. ``None`` when the value is not the filer's own.
@@ -628,8 +638,12 @@ class ModeloFormField(ModeloFormBase):
     @pydantic_validation_boundary
     def _derived_edit_values_match(self) -> ModeloFormField:
         derived = dict(self)
-        if (self.takes_typed_value, self.clearable) != (_takes_typed_value_of(derived), _clearable_of(derived)):
-            raise ValueError("whether a field takes typing or clearing is what its own state makes it")
+        if (self.takes_typed_value, self.clearable, self.removable) != (
+            _takes_typed_value_of(derived),
+            _clearable_of(derived),
+            _removable_of(derived),
+        ):
+            raise ValueError("whether a field takes typing, clearing or removal is what its own state makes it")
         if self.confirm_comparable != _confirm_comparable_of(derived):
             raise ValueError("a field's comparable confirm value is the one its own state lets a confirmation stage")
         if self.own_value != _own_value_of(derived) or self.state_digest != _state_digest_of(derived):
@@ -655,6 +669,7 @@ _SELF_DERIVED: Final[frozenset[str]] = frozenset(
         "confirm_value",
         "takes_typed_value",
         "clearable",
+        "removable",
         "own_value",
         "confirm_comparable",
         "state_digest",
@@ -1049,6 +1064,8 @@ class ModeloWorkForm(ModeloFormBase):
     result_addresses: tuple[CasillaId, ...] = ()
     #: The boxes the withholding register supplies, in reading order, each with the boxes worked out from it.
     withholding_credits: tuple[ModeloFormCredit, ...] = ()
+    #: Who withheld :attr:`withholding_credits`, in the form's language; ``None`` when the form has none.
+    withholding_credits_heading: str | None = None
     counts: ModeloFormCounts
     progress: ModeloWorkProgress
     operator_entries_known: bool

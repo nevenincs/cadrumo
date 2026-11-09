@@ -56,11 +56,16 @@ async function openCredits(
     })
     .click();
   const panel = workspace(target).getByRole("tabpanel");
-  await expect(
-    panel.getByRole("heading", {
-      name: label("desktop.modelo.credits.title", {}, language),
-    }),
-  ).toBeVisible();
+  const heading = await target.evaluate(async (asked) => {
+    const port = window.__fixtureModelo!;
+    const list = await port.declarations(asked);
+    const unit = list.creation_targets.find(
+      (entry) => entry.modelo === "100" && entry.existing,
+    )!.existing!.work_unit_id;
+    return (await port.form(unit, asked)).form.form.withholding_credits_heading;
+  }, language);
+  expect(heading).not.toBeNull();
+  await expect(panel.getByRole("heading", { name: heading! })).toBeVisible();
   return panel;
 }
 

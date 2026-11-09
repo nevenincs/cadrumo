@@ -51,10 +51,13 @@ function OriginMark({
     return (
       <span className="inline-flex items-center gap-1 text-sm text-foreground">
         <Icon name="edit" size="xs" />
-        {staged.intent.kind === "restore_source_value" ||
-        staged.intent.kind === "remove_override"
-          ? t("workspace.modelo.staged.restore")
-          : t("workspace.modelo.attention.staged")}
+        {staged.intent.kind === "restore_source_value" &&
+        staged.intent.change === "remove"
+          ? t("workspace.modelo.staged.remove")
+          : staged.intent.kind === "restore_source_value" ||
+              staged.intent.kind === "remove_override"
+            ? t("workspace.modelo.staged.restore")
+            : t("workspace.modelo.attention.staged")}
       </span>
     );
   if (!field.origin_words) return null;
