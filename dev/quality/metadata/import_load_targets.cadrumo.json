@@ -2994,6 +2994,8 @@
         "cadrumo.entrypoints.cli.config.profile_setup_results",
         "cadrumo.entrypoints.cli.config.profile_status_cli",
         "cadrumo.entrypoints.cli.config.profile_support",
+        "cadrumo.entrypoints.cli.config.provider_login_cli",
+        "cadrumo.entrypoints.cli.config.provider_login_command_specs",
         "cadrumo.entrypoints.cli.config.repair_command_specs",
         "cadrumo.entrypoints.cli.config.repair_commands",
         "cadrumo.entrypoints.cli.config.reset_cli",
