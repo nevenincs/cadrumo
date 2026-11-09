@@ -9431,6 +9431,7 @@ workspace:
       calculated: Cálculo completado
       created: Declaración creada
       discarded: Declaración descartada
+      edited: Cambios aplicados
       exported: Declaración exportada
       external_evidence_imported: Datos externos de la AEAT importados
       filed: Presentación registrada
@@ -9743,6 +9744,7 @@ workspace:
       reach: Qué cambia
       reach_others: 'También:'
       reading: Leyendo la explicación…
+      remove: Quitar tu valor
       retrieved: Consultado el {date}
       undo: Deshacer
       uses_outside_many: 'También usa datos que se guardan fuera de este modelo: {count}.'
@@ -10471,6 +10473,7 @@ workspace:
         Tu valor mandará hasta que restaures el origen.'
       effect:
         clear: quedará sin valor
+        remove: deja de llevar tu valor y vuelve a lo que da la declaración
         replaces_aeat_draft: sustituye el valor de los datos de la AEAT
         replaces_earlier_filings: sustituye el valor de una declaración anterior
         replaces_fixed_by_design: sustituye el valor fijado por el modelo
@@ -10568,6 +10571,7 @@ workspace:
       nothing_to_restore: Esta casilla ya muestra el valor de su origen.
     staged:
       clear: (se vaciará)
+      remove: (se quitará tu valor)
       restore: (vuelve al origen)
     step:
       calculate: Calcular

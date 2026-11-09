@@ -197,6 +197,7 @@ class PublicModeloFormField(BaseModel):
     confirm_value: ModeloEditWireScalar
     takes_typed_value: bool
     clearable: bool
+    removable: bool
     own_value: ModeloEditWireScalar
     confirm_comparable: ModeloEditWireScalar
     state_digest: str
