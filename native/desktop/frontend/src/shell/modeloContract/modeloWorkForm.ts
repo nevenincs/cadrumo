@@ -1104,6 +1104,7 @@ export type PublicModeloFormField = {
   confirm_value: ModeloEditWireScalar;
   takes_typed_value: boolean;
   clearable: boolean;
+  removable: boolean;
   own_value: ModeloEditWireScalar;
   confirm_comparable: ModeloEditWireScalar;
   state_digest: string;

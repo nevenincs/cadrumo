@@ -53,6 +53,7 @@ const KIND_ICON: Record<string, IconName> = {
   created: "plus",
   renamed: "edit",
   calculated: "sync",
+  edited: "edit",
   verified: "check",
   verification_refused: "refused",
   exported: "download",

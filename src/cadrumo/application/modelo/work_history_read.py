@@ -3,7 +3,8 @@
 The meaning of every declaration event lives here, once. An event with a
 lifecycle meaning (created, calculated, checked, filed, corrected …) carries
 that meaning as its kind and is said in the words the filing history uses for
-it; every other recorded event carries the closed kind ``other`` and words of
+it; a calculation the filer's edits produced is an edit, not a plain
+calculation; every other recorded event carries the closed kind ``other`` and words of
 its own, so nothing that happened to the declaration is dropped or reworded by
 a frontend. A rename names the old and the new name as its detail.
 
@@ -28,6 +29,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import validate_utc_aware
 from ...domain.buckets.event import BucketEvent, BucketEventId, BucketEventType, bucket_event_order_key
 from .declarations_workspace_contracts import DeclarationsLifecycleKind
+from .edit_services import RESPONSIBLE_OWNER as EDIT_ACTOR
 from .history import WorkUnitHistory
 
 OTHER_HISTORY_KIND: Final = "other"
@@ -52,6 +54,14 @@ LIFECYCLE_KIND_BY_EVENT: Final[Mapping[BucketEventType, DeclarationsLifecycleKin
     }
 )
 """The lifecycle meaning each declaration event carries; an event absent here has none."""
+
+LIFECYCLE_KIND_BY_ACTOR: Final[Mapping[tuple[BucketEventType, str], DeclarationsLifecycleKind]] = MappingProxyType(
+    {
+        (BucketEventType.MODELO_CALCULATION_CREATED, EDIT_ACTOR): DeclarationsLifecycleKind.EDITED,
+    }
+)
+"""The meaning an event carries when the actor that recorded it says more than its type: a calculation the
+edit surface recorded is the filer's edits applied."""
 
 _LIFECYCLE_LOCALE_ROOT: Final[str] = "workspace.declarations.lifecycle"
 
@@ -97,14 +107,21 @@ class ModeloWorkHistoryEntryV1(BaseModel):
         return self
 
 
-def history_kind(event_type: BucketEventType) -> DeclarationsLifecycleKind | Literal["other"]:
-    """The lifecycle meaning of one event, or ``other`` when it carries none."""
-    return LIFECYCLE_KIND_BY_EVENT.get(event_type, OTHER_HISTORY_KIND)
+def history_kind(event: BucketEvent) -> DeclarationsLifecycleKind | Literal["other"]:
+    """The lifecycle meaning of one event, or ``other`` when it carries none.
+
+    A calculation the edit surface recorded is the filer's edits applied, so it
+    reads as an edit; every other calculation reads as a calculation.
+    """
+    refined = LIFECYCLE_KIND_BY_ACTOR.get((event.event_type, event.actor))
+    if refined is not None:
+        return refined
+    return LIFECYCLE_KIND_BY_EVENT.get(event.event_type, OTHER_HISTORY_KIND)
 
 
 def _words(event: BucketEvent, language: OutputLanguage) -> str:
-    kind = LIFECYCLE_KIND_BY_EVENT.get(event.event_type)
-    if kind is not None:
+    kind = history_kind(event)
+    if isinstance(kind, DeclarationsLifecycleKind):
         return tr(f"{_LIFECYCLE_LOCALE_ROOT}.{kind.value}", locale=language.value)
     return tr(_OTHER_EVENT_LOCALE_KEYS.get(event.event_type, _OTHER_LOCALE_KEY), locale=language.value)
 
@@ -125,7 +142,7 @@ def worded_history(history: WorkUnitHistory, language: OutputLanguage) -> tuple[
     return tuple(
         ModeloWorkHistoryEntryV1(
             event_id=event.event_id,
-            kind=history_kind(event.event_type),
+            kind=history_kind(event),
             words=_words(event, language),
             detail=_detail(event, language),
             occurred_at=event.occurred_at,
@@ -142,6 +159,7 @@ def _require_disjoint_tables() -> None:
 _require_disjoint_tables()
 
 __all__ = [
+    "LIFECYCLE_KIND_BY_ACTOR",
     "LIFECYCLE_KIND_BY_EVENT",
     "OTHER_HISTORY_KIND",
     "ModeloWorkHistoryEntryV1",

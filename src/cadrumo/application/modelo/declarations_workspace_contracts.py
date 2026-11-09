@@ -90,6 +90,8 @@ class DeclarationsLifecycleKind(StrEnum):
     CREATED = "created"
     RENAMED = "renamed"
     CALCULATED = "calculated"
+    #: A calculation the filer's own edits produced: their changes, applied.
+    EDITED = "edited"
     VERIFIED = "verified"
     VERIFICATION_REFUSED = "verification_refused"
     FILED = "filed"

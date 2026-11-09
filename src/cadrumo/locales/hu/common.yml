@@ -9371,6 +9371,7 @@ workspace:
       calculated: Számítás elkészült
       created: Bevallás létrehozva
       discarded: Bevallás elvetve
+      edited: Módosítások alkalmazva
       exported: Bevallás exportálva
       external_evidence_imported: Külső AEAT-adatok importálva
       filed: Benyújtás rögzítve
@@ -9678,6 +9679,7 @@ workspace:
       reach: Mit változtat meg
       reach_others: 'Továbbá:'
       reading: A magyarázat betöltése…
+      remove: Értéked eltávolítása
       retrieved: 'Lekérve: {date}'
       undo: Visszavonás
       uses_outside_many: 'A nyomtatványon kívül tárolt adatokat is felhasznál: {count}.'
@@ -10426,6 +10428,7 @@ workspace:
         Az értéked marad érvényben, amíg vissza nem állítod a forrást.'
       effect:
         clear: érték nélkül marad
+        remove: már nem a te értékedet tartalmazza, hanem azt, amit a bevallás ad
         replaces_aeat_draft: felülírja az AEAT-adatokból származó értéket
         replaces_earlier_filings: felülírja egy korábbi bevallásból származó értéket
         replaces_fixed_by_design: felülírja a nyomtatvány által rögzített értéket
@@ -10526,6 +10529,7 @@ workspace:
       nothing_to_restore: Ez a rovat már a forrás értékét mutatja.
     staged:
       clear: (törlésre kerül)
+      remove: (az értéked törlődik)
       restore: (vissza a forráshoz)
     step:
       calculate: Számítás
@@ -10559,7 +10563,8 @@ workspace:
         lásd, mire.
       none: Ezen a nyomtatványon semmi sem vár rád.
       profile: 'Mielőtt ez az időszak kiszámítható lenne, a profilodnak meg kell válaszolnia:'
-      sources: 'Mielőtt ez a bevallás kiszámítható lenne, az általa összesített bevallásoknál ez hiányzik:'
+      sources: 'Mielőtt ez a bevallás kiszámítható lenne, az általa összesített bevallásoknál
+        ez hiányzik:'
       title: Teendők
     value:
       not_applicable: nem alkalmazható
