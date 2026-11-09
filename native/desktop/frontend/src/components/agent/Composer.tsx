@@ -106,6 +106,7 @@ export function Composer({
   onSelectionChange,
   pickerRequests,
   onPickerClosed,
+  onDownloadModels,
   onRemoveAttachment,
   onRemoveAllAttachments,
   onShowAllAttachments,
@@ -131,6 +132,8 @@ export function Composer({
   pickerRequests?: number;
   /** Called when the person closes the model picker. */
   onPickerClosed?: () => void;
+  /** Opens the settings where a model this computer lacks is downloaded. */
+  onDownloadModels?: () => void;
   onRemoveAttachment?: (id: string) => void;
   onRemoveAllAttachments?: () => void;
   onShowAllAttachments?: () => void;
@@ -308,6 +311,7 @@ export function Composer({
               onChange={onSelectionChange}
               openRequests={pickerRequests}
               onClosed={onPickerClosed}
+              onDownloadModels={onDownloadModels}
             >
               {settingsButton}
             </AgentSettingsPopover>

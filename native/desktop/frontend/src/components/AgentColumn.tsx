@@ -615,6 +615,7 @@ export function AgentColumn({
       promptOwner,
       currentPromptOwner,
       pendingPrompt,
+      refreshCatalog: agentCatalog.refresh,
     },
   );
 
@@ -628,16 +629,21 @@ export function AgentColumn({
       (offer !== null &&
         offer.observed &&
         !offer.providers.some((provider) => provider.selectable)));
+  // Where no lane can run and some lane only lacks a downloaded model, the
+  // way on is downloading one rather than setting up a provider.
+  const noModelHeld = noProvider && offer?.modelsToDownload === true;
   const serviceNotice = status ? serviceWords(t, status) : null;
   const notice = incompatible
     ? t("desktop.agent.service_incompatible")
     : catalogBusy
       ? t("desktop.agent.service_starting")
-      : noProvider
-        ? t("desktop.agent.no_provider")
-        : offer !== null && !offer.observed
-          ? (serviceNotice ?? t("desktop.agent.lane_not_observed"))
-          : serviceNotice;
+      : noModelHeld
+        ? t("desktop.agent.no_installed_model")
+        : noProvider
+          ? t("desktop.agent.no_provider")
+          : offer !== null && !offer.observed
+            ? (serviceNotice ?? t("desktop.agent.lane_not_observed"))
+            : serviceNotice;
 
   return (
     <div
@@ -899,7 +905,11 @@ export function AgentColumn({
                   }
                 : undefined
             }
-            onSetUpProviders={noProvider ? openSettings : undefined}
+            onSetUpProviders={
+              noProvider && !noModelHeld ? openSettings : undefined
+            }
+            onDownloadModels={noModelHeld ? openSettings : undefined}
+            onOpenModelSettings={openSettings}
           />
           <Composer
             key={view.draft.key}
@@ -934,6 +944,7 @@ export function AgentColumn({
             }
             pickerRequests={pickerRequests}
             onPickerClosed={() => setPickerRequests(0)}
+            onDownloadModels={openSettings}
           />
         </div>
       )}

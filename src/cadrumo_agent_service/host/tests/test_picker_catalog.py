@@ -179,3 +179,36 @@ def test_a_served_catalog_is_filtered_but_hosted_certification_keeps_every_lane(
     assert _identities(catalog) == [("example", "cli"), ("other", "api")]
     certified = [(item["provider"], item["transport"]) for item in service._hosted_certifications()]
     assert certified == [("example", "api"), ("example", "cli"), ("other", "api")]
+
+
+def test_a_served_model_this_computer_lacks_reaches_the_picker_still_marked_not_installed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The picker's installed state is the agent's: the relay keeps each entry's ``installed`` as served."""
+    service = _service(tmp_path, monkeypatch, MemoryProviderSettingsStore())
+    _turn_off_key_lane(service)
+    ready = AgentReady(
+        generations=AgentGenerations("synthetic-session", "synthetic-settings"),
+        gateway_port=12345,
+        agent_version="synthetic-agent",
+        hosting_contract=1,
+    )
+    service._controller = cast(AgentHostController, _Controller(ready))
+    served = _document()
+    local = _lane("other", "api")
+    local["catalog"] = {
+        "models": [
+            {"entry_id": "synthetic-held", "model": "synthetic-held:1", "installed": True},
+            {"entry_id": "synthetic-absent", "model": "synthetic-absent:1", "installed": False},
+        ]
+    }
+    served["providers"][2] = local
+    monkeypatch.setattr(service, "_served_catalog", lambda _ready: served)
+
+    catalog = service.admin("catalog")
+
+    other = next(lane for lane in catalog["providers"] if lane["provider_id"] == "other")
+    assert [(entry["model"], entry["installed"]) for entry in other["catalog"]["models"]] == [
+        ("synthetic-held:1", True),
+        ("synthetic-absent:1", False),
+    ]

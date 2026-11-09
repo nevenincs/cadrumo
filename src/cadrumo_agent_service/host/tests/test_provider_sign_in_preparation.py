@@ -274,7 +274,7 @@ def test_status_answer_serves_the_console_command_template_once(
     monkeypatch.setattr(service._providers, "status", lambda: ProviderSettingsStatus(providers=(_entry(),)))
     monkeypatch.setattr(service._catalog, "gui_sign_in_methods", lambda: {})
     answer = service.admin("status")
-    assert answer["console_sign_in_command"] == "aeat config provider-login --provider {provider}"
+    assert answer["console_sign_in_command"] == "cadrumo-agent-service provider-login --provider {provider}"
     assert "providers" in answer
     assert all("console_sign_in_command" not in provider for provider in answer["providers"])
 

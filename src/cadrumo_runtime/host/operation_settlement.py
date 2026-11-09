@@ -35,26 +35,21 @@ async def verify_inventory(host: ProfileWorkerOperationHost) -> None:
         services = await host.composed_off_loop()
         from cadrumo.application.operations.persistence.journal import OperationRecoveryInventoryDisposition
 
-        after = None
         refused = False
         unsettled: set[OperationId] = set()
         try:
-            while True:
-                page = await services.recovery_inventory(after=after, limit=128)
-                for entry in page.entries:
-                    if entry.disposition is OperationRecoveryInventoryDisposition.REFUSED:
-                        refused = True
-                        _log.warning(
-                            "operation refused for an unreadable journal record operation=%s", entry.operation_id
-                        )
-                unsettled.update(
-                    entry.operation_id
-                    for entry in page.entries
-                    if entry.disposition is OperationRecoveryInventoryDisposition.NONTERMINAL
-                )
-                if not page.has_more:
-                    break
-                after = page.next_cursor
+            # One directory scan under one journal exclusion. Reading page by page
+            # rescans the whole directory for every page, quadratic in the journal's size.
+            inventory = await services.recovery_inventory()
+            for entry in inventory.entries:
+                if entry.disposition is OperationRecoveryInventoryDisposition.REFUSED:
+                    refused = True
+                    _log.warning("operation refused for an unreadable journal record operation=%s", entry.operation_id)
+            unsettled.update(
+                entry.operation_id
+                for entry in inventory.entries
+                if entry.disposition is OperationRecoveryInventoryDisposition.NONTERMINAL
+            )
         except (RepositoryError, ValueError) as error:
             _log.warning("operation refused for an unavailable journal inventory error=%s", type(error).__name__)
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE) from None

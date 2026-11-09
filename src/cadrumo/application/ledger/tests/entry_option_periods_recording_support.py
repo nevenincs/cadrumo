@@ -116,6 +116,7 @@ def recording(questions: PeriodQuestions, operation: PinnedAuthorityOperation) -
     served = ledger_entry_options(_PROFILE, operation=operation)
     return {
         "note": NOTE,
+        "default_currency": served.default_currency,
         "families": [
             family.model_dump(mode="json") for family in served.families if family.family not in TRIMMED_FAMILIES
         ],

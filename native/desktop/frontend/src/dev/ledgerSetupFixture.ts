@@ -653,6 +653,7 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       if (periods === null) throw new SetupStopped("ERROR_PERIOD_NOT_RECORDED");
       return {
         profile_id: profileId,
+        default_currency: servedEntryOptions.default_currency,
         families: Object.entries(ENTRY_OPTION_FAMILIES).map(
           ([family, options]) => ({ family, options }),
         ),

@@ -3,6 +3,7 @@ import type { DesktopSetup } from "../ipc/componentSetup";
 import type { LogBatch, ShellToken, WindowPresentation } from "../ipc/contract";
 import type { ManagerSignal, SignInSignal } from "../ipc/account";
 import type { AgentAccess } from "./agentAccess";
+import { SEND_PLAN } from "./agentSendRefusals";
 import type {
   AgentServiceStatus,
   AgentSession,
@@ -642,7 +643,7 @@ function tauriAgent(call: HostCall): {
         call("agent_conversation_rename", { conversationId, title }).then(
           () => undefined,
         ),
-      send: (request) => call("agent_send", { request }),
+      send: (request) => call("agent_send", { request }, SEND_PLAN),
       attach: (conversationId, filterLabel, onEvent, dropId) => {
         const updates = new Channel<AgentUploadEvent>();
         updates.onmessage = onEvent;

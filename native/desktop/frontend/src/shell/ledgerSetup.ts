@@ -389,6 +389,9 @@ export type LedgerServedPeriods = {
  * are. */
 export type LedgerEntryOptionsResult = {
   profile_id: string;
+  /** The ledger's functional currency: what a new movement is offered when
+   * the profile's own accounts name none. */
+  default_currency: string;
   families: {
     family: string;
     options: {

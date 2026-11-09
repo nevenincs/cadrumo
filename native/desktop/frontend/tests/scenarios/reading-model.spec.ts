@@ -9,9 +9,11 @@ test.beforeEach(() => {
   scenarioOnly("The scenario host stands in for the agent service.");
 });
 
+// Every model of the local lane is held, so a model other than the one the
+// lane starts with can be picked.
 const open = (target: Page) =>
   target.goto(
-    "/scenarios.html?scenario=signed-in&latency=0&bar=off&setup=ready",
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&setup=ready&models=all",
   );
 
 /** The model the made-up service stores for reading documents. */
@@ -36,9 +38,17 @@ test("the model picked in the agent column is the one documents are read with, o
     .toMatchObject({ lane: "beta_cli" });
   picker = await openModelPicker(target);
   await pickWay(target, picker, "local/api");
-  await picker
-    .getByLabel(label("desktop.agent.model"))
-    .selectOption("synthetic-vision:1");
+  const model = picker.getByLabel(label("desktop.agent.model"));
+  // The lane starts on another model, so the store changes only by the pick.
+  await expect(model).not.toHaveValue("synthetic-vision:1");
+  await expect
+    .poll(() => storedReading(target))
+    .toMatchObject({ lane: "local_api" });
+  expect(await storedReading(target)).not.toEqual({
+    lane: "local_api",
+    model: "synthetic-vision:1",
+  });
+  await model.selectOption("synthetic-vision:1");
   await expect
     .poll(() => storedReading(target))
     .toEqual({ lane: "local_api", model: "synthetic-vision:1" });

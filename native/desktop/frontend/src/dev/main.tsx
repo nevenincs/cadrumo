@@ -95,8 +95,19 @@ function readParams() {
     ),
     // How the service answers the agent's catalog.
     agentCatalog: (
-      ["served", "busy", "busy-past-ready", "declared", "unsupported"] as const
+      [
+        "served",
+        "busy",
+        "busy-past-ready",
+        "declared",
+        "unsupported",
+        "local-only",
+      ] as const
     ).find((catalog) => catalog === params.get("catalog")),
+    // Which of the local lane's models the made-up computer holds.
+    localModels: (["none", "all"] as const).find(
+      (held) => held === params.get("models"),
+    ),
     // The shape of the component setup.
     setup: SETUP_SHAPES.find((shape) => shape === params.get("setup")),
     // How the made-up ledger answers.
@@ -290,6 +301,7 @@ function Scenarios() {
       agentDocuments: initial.agentDocuments,
       agentSkills: initial.agentSkills,
       agentCatalog: initial.agentCatalog,
+      localModels: initial.localModels,
       setup: initial.setup,
       ledger: initial.ledger,
       modelo: initial.modelo,

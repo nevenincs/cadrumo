@@ -41,6 +41,7 @@ import {
   type FixtureAsks,
   type FixtureCatalog,
   type FixtureDocuments,
+  type FixtureLocalModels,
   type FixtureStream,
 } from "./agentFixtureHost";
 import { agentAccessFixture } from "./agentAccessFixture";
@@ -74,7 +75,10 @@ import {
   MISSING,
   UNREADABLE,
 } from "./fixtures/logs";
-import { fixtureModelPresence } from "./fixtures/agentCatalog";
+import {
+  fixtureModelPresence,
+  type FixtureModelPresence,
+} from "./fixtures/agentCatalog";
 import { openFixtureTerminal } from "./fixtures/terminal";
 import { setupFixture, type SetupShape } from "./setupFixture";
 import { SCENARIO_HOST_MARKER } from "./marker";
@@ -118,6 +122,9 @@ export type ScenarioHostOptions = {
   agentSkills?: FixtureSkills;
   /** How the service answers the agent's catalog. */
   agentCatalog?: FixtureCatalog;
+  /** Which of the local lane's models the made-up computer holds, where not
+   * as the fixture catalog writes it. */
+  localModels?: FixtureLocalModels;
   /** The shape of the made-up computer's component setup; where neither
    * this nor the scenario names one, the host offers no setup. */
   setup?: SetupShape | null;
@@ -184,6 +191,9 @@ declare global {
     __scenarioAgentPublishStatus?: (status?: AgentServiceStatus) => void;
     /** Commits a change to the fixture agent's local model list elsewhere. */
     __scenarioLocalModelsChangeElsewhere?: () => void;
+    /** Which models the made-up computer holds, changed behind the window's
+     * back: the window learns of it only when it reads the catalog again. */
+    __scenarioModelPresence?: FixtureModelPresence;
     /** The next password change is answered as unconfirmed. */
     __scenarioPassword?: { uncertain(): void; changes(): number };
     /** The made-up window port, where the scenario offers one. */
@@ -569,6 +579,7 @@ export function scenarioHost(
   // The models this made-up computer holds: setup downloads and removes
   // them, and the agent's catalog reports them.
   const modelPresence = fixtureModelPresence();
+  window.__scenarioModelPresence = modelPresence;
   const providerFixture = providerSettingsFixture({
     say,
     wait: () => wait(options.latencyMs),
@@ -597,6 +608,7 @@ export function scenarioHost(
     documents: options.agentDocuments ?? "stored",
     skills: options.agentSkills ?? "bundled",
     catalog: options.agentCatalog ?? "served",
+    ...(options.localModels ? { localModels: options.localModels } : {}),
   });
   // Every host this page made publishes, as one service would for each.
   const publishedBefore = window.__scenarioAgentPublishStatus;
