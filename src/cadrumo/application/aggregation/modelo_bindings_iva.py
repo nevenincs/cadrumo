@@ -59,7 +59,6 @@ from .modelo_bindings_invoice_iva import (
     invoice_screen_of,
     out_of_window_summary_diagnostics,
     recargo_rate_mismatch_diagnostics,
-    recargo_unattributable_diagnostics,
     reverse_charge_underivable_diagnostics,
 )
 from .modelo_bindings_support import (
@@ -374,10 +373,6 @@ class LedgerIvaAggregationSourceResolver:
             )
             + recargo_rate_mismatch_diagnostics(
                 invoice_screen.recargo_rate_divergences,
-                resolver_id=self.resolver_id,
-            )
-            + recargo_unattributable_diagnostics(
-                invoice_screen.recargo_unattributable,
                 resolver_id=self.resolver_id,
             )
             + invoice_iva_finding_diagnostics(

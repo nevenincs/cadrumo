@@ -73,6 +73,10 @@ class InvoiceIvaFindingReason(StrEnum):
     #: art. 163 terdecies) whose period holds invoices: accrual follows payment
     #: there, and invoices carry no payment-date schedule to place it.
     CASH_ACCOUNTING_UNMODELLED = "invoice_cash_accounting_regime_unmodelled"
+    #: An issued invoice whose one recargo de equivalencia spans several IVA
+    #: rates and differs from the sum of each rate's LIVA art. 161 share, so no
+    #: figure says which Modelo 303 recargo casilla holds which part.
+    RECARGO_SPLIT_UNRESOLVED = "invoice_recargo_split_unresolved"
 
 
 class InvoiceIvaFinding(BaseModel):
@@ -335,6 +339,10 @@ def invoice_iva_source(
     findings.extend(
         InvoiceIvaFinding(reason=InvoiceIvaFindingReason.CATEGORY_CONTRADICTED, invoice_id=invoice.invoice_id)
         for invoice in screen.category_counterparty_mismatches
+    )
+    findings.extend(
+        InvoiceIvaFinding(reason=InvoiceIvaFindingReason.RECARGO_SPLIT_UNRESOLVED, invoice_id=invoice.invoice_id)
+        for invoice in screen.recargo_split_unresolved
     )
     in_period = tuple(
         invoice

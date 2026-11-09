@@ -179,18 +179,19 @@ def test_the_guard_would_have_caught_the_v2_gap() -> None:
         "investment_asset_id",
         "iva_vehicle_use",
         "operation_date",
+        "purchase_invoice_evidence_id",
     )
 
 
 def test_the_guard_would_have_caught_the_v3_gap() -> None:
-    """Detached evidence and the operation date were the facts V3 could not see."""
+    """Detached evidence, the operation date and the factura evidence the art. 97 gate reads escaped V3."""
     missing = unwatched_writable_iva_fields(
         writable=writable_transaction_fields(),
         iva_read=iva_read_fields(_IVA_AGGREGATION_MODULES),
         field_set=FINGERPRINT_FIELDS_V3,
         excluded=INTENTIONALLY_EXCLUDED,
     )
-    assert missing == ("deduction_provenance", "iva_vehicle_use", "operation_date")
+    assert missing == ("deduction_provenance", "iva_vehicle_use", "operation_date", "purchase_invoice_evidence_id")
 
 
 def test_the_guard_would_have_caught_the_v5_gap() -> None:

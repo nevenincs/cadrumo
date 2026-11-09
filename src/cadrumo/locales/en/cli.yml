@@ -393,6 +393,9 @@ cli:
         arrendamiento_local_negocio_help: Mark an invoice issued by the lessor as
           relating to a business premises lease. Use the situation and cadastral reference
           options to record the premises details.
+        attach_document_help: Store an invoice's document (its PDF or e-invoice) with
+          it.
+        attach_document_source_help: Path of the document file.
         country_code_help: 'Counterparty ISO 3166-1 alpha-2 country code. Required:
           it routes both information returns, so it is never assumed.'
         duplicate_help: Answer which stored invoice a document may already be, without

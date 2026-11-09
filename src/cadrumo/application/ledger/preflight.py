@@ -146,6 +146,7 @@ class LedgerPreflightIssueReason(StrEnum):
     MOVEMENT_INVOICE_DOUBLE_COUNT = "movement_invoice_double_count"
     INVOICE_CASH_ACCOUNTING_REGIME_UNMODELLED = "invoice_cash_accounting_regime_unmodelled"
     LINKED_MOVEMENT_CONTRADICTS_INVOICE = "linked_movement_contradicts_invoice"
+    INVOICE_RECARGO_SPLIT_UNRESOLVED = "invoice_recargo_split_unresolved"
 
 
 class LedgerPreflightIssue(BaseModel):
@@ -413,6 +414,10 @@ _INVOICE_FINDING_DETAIL: Final[Mapping[str, str]] = MappingProxyType(
         ),
         LedgerPreflightIssueReason.LINKED_MOVEMENT_CONTRADICTS_INVOICE.value: (
             "the movements paying invoice {number} state a base or cuota that differs from the invoice"
+        ),
+        LedgerPreflightIssueReason.INVOICE_RECARGO_SPLIT_UNRESOLVED.value: (
+            "issued invoice {number} records one recargo de equivalencia over several IVA rates that differs "
+            "from the sum of each rate's art. 161 recargo; correct the recargo on the invoice"
         ),
     }
 )

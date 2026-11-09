@@ -119,6 +119,7 @@ const ADMITTED: [(&str, Kind); 122] = [
     ("ledger.inventory.retire", Write),
     ("ledger.inventory.valuation.preview", Write),
     ("ledger.invoice.add", Write),
+    ("ledger.invoice.attach_document", Write),
     ("ledger.invoice.duplicate", Read),
     ("ledger.invoice.import", Write),
     ("ledger.invoice.list", Read),
