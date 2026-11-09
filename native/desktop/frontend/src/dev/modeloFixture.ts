@@ -285,6 +285,7 @@ function withAssetNotes(
       ...ASSET_NOTES.map((note): ModeloFormIssueLine => ({
         level: "check",
         box: null,
+        invoice_id: null,
         where: null,
         message: note.message,
         action: t("workspace.modelo.notes.lead"),
@@ -315,6 +316,7 @@ function withWithholdingLine(
       {
         level: "blocks",
         box: null,
+        invoice_id: null,
         where: null,
         message:
           "The withholding payers took from your income is not recorded yet.",

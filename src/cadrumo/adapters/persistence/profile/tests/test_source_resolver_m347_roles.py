@@ -461,8 +461,8 @@ def test_m347_filer_declaration_roles_fails_closed_to_empty_for_a_profile_absent
         ),
     )
     # The one advisory left is the record gap every Spanish declarado carries
-    # (its provincia is not held as structured data), never a role advisory.
-    assert [item.source_ref for item in resolution.diagnostics] == ["m347-record:provincia-not-recorded"]
+    # until its provincia is stated, never a role advisory.
+    assert [item.reason for item in resolution.diagnostics] == ["m347_declarado_provincia_unrecorded"]
     assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
 
 
@@ -900,7 +900,7 @@ def test_m347_role_fact_advisories_fires_only_for_a_role_carrying_filer_with_the
     diagnostics = public_resolution((unrelated_purchase,), context=context).diagnostics
 
     # No role advisory; the one diagnostic is the provincia gap every Spanish declarado carries.
-    assert [item.source_ref for item in diagnostics] == ["m347-record:provincia-not-recorded"]
+    assert [item.reason for item in diagnostics] == ["m347_declarado_provincia_unrecorded"]
 
 
 def test_m347_role_fact_advisories_fires_for_an_unset_clave_d_fact_and_not_once_declared(
@@ -937,14 +937,14 @@ def test_m347_role_fact_advisories_fires_for_an_unset_clave_d_fact_and_not_once_
 
     # Both resolutions also carry the provincia gap every Spanish declarado has;
     # it is asserted exactly so that nothing else can hide beside the role advisory.
-    provincia_gap = "m347-record:provincia-not-recorded"
+    provincia_gap = "m347_declarado_provincia_unrecorded"
     undeclared_all = public_resolution((undeclared_purchase,), context=context).diagnostics
     declared_all = public_resolution((declared_purchase,), context=context).diagnostics
-    undeclared_diagnostics = tuple(item for item in undeclared_all if item.source_ref != provincia_gap)
-    declared_diagnostics = tuple(item for item in declared_all if item.source_ref != provincia_gap)
+    undeclared_diagnostics = tuple(item for item in undeclared_all if item.reason != provincia_gap)
+    declared_diagnostics = tuple(item for item in declared_all if item.reason != provincia_gap)
 
-    assert [item.source_ref for item in undeclared_all].count(provincia_gap) == 1
-    assert [item.source_ref for item in declared_all] == [provincia_gap]
+    assert [item.reason for item in undeclared_all].count(provincia_gap) == 1
+    assert [item.reason for item in declared_all] == [provincia_gap]
     assert len(undeclared_diagnostics) == 1
     assert undeclared_diagnostics[0].reason == "unclassified_declarant_role_fact"
     assert undeclared_diagnostics[0].source_ref == f"invoice:{undeclared_purchase.invoice_id}"

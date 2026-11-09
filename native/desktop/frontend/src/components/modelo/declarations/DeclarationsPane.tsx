@@ -25,6 +25,7 @@ export function DeclarationsPane({
   onCensus,
   onProfileStep,
   onOpenMovement,
+  onOpenInvoice,
   onBack,
   onOpenSurface,
   canOpenSurface,
@@ -61,6 +62,7 @@ export function DeclarationsPane({
   openLink(url: string): void;
   /** Opens one ledger movement in the Libro, where the window has one. */
   onOpenMovement?: (transactionId: string) => void;
+  onOpenInvoice?: (invoiceId: string) => void;
   /** Hands the shell the guard that asks before staged edits are dropped. */
   guardLeave(guard: LeaveGuard | null): void;
   /** What the list keeps of itself while a declaration is open, for one
@@ -123,6 +125,7 @@ export function DeclarationsPane({
           onBack={onBack}
           onOpenWork={onOpenWork}
           onOpenMovement={onOpenMovement}
+          onOpenInvoice={onOpenInvoice}
           onOpenSurface={onOpenSurface}
           canOpenSurface={canOpenSurface}
           openLink={openLink}

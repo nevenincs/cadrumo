@@ -21,6 +21,7 @@ import {
   useSetupDraft,
   useSetupWrite,
 } from "./SetupParts";
+import { CounterpartyProvincia } from "./CounterpartyProvincia";
 import { EditorField } from "./EditorField";
 import type { SetupProps } from "./setupProps";
 import { setupCall, type SetupCall } from "./setupModel";
@@ -495,6 +496,14 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
           <CallLine
             call={writeIdentity === identity ? write.last : null}
             onReread={() => void view(result.tax_identifier)}
+          />
+          <CounterpartyProvincia
+            key={`${identity}:${result.provincia_code ?? ""}`}
+            port={port}
+            result={result}
+            country={country}
+            actor={actor}
+            onSaved={() => view(result.tax_identifier)}
           />
           {conflict?.identity === identity && (
             <CounterpartyConflict context={conflict.context} />

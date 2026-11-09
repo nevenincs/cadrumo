@@ -64,6 +64,7 @@ from ...core.hashing import sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
+from ...domain.calculations.registry.ine_provincia_catalogue import is_ine_provincia_code
 from ...domain.iva.classification import require_iva_territorial_scope
 from ...domain.iva.schema import EUMemberState, IvaTerritorialScope
 from .classification_assembly import DeclaredFact
@@ -84,7 +85,9 @@ __all__ = [
     "confirmed_counterparty_facts_key",
     "forget_confirmed_counterparty_facts",
     "record_confirmed_counterparty_facts",
+    "record_counterparty_provincia",
     "resolve_confirmed_counterparty_facts",
+    "stated_counterparty_provincia",
 ]
 
 
@@ -188,6 +191,10 @@ class ConfirmedCounterpartyFacts(BaseModel):
             review item rather than reading the territory beside it.
         note: What the operator relied on, in their own words. Empty when they
             said nothing.
+        provincia_code: The INE code of the province of the counterparty's
+            domicilio fiscal, when the person has stated it. An answer of its
+            own: Modelo 347 declares it for a Spanish declarado, and it is
+            never derived from the identifier or read for the territory.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -200,6 +207,21 @@ class ConfirmedCounterpartyFacts(BaseModel):
     asserted_by: str = Field(min_length=1)
     asserted_at: datetime
     note: str = ""
+    provincia_code: str | None = None
+
+    @field_validator("provincia_code")
+    @classmethod
+    @pydantic_validation_boundary
+    def _provincia_in_the_ine_catalogue(cls, value: str | None) -> str | None:
+        """Take only a provincia code the registry's INE catalogue declares."""
+        if value is None:
+            return None
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
+
+        with bundled_indexed_authority().operation() as operation:
+            if not is_ine_provincia_code(value, authority=operation):
+                raise ValueError(f"{value!r} is not a provincia code the INE catalogue declares")
+        return value
 
     @field_validator("territorial_scope", mode="before")
     @classmethod
@@ -264,6 +286,7 @@ class ConfirmedCounterpartyFacts(BaseModel):
         country_code: str | None = None,
         note: str = "",
         asserted_at: datetime | None = None,
+        provincia_code: str | None = None,
     ) -> Self:
         """Build a fact for one counterparty, refusing an identifier with no identity.
 
@@ -290,6 +313,7 @@ class ConfirmedCounterpartyFacts(BaseModel):
             asserted_by=asserted_by,
             asserted_at=asserted_at or now(),
             note=note,
+            provincia_code=provincia_code,
         )
 
     @model_validator(mode="after")
@@ -303,10 +327,10 @@ class ConfirmedCounterpartyFacts(BaseModel):
         record: it addresses a counterparty, occupies the key, and answers every
         later question with silence that reads as a confirmed absence.
         """
-        if self.territorial_scope is None and self.identification_state is None:
+        if self.territorial_scope is None and self.identification_state is None and self.provincia_code is None:
             message = (
                 "a confirmed counterparty record must answer at least one of the "
-                "territorial scope or the identification state"
+                "territorial scope, the identification state or the provincia"
             )
             raise ValueError(message)
         return self
@@ -448,11 +472,14 @@ def _merge_confirmed_counterparty_facts(
     _raise_scope_conflict(existing, asserted)
     _raise_identification_conflict(existing, asserted)
     added_identification = asserted.identification_state is not None and existing.identification_state is None
-    if existing.note == asserted.note and not added_identification:
+    added_territory = asserted.territorial_scope is not None and existing.territorial_scope is None
+    if existing.note == asserted.note and not added_identification and not added_territory:
         return existing
     update: dict[str, object] = {"note": asserted.note}
     if added_identification:
         update["identification_state"] = asserted.identification_state
+    if added_territory:
+        update["territorial_scope"] = asserted.territorial_scope
     corrected = existing.model_copy(update=update)
     repository.save(corrected)
     return corrected
@@ -528,6 +555,72 @@ def record_confirmed_counterparty_facts(
         return _merge_confirmed_counterparty_facts(repository, existing=existing, asserted=fact)
     repository.save(fact)
     return fact
+
+
+def record_counterparty_provincia(
+    *,
+    bucket_id: str,
+    tax_identifier: str,
+    provincia_code: str,
+    asserted_by: str,
+    country_code: str | None = None,
+    asserted_at: datetime | None = None,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
+) -> ConfirmedCounterpartyFacts:
+    """State the province of a counterparty's domicilio fiscal, keeping every other answer.
+
+    Unlike the establishment axes, a different provincia is not a conflict: a
+    domicilio fiscal moves, and the person stating where it is now corrects the
+    record. The same provincia again writes nothing, so a retry keeps the
+    stored attribution.
+
+    Raises:
+        ConfirmedCounterpartyFactsInputError: When the identifier does not
+            verify, or the INE catalogue declares no such provincia.
+    """
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
+
+    with bundled_indexed_authority().operation() as operation:
+        known = is_ine_provincia_code(provincia_code, authority=operation)
+    if not known:
+        raise ConfirmedCounterpartyFactsInputError(
+            translated_message="errors.refused.refused_ledger_counterparty_provincia_input",
+            context={"provincia_code": provincia_code},
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.COUNTERPARTY_PROVINCIA_KNOWN,
+                facts={"counterparty_provincia_known": False},
+            ),
+        )
+    stated = ConfirmedCounterpartyFacts.create(
+        tax_identifier=tax_identifier,
+        asserted_by=asserted_by,
+        country_code=country_code,
+        asserted_at=asserted_at,
+        provincia_code=provincia_code,
+    )
+    existing = repository.load(stated.counterparty_key)
+    if existing is None:
+        repository.save(stated)
+        return stated
+    if existing.provincia_code == stated.provincia_code:
+        return existing
+    corrected = existing.model_copy(update={"provincia_code": stated.provincia_code})
+    repository.save(corrected)
+    return corrected
+
+
+def stated_counterparty_provincia(
+    tax_identifier: str,
+    *,
+    country_code: str | None = None,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
+) -> str | None:
+    """Return the provincia the person stated for a counterparty, or ``None`` when none is stated."""
+    key = confirmed_counterparty_facts_key(tax_identifier, country_code=country_code)
+    if key is None:
+        return None
+    stored = repository.load(key)
+    return None if stored is None else stored.provincia_code
 
 
 def forget_confirmed_counterparty_facts(

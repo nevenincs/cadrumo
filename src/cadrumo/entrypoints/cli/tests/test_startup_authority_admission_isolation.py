@@ -43,6 +43,12 @@ class MissingExecutionDependencies(importlib.abc.MetaPathFinder):
         if fullname in blocked:
             raise ModuleNotFoundError('fixture: authority execution dependency unavailable', name=fullname)
 
+import platform
+
+# Resolve the host identity before the effects guard goes in: on Windows the first
+# uname() asks WMI and, when that query fails under load, launches cmd for `ver`.
+platform.uname()
+
 def refuse_actions(event, args):
     if event in {'socket.connect', 'socket.bind', 'subprocess.Popen', 'os.system'}:
         raise AssertionError('admission-only fixture attempted an active effect')
