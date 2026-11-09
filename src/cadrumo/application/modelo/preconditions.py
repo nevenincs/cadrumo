@@ -71,6 +71,8 @@ def _profile(
 
 _IVA_WALLET_BLOCKED_DECISION_SCENARIOS = (
     "filed_history_requires_override",
+    "local_calculation_redeme_unstated",
+    "local_calculation_refund_undecided",
     "local_evidence_unreadable",
     "local_recurrence_requires_override",
     "no_usable_authority",
@@ -99,6 +101,7 @@ _IVA_WALLET_REVISION_SCENARIOS = (
     "amount_mismatch",
     *_IVA_WALLET_BLOCKED_DECISION_SCENARIOS,
     "first_period_zero_ungrounded",
+    "local_calculation_only",
     "not_seeded",
     "registry_snapshot_unavailable",
     "revision_amount_missing",

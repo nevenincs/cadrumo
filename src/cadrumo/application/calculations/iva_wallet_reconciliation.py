@@ -50,6 +50,7 @@ from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.iva_compensation.errors import IvaCompensationReconciliationInputError
 from ...domain.iva_compensation.reconciliation import (
     DEFAULT_MAX_WALLET_AGE_DAYS,
+    IvaCompensationDecisionReason,
     IvaCompensationOverride,
     IvaCompensationReconciliationDecision,
     IvaCompensationWalletObservationProtocol,
@@ -254,6 +255,7 @@ def reconcile_modelo_303_iva_compensation(
     max_wallet_age_days: int = DEFAULT_MAX_WALLET_AGE_DAYS,
     treat_absent_recurrence_as_first_period: bool = False,
     local_evidence_found_but_unusable: bool = False,
+    local_calculation_refusal: IvaCompensationDecisionReason | None = None,
     local_recurrence: LocalIvaCompensationRecurrence | None,
     prefill_report: BindingPrefillReport,
     persist: bool = True,
@@ -303,6 +305,9 @@ def reconcile_modelo_303_iva_compensation(
             be read. It changes no outcome, only what the no-authority decision
             says, so an operator is not told nothing exists while their own
             prior record sits in the store.
+        local_calculation_refusal: Why the credit of a calculated, unfiled
+            prior period cannot be carried, from the refund rules the caller
+            resolved, or ``None`` where it may be.
         local_recurrence: Required caller-resolved canonical recurrence, or
             explicit ``None`` when the caller found no admissible recurrence.
         prefill_report: Required report from the same recurrence resolution.
@@ -376,6 +381,7 @@ def reconcile_modelo_303_iva_compensation(
         max_wallet_age_days=max_wallet_age_days,
         is_first_iva_period=is_first_iva_period,
         local_evidence_found_but_unusable=local_evidence_found_but_unusable,
+        local_calculation_refusal=local_calculation_refusal,
     )
     if persist:
         decision_repo.save_decision(decision)

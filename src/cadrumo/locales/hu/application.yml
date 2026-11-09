@@ -976,6 +976,22 @@ application:
         nulla az első rögzített IVA időszakban.
       first_period_zero_local_recurrence: Egy kezdeti helyi nulla megállapítja, hogy
         nincs korábbi compensación az első rögzített IVA időszakban.
+      local_calculation_calculation_grade: Az előző Modelo 303 itt csak ki van számítva,
+        nincs benyújtva; a compensación összege számítási szinten kerül át, amíg az
+        AEAT tárca, a benyújtott bevallás vagy az általad rögzített összeg meg nem
+        erősíti.
+      local_calculation_only: Az előző Modelo 303-ból áthozott compensación csak a
+        saját számításodon alapul. Ellenőrzéshez, benyújtáshoz vagy exportáláshoz
+        rögzítsd az IVA-egyenlegben az AEAT tárcát, a benyújtott bevallást vagy az
+        abban bevallott összeget.
+      local_calculation_redeme_unstated: Az előző Modelo 303 ki van számítva, de nincs
+        benyújtva, és nincs megadva, hogy szerepelsz-e a havi visszatérítési nyilvántartásban
+        (REDEME), így nem tudni, továbbvihető-e az összege. Add meg a REDEME-tagságodat,
+        vagy rögzítsd az IVA-egyenlegben, amit az a bevallás tartalmazott.
+      local_calculation_refund_undecided: Az előző Modelo 303 ki van számítva, de
+        nincs benyújtva, és abban az időszakban visszatérítést kérhetsz a továbbvitel
+        helyett (LIVA 115. cikk). Rögzítsd az IVA-egyenlegben, amit az a bevallás
+        tartalmazott.
       local_evidence_unreadable: Létezik korábbi Modelo 303 rekord, de nem olvasható
         korábbi compensación bizonyítékaként, és nem áll rendelkezésre AEAT tárcamegfigyelés.
       local_recurrence_requires_override: Az AEAT tárca nem érhető el; a helyi ismétlődéshez
@@ -2210,7 +2226,9 @@ application:
       cross_period_clean_state_incomplete: A keresztidőszaki tiszta állapot igazolása
         hiányos a Modelo {modelo} ({period} {filing_year}) bevalláshoz; {finding_count}
         probléma maradt.
-      cross_period_sources_not_filed: 'A(z) %{modelo_words} (%{year}) az év bevallásait összesíti, és ezek még nincsenek benyújtva: %{sources}. Ha benyújtottad őket, számold újra.'
+      cross_period_sources_not_filed: 'A(z) %{modelo_words} (%{year}) az év bevallásait
+        összesíti, és ezek még nincsenek benyújtva: %{sources}. Ha benyújtottad őket,
+        számold újra.'
       deductible_iva_evidence_missing: 'A nyilvántartásaidban szereplő, levonható
         IVA-t tartalmazó tételekhez kapcsolt beszerzési számla szükséges. Kapcsold
         a számlát a tételhez, majd futtasd újra a aeat app modelo work verify parancsot:
