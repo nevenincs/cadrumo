@@ -27,7 +27,10 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
+from cadrumo.domain.calculations.registry.tests.published_authority import (
+    published_snapshot,
+    published_supported_filing_years,
+)
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from ....core.period import Period
@@ -95,7 +98,7 @@ class _Movements:
         raise AssertionError("the projection reads the whole catalogue")
 
 
-def _payment(provider_id: str, day: date, *, cash: Decimal, irpf_category: str) -> Transaction:
+def _payment(provider_id: str, day: date, *, cash: Decimal, irpf_category: str | None) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_id,
         booked_date=day,
@@ -373,3 +376,97 @@ def test_another_quarters_modelo_111_is_not_held_back_by_it() -> None:
                 revision=snapshot.revision,
             )
         )
+
+
+# APP-QA row 17: Pedro Gestor Ejemplo, a natural-person professional, bills 300.00
+# plus IVA on 28 February with 15 per cent retención, 45.00, paid net at 318.00
+# the same day. Hand-derived Modelo 111 oracle (AEAT instructions, casillas 07 to
+# 09, 28 and 30; RIRPF arts. 95 and 101): one perceptor, base 300.00, retención
+# 45.00, total retenciones 45.00, resultado a ingresar 45.00.
+_PROFESSIONAL_NIF = "51234567C"
+
+
+def _professional_quarter(year: int, *, irpf_category: str | None) -> tuple[InvoiceCatalogue, TransactionCatalogue]:
+    fee = _payment("GES-PAGO-0228", date(year, 2, 28), cash=Decimal("318.00"), irpf_category=irpf_category)
+    invoice = _received(
+        f"GES-{year}-001",
+        date(year, 2, 28),
+        supplier="Pedro Gestor Ejemplo",
+        tax_id=_PROFESSIONAL_NIF,
+        base=Decimal("300.00"),
+        retencion=Decimal("45.00"),
+        rate=Decimal("0.15"),
+        linked=(fee.transaction_id,),
+    )
+    return build_invoice_catalogue((invoice,)), TransactionCatalogue.from_transactions((fee,))
+
+
+def _resolve_professional(
+    year: int, *, irpf_category: str | None
+) -> tuple[RegistrySnapshot, CalculationSourceResolution]:
+    invoices, movements = _professional_quarter(year, irpf_category=irpf_category)
+    snapshot = published_snapshot("111", filing_year=year, period="1T")
+    resolver = RetencionesAggregationSourceResolver(
+        ports=RetencionObservationPorts(repository=_EmptyStore()),
+        invoice_catalogue=InvoiceCatalogueReadPorts(
+            invoice_reader=_Invoices(invoices),
+            transaction_reader=_Movements(movements),
+        ),
+    )
+    resolution = resolver.resolve(
+        CalculationSourceContext(
+            bucket_id=BUCKET,
+            modelo="111",
+            filing_year=year,
+            period=Period.from_year_and_code(year, "1T"),
+            revision=snapshot.revision,
+        )
+    )
+    return snapshot, resolution
+
+
+def _supported_years() -> tuple[int, ...]:
+    support = published_supported_filing_years()
+    assert support is not None
+    return tuple(support.years)
+
+
+def test_a_professionals_retencion_fills_modelo_111_in_every_supported_year() -> None:
+    years = _supported_years()
+    assert _YEAR in years
+
+    for year in years:
+        snapshot, resolution = _resolve_professional(year, irpf_category="actividad_economica")
+        result = calculate_registry_snapshot(
+            snapshot,
+            inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, resolution.binding_values),
+            binding_values=resolution.binding_values,
+            date_context={"filing_period": date(year, 3, 31)},
+        )
+        casillas = {str(casilla): value for casilla, value in result.values.items()}
+
+        assert resolution.diagnostics == (), year
+        assert resolution.unresolved_binding_ids == (), year
+        assert {box: casillas.get(box) for box in ("07", "08", "09", "28", "30")} == {
+            "07": Decimal("1"),
+            "08": Decimal("300.00"),
+            "09": Decimal("45.00"),
+            "28": Decimal("45.00"),
+            "30": Decimal("45.00"),
+        }, year
+
+
+def test_an_unclassified_payment_holds_modelo_111_back_with_a_finding() -> None:
+    _, resolution = _resolve_professional(_YEAR, irpf_category=None)
+
+    assert resolution.binding_values == {}
+    assert {"modelo-111-actividades-dinerario-retenciones", "modelo-111-actividades-dinerario-base"} <= {
+        str(binding_id) for binding_id in resolution.unresolved_binding_ids
+    }
+    assert [
+        (item.reason, item.fact.sentence if item.fact is not None else None) for item in resolution.diagnostics
+    ] == [("source_domain_not_ready", CalculationNoteSentence.WITHHOLDING_INVOICE_KIND_UNDECLARED)]
+    assert resolution.diagnostics[0].source_ref is not None
+    assert resolution.diagnostics[0].message.endswith(
+        ReceivedInvoiceWithholdingFindingKind.INCOME_KIND_UNDECLARED.value
+    )
