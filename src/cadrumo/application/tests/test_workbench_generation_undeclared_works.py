@@ -12,15 +12,14 @@ from typing import Any, cast
 
 import pytest
 
-from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ...domain.user_profile.values import UserProfileFact
 from ..modelo.declarations_calendar import DeclarationsCalendarSource
 from ..modelo.declarations_list import DeclarationListGroup, declaration_list_rows
 from ..overview.calendar_models import OverviewCalendarEntrySource
 from ..overview.home import HomeAvailability
-from .workbench_generation_support import NOW, PROFILE_ID, Repository, plain_generation_door, profile_record
+from .workbench_generation_support import NOW, Repository, plain_generation_door, profile_record, work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -28,28 +27,10 @@ _YEAR = NOW.year
 _LOCAL_MODELOS = ("303", "390")
 
 
-def _work_unit(operation: PinnedAuthorityOperation, modelo: str, filing_year: int, code: str) -> WorkUnit:
-    period = Period.from_year_and_code(filing_year, code)
-    revision_id = operation.snapshot(modelo, filing_year=filing_year, period=code).revision.id
-    return WorkUnit(
-        work_unit_id=derive_work_unit_id(
-            bucket_id=PROFILE_ID, modelo=modelo, filing_year=filing_year, period=period, revision_id=revision_id
-        ),
-        bucket_id=PROFILE_ID,
-        modelo=modelo,
-        filing_year=filing_year,
-        period=period,
-        revision_id=revision_id,
-        name=f"local {modelo}",
-        created_at=NOW,
-        updated_at=NOW,
-    )
-
-
 def _list_inputs(operation: PinnedAuthorityOperation):
     units = (
-        _work_unit(operation, "303", _YEAR, "1T"),
-        _work_unit(operation, "390", _YEAR - 1, "0A"),
+        work_unit(operation, "303", _YEAR, "1T"),
+        work_unit(operation, "390", _YEAR - 1, "0A"),
     )
     catalogue = WorkUnitCatalogue.model_construct(work_units={unit.work_unit_id: unit for unit in units})
     door = plain_generation_door(
@@ -95,7 +76,7 @@ def test_a_refused_taxpayer_projection_still_dates_each_local_declaration(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """One IVA fact claims the whole IVA block, so the projection refuses until it is answered."""
-    unit = _work_unit(authority_operation, "303", _YEAR, "1T")
+    unit = work_unit(authority_operation, "303", _YEAR, "1T")
     door = plain_generation_door(
         authority_operation,
         profile=Repository(
