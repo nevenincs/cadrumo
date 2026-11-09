@@ -20,7 +20,7 @@ use crate::{
     },
     startup::{self, Running, Start},
     supervision::{
-        local_ai::LocalAiHost,
+        local_ai::{LocalAiHost, server_address},
         stop::PlatformStopSignal,
         supervisor::{
             Collaborators, EVENT_QUEUE, Event, Outcome, Request, SessionActivity, SupervisorConfig,
@@ -30,9 +30,11 @@ use crate::{
 use cadrumo_application::{
     diagnostics::{Diagnostics, EventKind, HostStage, lifecycle::LifecycleFact},
     error::application::{ApplicationError, ErrorCode, Operation},
+    provisioning::local_ai::LocalEngine,
 };
 use std::{
     io,
+    net::SocketAddr,
     path::{Path, PathBuf},
     sync::Arc,
     time::{Duration, Instant},
@@ -667,12 +669,25 @@ struct LocalAi {
     host: Option<LocalAiHost>,
     applied: Recorded,
     changes: SelectionChanges,
+    /// The loopback address each engine's server listens on: the package's declared one,
+    /// and in a test one the system has just assigned.
+    address: fn(LocalEngine) -> Option<SocketAddr>,
 }
 
 impl LocalAi {
     /// Reads the selection record and starts the server it names. The watch is set before
     /// the first read, so a rewrite in between is noticed.
     fn start(package: Option<&Path>, storage_root: &Path, diagnostics: &Diagnostics) -> Self {
+        Self::start_at(package, storage_root, diagnostics, server_address)
+    }
+
+    /// [`Self::start`] with each engine's server on the address `address` gives.
+    fn start_at(
+        package: Option<&Path>,
+        storage_root: &Path,
+        diagnostics: &Diagnostics,
+        address: fn(LocalEngine) -> Option<SocketAddr>,
+    ) -> Self {
         let changes = SelectionChanges::new(storage_root);
         let applied = LocalEngineSelection::read(storage_root);
         let mut local_ai = Self {
@@ -681,6 +696,7 @@ impl LocalAi {
             host: None,
             applied,
             changes,
+            address,
         };
         local_ai.host = local_ai.build(applied, diagnostics);
         local_ai
@@ -694,11 +710,12 @@ impl LocalAi {
             diagnostics::local_ai_selection_unreadable(diagnostics);
             return None;
         };
-        LocalAiHost::for_package(
+        LocalAiHost::at(
             package,
             &self.storage_root,
             selection.engine,
             selection.placement,
+            (self.address)(selection.engine),
         )
         .inspect_err(|reason| {
             diagnostics::local_ai_unavailable(diagnostics, selection.engine, *reason);
@@ -1075,7 +1092,12 @@ mod tests {
         }
 
         fn start(&self, diagnostics: &Diagnostics) -> LocalAi {
-            LocalAi::start(Some(self.package().as_path()), &self.state(), diagnostics)
+            LocalAi::start_at(
+                Some(self.package().as_path()),
+                &self.state(),
+                diagnostics,
+                crate::supervision::local_ai::free_loopback,
+            )
         }
     }
 

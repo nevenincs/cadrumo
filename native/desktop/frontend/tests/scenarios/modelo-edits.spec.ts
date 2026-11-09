@@ -91,6 +91,73 @@ test("staged edits survive a renewal of a baseline that went stale", async ({
   );
 });
 
+test("an entry typed after the form's baseline ran out is read again on its renewal and staged", async ({
+  page: target,
+}) => {
+  const late = envelope<{
+    outcome: { outcome: string; refusal?: { kind: string } };
+    refusal_words: string | null;
+  }>("preflight-130-1T-expiring-entry-06-en-late");
+  // Typed only now, the entry is answered stale, as the application answers it.
+  expect(late.outcome.refusal?.kind).toBe("stale_edit_baseline");
+  const staleWords = late.refusal_words;
+  if (!staleWords) throw new Error("the stale entry check served no words");
+  await openDeclaration(target, "130", { shape: "renewal-entry" });
+  await stage(target, "06", TYPED_06);
+  // Nothing moved, so the baseline was renewed and the entry read again on
+  // the renewal: the filer was never told the declaration changed.
+  const sequence = (
+    await target.evaluate(() => window.__scenarioHostCalls ?? [])
+  ).filter(
+    (call) =>
+      call === "modelo edit modelo.edit.preflight" ||
+      call === "modelo submit modelo.edit.renew" ||
+      call.startsWith("modelo form "),
+  );
+  expect(sequence.slice(-3)).toEqual([
+    "modelo edit modelo.edit.preflight",
+    "modelo submit modelo.edit.renew",
+    "modelo edit modelo.edit.preflight",
+  ]);
+  await expect(target.getByText(staleWords)).toHaveCount(0);
+  // The review checks on the renewed baseline the entry was read on: it
+  // needs no renewal of its own.
+  const dialog = await review(target);
+  await expect(applyButton(dialog)).toBeEnabled();
+  expect(await calls(target, "modelo submit modelo.edit.renew")).toHaveLength(
+    1,
+  );
+});
+
+test("an apply refused because its baseline went stale is renewed and applied once more", async ({
+  page: target,
+}) => {
+  await openDeclaration(target, "130", { shape: "renewal-apply" });
+  await stage(target, "06", TYPED_06);
+  const dialog = await review(target);
+  await applyButton(dialog).click();
+  await expect(
+    dialog.getByText(label("workspace.modelo.operation.done")),
+  ).toBeVisible();
+  // The stale refusal wrote nothing, so the apply was sent again on the
+  // renewal: once refused, once applied.
+  const sequence = (
+    await target.evaluate(() => window.__scenarioHostCalls ?? [])
+  ).filter(
+    (call) =>
+      call === "modelo edit modelo.edit.apply" ||
+      call === "modelo submit modelo.edit.renew",
+  );
+  expect(sequence.slice(-3)).toEqual([
+    "modelo edit modelo.edit.apply",
+    "modelo submit modelo.edit.renew",
+    "modelo edit modelo.edit.apply",
+  ]);
+  await expect(
+    dialog.getByText(label("workspace.modelo.operation.not_done")),
+  ).toHaveCount(0);
+});
+
 test("an unknown apply stays held until terminal observation and a successful fresh form read", async ({
   page: target,
 }) => {

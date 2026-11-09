@@ -2708,8 +2708,7 @@ desktop:
       whole_counts: Movements · whole ledger
     import:
       accepts:
-        bank: CSV, XLSX, XLS, OFX, QFX or PDF · up to 128 files · folders inside a
-          folder are not read
+        bank: '{formats} · up to 128 files · folders inside a folder are not read'
         book: CSV, TSV, XLSX, XLSM or XLS
         documents: PDF, PNG, JPG, TIFF, WEBP, HEIC, or Facturae, UBL or CII XML ·
           folders inside a folder are not read
@@ -4744,7 +4743,8 @@ desktop:
       cancelled: You cancelled the setup.
       damaged_download: The download was damaged and could not be used.
       disk_full: There is not enough free disk space.
-      host_unreachable: The download server could not be reached.
+      host_unreachable: The download server could not be reached. Check your internet
+        connection, then try again.
       interrupted: Setup was interrupted before it finished.
       memory_busy: Too much memory is in use right now. Close other programs and try
         again.
@@ -4757,6 +4757,7 @@ desktop:
       program_not_running: The local AI program is not running.
       secure_connection_failed: A secure connection could not be made. A network filter
         may be in the way.
+      server_error: The download server is having a problem. Try again in a few minutes.
       unexpected: Something went wrong.
     item:
       browser: Browser

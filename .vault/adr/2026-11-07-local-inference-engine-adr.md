@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#local-inference-engine'
 date: '2026-11-07'
-modified: '2026-11-07'
+modified: '2026-11-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:51eccb59101c6bca2da1b3903ecd1e12dd1201d0aec033f391062f389c36be79'
+body_hash: 'sha256:f726c23afe5eb22f15f86c63aab004a2e989efa4560b56707af06aab885c7b30'
 related:
   - "[[2026-11-07-local-inference-engine-research]]"
   - "[[2026-10-24-rust-component-provisioning-adr]]"
@@ -221,3 +221,14 @@ Basis: the P03.S11 staging findings, approved by the coordinating session on 202
   - The note says that, since this amendment, Cadrumo compiles the pinned upstream llama-server source on Linux without modification, and builds no runtime of its own.
   - It also records that Ollama is still never built.
   - This record's earlier reconciliation line, "Cadrumo stages a pinned upstream release and builds nothing", is superseded for Linux by this amendment.
+
+## Amendment 2026-11-08: who sets the llama.cpp context and offload
+
+Basis: the coordinator's acceptance on 2026-11-08 of the residency contract settled for P02.S07, which applies rulings already made, recorded here as coordinator-accepted. The evidence is the live b12184 router probe (`llama-server` b12184 in router mode, `--models-preset`, `--models-max 1`, `--no-models-autoload`). This amendment narrows D5 and D6 for the llama.cpp engine. It changes no other constraint, and the Ollama engine is unchanged.
+
+- **Finding.** On b12184 in router mode, a load applies the context and offload the preset section states. `POST /models/load` ignores per-request `args`, `extra_args`, `ctx_size` and `n_ctx`. `/models/add`, `/models/remove` and `/models/delete` answer 404. Each listed model's `status.args` carries the `--ctx-size` and `--n-gpu-layers` it runs with. All four slots receive the full context. With `--fit on`, the default, llama-server fits only the arguments left unset.
+- **D5, context on llama.cpp.** cadrumo-agent still owns the context, through its catalogue: the preset's `ctx-size` for a model is the catalogue's `models[].artefacts.llamacpp_default_context`, never a constant. The desktop passes that value with each model download request, Rust records it beside the store manifest, and the manager writes the preset from that record. Rust never parses the agent catalogue. A model with no declared context gets no preset section, so it cannot be loaded.
+  - cadrumo-agent addresses a model only by its alias, never writes the preset and never passes a context. It makes the model resident before each request. A run whose first request, or whose stated `context_tokens`, needs more than the model's preset window is refused as `model_does_not_fit` before any prompt is sent. On this engine the window does not grow to fit, and the reply bound fits inside the window instead.
+  - The interim fixed `ctx-size` of 8192 in the P03.S17 preset is replaced by this route.
+- **D6, offload on llama.cpp.** "cadrumo-agent's admission picks the offload" no longer applies to llama.cpp. The placement is written into the preset by the manager: `cpu_only` writes `n-gpu-layers = 0`, and `auto` writes no key, so llama-server's own launch-time fit chooses the offload. A placement change goes through the manager's drain and restart. cadrumo-agent reads the placement from `status.args` only to word a refusal.
+- **Admission mapping.** A load that ends `failed` maps to `model_does_not_fit`. A model the router does not present maps to `model_not_installed`. A model without an explicit context, or a router that cannot be reached, maps to `provider_unavailable`.

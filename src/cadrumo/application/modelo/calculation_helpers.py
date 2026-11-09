@@ -506,6 +506,7 @@ def calculate_amendment(
         decimal_casilla_inputs=authored,
         text_casilla_inputs=layer.text_casilla_inputs if layer is not None else {},
         binding_overrides=layer.binding_overrides if layer is not None else {},
+        attested_binding_ids=layer.attested_binding_ids if layer is not None else (),
     )
     return AmendmentCalculation(
         casilla_values=values,
