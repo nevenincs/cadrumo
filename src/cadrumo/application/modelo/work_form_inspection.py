@@ -17,7 +17,7 @@ from ...domain.calculations.registry.schema_form_layouts import FormPageConditio
 from .calculation_report import CalculationReportRowRole
 from .caller_context import caller_context_of
 from .work_form_counts import count_work_form_fields
-from .work_form_credits import withholding_credits
+from .work_form_credits import withholding_credits, withholding_credits_heading
 from .work_form_declaration_facts import (
     ModeloFormAeatData,
     ModeloFormDeadline,
@@ -160,6 +160,7 @@ def build_inspection_only_form(
         outline=form_outline((), (page,), context.language, filed=context.filed),
         result_addresses=result_casilla_ids(context),
         withholding_credits=withholding_credits(tuple(fields), snapshot.revision),
+        withholding_credits_heading=withholding_credits_heading(tuple(fields), context.language),
         counts=count_work_form_fields(fields, filed=context.filed),
         progress=review.progress,
         operator_entries_known=context.entered is not None,

@@ -2,7 +2,8 @@
 // once `ledger.entry-options` has served them: the IVA and IRPF categories,
 // the spending categories with their families, the categories a usage ratio
 // applies to, the invoice classes, the premises situations, the prorrata
-// provenances and sector letters, and the capital goods kinds and disposals.
+// provenances and sector letters, the capital goods kinds and disposals, and
+// the statement formats this installation parses.
 // The window keeps no list of its own, so until they are served, or where the
 // read failed, each is empty and `state` says which. Nothing here decides
 // whether a value is allowed; the ledger does.
@@ -34,6 +35,9 @@ export type ServedVocabulary = {
   sectorLetters: readonly string[];
   capitalKinds: readonly string[];
   capitalDisposals: readonly string[];
+  /** The statement formats an import offers: those whose parser this
+   * installation carries. */
+  importFormats: readonly string[];
 };
 
 const NONE: readonly string[] = [];
@@ -56,6 +60,7 @@ export const NO_VOCABULARY: ServedVocabulary = {
   sectorLetters: NONE,
   capitalKinds: NONE,
   capitalDisposals: NONE,
+  importFormats: NONE,
 };
 
 /** The lists out of a served answer; with none, the state says why there are
@@ -99,6 +104,7 @@ export function servedVocabulary(
     sectorLetters: values("prorrata_sector_letter"),
     capitalKinds: values("capital_good_kind"),
     capitalDisposals: values("capital_good_disposal"),
+    importFormats: values("import_format"),
   };
 }
 

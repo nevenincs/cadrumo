@@ -19,6 +19,9 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 
+from ...core.aggregation import BindingSourceKind
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import tr
 from ...domain.calculations.registry.runtime_graph import expression_binding_refs, expression_casilla_refs
 from ...domain.calculations.registry.schema import ModeloRevision
 from .source_policy import SourceSurface
@@ -88,4 +91,32 @@ def withholding_credits(fields: tuple[ModeloFormField, ...], revision: ModeloRev
     return tuple(served)
 
 
-__all__ = ["withholding_credits"]
+_SUFFERED_HEADING_LOCALE_KEY = "application.modelo.work_form.credits_heading.suffered"
+_PRACTISED_HEADING_LOCALE_KEY = "application.modelo.work_form.credits_heading.practised"
+_MIXED_HEADING_LOCALE_KEY = "application.modelo.work_form.credits_heading.mixed"
+
+
+def withholding_credits_heading(fields: tuple[ModeloFormField, ...], language: OutputLanguage) -> str | None:
+    """Head the credits among ``fields`` by who withheld them, in ``language``; ``None`` when there are none.
+
+    A retención soportada binding is withholding a payer took from the filer's own
+    income; every other register binding is withholding the filer took from others.
+    """
+    kinds = {
+        item.policy.source_kind
+        for field in fields
+        for item in field.bindings
+        if item.policy.surface is SourceSurface.WITHHOLDING
+    }
+    if not kinds:
+        return None
+    if kinds == {BindingSourceKind.RETENCION_SOPORTADA}:
+        key = _SUFFERED_HEADING_LOCALE_KEY
+    elif BindingSourceKind.RETENCION_SOPORTADA not in kinds:
+        key = _PRACTISED_HEADING_LOCALE_KEY
+    else:
+        key = _MIXED_HEADING_LOCALE_KEY
+    return tr(key, locale=language.value)
+
+
+__all__ = ["withholding_credits", "withholding_credits_heading"]

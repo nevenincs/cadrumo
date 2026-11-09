@@ -29,6 +29,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.identity.documents import SpanishTaxIdFormat
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.result_disposition import ResultDisposition
+from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ...domain.calculations.registry.schema_form_layouts import (
     FormCellKind,
     FormLayoutSeedSource,
@@ -80,6 +81,7 @@ from .work_form_models import (
     ModeloFormAddressV1,
     ModeloFormBinding,
     ModeloFormBlocker,
+    ModeloFormCarryAttestation,
     ModeloFormCounts,
     ModeloFormCredit,
     ModeloFormEditability,
@@ -191,9 +193,11 @@ class PublicModeloFormField(BaseModel):
     value_text: str | None
     restorable: bool
     filers_own: bool
+    stated_absent: AbsenceAttestationFamily | None = None
     confirm_value: ModeloEditWireScalar
     takes_typed_value: bool
     clearable: bool
+    removable: bool
     own_value: ModeloEditWireScalar
     confirm_comparable: ModeloEditWireScalar
     state_digest: str
@@ -371,6 +375,7 @@ class PublicModeloWorkForm(BaseModel):
     answers: tuple[PublicModeloFormField, ...] = ()
     result_addresses: tuple[CasillaId, ...]
     withholding_credits: tuple[ModeloFormCredit, ...] = ()
+    withholding_credits_heading: str | None = None
     counts: ModeloFormCounts
     progress: ModeloWorkProgress
     operator_entries_known: bool
@@ -391,6 +396,7 @@ class PublicModeloWorkForm(BaseModel):
     filing: ModeloFormFiling | None
     last_export: ModeloFormExport | None
     edit_closure: ModeloFormEditClosure | None
+    carry_attestations: tuple[ModeloFormCarryAttestation, ...] = ()
     modelo_title: str | None
     modelo_name: str | None
     modelo_number: str | None

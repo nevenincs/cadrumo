@@ -5,6 +5,7 @@
 //! chain (an I/O kind, a JSON position, a nested catalogue code, a child
 //! process's registered refusal) and a static reason naming which check of
 //! several sharing one code failed.
+use crate::provisioning::failure::TransferFailure;
 use serde::{Deserialize, Serialize};
 use std::{borrow::Cow, error::Error, fmt, sync::Arc};
 
@@ -109,6 +110,20 @@ pub enum Cause {
         reason: Option<String>,
     },
     Child(ChildRefusal),
+    /// A download that failed: the host of the hop it failed at, a name without a path or
+    /// a query; the stage the exchange stopped at; the HTTP status and the I/O error kind
+    /// that decided it; and how many attempts were made.
+    Download {
+        #[serde(skip_serializing_if = "Option::is_none")]
+        host: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        stage: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        status: Option<u16>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        io_kind: Option<String>,
+        attempts: u32,
+    },
     TimedOut,
     Disconnected,
     /// A cause of a type this boundary does not describe; its text stays local.
@@ -140,6 +155,15 @@ impl Cause {
         if let Some(refusal) = error.downcast_ref::<ChildRefusal>() {
             return Self::Child(refusal.clone());
         }
+        if let Some(failure) = error.downcast_ref::<TransferFailure>() {
+            return Self::Download {
+                host: failure.host.as_ref().map(|host| host.as_str().to_owned()),
+                stage: failure.stage.map(|stage| stage.as_str().to_owned()),
+                status: failure.http_status,
+                io_kind: failure.io_kind.map(|kind| format!("{kind:?}")),
+                attempts: failure.attempts,
+            };
+        }
         if let Some(error) = error.downcast_ref::<std::sync::mpsc::RecvTimeoutError>() {
             return match error {
                 std::sync::mpsc::RecvTimeoutError::Timeout => Self::TimedOut,
@@ -159,6 +183,16 @@ impl Cause {
             Self::Json { category, .. } => admit::identifier(category),
             Self::Application { reason, .. } => reason.as_deref().is_none_or(admit::identifier),
             Self::Child(refusal) => refusal.admissible(),
+            Self::Download {
+                host,
+                stage,
+                io_kind,
+                ..
+            } => {
+                host.as_deref().is_none_or(admit::host)
+                    && stage.as_deref().is_none_or(admit::identifier)
+                    && io_kind.as_deref().is_none_or(admit::identifier)
+            }
             Self::TimedOut | Self::Disconnected | Self::Opaque => true,
         }
     }
@@ -186,6 +220,26 @@ impl Cause {
                 text
             }
             Self::Child(refusal) => refusal.summary(),
+            Self::Download {
+                host,
+                stage,
+                status,
+                io_kind,
+                attempts,
+            } => {
+                let mut text = format!("download from {}", host.as_deref().unwrap_or("no host"));
+                if let Some(stage) = stage {
+                    text.push_str(&format!(" stopped at {stage}"));
+                }
+                if let Some(status) = status {
+                    text.push_str(&format!(" (http {status})"));
+                }
+                if let Some(kind) = io_kind {
+                    text.push_str(&format!(" (io {kind})"));
+                }
+                text.push_str(&format!(" after {attempts} attempts"));
+                text
+            }
             Self::TimedOut => "timed out".to_owned(),
             Self::Disconnected => "disconnected".to_owned(),
             Self::Opaque => "unclassified cause".to_owned(),
@@ -330,6 +384,21 @@ pub mod admit {
     }
     pub fn trace(value: &str) -> bool {
         value.len() == 32 && value.bytes().all(|b| b.is_ascii_hexdigit())
+    }
+    /// A lowercase DNS host name: dot-separated labels of letters, digits and inner
+    /// hyphens, with no port, path or query.
+    pub fn host(value: &str) -> bool {
+        !value.is_empty()
+            && value.len() <= 253
+            && value.split('.').all(|label| {
+                !label.is_empty()
+                    && label.len() <= 63
+                    && !label.starts_with('-')
+                    && !label.ends_with('-')
+                    && label
+                        .bytes()
+                        .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+            })
     }
     /// A `module:function:line` frame inside Cadrumo's own packages.
     pub fn first_party_source(value: &str) -> bool {
@@ -517,6 +586,90 @@ mod tests {
         for cause in &outer.causes {
             assert!(cause.admissible());
         }
+    }
+
+    #[test]
+    fn a_failed_download_keeps_its_host_stage_status_and_attempts_and_nothing_else() {
+        use crate::{
+            provisioning::failure::{FailureCategory, FailureStage},
+            value::HostName,
+        };
+        let mut failure = TransferFailure::transient(FailureCategory::ServerError)
+            .with_status(504)
+            .at_stage(FailureStage::Status)
+            .from_host(&HostName::new("github.com").unwrap());
+        failure.attempts = 19;
+        let error = ApplicationError::new(ErrorCode::SetupFailed, Operation::Cli)
+            .with_reason("server_error")
+            .caused_by(failure);
+        assert_eq!(
+            error.causes,
+            vec![Cause::Download {
+                host: Some("github.com".into()),
+                stage: Some("status".into()),
+                status: Some(504),
+                io_kind: None,
+                attempts: 19,
+            }]
+        );
+        assert!(error.causes.iter().all(Cause::admissible));
+        assert_eq!(
+            error.chain_summary().as_deref(),
+            Some(
+                "server_error <- download from github.com stopped at status (http 504) after 19 attempts"
+            )
+        );
+        let document = serde_json::to_value(&error).unwrap();
+        assert_eq!(
+            document["causes"][0],
+            serde_json::json!({
+                "kind": "download",
+                "host": "github.com",
+                "stage": "status",
+                "status": 504,
+                "attempts": 19,
+            })
+        );
+        let read: Cause = serde_json::from_value(document["causes"][0].clone()).unwrap();
+        assert_eq!(read, error.causes[0]);
+
+        let refused = TransferFailure::transient(FailureCategory::HostUnreachable)
+            .at_stage(FailureStage::Connect)
+            .with_io_kind(Some(std::io::ErrorKind::ConnectionRefused));
+        let error =
+            ApplicationError::new(ErrorCode::SetupFailed, Operation::Cli).caused_by(refused);
+        assert!(matches!(
+            &error.causes[..],
+            [Cause::Download { host: None, stage: Some(stage), status: None, io_kind: Some(kind), attempts: 0 }]
+                if stage == "connect" && kind == "ConnectionRefused"
+        ));
+
+        for host in [
+            "github.com",
+            "release-assets.githubusercontent.com",
+            "a1.b-2.example",
+        ] {
+            assert!(admit::host(host), "{host}");
+        }
+        for host in [
+            "",
+            "github.com/owner",
+            "github.com:443",
+            "-a.example",
+            "a..example",
+            "GitHub.com",
+            "a.example?x",
+        ] {
+            assert!(!admit::host(host), "{host}");
+        }
+        let forged = Cause::Download {
+            host: Some("github.com/private/path".into()),
+            stage: None,
+            status: None,
+            io_kind: None,
+            attempts: 1,
+        };
+        assert!(!forged.admissible());
     }
 
     #[test]

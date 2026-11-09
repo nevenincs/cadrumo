@@ -645,12 +645,14 @@ def _caller_operator_layer(
     preparation: BucketAggregationPreparation,
     text_casilla_inputs: Mapping[CasillaId, str] | None,
     enum_binding_values: Mapping[BindingId, str] | None,
+    attested_binding_ids: tuple[BindingId, ...],
 ) -> CalculationOperatorLayer:
     """Project the validated caller tier of one run onto the persisted operator layer.
 
     Only the caller channels are read: the backend, bound, profile and borrador
     tiers merged into the revision's replay maps never reach the layer, so a
-    later replay cannot promote a source value into an operator override.
+    later replay cannot promote a source value into an operator override. The
+    overrides the operator stated hold nothing stay marked as that statement.
     """
     return CalculationOperatorLayer(
         decimal_casilla_inputs={
@@ -661,6 +663,7 @@ def _caller_operator_layer(
             **{binding_id: canonical_decimal_string(value) for binding_id, value in preparation.binding_values.items()},
             **dict(enum_binding_values or {}),
         },
+        attested_binding_ids=attested_binding_ids,
     )
 
 
@@ -720,6 +723,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     text_casilla_inputs: Mapping[CasillaId, str] | None = None,
     cleared_casilla_ids: tuple[CasillaId, ...] = (),
     record_operator_layer: bool = False,
+    attested_binding_ids: tuple[BindingId, ...] = (),
     m210_official_tipo_renta_code: str | None = None,
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
     binding_values: Mapping[BindingId, Decimal] | None = None,
@@ -772,6 +776,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 preparation=preparation,
                 text_casilla_inputs=text_casilla_inputs,
                 enum_binding_values=enum_binding_values,
+                attested_binding_ids=attested_binding_ids,
             )
             if record_operator_layer
             else None

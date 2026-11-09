@@ -49,8 +49,15 @@ function effectWords(
     case "clear_declared_value":
       return t("workspace.modelo.review.effect.clear");
     case "restore_source_value":
+      return t(
+        edit.intent.change === "remove"
+          ? "workspace.modelo.review.effect.remove"
+          : "workspace.modelo.review.effect.restore",
+      );
     case "remove_override":
       return t("workspace.modelo.review.effect.restore");
+    case "attest_no_amount":
+      return edit.intent.effect;
     default:
       return effect?.words ?? null;
   }
@@ -171,7 +178,7 @@ function PhaseNotice({ phase }: { phase: ReviewPhase }) {
     case "not_applied":
       return (
         <Alert tone="warning" icon={<Icon name="alert" />}>
-          {t("workspace.modelo.operation.not_done")}
+          {phase.words ?? t("workspace.modelo.operation.not_done")}
         </Alert>
       );
     case "still_moving":

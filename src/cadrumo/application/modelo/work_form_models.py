@@ -50,6 +50,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.hashing import sha256_hex
 from ...core.period import Period
 from ...core.type_guards import is_object_list_or_tuple
+from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ...domain.calculations.registry.ids import BindingId, FormulaId, LegalRefId, RevisionId
 from ...domain.calculations.registry.schema_form_layouts import (
     FormCellKind,
@@ -491,6 +492,13 @@ def _clearable_of(data: dict[str, object]) -> bool:
     return data["editability"] is ModeloFormEditability.EDITABLE_VALUE and data["origin"] is ModeloFormOrigin.ENTERED
 
 
+_REMOVABLE_ORIGINS = frozenset({ModeloFormOrigin.ENTERED, ModeloFormOrigin.CLEARED})
+
+
+def _removable_of(data: dict[str, object]) -> bool:
+    return data["editability"] is ModeloFormEditability.EDITABLE_VALUE and data["origin"] in _REMOVABLE_ORIGINS
+
+
 def _own_value_of(data: dict[str, object]) -> ModeloEditWireScalar:
     return comparable_entry(_factory_value(data)) if data["origin"] in _FILERS_OWN_ORIGINS else None
 
@@ -568,6 +576,9 @@ class ModeloFormField(ModeloFormBase):
     takes_typed_value: bool = Field(default_factory=_takes_typed_value_of)
     #: Whether the box holds a value the filer entered that they can remove.
     clearable: bool = Field(default_factory=_clearable_of)
+    #: Whether the filer's own entry or clear on a box they type can be taken out, so the box holds
+    #: what the declaration gives without it, as it did before the filer touched it.
+    removable: bool = Field(default_factory=_removable_of)
     #: The filer's own value as an entry of it compares (see
     #: :func:`~cadrumo.application.modelo.work_form_scalar_values.comparable_entry`); typing it again
     #: changes nothing. ``None`` when the value is not the filer's own.
@@ -583,6 +594,9 @@ class ModeloFormField(ModeloFormBase):
     restorable: bool = Field(default_factory=_restorable_of)
     #: Whether the box holds the filer's own value: typed here, or replacing its source's.
     filers_own: bool = Field(default_factory=_filers_own_of)
+    #: The statement the filer made that this carry holds nothing, by the family its binding declares;
+    #: ``None`` for a value typed or taken from a source, so a zero stated never reads as a zero typed.
+    stated_absent: AbsenceAttestationFamily | None = None
     #: The value confirming the box stages, as an edit intent carries it; ``None`` when the box is not confirmable.
     confirm_value: ModeloEditWireScalar = Field(default_factory=_confirm_value_of)
     #: Where the box's value stands, in the few words every frontend shows beside it, in the
@@ -624,8 +638,12 @@ class ModeloFormField(ModeloFormBase):
     @pydantic_validation_boundary
     def _derived_edit_values_match(self) -> ModeloFormField:
         derived = dict(self)
-        if (self.takes_typed_value, self.clearable) != (_takes_typed_value_of(derived), _clearable_of(derived)):
-            raise ValueError("whether a field takes typing or clearing is what its own state makes it")
+        if (self.takes_typed_value, self.clearable, self.removable) != (
+            _takes_typed_value_of(derived),
+            _clearable_of(derived),
+            _removable_of(derived),
+        ):
+            raise ValueError("whether a field takes typing, clearing or removal is what its own state makes it")
         if self.confirm_comparable != _confirm_comparable_of(derived):
             raise ValueError("a field's comparable confirm value is the one its own state lets a confirmation stage")
         if self.own_value != _own_value_of(derived) or self.state_digest != _state_digest_of(derived):
@@ -651,6 +669,7 @@ _SELF_DERIVED: Final[frozenset[str]] = frozenset(
         "confirm_value",
         "takes_typed_value",
         "clearable",
+        "removable",
         "own_value",
         "confirm_comparable",
         "state_digest",
@@ -991,6 +1010,34 @@ class ModeloFormCredit(ModeloFormBase):
     dependents: tuple[ModeloFormCasillaAddressV1, ...] | None
 
 
+class ModeloFormCarryAttestation(ModeloFormBase):
+    """The statement a filer can make that no amount from an earlier ejercicio is still pending.
+
+    It is offered while a carry the declaration reads from an earlier filing
+    holds no value: no stored earlier return supplied it, and the filer has
+    neither entered it nor stated it. Applying it stages one ``attest_no_amount``
+    intent per binding, which records each as a zero the filer stated.
+    """
+
+    #: The family of carries the statement answers, as their bindings declare it.
+    family: AbsenceAttestationFamily
+    #: The carries the statement answers, each a binding override the edit admits the statement on.
+    binding_ids: tuple[BindingId, ...] = Field(min_length=1)
+    #: The action, in the form's language.
+    action_words: str = Field(min_length=1)
+    #: What the statement records and what happens when an earlier return later shows an amount.
+    statement_words: str = Field(min_length=1)
+    #: What the statement does to one carry, as a review lists each staged change.
+    effect_words: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _bindings_are_unique_and_sorted(self) -> ModeloFormCarryAttestation:
+        if list(self.binding_ids) != sorted(set(self.binding_ids)):
+            raise ValueError("a carry attestation names each binding once, in order")
+        return self
+
+
 class ModeloWorkForm(ModeloFormBase):
     """The editor form of one work target in one language."""
 
@@ -1017,6 +1064,8 @@ class ModeloWorkForm(ModeloFormBase):
     result_addresses: tuple[CasillaId, ...] = ()
     #: The boxes the withholding register supplies, in reading order, each with the boxes worked out from it.
     withholding_credits: tuple[ModeloFormCredit, ...] = ()
+    #: Who withheld :attr:`withholding_credits`, in the form's language; ``None`` when the form has none.
+    withholding_credits_heading: str | None = None
     counts: ModeloFormCounts
     progress: ModeloWorkProgress
     operator_entries_known: bool
@@ -1064,6 +1113,9 @@ class ModeloWorkForm(ModeloFormBase):
     last_export: ModeloFormExport | None = None
     #: Why nothing may be edited, when something other than the admission closes the form.
     edit_closure: ModeloFormEditClosure | None = None
+    #: The statements that no earlier-ejercicio amount is pending, one per family, while a carry each
+    #: answers holds no value.
+    carry_attestations: tuple[ModeloFormCarryAttestation, ...] = ()
     #: The modelo's number and title, its number alone, and the period, in the form's language.
     modelo_title: str | None = None
     #: The modelo's own title without its number, beside the number a frontend shows apart; ``None`` without one.

@@ -822,6 +822,7 @@ def resolve_bindings_from_local_store(
     captured_at: datetime | None = None,
     activity_start_date: date | None = None,
     excluded_binding_ids: frozenset[BindingId] | None = None,
+    answered_binding_ids: frozenset[BindingId] = frozenset(),
 ) -> BindingPrefillReport:
     """Resolve every ``previous_filing`` binding the revision declares against observations in the local store.
 
@@ -848,6 +849,9 @@ def resolve_bindings_from_local_store(
             and resolve to a neutral zero instead of requiring observed filings.
         excluded_binding_ids: Optional previous-filing binding ids to leave
             unresolved because another authority owns them.
+        answered_binding_ids: Previous-filing binding ids the caller already
+            supplies a value for; one an observed return cannot show is left
+            unresolved for that value instead of refused.
 
     Returns a :class:`BindingPrefillReport` carrying the resolved
     ``binding_values`` mapping (suitable for passing through
@@ -900,6 +904,7 @@ def resolve_bindings_from_local_store(
         period=snapshot.period,
         activity_start_date=activity_start_date,
         excluded_binding_ids=excluded_binding_ids,
+        answered_binding_ids=answered_binding_ids,
     )
 
     return BindingPrefillReport(

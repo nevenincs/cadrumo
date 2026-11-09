@@ -41,7 +41,7 @@ use crate::{
     filesystem,
     provisioning::{
         connection::Network,
-        failure::{FailureCategory, TransferFailure},
+        failure::{FailureCategory, FailureStage, TransferFailure},
         http::{Body, Framing},
         transfer::{self, Pinned, Round, Transfer, TransferEvent},
         url::HttpsUrl,
@@ -158,6 +158,8 @@ impl From<RegistryError> for LocalAiError {
         match error {
             RegistryError::Cancelled => Self::Engine(Error::Cancelled),
             RegistryError::Engine(error) => Self::Engine(error),
+            // A download that failed keeps its facts for the diagnostic record.
+            RegistryError::Network(failure) => Self::Engine(Error::Download(failure)),
             other => Self::Failed(other.category()),
         }
     }
@@ -593,9 +595,7 @@ fn get_manifest(
     cancellation: &Cancellation,
 ) -> Result<Vec<u8>, RegistryError> {
     let stop = move || cancellation.is_cancelled();
-    let network_failure =
-        |error: &io::Error| RegistryError::Network(transfer::network_failure(error));
-    let transfer::Answer { head, reader } = transfer::request_chain(
+    let transfer::Answer { head, reader, host } = transfer::request_chain(
         network,
         hosts,
         source,
@@ -603,15 +603,21 @@ fn get_manifest(
         cancellation,
     )?
     .map_err(RegistryError::Network)?;
+    let network_failure = |error: &io::Error| {
+        RegistryError::Network(transfer::network_failure(error).from_host(&host))
+    };
     if head.status == 404 {
         return Err(RegistryError::NotFound);
     }
     if let Some(failure) = TransferFailure::of_status(head.status) {
-        return Err(RegistryError::Network(failure));
+        return Err(RegistryError::Network(failure.from_host(&host)));
     }
     if head.status != 200 {
         return Err(RegistryError::Network(
-            TransferFailure::final_(FailureCategory::Unexpected).with_status(head.status),
+            TransferFailure::final_(FailureCategory::Unexpected)
+                .with_status(head.status)
+                .at_stage(FailureStage::Status)
+                .from_host(&host),
         ));
     }
     let framing = Framing::of(&head).map_err(|error| network_failure(&error))?;

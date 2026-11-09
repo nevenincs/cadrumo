@@ -2710,8 +2710,14 @@ def _held(directory: Path, form: str, changes: tuple[tuple[str, str], ...]) -> l
     ]
 
 
-def _write_entries(directory: Path, work: Any, form: str, *typed: tuple[tuple[str, str], ...]) -> None:
-    """Read entries as typed into boxes of ``form``, one check per boxes and language, as the window sends each."""
+def _write_entries(
+    directory: Path, work: Any, form: str, *typed: tuple[tuple[str, str], ...], late: bool = False
+) -> None:
+    """Read entries as typed into boxes of ``form``, one check per boxes and language, as the window sends each.
+
+    ``late`` reads them once the form's baseline has run out, as the application
+    then answers every check on it: stale, under the name ``...-late``.
+    """
     from cadrumo.application.modelo.workbench_operations import MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID
 
     for entries in typed:
@@ -2723,7 +2729,10 @@ def _write_entries(directory: Path, work: Any, form: str, *typed: tuple[tuple[st
                 MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
                 _edit_document(_form_baseline(directory, form, language), typed=lexemes, language=language),
             )
-            _write(directory, f"preflight-{form}-entry-{boxes}-{language}.json", _expect_model(read))
+            checked = _expect_model(read)
+            if late:
+                _stale_refusal(checked)
+            _write(directory, f"preflight-{form}-entry-{boxes}-{language}{'-late' if late else ''}.json", checked)
 
 
 def _write_check(
@@ -2806,7 +2815,10 @@ def _write_renewal_flow(directory: Path, work: Any, started: datetime) -> None:
     What was typed then was read while the form's baseline was current; the
     review now finds it stale, the renewal re-admits it with nothing but its
     lifetime changed, and the form read again admits a fresh baseline, on
-    which the review is checked. The profile's whole timeline runs on a
+    which the review is checked. The same entry typed only now is stale too,
+    and is read again on the renewed baseline. The renewed baseline renews
+    again, as an apply refused for its baseline going stale has it, and the
+    staged changes are applied on it, last, as that apply writes. The profile's whole timeline runs on a
     frozen clock before ``started``, as a replay does: it was seeded and
     calculated forty minutes before, the form read half an hour before, and
     the review twenty minutes before.
@@ -2823,8 +2835,13 @@ def _write_renewal_flow(directory: Path, work: Any, started: datetime) -> None:
         )
         if getattr(_write_renewal(directory, work, read), "renewed_baseline", None) is None:
             raise SystemExit("the expired baseline was not renewed")
+        _write_entries(directory, work, read, TYPED_130, late=True)
         _write_form(directory, work, f"modelo-{renewed}")
         _write_check(directory, work, renewed, staged_on=read, staged=STAGED_130, intents=EDIT_130)
+        _write_entries(directory, work, renewed, TYPED_130)
+        if getattr(_write_renewal(directory, work, renewed), "renewed_baseline", None) is None:
+            raise SystemExit("the renewed baseline was not renewed again")
+        _write(directory, f"apply-{renewed}.json", _expect_model(_write_apply(directory, work, renewed, EDIT_130)))
 
 
 def _write_edits(directory: Path, work: Any) -> None:
