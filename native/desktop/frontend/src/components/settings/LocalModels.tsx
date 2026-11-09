@@ -444,6 +444,25 @@ export function LocalModels({
   const progressOf = (model: LaneModel): StepProgress | null => {
     const part = store.modelPart(model.id);
     if (!part) return null;
+    // A setup that stopped at the item itself, not in a part, settles with
+    // its failure and no part failed: the model it planned and did not bring
+    // here says so, instead of going back to its plain download.
+    const settled = localAi ? store.runOf(localAi.item) : null;
+    const itemFailure =
+      settled?.stage === "settled" && settled.outcome === "failed"
+        ? settled.failure
+        : null;
+    if (
+      itemFailure !== null &&
+      part.result?.failure == null &&
+      model.installed !== true
+    )
+      return {
+        step: null,
+        completed: null,
+        total: null,
+        result: { changed: false, failure: itemFailure, transferred_bytes: 0 },
+      };
     // A part planned for the person's review has not begun: it reports no
     // step until the setup runs.
     if (part.result === null) {

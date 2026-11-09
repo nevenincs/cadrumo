@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-07 04:04+0200\n"
+"POT-Creation-Date: 2026-11-09 13:17+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.example>\n"
 "Language: es\n"
@@ -187,6 +187,10 @@ msgid "Troubleshooting"
 msgstr "Resolución de problemas"
 
 #: ../../index.md:175
+msgid "Sign in to an AI provider by hand"
+msgstr "Iniciar sesión en un proveedor de IA a mano"
+
+#: ../../index.md:175
 msgid "How to publish a validated runtime authority"
 msgstr "Cómo publicar una autoridad de ejecución validada"
 
@@ -198,39 +202,39 @@ msgstr "Aviso legal"
 msgid "Help"
 msgstr "Ayuda"
 
-#: ../../index.md:184
+#: ../../index.md:185
 msgid "Cadrumo reference"
 msgstr "Referencia de Cadrumo"
 
-#: ../../index.md:184
+#: ../../index.md:185
 msgid "Reference"
 msgstr "Referencia"
 
-#: ../../index.md:195
+#: ../../index.md:196
 msgid "Overview"
 msgstr "Visión general"
 
-#: ../../index.md:195
+#: ../../index.md:196
 msgid "How it works"
 msgstr "Cómo funciona"
 
-#: ../../index.md:202
+#: ../../index.md:203
 msgid "Updates and downloads"
 msgstr "Actualizaciones y descargas"
 
-#: ../../index.md:202
+#: ../../index.md:203
 msgid "Architecture"
 msgstr "Arquitectura"
 
-#: ../../index.md:202
+#: ../../index.md:203
 msgid "Authoring guide"
 msgstr "Guía de redacción"
 
-#: ../../index.md:202
+#: ../../index.md:203
 msgid "Project"
 msgstr "Proyecto"
 
-#: ../../index.md:212
+#: ../../index.md:213
 msgid "Technical documentation"
 msgstr "Documentación técnica"
 

@@ -1375,6 +1375,46 @@ fn a_pull_records_the_stated_context_also_for_a_model_already_stored_and_fetches
 }
 
 #[test]
+fn a_model_with_no_llamacpp_context_reads_not_in_this_build_before_anything_is_fetched() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path().join("models");
+    let router = directory.path().join("llama-server");
+    let hardware = Hardware::default();
+
+    // Neither stored nor stating a context: the router could never present it, so it is
+    // refused rather than planned as a download.
+    let models = stating(&root, TEXT, None);
+    let model = &models.selection().as_slice()[0];
+    assert!(!models.presentable(model));
+    assert_eq!(
+        models.observe_presented(model, &hardware, &router),
+        Observation::Blocked(BlockedReason::NotInThisBuild)
+    );
+
+    // Stating one, the same absent model is planned as a download.
+    let models = stating(&root, TEXT, Some(4096));
+    let model = &models.selection().as_slice()[0];
+    assert!(models.presentable(model));
+    assert_eq!(
+        models.observe_presented(model, &hardware, &router),
+        Observation::Absent
+    );
+
+    // A stored model with a recorded context but none stated still goes on to the router,
+    // which is not recorded here.
+    let name = ModelName::parse(TEXT).unwrap();
+    Stored::new(5).write(&root, TEXT);
+    record_context(&root, &name, NonZeroU32::new(2048).unwrap()).unwrap();
+    let models = stating(&root, TEXT, None);
+    let model = &models.selection().as_slice()[0];
+    assert!(models.presentable(model));
+    assert_eq!(
+        models.observe_presented(model, &hardware, &router),
+        Observation::Failed(FailureCategory::ProgramNotRunning)
+    );
+}
+
+#[test]
 fn removal_deletes_the_removed_models_contexts_and_keeps_a_kept_models() {
     let fixture = fixture();
     let root = fixture.models_root();
