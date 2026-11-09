@@ -78,8 +78,9 @@ export function CreditsPanel({
   };
   return (
     <div className="flex flex-col gap-8">
-      {credits.length > 0 && (
+      {credits.length > 0 && form.withholding_credits_heading !== null && (
         <Credits
+          heading={form.withholding_credits_heading}
           credits={credits}
           dependents={dependents}
           lines={envelope.issue_lines}

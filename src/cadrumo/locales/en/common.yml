@@ -4324,7 +4324,6 @@ desktop:
       list: Withholdings
       show: Show on the form
       show_box: Show box {box} on the form
-      title: Withholdings taken from your income
     details:
       close: Close details
       hide: Hide details

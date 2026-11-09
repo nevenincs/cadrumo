@@ -3046,6 +3046,10 @@ application:
         one_year: Casilla {box} del modelo {modelo}, ejercicio {years}.
         onwards: Casilla {box} del modelo {modelo}, ejercicio {years} y siguientes.
         year_span: Casilla {box} del modelo {modelo}, ejercicio {years}.
+      credits_heading:
+        mixed: Retenciones
+        practised: Retenciones que has practicado
+        suffered: Retenciones practicadas sobre tus ingresos
       finding_action:
         add_activity_start: Añade a tu perfil la fecha en que empezó tu actividad
           y vuelve a calcular.

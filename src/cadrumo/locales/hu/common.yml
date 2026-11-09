@@ -4368,7 +4368,6 @@ desktop:
       list: Levonások
       show: Megjelenítés az űrlapon
       show_box: A(z) {box} rovat megjelenítése az űrlapon
-      title: A jövedelmedből levont összegek
     details:
       close: Részletek bezárása
       hide: Részletek elrejtése

@@ -2888,6 +2888,10 @@ application:
         one_year: Box {box} of modelo {modelo}, tax year {years}.
         onwards: Box {box} of Modelo {modelo}, tax years {years} onwards.
         year_span: Box {box} of Modelo {modelo}, tax years {years}.
+      credits_heading:
+        mixed: Withholdings
+        practised: Withholdings you have taken
+        suffered: Withholdings taken from your income
       finding_action:
         add_activity_start: Add the date your activity started to your profile, then
           calculate again.

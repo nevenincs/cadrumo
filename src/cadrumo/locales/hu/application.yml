@@ -3002,6 +3002,10 @@ application:
         onwards: A Modelo {modelo} nyomtatvány {box}. mezője, {years}. és az azt követő
           adóévek.
         year_span: A Modelo {modelo} nyomtatvány {box}. mezője, {years}. adóév.
+      credits_heading:
+        mixed: Levonások
+        practised: Az általad levont összegek
+        suffered: A jövedelmedből levont összegek
       finding_action:
         add_activity_start: Add meg a profilodban, mikor kezdődött a tevékenységed,
           majd számolj újra.

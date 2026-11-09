@@ -154,6 +154,7 @@ function CreditRow({
  * the page. The estimate from the quarterly declarations sits under them.
  */
 export function Credits({
+  heading,
   credits,
   dependents,
   lines,
@@ -164,6 +165,8 @@ export function Credits({
   extraOf,
   onAnswer = null,
 }: {
+  /** Who withheld these credits, in the words the application served. */
+  heading: string;
   credits: readonly PublicModeloFormField[];
   /** The boxes the application works out from a credit, directly or through
    * another figure; null when it could not say which they are. */
@@ -185,10 +188,7 @@ export function Credits({
     lines.filter((line) => line.box !== null && line.box === field.box);
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
-      <Heading
-        title={t("desktop.modelo.credits.title")}
-        lead={t("desktop.modelo.credits.lead")}
-      />
+      <Heading title={heading} lead={t("desktop.modelo.credits.lead")} />
       <section
         aria-label={t("desktop.modelo.credits.list")}
         className="flex flex-col gap-3"

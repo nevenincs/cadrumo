@@ -3047,6 +3047,10 @@ application:
         one_year: Casella {box} del model {modelo}, exercici {years}.
         onwards: Casella {box} del model {modelo}, exercicis {years} i posteriors.
         year_span: Casella {box} del model {modelo}, exercicis {years}.
+      credits_heading:
+        mixed: Retencions
+        practised: Retencions que has practicat
+        suffered: Retencions practicades sobre els teus ingressos
       finding_action:
         add_activity_start: Afegeix al teu perfil la data en què va començar la teva
           activitat i torna a calcular.

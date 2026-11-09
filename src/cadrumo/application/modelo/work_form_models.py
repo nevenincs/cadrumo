@@ -1017,6 +1017,8 @@ class ModeloWorkForm(ModeloFormBase):
     result_addresses: tuple[CasillaId, ...] = ()
     #: The boxes the withholding register supplies, in reading order, each with the boxes worked out from it.
     withholding_credits: tuple[ModeloFormCredit, ...] = ()
+    #: Who withheld :attr:`withholding_credits`, in the form's language; ``None`` when the form has none.
+    withholding_credits_heading: str | None = None
     counts: ModeloFormCounts
     progress: ModeloWorkProgress
     operator_entries_known: bool
