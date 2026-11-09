@@ -29,6 +29,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.identity.documents import SpanishTaxIdFormat
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.result_disposition import ResultDisposition
+from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ...domain.calculations.registry.schema_form_layouts import (
     FormCellKind,
     FormLayoutSeedSource,
@@ -48,6 +49,7 @@ from .calculation_report import CalculationReportRowRole
 from .edit_apply_scalar_contracts import ModeloEditWireScalar
 from .edit_baseline_projection import ModeloEditApplyBaselineV1
 from .edit_models import ModeloEditAdmittedV1, ModeloEditRefusedV1
+from .reconciliation_sources import ReconciliationSourceRequirementV1
 from .source_policy import SourceFamily
 from .work_form_declaration_facts import (
     ModeloFormAeatData,
@@ -79,6 +81,7 @@ from .work_form_models import (
     ModeloFormAddressV1,
     ModeloFormBinding,
     ModeloFormBlocker,
+    ModeloFormCarryAttestation,
     ModeloFormCounts,
     ModeloFormCredit,
     ModeloFormEditability,
@@ -190,6 +193,7 @@ class PublicModeloFormField(BaseModel):
     value_text: str | None
     restorable: bool
     filers_own: bool
+    stated_absent: AbsenceAttestationFamily | None = None
     confirm_value: ModeloEditWireScalar
     takes_typed_value: bool
     clearable: bool
@@ -370,6 +374,7 @@ class PublicModeloWorkForm(BaseModel):
     answers: tuple[PublicModeloFormField, ...] = ()
     result_addresses: tuple[CasillaId, ...]
     withholding_credits: tuple[ModeloFormCredit, ...] = ()
+    withholding_credits_heading: str | None = None
     counts: ModeloFormCounts
     progress: ModeloWorkProgress
     operator_entries_known: bool
@@ -390,6 +395,7 @@ class PublicModeloWorkForm(BaseModel):
     filing: ModeloFormFiling | None
     last_export: ModeloFormExport | None
     edit_closure: ModeloFormEditClosure | None
+    carry_attestations: tuple[ModeloFormCarryAttestation, ...] = ()
     modelo_title: str | None
     modelo_name: str | None
     modelo_number: str | None
@@ -501,6 +507,8 @@ class ModeloWorkbenchFormProjectionV1(BaseModel):
     export_offer: PublicModeloFormExportOffer | None = None
     #: The profile details the readiness gate still asks for, each as its label in the form's language.
     profile_requirements: tuple[str, ...] = ()
+    #: The declarations an annual summary sums whose filed figures are not there yet, each with its step.
+    source_requirements: tuple[ReconciliationSourceRequirementV1, ...] = ()
     #: The recorded filing's AEAT receipt state; ``None`` when the declaration is not recorded as filed.
     receipt: ModeloFormReceipt | None = None
 
@@ -597,6 +605,7 @@ def _restore(projection: ModeloWorkbenchFormProjectionV1) -> ModeloWorkbenchForm
         export_offer=_restore_export_offer(projection.export_offer),
         receipt=projection.receipt,
         profile_requirements=projection.profile_requirements,
+        source_requirements=projection.source_requirements,
     )
 
 
@@ -648,6 +657,7 @@ def project_modelo_workbench_form(
         export_offer=_project_export_offer(read.export_offer),
         receipt=read.receipt,
         profile_requirements=read.profile_requirements,
+        source_requirements=read.source_requirements,
     )
     _require_projection_roundtrip(read, projection)
     return projection

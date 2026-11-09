@@ -68,19 +68,24 @@ pub struct Supervised {
     diagnostics: Arc<Diagnostics>,
 }
 
-/// Starts `command` contained, writes the bearer frame, and reports each
+/// Starts `command` contained, writes the startup frame, and reports each
 /// output line to `signals` from a reader thread.
 #[cfg(test)]
 pub fn start(
     command: Command,
     bearer: &str,
     gateway_bearer: &str,
+    local_engine_default: cadrumo_application::provisioning::local_ai::LocalEngine,
     signals: impl Fn(Signal) + Send + 'static,
     diagnostics: Arc<Diagnostics>,
 ) -> Result<Supervised> {
     start_child(
         command,
-        Some((bearer, gateway_bearer)),
+        Some(launcher::Startup {
+            bearer,
+            gateway_bearer,
+            local_engine_default,
+        }),
         signals,
         diagnostics,
     )
@@ -92,7 +97,7 @@ pub fn start(
 #[cfg(windows)]
 pub fn start_child(
     mut command: Command,
-    bearer: Option<(&str, &str)>,
+    bearer: Option<launcher::Startup<'_>>,
     signals: impl Fn(Signal) + Send + 'static,
     diagnostics: Arc<Diagnostics>,
 ) -> Result<Supervised> {
@@ -129,7 +134,7 @@ pub fn start_child(
 #[cfg(unix)]
 pub fn start_child(
     mut command: Command,
-    bearer: Option<(&str, &str)>,
+    bearer: Option<launcher::Startup<'_>>,
     signals: impl Fn(Signal) + Send + 'static,
     diagnostics: Arc<Diagnostics>,
 ) -> Result<Supervised> {
@@ -153,7 +158,7 @@ pub fn start_child(
 fn supervise(
     mut child: Child,
     containment: Containment,
-    bearer: Option<(&str, &str)>,
+    bearer: Option<launcher::Startup<'_>>,
     signals: impl Fn(Signal) + Send + 'static,
     diagnostics: Arc<Diagnostics>,
 ) -> Result<Supervised> {
@@ -186,10 +191,10 @@ fn supervise(
     supervised
         .threads
         .push(thread::spawn(move || discard(stderr)));
-    let Some((bearer, gateway_bearer)) = bearer else {
+    let Some(startup) = bearer else {
         return Ok(supervised);
     };
-    let frame = launcher::bearer_frame(bearer, gateway_bearer);
+    let frame = launcher::bearer_frame(startup);
     let written = supervised
         .stdin
         .as_mut()
@@ -422,6 +427,7 @@ pub(crate) mod tests {
              $frame = $line | ConvertFrom-Json; \
              $bearer = $frame.bearer; \
              if (-not $frame.gateway_bearer -or $frame.gateway_bearer -eq $bearer) {{ exit 1 }}; \
+             if ($frame.local_engine_default -cne 'llamacpp' -and $frame.local_engine_default -cne 'ollama') {{ exit 1 }}; \
              $grandchild = Start-Process -PassThru -WindowStyle Hidden -FilePath $env:SystemRoot\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -ArgumentList '-NoProfile','-Command','Start-Sleep -Seconds 120'; \
              [Console]::Error.WriteLine('grandchild ' + $grandchild.Id); \
              [Console]::Out.WriteLine('{{\"event\":\"agent_ready\",\"gateway_port\":4000,\"agent_version\":\"' + $bearer.Length + '-' + $grandchild.Id + '\",\"hosting_contract\":1,\"workspace_root\":\"C:\\\\lane\\\\ws\"}}'); \
@@ -444,6 +450,8 @@ pub(crate) mod tests {
 bearer=$(printf '%s' "$line" | /usr/bin/sed -n 's/^{"bearer":"\([^"]*\)".*/\1/p')
 gateway=$(printf '%s' "$line" | /usr/bin/sed -n 's/.*"gateway_bearer":"\([^"]*\)".*/\1/p')
 if [ -z "$gateway" ] || [ "$gateway" = "$bearer" ]; then exit 1; fi
+engine=$(printf '%s' "$line" | /usr/bin/sed -n 's/.*"local_engine_default":"\([^"]*\)".*/\1/p')
+case "$engine" in llamacpp|ollama) ;; *) exit 1 ;; esac
 /bin/sleep 120 </dev/null >/dev/null 2>&1 &
 grandchild=$!
 printf '{"event":"agent_ready","gateway_port":4000,"agent_version":"%s-%s","hosting_contract":1,"workspace_root":"/lane/ws"}\n' "${#bearer}" "$grandchild"
@@ -515,6 +523,7 @@ exit 0
             test_launcher(false),
             &bearer,
             "synthetic-gateway-secret",
+            cadrumo_application::provisioning::local_ai::LocalEngine::LlamaCpp,
             move |signal| sink.lock().unwrap().push(signal),
             diagnostics.clone(),
         )
@@ -554,6 +563,7 @@ exit 0
             test_launcher(true),
             "bearer",
             "synthetic-gateway-secret",
+            cadrumo_application::provisioning::local_ai::LocalEngine::Ollama,
             move |signal| sink.lock().unwrap().push(signal),
             diagnostics.clone(),
         )
@@ -582,6 +592,7 @@ exit 0
             test_launcher(true),
             "bearer",
             "synthetic-gateway-secret",
+            cadrumo_application::provisioning::local_ai::LocalEngine::Ollama,
             move |signal| sink.lock().unwrap().push(signal),
             Arc::new(Diagnostics::default()),
         )

@@ -1,6 +1,12 @@
 import { createContext, useCallback, useEffect, useState } from "react";
+import type { AgentSession } from "./agentSession";
 import { failureCode } from "../errors";
-import type { AgentLocalModels } from "../ipc/contract";
+import type {
+  AgentLocalEngine,
+  AgentLocalEngineToken,
+  AgentLocalModels,
+  AgentLocalPlacement,
+} from "../ipc/contract";
 import type { CatalogLane, LaneModel } from "./localModelLanes";
 import type { AskedModel } from "./provisioning";
 
@@ -23,7 +29,71 @@ export type LocalModelHost = {
     expectedRevision: string,
   ) => Promise<AgentLocalModels>;
   reset: (expectedRevision: string) => Promise<AgentLocalModels>;
+  /** The local engine, where the host offers it. It shares the lists'
+   * revision, so a change to either is read again from the other. */
+  engine?: LocalEngineHost;
+  /** Calls `listener` once a change made through this host stored. */
+  subscribe?: (listener: (change: "list" | "engine") => void) => () => void;
 };
+
+export type LocalEngineHost = {
+  read: () => Promise<AgentLocalEngine>;
+  choose: (
+    engine: AgentLocalEngineToken,
+    placement: AgentLocalPlacement,
+    expectedRevision: string,
+  ) => Promise<AgentLocalEngine>;
+};
+
+/**
+ * The host over `session`, or null where it offers no lists. A change made
+ * through it tells its subscribers and `onChange`, so the readers of the
+ * lists and of the engine read the record again.
+ */
+export function localModelHostOf(
+  session: AgentSession | undefined,
+  onChange?: (change: "list" | "engine") => void,
+): LocalModelHost | null {
+  if (
+    !session?.localModels ||
+    !session.addLocalModel ||
+    !session.removeLocalModel ||
+    !session.resetLocalModels
+  )
+    return null;
+  const listeners = new Set<(change: "list" | "engine") => void>();
+  const told = <T>(change: "list" | "engine", made: Promise<T>) =>
+    made.then((value) => {
+      onChange?.(change);
+      for (const listener of [...listeners]) listener(change);
+      return value;
+    });
+  const add = session.addLocalModel.bind(session);
+  const remove = session.removeLocalModel.bind(session);
+  const reset = session.resetLocalModels.bind(session);
+  const readEngine = session.localEngine?.bind(session);
+  const choose = session.chooseLocalEngine?.bind(session);
+  return {
+    read: session.localModels.bind(session),
+    add: (lane, model, revision) => told("list", add(lane, model, revision)),
+    remove: (lane, model, revision) =>
+      told("list", remove(lane, model, revision)),
+    reset: (revision) => told("list", reset(revision)),
+    ...(readEngine && choose
+      ? {
+          engine: {
+            read: readEngine,
+            choose: (engine, placement, revision) =>
+              told("engine", choose(engine, placement, revision)),
+          },
+        }
+      : {}),
+    subscribe: (listener) => {
+      listeners.add(listener);
+      return () => void listeners.delete(listener);
+    },
+  };
+}
 
 /** Where a model row that is showing the local AI's plan says so, to the
  * element that would otherwise show the same plan on the program's row.
@@ -62,7 +132,16 @@ export function useLocalModels(
   const [reads, setReads] = useState(0);
   const [busy, setBusy] = useState<string | null>(null);
   const [outcomes, setOutcomes] = useState<Record<string, ListOutcome>>({});
-  const { read } = host;
+  const { read, subscribe } = host;
+  // The engine shares the lists' revision: once it changed, the lists are
+  // read again.
+  useEffect(
+    () =>
+      subscribe?.((change) => {
+        if (change === "engine") setReads((count) => count + 1);
+      }),
+    [subscribe],
+  );
   useEffect(() => {
     let current = true;
     read().then(
@@ -109,6 +188,95 @@ export function useLocalModels(
     setReads((count) => count + 1);
   }, []);
   return { snapshot, retry, busy, outcomes, change };
+}
+
+export type EngineSnapshot =
+  | { kind: "none" }
+  | { kind: "loading" }
+  | { kind: "failed"; code: string }
+  | { kind: "ready"; value: AgentLocalEngine };
+
+export type LocalEngineState = {
+  snapshot: EngineSnapshot;
+  /** The engine and placement as read, null until a readable record. */
+  value: AgentLocalEngine | null;
+  /** True while a change is being stored. */
+  busy: boolean;
+  /** The last change's refusal code, if it was refused. */
+  refusal: string | null;
+  change: (
+    engine: AgentLocalEngineToken,
+    placement: AgentLocalPlacement,
+  ) => Promise<boolean>;
+};
+
+/** The local engine and placement of `host`, read again after any change to
+ * the lists or the engine made through the host: they share one revision. */
+export function useLocalEngine(host: LocalModelHost | null): LocalEngineState {
+  const source = host?.engine ?? null;
+  const subscribe = host?.subscribe;
+  const [snapshot, setSnapshot] = useState<EngineSnapshot>({ kind: "none" });
+  const [reads, setReads] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [refusal, setRefusal] = useState<string | null>(null);
+  useEffect(
+    () => subscribe?.(() => setReads((count) => count + 1)),
+    [subscribe],
+  );
+  useEffect(() => {
+    if (!source) {
+      setSnapshot({ kind: "none" });
+      return;
+    }
+    let current = true;
+    source.read().then(
+      (value) => {
+        if (current) setSnapshot({ kind: "ready", value });
+      },
+      (error: unknown) => {
+        if (current) setSnapshot({ kind: "failed", code: failureCode(error) });
+      },
+    );
+    return () => {
+      current = false;
+    };
+  }, [source, reads]);
+  const change = useCallback(
+    async (
+      engine: AgentLocalEngineToken,
+      placement: AgentLocalPlacement,
+    ): Promise<boolean> => {
+      if (!source || snapshot.kind !== "ready" || busy) return false;
+      setBusy(true);
+      setRefusal(null);
+      try {
+        const value = await source.choose(
+          engine,
+          placement,
+          snapshot.value.revision,
+        );
+        setSnapshot({ kind: "ready", value });
+        return true;
+      } catch (error: unknown) {
+        const code = failureCode(error);
+        setRefusal(code);
+        // Another change came first: what is stored now is read again.
+        if (code === "agent_local_models_revision_conflict")
+          setReads((count) => count + 1);
+        return false;
+      } finally {
+        setBusy(false);
+      }
+    },
+    [source, snapshot, busy],
+  );
+  return {
+    snapshot,
+    value: snapshot.kind === "ready" ? snapshot.value : null,
+    busy,
+    refusal,
+    change,
+  };
 }
 
 /**

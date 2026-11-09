@@ -353,7 +353,7 @@ async def test_a_filed_declaration_draws_no_attention_mark_but_keeps_its_origin_
     draft_lines = await _drawn(draft)
     filed_lines = await _drawn(filed)
     with override_settings(cadrumo_output_language="en"):
-        words = origin_words(box(filed, "65").field)
+        words = box(filed, "65").origin_words
     row = next(line for line in filed_lines if "[65]" in line)
     assert f" {words}" in row
     waiting = _heading_over(filed, "65")

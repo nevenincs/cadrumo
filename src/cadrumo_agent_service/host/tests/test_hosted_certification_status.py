@@ -12,6 +12,7 @@ from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from ... import service as service_module
 from ...providers.application.ports import ProviderCatalogUnavailableError, ProviderCatalogUnavailableReason
+from ...providers.domain.record import LocalEngine
 from ...service import AgentService
 from ..controller import AgentGenerations, AgentHostController, AgentHostState, AgentReady
 
@@ -39,6 +40,7 @@ def _ready() -> AgentReady:
 def _service(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> AgentService:
     client = SimpleNamespace(lease=object(), connection=SimpleNamespace(close=lambda: None))
     service = AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
         client=cast(InstalledServiceClient, client),
         storage_root=tmp_path,
         gateway_bearer=bytearray(b"synthetic-gateway-bearer"),

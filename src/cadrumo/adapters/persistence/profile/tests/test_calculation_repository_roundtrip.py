@@ -565,6 +565,77 @@ def test_guarded_read_observes_another_repository_replacing_the_catalogue(tmp_pa
     assert first_revision_id != second_revision_id
 
 
+def _count_validations(monkeypatch: pytest.MonkeyPatch) -> list[bytes]:
+    """Record each full decode of stored catalogue bytes while still performing it."""
+    validated: list[bytes] = []
+    original = CalculationRevisionCatalogueRepository._validated_catalogue
+
+    def validate(
+        repository: CalculationRevisionCatalogueRepository,
+        payload: bytes,
+        **options: Any,
+    ) -> CalculationRevisionCatalogue:
+        validated.append(payload)
+        return original(repository, payload, **options)
+
+    monkeypatch.setattr(CalculationRevisionCatalogueRepository, "_validated_catalogue", validate)
+    return validated
+
+
+def test_an_unchanged_row_is_decoded_once_per_repository_and_reads_as_a_fresh_repository_does(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    operation = published_authority_operation()
+    snapshot = operation.snapshot("303", filing_year=2026, period="1T")
+    rendering = CalculationRenderingSnapshot.capture(snapshot, authority_generation=operation.pin().logical_generation)
+    original = _populated_catalogue(rendering_snapshot=rendering)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _seed_parent_work_unit(profile)
+        CalculationRevisionCatalogueRepository(objects=profile.repository).save(original)
+        repo = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        validated = _count_validations(monkeypatch)
+        with validating_governed_facts(operation):
+            first, first_revision_id = repo.load_revisioned(operation=operation)
+            second, second_revision_id = repo.load_revisioned(operation=operation)
+            assert len(validated) == 1
+            fresh, fresh_revision_id = CalculationRevisionCatalogueRepository(
+                objects=profile.repository
+            ).load_revisioned(operation=operation)
+
+    assert len(validated) == 2
+    assert first == second == fresh == original
+    assert first_revision_id == second_revision_id == fresh_revision_id
+
+
+def test_a_saved_row_or_another_madrid_day_decodes_the_stored_bytes_again(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from .. import modelos_calculation
+
+    operation = published_authority_operation()
+    original = _populated_catalogue()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _seed_parent_work_unit(profile)
+        repo = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        repo.save(original)
+        validated = _count_validations(monkeypatch)
+        _warm, warm_revision_id = repo.load_revisioned(operation=operation)
+
+        replacement = _populated_catalogue(source_issues=(_tier_divergence_issue(),))
+        CalculationRevisionCatalogueRepository(objects=profile.repository).save(replacement)
+        replaced, replaced_revision_id = repo.load_revisioned(operation=operation)
+        assert len(validated) == 2
+        assert replaced == replacement
+        assert replaced_revision_id != warm_revision_id
+
+        later = modelos_calculation.today_madrid() + timedelta(days=1)
+        monkeypatch.setattr(modelos_calculation, "today_madrid", lambda: later)
+        assert repo.load_revisioned(operation=operation)[0] == replacement
+        assert len(validated) == 3
+        assert repo.load_revisioned(operation=operation)[0] == replacement
+        assert len(validated) == 3
+
+
 @pytest.mark.parametrize("revisioned", (False, True))
 @pytest.mark.parametrize("payload", (b"\xff", b'{"private-taxpayer-marker":', b"{}"))
 def test_invalid_catalogue_bytes_have_the_same_redacted_refusal(

@@ -16,8 +16,16 @@ import {
   catalogReadRetry,
 } from "./catalogReadPolicy";
 import { useAgentStatus } from "./agentLive";
-import { catalogLanes, type CatalogLane } from "./localModelLanes";
-import type { LocalModelHost } from "./localModels";
+import {
+  catalogLanes,
+  lanesForEngine,
+  type CatalogLane,
+} from "./localModelLanes";
+import {
+  localModelHostOf,
+  useLocalEngine,
+  type LocalModelHost,
+} from "./localModels";
 import type { ProviderSettings } from "./providerSettings";
 
 // The local AI's model lists outside the agent column: the lanes that need
@@ -208,24 +216,15 @@ export function useLocalAiLanes(
               : "unavailable",
         };
   const retry = useCallback(() => setRetries((count) => count + 1), []);
-  const host = useMemo((): LocalModelHost | null => {
-    if (
-      !available ||
-      !session?.localModels ||
-      !session.addLocalModel ||
-      !session.removeLocalModel ||
-      !session.resetLocalModels
-    )
-      return null;
-    return {
-      read: session.localModels.bind(session),
-      add: session.addLocalModel.bind(session),
-      remove: session.removeLocalModel.bind(session),
-      reset: session.resetLocalModels.bind(session),
-    };
-  }, [session, available]);
+  const host = useMemo(
+    (): LocalModelHost | null =>
+      available ? localModelHostOf(session ?? undefined) : null,
+    [session, available],
+  );
+  const engine = useLocalEngine(host);
   return {
-    lanes: read.kind === "ready" ? read.value : [],
+    lanes:
+      read.kind === "ready" ? lanesForEngine(read.value, engine.value) : [],
     host,
     status:
       read.kind === "ready"

@@ -123,15 +123,19 @@ class ModeloEditDetailRowIntentKind(StrEnum):
 
 
 class ModeloEditBindingIntentKind(StrEnum):
-    """The two distinct binding-override edit intents; address absence means UNCHANGED.
+    """The distinct binding-override edit intents; address absence means UNCHANGED.
 
-    Both act on the ``BindingId``-keyed binding overrides of the revision's
+    Each acts on the ``BindingId``-keyed binding overrides of the revision's
     operator layer: ``SET_OVERRIDE_VALUE`` replaces the operator's override and
     ``REMOVE_OVERRIDE`` withdraws it, so the binding's source tiers win again.
+    ``ATTEST_NO_AMOUNT`` records the operator's statement that a carry from an
+    earlier filing holds no amount: an override of zero the operator layer marks
+    attested, kept apart from a zero typed. Either other intent withdraws it.
     """
 
     SET_OVERRIDE_VALUE = "set_override_value"
     REMOVE_OVERRIDE = "remove_override"
+    ATTEST_NO_AMOUNT = "attest_no_amount"
 
 
 class ModeloEditNonWritableReason(StrEnum):
@@ -788,8 +792,9 @@ class ModeloBindingEditIntentV1(EditModel):
     """One binding-override edit intent; zero and false remain distinct from UNCHANGED.
 
     Addresses ``CalculationRevision.binding_overrides`` directly by
-    ``BindingId``. Never carries a value for ``REMOVE_OVERRIDE``: withdrawing
-    an override is expressed by absence of a value, not a typed zero.
+    ``BindingId``. Never carries a value for ``REMOVE_OVERRIDE`` or
+    ``ATTEST_NO_AMOUNT``: withdrawing an override, and stating that a carry
+    holds no amount, are expressed by absence of a value, not a typed zero.
     """
 
     address: ModeloEditBindingAddressV1

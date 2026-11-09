@@ -7,17 +7,18 @@ import io
 import json
 import tarfile
 import zipfile
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any
 
 import pytest
 
-from dev.env.llamacpp_pins import ServerArchivePin, ServerPins, load_server_pins
+from dev.env.llamacpp_pins import LicensePin, ServerArchivePin, ServerPins, load_server_pins
 
 from ..llama_server import (
     ARCHIVE_DIRECTORY,
     LICENSE_DIRECTORY,
+    LICENSE_NAME,
     PROGRAM_DIRECTORY,
     RECEIPT_NAME,
     ArchiveMismatchError,
@@ -25,7 +26,7 @@ from ..llama_server import (
     LlamaServerError,
     UnresolvedImportError,
     acquire_llama_server,
-    fetch_archive,
+    fetch_pinned,
     pin_for_target,
     require_resolved_imports,
     stage_llama_server,
@@ -38,6 +39,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _LAYOUT = {"llama_server": "bin/llama", "docs": "docs"}
 _TAG = "b1"
+_LICENSE_TEXT = b"MIT License\n\nCopyright (c) the ggml authors (test)\n"
 
 
 def _pins(target: str, archive_format: str, executable: str, content: bytes) -> ServerPins:
@@ -46,7 +48,7 @@ def _pins(target: str, archive_format: str, executable: str, content: bytes) -> 
         "program": "llama-server",
         "repository": "ggml-org/llama.cpp",
         "tag": _TAG,
-        "hosts": ["github.com"],
+        "hosts": ["github.com", "raw.githubusercontent.com"],
         "archives": [
             {
                 "target": target,
@@ -58,8 +60,22 @@ def _pins(target: str, archive_format: str, executable: str, content: bytes) -> 
                 "sha256": hashlib.sha256(content).hexdigest(),
             }
         ],
+        "license": {
+            "url": f"https://raw.githubusercontent.com/ggml-org/llama.cpp/{_TAG}/LICENSE",
+            "download_bytes": len(_LICENSE_TEXT),
+            "sha256": hashlib.sha256(_LICENSE_TEXT).hexdigest(),
+        },
     }
     return load_server_pins(json.dumps(document))
+
+
+def _serving(archive: bytes, notice: bytes = _LICENSE_TEXT) -> Callable[[object, tuple[str, ...]], bytes]:
+    """A fetch that answers the pinned licence with ``notice`` and the archive with ``archive``."""
+
+    def fetch(pin: object, _hosts: tuple[str, ...]) -> bytes:
+        return notice if isinstance(pin, LicensePin) else archive
+
+    return fetch
 
 
 def _zip(members: Mapping[str, bytes]) -> bytes:
@@ -105,7 +121,7 @@ def _windows_archive(tmp_path: Path) -> bytes:
     return _zip({path.name: path.read_bytes() for path in sorted(images.iterdir())})
 
 
-def _linux_archive(tmp_path: Path, *, glibc: tuple[str, ...] = ("2.17",)) -> bytes:
+def _linux_archive(tmp_path: Path, *, glibc: tuple[str, ...] = ("2.17",), notice: bytes = _LICENSE_TEXT) -> bytes:
     images = tmp_path / "linux-images"
     images.mkdir()
     elf_with_requirements(images / "llama-server", needed=("libllama.so.0", "libc.so.6"), glibc=glibc)
@@ -114,7 +130,7 @@ def _linux_archive(tmp_path: Path, *, glibc: tuple[str, ...] = ("2.17",)) -> byt
     elf_with_requirements(images / "libggml-cpu-x64.so", needed=("libggml-base.so.0",), glibc=glibc)
     elf_with_requirements(images / "llama-cli", needed=("libllama-cli-impl.so",), glibc=glibc)
     members = {path.name: path.read_bytes() for path in sorted(images.iterdir())}
-    members["LICENSE"] = b"notice"
+    members["LICENSE"] = notice
     links = {
         "libllama.so.0": "libllama.so.0.1.0",
         "libllama.so": "libllama.so.0",
@@ -138,7 +154,7 @@ def _macos_archive(tmp_path: Path, *, executable_needs: tuple[str, ...] | None =
     macho_image(images / "libggml-cpu.0.1.0.dylib", dependencies=("@rpath/libggml-base.0.dylib",))
     macho_image(images / "llama-cli", dependencies=("@rpath/libggml-cpu.0.dylib",))
     members = {path.name: path.read_bytes() for path in sorted(images.iterdir())}
-    members["LICENSE"] = b"notice"
+    members["LICENSE"] = _LICENSE_TEXT
     links = {
         "libllama.0.dylib": "libllama.0.1.0.dylib",
         "libggml-base.0.dylib": "libggml-base.0.1.0.dylib",
@@ -149,7 +165,7 @@ def _macos_archive(tmp_path: Path, *, executable_needs: tuple[str, ...] | None =
 
 def _acquire(tmp_path: Path, target: str, archive_format: str, executable: str, content: bytes) -> Path:
     pins = _pins(target, archive_format, executable, content)
-    return acquire_llama_server(tmp_path / "acquired", target, pins=pins, fetch=lambda _pin, _hosts: content)
+    return acquire_llama_server(tmp_path / "acquired", target, pins=pins, fetch=_serving(content))
 
 
 def _receipt(tree: Path) -> dict[str, Any]:
@@ -169,7 +185,7 @@ def test_a_windows_archive_keeps_the_launcher_its_libraries_and_the_backends_bes
         "llama-server-impl.dll",
         "llama-server.exe",
     ]
-    assert sorted(receipt["licenses"]) == ["LICENSE-LLVM-OpenMP"]
+    assert sorted(receipt["licenses"]) == [LICENSE_NAME, "LICENSE-LLVM-OpenMP"]
     assert receipt["host_libraries"] == ["kernel32.dll", "vcruntime140.dll"]
     assert not (tree / "extraction").exists()
     assert (tree / ARCHIVE_DIRECTORY / "llama-b1-test.zip").read_bytes() == content
@@ -209,7 +225,7 @@ def test_a_macos_launcher_that_links_a_library_the_archive_lacks_is_refused(tmp_
     pins = _pins("macos-arm64", "tar.gz", "llama-b1/llama-server", content)
 
     with pytest.raises(ArchiveMismatchError, match=r"libmissing\.0\.dylib, which the archive does not hold"):
-        acquire_llama_server(tmp_path / "acquired", "macos-arm64", pins=pins, fetch=lambda _pin, _hosts: content)
+        acquire_llama_server(tmp_path / "acquired", "macos-arm64", pins=pins, fetch=_serving(content))
 
 
 def test_bytes_that_differ_from_the_pin_are_refused_and_never_cached(tmp_path: Path) -> None:
@@ -218,7 +234,7 @@ def test_bytes_that_differ_from_the_pin_are_refused_and_never_cached(tmp_path: P
     tampered = pinned[:-1] + bytes([pinned[-1] ^ 1])
 
     with pytest.raises(ArchiveMismatchError, match="does not match its pin"):
-        acquire_llama_server(tmp_path / "acquired", "windows-x86-64", pins=pins, fetch=lambda _pin, _hosts: tampered)
+        acquire_llama_server(tmp_path / "acquired", "windows-x86-64", pins=pins, fetch=_serving(tampered))
 
     assert not list((tmp_path / "acquired" / ARCHIVE_DIRECTORY).glob("*"))
     assert not (tmp_path / "acquired" / PROGRAM_DIRECTORY).exists()
@@ -230,9 +246,7 @@ def test_a_wrong_size_alone_is_refused(tmp_path: Path) -> None:
     pins = _pins("windows-x86-64", "zip", "llama-server.exe", pinned)
 
     with pytest.raises(ArchiveMismatchError, match=f"got {len(pinned) + 1} bytes"):
-        acquire_llama_server(
-            tmp_path / "acquired", "windows-x86-64", pins=pins, fetch=lambda _pin, _hosts: pinned + b"\0"
-        )
+        acquire_llama_server(tmp_path / "acquired", "windows-x86-64", pins=pins, fetch=_serving(pinned + b"\0"))
 
 
 def test_a_verified_archive_is_kept_and_a_damaged_one_is_fetched_again(tmp_path: Path) -> None:
@@ -240,18 +254,21 @@ def test_a_verified_archive_is_kept_and_a_damaged_one_is_fetched_again(tmp_path:
     pins = _pins("windows-x86-64", "zip", "llama-server.exe", content)
     fetched: list[str] = []
 
-    def fetch(pin: ServerArchivePin, _hosts: tuple[str, ...]) -> bytes:
+    def fetch(pin: ServerArchivePin | LicensePin, _hosts: tuple[str, ...]) -> bytes:
+        if isinstance(pin, LicensePin):
+            fetched.append("licence")
+            return _LICENSE_TEXT
         fetched.append(pin.target)
         return content
 
     destination = tmp_path / "acquired"
     acquire_llama_server(destination, "windows-x86-64", pins=pins, fetch=fetch)
     acquire_llama_server(destination, "windows-x86-64", pins=pins, fetch=fetch)
-    assert fetched == ["windows-x86-64"]
+    assert fetched == ["windows-x86-64", "licence"]
 
     (destination / ARCHIVE_DIRECTORY / "llama-b1-test.zip").write_bytes(b"damaged")
     acquire_llama_server(destination, "windows-x86-64", pins=pins, fetch=fetch)
-    assert fetched == ["windows-x86-64", "windows-x86-64"]
+    assert fetched == ["windows-x86-64", "licence", "windows-x86-64"]
     assert (destination / ARCHIVE_DIRECTORY / "llama-b1-test.zip").read_bytes() == content
 
 
@@ -262,7 +279,7 @@ def test_a_linux_archive_built_for_a_newer_glibc_than_the_floor_is_refused_befor
     pins = _pins("linux-x86-64", "tar.gz", "llama-b1/llama-server", content)
 
     with pytest.raises(GlibcFloorError, match=r"glibc 2\.34 and the linux-x86-64 floor is glibc 2\.28") as refused:
-        acquire_llama_server(tmp_path / "acquired", "linux-x86-64", pins=pins, fetch=lambda _pin, _hosts: content)
+        acquire_llama_server(tmp_path / "acquired", "linux-x86-64", pins=pins, fetch=_serving(content))
 
     assert "llama-server (glibc 2.34)" in str(refused.value)
     assert "Nothing is staged" in str(refused.value)
@@ -295,7 +312,7 @@ def test_an_archive_that_could_write_or_link_outside_its_directory_is_refused(
     pins = _pins("macos-arm64", "tar.gz", "llama-b1/llama-server", content)
 
     with pytest.raises(ArchiveMismatchError, match=message):
-        acquire_llama_server(tmp_path / "acquired", "macos-arm64", pins=pins, fetch=lambda _pin, _hosts: content)
+        acquire_llama_server(tmp_path / "acquired", "macos-arm64", pins=pins, fetch=_serving(content))
 
 
 def test_a_download_is_refused_unless_every_host_is_pinned(tmp_path: Path) -> None:
@@ -303,7 +320,7 @@ def test_a_download_is_refused_unless_every_host_is_pinned(tmp_path: Path) -> No
     pin = pin_for_target(_pins("windows-x86-64", "zip", "llama-server.exe", content), "windows-x86-64")
 
     with pytest.raises(ArchiveMismatchError, match=r"leaves the pinned HTTPS hosts at github\.com"):
-        fetch_archive(pin, ())
+        fetch_pinned(pin, ())
 
 
 def test_a_target_without_a_pin_is_refused() -> None:
@@ -322,20 +339,20 @@ def test_every_enrolled_native_target_has_a_committed_pin(target: str) -> None:
 def test_an_acquired_tree_is_staged_with_its_licence_and_the_package_holds_no_link(tmp_path: Path) -> None:
     content = _linux_archive(tmp_path)
     pins = _pins("linux-x86-64", "tar.gz", "llama-b1/llama-server", content)
-    tree = acquire_llama_server(tmp_path / "acquired", "linux-x86-64", pins=pins, fetch=lambda _pin, _hosts: content)
+    tree = acquire_llama_server(tmp_path / "acquired", "linux-x86-64", pins=pins, fetch=_serving(content))
     root = tmp_path / "package"
 
     receipt = stage_llama_server(tree, root, _LAYOUT, "linux-x86-64", pins=pins)
 
     assert sorted(path.name for path in (root / "bin/llama").iterdir()) == sorted(receipt.files)
-    assert (root / "docs/licenses/llama.cpp/LICENSE").read_bytes() == b"notice"
+    assert (root / "docs/licenses/llama.cpp/LICENSE").read_bytes() == _LICENSE_TEXT
     assert not [path for path in root.rglob("*") if path.is_symlink()]
 
 
 def test_staging_refuses_a_file_that_differs_from_the_receipt(tmp_path: Path) -> None:
     content = _linux_archive(tmp_path)
     pins = _pins("linux-x86-64", "tar.gz", "llama-b1/llama-server", content)
-    tree = acquire_llama_server(tmp_path / "acquired", "linux-x86-64", pins=pins, fetch=lambda _pin, _hosts: content)
+    tree = acquire_llama_server(tmp_path / "acquired", "linux-x86-64", pins=pins, fetch=_serving(content))
     (tree / PROGRAM_DIRECTORY / "libllama.so.0").write_bytes(b"replaced")
 
     with pytest.raises(ArchiveMismatchError, match="differ from the receipt"):
@@ -347,7 +364,7 @@ def test_staging_refuses_a_file_that_differs_from_the_receipt(tmp_path: Path) ->
 def test_staging_refuses_an_unreceipted_extra_file(tmp_path: Path) -> None:
     content = _linux_archive(tmp_path)
     pins = _pins("linux-x86-64", "tar.gz", "llama-b1/llama-server", content)
-    tree = acquire_llama_server(tmp_path / "acquired", "linux-x86-64", pins=pins, fetch=lambda _pin, _hosts: content)
+    tree = acquire_llama_server(tmp_path / "acquired", "linux-x86-64", pins=pins, fetch=_serving(content))
     (tree / PROGRAM_DIRECTORY / "implant.so").write_bytes(b"x")
 
     with pytest.raises(ArchiveMismatchError, match="differ from the receipt"):
@@ -357,7 +374,7 @@ def test_staging_refuses_an_unreceipted_extra_file(tmp_path: Path) -> None:
 def test_staging_refuses_a_tree_acquired_for_another_pin(tmp_path: Path) -> None:
     content = _linux_archive(tmp_path)
     pins = _pins("linux-x86-64", "tar.gz", "llama-b1/llama-server", content)
-    tree = acquire_llama_server(tmp_path / "acquired", "linux-x86-64", pins=pins, fetch=lambda _pin, _hosts: content)
+    tree = acquire_llama_server(tmp_path / "acquired", "linux-x86-64", pins=pins, fetch=_serving(content))
     moved = _pins("linux-x86-64", "tar.gz", "llama-b1/llama-server", content + b"\0")
 
     with pytest.raises(ArchiveMismatchError, match="not the archive pinned for linux-x86-64"):
@@ -374,7 +391,7 @@ def test_staging_refuses_a_missing_receipt(tmp_path: Path) -> None:
 def test_the_native_image_walk_of_a_posix_assembly_reaches_every_staged_program_image(tmp_path: Path) -> None:
     content = _macos_archive(tmp_path)
     pins = _pins("macos-arm64", "tar.gz", "llama-b1/llama-server", content)
-    tree = acquire_llama_server(tmp_path / "acquired", "macos-arm64", pins=pins, fetch=lambda _pin, _hosts: content)
+    tree = acquire_llama_server(tmp_path / "acquired", "macos-arm64", pins=pins, fetch=_serving(content))
     root = tmp_path / "package"
     sdk, native, packages = tmp_path / "sdk", root / "bin", root / "lib"
     for directory in (sdk / "extensions", native, packages):
@@ -404,7 +421,7 @@ def _redistributable(tmp_path: Path) -> dict[str, Path]:
 def _staged_windows(tmp_path: Path, redistributable: dict[str, Path] | None) -> Path:
     content = _windows_archive(tmp_path)
     pins = _pins("windows-x86-64", "zip", "llama-server.exe", content)
-    tree = acquire_llama_server(tmp_path / "acquired", "windows-x86-64", pins=pins, fetch=lambda _pin, _hosts: content)
+    tree = acquire_llama_server(tmp_path / "acquired", "windows-x86-64", pins=pins, fetch=_serving(content))
     root = tmp_path / "package"
     stage_llama_server(tree, root, _LAYOUT, "windows-x86-64", pins=pins, redistributable=redistributable)
     return root / "bin/llama"
@@ -462,3 +479,65 @@ def test_a_program_without_pe_images_has_nothing_to_resolve(tmp_path: Path) -> N
     elf_with_requirements(program / "llama-server", needed=("libc.so.6",))
 
     assert require_resolved_imports(program) == ()
+
+
+def test_a_windows_package_holds_the_pinned_llama_cpp_licence_beside_the_archive_notices(tmp_path: Path) -> None:
+    program = _staged_windows(tmp_path, _redistributable(tmp_path))
+    notices = program.parent.parent / "docs/licenses/llama.cpp"
+
+    assert sorted(path.name for path in notices.iterdir()) == [LICENSE_NAME, "LICENSE-LLVM-OpenMP"]
+    assert (notices / LICENSE_NAME).read_bytes() == _LICENSE_TEXT
+
+
+def test_a_licence_download_that_differs_from_its_pin_is_refused(tmp_path: Path) -> None:
+    content = _windows_archive(tmp_path)
+    pins = _pins("windows-x86-64", "zip", "llama-server.exe", content)
+
+    with pytest.raises(ArchiveMismatchError, match=r"the llama.cpp licence does not match its pin"):
+        acquire_llama_server(
+            tmp_path / "acquired", "windows-x86-64", pins=pins, fetch=_serving(content, _LICENSE_TEXT + b"x")
+        )
+    assert not (tmp_path / "acquired" / LICENSE_DIRECTORY).exists()
+
+
+def test_an_archive_whose_own_licence_differs_from_the_pinned_one_is_refused(tmp_path: Path) -> None:
+    content = _linux_archive(tmp_path, notice=b"MIT License\nother\n")
+    pins = _pins("linux-x86-64", "tar.gz", "llama-b1/llama-server", content)
+
+    with pytest.raises(ArchiveMismatchError, match="carries a LICENSE that differs from the pinned licence"):
+        acquire_llama_server(tmp_path / "acquired", "linux-x86-64", pins=pins, fetch=_serving(content))
+
+
+def _rewrite_receipt_licences(tree: Path, licences: dict[str, str]) -> None:
+    receipt = _receipt(tree)
+    receipt["licenses"] = licences
+    (tree / RECEIPT_NAME).write_text(json.dumps(receipt), encoding="utf-8")
+
+
+def test_staging_refuses_a_tree_whose_notices_lack_the_pinned_licence(tmp_path: Path) -> None:
+    content = _windows_archive(tmp_path)
+    pins = _pins("windows-x86-64", "zip", "llama-server.exe", content)
+    tree = acquire_llama_server(tmp_path / "acquired", "windows-x86-64", pins=pins, fetch=_serving(content))
+    (tree / LICENSE_DIRECTORY / LICENSE_NAME).unlink()
+    licences = dict(_receipt(tree)["licenses"])
+    del licences[LICENSE_NAME]
+    _rewrite_receipt_licences(tree, licences)
+
+    with pytest.raises(ArchiveMismatchError, match=r"do not hold the pinned llama.cpp LICENSE"):
+        stage_llama_server(tree, tmp_path / "package", _LAYOUT, "windows-x86-64", pins=pins)
+    assert not (tmp_path / "package").exists()
+
+
+def test_staging_refuses_a_tree_whose_licence_is_not_the_pinned_text(tmp_path: Path) -> None:
+    content = _windows_archive(tmp_path)
+    pins = _pins("windows-x86-64", "zip", "llama-server.exe", content)
+    tree = acquire_llama_server(tmp_path / "acquired", "windows-x86-64", pins=pins, fetch=_serving(content))
+    replaced = b"Some other licence\n"
+    (tree / LICENSE_DIRECTORY / LICENSE_NAME).write_bytes(replaced)
+    licences = dict(_receipt(tree)["licenses"])
+    licences[LICENSE_NAME] = hashlib.sha256(replaced).hexdigest()
+    _rewrite_receipt_licences(tree, licences)
+
+    with pytest.raises(ArchiveMismatchError, match=r"do not hold the pinned llama.cpp LICENSE"):
+        stage_llama_server(tree, tmp_path / "package", _LAYOUT, "windows-x86-64", pins=pins)
+    assert not (tmp_path / "package").exists()

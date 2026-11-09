@@ -97,6 +97,18 @@ def project_casilla_field(
         legal_refs=row.legal_refs,
         also_appears_on=also_appears_on,
         standing=field_standing(origin, blockers, recorded=context.filed),
+        stated_absent=(
+            next(
+                (
+                    context.stated[bound.binding_id]
+                    for bound in row.concrete_bindings[:1]
+                    if bound.binding_id in context.stated
+                ),
+                None,
+            )
+            if origin in {ModeloFormOrigin.ENTERED, ModeloFormOrigin.OVERRIDES_SOURCE}
+            else None
+        ),
     )
 
 
@@ -259,6 +271,7 @@ def project_binding_field(binding_id: str, context: WorkFormContext) -> ModeloFo
         ),
         legal_refs=tuple(binding.legal_refs),
         standing=field_standing(origin, recorded=context.filed),
+        stated_absent=context.stated.get(binding.id) if origin is ModeloFormOrigin.ENTERED else None,
     )
 
 

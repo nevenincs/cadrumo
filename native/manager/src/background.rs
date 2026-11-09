@@ -1,15 +1,26 @@
 //! Lifetime of one admitted manager, independent of the native event loop.
+//!
+//! The manager runs the local AI server of the engine the person's selection record names,
+//! and follows the record. An absent record is automatic placement on the engine the
+//! package makes the default: llama.cpp where it carries the llama-server, Ollama
+//! otherwise. A stored choice is kept whatever the package carries, and a record that
+//! cannot be read runs no server at all. A rewrite of the record is noticed through a watch
+//! of the storage root, on Windows, or at a bounded pace elsewhere. A rewrite that names
+//! another engine stops the running server before the other engine's starts; one that
+//! changes only the placement under llama.cpp reaches the running server's preset, which
+//! drains and starts again once it holds no model.
 
 use crate::{
     diagnostics,
     installed::InstalledRuntime,
+    local_engine::{LocalEngineSelection, Recorded},
     session::{
         ManagerSession,
         ownership::{BootRecordLocator, Ownership, StartKind},
     },
     startup::{self, Running, Start},
     supervision::{
-        local_ai::LocalAiHost,
+        local_ai::{LocalAiHost, server_address},
         stop::PlatformStopSignal,
         supervisor::{
             Collaborators, EVENT_QUEUE, Event, Outcome, Request, SessionActivity, SupervisorConfig,
@@ -23,6 +34,8 @@ use cadrumo_application::{
 };
 use std::{
     io,
+    net::SocketAddr,
+    path::{Path, PathBuf},
     sync::Arc,
     time::{Duration, Instant},
 };
@@ -34,6 +47,10 @@ const EVENTS_PER_POLL: usize = 64;
 const OWNERSHIP_PACE: Duration = Duration::from_secs(1);
 // Pacing: a full supervisor input queue publishes no notification when it drains.
 const CONTROL_RETRY: Duration = Duration::from_millis(100);
+// Pacing: where no directory notification exists, the selection record is read again at
+// this interval.
+#[cfg(not(windows))]
+const SELECTION_PACE: Duration = Duration::from_secs(2);
 
 pub struct Background {
     installed: InstalledRuntime,
@@ -64,7 +81,7 @@ pub struct Background {
     /// A refused uninstall stop is retried at the control pace.
     stop_retry: Option<Instant>,
     /// The selected engine's local AI server, for a package that carries its program.
-    local_ai: Option<LocalAiHost>,
+    local_ai: LocalAi,
 }
 
 impl Background {
@@ -75,16 +92,11 @@ impl Background {
         diagnostics: Arc<Diagnostics>,
         initial: StartKind,
     ) -> io::Result<Self> {
-        // The person's engine selection does not reach the manager yet, so the default
-        // engine's server runs.
-        let engine = LocalEngine::default();
-        let local_ai = installed.target.package_root().and_then(|package| {
-            LocalAiHost::for_package(package, installed.target.storage_root(), engine)
-                .inspect_err(|reason| {
-                    diagnostics::local_ai_unavailable(&diagnostics, engine, *reason);
-                })
-                .ok()
-        });
+        let local_ai = LocalAi::start(
+            installed.target.package_root(),
+            installed.target.storage_root(),
+            &diagnostics,
+        );
         let ownership = Ownership::new(
             installed.target.storage_root().to_path_buf(),
             session,
@@ -158,6 +170,7 @@ impl Background {
         {
             watch.readiness(into);
         }
+        self.local_ai.changes.readiness(into);
         if let Some(deadline) = self.next_deadline() {
             into.at(deadline);
         }
@@ -171,6 +184,9 @@ impl Background {
         }
         deadlines.extend(self.control_retry);
         deadlines.extend(self.stop_retry);
+        // Where no notification says the selection record changed, its paced look is due.
+        #[cfg(not(windows))]
+        deadlines.push(self.local_ai.changes.next_look);
         if self.running.is_none() && !self.start_withheld() {
             deadlines.push(self.next_start.unwrap_or_else(Instant::now));
         }
@@ -278,9 +294,7 @@ impl Background {
     /// The local AI server stops with the runtime's supervision and starts nothing
     /// until supervision resumes. Its own thread carries the stop out.
     fn stop_local_ai(&mut self) {
-        if let Some(local_ai) = &mut self.local_ai {
-            local_ai.stop();
-        }
+        self.local_ai.stop();
     }
 
     pub fn poll(&mut self) -> io::Result<()> {
@@ -304,6 +318,8 @@ impl Background {
         if self.quitting || self.suspended {
             self.stop_local_ai();
         }
+        self.local_ai
+            .follow(&self.diagnostics, self.quitting || self.suspended);
         if let Some(running) = &mut self.running {
             self.backlog = drain_events(
                 running,
@@ -441,9 +457,7 @@ impl Background {
             return Err(io::ErrorKind::WouldBlock.into());
         }
         crate::failed_versions::FailedVersions::retry(self.installed.target.storage_root())?;
-        if let Some(local_ai) = &self.local_ai {
-            local_ai.retry();
-        }
+        self.local_ai.retry();
         self.blocked = false;
         self.update_failed = false;
         self.next_start = None;
@@ -580,10 +594,8 @@ impl Background {
     pub fn cancel_session_end(&mut self) {
         // A still-settling supervisor must exit before a fresh one may start.
         self.session_end.cancel(&mut self.suspended, self.quitting);
-        if !self.quitting
-            && let Some(local_ai) = &mut self.local_ai
-        {
-            local_ai.resume();
+        if !self.quitting {
+            self.local_ai.resume(&self.diagnostics);
         }
         self.next_start = None;
         self.diagnostics.lifecycle(
@@ -592,6 +604,180 @@ impl Background {
             LifecycleFact::SessionEndCancelled {},
             None,
         );
+    }
+}
+
+/// Notices a rewrite of the selection record in the storage root.
+struct SelectionChanges {
+    /// The storage root, whose entries' names and writes the watch reports. A notification
+    /// says only that something changed; the record is read again.
+    #[cfg(windows)]
+    watch: crate::change_watch::ChangeWatch,
+    #[cfg(not(windows))]
+    next_look: Instant,
+    /// A change was noticed that has not been acted on yet.
+    dirty: bool,
+}
+
+impl SelectionChanges {
+    fn new(root: &Path) -> Self {
+        #[cfg(windows)]
+        let watch = {
+            let mut watch = crate::change_watch::ChangeWatch::default();
+            watch.directory(root.to_path_buf(), false);
+            watch
+        };
+        #[cfg(not(windows))]
+        let _ = root;
+        Self {
+            #[cfg(windows)]
+            watch,
+            #[cfg(not(windows))]
+            next_look: Instant::now() + SELECTION_PACE,
+            dirty: false,
+        }
+    }
+
+    /// Takes what the watch noticed since the last call.
+    #[cfg(windows)]
+    fn look(&mut self) {
+        self.dirty |= self.watch.take();
+    }
+
+    /// Takes the pace's due look, since nothing here notices a rewrite.
+    #[cfg(not(windows))]
+    fn look(&mut self) {
+        if Instant::now() >= self.next_look {
+            self.next_look = Instant::now() + SELECTION_PACE;
+            self.dirty = true;
+        }
+    }
+
+    #[cfg(windows)]
+    fn readiness<'a>(&'a self, into: &mut crate::wake::windows::Readiness<'a>) {
+        self.watch.readiness(into);
+    }
+}
+
+/// The local AI server the person's selection names, and the reading of the record it was
+/// started from.
+struct LocalAi {
+    package: Option<PathBuf>,
+    storage_root: PathBuf,
+    /// The server of the applied selection: none for a package that carries no program of
+    /// the selected engine, and none while the record cannot be read.
+    host: Option<LocalAiHost>,
+    applied: Recorded,
+    changes: SelectionChanges,
+    /// The loopback address each engine's server listens on: the package's declared one,
+    /// and in a test one the system has just assigned.
+    address: fn(LocalEngine) -> Option<SocketAddr>,
+}
+
+impl LocalAi {
+    /// Reads the selection record and starts the server it names. The watch is set before
+    /// the first read, so a rewrite in between is noticed.
+    fn start(package: Option<&Path>, storage_root: &Path, diagnostics: &Diagnostics) -> Self {
+        Self::start_at(package, storage_root, diagnostics, server_address)
+    }
+
+    /// [`Self::start`] with each engine's server on the address `address` gives.
+    fn start_at(
+        package: Option<&Path>,
+        storage_root: &Path,
+        diagnostics: &Diagnostics,
+        address: fn(LocalEngine) -> Option<SocketAddr>,
+    ) -> Self {
+        let changes = SelectionChanges::new(storage_root);
+        let applied = LocalEngineSelection::read(storage_root);
+        let mut local_ai = Self {
+            package: package.map(Path::to_path_buf),
+            storage_root: storage_root.to_path_buf(),
+            host: None,
+            applied,
+            changes,
+            address,
+        };
+        local_ai.host = local_ai.build(applied, diagnostics);
+        local_ai
+    }
+
+    /// The server `recorded` names. A record that cannot be read names none, and none runs:
+    /// Ollama must never run where llama.cpp may be the selection.
+    fn build(&self, recorded: Recorded, diagnostics: &Diagnostics) -> Option<LocalAiHost> {
+        let package = self.package.as_deref()?;
+        let Some(selection) = recorded.selection(package) else {
+            diagnostics::local_ai_selection_unreadable(diagnostics);
+            return None;
+        };
+        LocalAiHost::at(
+            package,
+            &self.storage_root,
+            selection.engine,
+            selection.placement,
+            (self.address)(selection.engine),
+        )
+        .inspect_err(|reason| {
+            diagnostics::local_ai_unavailable(diagnostics, selection.engine, *reason);
+        })
+        .ok()
+    }
+
+    /// Applies a rewrite of the record that was noticed, unless the manager is stopping,
+    /// when it waits for supervision to resume. Whether the selection was applied as a new
+    /// server.
+    fn follow(&mut self, diagnostics: &Diagnostics, withheld: bool) -> bool {
+        self.changes.look();
+        if withheld || !self.changes.dirty {
+            return false;
+        }
+        let Some(package) = self.package.clone() else {
+            return false;
+        };
+        self.changes.dirty = false;
+        let recorded = LocalEngineSelection::read(&self.storage_root);
+        if recorded == self.applied {
+            return false;
+        }
+        let previous = std::mem::replace(&mut self.applied, recorded);
+        if let (Some(before), Some(after)) =
+            (previous.selection(&package), recorded.selection(&package))
+            && before.engine == after.engine
+            && let Some(host) = &self.host
+        {
+            // The same engine keeps its server: a changed placement reaches its preset, which
+            // drains and starts again once it holds no model.
+            host.set_placement(after.placement);
+            return false;
+        }
+        // Another engine, or none readable, or no server yet: the running server stops
+        // before the next one starts.
+        drop(self.host.take());
+        self.host = self.build(recorded, diagnostics);
+        true
+    }
+
+    fn stop(&mut self) {
+        if let Some(host) = &mut self.host {
+            host.stop();
+        }
+    }
+
+    /// Supervises again after a stop that did not end the manager. A selection rewritten
+    /// meanwhile starts its own server instead of the stopped one.
+    fn resume(&mut self, diagnostics: &Diagnostics) {
+        if self.follow(diagnostics, false) {
+            return;
+        }
+        if let Some(host) = &mut self.host {
+            host.resume();
+        }
+    }
+
+    fn retry(&self) {
+        if let Some(host) = &self.host {
+            host.retry();
+        }
     }
 }
 
@@ -755,7 +941,16 @@ fn report_failure<T>(diagnostics: &Diagnostics, result: io::Result<T>) -> io::Re
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cadrumo_application::diagnostics::DiagnosticSource;
+    use cadrumo_application::{
+        diagnostics::{
+            DiagnosticSource,
+            lifecycle::{LocalAiEngine, LocalAiUnavailable},
+        },
+        provisioning::{
+            local_ai::{LocalEngine, Placement},
+            pins::Platform,
+        },
+    };
     use std::sync::mpsc;
 
     #[test]
@@ -847,6 +1042,231 @@ mod tests {
         assert_eq!(
             final_events.last().unwrap().lifecycle,
             Some(LifecycleFact::Ready { pid: 576 })
+        );
+    }
+
+    /// The storage root and package of one local AI test, removed when dropped.
+    struct LocalAiScratch(PathBuf);
+
+    impl LocalAiScratch {
+        fn new(name: &str) -> Self {
+            let path = std::env::temp_dir().join(format!(
+                "cadrumo-manager-selection-{name}-{}",
+                std::process::id()
+            ));
+            let _ = std::fs::remove_dir_all(&path);
+            std::fs::create_dir_all(path.join("package")).unwrap();
+            std::fs::create_dir_all(path.join("state")).unwrap();
+            Self(path)
+        }
+
+        fn package(&self) -> PathBuf {
+            self.0.join("package")
+        }
+
+        fn state(&self) -> PathBuf {
+            self.0.join("state")
+        }
+
+        /// Puts a llama-server in the package that cannot get as far as listening.
+        fn carry_llama_server(&self) {
+            #[cfg(windows)]
+            const EXECUTABLE: &str = "llama-server.exe";
+            #[cfg(not(windows))]
+            const EXECUTABLE: &str = "llama-server";
+            let folder = self.package().join(crate::contract::LLAMA_SERVER);
+            std::fs::create_dir_all(&folder).unwrap();
+            let program = folder.join(EXECUTABLE);
+            std::fs::write(&program, b"#!/bin/sh\nexit 3\n").unwrap();
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                std::fs::set_permissions(&program, std::fs::Permissions::from_mode(0o755)).unwrap();
+            }
+        }
+
+        fn choose(&self, engine: LocalEngine, placement: Placement) {
+            LocalEngineSelection::new(engine, placement)
+                .store(&self.state())
+                .unwrap();
+        }
+
+        fn start(&self, diagnostics: &Diagnostics) -> LocalAi {
+            LocalAi::start_at(
+                Some(self.package().as_path()),
+                &self.state(),
+                diagnostics,
+                crate::supervision::local_ai::free_loopback,
+            )
+        }
+    }
+
+    impl Drop for LocalAiScratch {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.0);
+        }
+    }
+
+    /// Every local AI server the manager recorded it could not run.
+    fn unavailable(diagnostics: &Diagnostics) -> Vec<(LocalAiEngine, LocalAiUnavailable)> {
+        diagnostics
+            .snapshot(0)
+            .events
+            .iter()
+            .filter_map(|event| match event.lifecycle {
+                Some(LifecycleFact::LocalAiUnavailable { engine, reason }) => {
+                    Some((engine, reason))
+                }
+                _ => None,
+            })
+            .collect()
+    }
+
+    /// What a package without Ollama's pins reports for Ollama.
+    fn ollama_unpinned() -> LocalAiUnavailable {
+        if Platform::current().is_some() {
+            LocalAiUnavailable::OllamaNotPinned
+        } else {
+            LocalAiUnavailable::Platform
+        }
+    }
+
+    /// Whether the server the manager runs is the llama-server: only its host takes a
+    /// placement.
+    fn runs_llama_server(local_ai: &LocalAi) -> bool {
+        local_ai
+            .host
+            .as_ref()
+            .is_some_and(|host| host.set_placement(Placement::Auto))
+    }
+
+    #[test]
+    fn with_no_record_a_package_that_carries_the_llama_server_runs_it() {
+        let scratch = LocalAiScratch::new("absent-llama");
+        scratch.carry_llama_server();
+        let diagnostics = Diagnostics::new(DiagnosticSource::Manager);
+        let local_ai = scratch.start(&diagnostics);
+        assert_eq!(local_ai.applied, Recorded::Absent);
+        assert!(runs_llama_server(&local_ai));
+        assert_eq!(unavailable(&diagnostics), []);
+    }
+
+    #[test]
+    fn with_no_record_a_package_without_the_llama_server_chooses_ollama() {
+        let scratch = LocalAiScratch::new("absent-ollama");
+        let diagnostics = Diagnostics::new(DiagnosticSource::Manager);
+        let local_ai = scratch.start(&diagnostics);
+        // The package pins no Ollama either, so nothing runs, and Ollama says why.
+        assert!(local_ai.host.is_none());
+        assert_eq!(
+            unavailable(&diagnostics),
+            [(LocalAiEngine::Ollama, ollama_unpinned())]
+        );
+    }
+
+    #[test]
+    fn a_stored_llama_cpp_choice_on_a_package_without_it_is_refused_and_never_ollama() {
+        let scratch = LocalAiScratch::new("chosen-llama");
+        scratch.choose(LocalEngine::LlamaCpp, Placement::Auto);
+        let diagnostics = Diagnostics::new(DiagnosticSource::Manager);
+        let local_ai = scratch.start(&diagnostics);
+        assert!(local_ai.host.is_none());
+        assert_eq!(
+            unavailable(&diagnostics),
+            [(
+                LocalAiEngine::LlamaCpp,
+                LocalAiUnavailable::LlamaServerNotPackaged
+            )]
+        );
+    }
+
+    #[test]
+    fn a_stored_ollama_choice_is_kept_beside_a_packaged_llama_server() {
+        let scratch = LocalAiScratch::new("chosen-ollama");
+        scratch.carry_llama_server();
+        scratch.choose(LocalEngine::Ollama, Placement::CpuOnly);
+        let diagnostics = Diagnostics::new(DiagnosticSource::Manager);
+        let local_ai = scratch.start(&diagnostics);
+        assert!(!runs_llama_server(&local_ai));
+        assert_eq!(
+            unavailable(&diagnostics),
+            [(LocalAiEngine::Ollama, ollama_unpinned())]
+        );
+    }
+
+    #[test]
+    fn an_unreadable_record_runs_no_server_and_says_no_engine_was_selected() {
+        let scratch = LocalAiScratch::new("unreadable");
+        scratch.carry_llama_server();
+        std::fs::write(
+            scratch
+                .state()
+                .join(crate::contract::LOCAL_ENGINE_SELECTION),
+            b"{",
+        )
+        .unwrap();
+        let diagnostics = Diagnostics::new(DiagnosticSource::Manager);
+        let local_ai = scratch.start(&diagnostics);
+        assert_eq!(local_ai.applied, Recorded::Unreadable);
+        assert!(local_ai.host.is_none(), "neither engine runs");
+        assert_eq!(
+            unavailable(&diagnostics),
+            [(
+                LocalAiEngine::Unselected,
+                LocalAiUnavailable::SelectionUnreadable
+            )]
+        );
+    }
+
+    #[test]
+    fn a_rewritten_record_is_followed_by_engine_and_by_placement() {
+        let scratch = LocalAiScratch::new("follow");
+        scratch.carry_llama_server();
+        scratch.choose(LocalEngine::Ollama, Placement::Auto);
+        let diagnostics = Diagnostics::new(DiagnosticSource::Manager);
+        let mut local_ai = scratch.start(&diagnostics);
+        assert!(!runs_llama_server(&local_ai));
+
+        // A noticed rewrite is not applied while the manager is stopping.
+        scratch.choose(LocalEngine::LlamaCpp, Placement::Auto);
+        local_ai.changes.dirty = true;
+        assert!(!local_ai.follow(&diagnostics, true));
+        assert!(!runs_llama_server(&local_ai));
+
+        // Another engine: the running server is replaced by the other engine's.
+        assert!(local_ai.follow(&diagnostics, false));
+        assert!(runs_llama_server(&local_ai));
+
+        // The same engine with another placement keeps its server and passes it on.
+        scratch.choose(LocalEngine::LlamaCpp, Placement::CpuOnly);
+        local_ai.changes.dirty = true;
+        assert!(!local_ai.follow(&diagnostics, false));
+        assert_eq!(
+            local_ai.applied,
+            Recorded::Selected(LocalEngineSelection::new(
+                LocalEngine::LlamaCpp,
+                Placement::CpuOnly
+            ))
+        );
+        assert!(runs_llama_server(&local_ai));
+
+        // A record that can no longer be read stops the server and runs none.
+        std::fs::write(
+            scratch
+                .state()
+                .join(crate::contract::LOCAL_ENGINE_SELECTION),
+            b"{",
+        )
+        .unwrap();
+        local_ai.changes.dirty = true;
+        assert!(local_ai.follow(&diagnostics, false));
+        assert!(local_ai.host.is_none());
+        assert_eq!(
+            unavailable(&diagnostics).last(),
+            Some(&(
+                LocalAiEngine::Unselected,
+                LocalAiUnavailable::SelectionUnreadable
+            ))
         );
     }
 }

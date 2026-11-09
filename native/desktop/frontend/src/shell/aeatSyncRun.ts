@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { AeatSyncAreaId } from "./aeatSync";
 import { aeatSyncFailure } from "./aeatSync";
 import type { AeatSyncReason } from "./aeatSyncResults";
+import { sessionEnded } from "./sessionGate";
 
 // The run of an update from AEAT as the window follows it: which kinds of
 // data are being read, what each part came to, and the few things the person
@@ -152,7 +153,8 @@ export function useAeatSyncRun(
       setStored({ identity, state });
     };
     const read = async () => {
-      if (!alive || !unsubscribe) return;
+      // News after the session ended is about a run nobody is working for.
+      if (!alive || !unsubscribe || sessionEnded()) return;
       if (reading) {
         again = true;
         return;

@@ -9,9 +9,10 @@ use cadrumo_application::{
         connection::Network,
         items::{FULL_CHECK_BUDGET, Locations},
         local_ai::{
+            Placement,
             hardware::Hardware,
             huggingface::{HuggingFaceFile, HuggingFaceModel},
-            llama_server::{self, LOAD_CONTEXT, LlamaServer, Presentation},
+            llama_server::{self, LlamaServer, Presentation},
             loopback::Loopback,
             models::{LocalModels, ModelArtefact, Models, SelectedModel},
             program::{self, Uncontained},
@@ -28,6 +29,7 @@ use cadrumo_application::{
 use serde_json::{Value, json};
 use std::{
     net::{SocketAddr, TcpListener},
+    num::NonZeroU32,
     path::{Path, PathBuf},
     process::{Child, Command, Stdio},
     time::{Duration, Instant},
@@ -149,6 +151,9 @@ const TINY_REVISION: &str = "479896ec924af6d40fd419ab8f4d1eb2101de00d";
 const TINY_FILE: &str = "stories260K-f32.gguf";
 const TINY_SHA256: &str = "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d";
 const TINY_BYTES: u64 = 1_185_376;
+/// The llama.cpp context the tiny model is stated with, which its pull records and the
+/// router's preset loads it with.
+const TINY_CONTEXT: NonZeroU32 = NonZeroU32::new(8192).unwrap();
 /// The most a real program may take to answer after it starts.
 const PROGRAM_WAIT: Duration = Duration::from_secs(120);
 
@@ -182,7 +187,8 @@ fn free_address() -> SocketAddr {
 }
 
 /// Fetches the tiny model into the models folder `root` with the engine's own fetcher,
-/// from Hugging Face itself, and returns it with the folder's `Models`.
+/// from Hugging Face itself, stating its llama.cpp context, and returns it with the
+/// folder's `Models`.
 fn fetch_tiny_model(root: &Path) -> (SelectedModel, Models) {
     let file = HuggingFaceFile::new(TINY_FILE, TINY_SHA256, TINY_BYTES).unwrap();
     let declared = HuggingFaceModel::new(TINY_REPOSITORY, TINY_REVISION, file, None).unwrap();
@@ -190,6 +196,7 @@ fn fetch_tiny_model(root: &Path) -> (SelectedModel, Models) {
         "text_extraction",
         ModelArtefact::HuggingFace(declared),
         None,
+        Some(TINY_CONTEXT),
     )
     .unwrap();
     let models = Models::new(
@@ -238,7 +245,7 @@ fn the_packaged_llama_server_answers_as_the_pinned_build_and_generates_from_a_fe
     let (model, models) = fetch_tiny_model(&locations.models);
     let build = cadrumo_platform::LLAMA_SERVER_BUILD;
     let mut llama =
-        LlamaServer::packaged(&packaged_llama_folder(), build, &locations, LOAD_CONTEXT)
+        LlamaServer::packaged(&packaged_llama_folder(), build, &locations, Placement::Auto)
             .expect("the selected package carries the llama-server");
     llama
         .serve(
@@ -249,6 +256,12 @@ fn the_packaged_llama_server_answers_as_the_pinned_build_and_generates_from_a_fe
         )
         .expect("the router starts, answers ready and reports the pinned build");
     let folder = llama.folder().to_owned();
+    // The preset loads the model with the context its pull recorded.
+    let preset = std::fs::read_to_string(folder.join(llama_server::PRESET)).unwrap();
+    assert!(
+        preset.contains(&format!("ctx-size = {TINY_CONTEXT}\n")),
+        "{preset}"
+    );
     let router = llama.server().expect("the router runs").loopback();
     let name = model.name().to_string();
 
@@ -281,7 +294,19 @@ fn the_packaged_llama_server_answers_as_the_pinned_build_and_generates_from_a_fe
     );
 
     // A load by the model's name, then a completion that reports the tokens it made.
-    llama_server::load(&folder, model.name()).expect("the router loads the model by its name");
+    llama_server::load(&folder, model.name()).expect("the router takes the load by its name");
+    // The router answers a load before the model has loaded: its entry reads loaded later.
+    let loading = Instant::now();
+    while !listed(router).iter().any(|entry| {
+        entry["id"] == llama_server::router_id(&name) && entry["status"]["value"] == "loaded"
+    }) {
+        assert!(
+            loading.elapsed() < FULL_CHECK_BUDGET,
+            "the model never read loaded: {:?}",
+            listed(router)
+        );
+        std::thread::sleep(Duration::from_millis(100));
+    }
     let request = json!({
         "model": name,
         "prompt": "Reply with one word.",

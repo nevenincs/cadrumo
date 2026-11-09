@@ -256,6 +256,7 @@ def group_items(group: SourceGroup, *, staged: Mapping[AddressKey, StagedDisplay
             staged_text=None if change is None else change.text,
             previous_text=None if change is None else change.previous_text,
             recorded=group.recorded,
+            calculated=group.calculated,
         )
 
     items: list[CasillaListItem] = [CasillaListHeading(_group_words(group))]

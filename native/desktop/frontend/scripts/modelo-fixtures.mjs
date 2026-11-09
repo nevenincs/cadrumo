@@ -89,6 +89,7 @@ const CONTRACT_MODULES = [
   "src/shell/modeloContract/modeloWorkCasillaHelp.ts",
   "src/shell/modeloContract/modeloWorkDependencies.ts",
   "src/shell/modeloContract/modeloWorkForm.ts",
+  "src/shell/modeloContract/modeloWorkFormPart2.ts",
   "src/shell/modeloContract/modeloWorkHistory.ts",
   "src/shell/modeloContract/modeloWorkReportVerify.ts",
   "src/shell/modeloContract/modeloWorkReview.ts",

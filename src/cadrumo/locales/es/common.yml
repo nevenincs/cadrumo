@@ -2761,8 +2761,7 @@ desktop:
       whole_counts: Movimientos · todo el libro
     import:
       accepts:
-        bank: CSV, XLSX, XLS, OFX, QFX o PDF · hasta 128 archivos · no se leen las
-          carpetas de dentro
+        bank: '{formats} · hasta 128 archivos · no se leen las carpetas de dentro'
         book: CSV, TSV, XLSX, XLSM o XLS
         documents: PDF, PNG, JPG, TIFF, WEBP, HEIC o XML Facturae, UBL o CII · no
           se leen las carpetas de dentro
@@ -4405,7 +4404,6 @@ desktop:
       list: Retenciones
       show: Ver en el formulario
       show_box: Ver la casilla {box} en el formulario
-      title: Retenciones practicadas sobre tus ingresos
     details:
       close: Cerrar detalles
       hide: Ocultar detalles
@@ -4828,7 +4826,8 @@ desktop:
       cancelled: Has cancelado la configuración.
       damaged_download: La descarga estaba dañada y no se ha podido usar.
       disk_full: No hay suficiente espacio libre en el disco.
-      host_unreachable: No se ha podido contactar con el servidor de descarga.
+      host_unreachable: No se ha podido contactar con el servidor de descarga. Comprueba
+        tu conexión a internet y vuelve a intentarlo.
       interrupted: La configuración se interrumpió antes de terminar.
       memory_busy: Hay demasiada memoria en uso ahora mismo. Cierra otros programas
         y vuelve a intentarlo.
@@ -4841,6 +4840,8 @@ desktop:
       program_not_running: El programa de IA local no está en marcha.
       secure_connection_failed: No se ha podido establecer una conexión segura. Puede
         que un filtro de red lo impida.
+      server_error: El servidor de descarga tiene un problema. Vuelve a intentarlo
+        dentro de unos minutos.
       unexpected: Algo ha salido mal.
     item:
       browser: Navegador
@@ -10596,6 +10597,7 @@ workspace:
       failed_lead: Esperan algo que le faltaba al cálculo. Elige una para ver qué.
       none: Nada de este modelo te necesita.
       profile: 'Antes de calcular este periodo, tu perfil tiene que responder:'
+      sources: 'Antes de calcular esta declaración, faltan las declaraciones que resume:'
       title: Pendiente
     value:
       not_applicable: no aplica
