@@ -4404,7 +4404,6 @@ desktop:
       list: Retenciones
       show: Ver en el formulario
       show_box: Ver la casilla {box} en el formulario
-      title: Retenciones practicadas sobre tus ingresos
     details:
       close: Cerrar detalles
       hide: Ocultar detalles

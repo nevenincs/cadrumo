@@ -128,11 +128,10 @@ async function openCredits(target: Page, language: Language) {
     })
     .click();
   const panel = workspace(target).getByRole("tabpanel");
-  await expect(
-    panel.getByRole("heading", {
-      name: label("desktop.modelo.credits.title", {}, language),
-    }),
-  ).toBeVisible();
+  const heading = (await servedForm(target, language)).form.form
+    .withholding_credits_heading;
+  expect(heading).not.toBeNull();
+  await expect(panel.getByRole("heading", { name: heading! })).toBeVisible();
   return panel;
 }
 
