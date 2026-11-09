@@ -120,13 +120,18 @@ export function reportReactError(): void {
 }
 
 /** What a caller knows of a call it has made. The level of a refusal's record
- * follows its retry class and whether the ask is actually coming, never the
- * command or the wording of the refusal. */
+ * follows its retry class, whether the ask is actually coming and whether the
+ * wait is still the one expected, never the command or the wording of the
+ * refusal. */
 export type CallPlan = {
   /** Whether a refusal with this code is one that passes by waiting. */
   retryable?(code: string): boolean;
   /** Whether the caller will ask again after this refusal. */
   scheduled?(): boolean;
+  /** Whether the wait a scheduled ask is part of is still within the time the
+   * caller expects it to take. Such a refusal is noted below a warning; a
+   * caller that does not say keeps the warning. */
+  expected?(): boolean;
   /** Whether a refusal with this code is one the calling view says in words
    * and offers the next step for: the person is told what to do, and
    * nothing failed. */
@@ -160,9 +165,10 @@ const INTERNAL_FAULT: readonly string[] = [
 function rejectionLevel(
   code: string | null,
   plan: CallPlan | undefined,
-): "WARNING" | "ERROR" {
+): "DEBUG" | "WARNING" | "ERROR" {
   if (code === null) return "ERROR";
-  if (plan?.retryable?.(code) && plan.scheduled?.()) return "WARNING";
+  if (plan?.retryable?.(code) && plan.scheduled?.())
+    return plan.expected?.() ? "DEBUG" : "WARNING";
   if (plan?.answered?.(code)) return "WARNING";
   return REFUSAL_LEVEL[code] ?? "ERROR";
 }
