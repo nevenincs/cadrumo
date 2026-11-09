@@ -47,6 +47,9 @@ export type HistoryNotice = {
     periodCode: string;
     words: string;
   };
+  /** The work unit whose IVA balance a refusal names, and the words that
+   * offer opening it. */
+  ivaWallet?: { workUnitId: string; words: string };
 } | null;
 
 const KIND_ICON: Record<string, IconName> = {

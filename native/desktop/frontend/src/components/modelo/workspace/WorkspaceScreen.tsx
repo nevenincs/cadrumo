@@ -130,6 +130,14 @@ function runNotice(t: Translate, run: OperationRun<unknown>): HistoryNotice {
               },
             }
           : {}),
+        ...(run.step?.kind === "open_iva_wallet"
+          ? {
+              ivaWallet: {
+                workUnitId: run.step.work_unit_id,
+                words: run.step.words,
+              },
+            }
+          : {}),
       };
     case "not_sent":
       return {
@@ -707,6 +715,14 @@ function Ready({
     notice.openingBalance.periodCode === envelope.form.form.period.code
       ? notice.openingBalance
       : null;
+  // The balance door opens only the declaration on screen; a step naming
+  // another work unit offers nothing here.
+  const ivaWalletDoor =
+    notice?.ivaWallet &&
+    hasIvaWallet(envelope) &&
+    notice.ivaWallet.workUnitId === envelope.work_unit_id
+      ? notice.ivaWallet
+      : null;
   const left =
     unresolved &&
     unresolved.revision === envelope.calculation_revision_id &&
@@ -743,6 +759,16 @@ function Ready({
                 }}
               >
                 {openingBalanceDoor.words}
+              </Button>
+            )}
+            {ivaWalletDoor && (
+              <Button
+                variant="link"
+                className="min-h-control-xs"
+                data-refusal-step="open_iva_wallet"
+                onClick={() => setView("credits")}
+              >
+                {ivaWalletDoor.words}
               </Button>
             )}
           </Alert>
