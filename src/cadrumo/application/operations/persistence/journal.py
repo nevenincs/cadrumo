@@ -25,6 +25,7 @@ from ..events import OperationEventCode
 from ..financial_operand_contract import OperationTransientFinancialOperandRequirementV1
 from ..interactions import OperationConsumedInteraction, OperationPendingInteraction
 from ..models import (
+    OperationDefinitionId,
     OperationId,
     OperationIdentity,
     OperationRevision,
@@ -354,6 +355,15 @@ class OperationRecoveryInventoryEntry(BaseModel):
 
     operation_id: OperationId
     disposition: OperationRecoveryInventoryDisposition
+    #: The definition the record was opened for, read with its classification; absent exactly when it is refused.
+    definition_id: OperationDefinitionId | None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _definition_named_unless_refused(self) -> OperationRecoveryInventoryEntry:
+        if (self.definition_id is None) != (self.disposition is OperationRecoveryInventoryDisposition.REFUSED):
+            raise ValueError("an operation inventory entry names its definition exactly when its record was read")
+        return self
 
 
 class OperationRecoveryInventoryPage(BaseModel):
