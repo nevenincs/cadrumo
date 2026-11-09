@@ -396,11 +396,15 @@ impl Containment for GroupContainment {
 mod tests {
     use super::*;
     use crate::local_engine::Recorded;
-    use cadrumo_application::provisioning::local_ai::program::latest_start_failure;
+    use cadrumo_application::provisioning::local_ai::program::{
+        START_BUDGET, latest_start_failure,
+    };
     use std::{fs, path::PathBuf};
 
-    /// The longest a test waits for the supervision to publish a state.
-    const WAIT: Duration = Duration::from_secs(30);
+    /// The longest a test waits for the supervision to publish a state: past a whole server
+    /// start, which takes at most the start budget, with room for a computer that runs other
+    /// work.
+    const WAIT: Duration = START_BUDGET.saturating_add(Duration::from_secs(60));
 
     /// The host of ngine on a loopback port the system has just assigned, never the
     /// package's declared one, which a running Cadrumo holds.

@@ -93,3 +93,25 @@ def test_stream_requires_ready_first(event: str) -> None:
 def test_malformed_frames_never_echo_contents(raw: bytes) -> None:
     with pytest.raises(ValueError, match=r"^invalid_auth_event$"):
         AuthProtocol("example").read(raw)
+
+
+@pytest.mark.parametrize("terminal", ["failed", "cancelled"])
+def test_a_terminal_failure_may_carry_a_closed_cause(terminal: str) -> None:
+    attempt = str(uuid4())
+    protocol = AuthProtocol("example")
+    protocol.read(_event(attempt, "ready"))
+    event = protocol.read(_event(attempt, terminal, reason="provider_error", cause="cli_reported_error"))
+    assert event.cause == "cli_reported_error"
+
+
+@pytest.mark.parametrize(
+    ("event", "cause"),
+    [("failed", "invented_word"), ("failed", "cli_reported_error!"), ("started", "cli_reported_error")],
+    ids=["unknown_word", "unclean_word", "non_terminal_event"],
+)
+def test_a_cause_outside_the_closed_set_or_on_a_live_event_is_refused(event: str, cause: str) -> None:
+    attempt = str(uuid4())
+    protocol = AuthProtocol("example")
+    protocol.read(_event(attempt, "ready"))
+    with pytest.raises(ValueError, match=r"^invalid_auth_event$"):
+        protocol.read(_event(attempt, event, cause=cause))

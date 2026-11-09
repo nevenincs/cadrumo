@@ -9,6 +9,7 @@ const NAME_LIMIT: usize = 100;
 const URL_LIMIT: usize = 2048;
 const PROVIDER_LIMIT: usize = 64;
 const AUTH_URL_LIMIT: usize = 8192;
+const CONSOLE_COMMAND_LIMIT: usize = 200;
 
 fn protocol() -> ApplicationError {
     ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
@@ -138,6 +139,35 @@ pub enum CliState {
     Unknown,
 }
 
+/// Why a cli lane's state is not established, in the service's closed words;
+/// never provider output.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CliStateCause {
+    CliNotFound,
+    HomeInGitProject,
+    HomeUnavailable,
+    ProbeStartFailed,
+    ProbeTimedOut,
+    ProbeOutputUnreadable,
+    ProbeCleanupUnconfirmed,
+    StatusReadFailed,
+    StatusUnreadable,
+    StatusContextUnavailable,
+}
+
+/// What a person can do about a cause, in the service's closed words.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum NextStep {
+    Retry,
+    InstallCli,
+    MoveProfileOutsideGit,
+    CloseOtherSignIn,
+    ConsoleSignIn,
+    UpdateApp,
+}
+
 /// One provider as the profile holds it. No field is, or is derived from, a
 /// secret; a field the contract does not name is dropped, not forwarded.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -162,6 +192,12 @@ pub struct Entry {
     pub default_base_url: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cli_state: Option<CliState>,
+    /// Why the app's state is not established, when the probe says.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cli_state_cause: Option<CliStateCause>,
+    /// What to do about `cli_state_cause`; never without one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub next_step: Option<NextStep>,
     pub revision: String,
 }
 
@@ -172,6 +208,10 @@ pub struct Status {
     pub sign_in_providers: Vec<String>,
     #[serde(default)]
     pub sign_in_methods: BTreeMap<String, Vec<SignInMethod>>,
+    /// The console command that signs a provider in by hand, with a
+    /// `{provider}` slot for the window to fill.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub console_sign_in_command: Option<String>,
 }
 
 impl Status {
@@ -245,6 +285,36 @@ pub enum SignInReason {
     ProfileRequired,
 }
 
+/// Why an attempt did not succeed, in the helper's and the service's closed
+/// words; never process output.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SignInCause {
+    ProfileMissing,
+    UnsupportedMethod,
+    HostInputInvalid,
+    HostDisconnected,
+    LoginAlreadyRunning,
+    TimedOut,
+    HomeInGitProject,
+    HomeUnavailable,
+    CliNotFound,
+    BrowserRelayUnavailable,
+    CliStartFailed,
+    CliExitedEarly,
+    CliProtocolMismatch,
+    CliReportedError,
+    LoginNotCompleted,
+    CleanupUnconfirmed,
+    InternalError,
+    HelperStartFailed,
+    HelperOutputInvalid,
+    HelperEndedWithoutResult,
+    HelperExitNonzero,
+    AgentStopFailed,
+    StatusNotConfirmed,
+}
+
 /// The snapshot returned to the person during a provider sign-in attempt.
 /// Deliberately has no `Debug` implementation: URL and device-code fields are
 /// transient and must not be written to diagnostics by formatting this value.
@@ -256,6 +326,14 @@ pub struct SignInSnapshot {
     pub event: SignInEvent,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reason: Option<SignInReason>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cause: Option<SignInCause>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub next_step: Option<NextStep>,
+    /// Why the status read that confirmed (or failed to confirm) a sign-in
+    /// could not establish it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub status_cause: Option<CliStateCause>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub url: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -323,6 +401,16 @@ fn is_https_url(text: &str) -> bool {
             })
 }
 
+/// The console command template: printable ASCII, bounded, naming the
+/// provider once and no path.
+fn is_console_command(text: &str) -> bool {
+    text.len() <= CONSOLE_COMMAND_LIMIT
+        && text.matches("{provider}").count() == 1
+        && text
+            .bytes()
+            .all(|b| (b' '..=b'~').contains(&b) && !matches!(b, b'/' | b'\\'))
+}
+
 fn valid_user_code(text: &str) -> bool {
     (4..=32).contains(&text.len())
         && text
@@ -340,7 +428,10 @@ impl SignInSnapshot {
         );
         let valid = is_attempt_id(&self.attempt_id)
             && is_provider_id(&self.provider)
-            && (self.reason.is_none()
+            && ((self.reason.is_none()
+                && self.cause.is_none()
+                && self.next_step.is_none()
+                && self.status_cause.is_none())
                 || matches!(self.event, SignInEvent::Cancelled | SignInEvent::Failed))
             && (self
                 .url
@@ -399,6 +490,10 @@ impl Entry {
                 .all(|url| is_plain_text(url, URL_LIMIT))
             // A provider's own app has a state; a web API has none.
             && (self.transport == Transport::Cli) == self.cli_state.is_some()
+            // Only an app's state has a cause, and a step answers a cause.
+            && (self.transport == Transport::Cli
+                || (self.cli_state_cause.is_none() && self.next_step.is_none()))
+            && (self.next_step.is_none() || self.cli_state_cause.is_some())
             && self.consumers.len() <= 1
             // Only a lane that takes a key can hold one, and a key mode has one.
             && (!self.credential_saved
@@ -463,6 +558,13 @@ pub fn status(outcome: Outcome) -> Result<Status, CommandFailure> {
     if !coherent {
         return Err(protocol().into());
     }
+    if status
+        .console_sign_in_command
+        .as_deref()
+        .is_some_and(|command| !is_console_command(command))
+    {
+        return Err(protocol().into());
+    }
     let providers = status
         .providers
         .into_iter()
@@ -472,6 +574,7 @@ pub fn status(outcome: Outcome) -> Result<Status, CommandFailure> {
         providers,
         sign_in_providers: status.sign_in_providers,
         sign_in_methods: status.sign_in_methods,
+        console_sign_in_command: status.console_sign_in_command,
     })
 }
 
@@ -1012,6 +1115,233 @@ mod tests {
                 .event,
             SignInEvent::Failed
         );
+    }
+
+    const ATTEMPT: &str = "123e4567-e89b-42d3-a456-426614174000";
+
+    fn terminal(event: &str, extra: Value) -> Value {
+        let mut snapshot =
+            json!({"attempt_id": ATTEMPT, "provider": "codex_cli", "event": event});
+        snapshot
+            .as_object_mut()
+            .unwrap()
+            .extend(extra.as_object().unwrap().clone());
+        snapshot
+    }
+
+    fn sent_snapshot(snapshot: Value) -> Value {
+        serde_json::to_value(sign_in_snapshot(success(snapshot), None, None).unwrap()).unwrap()
+    }
+
+    #[test]
+    fn a_failed_sign_in_carries_its_closed_cause_next_step_and_status_cause() {
+        let failed = terminal(
+            "failed",
+            json!({
+                "reason": "provider_error", "cause": "status_not_confirmed",
+                "next_step": "console_sign_in", "status_cause": "probe_timed_out"
+            }),
+        );
+        let parsed = sign_in_snapshot(success(failed), None, None).unwrap();
+        assert_eq!(parsed.cause, Some(SignInCause::StatusNotConfirmed));
+        assert_eq!(parsed.next_step, Some(NextStep::ConsoleSignIn));
+        assert_eq!(parsed.status_cause, Some(CliStateCause::ProbeTimedOut));
+        let sent = serde_json::to_value(parsed).unwrap();
+        assert_eq!(sent["cause"], "status_not_confirmed");
+        assert_eq!(sent["next_step"], "console_sign_in");
+        assert_eq!(sent["status_cause"], "probe_timed_out");
+
+        let cancelled = terminal(
+            "cancelled",
+            json!({"reason": "cleanup_failed", "cause": "cleanup_unconfirmed", "next_step": "retry"}),
+        );
+        let parsed = sign_in_snapshot(success(cancelled), None, None).unwrap();
+        assert_eq!(parsed.cause, Some(SignInCause::CleanupUnconfirmed));
+        assert_eq!(parsed.next_step, Some(NextStep::Retry));
+
+        // Absent stays absent, as before the service served them.
+        let bare = sent_snapshot(terminal("failed", json!({"reason": "provider_error"})));
+        for field in ["cause", "next_step", "status_cause"] {
+            assert!(bare.get(field).is_none(), "{field}");
+        }
+    }
+
+    #[test]
+    fn every_closed_word_the_service_serves_is_accepted() {
+        for word in [
+            "profile_missing",
+            "unsupported_method",
+            "host_input_invalid",
+            "host_disconnected",
+            "login_already_running",
+            "timed_out",
+            "home_in_git_project",
+            "home_unavailable",
+            "cli_not_found",
+            "browser_relay_unavailable",
+            "cli_start_failed",
+            "cli_exited_early",
+            "cli_protocol_mismatch",
+            "cli_reported_error",
+            "login_not_completed",
+            "cleanup_unconfirmed",
+            "internal_error",
+            "helper_start_failed",
+            "helper_output_invalid",
+            "helper_ended_without_result",
+            "helper_exit_nonzero",
+            "agent_stop_failed",
+            "status_not_confirmed",
+        ] {
+            let failed = terminal("failed", json!({"reason": "provider_error", "cause": word}));
+            assert_eq!(sent_snapshot(failed)["cause"], word);
+        }
+        for word in [
+            "retry",
+            "install_cli",
+            "move_profile_outside_git",
+            "close_other_sign_in",
+            "console_sign_in",
+            "update_app",
+        ] {
+            let failed = terminal("failed", json!({"reason": "provider_error", "next_step": word}));
+            assert_eq!(sent_snapshot(failed)["next_step"], word);
+        }
+        for word in [
+            "cli_not_found",
+            "home_in_git_project",
+            "home_unavailable",
+            "probe_start_failed",
+            "probe_timed_out",
+            "probe_output_unreadable",
+            "probe_cleanup_unconfirmed",
+            "status_read_failed",
+            "status_unreadable",
+            "status_context_unavailable",
+        ] {
+            let failed = terminal(
+                "failed",
+                json!({"reason": "provider_error", "status_cause": word}),
+            );
+            assert_eq!(sent_snapshot(failed)["status_cause"], word);
+        }
+    }
+
+    #[test]
+    fn a_cause_outside_the_closed_words_or_off_a_terminal_failure_is_a_protocol_failure() {
+        for invalid in [
+            terminal("failed", json!({"cause": "raw provider output"})),
+            terminal("failed", json!({"cause": "probe_timed_out"})),
+            terminal("failed", json!({"next_step": "reboot"})),
+            terminal("failed", json!({"status_cause": "timed_out"})),
+            terminal("failed", json!({"status_cause": "raw output"})),
+            terminal("succeeded", json!({"cause": "timed_out"})),
+            terminal("succeeded", json!({"next_step": "retry"})),
+            terminal("succeeded", json!({"status_cause": "probe_timed_out"})),
+            terminal("started", json!({"cause": "timed_out"})),
+            terminal("browser_action", json!({"next_step": "retry"})),
+            terminal("starting", json!({"status_cause": "probe_timed_out"})),
+        ] {
+            assert_eq!(
+                sign_in_failure(sign_in_snapshot(success(invalid.clone()), None, None))["code"],
+                "read_failed",
+                "{invalid}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_cli_lane_may_say_why_its_state_is_unconfirmed_and_a_web_api_never() {
+        let mut unconfirmed = cli();
+        unconfirmed["cli_state"] = json!("unknown");
+        unconfirmed["cli_state_cause"] = json!("probe_timed_out");
+        unconfirmed["next_step"] = json!("console_sign_in");
+        let read = status_of(&[unconfirmed]);
+        assert_eq!(read.providers[0].cli_state, Some(CliState::Unknown));
+        assert_eq!(
+            read.providers[0].cli_state_cause,
+            Some(CliStateCause::ProbeTimedOut)
+        );
+        assert_eq!(read.providers[0].next_step, Some(NextStep::ConsoleSignIn));
+        let sent = serde_json::to_value(&read).unwrap();
+        assert_eq!(sent["providers"][0]["cli_state_cause"], "probe_timed_out");
+        assert_eq!(sent["providers"][0]["next_step"], "console_sign_in");
+
+        // Absent stays absent.
+        let sent = serde_json::to_value(status_of(&[cli()])).unwrap();
+        assert!(sent["providers"][0].get("cli_state_cause").is_none());
+        assert!(sent["providers"][0].get("next_step").is_none());
+
+        let mut api_with_cause = api();
+        api_with_cause["cli_state_cause"] = json!("probe_timed_out");
+        let mut api_with_step = api();
+        api_with_step["next_step"] = json!("retry");
+        let mut step_without_cause = cli();
+        step_without_cause["next_step"] = json!("retry");
+        let mut unknown_cause = cli();
+        unknown_cause["cli_state_cause"] = json!("raw output");
+        let mut unknown_step = cli();
+        unknown_step["cli_state_cause"] = json!("probe_timed_out");
+        unknown_step["next_step"] = json!("reboot");
+        let mut helper_word = cli();
+        helper_word["cli_state_cause"] = json!("timed_out");
+        for entry in [
+            api_with_cause,
+            api_with_step,
+            step_without_cause,
+            unknown_cause,
+            unknown_step,
+            helper_word,
+        ] {
+            assert_eq!(
+                failed(status(success(envelope(&[entry.clone()]))))["code"],
+                "read_failed",
+                "{entry}"
+            );
+        }
+    }
+
+    #[test]
+    fn the_console_sign_in_command_is_one_bounded_printable_template_with_a_provider_slot() {
+        let served = "aeat config provider-login --provider {provider}";
+        let mut answer = envelope(&[cli()]);
+        answer["console_sign_in_command"] = json!(served);
+        let read = status(success(answer)).unwrap();
+        assert_eq!(read.console_sign_in_command.as_deref(), Some(served));
+        let sent = serde_json::to_value(&read).unwrap();
+        assert_eq!(sent["console_sign_in_command"], served);
+
+        // Absent stays absent, for a service that does not serve it.
+        let read = status_of(&[cli()]);
+        assert!(read.console_sign_in_command.is_none());
+        assert!(
+            serde_json::to_value(&read)
+                .unwrap()
+                .get("console_sign_in_command")
+                .is_none()
+        );
+
+        let long = format!("aeat {} {{provider}}", "x".repeat(300));
+        for refused in [
+            "",
+            "aeat config provider-login",
+            "aeat {provider} {provider}",
+            "aeat /usr/bin/x {provider}",
+            "aeat C:\\x {provider}",
+            "aeat\n{provider}",
+            long.as_str(),
+        ] {
+            let mut answer = envelope(&[cli()]);
+            answer["console_sign_in_command"] = json!(refused);
+            assert_eq!(
+                failed(status(success(answer)))["code"],
+                "read_failed",
+                "{refused:?}"
+            );
+        }
+        let mut answer = envelope(&[cli()]);
+        answer["console_sign_in_command"] = json!(7);
+        assert_eq!(failed(status(success(answer)))["code"], "read_failed");
     }
 
     #[test]

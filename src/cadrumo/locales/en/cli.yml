@@ -2706,6 +2706,16 @@ cli:
       validate_name_help: Optional profile label to validate; defaults to the active
         profile.
       view_help: Show one profile's facts (defaults to the active profile)
+    provider_login:
+      device_help: 'Use the device-code sign-in (codex only).'
+      device_unsupported: '--device is only available for %{supported}.'
+      help: 'Sign in to an AI provider by hand from this console.'
+      json_unsupported: '--format json is not available for provider-login: it is an interactive terminal command. Run it without --format.'
+      no_profile: 'No profile is selected. Select a profile in the application or pass --profile.'
+      profile_help: 'Profile UUID or exact label; omit to use the selected profile.'
+      provider_help: 'Provider to sign in to: claude, codex or antigravity.'
+      signed_in: 'Signed in to %{provider}. Reopen the provider settings in the application to see it.'
+      unsupported_provider: 'Provider %{provider} cannot be signed in by hand. Use one of: %{supported}.'
     repair:
       connectivity_help: Check browser and AEAT Sede connectivity
       help: Diagnose and repair local configuration, modelo definitions, profile,
