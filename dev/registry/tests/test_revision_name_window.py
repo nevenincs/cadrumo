@@ -9,10 +9,14 @@ for the schema.
 from __future__ import annotations
 
 import datetime
+import re
 
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_indexed_authority
+
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ..analysis.revision_name_window import name_window_findings
 from ..compiler.authority import compiled_bundled_authority
@@ -25,9 +29,19 @@ def authority() -> ValidatedRegistryAuthority:
     return compiled_bundled_authority()
 
 
+def _open_ended(authority: ValidatedRegistryAuthority, modelo_id: str) -> ModeloRevision:
+    """Return the modelo's one open-ended authored revision as the validated authority holds it."""
+    return authority.modelo(modelo_id).revisions[str(open_ended_revision(modelo_id).id)]
+
+
+def _named_year(revision: ModeloRevision) -> int:
+    """Return the year a revision's name opens with."""
+    return int(str(revision.id)[:4])
+
+
 def test_an_agreeing_name_reports_nothing(authority: ValidatedRegistryAuthority) -> None:
     """A revision whose name matches its declared window yields no finding."""
-    revision = authority.modelo("303").revisions["2025"]
+    revision = _open_ended(authority, "303")
     assert name_window_findings(revision, modelo_id="303") == ()
 
 
@@ -52,14 +66,14 @@ def test_a_name_later_than_its_window_is_reported_apart_from_one_that_is_earlier
     delete the test - the direction is the reason this condition exists apart
     from its opposite.
     """
-    revision = authority.modelo("151").revisions["2025-y-siguientes"]
+    revision = _open_ended(authority, "151")
     findings = name_window_findings(revision, modelo_id="151")
     kinds = {finding.kind for finding in findings}
     assert "name_opens_after_window" in kinds
     assert "name_opens_before_window" not in kinds
     detail = next(item.detail for item in findings if item.kind == "name_opens_after_window")
-    assert "2025" in detail
-    assert "2023" in detail
+    assert str(_named_year(revision)) in detail
+    assert str(revision.valid_from.year) in detail
 
 
 def test_a_name_earlier_than_its_window_is_the_other_direction(
@@ -82,7 +96,7 @@ def test_a_name_earlier_than_its_window_is_the_other_direction(
     stepped for rename as well, so no live successor survives the cluster; the
     replacement is constructed.
     """
-    revision = authority.modelo("185").revisions["2025-y-siguientes"]
+    revision = _open_ended(authority, "185")
     kinds = {finding.kind for finding in name_window_findings(revision, modelo_id="185")}
 
     assert "name_opens_before_window" in kinds
@@ -102,10 +116,10 @@ def test_screen_detects_a_window_moved_away_from_its_name(authority: ValidatedRe
     This is the detector case: the defect is introduced on a copy, and a screen
     that read the name alone, or the window alone, could not see it.
     """
-    revision = authority.modelo("303").revisions["2025"]
+    revision = _open_ended(authority, "303")
     assert name_window_findings(revision, modelo_id="303") == ()
 
-    moved = revision.model_copy(update={"valid_from": datetime.date(2019, 1, 1)})
+    moved = revision.model_copy(update={"valid_from": datetime.date(revision.valid_from.year - 6, 1, 1)})
     findings = name_window_findings(moved, modelo_id="303")
     assert any(finding.kind == "name_opens_after_window" for finding in findings)
 
@@ -116,7 +130,7 @@ def test_screen_reports_disagreeing_window_sources(authority: ValidatedRegistryA
     Neither source is preferred and neither silently wins; the disagreement is
     itself the finding, because a reader cannot tell which one the law meant.
     """
-    revision = authority.modelo("303").revisions["2025"]
+    revision = _open_ended(authority, "303")
     selector = revision.period_selector
     assert selector.year_from is not None, "this revision's period selector must declare a starting year"
 
@@ -141,7 +155,7 @@ def test_an_open_ended_window_its_selector_does_not_carry_is_reported(
     window is stated by the dates and they are correct, so reporting them would
     put fifty right declarations around five wrong ones.
     """
-    revision = authority.modelo("131").revisions["2026"]
+    revision = _open_ended(authority, "131")
     kinds = {finding.kind for finding in name_window_findings(revision, modelo_id="131")}
 
     assert "open_ended_window_not_selectable" in kinds
@@ -157,7 +171,7 @@ def test_a_genuinely_open_ended_revision_carries_a_selector_opening_and_is_not_r
     understating its reach, which the single-year condition reports, and it is
     emphatically not an unselectable window.
     """
-    revision = authority.modelo("721").revisions["2024"]
+    revision = _open_ended(authority, "721")
     kinds = {finding.kind for finding in name_window_findings(revision, modelo_id="721")}
 
     assert "open_ended_window_not_selectable" not in kinds
@@ -167,7 +181,13 @@ def test_an_explicit_closing_date_is_never_reported_as_unselectable(
     authority: ValidatedRegistryAuthority,
 ) -> None:
     """A revision whose window closes states its span in the dates, selector or not."""
-    revision = authority.modelo("100").revisions["2025"]
+    revision = next(
+        candidate
+        for candidate in authority.modelo("100").revisions.values()
+        if candidate.valid_to is not None
+        and candidate.period_selector.year_from is None
+        and candidate.period_selector.year_to is None
+    )
     selector = revision.period_selector
 
     assert revision.valid_to is not None
@@ -187,7 +207,7 @@ def test_an_unselectable_open_end_is_not_also_called_a_name_understating_its_rea
     one row saying the window does not extend, another saying the name fails to
     admit that it does.
     """
-    revision = authority.modelo("131").revisions["2026"]
+    revision = _open_ended(authority, "131")
     kinds = {finding.kind for finding in name_window_findings(revision, modelo_id="131")}
 
     assert "open_ended_window_not_selectable" in kinds
@@ -209,7 +229,7 @@ def test_a_selectable_open_end_still_reports_the_name_understating_its_reach(
     successor. Both leave together, and the replacement is a constructed
     revision: a real one copied with its closing bound removed.
     """
-    revision = authority.modelo("721").revisions["2024"]
+    revision = _open_ended(authority, "721")
     kinds = {finding.kind for finding in name_window_findings(revision, modelo_id="721")}
 
     assert "name_claims_single_year" in kinds
@@ -229,8 +249,8 @@ def test_an_open_ended_name_over_a_closing_window_is_reported(
     Built from modelo 151's open-ended revision by giving it a closing date, so
     the name still promises "y-siguientes" while the window stops in 2027.
     """
-    revision = authority.modelo("151").revisions["2025-y-siguientes"]
-    closed = revision.model_copy(update={"valid_to": datetime.date(2027, 12, 31)})
+    revision = _open_ended(authority, "151")
+    closed = revision.model_copy(update={"valid_to": datetime.date(revision.valid_from.year + 2, 12, 31)})
 
     kinds = {finding.kind for finding in name_window_findings(closed, modelo_id="151")}
 
@@ -247,15 +267,22 @@ def test_a_name_closing_at_the_wrong_year_is_reported(
     the window's close to 2021 leaves the name claiming a year the revision no
     longer serves.
     """
-    revision = authority.modelo("151").revisions["2015-2022"]
+    revision = next(
+        candidate
+        for candidate in authority.modelo("151").revisions.values()
+        if candidate.valid_to is not None
+        and re.fullmatch(r"\d{4}-\d{4}", str(candidate.id))
+        and not name_window_findings(candidate, modelo_id="151")
+    )
+    assert revision.valid_to is not None
     assert name_window_findings(revision, modelo_id="151") == ()
 
-    moved = revision.model_copy(update={"valid_to": datetime.date(2021, 12, 31)})
+    moved = revision.model_copy(update={"valid_to": datetime.date(revision.valid_to.year - 1, 12, 31)})
     findings = name_window_findings(moved, modelo_id="151")
 
     assert "name_misstates_closing" in {finding.kind for finding in findings}
     detail = next(item.detail for item in findings if item.kind == "name_misstates_closing")
-    assert "2022" in detail and "2021" in detail
+    assert str(revision.valid_to.year) in detail and str(revision.valid_to.year - 1) in detail
 
 
 def test_every_condition_the_screen_documents_is_declared_and_reachable(
@@ -275,8 +302,6 @@ def test_every_condition_the_screen_documents_is_declared_and_reachable(
     it. The conditions that do not fire are constructed by the tests above,
     which is why those exist and why this one constructs nothing.
     """
-    import re
-
     from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 
     from ..analysis import revision_name_window as screen

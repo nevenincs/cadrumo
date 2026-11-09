@@ -26,6 +26,7 @@ from cadrumo.domain.calculations.registry.revision_contracts import (
     validate_predecessor_forest,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 from ..compiler.loader import load_modelo_directory
@@ -39,6 +40,11 @@ _NONE = (
     f'legal_refs = ["{_LEGAL_REF}"], source_refs = ["aeat-manual"] }} }}\n'
 )
 _PARALLEL_SCHEME_MODELO = "369"
+# Four consecutive exercises of the support envelope name the editions of the synthetic trees.
+_Y1, _Y2, _Y3, _Y4 = filing_year_envelope().years[-4:]
+_I1, _I2, _I3, _I4 = (str(year) for year in (_Y1, _Y2, _Y3, _Y4))
+# A revision id no tree in this module authors.
+_MISSING = "edicion-inexistente"
 
 
 @dataclass(frozen=True, slots=True)
@@ -88,7 +94,7 @@ def _write_edition(modelo_dir: Path, edition: _Edition) -> None:
         (
             f'[[revisions."{edition.revision_id}".casillas]]\n'
             f'id = "{edition.year:04d}"\n'
-            f'number = "{edition.year - 2000}"\n'
+            f'number = "{edition.year % 100}"\n'
             'section = ["liquidacion"]\n'
             f'legal_refs = ["{_LEGAL_REF}"]\n'
             'source_refs = ["aeat-manual"]\n'
@@ -99,12 +105,12 @@ def _write_edition(modelo_dir: Path, edition: _Edition) -> None:
     )
 
 
-def _chain(third_extra: str, *, second_extra: str = _names("2024")) -> tuple[_Edition, ...]:
-    """A 2024 first edition, a 2025 successor, and a 2026 edition under test."""
+def _chain(third_extra: str, *, second_extra: str = _names(_I1)) -> tuple[_Edition, ...]:
+    """A first edition, its successor, and a third edition under test."""
     return (
-        _Edition("2024", 2024),
-        _Edition("2025", 2025, manifest_extra=second_extra),
-        _Edition("2026", 2026, manifest_extra=third_extra),
+        _Edition(_I1, _Y1),
+        _Edition(_I2, _Y2, manifest_extra=second_extra),
+        _Edition(_I3, _Y3, manifest_extra=third_extra),
     )
 
 
@@ -113,37 +119,37 @@ def test_keyless_full_copies_remain_independent_roots_beside_a_delta(tmp_path: P
     modelo_dir = _write_editions(tmp_path, *_chain(""))
 
     independent = load_modelo_directory(modelo_dir)
-    assert independent.revisions["2024"].predecessor is None
-    assert independent.revisions["2026"].predecessor is None
+    assert independent.revisions[_I1].predecessor is None
+    assert independent.revisions[_I3].predecessor is None
 
-    _write_edition(modelo_dir, _Edition("2026", 2026, manifest_extra=_names("2025")))
+    _write_edition(modelo_dir, _Edition(_I3, _Y3, manifest_extra=_names(_I2)))
     restored = load_modelo_directory(modelo_dir)
-    assert restored.revisions["2026"].predecessor == DeclaredPredecessor(revision_id="2025")
-    assert restored.revisions["2024"].predecessor is None
+    assert restored.revisions[_I3].predecessor == DeclaredPredecessor(revision_id=_I2)
+    assert restored.revisions[_I1].predecessor is None
 
-    _write_edition(modelo_dir, _Edition("2026", 2026))
-    assert load_modelo_directory(modelo_dir).revisions["2026"].predecessor is None
+    _write_edition(modelo_dir, _Edition(_I3, _Y3))
+    assert load_modelo_directory(modelo_dir).revisions[_I3].predecessor is None
 
 
 def test_parallel_editions_each_declaring_no_predecessor_load_without_an_order(tmp_path: Path) -> None:
     """Explicit roots are a legal set of any size; only key-less roots are capped at one."""
     variants = ("esquema-a", "esquema-b", "esquema-c")
-    modelo_dir = _write_editions(tmp_path, *(_Edition(variant, 2025, manifest_extra=_NONE) for variant in variants))
+    modelo_dir = _write_editions(tmp_path, *(_Edition(variant, _Y2, manifest_extra=_NONE) for variant in variants))
 
     parallel = load_modelo_directory(modelo_dir)
     assert len({revision.valid_from for revision in parallel.revisions.values()}) == 1
     assert all(isinstance(parallel.revisions[variant].predecessor, NoPredecessor) for variant in variants)
 
     # One key-less edition beside explicit roots is still the unique undeclared first edition.
-    _write_edition(modelo_dir, _Edition("esquema-c", 2025))
+    _write_edition(modelo_dir, _Edition("esquema-c", _Y2))
     assert load_modelo_directory(modelo_dir).revisions["esquema-c"].predecessor is None
 
-    _write_edition(modelo_dir, _Edition("esquema-b", 2025))
+    _write_edition(modelo_dir, _Edition("esquema-b", _Y2))
     keyless = load_modelo_directory(modelo_dir)
     assert keyless.revisions["esquema-b"].predecessor is None
     assert keyless.revisions["esquema-c"].predecessor is None
 
-    _write_edition(modelo_dir, _Edition("esquema-b", 2025, manifest_extra=_NONE))
+    _write_edition(modelo_dir, _Edition("esquema-b", _Y2, manifest_extra=_NONE))
     assert isinstance(load_modelo_directory(modelo_dir).revisions["esquema-b"].predecessor, NoPredecessor)
 
 
@@ -164,16 +170,16 @@ def test_the_parallel_scheme_modelo_loads_as_three_parallel_roots() -> None:
 
 
 def test_a_predecessor_cycle_is_refused(tmp_path: Path) -> None:
-    cycle = re.escape("form a cycle '2025' -> '2026' -> '2025'")
-    modelo_dir = _write_editions(tmp_path, *_chain(_names("2025"), second_extra=_names("2026")))
+    cycle = re.escape(f"form a cycle '{_I2}' -> '{_I3}' -> '{_I2}'")
+    modelo_dir = _write_editions(tmp_path, *_chain(_names(_I2), second_extra=_names(_I3)))
 
     with pytest.raises(RegistryLoadError, match=cycle):
         load_modelo_directory(modelo_dir)
 
-    _write_edition(modelo_dir, _Edition("2025", 2025, manifest_extra=_names("2024")))
-    assert load_modelo_directory(modelo_dir).revisions["2025"].predecessor == DeclaredPredecessor(revision_id="2024")
+    _write_edition(modelo_dir, _Edition(_I2, _Y2, manifest_extra=_names(_I1)))
+    assert load_modelo_directory(modelo_dir).revisions[_I2].predecessor == DeclaredPredecessor(revision_id=_I1)
 
-    _write_edition(modelo_dir, _Edition("2025", 2025, manifest_extra=_names("2026")))
+    _write_edition(modelo_dir, _Edition(_I2, _Y2, manifest_extra=_names(_I3)))
     with pytest.raises(RegistryLoadError, match=cycle):
         load_modelo_directory(modelo_dir)
 
@@ -190,34 +196,34 @@ def test_a_cycle_with_no_key_less_edition_is_refused_rather_than_read_as_rootles
 
 def test_a_self_target_is_refused_at_the_loader_and_by_the_forest_rule(tmp_path: Path) -> None:
     """The typed revision refuses it first; the rule refuses it too for untyped callers."""
-    self_target = re.escape("'2026' declares itself as its own predecessor")
-    modelo_dir = _write_editions(tmp_path, *_chain(_names("2026")))
+    self_target = re.escape(f"'{_I3}' declares itself as its own predecessor")
+    modelo_dir = _write_editions(tmp_path, *_chain(_names(_I3)))
 
     with pytest.raises(RegistryLoadError, match=self_target):
         load_modelo_directory(modelo_dir)
     with pytest.raises(RegistryValidationError, match=self_target):
         validate_predecessor_forest(
-            "999", named={"2025": "2024", "2026": "2026"}, declared_roots=frozenset(), keyless=frozenset({"2024"})
+            "999", named={_I2: _I1, _I3: _I3}, declared_roots=frozenset(), keyless=frozenset({_I1})
         )
 
-    _write_edition(modelo_dir, _Edition("2026", 2026, manifest_extra=_names("2025")))
-    assert load_modelo_directory(modelo_dir).revisions["2026"].predecessor is not None
+    _write_edition(modelo_dir, _Edition(_I3, _Y3, manifest_extra=_names(_I2)))
+    assert load_modelo_directory(modelo_dir).revisions[_I3].predecessor is not None
     validate_predecessor_forest(
-        "999", named={"2025": "2024", "2026": "2025"}, declared_roots=frozenset(), keyless=frozenset({"2024"})
+        "999", named={_I2: _I1, _I3: _I2}, declared_roots=frozenset(), keyless=frozenset({_I1})
     )
 
 
 def test_an_unknown_target_is_refused(tmp_path: Path) -> None:
-    unknown = re.escape("declares predecessor '2023', which is not a revision of this modelo")
-    modelo_dir = _write_editions(tmp_path, *_chain(_names("2023")))
+    unknown = re.escape(f"declares predecessor '{_MISSING}', which is not a revision of this modelo")
+    modelo_dir = _write_editions(tmp_path, *_chain(_names(_MISSING)))
 
     with pytest.raises(RegistryLoadError, match=unknown):
         load_modelo_directory(modelo_dir)
 
-    _write_edition(modelo_dir, _Edition("2026", 2026, manifest_extra=_names("2025")))
-    assert load_modelo_directory(modelo_dir).revisions["2026"].predecessor is not None
+    _write_edition(modelo_dir, _Edition(_I3, _Y3, manifest_extra=_names(_I2)))
+    assert load_modelo_directory(modelo_dir).revisions[_I3].predecessor is not None
 
-    _write_edition(modelo_dir, _Edition("2026", 2026, manifest_extra=_names("2023")))
+    _write_edition(modelo_dir, _Edition(_I3, _Y3, manifest_extra=_names(_MISSING)))
     with pytest.raises(RegistryLoadError, match=unknown):
         load_modelo_directory(modelo_dir)
 
@@ -225,14 +231,14 @@ def test_an_unknown_target_is_refused(tmp_path: Path) -> None:
 def test_a_section_fragment_declaring_the_predecessor_is_refused(tmp_path: Path) -> None:
     """Placement, not content: the identical declaration loads from the manifest."""
     misplaced = re.escape("revision field 'predecessor' must be declared in the revision's revision.toml")
-    in_fragment = _Edition("2025", 2025, fragment_extra='\n[revisions."2025"]\npredecessor = "2024"\n')
-    modelo_dir = _write_editions(tmp_path, _Edition("2024", 2024), in_fragment)
+    in_fragment = _Edition(_I2, _Y2, fragment_extra=f'\n[revisions."{_I2}"]\npredecessor = "{_I1}"\n')
+    modelo_dir = _write_editions(tmp_path, _Edition(_I1, _Y1), in_fragment)
 
     with pytest.raises(RegistryLoadError, match=misplaced):
         load_modelo_directory(modelo_dir)
 
-    _write_edition(modelo_dir, _Edition("2025", 2025, manifest_extra=_names("2024")))
-    assert load_modelo_directory(modelo_dir).revisions["2025"].predecessor == DeclaredPredecessor(revision_id="2024")
+    _write_edition(modelo_dir, _Edition(_I2, _Y2, manifest_extra=_names(_I1)))
+    assert load_modelo_directory(modelo_dir).revisions[_I2].predecessor == DeclaredPredecessor(revision_id=_I1)
 
     _write_edition(modelo_dir, in_fragment)
     with pytest.raises(RegistryLoadError, match=misplaced):
@@ -241,18 +247,18 @@ def test_a_section_fragment_declaring_the_predecessor_is_refused(tmp_path: Path)
 
 def test_one_declared_root_does_not_invalidate_other_full_copy_roots(tmp_path: Path) -> None:
     """Authored full copies and explicit roots are both valid forest roots."""
-    modelo_dir = _write_editions(tmp_path, *_chain("", second_extra=""), _Edition("2027", 2027))
+    modelo_dir = _write_editions(tmp_path, *_chain("", second_extra=""), _Edition(_I4, _Y4))
     full_copy = load_modelo_directory(modelo_dir)
     assert len(full_copy.revisions) == 4
     assert all(revision.predecessor is None for revision in full_copy.revisions.values())
 
-    _write_edition(modelo_dir, _Edition("2025", 2025, manifest_extra=_NONE))
+    _write_edition(modelo_dir, _Edition(_I2, _Y2, manifest_extra=_NONE))
     mixed = load_modelo_directory(modelo_dir)
-    assert isinstance(mixed.revisions["2025"].predecessor, NoPredecessor)
-    assert all(mixed.revisions[key].predecessor is None for key in ("2024", "2026", "2027"))
+    assert isinstance(mixed.revisions[_I2].predecessor, NoPredecessor)
+    assert all(mixed.revisions[key].predecessor is None for key in (_I1, _I3, _I4))
 
-    _write_edition(modelo_dir, _Edition("2025", 2025))
-    assert load_modelo_directory(modelo_dir).revisions["2025"].predecessor is None
+    _write_edition(modelo_dir, _Edition(_I2, _Y2))
+    assert load_modelo_directory(modelo_dir).revisions[_I2].predecessor is None
 
 
 def test_an_edition_carrying_two_declaration_states_is_refused() -> None:
