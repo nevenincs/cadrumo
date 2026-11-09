@@ -445,3 +445,15 @@ retrieved_at = 2026-10-31
 applies_from = 2000-01-01
 source_url = "https://www.ine.es/daco/daco42/codmun/cod_ccaa.htm"
 review_status = "pending_review"
+
+[sources."ine-codigos-provincias"]
+evidence_tier = "official_source_guidance"
+authority = "other"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/ine-codigos-provincias.html"
+sha256 = "5129d5ae9739a7822f3f8d421db2463d5c2fba9ff5e061ff1de16c046d999178"
+bytes = 28144
+retrieved_at = 2026-11-08
+applies_from = 2000-01-01
+source_url = "https://www.ine.es/daco/daco42/codmun/cod_provincia.htm"
+review_status = "pending_review"

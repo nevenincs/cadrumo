@@ -113,7 +113,13 @@ def search_entries(
                     description=description,
                     page=page.heading.text,
                     value=stated_value_text(item, language) or "",
-                    origin=origin_text(field, recorded=recorded, aeat_imported=aeat_imported, language=language),
+                    origin=origin_text(
+                        field,
+                        recorded=recorded,
+                        aeat_imported=aeat_imported,
+                        language=language,
+                        calculated=item.calculated,
+                    ),
                 )
             )
     return tuple(entries)

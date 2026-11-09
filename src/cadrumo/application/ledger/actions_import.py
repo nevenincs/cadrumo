@@ -27,6 +27,7 @@ from ...core.hashing import canonical_json_bytes, sha256_file, sha256_hex
 from ...core.i18n.render import tr as render_translation
 from ...core.i18n.translatable import Translatable as tr
 from ...core.iban import normalise_iban
+from ...core.optional_extras import OFX_EXTRA, OptionalExtra, optional_extra_available
 from ...core.period import Period
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_events
@@ -100,6 +101,27 @@ class LedgerProviderID(StrEnum):
     XLSX = "xlsx"
     XLS = "xls"
     PDF = "pdf"
+
+
+_FORMAT_EXTRAS: Final[Mapping[LedgerProviderID, OptionalExtra]] = {
+    LedgerProviderID.OFX: OFX_EXTRA,
+    LedgerProviderID.QFX: OFX_EXTRA,
+}
+"""The formats whose parser ships in an optional extra; every other format's parser is in the core."""
+
+
+def installed_ledger_providers() -> tuple[LedgerProviderID, ...]:
+    """Return the formats this installation parses, in the enum's order.
+
+    A format whose parser lives in an optional extra is offered only where that
+    extra is installed, so a surface never offers a format the import would
+    refuse for want of its parser.
+    """
+    return tuple(
+        provider
+        for provider in LedgerProviderID
+        if (extra := _FORMAT_EXTRAS.get(provider)) is None or optional_extra_available(extra)
+    )
 
 
 class _ImportRowPlan(NamedTuple):
@@ -1006,6 +1028,7 @@ __all__ = [
     "PreparedLedgerSourceImport",
     "aggregate_ledger_import_results",
     "import_ledger_transactions",
+    "installed_ledger_providers",
     "persist_prepared_ledger_source_import",
     "plan_ledger_import_sources",
     "prepare_ledger_source_import",

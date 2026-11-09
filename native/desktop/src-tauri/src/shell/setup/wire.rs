@@ -219,6 +219,7 @@ pub enum StaleReason {
 pub enum Failure {
     Offline,
     HostUnreachable,
+    ServerError,
     SecureConnectionFailed,
     BlockedByNetwork,
     DiskFull,

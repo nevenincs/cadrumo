@@ -133,6 +133,8 @@ def test_the_public_read_serves_the_credits_as_the_form_holds_them(operation: Pi
     )
 
     assert projection.form.form.withholding_credits == form.withholding_credits
+    assert projection.form.form.withholding_credits_heading == form.withholding_credits_heading
+    assert form.withholding_credits_heading is not None
 
 
 def test_a_credit_read_only_through_a_working_figure_still_lists_the_total_reading_that_figure(

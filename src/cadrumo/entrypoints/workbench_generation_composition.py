@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -11,9 +11,14 @@ from ..application.workbench_generation import (
     InstalledWorkbenchGenerationProviderV1,
 )
 from ..application.workbench_generation_contracts import WorkbenchGenerationV1
-from ..application.workbench_generation_reader import SecureProfileWorkbenchGenerationReadDoorV1
+from ..application.workbench_generation_reader import (
+    NotificationCustodyCount,
+    SecureProfileWorkbenchGenerationReadDoorV1,
+)
 
 if TYPE_CHECKING:
+    from ..adapters.persistence.profile.snapshots import SecureSnapshotRepository
+    from ..application.live.notification_documents import NotificationDocumentRecord
     from ..application.modelo.declarations_list import DeclarationListInputs
     from ..application.modelo.workspace_models import (
         ModeloWorkspaceProjectionV1,
@@ -91,7 +96,7 @@ def _secure_read_door(
     from .adapter_composition_work_ports import build_ledger_membership_ports
     from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
     from .calendar_evidence_composition import compose_calendar_aeat_reader
-    from .censal_readback_composition import read_stored_censal_observation
+    from .censal_readback_composition import StoredCensalHistoryReader
     from .ledger_action_composition import compose_ledger_action_ports
 
     calendar_aeat_reader = compose_calendar_aeat_reader(operation)
@@ -133,8 +138,8 @@ def _secure_read_door(
             verification_repository=calculation_binding.verification_repository(),
             credit_resolution_reader=CreditResolutionRepositoryAdapter(objects=objects),
             reconciliation_reader=lambda: tuple(ModeloReconciliationRecordRepository(objects=objects).iter_records()),
-            notification_custody_reader=_notification_custody_reader(profile_id),
-            census_observation_reader=lambda: asyncio.run(read_stored_censal_observation(UUID(profile_id))),
+            notification_custody_reader=StoredNotificationCustodyCounter(profile_id),
+            census_observation_reader=StoredCensalHistoryReader(UUID(profile_id)),
             result_casilla_reader=_declaration_result_casilla_reader(operation),
             operation_contracts=operation_contracts,
             modelo_projection_reader=modelo_workspace_projection_reader(operation),
@@ -144,16 +149,29 @@ def _secure_read_door(
     return read_door
 
 
-def _notification_custody_reader(profile_id: str) -> Callable[[], int]:
-    """Count this profile's existing notification snapshots without bytes."""
+@dataclass(frozen=True, slots=True)
+class StoredNotificationCustodyCounter:
+    """Count this profile's existing notification snapshots, and recheck that count by their stored keys."""
 
-    def read() -> int:
+    profile_id: str
+
+    def count(self) -> NotificationCustodyCount:
+        repository = self._repository()
+        # Keys first: a document stored between the two reads then shows as changed keys at the recheck.
+        stored_keys = repository.stored_keys()
+        return NotificationCustodyCount(count=len(repository.list_snapshots()), stored_keys=stored_keys)
+
+    def recount(self, prior: NotificationCustodyCount) -> int:
+        repository = self._repository()
+        if repository.stored_keys() == prior.stored_keys:
+            return prior.count
+        return len(repository.list_snapshots())
+
+    def _repository(self) -> SecureSnapshotRepository[NotificationDocumentRecord]:
         from ..adapters.persistence.profile.notification_documents import notification_document_repository
         from ..core.config import load_settings
 
-        return len(notification_document_repository(profile_id, load_settings()).list_snapshots())
-
-    return read
+        return notification_document_repository(self.profile_id, load_settings())
 
 
 def _declaration_result_casilla_reader(

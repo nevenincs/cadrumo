@@ -8,6 +8,55 @@
 // is always present; a field of what the window sends may be left out where
 // the model gives it a default.
 
+import type { BindingSourceKind } from "./modelo";
+import type { SourceSurface } from "./modeloWork";
+
+/**
+ * How far one modelo registry revision's declared authority reaches.
+ *
+ * The members form a ladder of increasing claim, each rung requiring
+ * everything the rung below it requires. Which families a rung demands is a
+ * question about *dispositions*, not raw population - a family may be honestly
+ * resolved as not applicable, with a reason and legal references - so an
+ * informative modelo carrying export layouts and no formulas can legitimately
+ * reach `FILING`. Registry build validation owns that rule; this enum owns
+ * only the vocabulary.
+ */
+export type RegistryAuthorityGrade = "applicability" | "calculation" | "filing";
+
+/**
+ * The kind of place a value comes from, as a filer thinks of it.
+ */
+export type SourceFamily =
+  | "records"
+  | "registers"
+  | "profile"
+  | "earlier_filings"
+  | "aeat_draft"
+  | "your_entries"
+  | "fixed_by_design";
+
+/**
+ * What a filer may do about a value this source supplies.
+ */
+export type SourceOverridePolicy =
+  | "fix_at_source"
+  | "override_with_reason"
+  | "edit_at_home"
+  | "enter"
+  | "fixed"
+  | "undecided";
+
+/**
+ * The family, policy and owning surface of one binding source kind.
+ */
+export type SourcePolicyV1 = {
+  source_kind: BindingSourceKind;
+  family: SourceFamily;
+  override_policy: SourceOverridePolicy;
+  surface: SourceSurface;
+};
+
 /**
  * How a resolved coordinate relates to the declaration supplying it.
  */

@@ -67,7 +67,12 @@ import { hex64 } from "./fixtures/ledger";
  *
  * The write shapes answer that Modelo 130's writes as the application
  * answered them: `edit` applies a typed value, `renewal` reads a form whose
- * baseline has since run out, renews it and reads the form again, and
+ * baseline has since run out, renews it and reads the form again,
+ * `renewal-entry` types a box on that form only after its baseline ran out,
+ * so the entry is answered stale until it is read on the renewed baseline,
+ * `renewal-apply` settles the first apply on the renewed form as refused for
+ * its baseline going stale and the next one as the application applied it,
+ * and
  * `prerequisite` reads a third quarter whose apply is refused on an earlier
  * filing it waits on;
  * `exported` is the checked declaration with its file made, which exports
@@ -149,6 +154,8 @@ export const MODELO_SHAPES = [
   "incomplete",
   "edit",
   "renewal",
+  "renewal-entry",
+  "renewal-apply",
   "prerequisite",
   "exported",
   "export-unverified",
@@ -525,6 +532,8 @@ export function modeloFixture(options: Options): ModeloPort {
 
   // What the scenario's writes did, as far as they settled.
   let applied = false;
+  // Whether the `renewal-apply` shape has refused an apply as stale yet.
+  let staleApplied = false;
   // How far the answer to the disagreement the applied 130 states has come.
   let answered: "open" | "accepted" | "revoked" = "open";
   let recorded = false;
@@ -570,6 +579,8 @@ export function modeloFixture(options: Options): ModeloPort {
       // Read half an hour ago; read again after its renewal, it admits a
       // fresh baseline.
       case "renewal":
+      case "renewal-entry":
+      case "renewal-apply":
         return renewals > 0 ? "130-1T-renewed" : "130-1T-expiring";
       case "rebase":
         return renewals > 0 ? "130-1T-rebased" : "130-1T-rebase";
@@ -1183,8 +1194,16 @@ export function modeloFixture(options: Options): ModeloPort {
               : catalogue[`preflight-${form}-stale`]
                 ? `preflight-${form}-stale`
                 : await reviewHeld(form, held);
+          // An entry typed only once the form's baseline ran out is answered
+          // as the application answers it then: stale.
+          const late = `${read}-late`;
+          const answered =
+            shape === "renewal-entry" && entries.length > 0 && catalogue[late]
+              ? late
+              : read;
           const preflight =
-            read && (await envelope<ModeloEditPreflightProjectionV1>(read));
+            answered &&
+            (await envelope<ModeloEditPreflightProjectionV1>(answered));
           if (!preflight) return unserved();
           // Read for exactly this baseline and, where it reports on them,
           // exactly the changes this window holds.
@@ -1206,6 +1225,13 @@ export function modeloFixture(options: Options): ModeloPort {
         }
         if (shape === "prerequisite")
           reject("refused", { operation_id: nextOperation() });
+        if (shape === "renewal-apply" && !staleApplied) {
+          staleApplied = true;
+          reject("refused", {
+            operation_id: nextOperation(),
+            reason: "REFUSED_MODELO_EDIT_BASELINE_STALE",
+          });
+        }
         const result = await envelope<unknown>(`apply-${form}`);
         if (!result) return unserved();
         applied = true;

@@ -17,6 +17,7 @@ from collections.abc import Mapping
 from types import MappingProxyType
 from typing import Final
 
+from cadrumo.application.ledger.actions_import import LedgerProviderID
 from cadrumo.application.ledger.entry_options_operation import ENTRY_OPTION_LABEL_PREFIX
 from cadrumo.core.resources.bundled_data import bundled_path
 
@@ -100,6 +101,8 @@ ENTRY_TOKEN_WORD_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyTy
         "desktop.ledger.prorrata.letra.": _ordered(_PRORRATA_FACT, "prorrata.sector_diferenciado_letra_order"),
         "desktop.ledger.capital.kind.": _ordered(_CAPITAL_FACT, "kind.order"),
         "desktop.ledger.capital.disposal.": _ordered(_CAPITAL_FACT, "disposal_regime.order"),
+        # Every format the import knows; an installation serves those whose parser it carries.
+        "desktop.ledger.import.provider.": tuple(provider.value for provider in LedgerProviderID),
     }
 )
 

@@ -138,6 +138,8 @@ class SourceGroup:
     readings: tuple[SourceReading, ...] = ()
     #: The declaration is recorded as filed, so the group asks nothing of the filer.
     recorded: bool = False
+    #: The declaration has been calculated; before then no source has been read, so a box waits on the calculation.
+    calculated: bool = True
     #: For the AEAT data group, the day the data was imported, when the form knows it.
     imported_on: date | None = None
 
@@ -260,7 +262,14 @@ def source_groups(form: ModeloWorkForm) -> tuple[SourceGroup, ...]:
         readings = _readings(fields, calculated=calculated) if sourced else ()
         imported_on = aeat_imported_on(form) if kind is ModeloFormSourceGroupKind.AEAT_DATA else None
         groups.append(
-            SourceGroup(kind=kind, fields=fields, readings=readings, recorded=recorded, imported_on=imported_on)
+            SourceGroup(
+                kind=kind,
+                fields=fields,
+                readings=readings,
+                recorded=recorded,
+                calculated=calculated,
+                imported_on=imported_on,
+            )
         )
     return tuple(groups)
 

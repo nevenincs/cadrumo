@@ -299,9 +299,10 @@ impl LlamaServer {
     }
 
     /// The command a start runs: the router on `address`, with the preset, and the
-    /// home, cache and temporary folders under the server's folder. The address is on
-    /// the command line, never in the environment, so the model instances the router
-    /// starts, which inherit its environment, never read it as their own.
+    /// home, cache and temporary folders under the server's folder, in llama.cpp's
+    /// offline mode. The address is on the command line, never in the environment, so
+    /// the model instances the router starts, which inherit its environment, never read
+    /// it as their own; the offline mode is in the environment, so they inherit it.
     fn serve_command(
         &self,
         address: SocketAddr,
@@ -319,6 +320,9 @@ impl LlamaServer {
             environment.insert(OsString::from(name), value.to_owned());
         };
         set("LLAMA_CACHE", home.join("cache").as_os_str());
+        // The router and every model instance use the cache only and never reach the
+        // network: the engine fetches every model itself.
+        set("LLAMA_ARG_OFFLINE", OsStr::new("1"));
         set("HOME", home.as_os_str());
         set("USERPROFILE", home.as_os_str());
         set("APPDATA", home.join("AppData").join("Roaming").as_os_str());
@@ -470,7 +474,7 @@ impl Supervised for LlamaServer {
             Ok(server) => server,
             Err(error) => {
                 if let LocalAiError::NotRunning(NotRunningCause::Start(failure)) = &error {
-                    program::record_start_failure(&self.folder, failure.kind());
+                    program::record_start_failure(&self.folder, failure);
                 }
                 return Err(error);
             }

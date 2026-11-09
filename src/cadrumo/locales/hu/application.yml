@@ -3008,6 +3008,20 @@ application:
         onwards: A Modelo {modelo} nyomtatvány {box}. mezője, {years}. és az azt követő
           adóévek.
         year_span: A Modelo {modelo} nyomtatvány {box}. mezője, {years}. adóév.
+      carry_attestation:
+        renta_negative_general_bases_pending:
+          action: Nincs korábbi évekből fennmaradó összegem
+          effect: 'Általad kijelentett 0-ként rögzítve: nincs korábbi évekből fennmaradó
+            összeg.'
+          origin: Kijelentetted, hogy nincs fennmaradó összeg
+          statement: Rögzíti, hogy az előző négy adóévből nincs beszámításra váró
+            negatív általános adóalapod (Ley 35/2006, 50.3. cikk). Minden összeg általad
+            kijelentett 0-ként kerül rögzítésre, a beírt számtól elkülönítve; ha egy
+            korábbi bevallás később összeget mutat, a bevallás jelzi az eltérést.
+      credits_heading:
+        mixed: Levonások
+        practised: Az általad levont összegek
+        suffered: A jövedelmedből levont összegek
       finding_action:
         add_activity_start: Add meg a profilodban, mikor kezdődött a tevékenységed,
           majd számolj újra.

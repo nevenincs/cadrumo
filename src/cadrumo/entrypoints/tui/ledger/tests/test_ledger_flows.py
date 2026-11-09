@@ -11,7 +11,9 @@ import pytest
 from textual.containers import VerticalScroll
 from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Input, Select, Static
+from textual.widgets.select import InvalidSelectValueError
 
+from .....application.ledger import actions_import
 from .....application.ledger.actions_import import LedgerProviderID
 from .....application.ledger.models import ManualLedgerTransactionResult
 from .....application.ledger.workspace import LedgerWorkspaceArea
@@ -520,6 +522,27 @@ async def test_import_flow_starts_at_the_path_and_keeps_one_scroll_owner() -> No
             widget for widget in screen.query(VerticalScroll) if widget.display and widget.show_vertical_scrollbar
         )
         assert all(owner.id == "ledger-page" for owner in owners)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("ofx_installed", [True, False])
+async def test_import_flow_offers_ofx_only_where_its_parser_is_installed(
+    monkeypatch: pytest.MonkeyPatch, ofx_installed: bool
+) -> None:
+    monkeypatch.setattr(actions_import, "optional_extra_available", lambda extra: ofx_installed or extra.extra != "ofx")
+    screen = LedgerImportScreen(_import_controller(ImportDoor()))
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(80, 24)) as pilot:
+        await settle(pilot)
+        provider = screen.query_one("#ledger-import-provider", Select)
+        provider.value = LedgerProviderID.CSV.value
+        if ofx_installed:
+            provider.value = LedgerProviderID.OFX.value
+            assert provider.value == LedgerProviderID.OFX.value
+        else:
+            with pytest.raises(InvalidSelectValueError):
+                provider.value = LedgerProviderID.OFX.value
+            assert provider.value == LedgerProviderID.CSV.value
 
 
 def test_flow_modules_reach_writers_only_through_injected_doors() -> None:

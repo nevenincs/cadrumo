@@ -19,6 +19,11 @@ Three rules keep a copy equivalent to the world it came from:
   installation records in it pin the origin's physical identity, and a copy is
   another root that installs its own on first use.
 * A copy opens under the same authority generation and password as its origin.
+* A copy is never taken on a clock earlier than the instant its world was
+  sealed. A world's records carry the clock that registered it, and the key
+  names the registration's inputs but not that clock, so a copy taken under an
+  earlier frozen clock would date its next record update before the record
+  was created; the copy is refused with the remedy instead.
 
 A copy resumes through :func:`publish_created_profile_session`, the publication
 registration and login share, from the key the build proved, so no password
@@ -34,6 +39,7 @@ import shutil
 from collections.abc import Callable, Generator, Hashable
 from contextlib import contextmanager
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, cast
@@ -45,6 +51,7 @@ from .....core.errors.hierarchy import CadrumoError
 from .....core.hashing import sha256_hex
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_location
+from .....core.time.clock import now
 from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....tests.run_artifact import file_inputs_digest, run_artifact, run_artifact_root
 from ...storage.custody.tests.portable_password_custody import portable_password_custody
@@ -84,11 +91,12 @@ _WORLDS: dict[str, SealedProfileWorld] = {}
 
 @dataclass(frozen=True, slots=True)
 class SealedProfileWorld:
-    """One worker's settled world: its bytes at rest and the key its registration proved."""
+    """One worker's settled world: its bytes at rest, the key its registration proved and when it was sealed."""
 
     origin: Path
     profile_id: str
     dek: bytes = field(repr=False)
+    sealed_at: datetime
 
 
 def _omit_installation_records(origin: Path) -> Callable[[str, list[str]], set[str]]:
@@ -160,7 +168,12 @@ def _read_world(entry: Path) -> SealedProfileWorld | None:
         tree = entry / _WORLD_TREE
         if not isinstance(record, dict) or record.get("tree") != _tree_digest(tree):
             return None
-        return SealedProfileWorld(origin=tree, profile_id=str(record["profile_id"]), dek=bytes.fromhex(record["dek"]))
+        return SealedProfileWorld(
+            origin=tree,
+            profile_id=str(record["profile_id"]),
+            dek=bytes.fromhex(record["dek"]),
+            sealed_at=datetime.fromisoformat(record["sealed_at"]),
+        )
     except (OSError, ValueError, KeyError, TypeError):
         return None
 
@@ -227,7 +240,12 @@ def _published_world(digest: str, build: Callable[[Path], tuple[str, bytes]]) ->
         tree = staging / _WORLD_TREE
         tree.mkdir()
         profile_id, dek = build(tree)
-        record = {"profile_id": profile_id, "dek": dek.hex(), "tree": _tree_digest(tree)}
+        record = {
+            "profile_id": profile_id,
+            "dek": dek.hex(),
+            "sealed_at": now().isoformat(),
+            "tree": _tree_digest(tree),
+        }
         (staging / _WORLD_RECORD).write_text(json.dumps(record), encoding="utf-8")
 
     def verify(entry: Path) -> bool:
@@ -248,6 +266,17 @@ def _published_world(digest: str, build: Callable[[Path], tuple[str, bytes]]) ->
         raise CadrumoError(f"the sealed profile world {digest} changed after it was verified")
     _WORLDS[digest] = world
     return world
+
+
+def _refuse_copy_before_seal(world: SealedProfileWorld) -> None:
+    """Refuse a copy of ``world`` taken on a clock earlier than the instant it was sealed."""
+    current = now()
+    if current < world.sealed_at:
+        raise AssertionError(
+            f"this sealed profile world was sealed at {world.sealed_at.isoformat()}, but the clock now reads "
+            f"{current.isoformat()}, so its profile record would be updated before it was created; register "
+            "the frozen-clock test's profile under its own label or world key so its world is sealed under that clock"
+        )
 
 
 def publish_world_session(world: SealedProfileWorld, *, profile_decode_context: ProfileDecodeContext) -> None:
@@ -271,6 +300,7 @@ def copy_world_into_storage_root(
     world: SealedProfileWorld, storage_root: Path, *, profile_decode_context: ProfileDecodeContext
 ) -> None:
     """Copy a world into the isolated root already open around the caller and resume its profile."""
+    _refuse_copy_before_seal(world)
     copy_sealed_tree(world.origin, storage_root.parent)
     publish_world_session(world, profile_decode_context=profile_decode_context)
 
@@ -280,6 +310,7 @@ def copied_profile_world(
     world: SealedProfileWorld, tmp_path: Path, *, profile_decode_context: ProfileDecodeContext
 ) -> Generator[tuple[Path, UUID]]:
     """Open this test's own copy of ``world`` with its profile resumed; the session ends with the scope."""
+    _refuse_copy_before_seal(world)
     tmp_path.mkdir(parents=True, exist_ok=True)
     copy_sealed_tree(world.origin, tmp_path)
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
