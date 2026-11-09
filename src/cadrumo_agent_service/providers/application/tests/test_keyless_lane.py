@@ -18,11 +18,14 @@ from cadrumo_client.contracts.model_runs import (
 
 from ...domain.catalog import ProviderAuthKind, ProviderConsumer
 from ...domain.record import (
+    LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
     AssistantAuth,
     CredentialKind,
     CredentialState,
     ListedModel,
+    LocalEngine,
     LocalModelListRecord,
+    LocalPlacement,
     ProviderCredential,
     ProviderSettingsRecord,
     new_settings_generation,
@@ -236,7 +239,9 @@ def test_a_keyless_lane_reads_nothing_until_the_person_selects_a_model_and_needs
     )
     assert runs.lookup("text_extraction") == ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
     record = LocalModelListRecord(
-        schema_version=2,
+        schema_version=LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
+        engine=LocalEngine.OLLAMA,
+        placement=LocalPlacement.AUTO,
         models=(),
         reading=ListedModel(lane=KEYLESS_LANE, model=KEYLESS_TEXT_MODEL),
         generation=new_settings_generation(),

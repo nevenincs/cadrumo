@@ -8,6 +8,7 @@ import pytest
 
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
+from ...providers.domain.record import LocalEngine
 from ...service import AgentService
 from ..auth_attempt import AuthAttempt
 
@@ -21,6 +22,7 @@ def test_settlement_consumes_resume_only_under_original_authority(
     lease = object()
     client = SimpleNamespace(lease=lease, connection=SimpleNamespace(close=lambda: None))
     service = AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
         client=cast(InstalledServiceClient, client),
         storage_root=tmp_path,
         gateway_bearer=bytearray(),

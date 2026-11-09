@@ -18,7 +18,14 @@ from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunRefusal, ModelRunRefusalCode
 
 from ...domain.catalog import LiveCatalogModel
-from ...domain.record import ListedModel, LocalModelListRecord, new_settings_generation
+from ...domain.record import (
+    LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
+    ListedModel,
+    LocalEngine,
+    LocalModelListRecord,
+    LocalPlacement,
+    new_settings_generation,
+)
 from ..lane_entries import merged_entries
 from ..model_runs import ModelRunService
 from ..resolution import ProviderCredentialResolver
@@ -64,7 +71,9 @@ def _runs(live: StaticLiveModels, reading: str, *added: str) -> ModelRunService:
     """A service whose person selected ``reading`` on the keyless lane and added ``added`` to its list."""
     store = MemoryLocalModelListStore()
     record = LocalModelListRecord(
-        schema_version=2,
+        schema_version=LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
+        engine=LocalEngine.OLLAMA,
+        placement=LocalPlacement.AUTO,
         models=tuple(ListedModel(lane=KEYLESS_LANE, model=model) for model in added),
         reading=ListedModel(lane=KEYLESS_LANE, model=reading),
         generation=new_settings_generation(),

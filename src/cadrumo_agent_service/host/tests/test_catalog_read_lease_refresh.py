@@ -14,6 +14,7 @@ from cadrumo_client.contracts.service_access import ServiceLease
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from ... import service_administration as service_module
+from ...providers.domain.record import LocalEngine
 from ...service import AgentService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -68,6 +69,7 @@ def _service(
     monkeypatch.setattr(AgentService, method, lambda _self: holder["work"]())
     monkeypatch.setattr(service_module, "ADMIN_READ_SECONDS", _WITHIN_SECONDS)
     service = AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
         client=cast(
             InstalledServiceClient, SimpleNamespace(lease=lease, connection=SimpleNamespace(close=lambda: None))
         ),

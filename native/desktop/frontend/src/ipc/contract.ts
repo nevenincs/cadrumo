@@ -327,6 +327,25 @@ export type AgentLocalModels =
     }
   | { state: "unreadable"; local_lanes: string[]; revision: string };
 
+/** The engine that serves the local models, as the service names it. */
+export type AgentLocalEngineToken = "llamacpp" | "ollama";
+/** Where the local models run: the device the engine finds, or the
+ * processor alone. */
+export type AgentLocalPlacement = "auto" | "cpu_only";
+/**
+ * The local engine and placement stored beside the model lists, with the
+ * revision a change sends back: the lists' own revision, as one record holds
+ * both; or the same record unreadable.
+ */
+export type AgentLocalEngine =
+  | {
+      state: "readable";
+      engine: AgentLocalEngineToken;
+      placement: AgentLocalPlacement;
+      revision: string;
+    }
+  | { state: "unreadable"; revision: string };
+
 // ---------------------------------------------------------------------------
 // Command table
 // ---------------------------------------------------------------------------
@@ -1038,6 +1057,20 @@ export interface HostCommands {
   agent_local_models_reset: {
     args: Authorized<{ expectedRevision: string }>;
     result: AgentLocalModels;
+  };
+  /** The local engine and placement, as the agent service stores them. */
+  agent_local_engine: { args: Authorized; result: AgentLocalEngine };
+  /** Stores the local engine and placement at the revision read; the service
+   * retires and restarts the assistant when either changes. A refusal is
+   * `agent_local_models_<reason>` (the same service reasons as the model
+   * list) or a column code. */
+  agent_local_engine_choose: {
+    args: Authorized<{
+      engine: AgentLocalEngineToken;
+      placement: AgentLocalPlacement;
+      expectedRevision: string;
+    }>;
+    result: AgentLocalEngine;
   };
   /** Stores the model documents are read with, on any lane the catalogue
    * reports, at the revision read. */

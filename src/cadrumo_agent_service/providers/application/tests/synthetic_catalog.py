@@ -82,7 +82,12 @@ KEYLESS_VISION_MODEL: Final = "synthetic-vision:1"
 
 def _hosted_model(model_id: str, *, vision: bool | None) -> dict[str, Any]:
     """Return one declared hosted model: only its vision may be stated, as the agent declares a hosted model."""
-    return synthetic_model(model_id, vision=vision) | {"size_bytes": None, "context_length": None, "licence": None}
+    return synthetic_model(model_id, vision=vision) | {
+        "size_bytes": None,
+        "context_length": None,
+        "licence": None,
+        "artefacts": None,
+    }
 
 
 def _hosted_models() -> tuple[dict[str, Any], ...]:
@@ -100,11 +105,12 @@ def synthetic_model(model_id: str, *, vision: bool | None) -> dict[str, Any]:
         "size_bytes": 1_000_000,
         "context_length": 4096,
         "licence": {"spdx": "MIT", "name": "Synthetic licence", "digest": "sha256:" + "0" * 64},
+        "artefacts": None,
     }
 
 
 def synthetic_document() -> str:
-    """Return the schema-version-5 document the synthetic agent serves."""
+    """Return the schema-version-6 document the synthetic agent serves."""
     lanes = [
         _lane("bare", "cli", "api_key_with_base_url", credential_id="bare", cli_programs=("example",)),
         _lane(
@@ -145,7 +151,7 @@ def synthetic_document() -> str:
         _lane("other", "api", "api_key", credential_id="other"),
         _lane("third", "cli", "api_key", credential_id="third", cli_programs=("third",)),
     ]
-    return json.dumps({"schema_version": 5, "providers": lanes, "icon_attribution": {}})
+    return json.dumps({"schema_version": 6, "providers": lanes, "icon_attribution": {}})
 
 
 def synthetic_catalog() -> ProviderCatalog:

@@ -1,4 +1,8 @@
-import type { AgentLocalModels } from "../ipc/contract";
+import type {
+  AgentLocalEngine,
+  AgentLocalEngineToken,
+  AgentLocalModels,
+} from "../ipc/contract";
 import { isDeclared } from "./agentCatalog";
 import type {
   AgentCatalogAnswer,
@@ -150,6 +154,37 @@ export function laneModelList(
   return [...recommended, ...extra];
 }
 
+const ENGINES: readonly string[] = [
+  "llamacpp",
+  "ollama",
+] satisfies AgentLocalEngineToken[];
+
+/** Whether `lane` is a local engine's lane: its provider is an engine token. */
+export const isEngineLane = (lane: Pick<CatalogLane, "provider">): boolean =>
+  ENGINES.includes(lane.provider);
+
+/** Whether `lane` is a local engine's lane that is not the one selected.
+ * With no readable engine nothing is held back. */
+export function heldBackByEngine(
+  lane: Pick<CatalogLane, "provider">,
+  engine: AgentLocalEngine | null,
+): boolean {
+  return (
+    engine?.state === "readable" &&
+    isEngineLane(lane) &&
+    lane.provider !== engine.engine
+  );
+}
+
+/** The lanes with the unselected engine's lane left out; every other lane
+ * is unchanged. */
+export function lanesForEngine<T extends Pick<CatalogLane, "provider">>(
+  lanes: readonly T[],
+  engine: AgentLocalEngine | null,
+): T[] {
+  return lanes.filter((lane) => !heldBackByEngine(lane, engine));
+}
+
 /** Why a change to a list was not made, in words. */
 export function listRefusalWords(t: Translate, code: string): string {
   switch (code) {
@@ -174,5 +209,20 @@ export function listRefusalWords(t: Translate, code: string): string {
       return t("desktop.account.reconnecting");
     default:
       return t("desktop.providers.local_models_refused_unknown");
+  }
+}
+
+/** Why the engine or placement was not changed, in words. */
+export function engineRefusalWords(t: Translate, code: string): string {
+  switch (code) {
+    case "agent_local_models_revision_conflict":
+    case "agent_local_models_committed_readback_failed":
+    case "agent_local_models_catalog_unavailable":
+    case "agent_local_models_unknown":
+      return listRefusalWords(t, code);
+    case "agent_local_engine_unavailable":
+      return t("desktop.providers.local_engine_unavailable");
+    default:
+      return t("desktop.providers.local_engine_change_failed");
   }
 }

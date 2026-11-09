@@ -16,10 +16,17 @@
 //!   unreadable record of added models admits no added model;
 //! - the size is the one the catalogue states for the model, and unknown when it states
 //!   none or a zero one, as for a model the person named;
+//! - the context llama.cpp loads the model with is the default the catalogue's artefacts
+//!   state for it, and none when it states none; a stated context that is no positive
+//!   32-bit count is a catalogue outside the service's contract, a host failure;
 //! - a service that does not answer or refuses refuses the download as unavailable, with
 //!   what it answered kept for diagnostics;
 //! - a list reply outside the service's contract is a host failure, not a service that is
 //!   not answering.
+//!
+//! The local engine and its placement are the ones the runtime manager runs: its selection
+//! record's, the defaults when there is none. A record nobody can read refuses the
+//! command as unavailable and never stands for the defaults.
 //!
 //! A keyless lane is a lane on this computer: the service's catalogue admits a keyless
 //! lane only with a loopback address. The catalogue's `reads_off_host` flag is not part
@@ -42,10 +49,15 @@ use crate::{
 use cadrumo_application::{
     component::Cancellation,
     error::application::{ApplicationError, ChildRefusal, ErrorCode, Operation},
-    provisioning::local_ai::models::{LocalModels, SelectedModel},
+    provisioning::local_ai::{
+        LocalEngine, Placement,
+        models::{LocalModels, SelectedModel},
+    },
 };
 use serde_json::{Value, json};
 use std::{
+    num::NonZeroU32,
+    path::PathBuf,
     sync::Arc,
     time::{Duration, Instant},
 };
@@ -168,11 +180,29 @@ impl Pending<'_> {
 /// Reads what a download is admitted with.
 pub struct Admission {
     agent: Arc<dyn Agent>,
+    /// The storage root the runtime manager reads its local engine selection from.
+    selection_root: PathBuf,
+    /// The package this process runs from, whose contents decide the default engine.
+    package_root: PathBuf,
 }
 
 impl Admission {
-    pub fn new(agent: Arc<dyn Agent>) -> Self {
-        Self { agent }
+    pub fn new(agent: Arc<dyn Agent>, selection_root: PathBuf, package_root: PathBuf) -> Self {
+        Self {
+            agent,
+            selection_root,
+            package_root,
+        }
+    }
+
+    /// The local engine and placement the runtime manager runs, which every engine of a
+    /// command is made for: the selection record's, or the defaults the package derives when
+    /// there is none.
+    /// A record nobody can read refuses, since running the defaults could run an engine
+    /// the person did not choose.
+    pub fn local_engine(&self) -> Result<(LocalEngine, Placement), Stop> {
+        local_models::manager_selection(&self.selection_root, &self.package_root)
+            .ok_or_else(|| Stop::unavailable("setup_local_engine_unreadable"))
     }
 
     /// Admits the requested model alone, if it is on the requested local lane's list.
@@ -237,8 +267,18 @@ impl Admission {
         let size = record
             .and_then(|record| record.stated_size(&request.model))
             .filter(|size| *size > 0);
+        let context = match record {
+            Some(record) => record.stated_context(&request.model).map_err(|_| {
+                Stop::Host(
+                    ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+                        .with_reason("setup_catalogue_contract"),
+                )
+            })?,
+            None => None,
+        };
         // This part identifies the transfer in the engine plan, never a stored task.
-        let model = SelectedModel::new("download", &request.model, size).map_err(|_| unusable())?;
+        let model = SelectedModel::new("download", &request.model, size, context)
+            .map_err(|_| unusable())?;
         if let Some(pending) = pending {
             pending
                 .check(&*self.agent)
@@ -275,7 +315,7 @@ impl Admission {
         let selected = names
             .iter()
             .enumerate()
-            .map(|(index, name)| SelectedModel::new(&format!("listed{index}"), name, None))
+            .map(|(index, name)| SelectedModel::new(&format!("listed{index}"), name, None, None))
             .collect::<Result<Vec<_>, _>>()
             .map_err(|_| Stop::Refused(Refusal::ModelSelectionUnusable))?;
         LocalModels::new(selected).map_err(|_| Stop::Refused(Refusal::ModelSelectionUnusable))
@@ -425,7 +465,39 @@ impl LaneRecord<'_> {
             .find(|entry| entry[self.key] == model)?["size_bytes"]
             .as_u64()
     }
+
+    /// The context llama.cpp loads `model` with, as the catalogue's artefacts for it state
+    /// it: `None` when it lists no such model, its entry has no artefacts, or they state
+    /// no context; refused when a stated context is no positive 32-bit count.
+    fn stated_context(self, model: &str) -> Result<Option<NonZeroU32>, MalformedContext> {
+        let Some(entry) = self
+            .models
+            .as_array()
+            .and_then(|models| models.iter().find(|entry| entry[self.key] == model))
+        else {
+            return Ok(None);
+        };
+        let artefacts = match entry.get("artefacts") {
+            None | Some(Value::Null) => return Ok(None),
+            Some(Value::Object(artefacts)) => artefacts,
+            Some(_) => return Err(MalformedContext),
+        };
+        match artefacts.get("llamacpp_default_context") {
+            None | Some(Value::Null) => Ok(None),
+            Some(stated) => stated
+                .as_u64()
+                .and_then(|tokens| u32::try_from(tokens).ok())
+                .and_then(NonZeroU32::new)
+                .map(Some)
+                .ok_or(MalformedContext),
+        }
+    }
 }
+
+/// A model's catalogue artefacts state a llama.cpp context that is no positive 32-bit
+/// count of tokens.
+#[derive(Debug)]
+struct MalformedContext;
 
 /// `lane`'s record in `catalogue`. A ready agent serves a lane's record by provider and
 /// transport, and names a model `model`; while none is ready the declared catalogue
