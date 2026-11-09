@@ -431,7 +431,7 @@ class OperationRecoveryInventoryReader(Protocol):
 
 
 @runtime_checkable
-class OperationJournal(OperationRecoveryInventoryReader, Protocol):
+class OperationJournal(OperationRecoveryInventoryReader, OperationRecoveryInventoryDeltaReader, Protocol):
     """Atomic snapshot-plus-event persistence with optimistic revision checks."""
 
     async def load(self, operation_id: OperationId) -> OperationPersistedSnapshot:

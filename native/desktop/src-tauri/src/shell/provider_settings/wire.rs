@@ -1305,7 +1305,7 @@ mod tests {
 
     #[test]
     fn the_console_sign_in_command_is_one_bounded_printable_template_with_a_provider_slot() {
-        let served = "aeat config provider-login --provider {provider}";
+        let served = "cadrumo-agent-service provider-login --provider {provider}";
         let mut answer = envelope(&[cli()]);
         answer["console_sign_in_command"] = json!(served);
         let read = status(success(answer)).unwrap();
@@ -1326,7 +1326,7 @@ mod tests {
         let long = format!("aeat {} {{provider}}", "x".repeat(300));
         for refused in [
             "",
-            "aeat config provider-login",
+            "cadrumo-agent-service provider-login",
             "aeat {provider} {provider}",
             "aeat /usr/bin/x {provider}",
             "aeat C:\\x {provider}",

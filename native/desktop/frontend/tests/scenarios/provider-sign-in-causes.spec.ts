@@ -57,7 +57,7 @@ test.beforeEach(async ({ page: target }) => {
 });
 
 const CONSOLE_COMMAND = (provider: string) =>
-  `aeat config provider-login --provider ${provider}`;
+  `cadrumo-agent-service provider-login --provider ${provider}`;
 
 test("a failed sign-in says why and what to do, with the console command to run when the step is a console sign-in", async ({
   page: target,

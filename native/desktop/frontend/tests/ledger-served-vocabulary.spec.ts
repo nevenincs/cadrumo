@@ -14,6 +14,7 @@ import {
   servedVocabulary,
   shareCategoryFamilies,
 } from "../src/shell/ledgerServedVocabulary";
+import { servedDraftCurrency } from "../src/shell/ledgerMovementReads";
 import { hexId, movement } from "./support/ledger";
 import { SERVED } from "./support/servedVocabulary";
 import { recordedCheck } from "./support/stagedCheck";
@@ -170,4 +171,27 @@ test("a category fits a classify command only if it is served, and a share only 
     kind: "needs",
     field: "category",
   });
+});
+
+test("a new movement is offered the served functional currency unless the accounts say otherwise", () => {
+  const served = SERVED.defaultCurrency;
+  expect(served).not.toBeNull();
+  expect(UNAVAILABLE.defaultCurrency).toBeNull();
+  const account = (currency: string | null) => ({
+    id: "a",
+    label: "A",
+    currency,
+  });
+  // Accounts read, none naming a currency: the served default.
+  expect(servedDraftCurrency([], served)).toBe(served);
+  expect(servedDraftCurrency([account(null)], served)).toBe(served);
+  // Accounts not read: nothing is offered yet.
+  expect(servedDraftCurrency(null, served)).toBeNull();
+  // The accounts' own currency wins, and a disagreement offers nothing.
+  expect(servedDraftCurrency([account("GBP"), account("GBP")], served)).toBe(
+    "GBP",
+  );
+  expect(
+    servedDraftCurrency([account("GBP"), account("USD")], served),
+  ).toBeNull();
 });

@@ -6,7 +6,7 @@ from typing import Final
 
 from .contracts import NextStep
 
-CONSOLE_SIGN_IN_COMMAND: Final = "aeat config provider-login --provider {provider}"
+CONSOLE_SIGN_IN_COMMAND: Final = "cadrumo-agent-service provider-login --provider {provider}"
 """The console command that signs a provider in, as value-free words; ``{provider}`` is for the frontend to fill."""
 
 _STEPS: Final[dict[str, NextStep]] = {

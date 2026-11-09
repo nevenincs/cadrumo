@@ -37,6 +37,7 @@ from ....application.operations.persistence.journal import (
     OperationObservationReader,
     OperationObservationUnknownOperationError,
     OperationPersistedSnapshot,
+    OperationRecoveryInventoryDelta,
     OperationRecoveryInventoryPage,
     OperationSecureReferenceStore,
     serialize_operation_operand,
@@ -133,6 +134,12 @@ class EphemeralOperationStore(
         # An ephemeral operation is never recovered: it ends with its process.
         del limit
         return OperationRecoveryInventoryPage(entries=(), next_cursor=after, has_more=False)
+
+    @override
+    async def inventory_delta(self, *, known: frozenset[OperationId]) -> OperationRecoveryInventoryDelta:
+        # Nothing ephemeral is ever recovered, so no record is present to classify.
+        del known
+        return OperationRecoveryInventoryDelta(present=frozenset(), entries=())
 
     @override
     async def resolve_idempotency(self, claim: OperationIdempotencyClaim) -> OperationId | None:

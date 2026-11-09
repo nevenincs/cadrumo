@@ -9,7 +9,6 @@ from .custody_command_specs import CONFIG_CUSTODY_COMMAND_SPECS
 from .google_command_specs import GOOGLE_COMMAND_SPECS
 from .profile_command_specs import PROFILE_COMMAND_SPECS
 from .profile_inventory_specs import PROFILE_INVENTORY_COMMAND_SPECS
-from .provider_login_command_specs import CONFIG_PROVIDER_LOGIN_COMMAND_SPECS
 from .repair_command_specs import CONFIG_REPAIR_COMMAND_SPECS
 from .reset_command_specs import CONFIG_RESET_COMMAND_SPECS
 from .storage_command_specs import CONFIG_STORAGE_COMMAND_SPECS
@@ -20,7 +19,6 @@ CONFIG_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     *GOOGLE_COMMAND_SPECS,
     *PROFILE_COMMAND_SPECS,
     *PROFILE_INVENTORY_COMMAND_SPECS,
-    *CONFIG_PROVIDER_LOGIN_COMMAND_SPECS,
     *CONFIG_REPAIR_COMMAND_SPECS,
     *CONFIG_RESET_COMMAND_SPECS,
     *CONFIG_STORAGE_COMMAND_SPECS,

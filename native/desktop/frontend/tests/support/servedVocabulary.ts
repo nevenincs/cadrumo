@@ -8,6 +8,7 @@ import type { LedgerEntryLimits } from "../../src/shell/ledgerSetup";
 export const SERVED = servedVocabulary(
   {
     profile_id: "p",
+    default_currency: recorded.default_currency,
     families: recorded.families,
     classifications: recorded.classifications,
     limits: recorded.limits as LedgerEntryLimits,

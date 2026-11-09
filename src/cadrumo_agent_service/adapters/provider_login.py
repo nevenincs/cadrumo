@@ -1,6 +1,7 @@
-"""Sign in to a provider by hand from a console, through the bundled agent's own login.
+"""``cadrumo-agent-service provider-login``: sign in to a provider by hand from a console.
 
-The agent runs against the same isolated provider home the desktop application
+When the desktop application's own sign-in fails, this command runs the bundled
+agent's own login. The agent runs against the same isolated provider home the desktop application
 uses, so the application finds the sign-in on its next status read. The
 operator's terminal is handed to the agent unchanged: nothing is captured,
 because the provider's login may print a device code there.
@@ -18,7 +19,10 @@ from pathlib import Path
 from typing import Final
 from uuid import UUID
 
+from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.storage_environment import configured_storage_root
+from cadrumo.domain.user_profile.errors import ProfileNotFoundError
+from cadrumo_client.commands import profile_selection
 
 from ..host.launch_environment import (
     EXTERNAL_BIN_DIRECTORIES_VARIABLE,
@@ -125,17 +129,53 @@ def prepare_provider_login(
     )
 
 
+def selected_profile_id(profile: str | None) -> UUID:
+    """Return the profile the sign-in is for: a UUID as given, a label the runtime resolves, or the selected one.
+
+    A UUID needs no runtime: the sign-in refuses a profile whose agent root does not exist.
+
+    Raises:
+        ProviderLoginRefusalError: No profile is selected, the label names none, or the runtime cannot answer.
+    """
+    text = (profile or "").strip()
+    if text:
+        try:
+            return UUID(text)
+        except ValueError:
+            pass
+    try:
+        chosen = (
+            profile_selection.require_runtime_login_target(text).bucket_id
+            if text
+            else profile_selection.command_profile_id()
+        )
+    except ProfileNotFoundError as error:
+        raise ProviderLoginRefusalError(
+            f"No profile is named {text!r}. Pass a profile's UUID or exact label."
+        ) from error
+    except CadrumoError as error:
+        raise ProviderLoginRefusalError(
+            "Cadrumo could not say which profile is selected. Open Cadrumo, or pass --profile with a profile's UUID."
+        ) from error
+    if chosen is None:
+        raise ProviderLoginRefusalError("No profile is selected. Select a profile in Cadrumo or pass --profile.")
+    return UUID(chosen)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Run the sign-in with the caller's terminal and return the agent's exit status."""
-    parser = argparse.ArgumentParser(prog="provider_login")
-    parser.add_argument("--profile-id", type=UUID, required=True)
-    parser.add_argument("--provider", required=True)
-    parser.add_argument("--device", action="store_true")
+    parser = argparse.ArgumentParser(
+        prog="cadrumo-agent-service provider-login",
+        description="Sign in to an AI provider by hand from this console, for the profile's agent.",
+    )
+    parser.add_argument("--provider", required=True, help="claude, codex or antigravity")
+    parser.add_argument("--device", action="store_true", help="use the device-code sign-in (codex only)")
+    parser.add_argument("--profile", help="profile UUID or exact label; omit to use the selected profile")
     options = parser.parse_args(argv)
     try:
         launch = prepare_provider_login(
             storage_root=configured_storage_root(),
-            profile_id=options.profile_id,
+            profile_id=selected_profile_id(options.profile),
             provider=options.provider,
             device=options.device,
         )
@@ -150,7 +190,3 @@ def main(argv: Sequence[str] | None = None) -> int:
         check=False,
     )
     return done.returncode
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

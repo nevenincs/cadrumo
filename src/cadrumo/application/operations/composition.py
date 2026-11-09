@@ -22,11 +22,10 @@ from .persistence.financial_operand_custody import (
 from .persistence.journal import (
     OperationEphemeralRouting,
     OperationEventStream,
-    OperationInventoryLimit,
     OperationJournal,
     OperationLeaseRepository,
     OperationObservationReader,
-    OperationRecoveryInventoryPage,
+    OperationRecoveryInventoryDelta,
     OperationSecureReferenceStore,
 )
 from .projection_services import (
@@ -158,7 +157,7 @@ class OperationComposedServices:
     _response_clock: Callable[[], datetime]
     _shutdown: Callable[[], Awaitable[OperationDrainResult]]
     _drain: Callable[[timedelta], Awaitable[OperationDrainResult]]
-    _inventory: Callable[[OperationId | None, OperationInventoryLimit], Awaitable[OperationRecoveryInventoryPage]]
+    _inventory: Callable[[], Awaitable[OperationRecoveryInventoryDelta]]
     _ephemeral: OperationEphemeralRouting | None
     _session_reads_end: Callable[[], None] | None = None
 
@@ -199,11 +198,9 @@ class OperationComposedServices:
             self.result.forget_snapshot()
             self.end_session_reads()
 
-    async def recovery_inventory(
-        self, *, after: OperationId | None, limit: OperationInventoryLimit
-    ) -> OperationRecoveryInventoryPage:
-        """Read one bounded page of existing canonical journal identities."""
-        return await self._inventory(after, limit)
+    async def recovery_inventory(self) -> OperationRecoveryInventoryDelta:
+        """Name and classify every existing canonical journal record under one journal exclusion."""
+        return await self._inventory()
 
     async def response(
         self,
@@ -321,8 +318,8 @@ def compose_operation_services(
         authority_broker.close()
         return await supervisor.drain(timeout)
 
-    async def inventory(after: OperationId | None, limit: OperationInventoryLimit) -> OperationRecoveryInventoryPage:
-        return await journal.inventory_page(after=after, limit=limit)
+    async def inventory() -> OperationRecoveryInventoryDelta:
+        return await journal.inventory_delta(known=frozenset())
 
     return OperationComposedServices(
         public_contracts=public_contracts,
