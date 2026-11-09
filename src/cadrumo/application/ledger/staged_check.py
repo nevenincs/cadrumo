@@ -37,7 +37,11 @@ from ...domain.transactions.enums import (
     is_classified,
     takes_business_share,
 )
-from ...domain.transactions.gross_validation import GrossReconstitutionFinding, gross_reconstitution_finding
+from ...domain.transactions.gross_validation import (
+    GROSS_NEEDS_WITHHOLDING_CATEGORY_FIELD,
+    GrossReconstitutionFinding,
+    gross_reconstitution_finding,
+)
 from ...domain.transactions.models import Transaction
 from .actions_common import display_decimal
 from .classify_requests import CLASSIFY_FIELD_NAMES, CLASSIFY_UNCLEARABLE_FIELD_NAMES
@@ -187,7 +191,7 @@ def _gross_blocker(
     )
     if finding is not GrossReconstitutionFinding.NEEDS_IRPF_CATEGORY:
         return None
-    return _Blocked(kind="needs_withholding_category", fields=("irpf_category",))
+    return _Blocked(kind="needs_withholding_category", fields=(GROSS_NEEDS_WITHHOLDING_CATEGORY_FIELD,))
 
 
 def route_for_cell(*, field: str, clear: bool, classified: bool) -> tuple[WriteRoute | None, RouteRefusal | None]:
