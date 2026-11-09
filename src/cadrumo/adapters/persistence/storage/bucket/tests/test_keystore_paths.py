@@ -18,6 +18,7 @@ The literal is the independent oracle. Do not migrate it to the accessor.
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import pytest
@@ -88,6 +89,57 @@ def test_rejects_keystore_paths_nested_under_bucket_storage(tmp_path: Path) -> N
         assert str(tmp_path) not in message, relative_parts
         assert excinfo.value.context == expected_context, relative_parts
         assert excinfo.value.translated_message == "errors.integrity.integrity_storage_bucket_validation"
+
+
+def test_separation_resolves_the_keystore_once_for_both_parents(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    target = keystore_path(tmp_path, "alpha")
+    resolved: list[Path] = []
+    resolve = Path.resolve
+
+    def recording(self: Path, strict: bool = False) -> Path:
+        resolved.append(self)
+        return resolve(self, strict=strict)
+
+    monkeypatch.setattr(Path, "resolve", recording)
+    validate_keystore_separation(tmp_path, "alpha")
+
+    assert resolved.count(target) == 1
+    assert sorted(map(str, resolved)) == sorted(
+        map(str, (target, tmp_path / "buckets" / "alpha" / "db", tmp_path / "buckets"))
+    )
+
+
+def _link_directory(target: Path, link: Path) -> None:
+    if sys.platform == "win32":
+        import _winapi
+
+        _winapi.CreateJunction(str(target), str(link))
+        return
+    link.symlink_to(target, target_is_directory=True)
+
+
+@pytest.mark.parametrize(
+    ("relative_parts", "reason"),
+    [
+        (("buckets", "alpha", "stowaway"), "under_buckets_parent"),
+        (("buckets", "alpha", "db", "stowaway"), "under_bucket_db_dir"),
+    ],
+)
+def test_a_keystore_that_links_into_bucket_storage_is_refused(
+    tmp_path: Path, relative_parts: tuple[str, ...], reason: str
+) -> None:
+    """SECURITY: the keystore is compared where it resolves, for each parent, not where it is named."""
+    inside = tmp_path.joinpath(*relative_parts)
+    inside.mkdir(parents=True)
+    link = tmp_path / "elsewhere"
+    _link_directory(inside, link)
+
+    with pytest.raises(BucketValidationError) as excinfo:
+        validate_keystore_separation(tmp_path, "alpha", configured_keystore=link)
+
+    assert excinfo.value.context == {"reason": reason, "surface": "bucket_keystore"}
 
 
 def test_external_path_passes_validation(tmp_path: Path) -> None:
