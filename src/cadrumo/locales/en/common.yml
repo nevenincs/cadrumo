@@ -4323,7 +4323,6 @@ desktop:
       list: Withholdings
       show: Show on the form
       show_box: Show box {box} on the form
-      title: Withholdings taken from your income
     details:
       close: Close details
       hide: Hide details
@@ -9231,6 +9230,7 @@ workspace:
       calculated: Calculation completed
       created: Declaration created
       discarded: Declaration discarded
+      edited: Changes applied
       exported: Declaration exported
       external_evidence_imported: External AEAT data imported
       filed: Filing recorded
@@ -9537,6 +9537,7 @@ workspace:
       reach: What it changes
       reach_others: 'Also:'
       reading: Reading the explanation…
+      remove: Remove your value
       retrieved: Read on {date}
       undo: Undo
       uses_outside_many: 'It also uses figures kept outside this form: {count}.'
@@ -10261,6 +10262,7 @@ workspace:
         Your value will win until you restore the source.'
       effect:
         clear: will have no value
+        remove: no longer holds your value and goes back to what the declaration gives
         replaces_aeat_draft: replaces the value from AEAT data
         replaces_earlier_filings: replaces the value from an earlier declaration
         replaces_fixed_by_design: replaces the value set by the form
@@ -10356,6 +10358,7 @@ workspace:
       nothing_to_restore: This box already shows its source's value.
     staged:
       clear: (will be cleared)
+      remove: (your value will be removed)
       restore: (back to source)
     step:
       calculate: Calculate
@@ -10389,7 +10392,8 @@ workspace:
         what.
       none: Nothing needs you on this form.
       profile: 'Before this period can be calculated, your profile must answer:'
-      sources: 'Before this declaration can be calculated, the declarations it adds up need:'
+      sources: 'Before this declaration can be calculated, the declarations it adds
+        up need:'
       title: To do
     value:
       not_applicable: n/a

@@ -37,7 +37,8 @@ async function compiled(): Promise<Draw> {
               ...props,
               bindingsTitle: "inputs",
               casillasTitle: "boxes",
-              boxName: (box) => createElement("span", null, box),
+              // The window names a box by the number its form prints.
+              boxName: (box) => createElement("span", null, box.box),
             }),
           );
       `,

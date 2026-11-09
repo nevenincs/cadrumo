@@ -27,6 +27,7 @@ export type DeclarationsLifecycleKind =
   | "created"
   | "renamed"
   | "calculated"
+  | "edited"
   | "verified"
   | "verification_refused"
   | "filed"

@@ -2903,6 +2903,10 @@ application:
             years is still pending offset (art. 50.3 Ley 35/2006). Each carry is recorded
             as a 0 you stated, apart from a figure you typed; if an earlier return
             later shows an amount, the declaration flags the difference.
+      credits_heading:
+        mixed: Withholdings
+        practised: Withholdings you have taken
+        suffered: Withholdings taken from your income
       finding_action:
         add_activity_start: Add the date your activity started to your profile, then
           calculate again.

@@ -4398,7 +4398,6 @@ desktop:
       list: Retencions
       show: Mostra-ho al formulari
       show_box: Mostra la casella {box} al formulari
-      title: Retencions practicades sobre els teus ingressos
     details:
       close: Tancar els detalls
       hide: Amagar els detalls
@@ -9410,6 +9409,7 @@ workspace:
       calculated: Càlcul completat
       created: Declaració creada
       discarded: Declaració descartada
+      edited: Canvis aplicats
       exported: Declaració exportada
       external_evidence_imported: Dades externes de l'AEAT importades
       filed: Presentació registrada
@@ -9720,6 +9720,7 @@ workspace:
       reach: Què canvia
       reach_others: 'També:'
       reading: Llegint l'explicació…
+      remove: Treu el teu valor
       retrieved: Consultat el {date}
       undo: Desfés
       uses_outside_many: 'També fa servir dades que es desen fora d''aquest model:
@@ -10458,6 +10459,7 @@ workspace:
         El teu valor manarà fins que restauris l''origen.'
       effect:
         clear: quedarà sense valor
+        remove: deixa de portar el teu valor i torna al que dona la declaració
         replaces_aeat_draft: substitueix el valor de les dades de l'AEAT
         replaces_earlier_filings: substitueix el valor d'una declaració anterior
         replaces_fixed_by_design: substitueix el valor fixat pel model
@@ -10555,6 +10557,7 @@ workspace:
       nothing_to_restore: Aquesta casella ja mostra el valor del seu origen.
     staged:
       clear: (es buidarà)
+      remove: (es traurà el teu valor)
       restore: (torna a l'origen)
     step:
       calculate: Calcular
@@ -10587,7 +10590,8 @@ workspace:
         què.
       none: Res d'aquest model no et necessita.
       profile: 'Abans de calcular aquest període, el teu perfil ha de respondre:'
-      sources: 'Abans de calcular aquesta declaració, falten les declaracions que resumeix:'
+      sources: 'Abans de calcular aquesta declaració, falten les declaracions que
+        resumeix:'
       title: Pendent
     value:
       not_applicable: no s'aplica

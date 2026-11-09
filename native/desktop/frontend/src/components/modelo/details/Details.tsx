@@ -20,6 +20,7 @@ import { BoxNumber } from "../form/BoxNumber";
 import {
   editKey,
   editsAdmitted,
+  removeIntent,
   restoreIntent,
   type FormSession,
   type StagedEdit,
@@ -94,12 +95,14 @@ function ValueCard({
   staged,
   onUndo,
   onRestore,
+  onRemove,
 }: {
   field: PublicModeloFormField;
   editable: boolean;
   staged: StagedEdit | undefined;
   onUndo: () => void;
   onRestore: (() => void) | null;
+  onRemove: (() => void) | null;
 }) {
   const t = useStrings();
   const shown = staged ? stagedText(t, staged) : field.value_text;
@@ -138,7 +141,7 @@ function ValueCard({
           {field.editability_words}
         </span>
       )}
-      {(staged || onRestore) && (
+      {(staged || onRestore || onRemove) && (
         <div className="mt-1 flex gap-2">
           {staged ? (
             <Button size="sm" variant="ghost" onClick={onUndo}>
@@ -146,12 +149,20 @@ function ValueCard({
               {t("workspace.modelo.details.undo")}
             </Button>
           ) : (
-            onRestore && (
-              <Button size="sm" variant="ghost" onClick={onRestore}>
-                <Icon name="restore" size="xs" />
-                {t("workspace.modelo.review.effect.restore")}
-              </Button>
-            )
+            <>
+              {onRestore && (
+                <Button size="sm" variant="ghost" onClick={onRestore}>
+                  <Icon name="restore" size="xs" />
+                  {t("workspace.modelo.review.effect.restore")}
+                </Button>
+              )}
+              {onRemove && (
+                <Button size="sm" variant="ghost" onClick={onRemove}>
+                  <Icon name="restore" size="xs" />
+                  {t("workspace.modelo.details.remove")}
+                </Button>
+              )}
+            </>
           )}
         </div>
       )}
@@ -454,6 +465,7 @@ export function Details({
   const key = editKey(field);
   const staged = session.staged.get(key);
   const restore = editsAdmitted(envelope) ? restoreIntent(field) : null;
+  const remove = editsAdmitted(envelope) ? removeIntent(field) : null;
   return (
     <div data-modelo-details="" className="flex flex-col gap-5 p-5">
       <div className="flex flex-col items-start gap-2">
@@ -478,6 +490,7 @@ export function Details({
         staged={staged}
         onUndo={() => session.unstage(key)}
         onRestore={restore ? () => session.stage(field, restore) : null}
+        onRemove={remove ? () => session.stage(field, remove) : null}
       />
       {read?.kind === "ready" ? (
         <CardParts
