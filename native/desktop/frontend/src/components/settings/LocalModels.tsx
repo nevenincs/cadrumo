@@ -443,7 +443,30 @@ export function LocalModels({
    * here, or when it failed. */
   const progressOf = (model: LaneModel): StepProgress | null => {
     const part = store.modelPart(model.id);
-    if (!part) return null;
+    if (!part) {
+      // A setup refused or failed before it planned a part for the model
+      // the person asked for, as when the host refuses the download while it
+      // plans, still says why on that model's row.
+      const ended = store.settledAsk;
+      return ended !== null &&
+        lane !== null &&
+        ended.lane === lane.id &&
+        ended.model === model.id &&
+        ended.run.outcome === "failed" &&
+        ended.run.failure !== null &&
+        model.installed !== true
+        ? {
+            step: null,
+            completed: null,
+            total: null,
+            result: {
+              changed: false,
+              failure: ended.run.failure,
+              transferred_bytes: 0,
+            },
+          }
+        : null;
+    }
     // A setup that stopped at the item itself, not in a part, settles with
     // its failure and no part failed: the model it planned and did not bring
     // here says so, instead of going back to its plain download.
