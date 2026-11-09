@@ -123,6 +123,9 @@ def create_attribution_entity_intracom_profile() -> None:
             "identity.name": "M349 Readiness CB",
             "activities.description": "intracommunity operations",
             "iva.does_intracomunitario": "true",
+            # Stated, not defaulted: the 50,000 EUR threshold selects the
+            # Modelo 349 cadence, so an unstated answer leaves the profile unready.
+            "iva.intracommunity_operations_exceed_50000_eur": "false",
         },
     )
 

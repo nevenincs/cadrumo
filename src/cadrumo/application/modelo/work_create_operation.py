@@ -50,6 +50,7 @@ from .profile_readiness_gate import (
     load_modelo_work_profile,
     require_existing_profile_baseline_ready_for_modelo_work,
     require_profile_ready_for_modelo_work,
+    require_taxpayer_projection_facts_declared,
 )
 from .work_addressing import (
     ModeloWorkEnsureResult,
@@ -264,6 +265,13 @@ class ModeloWorkCreateExecutor:
             if profile is None or profile.record.profile_id != profile_id:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             guard_active_profile_foral_ccaa(profile.record)
+            require_taxpayer_projection_facts_declared(
+                record=profile.record,
+                modelo=payload.modelo,
+                filing_year=period.filing_year,
+                period=period,
+                operation=operation,
+            )
             applicability = modelo_work_create_applicability_refusal(
                 payload.modelo,
                 allow_not_applicable=payload.allow_not_applicable,

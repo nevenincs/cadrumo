@@ -23,6 +23,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Mapping
+from contextlib import AbstractContextManager, nullcontext
 from datetime import date
 from typing import TYPE_CHECKING
 
@@ -36,6 +37,7 @@ from ...domain.calculations.registry.applicability_models import ApplicabilityVe
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.form_codes import form_for_role, forms_for_role
+from ...domain.calculations.registry.governed_fact_scope import governed_facts_in_scope, validating_governed_facts
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.irpf_income_categories import irpf_income_category_actividad_economica_token
 from ...domain.calculations.registry.profile_grounding import (
@@ -55,7 +57,7 @@ from ..operations.next_step import (
 )
 from ..operator_actions.preconditions import profile_setup_incomplete_verdict
 from ..user_profile.commands import ProfilePreflightReport, ProfilePreflightRequirement, ProfileValidationIssue
-from ..user_profile.completeness import missing_required_field_paths
+from ..user_profile.completeness import missing_required_field_paths, modelo_iva_block_missing_paths
 from ..user_profile.preflight import (
     ProfilePreflightService,
     build_profile_preflight_requirement,
@@ -454,13 +456,87 @@ def _require_not_pre_activity_period(
     )
 
 
+def _governed_facts_scope(operation: PinnedAuthorityOperation) -> AbstractContextManager[None]:
+    """Judge registry vocabularies against the caller's pin, or the scope already open."""
+    if governed_facts_in_scope() is not None:
+        return nullcontext()
+    return validating_governed_facts(operation)
+
+
+def taxpayer_projection_missing_paths(
+    record: UserProfileRecord,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[str, ...]:
+    """Return the unanswered profile questions the taxpayer projection cannot be built without.
+
+    Applicability is judged on that projection, so while any is unanswered
+    applicability is unknown: a readiness surface reports the questions as
+    missing and claims no applicability verdict either way.
+    """
+    values = record_to_path_values(record)
+    with _governed_facts_scope(operation):
+        return modelo_iva_block_missing_paths(values)
+
+
+def require_taxpayer_projection_facts_declared(
+    *,
+    record: UserProfileRecord,
+    modelo: str,
+    filing_year: int,
+    period: Period,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Refuse, naming the first unanswered question, before projecting a profile that cannot be projected.
+
+    Applicability is judged on the taxpayer projection, and that projection
+    refuses to build a claimed Modelo IVA block whose required yes/no answers
+    are missing rather than guess either answer. A missing answer is the
+    operator's to give, so it is refused here as a readiness gap whose door
+    opens that question, before any projection or effect.
+    """
+    missing_paths = taxpayer_projection_missing_paths(record, operation=operation)
+    if not missing_paths:
+        return
+    grounding_index = deferred_profile_grounding_index(operation)
+    requirements = tuple(
+        _requirement_for_profile_path(
+            path,
+            grounding_index=grounding_index,
+            profile_decode_context=operation.profile_decode_context(),
+        )
+        for path in missing_paths
+    )
+    raise ModeloProfileReadinessError(
+        translated_message="application.modelo.errors.profile_readiness_missing",
+        context={
+            "modelo": modelo,
+            "filing_year": filing_year,
+            "period": period.registry_token,
+            "profile_requirements": ", ".join(
+                format_profile_preflight_requirement(requirement) for requirement in requirements
+            ),
+        },
+        next_step=_first_missing_field_step(requirements),
+    )
+
+
 def _require_modelo_applicable_for_local_work(
     *,
     record: UserProfileRecord,
     bucket_id: str,
     modelo: str,
+    filing_year: int,
+    period: Period,
     operation: PinnedAuthorityOperation,
 ) -> None:
+    require_taxpayer_projection_facts_declared(
+        record=record,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        operation=operation,
+    )
     refusal = modelo_applicability_refusal(
         record=record,
         bucket_id=bucket_id,
@@ -773,6 +849,8 @@ def require_profile_ready_for_modelo_work(
             record=record,
             bucket_id=bucket_id,
             modelo=modelo,
+            filing_year=filing_year,
+            period=period,
             operation=operation,
         )
     _require_profile_filing_ready(
@@ -789,6 +867,8 @@ def require_profile_ready_for_modelo_work(
             record=record,
             bucket_id=bucket_id,
             modelo=modelo,
+            filing_year=filing_year,
+            period=period,
             operation=operation,
         )
     report = modelo_work_profile_preflight_report(
@@ -842,6 +922,8 @@ def require_existing_profile_baseline_ready_for_modelo_work(
             record=record,
             bucket_id=bucket_id,
             modelo=modelo,
+            filing_year=filing_year,
+            period=period,
             operation=operation,
         )
     _require_profile_filing_ready(
@@ -857,6 +939,8 @@ def require_existing_profile_baseline_ready_for_modelo_work(
             record=record,
             bucket_id=bucket_id,
             modelo=modelo,
+            filing_year=filing_year,
+            period=period,
             operation=operation,
         )
     _require_not_pre_activity_period(
@@ -912,4 +996,6 @@ __all__ = [
     "require_existing_profile_baseline_ready_for_modelo_work",
     "require_profile_ready_for_modelo_work",
     "require_profile_ready_for_work_unit",
+    "require_taxpayer_projection_facts_declared",
+    "taxpayer_projection_missing_paths",
 ]

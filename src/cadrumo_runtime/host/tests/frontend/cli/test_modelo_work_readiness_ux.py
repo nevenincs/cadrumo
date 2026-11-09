@@ -12,6 +12,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend,
 )
 from cadrumo.core.modelo import Modelo
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
     MODELO_OPERATOR_PROFILE_LABEL,
@@ -55,6 +56,117 @@ def _remove_representante_fields_from_operator_profile() -> None:
                 },
             ),
         )
+
+
+_UNANSWERED_IVA_QUESTION = "iva.redeme_enrolled"
+
+
+def _drop_operator_profile_fact(path: str) -> None:
+    """Leave one answered question unanswered, as a profile saved before it was asked does."""
+    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+        load_test_profile_record,
+        replace_test_profile_record,
+    )
+    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
+
+    pointer = read_profile_bucket(MODELO_OPERATOR_PROFILE_LABEL)
+    assert pointer is not None
+    with open_test_profile_session(pointer.bucket_id):
+        record = load_test_profile_record(pointer.bucket_id)
+        assert any(fact.path == path for fact in record.facts)
+        replace_test_profile_record(
+            record.model_copy(update={"facts": tuple(fact for fact in record.facts if fact.path != path)}),
+        )
+
+
+def _invoke_m303_work_create() -> Any:
+    with bundled_indexed_authority().operation() as operation:
+        filing_year = operation.supported_filing_years().horizon
+    return invoke_modelo_scenario_cli(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "303",
+            "--year", str(filing_year),
+            "--period", "1T",
+        ],
+    )  # fmt: skip
+
+
+def test_work_create_refuses_unanswered_iva_question_with_its_profile_field_door(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """An IVA yes/no question left unanswered is a readiness refusal naming that question, not a failure."""
+    create_modelo_operator_profile()
+    _drop_operator_profile_fact(_UNANSWERED_IVA_QUESTION)
+
+    with caplog.at_level("ERROR"):
+        result = _invoke_m303_work_create()
+
+    assert result.exit_code != 0, result.output
+    payload = json.loads(result.output)
+    assert payload["status"] == "error"
+    error = payload["error"]
+    assert error["code"] == "REFUSED_MODELO_PROFILE_READINESS", result.output
+    assert error["category"] == "REFUSED"
+    assert error["context"]["effect"] == "none"
+    assert "REDEME" in error["message"]
+    assert "ERROR_DEADLINES_PROFILE" not in result.output
+    assert "Traceback" not in result.output
+    assert not [record for record in caplog.records if record.levelname == "ERROR"]
+
+    listed = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "list"])
+    assert listed.exit_code == 0, listed.output
+    assert unwrap_schema_envelope(listed.output)["work_unit_count"] == 0
+
+
+def test_readiness_reports_unanswered_iva_question_as_a_missing_profile_field(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Readiness lists the unanswered question as the gap and claims no applicability verdict."""
+    create_modelo_operator_profile()
+    _drop_operator_profile_fact(_UNANSWERED_IVA_QUESTION)
+    with bundled_indexed_authority().operation() as operation:
+        filing_year = operation.supported_filing_years().horizon
+    revision_id = str(published_snapshot("303", filing_year=filing_year, period="1T").revision.id)
+
+    with caplog.at_level("ERROR"):
+        readiness = invoke_modelo_scenario_cli(
+            [
+                "--format", "json",
+                "app", "modelo", "readiness",
+                "--modelo", "303",
+                "--revision-id", revision_id,
+                "--year", str(filing_year),
+                "--period", "1T",
+            ],
+        )  # fmt: skip
+
+    assert readiness.exit_code == 2, readiness.output
+    payload = unwrap_schema_envelope(readiness.output)
+    assert payload["ready"] is False
+    assert payload["profile_ready"] is False
+    assert payload["profile_refusal"] == ""
+    section_key, field_key = _UNANSWERED_IVA_QUESTION.split(".")
+    (row,) = [entry for entry in payload["missing"] if entry["selector"] == _UNANSWERED_IVA_QUESTION]
+    assert (row["section_key"], row["field_key"]) == (section_key, field_key)
+    assert row["label"] and row["label"] != row["selector"]
+    assert "ERROR_DEADLINES_PROFILE" not in readiness.output
+    assert "Traceback" not in readiness.output
+    assert not [record for record in caplog.records if record.levelname == "ERROR"]
+
+
+def test_work_create_with_every_iva_question_answered_creates_the_work() -> None:
+    """ANTI-VACUITY: the same profile with the question answered is not refused."""
+    create_modelo_operator_profile()
+
+    result = _invoke_m303_work_create()
+
+    assert result.exit_code == 0, result.output
+    assert unwrap_schema_envelope(result.output)["status"] == "created"
+    listed = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "list"])
+    assert listed.exit_code == 0, listed.output
+    assert unwrap_schema_envelope(listed.output)["work_unit_count"] == 1
 
 
 def test_work_create_refuses_status_blocked_profile_missing_activity() -> None:

@@ -164,6 +164,19 @@ def conditional_profile_missing_required(values: Mapping[str, object]) -> tuple[
     return tuple(path for path in conditional_profile_required_paths(values) if not _has_value(values, path))
 
 
+def modelo_iva_block_missing_paths(values: Mapping[str, object]) -> tuple[str, ...]:
+    """Return the Modelo IVA block paths a claimed block owes and ``values`` leaves unanswered.
+
+    These are the facts the taxpayer projection refuses to build without: an
+    unanswered yes/no enrolment is neither yes nor no, so the projection cannot
+    stand in for it. A surface that projects the taxpayer asks for them first,
+    as a readiness gap the operator can answer, instead of failing inside the
+    projection.
+    """
+    with pinned_registry_scope():
+        return tuple(path for path in modelo_iva_profile_required_paths(values) if not _has_value(values, path))
+
+
 def _socio_row_indices(values: Mapping[str, object]) -> tuple[str, ...]:
     """Return the declared attribution-socio row indices, in declaration order."""
     prefix = f"{ATRIBUCION_SOCIOS_SECTION}."
@@ -375,6 +388,7 @@ __all__ = [
     "conditional_profile_required_paths",
     "iva_regime_required",
     "missing_required_field_paths",
+    "modelo_iva_block_missing_paths",
     "pinned_registry_scope",
     "profile_section_rows",
     "profile_value_is_present",
