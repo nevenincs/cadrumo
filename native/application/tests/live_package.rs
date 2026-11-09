@@ -330,6 +330,19 @@ fn the_packaged_llama_server_answers_as_the_pinned_build_and_generates_from_a_fe
         .post("/models/unload", unload.to_string().as_bytes())
         .unwrap();
     assert_eq!(status, 200);
+    // The router answers an unload before the model has gone: the full check below starts
+    // from a model the router no longer holds, as a check of a stored model does.
+    let unloading = Instant::now();
+    while !listed(router).iter().any(|entry| {
+        entry["id"] == llama_server::router_id(&name) && entry["status"]["value"] == "unloaded"
+    }) {
+        assert!(
+            unloading.elapsed() < FULL_CHECK_BUDGET,
+            "the model never read unloaded: {:?}",
+            listed(router)
+        );
+        std::thread::sleep(Duration::from_millis(100));
+    }
 
     // The engine's own full check, from the store to the unload.
     assert_eq!(
