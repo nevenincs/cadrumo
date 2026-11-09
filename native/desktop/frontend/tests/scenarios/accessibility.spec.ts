@@ -653,10 +653,16 @@ const SURFACES: {
     reach: async (target: Page) => {
       await openDeclarations(target);
       // The list's row opens no local work; the dialog opens the existing
-      // declaration.
+      // declaration, which is the period the read names as existing.
+      const read = await target.evaluate(async () =>
+        window.__fixtureModelo!.declarations("en"),
+      );
+      const existing = read.creation_targets.find(
+        (entry) => entry.modelo === "100" && entry.existing,
+      )!;
       await newDeclaration(target, "100");
       const dialog = target.getByRole("dialog");
-      await dialog.getByRole("radio", { checked: false }).last().click();
+      await dialog.getByRole("radio", { name: existing.period_words! }).click();
       await dialog
         .getByRole("button", {
           name: label("workspace.declarations.list.new.open_it"),
