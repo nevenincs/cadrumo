@@ -180,8 +180,10 @@ foreach(input uv.lock pyproject.toml dev/packaging/release-python-version
     dev/packaging/native/action_cache.py dev/packaging/native/build_toolchain.py)
   list(APPEND assembly_inputs "${PROJECT_SOURCE_DIR}/${input}")
 endforeach()
+# The builder-supplied commit is part of the staged build record, so a new one restages it.
 cadrumo_cached_command(assembly_command app-payload INPUTS ${assembly_inputs}
-  OUTPUTS "${CADRUMO_PATH_STAGE}/$<CONFIG>/app" "${CADRUMO_PATH_STAGE}/$<CONFIG>/ready")
+  OUTPUTS "${CADRUMO_PATH_STAGE}/$<CONFIG>/app" "${CADRUMO_PATH_STAGE}/$<CONFIG>/ready"
+  ENVIRONMENT CADRUMO_SOURCE_COMMIT)
 cadrumo_build_step(step_comment native-process-quiesce GROUP assembly
   SUMMARY "stop Cadrumo processes running from this build before its images are replaced")
 add_custom_target(native-process-quiesce

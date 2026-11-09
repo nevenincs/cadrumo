@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from ..assembly_identity import agent_closure, package_binaries, package_build_record, package_components
-from ..build_stamp import BuildStamp, ComponentIdentity
+from ..build_stamp import SOURCE_COMMIT_VARIABLE, BuildStamp, ComponentIdentity, supplied_source_commit
 from ..layout import application_images, load_layout
 from ..metadata import generate
 
@@ -85,10 +85,33 @@ def test_components_name_every_cadrumo_built_binary_with_its_own_component_build
 
 def test_the_staged_record_carries_the_package_identity_beside_the_interpreter_identity() -> None:
     shared = {"version": "0.6.0", "interpreter": {"build_id": "2026101901", "build_number": 1}}
-    record = package_build_record(shared, BuildStamp("2026101907", 7, "2026-10-19T09:00:00Z"), "release")
+    commit = "0123456789abcdef0123456789abcdef01234567"
+    record = package_build_record(
+        shared, BuildStamp("2026101907", 7, "2026-10-19T09:00:00Z"), "release", source_commit=commit
+    )
     assert record["interpreter"] == shared["interpreter"]
     assert (record["build_id"], record["build_sequence"], record["build_number"]) == ("2026101907", 7, 7)
     assert (record["build_type"], record["display_version"]) == ("release", "0.6.0+2026101907")
+    assert record["source_commit"] == commit
+
+
+def test_a_stage_built_without_a_supplied_commit_records_none_rather_than_a_guess() -> None:
+    record = package_build_record(
+        {"version": "0.6.0"}, BuildStamp("2026101907", 7, "2026-10-19T09:00:00Z"), "debug", source_commit=None
+    )
+    assert "source_commit" in record
+    assert record["source_commit"] is None
+
+
+def test_the_supplied_commit_is_read_from_the_builder_and_must_be_a_full_hash() -> None:
+    commit = "fedcba9876543210fedcba9876543210fedcba98"
+    assert supplied_source_commit({SOURCE_COMMIT_VARIABLE: commit}) == commit
+    assert supplied_source_commit({SOURCE_COMMIT_VARIABLE: f" {commit}\n"}) == commit
+    assert supplied_source_commit({}) is None
+    assert supplied_source_commit({SOURCE_COMMIT_VARIABLE: ""}) is None
+    for refused in ("fedcba9", commit.upper(), commit + "0", "HEAD", "feature/tui"):
+        with pytest.raises(ValueError, match=SOURCE_COMMIT_VARIABLE):
+            supplied_source_commit({SOURCE_COMMIT_VARIABLE: refused})
 
 
 def test_the_agent_closure_lists_its_installed_versions_by_name() -> None:
