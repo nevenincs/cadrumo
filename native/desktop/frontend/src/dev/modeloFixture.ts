@@ -203,6 +203,9 @@ export const MODELO_SHAPES = [
   "unknown",
   "unavailable",
   "slow",
+  /** The served list, with no period suggested for the first modelo it
+   * offers. */
+  "unsuggested",
 ] as const;
 /** The shapes a scenario names, and `renta-y<year>`: the couple of a filing
  * year the registry supports, whose own edition decides what its Modelo 100
@@ -361,6 +364,19 @@ function withStoredDefaults(
 
 /** The declarations list with the asset notes' sentences on the first local
  * Modelo 130 row, as what its calculation noted that withholds nothing. */
+/** The list without a served suggestion for the first modelo it offers. */
+function withoutSuggestion(
+  list: ModeloDeclarationsListProjectionV1,
+): ModeloDeclarationsListProjectionV1 {
+  const modelo = list.creation_targets[0]?.modelo;
+  return {
+    ...list,
+    creation_targets: list.creation_targets.map((target) =>
+      target.modelo === modelo ? { ...target, suggested: false } : target,
+    ),
+  };
+}
+
 function withListNotes(
   list: ModeloDeclarationsListProjectionV1,
 ): ModeloDeclarationsListProjectionV1 {
@@ -849,7 +865,11 @@ export function modeloFixture(options: Options): ModeloPort {
       );
       if (!list) return reject("unavailable");
       const read = withStoredDefaults(list);
-      return shape === "list-notes" ? withListNotes(read) : read;
+      return shape === "list-notes"
+        ? withListNotes(read)
+        : shape === "unsuggested"
+          ? withoutSuggestion(read)
+          : read;
     },
     async search(query, language, limit) {
       say(`modelo search ${language}`);

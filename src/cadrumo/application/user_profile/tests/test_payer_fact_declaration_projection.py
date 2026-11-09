@@ -6,7 +6,7 @@ The projection under test is the production one: a real
 classifier. A record that carries no answer must leave each gated modelo
 INCOMPLETE, a record that answers no must make it NOT_APPLICABLE, and a record
 that answers yes must make it APPLICABLE. Modelos 111, 115, 180, 190, 216, 296
-and 349 are all asserted, because they share these four facts and a defaulted
+and 349 are all asserted, because they share these six facts and a defaulted
 negative refused every one of them for a taxpayer nobody asked.
 """
 
@@ -62,4 +62,5 @@ def test_an_unanswered_record_carries_no_payer_fact_at_all(operation: PinnedAuth
     assert profile.has_employees is None
     assert profile.pays_professionals_with_retencion is None
     assert profile.pays_rent_with_retencion is None
+    assert profile.pays_non_resident_income_with_retencion is None
     assert profile.does_intracomunitario is None

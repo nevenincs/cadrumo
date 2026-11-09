@@ -267,7 +267,7 @@ def build_modelo_calculation_report_for_revision(
     published document is rendered from.
 
     Raises:
-        CalculationRevisionStateError: The revision is not sealed.
+        ModeloRevisionNotSealedError: The revision is not sealed.
         ModeloCalculationReportTaxpayerUnknownError: The profile declares no
             usable taxpayer identity.
     """
@@ -277,7 +277,7 @@ def build_modelo_calculation_report_for_revision(
         export_ports=export_ports,
         operation=operation,
     )
-    require_exportable_revision_state(revision)
+    require_exportable_revision_state(revision, work_unit=work_unit)
     # A sealed revision verified before a note was screened is refused as export
     # refuses it; only a revision already recorded as filed keeps its history.
     require_work_unit_calculation_screen_current(

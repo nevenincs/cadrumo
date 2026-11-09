@@ -8,9 +8,97 @@
 // is always present; a field of what the window sends may be left out where
 // the model gives it a default.
 
-import type { BindingSourceKind } from "./modelo";
+import type {
+  BindingSourceKind,
+  CasillaId,
+  OutputLanguage,
+  PublicPeriod,
+  VerificationCompletenessStatus,
+} from "./modelo";
 import type { SourceSurface } from "./modeloWork";
-import type { OperationNextStepV1 } from "./modeloWorkForm";
+import type {
+  FormLayoutSeedSource,
+  ModeloFormAeatData,
+  ModeloFormCalculationNote,
+  ModeloFormCarryAttestation,
+  ModeloFormCounts,
+  ModeloFormCredit,
+  ModeloFormDeadline,
+  ModeloFormEditClosure,
+  ModeloFormExport,
+  ModeloFormFiling,
+  ModeloFormInspectionReason,
+  ModeloFormLayoutProvenance,
+  ModeloFormOutlineGroup,
+  ModeloFormSourceGroup,
+  ModeloFormYearProjection,
+  ModeloWorkProgress,
+  OperationNextStepV1,
+  PublicModeloFormField,
+  PublicModeloFormIssue,
+  PublicModeloFormPage,
+  PublicModeloFormResult,
+  PublicModeloFormUnplacedField,
+} from "./modeloWorkForm";
+
+/**
+ * Typed local-human workbench view of ModeloWorkForm.
+ */
+export type PublicModeloWorkForm = {
+  modelo: string;
+  filing_year: number;
+  period: PublicPeriod;
+  registry_revision_id: string;
+  year_projection: ModeloFormYearProjection;
+  work_unit_id: string;
+  calculation_revision_id: string | null;
+  language: OutputLanguage;
+  layout_provenance: ModeloFormLayoutProvenance;
+  inspection_reason: ModeloFormInspectionReason | null;
+  seed_source: FormLayoutSeedSource | null;
+  pages: PublicModeloFormPage[];
+  outline: ModeloFormOutlineGroup[];
+  working_figures: PublicModeloFormField[];
+  unplaced: PublicModeloFormUnplacedField[];
+  answers: PublicModeloFormField[];
+  result_addresses: CasillaId[];
+  withholding_credits: ModeloFormCredit[];
+  withholding_credits_heading: string | null;
+  counts: ModeloFormCounts;
+  progress: ModeloWorkProgress;
+  operator_entries_known: boolean;
+  edit_admitted: boolean;
+  verification: VerificationCompletenessStatus | null;
+  issues: PublicModeloFormIssue[];
+  calculation_notes: ModeloFormCalculationNote[];
+  calculation_notes_held: boolean;
+  source_groups: ModeloFormSourceGroup[];
+  result: PublicModeloFormResult | null;
+  deadline: ModeloFormDeadline | null;
+  aeat_data: ModeloFormAeatData | null;
+  projectable: boolean;
+  asks_imputation_election: boolean;
+  compares_taxation: boolean;
+  compares_borrador: boolean;
+  offers_iva_wallet: boolean;
+  filing: ModeloFormFiling | null;
+  last_export: ModeloFormExport | null;
+  edit_closure: ModeloFormEditClosure | null;
+  carry_attestations: ModeloFormCarryAttestation[];
+  modelo_title: string | null;
+  modelo_name: string | null;
+  modelo_number: string | null;
+  period_words: string | null;
+};
+
+/**
+ * Typed local-human workbench view of ModeloWorkFormLoadV1.
+ */
+export type PublicModeloWorkFormLoadV1 = {
+  form: PublicModeloWorkForm;
+  verified: boolean;
+  filed: boolean;
+};
 
 /**
  * Typed local-human view of RefundEligibility: whether the IVA refund may be

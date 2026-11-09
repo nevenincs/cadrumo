@@ -42,7 +42,7 @@ from ...domain.transactions.protocols import TransactionCatalogueRepositoryProto
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..user_profile.projections import record_to_path_values
 from .action_errors import (
-    ModeloAggregationBindingError,
+    ModeloAggregationInputConflictError,
 )
 from .calculation_action_ports import (
     CalculationActionPorts,
@@ -1109,7 +1109,7 @@ def _reject_manual_m210_gross_income_override_in_ledger_mode(
     if mode is not M210GrossIncomeSourceMode.LEDGER:
         return
     if "rendimientos_integros" in casilla_inputs:
-        raise ModeloAggregationBindingError(
+        raise ModeloAggregationInputConflictError(
             translated_message="application.modelo.errors.caller_casilla_source_binding_conflict",
             context={"casillas": ["rendimientos_integros"]},
         )
@@ -1124,13 +1124,13 @@ def _validate_m210_official_tipo_renta_selection(
     """Keep raw M210 code and conceptual formula token coherent at the application boundary."""
     if m210_official_tipo_renta_code is None:
         if mode is M210GrossIncomeSourceMode.LEDGER:
-            raise ModeloAggregationBindingError(
+            raise ModeloAggregationInputConflictError(
                 translated_message="application.modelo.errors.m210_ledger_source_selection_required",
             )
         return
     expected_tipo_renta = m210_tipo_renta_code_projection().get(m210_official_tipo_renta_code)
     if expected_tipo_renta is None or text_casilla_inputs.get("tipo_renta") != expected_tipo_renta.value:
-        raise ModeloAggregationBindingError(
+        raise ModeloAggregationInputConflictError(
             translated_message="application.modelo.errors.m210_official_tipo_renta_selection_mismatch",
             context={
                 "official_tipo_renta_code": m210_official_tipo_renta_code,
@@ -1149,7 +1149,7 @@ def _reject_manual_m210_agrupacion_rows_in_ledger_mode(
     if mode is M210GrossIncomeSourceMode.LEDGER and any(
         isinstance(row, Modelo210AgrupacionRentaRow) for row in detail_rows
     ):
-        raise ModeloAggregationBindingError(
+        raise ModeloAggregationInputConflictError(
             translated_message="application.modelo.errors.m210_ledger_manual_agrupacion_rows",
         )
 
@@ -1167,7 +1167,7 @@ def _merge_bucket_bound_inputs(
         if casilla_id in casillas and casillas[casilla_id].input_kind == InputKind.COMPUTED
     )
     if computed:
-        raise ModeloAggregationBindingError(
+        raise ModeloAggregationInputConflictError(
             translated_message="application.modelo.errors.computed_casilla_binding_conflict",
             context={"computed": computed},
         )
