@@ -23,8 +23,11 @@ from ...application.ports import (
     UnreadableLocalModelList,
 )
 from ...domain.record import (
+    LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
     ListedModel,
+    LocalEngine,
     LocalModelListRecord,
+    LocalPlacement,
     local_model_list_record_document,
     new_settings_generation,
     parse_local_model_list_record,
@@ -117,14 +120,35 @@ def _store(records: _Records) -> SecureLocalModelListStore:
     return SecureLocalModelListStore(client=cast(InstalledServiceClient, records))
 
 
-def _record(*models: ListedModel) -> LocalModelListRecord:
+def _record(
+    *models: ListedModel,
+    engine: LocalEngine | None = LocalEngine.OLLAMA,
+    placement: LocalPlacement = LocalPlacement.AUTO,
+) -> LocalModelListRecord:
     return LocalModelListRecord(
-        schema_version=2, models=models, generation=new_settings_generation(), updated_at=_UPDATED_AT
+        schema_version=LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
+        models=models,
+        engine=engine,
+        placement=placement,
+        generation=new_settings_generation(),
+        updated_at=_UPDATED_AT,
     )
 
 
 _ADDED = ListedModel(lane="local_api", model="custom-model:7b")
 _OTHER = ListedModel(lane="local_api", model="another:1")
+
+
+def _model_list_v2(*, reading: ListedModel | None = _OTHER) -> bytes:
+    """A schema version 2 document as it was stored: the added models and the reading model, no engine setting."""
+    document: dict[str, object] = {
+        "schema_version": 2,
+        "models": [{"lane": _ADDED.lane, "model": _ADDED.model}],
+        "reading": None if reading is None else {"lane": reading.lane, "model": reading.model},
+        "generation": "d" * 64,
+        "updated_at": "2026-10-26T09:00:00Z",
+    }
+    return json.dumps(document, sort_keys=True, separators=(",", ":")).encode("utf-8")
 
 
 def _role_choices(*choices: tuple[str, str, str]) -> bytes:
@@ -190,6 +214,66 @@ def test_a_stored_per_role_record_reads_as_the_models_it_chose_without_being_rew
     assert records.rows[LOCAL_MODEL_LIST_KEY] == ("a" * 64, stored)
 
 
+def test_a_stored_model_list_record_without_an_engine_setting_reads_as_unchosen_without_being_rewritten() -> None:
+    records = _Records()
+    stored = _model_list_v2()
+    records.rows[LOCAL_MODEL_LIST_KEY] = ("a" * 64, stored)
+
+    read = _store(records).read()
+
+    assert isinstance(read, StoredLocalModelList)
+    assert read.revision == "a" * 64
+    assert read.record.schema_version == LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION
+    assert read.record.models == (_ADDED,)
+    assert read.record.reading == _OTHER
+    assert read.record.generation == "d" * 64
+    assert read.record.updated_at == datetime(2026, 10, 26, 9, 0, tzinfo=UTC)
+    assert (read.record.engine, read.record.placement) == (None, None)
+    assert records.rows[LOCAL_MODEL_LIST_KEY] == ("a" * 64, stored)
+
+
+def test_a_stored_model_list_record_without_a_reading_model_keeps_none_when_migrated() -> None:
+    parsed = parse_local_model_list_record(_model_list_v2(reading=None))
+
+    assert parsed.reading is None
+    assert parsed.models == (_ADDED,)
+
+
+def test_a_migrated_per_role_record_carries_no_engine_choice() -> None:
+    parsed = parse_local_model_list_record(_role_choices(("text_extraction", "local_api", "custom-text:1")))
+
+    assert parsed.schema_version == LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION
+    assert (parsed.engine, parsed.placement) == (None, None)
+
+
+def test_the_engine_setting_round_trips_through_the_document_and_the_store() -> None:
+    record = _record(_ADDED, engine=LocalEngine.LLAMACPP, placement=LocalPlacement.CPU_ONLY)
+
+    document = local_model_list_record_document(record)
+    assert b'"engine":"llamacpp"' in document
+    assert b'"placement":"cpu_only"' in document
+    assert parse_local_model_list_record(document) == record
+
+    records = _Records()
+    store = _store(records)
+    assert store.write(record, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID) is None
+    read = store.read()
+    assert isinstance(read, StoredLocalModelList)
+    assert read.record == record
+
+
+def test_a_record_without_an_engine_setting_cannot_be_built_at_the_current_version() -> None:
+    with pytest.raises(ValidationError):
+        LocalModelListRecord.model_validate(
+            {
+                "schema_version": LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
+                "models": [],
+                "generation": "d" * 64,
+                "updated_at": _UPDATED_AT,
+            }
+        )
+
+
 def test_a_write_or_delete_against_a_stale_revision_is_refused_and_changes_nothing() -> None:
     records = _Records()
     store = _store(records)
@@ -210,11 +294,23 @@ def test_a_write_or_delete_against_a_stale_revision_is_refused_and_changes_nothi
     [
         b"not json",
         b"\xff\xfe",
-        local_model_list_record_document(_record(_ADDED)).replace(b'"schema_version":2', b'"schema_version":3'),
+        local_model_list_record_document(_record(_ADDED)).replace(b'"schema_version":3', b'"schema_version":4'),
         local_model_list_record_document(_record(_ADDED)).replace(b"local_api", b"Local API"),
+        local_model_list_record_document(_record(_ADDED)).replace(b'"engine":"ollama"', b'"engine":"vllm"'),
+        local_model_list_record_document(_record(_ADDED)).replace(b'"placement":"auto"', b'"placement":"gpu_only"'),
+        _model_list_v2().replace(b'"updated_at"', b'"engine":"ollama","updated_at"'),
         _role_choices(("Vision", "local_api", "custom-vision:1")),
     ],
-    ids=["not-json", "not-utf8", "unknown-schema", "malformed-lane", "malformed-earlier-role"],
+    ids=[
+        "not-json",
+        "not-utf8",
+        "unknown-schema",
+        "malformed-lane",
+        "unknown-engine",
+        "unknown-placement",
+        "earlier-schema-with-engine-field",
+        "malformed-earlier-role",
+    ],
 )
 def test_a_stored_record_that_does_not_validate_is_unreadable_never_absent(payload: bytes) -> None:
     records = _Records()

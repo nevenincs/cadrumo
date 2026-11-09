@@ -7,6 +7,7 @@ Core types: :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`,
 from __future__ import annotations
 
 import asyncio
+import threading
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -14,6 +15,7 @@ from typing import TYPE_CHECKING
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language
 from ...core.operations import (
@@ -117,13 +119,23 @@ async def prepare_modelo_work_calculation(
     operation: PinnedAuthorityOperation,
     calculation_action_ports_factory: CalculationActionPortsFactory,
     attachment_store_factory: Callable[[str], AttachmentStoreProtocol],
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> PreparedModeloWorkCalculation:
-    """Apply the ordinary admission, M303 evidence, and input-channel policy."""
+    """Apply the ordinary admission, M303 evidence, and input-channel policy.
+
+    ``mutation_writer`` admits every persistence commit the prepared ports make.
+    """
     from ...core.bucket_pointer import require_active_bucket_id
     from .work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
 
     active_bucket_id = require_active_bucket_id()
-    ports = calculation_action_ports_factory(bucket_id=active_bucket_id, operation=operation)
+    ports = (
+        calculation_action_ports_factory(bucket_id=active_bucket_id, operation=operation)
+        if mutation_writer is None
+        else calculation_action_ports_factory(
+            bucket_id=active_bucket_id, operation=operation, mutation_writer=mutation_writer
+        )
+    )
     if ports.work_unit_repository.bucket_id != active_bucket_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     work_unit = require_active_work_unit(
@@ -303,6 +315,42 @@ def _ordinary_m303_filing_instance_evidence(
     )
 
 
+class _FirstWriteAnnouncement:
+    """Journal a possible effect from the worker thread before the first actual write."""
+
+    def __init__(self, context: OperationExecutorContext, loop: asyncio.AbstractEventLoop) -> None:
+        self._context = context
+        self._loop = loop
+        self._lock = threading.Lock()
+        self._began = False
+
+    @property
+    def began(self) -> bool:
+        """Report whether any persistence commit was admitted."""
+        with self._lock:
+            return self._began
+
+    def write(self, write: Callable[[], None]) -> None:
+        """Announce the uncertain effect once, then run ``write``."""
+        with self._lock:
+            if not self._began:
+                if _runs_on(self._loop):
+                    raise InternalInvariantError("a calculation write must run off the operation event loop")
+                asyncio.run_coroutine_threadsafe(
+                    self._context.events.effect(OperationEffect.UNKNOWN), self._loop
+                ).result()
+                self._began = True
+        write()
+
+
+def _runs_on(loop: asyncio.AbstractEventLoop) -> bool:
+    """Report whether the calling thread is running ``loop``, which a blocking wait would deadlock."""
+    try:
+        return asyncio.get_running_loop() is loop
+    except RuntimeError:
+        return False
+
+
 class ModeloWorkCalculateExecutor:
     """Recalculate a declaration from its ledger under the request's caller context.
 
@@ -339,11 +387,13 @@ class ModeloWorkCalculateExecutor:
         await context.events.phase("modelo.work.calculate.ledger")
         payload = request.payload
         actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor)
+        writes = _FirstWriteAnnouncement(context, asyncio.get_running_loop())
         prepared = await prepare_modelo_work_calculation(
             payload=payload,
             operation=context.authority_operation,
             calculation_action_ports_factory=self._calculation_action_ports_factory,
             attachment_store_factory=self._attachment_store_factory,
+            mutation_writer=writes.write,
         )
 
         # A blocked ledger is a refusal with nothing written, so it is checked
@@ -361,7 +411,9 @@ class ModeloWorkCalculateExecutor:
             # The canonical service also owns migrations and IVA decisions.
             # Hold COMMIT across all of it, including cancellation settlement.
             async with context.cancellation.irreversible_section():
-                await context.events.effect(OperationEffect.UNKNOWN)
+                # A refusal or failure before the first write leaves the
+                # effect at none; the first write journals that records may
+                # have changed before it begins.
                 result = await asyncio.to_thread(
                     calculate_prepared_modelo_work,
                     prepared,
@@ -369,7 +421,7 @@ class ModeloWorkCalculateExecutor:
                 )
                 # A revision no-op alone cannot establish that preparatory
                 # migrations and IVA decisions also made no changes.
-                if result.revision_published:
+                if result.revision_published or writes.began:
                     await context.events.effect(OperationEffect.UPDATED)
                 public_result = await asyncio.to_thread(
                     calculation_public_result,

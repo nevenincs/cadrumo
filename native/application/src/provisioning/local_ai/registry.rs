@@ -20,6 +20,11 @@
 //! under `manifests/<host>/<namespace>/<model>/<tag>`, so a model the folder names is
 //! whole, and the program and the quick check both read it.
 //!
+//! A program serving the same store may clear it of blobs no manifest names, as Ollama
+//! does when it starts. So just before the manifest is written, every blob it names is
+//! looked for once more, and one that is gone is fetched or written again; only a store
+//! that holds them all gets the manifest.
+//!
 //! Progress counts the bytes held of the whole model out of the sum of the sizes the
 //! manifest states, each distinct blob counted once, and never goes back.
 //!
@@ -36,9 +41,9 @@ use crate::{
     filesystem,
     provisioning::{
         connection::Network,
-        failure::{FailureCategory, TransferFailure},
-        http::{self, Body, Framing},
-        transfer::{self, MAX_REDIRECTS, Pinned, Transfer, TransferEvent},
+        failure::{FailureCategory, FailureStage, TransferFailure},
+        http::{Body, Framing},
+        transfer::{self, Pinned, Round, Transfer, TransferEvent},
         url::HttpsUrl,
     },
     value::{HostName, Sha256Digest},
@@ -48,7 +53,7 @@ use std::{
     collections::{BTreeMap, BTreeSet},
     fmt,
     fs::{self, File},
-    io::{self, BufReader, Read, Write},
+    io::{self, Read, Write},
     path::{Path, PathBuf},
     sync::atomic::{AtomicU64, Ordering},
 };
@@ -56,7 +61,12 @@ use std::{
 /// The manifest media type a pull asks the registry for.
 pub const MANIFEST_MEDIA_TYPE: &str = "application/vnd.docker.distribution.manifest.v2+json";
 
-/// The storage hosts the default registry redirects a blob request to.
+/// The storage hosts the default registry redirects a blob request to. On 2026-11-08 a
+/// `GET` of a layer blob of `library/qwen3:1.7b` (config, model, template) and of a
+/// `library/llama3.2:1b` layer each answered `307 Temporary Redirect` to this one host, in
+/// one hop with a signed query; a `Range` request there answered `206` with an exact
+/// `Content-Range`. A host the registry moves blobs to is refused as blocked until it is
+/// added here.
 const DEFAULT_REGISTRY_BLOB_HOSTS: &[&str] =
     &["dd20bb891979d25aebc8bec07b2b3bbc.r2.cloudflarestorage.com"];
 
@@ -65,6 +75,9 @@ const DEFAULT_REGISTRY_BLOB_HOSTS: &[&str] =
 pub(super) const PARTIAL: &str = "partial";
 /// The most layers one manifest may name.
 const LAYERS_LIMIT: usize = 256;
+/// How many times blobs that went missing before the manifest was written are stored
+/// again before the pull gives up.
+const RESTORE_ROUNDS: usize = 2;
 const DIGEST_PREFIX: &str = "sha256:";
 
 /// The hosts a pull of `name` may reach: its registry and, for the default registry, the
@@ -145,6 +158,8 @@ impl From<RegistryError> for LocalAiError {
         match error {
             RegistryError::Cancelled => Self::Engine(Error::Cancelled),
             RegistryError::Engine(error) => Self::Engine(error),
+            // A download that failed keeps its facts for the diagnostic record.
+            RegistryError::Network(failure) => Self::Engine(Error::Download(failure)),
             other => Self::Failed(other.category()),
         }
     }
@@ -307,7 +322,7 @@ fn blob(descriptor: Descriptor) -> Result<Blob, RegistryError> {
 }
 
 /// The bytes a pull has reported, so progress across blobs only grows.
-struct Tally {
+pub(super) struct Tally {
     /// Bytes of the blobs already held.
     done: u64,
     total: u64,
@@ -315,6 +330,23 @@ struct Tally {
 }
 
 impl Tally {
+    /// A tally of `blobs`, reported at once as nothing held yet.
+    pub(super) fn start(blobs: &[&Blob], events: &mut dyn FnMut(TransferEvent)) -> Self {
+        let mut tally = Self {
+            done: 0,
+            total: sum_of(blobs),
+            reported: 0,
+        };
+        tally.report(events, 0);
+        tally
+    }
+
+    /// Counts `blobs` as not held again, to store them once more. The progress already
+    /// reported stays, so it never goes back.
+    pub(super) fn again(&mut self, blobs: &[&Blob]) {
+        self.done = self.total.saturating_sub(sum_of(blobs));
+    }
+
     /// Reports `completed` bytes of the whole model, never fewer than before.
     fn report(&mut self, events: &mut dyn FnMut(TransferEvent), completed: u64) {
         self.reported = completed.min(self.total).max(self.reported);
@@ -368,37 +400,35 @@ impl Registry {
                 &format!("blobs/{}", blob.reference()),
             )?])
         };
-        self.store(&manifest.blobs(), &hosts, transfer, &sources)?;
-        self.publish(name, &manifest)?;
+        let blobs = manifest.blobs();
+        let mut tally = Tally::start(&blobs, &mut *transfer.events);
+        self.store(&blobs, &hosts, transfer, &sources, &mut tally)?;
+        self.publish_whole(name, &manifest, &mut |missing| {
+            tally.again(missing);
+            self.store(missing, &hosts, transfer, &sources, &mut tally)
+        })?;
         Ok(manifest)
     }
 
     /// Stores each of `blobs` the store does not already hold whole, fetched from the
     /// addresses `sources` names for it and only through `hosts`. Progress counts the
-    /// bytes held out of the sum of their sizes. A failure leaves resumable partial
-    /// bytes, never damaged ones.
+    /// bytes held on `tally`. A failure leaves resumable partial bytes, never damaged
+    /// ones.
     pub(super) fn store(
         &self,
         blobs: &[&Blob],
         hosts: &BTreeSet<HostName>,
         transfer: &mut Transfer<'_>,
         sources: &dyn Fn(&Blob) -> Result<Vec<HttpsUrl>, RegistryError>,
+        tally: &mut Tally,
     ) -> Result<(), RegistryError> {
         let (stored_blobs, partials) = self.folders()?;
-        let mut tally = Tally {
-            done: 0,
-            total: blobs
-                .iter()
-                .fold(0u64, |sum, blob| sum.saturating_add(blob.size)),
-            reported: 0,
-        };
-        tally.report(&mut *transfer.events, 0);
         for &blob in blobs {
             transfer.cancellation.check()?;
             let stored = stored_blobs.join(blob.file_name());
             if !verified(&stored, blob, transfer.cancellation)? {
                 let partial = partials.join(blob.file_name());
-                fetch_blob(&sources(blob)?, blob, hosts, transfer, &partial, &mut tally)?;
+                fetch_blob(&sources(blob)?, blob, hosts, transfer, &partial, tally)?;
                 filesystem::refuse_links(&stored)?;
                 fs::rename(&partial, &stored)?;
                 sync_folder(&stored_blobs)?;
@@ -449,13 +479,52 @@ impl Registry {
         Ok((blobs, partials))
     }
 
-    /// Writes `manifest` as `name`'s, atomically: it is staged in the partial folder and
-    /// renamed into place, so the manifests folder never holds a partial document.
-    pub(super) fn publish(
+    /// Writes `manifest` as `name`'s once the store holds every blob it names. Just
+    /// before it is written each blob is looked for again, and `restore` stores those that
+    /// are gone, at most [`RESTORE_ROUNDS`] times; a store that still misses one gets no
+    /// manifest.
+    pub(super) fn publish_whole(
         &self,
         name: &ModelName,
         manifest: &RegistryManifest,
+        restore: &mut dyn FnMut(&[&Blob]) -> Result<(), RegistryError>,
     ) -> Result<(), RegistryError> {
+        let mut rounds = 0;
+        loop {
+            let missing = self.missing(manifest)?;
+            if missing.is_empty() {
+                return self.publish(name, manifest);
+            }
+            if rounds == RESTORE_ROUNDS {
+                return Err(RegistryError::Engine(Error::Invalid(
+                    "model store: blobs went missing before the manifest was written".into(),
+                )));
+            }
+            rounds += 1;
+            restore(&missing)?;
+        }
+    }
+
+    /// The blobs `manifest` names that the store does not hold as a file of their size.
+    fn missing<'m>(&self, manifest: &'m RegistryManifest) -> Result<Vec<&'m Blob>, RegistryError> {
+        let folder = self.root.join("blobs");
+        let mut missing = Vec::new();
+        for blob in manifest.blobs() {
+            let path = folder.join(blob.file_name());
+            filesystem::refuse_links(&path)?;
+            match fs::metadata(&path) {
+                Ok(meta) if meta.is_file() && meta.len() == blob.size => {}
+                Ok(_) => missing.push(blob),
+                Err(error) if error.kind() == io::ErrorKind::NotFound => missing.push(blob),
+                Err(error) => return Err(error.into()),
+            }
+        }
+        Ok(missing)
+    }
+
+    /// Writes `manifest` as `name`'s, atomically: it is staged in the partial folder and
+    /// renamed into place, so the manifests folder never holds a partial document.
+    fn publish(&self, name: &ModelName, manifest: &RegistryManifest) -> Result<(), RegistryError> {
         static WRITES: AtomicU64 = AtomicU64::new(0);
         let path = name.manifest_path(&self.root);
         let folder = path
@@ -505,30 +574,17 @@ fn fetch_manifest(
     transfer: &mut Transfer<'_>,
 ) -> Result<RegistryManifest, RegistryError> {
     let url = repository_url(name, &format!("manifests/{}", name.tag()))?;
-    let mut attempt = 1;
-    loop {
-        transfer.cancellation.check()?;
-        let failure = match get_manifest(transfer.network, hosts, &url, transfer.cancellation) {
-            Ok(bytes) => return RegistryManifest::parse(bytes),
-            Err(RegistryError::Network(failure)) => failure,
-            Err(other) => return Err(other),
-        };
-        let last = TransferFailure {
-            transient: false,
-            attempts: attempt,
-            ..failure
-        };
-        if !failure.transient || attempt >= transfer.policy.max_attempts {
-            return Err(RegistryError::Network(last));
-        }
-        let delay = transfer.policy.delay(attempt, transfer.pacing.jitter());
-        if transfer.pacing.elapsed() + delay > transfer.policy.window {
-            return Err(RegistryError::Network(last));
-        }
-        attempt += 1;
-        (transfer.events)(TransferEvent::Retrying { attempt, delay });
-        transfer.pacing.wait(delay, transfer.cancellation)?;
-    }
+    let bytes = transfer.retrying(|transfer| -> Result<Round<Vec<u8>>, RegistryError> {
+        Ok(
+            match get_manifest(transfer.network, hosts, &url, transfer.cancellation) {
+                Ok(bytes) => Round::Done(bytes),
+                Err(RegistryError::Network(failure)) if failure.transient => Round::Retry(failure),
+                Err(RegistryError::Network(failure)) => Round::Final(failure),
+                Err(other) => return Err(other),
+            },
+        )
+    })?;
+    RegistryManifest::parse(bytes)
 }
 
 /// One request chain for the manifest at `source`, under the transfer's hop policy.
@@ -539,80 +595,45 @@ fn get_manifest(
     cancellation: &Cancellation,
 ) -> Result<Vec<u8>, RegistryError> {
     let stop = move || cancellation.is_cancelled();
-    let network_failure =
-        |error: &io::Error| RegistryError::Network(transfer::network_failure(error));
-    let mut url = source.clone();
-    let mut redirects = 0;
-    loop {
-        cancellation.check()?;
-        if !(url.default_port() && hosts.contains(url.host())) {
-            return Err(RegistryError::Network(TransferFailure::final_(
-                FailureCategory::BlockedByNetwork,
-            )));
-        }
-        let mut stream = match network.open_unless_cancelled(&url, None, Some(cancellation)) {
-            Ok(stream) => stream,
-            Err(failure) => {
-                cancellation.check()?;
-                return Err(RegistryError::Network(transfer::connect_failure(&failure)));
-            }
-        };
-        http::write_request(
-            &mut stream,
-            "GET",
-            url.target(),
-            &url.authority(),
-            &[("Accept", MANIFEST_MEDIA_TYPE)],
-        )
-        .map_err(|error| network_failure(&error))?;
-        let mut reader = BufReader::new(stream);
-        let head = http::read_head(&mut reader, &stop);
-        cancellation.check()?;
-        let head = head.map_err(|error| network_failure(&error))?;
-        if head.redirect() {
-            redirects += 1;
-            let next = head
-                .header("location")
-                .map(|location| url.redirect(location));
-            match next {
-                Some(Ok(next)) if redirects <= MAX_REDIRECTS => {
-                    url = next;
-                    continue;
-                }
-                _ => {
-                    return Err(RegistryError::Network(
-                        TransferFailure::final_(FailureCategory::BlockedByNetwork)
-                            .with_status(head.status),
-                    ));
-                }
-            }
-        }
-        if head.status == 404 {
-            return Err(RegistryError::NotFound);
-        }
-        if let Some(failure) = TransferFailure::of_status(head.status) {
-            return Err(RegistryError::Network(failure));
-        }
-        if head.status != 200 {
-            return Err(RegistryError::Network(
-                TransferFailure::final_(FailureCategory::Unexpected).with_status(head.status),
-            ));
-        }
-        let framing = Framing::of(&head).map_err(|error| network_failure(&error))?;
-        if matches!(framing, Framing::Length(length) if length > MANIFEST_BYTES_LIMIT) {
-            return Err(RegistryError::Damaged);
-        }
-        let mut bytes = Vec::new();
-        let read = Body::new(reader, framing, &stop)
-            .take(MANIFEST_BYTES_LIMIT + 1)
-            .read_to_end(&mut bytes);
-        cancellation.check()?;
-        read.map_err(|error| network_failure(&error))?;
-        if bytes.len() as u64 > MANIFEST_BYTES_LIMIT {
-            return Err(RegistryError::Damaged);
-        }
-        return Ok(bytes);
+    let transfer::Answer { head, reader, host } = transfer::request_chain(
+        network,
+        hosts,
+        source,
+        &[("Accept", MANIFEST_MEDIA_TYPE)],
+        cancellation,
+    )?
+    .map_err(RegistryError::Network)?;
+    let network_failure = |error: &io::Error| {
+        RegistryError::Network(transfer::network_failure(error).from_host(&host))
+    };
+    if head.status == 404 {
+        return Err(RegistryError::NotFound);
     }
+    if let Some(failure) = TransferFailure::of_status(head.status) {
+        return Err(RegistryError::Network(failure.from_host(&host)));
+    }
+    if head.status != 200 {
+        return Err(RegistryError::Network(
+            TransferFailure::final_(FailureCategory::Unexpected)
+                .with_status(head.status)
+                .at_stage(FailureStage::Status)
+                .from_host(&host),
+        ));
+    }
+    let framing = Framing::of(&head).map_err(|error| network_failure(&error))?;
+    if matches!(framing, Framing::Length(length) if length > MANIFEST_BYTES_LIMIT) {
+        return Err(RegistryError::Damaged);
+    }
+    let mut bytes = Vec::new();
+    let read = Body::new(reader, framing, &stop)
+        .take(MANIFEST_BYTES_LIMIT + 1)
+        .read_to_end(&mut bytes);
+    cancellation.check()?;
+    read.map_err(|error| network_failure(&error))?;
+    if bytes.len() as u64 > MANIFEST_BYTES_LIMIT {
+        return Err(RegistryError::Damaged);
+    }
+    Ok(bytes)
 }
 
 /// Fetches `blob` from `sources` into `partial`, which holds exactly its bytes on
@@ -682,6 +703,13 @@ fn verified(path: &Path, blob: &Blob, cancellation: &Cancellation) -> Result<boo
     }
     let mut file = File::open(path)?;
     Ok(filesystem::digest_reader(&mut file, cancellation)? == blob.digest)
+}
+
+/// The sum of the sizes of `blobs`.
+fn sum_of(blobs: &[&Blob]) -> u64 {
+    blobs
+        .iter()
+        .fold(0u64, |sum, blob| sum.saturating_add(blob.size))
 }
 
 fn write_synced(path: &Path, bytes: &[u8]) -> io::Result<()> {

@@ -279,6 +279,11 @@ cadrumo_register_clean(TARGET app-distro DEPENDS bundle)
 if(TARGET desktop-headless-test)
   add_dependencies(desktop-headless-test bundle)
 endif()
+# The host tests' live cases open the configuration's staged package, so a fresh or pruned tree
+# assembles it first; an operator-selected existing package is used as it stands.
+if(TARGET desktop-host-test AND NOT CADRUMO_DESKTOP_PACKAGE_ROOT)
+  add_dependencies(desktop-host-test app-payload)
+endif()
 if(BUILD_TESTING)
   add_test(NAME bundle.agent COMMAND "${CMAKE_COMMAND}" -E env
     "${CADRUMO_STORAGE_ROOT_VARIABLE}=${CADRUMO_PATH_TESTING}/$<CONFIG>/storage"

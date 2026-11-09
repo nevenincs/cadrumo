@@ -74,15 +74,20 @@ from cadrumo.application.modelo.export import export_modelo_revision
 from cadrumo.application.modelo.export_contracts import ModeloExportCommand
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
+from cadrumo.application.modelo.work_form_wording import modelo_number, period_words
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.application.operations.next_step import OperationOpenWorkStepV1
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.errors.hierarchy import CadrumoError
+from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.i18n.render import output_language, tr
 from cadrumo.core.period import Period
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.schema import InvoiceKind
+from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.source_disagreement import DisagreementDecimalValue, SourceDisagreementRole
 from cadrumo.domain.modelos.verification_report import VerificationCompletenessStatus
 from cadrumo.domain.transactions.enums import TransactionDirection
@@ -220,7 +225,13 @@ def test_first_activity_2026_m303_calculates_linked_invoices_without_joint_retur
     assert Decimal(result.revision.casilla_values[DEDUCIBLE_TOTAL]) == Decimal("1000.00")
     assert Decimal(result.revision.casilla_values[RESULTADO]) == Decimal("1400.00")
     assert public.calculation_revision_id == result.revision.calculation_revision_id
-    assert len(result.revision.source_transaction_ids) == 2
+    # Both movements are linked payment evidence, so no movement is a source;
+    # the issued and the received invoice are, each traced by its own id.
+    assert result.revision.source_transaction_ids == ()
+    traced = " ".join(ref.source_ref for ref in result.revision.source_provenance)
+    catalogue_ids = set(invoices.load().invoices)
+    assert len(catalogue_ids) == 2
+    assert {invoice_id for invoice_id in catalogue_ids if invoice_id in traced} == catalogue_ids
     assert (
         CalculationRevisionCatalogueRepository(objects=secure_objects)
         .load()
@@ -597,8 +608,10 @@ def test_m390_refuses_zero_reconciliation_when_m303_calculated_but_observations_
     persist_year_of_invoices(secure_objects)
 
     computed: ComputedM303CasillasByPeriod = {}
+    revision_ids: dict[str, str] = {}
     for period in QUARTER_ORDER:
         _work_unit, revision = calculate_m303_quarter_revision(secure_objects, period=period, operation=operation)
+        revision_ids[period] = revision.calculation_revision_id
         computed[period] = {
             DEVENGADA_TOTAL: Decimal(revision.casilla_values[DEVENGADA_TOTAL]),
             DEDUCIBLE_TOTAL: Decimal(revision.casilla_values[DEDUCIBLE_TOTAL]),
@@ -617,10 +630,20 @@ def test_m390_refuses_zero_reconciliation_when_m303_calculated_but_observations_
 
     assert after_revision_ids == before_revision_ids
     assert isinstance(exc_info.value, CadrumoError)
-    assert exc_info.value.translated_message == "application.modelo.errors.cross_period_clean_state_incomplete"
+    assert exc_info.value.translated_message == "application.modelo.errors.cross_period_sources_not_filed"
     context = exc_info.value.context or {}
     assert context["reason"] == "missing_clean_cross_period_303_filings_or_observations"
     assert context["missing_303_periods"] == ("1T", "2T", "3T", "4T")
+    # Each quarter is named by where its stored head stands: calculated and not
+    # verified still needs its check, verified and not filed needs its filing.
+    standing_of_state = {
+        CalculationRevisionState.BORRADOR: "unverified",
+        CalculationRevisionState.VERIFICADO_COMPLETO: "unfiled",
+    }
+    catalogue = cr_repo.load()
+    assert context["missing_303_period_standings"] == tuple(
+        f"{period}:{standing_of_state[catalogue.revisions[revision_ids[period]].state]}" for period in QUARTER_ORDER
+    )
     # Without a filed fourth quarter the annual prorrata regularisation is
     # unresolved, so the annual deduction total and result that sum it are
     # unknown, which proves no zero slot; the output-IVA total refuses as well.
@@ -629,6 +652,69 @@ def test_m390_refuses_zero_reconciliation_when_m303_calculated_but_observations_
         M390_DEDUCIBLE,
         M390_RESULTADO,
     )
+
+
+def test_m390_refusal_names_a_verified_unfiled_quarter_apart_from_unverified_ones(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A quarter verified through the real verification path and not filed is named as waiting to be filed.
+
+    The first quarter is verified complete, so what it lacks is its filing; the
+    other three are only calculated, so they still need verifying. The refusal
+    names each in that standing and opens the first one, whose own form offers
+    the filing.
+    """
+    store_profile(secure_objects)
+    persist_year_of_invoices(secure_objects)
+    wu_repo = WorkUnitCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
+    cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
+    units = {}
+    for period in QUARTER_ORDER:
+        work_unit, revision = calculate_m303_quarter_revision(secure_objects, period=period, operation=operation)
+        units[period] = (work_unit, revision)
+
+    first_unit, first_revision = units["1T"]
+    with bundled_indexed_authority().operation() as verify_operation:
+        report = verify_modelo_revision_with_preconditions(
+            first_revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=verification_ports(
+                operation=verify_operation,
+                work_repo=wu_repo,
+                calc_repo=cr_repo,
+                filing_repo=ModeloRecordCatalogueRepository(objects=secure_objects),
+                verification_repo=VerificationReportCatalogueRepository(objects=secure_objects),
+                event_repo=BucketEventHistoryRepository(objects=secure_objects),
+                tx_repo=TransactionCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects),
+            ),
+            actor="operator",
+            workflow_profile=workflow_profile(),
+            settings=ready_clave_settings(TAX_ID),
+            clock=FILE_AT,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
+            operation=verify_operation,
+        ).report
+    assert report.granted_verificado_completo is True
+    verified = cr_repo.load().get(first_revision.calculation_revision_id)
+    assert verified is not None
+    assert verified.state is CalculationRevisionState.VERIFICADO_COMPLETO
+
+    with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:
+        calculate_m390_annual(secure_objects, operation=operation)
+
+    context = exc_info.value.context or {}
+    assert context["missing_303_periods"] == QUARTER_ORDER
+    assert context["missing_303_period_standings"] == ("1T:unfiled", "2T:unverified", "3T:unverified", "4T:unverified")
+    language = OutputLanguage(output_language())
+    assert str(context["sources"]).split("; ")[0] == tr(
+        "application.modelo.reconciliation_sources.standing.unfiled",
+        modelo=modelo_number("303", language),
+        period=period_words(Period.from_year_and_code(YEAR, "1T"), language),
+        locale=language.value,
+    )
+    step = exc_info.value.operation_next_step(language)
+    assert isinstance(step, OperationOpenWorkStepV1)
+    assert step.work_unit_id == first_unit.work_unit_id
 
 
 def test_m390_refuses_annual_zeros_no_source_or_operator_ever_stated(

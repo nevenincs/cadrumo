@@ -1,12 +1,15 @@
 //! The local AI item: the program that runs models, installed from its pinned portable
 //! archive, the one server run from it on the installation's fixed loopback address, and
-//! the model the person selected for each local role, pulled through that server.
+//! the model the person selected for each local role, fetched by the engine itself.
 //!
-//! `program` installs, checks, starts, stops and removes the program, records where it
-//! is, and reports a copy installed outside Cadrumo without touching it. `supervision`
-//! is the runtime manager's part: it keeps the server running while the program is set
-//! up. `lease` keeps that server and a change of the program apart across processes.
-//! `models` pulls and checks each selected model through the running server.
+//! Two engines can serve the local models, and [`LocalEngine`] names them. `program`
+//! installs, checks, starts, stops and removes the Ollama program, records where it is,
+//! and reports a copy installed outside Cadrumo without touching it. `llama_server` runs
+//! the llama-server the package carries, which nothing installs. `supervision` is the
+//! runtime manager's part: it keeps the selected engine's server running while its
+//! program is set up. `lease` keeps that server and a change of the program apart across
+//! processes.
+//! `models` fetches each selected model into the store and checks it on the running server.
 //! `registry` fetches a model from its registry into the models folder without one, and
 //! `huggingface` fetches a model's declared files from Hugging Face into the same store.
 //! `hardware` decides whether this computer can hold a model of a given size. `loopback` is the
@@ -16,6 +19,7 @@
 pub mod hardware;
 pub mod huggingface;
 pub mod lease;
+pub mod llama_server;
 pub mod loopback;
 pub mod models;
 pub mod program;
@@ -33,7 +37,58 @@ use super::{
 };
 use crate::error::Error;
 use loopback::{ExchangeFailure, ExchangePhase};
-use std::{fmt, io, process::ExitStatus, time::Duration};
+use serde::{Deserialize, Serialize};
+use std::{fmt, io, path::Path, process::ExitStatus, time::Duration};
+
+/// The engine that serves the local models, and so the one local AI server the runtime
+/// manager runs. A person who has chosen none is served by `package_default_engine`:
+/// the llama-server where the package carries it, otherwise Ollama. Stored as `ollama` or
+/// `llamacpp`.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+pub enum LocalEngine {
+    /// The Ollama program the engine downloads on the person's approval.
+    #[serde(rename = "ollama")]
+    Ollama,
+    /// The llama-server program the package carries.
+    #[serde(rename = "llamacpp")]
+    LlamaCpp,
+}
+
+/// The engine of a person who has chosen none, from what the package at `package_root`
+/// carries: llama.cpp exactly when the package's `llama_server` folder holds the
+/// llama-server program, since it needs no download, and Ollama otherwise. This is the only
+/// default engine. A chosen engine is kept whatever the package carries: llama.cpp chosen on
+/// a package without the llama-server is refused as not packaged, never served by Ollama.
+#[cfg(feature = "platform")]
+pub fn package_default_engine(package_root: &Path) -> LocalEngine {
+    llama_server_folder_default(&super::installation::package_path(
+        package_root,
+        cadrumo_platform::LLAMA_SERVER,
+    ))
+}
+
+/// `package_default_engine` for the package whose `llama_server` folder is
+/// `llama_server_folder`, for a caller that holds that folder rather than the package root.
+pub(crate) fn llama_server_folder_default(llama_server_folder: &Path) -> LocalEngine {
+    if llama_server::carried(llama_server_folder) {
+        LocalEngine::LlamaCpp
+    } else {
+        LocalEngine::Ollama
+    }
+}
+
+/// Where the local engine runs a model: the device policy of its server's launch. The
+/// same model files serve either, so no placement has a model list of its own. Stored as
+/// `auto` or `cpu_only`.
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Placement {
+    /// The engine offloads layers to a device when one is present and the load fits.
+    #[default]
+    Auto,
+    /// The engine keeps every layer on the processor.
+    CpuOnly,
+}
 
 /// The local AI's one reading from its program's observation and version and each selected
 /// model's observation, the worst of them deciding.
@@ -95,8 +150,6 @@ pub enum NotRunningCause {
 pub enum ServerCall {
     /// Listing the models the server holds.
     ListModels,
-    /// Pulling a model through the server.
-    PullModel,
     /// Generating one token to check a model loads.
     Generate,
 }
@@ -154,15 +207,17 @@ pub enum StartFailureKind {
     LogUnreadable,
     Closed,
     Silent,
+    NotReady,
     VersionUnconfirmed,
 }
 
 impl StartFailureKind {
-    const ALL: [Self; 5] = [
+    const ALL: [Self; 6] = [
         Self::Launch,
         Self::LogUnreadable,
         Self::Closed,
         Self::Silent,
+        Self::NotReady,
         Self::VersionUnconfirmed,
     ];
 
@@ -173,6 +228,7 @@ impl StartFailureKind {
             Self::LogUnreadable => "server_log_unreadable",
             Self::Closed => "server_closed_before_listening",
             Self::Silent => "server_start_budget_expired",
+            Self::NotReady => "server_not_ready",
             Self::VersionUnconfirmed => "server_version_unconfirmed",
         }
     }
@@ -191,7 +247,30 @@ impl ServerStartFailure {
             Self::LogUnreadable => StartFailureKind::LogUnreadable,
             Self::Closed { .. } => StartFailureKind::Closed,
             Self::Silent { .. } => StartFailureKind::Silent,
+            Self::NotReady { .. } => StartFailureKind::NotReady,
             Self::Version(_) => StartFailureKind::VersionUnconfirmed,
+        }
+    }
+
+    /// What the last version question got, for a start whose version was not
+    /// confirmed; none for any other kind.
+    pub fn last_check(&self) -> Option<String> {
+        match self {
+            Self::Version(failure) => Some(failure.check()),
+            _ => None,
+        }
+    }
+}
+
+impl VersionFailure {
+    /// What the version question got, without any value the server sent: `unreachable`,
+    /// `status_` and the HTTP status, `unreadable`, or `different_version`.
+    pub fn check(&self) -> String {
+        match self {
+            Self::Unreachable(_) => "unreachable".to_owned(),
+            Self::Status(status) => format!("status_{status}"),
+            Self::Unreadable => "unreadable".to_owned(),
+            Self::Different { .. } => "different_version".to_owned(),
         }
     }
 }
@@ -213,6 +292,13 @@ pub enum ServerStartFailure {
     Closed { exit: Option<ExitStatus> },
     /// The program announced nothing within the start budget.
     Silent { budget: Duration },
+    /// The program announced that it listens and did not answer ready within the start
+    /// budget. The status is its latest answer to the readiness question, absent when it
+    /// never answered one.
+    NotReady {
+        budget: Duration,
+        status: Option<u16>,
+    },
     /// The program announced it listens and was then asked its version.
     Version(VersionFailure),
 }
@@ -257,6 +343,22 @@ impl fmt::Display for ServerStartFailure {
                 "it announced nothing within the {}s start budget",
                 budget.as_secs()
             ),
+            Self::NotReady {
+                budget,
+                status: Some(status),
+            } => write!(
+                f,
+                "it was not ready within the {}s start budget (status {status})",
+                budget.as_secs()
+            ),
+            Self::NotReady {
+                budget,
+                status: None,
+            } => write!(
+                f,
+                "it did not answer ready within the {}s start budget",
+                budget.as_secs()
+            ),
             Self::Version(failure) => write!(f, "its version could not be confirmed: {failure}"),
         }
     }
@@ -271,8 +373,6 @@ impl NotRunningCause {
             Self::Request { call, failure } => match (call, failure.phase) {
                 (ServerCall::ListModels, ExchangePhase::Connect) => "model_list_connect_failed",
                 (ServerCall::ListModels, ExchangePhase::Exchange) => "model_list_request_failed",
-                (ServerCall::PullModel, ExchangePhase::Connect) => "model_pull_connect_failed",
-                (ServerCall::PullModel, ExchangePhase::Exchange) => "model_pull_request_failed",
                 (ServerCall::Generate, ExchangePhase::Connect) => "generate_connect_failed",
                 (ServerCall::Generate, ExchangePhase::Exchange) => "generate_request_failed",
             },
@@ -337,7 +437,6 @@ impl fmt::Display for ServerCall {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
             Self::ListModels => "model list",
-            Self::PullModel => "model pull",
             Self::Generate => "generate",
         })
     }

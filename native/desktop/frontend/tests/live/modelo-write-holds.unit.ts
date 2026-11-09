@@ -77,28 +77,69 @@ test("an old reader's completion cannot alter the replacement reader's holds", (
   assert.equal(nextReader.get(target)?.phase, "running");
 });
 
-test("wallet and declaration writes exclude each other until their exact hold is released", () => {
+test("a wallet write excludes declarations until its exact hold is released", () => {
   const work = declarationWriteKey("unit");
-  for (const [first, blocked] of [
-    [walletWriteKey, work],
-    [work, walletWriteKey],
-  ] as const) {
+  const holds = createModeloWriteHolds();
+  const lease = holds.begin(walletWriteKey)!;
+  assert.equal(holds.begin(work), null);
+  holds.unknown(lease, "operation");
+  const unknown = holds.get(walletWriteKey)!;
+  assert.equal(holds.blocking(work), unknown);
+  assert.equal(holds.begin(work), null);
+  holds.needsRead(lease);
+  assert.equal(holds.begin(work), null);
+  holds.readCompleted(unknown);
+  assert.equal(holds.begin(work), null);
+  // A declaration read must not mistake a wallet blocker for its own hold.
+  assert.equal(holds.get(work), undefined);
+  holds.readCompleted(holds.get(walletWriteKey)!);
+  assert.ok(holds.begin(work));
+});
+
+const walletReader = (workUnitId: string, readsIvaWallet?: boolean) => ({
+  workUnitId,
+  label: workUnitId,
+  filingYear: YEAR,
+  ...(readsIvaWallet === undefined ? {} : { readsIvaWallet }),
+});
+const stopped = (operationId: string) => ({
+  operation_id: operationId,
+  definition_id: "modelo.work.calculate",
+  effect: "unknown" as const,
+  refusal_words: null,
+});
+
+for (const readsIvaWallet of [true, undefined])
+  test(`a declaration that ${readsIvaWallet ? "reads" : "may read"} the wallet locks it only while its operation may still run`, () => {
+    const work = declarationWriteKey("unit");
     const holds = createModeloWriteHolds();
-    const lease = holds.begin(first)!;
-    assert.equal(holds.begin(blocked), null);
+    const lease = holds.begin(work, walletReader("unit", readsIvaWallet))!;
+    assert.equal(holds.begin(walletWriteKey), null);
     holds.unknown(lease, "operation");
-    const unknown = holds.get(first)!;
-    assert.equal(holds.blocking(blocked), unknown);
-    assert.equal(holds.begin(blocked), null);
-    holds.needsRead(lease);
-    assert.equal(holds.begin(blocked), null);
-    holds.readCompleted(unknown);
-    assert.equal(holds.begin(blocked), null);
-    // A declaration read must not mistake a wallet blocker for its own hold.
-    assert.equal(holds.get(blocked), undefined);
-    holds.readCompleted(holds.get(first)!);
-    assert.ok(holds.begin(blocked));
-  }
+    assert.equal(holds.blocking(walletWriteKey), holds.get(work));
+    // Stopped: the journal proved the operation ended, so nothing is in flight.
+    holds.unknown(lease, "operation", stopped("operation"));
+    assert.equal(holds.blocking(walletWriteKey), undefined);
+    // Settled or refused: only the declaration's own reads are stale.
+    holds.needsRead(lease, false, "refused");
+    assert.equal(holds.blocking(walletWriteKey), undefined);
+    // The declaration itself stays held until its own recovery.
+    assert.equal(holds.blocking(work), holds.get(work));
+    assert.equal(holds.begin(work), null);
+    const wallet = holds.begin(walletWriteKey);
+    assert.ok(wallet);
+    assert.equal(holds.get(work)?.phase, "refresh");
+  });
+
+test("a declaration whose served form reads no IVA wallet never locks it", () => {
+  const work = declarationWriteKey("retenciones");
+  const holds = createModeloWriteHolds();
+  const lease = holds.begin(work, walletReader("retenciones", false))!;
+  assert.equal(holds.blocking(walletWriteKey), undefined);
+  holds.unknown(lease, "operation");
+  assert.equal(holds.blocking(walletWriteKey), undefined);
+  assert.ok(holds.begin(walletWriteKey));
+  assert.equal(holds.get(work)?.phase, "unknown");
 });
 
 test("a finished conflicting write retires a preflight even after its hold is removed", () => {
@@ -212,6 +253,46 @@ for (const effect of ["unknown", "partial", "updated"] as const)
     assert.notEqual(next.id, hold.id);
     assert.equal(holds.reviewedFailure(workTarget), undefined);
   });
+
+test("a new calculation attempt retires the reviewed failure's words before it asks for anything", async () => {
+  const holds = createModeloWriteHolds();
+  const lease = holds.begin(workTarget)!;
+  holds.unknown(lease, failedCalculation.operation_id, failedCalculation);
+  await holds.reviewCalculation(
+    holds.get(workTarget)!,
+    async () => true,
+    () => true,
+  );
+  let published = 0;
+  holds.subscribe(() => published++);
+  // The person presses Calcular again; the evidence dialog opens before any
+  // write is admitted, and must not repeat the earlier attempt's words.
+  holds.newAttempt(workTarget);
+  assert.equal(holds.reviewedFailure(workTarget), undefined);
+  assert.equal(published, 1);
+  assert.equal(holds.snapshot().length, 0);
+  // Nothing is admitted or held by the attempt itself.
+  assert.notEqual(holds.begin(workTarget), null);
+});
+
+test("a new attempt leaves another declaration's reviewed failure and every hold alone", async () => {
+  const holds = createModeloWriteHolds();
+  const other = declarationWriteKey("work-two");
+  const lease = holds.begin(other)!;
+  holds.unknown(lease, failedCalculation.operation_id, failedCalculation);
+  await holds.reviewCalculation(
+    holds.get(other)!,
+    async () => true,
+    () => true,
+  );
+  const running = holds.begin(workTarget)!;
+  holds.newAttempt(workTarget);
+  assert.equal(
+    holds.reviewedFailure(other)?.refusal_words,
+    failedCalculation.refusal_words,
+  );
+  assert.equal(holds.get(workTarget)?.id, running.id);
+});
 
 for (const result of [false, "throws"] as const)
   test(`an explicit review whose current form read ${result === false ? "fails" : "throws"} remains held`, async () => {

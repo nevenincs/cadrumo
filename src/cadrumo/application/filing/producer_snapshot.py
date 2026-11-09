@@ -11,13 +11,14 @@ Core types:
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated, Final, Literal
+from typing import Annotated, Final, Literal, Self
 
 from pydantic import AfterValidator, BaseModel, StringConstraints, ValidationError, model_validator
 
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
+from ...core.field_origin import FieldOrigin
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.payment_election import PaymentElection
@@ -229,6 +230,29 @@ class Modelo111ProfileFacts(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     colegio_concertado: bool | None
+    colegio_concertado_origin: FieldOrigin | None = None
+    """How the colegio concertado answer was reached, once there is one.
+
+    :attr:`core.field_origin.FieldOrigin.OPERATOR` is the declarant's own
+    attestation. :attr:`core.field_origin.FieldOrigin.DERIVED` is a no the
+    profile never answered and never had to: the header's conditions are
+    positively absent, so the mark follows deterministically and the field
+    emits blank. Only a no can be derived -- nothing concludes an attestation
+    on the declarant's behalf -- and an unanswered fact carries no origin at
+    all, which is what the snapshot check refuses on.
+    """
+
+    @model_validator(mode="after")
+    def _derived_answers_are_only_a_no(self) -> Self:
+        if self.colegio_concertado is None:
+            if self.colegio_concertado_origin is not None:
+                raise ValueError("an unanswered colegio concertado has no origin")
+            return self
+        if self.colegio_concertado_origin is None:
+            raise ValueError("an answered colegio concertado records how it was reached")
+        if self.colegio_concertado and self.colegio_concertado_origin is FieldOrigin.DERIVED:
+            raise ValueError("a colegio concertado attestation is never derived")
+        return self
 
 
 _GrupoNumber = Annotated[

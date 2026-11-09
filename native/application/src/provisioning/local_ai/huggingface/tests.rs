@@ -256,6 +256,34 @@ fn pull(network: &Network, root: &Path, model: &HuggingFaceModel) -> Run {
     }
 }
 
+/// Fetches `model` into `root` with every test host approved, each event going to
+/// `observe` as it happens.
+fn pull_observed(
+    network: &Network,
+    root: &Path,
+    model: &HuggingFaceModel,
+    mut observe: impl FnMut(TransferEvent),
+) -> Result<RegistryManifest, RegistryError> {
+    let approved: BTreeSet<HostName> = hosts()
+        .iter()
+        .map(|host| HostName::new(*host).unwrap())
+        .collect();
+    let mut pacing = RecordedPacing {
+        now: Duration::ZERO,
+        waits: Vec::new(),
+    };
+    let cancellation = Cancellation::default();
+    let mut transfer = Transfer {
+        network,
+        hosts: &approved,
+        policy: RetryPolicy::default(),
+        pacing: &mut pacing,
+        events: &mut observe,
+        cancellation: &cancellation,
+    };
+    Registry::new(root.to_path_buf()).pull_hugging_face(model, &mut transfer)
+}
+
 fn store_requests(server: &TlsServer, bytes: &[u8]) -> Vec<Request> {
     let target = format!("{STORE_TARGET}{}", hex(bytes));
     server
@@ -286,7 +314,7 @@ fn progress(run: &Run, total: u64) -> Vec<u64> {
 }
 
 fn models(root: &Path, model: &HuggingFaceModel) -> (Models, SelectedModel) {
-    let selected = SelectedModel::new("vision", &model.name().to_string(), None).unwrap();
+    let selected = SelectedModel::new("vision", &model.name().to_string(), None, None).unwrap();
     let models = Models::new(
         LocalModels::new(vec![selected.clone()]).unwrap(),
         root.to_path_buf(),
@@ -514,6 +542,54 @@ fn a_redirect_to_a_host_not_declared_for_hugging_face_is_refused() {
     assert!(run.waits.is_empty());
     assert!(!manifest_file(root).exists());
     assert_eq!(fs::read_dir(root.join("blobs")).unwrap().count(), 0);
+}
+
+#[test]
+fn the_storage_hosts_are_hugging_faces_own_inside_hf_co_and_named_exactly() {
+    assert_eq!(
+        source_hosts()
+            .iter()
+            .map(HostName::as_str)
+            .collect::<Vec<_>>(),
+        [
+            "cas-bridge.xethub.hf.co",
+            "huggingface.co",
+            "us.aws.cdn.hf.co"
+        ]
+    );
+    for host in HUGGING_FACE_FILE_HOSTS {
+        assert!(host.ends_with(".hf.co"), "{host}");
+        assert!(!host.contains('*'), "{host}");
+    }
+}
+
+#[test]
+fn a_file_cleared_before_the_manifest_is_written_is_fetched_again() {
+    let served = Served::with_projector();
+    let model = served.declared();
+    let projector = served.projector.clone().unwrap();
+    let (certificate, server, directory) = setup(hub(served.files(), file_host()));
+    let network = network_to(certificate.roots(), server.address(), None);
+    let root = directory.path();
+    let cleared = stored(root, &served.model);
+    let total = served.total();
+    let mut clears = 0;
+    let result = pull_observed(&network, root, &model, |event| {
+        if let TransferEvent::Progress { completed, .. } = event
+            && completed == total
+            && clears == 0
+            && fs::remove_file(&cleared).is_ok()
+        {
+            clears += 1;
+        }
+    });
+    let manifest = result.unwrap();
+    assert_eq!(clears, 1);
+    assert_eq!(fs::read(&cleared).unwrap(), served.model);
+    assert_eq!(fs::read(manifest_file(root)).unwrap(), manifest.bytes());
+    assert_eq!(store_requests(&server, &served.model).len(), 2);
+    assert_eq!(store_requests(&server, &projector).len(), 1);
+    assert_eq!(present(root, &model), Observation::Present);
 }
 
 #[test]

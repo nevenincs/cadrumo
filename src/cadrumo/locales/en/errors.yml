@@ -351,6 +351,9 @@ errors:
     error_wizard_compile: The wizard catalogue is malformed and could not be compiled.
     error_workflow: A workflow error occurred.
     error_workflow_component: A workflow component raised an unexpected exception.
+    ledger_gross_above_cash_needs_withholding_category: The declared base and IVA
+      add up to more than the money that moved; that gap is an IRPF withholding, and
+      no IRPF category is declared.
     m145_communication_record_not_found: No Modelo 145 local communication record
       matches the requested id.
     m145_communication_service: A Modelo 145 local communication service operation

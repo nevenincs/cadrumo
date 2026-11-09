@@ -242,6 +242,7 @@ class AgentHostController:
         self._state = AgentHostState.DETACHED
         self._process: AgentProcess | None = None
         self._ready: AgentReady | None = None
+        self._superseded: AgentReady | None = None
 
     @property
     def state(self) -> AgentHostState:
@@ -302,13 +303,25 @@ class AgentHostController:
         if self._credentials.current_generations(deadline=deadline) != ready.generations:
             return None
         with self._lock:
-            return ready if self._ready is ready and self._process is process else None
+            current = self._ready is ready and self._process is process and self._superseded is not ready
+            return ready if current else None
 
     def superseded(self) -> bool:
-        """Whether a ready tree runs under generations that are no longer current."""
+        """Whether a ready tree runs under generations that are no longer current, or was superseded."""
         with self._lock:
             ready = self._ready
-        return ready is not None and self._credentials.current_generations() != ready.generations
+            marked = ready is not None and self._superseded is ready
+        return ready is not None and (marked or self._credentials.current_generations() != ready.generations)
+
+    def supersede(self) -> None:
+        """Withhold the ready tree as superseded by a setting its generations do not cover.
+
+        The local engine setting is kept apart from the provider settings, so
+        its change moves no generation; its owner marks the tree instead, and
+        the lifecycle owner replaces it as it replaces any superseded tree.
+        """
+        with self._lock:
+            self._superseded = self._ready
 
     def cancel_start(self) -> None:
         """Invalidate publication and wake startup; its owner retains cleanup responsibility."""

@@ -113,7 +113,7 @@ function ScopeNotices({
         .filter(
           (hold) =>
             !exclude.includes(hold.key) &&
-            modeloWriteConflicts(scope.target, hold.key),
+            modeloWriteConflicts(scope.target, hold),
         )
         .map((hold) => {
           const owner = hold.owner;

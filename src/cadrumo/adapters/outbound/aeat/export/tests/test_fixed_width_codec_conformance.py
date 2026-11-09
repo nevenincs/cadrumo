@@ -42,6 +42,8 @@ from cadrumo.domain.modelos.errors import ModeloExportError
 from cadrumo.domain.modelos.filing_record import FilingDeclarationKind
 from cadrumo.domain.submission.models import ModeloDraftStatus
 
+from ......core.field_origin import FieldOrigin
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _YEAR = filing_year_envelope().horizon
@@ -70,7 +72,7 @@ def _typed_producer_snapshot(*, complementaria: bool = False) -> FilingProducerS
             full_name="Ana Prueba",
         ),
         presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoría Prueba"),
-        model_profile=Modelo111ProfileFacts(colegio_concertado=False),
+        model_profile=Modelo111ProfileFacts(colegio_concertado=False, colegio_concertado_origin=FieldOrigin.OPERATOR),
         elections=FilingElectionFacts(
             result_disposition=ResultDisposition.NEGATIVA,
             payment=PaymentElection.INGRESO,

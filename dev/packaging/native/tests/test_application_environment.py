@@ -304,6 +304,7 @@ def _source_tree(tmp_path: Path, declaration: str) -> Path:
         ".python-version",
         "dev/packaging/release-python-version",
         "native/package-layout.json",
+        "native/llamacpp-pins.json",
         "native/platforms",
     ):
         source, destination = REPO_ROOT / relative, root / relative

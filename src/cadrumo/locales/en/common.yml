@@ -1450,6 +1450,7 @@ desktop:
         set_currency: Set the currency
         set_share: Set the share
         show: Show in grid
+        show_fields: Show the movements and the column
       gone: Removed or moved out of the period since you read it.
       gone_mine: Keep it in my changes
       gone_movement: A movement no longer read
@@ -4743,7 +4744,8 @@ desktop:
       cancelled: You cancelled the setup.
       damaged_download: The download was damaged and could not be used.
       disk_full: There is not enough free disk space.
-      host_unreachable: The download server could not be reached.
+      host_unreachable: The download server could not be reached. Check your internet
+        connection, then try again.
       interrupted: Setup was interrupted before it finished.
       memory_busy: Too much memory is in use right now. Close other programs and try
         again.
@@ -4754,11 +4756,9 @@ desktop:
       offline: You are offline.
       program_missing: The local AI program is not installed.
       program_not_running: The local AI program is not running.
-      program_proxy_differs: Cadrumo's background service is running with a different
-        proxy setting. Restart Cadrumo, or sign out and back in, so it starts with
-        the current one.
       secure_connection_failed: A secure connection could not be made. A network filter
         may be in the way.
+      server_error: The download server is having a problem. Try again in a few minutes.
       unexpected: Something went wrong.
     item:
       browser: Browser
@@ -10390,6 +10390,7 @@ workspace:
         what.
       none: Nothing needs you on this form.
       profile: 'Before this period can be calculated, your profile must answer:'
+      sources: 'Before this declaration can be calculated, the declarations it adds up need:'
       title: To do
     value:
       not_applicable: n/a

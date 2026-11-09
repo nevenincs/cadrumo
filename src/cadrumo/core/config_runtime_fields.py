@@ -19,6 +19,11 @@ from .config_timeouts import CadrumoTimeoutSettings
 #: same address for the native side; a package-side test keeps the two equal.
 LOCAL_AI_SERVER_ADDRESS: Final = "127.0.0.1:23743"
 
+#: The loopback address the runtime manager's bundled llama-server listens on, which the agent
+#: service hands to the agent it hosts. The package's environment declaration states the same
+#: address for the native side; a package-side test keeps the two equal.
+LLAMA_SERVER_ADDRESS: Final = "127.0.0.1:23744"
+
 
 class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
     """LLM runtime tuning fields layered on top of timeouts."""
@@ -98,7 +103,7 @@ class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
         description="Log level for the stderr handler installed by ``cadrumo.core.logging``",
     )
     cadrumo_log_file_level: str = Field(
-        default="DEBUG",
+        default="INFO",
         description="Log level for the file handler installed by ``cadrumo.core.logging``",
     )
     cadrumo_log_file_max_bytes: int = Field(
@@ -112,6 +117,6 @@ class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
         description="Number of rotated cadrumo.log backups retained by the rotating file handler",
     )
     cadrumo_log_root_level: str = Field(
-        default="DEBUG",
+        default="INFO",
         description="Root logger level installed by ``cadrumo.core.logging``",
     )

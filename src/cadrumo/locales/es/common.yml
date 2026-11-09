@@ -1505,6 +1505,7 @@ desktop:
         set_currency: Indicar la moneda
         set_share: Indicar la parte
         show: Mostrar en la tabla
+        show_fields: Muestra los movimientos y la columna
       gone: Eliminado o movido fuera del periodo desde que lo leíste.
       gone_mine: Mantenerlo en mis cambios
       gone_movement: Un movimiento que ya no se lee
@@ -4827,7 +4828,8 @@ desktop:
       cancelled: Has cancelado la configuración.
       damaged_download: La descarga estaba dañada y no se ha podido usar.
       disk_full: No hay suficiente espacio libre en el disco.
-      host_unreachable: No se ha podido contactar con el servidor de descarga.
+      host_unreachable: No se ha podido contactar con el servidor de descarga. Comprueba
+        tu conexión a internet y vuelve a intentarlo.
       interrupted: La configuración se interrumpió antes de terminar.
       memory_busy: Hay demasiada memoria en uso ahora mismo. Cierra otros programas
         y vuelve a intentarlo.
@@ -4838,11 +4840,10 @@ desktop:
       offline: No tienes conexión.
       program_missing: El programa de IA local no está instalado.
       program_not_running: El programa de IA local no está en marcha.
-      program_proxy_differs: El servicio en segundo plano de Cadrumo se está ejecutando
-        con otra configuración de proxy. Reinicia Cadrumo, o cierra la sesión y vuelve
-        a iniciarla, para que arranque con la actual.
       secure_connection_failed: No se ha podido establecer una conexión segura. Puede
         que un filtro de red lo impida.
+      server_error: El servidor de descarga tiene un problema. Vuelve a intentarlo
+        dentro de unos minutos.
       unexpected: Algo ha salido mal.
     item:
       browser: Navegador
@@ -10598,6 +10599,7 @@ workspace:
       failed_lead: Esperan algo que le faltaba al cálculo. Elige una para ver qué.
       none: Nada de este modelo te necesita.
       profile: 'Antes de calcular este periodo, tu perfil tiene que responder:'
+      sources: 'Antes de calcular esta declaración, faltan las declaraciones que resume:'
       title: Pendiente
     value:
       not_applicable: no aplica

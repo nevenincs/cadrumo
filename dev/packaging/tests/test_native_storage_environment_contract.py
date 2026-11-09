@@ -73,6 +73,7 @@ def test_desktop_defaults_project_the_package_declaration(tmp_path: Path) -> Non
     generated = (tmp_path / "contract.rs").read_text(encoding="utf-8")
     assert _rust_strings(generated, "MANAGER_LOG") == [components["manager_log_file"]]
     assert _rust_strings(generated, "MANAGER_PREFERENCES") == [components["manager_preferences"]]
+    assert _rust_strings(generated, "LOCAL_ENGINE_SELECTION") == [components["local_engine_selection"]]
     assert _rust_strings(generated, "MANAGER_FAILED_VERSIONS") == [components["manager_failed_versions"]]
     assert _rust_strings(generated, "MANAGER_LANGUAGE_ENV") == [components["language_variable"]]
     assert _rust_strings(generated, "MANAGER_LANGUAGE_DEFAULT") == [components["language_default"]]

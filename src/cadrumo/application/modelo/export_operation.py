@@ -6,15 +6,13 @@ Core types: :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`,
 
 from __future__ import annotations
 
-import asyncio
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from ...core.async_cleanup import await_cancellation_complete
 from ...core.calculation_report_format import CalculationReportDocumentFormat
 from ...core.modelo_export_artefact import ModeloExportArtefact
 from ...core.operations import (
@@ -29,6 +27,7 @@ from ...core.operations import (
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ..ledger.commit_fence import LedgerCommitAttemptTracker, run_with_ledger_commit_fence
 from ..operations.access_port import OperationAccessResolver
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -207,6 +206,12 @@ class ModeloExportExecutor:
         actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor)
         from ...core.bucket_pointer import require_active_bucket_id
 
+        # Every write the export can make -- its secure records, a minted
+        # signing key and the published file -- passes this tracker, which
+        # journals a possible effect only when one actually begins. A refusal
+        # of the export's preconditions therefore settles with no effect.
+        writes = LedgerCommitAttemptTracker()
+
         def export() -> ModeloExportSettledResult:
             with validating_governed_facts(context.authority_operation):
                 workflow_profile = self._profile_resolver(context.authority_operation)
@@ -215,6 +220,7 @@ class ModeloExportExecutor:
                     bucket_id=active_bucket_id,
                     m303_rectificativa_taxpayer_tax_id=workflow_profile.tax_id,
                     operation=context.authority_operation,
+                    mutation_writer=writes.call_writer,
                 )
                 if payload.artefact is ModeloExportArtefact.FICHERO_BOE:
                     return ModeloExportSettledResult(
@@ -224,6 +230,7 @@ class ModeloExportExecutor:
                             workflow_profile=workflow_profile,
                             export_ports=export_ports,
                             operation=context.authority_operation,
+                            mutation_writer=writes.call_writer,
                         )
                     )
                 return ModeloExportSettledResult(
@@ -232,17 +239,21 @@ class ModeloExportExecutor:
                         active_bucket_id=active_bucket_id,
                         export_ports=export_ports,
                         operation=context.authority_operation,
+                        mutation_writer=writes.call_writer,
                     )
                 )
 
-        async def publish() -> str:
-            async with context.cancellation.irreversible_section():
+        try:
+            settled = await run_with_ledger_commit_fence(
+                export, tracker=writes, context=context, task_name="modelo-export-publication"
+            )
+        except BaseException:
+            # A failure after a write began cannot prove what the earlier
+            # writes left behind, whatever each of them reported.
+            if writes.attempt_count:
                 await context.events.effect(OperationEffect.UNKNOWN)
-                settled = await asyncio.to_thread(export)
-                await context.events.effect(OperationEffect.UPDATED)
-                return await context.operands.put(settled, written_at=now())
-
-        return await await_cancellation_complete(publish(), task_name="modelo-export-publication")
+            raise
+        return await context.operands.put(settled, written_at=now())
 
     @staticmethod
     def _published_fichero_boe(
@@ -252,6 +263,7 @@ class ModeloExportExecutor:
         workflow_profile: TaxpayerProfile,
         export_ports: ModeloExportPorts,
         operation: PinnedAuthorityOperation,
+        mutation_writer: Callable[[Callable[[], None]], None],
     ) -> ModeloExportResult:
         """Publish the AEAT-compatible filing file and return the service's receipt."""
         return export_modelo_revision(
@@ -270,6 +282,7 @@ class ModeloExportExecutor:
             workflow_profile=workflow_profile,
             operation=operation,
             export_ports=export_ports,
+            mutation_writer=mutation_writer,
         )
 
     def _published_calculation_report(
@@ -279,6 +292,7 @@ class ModeloExportExecutor:
         active_bucket_id: str,
         export_ports: ModeloExportPorts,
         operation: PinnedAuthorityOperation,
+        mutation_writer: Callable[[Callable[[], None]], None],
     ) -> ModeloCalculationReportResult:
         """Publish the calculation report and return the service's receipt.
 
@@ -306,9 +320,12 @@ class ModeloExportExecutor:
                 replace_existing=payload.replace_existing,
             ),
             export_ports=export_ports,
-            signing_keypair=self._signing_keypair_capability_factory(bucket_id=active_bucket_id),
+            signing_keypair=self._signing_keypair_capability_factory(
+                bucket_id=active_bucket_id, mutation_writer=mutation_writer
+            ),
             operation=operation,
             pdf_writer=self._calculation_summary_pdf_writer,
+            mutation_writer=mutation_writer,
         )
 
 

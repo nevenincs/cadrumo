@@ -66,6 +66,7 @@ _COMPONENT_PATHS = (
     "webview",
     "manager_log_file",
     "manager_preferences",
+    "local_engine_selection",
     "manager_failed_versions",
     "logs",
     "log_file",
@@ -78,8 +79,9 @@ _COMPONENT_VALUES = (
     "language_default",
     "profile_variable",
     "local_ai_address",
+    "llama_server_address",
 )
-#: The local AI server's address: IPv4 loopback, a port outside the privileged range and
+#: Each local AI server's address: IPv4 loopback, a port outside the privileged range and
 #: below every platform's ephemeral range, and never the publisher's default port.
 _LOCAL_AI_ADDRESS = re.compile(r"127\.0\.0\.1:(?P<port>[1-9][0-9]{3,4})")
 _LOCAL_AI_PORTS = range(1024, 32768)
@@ -102,7 +104,10 @@ def declare_components(raw: object, names: Mapping[str, Mapping[str, str]]) -> d
         raise fail("components.language_default must be a two-letter lower-case language")
     if names.get(entry["profile_variable"]) != {"kind": "directory", "role": "slot"}:
         raise fail("components.profile_variable must name a declared directory slot")
-    address = _local_ai_address(entry)
+    address = _local_ai_address(entry, "local_ai_address")
+    llama_server_address = _local_ai_address(entry, "llama_server_address")
+    if llama_server_address == address:
+        raise fail("components.llama_server_address must differ from components.local_ai_address")
     components.update(
         log_format=entry["log_format"],
         log_max_bytes=require_integer(entry["log_max_bytes"], "components.log_max_bytes"),
@@ -111,16 +116,18 @@ def declare_components(raw: object, names: Mapping[str, Mapping[str, str]]) -> d
         language_default=language,
         profile_variable=entry["profile_variable"],
         local_ai_address=address,
+        llama_server_address=llama_server_address,
     )
     return components
 
 
-def _local_ai_address(entry: dict[str, Any]) -> str:
-    address = entry["local_ai_address"]
+def _local_ai_address(entry: dict[str, Any], key: str) -> str:
+    address = entry[key]
+    refusal = f"components.{key} must be 127.0.0.1 with a port from 1024 to 32767 other than 11434"
     if not isinstance(address, str):
-        raise fail("components.local_ai_address must be 127.0.0.1 with a port from 1024 to 32767 other than 11434")
+        raise fail(refusal)
     matched = _LOCAL_AI_ADDRESS.fullmatch(address)
     port = int(matched["port"]) if matched else None
     if port is None or port not in _LOCAL_AI_PORTS or port == _LOCAL_AI_UPSTREAM_PORT:
-        raise fail("components.local_ai_address must be 127.0.0.1 with a port from 1024 to 32767 other than 11434")
+        raise fail(refusal)
     return address

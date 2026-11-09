@@ -266,6 +266,8 @@ console_workspace = "workspace"
 webview = "webview"
 manager_log_file = "logs/cadrumo-manager.log"
 manager_preferences = "manager-preferences.json"
+# The person's local engine and placement, written by the desktop and read by the manager.
+local_engine_selection = "local-engine.json"
 manager_failed_versions = ".runtime/manager-failed-versions.json"
 logs = "logs"
 log_file = "logs/cadrumo.log"
@@ -284,6 +286,9 @@ profile_variable = "CADRUMO_PROFILE_ROOT"
 # installed outside Cadrumo keeps its own port. The command line's default chat address
 # states the same value; a package-side test keeps them equal.
 local_ai_address = "127.0.0.1:23743"
+# The packaged llama-server's own loopback address, beside the Ollama server's, under
+# the same rules, so either engine's server can run while the other's port stays free.
+llama_server_address = "127.0.0.1:23744"
 
 # ---------------------------------------------------------------------------
 # The storage root: its one variable, the per-platform per-user default under the

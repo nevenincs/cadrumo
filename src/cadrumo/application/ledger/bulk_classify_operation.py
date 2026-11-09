@@ -42,10 +42,13 @@ from .commit_fence import (
 from .models import BulkClassifyResult
 from .protocols import RevisionGuardedTransactionCatalogueCoCommitWriterProtocol
 from .read_access import resolve_ledger_request_commit_access
+from .validation_messages import ledger_refusal_messages
 
 LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID = "ledger.classify.bulk"
 LEDGER_BULK_CLASSIFY_VALIDATION_REFUSAL_CODE = "REFUSED_CLI_VALIDATION_BOUNDARY"
 _CLI_SOURCE_COMMAND = "aeat app ledger classify --file"
+_MAX_VALIDATION_MESSAGES = 8
+"""How many input refusals one rejected table reports."""
 _VALIDATION_ERRORS = (TransactionValidationError, RegistryValidationError, ValidationError, ValueError)
 
 
@@ -188,7 +191,9 @@ class LedgerBulkClassifyExecutor:
             projection = LedgerBulkClassifyProjection(
                 profile_id=payload.profile_id,
                 outcome="validation_error",
-                validation_messages=(str(error) or "CSV classification input is invalid",),
+                validation_messages=ledger_refusal_messages(
+                    error, limit=_MAX_VALIDATION_MESSAGES, fallback="CSV classification input is invalid"
+                ),
             )
             detail_ref = await context.operands.put(
                 LedgerBulkClassifyExecutionResult(projection=projection), written_at=now()

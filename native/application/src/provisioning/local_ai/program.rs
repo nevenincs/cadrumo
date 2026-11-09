@@ -36,11 +36,16 @@
 //!
 //! A program archive may unpack to six times its pinned size, about 1.8 times the largest
 //! measured ratio, and hold 1024 members, over twelve times the most measured.
+//!
+//! [`Server`] also runs the packaged llama-server for [`llama_server`]: the same
+//! containment, lease, record and stop, with that program's own announcement, readiness,
+//! build check and unload.
 
 use super::{
-    LaunchStep, LocalAiError, NotRunningCause, ServerStartFailure, StartFailureKind,
+    LaunchStep, LocalAiError, LocalEngine, NotRunningCause, ServerStartFailure, StartFailureKind,
     VersionFailure,
     lease::{Leases, PROGRAM_CHANGE_BUDGET, ProgramChange, ServerLease},
+    llama_server,
     loopback::Loopback,
 };
 use crate::{
@@ -70,7 +75,7 @@ use std::{
     path::{Path, PathBuf},
     process::{Child, ChildStdin, Command, Stdio},
     sync::mpsc::{self, RecvTimeoutError},
-    time::{Duration, SystemTime},
+    time::{Duration, Instant, SystemTime},
 };
 
 /// How many bytes a program archive may unpack to for each byte it downloads.
@@ -79,10 +84,19 @@ pub const UNPACKED_PER_DOWNLOADED_BYTE: u64 = 6;
 pub const MAX_ARCHIVE_ENTRIES: usize = 1024;
 /// The component store's bound on any component's unpacked size.
 const STORE_UNPACKED_LIMIT: u64 = 32 * 1024 * 1024 * 1024;
-/// Bound for the server to announce that it listens. Exceeding it ends the server.
+/// Bound for the server to announce that it listens, for llama-server to answer ready,
+/// and for either to answer with its version. Exceeding it ends the server.
 pub const START_BUDGET: Duration = Duration::from_secs(30);
-/// What the program writes on standard error once it accepts connections.
-const LISTENING: &str = "Listening on ";
+/// What Ollama writes on standard error once it accepts connections.
+const OLLAMA_LISTENING: &str = "Listening on ";
+/// What llama-server writes on standard error once it accepts connections. Build b12184
+/// writes `srv  server_on_li: listening on http://<host>:<port>`, and earlier builds
+/// `main: server is listening on http://<host>:<port> - starting the main loop`.
+const LLAMA_SERVER_LISTENING: &str = "listening on http://";
+/// How often a server that listens is asked whether it is ready, or its version.
+const READY_PACE: Duration = Duration::from_millis(100);
+/// Bound for each readiness or version question, so the start budget holds.
+const READY_QUESTION_BOUND: Duration = Duration::from_secs(2);
 /// The longest standard-error line the engine reads at once.
 const LOG_LINE_LIMIT: u64 = 64 * 1024;
 /// The running server's record beside the versions.
@@ -105,7 +119,7 @@ const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 /// The operating system settings a server needs and is given from the engine's own
 /// environment; everything else it is given is set by the engine.
 #[cfg(windows)]
-const PASSED_THROUGH: &[&str] = &[
+pub(super) const PASSED_THROUGH: &[&str] = &[
     "SystemRoot",
     "SystemDrive",
     "windir",
@@ -116,7 +130,7 @@ const PASSED_THROUGH: &[&str] = &[
     "PROCESSOR_ARCHITECTURE",
 ];
 #[cfg(not(windows))]
-const PASSED_THROUGH: &[&str] = &["PATH", "LANG", "LC_ALL"];
+pub(super) const PASSED_THROUGH: &[&str] = &["PATH", "LANG", "LC_ALL"];
 
 /// The unpacked-size and member bounds for a program archive of `download_bytes`.
 pub fn archive_limits(download_bytes: u64) -> (u64, usize) {
@@ -210,12 +224,16 @@ impl ServerRecord {
     }
 }
 
-/// The start-failure record: a static kind identifier and nothing else.
+/// The start-failure record: a static kind identifier and, for a start whose version
+/// was not confirmed, what the last version question got. A record an earlier build
+/// wrote has no `last_check` and reads the same.
 #[derive(Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 struct StartFailureRecord {
     schema: u32,
     reason: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    last_check: Option<String>,
 }
 
 /// The kind of the latest failed server start recorded under `programs`, when one is
@@ -231,17 +249,18 @@ pub fn latest_start_failure(programs: &Path) -> Option<StartFailureKind> {
 }
 
 // The record is diagnostic: a start's outcome stands whether or not it could be written.
-fn record_start_failure(programs: &Path, kind: StartFailureKind) {
+pub(super) fn record_start_failure(programs: &Path, failure: &ServerStartFailure) {
     let _ = filesystem::replace_json(
         &programs.join(START_FAILURE_RECORD),
         &StartFailureRecord {
             schema: START_FAILURE_RECORD_SCHEMA,
-            reason: kind.reason().to_owned(),
+            reason: failure.kind().reason().to_owned(),
+            last_check: failure.last_check(),
         },
     );
 }
 
-fn clear_start_failure(programs: &Path) {
+pub(super) fn clear_start_failure(programs: &Path) {
     let _ = fs::remove_file(programs.join(START_FAILURE_RECORD));
 }
 
@@ -259,6 +278,9 @@ pub struct ServeCommand {
 /// A running server. The one the supervisor started stops when dropped; one only
 /// observed through its record is left running.
 pub struct Server {
+    /// The engine whose program this is, which decides how it announces itself, how it
+    /// is asked its version and how its models are unloaded.
+    engine: LocalEngine,
     child: Option<Child>,
     stdin: Option<ChildStdin>,
     loopback: Loopback,
@@ -315,6 +337,7 @@ impl Server {
     #[cfg(test)]
     pub(crate) fn attached(address: SocketAddr, version: &str) -> Self {
         Self {
+            engine: LocalEngine::Ollama,
             child: None,
             stdin: None,
             loopback: Loopback::new(address).unwrap(),
@@ -330,22 +353,35 @@ impl Server {
     /// The server `programs`' record names, when it answers there with `version`. The
     /// handle owns nothing: dropping it leaves the server running.
     pub fn observed(programs: &Path, version: &str) -> Option<Self> {
-        let record = ServerRecord::read(programs)?;
+        Self::observed_as(LocalEngine::Ollama, programs, version)
+    }
+
+    /// The server of `engine` the record in `folder` names, when it answers there as
+    /// that engine's program of `version`: Ollama with exactly that version, llama-server
+    /// ready on its readiness route and reporting that build. The handle owns nothing.
+    pub fn observed_as(engine: LocalEngine, folder: &Path, version: &str) -> Option<Self> {
+        let record = ServerRecord::read(folder)?;
         let server = Self {
+            engine,
             child: None,
             stdin: None,
             loopback: record.loopback()?,
             version: record.version.clone(),
             executable: record.executable.clone(),
-            record: programs.join(SERVER_RECORD),
+            record: folder.join(SERVER_RECORD),
             containment: None,
             lease: None,
             proxy: record.proxy_fingerprint(),
         };
+        let ready = match engine {
+            LocalEngine::Ollama => true,
+            LocalEngine::LlamaCpp => {
+                matches!(server.loopback.get(llama_server::HEALTH), Ok((200, _)))
+            }
+        };
         (record.version == version
-            && server
-                .answers_version()
-                .is_some_and(|found| found == version))
+            && ready
+            && server.confirm_version(server.loopback, version).is_ok())
         .then_some(server)
     }
 
@@ -365,11 +401,13 @@ impl Server {
         }
     }
 
-    /// Starts `command` contained and waits for the program to announce that it listens,
-    /// then for it to answer with `version`. A program that exits, stays silent past
-    /// [`START_BUDGET`] or answers otherwise is ended and reads `program_not_running`,
-    /// with the [`ServerStartFailure`] that decided it.
-    fn spawn(
+    /// Starts `command` contained as `engine`'s server and waits for the program to
+    /// announce that it listens, for llama-server then to answer ready, and then for it
+    /// to answer with `version`. A program that exits, stays silent, unready or without
+    /// a version answer past [`START_BUDGET`] or answers otherwise is ended and reads
+    /// `program_not_running`, with the [`ServerStartFailure`] that decided it.
+    pub(super) fn spawn(
+        engine: LocalEngine,
         command: ServeCommand,
         version: &str,
         record: PathBuf,
@@ -403,6 +441,7 @@ impl Server {
             group.map(|group| group.guard)
         };
         let loopback = Loopback::new(command.address)?;
+        let started = Instant::now();
         let mut child = crate::process::creation::run(|| process.spawn())
             .map_err(|error| launch_failure(LaunchStep::Create, &error))?;
         let guard = match containment.contain(&child) {
@@ -418,6 +457,7 @@ impl Server {
         let guard: Box<dyn Send> = Box::new((guard, group));
         let stdin = child.stdin.take();
         let mut server = Self {
+            engine,
             child: Some(child),
             stdin,
             loopback,
@@ -428,11 +468,13 @@ impl Server {
             lease: Some(lease),
             proxy,
         };
-        let answered = server.announced().and_then(|()| {
-            server
-                .confirm_version(version)
-                .map_err(ServerStartFailure::Version)
-        });
+        let answered = server
+            .announced()
+            .and_then(|()| match engine {
+                LocalEngine::Ollama => Ok(()),
+                LocalEngine::LlamaCpp => server.ready(started + START_BUDGET),
+            })
+            .and_then(|()| server.answered_version(version, started + START_BUDGET));
         if let Err(cause) = answered {
             server.halt();
             return Err(LocalAiError::NotRunning(NotRunningCause::Start(cause)));
@@ -448,6 +490,7 @@ impl Server {
             return Err(ServerStartFailure::LogUnreadable);
         };
         let (sender, receiver) = mpsc::channel::<bool>();
+        let listening = announcement(self.engine);
         let reader = std::thread::Builder::new()
             .name("cadrumo-local-ai-log".into())
             .spawn(move || {
@@ -462,10 +505,9 @@ impl Server {
                     {
                         Ok(0) | Err(_) => break,
                         Ok(_) => {
-                            let listening = line
-                                .windows(LISTENING.len())
-                                .any(|window| window == LISTENING.as_bytes());
-                            if listening && let Some(sender) = waiting.take() {
+                            if announces(listening, &line)
+                                && let Some(sender) = waiting.take()
+                            {
                                 let _ = sender.send(true);
                             }
                         }
@@ -490,33 +532,104 @@ impl Server {
         }
     }
 
-    /// The version the server reports, when it answers.
-    fn answers_version(&self) -> Option<String> {
-        self.reported_version().ok()
+    /// Asks a llama-server that announced it listens whether it is ready, until it
+    /// answers `200`, its process ends or `deadline` passes.
+    fn ready(&mut self, deadline: Instant) -> Result<(), ServerStartFailure> {
+        let loopback = self.loopback.with_io_timeout(READY_QUESTION_BOUND);
+        let mut status = None;
+        loop {
+            match loopback.get(llama_server::HEALTH) {
+                Ok((200, _)) => return Ok(()),
+                Ok((answered, _)) => status = Some(answered),
+                Err(_) => {}
+            }
+            if let Some(exit) = self
+                .child
+                .as_mut()
+                .and_then(|child| child.try_wait().ok().flatten())
+            {
+                return Err(ServerStartFailure::Closed { exit: Some(exit) });
+            }
+            let remaining = deadline.saturating_duration_since(Instant::now());
+            if remaining.is_zero() {
+                return Err(ServerStartFailure::NotReady {
+                    budget: START_BUDGET,
+                    status,
+                });
+            }
+            std::thread::sleep(READY_PACE.min(remaining));
+        }
     }
 
-    /// The version the server reports, or how it failed to.
-    fn reported_version(&self) -> Result<String, VersionFailure> {
-        let (status, body) = self
-            .loopback
-            .get("/api/version")
+    /// Asks a server that announced it listens its version until it reports `version`,
+    /// another version or an answer that is no version document, its process ends, or
+    /// `deadline` passes. A program can announce that it listens before it answers any
+    /// request: Ollama does, and then discovers the computer's GPUs for many seconds
+    /// before it serves. So an unanswered question, or another status, is asked again;
+    /// the failure keeps what the last question got.
+    fn answered_version(
+        &mut self,
+        version: &str,
+        deadline: Instant,
+    ) -> Result<(), ServerStartFailure> {
+        let loopback = self.loopback.with_io_timeout(READY_QUESTION_BOUND);
+        loop {
+            let last = match self.confirm_version(loopback, version) {
+                Ok(()) => return Ok(()),
+                Err(failure @ (VersionFailure::Different { .. } | VersionFailure::Unreadable)) => {
+                    return Err(ServerStartFailure::Version(failure));
+                }
+                Err(failure) => failure,
+            };
+            if let Some(exit) = self
+                .child
+                .as_mut()
+                .and_then(|child| child.try_wait().ok().flatten())
+            {
+                return Err(ServerStartFailure::Closed { exit: Some(exit) });
+            }
+            let remaining = deadline.saturating_duration_since(Instant::now());
+            if remaining.is_zero() {
+                return Err(ServerStartFailure::Version(last));
+            }
+            std::thread::sleep(READY_PACE.min(remaining));
+        }
+    }
+
+    /// The version the server reports through `loopback`, or how it failed to: Ollama's
+    /// `/api/version`, or the `build_info` of llama-server's `/props`.
+    fn reported_version(&self, loopback: Loopback) -> Result<String, VersionFailure> {
+        let (path, field) = match self.engine {
+            LocalEngine::Ollama => ("/api/version", "version"),
+            LocalEngine::LlamaCpp => (llama_server::PROPERTIES, "build_info"),
+        };
+        let (status, body) = loopback
+            .get(path)
             .map_err(|error| VersionFailure::Unreachable(error.to_string()))?;
         if status != 200 {
             return Err(VersionFailure::Status(status));
         }
         let value: serde_json::Value =
             serde_json::from_slice(&body).map_err(|_| VersionFailure::Unreadable)?;
-        value["version"]
+        value[field]
             .as_str()
             .map(str::to_owned)
             .ok_or(VersionFailure::Unreadable)
     }
 
-    /// Whether the server reports exactly `expected`.
-    fn confirm_version(&self, expected: &str) -> Result<(), VersionFailure> {
-        match self.reported_version()? {
-            found if found == expected => Ok(()),
-            found => Err(VersionFailure::Different { found }),
+    /// Whether the server reports `expected` through `loopback`: exactly for Ollama, and
+    /// for llama-server a build that is the pinned build tag, alone or followed by its
+    /// commit.
+    fn confirm_version(&self, loopback: Loopback, expected: &str) -> Result<(), VersionFailure> {
+        let found = self.reported_version(loopback)?;
+        let confirmed = match self.engine {
+            LocalEngine::Ollama => found == expected,
+            LocalEngine::LlamaCpp => llama_server::build_matches(&found, expected),
+        };
+        if confirmed {
+            Ok(())
+        } else {
+            Err(VersionFailure::Different { found })
         }
     }
 
@@ -528,7 +641,10 @@ impl Server {
             return;
         };
         if matches!(child.try_wait(), Ok(None)) {
-            unload_all(self.loopback);
+            match self.engine {
+                LocalEngine::Ollama => unload_all(self.loopback),
+                LocalEngine::LlamaCpp => llama_server::unload_all(self.loopback),
+            }
         }
         drop(self.stdin.take());
         let _ = child.kill();
@@ -557,8 +673,22 @@ fn launch_failure(step: LaunchStep, error: &io::Error) -> LocalAiError {
     }))
 }
 
-/// Unloads every model a server reports loaded; a server that does not answer is left
-/// to the termination that follows.
+/// The line `engine`'s program writes on standard error once it accepts connections.
+pub(super) fn announcement(engine: LocalEngine) -> &'static str {
+    match engine {
+        LocalEngine::Ollama => OLLAMA_LISTENING,
+        LocalEngine::LlamaCpp => LLAMA_SERVER_LISTENING,
+    }
+}
+
+/// Whether one standard-error `line` holds the announcement `listening`.
+pub(super) fn announces(listening: &str, line: &[u8]) -> bool {
+    line.windows(listening.len())
+        .any(|window| window == listening.as_bytes())
+}
+
+/// Unloads every model an Ollama server reports loaded; a server that does not answer
+/// is left to the termination that follows.
 fn unload_all(loopback: Loopback) {
     let Ok((200, body)) = loopback.get("/api/ps") else {
         return;
@@ -899,6 +1029,14 @@ impl Program {
         };
         set("OLLAMA_HOST", OsStr::new(&address.to_string()));
         set("OLLAMA_MODELS", self.locations.models.as_os_str());
+        // The engine writes a model's blobs before its manifest into the store this server
+        // reads, so the server must not clear blobs no manifest names yet when it starts.
+        set("OLLAMA_NOPRUNE", OsStr::new("1"));
+        // The server answers from this computer only: without it, it fetches model
+        // recommendations from ollama.com and refreshes cloud model details. Its other
+        // network use is the pull, which the engine never asks of it; it has no
+        // telemetry setting, and only Ollama's desktop app checks for updates.
+        set("OLLAMA_NO_CLOUD", OsStr::new("1"));
         set("OLLAMA_HOME", home.as_os_str());
         set("HOME", home.as_os_str());
         set("USERPROFILE", home.as_os_str());
@@ -962,6 +1100,7 @@ impl Program {
         }
         let record = self.locations.programs.join(SERVER_RECORD);
         let server = match Server::spawn(
+            LocalEngine::Ollama,
             command,
             &self.version,
             record.clone(),
@@ -972,7 +1111,7 @@ impl Program {
             Ok(server) => server,
             Err(error) => {
                 if let LocalAiError::NotRunning(NotRunningCause::Start(failure)) = &error {
-                    record_start_failure(&self.locations.programs, failure.kind());
+                    record_start_failure(&self.locations.programs, failure);
                 }
                 return Err(error);
             }

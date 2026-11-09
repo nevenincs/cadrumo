@@ -1,24 +1,31 @@
 use super::*;
-use crate::provisioning::{
-    items::ItemId,
-    local_ai::{
-        fake_ollama::FakeOllama,
-        loopback::{ExchangeFailure, ExchangePhase},
-        program::Server,
-        reading,
+use crate::{
+    component::Cancellation,
+    provisioning::{
+        connection::Network,
+        items::ItemId,
+        local_ai::{
+            fake_ollama::FakeOllama,
+            loopback::{ExchangeFailure, ExchangePhase},
+            program::Server,
+            reading,
+        },
+        plan::PlanEntry,
+        state::{CheckMode, StaleReason},
+        test_servers::{Reply, Request, TestCertificate, TlsServer, network_to, response},
+        transfer::{Pacing, RetryPolicy},
     },
-    plan::PlanEntry,
-    state::{CheckMode, StaleReason},
 };
-use serde_json::{Value, json};
-use std::{fs, time::Duration};
+use serde_json::json;
+use std::{collections::BTreeMap, fs, time::Duration};
 
 const GIB: u64 = 1024 * 1024 * 1024;
 /// Obviously synthetic names: the engine knows no model, so its tests name none.
 const TEXT: &str = "synthetic-text:test";
 const VISION: &str = "synthetic-vision:test";
 
-/// One model as the program stores it: its manifest, and each layer's bytes by digest.
+/// One model as its registry serves it and the store keeps it: its manifest, and each
+/// layer's bytes by digest.
 struct Stored {
     manifest: Vec<u8>,
     blobs: Vec<(String, Vec<u8>)>,
@@ -34,12 +41,15 @@ impl Stored {
         .into_iter()
         .map(|bytes| (format!("sha256:{}", Sha256Digest::of(&bytes)), bytes))
         .collect();
-        let layer =
-            |(digest, bytes): &(String, Vec<u8>)| json!({ "digest": digest, "size": bytes.len() });
+        let layer = |media_type: &str, (digest, bytes): &(String, Vec<u8>)| json!({ "mediaType": media_type, "digest": digest, "size": bytes.len() });
         let manifest = json!({
             "schemaVersion": 2,
-            "config": layer(&blobs[0]),
-            "layers": [layer(&blobs[1]), layer(&blobs[2])],
+            "mediaType": registry::MANIFEST_MEDIA_TYPE,
+            "config": layer("application/vnd.docker.container.image.v1+json", &blobs[0]),
+            "layers": [
+                layer(huggingface::MODEL_MEDIA_TYPE, &blobs[1]),
+                layer("application/vnd.ollama.image.params", &blobs[2]),
+            ],
         })
         .to_string()
         .into_bytes();
@@ -71,10 +81,27 @@ impl Stored {
             fs::write(path, bytes).unwrap();
         }
     }
+
+    /// The default registry's routes for this model under `name`: its manifest and each
+    /// blob by digest.
+    fn routes(&self, name: &str) -> Vec<(String, Vec<u8>)> {
+        let name = ModelName::parse(name).unwrap();
+        let repository = format!("/v2/{}/{}", name.namespace(), name.model());
+        std::iter::once((
+            format!("{repository}/manifests/{}", name.tag()),
+            self.manifest.clone(),
+        ))
+        .chain(
+            self.blobs
+                .iter()
+                .map(|(digest, bytes)| (format!("{repository}/blobs/{digest}"), bytes.clone())),
+        )
+        .collect()
+    }
 }
 
 fn selected(role: &str, name: &str, size_bytes: u64) -> SelectedModel {
-    SelectedModel::new(role, name, Some(size_bytes)).unwrap()
+    SelectedModel::new(role, name, Some(size_bytes), None).unwrap()
 }
 
 /// The vision role reads with one model and two text roles share another.
@@ -115,6 +142,14 @@ impl Fixture {
     fn text_model(&self) -> &SelectedModel {
         self.models.selection().for_role("text_extraction").unwrap()
     }
+
+    fn vision_name(&self) -> &ModelName {
+        self.models
+            .selection()
+            .for_role("vision_transcription")
+            .unwrap()
+            .name()
+    }
 }
 
 const ROOMY: Hardware = Hardware {
@@ -141,7 +176,7 @@ fn a_selection_takes_well_formed_triples_only_and_orders_them_by_role() {
         ("text_extraction", "synthetic-text:", 1),
     ] {
         assert!(
-            SelectedModel::new(role, name, Some(size)).is_err(),
+            SelectedModel::new(role, name, Some(size), None).is_err(),
             "{role} {name} {size}"
         );
     }
@@ -155,6 +190,35 @@ fn a_selection_takes_well_formed_triples_only_and_orders_them_by_role() {
         selected("column_role_mapping", "SYNTHETIC-TEXT:TEST", 2),
     ]);
     assert!(two_sizes.is_err(), "one model has one size");
+    let one_size = LocalModels::new(vec![
+        selected("text_extraction", TEXT, 1),
+        selected("column_role_mapping", "SYNTHETIC-TEXT:TEST", 1),
+    ]);
+    assert!(one_size.is_ok(), "a registry name reads regardless of case");
+    // The store keeps a Hugging Face model under a name a registry could also serve; one
+    // name has one source.
+    let declared = hugging_face(&[1u8; 10], None);
+    let two_sources = LocalModels::new(vec![
+        SelectedModel::of_artefact(
+            "text_extraction",
+            ModelArtefact::HuggingFace(declared.clone()),
+            None,
+            None,
+        )
+        .unwrap(),
+        SelectedModel::new(
+            "column_role_mapping",
+            &declared.name().to_string(),
+            None,
+            None,
+        )
+        .unwrap(),
+    ]);
+    assert!(two_sources.is_err(), "one model has one source");
+    assert!(
+        SelectedModel::of_artefact("program", ModelArtefact::HuggingFace(declared), None, None)
+            .is_err()
+    );
     let ordered = LocalModels::new(vec![
         selected("vision_transcription", VISION, 1),
         selected("column_role_mapping", TEXT, 1),
@@ -221,10 +285,21 @@ fn the_plan_has_a_part_per_selected_role_and_counts_a_shared_model_once() {
             "vision_transcription"
         ]
     );
+    let registry_hosts = registry::source_hosts(&ModelName::parse(TEXT).unwrap());
+    assert!(
+        registry_hosts.len() > 1,
+        "the registry redirects to its storage"
+    );
     for part in &parts {
         assert_eq!(part.destination, Some(Destination::OllamaModels));
         assert!(!part.installs_outside_program);
         assert_eq!(part.source_hosts[0].as_str(), "registry.ollama.ai");
+        assert_eq!(
+            part.source_hosts.iter().cloned().collect::<BTreeSet<_>>(),
+            registry_hosts,
+            "the plan names every host the fetch may reach"
+        );
+        assert_eq!(part.source_hosts.len(), registry_hosts.len());
     }
     assert_eq!(parts[0].target_version.as_deref(), Some(TEXT));
     assert_eq!(parts[0].target_version, parts[1].target_version);
@@ -260,11 +335,38 @@ fn the_plan_has_a_part_per_selected_role_and_counts_a_shared_model_once() {
         fixture.models_root(),
     );
     assert_eq!(
-        elsewhere.plan_parts()[0].source_hosts[0].as_str(),
-        "models.example.com"
+        elsewhere.plan_parts()[0].source_hosts,
+        [HostName::new("models.example.com").unwrap()],
+        "another registry declares no storage of its own"
     );
     let none = Models::new(LocalModels::default(), fixture.models_root());
     assert!(none.plan_parts().is_empty(), "no selection plans no model");
+
+    // A Hugging Face model is planned at its declared size from the hub and the storage
+    // it redirects to, the hub first.
+    let declared = hugging_face(&[3u8; 40], Some(&[4u8; 20][..]));
+    let pinned = Models::new(
+        LocalModels::new(vec![
+            SelectedModel::of_artefact(
+                "vision_transcription",
+                ModelArtefact::HuggingFace(declared.clone()),
+                None,
+                None,
+            )
+            .unwrap(),
+        ])
+        .unwrap(),
+        fixture.models_root(),
+    );
+    let part = &pinned.plan_parts()[0];
+    assert_eq!(part.download_bytes, Some(60));
+    assert_eq!(part.target_version, Some(declared.name().to_string()));
+    assert_eq!(part.source_hosts[0].as_str(), huggingface::HUGGING_FACE);
+    assert_eq!(
+        part.source_hosts.iter().cloned().collect::<BTreeSet<_>>(),
+        huggingface::source_hosts()
+    );
+    assert_eq!(pinned.selection().hosts(), huggingface::source_hosts());
 }
 
 #[test]
@@ -272,6 +374,15 @@ fn the_quick_check_reads_the_stored_manifest_and_its_layers() {
     let fixture = fixture();
     let root = fixture.models_root();
     let model = fixture.text_model();
+    assert_eq!(
+        fixture.models.observe_quick(model, &ROOMY),
+        Observation::Absent
+    );
+    // Every layer stored and no manifest naming them: the model is absent.
+    for (path, bytes) in fixture.text.files(&root, TEXT).into_iter().skip(1) {
+        fs::create_dir_all(path.parent().unwrap()).unwrap();
+        fs::write(path, bytes).unwrap();
+    }
     assert_eq!(
         fixture.models.observe_quick(model, &ROOMY),
         Observation::Absent
@@ -334,11 +445,10 @@ fn the_hardware_floor_is_the_size_the_caller_stated() {
     assert_eq!(fixture.models.observe_quick(&fitting, &small), PRESENT);
 }
 
-/// A pacing that records each wait instead of waiting.
+/// A pacing that advances by each wait instead of waiting.
 #[derive(Default)]
 struct RecordedPacing {
     now: Duration,
-    waits: Vec<Duration>,
 }
 
 impl Pacing for RecordedPacing {
@@ -347,7 +457,6 @@ impl Pacing for RecordedPacing {
     }
     fn wait(&mut self, delay: Duration, cancellation: &Cancellation) -> Result<(), Error> {
         cancellation.check()?;
-        self.waits.push(delay);
         self.now += delay;
         Ok(())
     }
@@ -356,236 +465,394 @@ impl Pacing for RecordedPacing {
     }
 }
 
-fn progress(digest: &str, total: usize, completed: usize) -> Value {
-    json!({ "status": format!("pulling {digest}"), "digest": digest, "total": total, "completed": completed })
+// Obviously synthetic: the engine knows no model, so its tests name none.
+const HF_REPOSITORY: &str = "synthetic-owner/synthetic-vision-gguf";
+const HF_REVISION: &str = "0123456789abcdef0123456789abcdef01234567";
+/// The storage host the hub redirected a GGUF file to when it was probed.
+const HF_STORAGE_HOST: &str = "us.aws.cdn.hf.co";
+const HF_STORAGE: &str = "/xet-bridge/";
+
+/// A Hugging Face declaration of `model` and its optional `projector` bytes.
+fn hugging_face(model: &[u8], projector: Option<&[u8]>) -> HuggingFaceModel {
+    let file = |name: &str, bytes: &[u8]| {
+        HuggingFaceFile::new(name, Sha256Digest::of(bytes).as_str(), bytes.len() as u64).unwrap()
+    };
+    HuggingFaceModel::new(
+        HF_REPOSITORY,
+        HF_REVISION,
+        file("synthetic-vision-q4.gguf", model),
+        projector.map(|bytes| file("synthetic-projector-q8.gguf", bytes)),
+    )
+    .unwrap()
 }
 
-struct Pulled {
+fn answer(bytes: &[u8]) -> Reply {
+    Reply::Bytes(response(
+        "200 OK",
+        &[("Content-Length", bytes.len().to_string())],
+        bytes,
+    ))
+}
+
+/// The publishers a fetch reaches, on one TLS server whose certificate covers every host a
+/// registry or Hugging Face fetch may reach: the default registry serving `routes` by
+/// target, and the Hugging Face hub redirecting each `resolve` route of `files` to its
+/// storage host, which serves the bytes by digest.
+struct Publishers {
+    certificate: TestCertificate,
+    server: TlsServer,
+}
+
+impl Publishers {
+    fn start(routes: Vec<(String, Vec<u8>)>, files: Vec<(String, Vec<u8>)>) -> Self {
+        let hosts: Vec<String> = registry::source_hosts(&ModelName::parse(TEXT).unwrap())
+            .into_iter()
+            .chain(huggingface::source_hosts())
+            .map(|host| host.as_str().to_owned())
+            .collect();
+        let names: Vec<&str> = hosts.iter().map(String::as_str).collect();
+        let certificate = TestCertificate::new(&names);
+        let routes: BTreeMap<String, Vec<u8>> = routes.into_iter().collect();
+        let resolve = format!("/{HF_REPOSITORY}/resolve/{HF_REVISION}/");
+        let server = TlsServer::start(&certificate, move |request: &Request| {
+            let target = request.target();
+            if let Some(bytes) = routes.get(target) {
+                return answer(bytes);
+            }
+            if let Some(name) = target.strip_prefix(resolve.as_str())
+                && let Some((_, bytes)) = files.iter().find(|(held, _)| held == name)
+            {
+                return Reply::Bytes(response(
+                    "302 Found",
+                    &[
+                        (
+                            "Location",
+                            format!(
+                                "https://{HF_STORAGE_HOST}{HF_STORAGE}{}",
+                                Sha256Digest::of(bytes)
+                            ),
+                        ),
+                        ("Content-Length", "0".into()),
+                    ],
+                    b"",
+                ));
+            }
+            let stored = target.strip_prefix(HF_STORAGE).and_then(|hex| {
+                files
+                    .iter()
+                    .find(|(_, bytes)| Sha256Digest::of(bytes).as_str() == hex)
+            });
+            match stored {
+                Some((_, bytes)) => answer(bytes),
+                None => Reply::Bytes(response(
+                    "404 Not Found",
+                    &[("Content-Length", "0".into())],
+                    b"",
+                )),
+            }
+        });
+        Self {
+            certificate,
+            server,
+        }
+    }
+
+    fn network(&self) -> Network {
+        network_to(self.certificate.roots(), self.server.address(), None)
+    }
+}
+
+struct Fetched {
     result: Result<Observation, LocalAiError>,
+    /// The bytes the pull reported its progress against, when it finished.
+    bytes: Option<u64>,
     events: Vec<TransferEvent>,
-    waits: Vec<Duration>,
-    pulls: Vec<Value>,
 }
 
-fn pull_with(
-    fixture: &Fixture,
-    fake: &FakeOllama,
-    policy: RetryPolicy,
-    cancellation: &Cancellation,
-) -> Pulled {
-    let server = Server::attached(fake.address(), "1.0.0");
+/// Fetches `model` with `models` through `network`, reaching only the `approved` hosts.
+fn fetch(
+    models: &Models,
+    model: &SelectedModel,
+    network: &Network,
+    approved: &[HostName],
+) -> Fetched {
+    let hosts: BTreeSet<HostName> = approved.iter().cloned().collect();
     let mut pacing = RecordedPacing::default();
     let mut events = Vec::new();
-    let mut sink = |event| events.push(event);
-    let result = fixture.models.pull(
-        &server,
-        fixture.text_model(),
-        &mut Pull {
-            policy,
-            pacing: &mut pacing,
-            events: &mut sink,
-            cancellation,
-        },
-    );
-    let pulls = fake
-        .state
-        .lock()
-        .unwrap()
-        .bodies
-        .iter()
-        .filter(|body| body["stream"] == true)
-        .cloned()
-        .collect();
-    Pulled {
-        result,
+    let cancellation = Cancellation::default();
+    let pulled = {
+        let mut sink = |event| events.push(event);
+        models.pull(
+            model,
+            &mut Transfer {
+                network,
+                hosts: &hosts,
+                policy: RetryPolicy::default(),
+                pacing: &mut pacing,
+                events: &mut sink,
+                cancellation: &cancellation,
+            },
+        )
+    };
+    let bytes = pulled.as_ref().ok().map(|pulled| pulled.bytes);
+    Fetched {
+        result: pulled.map(|pulled| pulled.observation),
+        bytes,
         events,
-        waits: pacing.waits,
-        pulls,
     }
 }
 
-#[test]
-fn a_cut_off_pull_is_pulled_again_and_reports_byte_progress_for_the_whole_model() {
-    let fixture = fixture();
-    let fake = FakeOllama::start("1.0.0");
-    let text = &fixture.text;
-    let (config, first, second) = (&text.blobs[0], &text.blobs[1], &text.blobs[2]);
-    {
-        let mut state = fake.state.lock().unwrap();
-        state.pulls.push_back(vec![
-            json!({ "status": "pulling manifest" }),
-            progress(&first.0, first.1.len(), 20),
-        ]);
-        // The program resumes the layer it had begun.
-        state.pulls.push_back(vec![
-            json!({ "status": "pulling manifest" }),
-            progress(&first.0, first.1.len(), 20),
-            progress(&first.0, first.1.len(), first.1.len()),
-            progress(&second.0, second.1.len(), second.1.len()),
-            progress(&config.0, config.1.len(), config.1.len()),
-            json!({ "status": "verifying sha256 digest" }),
-            json!({ "status": "writing manifest" }),
-            json!({ "status": "success" }),
-        ]);
-        state
-            .installs
-            .insert(TEXT.into(), text.files(&fixture.models_root(), TEXT));
-    }
-    let pulled = pull_with(
-        &fixture,
-        &fake,
-        RetryPolicy::default(),
-        &Cancellation::default(),
-    );
-    assert_eq!(pulled.result.unwrap(), PRESENT);
-    let request = json!({ "model": TEXT, "stream": true });
-    assert_eq!(pulled.pulls, [request.clone(), request]);
-    assert_eq!(
-        fake.state
-            .lock()
-            .unwrap()
-            .requests
-            .last()
-            .map(String::as_str),
-        Some("GET /api/tags HTTP/1.1"),
-        "the pulled model is read back from the server's own list"
-    );
-    assert_eq!(pulled.waits.len(), 1);
-    assert!((Duration::from_secs(2)..=Duration::from_secs(3)).contains(&pulled.waits[0]));
-    let total = text.size();
-    let completed: Vec<u64> = pulled
-        .events
+/// The progress a fetch reported, as completed and total bytes.
+fn progress(events: &[TransferEvent]) -> Vec<(u64, u64)> {
+    events
         .iter()
         .filter_map(|event| match event {
-            TransferEvent::Progress {
-                completed,
-                total: of,
-            } => {
-                assert_eq!(*of, total);
-                Some(*completed)
-            }
+            TransferEvent::Progress { completed, total } => Some((*completed, *total)),
             TransferEvent::Retrying { .. } => None,
         })
-        .collect();
-    assert_eq!(completed.first(), Some(&20));
-    assert_eq!(completed.last(), Some(&total));
-    assert!(
-        completed
-            .windows(2)
-            .filter(|pair| pair[1] < pair[0])
-            .count()
-            == 0
-    );
-    assert!(matches!(
-        pulled
-            .events
-            .iter()
-            .find(|event| matches!(event, TransferEvent::Retrying { .. })),
-        Some(TransferEvent::Retrying { attempt: 2, .. })
-    ));
-    assert_eq!(
-        fixture.models.observe_quick(fixture.text_model(), &ROOMY),
-        PRESENT
-    );
-
-    // A present model is not pulled again.
-    let again = pull_with(
-        &fixture,
-        &fake,
-        RetryPolicy::default(),
-        &Cancellation::default(),
-    );
-    assert_eq!(again.result.unwrap(), PRESENT);
-    assert_eq!(again.pulls.len(), 2, "no new pull request");
+        .collect()
 }
 
-#[test]
-fn a_pull_the_program_calls_done_but_did_not_store_fails_rather_than_finishing() {
-    let fixture = fixture();
-    let fake = FakeOllama::start("1.0.0");
-    fake.state
-        .lock()
+/// The hosts the plan approves for the part `role`.
+fn approved_for(models: &Models, role: &str) -> Vec<HostName> {
+    models
+        .plan_parts()
+        .into_iter()
+        .find(|part| part.part_id == role)
         .unwrap()
-        .pulls
-        .push_back(vec![json!({ "status": "success" })]);
-    let pulled = pull_with(
-        &fixture,
-        &fake,
-        RetryPolicy::default(),
-        &Cancellation::default(),
-    );
-    assert_eq!(
-        pulled.result.unwrap_err().category(),
-        FailureCategory::DamagedDownload
-    );
-    assert_eq!(pulled.pulls.len(), 1);
+        .source_hosts
 }
 
 #[test]
-fn pull_failures_take_their_category_and_only_passing_ones_are_retried() {
+fn a_registry_model_is_fetched_by_the_engine_into_the_store_with_no_server() {
     let fixture = fixture();
-    let policy = RetryPolicy {
-        max_attempts: 3,
-        ..RetryPolicy::default()
-    };
-    for (error, category, attempts) in [
-        (
-            "write /models/blobs: no space left on device",
-            FailureCategory::DiskFull,
-            1,
-        ),
-        (
-            "pull model manifest: file does not exist",
-            FailureCategory::Unexpected,
-            1,
-        ),
-        (
-            "tls: failed to verify certificate: x509",
-            FailureCategory::SecureConnectionFailed,
-            1,
-        ),
-        (
-            "dial tcp: lookup registry.ollama.ai: no such host",
-            FailureCategory::Offline,
-            3,
-        ),
-        (
-            "max retries exceeded: 503 Service Unavailable",
-            FailureCategory::HostUnreachable,
-            3,
-        ),
-    ] {
-        let fake = FakeOllama::start("1.0.0");
-        for _ in 0..attempts {
-            fake.state.lock().unwrap().pulls.push_back(vec![
-                json!({ "status": "pulling manifest" }),
-                json!({ "error": error }),
-            ]);
-        }
-        let pulled = pull_with(&fixture, &fake, policy, &Cancellation::default());
-        assert!(
-            matches!(pulled.result, Err(LocalAiError::Failed(found)) if found == category),
-            "{error}"
-        );
-        assert_eq!(pulled.pulls.len(), attempts, "{error}");
-    }
+    let publishers = Publishers::start(fixture.text.routes(TEXT), Vec::new());
+    // A server runs beside the store, as the manager's does; the fetch asks it nothing.
     let fake = FakeOllama::start("1.0.0");
-    let cancelled = Cancellation::default();
-    cancelled.cancel();
-    let pulled = pull_with(&fixture, &fake, policy, &cancelled);
+    let model = fixture.text_model();
+    let approved = approved_for(&fixture.models, "text_extraction");
+    let fetched = fetch(&fixture.models, model, &publishers.network(), &approved);
+    assert_eq!(fetched.result.unwrap(), PRESENT);
+
+    let root = fixture.models_root();
     assert_eq!(
-        pulled.result.unwrap_err().category(),
-        FailureCategory::Cancelled
+        fs::read(ModelName::parse(TEXT).unwrap().manifest_path(&root)).unwrap(),
+        fixture.text.manifest,
+        "the store keeps the manifest the registry served"
     );
-    assert!(pulled.pulls.is_empty());
+    for (path, bytes) in fixture.text.files(&root, TEXT).into_iter().skip(1) {
+        assert_eq!(fs::read(path).unwrap(), bytes);
+    }
+    assert_eq!(fixture.models.observe_quick(model, &ROOMY), PRESENT);
+    let total = fixture.text.size();
+    let reported = progress(&fetched.events);
+    assert!(reported.iter().all(|(_, of)| *of == total), "{reported:?}");
+    assert_eq!(reported.first(), Some(&(0, total)));
+    assert_eq!(reported.last(), Some(&(total, total)));
+    assert!(reported.windows(2).all(|pair| pair[0].0 <= pair[1].0));
+    let targets = publishers.server.targets();
+    assert_eq!(targets.len(), 1 + fixture.text.blobs.len(), "{targets:?}");
+    assert!(
+        fake.state.lock().unwrap().requests.is_empty(),
+        "no server is asked to pull or list anything"
+    );
+
+    // A model the store holds whole is not fetched again.
+    let again = fetch(&fixture.models, model, &publishers.network(), &approved);
+    assert_eq!(again.result.unwrap(), PRESENT);
     assert_eq!(
-        pull_error_category("Bad Gateway"),
-        FailureCategory::HostUnreachable
+        again.events,
+        [TransferEvent::Progress {
+            completed: total,
+            total
+        }]
+    );
+    assert_eq!(publishers.server.targets().len(), targets.len());
+}
+
+/// A model no catalogue sizes, as one the person names: planned with an unknown download,
+/// never held back by a floor it has no size for, and fetched with progress against the
+/// sizes its manifest declares.
+#[test]
+fn a_model_of_unknown_size_is_planned_unsized_and_fetched_against_its_manifest_sizes() {
+    let root = tempfile::tempdir().unwrap();
+    let stored = Stored::new(5);
+    assert!(SelectedModel::new("download", TEXT, Some(0), None).is_err());
+    let models = Models::new(
+        LocalModels::new(vec![
+            SelectedModel::new("download", TEXT, None, None).unwrap(),
+        ])
+        .unwrap(),
+        root.path().join("models"),
+    );
+    let model = &models.selection().as_slice()[0];
+    let parts = models.plan_parts();
+    assert_eq!(parts[0].download_bytes, None);
+    assert_eq!(models.download_bytes(model), None);
+    let tiny = Hardware {
+        total_memory_bytes: Some(1),
+        nvidia_vram_bytes: None,
+    };
+    assert_eq!(models.observe_quick(model, &tiny), Observation::Absent);
+    let publishers = Publishers::start(stored.routes(TEXT), Vec::new());
+    let fetched = fetch(
+        &models,
+        model,
+        &publishers.network(),
+        &parts[0].source_hosts,
+    );
+    assert_eq!(fetched.result.unwrap(), PRESENT);
+    let reported = progress(&fetched.events);
+    assert!(
+        reported
+            .iter()
+            .all(|(completed, total)| completed <= total && *total == stored.size()),
+        "{reported:?}"
+    );
+    assert_eq!(reported.last(), Some(&(stored.size(), stored.size())));
+    assert_eq!(models.download_bytes(model), Some(stored.size()));
+}
+
+#[test]
+fn a_pull_reports_the_total_its_manifest_states_not_the_size_a_catalogue_gave() {
+    let root = tempfile::tempdir().unwrap();
+    let stored = Stored::new(5);
+    let models = Models::new(
+        LocalModels::new(vec![selected("download", TEXT, 7)]).unwrap(),
+        root.path().join("models"),
+    );
+    let model = &models.selection().as_slice()[0];
+    let publishers = Publishers::start(stored.routes(TEXT), Vec::new());
+    let approved = approved_for(&models, "download");
+    let fetched = fetch(&models, model, &publishers.network(), &approved);
+    assert_eq!(fetched.result.unwrap(), PRESENT);
+    assert_eq!(fetched.bytes, Some(stored.size()));
+    let reported = progress(&fetched.events);
+    assert_eq!(reported.last(), Some(&(stored.size(), stored.size())));
+    assert!(
+        reported.iter().all(|(_, total)| *total == stored.size()),
+        "{reported:?}"
+    );
+}
+
+#[test]
+fn a_fetch_reaches_only_the_hosts_the_approved_plan_names() {
+    let fixture = fixture();
+    let publishers = Publishers::start(fixture.text.routes(TEXT), Vec::new());
+    let model = fixture.text_model();
+    let storage_only: Vec<HostName> = registry::source_hosts(model.name())
+        .into_iter()
+        .filter(|host| host != model.name().host())
+        .collect();
+    assert!(!storage_only.is_empty());
+    let fetched = fetch(&fixture.models, model, &publishers.network(), &storage_only);
+    assert!(
+        matches!(
+            &fetched.result,
+            Err(error) if error.category() == FailureCategory::BlockedByNetwork
+        ),
+        "{:?}",
+        fetched.result
+    );
+    assert!(publishers.server.targets().is_empty(), "nothing was sent");
+    assert_eq!(
+        fixture.models.observe_quick(model, &ROOMY),
+        Observation::Absent
+    );
+}
+
+#[test]
+fn a_layer_that_is_not_its_digest_fails_the_fetch_and_the_model_stays_absent() {
+    let fixture = fixture();
+    let mut routes = fixture.text.routes(TEXT);
+    // Same size, other bytes: only the manifest's digest tells them apart.
+    routes[2].1[0] ^= 0xff;
+    let publishers = Publishers::start(routes, Vec::new());
+    let model = fixture.text_model();
+    let approved = approved_for(&fixture.models, "text_extraction");
+    let fetched = fetch(&fixture.models, model, &publishers.network(), &approved);
+    assert!(
+        matches!(
+            fetched.result,
+            Err(LocalAiError::Failed(FailureCategory::DamagedDownload))
+        ),
+        "{:?}",
+        fetched.result
+    );
+    assert!(
+        !ModelName::parse(TEXT)
+            .unwrap()
+            .manifest_path(&fixture.models_root())
+            .exists(),
+        "no manifest names a model the store does not hold whole"
     );
     assert_eq!(
-        pull_error_category("something new"),
-        FailureCategory::Unexpected
+        fixture.models.observe_quick(model, &ROOMY),
+        Observation::Absent
     );
+}
+
+#[test]
+fn a_hugging_face_model_is_fetched_from_its_declared_files_into_the_same_store() {
+    let root = tempfile::tempdir().unwrap();
+    let models_root = root.path().join("models");
+    let model_bytes: Vec<u8> = (0..90_000u32).map(|index| (index % 251) as u8).collect();
+    let projector_bytes = vec![7u8; 30_000];
+    let declared = hugging_face(&model_bytes, Some(projector_bytes.as_slice()));
+    let models = Models::new(
+        LocalModels::new(vec![
+            SelectedModel::of_artefact(
+                "vision_transcription",
+                ModelArtefact::HuggingFace(declared.clone()),
+                None,
+                None,
+            )
+            .unwrap(),
+        ])
+        .unwrap(),
+        models_root.clone(),
+    );
+    let model = &models.selection().as_slice()[0];
+    assert_eq!(models.observe_quick(model, &ROOMY), Observation::Absent);
+    let publishers = Publishers::start(
+        Vec::new(),
+        vec![
+            (declared.model().file().to_owned(), model_bytes.clone()),
+            (
+                declared.projector().unwrap().file().to_owned(),
+                projector_bytes.clone(),
+            ),
+        ],
+    );
+    let approved = approved_for(&models, "vision_transcription");
+    let fetched = fetch(&models, model, &publishers.network(), &approved);
+    assert_eq!(fetched.result.unwrap(), PRESENT);
+    assert_eq!(models.observe_quick(model, &ROOMY), PRESENT);
+    let total = declared.download_bytes();
+    assert_eq!(models.download_bytes(model), Some(total));
+    let reported = progress(&fetched.events);
+    assert!(reported.iter().all(|(_, of)| *of == total), "{reported:?}");
+    assert_eq!(reported.last(), Some(&(total, total)));
+    let requests = publishers.server.requests.lock().unwrap().clone();
+    let hosts: Vec<Option<&str>> = requests
+        .iter()
+        .map(|request| request.header("host"))
+        .collect();
+    assert_eq!(
+        hosts,
+        [
+            Some(huggingface::HUGGING_FACE),
+            Some(HF_STORAGE_HOST),
+            Some(huggingface::HUGGING_FACE),
+            Some(HF_STORAGE_HOST),
+        ],
+        "each file is resolved on the hub and read from its storage"
+    );
+
+    // Removal takes the manifest and every layer only it used, as for a registry model.
+    models.remove_named(model.name()).unwrap();
+    assert_eq!(models.observe_quick(model, &ROOMY), Observation::Absent);
+    assert_eq!(fs::read_dir(models_root.join("blobs")).unwrap().count(), 0);
 }
 
 #[test]
@@ -678,143 +945,6 @@ fn the_full_check_looks_the_model_up_in_the_servers_list_and_generates_one_token
         ),
         "the connect failed, under the connect bound: {gone:?}"
     );
-}
-
-/// The pull path end to end for a model no catalogue has: pulled by the name the
-/// selection spells, stored where the program keeps that name, read back from the
-/// server's list and answering one token, with no digest compared anywhere.
-#[test]
-fn a_synthetic_model_from_any_registry_is_pulled_listed_and_checked_by_its_name() {
-    const SYNTHETIC: &str = "models.example.com/someone/synthetic-model:test";
-    let root = tempfile::tempdir().unwrap();
-    let models_root = root.path().join("models");
-    let stored = Stored::new(3);
-    let models = Models::new(
-        LocalModels::new(vec![selected("text_extraction", SYNTHETIC, stored.size())]).unwrap(),
-        models_root.clone(),
-    );
-    let model = &models.selection().as_slice()[0];
-    let fake = FakeOllama::start("1.0.0");
-    {
-        let mut state = fake.state.lock().unwrap();
-        let mut lines = vec![json!({ "status": "pulling manifest" })];
-        for (digest, bytes) in &stored.blobs {
-            lines.push(progress(digest, bytes.len(), bytes.len()));
-        }
-        lines.push(json!({ "status": "success" }));
-        state.pulls.push_back(lines);
-        state
-            .installs
-            .insert(SYNTHETIC.into(), stored.files(&models_root, SYNTHETIC));
-    }
-    let server = Server::attached(fake.address(), "1.0.0");
-    assert_eq!(models.observe_quick(model, &ROOMY), Observation::Absent);
-    let mut pacing = RecordedPacing::default();
-    let mut events = Vec::new();
-    let pulled = models
-        .pull(
-            &server,
-            model,
-            &mut Pull {
-                policy: RetryPolicy::default(),
-                pacing: &mut pacing,
-                events: &mut |event| events.push(event),
-                cancellation: &Cancellation::default(),
-            },
-        )
-        .unwrap();
-    assert_eq!(pulled, PRESENT);
-    assert!(matches!(
-        events.last(),
-        Some(TransferEvent::Progress { completed, total }) if *completed == stored.size() && *total == stored.size()
-    ));
-    assert!(
-        models_root
-            .join("manifests/models.example.com/someone/synthetic-model/test")
-            .is_file()
-    );
-    assert_eq!(models.observe_full(&server, model, &ROOMY), PRESENT);
-    let state = fake.state.lock().unwrap();
-    let named: Vec<&Value> = state
-        .bodies
-        .iter()
-        .filter(|body| body["model"].is_string())
-        .map(|body| &body["model"])
-        .collect();
-    assert!(!named.is_empty());
-    assert!(named.iter().all(|name| **name == SYNTHETIC), "{named:?}");
-    assert_eq!(
-        models.plan_parts()[0].source_hosts[0].as_str(),
-        "models.example.com"
-    );
-}
-
-/// A model no catalogue sizes, as one the person names: planned with an unknown download,
-/// never held back by a floor it has no size for, and pulled with progress against the
-/// layer totals the program streams.
-#[test]
-fn a_model_of_unknown_size_is_planned_unsized_and_pulled_against_the_streamed_totals() {
-    let root = tempfile::tempdir().unwrap();
-    let models_root = root.path().join("models");
-    let stored = Stored::new(5);
-    assert!(SelectedModel::new("download", TEXT, Some(0)).is_err());
-    let models = Models::new(
-        LocalModels::new(vec![SelectedModel::new("download", TEXT, None).unwrap()]).unwrap(),
-        models_root.clone(),
-    );
-    let model = &models.selection().as_slice()[0];
-    assert_eq!(models.plan_parts()[0].download_bytes, None);
-    assert_eq!(models.download_bytes(model), None);
-    let tiny = Hardware {
-        total_memory_bytes: Some(1),
-        nvidia_vram_bytes: None,
-    };
-    assert_eq!(models.observe_quick(model, &tiny), Observation::Absent);
-    let fake = FakeOllama::start("1.0.0");
-    {
-        let mut state = fake.state.lock().unwrap();
-        let mut lines = vec![json!({ "status": "pulling manifest" })];
-        for (digest, bytes) in &stored.blobs {
-            lines.push(progress(digest, bytes.len(), bytes.len() / 2));
-        }
-        for (digest, bytes) in &stored.blobs {
-            lines.push(progress(digest, bytes.len(), bytes.len()));
-        }
-        lines.push(json!({ "status": "success" }));
-        state.pulls.push_back(lines);
-        state
-            .installs
-            .insert(TEXT.into(), stored.files(&models_root, TEXT));
-    }
-    let server = Server::attached(fake.address(), "1.0.0");
-    let mut pacing = RecordedPacing::default();
-    let mut events = Vec::new();
-    let pulled = models
-        .pull(
-            &server,
-            model,
-            &mut Pull {
-                policy: RetryPolicy::default(),
-                pacing: &mut pacing,
-                events: &mut |event| events.push(event),
-                cancellation: &Cancellation::default(),
-            },
-        )
-        .unwrap();
-    assert_eq!(pulled, PRESENT);
-    let progress: Vec<(u64, u64)> = events
-        .iter()
-        .filter_map(|event| match event {
-            TransferEvent::Progress { completed, total } => Some((*completed, *total)),
-            _ => None,
-        })
-        .collect();
-    assert!(
-        progress.iter().all(|(completed, total)| completed <= total),
-        "{progress:?}"
-    );
-    assert_eq!(progress.last(), Some(&(stored.size(), stored.size())));
-    assert_eq!(models.download_bytes(model), Some(stored.size()));
 }
 
 #[test]
@@ -977,4 +1107,304 @@ fn a_named_model_is_removed_alone_and_the_layers_others_use_stay() {
         4,
         "a model not stored removes nothing"
     );
+}
+
+/// A blob file the store holds that no manifest names, and the bytes it holds.
+fn orphan_blob(root: &Path, seed: u8) -> PathBuf {
+    let bytes = vec![seed; 13];
+    let path = root
+        .join("blobs")
+        .join(format!("sha256-{}", Sha256Digest::of(&bytes)));
+    fs::create_dir_all(path.parent().unwrap()).unwrap();
+    fs::write(&path, bytes).unwrap();
+    path
+}
+
+/// Writes bytes of a fetch that never finished, and returns their paths.
+fn partial_files(root: &Path) -> Vec<PathBuf> {
+    let folder = root.join(registry::PARTIAL);
+    fs::create_dir_all(&folder).unwrap();
+    ["sha256-0000", "manifest-1-0"]
+        .into_iter()
+        .map(|name| {
+            let path = folder.join(name);
+            fs::write(&path, b"unfinished").unwrap();
+            path
+        })
+        .collect()
+}
+
+#[test]
+fn removal_clears_the_partial_folder_and_the_blobs_no_remaining_manifest_names() {
+    let fixture = fixture();
+    let root = fixture.models_root();
+    fixture.text.write(&root, TEXT);
+    fixture.vision.write(&root, VISION);
+    // A model the person keeps shares the text model's first layer.
+    let shared = &fixture.text.blobs[0];
+    let kept = root.join("manifests/registry.ollama.ai/library/kept/latest");
+    fs::create_dir_all(kept.parent().unwrap()).unwrap();
+    let kept_manifest = json!({
+        "schemaVersion": 2,
+        "config": { "digest": shared.0, "size": shared.1.len() },
+        "layers": [],
+    })
+    .to_string();
+    fs::write(&kept, &kept_manifest).unwrap();
+    // A blob an earlier fetch or removal left behind, and a file that is no blob.
+    let orphan = orphan_blob(&root, 40);
+    let stray = root.join("blobs/notes.txt");
+    fs::write(&stray, b"not a blob").unwrap();
+    let partials = partial_files(&root);
+
+    fixture.models.remove_named(fixture.vision_name()).unwrap();
+    assert!(!orphan.exists(), "an unreferenced blob is reclaimed");
+    assert!(stray.is_file(), "a file that is no blob stays");
+    assert!(partials.iter().all(|path| !path.exists()));
+    assert!(root.join(registry::PARTIAL).is_dir());
+    let present = |stored: &Stored, name: &str| {
+        stored
+            .files(&root, name)
+            .into_iter()
+            .filter(|(path, _)| path.exists())
+            .count()
+    };
+    assert_eq!(present(&fixture.vision, VISION), 0);
+    assert_eq!(
+        present(&fixture.text, TEXT),
+        4,
+        "a stored model other than the removed one keeps its manifest and layers"
+    );
+    assert!(kept.is_file());
+
+    // Unreadable kept manifests keep every blob, but unfinished bytes are no model's.
+    let orphan = orphan_blob(&root, 41);
+    let partials = partial_files(&root);
+    fs::write(&kept, b"{").unwrap();
+    fixture.models.remove().unwrap();
+    assert!(
+        orphan.is_file(),
+        "an unreadable kept manifest keeps every blob"
+    );
+    assert!(partials.iter().all(|path| !path.exists()));
+}
+
+/// A selection of `name` alone, stating `context` as its llama.cpp context.
+fn stating(root: &Path, name: &str, context: Option<u32>) -> Models {
+    Models::new(
+        LocalModels::new(vec![
+            SelectedModel::new(
+                "download",
+                name,
+                None,
+                context.map(|context| NonZeroU32::new(context).unwrap()),
+            )
+            .unwrap(),
+        ])
+        .unwrap(),
+        root.to_path_buf(),
+    )
+}
+
+fn context(value: u32) -> Option<NonZeroU32> {
+    NonZeroU32::new(value)
+}
+
+#[test]
+fn a_context_record_reads_back_is_replaced_and_refuses_what_it_cannot_hold() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path().join("models");
+    let name = ModelName::parse(TEXT).unwrap();
+    assert_eq!(recorded_context(&root, &name), None, "nothing recorded yet");
+
+    record_context(&root, &name, NonZeroU32::new(4096).unwrap()).unwrap();
+    let file = root
+        .join("cadrumo")
+        .join("llamacpp-context")
+        .join("registry.ollama.ai")
+        .join("library")
+        .join("synthetic-text")
+        .join("test.json");
+    assert_eq!(
+        fs::read_to_string(&file).unwrap(),
+        r#"{"schema":1,"llamacpp_context":4096}"#
+    );
+    assert_eq!(recorded_context(&root, &name), context(4096));
+    // Outside the folders Ollama reads.
+    assert!(!root.join("manifests").exists() && !root.join("blobs").exists());
+
+    record_context(&root, &name, NonZeroU32::new(8192).unwrap()).unwrap();
+    assert_eq!(recorded_context(&root, &name), context(8192));
+    assert_eq!(
+        fs::read_dir(file.parent().unwrap()).unwrap().count(),
+        1,
+        "a replacement leaves no other file"
+    );
+
+    // A tag with a dot keeps it: `.json` is added, never put in its place.
+    let dotted = ModelName::parse("synthetic-text:1.5b").unwrap();
+    record_context(&root, &dotted, NonZeroU32::new(2048).unwrap()).unwrap();
+    assert!(file.with_file_name("1.5b.json").is_file());
+    assert_eq!(recorded_context(&root, &dotted), context(2048));
+    assert_eq!(recorded_context(&root, &name), context(8192));
+
+    for bytes in [
+        br#"{"schema":1,"llamacpp_context":0}"#.as_slice(),
+        br#"{"schema":2,"llamacpp_context":4096}"#,
+        br#"{"schema":1,"llamacpp_context":4096,"extra":0}"#,
+        br#"{"schema":1}"#,
+        br#"{"schema":1,"llamacpp_context":-1}"#,
+        br#"{"schema":1,"llamacpp_context":"4096"}"#,
+        b"{",
+    ] {
+        fs::write(&file, bytes).unwrap();
+        assert_eq!(
+            recorded_context(&root, &name),
+            None,
+            "{}",
+            String::from_utf8_lossy(bytes)
+        );
+    }
+    // A record longer than any context record is not read.
+    let mut long = br#"{"schema":1,"llamacpp_context":4096}"#.to_vec();
+    long.resize(8192, b' ');
+    fs::write(&file, long).unwrap();
+    assert_eq!(recorded_context(&root, &name), None);
+}
+
+#[cfg(unix)]
+#[test]
+fn a_context_record_behind_a_link_is_neither_read_nor_written() {
+    use std::os::unix::fs::symlink;
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path().join("models");
+    let name = ModelName::parse(TEXT).unwrap();
+    let outside = directory.path().join("outside");
+    fs::create_dir_all(&outside).unwrap();
+    fs::write(
+        outside.join("test.json"),
+        br#"{"schema":1,"llamacpp_context":4096}"#,
+    )
+    .unwrap();
+    let folder = root
+        .join("cadrumo")
+        .join("llamacpp-context")
+        .join("registry.ollama.ai")
+        .join("library");
+    fs::create_dir_all(&folder).unwrap();
+    symlink(&outside, folder.join("synthetic-text")).unwrap();
+
+    assert_eq!(recorded_context(&root, &name), None);
+    assert!(record_context(&root, &name, NonZeroU32::new(2048).unwrap()).is_err());
+    assert_eq!(
+        fs::read(outside.join("test.json")).unwrap(),
+        br#"{"schema":1,"llamacpp_context":4096}"#,
+        "nothing is written through the link"
+    );
+}
+
+#[test]
+fn a_pull_records_the_stated_context_also_for_a_model_already_stored_and_fetches_nothing() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path().join("models");
+    let name = ModelName::parse(TEXT).unwrap();
+    let stored = Stored::new(5);
+    let publishers = Publishers::start(stored.routes(TEXT), Vec::new());
+
+    // A fetched pull records the context once the model is whole.
+    let models = stating(&root, TEXT, Some(4096));
+    let model = &models.selection().as_slice()[0];
+    let fetched = fetch(
+        &models,
+        model,
+        &publishers.network(),
+        &approved_for(&models, "download"),
+    );
+    assert_eq!(fetched.result.unwrap(), PRESENT);
+    assert_eq!(recorded_context(&root, &name), context(4096));
+    let targets = publishers.server.targets().len();
+    assert!(targets > 0);
+
+    // A pull of a stored model that states another context records it and fetches
+    // nothing.
+    let models = stating(&root, TEXT, Some(2048));
+    let model = &models.selection().as_slice()[0];
+    let again = fetch(
+        &models,
+        model,
+        &publishers.network(),
+        &approved_for(&models, "download"),
+    );
+    assert_eq!(again.result.unwrap(), PRESENT);
+    assert_eq!(recorded_context(&root, &name), context(2048));
+    assert_eq!(
+        publishers.server.targets().len(),
+        targets,
+        "nothing fetched"
+    );
+
+    // A pull that states no context leaves the earlier record as it was.
+    let models = stating(&root, TEXT, None);
+    let model = &models.selection().as_slice()[0];
+    let silent = fetch(
+        &models,
+        model,
+        &publishers.network(),
+        &approved_for(&models, "download"),
+    );
+    assert_eq!(silent.result.unwrap(), PRESENT);
+    assert_eq!(recorded_context(&root, &name), context(2048));
+    assert_eq!(publishers.server.targets().len(), targets);
+
+    // A model stored before any context was stated gets one from its next pull, with no
+    // download.
+    let vision = ModelName::parse(VISION).unwrap();
+    Stored::new(9).write(&root, VISION);
+    assert_eq!(recorded_context(&root, &vision), None);
+    let models = stating(&root, VISION, Some(16384));
+    let model = &models.selection().as_slice()[0];
+    let present = fetch(
+        &models,
+        model,
+        &publishers.network(),
+        &approved_for(&models, "download"),
+    );
+    assert_eq!(present.result.unwrap(), PRESENT);
+    assert_eq!(recorded_context(&root, &vision), context(16384));
+    assert_eq!(publishers.server.targets().len(), targets);
+}
+
+#[test]
+fn removal_deletes_the_removed_models_contexts_and_keeps_a_kept_models() {
+    let fixture = fixture();
+    let root = fixture.models_root();
+    fixture.text.write(&root, TEXT);
+    fixture.vision.write(&root, VISION);
+    let (text, vision) = (
+        ModelName::parse(TEXT).unwrap(),
+        fixture.vision_name().clone(),
+    );
+    let kept = ModelName::parse("synthetic-kept:test").unwrap();
+    Stored::new(3).write(&root, "synthetic-kept:test");
+    for (name, value) in [(&text, 4096), (&vision, 2048), (&kept, 8192)] {
+        record_context(&root, name, NonZeroU32::new(value).unwrap()).unwrap();
+    }
+
+    fixture.models.remove().unwrap();
+    assert_eq!(recorded_context(&root, &text), None);
+    assert_eq!(recorded_context(&root, &vision), None);
+    assert_eq!(
+        recorded_context(&root, &kept),
+        context(8192),
+        "a kept model keeps its context"
+    );
+
+    // A model removed by name loses its context, also when its manifest is already gone.
+    let unselected = Models::new(LocalModels::default(), root.clone());
+    record_context(&root, &text, NonZeroU32::new(4096).unwrap()).unwrap();
+    unselected.remove_named(&text).unwrap();
+    assert_eq!(recorded_context(&root, &text), None);
+    assert_eq!(recorded_context(&root, &kept), context(8192));
+    unselected.remove_named(&kept).unwrap();
+    assert_eq!(recorded_context(&root, &kept), None);
 }

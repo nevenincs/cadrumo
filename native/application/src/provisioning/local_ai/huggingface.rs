@@ -6,7 +6,8 @@
 //! commit, file name, SHA-256 digest and size, and the engine fetches exactly those. A
 //! file comes from `https://huggingface.co/<owner>/<repo>/resolve/<commit>/<file>`
 //! through the pinned transfer, with its hop, retry, resume and proxy rules, and a hop is
-//! followed only to a host declared here and in the approved plan. A file is accepted
+//! followed only to a host declared here and in the approved plan. The declared hosts
+//! are Hugging Face's own, all under HTTPS, and are no trust anchor: a file is accepted
 //! only at its declared size and digest, as a registry blob is, and is stored as
 //! `blobs/sha256-<hex>`.
 //!
@@ -24,7 +25,7 @@
 
 use super::{
     models::ModelName,
-    registry::{Blob, MANIFEST_MEDIA_TYPE, Registry, RegistryError, RegistryManifest},
+    registry::{Blob, MANIFEST_MEDIA_TYPE, Registry, RegistryError, RegistryManifest, Tally},
 };
 use crate::{
     error::Error,
@@ -37,13 +38,19 @@ use std::collections::BTreeSet;
 /// The host a Hugging Face repository is addressed at.
 pub const HUGGING_FACE: &str = "huggingface.co";
 
-/// The storage hosts Hugging Face redirects a file request to. On 2026-11-07 a `resolve`
-/// request for a GGUF file at a pinned commit answered `302 Found` to
-/// `us.aws.cdn.hf.co`, in one hop, for repositories old and new; that host answered a
-/// `Range` request with `206` and an exact `Content-Range`. A small non-GGUF file
-/// redirected within `huggingface.co` itself. No other host was seen, so no other is
-/// declared: a file moved elsewhere is refused as blocked until its host is added here.
-const HUGGING_FACE_FILE_HOSTS: &[&str] = &["us.aws.cdn.hf.co"];
+/// The domain every storage host Hugging Face redirects to lies inside.
+const HUGGING_FACE_STORAGE_DOMAIN: &str = "hf.co";
+
+/// The storage hosts Hugging Face redirects a file request to, each inside
+/// [`HUGGING_FACE_STORAGE_DOMAIN`] and named exactly: no host is admitted by a pattern.
+/// On 2026-11-07 a `resolve` request for a GGUF file at a pinned commit answered
+/// `302 Found` to `us.aws.cdn.hf.co`, in one hop, for repositories old and new; that host
+/// answered `200` with the file's whole length, and a `Range` request with `206` and an
+/// exact `Content-Range`. A file stored through Xet may instead be served by Hugging
+/// Face's Xet bridge, `cas-bridge.xethub.hf.co`. A small non-GGUF file redirected within
+/// `huggingface.co` itself. A file moved to any other host is refused as blocked until
+/// that host is added here.
+const HUGGING_FACE_FILE_HOSTS: &[&str] = &["us.aws.cdn.hf.co", "cas-bridge.xethub.hf.co"];
 
 /// The media types the store's manifests name a GGUF model, its projector and the
 /// engine's config document by.
@@ -61,10 +68,17 @@ fn invalid(what: &str) -> Error {
 }
 
 /// The hosts a Hugging Face fetch may reach: the hub and the storage it redirects to. A
-/// plan names these as the model's sources.
+/// plan names these as the model's sources. A storage host outside the `hf.co` domain
+/// is never among them.
 pub fn source_hosts() -> BTreeSet<HostName> {
+    let inside = format!(".{HUGGING_FACE_STORAGE_DOMAIN}");
     std::iter::once(HUGGING_FACE)
-        .chain(HUGGING_FACE_FILE_HOSTS.iter().copied())
+        .chain(
+            HUGGING_FACE_FILE_HOSTS
+                .iter()
+                .copied()
+                .filter(|host| host.ends_with(&inside)),
+        )
         .filter_map(|host| HostName::new(host).ok())
         .collect()
 }
@@ -314,14 +328,23 @@ impl Registry {
                 .ok_or(RegistryError::Damaged)?;
             Ok(vec![model.url(file)?])
         };
-        self.store(
-            &manifest.layers().iter().collect::<Vec<_>>(),
-            &hosts,
-            transfer,
-            &sources,
-        )?;
+        let layers: Vec<&Blob> = manifest.layers().iter().collect();
+        let mut tally = Tally::start(&layers, &mut *transfer.events);
+        self.store(&layers, &hosts, transfer, &sources, &mut tally)?;
         self.store_local(manifest.config(), &config, transfer.cancellation)?;
-        self.publish(model.name(), &manifest)?;
+        let written = manifest.config();
+        self.publish_whole(model.name(), &manifest, &mut |missing| {
+            if missing.iter().any(|blob| blob.digest == written.digest) {
+                self.store_local(written, &config, transfer.cancellation)?;
+            }
+            let fetched: Vec<&Blob> = missing
+                .iter()
+                .copied()
+                .filter(|blob| blob.digest != written.digest)
+                .collect();
+            tally.again(&fetched);
+            self.store(&fetched, &hosts, transfer, &sources, &mut tally)
+        })?;
         Ok(manifest)
     }
 }

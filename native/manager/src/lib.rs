@@ -22,6 +22,7 @@ pub mod installed;
 pub mod invocation;
 pub mod ipc;
 pub mod lifecycle;
+pub mod local_engine;
 pub mod preferences;
 #[cfg(windows)]
 pub mod process_job;

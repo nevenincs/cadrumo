@@ -82,6 +82,9 @@ const DECLARED_LANES: readonly DeclaredLane[] = [
   declare("theta", "cli", "declared"),
   // A lane run on this computer, with no key: its models state what they are.
   declare("local", "api", "catalog"),
+  // The two engines' keyless lanes: the engine setting shows one of them.
+  declare("ollama", "api", "catalog"),
+  declare("llamacpp", "api", "catalog"),
 ];
 
 const CHECKED = fixtureInstant(10, 13, "08:00:00Z");
@@ -286,6 +289,28 @@ const FIXTURES: Record<string, Fixture> = {
       },
     ],
     recommendedFor: { vision: "synthetic-vision:1", text: "synthetic-text:1" },
+  },
+  "ollama/api": {
+    models: [
+      {
+        entry_id: "synthetic-ollama:1",
+        display_name: "Synthetic Ollama 1",
+        efforts: [],
+        vision: false,
+      },
+    ],
+    recommendedFor: { text: "synthetic-ollama:1" },
+  },
+  "llamacpp/api": {
+    models: [
+      {
+        entry_id: "synthetic-llamacpp:1",
+        display_name: "Synthetic Llamacpp 1",
+        efforts: [],
+        vision: false,
+      },
+    ],
+    recommendedFor: { text: "synthetic-llamacpp:1" },
   },
 };
 

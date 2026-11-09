@@ -41,6 +41,7 @@ export type SetupStaleReason = "older_revision" | "program_too_old";
 export type SetupFailureCategory =
   | "offline"
   | "host_unreachable"
+  | "server_error"
   | "secure_connection_failed"
   | "blocked_by_network"
   | "disk_full"
@@ -50,7 +51,6 @@ export type SetupFailureCategory =
   | "memory_busy"
   | "program_missing"
   | "program_not_running"
-  | "program_proxy_differs"
   | "interrupted"
   | "needs_sign_in"
   | "not_in_this_build"
@@ -86,7 +86,9 @@ export type SetupRow = {
 };
 
 /** A status read or a full check this window started. A settled check has
- * already replaced `rows`; a failed one leaves the earlier rows. */
+ * already replaced `rows`; a failed one leaves the earlier rows, except a
+ * status read refused because the local engine record cannot be read, which
+ * replaces them with the browser row alone. */
 export type SetupCheck = {
   operation_id: string;
   kind: "status_quick" | "status_full" | "verify";
@@ -95,8 +97,10 @@ export type SetupCheck = {
    * while it runs, when it is done, and when a failure carried no category. */
   failure: SetupFailureCategory | null;
   /** Why the check was refused before the engine ran: the person's selection
-   * of local models could not be handed to it. Only on a failed check, and
-   * never with a `failure`. Worded as a command's refusal is. */
+   * of local models could not be handed to it, or the local engine record
+   * cannot be read, when a status read still reads the browser alone. Only on
+   * a failed check, and never with a `failure`. Worded as a command's refusal
+   * is. */
   refusal: SetupRefusalCode | null;
 };
 

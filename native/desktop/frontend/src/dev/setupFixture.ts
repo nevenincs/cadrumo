@@ -60,6 +60,10 @@ export const SETUP_SHAPES = [
    * downloads from unreachable: the setup settles failed before its review,
    * leaving its row as it was. */
   "unreachable",
+  /** Nothing set up, and every setup's download server answers with an error
+   * until the retries run out: the setup settles failed at its download,
+   * leaving its row as it was. */
+  "server_error",
   /** As `ready`, but a start stays in its planning with nothing reported,
    * as while the host checks a model with the agent service, until
    * `finishPlanning` lets its plan reach review. */
@@ -191,6 +195,7 @@ function readied(held: SetupRow): SetupRow {
 const RECOVERY: Record<SetupFailureCategory, SetupRow["recovery"]> = {
   offline: "check_again",
   host_unreachable: "try_again",
+  server_error: "try_again",
   secure_connection_failed: "try_again",
   blocked_by_network: "try_again",
   disk_full: "try_again",
@@ -200,7 +205,6 @@ const RECOVERY: Record<SetupFailureCategory, SetupRow["recovery"]> = {
   memory_busy: "try_again",
   program_missing: "try_again",
   program_not_running: "try_again",
-  program_proxy_differs: "try_again",
   interrupted: "resume",
   needs_sign_in: "try_again",
   not_in_this_build: null,
@@ -992,8 +996,14 @@ export function setupFixture({
         .map((seed) => planned(seed, model));
       if (download) say(`setup.download ${download.lane} ${download.model}`);
       operations += 1;
-      if (shape === "unreachable" && chosen.length > 0) {
-        const failure: SetupFailureCategory = "host_unreachable";
+      const settled: SetupFailureCategory | null =
+        shape === "unreachable"
+          ? "host_unreachable"
+          : shape === "server_error"
+            ? "server_error"
+            : null;
+      if (settled !== null && chosen.length > 0) {
+        const failure: SetupFailureCategory = settled;
         const result = { changed: false, failure, transferred_bytes: 0 };
         put({
           item: wanted,
@@ -1002,7 +1012,9 @@ export function setupFixture({
           review: null,
           items: chosen.map((seed) => ({
             ...progress(seed),
-            step: "preflight",
+            // The network check finds an unreachable host before the review;
+            // a server's error answers come during the download.
+            step: failure === "host_unreachable" ? "preflight" : "download",
             result,
           })),
           cancellable: false,

@@ -3,26 +3,34 @@
 from __future__ import annotations
 
 import csv
+import json
 import secrets
 import sys
+import uuid
 from pathlib import Path
 from typing import Any
 
 import pytest
 
 from cadrumo.adapters.inbound.financial.providers.csv import CsvProvider
+from cadrumo.adapters.persistence.storage.custody.acceleration_keychain import PROFILE_SESSION_KEYCHAIN_SERVICE
 
 from ...runtime_lifecycle.caller_owned_root import AcceptanceError
+from ...runtime_lifecycle.proof_support import Profile
 from ..disposable_root import (
     LEDGER_SEED,
     MINIMUM_SEEDED_ROWS,
+    PROFILE_RECORD,
     ROOT_PREFIX,
     contains_secret,
     create_root,
     enclosing_git_project,
     first_answer,
     log_files,
+    profile_credentials,
+    record_profile,
     removable_root,
+    remove_profile_credentials,
     remove_root,
     remove_secret_bearing,
     restaged,
@@ -306,3 +314,70 @@ def test_staging_counts_what_it_wrote_and_removed() -> None:
     before = {"a": (1, 10), "b": (2, 20), "gone": (3, 30)}
     after = {"a": (1, 10), "b": (5, 21), "new": (7, 40)}
     assert restaged(before, after) == {"files_written": 2, "bytes_written": 12, "files_removed": 1}
+
+
+def _credential(account: str, *, target: str | None = None, kind: int = 1) -> dict[str, Any]:
+    return {"Type": kind, "UserName": account, "TargetName": target or f"{account}@{PROFILE_SESSION_KEYCHAIN_SERVICE}"}
+
+
+def test_the_record_names_the_profile_by_its_opaque_id_and_holds_no_password(tmp_path: Path) -> None:
+    profile_id = uuid.uuid4()
+    password = secrets.token_urlsafe(24)
+    record = record_profile(tmp_path, Profile("desktop-e2e", password, profile_id))
+    assert record == tmp_path / PROFILE_RECORD
+    assert json.loads(record.read_text(encoding="utf-8")) == {"profile": "desktop-e2e", "profile_id": str(profile_id)}
+    assert not contains_secret(record.read_bytes(), password)
+
+
+def test_an_unidentified_profile_is_not_recorded(tmp_path: Path) -> None:
+    with pytest.raises(AcceptanceError):
+        record_profile(tmp_path, Profile("desktop-e2e", "unused"))
+    assert not (tmp_path / PROFILE_RECORD).exists()
+
+
+def test_only_this_profiles_sign_in_keys_are_selected() -> None:
+    mine, other = uuid.uuid4(), uuid.uuid4()
+    first, second = f"{mine}:{uuid.uuid4()}", f"{mine}:{uuid.uuid4()}"
+    plain = f"{mine}:{uuid.uuid4()}"
+    stored = [
+        _credential(first),
+        _credential(second),
+        _credential(plain, target=PROFILE_SESSION_KEYCHAIN_SERVICE),
+        _credential(f"{other}:{uuid.uuid4()}"),
+        # Same account under another service, another credential type, and a prefix without the separator.
+        _credential(first, target=f"{first}@another-service"),
+        _credential(f"{mine}:{uuid.uuid4()}", kind=2),
+        _credential(f"{mine}{uuid.uuid4()}"),
+    ]
+    assert profile_credentials(stored, mine) == sorted(
+        [
+            f"{first}@{PROFILE_SESSION_KEYCHAIN_SERVICE}",
+            f"{second}@{PROFILE_SESSION_KEYCHAIN_SERVICE}",
+            PROFILE_SESSION_KEYCHAIN_SERVICE,
+        ]
+    )
+
+
+def test_removal_deletes_exactly_the_selected_keys_and_names_one_that_stays() -> None:
+    mine, other = uuid.uuid4(), uuid.uuid4()
+    store = {
+        credential["TargetName"]: credential
+        for credential in (
+            _credential(f"{mine}:{uuid.uuid4()}"),
+            _credential(f"{mine}:{uuid.uuid4()}"),
+            _credential(f"{other}:{uuid.uuid4()}"),
+        )
+    }
+    others = {target for target, credential in store.items() if credential["UserName"].startswith(str(other))}
+    stuck = min(target for target in store if target not in others)
+
+    def delete(target: str) -> None:
+        if target == stuck:
+            raise OSError(5, "Access is denied")
+        del store[target]
+
+    failures = remove_profile_credentials(mine, lambda: list(store.values()), delete)
+    assert set(store) == {*others, stuck}
+    assert len(failures) == 1
+    assert str(mine) in failures[0]
+    assert stuck not in failures[0]
