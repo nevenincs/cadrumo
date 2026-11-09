@@ -1,5 +1,4 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { showLedgerColumn } from "../support/ledgerPage";
 import { captureUnrecordedQuestions } from "../support/stagedCheckCapture";
 import { label } from "../support/strings";
 
@@ -91,7 +90,10 @@ test("an amount typed with a sign is refused for its sign, not reported as a mis
   // staged so the review can say why.
   await expect(editor(target)).toHaveAttribute("aria-invalid", "true");
   await expect(editor(target)).toHaveValue("-50,00");
-  await target.keyboard.press("Escape");
+  // Enter keeps the editor open on a refusal. Leaving it with the pointer
+  // keeps what was typed as a refused value, marked in the cell and staged.
+  await cellOf(row, "description").click();
+  await expect(editor(target)).toHaveCount(0);
 
   await openReview(target);
   const blocker = review(target).locator("[data-blocker=amount_signed]");
@@ -125,8 +127,9 @@ test("a new movement whose amount carries a sign is held back as a sign, with a 
   await expect(blocker).toBeVisible();
   await blocker.locator(".ledger-fix-go-to-draft").click();
   await expect(review(target)).toHaveCount(0);
+  // The cell keeps the amount as the editor read it: plain decimal text.
   await expect(cellOf(dataRows(target).first(), "amount")).toContainText(
-    "-50,00",
+    "-50.00",
   );
 });
 
@@ -207,24 +210,24 @@ test("naming the IRPF category clears the refusal and the row saves", async ({
 test("an IVA deduction kind is reviewed by its served word, never by its stored code", async ({
   page: target,
 }) => {
+  const kind = "application.ledger.entry_options.deduction_fact_kind";
   await openLedger(target);
-  await usePreset(target, "everything");
-  await showLedgerColumn(target, "classification");
   await find(target, "estudio garcia");
   const row = rowOf(target, "ESTUDIO GARCIA").first();
-  await typeInto(
-    target,
-    cellOf(row, "iva_category"),
-    label("desktop.ledger.iva_category.domestic_general"),
-  );
+  await row.locator("[data-column=status]").click();
+  const panel = target.locator("aside.ledger-panel");
+  if (!(await panel.isVisible())) await target.keyboard.press("Alt+KeyI");
+  const more = panel.locator(".ledger-inspector-body .ledger-more-tax");
+  await more.locator("summary").click();
+  await more.locator("[data-field=deduction_fact_kind]").click();
+  await target
+    .getByRole("option", { name: label(`${kind}.domestic_current`) })
+    .click();
 
   await openReview(target);
   const summary = review(target).locator(".ledger-summary");
-  await expect(summary).toContainText(
-    label("desktop.ledger.iva_category.domestic_general"),
-  );
+  await expect(summary).toContainText(label(`${kind}.domestic_current`));
   // The stored code never reaches the person.
-  await expect(summary).not.toContainText("domestic_general");
   await expect(summary).not.toContainText("domestic_current");
 });
 

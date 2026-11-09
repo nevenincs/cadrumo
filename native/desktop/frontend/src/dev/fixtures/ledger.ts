@@ -390,6 +390,18 @@ const TRIP_HOTEL: Kind = {
   high: 24200,
 };
 
+const ADVISORY_FEE: Kind = {
+  description: "ESTUDIO GARCIA ASESORES HONORARIOS",
+  counterparty: "Estudio García Asesores, S.L.",
+  direction: "OUTGOING",
+  classification: "BUSINESS",
+  category: "asesoria_fiscal",
+  iva: "general",
+  account: "acc-01",
+  low: 212000,
+  high: 212000,
+};
+
 const RATE = { general: 21, reduced: 10 } as const;
 
 function receivedInvoice(
@@ -865,6 +877,17 @@ export function fixtureLedger(): FixtureLedger {
     earlier.import_batch_id = `import-${year}-${date.slice(5, 7)}`;
     if (!bound) earlier.own_account_id = null;
   }
+
+  // A professional's fee paid in cash, whose invoice figures were never
+  // entered. Typing its base, rate and cuota is how the window meets a
+  // received invoice settled net of withholding: the cash is below the
+  // base plus the cuota. Added last, and outside the months that draw random
+  // numbers, so no other movement's identity or facts change.
+  push(ADVISORY_FEE, day(8, 12), 212000);
+  const fee = movements.at(-1)!.transaction;
+  fee.taxable_base = null;
+  fee.iva_rate = null;
+  fee.iva_amount = null;
 
   return {
     movements,
