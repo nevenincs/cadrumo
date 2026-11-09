@@ -16,7 +16,7 @@ every filing year) and the boundary dates themselves.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
 from pydantic import ValidationError
@@ -29,6 +29,13 @@ from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatal
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, LegalReferenceKind
 from cadrumo.domain.calculations.registry.snapshot import SUBSTANTIVE_LAW_KINDS
 from cadrumo.domain.calculations.registry.snapshot_references import collect_snapshot_ref_ids
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    newest_authored_edition,
+    revision_covering,
+    revision_last_exercise,
+)
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..conformance.registry_schema_support import (
@@ -39,9 +46,19 @@ from ..conformance.registry_schema_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _MODELO = "100"
-_FILING_YEAR = 2025
+_FILING_YEAR = newest_authored_edition(_MODELO)
 _PERIOD = "0A"
-_REVISION = "2025"
+_REVISION = str(revision_covering(_MODELO, _FILING_YEAR).id)
+_OPENS = committed_modelo(_MODELO)[0].revisions[_REVISION].valid_from
+_CLOSES = committed_modelo(_MODELO)[0].revisions[_REVISION].valid_to
+assert _CLOSES is not None, "the newest authored M100 revision must be closed for these windows to be placed around it"
+# A date later than every exercise the support envelope reaches.
+_BEYOND = filing_year_envelope().horizon + 1
+# Windows that end before the revision opens and that begin after it closes.
+_EXPIRED = (date(_OPENS.year - 5, 1, 1), _OPENS - timedelta(days=1))
+_FUTURE_ONLY = (_CLOSES + timedelta(days=1), date(_CLOSES.year + 2, 12, 31))
+# A window long before the revision, for refs the gate deliberately leaves alone.
+_LONG_AGO = (date(_OPENS.year - 5, 1, 1), date(_OPENS.year - 5, 12, 31))
 
 
 def _modelo_and_catalogues() -> tuple[ModeloDefinition, RegistryCatalogues]:
@@ -173,15 +190,15 @@ def test_shipped_registry_snapshot_builds_with_every_evidence_window_intact() ->
 
 
 def test_snapshot_refuses_a_legal_ref_that_expired_before_the_revision_opened() -> None:
-    """A law version expired in 2024 cannot ground the 2025 revision."""
+    """A law version expired before the revision opened cannot ground it."""
     modelo, _catalogues = _modelo_and_catalogues()
     legal_id = _revision_scoped_legal_id(modelo)
 
     with pytest.raises(RegistryValidationError, match="outside their effective window"):
         _rebuild_with_legal_window(
             legal_id,
-            effective_from=date(2020, 1, 1),
-            effective_to=date(2024, 12, 31),
+            effective_from=_EXPIRED[0],
+            effective_to=_EXPIRED[1],
         )
 
 
@@ -193,31 +210,24 @@ def test_snapshot_refuses_a_legal_ref_that_only_takes_effect_after_the_revision_
     with pytest.raises(RegistryValidationError, match="outside their effective window"):
         _rebuild_with_legal_window(
             legal_id,
-            effective_from=date(2030, 1, 1),
-            effective_to=date(2031, 12, 31),
+            effective_from=_FUTURE_ONLY[0],
+            effective_to=_FUTURE_ONLY[1],
         )
 
 
-@pytest.mark.parametrize(
-    ("effective_from", "effective_to"),
-    [
-        pytest.param(date(2026, 6, 30), None, id="effective_from-on-applicability-close"),
-        pytest.param(date(2020, 1, 1), date(2025, 1, 1), id="effective_to-on-applicability-start"),
-    ],
-)
-def test_snapshot_accepts_legal_windows_that_touch_the_applicability_boundary(
-    effective_from: date,
-    effective_to: date | None,
-) -> None:
+@pytest.mark.parametrize("boundary", ["effective_from-on-applicability-close", "effective_to-on-applicability-start"])
+def test_snapshot_accepts_legal_windows_that_touch_the_applicability_boundary(boundary: str) -> None:
     """A legal window touching either applicability boundary still overlaps it."""
     modelo, catalogues = _modelo_and_catalogues()
     legal_id = _revision_scoped_procedural_legal_id(modelo, catalogues)
     applicability_window = RevisionLegalApplicabilityWindow.from_revision(modelo.revisions[_REVISION])
     assert applicability_window.closes_on is not None
-    if effective_to is None:
-        assert effective_from == applicability_window.closes_on
+    if boundary == "effective_from-on-applicability-close":
+        effective_from: date = applicability_window.closes_on
+        effective_to: date | None = None
     else:
-        assert effective_to == applicability_window.starts_on
+        effective_from = date(applicability_window.starts_on.year - 5, 1, 1)
+        effective_to = applicability_window.starts_on
 
     snapshot = _rebuild_with_legal_window(
         legal_id,
@@ -275,8 +285,8 @@ def test_modelo_level_legal_refs_stay_exempt_from_the_revision_window() -> None:
 
     snapshot = _rebuild_with_legal_window(
         stale_id,
-        effective_from=date(2020, 1, 1),
-        effective_to=date(2020, 12, 31),
+        effective_from=_LONG_AGO[0],
+        effective_to=_LONG_AGO[1],
     )
 
     assert snapshot.revision.id == _REVISION
@@ -284,15 +294,15 @@ def test_modelo_level_legal_refs_stay_exempt_from_the_revision_window() -> None:
 
 
 def test_snapshot_refuses_a_source_that_expired_before_the_revision_opened() -> None:
-    """The audit's probe: a stale 2020..2024 window must not stay authoritative."""
+    """The audit's probe: a window that ended before the revision opened must not stay authoritative."""
     modelo, catalogues = _modelo_and_catalogues()
     source_id = _revision_scoped_source_id(modelo, catalogues)
 
     with pytest.raises(RegistryValidationError, match="outside their applicability window"):
         _rebuild_with_source_window(
             source_id,
-            applies_from=date(2020, 1, 1),
-            applies_to=date(2024, 12, 31),
+            applies_from=_EXPIRED[0],
+            applies_to=_EXPIRED[1],
         )
 
 
@@ -304,8 +314,8 @@ def test_snapshot_refuses_a_source_that_only_applies_after_the_revision_closed()
     with pytest.raises(RegistryValidationError, match="outside their applicability window"):
         _rebuild_with_source_window(
             source_id,
-            applies_from=date(2030, 1, 1),
-            applies_to=date(2031, 12, 31),
+            applies_from=_FUTURE_ONLY[0],
+            applies_to=_FUTURE_ONLY[1],
         )
 
 
@@ -315,10 +325,10 @@ def test_snapshot_refuses_invalid_legal_window_before_invalid_source_window() ->
     legal_id = _revision_scoped_legal_id(modelo)
     source_id = _revision_scoped_source_id(modelo, catalogues)
     legal_reference = catalogues.legal[legal_id].model_copy(
-        update={"effective_from": date(2020, 1, 1), "effective_to": date(2024, 12, 31)},
+        update={"effective_from": _EXPIRED[0], "effective_to": _EXPIRED[1]},
     )
     source_reference = catalogues.sources[source_id].model_copy(
-        update={"applies_from": date(2020, 1, 1), "applies_to": date(2024, 12, 31)},
+        update={"applies_from": _EXPIRED[0], "applies_to": _EXPIRED[1]},
     )
     restaged_catalogues = catalogues.model_copy(
         update={
@@ -338,18 +348,12 @@ def test_snapshot_refuses_invalid_legal_window_before_invalid_source_window() ->
 
 
 @pytest.mark.parametrize(
-    ("applies_from", "applies_to"),
-    [
-        pytest.param(date(2025, 12, 31), None, id="applies_from-on-revision-valid_to"),
-        pytest.param(None, date(2025, 1, 1), id="applies_to-on-revision-valid_from"),
-        pytest.param(None, None, id="unbounded-window"),
-    ],
+    "boundary", ["applies_from-on-revision-valid_to", "applies_to-on-revision-valid_from", "unbounded-window"]
 )
-def test_snapshot_accepts_windows_that_touch_the_revision_boundary(
-    applies_from: date | None,
-    applies_to: date | None,
-) -> None:
+def test_snapshot_accepts_windows_that_touch_the_revision_boundary(boundary: str) -> None:
     """The refusal is for windows that miss the revision, not ones that touch it."""
+    applies_from = _CLOSES if boundary == "applies_from-on-revision-valid_to" else None
+    applies_to = _OPENS if boundary == "applies_to-on-revision-valid_from" else None
     modelo, catalogues = _modelo_and_catalogues()
     source_id = _revision_scoped_source_id(modelo, catalogues)
 
@@ -374,8 +378,8 @@ def test_modelo_level_source_refs_stay_exempt_from_the_revision_window() -> None
 
     snapshot = _rebuild_with_source_window(
         stale_id,
-        applies_from=date(2020, 1, 1),
-        applies_to=date(2020, 12, 31),
+        applies_from=_LONG_AGO[0],
+        applies_to=_LONG_AGO[1],
     )
 
     assert snapshot.revision.id == _REVISION
@@ -388,10 +392,11 @@ def test_modelo_level_source_refs_stay_exempt_from_the_revision_window() -> None
 # axis that citation is validated against.
 
 _DEADLINE_MODELO = "123"
-_DEADLINE_REVISION = "2019-2023"
-_DEADLINE_FILING_YEAR = 2023
+# The oldest authored M123 revision is closed, and its last exercise's fourth quarter is filed the year after.
+_DEADLINE_REVISION = str(next(revision.id for revision in authored_revisions(_DEADLINE_MODELO) if revision.valid_to))
+_DEADLINE_FILING_YEAR = revision_last_exercise(_DEADLINE_MODELO, _DEADLINE_REVISION)
 _DEADLINE_PERIOD = "4T"
-_NEXT_YEAR_CALENDARIO = "aeat-calendario-contribuyente-2024"
+_NEXT_YEAR_CALENDARIO = f"aeat-calendario-contribuyente-{_DEADLINE_FILING_YEAR + 1}"
 
 
 def _rebuild_m123_with_source_window(
@@ -432,7 +437,7 @@ def test_a_deadline_window_source_is_validated_against_the_window_not_the_revisi
     assert calendario.applies_from > revision.valid_to, (
         "precondition: the next-year calendario must start after the revision closes"
     )
-    fourth_quarter = next(window for window in revision.deadline_windows if window.id.endswith("2023-4t"))
+    fourth_quarter = next(window for window in revision.deadline_windows if window.id.endswith(f"{_DEADLINE_FILING_YEAR}-4t"))
     assert _NEXT_YEAR_CALENDARIO in fourth_quarter.source_refs
     assert fourth_quarter.closes_on > revision.valid_to
 
@@ -445,7 +450,7 @@ def test_construct_deadline_closure_does_not_reclassify_its_calendar_as_a_generi
     """Construct aggregation preserves the member deadline's presentation axis."""
     modelo, catalogues = committed_modelo(_DEADLINE_MODELO)
     revision = modelo.revisions[_DEADLINE_REVISION]
-    window = next(item for item in revision.deadline_windows if item.id.endswith("2023-4t"))
+    window = next(item for item in revision.deadline_windows if item.id.endswith(f"{_DEADLINE_FILING_YEAR}-4t"))
     construct = revision.constructs[0]
     closed_construct = construct.model_copy(
         update={
@@ -479,7 +484,7 @@ def test_construct_owned_source_without_deadline_member_provenance_keeps_revisio
     construct = revision.constructs[0]
     stale_id = "aeat-calendario-contribuyente-2026"
     stale_source = catalogues.sources[stale_id].model_copy(
-        update={"applies_from": date(2030, 1, 1), "applies_to": date(2030, 12, 31)},
+        update={"applies_from": date(_BEYOND, 1, 1), "applies_to": date(_BEYOND, 12, 31)},
     )
     catalogues = catalogues.model_copy(
         update={"sources": {**catalogues.sources, stale_id: stale_source}},
@@ -509,8 +514,8 @@ def test_a_deadline_source_outside_both_the_revision_and_its_window_still_refuse
     with pytest.raises(RegistryValidationError, match=_NEXT_YEAR_CALENDARIO):
         _rebuild_m123_with_source_window(
             _NEXT_YEAR_CALENDARIO,
-            applies_from=date(2030, 1, 1),
-            applies_to=date(2030, 12, 31),
+            applies_from=date(_BEYOND, 1, 1),
+            applies_to=date(_BEYOND, 12, 31),
         )
 
 
@@ -529,8 +534,8 @@ def test_a_source_cited_outside_any_deadline_window_keeps_the_revision_axis() ->
     with pytest.raises(RegistryValidationError, match=design_source):
         _rebuild_m123_with_source_window(
             design_source,
-            applies_from=date(2024, 1, 1),
-            applies_to=date(2024, 1, 22),
+            applies_from=date(_DEADLINE_FILING_YEAR + 1, 1, 1),
+            applies_to=date(_DEADLINE_FILING_YEAR + 1, 1, 22),
         )
 
 
@@ -538,10 +543,27 @@ def test_a_source_cited_outside_any_deadline_window_keeps_the_revision_axis() ->
 # its citation defends a reach its in-force window does not describe.
 
 _RETRO_MODELO = "190"
-_RETRO_REVISION = "2024"
-_RETRO_FILING_YEAR = 2024
 _RETRO_PERIOD = "0A"
 _RETRO_LEGAL_ID = "real-decreto-ley-13-2025:art-2"
+
+
+def _retroactive_revision_id() -> str:
+    """Return the one closed M190 revision whose snapshot cites the provision that took force after its devengo."""
+    modelo, catalogues = committed_modelo(_RETRO_MODELO)
+    reference = catalogues.legal[_RETRO_LEGAL_ID]
+    assert reference.governs_periods_from is not None
+    (revision_id,) = (
+        revision_id
+        for revision_id, revision in modelo.revisions.items()
+        if revision.valid_to is not None
+        and reference.governs_periods_from <= revision.valid_to < reference.effective_from
+        and _RETRO_LEGAL_ID in collect_snapshot_ref_ids(modelo, revision)[0]
+    )
+    return str(revision_id)
+
+
+_RETRO_REVISION = _retroactive_revision_id()
+_RETRO_FILING_YEAR = revision_last_exercise(_RETRO_MODELO, _RETRO_REVISION)
 
 
 def _rebuild_m190_with_legal_reach(**update: object) -> RegistrySnapshot:
@@ -604,7 +626,7 @@ def test_a_forward_reaching_declaration_is_refused_at_the_model_boundary() -> No
     """
     _modelo, catalogues = committed_modelo(_RETRO_MODELO)
     reference = catalogues.legal[_RETRO_LEGAL_ID]
-    forward = reference.model_dump() | {"governs_periods_from": date(2026, 1, 1)}
+    forward = reference.model_dump() | {"governs_periods_from": reference.effective_from + timedelta(days=1)}
 
     with pytest.raises(ValidationError, match="RETROACTIVE reach only"):
         LegalReference.model_validate(forward)
