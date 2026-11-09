@@ -234,15 +234,20 @@ def same_wording(value: str, language: OutputLanguage, /, *, as_source: Callable
     recorded as plain text it would reach the reader as the markup it was
     written as.
 
-    The value reaches the page through the generator's own markup, where it is
-    escaped as that markup requires and the parser takes the escaping back off.
-    What is recorded is therefore the value itself.
+    Outside a page, the value reaches the page through the generator's own
+    markup, where it is escaped as that markup requires and the parser takes
+    the escaping back off, so what is recorded is the value itself. Inside a
+    page, what is recorded is the source a single-language build parses,
+    because ``as_source`` can add markup of its own (a legal reviewer's note
+    styles the record's source identifiers as inline literals), and a value
+    recorded without it would lose that markup in the composed page.
 
     Args:
         value: The wording, as its own authority holds it.
         language: The language a single-language build renders.
-        as_source: Escapes the value as the generator's own markup requires,
-            and defaults to writing it as it stands where nothing escapes it.
+        as_source: Writes the value as the generator's own markup, escaping it
+            and adding any markup the generator gives it, and defaults to
+            writing it as it stands.
 
     Returns:
         The escaped value, or the mark standing for every language's reading.
@@ -254,12 +259,11 @@ def same_wording(value: str, language: OutputLanguage, /, *, as_source: Callable
     # it, which is what every language's build has always read on that page.
     if slots is None or "\n\n" in value:
         return as_source(value)
-    strings = [value] * len(slots.languages)
     if _PAGE is not None:
         from .message_marks import rendered_markup
 
-        return rendered_markup(slots, _PAGE, strings)
-    return slots.mark(Rendering.DOCUTILS, strings)
+        return rendered_markup(slots, _PAGE, [as_source(value)] * len(slots.languages))
+    return slots.mark(Rendering.DOCUTILS, [value] * len(slots.languages))
 
 
 def _per_language(slots: CompileSlots, key: str, values: Mapping[str, object]) -> list[str]:
