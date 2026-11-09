@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Self
 
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, model_validator
 
-from ...core.errors.error_codes import ErrorCategory, current_error_code, get_registered_error_code_by_code
+from ...core.errors.error_codes import ErrorCategory, get_registered_error_code_by_code
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -30,11 +30,6 @@ class OperationRefusalEvidence(BaseModel):
 
     refusal_code: OperationFailureErrorCode
     detail_ref: ContentDigest
-
-    @field_validator("refusal_code", mode="before")
-    @classmethod
-    def _read_retired_code_as_its_successor(cls, value: object) -> object:
-        return current_error_code(value) if isinstance(value, str) else value
 
     @model_validator(mode="after")
     def _registered_refusal(self) -> Self:
