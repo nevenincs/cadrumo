@@ -249,14 +249,6 @@ class RepairConnectivityResult(OutputSchema):
 # P06 — config and profile verb result schemas
 
 
-class ConfigProviderLoginResult(OutputSchema):
-    """Non-secret outcome of a manual provider sign-in the agent reported as signed in."""
-
-    provider: str
-    device: bool
-    signed_in: bool
-
-
 class ConfigPassphraseChangeResult(OutputSchema):
     """Non-secret outcome of one active-profile passphrase rotation."""
 
