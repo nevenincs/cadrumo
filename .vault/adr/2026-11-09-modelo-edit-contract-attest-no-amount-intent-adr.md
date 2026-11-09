@@ -5,7 +5,7 @@ tags:
 date: '2026-11-09'
 modified: '2026-11-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:2518c0deea6915aa495d370034d05d918ce9b7032d664d8c78f4e1f945aeabea'
+body_hash: 'sha256:d40c18726fa8f197158b59d107247ce8f316febe24ec62ae79239dd3f9ec7867'
 related:
   - "[[2026-08-24-modelo-edit-contract-adr]]"
   - "[[2026-11-08-prior-carry-attestation-adr]]"
@@ -51,3 +51,7 @@ The contract record is what frontends and reviewers read for the edit vocabulary
 - Once applied, D4 again lists every binding intent kind that the operation contract manifest carries.
 - No code changes: the intent and its admission already ship under the accepted attestation ADR.
 - If the operator declines, the accepted attestation ADR still governs the intent. The contract record's omission then stays a recorded documentation gap in `2026-11-08-prior-carry-attestation-audit`.
+
+## Open item
+
+The coordinator ruled on 2026-11-09 that the attestation ADR's resolution-and-verification bullet stands. An attested zero must carry its provenance through the earlier-filing resolver and verification into results, not only onto the work form. Today only the form reads `attested_binding_ids` (`src/cadrumo/application/modelo/calculation_bucket_actions.py:666`), so this is open (finding attested-resolution-provenance in `2026-11-08-prior-carry-attestation-audit`). It is to be implemented only after the operator accepts this amendment.
