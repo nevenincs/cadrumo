@@ -30,8 +30,8 @@ import type {
   ModeloFormCounts,
   ModeloWorkbenchFormProjectionV1,
   PublicModeloFormField,
-  PublicModeloWorkForm,
 } from "../../../shell/modeloContract/modeloWorkForm";
+import type { PublicModeloWorkForm } from "../../../shell/modeloContract/modeloWorkFormPart2";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { boxNotes } from "./boxNotes";
 import { calm } from "./FieldRow";
