@@ -2099,8 +2099,8 @@ desktop:
         Your draft has been kept.
       note: Note
       proposed: Your proposed value
-      provincia: Provincia of the domicilio fiscal
-      provincia_save: Save provincia
+      provincia: Province of the tax domicile
+      provincia_save: Save province
       provincia_unstated: 'Not stated: Modelo 347 declares it for each Spanish counterparty.'
       scope:
         es_canarias: Canary Islands
@@ -3778,7 +3778,7 @@ desktop:
       missing_iva_rate: IVA rate missing
       missing_proportionality_reference: Mixed without a usage ratio
       missing_taxable_base: Taxable base missing
-      movement_invoice_double_count: Matches an unlinked invoice
+      movement_invoice_double_count: Matches an invoice not yet linked
       unsupported_currency: Currency not supported
       unsupported_period: Period not supported
     registers:

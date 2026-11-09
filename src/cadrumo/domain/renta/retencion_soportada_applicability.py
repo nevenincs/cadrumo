@@ -36,7 +36,6 @@ from ..calculations.registry.governed_fact_scope import GovernedFactSource
 from ..calculations.registry.iae_activity_groups import (
     ActivityGroupMembership,
     activity_group_membership,
-    iae_activity_groups,
 )
 
 __all__ = [
@@ -44,7 +43,6 @@ __all__ = [
     "RETENCION_SOPORTADA_INCOME_CATEGORIES",
     "RetencionSoportadaApplicability",
     "arrendamiento_actividad_applicability",
-    "iae_urban_rental_groups",
     "retencion_soportada_applicability",
 ]
 
@@ -114,25 +112,6 @@ _MEMBERSHIP_APPLICABILITY: Final[Mapping[ActivityGroupMembership, RetencionSopor
         ActivityGroupMembership.UNKNOWN: RetencionSoportadaApplicability.UNKNOWN,
     },
 )
-
-
-def iae_urban_rental_groups(
-    *,
-    effective_date: date,
-    authority: GovernedFactSource | None = None,
-) -> frozenset[str]:
-    """Return the IAE groups in force on ``effective_date`` that classify an urban rental activity.
-
-    Raises:
-        InternalInvariantError: When no authority is supplied and no scope is active.
-        GovernedFactNotApplicableError: When the fact does not reach ``effective_date``.
-        RegistryValidationError: When the fact is not a non-empty set of three-digit groups.
-    """
-    return iae_activity_groups(
-        IAE_URBAN_RENTAL_GROUPS_FACT_ID,
-        effective_date=effective_date,
-        authority=authority,
-    )
 
 
 def arrendamiento_actividad_applicability(

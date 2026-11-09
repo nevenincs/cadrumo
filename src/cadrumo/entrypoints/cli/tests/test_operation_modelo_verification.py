@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import override
 from uuid import UUID, uuid4
 
@@ -34,7 +35,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 def _contract() -> OperationPublicDefinitionContractV1:
     def unavailable_repositories(
-        _profile_id: str, *, operation: PinnedAuthorityOperation
+        _profile_id: str,
+        *,
+        operation: PinnedAuthorityOperation,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
     ) -> VerificationRepositoryBundle:
         raise AssertionError("public contract construction must not open profile repositories")
 

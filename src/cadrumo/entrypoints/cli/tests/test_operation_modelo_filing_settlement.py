@@ -67,7 +67,7 @@ from cadrumo_client.contracts.operation_access import (
 from cadrumo_client.contracts.projection_pages import encode_projection_document, project_encoded_page
 from cadrumo_client.transport.frontend_client import FrontendClient
 
-from .operation_contract_support import modelo_work_file_contract
+from ...tests.operation_contract_support import modelo_work_file_contract
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

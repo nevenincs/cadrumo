@@ -175,6 +175,15 @@ TRANSLATION_SPANISH_TAX_TERM_RE: Final[re.Pattern[str]] = re.compile(
     # Full official tax names retained in the bilingual lifecycle guides.
     # https://sede.agenciatributaria.gob.es/Sede/iva/novedades-iva/novedades-normativa-2025/orden-hac-1425-2025-9-diciembre.html
     r"Impuesto sobre la Renta de las Personas Físicas|Impuesto sobre el Valor Añadido|"
+    # The wealth tax keeps its statutory name (Ley 19/1991) in the profile,
+    # wizard and overview catalogues, as the IRPF and IVA names do above.
+    # https://www.boe.es/buscar/act.php?id=BOE-A-1991-14392
+    r"Impuesto sobre el Patrimonio|"
+    # The special IVA cash-accounting regime keeps its statutory name (LIVA
+    # arts. 163 decies to 163 sexiesdecies); Hungarian prose quotes only its
+    # criterion in parentheses.
+    # https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740
+    r"régimen especial del criterio de caja|criterio de caja|"
     # Complete official identification and maritime-regime names, plus the
     # installment-payment term retained in modelo guidance.
     # https://sede.agenciatributaria.gob.es/Sede/ayuda/consultas-informaticas/otros-servicios-ayuda-tecnica/apoderamientos-otorgados.html

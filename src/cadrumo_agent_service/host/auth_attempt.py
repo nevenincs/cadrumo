@@ -19,6 +19,7 @@ from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.windows_owned_process import WindowsOwnedProcess
 from cadrumo_client.transport.windows_process import WindowsProcessScope, unreturned_windows_process_scope
 
+from ..providers.application.contracts import HelperCause, ServiceCause
 from .auth_protocol import MAX_AUTH_LINE, TERMINAL_EVENTS, AuthEvent, AuthProtocol, snapshot
 from .credential_frame import wipe
 
@@ -27,17 +28,17 @@ _LOGGER = get_logger(__name__)
 EXCHANGE_SECONDS = 305
 """The bound on one helper exchange: a little past the helper's own 300 second login timeout."""
 
-_Settlement = tuple[str, str | None, str | None]
+_Settlement = tuple[str, str | None, HelperCause | ServiceCause | None]
 """An outcome event, its reason and its cause."""
 
 
 class HelperStreamError(ValueError):
     """The helper's stream broke the protocol; carries only the service's closed cause word."""
 
-    def __init__(self, cause: str) -> None:
+    def __init__(self, cause: ServiceCause) -> None:
         """Keep the cause beside the content-free message."""
         super().__init__("invalid_auth_event")
-        self.cause = cause
+        self.cause: ServiceCause = cause
 
 
 class AuthAttempt:
@@ -387,7 +388,7 @@ class AuthAttempt:
         input_stream: BinaryIO | None,
         outcome: str,
         reason: str | None,
-        cause: str | None,
+        cause: HelperCause | ServiceCause | None,
     ) -> None:
         status_cause: str | None = None
         try:

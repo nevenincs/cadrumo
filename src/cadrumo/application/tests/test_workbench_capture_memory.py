@@ -8,12 +8,10 @@ builds are counted by observing the real builder, never by replacing it.
 
 from __future__ import annotations
 
-import sys
 import threading
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
-from types import FrameType
 from typing import Any, cast
 
 import pytest
@@ -23,7 +21,6 @@ from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...domain.modelos.filing_record import ModeloRecordCatalogue
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord, create_user_profile_record
-from ..overview.calendar import build_overview_calendar
 from ..overview.home import HomeAccountSession, HomeSessionPosture
 from ..workbench_capture_memory import WorkbenchCaptureMemory, WorkbenchCaptureMemoryOwner, WorkbenchMemoSlot
 from ..workbench_generation import (
@@ -31,6 +28,7 @@ from ..workbench_generation import (
 )
 from ..workbench_generation_contracts import WorkbenchGenerationV1
 from ..workbench_generation_reader import SecureProfileWorkbenchGenerationReadDoorV1
+from .workbench_generation_support import calendar_builds
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -101,26 +99,6 @@ def _session(operation: PinnedAuthorityOperation) -> _Session:
     )
 
 
-def _calendar_builds(action: Callable[[], object]) -> int:
-    """Count calls into the real calendar builder while ``action`` runs."""
-    code = build_overview_calendar.__code__
-    builds = 0
-    previous = sys.getprofile()
-
-    def observe(frame: FrameType, event: str, arg: object) -> None:
-        nonlocal builds
-        del arg
-        if event == "call" and frame.f_code is code:
-            builds += 1
-
-    sys.setprofile(observe)
-    try:
-        action()
-    finally:
-        sys.setprofile(previous)
-    return builds
-
-
 def _without_compute_instants(value: object) -> object:
     """Drop the instants a calendar records for when it was computed; nothing else."""
     if isinstance(value, dict):
@@ -140,9 +118,9 @@ def test_an_unchanged_session_reuses_its_calendar_and_publishes_the_same_generat
     session = _session(authority_operation)
     memory = WorkbenchCaptureMemory()
 
-    first_builds = _calendar_builds(lambda: session.capture(memory))
+    first_builds = calendar_builds(lambda: session.capture(memory))
     reused: list[WorkbenchGenerationV1] = []
-    reuse_builds = _calendar_builds(lambda: reused.append(session.capture(memory)))
+    reuse_builds = calendar_builds(lambda: reused.append(session.capture(memory)))
     fresh = session.capture(None)
 
     assert first_builds > 0
@@ -153,8 +131,8 @@ def test_an_unchanged_session_reuses_its_calendar_and_publishes_the_same_generat
 def test_the_counter_detects_rebuilding_on_every_capture(authority_operation: PinnedAuthorityOperation) -> None:
     session = _session(authority_operation)
 
-    first = _calendar_builds(lambda: session.capture(None))
-    second = _calendar_builds(lambda: session.capture(None))
+    first = calendar_builds(lambda: session.capture(None))
+    second = calendar_builds(lambda: session.capture(None))
 
     assert first > 0
     assert second == first, "without a memory every capture rebuilds, and the counter sees it"
@@ -175,7 +153,7 @@ def test_any_changed_input_rebuilds_the_calendar(authority_operation: PinnedAuth
     else:
         session.now = _NOW + timedelta(days=1)
     changed: list[WorkbenchGenerationV1] = []
-    builds = _calendar_builds(lambda: changed.append(session.capture(memory)))
+    builds = calendar_builds(lambda: changed.append(session.capture(memory)))
 
     assert builds > 0, f"a changed {change} must not be served from memory"
     assert _comparable(changed[0]) == _comparable(session.capture(None))
@@ -187,8 +165,8 @@ def test_a_closed_memory_serves_and_keeps_nothing(authority_operation: PinnedAut
     session.capture(memory)
     memory.close()
 
-    after_close = _calendar_builds(lambda: session.capture(memory))
-    again = _calendar_builds(lambda: session.capture(memory))
+    after_close = calendar_builds(lambda: session.capture(memory))
+    again = calendar_builds(lambda: session.capture(memory))
 
     assert after_close > 0
     assert again == after_close, "a closed memory must not start storing again"

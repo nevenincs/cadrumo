@@ -31,8 +31,8 @@ from ....core.errors.hierarchy import CadrumoError
 from ....core.operations import OperationEffect
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...adapter_composition_work_ports import build_filing_action_ports, build_verification_repository_bundle
-from ...cli.tests.operation_contract_support import unavailable, unavailable_operator_scope_ports
 from ..modelo_operator_work_storage import seeded_operator_work
+from ..operation_contract_support import unavailable, unavailable_operator_scope_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

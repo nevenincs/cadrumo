@@ -5,16 +5,16 @@ from __future__ import annotations
 from pathlib import Path
 from typing import NoReturn
 
-from cadrumo.application.auth.operator_scope_ports import (
+from ...application.auth.operator_scope_ports import (
     OperatorScopeBucketPaths,
     OperatorScopePorts,
     OperatorScopeSession,
 )
-from cadrumo.application.modelo.operation_definitions import (
+from ...application.modelo.operation_definitions import (
     build_modelo_work_file_definition,
     build_modelo_work_file_registration,
 )
-from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
+from ...application.operations.registry import OperationPublicDefinitionContractV1
 
 
 def unavailable(*_args: object, **_kwargs: object) -> NoReturn:
