@@ -9,6 +9,7 @@ coherent bundle for each profile bucket.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
@@ -85,8 +86,20 @@ class VerificationRepositoryBundle:
 class VerificationRepositoryBundleFactory(Protocol):
     """Compose one bucket's repositories under the caller's pinned authority."""
 
-    def __call__(self, bucket_id: str, /, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
-        """Return the complete repository set for the named profile bucket."""
+    def __call__(
+        self,
+        bucket_id: str,
+        /,
+        *,
+        operation: PinnedAuthorityOperation,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    ) -> VerificationRepositoryBundle:
+        """Return the complete repository set for the named profile bucket.
+
+        ``mutation_writer``, when supplied, admits every actual persistence
+        commit the bundle's repositories make, so an operation can account
+        for its effect from the writes that really began.
+        """
         ...
 
 
