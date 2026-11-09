@@ -3020,6 +3020,10 @@ application:
             negatív általános adóalapod (Ley 35/2006, 50.3. cikk). Minden összeg általad
             kijelentett 0-ként kerül rögzítésre, a beírt számtól elkülönítve; ha egy
             korábbi bevallás később összeget mutat, a bevallás jelzi az eltérést.
+      credits_heading:
+        mixed: Levonások
+        practised: Az általad levont összegek
+        suffered: A jövedelmedből levont összegek
       finding_action:
         add_activity_start: Add meg a profilodban, mikor kezdődött a tevékenységed,
           majd számolj újra.

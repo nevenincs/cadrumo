@@ -1295,6 +1295,7 @@ export type PublicModeloWorkForm = {
   answers: PublicModeloFormField[];
   result_addresses: CasillaId[];
   withholding_credits: ModeloFormCredit[];
+  withholding_credits_heading: string | null;
   counts: ModeloFormCounts;
   progress: ModeloWorkProgress;
   operator_entries_known: boolean;

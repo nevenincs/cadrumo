@@ -30,6 +30,7 @@ use crate::{
 use cadrumo_application::{
     diagnostics::{Diagnostics, EventKind, HostStage, lifecycle::LifecycleFact},
     error::application::{ApplicationError, ErrorCode, Operation},
+    provisioning::local_ai::LocalEngine,
 };
 use std::{
     io,

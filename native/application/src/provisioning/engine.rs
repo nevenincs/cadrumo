@@ -702,7 +702,7 @@ impl Engine {
             Err(report) if report.outcome == Outcome::Busy => {
                 return self.follow_only(&report.items, &sink, cancellation);
             }
-            Err(report) => return report,
+            Err(report) => return *report,
         };
         for entry in &plan.entries {
             sink.emit(Event::Phase {
@@ -742,7 +742,7 @@ impl Engine {
                     Err(report) if report.outcome == Outcome::Busy => {
                         return self.follow_only(&report.items, &sink, cancellation);
                     }
-                    Err(report) => return report,
+                    Err(report) => return *report,
                 },
             },
         };
@@ -1317,7 +1317,7 @@ impl Engine {
     fn planned(
         &mut self,
         items: Option<&[ItemId]>,
-    ) -> Result<(Vec<StatusRow>, Option<SetupPlan>), Report> {
+    ) -> Result<(Vec<StatusRow>, Option<SetupPlan>), Box<Report>> {
         let mut surveys: Vec<(ItemId, Survey)> = ItemId::ALL
             .into_iter()
             .map(|item| (item, self.survey(item)))
@@ -1336,10 +1336,10 @@ impl Engine {
             .map(|row| row.item)
             .collect();
         if let Some(first) = running.first() {
-            return Err(Report {
+            return Err(Box::new(Report {
                 items: running.clone(),
                 ..Report::new(Outcome::Busy, rows.clone()).for_item(*first, None)
-            });
+            }));
         }
         let chosen: Vec<ItemId> = match items {
             None => state::items_to_set_up(&rows),
@@ -1359,8 +1359,10 @@ impl Engine {
                         _ => None,
                     };
                     if let Some(category) = refusal {
-                        return Err(Report::new(Outcome::Refused, rows.clone())
-                            .for_item(row.item, Some(category)));
+                        return Err(Box::new(
+                            Report::new(Outcome::Refused, rows.clone())
+                                .for_item(row.item, Some(category)),
+                        ));
                     }
                     chosen.push(row.item);
                 }

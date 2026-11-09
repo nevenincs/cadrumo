@@ -391,6 +391,7 @@ class PublicModeloWorkForm(BaseModel):
     answers: tuple[PublicModeloFormField, ...] = ()
     result_addresses: tuple[CasillaId, ...]
     withholding_credits: tuple[ModeloFormCredit, ...] = ()
+    withholding_credits_heading: str | None = None
     counts: ModeloFormCounts
     progress: ModeloWorkProgress
     operator_entries_known: bool

@@ -3066,6 +3066,10 @@ application:
             35/2006). Cada import es registra com un 0 que has declarat, diferent
             d'una xifra escrita; si després una declaració anterior mostra un import,
             la declaració assenyala la diferència.
+      credits_heading:
+        mixed: Retencions
+        practised: Retencions que has practicat
+        suffered: Retencions practicades sobre els teus ingressos
       finding_action:
         add_activity_start: Afegeix al teu perfil la data en què va començar la teva
           activitat i torna a calcular.

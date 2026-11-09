@@ -607,7 +607,7 @@ mod tests {
         let root = Scratch::new("paced");
         let package = root.path().join("package");
         package_with_pins(&package);
-        let Ok(mut host) = host(
+        let Ok(mut host) = start_host(
             &package,
             &root.path().join("state"),
             LocalEngine::Ollama,

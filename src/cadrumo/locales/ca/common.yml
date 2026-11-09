@@ -4398,7 +4398,6 @@ desktop:
       list: Retencions
       show: Mostra-ho al formulari
       show_box: Mostra la casella {box} al formulari
-      title: Retencions practicades sobre els teus ingressos
     details:
       close: Tancar els detalls
       hide: Amagar els detalls

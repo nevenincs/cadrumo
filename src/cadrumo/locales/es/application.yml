@@ -3065,6 +3065,10 @@ application:
             de la Ley 35/2006). Cada importe se registra como un 0 que has declarado,
             distinto de una cifra escrita; si después una declaración anterior muestra
             un importe, la declaración señala la diferencia.
+      credits_heading:
+        mixed: Retenciones
+        practised: Retenciones que has practicado
+        suffered: Retenciones practicadas sobre tus ingresos
       finding_action:
         add_activity_start: Añade a tu perfil la fecha en que empezó tu actividad
           y vuelve a calcular.
