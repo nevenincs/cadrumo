@@ -9,9 +9,25 @@ import sys
 import sysconfig
 from pathlib import Path
 
+_HOST_IDENTITY_PRELUDE = """import platform
+
+platform.uname()
+"""
+"""Resolve the host identity before a probe's body installs its effects guard.
+
+On Windows the first ``platform.uname()`` asks WMI and, when that query fails or
+times out under load, launches ``cmd`` for ``ver``. Imports under the guard read
+the machine identity (SQLAlchemy does), so an unresolved first query there is a
+process launch the guard refuses, and the probe fails by how busy the host is.
+"""
+
 
 def run_isolated_registry_probe(tmp_path: Path, probe: str) -> None:
-    """Run ``probe`` in an isolated base interpreter and assert it exits cleanly without touching storage."""
+    """Run ``probe`` in an isolated base interpreter and assert it exits cleanly without touching storage.
+
+    The host identity is resolved first, so ``probe`` may guard against process
+    launches from its first line.
+    """
     source = Path(__file__).resolve().parents[3]
     base_executable = getattr(sys, "_base_executable", None)
     assert isinstance(base_executable, str)
@@ -36,7 +52,16 @@ def run_isolated_registry_probe(tmp_path: Path, probe: str) -> None:
     stderr_path = tmp_path / "registry-probe.stderr"
     with stdout_path.open("w", encoding="utf-8") as stdout, stderr_path.open("w", encoding="utf-8") as stderr:
         process = subprocess.Popen(  # noqa: S603 - resolved base interpreter, fixed import-only probe, owned child
-            [str(interpreter), "-I", "-S", "-B", "-c", probe, str(source), json.dumps(package_paths)],
+            [
+                str(interpreter),
+                "-I",
+                "-S",
+                "-B",
+                "-c",
+                _HOST_IDENTITY_PRELUDE + probe,
+                str(source),
+                json.dumps(package_paths),
+            ],
             cwd=tmp_path,
             env=environment,
             stdout=stdout,
