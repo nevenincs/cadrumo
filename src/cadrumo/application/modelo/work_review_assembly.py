@@ -17,6 +17,7 @@ from ...core.casilla_id import CasillaId
 from ...core.estado_casilla_oficial import EstadoCasillaOficial
 from ...core.identity.bucket import BucketId
 from ...core.modelo_work_progress_state import ModeloWorkProgressState
+from ...core.operator_action_enums import OperatorActionAxis
 from ...core.period import Period
 from ...domain.calculations.registry.binding_targets import casillas_by_binding
 from ...domain.calculations.registry.binding_value_contract import BindingValueChannel
@@ -54,6 +55,7 @@ from ...domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
 )
+from ...domain.modelos.calculation_revision_sources import DISAGREEMENT_REASONS, CalculationSourceIssue
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -70,6 +72,14 @@ from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..calculations.verification_report_gate import require_verification_report_coordinates_current
 from .action_errors import CalculationRevisionNotFoundError, StoredCalculationDriftError, WorkUnitNotFoundError
+from .calculation_note_gate import (
+    NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
+    SOURCE_DISAGREEMENT_FINDING_ID_LENGTH,
+    SourceDisagreementResolutions,
+    blocking_calculation_issues,
+    note_subject_facts,
+)
+from .calculation_notes import PROFILE_REASONS, RECORDS_REASONS
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .row_source_identity_replay import revision_row_source_fingerprints_for_review
 from .work_review import (
@@ -253,6 +263,49 @@ def _blocker_ref(finding: ModeloVerificationFinding) -> BlockerRef:
         native_code=finding.kind.value,
         facts=finding.message_facts,
     )
+
+
+def _calculation_note_axis(reason: str) -> OperatorActionAxis:
+    """The operator action that clears a blocking calculation note of ``reason``."""
+    if reason in DISAGREEMENT_REASONS:
+        return OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE
+    if reason in PROFILE_REASONS:
+        return OperatorActionAxis.SET_PROFILE_FACT
+    if reason in RECORDS_REASONS:
+        return OperatorActionAxis.IMPORT_LEDGER_DATA
+    return OperatorActionAxis.SUPPLY_MANUAL_INPUT
+
+
+def _calculation_note_blocker_ref(issue: CalculationSourceIssue) -> BlockerRef:
+    """Project one note that withholds checking onto the blocker the review lists.
+
+    The note names its own record and the amount it leaves out, so the review
+    tells the filer what to correct, as the refusal of the check does.
+    """
+    facts: dict[str, str] = dict(note_subject_facts(issue))
+    if issue.casilla_id is not None:
+        facts["casilla_id"] = str(issue.casilla_id)
+    if issue.disagreement is not None:
+        facts["finding_id"] = issue.disagreement.finding_key[:SOURCE_DISAGREEMENT_FINDING_ID_LENGTH]
+    return BlockerRef(axis=_calculation_note_axis(issue.reason), native_code=issue.reason, facts=facts)
+
+
+def _calculation_note_blockers(
+    revision: CalculationRevision | None,
+    resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
+) -> tuple[BlockerRef, ...]:
+    """The blockers for every persisted note that refuses checking, exporting and recording ``revision``.
+
+    A check that a note refuses persists no verification report, so a review
+    read from the report alone would show nothing while the check refuses. The
+    notes come from :func:`~.calculation_note_gate.blocking_calculation_issues`,
+    the same selection the refusal makes, so the two always agree. Without
+    ``resolutions`` no accepted source disagreement is honoured, as the gate
+    does without them.
+    """
+    if revision is None:
+        return ()
+    return tuple(_calculation_note_blocker_ref(issue) for issue in blocking_calculation_issues(revision, resolutions))
 
 
 def _casilla_observation(
@@ -561,8 +614,14 @@ def assemble_modelo_work_review(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
     calculation_catalogue: CalculationRevisionCatalogue | None = None,
+    resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
 ) -> ModeloWorkReview:
-    """Assemble the casilla-level review of a work unit from its snapshot, calculation revision and verification."""
+    """Assemble the casilla-level review of a work unit from its snapshot, calculation revision and verification.
+
+    Its blockers are the verification report's blocking findings and every
+    persisted calculation note that refuses the check, judged with
+    ``resolutions`` as the check judges them.
+    """
     snapshot = operation.snapshot(
         modelo,
         filing_year=filing_year,
@@ -591,7 +650,10 @@ def assemble_modelo_work_review(
     blocking_findings = tuple(
         finding for finding in findings if finding.severity is ModeloVerificationFindingSeverity.BLOCKING
     )
-    blockers = tuple(_blocker_ref(finding) for finding in blocking_findings)
+    blockers = (
+        *(_blocker_ref(finding) for finding in blocking_findings),
+        *_calculation_note_blockers(revision, resolutions),
+    )
     rows = assemble_modelo_work_review_casillas(
         snapshot=snapshot,
         revision=revision,

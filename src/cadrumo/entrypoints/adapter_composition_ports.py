@@ -415,6 +415,7 @@ def build_draft_review_ports(
 def build_modelo_history_ports(*, bucket_id: str, operation: PinnedAuthorityOperation) -> ModeloHistoryPorts:
     """Compose every persisted authority required by Modelo history reads."""
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ..adapters.persistence.profile.credit_resolution_records import CreditResolutionRepositoryAdapter
     from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
@@ -440,6 +441,7 @@ def build_modelo_history_ports(*, bucket_id: str, operation: PinnedAuthorityOper
         ),
         verification_repository=calculation_binding.verification_repository(),
         bucket_event_repository=BucketEventHistoryRepository(objects=objects),
+        credit_resolution=CreditResolutionRepositoryAdapter(objects=objects),
     )
 
 

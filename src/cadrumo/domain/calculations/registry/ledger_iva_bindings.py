@@ -803,6 +803,18 @@ assert_quantity_readers_cover_independent_facts(
 )
 
 
+def ledger_iva_quantity(fact: str, observation: IvaLedgerObservation) -> Decimal:
+    """Return the amount of the independent quantity ``fact`` that ``observation`` carries.
+
+    Read through the same per-fact readers the quantity screen uses, so a row is
+    named by exactly the amount the screen found undrawn.
+
+    Raises:
+        KeyError: If ``fact`` is not one of :data:`IVA_INDEPENDENT_QUANTITY_FACTS`.
+    """
+    return _IVA_INDEPENDENT_QUANTITY_READERS[fact](observation)
+
+
 def declarable_ledger_iva_observations(
     observations: Iterable[IvaLedgerObservation],
 ) -> tuple[IvaLedgerObservation, ...]:

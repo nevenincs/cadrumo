@@ -19,8 +19,11 @@ from .....domain.bienes_inversion.register import BienesInversionIvaRegister
 from .....domain.calculations.registry.binding_targets import casillas_by_binding
 from .....domain.calculations.registry.schema import ModeloRevision
 from .....domain.invoices.catalogue import InvoiceCatalogue
+from .....domain.invoices.enums import IvaRate
+from .....domain.invoices.models import Invoice
 from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
-from .....domain.iva.schema import IvaCategory
+from .....domain.iva.schema import InvoiceKind, IvaCategory
+from .....domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from .....domain.transactions.date_partition import LedgerDatePartition
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from .....domain.transactions.models import Transaction, TransactionCatalogue
@@ -273,6 +276,87 @@ def test_the_import_base_lands_in_box_32_on_the_committed_revision(tmp_path: Pat
     assert not [
         diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "unrouted_declarable_quantity"
     ]
+
+
+class _InvoiceCatalogueReader:
+    def __init__(self, *invoices: Invoice) -> None:
+        self._catalogue = InvoiceCatalogue(invoices={invoice.invoice_id: invoice for invoice in invoices})
+
+    def load(self) -> InvoiceCatalogue:
+        return self._catalogue
+
+
+def _uncategorised_eu_service() -> Invoice:
+    """A 0 % service invoiced to a German business, read from the Libro de facturas with no IVA category."""
+    return Invoice.model_validate(
+        {
+            "bucket_id": _BUCKET_ID,
+            "kind": InvoiceKind.ISSUED.value,
+            "invoice_number": "2025-002",
+            "issued_at": "2025-01-31",
+            "counterparty_name": "Kunde GmbH",
+            "counterparty_tax_id": "DE123456788",
+            "counterparty_country": "DE",
+            "base_total": "1500.00",
+            "iva_total": "0.00",
+            "grand_total": "1500.00",
+            "currency": "EUR",
+            "payment_status": "PENDING",
+            "lines": [
+                {
+                    "description": "Servicio de consultoria",
+                    "quantity": "1",
+                    "unit_price": "1500.00",
+                    "subtotal": "1500.00",
+                    "iva_rate": IvaRate.from_registry("RATE_0").value,
+                    "iva_amount": "0.00",
+                },
+            ],
+        },
+    )
+
+
+def test_an_unrouted_invoice_base_is_named_by_its_invoice_date_and_amount(tmp_path: Path) -> None:
+    """The note a blocked check rests on names the record, its date and the amount it leaves out.
+
+    A base no box of the committed Modelo 303 draws still blocks; the note must
+    tell the filer which invoice to correct, not only that some record is wrong.
+    """
+    invoice = _uncategorised_eu_service()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
+        resolver = LedgerIvaAggregationSourceResolver(
+            transaction_repository=repository,
+            invoice_catalogue_read_ports=InvoiceCatalogueReadPorts(
+                invoice_reader=_InvoiceCatalogueReader(invoice),
+                transaction_reader=_EmptyTransactionCatalogueReader(),
+            ),
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
+            investment_asset_register=BienesInversionIvaRegister(),
+            investment_asset_profile_id=_BUCKET_ID,
+        )
+        resolution = resolver.resolve(
+            CalculationSourceContext(
+                bucket_id=_BUCKET_ID,
+                modelo="303",
+                filing_year=2025,
+                period=_Q1_2025,
+                revision=_revision("303"),
+            ),
+        )
+
+    (note,) = [
+        diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "unrouted_declarable_quantity"
+    ]
+    assert note.source_ref == f"invoice:{invoice.invoice_id}"
+    assert note.fact == CalculationNoteFact.of(
+        CalculationNoteSentence.UNROUTED_IVA_BASE,
+        rows=(f"invoice:{invoice.invoice_id}:0",),
+        row_date="2025-01-31",
+        row_amount=Decimal("1500.00"),
+    )
+    assert "base_amount_sum" in note.message
+    assert "domestic_zero" in note.message
 
 
 def test_the_advisory_names_the_categories_carrying_the_residue(tmp_path: Path) -> None:

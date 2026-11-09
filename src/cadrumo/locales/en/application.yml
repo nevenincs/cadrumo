@@ -1800,6 +1800,12 @@ application:
         asset your register does not hold.
       row_unregistered_undated: A ledger entry records an asset your register does
         not hold.
+      unrouted_iva_base: The tax base of {row_amount} on the record of {row_date}
+        reaches no box of this declaration.
+      unrouted_iva_cuota: The IVA charged of {row_amount} on the record of {row_date}
+        reaches no box of this declaration.
+      unrouted_iva_recargo: The recargo de equivalencia of {row_amount} on the record
+        of {row_date} reaches no box of this declaration.
       withholding_invoice_entity_professional_fee: Received invoice {invoice} from
         {counterparty} states a withholding of {amount} on a professional fee, but
         its issuer is a company, and a company's professional services carry no withholding.

@@ -7,8 +7,10 @@ Core types:
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
 from decimal import Decimal
-from typing import ClassVar
+from types import MappingProxyType
+from typing import ClassVar, Final
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.external_constants import OutputLanguage
@@ -19,11 +21,14 @@ from ...domain.calculations.registry.binding_targets import bound_casilla_bindin
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.ledger_binding_resolution import UnroutedLedgerQuantity
 from ...domain.calculations.registry.ledger_binding_selector_support import LedgerIvaFact
 from ...domain.calculations.registry.ledger_iva_bindings import (
+    IVA_INDEPENDENT_QUANTITY_FACTS,
     IvaLedgerObservation,
     LedgerIvaProvider,
     declarable_ledger_iva_observations,
+    ledger_iva_quantity,
     structurally_unroutable_iva_base_categories,
     unrouted_ledger_iva_quantities,
     unsupported_ledger_iva_observations,
@@ -31,6 +36,7 @@ from ...domain.calculations.registry.ledger_iva_bindings import (
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.iva.schema import IvaCategory
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
@@ -233,22 +239,47 @@ def _iva_row_date_diagnostics(
     return tuple(found)
 
 
-def _residue_categories(observations: Sequence[IvaLedgerObservation]) -> str:
-    """Return the sorted distinct IVA categories carrying an undrawn quantity.
+_UNROUTED_IVA_QUANTITY_SENTENCES: Final[Mapping[str, CalculationNoteSentence]] = MappingProxyType(
+    {
+        "base_amount_sum": CalculationNoteSentence.UNROUTED_IVA_BASE,
+        "iva_amount_sum": CalculationNoteSentence.UNROUTED_IVA_CUOTA,
+        "recargo_amount_sum": CalculationNoteSentence.UNROUTED_IVA_RECARGO,
+    }
+)
+"""The sentence that names one row's undrawn IVA quantity, by the fact the screen found undrawn."""
 
-    The screen detects per fact AND per selector, so a fact can be drawn for some
-    categories and undrawn for others -- Modelo 390 draws ``base_amount_sum`` for
-    the domestic tiers while import and the two reverse-charge categories carry it
-    undrawn. Reporting only the fact would tell an operator that base is missing
-    without saying where, which is the reading that makes a partially-closed gap
-    look wholly open.
+if frozenset(_UNROUTED_IVA_QUANTITY_SENTENCES) != IVA_INDEPENDENT_QUANTITY_FACTS:
+    raise ValueError("every screened IVA quantity is worded by exactly one calculation note sentence")
 
-    Naming the categories is what makes the residue attributable: it states which
-    set is still open, so a later reader can tell a genuine remainder from a
-    regression.
+
+@dataclass(frozen=True, slots=True)
+class _UnroutedIvaQuantityRow:
+    """One row's amount of one IVA quantity that no binding drawing that quantity reaches."""
+
+    fact: str
+    observation: IvaLedgerObservation
+    amount: Decimal
+
+
+def _unrouted_iva_quantity_rows(
+    quantities: Iterable[UnroutedLedgerQuantity[IvaLedgerObservation]],
+) -> tuple[_UnroutedIvaQuantityRow, ...]:
+    """Split each undrawn quantity into the rows that carry it, each with its own amount.
+
+    The screen detects per fact and per selector, so a fact can be drawn for some
+    categories and undrawn for others. A note per row names the record, its date
+    and the amount left out, which is what the filer needs to correct its
+    classification; a total over several rows names none of them.
     """
-    categories = sorted({observation.category.value for observation in observations})
-    return "[" + ", ".join(categories) + "]"
+    return tuple(
+        _UnroutedIvaQuantityRow(
+            fact=quantity.fact,
+            observation=observation,
+            amount=ledger_iva_quantity(quantity.fact, observation),
+        )
+        for quantity in quantities
+        for observation in quantity.observations
+    )
 
 
 class LedgerIvaAggregationSourceResolver:
@@ -421,17 +452,22 @@ class LedgerIvaAggregationSourceResolver:
                 ),
             )
             + source_diagnostics_for(
-                unrouted_quantities,
+                _unrouted_iva_quantity_rows(unrouted_quantities),
                 reason="unrouted_declarable_quantity",
                 source_kind="ledger_iva_aggregation",
                 resolver_id=self.resolver_id,
-                message=lambda quantity: (
-                    f"{len(quantity.observations)} IVA row(s) carry {quantity.total} EUR of "
-                    f"{quantity.fact!r} in categories "
-                    f"{_residue_categories(quantity.observations)}, which no ledger_iva_aggregation "
-                    f"binding on revision {context.revision.id!r} draws for those categories; that "
-                    f"amount is not declared on this calculation. The rows themselves ARE consumed "
-                    f"for their other quantities, so no other screen reports them"
+                source_ref=lambda row: _observation_source_ref(row.observation),
+                message=lambda row: (
+                    f"IVA row {row.observation.ledger_id!r} carries {row.amount} EUR of {row.fact!r} in "
+                    f"category {row.observation.category.value!r}, which no ledger_iva_aggregation binding "
+                    f"on revision {context.revision.id!r} draws for that category; that amount is not "
+                    "declared on this calculation"
+                ),
+                fact=lambda row: CalculationNoteFact.of(
+                    _UNROUTED_IVA_QUANTITY_SENTENCES[row.fact],
+                    rows=(row.observation.ledger_id,),
+                    row_date=row.observation.transaction_date.isoformat(),
+                    row_amount=row.amount,
                 ),
             )
             + source_diagnostics_for(

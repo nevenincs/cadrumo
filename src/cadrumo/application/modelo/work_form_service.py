@@ -368,6 +368,16 @@ def load_modelo_work_form(
     disagreements; without it none is honoured, so every disagreement holds
     filing, and one that cannot be read is held the same way.
     """
+    resolutions = (
+        NO_SOURCE_DISAGREEMENT_RESOLUTIONS
+        if credit_resolutions is None
+        else load_credit_resolutions(
+            credit_resolutions,
+            modelo=str(modelo),
+            filing_year=filing_year,
+            period=period.registry_token,
+        ).resolutions
+    )
     review = build_modelo_work_review(
         bucket_id,
         modelo,
@@ -378,6 +388,7 @@ def load_modelo_work_form(
         calculation_repository=calculation_repository,
         verification_repository=verification_repository,
         calculation_catalogue=calculation_catalogue,
+        resolutions=resolutions,
     )
     snapshot = modelo_form_snapshot(operation, modelo, filing_year, period, review.registry_revision_id)
     layout = operation.form_layout(str(modelo), review.registry_revision_id)
@@ -393,16 +404,6 @@ def load_modelo_work_form(
         admission.baseline.permitted_surface
         if isinstance(admission, ModeloEditAdmittedV1) and admission.baseline.work_unit_id == review.work_unit_id
         else None
-    )
-    resolutions = (
-        NO_SOURCE_DISAGREEMENT_RESOLUTIONS
-        if credit_resolutions is None
-        else load_credit_resolutions(
-            credit_resolutions,
-            modelo=str(modelo),
-            filing_year=filing_year,
-            period=period.registry_token,
-        ).resolutions
     )
     form = build_modelo_work_form(
         review=review,
