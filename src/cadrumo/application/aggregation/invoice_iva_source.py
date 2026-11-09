@@ -34,8 +34,9 @@ from ...core.identity.hex_ids import InvoiceId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.calculations.registry.iva_deduction_catalogue import is_iva_deduction_kind
-from ...domain.invoices.models import Invoice, InvoiceKind
+from ...domain.invoices.models import Invoice
 from ...domain.invoices.payment_matching import suggest_payments
+from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from .errors import AggregationValidationError
 from .invoice_devengo import invoice_devengo_in_period
