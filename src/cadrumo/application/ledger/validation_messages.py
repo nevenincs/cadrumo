@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import cast
 
 from pydantic import ValidationError
 
@@ -49,7 +50,7 @@ def _registered_cause(item: Mapping[str, object]) -> CadrumoError | None:
     context = item.get("ctx")
     if not isinstance(context, Mapping):
         return None
-    found = context.get("error")
+    found: object = cast("Mapping[str, object]", context).get("error")
     while isinstance(found, BaseException):
         if isinstance(found, CadrumoError):
             return found
@@ -60,7 +61,7 @@ def _registered_cause(item: Mapping[str, object]) -> CadrumoError | None:
 def _located(item: Mapping[str, object]) -> str:
     """One Pydantic entry as its dotted field location and its own sentence."""
     location = item.get("loc", ())
-    parts = location if isinstance(location, tuple) else ()
+    parts: tuple[object, ...] = cast("tuple[object, ...]", location) if isinstance(location, tuple) else ()
     field_path = ".".join(str(part) for part in parts if part != "__root__")
     message = str(item.get("msg", "")).removeprefix("Value error, ").strip()
     return f"{field_path}: {message}" if field_path and message else message

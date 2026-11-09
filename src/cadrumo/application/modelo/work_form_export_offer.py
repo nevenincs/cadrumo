@@ -61,12 +61,13 @@ from ...core.result_disposition import ResultDisposition, result_disposition_dec
 from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.payment_instalment_split import first_instalment_share
 from ...domain.calculations.registry.schema_base import CasillaDataType
+from ...domain.iva.refund_eligibility import RefundEligibilityOutcome
 from ...domain.modelos.filing_record import AeatConfirmationState, ModeloRecordStatus
 from ...domain.transactions.own_accounts import OwnAccountRegister, OwnAccountRole, OwnBankAccount
 from .export_settlement import SettlementRefusal, declared_settlement
 from .settlement_casilla import declaration_settlement_casilla_id
 from .value_presentation import format_casilla_value
-from .work_form_declaration_facts import ModeloFormResultDirection
+from .work_form_declaration_facts import ModeloFormResult, ModeloFormResultDirection
 from .work_form_header import ModeloFormExportHoldReason, export_hold, form_recorded
 from .work_form_models import ModeloFormCasillaAddressV1, ModeloFormOrigin, ModeloWorkForm
 from .work_form_wording import day_text
@@ -204,10 +205,20 @@ class ModeloFormElectionReason(StrEnum):
     SETTLEMENT_UNSUPPORTED = "settlement_unsupported"
     #: Unavailable: the second instalment of the amount to pay would be nothing, so it is paid at once.
     SECOND_INSTALMENT_NOTHING = "second_instalment_nothing"
+    #: Not applicable: the negative IVA result may only be carried forward, because the period is not
+    #: the year's last and the filer is not inscribed in the Registro de devolución mensual.
+    CARRY_FORWARD_ONLY = "carry_forward_only"
+    #: Unavailable: outside the year's last period the refund needs the filer's REDEME inscription,
+    #: which their profile does not state.
+    REDEME_UNSTATED = "redeme_unstated"
 
 
 _NOT_APPLICABLE_REASONS: Final = frozenset(
-    {ModeloFormElectionReason.NOTHING_TO_PAY, ModeloFormElectionReason.NOTHING_TO_REFUND},
+    {
+        ModeloFormElectionReason.NOTHING_TO_PAY,
+        ModeloFormElectionReason.NOTHING_TO_REFUND,
+        ModeloFormElectionReason.CARRY_FORWARD_ONLY,
+    },
 )
 _ELECTION_REASON_LOCALE_KEYS: Final[Mapping[ModeloFormElectionReason, str]] = MappingProxyType(
     {
@@ -223,8 +234,17 @@ _ELECTION_REASON_LOCALE_KEYS: Final[Mapping[ModeloFormElectionReason, str]] = Ma
         ModeloFormElectionReason.SECOND_INSTALMENT_NOTHING: (
             "workspace.modelo.export.election.second_instalment_nothing"
         ),
+        ModeloFormElectionReason.CARRY_FORWARD_ONLY: "workspace.modelo.export.election.carry_forward_only",
+        ModeloFormElectionReason.REDEME_UNSTATED: "workspace.modelo.export.election.redeme_unstated",
     }
 )
+_REFUND_ELIGIBILITY_REASONS: Final[Mapping[RefundEligibilityOutcome, ModeloFormElectionReason]] = MappingProxyType(
+    {
+        RefundEligibilityOutcome.CARRY_FORWARD_ONLY: ModeloFormElectionReason.CARRY_FORWARD_ONLY,
+        RefundEligibilityOutcome.UNDETERMINED_REDEME_UNSTATED: ModeloFormElectionReason.REDEME_UNSTATED,
+    }
+)
+"""The reason the refund is not offered, for each resolver outcome that withholds it; REFUND_ALLOWED has none."""
 
 
 class ModeloFormUnavailable(StrEnum):
@@ -631,7 +651,24 @@ def _refundable(form: ModeloWorkForm, settlement: _Settlement) -> ModeloFormElec
         return settlement.held
     if result is not None and result.election_may_change:
         return None
+    withheld = _refund_election_withheld(result)
+    if withheld is not None:
+        return withheld
     return ModeloFormElectionReason.NOTHING_TO_REFUND
+
+
+def _refund_election_withheld(result: ModeloFormResult | None) -> ModeloFormElectionReason | None:
+    """Why a carried IVA credit is not offered as a refund, or ``None`` when no such rule withheld it.
+
+    The refusal is the shared resolver's, never a period test here: outside the
+    year's last period the refund is lawful only for a filer inscribed in the
+    Registro de devolución mensual (LIVA art. 115), and an unstated inscription
+    names the missing fact rather than standing as a no.
+    """
+    eligibility = None if result is None else result.refund_eligibility
+    if eligibility is None:
+        return None
+    return _REFUND_ELIGIBILITY_REASONS.get(eligibility.outcome)
 
 
 def _instalment_figures(
@@ -721,7 +758,15 @@ def _settlement_question(
 ) -> ModeloFormElectionQuestion:
     locale = language.value
     if election is ModeloFormElection.REFUND:
-        return _question(election, REFUND_ELECTION_LOCALE_KEYS, RefundElection.COMPENSAR, locale)
+        # The carry-forward is always lawful; the refund is the gated answer, so
+        # the choice is offered only where the shared resolver admits it.
+        return _question(
+            election,
+            REFUND_ELECTION_LOCALE_KEYS,
+            RefundElection.COMPENSAR,
+            locale,
+            held=_refund_election_withheld(form.result),
+        )
     if election is ModeloFormElection.PAYMENT:
         return _question(
             election, _payment_keys(modelo), PaymentElection.INGRESO, locale, held=_payable(form, settlement)

@@ -2878,6 +2878,8 @@ application:
         presentado (%{blocking_period} %{blocking_filing_year}) ha usado esta base
         de compensación inicial. Cambiarla alteraría una declaración registrada como
         presentada.'
+      next_step:
+        open_opening_balance: Registra el saldo inicial de IVA del %{modelo}, %{period}
       override_fresh_wallet_blocked: 'Anulación rechazada: una lectura actual de la
         cartera de AEAT ya resuelve el Modelo 303 %{period} %{filing_year}. La evidencia
         reciente de AEAT es la autoridad y una anulación no debe sustituirla.'

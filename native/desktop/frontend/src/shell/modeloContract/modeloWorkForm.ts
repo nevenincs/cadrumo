@@ -39,6 +39,8 @@ import type {
   SourceSurface,
 } from "./modeloWork";
 import type {
+  PublicRefundEligibility,
+  PublicScalarValueV1,
   PublicSpanishTaxIdFormat,
   ReconciliationSourceRequirementV1,
   RegistryAuthorityGrade,
@@ -397,7 +399,9 @@ export type ModeloFormElectionReason =
   | "no_open_account"
   | "no_spanish_account"
   | "settlement_unsupported"
-  | "second_instalment_nothing";
+  | "second_instalment_nothing"
+  | "carry_forward_only"
+  | "redeme_unstated";
 
 /**
  * Whether the filer can answer an election now.
@@ -926,7 +930,24 @@ export type OperationNextStepV1 =
   | OperationOpenWorkStepV1
   | OperationOpenProfileFieldStepV1
   | OperationCompleteProfileSetupStepV1
-  | OperationOpenMovementStepV1;
+  | OperationOpenMovementStepV1
+  | OperationOpenIvaWalletOpeningBalanceStepV1;
+
+/**
+ * Record the opening IVA balance the period's carry reads, in the IVA balance
+ * of that declaration.
+ *
+ * The balance is the wallet's own, addressed by the modelo, filing year and
+ * period whose carry the refusal could not settle; the window opens that
+ * declaration's IVA balance at its opening-balance entry.
+ */
+export type OperationOpenIvaWalletOpeningBalanceStepV1 = {
+  kind: "open_iva_wallet_opening_balance";
+  modelo: string;
+  filing_year: number;
+  period_code: string;
+  words: string;
+};
 
 /**
  * Open one ledger movement in the Libro, where the fact the refusal names is
@@ -1221,6 +1242,7 @@ export type PublicModeloFormResult = {
   direction: ModeloFormResultDirection;
   disposition: ResultDisposition | null;
   election_may_change: boolean;
+  refund_eligibility: PublicRefundEligibility | null;
 };
 
 /**
@@ -1324,12 +1346,4 @@ export type PublicModeloWorkFormLoadV1 = {
   form: PublicModeloWorkForm;
   verified: boolean;
   filed: boolean;
-};
-
-/**
- * Preserve scalar kind and decimal precision across the public schema.
- */
-export type PublicScalarValueV1 = {
-  kind: "string" | "integer" | "boolean" | "decimal" | "date" | "null";
-  text: string;
 };

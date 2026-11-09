@@ -120,6 +120,16 @@ function runNotice(t: Translate, run: OperationRun<unknown>): HistoryNotice {
               },
             }
           : {}),
+        ...(run.step?.kind === "open_iva_wallet_opening_balance"
+          ? {
+              openingBalance: {
+                modelo: run.step.modelo,
+                filingYear: run.step.filing_year,
+                periodCode: run.step.period_code,
+                words: run.step.words,
+              },
+            }
+          : {}),
       };
     case "not_sent":
       return {
@@ -206,6 +216,9 @@ function Ready({
   const held = operation.hold !== undefined;
   const busy = operation.hold?.phase === "running";
   const [notice, setNotice] = useState<HistoryNotice>(null);
+  // Counts the times the opening-balance door was taken, so the IVA balance
+  // opens its entry again each time rather than once.
+  const [openingBalanceAsked, setOpeningBalanceAsked] = useState(0);
   // What the last calculation could give no value for, as the application
   // said it. It belongs to the calculation it came with.
   const [unresolved, setUnresolved] = useState<CalculationUnresolved | null>(
@@ -683,6 +696,17 @@ function Ready({
     return true;
   };
 
+  // The door is offered only where the declaration shown is the one the step
+  // names and reads an IVA balance at all; the window matches the identity the
+  // backend served and works out no period of its own.
+  const openingBalanceDoor =
+    notice?.openingBalance &&
+    hasIvaWallet(envelope) &&
+    notice.openingBalance.modelo === envelope.form.form.modelo &&
+    notice.openingBalance.filingYear === envelope.form.form.filing_year &&
+    notice.openingBalance.periodCode === envelope.form.form.period.code
+      ? notice.openingBalance
+      : null;
   const left =
     unresolved &&
     unresolved.revision === envelope.calculation_revision_id &&
@@ -706,6 +730,19 @@ function Ready({
                 }
               >
                 {notice.movement.words}
+              </Button>
+            )}
+            {openingBalanceDoor && (
+              <Button
+                variant="link"
+                className="min-h-control-xs"
+                data-refusal-step="open_iva_wallet_opening_balance"
+                onClick={() => {
+                  setView("credits");
+                  setOpeningBalanceAsked((asked) => asked + 1);
+                }}
+              >
+                {openingBalanceDoor.words}
               </Button>
             )}
           </Alert>
@@ -868,6 +905,7 @@ function Ready({
               session={session}
               estimate={estimate}
               locale={locale}
+              openingBalanceAsked={openingBalanceAsked}
               onGo={(address) => {
                 setView("form");
                 session.selectAddress(address);

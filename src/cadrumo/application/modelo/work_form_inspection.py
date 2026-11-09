@@ -60,7 +60,11 @@ def result_casilla_ids(context: WorkFormContext) -> tuple[CasillaId, ...]:
 def project_settlement_result(context: WorkFormContext, fields: Iterable[ModeloFormField]) -> ModeloFormResult | None:
     """The settlement box, printed where the form shows it."""
     result = settlement_result(
-        str(context.review.modelo), context.snapshot.revision, context.rows, context.review.period
+        str(context.review.modelo),
+        context.snapshot.revision,
+        context.rows,
+        context.review.period,
+        redeme=context.redeme,
     )
     if result is None:
         return None
