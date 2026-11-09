@@ -1237,7 +1237,9 @@ def _reconcile_local_iva_compensation(
         operation=operation,
         repository=observation_repository,
         history_repository=history_repository,
-        prior_calculations=prior_calculations,
+        # The taxpayer's own calculation stands in only where AEAT's wallet is
+        # absent too; a wallet is the authority, never checked against it.
+        prior_calculations=prior_calculations if wallet is None else None,
         profile_values=profile_values,
     )
     report = reconcile_modelo_303_iva_compensation(
