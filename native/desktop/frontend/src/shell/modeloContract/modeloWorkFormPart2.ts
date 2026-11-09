@@ -13,6 +13,20 @@ import type { SourceSurface } from "./modeloWork";
 import type { OperationNextStepV1 } from "./modeloWorkForm";
 
 /**
+ * Typed local-human view of RefundEligibility: whether the IVA refund may be
+ * asked for, and why.
+ *
+ * `legal_refs` are the registry's declared references for the provisions the
+ * outcome rests on. A frontend renders the header's words; this carries the
+ * machine-readable outcome beside them so none of it is re-derived there.
+ */
+export type PublicRefundEligibility = {
+  outcome: RefundEligibilityOutcome;
+  basis: RefundEligibilityBasis;
+  legal_refs: string[];
+};
+
+/**
  * Preserve scalar kind and decimal precision across the public schema.
  */
 export type PublicScalarValueV1 = {

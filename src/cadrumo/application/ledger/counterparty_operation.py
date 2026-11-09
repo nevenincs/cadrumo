@@ -15,7 +15,9 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.country_code import CountryCodeAlpha2
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
+from ...domain.calculations.registry.ine_provincia_catalogue import ine_provincia_names
 from ...domain.iva.classification import require_iva_territorial_scope
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
@@ -35,7 +37,9 @@ from .counterparty_establishment import (
     confirm_counterparty_establishment,
     confirmed_counterparty_facts_key,
     forget_confirmed_counterparty_facts,
+    record_counterparty_provincia,
     resolve_confirmed_counterparty_facts,
+    stated_counterparty_provincia,
 )
 from .counterparty_establishment_ports import (
     CounterpartyEstablishmentRepositoryFactory,
@@ -50,6 +54,8 @@ LEDGER_COUNTERPARTY_NOTE_MAX = 4096
 """The longest note a counterparty confirmation takes."""
 LEDGER_COUNTERPARTY_ASSERTED_BY_MAX = 256
 """The longest attribution label a counterparty confirmation takes."""
+LEDGER_COUNTERPARTY_PROVINCIA_LENGTH = 2
+"""An INE provincia code is two digits; which codes exist is the registry catalogue's."""
 
 
 def _require_confirmation_action_fields(
@@ -64,6 +70,23 @@ def _require_confirmation_action_fields(
         raise ValueError("confirmation must answer at least one axis")
     if asserted_by is None or not asserted_by.strip() or evidenced_scope is not None:
         raise ValueError("confirmation requires its actor and no document evidence")
+
+
+def _require_provincia_action_fields(
+    *,
+    provincia_code: str | None,
+    territorial_scope: str | None,
+    identification_state: str | None,
+    asserted_by: str | None,
+    evidenced_scope: str | None,
+) -> None:
+    """Require the stated provincia and its actor, and nothing about establishment."""
+    if provincia_code is None:
+        raise ValueError("a provincia statement must carry the provincia")
+    if territorial_scope is not None or identification_state is not None or evidenced_scope is not None:
+        raise ValueError("a provincia statement answers no establishment question")
+    if asserted_by is None or not asserted_by.strip():
+        raise ValueError("a provincia statement requires its actor")
 
 
 def _require_non_confirmation_action_fields(
@@ -96,7 +119,7 @@ class LedgerCounterpartyRequest(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
-    action: Literal["confirm", "withdraw", "view"]
+    action: Literal["confirm", "withdraw", "view", "provincia"]
     tax_identifier: str = Field(min_length=1, max_length=LEDGER_COUNTERPARTY_TAX_ID_MAX)
     country_code: CountryCodeAlpha2 | None = None
     territorial_scope: str | None = Field(default=None, min_length=1, max_length=64)
@@ -104,10 +127,23 @@ class LedgerCounterpartyRequest(BaseModel):
     evidenced_scope: str | None = Field(default=None, min_length=1, max_length=64)
     note: str = Field(default="", max_length=LEDGER_COUNTERPARTY_NOTE_MAX)
     asserted_by: str | None = Field(default=None, max_length=LEDGER_COUNTERPARTY_ASSERTED_BY_MAX)
+    provincia_code: str | None = Field(
+        default=None, min_length=LEDGER_COUNTERPARTY_PROVINCIA_LENGTH, max_length=LEDGER_COUNTERPARTY_PROVINCIA_LENGTH
+    )
 
     @model_validator(mode="after")
     def _action_fields(self) -> LedgerCounterpartyRequest:
-        if self.action == "confirm":
+        if self.action != "provincia" and self.provincia_code is not None:
+            raise ValueError("only a provincia statement carries a provincia")
+        if self.action == "provincia":
+            _require_provincia_action_fields(
+                provincia_code=self.provincia_code,
+                territorial_scope=self.territorial_scope,
+                identification_state=self.identification_state,
+                asserted_by=self.asserted_by,
+                evidenced_scope=self.evidenced_scope,
+            )
+        elif self.action == "confirm":
             _require_confirmation_action_fields(
                 territorial_scope=self.territorial_scope,
                 identification_state=self.identification_state,
@@ -137,6 +173,9 @@ class CounterpartyFactProjection(BaseModel):
     asserted_by: str = Field(min_length=1, max_length=256)
     asserted_at: datetime
     note: str = Field(default="", max_length=LEDGER_COUNTERPARTY_NOTE_MAX)
+    provincia_code: str | None = Field(
+        default=None, min_length=LEDGER_COUNTERPARTY_PROVINCIA_LENGTH, max_length=LEDGER_COUNTERPARTY_PROVINCIA_LENGTH
+    )
 
     @classmethod
     def from_fact(cls, fact: ConfirmedCounterpartyFacts) -> CounterpartyFactProjection:
@@ -149,6 +188,7 @@ class CounterpartyFactProjection(BaseModel):
             asserted_by=fact.asserted_by,
             asserted_at=fact.asserted_at,
             note=fact.note,
+            provincia_code=fact.provincia_code,
         )
 
 
@@ -181,12 +221,33 @@ class CounterpartyResolutionProjection(BaseModel):
         )
 
 
+class CounterpartyProvinciaChoice(BaseModel):
+    """One province or autonomous city a counterparty's domicilio fiscal can be in, by its INE code."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    code: str = Field(pattern=r"^[0-9]{2}$")
+    name: str = Field(min_length=1, max_length=64)
+
+
+def _provincia_choices(operation: PinnedAuthorityOperation) -> tuple[CounterpartyProvinciaChoice, ...]:
+    """The INE catalogue's provinces in code order, named as INE prints them in every language."""
+    return tuple(
+        CounterpartyProvinciaChoice(code=code, name=name)
+        for code, name in ine_provincia_names(authority=operation).items()
+    )
+
+
 class LedgerCounterpartyResult(BaseModel):
-    """Encrypted operation result containing only the selected action's facts."""
+    """Encrypted operation result containing only the selected action's facts.
+
+    ``provincia_code`` is the provincia stated for the counterparty, served by a
+    view; ``provincia_choices`` are the provinces it can be stated as, served by
+    a view and a provincia statement so a surface offers no list of its own.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
-    action: Literal["confirm", "withdraw", "view"]
+    action: Literal["confirm", "withdraw", "view", "provincia"]
     tax_identifier: str
     country_code: str | None = None
     evidenced_scope: str | None = Field(default=None, min_length=1, max_length=64)
@@ -196,6 +257,8 @@ class LedgerCounterpartyResult(BaseModel):
     withdrawn: bool | None = None
     changed: bool = False
     conflict_context: tuple[tuple[str, str], ...] | None = None
+    provincia_code: str | None = Field(default=None, pattern=r"^[0-9]{2}$")
+    provincia_choices: tuple[CounterpartyProvinciaChoice, ...] = ()
 
 
 class _TrackedCounterpartyRepository:
@@ -293,6 +356,35 @@ def _withdraw_counterparty_action(
     )
 
 
+def _provincia_counterparty_action(
+    payload: LedgerCounterpartyRequest,
+    *,
+    bucket_id: str,
+    context: OperationExecutorContext,
+    repository: _TrackedCounterpartyRepository,
+) -> LedgerCounterpartyResult:
+    """State the counterparty's provincia, keeping its other answers."""
+    facts = record_counterparty_provincia(
+        bucket_id=bucket_id,
+        tax_identifier=payload.tax_identifier,
+        provincia_code=payload.provincia_code or "",
+        asserted_by=payload.asserted_by or "",
+        country_code=payload.country_code,
+        repository=repository,
+    )
+    return LedgerCounterpartyResult(
+        profile_id=payload.profile_id,
+        action=payload.action,
+        tax_identifier=payload.tax_identifier,
+        country_code=payload.country_code,
+        facts=CounterpartyFactProjection.from_fact(facts),
+        recorded=True,
+        changed=repository.changed,
+        provincia_code=facts.provincia_code,
+        provincia_choices=_provincia_choices(context.authority_operation),
+    )
+
+
 def _view_counterparty_action(
     payload: LedgerCounterpartyRequest,
     *,
@@ -319,6 +411,10 @@ def _view_counterparty_action(
         country_code=payload.country_code,
         evidenced_scope=payload.evidenced_scope,
         resolution=CounterpartyResolutionProjection.from_resolution(resolution),
+        provincia_code=stated_counterparty_provincia(
+            payload.tax_identifier, country_code=payload.country_code, repository=repository
+        ),
+        provincia_choices=_provincia_choices(context.authority_operation),
     )
 
 
@@ -335,6 +431,8 @@ def _perform_counterparty_action(
         return _confirm_counterparty_action(payload, bucket_id=bucket_id, context=context, repository=repository)
     if payload.action == "withdraw":
         return _withdraw_counterparty_action(payload, bucket_id=bucket_id, repository=repository)
+    if payload.action == "provincia":
+        return _provincia_counterparty_action(payload, bucket_id=bucket_id, context=context, repository=repository)
     return _view_counterparty_action(payload, bucket_id=bucket_id, context=context, repository=repository)
 
 
@@ -387,7 +485,7 @@ class LedgerCounterpartyExecutor:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(LEDGER_COUNTERPARTY_OPERATION_DEFINITION_ID)
-        if payload.action == "confirm":
+        if payload.action in {"confirm", "provincia"}:
             asserted_by = execution_actor_label(
                 self._execution_caller_reader, context, supplied=payload.asserted_by or ""
             )

@@ -39,11 +39,10 @@ import type {
   SourceSurface,
 } from "./modeloWork";
 import type {
+  PublicRefundEligibility,
   PublicScalarValueV1,
   PublicSpanishTaxIdFormat,
   ReconciliationSourceRequirementV1,
-  RefundEligibilityBasis,
-  RefundEligibilityOutcome,
   RegistryAuthorityGrade,
   SourceFamily,
   SourcePolicyV1,
@@ -134,6 +133,8 @@ export type FormUnplacedReason =
   | "ambiguous_anchor"
   | "anchor_conflicts_with_section"
   | "pending_review";
+
+export type InvoiceId = string;
 
 export type ModeloExportRequestField =
   | "refund_election"
@@ -519,6 +520,7 @@ export type ModeloFormIssueLine = {
   resolution_answer: ModeloFormResolutionAnswer | null;
   answer_lead_words: string | null;
   answer_lead_words_language: OutputLanguage | null;
+  invoice_id: InvoiceId | null;
 };
 
 /**
@@ -526,6 +528,18 @@ export type ModeloFormIssueLine = {
  */
 export type ModeloFormLayoutProvenance =
   "reviewed" | "generated" | "inspection_only";
+
+/**
+ * What in the ledger holds the declaration's calculation, in the form's
+ * language.
+ *
+ * `transaction_id` is the movement to open, `None` when the hold is about the
+ * whole period rather than one movement.
+ */
+export type ModeloFormLedgerHold = {
+  words: string;
+  transaction_id: string | null;
+};
 
 /**
  * The missing values no box holds, which the check names, counted as the
@@ -870,6 +884,7 @@ export type ModeloWorkbenchFormProjectionV1 = {
   profile_requirements: string[];
   source_requirements: ReconciliationSourceRequirementV1[];
   receipt: ModeloFormReceipt | null;
+  ledger_hold: ModeloFormLedgerHold | null;
 };
 
 /**
@@ -1331,18 +1346,4 @@ export type PublicModeloWorkFormLoadV1 = {
   form: PublicModeloWorkForm;
   verified: boolean;
   filed: boolean;
-};
-
-/**
- * Typed local-human view of RefundEligibility: whether the IVA refund may be
- * asked for, and why.
- *
- * `legal_refs` are the registry's declared references for the provisions the
- * outcome rests on. A frontend renders the header's words; this carries the
- * machine-readable outcome beside them so none of it is re-derived there.
- */
-export type PublicRefundEligibility = {
-  outcome: RefundEligibilityOutcome;
-  basis: RefundEligibilityBasis;
-  legal_refs: string[];
 };
