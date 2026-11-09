@@ -199,7 +199,7 @@ def test_explicit_empty_and_omitted_legacy_detail_channels_survive_real_encrypte
     ]
     assert blocks and all(block.rows_known and not block.rows for block in blocks)
 
-    write = repository.to_secure_object_write(catalogue)
+    write = repository.to_secure_object_write_unit(catalogue).writes[0]
     payload = json.loads(write.payload)
     del payload["payload"]["revisions"][head.calculation_revision_id]["detail_rows"]
     secure_object_repository_for_bucket(unit.bucket_id).save_many(

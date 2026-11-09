@@ -245,14 +245,16 @@ def test_event_write_failure_rolls_back_every_import_catalogue(
         expected_revision_id=_STALE_REVISION_ID,
     )
 
+    revisions_unit = fixture.calculations.to_secure_object_write_unit(baseline_revisions)
     with pytest.raises(SecureObjectRevisionConflictError):
         fixture.filings.save_with_secure_object_writes(
             baseline_filings,
             (
-                fixture.calculations.to_secure_object_write(baseline_revisions),
+                *revisions_unit.writes,
                 fixture.work_units.to_secure_object_write(baseline_work_units),
                 conflicting_event_write,
             ),
+            assertions=revisions_unit.assertions,
         )
 
     assert fixture.calculations.load() == baseline_revisions

@@ -46,6 +46,7 @@ Core types:
 
 from __future__ import annotations
 
+import contextlib
 from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import date
@@ -102,6 +103,7 @@ from ..storage.secure_object_namespaces import (
 from .secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
+    from ..storage.sql.secure_object_records import SecureObjectRecord
     from ..storage.sql.secure_objects import SecureObjectRepository
 
 _LOGGER = get_logger(__name__)
@@ -231,18 +233,25 @@ def _referenced_rendering_digests(payload: bytes) -> tuple[str, ...]:
             envelope, or a rendering names a storage form this reader does
             not know.
     """
-    try:
+    # Each refusal is raised outside its handler so the decoder failure, which
+    # can quote stored bytes, is not chained onto the redacted error.
+    stored: _StoredCatalogueEnvelope | None = None
+    with contextlib.suppress(ValidationError):
         stored = _stored_catalogue_renderings().validate_json(payload)
-    except ValidationError:
-        raise _persistence_refusal("calculation-revision catalogue payload is invalid", "invalid_payload") from None
+    if stored is None:
+        raise _persistence_refusal("calculation-revision catalogue payload is invalid", "invalid_payload")
     digests: set[str] = set()
     for revision in stored["payload"]["revisions"].values():
+        known_form = True
+        digest: str | None = None
         try:
             digest = saved_rendering_reference_digest(revision.get("rendering_snapshot"))
         except ValueError:
+            known_form = False
+        if not known_form:
             raise _persistence_refusal(
                 "calculation revision names an unknown rendering storage form", "unknown_rendering_form"
-            ) from None
+            )
         if digest is not None:
             digests.add(digest)
     return tuple(sorted(digests))
@@ -433,8 +442,11 @@ class CalculationRevisionCatalogueRepository:
 
         Raises:
             CalculationRevisionPersistenceError: Typed by reason
-                ``rendering_snapshot_missing``, ``rendering_snapshot_unreadable``,
-                ``rendering_snapshot_invalid`` or ``rendering_snapshot_digest_mismatch``.
+                ``rendering_snapshot_missing``, ``rendering_snapshot_unreadable`` or
+                ``rendering_snapshot_digest_mismatch``; a body that no longer
+                validates under the current authority refuses as
+                ``invalid_payload``, exactly as the same rendering embedded in
+                the catalogue does.
         """
         if not digests:
             return {}
@@ -447,7 +459,8 @@ class CalculationRevisionCatalogueRepository:
                 "saved rendering snapshot row has an unsupported schema version", "rendering_snapshot_unreadable"
             )
 
-        try:
+        records: tuple[SecureObjectRecord, ...] | None = None
+        with contextlib.suppress(ClassificationError, DecryptionError, EnvelopeVersionError):
             records = tuple(
                 self._objects.load_many_current(
                     definition.namespace,
@@ -457,10 +470,8 @@ class CalculationRevisionCatalogueRepository:
                     refuse_legacy=refuse_other_version,
                 )
             )
-        except (ClassificationError, DecryptionError, EnvelopeVersionError):
-            raise _persistence_refusal(
-                "saved rendering snapshot row is unreadable", "rendering_snapshot_unreadable"
-            ) from None
+        if records is None:
+            raise _persistence_refusal("saved rendering snapshot row is unreadable", "rendering_snapshot_unreadable")
         digest_by_key = {secure_object_key_digest(digest): digest for digest in digests}
         bodies: dict[str, SavedRenderingBody] = {}
         for stored in records:
@@ -490,17 +501,16 @@ class CalculationRevisionCatalogueRepository:
         )
 
         definition = MODELO_CALCULATION_RENDERING_SNAPSHOT_NAMESPACE
-        try:
+        envelope = None
+        with contextlib.suppress(ValidationError):
             envelope = parameterized_envelope_type(SavedRenderingBody).model_validate_json(payload)
-        except ValidationError:
-            raise _persistence_refusal(
-                "saved rendering snapshot payload is invalid", "rendering_snapshot_invalid"
-            ) from None
+        if envelope is None:
+            raise _persistence_refusal("saved rendering snapshot payload is invalid", "invalid_payload")
         if not inner_envelope_classification_is_expected(
             envelope.classification, definition.sensitivity
         ) or not inner_envelope_version_is_current(envelope.schema_version, definition.schema_version):
             raise _persistence_refusal(
-                "saved rendering snapshot envelope does not match its namespace", "rendering_snapshot_invalid"
+                "saved rendering snapshot envelope does not match its namespace", "rendering_snapshot_unreadable"
             )
         return envelope.payload
 

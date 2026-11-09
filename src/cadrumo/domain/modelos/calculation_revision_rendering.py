@@ -11,13 +11,15 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from functools import partial
 from threading import RLock
-from typing import Literal, Self, TypeGuard
+from typing import Annotated, Literal, Self, TypeGuard
 from weakref import ReferenceType, ref
 
 from pydantic import (
     BaseModel,
     Field,
     FieldSerializationInfo,
+    GetCoreSchemaHandler,
+    GetPydanticSchema,
     SerializationInfo,
     SerializerFunctionWrapHandler,
     TypeAdapter,
@@ -27,7 +29,7 @@ from pydantic import (
     model_serializer,
     model_validator,
 )
-from pydantic_core import SchemaSerializer
+from pydantic_core import CoreSchema, SchemaSerializer, core_schema
 
 from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.hex import Hex64Str
@@ -511,28 +513,6 @@ def saved_rendering_reference_digest(value: object) -> str | None:
     return digest
 
 
-def hydrate_saved_rendering(value: object, context: object) -> object:
-    """Replace a stored rendering reference with the rendering rebuilt from its verified body.
-
-    An embedded, absent or already built rendering is returned unchanged for
-    ordinary validation. A reference is rebuilt from the body supplied under
-    :data:`SAVED_RENDERING_BODIES_CONTEXT`, and the rebuilt rendering
-    recomputes both digests the reference claims.
-
-    Raises:
-        ValueError: The form is unknown, or no body is supplied for the digest.
-    """
-    digest = saved_rendering_reference_digest(value)
-    if digest is None:
-        return value
-    reference = SavedRenderingReference.model_validate(value)
-    bodies = context.get(SAVED_RENDERING_BODIES_CONTEXT) if is_object_mapping(context) else None
-    body = bodies.get(digest) if is_object_mapping(bodies) else None
-    if not isinstance(body, SavedRenderingBody):
-        raise ValueError("saved rendering reference has no supplied body")
-    return CalculationRenderingSnapshot.from_saved_body(reference, body)
-
-
 class CalculationRenderingSnapshot(BaseModel):
     """Digest-bound registry geometry and display rules captured under the calculation pin."""
 
@@ -665,3 +645,34 @@ def _rendering_payload(
     if directory_ids is not None:
         payload["revision_directory_ids"] = directory_ids
     return payload
+
+
+def _rendering_from_reference(reference: SavedRenderingReference, info: ValidationInfo) -> CalculationRenderingSnapshot:
+    """Rebuild a referenced rendering from the verified body its reader supplied under the context."""
+    bodies = info.context.get(SAVED_RENDERING_BODIES_CONTEXT) if is_object_mapping(info.context) else None
+    body = bodies.get(reference.rendering_digest) if is_object_mapping(bodies) else None
+    if not isinstance(body, SavedRenderingBody):
+        raise ValueError("saved rendering reference has no supplied body")
+    return CalculationRenderingSnapshot.from_saved_body(reference, body)
+
+
+def _stored_rendering_schema(source: type[object], handler: GetCoreSchemaHandler) -> CoreSchema:
+    # An embedded rendering keeps its own strict JSON validation; only when it
+    # does not validate is the value read as a reference. A before or wrap
+    # validator would hand the embedded JSON on as Python input and lose that.
+    return core_schema.union_schema(
+        [
+            handler(source),
+            core_schema.with_info_after_validator_function(
+                _rendering_from_reference, handler.generate_schema(SavedRenderingReference)
+            ),
+        ],
+        mode="left_to_right",
+    )
+
+
+#: A saved revision's rendering as storage holds it: embedded whole, as every
+#: revision stored before references existed, or as a :class:`SavedRenderingReference`
+#: rebuilt from the body supplied under :data:`SAVED_RENDERING_BODIES_CONTEXT`.
+#: After validation it is always the whole :class:`CalculationRenderingSnapshot`.
+StoredCalculationRendering = Annotated[CalculationRenderingSnapshot, GetPydanticSchema(_stored_rendering_schema)]

@@ -16,7 +16,7 @@ import pytest
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.classification.policies import SensitivityClass
 from ....core.period import Period
-from ....core.secure_object_write import SecureObjectWrite
+from ....core.secure_object_write import SecureObjectRevisionAssertion, SecureObjectWrite, SecureObjectWriteUnit
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
@@ -127,18 +127,22 @@ class _CalculationRepository(CalculationRevisionCatalogueRepositoryProtocol):
         self._catalogue = catalogue
 
     @override
-    def to_secure_object_write(
+    def to_secure_object_write_unit(
         self,
         catalogue: CalculationRevisionCatalogue,
         *,
         expected_revision_id: str | None = None,
-    ) -> SecureObjectWrite:
+    ) -> SecureObjectWriteUnit:
         """Prepare a typed calculation-catalogue write without persistence."""
-        return _secure_write(
-            namespace="application-test-calculation-revisions",
-            object_key="participation-rebuild",
-            payload=catalogue.model_dump_json().encode("utf-8"),
-            expected_revision_id=expected_revision_id,
+        return SecureObjectWriteUnit(
+            writes=(
+                _secure_write(
+                    namespace="application-test-calculation-revisions",
+                    object_key="participation-rebuild",
+                    payload=catalogue.model_dump_json().encode("utf-8"),
+                    expected_revision_id=expected_revision_id,
+                ),
+            )
         )
 
     @override
@@ -280,9 +284,10 @@ class _FilingRepository(ModeloRecordCatalogueRepositoryProtocol):
         extra_writes: tuple[SecureObjectWrite, ...],
         *,
         expected_revision_id: str | None = None,
+        assertions: tuple[SecureObjectRevisionAssertion, ...] = (),
     ) -> None:
         """Persist the catalogue while accepting the co-write contract."""
-        del extra_writes, expected_revision_id
+        del extra_writes, expected_revision_id, assertions
         self._catalogue = catalogue
 
 

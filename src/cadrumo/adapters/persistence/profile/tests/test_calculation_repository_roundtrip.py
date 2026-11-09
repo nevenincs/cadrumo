@@ -421,12 +421,81 @@ def test_saved_rendering_snapshot_survives_encrypted_calculation_readback(tmp_pa
     assert revision.rendering_snapshot.registry_snapshot.revision.localization_key == snapshot.revision.localization_key
 
 
+def _rewrite_stored_catalogue(profile: TestRuntimeProfile, rewrite: Any) -> None:
+    """Re-encrypt the stored catalogue row after ``rewrite`` changed its decoded JSON in place."""
+    definition = MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
+    record = profile.repository.load(
+        definition.namespace,
+        definition.require_default_object_key(),
+        expected_class=definition.sensitivity,
+        max_supported_version=definition.schema_version,
+    )
+    assert record is not None
+    stored = _json.loads(record.payload)
+    rewrite(stored)
+    profile.repository.save(
+        namespace=definition.namespace,
+        object_key=definition.require_default_object_key(),
+        classification=definition.sensitivity,
+        schema_version=definition.schema_version,
+        written_at=record.written_at,
+        payload=_json.dumps(stored).encode(),
+    )
+
+
+def _embed_rendering(stored: dict[str, Any], rendering: CalculationRenderingSnapshot) -> None:
+    """Put a revision's stored reference back into the embedded form every earlier writer produced."""
+    revision = next(iter(stored["payload"]["revisions"].values()))
+    assert revision["rendering_snapshot"]["form"] == "rendering_digest_reference"
+    revision["rendering_snapshot"] = rendering.model_dump(mode="json")
+
+
+def _tamper_saved_rendering(saved: dict[str, Any], tamper: str) -> None:
+    if tamper == "concealed-field":
+        saved["registry_snapshot"]["revision"]["localization_key"] += ".tampered"
+    elif tamper == "authority-generation":
+        saved["authority_generation"] = "not-a-generation"
+    else:
+        saved[tamper.replace("-", "_")] = "0" * 64
+
+
 @pytest.mark.parametrize("tamper", ("concealed-field", "registry-digest", "rendering-digest", "authority-generation"))
-def test_a_warm_read_refuses_altered_stored_rendering_bytes(tmp_path: Path, tamper: str) -> None:
+def test_a_warm_read_refuses_altered_embedded_rendering_bytes(tmp_path: Path, tamper: str) -> None:
     operation = published_authority_operation()
     snapshot = operation.snapshot("303", filing_year=2026, period="1T")
     rendering = CalculationRenderingSnapshot.capture(snapshot, authority_generation=operation.pin().logical_generation)
-    definition = MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _seed_parent_work_unit(profile)
+        repo = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        repo.save(_populated_catalogue(rendering_snapshot=rendering))
+        _rewrite_stored_catalogue(profile, lambda stored: _embed_rendering(stored, rendering))
+        with validating_governed_facts(operation):
+            warm, _revision_id = repo.load_revisioned(operation=operation)
+            assert repo.load_revisioned(operation=operation)[0] == warm
+        assert next(iter(warm.values())).rendering_snapshot == rendering
+
+        def tamper_embedded(stored: dict[str, Any]) -> None:
+            _tamper_saved_rendering(next(iter(stored["payload"]["revisions"].values()))["rendering_snapshot"], tamper)
+
+        _rewrite_stored_catalogue(profile, tamper_embedded)
+        with validating_governed_facts(operation), pytest.raises(CalculationRevisionPersistenceError) as refused:
+            repo.load_revisioned(operation=operation)
+
+    assert refused.value.context == {"reason": "invalid_payload"}
+
+
+@pytest.mark.parametrize(
+    ("tamper", "reason"),
+    (
+        ("registry-digest", "invalid_payload"),
+        ("rendering-digest", "rendering_snapshot_missing"),
+        ("authority-generation", "invalid_payload"),
+    ),
+)
+def test_a_warm_read_refuses_an_altered_rendering_reference(tmp_path: Path, tamper: str, reason: str) -> None:
+    operation = published_authority_operation()
+    snapshot = operation.snapshot("303", filing_year=2026, period="1T")
+    rendering = CalculationRenderingSnapshot.capture(snapshot, authority_generation=operation.pin().logical_generation)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         _seed_parent_work_unit(profile)
         repo = CalculationRevisionCatalogueRepository(objects=profile.repository)
@@ -434,34 +503,18 @@ def test_a_warm_read_refuses_altered_stored_rendering_bytes(tmp_path: Path, tamp
         with validating_governed_facts(operation):
             warm, _revision_id = repo.load_revisioned(operation=operation)
             assert repo.load_revisioned(operation=operation)[0] == warm
-        record = profile.repository.load(
-            definition.namespace,
-            definition.require_default_object_key(),
-            expected_class=definition.sensitivity,
-            max_supported_version=definition.schema_version,
-        )
-        assert record is not None
-        stored = _json.loads(record.payload)
-        saved = next(iter(stored["payload"]["revisions"].values()))["rendering_snapshot"]
-        if tamper == "concealed-field":
-            saved["registry_snapshot"]["revision"]["localization_key"] += ".tampered"
-        elif tamper == "authority-generation":
-            saved["authority_generation"] = "not-a-generation"
-        else:
-            saved[tamper.replace("-", "_")] = "0" * 64
-        profile.repository.save(
-            namespace=definition.namespace,
-            object_key=definition.require_default_object_key(),
-            classification=definition.sensitivity,
-            schema_version=definition.schema_version,
-            written_at=record.written_at,
-            payload=_json.dumps(stored).encode(),
-        )
 
+        def tamper_reference(stored: dict[str, Any]) -> None:
+            saved = next(iter(stored["payload"]["revisions"].values()))["rendering_snapshot"]
+            assert saved["form"] == "rendering_digest_reference"
+            assert "registry_snapshot" not in saved
+            _tamper_saved_rendering(saved, tamper)
+
+        _rewrite_stored_catalogue(profile, tamper_reference)
         with validating_governed_facts(operation), pytest.raises(CalculationRevisionPersistenceError) as refused:
             repo.load_revisioned(operation=operation)
 
-    assert refused.value.context == {"reason": "invalid_payload"}
+    assert refused.value.context == {"reason": reason}
 
 
 class _RefusingFacts:

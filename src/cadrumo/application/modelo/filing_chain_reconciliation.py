@@ -41,6 +41,7 @@ from ...core.casilla_id import CasillaId
 from ...core.hashing import sha256_hex
 from ...core.observed_header_fact import ObservedHeaderFact
 from ...core.period import Period
+from ...core.secure_object_write import SecureObjectRevisionAssertion, SecureObjectWrite, SecureObjectWriteUnit
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write
 from ...domain.calculations.registry.form_codes import form_for_role
@@ -87,7 +88,6 @@ from .work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
 from .work_lifecycle_ports import WorkLifecyclePorts
 
 if TYPE_CHECKING:
-    from ...core.secure_object_write import SecureObjectWrite
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 FilingEvidenceBasis = Literal["casillas", "receipt_totals"]
@@ -817,25 +817,27 @@ def _record_aeat_content(
         evidence_basis=comparison.evidence_basis,
         notices=comparison.notices,
     )
+    content = _aeat_content_writes(
+        context,
+        draft_revisions=(revisions, draft.revisions_revision_id),
+        work_units=advance_external_filing_work_unit(
+            draft.work_units,
+            work_unit=draft.work_unit,
+            revision_id=revision.calculation_revision_id,
+            filing_record_id=new_id,
+            now=context.now,
+        ),
+        work_unit=draft.work_unit,
+        revision=revision,
+        filing_record_id=new_id,
+        clear_pending=outcome is FilingReconciliationOutcome.CONTRADICTED,
+    )
     _commit(
         context,
         catalogue=catalogue,
         result=result,
-        extra_writes=_aeat_content_writes(
-            context,
-            draft_revisions=(revisions, draft.revisions_revision_id),
-            work_units=advance_external_filing_work_unit(
-                draft.work_units,
-                work_unit=draft.work_unit,
-                revision_id=revision.calculation_revision_id,
-                filing_record_id=new_id,
-                now=context.now,
-            ),
-            work_unit=draft.work_unit,
-            revision=revision,
-            filing_record_id=new_id,
-            clear_pending=outcome is FilingReconciliationOutcome.CONTRADICTED,
-        ),
+        extra_writes=content.writes,
+        assertions=content.assertions,
     )
     return result
 
@@ -914,12 +916,15 @@ def _aeat_content_writes(
     revision: CalculationRevision,
     filing_record_id: str,
     clear_pending: bool,
-) -> tuple[SecureObjectWrite, ...]:
+) -> SecureObjectWriteUnit:
     entry = context.entry
     ports = context.ports
     revisions, revisions_revision_id = draft_revisions
+    revisions_unit = ports.calculation_repository.to_secure_object_write_unit(
+        revisions, expected_revision_id=revisions_revision_id
+    )
     writes: list[SecureObjectWrite] = [
-        ports.calculation_repository.to_secure_object_write(revisions, expected_revision_id=revisions_revision_id),
+        *revisions_unit.writes,
         ports.work_lifecycle.work_unit_repository.to_secure_object_write(work_units),
     ]
     observation_payload = build_external_filing_observation_payload(
@@ -948,7 +953,7 @@ def _aeat_content_writes(
     writes.extend(cleared)
     if observation_payload is not None and not cleared:
         writes.append(ports.observation_repository.to_secure_object_write(observation_payload))
-    return tuple(writes)
+    return SecureObjectWriteUnit(writes=tuple(writes), assertions=revisions_unit.assertions)
 
 
 def _official_source_metadata(context: _Context, *, filing_record_id: str) -> dict[str, str]:
@@ -971,12 +976,14 @@ def _commit(
     catalogue: ModeloRecordCatalogue,
     result: FilingReconciliationResult,
     extra_writes: tuple[SecureObjectWrite, ...],
+    assertions: tuple[SecureObjectRevisionAssertion, ...] = (),
 ) -> None:
     event = _reconciliation_event(context, result, catalogue=catalogue)
     context.ports.filing_repository.save_with_secure_object_writes(
         catalogue,
         (*extra_writes, bucket_event_history_write(context.ports.work_lifecycle.bucket_event_repository, (event,))),
         expected_revision_id=context.catalogue_revision_id,
+        assertions=assertions,
     )
 
 

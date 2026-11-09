@@ -1070,12 +1070,13 @@ def _persist_amendment_side_effects(
             "discarded_filing_record_id": discarded.filing_record_id if discarded is not None else "",
         },
     )
+    revisions_unit = ports.calculation_repository.to_secure_object_write_unit(
+        revisions, expected_revision_id=catalogue_revisions.calculation
+    )
     ports.filing_repository.save_with_secure_object_writes(
         filing_catalogue,
         (
-            ports.calculation_repository.to_secure_object_write(
-                revisions, expected_revision_id=catalogue_revisions.calculation
-            ),
+            *revisions_unit.writes,
             ports.work_unit_repository.to_secure_object_write(
                 advanced_work_units, expected_revision_id=catalogue_revisions.work_units
             ),
@@ -1083,4 +1084,5 @@ def _persist_amendment_side_effects(
             *observation_writes,
         ),
         expected_revision_id=catalogue_revisions.filing,
+        assertions=revisions_unit.assertions,
     )

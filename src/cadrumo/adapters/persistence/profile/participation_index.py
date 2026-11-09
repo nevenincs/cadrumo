@@ -217,8 +217,8 @@ class TransactionParticipationIndexRepository:
         Returns:
             The number of stale participation objects removed.
         """
-        from ..storage.crypto.encrypted_columns import secure_object_key_digest
         from ....core.secure_object_write import SecureObjectRevisionAssertion
+        from ..storage.crypto.encrypted_columns import secure_object_key_digest
         from ..storage.sql.secure_object_records import SecureObjectDeletion
 
         writes = tuple(self.to_secure_object_write(index) for index in indexes)

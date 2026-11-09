@@ -73,9 +73,8 @@ from .transaction_storage_failures import translating_transaction_storage_failur
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from sqlalchemy import Connection
 
-    from ....core.secure_object_write import SecureObjectWrite
+    from ....core.secure_object_write import SecureObjectRevisionAssertion, SecureObjectWrite
     from ..storage.envelope.contract import Envelope
-    from ....core.secure_object_write import SecureObjectRevisionAssertion
     from ..storage.sql.secure_object_records import SecureObjectDeletion
     from ..storage.sql.secure_objects import SecureObjectRepository
 

@@ -76,7 +76,7 @@ from .observation_store import FiledDeclaracionObservationStore
 from .schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
 
 if TYPE_CHECKING:
-    from .....core.secure_object_write import SecureObjectWrite
+    from .....core.secure_object_write import SecureObjectRevisionAssertion, SecureObjectWrite
 
 
 _DEFAULT_FAILURE_KEY = "application.live.filed_observations.errors.registry_enrollment_failed"
@@ -394,6 +394,7 @@ class FilingRepositoryAdapter(ModeloRecordCatalogueRepositoryProtocol):
         extra_writes: tuple[SecureObjectWrite, ...],
         *,
         expected_revision_id: str | None = None,
+        assertions: tuple[SecureObjectRevisionAssertion, ...] = (),
     ) -> None:
         """Persist filing state and co-emitted writes atomically."""
         _call_adapter(
@@ -402,6 +403,7 @@ class FilingRepositoryAdapter(ModeloRecordCatalogueRepositoryProtocol):
                 catalogue,
                 extra_writes,
                 expected_revision_id=expected_revision_id,
+                assertions=assertions,
             ),
         )
 
