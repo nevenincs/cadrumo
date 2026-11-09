@@ -5,6 +5,10 @@ import type {
   ProviderSettingsView,
 } from "../../src/shell/providerSettings";
 import type { AgentRead } from "../../src/shell/agentViews";
+import { servedLocalLanes } from "../support/servedLocalLanes";
+
+// The lanes the host serves with the engine setting it answers.
+const SERVED = servedLocalLanes().map((lane) => lane.id);
 
 for (const transition of ["profile", "sign-out", "host"] as const)
   for (const outcome of ["success", "failure"] as const)
@@ -208,7 +212,7 @@ for (const recovery of [
     const result = await localAiProbe(page, { recovery });
     expect(result).toEqual({
       status: "ready",
-      lanes: ["local_api"],
+      lanes: SERVED,
       catalog: 2,
       settings: 1,
       beforeAdmission: 0,
@@ -232,7 +236,7 @@ for (const settingsMode of [
       settingsMode === "exhaustion" || settingsMode === "shared";
     expect(result).toEqual({
       status: exhausted ? "failed" : "ready",
-      lanes: exhausted ? [] : ["local_api"],
+      lanes: exhausted ? [] : SERVED,
       catalog: settingsMode === "shared" ? 3 : 1,
       settings: settingsMode === "exhaustion" ? 4 : 2,
       pauses: exhausted ? [2_000, 4_000, 8_000] : [2_000],
@@ -303,7 +307,7 @@ test("Local AI asks nothing while the agent starts and reads once it runs", asyn
     whileStarting: { status: "loading", catalog: 0, settings: 0, host: true },
     status: "ready",
     catalog: 1,
-    lanes: ["local_api"],
+    lanes: SERVED,
     host: true,
   });
 });
@@ -367,13 +371,11 @@ for (const transition of [
             ? "unmounted"
             : "failed",
       );
-      expect(result.retiredLanes).toEqual(stillShown ? ["local_api"] : []);
+      expect(result.retiredLanes).toEqual(stillShown ? SERVED : []);
       expect(result.status).toBe(
         transition === "unmount" ? "unmounted" : "ready",
       );
-      expect(result.lanes).toEqual(
-        transition === "unmount" ? [] : ["local_api"],
-      );
+      expect(result.lanes).toEqual(transition === "unmount" ? [] : SERVED);
     });
 
 async function localAiProbe(

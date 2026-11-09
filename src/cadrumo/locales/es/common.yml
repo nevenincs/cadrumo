@@ -9516,6 +9516,8 @@ workspace:
         open_count: 'abiertas: {count}'
         open_it: Abrirla
         other: Otros modelos
+        profile_requirements: 'Que este periodo te corresponda depende de lo que diga
+          tu perfil sobre:'
         refused: Cadrumo no ha creado la declaración.
         search_placeholder: Buscar
         show_all: Mostrar todos los modelos, no solo los tuyos

@@ -7,6 +7,7 @@ import {
   pickWay,
   scenarioOnly,
 } from "../support/agent";
+import { servedLocalLanes } from "../support/servedLocalLanes";
 import { label } from "../support/strings";
 
 // The local lane's model list: the catalog's recommended models, the ones the
@@ -27,6 +28,11 @@ const ADDED = "synthetic-named:test";
 const localLane = catalogLanes(FIXTURE_CATALOG).find(
   (lane) => lane.id === LOCAL,
 )!;
+
+// The setup panel lists the models of every lane the host serves.
+const servedRecommended = servedLocalLanes().flatMap(
+  (lane) => lane.recommended,
+);
 
 const open = (target: Page, setup = "ready") =>
   target.goto(
@@ -219,7 +225,7 @@ for (const source of ["catalog", "settings"] as const) {
       .click();
     await expect(
       localAi.locator("[data-slot=local-models] li[data-model]"),
-    ).toHaveCount(localLane.recommended.length);
+    ).toHaveCount(servedRecommended.length);
   });
 }
 
@@ -601,6 +607,38 @@ async function downloadVision(target: Page, lane: Locator) {
   return vision;
 }
 
+test("a setup that fails at the item after a model's download says so on that model's row at once, without a sign-in", async ({
+  page: target,
+}) => {
+  await open(target);
+  const lane = await openLane(target);
+  const vision = lane.locator('li[data-model="synthetic-vision:1"]');
+  await vision
+    .getByRole("button", {
+      name: label("desktop.providers.local_model_download"),
+    })
+    .click();
+  await laneReview(lane)
+    .getByRole("button", {
+      name: label("desktop.setup.approve_size", { size: "3.2 GB" }),
+    })
+    .click();
+  await expect(vision.locator("[data-setup-progress]")).toBeVisible();
+  await target.evaluate(() =>
+    window.__scenarioSetup?.failItem("damaged_download"),
+  );
+  await expect(vision.getByRole("alert")).toContainText(
+    label("desktop.setup.failure.damaged_download"),
+  );
+  await expect(vision).toHaveAttribute("data-installed", "false");
+  // The download can be asked for again from the same row.
+  await expect(
+    vision.getByRole("button", {
+      name: label("desktop.providers.local_model_download"),
+    }),
+  ).toBeEnabled();
+});
+
 /** Asks for a check of the setup from the command palette. */
 async function checkFromPalette(target: Page) {
   const palette = target.getByRole("dialog", {
@@ -785,8 +823,8 @@ test("the panel's local AI holds the same model list without starting a download
     label("desktop.setup.failure.damaged_download"),
   );
   const models = localAi.locator("[data-slot=local-models] li[data-model]");
-  await expect(models).toHaveCount(localLane.recommended.length);
-  for (const model of localLane.recommended)
+  await expect(models).toHaveCount(servedRecommended.length);
+  for (const model of servedRecommended)
     await expect(
       localAi.locator(`[data-slot=local-models] li[data-model="${model}"]`),
     ).toHaveCount(1);

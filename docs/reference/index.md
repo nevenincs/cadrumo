@@ -29,7 +29,8 @@ interface (API) are Cadrumo product surfaces.
   Advanced deployment and development configuration; no user workflow needs
   them.
 - [Third-party notices for Windows](third-party-notices-windows-x86-64.md) -
-  every third-party Python distribution the Windows package installs, with its
+  every third-party component the Windows package installs, from the
+  interpreter and its programs to the Python and JavaScript packages, with its
   version and declared licence, generated from the assembled package.
 
 Terms are defined in the {doc}`glossary </_generated/glossary>`. For ordinary

@@ -58,6 +58,7 @@ from ...core.operations import (
 )
 from ...core.paths import effective_storage_root
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...tests.aeat_literal_fixtures import NOTIFICATION_DETALLE_SEDE_URL_FIXTURE
 from ..censal_readback_composition import StoredCensalHistoryReader, read_stored_censal_observation
 from ..workbench_generation_composition import StoredNotificationCustodyCounter
 from .test_censal_operation_operand import censal_operation_operand
@@ -183,6 +184,11 @@ def _profile(tmp_path: Path) -> Generator[OperationSecureReferenceStore]:
 @pytest.fixture
 def decodes(monkeypatch: pytest.MonkeyPatch) -> list[str]:
     """The journal records the real repository decodes, by operation id."""
+    return journal_decodes(monkeypatch)
+
+
+def journal_decodes(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    """Record, by operation id, every journal record the real repository decodes from now on."""
     decoded: list[str] = []
     original = journal_module.SnapshotJournalRepository._decode_payload
 
@@ -335,7 +341,7 @@ def _notification_document(certificado_id: str) -> NotificationDocumentRecord:
         attachment_id="a" * 64,
         document_sha256="a" * 64,
         byte_size=12,
-        source_url="https://sede.agenciatributaria.gob.es/notificaciones/detalle",
+        source_url=NOTIFICATION_DETALLE_SEDE_URL_FIXTURE,
         fetched_at=STARTED,
         parse_refusal="SancionParseError: no text layer",
     )

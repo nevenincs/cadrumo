@@ -595,7 +595,10 @@ impl ModeloHost {
             settle::still_holding(&self.profile, &person).await?;
             match answered {
                 Outcome::Settled { result, .. } => {
-                    let list = definition.id == "modelo.declarations.list";
+                    let list = matches!(
+                        definition.id,
+                        "modelo.declarations.list" | "modelo.declarations.search"
+                    );
                     read_answer(result, &profile, work_unit, list.then_some(language))
                 }
                 Outcome::Refused { reason, .. } => {
@@ -659,6 +662,27 @@ async fn modelo_declarations(
     host.read(
         "modelo.declarations.list",
         json!({"output_language":output_language}),
+        None,
+        &output_language,
+    )
+    .await
+}
+/// The profile's declarations and works that match `query`, ranked and said in
+/// `output_language`, at most `limit` of them.
+#[tauri::command]
+async fn modelo_declarations_search(
+    host: State<'_, Arc<ModeloHost>>,
+    query: String,
+    output_language: String,
+    limit: Option<u32>,
+) -> Result<Value> {
+    let mut payload = json!({"query":query, "output_language":output_language});
+    if let Some(limit) = limit {
+        payload["limit"] = json!(limit);
+    }
+    host.read(
+        "modelo.declarations.search",
+        payload,
         None,
         &output_language,
     )
@@ -848,6 +872,7 @@ fn modelo_files_forget(host: State<'_, Arc<ModeloHost>>, tokens: Vec<String>) {
 pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
     crate::app::commands![
         modelo_declarations,
+        modelo_declarations_search,
         modelo_form,
         modelo_casilla_help,
         modelo_submit,

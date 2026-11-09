@@ -606,6 +606,8 @@ impl Models {
     /// of the store, then whether the router recorded in `router`, the llama-server's
     /// folder, presents the model. A model stored whole that the router does not present
     /// yet is absent, and with no router recorded there it reads `program_not_running`.
+    /// A model that states no llama.cpp context and has none recorded can never be
+    /// presented, so it reads not in this build before anything is fetched for it.
     /// Files only: no server is asked.
     pub fn observe_presented(
         &self,
@@ -614,6 +616,12 @@ impl Models {
         router: &Path,
     ) -> Observation {
         let stored = self.observe_quick(model, hardware);
+        if matches!(stored, Observation::Blocked(_)) {
+            return stored;
+        }
+        if !self.presentable(model) {
+            return Observation::Blocked(BlockedReason::NotInThisBuild);
+        }
         if stored != Observation::Present {
             return stored;
         }
@@ -707,6 +715,12 @@ impl Models {
             observation: Observation::Present,
             bytes,
         })
+    }
+
+    /// Whether the llama-server router can present `model`: it states a llama.cpp context,
+    /// or one is recorded for it in the models folder.
+    pub fn presentable(&self, model: &SelectedModel) -> bool {
+        model.llamacpp_context.is_some() || recorded_context(&self.root, model.name()).is_some()
     }
 
     /// Records the llama.cpp context `model` states, if it states one.

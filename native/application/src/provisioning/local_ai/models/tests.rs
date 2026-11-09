@@ -1242,9 +1242,9 @@ fn a_context_record_reads_back_is_replaced_and_refuses_what_it_cannot_hold() {
     );
 
     // A tag with a dot keeps it: `.json` is added, never put in its place.
-    let dotted = ModelName::parse("synthetic-text:1.5b").unwrap();
+    let dotted = ModelName::parse("synthetic-text:v1.5").unwrap();
     record_context(&root, &dotted, NonZeroU32::new(2048).unwrap()).unwrap();
-    assert!(file.with_file_name("1.5b.json").is_file());
+    assert!(file.with_file_name("v1.5.json").is_file());
     assert_eq!(recorded_context(&root, &dotted), context(2048));
     assert_eq!(recorded_context(&root, &name), context(8192));
 
@@ -1372,6 +1372,46 @@ fn a_pull_records_the_stated_context_also_for_a_model_already_stored_and_fetches
     assert_eq!(present.result.unwrap(), PRESENT);
     assert_eq!(recorded_context(&root, &vision), context(16384));
     assert_eq!(publishers.server.targets().len(), targets);
+}
+
+#[test]
+fn a_model_with_no_llamacpp_context_reads_not_in_this_build_before_anything_is_fetched() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path().join("models");
+    let router = directory.path().join("llama-server");
+    let hardware = Hardware::default();
+
+    // Neither stored nor stating a context: the router could never present it, so it is
+    // refused rather than planned as a download.
+    let models = stating(&root, TEXT, None);
+    let model = &models.selection().as_slice()[0];
+    assert!(!models.presentable(model));
+    assert_eq!(
+        models.observe_presented(model, &hardware, &router),
+        Observation::Blocked(BlockedReason::NotInThisBuild)
+    );
+
+    // Stating one, the same absent model is planned as a download.
+    let models = stating(&root, TEXT, Some(4096));
+    let model = &models.selection().as_slice()[0];
+    assert!(models.presentable(model));
+    assert_eq!(
+        models.observe_presented(model, &hardware, &router),
+        Observation::Absent
+    );
+
+    // A stored model with a recorded context but none stated still goes on to the router,
+    // which is not recorded here.
+    let name = ModelName::parse(TEXT).unwrap();
+    Stored::new(5).write(&root, TEXT);
+    record_context(&root, &name, NonZeroU32::new(2048).unwrap()).unwrap();
+    let models = stating(&root, TEXT, None);
+    let model = &models.selection().as_slice()[0];
+    assert!(models.presentable(model));
+    assert_eq!(
+        models.observe_presented(model, &hardware, &router),
+        Observation::Failed(FailureCategory::ProgramNotRunning)
+    );
 }
 
 #[test]

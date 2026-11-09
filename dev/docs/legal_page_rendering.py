@@ -23,7 +23,7 @@ from .legal_reference_routing import (
     legal_provision_designation,
     legal_reference_target,
 )
-from .locale_chrome import chrome_anchor, docs_chrome, docs_fragment, same_wording
+from .locale_chrome import chrome_anchor, docs_chrome, docs_fragment, markup_page, same_wording
 
 _DATE_FIELDS: Final[tuple[str, ...]] = (
     "published_at",
@@ -200,10 +200,14 @@ def _catalogue_record_fields(record: LegalProvisionRecord, language: OutputLangu
     if record.reviewed_at is not None:
         fields.append(f":{docs_chrome('docs.legal.record.reviewed_at', language)}: {record.reviewed_at.isoformat()}")
     if record.reviewed_by is not None:
-        fields.append(
-            f":{docs_chrome('docs.legal.record.reviewed_by', language)}: "
-            f"{same_wording(record.reviewed_by, language, as_source=lambda text: rst_provenance_text(text, record))}",
-        )
+        label = docs_chrome("docs.legal.record.reviewed_by", language)
+        # The reviewer's note carries inline literals the provenance styling
+        # adds, so the one compile renders it as markup on its own page.
+        with markup_page(legal_page_relpath(record.document_id).with_suffix("").as_posix()):
+            reviewer = same_wording(
+                record.reviewed_by, language, as_source=lambda text: rst_provenance_text(text, record)
+            )
+        fields.append(f":{label}: {reviewer}")
     return fields
 
 

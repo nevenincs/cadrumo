@@ -99,6 +99,7 @@ def test_casilla_funnels_to_a_search_record_with_provenance() -> None:
     assert re.fullmatch(r"casilla-record:[0-9a-f]{24}", record.id)
     assert not _PARSEABLE_CASILLA_RECORD_ID_RE.fullmatch(record.id)
     assert record.metadata.modelo == "303"
+    assert record.title == f"Modelo 303 · {records[0].descriptions[OutputLanguage.ES]}"  # type: ignore[attr-defined]
     assert record.metadata.casilla_id == records[0].casilla_id  # type: ignore[attr-defined]
     assert record.metadata.legal_refs  # provenance survived the funnel
     assert record.metadata.source_refs
@@ -117,7 +118,9 @@ def test_segmented_casilla_funnels_with_opaque_id_and_canonical_metadata() -> No
     assert record.id.startswith("casilla-record:")
     assert not _PARSEABLE_CASILLA_RECORD_ID_RE.fullmatch(record.id)
     assert "DP200014:00562" not in record.id
-    assert record.title == "Modelo 200 · casilla DP200014:00562"
+    expected_label = segmented.descriptions[OutputLanguage.ES]  # type: ignore[attr-defined]
+    assert record.title == f"Modelo 200 · {expected_label}"
+    assert "DP200014:00562" not in record.title
     # The target deep-links to the per-modelo casilla reference page and the
     # casilla's page-local anchor (the id-folding slug), never the retired
     # search-for-itself query string. Both come from the ONE slug authority the
