@@ -25,6 +25,8 @@ from ....application.operations.persistence.journal import (
     OperationObservationUnknownOperationError,
     OperationPersistedSnapshot,
     OperationProgressFoldInput,
+    OperationRecoveryInventoryDelta,
+    OperationRecoveryInventoryDeltaReader,
     OperationRecoveryInventoryDisposition,
     OperationRecoveryInventoryEntry,
     OperationRecoveryInventoryPage,
@@ -264,6 +266,30 @@ class SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
                 entries=tuple(entries),
                 next_cursor=page_ids[-1] if page_ids else request.after,
                 has_more=len(selected) > request.limit,
+            )
+
+    def inventory_delta(self, known: frozenset[OperationId]) -> OperationRecoveryInventoryDelta:
+        """Name every present record and classify the ones outside ``known``, in one exclusion.
+
+        One directory scan replaces a page-by-page inventory for a caller that
+        already classified most records: a record's definition is fixed when it
+        is created, so only records it has not seen need to be read.
+        """
+        if not self._validate_existing_root():
+            return OperationRecoveryInventoryDelta(present=frozenset(), entries=())
+        with exclusive_file_lock(self.lock_target):
+            try:
+                paths = scan_directory(self.root, pattern="*.json", require_root=True)
+            except OSError as exc:
+                raise RepositoryError("cannot scan operation journal inventory") from exc
+            present = self._inventory_operation_ids(paths)
+            return OperationRecoveryInventoryDelta(
+                present=frozenset(present),
+                entries=tuple(
+                    self._recovery_inventory_entry(operation_id)
+                    for operation_id in sorted(present)
+                    if operation_id not in known
+                ),
             )
 
     def _inventory_operation_ids(self, paths: Iterable[Path]) -> list[OperationId]:
@@ -635,7 +661,9 @@ class SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
         validate_advance(current, snapshot, expected_revision)
 
 
-class OperationJournalRepository(OperationJournal, OperationEventStream, OperationObservationReader):
+class OperationJournalRepository(
+    OperationJournal, OperationRecoveryInventoryDeltaReader, OperationEventStream, OperationObservationReader
+):
     """Async operation-journal port over the atomic filesystem substrate.
 
     Every port call runs the synchronous substrate -- its lock wait and its
@@ -662,6 +690,11 @@ class OperationJournalRepository(OperationJournal, OperationEventStream, Operati
         """Read one bounded startup page without blocking the event loop."""
         request = _OperationInventoryRequest(after=after, limit=limit)
         return await asyncio.to_thread(self._repository.inventory_page, request)
+
+    @override
+    async def inventory_delta(self, *, known: frozenset[OperationId]) -> OperationRecoveryInventoryDelta:
+        """List every record and classify the unknown ones without blocking the event loop."""
+        return await asyncio.to_thread(self._repository.inventory_delta, known)
 
     @override
     async def resolve_idempotency(self, claim: OperationIdempotencyClaim) -> str | None:

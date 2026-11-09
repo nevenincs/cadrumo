@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable, Mapping
 from copy import deepcopy
 from dataclasses import dataclass, field
@@ -123,11 +124,32 @@ REGISTRY_SERIALIZER = RegistrySerializerMemo()
 def registry_payload(snapshot: RegistrySnapshot) -> dict[str, object]:
     """Serialize a registry snapshot to a JSON-mode mapping.
 
-    ``snapshot`` is a :class:`RegistrySnapshot`.
+    ``snapshot`` is a :class:`RegistrySnapshot`. Each call returns a mapping of
+    its own; the serialization is computed once per live snapshot object and
+    serializer, and later calls rebuild an equal mapping from it.
     """
-    return _STRING_MAPPING_ADAPTER.validate_python(
-        REGISTRY_SERIALIZER.serializer().to_python(snapshot, mode="json", by_alias=False, exclude_computed_fields=True)
+    serializer = REGISTRY_SERIALIZER.serializer()
+    return VERIFIED_REGISTRY.registry_payload(
+        snapshot,
+        serializer,
+        lambda: _STRING_MAPPING_ADAPTER.validate_python(
+            serializer.to_python(snapshot, mode="json", by_alias=False, exclude_computed_fields=True)
+        ),
     )
+
+
+def _reproducible_json(payload: dict[str, object]) -> str | None:
+    """Encode ``payload`` when decoding the text gives back an equal mapping, else ``None``.
+
+    A JSON-mode serialization holds only JSON values, but anything the text
+    would not give back unchanged -- a tuple, a non-finite number -- keeps the
+    payload out of the memo rather than altering what a later call returns.
+    """
+    try:
+        encoded = json.dumps(payload, ensure_ascii=False, allow_nan=False, separators=(",", ":"))
+    except (TypeError, ValueError):
+        return None
+    return encoded if json.loads(encoded) == payload else None
 
 
 type _LabelIdentity = tuple[tuple[str, str], ...]
@@ -155,6 +177,7 @@ class _SnapshotDigests:
     snapshot: ReferenceType[RegistrySnapshot]
     registry_digest: str | None = None
     rendering_digests: dict[_RenderingDigestKey, str] = field(default_factory=dict)
+    registry_payload: tuple[SchemaSerializer, str] | None = None
 
 
 class VerifiedRegistryMemo:
@@ -256,6 +279,32 @@ class VerifiedRegistryMemo:
             if len(digests.rendering_digests) < _MAX_RENDERING_DIGESTS_PER_SNAPSHOT:
                 digests.rendering_digests[key] = digest
         return digest
+
+    def registry_payload(
+        self,
+        snapshot: RegistrySnapshot,
+        serializer: SchemaSerializer,
+        compute: Callable[[], dict[str, object]],
+    ) -> dict[str, object]:
+        """Return a fresh JSON-mode mapping of a :class:`RegistrySnapshot` under ``serializer``.
+
+        Every saved revision of a declaration embeds the same snapshot, and a
+        catalogue write serializes each of them again. The serialization is kept
+        as JSON text for the snapshot object and the serializer it came from, and
+        each later call decodes its own mapping from that text, so no caller
+        shares or can alter what another receives.
+        """
+        digests = self._digests_of(snapshot)
+        if digests is None:
+            return compute()
+        held = digests.registry_payload
+        if held is not None and held[0] is serializer:
+            return _STRING_MAPPING_ADAPTER.validate_python(json.loads(held[1]))
+        payload = compute()
+        encoded = _reproducible_json(payload)
+        if encoded is not None:
+            digests.registry_payload = (serializer, encoded)
+        return payload
 
     def _digests_of(self, snapshot: RegistrySnapshot) -> _SnapshotDigests | None:
         key = id(snapshot)
