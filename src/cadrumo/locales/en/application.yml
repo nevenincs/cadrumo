@@ -2144,6 +2144,8 @@ application:
         a linked purchase invoice. Link the invoice to the entry, then run aeat app
         modelo work verify again: the check refuses to complete while a deductible
         entry has no invoice, so the draft is still open and picks the document up.'
+      detail_row_identity_conflict: A detail row you entered does not match the row
+        your records give for the same declarant; correct or remove it before calculating.
       export_cross_bucket_refused: The addressed revision belongs to a bucket other
         than the active profile bucket. Switch profile before exporting.
       export_draft_approval_failed: Could not approve the draft for calculation revision
@@ -2320,6 +2322,8 @@ application:
         unusable rows: %{malformed_rows}'
       m036_declaration_profile_bucket_mismatch: The M036 declaration names a different
         profile than the bucket it would be recorded in
+      m200_accounting_result_required: Modelo 200 needs the year's accounting result
+        before it can be calculated from the ledger.
       m210_ledger_manual_agrupacion_rows: Modelo 210 in records mode derives the annual
         grouped-renta rows from the classifications in your records; do not provide
         manual agrupacion-renta rows.
@@ -2336,6 +2340,8 @@ application:
         Run `aeat app modelo work attest-m303-exonerado-390 --year %{filing_year}
         --period %{period} --observed-at TIMESTAMP` to record it, then retry the calculation.'
       m303_filing_evidence_invalid: Modelo 303 filing-instance evidence failed validation.
+      m349_operator_rows_required: This period's ledger has intra-community operations
+        without their Modelo 349 operator rows; add them before calculating.
       novel_source_kind_rejected: 'Unrecognized calculation source kind(s) %{novel_source_kinds}
         on version %{revision_id}: the modelo definitions declare a value source that
         no calculation resolver handles. Add a resolver or mark it as deferred before
@@ -2389,6 +2395,8 @@ application:
       revision_pick_explicit_id_required: Explicit revision picks require calculation_revision_id.
       revision_pick_id_requires_explicit_selector: calculation_revision_id is only
         valid with the explicit revision selector.
+      source_owned_binding_override: You entered a value in a box that comes from
+        your records; remove it or correct the record it comes from.
       verification_report_not_found: No check report found with id=%{verification_report_id}.
       work_period_token_invalid: '--period ''%{token}'' is not a valid period token
         for modelo %{modelo}. Pass --year %{year} separately and use one of: %{tokens}.'
@@ -2730,6 +2738,7 @@ application:
         filed (%{blocking_period} %{blocking_filing_year}) has used this starting
         compensation basis. Changing it would alter a declaration recorded as filed.'
       next_step:
+        open: Open the IVA balance
         open_opening_balance: Record the opening IVA balance for %{modelo}, %{period}
       override_fresh_wallet_blocked: 'Override refused: a current AEAT wallet reading
         already resolves Modelo 303 %{period} %{filing_year}. Fresh AEAT evidence
@@ -2813,6 +2822,7 @@ application:
         create_work: Create %{modelo}, %{period}
         open_movement: Open the movement in the Ledger
         open_work: Open %{modelo}, %{period}
+        verify_work: Check %{modelo}, %{period}
       no_m130_revisions: The Modelo 130 declarations for filing year %{year} have
         not been calculated yet, so there is nothing to base an estimate of the annual
         return on. Calculate a quarter, then ask for the estimate again.

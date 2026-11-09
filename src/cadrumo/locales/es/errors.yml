@@ -298,8 +298,8 @@ errors:
       importada. Comprueba los valores de las casillas y la referencia de evidencia.
     error_modelo_filing_record_not_found: No se encontró la declaración registrada
       solicitada.
-    error_modelo_iva_wallet_reconciliation_blocked: 'El cálculo del Modelo 303 está
-      bloqueado: se requiere la reconciliación de la cartera de IVA'
+    error_modelo_iva_wallet_authority_unavailable: No se pudo leer el registro que
+      el Saldo de IVA necesita para este periodo.
     error_modelo_metadata_run: La operación sobre los metadatos del trabajo no devolvió
       un resultado confirmado. Consulta su identificador antes de volver a intentarlo.
     error_modelo_verification_outcome_incomplete: 'La verificación de esta revisión
@@ -1301,6 +1301,8 @@ errors:
       (campo 114) debe ser el titular de la cuenta que elegiste.
     refused_modelo_360_solicitud_undeclared: No hay ninguna solicitud del Modelo 360
       declarada para {filing_year}.
+    refused_modelo_aggregation_input_conflict: Un dato que has introducido contradice
+      lo que dan tus registros; corrígelo antes de calcular.
     refused_modelo_amendment_complementaria_liability_decrease: Una complementaria
       no puede disminuir legalmente la deuda declarada antes de la unificación de
       la autoliquidación rectificativa. Utiliza el procedimiento de solicitud de rectificación
@@ -1340,6 +1342,9 @@ errors:
       plazos: hace falta un resultado a ingresar que deje un segundo plazo de al menos
       un céntimo, que no sea rectificativa y se presente dentro de plazo y, si domicilias
       el segundo plazo, una cuenta española tuya.'
+    refused_modelo_iva_wallet_reconciliation_blocked: 'El Modelo 303 no puede calcularse
+      hasta que la compensación de periodos anteriores tenga respaldo: regístrala
+      en el Saldo de IVA.'
     refused_modelo_ledger_evidence_recapture: No se puede volver a agrupar la evidencia
       de esta declaración porque los apuntes contables que la sustentan han cambiado
       desde que se selló. Vuelve a calcular la declaración; la recaptura solo recoge
@@ -1367,6 +1372,8 @@ errors:
       tiene un campo de tipo de declaración, pero Cadrumo aún no tiene un juego de
       códigos fundamentado para él, así que el resultado no puede presentarse sin
       adivinar ese campo.
+    refused_modelo_revision_not_sealed: Esta declaración aún no está comprobada; compruébala
+      antes de exportarla o de sacar su informe.
     refused_modelo_stored_row_field_input: La revisión de cálculo {calculation_revision_id}
       guarda un único valor de entrada para las casillas {casilla_ids}, que toman
       un valor por cada fila de detalle. Vuelve a calcular la unidad de trabajo {work_unit_id}

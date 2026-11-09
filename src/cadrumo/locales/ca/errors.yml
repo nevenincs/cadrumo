@@ -301,8 +301,8 @@ errors:
       importada. Comprova els valors de les caselles i la referència d'evidència.
     error_modelo_filing_record_not_found: No s'ha trobat la declaració registrada
       sol·licitada.
-    error_modelo_iva_wallet_reconciliation_blocked: 'El càlcul del Model 303 està
-      bloquejat: cal la reconciliació de la cartera d''IVA'
+    error_modelo_iva_wallet_authority_unavailable: No s'ha pogut llegir el registre
+      que el Saldo d'IVA necessita per a aquest període.
     error_modelo_metadata_run: L’operació sobre les metadades del treball no ha retornat
       cap resultat confirmat. Consulta’n l’identificador abans de tornar-ho a provar.
     error_modelo_verification_outcome_incomplete: 'La verificació d''aquesta revisió
@@ -1310,6 +1310,8 @@ errors:
       (camp 114) ha de ser el titular del compte que has triat.
     refused_modelo_360_solicitud_undeclared: No hi ha cap sol·licitud del Model 360
       declarada per a {filing_year}.
+    refused_modelo_aggregation_input_conflict: Una dada que has introduït contradiu
+      el que donen els teus registres; corregeix-la abans de calcular.
     refused_modelo_amendment_complementaria_liability_decrease: Una complementària
       no pot disminuir legalment el deute declarat abans de la unificació de l'autoliquidació
       rectificativa. Utilitza el procediment de sol·licitud de rectificació per a
@@ -1349,6 +1351,9 @@ errors:
       terminis: cal un resultat a ingressar que deixi un segon termini d''almenys
       un cèntim, que no sigui rectificativa i es presenti dins de termini i, si domicilies
       el segon termini, un compte espanyol teu.'
+    refused_modelo_iva_wallet_reconciliation_blocked: 'El Model 303 no es pot calcular
+      fins que la compensació de períodes anteriors tingui suport: registra-la al
+      Saldo d''IVA.'
     refused_modelo_ledger_evidence_recapture: No es pot tornar a agrupar l'evidència
       d'aquesta declaració perquè els assentaments comptables que la sustenten han
       canviat des que es va segellar. Torna a calcular la declaració; la recaptura
@@ -1376,6 +1381,8 @@ errors:
       model té un camp de tipus de declaració, però Cadrumo encara no té un joc de
       codis fonamentat per a aquest camp, així que el resultat no es pot presentar
       sense endevinar-lo.
+    refused_modelo_revision_not_sealed: Aquesta declaració encara no està comprovada;
+      comprova-la abans d'exportar-la o de treure'n l'informe.
     refused_modelo_stored_row_field_input: La revisió de càlcul {calculation_revision_id}
       desa un únic valor d'entrada per a les caselles {casilla_ids}, que prenen un
       valor per cada fila de detall. Torna a calcular la unitat de treball {work_unit_id}
