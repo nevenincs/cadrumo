@@ -169,7 +169,7 @@ export type LedgerRatiosUnsetResult = {
 // ---- Counterparties ------------------------------------------------------
 
 export type LedgerCounterpartyRequest = {
-  action: "view" | "confirm" | "withdraw";
+  action: "view" | "confirm" | "withdraw" | "provincia";
   tax_identifier: string;
   country_code?: string | null;
   territorial_scope?: string | null;
@@ -177,11 +177,16 @@ export type LedgerCounterpartyRequest = {
   evidenced_scope?: string | null;
   note?: string;
   asserted_by?: string | null;
+  /** The INE code of the province of its domicilio fiscal; only with the provincia action. */
+  provincia_code?: string | null;
 };
+
+/** One province or autonomous city, by its INE code and the name INE prints. */
+export type CounterpartyProvinciaChoice = { code: string; name: string };
 
 export type LedgerCounterpartyResult = {
   profile_id: string;
-  action: "view" | "confirm" | "withdraw";
+  action: "view" | "confirm" | "withdraw" | "provincia";
   tax_identifier: string;
   country_code: string | null;
   evidenced_scope: string | null;
@@ -194,6 +199,7 @@ export type LedgerCounterpartyResult = {
     asserted_by: string;
     asserted_at: string;
     note: string;
+    provincia_code: string | null;
   } | null;
   /** What the ledger answers for it now, and where each answer comes from. */
   resolution: {
@@ -209,6 +215,10 @@ export type LedgerCounterpartyResult = {
   withdrawn: boolean | null;
   changed: boolean;
   conflict_context: [string, string][] | null;
+  /** The provincia stated for the counterparty, served by a view. */
+  provincia_code: string | null;
+  /** The provinces it can be stated as, in INE code order; empty on a confirm or withdraw. */
+  provincia_choices: CounterpartyProvinciaChoice[];
 };
 
 // ---- Model diagnostics ---------------------------------------------------

@@ -52,6 +52,7 @@ from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.iva_wallet_carry_targets import revision_offers_iva_wallet
 from ...domain.calculations.registry.schema_form_layouts import FormContextFieldBlock, FormLayoutDefinition
 from ...domain.deadlines.effective_close import resolve_effective_filing_deadline
+from ...domain.iva.refund_eligibility import RedemeEnrolmentState, redeme_enrolment_state
 from ...domain.modelos.calculation_revision import (
     FILED_REVISION_STATES,
     SEALED_REVISION_STATES,
@@ -69,6 +70,7 @@ from ...domain.user_profile.errors import ProfileSchemaValidationError
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..aggregation.renta_imputation import revision_reads_imputation_criterion
 from ..live.borrador_100_import import borrador_pdf_extraction_profile
+from ..user_profile.projections import declared_redeme_enrolment, profile_path_values_for_bucket
 from .calculation_note_gate import (
     NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
     calculation_filed_before_grade_cap,
@@ -225,6 +227,16 @@ def _known_profile_truths(
     except RegistryValidationError:
         return dict[BindingId, bool]()
     return dict(resolution.boolean_binding_values)
+
+
+def _redeme_enrolment(bucket_id: BucketId) -> RedemeEnrolmentState:
+    """The filer's stated inscription in the Registro de devolución mensual.
+
+    A profile that cannot be read, or one that has not answered, stays
+    unstated: the form then offers only the disposition that is lawful whatever
+    the answer, and says which fact the refund needs.
+    """
+    return redeme_enrolment_state(declared_redeme_enrolment(profile_path_values_for_bucket(str(bucket_id))))
 
 
 def _aeat_data_imported_at(
@@ -411,6 +423,7 @@ def load_modelo_work_form(
         calculation_diagnostics=CALCULATION_NOTES.diagnostics_for(review.work_unit_id, review.calculation_revision_id),
         element_names=read_element_names(activity_assets),
         known_truths=_known_profile_truths(snapshot, bucket_id, operation=operation),
+        redeme=_redeme_enrolment(bucket_id),
         producer_values=_profile_context_values(
             layout, snapshot, review.lifecycle_state, bucket_id=bucket_id, operation=operation
         ),

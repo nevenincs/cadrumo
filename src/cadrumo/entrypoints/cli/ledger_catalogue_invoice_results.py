@@ -191,6 +191,18 @@ class CatalogueInvoiceRemovePayload(CatalogueInvoiceRecordPayload):
     """
 
 
+class CatalogueInvoiceDocumentAttachPayload(OutputSchema):
+    """JSON envelope for ``aeat app ledger invoice attach-document``.
+
+    Names the invoice, the content address of the document now held as its
+    source, and whether that document was already recorded for it.
+    """
+
+    invoice_id: Hex64Str
+    attachment_id: Hex64Str
+    already_linked: bool
+
+
 class CatalogueInvoiceListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger invoice list``.
 
@@ -237,6 +249,7 @@ class CatalogueInvoiceImportResult(OutputSchema):
 __all__ = [
     "BulkInvoiceImportRowFailurePayload",
     "CatalogueInvoiceCreatePayload",
+    "CatalogueInvoiceDocumentAttachPayload",
     "CatalogueInvoiceImportResult",
     "CatalogueInvoiceListResult",
     "CatalogueInvoiceRecordPayload",

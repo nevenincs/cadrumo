@@ -171,10 +171,15 @@ def test_machine_secret_and_profile_authentication_metadata_matches_live_project
         if node.machine_secret_payloads:
             secret_paths.add(path)
     # Interactive profile-authentication metadata is projected separately;
-    # these are the seven commands with machine-secret payload contracts.
+    # these are the twelve commands with machine-secret payload contracts.
     assert secret_paths == {
         ("aeat", "app", "ledger", "account", "add"),
         ("aeat", "app", "ledger", "account", "update"),
+        ("aeat", "app", "ledger", "invoice", "duplicate"),
+        ("aeat", "app", "ledger", "invoice", "preview"),
+        ("aeat", "app", "ledger", "rule", "trial"),
+        ("aeat", "app", "ledger", "split-check"),
+        ("aeat", "app", "ledger", "staged-check"),
         ("aeat", "app", "modelo", "m360", "declare"),
         ("aeat", "config", "login"),
         ("aeat", "config", "logout"),

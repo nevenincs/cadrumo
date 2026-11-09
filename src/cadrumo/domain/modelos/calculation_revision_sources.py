@@ -198,7 +198,12 @@ class CalculationNoteSentence(StrEnum):
     WITHHOLDING_INVOICE_INCOMPLETE = "withholding_invoice_incomplete"
     """A received invoice states a retención and lacks the supplier's NIF or a euro value."""
     M347_PROVINCIA_UNRECORDED = "m347_provincia_unrecorded"
-    """Modelo 347 records of Spanish counterparts whose provincia code no record states."""
+    """Modelo 347 records of Spanish counterparts whose provincia code no record states, listed together.
+
+    Read only from revisions calculated before each counterpart was named on its own.
+    """
+    M347_PROVINCIA_UNSTATED = "m347_provincia_unstated"
+    """One Spanish Modelo 347 declarado whose provincia the person has not stated for the counterparty."""
 
 
 GRADE_CAP_NOTE_SENTENCES: Final[Mapping[BindingGradeCapReason, CalculationNoteSentence]] = MappingProxyType(

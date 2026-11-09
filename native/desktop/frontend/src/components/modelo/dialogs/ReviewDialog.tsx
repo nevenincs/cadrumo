@@ -49,6 +49,11 @@ function effectWords(
     case "clear_declared_value":
       return t("workspace.modelo.review.effect.clear");
     case "restore_source_value":
+      return t(
+        edit.intent.change === "remove"
+          ? "workspace.modelo.review.effect.remove"
+          : "workspace.modelo.review.effect.restore",
+      );
     case "remove_override":
       return t("workspace.modelo.review.effect.restore");
     case "attest_no_amount":

@@ -20,6 +20,10 @@ The probe starts programs from the package, never from a checkout:
 * The generic interpreter image clears every name only the agent image admits, sets the declared ``PATH``
   and pins the storage root to the command line's own built-in default.
 
+The probe's own root is a fresh folder in a per-user folder (the ``Temp`` folder of ``LOCALAPPDATA`` on Windows,
+the user's cache folder elsewhere), not the inherited ``TEMP`` that a test run points into its build tree: the
+agent refuses a hosted root inside a Git project, so the probe refuses a base inside one before it starts anything.
+
 An earlier refusal of the gateway (the stores, the proof policy, the frame) means the probe's set-up is wrong
 and is reported as such. Every program started has a hard timeout and is killed with its whole tree.
 """
@@ -718,6 +722,36 @@ def _platform() -> str:
     return {"win32": "windows", "darwin": "macos"}.get(sys.platform, "linux")
 
 
+def git_project(path: Path) -> Path | None:
+    """The nearest folder at or above ``path`` that holds a ``.git`` entry, or ``None``."""
+    for folder in (path, *path.parents):
+        if (folder / ".git").exists():
+            return folder
+    return None
+
+
+def probe_base() -> Path:
+    """The per-user folder the probe makes its own root in, refused when it lies inside a Git project."""
+    platform = _platform()
+    if platform == "windows":
+        local = os.environ.get("LOCALAPPDATA", "")
+        if local == "":
+            raise SetupError("LOCALAPPDATA is not set, so the probe has no per-user temporary folder")
+        base = Path(local) / "Temp"
+    elif platform == "macos":
+        base = Path.home() / "Library" / "Caches"
+    else:
+        base = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache")
+    base = base.resolve()
+    project = git_project(base)
+    if project is not None:
+        raise SetupError(
+            f"the probe's temporary folder {base} is inside the Git project {project}, "
+            "where the agent refuses a hosted root"
+        )
+    return base
+
+
 async def run_probe(
     package: Path,
     document: Mapping[str, Any],
@@ -725,11 +759,14 @@ async def run_probe(
     launcher: Launcher | None = None,
     names: AgentNames | None = None,
     timeout: float = FIRST_LINE_SECONDS,
+    base: Path | None = None,
 ) -> list[Result]:
     """Run every check and return one result each; a failing check does not stop the others."""
     contract = read_contract(package, document)
     resolved = installed_agent_names() if names is None else names
-    with tempfile.TemporaryDirectory(prefix="cadrumo-launch-probe-", ignore_cleanup_errors=True) as directory:
+    base = probe_base() if base is None else base
+    base.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="cadrumo-launch-probe-", dir=base, ignore_cleanup_errors=True) as directory:
         probe = Probe(contract, resolved, launcher or Launcher(), Path(directory), timeout=timeout)
         results: list[Result] = []
         checks = (
@@ -752,7 +789,11 @@ def main(arguments: Sequence[str], *, launcher: Launcher | None = None, names: A
     """Probe the package named first with the contract named second; exit 0 when every check holds."""
     package = Path(arguments[0]).resolve(strict=True)
     document = json.loads(Path(arguments[1]).read_text(encoding="utf-8"))
-    results = asyncio.run(run_probe(package, document, launcher=launcher, names=names))
+    try:
+        results = asyncio.run(run_probe(package, document, launcher=launcher, names=names))
+    except SetupError as failure:
+        sys.stdout.write(f"FAIL set-up: {failure}\n")
+        return 1
     failed = False
     for result in results:
         if result.failure is None:

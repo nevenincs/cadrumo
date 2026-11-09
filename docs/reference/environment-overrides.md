@@ -235,6 +235,8 @@ Each profile belongs to one program. The host validates a launch parameter again
 - **Sets itself:** `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root
 - **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; those of the usual installation directories that exist (`%USERPROFILE%\.local\bin` on Windows, `%USERPROFILE%\scoop\shims` on Windows, `%APPDATA%\npm` on Windows, `$HOME/.local/bin` on Linux and macOS, `/usr/local/bin` on Linux and macOS and `/opt/homebrew/bin` on macOS); the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
 
+To sign in by hand when the desktop application's sign-in fails, run `aeat config provider-login --provider <provider>`; see [Sign in to an AI provider by hand](../how-to/sign-in-to-an-ai-provider-by-hand.md).
+
 ### Names only the package declares
 
 The settings table above does not list these names.
