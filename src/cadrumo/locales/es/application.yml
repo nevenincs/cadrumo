@@ -995,6 +995,21 @@ application:
         anterior es cero en el primer período de IVA registrado.
       first_period_zero_local_recurrence: Un cero local inicial establece que no existe
         compensación anterior en el primer período de IVA registrado.
+      local_calculation_calculation_grade: El Modelo 303 anterior solo está calculado
+        aquí, no presentado; su saldo a compensar se arrastra a nivel de cálculo hasta
+        que lo confirmen la cartera de la AEAT, la declaración presentada o el importe
+        que registres.
+      local_calculation_only: El saldo a compensar del Modelo 303 anterior solo procede
+        de tu propio cálculo. Para verificar, presentar o exportar, registra en el
+        Saldo de IVA la cartera de la AEAT, la declaración presentada o el importe
+        que declaró.
+      local_calculation_redeme_unstated: El Modelo 303 anterior está calculado pero
+        no presentado, y no consta si estás inscrito en el Registro de devolución
+        mensual (REDEME), así que no se sabe si su saldo se compensa. Indica tu inscripción
+        en el REDEME o registra en el Saldo de IVA lo que declaró esa autoliquidación.
+      local_calculation_refund_undecided: El Modelo 303 anterior está calculado pero
+        no presentado, y en ese periodo puedes pedir la devolución en lugar de compensar
+        (art. 115 LIVA). Registra en el Saldo de IVA lo que declaró esa autoliquidación.
       local_evidence_unreadable: Existe un registro anterior del Modelo 303, pero
         no puede leerse como prueba de compensación anterior y no hay ninguna observación
         disponible de la cartera de la AEAT.
@@ -2248,7 +2263,9 @@ application:
       cross_period_clean_state_incomplete: La prueba de estado limpio entre periodos
         está incompleta para el modelo {modelo} {period} {filing_year}; quedan {finding_count}
         incidencia(s).
-      cross_period_sources_not_filed: 'El %{modelo_words} de %{year} suma las declaraciones de su ejercicio y aún le faltan: %{sources}. Cuando estén presentadas, vuelve a calcularlo.'
+      cross_period_sources_not_filed: 'El %{modelo_words} de %{year} suma las declaraciones
+        de su ejercicio y aún le faltan: %{sources}. Cuando estén presentadas, vuelve
+        a calcularlo.'
       deductible_iva_evidence_missing: 'Los apuntes con IVA deducible de tus registros
         requieren una factura de compra vinculada. Vincula la factura al apunte y
         vuelve a ejecutar aeat app modelo work verify: la comprobación no se completa

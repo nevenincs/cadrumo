@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import UTC, datetime
 from decimal import Decimal
 from types import SimpleNamespace
@@ -57,9 +58,13 @@ _CALCULATION_PORTS = cast(CalculationActionPorts, object())
 
 
 def _unused_calculation_ports(
-    *, bucket_id: str, operation: PinnedAuthorityOperation, profile_record: object | None = None
+    *,
+    bucket_id: str,
+    operation: PinnedAuthorityOperation,
+    profile_record: object | None = None,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> CalculationActionPorts:
-    del bucket_id, operation, profile_record
+    del bucket_id, operation, profile_record, mutation_writer
     pytest.fail("access resolution must not build calculation ports")
 
 
@@ -300,8 +305,13 @@ def test_executor_passes_exact_bucket_and_owner_authority_and_stores_closed_proj
     factory_calls: list[tuple[str, PinnedAuthorityOperation]] = []
 
     def factory(
-        *, bucket_id: str, operation: PinnedAuthorityOperation, profile_record: object | None = None
+        *,
+        bucket_id: str,
+        operation: PinnedAuthorityOperation,
+        profile_record: object | None = None,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
     ) -> CalculationActionPorts:
+        del mutation_writer
         assert profile_record is None
         factory_calls.append((bucket_id, operation))
         return _CALCULATION_PORTS
@@ -423,8 +433,13 @@ def test_executor_requires_exact_active_profile_before_comparison() -> None:
     calls: list[str] = []
 
     def factory(
-        *, bucket_id: str, operation: PinnedAuthorityOperation, profile_record: object | None = None
+        *,
+        bucket_id: str,
+        operation: PinnedAuthorityOperation,
+        profile_record: object | None = None,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
     ) -> CalculationActionPorts:
+        del mutation_writer
         del operation, profile_record
         calls.append(bucket_id)
         return _CALCULATION_PORTS

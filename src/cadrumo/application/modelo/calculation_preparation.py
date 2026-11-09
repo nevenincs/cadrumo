@@ -45,6 +45,7 @@ from ...domain.calculations.registry.schema import (
 )
 from ...domain.deadlines.models import IVARegime
 from ...domain.modelos.calculation_revision_sources import CalculationSourceRef
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.period import calculation_filing_date
@@ -69,6 +70,7 @@ from .iva_wallet_gate import (
     iva_wallet_door,
     resolve_iva_compensation_decision_for_calculation,
 )
+from .iva_wallet_prior_period import CataloguePriorModeloCalculations
 from .iva_wallet_values import taxpayer_nif_from_path_values
 from .lifecycle_clock_gate import (
     ModeloLifecycleClockOperation,
@@ -150,6 +152,7 @@ def prepare_calculation(
     work_unit_id: str,
     evaluated_at: datetime,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     casilla_inputs: Mapping[CasillaId, Decimal],
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None,
     ledger_preflight_transaction_repository: TransactionCatalogueRepositoryProtocol,
@@ -243,6 +246,11 @@ def prepare_calculation(
             backend_casilla_inputs=backend_casilla_inputs,
             operation=operation,
             profile_values=profile_values,
+            prior_calculations=CataloguePriorModeloCalculations(
+                work_units=work_units,
+                calculation_repository=calculation_repository,
+                operation=operation,
+            ),
         )
         _apply_iva_compensation_decision_binding(
             work_unit.modelo,

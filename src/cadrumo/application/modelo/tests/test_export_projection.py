@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -224,14 +225,20 @@ def test_fichero_boe_receipt_preserves_neutral_optional_provenance() -> None:
 
 
 def _unused_ports_factory(
-    *, bucket_id: str, m303_rectificativa_taxpayer_tax_id: SubjectTaxId, operation: PinnedAuthorityOperation
+    *,
+    bucket_id: str,
+    m303_rectificativa_taxpayer_tax_id: SubjectTaxId,
+    operation: PinnedAuthorityOperation,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> ModeloExportPorts:
-    del bucket_id, m303_rectificativa_taxpayer_tax_id
+    del bucket_id, m303_rectificativa_taxpayer_tax_id, operation, mutation_writer
     raise AssertionError("registration must not construct export ports")
 
 
-def _unused_signing_keypair(*, bucket_id: str) -> ReviewPackageSigningKeypairCapability:
-    del bucket_id
+def _unused_signing_keypair(
+    *, bucket_id: str, mutation_writer: Callable[[Callable[[], None]], None] | None = None
+) -> ReviewPackageSigningKeypairCapability:
+    del bucket_id, mutation_writer
     raise AssertionError("registration must not open the signing key")
 
 

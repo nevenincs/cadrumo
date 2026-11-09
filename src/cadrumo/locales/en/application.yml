@@ -933,6 +933,20 @@ application:
         is zero in the first recorded IVA period.
       first_period_zero_local_recurrence: An initial local zero establishes that no
         previous compensación exists in the first recorded IVA period.
+      local_calculation_calculation_grade: The previous Modelo 303 is only calculated
+        here, not filed; its credit is carried at calculation grade until the AEAT
+        wallet, the filed return or the amount you record for it confirms it.
+      local_calculation_only: The credit carried from the previous Modelo 303 comes
+        only from your own calculation of it. To check, file or export, record in
+        the IVA balance the AEAT wallet, the filed return or the amount it declared.
+      local_calculation_redeme_unstated: The previous Modelo 303 is calculated but
+        not filed, and whether you are in the monthly refund register (REDEME) is
+        not stated, so it is not known whether its credit carries forward. State your
+        REDEME inscription or record in the IVA balance what that return declared.
+      local_calculation_refund_undecided: The previous Modelo 303 is calculated but
+        not filed, and its period lets you ask for a refund instead of carrying the
+        credit forward (LIVA art. 115). Record in the IVA balance what that return
+        declared.
       local_evidence_unreadable: A previous Modelo 303 record exists, but it cannot
         be read as evidence of credit carried forward and no AEAT wallet observation
         is available.
@@ -2139,7 +2153,9 @@ application:
         boxes and cannot be overridden by an external value. Affected boxes: %{computed}.'
       cross_period_clean_state_incomplete: Cross-period clean-state proof is incomplete
         for modelo {modelo} {period} {filing_year}; {finding_count} issue(s) remain.
-      cross_period_sources_not_filed: '%{modelo_words} %{year} adds up the declarations of its year, and these are not filed yet: %{sources}. Once they are filed, calculate it again.'
+      cross_period_sources_not_filed: '%{modelo_words} %{year} adds up the declarations
+        of its year, and these are not filed yet: %{sources}. Once they are filed,
+        calculate it again.'
       deductible_iva_evidence_missing: 'Deductible IVA entries in your records require
         a linked purchase invoice. Link the invoice to the entry, then run aeat app
         modelo work verify again: the check refuses to complete while a deductible
