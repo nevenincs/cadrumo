@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import logging
+
 from ...core.logging import get_logger
-from ...core.operations import OperationLifecycle, OperationTerminalCondition
+from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from .models import OperationTerminalReceipt
 from .persistence.events import OperationEvent
 from .persistence.journal import OperationPersistedSnapshot
@@ -32,14 +34,28 @@ def settlement_successor(
     )
 
 
+def settlement_log_level(condition: OperationTerminalCondition, effect: OperationEffect) -> int:
+    """Return the level for a settled operation from its typed condition and effect.
+
+    A success, or a refusal that changed nothing, is an outcome the operator
+    asked for or was told about. Every other settlement, including a refusal
+    whose effect is applied, partial or unknown, needs a log reader's attention.
+    """
+    if condition is OperationTerminalCondition.SUCCEEDED:
+        return logging.INFO
+    if condition is OperationTerminalCondition.REFUSED and effect is OperationEffect.NONE:
+        return logging.INFO
+    return logging.WARNING
+
+
 def log_settlement(receipt: OperationTerminalReceipt, *, cause: str) -> None:
     """Name every settled operation once, so a log reader can match it to what a frontend showed.
 
     Only registered codes and opaque references are written; operands and
     exception text never reach the log.
     """
-    log = _log.info if receipt.condition is OperationTerminalCondition.SUCCEEDED else _log.warning
-    log(
+    _log.log(
+        settlement_log_level(receipt.condition, receipt.effect),
         "operation settled operation=%s definition=%s condition=%s effect=%s cause=%s"
         " refusal=%s failure=%s diagnostic=%s",
         receipt.identity.operation_id,

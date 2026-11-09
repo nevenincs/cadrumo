@@ -89,8 +89,9 @@ class _Request(CredentialFreeFinancialOperationRequest):
 class _FailureAfterGrantExecutor:
     """Hold one accepted operand, then raise the selected registered or ordinary failure."""
 
-    def __init__(self, *, registered_refusal: bool) -> None:
+    def __init__(self, *, registered_refusal: bool, effect: OperationEffect | None = None) -> None:
         self.registered_refusal = registered_refusal
+        self.effect = effect
         self.requirement: OperationTransientFinancialOperandRequirementV1 | None = None
 
     async def execute(self, request: OperationRequest[BaseModel], context: OperationExecutorContext) -> None:
@@ -99,6 +100,8 @@ class _FailureAfterGrantExecutor:
         async with context.typed_financial_operand.consume(FinancialOperandBatch) as operand:
             try:
                 assert operand.values == (Decimal("1234.56"), Decimal("-4.12"), Decimal("0.125"))
+                if self.effect is not None:
+                    await context.events.effect(self.effect)
                 if self.registered_refusal:
                     raise OperationSubjectBusyError()
                 raise RuntimeError("synthetic executor failure")
@@ -333,7 +336,7 @@ def test_executor_failure_log_record_carries_the_raising_frame(
             operation_id = await _submit_bind_and_start(supervisor, executor)
             return await supervisor.settled(operation_id)
 
-        with caplog.at_level(logging.WARNING, logger="cadrumo.application.operations.supervisor_execution"):
+        with caplog.at_level(logging.INFO, logger="cadrumo.application.operations.supervisor_execution"):
             terminal = asyncio.run(run())
 
     receipt = terminal.terminal_receipt
@@ -360,3 +363,58 @@ def test_executor_failure_log_record_carries_the_raising_frame(
     if not registered_refusal:
         assert message.partition(" application_frame=")[2] == raising
     assert "synthetic executor failure" not in message
+
+
+_EXECUTION_LOGGER = "cadrumo.application.operations.supervisor_execution"
+_SETTLEMENT_LOGGER = "cadrumo.application.operations.settlement_snapshot"
+
+
+@pytest.mark.parametrize(
+    ("registered_refusal", "effect", "condition", "execution_level", "settlement_level"),
+    [
+        (True, None, OperationTerminalCondition.REFUSED, logging.INFO, logging.INFO),
+        (True, OperationEffect.NONE, OperationTerminalCondition.REFUSED, logging.INFO, logging.INFO),
+        (True, OperationEffect.UNKNOWN, OperationTerminalCondition.REFUSED, logging.WARNING, logging.WARNING),
+        (False, None, OperationTerminalCondition.FAILED, logging.ERROR, logging.WARNING),
+    ],
+    ids=("refused-no-effect", "refused-effect-none", "refused-unknown-effect", "failed"),
+)
+def test_a_served_refusal_is_logged_by_its_settled_condition_and_effect(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+    registered_refusal: bool,
+    effect: OperationEffect | None,
+    condition: OperationTerminalCondition,
+    execution_level: int,
+    settlement_level: int,
+) -> None:
+    """Each settlement site chooses its level from the typed condition and effect, not from the code."""
+    executor = _FailureAfterGrantExecutor(registered_refusal=registered_refusal, effect=effect)
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        storage_root = tmp_path / "durable-state"
+        custody = _GatedReleaseCustodyRepository(root=tmp_path / "custody")
+        custody.allow_buffer_release.set()
+        supervisor = _supervisor(
+            executor=executor,
+            journal=OperationJournalRepository(storage_root=storage_root),
+            leases=OperationLeaseFilesystemRepository(storage_root=storage_root),
+            operands=operation_secure_reference_repository(objects=profile.repository),
+            custody=custody,
+        )
+
+        async def run() -> OperationPersistedSnapshot:
+            operation_id = await _submit_bind_and_start(supervisor, executor)
+            return await supervisor.settled(operation_id)
+
+        with caplog.at_level(logging.DEBUG):
+            terminal = asyncio.run(run())
+
+    receipt = terminal.terminal_receipt
+    assert receipt is not None
+    assert receipt.condition is condition
+    records = [record for record in delivered_records(caplog) if f"operation={_OPERATION_ID}" in record.getMessage()]
+    levels = {record.name: record.levelno for record in records}
+    assert levels == {_EXECUTION_LOGGER: execution_level, _SETTLEMENT_LOGGER: settlement_level}
+    settled = [record for record in records if record.name == _SETTLEMENT_LOGGER]
+    assert len(settled) == 1
+    assert f"effect={receipt.effect.value}" in settled[0].getMessage()

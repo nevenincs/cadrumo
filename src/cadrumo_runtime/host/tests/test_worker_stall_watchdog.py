@@ -12,6 +12,7 @@ import logging
 import os
 import re
 import stat
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -170,6 +171,51 @@ async def test_old_dump_files_are_pruned_to_the_retention_count_and_other_files_
     newest = stale[len(stale) - (RETAINED_DUMP_FILES - 1) :]
     assert sorted([*newest, _dump_path(tmp_path)]) == remaining
     assert unrelated.read_text(encoding="utf-8") == "synthetic log"
+
+
+def _named_for(directory: Path, pid: int) -> Path:
+    return directory / f"{DUMP_NAME_PREFIX}{pid}{DUMP_NAME_SUFFIX}"
+
+
+@pytest.mark.asyncio
+async def test_a_new_watchdog_removes_only_the_empty_files_of_workers_that_no_longer_run(tmp_path: Path) -> None:
+    ended = subprocess.Popen([sys.executable, "-I", "-c", "pass"])
+    ended.wait(timeout=60)
+    running = subprocess.Popen([sys.executable, "-I", "-c", "import sys; sys.stdin.read()"], stdin=subprocess.PIPE)
+    try:
+        abandoned = _named_for(tmp_path, ended.pid)
+        abandoned.touch()
+        still_armed = _named_for(tmp_path, running.pid)
+        still_armed.touch()
+        stalled_then_ended = _named_for(tmp_path, ended.pid + 1)
+        stalled_then_ended.write_text("synthetic earlier dump", encoding="utf-8")
+        unnumbered = tmp_path / f"{DUMP_NAME_PREFIX}other{DUMP_NAME_SUFFIX}"
+        unnumbered.touch()
+
+        async with watch_event_loop(directory=tmp_path, stall_seconds=5.0):
+            remaining = {path.name for path in tmp_path.iterdir()}
+    finally:
+        if running.stdin is not None:
+            running.stdin.close()
+        running.wait(timeout=60)
+
+    assert abandoned.name not in remaining
+    assert {still_armed.name, stalled_then_ended.name, unnumbered.name} <= remaining
+
+
+@pytest.mark.asyncio
+async def test_a_worker_that_never_stalls_leaves_no_file_while_one_that_stalls_leaves_its_stacks(
+    tmp_path: Path,
+) -> None:
+    quiet, stalling = tmp_path / "quiet", tmp_path / "stalling"
+    async with watch_event_loop(directory=quiet, stall_seconds=5.0):
+        await asyncio.sleep(0.05)
+    async with watch_event_loop(directory=stalling, stall_seconds=0.2, tick_seconds=0.05):
+        _block_the_loop(0.6)
+        await asyncio.sleep(0.15)
+
+    assert list(quiet.iterdir()) == []
+    assert "(most recent call first):" in _dump_path(stalling).read_text(encoding="utf-8")
 
 
 @pytest.mark.asyncio
