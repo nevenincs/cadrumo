@@ -927,6 +927,9 @@ export function MovementsSection({
       <SelectionActions
         availabilityOf={availabilityOf}
         classify={(kind) => classifySelection(kind)}
+        count={selected.size}
+        onCategory={() => askCategory([...selected])}
+        onClearCategory={() => classify.clearCategory([...selected])}
         hidden={hiddenSelected.length > 0}
         onMakeRule={
           onMakeRule ? () => onMakeRule({ ids: [...selected] }) : undefined

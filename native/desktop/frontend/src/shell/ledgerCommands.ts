@@ -365,6 +365,54 @@ export function categoryCells(
     : { kind: "nothing", skipped };
 }
 
+/**
+ * Clears the spending category of those of `ids` that take one and have
+ * one: a movement the ledger says takes no category, or has none stored,
+ * is left as it is and counted in `skipped`.
+ */
+export function clearCategoryCells(
+  ids: readonly string[],
+  rows: ReadonlyMap<string, LedgerRow>,
+  check: StagedCheck,
+):
+  | {
+      kind: "staged";
+      event: Extract<StageEvent, { type: "stage" }>;
+      movements: number;
+      skipped: number;
+    }
+  | { kind: "nothing"; skipped: number } {
+  const cells: StageCell[] = [];
+  let skipped = 0;
+  for (const id of ids) {
+    const row = rows.get(id);
+    const stored = row ? storedFieldValue(row, "category_id") : null;
+    if (
+      !row ||
+      !check.rows.get(id)?.category_settable ||
+      stored === null ||
+      stored === undefined
+    ) {
+      skipped += 1;
+      continue;
+    }
+    cells.push({
+      id,
+      field: "category_id",
+      value: { kind: "clear" },
+      stored,
+    });
+  }
+  return cells.length
+    ? {
+        kind: "staged",
+        event: { type: "stage", label: "bulk_set", cells },
+        movements: cells.length,
+        skipped,
+      }
+    : { kind: "nothing", skipped };
+}
+
 /** What a rule made from a selection or a group starts from: the
  * movements it was made from. */
 export type RuleSeed = { ids: readonly string[] };

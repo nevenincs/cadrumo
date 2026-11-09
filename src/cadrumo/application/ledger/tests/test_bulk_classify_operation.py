@@ -23,6 +23,8 @@ from ....core.operations import (
     profile_operation_subject,
 )
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.categories.spending_category_catalogue import spending_category_tokens
+from ....domain.transactions.classification_effects import fields_cleared_by_classification
 from ....domain.transactions.enums import BusinessClassification
 from ....domain.transactions.irpf_categories import ledger_irpf_category_catalogue
 from ....domain.transactions.models import Transaction
@@ -459,3 +461,82 @@ def test_the_recorded_actor_is_the_session_label_for_automation_and_the_typed_on
     stored = subject.repository.current.transactions[first.transaction_id]
     assert stored.business_classification is BusinessClassification.BUSINESS
     assert {entry.actor for entry in stored.edit_lineage} == {recorded}
+
+
+def _declared_spending_category(authority: PinnedAuthorityOperation) -> str:
+    return spending_category_tokens(authority=authority)[0].value
+
+
+@pytest.fixture
+def three_transactions() -> tuple[Transaction, Transaction, Transaction]:
+    return (
+        transaction(provider_id="bulk-batch-a", description="Synthetic batch purchase A"),
+        transaction(provider_id="bulk-batch-b", description="Synthetic batch purchase B"),
+        transaction(provider_id="bulk-batch-c", description="Synthetic batch purchase C"),
+    )
+
+
+@pytest.fixture
+def batch_subject(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+    three_transactions: tuple[Transaction, Transaction, Transaction],
+) -> BulkClassifySubject:
+    monkeypatch.setattr(
+        "cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(PROFILE_ID)
+    )
+    return BulkClassifySubject(operation=authority_operation, transactions=three_transactions)
+
+
+def test_one_category_applies_to_several_business_and_mixed_rows_and_is_persisted(
+    batch_subject: BulkClassifySubject,
+    three_transactions: tuple[Transaction, Transaction, Transaction],
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    category = _declared_spending_category(authority_operation)
+    first, second, third = three_transactions
+    source = (
+        "transaction_id,classification,category_id,business_pct\n"
+        f"{first.transaction_id},BUSINESS,{category},\n"
+        f"{second.transaction_id},MIXED,{category},0.25\n"
+        f"{third.transaction_id},BUSINESS,{category},\n"
+    )
+    asyncio.run(
+        operation.LedgerBulkClassifyExecutor(batch_subject.compose).execute(_request(source), batch_subject.context)
+    )
+    result = cast(operation.LedgerBulkClassifyExecutionResult, batch_subject.operands.values[-1]).projection.result
+    assert result is not None and not result.failures, result
+    assert (result.total, result.applied) == (3, 3)
+    stored = batch_subject.repository.current.transactions
+    assert [stored[row.transaction_id].category_id for row in three_transactions] == [category] * 3
+    assert stored[second.transaction_id].business_classification is BusinessClassification.MIXED
+    assert stored[second.transaction_id].business_pct == Decimal("0.25")
+    assert batch_subject.repository.committed_writes == 1
+
+
+def test_a_personal_row_in_a_category_batch_ends_with_no_category(
+    batch_subject: BulkClassifySubject,
+    three_transactions: tuple[Transaction, Transaction, Transaction],
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    category = _declared_spending_category(authority_operation)
+    first, second, third = three_transactions
+    executor = operation.LedgerBulkClassifyExecutor(batch_subject.compose)
+    seed = "transaction_id,classification,category_id\n" + "".join(
+        f"{row.transaction_id},BUSINESS,{category}\n" for row in three_transactions
+    )
+    asyncio.run(executor.execute(_request(seed), batch_subject.context))
+    assert batch_subject.repository.current.transactions[second.transaction_id].category_id == category
+    source = (
+        "transaction_id,classification,category_id\n"
+        f"{first.transaction_id},BUSINESS,{category}\n"
+        f"{second.transaction_id},PERSONAL,{category}\n"
+        f"{third.transaction_id},PERSONAL,\n"
+    )
+    asyncio.run(executor.execute(_request(source), batch_subject.context))
+    stored = batch_subject.repository.current.transactions
+    assert stored[first.transaction_id].category_id == category
+    for personal in (second, third):
+        assert stored[personal.transaction_id].business_classification is BusinessClassification.PERSONAL
+        assert stored[personal.transaction_id].category_id is None
+    assert "category_id" in fields_cleared_by_classification(BusinessClassification.PERSONAL)
