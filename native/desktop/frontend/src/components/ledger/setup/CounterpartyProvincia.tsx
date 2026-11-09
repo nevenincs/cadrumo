@@ -63,9 +63,7 @@ export function CounterpartyProvincia({
       <ChoiceField
         className="w-64"
         label={t("desktop.ledger.counterparty.provincia")}
-        hint={
-          statedName ?? t("desktop.ledger.counterparty.provincia_unstated")
-        }
+        hint={statedName ?? t("desktop.ledger.counterparty.provincia_unstated")}
         value={picked}
         onValue={setPicked}
         placeholder={t("desktop.ledger.form.choose")}

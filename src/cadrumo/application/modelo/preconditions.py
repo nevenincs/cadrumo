@@ -342,6 +342,12 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
     _profile(
         "modelo.work.calculate",
         "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.joint_return_unanswered",
+        action_id="operator.modelo.work.calculate_joint_return",
+    ),
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
         "modelo.work.calculate.m303_filing_evidence.period_mismatch",
     ),
     _profile(
@@ -639,8 +645,15 @@ def build_modelo_precondition_failure(
     provenance: ActionEvidenceProvenance,
     action_id: str | None = None,
     action_argument_values: Mapping[str, str | int | bool | Decimal] | None = None,
+    missing_action_arguments: tuple[str, ...] = (),
 ) -> ModeloPreconditionFailure:
-    """Build one declared verdict and fail closed on catalogue disagreement."""
+    """Build one declared verdict and fail closed on catalogue disagreement.
+
+    ``missing_action_arguments`` names the declared arguments only the operator
+    can supply, such as an answer the refused request did not carry; together
+    with the resolved ``action_argument_values`` they must cover the catalogue
+    declaration exactly.
+    """
     identity = (subject_leaf_key, condition_id, scenario_id)
     profile = MODELO_PRECONDITION_PROFILE_REGISTRY.get(identity)
     if profile is None:
@@ -655,30 +668,48 @@ def build_modelo_precondition_failure(
         values=evidence_values,
     )
     bindings: tuple[ActionArgumentBinding, ...] = ()
+    if declared_action_id is None and missing_action_arguments:
+        raise ValueError("modelo precondition failure without an action cannot name missing arguments")
     if declared_action_id is not None:
         declaration = lookup_action(declared_action_id)
         values = action_argument_values or {}
+        missing = set(missing_action_arguments)
         declared_names = {item.argument_name for item in declaration.argument_specifications}
-        if set(values) != declared_names:
+        if (
+            len(missing) != len(missing_action_arguments)
+            or missing & set(values)
+            or set(values) | missing != declared_names
+        ):
             raise ValueError("modelo action argument values must exactly match the catalogue declaration")
-        bindings = tuple(
-            ActionArgumentBinding(
-                argument_name=name,
-                status=ActionArgumentStatus.RESOLVED,
-                value=value,
-                source=ActionArgumentSource.VERDICT_CONTEXT,
-                source_key=name,
-            )
-            for name, value in values.items()
+        bindings = (
+            *(
+                ActionArgumentBinding(
+                    argument_name=name,
+                    status=ActionArgumentStatus.RESOLVED,
+                    value=value,
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key=name,
+                )
+                for name, value in values.items()
+            ),
+            *(
+                ActionArgumentBinding(argument_name=name, status=ActionArgumentStatus.MISSING)
+                for name in missing_action_arguments
+            ),
         )
+    if declared_action_id is None:
+        conditionality = ActionConditionality.NOT_APPLICABLE
+    elif missing_action_arguments:
+        conditionality = ActionConditionality.REQUIRES_ARGUMENTS
+    else:
+        conditionality = ActionConditionality.IMMEDIATE
     verdict = PreconditionVerdict(
         failed_condition_id=condition_id,
         evidence=(evidence,),
         action=profile.action,
         argument_bindings=bindings,
-        conditionality=(
-            ActionConditionality.IMMEDIATE if declared_action_id is not None else ActionConditionality.NOT_APPLICABLE
-        ),
+        missing_argument_names=missing_action_arguments,
+        conditionality=conditionality,
         no_recovery_outcome=profile.no_recovery_outcome,
     )
     return ModeloPreconditionFailure(
@@ -696,6 +727,7 @@ def build_modelo_precondition_failure_for_scenario(
     evidence_values: Mapping[str, str | int | bool | Decimal],
     provenance: ActionEvidenceProvenance,
     action_argument_values: Mapping[str, str | int | bool | Decimal] | None = None,
+    missing_action_arguments: tuple[str, ...] = (),
 ) -> ModeloPreconditionFailure:
     """Build a failure from its declared leaf/scenario profile without re-declaring its condition."""
     profiles = tuple(
@@ -715,6 +747,7 @@ def build_modelo_precondition_failure_for_scenario(
         provenance=provenance,
         action_id=None if profile.action is None else profile.action.action_id,
         action_argument_values=action_argument_values,
+        missing_action_arguments=missing_action_arguments,
     )
 
 
