@@ -46,7 +46,7 @@ def build_grouped() -> App[None]:
     """Review the real grouped list over synthetic, explicitly separated facts."""
     workspace, calendar = portfolio_projection()
     with bundled_indexed_authority().operation() as operation:
-        targets = declaration_targets(operation)
+        targets = declaration_targets(operation, profile=None)
     controller = DeclarationsWorkspaceController(
         TuiScreenContextV1(destination="workbench.declarations"),
         workspace,
@@ -65,14 +65,14 @@ def build_grouped() -> App[None]:
 def build_picker_modelo() -> App[DeclarationTarget | None]:
     """Review supported modelo names with the profile applicability shortcut."""
     with bundled_indexed_authority().operation() as operation:
-        targets = declaration_targets(operation)
+        targets = declaration_targets(operation, profile=None)
     return ScreenHostApp(NewDeclarationPicker(targets, frozenset({"130", "303", "349"})))
 
 
 def build_picker_period() -> App[DeclarationTarget | None]:
     """Review the period step using only the published registry choices."""
     with bundled_indexed_authority().operation() as operation:
-        targets = declaration_targets(operation)
+        targets = declaration_targets(operation, profile=None)
     picker = NewDeclarationPicker(targets, frozenset({"130"}), preferred=DeclarationTarget("130", _preferred_period()))
     # A capture opens the production second step without pretending a choice
     # has been confirmed or submitting a write to storage.
