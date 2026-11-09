@@ -40,10 +40,12 @@ from cadrumo.application.modelo.work_calculation_contracts import (
 )
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.owner import OperationExecutorContext
+from cadrumo.application.operator_actions.catalogue import lookup_action
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.operations import OperationEffect
+from cadrumo.core.operator_action_enums import ActionArgumentStatus, ActionConditionality
 from cadrumo.core.period import Period
 from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
 from cadrumo.domain.attachments.m303_filing_evidence import (
@@ -350,8 +352,21 @@ def test_calculate_executor_refuses_missing_m303_evidence_without_entering_calcu
     ):
         asyncio.run(executor.execute(_calculate_request(work_unit, None), _calculate_context(operation)))
 
-    assert raised.value.precondition_failure is not None
-    assert raised.value.precondition_failure.scenario_id == "modelo.work.calculate.m303_filing_evidence.missing"
+    failure = raised.value.precondition_failure
+    assert failure is not None
+    assert failure.scenario_id == "modelo.work.calculate.m303_filing_evidence.joint_return_unanswered"
+    # The refusal names the unanswered question and the calculation that takes it.
+    verdict = failure.verdict
+    assert verdict.action is not None
+    assert lookup_action(verdict.action.action_id).target_command_key == "modelo.work.calculate"
+    assert verdict.missing_argument_names == ("joint_return_elected",)
+    assert verdict.conditionality is ActionConditionality.REQUIRES_ARGUMENTS
+    resolved = {
+        binding.argument_name: binding.value
+        for binding in verdict.argument_bindings
+        if binding.status is ActionArgumentStatus.RESOLVED
+    }
+    assert resolved == {"work_unit_id": work_unit.work_unit_id}
 
 
 def test_calculate_executor_refuses_mismatched_m303_attachment_pair_before_calculation(

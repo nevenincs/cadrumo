@@ -302,7 +302,10 @@ def _ordinary_m303_filing_instance_evidence(
     if supplied is None:
         raise M303FilingEvidenceError(
             precondition_failure=m303_filing_evidence_failure(
-                "missing", {"modelo": str(work_unit.modelo), "evidence_present": False}
+                "joint_return_unanswered",
+                {"modelo": str(work_unit.modelo), "evidence_present": False},
+                action_argument_values={"work_unit_id": work_unit.work_unit_id},
+                missing_action_arguments=("joint_return_elected",),
             )
         )
     return author_ordinary_m303_evidence_for_work(
