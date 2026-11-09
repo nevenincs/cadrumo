@@ -165,7 +165,9 @@ def test_inventory_pages_include_terminal_and_refused_entries_without_changing_f
             execution_timeout=timedelta(minutes=1),
             cleanup_timeout=timedelta(minutes=1),
         )
-        assert await services.recovery_inventory(after=None, limit=2) == first
+        everything = await services.recovery_inventory()
+        assert everything.present == frozenset(ids)
+        assert everything.entries == (*first.entries, *second.entries)
 
     asyncio.run(exercise())
 
@@ -318,6 +320,94 @@ def test_an_inventory_delta_of_an_absent_journal_is_empty_and_a_malformed_name_i
             await OperationJournalRepository(storage_root=tmp_path).inventory_delta(known=frozenset({"a" * 64}))
 
     asyncio.run(exercise())
+
+
+def _clone_terminal(root: Path, template_id: str, operation_ids: tuple[str, ...]) -> None:
+    """Write terminal records under new identities from one record the real journal settled."""
+    template = _journal_path(root, template_id).read_text(encoding="utf-8")
+    for operation_id in operation_ids:
+        _journal_path(root, operation_id).write_text(template.replace(template_id, operation_id), encoding="utf-8")
+
+
+def _paged_entries(journal: OperationJournalRepository) -> Any:
+    async def collect() -> tuple[Any, ...]:
+        entries: list[Any] = []
+        after = None
+        while True:
+            page = await journal.inventory_page(after=after, limit=128)
+            entries.extend(page.entries)
+            if not page.has_more:
+                return tuple(entries)
+            after = page.next_cursor
+
+    return asyncio.run(collect())
+
+
+def test_a_full_inventory_classifies_every_record_as_the_pages_do_across_capture_batches(tmp_path: Path) -> None:
+    """Concurrent capture keeps identifier order, refusal and lifecycle exactly as page-by-page reads."""
+    terminal_id, running_id = "0" * 64, "1" * 64
+    asyncio.run(_create(tmp_path, terminal_id, terminal=True))
+    asyncio.run(_create(tmp_path, running_id))
+    clones = tuple(f"{index:064x}" for index in range(2, 302))
+    _clone_terminal(tmp_path, terminal_id, clones)
+    corrupted = (clones[0], clones[127], clones[128], clones[-1])
+    for operation_id in corrupted:
+        path = _journal_path(tmp_path, operation_id)
+        document = json.loads(path.read_text(encoding="utf-8"))
+        document["history"] = []
+        path.write_text(json.dumps(document), encoding="utf-8")
+    journal = OperationJournalRepository(storage_root=tmp_path)
+    ids = (terminal_id, running_id, *clones)
+    original_bytes = {operation_id: _journal_path(tmp_path, operation_id).read_bytes() for operation_id in ids}
+
+    full = asyncio.run(journal.inventory_delta(known=frozenset()))
+
+    assert full.present == frozenset(ids)
+    assert full.entries == _paged_entries(journal)
+    assert tuple(entry.operation_id for entry in full.entries) == tuple(sorted(ids))
+    dispositions = {entry.operation_id: entry.disposition for entry in full.entries}
+    assert dispositions[running_id] is OperationRecoveryInventoryDisposition.NONTERMINAL
+    assert {
+        operation_id
+        for operation_id, disposition in dispositions.items()
+        if disposition is OperationRecoveryInventoryDisposition.REFUSED
+    } == set(corrupted)
+    assert (
+        sum(disposition is OperationRecoveryInventoryDisposition.TERMINAL for disposition in dispositions.values())
+        == len(ids) - len(corrupted) - 1
+    )
+    assert {operation_id: _journal_path(tmp_path, operation_id).read_bytes() for operation_id in ids} == original_bytes
+
+
+def test_a_record_whose_read_is_refused_inside_a_concurrent_batch_is_refused_alone(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A captured read refusal reaches the same classification a sequential read gives it."""
+    terminal_id = "0" * 64
+    asyncio.run(_create(tmp_path, terminal_id, terminal=True))
+    clones = tuple(f"{index:064x}" for index in range(1, 20))
+    _clone_terminal(tmp_path, terminal_id, clones)
+    unreadable = clones[7]
+    journal = OperationJournalRepository(storage_root=tmp_path)
+    repository = journal._repository
+    real_read = repository._read_payload
+
+    def refusing_read(operation_id: str) -> str:
+        if operation_id == unreadable:
+            raise RepositoryError(f"cannot read operation journal {operation_id}")
+        return real_read(operation_id)
+
+    monkeypatch.setattr(repository, "_read_payload", refusing_read)
+
+    full = asyncio.run(journal.inventory_delta(known=frozenset()))
+
+    assert [entry.operation_id for entry in full.entries] == [terminal_id, *clones]
+    assert {
+        entry.operation_id
+        for entry in full.entries
+        if entry.disposition is OperationRecoveryInventoryDisposition.REFUSED
+    } == {unreadable}
+    assert all(entry.definition_id == "test.operation" for entry in full.entries if entry.operation_id != unreadable)
 
 
 _RETIRED_CODE_RECORD = Path(__file__).parent / "fixtures" / "retired_failure_code_journal.json"

@@ -6,7 +6,8 @@ import asyncio
 import json
 import os
 import re
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Final, Literal, override
 
@@ -125,6 +126,12 @@ _CLAIM_INDEX_DIRNAME: Final = "idempotency-claims"
 _CLAIM_INDEX_COMPLETE_FILENAME: Final = "complete"
 _CLAIM_INDEX_DIRECTORY_MODE: Final = 0o700
 _CLAIM_INDEX_FILE_MODE: Final = 0o600
+# Records are captured a bounded batch at a time, so an inventory never holds
+# every record's text at once.
+_INVENTORY_CAPTURE_BATCH: Final = 128
+# A first read of a record is dominated by per-file open latency (cold cache,
+# on-access scanning), which overlaps across threads; validation does not.
+_INVENTORY_CAPTURE_THREADS: Final = 4
 
 
 class _ClaimIndexEntry(BaseModel):
@@ -254,7 +261,10 @@ class SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
 
     def _read_purged_payload_unlocked(self, operation_id: str) -> str:
         """Capture one complete generation; legacy repair remains a locked write."""
-        raw = self._read_payload(operation_id)
+        return self._purged_payload_unlocked(operation_id, self._read_payload(operation_id))
+
+    def _purged_payload_unlocked(self, operation_id: str, raw: str) -> str:
+        """Purge one generation captured under the journal exclusion the caller still holds."""
         replacement = purge_legacy_financial_edit_journal(raw, operation_id=operation_id)
         if replacement is not None:
             self._write_purged_payload_unlocked(operation_id, replacement)
@@ -304,11 +314,8 @@ class SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
                 operation_id for operation_id in operation_ids if request.after is None or operation_id > request.after
             )
             page_ids = selected[: request.limit]
-            entries: list[OperationRecoveryInventoryEntry] = []
-            for operation_id in page_ids:
-                entries.append(self._recovery_inventory_entry(operation_id))
             return OperationRecoveryInventoryPage(
-                entries=tuple(entries),
+                entries=self._recovery_inventory_entries(page_ids),
                 next_cursor=page_ids[-1] if page_ids else request.after,
                 has_more=len(selected) > request.limit,
             )
@@ -330,10 +337,8 @@ class SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
             present = self._inventory_operation_ids(paths)
             return OperationRecoveryInventoryDelta(
                 present=frozenset(present),
-                entries=tuple(
-                    self._recovery_inventory_entry(operation_id)
-                    for operation_id in sorted(present)
-                    if operation_id not in known
+                entries=self._recovery_inventory_entries(
+                    tuple(operation_id for operation_id in sorted(present) if operation_id not in known)
                 ),
             )
 
@@ -364,10 +369,54 @@ class SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
             operation_ids.append(path.stem)
         return operation_ids
 
-    def _recovery_inventory_entry(self, operation_id: OperationId) -> OperationRecoveryInventoryEntry:
-        """Classify one present journal row while refusing an inventory race."""
+    def _recovery_inventory_entries(
+        self, operation_ids: Sequence[OperationId]
+    ) -> tuple[OperationRecoveryInventoryEntry, ...]:
+        """Classify records in order while the caller holds the journal exclusion.
+
+        Each batch's texts are read concurrently, then purged and validated one
+        at a time in identifier order, exactly as a sequential load would. No
+        writer can change a record between its capture and its classification:
+        every journal write takes the exclusion the caller holds.
+        """
+        entries: list[OperationRecoveryInventoryEntry] = []
+        for start in range(0, len(operation_ids), _INVENTORY_CAPTURE_BATCH):
+            batch = operation_ids[start : start + _INVENTORY_CAPTURE_BATCH]
+            captured = self._capture_payloads(batch)
+            entries.extend(
+                self._recovery_inventory_entry(operation_id, payload)
+                for operation_id, payload in zip(batch, captured, strict=True)
+            )
+        return tuple(entries)
+
+    def _capture_payloads(self, operation_ids: Sequence[OperationId]) -> list[str | RepositoryError]:
+        """Read each record's text, keeping a refused read as that record's outcome.
+
+        Any other failure propagates, as it would from a sequential read.
+        """
+
+        def capture(operation_id: OperationId) -> str | RepositoryError:
+            try:
+                return self._read_payload(operation_id)
+            except RepositoryError as error:
+                return error
+
+        if len(operation_ids) < 2:
+            return [capture(operation_id) for operation_id in operation_ids]
+        with ThreadPoolExecutor(
+            max_workers=min(_INVENTORY_CAPTURE_THREADS, len(operation_ids)),
+            thread_name_prefix="operation-journal-inventory",
+        ) as pool:
+            return list(pool.map(capture, operation_ids))
+
+    def _recovery_inventory_entry(
+        self, operation_id: OperationId, captured: str | RepositoryError
+    ) -> OperationRecoveryInventoryEntry:
+        """Classify one present journal row from its captured text while refusing an inventory race."""
         try:
-            record = self._load_unlocked(operation_id)
+            if isinstance(captured, RepositoryError):
+                raise captured
+            record = self._decode_payload(operation_id, self._purged_payload_unlocked(operation_id, captured))
         except RepositoryError as error:
             if not self._validate_existing_root() or self.is_absent(operation_id):
                 raise RepositoryError("operation journal inventory changed during read") from None
