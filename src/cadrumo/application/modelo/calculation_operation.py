@@ -7,7 +7,6 @@ Core types: :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`,
 from __future__ import annotations
 
 import asyncio
-import threading
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -15,7 +14,6 @@ from typing import TYPE_CHECKING
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language
 from ...core.operations import (
@@ -69,6 +67,7 @@ if TYPE_CHECKING:
 
 from .operation_shared import (
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+    FirstWriteEffectAnnouncement,
     modelo_workspace_refresh_target_binding,
     resolve_modelo_work_unit_refresh_target,
 )
@@ -318,42 +317,6 @@ def _ordinary_m303_filing_instance_evidence(
     )
 
 
-class _FirstWriteAnnouncement:
-    """Journal a possible effect from the worker thread before the first actual write."""
-
-    def __init__(self, context: OperationExecutorContext, loop: asyncio.AbstractEventLoop) -> None:
-        self._context = context
-        self._loop = loop
-        self._lock = threading.Lock()
-        self._began = False
-
-    @property
-    def began(self) -> bool:
-        """Report whether any persistence commit was admitted."""
-        with self._lock:
-            return self._began
-
-    def write(self, write: Callable[[], None]) -> None:
-        """Announce the uncertain effect once, then run ``write``."""
-        with self._lock:
-            if not self._began:
-                if _runs_on(self._loop):
-                    raise InternalInvariantError("a calculation write must run off the operation event loop")
-                asyncio.run_coroutine_threadsafe(
-                    self._context.events.effect(OperationEffect.UNKNOWN), self._loop
-                ).result()
-                self._began = True
-        write()
-
-
-def _runs_on(loop: asyncio.AbstractEventLoop) -> bool:
-    """Report whether the calling thread is running ``loop``, which a blocking wait would deadlock."""
-    try:
-        return asyncio.get_running_loop() is loop
-    except RuntimeError:
-        return False
-
-
 class ModeloWorkCalculateExecutor:
     """Recalculate a declaration from its ledger under the request's caller context.
 
@@ -390,7 +353,7 @@ class ModeloWorkCalculateExecutor:
         await context.events.phase("modelo.work.calculate.ledger")
         payload = request.payload
         actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor)
-        writes = _FirstWriteAnnouncement(context, asyncio.get_running_loop())
+        writes = FirstWriteEffectAnnouncement(context, asyncio.get_running_loop())
         prepared = await prepare_modelo_work_calculation(
             payload=payload,
             operation=context.authority_operation,

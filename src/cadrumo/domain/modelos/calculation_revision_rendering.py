@@ -24,7 +24,7 @@ from pydantic import (
     field_validator,
     model_validator,
 )
-from pydantic_core import SchemaSerializer
+from pydantic_core import CoreSchema, SchemaSerializer
 
 from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.hex import Hex64Str
@@ -91,12 +91,47 @@ def retain_registry_schema_fields(value: object, *, predecessor: bool = False) -
             retain_registry_schema_fields(item, predecessor=predecessor)
 
 
-def compile_registry_serializer() -> SchemaSerializer:
-    """Compile a complete serializer from an independent copy of the current public schema."""
+def write_absent_fields_as_null(value: object) -> None:
+    """Drop only the ``absent_when_none`` exclusion from a private copy of a serialization schema.
+
+    Builds between the declaration of such a field and its exclusion dumped it as
+    ``null``, so a snapshot they saved is bound by digests of that form.
+    """
+    if is_object_dict(value):
+        if value.get("type") == "model-field" and value.get("serialization_exclude_if") is absent_when_none:
+            value.pop("serialization_exclude_if", None)
+        for item in value.values():
+            write_absent_fields_as_null(item)
+    elif is_object_list_or_tuple(value):
+        for item in value:
+            write_absent_fields_as_null(item)
+
+
+def _public_schema_copy() -> CoreSchema:
     adapter = TypeAdapter(RegistrySnapshot)
     adapter.rebuild()
-    schema = deepcopy(adapter.core_schema)
+    return deepcopy(adapter.core_schema)
+
+
+def compile_registry_serializer() -> SchemaSerializer:
+    """Compile a complete serializer from an independent copy of the current public schema."""
+    schema = _public_schema_copy()
     retain_registry_schema_fields(schema)
+    # The original prebuilt serializers omit presentation fields. Reusing them
+    # here would silently discard the modifications on this schema copy.
+    return SchemaSerializer(schema, _use_prebuilt=False)
+
+
+def compile_absent_as_null_serializer(*, complete: bool) -> SchemaSerializer:
+    """Compile the dump of a build that wrote a field excluded only while absent as ``null``.
+
+    ``complete`` keeps every declared field, as a saved rendering's metadata
+    digest covers it; otherwise the ordinary dump's other exclusions hold.
+    """
+    schema = _public_schema_copy()
+    if complete:
+        retain_registry_schema_fields(schema)
+    write_absent_fields_as_null(schema)
     # The original prebuilt serializers omit presentation fields. Reusing them
     # here would silently discard the modifications on this schema copy.
     return SchemaSerializer(schema, _use_prebuilt=False)
@@ -110,10 +145,14 @@ class RegistrySerializerMemo:
     rebuild replaces the core schema object and so compiles again.
     """
 
-    __slots__ = ("_compiled_for", "_serializer")
+    __slots__ = ("_compile", "_compiled_for", "_serializer")
 
-    def __init__(self) -> None:
-        """Start with nothing compiled, so reads without a saved rendering pay no build cost."""
+    def __init__(self, compile_serializer: Callable[[], SchemaSerializer] | None = None) -> None:
+        """Start with nothing compiled, so reads without a saved rendering pay no build cost.
+
+        Without ``compile_serializer`` the memo holds the complete serializer.
+        """
+        self._compile = compile_serializer
         self._compiled_for: object = None
         self._serializer: SchemaSerializer | None = None
 
@@ -121,13 +160,17 @@ class RegistrySerializerMemo:
         """Return the serializer of the current schema, compiling it on a change."""
         serializer = self._serializer
         if serializer is None or self._compiled_for is not RegistrySnapshot.__pydantic_core_schema__:
-            serializer = compile_registry_serializer()
+            serializer = compile_registry_serializer() if self._compile is None else self._compile()
             self._compiled_for = RegistrySnapshot.__pydantic_core_schema__
             self._serializer = serializer
         return serializer
 
 
 REGISTRY_SERIALIZER = RegistrySerializerMemo()
+#: The ordinary and complete dumps as builds that wrote absent fields as
+#: ``null`` produced them; read only to verify a snapshot one of them saved.
+_ABSENT_AS_NULL_DUMP = RegistrySerializerMemo(partial(compile_absent_as_null_serializer, complete=False))
+_ABSENT_AS_NULL_COMPLETE = RegistrySerializerMemo(partial(compile_absent_as_null_serializer, complete=True))
 
 
 def registry_payload(snapshot: RegistrySnapshot) -> dict[str, object]:
@@ -442,13 +485,13 @@ class CalculationRenderingSnapshot(BaseModel):
         if len({label.key for label in self.labels}) != len(self.labels):
             raise ValueError("saved rendering labels contain duplicate identities")
         snapshot = self.registry_snapshot
-        if _registry_digest(snapshot) != self.registry_digest:
+        if not _registry_digest_holds(snapshot, self.registry_digest):
             raise ValueError("saved rendering registry digest does not match its captured snapshot")
         if self.revision_directory_ids is not None and frozenset(self.revision_directory_ids) != (
             self.registry_snapshot.modelo.directory_revision_ids
         ):
             raise ValueError("saved rendering directory identities disagree with its captured snapshot")
-        if _rendering_digest(snapshot, self.labels, self.revision_directory_ids) != self.rendering_digest:
+        if not _rendering_digest_holds(snapshot, self.labels, self.revision_directory_ids, self.rendering_digest):
             raise ValueError("saved rendering metadata digest does not match its captured schema and labels")
         return self
 
@@ -493,13 +536,44 @@ def _rendering_digest(
     )
 
 
+def _registry_digest_holds(snapshot: RegistrySnapshot, claimed: str) -> bool:
+    """Whether ``claimed`` is the registry digest of ``snapshot`` as the current or an earlier build dumped it.
+
+    A build that wrote absent fields as ``null`` bound its snapshots by digests
+    of that form; the snapshot itself is the same either way.
+    """
+    if _registry_digest(snapshot) == claimed:
+        return True
+    earlier = _ABSENT_AS_NULL_DUMP.serializer().to_python(snapshot, mode="json")
+    return content_hash_hex(earlier) == claimed
+
+
+def _rendering_digest_holds(
+    snapshot: RegistrySnapshot,
+    labels: tuple[SavedRenderingLabel, ...],
+    directory_ids: tuple[RevisionId, ...] | None,
+    claimed: str,
+) -> bool:
+    """Whether ``claimed`` is the rendering digest as the current or an earlier build dumped it."""
+    if _rendering_digest(snapshot, labels, directory_ids) == claimed:
+        return True
+    earlier = _STRING_MAPPING_ADAPTER.validate_python(
+        _ABSENT_AS_NULL_COMPLETE.serializer().to_python(
+            snapshot, mode="json", by_alias=False, exclude_computed_fields=True
+        )
+    )
+    return content_hash_hex(_rendering_payload(snapshot, labels, directory_ids, registry=earlier)) == claimed
+
+
 def _rendering_payload(
     snapshot: RegistrySnapshot,
     labels: tuple[SavedRenderingLabel, ...],
     directory_ids: tuple[RevisionId, ...] | None,
+    *,
+    registry: dict[str, object] | None = None,
 ) -> dict[str, object]:
     payload: dict[str, object] = {
-        "registry": registry_payload(snapshot),
+        "registry": registry_payload(snapshot) if registry is None else registry,
         "labels": [label.model_dump(mode="json") for label in labels],
     }
     if directory_ids is not None:

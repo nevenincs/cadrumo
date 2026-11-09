@@ -10,6 +10,7 @@ import type {
 import type { Host } from "./host";
 import { nameable, targetOf } from "./profiles";
 import {
+  confirmSessionWith,
   endSession,
   sessionEnded as windowSessionEnded,
   startSession,
@@ -130,6 +131,11 @@ export function phaseOf(
   return "signed-out";
 }
 
+/** Whether `status` says a session is signed in that the window may work for. */
+function signedIn(status: SignInStatus | null): boolean {
+  return status !== null && phaseOf(true, status) === "signed-in";
+}
+
 /** Refusals that outlast the attempt that met them. */
 const STANDING: ReadonlySet<string> = new Set([
   "PROFILE_LOCKED",
@@ -228,6 +234,19 @@ export function useSignIn(host: Host) {
   const submitting = useRef(false);
   const currentRefusal = refusal ?? status?.refusal ?? null;
   const retrySeconds = useCountdown(currentRefusal);
+  // Every status the window takes as current passes here, so the window's
+  // session gate follows the account the moment a status says the session
+  // started or ended, before any view renders or reads on that news.
+  const adopt = useCallback((next: SignInStatus | null) => {
+    const was = signedIn(latestStatus.current);
+    const now = signedIn(next);
+    latestStatus.current = next;
+    if (was && !now) endSession();
+    if (!was && now) {
+      sessionEnding.current = false;
+      startSession();
+    }
+  }, []);
   const invalidate = useCallback(() => {
     ++invalidation.current;
     ++request.current;
@@ -291,7 +310,7 @@ export function useSignIn(host: Host) {
           awaitingManagerAuth.current = false;
           if (managerObserved) setObservingStartup(false);
           setStatus(next);
-          latestStatus.current = next;
+          adopt(next);
           // A list that names another profile as selected than the status
           // does is older than it: not shown beside it, and never a ground
           // for naming the profile a password goes to.
@@ -333,7 +352,7 @@ export function useSignIn(host: Host) {
                     !host.startManager),
               refusal,
             };
-            latestStatus.current = failed;
+            adopt(failed);
             setStatus(failed);
           }
         } finally {
@@ -344,7 +363,7 @@ export function useSignIn(host: Host) {
       statusRead.current = { generation, promise };
       await promise;
     },
-    [host, managerAllows, managerObserved],
+    [adopt, host, managerAllows, managerObserved],
   );
 
   useEffect(() => {
@@ -355,7 +374,7 @@ export function useSignIn(host: Host) {
     managerRef.current = null;
     awaitingManagerAuth.current = true;
     invalidate();
-    latestStatus.current = null;
+    adopt(null);
     setStatus(null);
     setManager(null);
     const accept = (next: ManagerStatus) => {
@@ -367,7 +386,7 @@ export function useSignIn(host: Host) {
         if (previous?.state === next.state) return;
         invalidate();
         awaitingManagerAuth.current = true;
-        latestStatus.current = null;
+        adopt(null);
         setStatus(null);
         setRefusal(null);
         setObservingStartup(true);
@@ -382,7 +401,7 @@ export function useSignIn(host: Host) {
         runtimeAvailable: false,
         refusal: next.failure ? refusalFrom(next.failure) : null,
       };
-      latestStatus.current = unavailable;
+      adopt(unavailable);
       setStatus(unavailable);
       setRefusal(null);
       setChosen(null);
@@ -444,7 +463,7 @@ export function useSignIn(host: Host) {
       close?.();
       invalidate();
     };
-  }, [host, invalidate, managerObserved, refresh]);
+  }, [adopt, host, invalidate, managerObserved, refresh]);
 
   useEffect(() => {
     if (!host.observeSignIn) return;
@@ -482,7 +501,7 @@ export function useSignIn(host: Host) {
           return;
         invalidate();
         statusReadFailed.current = signal.kind === "sign-in-observation-failed";
-        latestStatus.current = next;
+        adopt(next);
         setStatus(next);
         setRefusal(null);
         setChosen(null);
@@ -538,7 +557,7 @@ export function useSignIn(host: Host) {
       active = false;
       close?.();
     };
-  }, [host, invalidate, managerAllows, refresh]);
+  }, [adopt, host, invalidate, managerAllows, refresh]);
 
   useEffect(() => {
     mounted.current = true;
@@ -578,10 +597,15 @@ export function useSignIn(host: Host) {
       startSession();
     }
     // A session that ends without the window asking (an idle expiry) ends
-    // for every read bound to it, as one the person signed out of does.
+    // for every command bound to it, as one the person signed out of does.
+    // `adopt` has normally ended it already; this also covers the account
+    // leaving the signed-in phase for the manager's sake.
     if (!signedInPhase && wasSignedIn.current) endSession();
     wasSignedIn.current = signedInPhase;
   }, [signedInPhase]);
+  // A view refused for a missing session may hear before this state does;
+  // a fresh read settles whether the session is gone.
+  useEffect(() => confirmSessionWith(() => refresh()), [refresh]);
   const sessionEnded = useCallback(
     () => sessionEnding.current || windowSessionEnded(),
     [],
@@ -664,7 +688,7 @@ export function useSignIn(host: Host) {
         // the invalidated generation; no second CLI call is needed to display it.
         signedIn = true;
         statusReadFailed.current = false;
-        latestStatus.current = result.status;
+        adopt(result.status);
         setStatus(result.status);
         listed.current = null;
         setProfiles(null);
@@ -725,7 +749,7 @@ export function useSignIn(host: Host) {
         else {
           signedIn = true;
           statusReadFailed.current = false;
-          latestStatus.current = login.status;
+          adopt(login.status);
           setStatus(login.status);
           listed.current = null;
           setProfiles(null);

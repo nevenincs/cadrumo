@@ -38,6 +38,32 @@ test("an opening-balance step missing part of its address is not read", () => {
   }
 });
 
+test("a wallet refusal's balance step is read with the work unit it names", () => {
+  assert.deepEqual(
+    servedNextStep({
+      next_step: {
+        kind: "open_iva_wallet",
+        work_unit_id: "wu-1",
+        words: "Abre el Saldo de IVA",
+      },
+    }),
+    {
+      kind: "open_iva_wallet",
+      work_unit_id: "wu-1",
+      words: "Abre el Saldo de IVA",
+    },
+  );
+});
+
+test("a balance step without its work unit is not read", () => {
+  assert.equal(
+    servedNextStep({
+      next_step: { kind: "open_iva_wallet", words: "Abre el Saldo de IVA" },
+    }),
+    null,
+  );
+});
+
 test("a step of a kind this window does not run is not read", () => {
   assert.equal(
     servedNextStep({

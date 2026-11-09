@@ -459,6 +459,9 @@ export type LedgerNextStep =
   /** Opens one ledger movement in the Libro, where the fact the refusal
    * names is recorded. */
   | { kind: "open_movement"; transaction_id: string; words: string }
+  /** Opens the IVA balance of the declaration one work unit holds, where its
+   * carried compensation is recorded. */
+  | { kind: "open_iva_wallet"; work_unit_id: string; words: string }
   /** Opens the IVA balance of the declaration named here, at the entry that
    * records the opening balance its carry reads. */
   | {
@@ -479,7 +482,7 @@ export type LedgerProfileStep = Extract<
  * opening balance is missing. */
 export type LedgerIvaWalletStep = Extract<
   LedgerNextStep,
-  { kind: "open_iva_wallet_opening_balance" }
+  { kind: "open_iva_wallet_opening_balance" } | { kind: "open_iva_wallet" }
 >;
 
 /** The step the Libro answers, naming one movement. */
@@ -553,7 +556,11 @@ export function servedNextStep(detail: unknown): LedgerNextStep | null {
       ? null
       : { kind: "open_movement", transaction_id: movement, words };
   }
-  if (served.kind === "calculate_work" || served.kind === "open_work") {
+  if (
+    served.kind === "calculate_work" ||
+    served.kind === "open_work" ||
+    served.kind === "open_iva_wallet"
+  ) {
     const unit = text("work_unit_id");
     return unit === null
       ? null

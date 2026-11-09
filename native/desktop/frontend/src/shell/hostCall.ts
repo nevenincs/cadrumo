@@ -10,7 +10,11 @@ import {
   rejectionSummary,
 } from "./diagnosticSummary";
 import { notifyInternalFailure } from "./internalFailures";
-import { firstAfterEnd, sessionEnded } from "./sessionGate";
+import {
+  firstAfterEnd,
+  sessionEndConfirmed,
+  sessionEnded,
+} from "./sessionGate";
 import type {
   HostCommand,
   HostCommands,
@@ -134,7 +138,7 @@ export type CallPlan = {
 const REFUSAL_LEVEL: Readonly<Record<string, "WARNING">> = {
   // The runtime or host refused the request as asked; nothing failed. A
   // session that ended is not here: one the window did not see coming is an
-  // error, and one it saw is noted through `endedRefusal`.
+  // error, and one it saw is noted once at INFO.
   refused: "WARNING",
   review_changed: "WARNING",
   conflict: "WARNING",
@@ -158,6 +162,46 @@ function rejectionLevel(
   return REFUSAL_LEVEL[code] ?? "ERROR";
 }
 
+/** Records a refused call. The caller has its refusal already; only the
+ * record waits, for as long as it takes to learn whether a refusal for a
+ * missing session came from an end the window had not heard of yet. */
+async function reportRejection(
+  token: ShellToken | null,
+  command: string,
+  code: string | null,
+  reason: string | null,
+  plan: CallPlan | undefined,
+): Promise<void> {
+  const fault = code === null || INTERNAL_FAULT.includes(code);
+  const ended = () => plan?.sessionEnded?.() === true || sessionEnded();
+  if (!fault && !ended() && code === "not_signed_in")
+    await sessionEndConfirmed();
+  if (!fault && ended()) {
+    // The session the call belonged to ended before it answered. The end
+    // is expected, so each operation notes it once, below any error.
+    if (firstAfterEnd(command))
+      reportDiagnostic(token, {
+        event: "command_rejected",
+        level: "INFO",
+        command,
+        code,
+      });
+    return;
+  }
+  // Backpressure and deliberate cancellation are expected control flow.
+  if (code === "queue_full" || code === "installation_cancelled") return;
+  reportDiagnostic(token, {
+    event: "command_rejected",
+    level: rejectionLevel(code, plan),
+    command,
+    code,
+    ...(reason !== null ? { reason } : {}),
+  });
+  // Typed refusals are worded by their owning view. Missing metadata and
+  // native faults must also surface when a caller deliberately catches.
+  if (fault) notifyInternalFailure();
+}
+
 export async function observedInvoke<T>(
   token: ShellToken | null,
   command: string,
@@ -177,36 +221,7 @@ export async function observedInvoke<T>(
         : null;
     const code = field("code");
     const reason = field("reason");
-    if (
-      code !== null &&
-      !INTERNAL_FAULT.includes(code) &&
-      (plan?.sessionEnded?.() || sessionEnded())
-    ) {
-      // The session the call belonged to ended before it answered. The end
-      // is expected, so each operation notes it once, below any error.
-      if (firstAfterEnd(command))
-        reportDiagnostic(token, {
-          event: "command_rejected",
-          level: "INFO",
-          command,
-          code,
-        });
-      throw error;
-    }
-    // Backpressure and deliberate cancellation are expected control flow.
-    if (code !== "queue_full" && code !== "installation_cancelled") {
-      reportDiagnostic(token, {
-        event: "command_rejected",
-        level: rejectionLevel(code, plan),
-        command,
-        code,
-        ...(reason !== null ? { reason } : {}),
-      });
-      // Typed refusals are worded by their owning view. Missing metadata and
-      // native faults must also surface when a caller deliberately catches.
-      if (code === null || INTERNAL_FAULT.includes(code))
-        notifyInternalFailure();
-    }
+    void reportRejection(token, command, code, reason, plan);
     throw error;
   }
 }

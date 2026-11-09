@@ -13,7 +13,7 @@ import pytest
 from pydantic import ValidationError
 
 import cadrumo.adapters.persistence.operations.journal as journal_module
-from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
+from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository, SnapshotJournalRepository
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from cadrumo.adapters.persistence.storage.errors import RepositoryError
@@ -32,6 +32,7 @@ from cadrumo.application.operations.persistence.leases import (
 from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
 from cadrumo.application.user_profile.censal_operation import CENSAL_OPERATION_DEFINITION_ID
 from cadrumo.application.user_profile.censal_readback import read_latest_censal_observation
+from cadrumo.core.errors.error_codes import RETIRED_ERROR_CODE_SUCCESSORS, declared_error_codes_by_qualname
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 
@@ -317,3 +318,29 @@ def test_an_inventory_delta_of_an_absent_journal_is_empty_and_a_malformed_name_i
             await OperationJournalRepository(storage_root=tmp_path).inventory_delta(known=frozenset({"a" * 64}))
 
     asyncio.run(exercise())
+
+
+_RETIRED_CODE_RECORD = Path(__file__).parent / "fixtures" / "retired_failure_code_journal.json"
+"""A terminal Modelo calculation an installation recorded on 2026-11-08, under a code since retired."""
+
+
+def test_a_terminal_record_settled_under_a_retired_code_reads_as_settled_history(tmp_path: Path) -> None:
+    raw = _RETIRED_CODE_RECORD.read_text(encoding="utf-8")
+    document = json.loads(raw)
+    operation_id = document["snapshot"]["identity"]["operation_id"]
+    retired = document["snapshot"]["terminal_receipt"]["failure_error_code"]
+    assert retired not in {code.code for code in declared_error_codes_by_qualname().values()}
+    journal = OperationJournalRepository(storage_root=tmp_path)
+    path = SnapshotJournalRepository(storage_root=tmp_path).path_for(operation_id)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(raw, encoding="utf-8")
+
+    page = asyncio.run(journal.inventory_page(after=None, limit=128))
+
+    assert [(entry.operation_id, entry.disposition, entry.definition_id) for entry in page.entries] == [
+        (operation_id, OperationRecoveryInventoryDisposition.TERMINAL, "modelo.work.calculate")
+    ]
+    receipt = asyncio.run(journal.load(operation_id)).terminal_receipt
+    assert receipt is not None
+    assert receipt.failure_error_code == RETIRED_ERROR_CODE_SUCCESSORS[retired]
+    assert path.read_text(encoding="utf-8") == raw, "the recorded history stays as it was written"

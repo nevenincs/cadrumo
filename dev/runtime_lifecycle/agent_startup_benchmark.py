@@ -37,7 +37,7 @@ from .agent_service_session import (
     validate_service_ready,
 )
 from .caller_owned_root import Programs, caller_owned_runtime, consumer_environment, require
-from .packaged_service_process import PackagedServiceProcess
+from .packaged_service_process import PackagedServiceProcess, package_default_engine
 from .proof_support import create_profile, identify_profile, login_profile, package_identity, started_processes
 from .windows_holder import WindowsRuntimeSessionHolder
 
@@ -185,6 +185,7 @@ def measure(package: Path, scratch: Path) -> dict[str, Any]:
                         directory=root,
                         bearer=bearer,
                         gateway_bearer=bytearray(gateway_bearer),
+                        local_engine_default=package_default_engine(package),
                     )
                     service_cleanup.callback(service.close)
                     ready = service.event()

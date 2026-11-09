@@ -172,7 +172,7 @@ export function useAeatSyncRun(
           if (mine === connection && requested === revision)
             update({ error: true, loading: false });
         }
-      } while (alive && again && unsubscribe);
+      } while (alive && again && !sessionEnded() && unsubscribe);
       reading = false;
     };
     const connect = async () => {

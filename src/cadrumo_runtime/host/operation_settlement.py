@@ -41,9 +41,12 @@ async def verify_inventory(host: ProfileWorkerOperationHost) -> None:
         try:
             while True:
                 page = await services.recovery_inventory(after=after, limit=128)
-                refused |= any(
-                    entry.disposition is OperationRecoveryInventoryDisposition.REFUSED for entry in page.entries
-                )
+                for entry in page.entries:
+                    if entry.disposition is OperationRecoveryInventoryDisposition.REFUSED:
+                        refused = True
+                        _log.warning(
+                            "operation refused for an unreadable journal record operation=%s", entry.operation_id
+                        )
                 unsettled.update(
                     entry.operation_id
                     for entry in page.entries
@@ -52,7 +55,8 @@ async def verify_inventory(host: ProfileWorkerOperationHost) -> None:
                 if not page.has_more:
                     break
                 after = page.next_cursor
-        except (RepositoryError, ValueError):
+        except (RepositoryError, ValueError) as error:
+            _log.warning("operation refused for an unavailable journal inventory error=%s", type(error).__name__)
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE) from None
         if refused or host.closed:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)

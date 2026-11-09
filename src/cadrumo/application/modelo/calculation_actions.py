@@ -577,6 +577,7 @@ def evaluate_modelo_revision_with_trusted_mesh_sources(
         evaluated_at=evaluated_at,
         work_unit_id=work_unit_id,
         work_unit_repository=ports.work_unit_repository,
+        calculation_repository=ports.calculation_repository,
         casilla_inputs=casilla_inputs,
         backend_casilla_inputs=backend_casilla_inputs,
         ledger_preflight_transaction_repository=ports.transaction_repository,

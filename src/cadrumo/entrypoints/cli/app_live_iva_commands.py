@@ -357,6 +357,15 @@ _IVA_WALLET_DECISION_REASON_LOCALE_KEYS: Final[dict[IvaCompensationDecisionReaso
     IvaCompensationDecisionReason.CALLER_ZERO_MATCHES_LOCAL_AUTHORITY: (
         "application.iva_wallet.decision_reason.caller_zero_matches_local_authority"
     ),
+    IvaCompensationDecisionReason.LOCAL_CALCULATION_CALCULATION_GRADE: (
+        "application.iva_wallet.decision_reason.local_calculation_calculation_grade"
+    ),
+    IvaCompensationDecisionReason.LOCAL_CALCULATION_REFUND_UNDECIDED: (
+        "application.iva_wallet.decision_reason.local_calculation_refund_undecided"
+    ),
+    IvaCompensationDecisionReason.LOCAL_CALCULATION_REDEME_UNSTATED: (
+        "application.iva_wallet.decision_reason.local_calculation_redeme_unstated"
+    ),
 }
 
 

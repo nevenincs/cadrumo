@@ -1103,7 +1103,10 @@ including relinked but unchanged images, keeps the package identity; it lives on
 so it never forces a recompile. `data/build.json` and the manifest's `build` carry the
 package's `build_id`, `build_sequence`, `build_number`, `build_date`, `build_type` and
 `display_version`, and the interpreter hosts' identity under `build.interpreter`, which the
-bootstrap compares with the running host to refuse a mixed build. The manifest lists each
+bootstrap compares with the running host to refuse a mixed build. They also carry
+`source_commit`: the full commit hash the builder supplied in `CADRUMO_SOURCE_COMMIT`, or
+null when none was supplied. The build never resolves it from version control, and a new
+value restages `app-payload`. The manifest lists each
 Cadrumo-built binary under `components` (name, role, path, component, version, build id,
 sequence, date, type and display version of its own component), the agent's installed
 closure under `agent.dependencies`, and the staged agent Node version under `tools.node`.

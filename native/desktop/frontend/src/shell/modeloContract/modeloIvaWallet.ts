@@ -15,6 +15,7 @@ export type IvaCompensationAuthority =
   | "taxpayer_override"
   | "filed_history"
   | "local_recurrence"
+  | "local_calculation"
   | "missing";
 
 export type IvaCompensationDivergence =
@@ -29,6 +30,7 @@ export type IvaCompensationDivergence =
   | "first_period_zero"
   | "filed_history_zero"
   | "local_recurrence_zero"
+  | "local_calculation_only"
   | "missing";
 
 /**

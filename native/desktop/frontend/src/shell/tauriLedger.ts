@@ -1,6 +1,7 @@
 import { Channel, invoke } from "@tauri-apps/api/core";
 import type { ShellToken, TokenHeader } from "../ipc/contract";
 import type { HostCall } from "./hostCall";
+import { refuseIfEnded, sessionBound } from "./sessionGate";
 import type {
   LedgerDropSignal,
   LedgerOutcome,
@@ -17,32 +18,35 @@ export function tauriLedger(
   token: ShellToken | null,
   call: HostCall,
 ): LedgerPort {
+  // Only a signed-in session can ask these; files and drops are released
+  // and observed whatever the session's state.
+  const bound = sessionBound(call);
   return {
     async submit(definition, payload) {
-      const outcome = await call("ledger_submit", { definition, payload });
+      const outcome = await bound("ledger_submit", { definition, payload });
       // The runtime decoded the request against this definition's registered
       // contract and published its result under that contract's schema.
       return outcome as LedgerOutcome<LedgerResult<typeof definition>>;
     },
-    observe: (operation) => call("ledger_observe", { operation }),
+    observe: (operation) => bound("ledger_observe", { operation }),
     async review<Review>(operation: string) {
-      const review = await call("ledger_review", { operation });
+      const review = await bound("ledger_review", { operation });
       return review as LedgerReview<Review>;
     },
     answer: (operation, reviewDigest, decision) =>
-      call("ledger_answer", { operation, reviewDigest, decision }),
+      bound("ledger_answer", { operation, reviewDigest, decision }),
     cancel: (operation, revision) =>
-      call("ledger_cancel", { operation, revision }),
+      bound("ledger_cancel", { operation, revision }),
     pickFiles: (purpose, pick, filterLabel) =>
-      call("ledger_files_pick", { purpose, pick, filterLabel }),
+      bound("ledger_files_pick", { purpose, pick, filterLabel }),
     saveFile: (format, filterLabel, suggestedName) =>
-      call("ledger_files_save", {
+      bound("ledger_files_save", {
         format,
         filterLabel,
         suggestedName: suggestedName ?? null,
       }),
     revealFile: (token) =>
-      call("ledger_files_reveal", { token }).then(() => undefined),
+      bound("ledger_files_reveal", { token }).then(() => undefined),
     forgetFiles: (tokens) =>
       call("ledger_files_forget", { tokens }).then(() => undefined),
     async observeDrops(purpose, listener) {
@@ -67,6 +71,7 @@ export function tauriLedger(
     async changeOwnAccount(change) {
       try {
         if (!token) throw new Error("Missing desktop launch token.");
+        refuseIfEnded();
         return await invoke<LedgerOutcome>("ledger_own_account", change, {
           headers: { [TOKEN_HEADER]: token },
         });

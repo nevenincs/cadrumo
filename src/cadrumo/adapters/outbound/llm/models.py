@@ -14,7 +14,7 @@ from datetime import datetime
 from decimal import Decimal
 from functools import wraps
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, JsonValue, field_validator
 
 from ....core.config_support import LLMProvider, RetiredLLMProvider
 from ....core.errors.hierarchy import pydantic_validation_boundary
@@ -162,6 +162,13 @@ class LLMRequest(BaseModel):
         description=(
             "The job this request does. The agent service selects the lane and model for it, "
             "so a request dispatched to the agent must name one."
+        ),
+    )
+    response_schema: dict[str, JsonValue] | None = Field(
+        default=None,
+        description=(
+            "A JSON Schema object the lane constrains the reply to. The reader still extracts and "
+            "validates the reply; the schema only keeps a model from answering in another shape."
         ),
     )
     expects_json: bool = Field(
