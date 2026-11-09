@@ -420,6 +420,50 @@ _M347_METALICO_CASILLA: CasillaId = validated_casilla_id("contraparte.importe-me
 """The declarado record field for amounts received in cash (2025 design pos. 101-115), filled once per record."""
 
 
+def _m347_provincia_unstated_advisories(
+    declared: Sequence[ObservedInvoice],
+    *,
+    context: CalculationSourceContext,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Name each Spanish declarado whose provincia the person has not stated, with an invoice to open.
+
+    A Spanish declarado's CÓDIGO PROVINCIA (pos. 77-78) is that of its domicilio
+    fiscal, which the invoices hold only inside free-text addresses. The person
+    states it once for the counterparty; until then each such counterpart is its
+    own note, carrying its earliest declared invoice so the note opens where it
+    is put right.
+    """
+    unstated: dict[str, ObservedInvoice] = {}
+    for invoice, observation in sorted(
+        declared, key=lambda item: (item[0].issued_at, item[0].invoice_number, item[0].invoice_id)
+    ):
+        if observation.country_code == SPAIN_COUNTRY_CODE and observation.party_provincia_code is None:
+            unstated.setdefault(str(observation.party_tax_id), (invoice, observation))
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    for party, (invoice, observation) in sorted(unstated.items()):
+        named = party if observation.party_legal_name is None else f"{observation.party_legal_name} ({party})"
+        diagnostics.append(
+            CalculationSourceDiagnostic(
+                reason="m347_declarado_provincia_unrecorded",
+                source_kind=BindingSourceKind.M347_THIRD_PARTY_OPERATION.value,
+                resolver_id=resolver_id,
+                source_ref=f"m347-record:provincia-not-stated:{invoice.invoice_id}",
+                casilla_id=_M347_PROVINCIA_CASILLA,
+                fact=CalculationNoteFact.of(
+                    CalculationNoteSentence.M347_PROVINCIA_UNSTATED, rows=(invoice.invoice_id,), party=named
+                ),
+                message=(
+                    f"Modelo 347 declares the Spanish counterparty {named} for ejercicio {context.filing_year}, "
+                    "but its record's provincia code is that of its domicilio fiscal, which no stated fact "
+                    "gives, so it is left without content."
+                ),
+                remedy="State the provincia of the counterparty's domicilio fiscal, then calculate again.",
+            ),
+        )
+    return tuple(diagnostics)
+
+
 def _m347_record_field_advisories(
     declarable: M347DeclarableSet,
     m347_items: Sequence[ObservedInvoice],
@@ -429,14 +473,14 @@ def _m347_record_field_advisories(
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Name the declarado record fields the declared operations need but the invoices cannot fill.
 
-    Three gaps, each one advisory per calculation and only for operations that
+    Three gaps, advisory and only for operations that
     are actually declared:
 
     - a criterio de caja record must also carry the amount devengado in the
       year under LIVA art. 163 terdecies (2025 design pos. 284-299), which
       turns on the collection and payment dates the invoice does not record;
     - a Spanish declarado's CÓDIGO PROVINCIA (pos. 77-78) is that of its
-      domicilio fiscal, which the invoice holds only inside free-text addresses;
+      domicilio fiscal, named per counterpart until the person states it;
     - the amounts above 6.000 EUR received in cash from a declarado (art.
       34.1.h, pos. 101-115) need a cash-collection fact no invoice carries.
     """
@@ -466,33 +510,7 @@ def _m347_record_field_advisories(
                 asserted_legal_refs=("rd-1065-2007:art-34.1.j", "ley-37-1992:art-163-terdecies"),
             ),
         )
-    without_provincia = sorted(
-        {
-            observation.party_tax_id
-            for _invoice, observation in declared
-            if observation.country_code == SPAIN_COUNTRY_CODE
-        },
-    )
-    if without_provincia:
-        diagnostics.append(
-            CalculationSourceDiagnostic(
-                reason="m347_declarado_provincia_unrecorded",
-                source_kind=BindingSourceKind.M347_THIRD_PARTY_OPERATION.value,
-                resolver_id=resolver_id,
-                source_ref="m347-record:provincia-not-recorded",
-                casilla_id=_M347_PROVINCIA_CASILLA,
-                fact=CalculationNoteFact.of(
-                    CalculationNoteSentence.M347_PROVINCIA_UNRECORDED, parties=", ".join(without_provincia)
-                ),
-                message=(
-                    f"Modelo 347 declares the Spanish counterparties {', '.join(without_provincia)} for ejercicio "
-                    f"{context.filing_year}, but each record's provincia code is that of the counterparty's "
-                    "domicilio fiscal, which the invoices hold only as free-text addresses, so it is left "
-                    "without content."
-                ),
-                remedy="Complete the provincia code of each listed counterparty on the AEAT form before filing.",
-            ),
-        )
+    diagnostics.extend(_m347_provincia_unstated_advisories(declared, context=context, resolver_id=resolver_id))
     if any(invoice.kind is InvoiceKind.ISSUED for invoice, _observation in declared):
         diagnostics.append(
             CalculationSourceDiagnostic(

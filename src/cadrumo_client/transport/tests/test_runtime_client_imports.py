@@ -36,6 +36,12 @@ class RefuseUnusedModels(importlib.abc.MetaPathFinder):
             raise RuntimeError('unneeded_client_model_import')
         return None
 
+import platform
+
+# Resolve the host identity before the effects guard goes in: on Windows the first
+# uname() asks WMI and, when that query fails under load, launches cmd for `ver`.
+platform.uname()
+
 def refuse_actions(event, args):
     if event in {'socket.connect', 'socket.bind', 'subprocess.Popen', 'os.system'}:
         raise RuntimeError('import_action_refused')

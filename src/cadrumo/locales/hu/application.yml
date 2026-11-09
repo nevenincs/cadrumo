@@ -1486,10 +1486,10 @@ application:
         what: Egy számlán rögzített egyenértékűségi pótlék eltér a hivatalos kulcstól.
         what_to_do: Ellenőrizd a számlához tartozó pótlékot a nyilvántartásodban.
       invoice_recargo_not_attributable_to_a_tier:
-        what: Egyetlen pótlék több áfakulcsú sort is lefed, ezért nem lehetett összevetni
-          a hivatalos kulcsokkal.
-        what_to_do: Ellenőrizd te magad a pótlékot, vagy oszd fel a számlát áfakulcsonként
-          a nyilvántartásodban.
+        what: Ezt a bevallást egy több áfakulcsot lefedő számla pótléka nélkül számoltuk
+          ki.
+        what_to_do: 'Számold újra: a pótlék kulcsonként bekerül a bevallásba, vagy
+          megmutatjuk a javítandó számlát.'
       invoice_reverse_charge_cuota_not_derivable:
         what: Egy fordított adózású beérkezett számlán nincs áfakulcs, ezért a rá
           fizetendő áfa nem lett kiszámolva.
@@ -1530,10 +1530,10 @@ application:
           erősíti meg hivatalos forrás.
         what_to_do: Benyújtás előtt vesd össze ezeket az összegeket a hivatalos útmutatóval.
       m347_declarado_provincia_unrecorded:
-        what: 'Néhány bejelentett partnernél hiányzik ez: {box}. Az adóügyi lakcímükhöz
+        what: 'Ennél a bejelentett partnernél hiányzik ez: {box}. Az adóügyi lakcíméhez
           tartozik, amit a számláid nem tüntetnek fel.'
-        what_to_do: A bevallás benyújtása előtt add meg minden felsorolt partner adóügyi
-          lakcímének tartománykódját.
+        what_to_do: Nyisd meg a számláját, és add meg az adóügyi lakcíme szerinti
+          tartományt; újraszámoláskor minden számlájára érvényes.
       m347_metalico_unrecorded:
         what: 'A számláid nem mutatják, hogyan fizették ki őket, ezért ez egyik rekordban
           sem tartalmaz összeget: {box}.'
@@ -1813,6 +1813,7 @@ application:
       instalment_free_gap: '{element}: {start} és {end} között nincs rögzített értékcsökkenési
         leírás. A módszere rád bízza az összeget, ezért semmit sem ad a(z) {box} mezőhöz.'
       m347_provincia_unrecorded: 'Tartománykód nélküli partnerek: {parties}.'
+      m347_provincia_unstated: Hiányzik {party} adóügyi lakcímének tartománya.
       possibly_durable_expense: A(z) {row_date} napi, {row_amount} összegű tétel folyó
         költségként kerül levonásra, a leírása pedig tartós eszközre utal.
       prior_filing_unrecorded: A(z) {box} mező kiszámításához rögzítsd a(z) {year}.
@@ -2364,6 +2365,9 @@ application:
         invoice_deduction_family_unresolved: 'a kifizetett bejövő számlából nem derül
           ki, melyik levonás illeti meg: sorold be a tételt, például folyó költségként
           vagy beruházási javakként'
+        invoice_recargo_split_unresolved: 'egy kiállított számla több áfakulcsra egyetlen
+          kiegyenlítő pótlékot (recargo de equivalencia) tartalmaz, amely eltér az
+          egyes kulcsok pótlékának összegétől: javítsd a számla pótlékát'
         linked_movement_contradicts_invoice: az adóalapja vagy az IVA-összege eltér
           a kifizetett számláétól
         missing_business_classification: még nincs besorolva üzleti, magán vagy vegyes
@@ -2911,6 +2915,10 @@ application:
           ingresos: Eddigi bevétel (Modelo 130 bevallások)
           pagos_fraccionados: Befizetett előlegfizetések (Modelo 130 bevallások)
           rendimiento_neto: Eddigi nettó jövedelem (Modelo 130 bevallások)
+      ledger_hold:
+        movement: 'A(z) %{period} kiszámítása előtt nézd át a(z) %{movement_date}
+          tételt („%{movement_description}”, %{movement_amount}): %{need}.'
+        period: 'A(z) %{period} kiszámítása előtt: %{need}.'
       next_step:
         calculate_work: 'Számítsd ki: %{modelo}, %{period}'
         create_work: 'Hozd létre: %{modelo}, %{period}'

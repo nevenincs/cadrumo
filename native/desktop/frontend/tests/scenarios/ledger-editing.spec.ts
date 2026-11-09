@@ -2,6 +2,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { showLedgerColumn } from "../support/ledgerPage";
+import { captureUnrecordedQuestions } from "../support/stagedCheckCapture";
 import { label } from "../support/strings";
 
 // Staged editing on the Ledger page over the scenario's ledger: cell
@@ -18,6 +19,7 @@ const engine = readFileSync(
 );
 
 async function open(target: Page, extra = "", scheme?: "light" | "dark") {
+  await captureUnrecordedQuestions(target);
   if (scheme)
     await target.addInitScript((appearance) => {
       localStorage.setItem(

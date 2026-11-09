@@ -56,6 +56,7 @@ from ....core.field_origin import FieldOrigin
 from ....core.identity.documents import IdentityError
 from ....core.identity.nif_iva import normalise_nif_iva
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.money.rounding import CENT
 from ....core.operator_action_enums import ActionEvidenceProvenance
 from ....core.parsing.codes import normalise_iso_4217_currency
 from ....core.parsing.dates import parse_date
@@ -506,10 +507,21 @@ def _grounded_money(raw: str | None, currency_unit: str | None = None) -> Decima
     The earlier note on :func:`_grounded_percentage` -- that a percent sign on
     an AMOUNT is a misread rather than a unit -- still holds: ``21%`` is not a
     currency unit, so it is not removed here and still drops.
+
+    An amount is held to the cent, the precision every invoice amount is kept
+    and rounded at, and it is never quantized there silently. Zeros beyond the
+    cent are the printed figure written long and normalize to it; any other
+    digit beyond the cent (a float's representation error carried in a quoted
+    string, ``145.2000000000000111``) is one no printed document holds, so the
+    amount is not grounded and the person is asked for it.
     """
     if raw is None:
         return None
-    return _grounded_decimal(without_currency_unit(raw, currency_unit))
+    amount = _grounded_decimal(without_currency_unit(raw, currency_unit))
+    if amount is None:
+        return None
+    at_the_cent = amount.quantize(CENT)
+    return at_the_cent if at_the_cent == amount else None
 
 
 def _grounded_currency(raw: str | None) -> str | None:
