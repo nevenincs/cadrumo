@@ -1755,6 +1755,35 @@ fn a_model_the_router_does_not_present_reads_absent_and_its_setup_downloads_noth
 }
 
 #[test]
+fn with_llama_cpp_selected_a_model_stating_no_context_is_refused_before_any_download() {
+    let text = StoredModel::new(1);
+    let vision = StoredModel::new(9);
+    let mut world = World::llama_cpp(&text, &vision);
+    world.llamacpp_context = None;
+    world.serve_router();
+
+    // The router could never present a model with no llama.cpp context, so the local AI
+    // reads not in this build rather than offering a download that ends damaged.
+    assert_eq!(
+        row(&world.status(), ItemId::LocalAi).state,
+        ItemState::Blocked(BlockedReason::NotInThisBuild)
+    );
+    let refused = world.plan(Some(vec![ItemId::LocalAi]));
+    assert_eq!(
+        (refused.outcome, refused.failure),
+        (Outcome::Refused, Some(FailureCategory::NotInThisBuild)),
+        "{refused:?}"
+    );
+    assert!(world.registry_requests().is_empty(), "nothing was fetched");
+    assert!(world.ollama_requests().is_empty());
+
+    // Stating the context, the same selection plans its download.
+    world.llamacpp_context = Some(LLAMA_CONTEXT);
+    let planned = world.plan(Some(vec![ItemId::LocalAi]));
+    assert!(planned.plan.is_some(), "{planned:?}");
+}
+
+#[test]
 fn a_load_that_fails_or_an_answer_without_a_token_fails_the_full_check() {
     let text = StoredModel::new(1);
     let vision = StoredModel::new(9);
