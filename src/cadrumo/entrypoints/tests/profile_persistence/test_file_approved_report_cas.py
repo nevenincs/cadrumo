@@ -20,7 +20,7 @@ from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.filing_actions import ModeloFilingResult, file_modelo_revision
-from cadrumo.core.secure_object_write import SecureObjectWrite
+from cadrumo.core.secure_object_write import SecureObjectRevisionAssertion, SecureObjectWrite, SecureObjectWriteUnit
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionCatalogue, CalculationRevisionState
@@ -75,16 +75,16 @@ class _CalculationRevisionChangedBeforeCommit(CalculationRevisionCatalogueReposi
     """Advance the current encrypted calculation row before its guarded batch."""
 
     @override
-    def to_secure_object_write(
+    def to_secure_object_write_unit(
         self,
         catalogue: CalculationRevisionCatalogue,
         *,
         expected_revision_id: str | None = None,
-    ) -> SecureObjectWrite:
+    ) -> SecureObjectWriteUnit:
         """Keep the old row but change its persistence revision after the read."""
-        write = super().to_secure_object_write(catalogue, expected_revision_id=expected_revision_id)
+        unit = super().to_secure_object_write_unit(catalogue, expected_revision_id=expected_revision_id)
         self.save(self.load())
-        return write
+        return unit
 
 
 class _WorkUnitRevisionChangedBeforeCommit(WorkUnitCatalogueRepository):
@@ -113,6 +113,7 @@ class _FilingRevisionChangedBeforeCommit(ModeloRecordCatalogueRepository):
         extra_writes: tuple[SecureObjectWrite, ...],
         *,
         expected_revision_id: str | None = None,
+        assertions: tuple[SecureObjectRevisionAssertion, ...] = (),
     ) -> None:
         """Keep the old row but change its persistence revision before commit."""
         self.save(self.load())
@@ -120,6 +121,7 @@ class _FilingRevisionChangedBeforeCommit(ModeloRecordCatalogueRepository):
             catalogue,
             extra_writes,
             expected_revision_id=expected_revision_id,
+            assertions=assertions,
         )
 
 

@@ -9,6 +9,13 @@ Each catalogue is wrapped in
 :class:`~adapters.persistence.storage.envelope.contract.Envelope` before being written to
 the encrypted BLOB per profile bucket.
 
+A saved revision's rendering snapshot is stored once per profile, keyed by its
+rendering digest, in the sibling rendering-snapshot namespace; the catalogue row
+holds a discriminated reference to it. A catalogue written before that form
+existed embeds each rendering whole and stays readable as it is until its next
+ordinary write. Every read hydrates references from verified rows, so the
+loaded :class:`~CalculationRevisionCatalogue` is the same in either form.
+
 This concrete repository is the persistence adapter behind the read-side
 :class:`~CalculationRevisionCatalogueRepositoryProtocol`. It
 lives in the persistence adapter (not in :mod:`~domain.modelos`) because its
@@ -39,23 +46,31 @@ Core types:
 
 from __future__ import annotations
 
+import contextlib
 from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import date
+from functools import cache
 from threading import Lock
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
 
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ....core.bucket_pointer import resolve_repository_bucket_id
 from ....core.diagnostic_log import diagnostic_timing_event
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ....core.modelo import Modelo
-from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
-from ....core.time.clock import today_madrid
+from ....core.secure_object_write import (
+    ABSENT_SECURE_OBJECT_REVISION_ID,
+    SecureObjectRevisionAssertion,
+    SecureObjectWrite,
+    SecureObjectWriteUnit,
+)
+from ....core.time.clock import now, today_madrid
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.form_codes import form_for_role
 from ....domain.calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
@@ -70,14 +85,25 @@ from ....domain.modelos.calculation_revision_aggregate import (
     CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY,
     CalculationRevisionAggregateContext,
 )
+from ....domain.modelos.calculation_revision_rendering import (
+    SAVED_RENDERING_BODIES_CONTEXT,
+    SAVED_RENDERING_REFERENCE_SERIALIZATION,
+    CalculationRenderingSnapshot,
+    SavedRenderingBody,
+    saved_rendering_reference_digest,
+)
 from ....domain.modelos.errors import raise_catalogue_integrity_error
 from ....domain.modelos.work_unit import WorkUnitCatalogue
 from ..storage.crypto.encrypted_columns import secure_object_key_digest
 from ..storage.runtime_repository import secure_object_repository_for_bucket
-from ..storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
+from ..storage.secure_object_namespaces import (
+    MODELO_CALCULATION_RENDERING_SNAPSHOT_NAMESPACE,
+    MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
+)
 from .secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
+    from ..storage.sql.secure_object_records import SecureObjectRecord
     from ..storage.sql.secure_objects import SecureObjectRepository
 
 _LOGGER = get_logger(__name__)
@@ -142,6 +168,8 @@ class _ValidationInputs:
     governed_facts: GovernedFactSource | None
     validated_on: date
     aggregate_context: CalculationRevisionAggregateContext
+    rendering_rows: tuple[tuple[str, str | None], ...]
+    """Each referenced rendering digest with the revision of the row stored under it."""
 
     def matches(self, other: _ValidationInputs) -> bool:
         """Report whether ``other`` would validate exactly as these inputs did."""
@@ -152,6 +180,7 @@ class _ValidationInputs:
             and self.governed_facts is other.governed_facts
             and self.validated_on == other.validated_on
             and self.aggregate_context == other.aggregate_context
+            and self.rendering_rows == other.rendering_rows
         )
 
 
@@ -161,6 +190,71 @@ class _ValidatedCatalogue:
 
     inputs: _ValidationInputs
     catalogue: CalculationRevisionCatalogue
+    referenced_digests: tuple[str, ...]
+
+
+class _StoredRendering(TypedDict, total=False):
+    """The two fields of a stored rendering that tell its form, read without decoding the rest."""
+
+    form: object
+    rendering_digest: object
+
+
+class _StoredRevision(TypedDict, total=False):
+    rendering_snapshot: _StoredRendering | None
+
+
+class _StoredRevisions(TypedDict):
+    revisions: dict[str, _StoredRevision]
+
+
+class _StoredCatalogueEnvelope(TypedDict):
+    payload: _StoredRevisions
+
+
+@cache
+def _stored_catalogue_renderings() -> TypeAdapter[_StoredCatalogueEnvelope]:
+    return TypeAdapter(_StoredCatalogueEnvelope)
+
+
+def _persistence_refusal(message: str, reason: str) -> CalculationRevisionPersistenceError:
+    return CalculationRevisionPersistenceError(
+        message,
+        translated_message=_CALCULATION_PERSISTENCE_MESSAGE,
+        context={"reason": reason},
+    )
+
+
+def _referenced_rendering_digests(payload: bytes) -> tuple[str, ...]:
+    """Return the distinct rendering digests a stored catalogue refers to, in sorted order.
+
+    Raises:
+        CalculationRevisionPersistenceError: The payload is not a catalogue
+            envelope, or a rendering names a storage form this reader does
+            not know.
+    """
+    # Each refusal is raised outside its handler so the decoder failure, which
+    # can quote stored bytes, is not chained onto the redacted error.
+    stored: _StoredCatalogueEnvelope | None = None
+    with contextlib.suppress(ValidationError):
+        stored = _stored_catalogue_renderings().validate_json(payload)
+    if stored is None:
+        raise _persistence_refusal("calculation-revision catalogue payload is invalid", "invalid_payload")
+    digests: set[str] = set()
+    for revision in stored["payload"]["revisions"].values():
+        known_form = True
+        digest: str | None = None
+        try:
+            digest = saved_rendering_reference_digest(revision.get("rendering_snapshot"))
+        except ValueError:
+            known_form = False
+        if not known_form:
+            raise _persistence_refusal(
+                "calculation revision names an unknown rendering storage form", "unknown_rendering_form"
+            )
+        if digest is not None:
+            digests.add(digest)
+    return tuple(sorted(digests))
 
 
 class CalculationRevisionCatalogueRepository:
@@ -169,9 +263,10 @@ class CalculationRevisionCatalogueRepository:
     :data:`~adapters.persistence.storage.secure_object_namespaces.MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE`
     is the central namespace, schema-version, sensitivity, and singleton-key
     contract for the encrypted :class:`CalculationRevisionCatalogue` row. The
-    write path (``to_secure_object_write`` / ``save`` / ``exists``) composes
+    write path (``to_secure_object_write_unit`` / ``save`` / ``exists``) composes
     :class:`~adapters.persistence.profile.secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
-    for the shared Envelope-construction mechanic; both read doors share
+    for the shared Envelope-construction mechanic and adds the rendering-snapshot
+    rows its revisions refer to; both read doors share
     one decoder here because it translates a classification or schema-version mismatch
     into :class:`CalculationRevisionPersistenceError` via
     :func:`~domain.modelos.errors.raise_catalogue_integrity_error`, and runs the
@@ -206,7 +301,10 @@ class CalculationRevisionCatalogueRepository:
             definition=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
             model_type=CalculationRevisionCatalogue,
             empty_document=CalculationRevisionCatalogue,
-            serialization_context={"secure_calculation_revision": True},
+            serialization_context={
+                "secure_calculation_revision": True,
+                SAVED_RENDERING_REFERENCE_SERIALIZATION: True,
+            },
         )
 
     @property
@@ -297,31 +395,137 @@ class CalculationRevisionCatalogueRepository:
             return CalculationRevisionCatalogue(), ABSENT_SECURE_OBJECT_REVISION_ID
         _catalogue_phase("load_validation_begin")
         aggregate_context = self._calculation_revision_aggregate_context(operation=operation)
+        payload_digest = sha256_hex(record.payload)
+        held = self._last_validated
+        referenced = (
+            held.referenced_digests
+            if held is not None and held.inputs.payload_digest == payload_digest
+            else _referenced_rendering_digests(record.payload)
+        )
+        rendering_revisions = (
+            self._objects.peek_many_revision_ids(MODELO_CALCULATION_RENDERING_SNAPSHOT_NAMESPACE.namespace, referenced)
+            if referenced
+            else {}
+        )
         inputs = _ValidationInputs(
             revision_id=record.revision_id,
-            payload_digest=sha256_hex(record.payload),
+            payload_digest=payload_digest,
             operation=operation,
             governed_facts=governed_facts_in_scope(),
             validated_on=today_madrid(),
             aggregate_context=aggregate_context,
+            rendering_rows=tuple((digest, rendering_revisions.get(digest)) for digest in referenced),
         )
-        held = self._last_validated
-        if held is not None and held.inputs.matches(inputs):
+        if held is not None and held.inputs.matches(inputs) and len(rendering_revisions) == len(referenced):
             catalogue = held.catalogue
         else:
-            catalogue = self._validated_catalogue(record.payload, aggregate_context=aggregate_context)
-            self._last_validated = _ValidatedCatalogue(inputs=inputs, catalogue=catalogue)
+            catalogue = self._validated_catalogue(
+                record.payload,
+                aggregate_context=aggregate_context,
+                rendering_bodies=self._verified_rendering_bodies(referenced),
+            )
+            self._last_validated = _ValidatedCatalogue(
+                inputs=inputs, catalogue=catalogue, referenced_digests=referenced
+            )
         _catalogue_phase("load_validation_end")
         _OVERRIDE_FREE_PAYLOADS.remember(record.payload, catalogue)
         return catalogue, record.revision_id
+
+    def _verified_rendering_bodies(self, digests: tuple[str, ...]) -> dict[str, SavedRenderingBody]:
+        """Load and verify the stored body of every referenced rendering digest.
+
+        Each row is read in one storage access, its AEAD and revision lineage
+        checked by the store, its envelope classification and version checked
+        here, and its body must recompute the digest it is stored under. A
+        missing, unreadable or mismatched row refuses the whole catalogue: a
+        reader never drops a rendering or substitutes one.
+
+        Raises:
+            CalculationRevisionPersistenceError: Typed by reason
+                ``rendering_snapshot_missing``, ``rendering_snapshot_unreadable`` or
+                ``rendering_snapshot_digest_mismatch``; a body that no longer
+                validates under the current authority refuses as
+                ``invalid_payload``, exactly as the same rendering embedded in
+                the catalogue does.
+        """
+        if not digests:
+            return {}
+        from ..storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
+
+        definition = MODELO_CALCULATION_RENDERING_SNAPSHOT_NAMESPACE
+
+        def refuse_other_version(_keys: tuple[str, ...]) -> None:
+            raise _persistence_refusal(
+                "saved rendering snapshot row has an unsupported schema version", "rendering_snapshot_unreadable"
+            )
+
+        records: tuple[SecureObjectRecord, ...] | None = None
+        with contextlib.suppress(ClassificationError, DecryptionError, EnvelopeVersionError):
+            records = tuple(
+                self._objects.load_many_current(
+                    definition.namespace,
+                    digests,
+                    expected_class=definition.sensitivity,
+                    current_version=definition.schema_version,
+                    refuse_legacy=refuse_other_version,
+                )
+            )
+        if records is None:
+            raise _persistence_refusal("saved rendering snapshot row is unreadable", "rendering_snapshot_unreadable")
+        digest_by_key = {secure_object_key_digest(digest): digest for digest in digests}
+        bodies: dict[str, SavedRenderingBody] = {}
+        for stored in records:
+            digest = digest_by_key.get(bytes(stored.object_key))
+            if digest is None:
+                raise _persistence_refusal(
+                    "saved rendering snapshot row is unreadable", "rendering_snapshot_unreadable"
+                )
+            body = self._decoded_rendering_body(stored.payload)
+            if not body.holds_rendering_digest(digest):
+                raise _persistence_refusal(
+                    "saved rendering snapshot row does not hold the body of its digest",
+                    "rendering_snapshot_digest_mismatch",
+                )
+            bodies[digest] = body
+        if len(bodies) != len(digests):
+            raise _persistence_refusal("saved rendering snapshot row is missing", "rendering_snapshot_missing")
+        return bodies
+
+    @staticmethod
+    def _decoded_rendering_body(payload: bytes) -> SavedRenderingBody:
+        """Decode one stored rendering body and check its envelope's classification and version."""
+        from ..storage.envelope.contract import parameterized_envelope_type
+        from ..storage.schema_lineage import (
+            inner_envelope_classification_is_expected,
+            inner_envelope_version_is_current,
+        )
+
+        definition = MODELO_CALCULATION_RENDERING_SNAPSHOT_NAMESPACE
+        envelope = None
+        with contextlib.suppress(ValidationError):
+            envelope = parameterized_envelope_type(SavedRenderingBody).model_validate_json(payload)
+        if envelope is None:
+            raise _persistence_refusal("saved rendering snapshot payload is invalid", "invalid_payload")
+        if not inner_envelope_classification_is_expected(
+            envelope.classification, definition.sensitivity
+        ) or not inner_envelope_version_is_current(envelope.schema_version, definition.schema_version):
+            raise _persistence_refusal(
+                "saved rendering snapshot envelope does not match its namespace", "rendering_snapshot_unreadable"
+            )
+        return envelope.payload
 
     def _validated_catalogue(
         self,
         payload: bytes,
         *,
         aggregate_context: CalculationRevisionAggregateContext,
+        rendering_bodies: dict[str, SavedRenderingBody] | None = None,
     ) -> CalculationRevisionCatalogue:
-        """Decode and validate one stored payload against the authorities it was read with."""
+        """Decode and validate one stored payload against the authorities it was read with.
+
+        ``rendering_bodies`` supplies the verified body of every rendering the
+        payload refers to by digest; embedded renderings need none.
+        """
         from ..storage.envelope.contract import Envelope
         from ..storage.schema_lineage import (
             inner_envelope_classification_is_expected,
@@ -336,6 +540,7 @@ class CalculationRevisionCatalogueRepository:
                 context={
                     CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY: aggregate_context,
                     "secure_calculation_revision": True,
+                    SAVED_RENDERING_BODIES_CONTEXT: rendering_bodies or {},
                 },
             )
         except ValidationError:
@@ -471,20 +676,18 @@ class CalculationRevisionCatalogueRepository:
     def save(self, catalogue: CalculationRevisionCatalogue) -> None:
         """Persist the calculation-revision catalogue to encrypted storage.
 
-        Wraps the catalogue (the keyed collection of a modelo's dated
-        calculation revisions) in an
-        :class:`~adapters.persistence.storage.envelope.contract.Envelope` stamped with the
-        current schema version, write time, and ``FINANCIAL`` sensitivity
-        classification, then writes the serialised envelope to the encrypted
-        store under this repository's namespace and key. An existing catalogue
-        object at that location is overwritten.
+        Commits the :meth:`to_secure_object_write_unit` of ``catalogue`` in one
+        SQL transaction: the catalogue row, stamped with the current schema
+        version, write time and ``FINANCIAL`` classification, overwrites any
+        existing one, and every rendering it refers to is created or asserted
+        present in the same transaction.
 
         Args:
             catalogue: The :class:`CalculationRevisionCatalogue` to serialise and
                 store.
         """
-        self._require_parent_coordinates(catalogue)
-        self._storage.save(catalogue)
+        unit = self.to_secure_object_write_unit(catalogue)
+        self._objects.apply_batch(unit.writes, assertions=unit.assertions)
 
     def load_revisioned(
         self,
@@ -513,20 +716,22 @@ class CalculationRevisionCatalogueRepository:
         _catalogue_phase("revisioned_end")
         return loaded
 
-    def to_secure_object_write(
+    def to_secure_object_write_unit(
         self,
         catalogue: CalculationRevisionCatalogue,
         *,
         expected_revision_id: str | None = None,
-    ) -> SecureObjectWrite:
-        """Return the secure-object upsert for ``catalogue`` without committing it.
+    ) -> SecureObjectWriteUnit:
+        """Return the writes and assertions that persist ``catalogue``, without committing them.
 
-        The returned :class:`~core.secure_object_write.SecureObjectWrite`
-        carries the same :class:`~adapters.persistence.storage.envelope.contract.Envelope`
-        and :class:`~core.classification.policies.SensitivityClass`
-        classification that :meth:`save` would persist directly. It can be
-        co-emitted with related secure objects (e.g. the participation index) in
-        one :meth:`save_with_secure_object_writes` unit of work.
+        The unit holds the catalogue row, whose revisions refer to their
+        renderings by digest, a create-only write for each referenced
+        rendering body not yet stored, and an assertion of the exact stored
+        revision of each one that is. A caller co-committing this catalogue
+        with other secure objects carries every write and every assertion into
+        its one batch, so the catalogue can never commit while a body it
+        refers to is missing. A body another writer creates in between turns
+        the create-only write into an ordinary revision conflict.
 
         Pass ``expected_revision_id`` from :meth:`load_revisioned` whenever the
         catalogue was DERIVED from a read; omitting it writes the whole
@@ -534,13 +739,60 @@ class CalculationRevisionCatalogueRepository:
         """
         _catalogue_phase("encode_begin")
         self._require_parent_coordinates(catalogue)
-        write = self._storage.to_secure_object_write(
+        catalogue_write = self._storage.to_secure_object_write(
             catalogue,
             expected_revision_id=expected_revision_id,
         )
-        _OVERRIDE_FREE_PAYLOADS.remember(write.payload, catalogue)
+        _OVERRIDE_FREE_PAYLOADS.remember(catalogue_write.payload, catalogue)
+        renderings: dict[str, CalculationRenderingSnapshot] = {}
+        for revision in catalogue.values():
+            rendering = revision.rendering_snapshot
+            if rendering is not None:
+                renderings.setdefault(rendering.rendering_digest, rendering)
+        definition = MODELO_CALCULATION_RENDERING_SNAPSHOT_NAMESPACE
+        stored = self._objects.peek_many_revision_ids(definition.namespace, renderings) if renderings else {}
+        body_writes: list[SecureObjectWrite] = []
+        assertions: list[SecureObjectRevisionAssertion] = []
+        for digest, rendering in sorted(renderings.items()):
+            if digest not in stored:
+                body_writes.append(self._rendering_body_write(digest, rendering))
+                continue
+            stored_revision = stored[digest]
+            if stored_revision is None:
+                raise _persistence_refusal(
+                    "saved rendering snapshot row carries no revision", "rendering_snapshot_unreadable"
+                )
+            assertions.append(
+                SecureObjectRevisionAssertion(
+                    namespace=definition.namespace,
+                    object_key=digest,
+                    expected_revision_id=stored_revision,
+                )
+            )
         _catalogue_phase("encode_end")
-        return write
+        return SecureObjectWriteUnit(writes=(catalogue_write, *body_writes), assertions=tuple(assertions))
+
+    @staticmethod
+    def _rendering_body_write(digest: str, rendering: CalculationRenderingSnapshot) -> SecureObjectWrite:
+        """Prepare the create-only row holding the shareable body of one rendering digest."""
+        from ..storage.envelope.contract import parameterized_envelope_type
+
+        definition = MODELO_CALCULATION_RENDERING_SNAPSHOT_NAMESPACE
+        envelope = parameterized_envelope_type(SavedRenderingBody)(
+            schema_version=definition.schema_version,
+            written_at=now(),
+            classification=definition.sensitivity,
+            payload=rendering.saved_body(),
+        )
+        return SecureObjectWrite(
+            namespace=definition.namespace,
+            object_key=digest,
+            classification=definition.sensitivity,
+            schema_version=definition.schema_version,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
+            expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
+        )
 
     def save_with_secure_object_writes(
         self,
@@ -551,10 +803,11 @@ class CalculationRevisionCatalogueRepository:
     ) -> None:
         """Persist ``catalogue`` plus related secure objects in one unit of work.
 
-        The catalogue save and every extra write land or fail together in a
-        single SQL transaction, so the participation index co-emitted here can
-        never drift from the calculation revision it indexes (per the
-        composition-service single-writer discipline).
+        The catalogue's :meth:`to_secure_object_write_unit` and every extra
+        write land or fail together in a single SQL transaction, so the
+        participation index co-emitted here can never drift from the
+        calculation revision it indexes (per the composition-service
+        single-writer discipline).
 
         Args:
             catalogue: The :class:`CalculationRevisionCatalogue` to persist.
@@ -569,9 +822,8 @@ class CalculationRevisionCatalogueRepository:
                 dropped calculation revision is a dropped tax computation. Omit
                 only when the catalogue was not derived from a read.
         """
-        self._objects.save_many(
-            (self.to_secure_object_write(catalogue, expected_revision_id=expected_revision_id), *extra_writes),
-        )
+        unit = self.to_secure_object_write_unit(catalogue, expected_revision_id=expected_revision_id)
+        self._objects.apply_batch((*unit.writes, *extra_writes), assertions=unit.assertions)
 
 
 __all__ = [

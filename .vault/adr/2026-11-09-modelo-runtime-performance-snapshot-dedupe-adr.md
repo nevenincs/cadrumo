@@ -5,7 +5,7 @@ tags:
 date: '2026-11-09'
 modified: '2026-11-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:2da6b25646440c7518b32264273844e83eb257c9f4ac5ca60f579725f4fdd416'
+body_hash: 'sha256:3598cc20a6ce45b1e917bd43c113fb0468ded22ff3ce2d9486f1892eacd7231b'
 related:
   - "[[2026-10-07-modelo-runtime-performance-audit]]"
   - "[[2026-10-07-modelo-runtime-performance-plan]]"
@@ -18,7 +18,9 @@ related:
   - '[[2026-06-14-storage-backend-security-review-adr]]'
 ---
 
-# `modelo-runtime-performance` adr: `Deduplicate saved registry rendering snapshots by content digest` | (**status:** `proposed`)
+# `modelo-runtime-performance` adr: `Deduplicate saved registry rendering snapshots by content digest` | (**status:** `accepted`)
+
+Accepted 2026-11-09. Basis: the operator ordered on 2026-11-09 that the Modelo 303 edit latency, 2.4 to 2.9 s and growing with every saved revision, be handled, and the coordinator routed that instruction to this decision.
 
 ## Problem Statement
 

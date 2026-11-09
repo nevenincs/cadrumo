@@ -45,6 +45,9 @@ class ProfileOnlyCatalogueRepository[CatalogueT: BaseModel]:
     def to_secure_object_write(self, catalogue: object, **_kwargs: object) -> Never:
         raise AssertionError("this unit test does not prepare secure catalogue writes")
 
+    def to_secure_object_write_unit(self, catalogue: object, **_kwargs: object) -> Never:
+        raise AssertionError("this unit test does not prepare secure catalogue writes")
+
     def save_with_secure_object_writes(self, catalogue: object, extra_writes: object, **_kwargs: object) -> Never:
         raise AssertionError("this unit test does not co-commit this catalogue")
 

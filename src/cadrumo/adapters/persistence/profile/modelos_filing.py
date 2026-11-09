@@ -39,7 +39,7 @@ from typing import TYPE_CHECKING
 from ....core.bucket_pointer import resolve_repository_bucket_id
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
-from ....core.secure_object_write import SecureObjectWrite
+from ....core.secure_object_write import SecureObjectRevisionAssertion, SecureObjectWrite
 from ....domain.modelos.errors import raise_catalogue_integrity_error
 from ....domain.modelos.filing_record import ModeloRecordCatalogue
 from ....domain.modelos.filing_repository import ModeloRecordPersistenceError
@@ -331,6 +331,7 @@ class ModeloRecordCatalogueRepository:
         extra_writes: tuple[SecureObjectWrite, ...],
         *,
         expected_revision_id: str | None = None,
+        assertions: tuple[SecureObjectRevisionAssertion, ...] = (),
     ) -> None:
         """Persist ``catalogue`` plus related secure objects in one unit of work.
 
@@ -344,9 +345,12 @@ class ModeloRecordCatalogueRepository:
                 this method already gave; the revision is what stops the batch
                 discarding a filing record another writer committed between the
                 read and this call.
+            assertions: Source revisions a co-emitted write unit requires,
+                checked inside the same transaction.
         """
-        self._objects.save_many(
+        self._objects.apply_batch(
             (self.to_secure_object_write(catalogue, expected_revision_id=expected_revision_id), *extra_writes),
+            assertions=assertions,
         )
 
 

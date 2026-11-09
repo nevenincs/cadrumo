@@ -16,7 +16,10 @@ from ....application.user_profile.archive_operation_ports import (
 from ....core.hashing import sha256_hex
 from ...persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ...persistence.storage.namespace_taxonomy import StorageRemoteMirrorPolicy
-from ...persistence.storage.secure_object_namespaces import SecureObjectNamespaceDefinition
+from ...persistence.storage.secure_object_namespaces import (
+    CO_READABLE_NAMESPACE_UNITS,
+    SecureObjectNamespaceDefinition,
+)
 from ...persistence.storage.sql.secure_object_crypto import verify_revision_self_consistency
 from ...persistence.storage.sql.secure_object_records import SecureObjectRawRow
 from ...persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -174,12 +177,33 @@ class _MirrorObjectPushOutcome:
     `(namespace, hmac, error)` triples for the operator surface.
     ``cleanup_failed`` identifies acknowledged partial uploads retained because
     the provider cannot prove exclusive creation ownership for safe deletion.
+    ``withheld_with_unit`` names namespaces whose own uploads succeeded but
+    whose manifest is withheld because a co-readable namespace failed.
     """
 
     pushed_by_namespace: dict[str, int]
     failed_namespaces: set[str]
     failed: list[tuple[str, str, str]]
     cleanup_failed: list[tuple[str, str, str]] = field(default_factory=list)
+    withheld_with_unit: list[str] = field(default_factory=list)
+
+
+def co_readable_namespace_unit(namespace: str) -> frozenset[str]:
+    """Return the namespaces that are readable only together with ``namespace``, itself included."""
+    for unit in CO_READABLE_NAMESPACE_UNITS:
+        if namespace in unit:
+            return unit
+    return frozenset({namespace})
+
+
+def _with_co_readable_units(namespaces: set[str]) -> set[str]:
+    return {member for namespace in namespaces for member in co_readable_namespace_unit(namespace)}
+
+
+#: Why a namespace with no failure of its own is withheld: a mirror holding
+#: one namespace of a co-readable unit without the other restores rows that
+#: refuse to load, so the unit is published or withheld whole.
+_CO_READABLE_UNIT_WITHHELD = "withheld_with_co_readable_namespace"
 
 
 def _partition_mirror_rows(
@@ -198,8 +222,9 @@ def _partition_mirror_rows(
     planned_rows_by_ns: dict[str, list[SecureObjectRawRow]] = {}
     skipped_by_ns: dict[str, int] = {}
     total_seen = 0
+    selected = co_readable_namespace_unit(namespace_filter) if namespace_filter is not None else None
     for raw_row in repository.iter_all_records_raw():
-        if namespace_filter is not None and raw_row.namespace != namespace_filter:
+        if selected is not None and raw_row.namespace not in selected:
             continue
         total_seen += 1
         if limit is not None and total_seen > limit:
@@ -388,6 +413,10 @@ def preflight_mirror_namespaces(
             blocked.add(namespace)
             continue
         manifest_by_ns[namespace] = manifest
+    for namespace in sorted(_with_co_readable_units(blocked) - blocked):
+        blocked.add(namespace)
+        if manifest_by_ns.pop(namespace, None) is not None:
+            failed.append((namespace, _CO_READABLE_UNIT_WITHHELD))
     return _MirrorPreflightOutcome(
         manifests_by_namespace=manifest_by_ns,
         blocked_namespaces=blocked,
@@ -404,7 +433,8 @@ def _push_mirror_objects(
 ) -> _MirrorObjectPushOutcome:
     """Upload every planned row's ciphertext payload to the provider.
 
-    Skips namespaces that preflight blocked. Each row uploads via
+    Skips namespaces that preflight blocked. A failure in one namespace of a
+    co-readable unit withholds the manifest of the whole unit. Each row uploads via
     :meth:`StorageProvider.put` under its `<hmac>--<label>.bin` name; a
     per-object upload error records the failure and marks the namespace so
     its manifest is later withheld.
@@ -440,6 +470,12 @@ def _push_mirror_objects(
             pushed_by_ns[raw_row.namespace] = pushed_by_ns.get(raw_row.namespace, 0) + 1
             pushed_keys_by_namespace.setdefault(raw_row.namespace, []).append(hmac_hex)
 
+    withheld_with_unit: list[str] = []
+    for namespace in sorted(_with_co_readable_units(failed_namespaces) - failed_namespaces):
+        if namespace in planned_rows_by_namespace and namespace not in blocked_namespaces:
+            failed_namespaces.add(namespace)
+            withheld_with_unit.append(namespace)
+
     cleanup_failed: list[tuple[str, str, str]] = []
     for namespace in failed_namespaces:
         for hmac_hex in pushed_keys_by_namespace.get(namespace, ()):
@@ -454,6 +490,7 @@ def _push_mirror_objects(
         failed_namespaces=failed_namespaces,
         failed=failed,
         cleanup_failed=cleanup_failed,
+        withheld_with_unit=withheld_with_unit,
     )
 
 
@@ -553,6 +590,7 @@ def push_secure_object_mirror_rows(
     )
 
     manifest_failed = preflight.failed
+    manifest_failed.extend((namespace, _CO_READABLE_UNIT_WITHHELD) for namespace in object_push.withheld_with_unit)
     if dry_run:
         manifest_pushed_by_ns: dict[str, int] = {}
     else:

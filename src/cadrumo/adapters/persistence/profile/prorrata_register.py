@@ -35,7 +35,7 @@ from ....application.prorrata_register.sector_lifecycle import (
 from ....core.errors.hierarchy import CadrumoError
 from ....core.logging import get_logger
 from ....core.period import StandardPeriodCode
-from ....core.secure_object_write import SecureObjectWrite
+from ....core.secure_object_write import SecureObjectRevisionAssertion, SecureObjectWrite
 from ....domain.calculations.registry.form_codes import form_for_role
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.prorrata_register.register import (
@@ -47,7 +47,6 @@ from ....domain.prorrata_register.register import (
 )
 from ..storage.errors import StorageValidationError
 from ..storage.secure_object_namespaces import CALCULATION_OBSERVATIONS_NAMESPACE, PROFILE_PRORRATA_REGISTER_NAMESPACE
-from ..storage.sql.secure_object_records import SecureObjectRevisionAssertion
 from ..storage.sql.secure_objects import SecureObjectRepository
 from .secure_model_document import (
     ProfileBareModelSecurePersistence,

@@ -53,16 +53,6 @@ class SecureObjectMetadata(BaseModel):
     byte_length: NonNegativeInt
 
 
-class SecureObjectRevisionAssertion(BaseModel):
-    """Read-only source revision required by a derived-data write transaction."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    namespace: str = Field(min_length=1)
-    object_key: str = Field(min_length=1)
-    expected_revision_id: ContentDigest
-
-
 class SecureObjectDeletion(BaseModel):
     """One secure-object row removal addressed by its raw HMAC digest.
 

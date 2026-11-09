@@ -40,7 +40,7 @@ from ..storage.secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
 from .secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:
-    from ..storage.sql.secure_object_records import SecureObjectRevisionAssertion
+    from ....core.secure_object_write import SecureObjectRevisionAssertion
     from ..storage.sql.secure_objects import SecureObjectRepository
 
 _log = get_logger(__name__)
@@ -316,7 +316,7 @@ class InvoiceCatalogueRepository:
 
     def revision_assertions(self, *, expected_revision_id: str) -> tuple[SecureObjectRevisionAssertion, ...]:
         """Require the source catalogue revision inside a derived write batch."""
-        from ..storage.sql.secure_object_records import SecureObjectRevisionAssertion
+        from ....core.secure_object_write import SecureObjectRevisionAssertion
 
         return (
             SecureObjectRevisionAssertion(

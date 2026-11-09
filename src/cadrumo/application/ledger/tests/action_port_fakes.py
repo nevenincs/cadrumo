@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import override
 
 from ....core.classification.policies import SensitivityClass
-from ....core.secure_object_write import SecureObjectWrite
+from ....core.secure_object_write import SecureObjectWrite, SecureObjectWriteUnit
 from ....domain.attachments.models import Attachment
 from ....domain.attachments.protocols import AttachmentStoreProtocol
 from ....domain.buckets.event import BucketEventHistoryCatalogue
@@ -251,20 +251,24 @@ class EmptyCalculationRepository(CalculationRevisionCatalogueRepositoryProtocol)
         self._catalogue = catalogue
 
     @override
-    def to_secure_object_write(
+    def to_secure_object_write_unit(
         self,
         catalogue: CalculationRevisionCatalogue,
         *,
         expected_revision_id: str | None = None,
-    ) -> SecureObjectWrite:
+    ) -> SecureObjectWriteUnit:
         del expected_revision_id
-        return SecureObjectWrite(
-            namespace="application-test-calculations",
-            object_key="classification",
-            classification=SensitivityClass.FINANCIAL,
-            schema_version=1,
-            written_at=datetime.now(UTC),
-            payload=catalogue.model_dump_json().encode("utf-8"),
+        return SecureObjectWriteUnit(
+            writes=(
+                SecureObjectWrite(
+                    namespace="application-test-calculations",
+                    object_key="classification",
+                    classification=SensitivityClass.FINANCIAL,
+                    schema_version=1,
+                    written_at=datetime.now(UTC),
+                    payload=catalogue.model_dump_json().encode("utf-8"),
+                ),
+            )
         )
 
     @override

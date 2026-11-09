@@ -27,7 +27,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.classification.policies import SensitivityClass
 from ....core.i18n.render import tr
 from ....core.period import Period
-from ....core.secure_object_write import SecureObjectWrite
+from ....core.secure_object_write import SecureObjectWrite, SecureObjectWriteUnit
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
@@ -151,17 +151,21 @@ class _InMemoryCalculationRevisionRepository:
     def save(self, catalogue: CalculationRevisionCatalogue) -> None:
         self._catalogue = catalogue
 
-    def to_secure_object_write(
+    def to_secure_object_write_unit(
         self,
         catalogue: CalculationRevisionCatalogue,
         *,
         expected_revision_id: str | None = None,
-    ) -> SecureObjectWrite:
-        return _secure_write(
-            namespace="application-test-calculation-revisions",
-            object_key="m303-m349-reconcile",
-            payload=catalogue.model_dump_json().encode("utf-8"),
-            expected_revision_id=expected_revision_id,
+    ) -> SecureObjectWriteUnit:
+        return SecureObjectWriteUnit(
+            writes=(
+                _secure_write(
+                    namespace="application-test-calculation-revisions",
+                    object_key="m303-m349-reconcile",
+                    payload=catalogue.model_dump_json().encode("utf-8"),
+                    expected_revision_id=expected_revision_id,
+                ),
+            )
         )
 
     def save_with_secure_object_writes(

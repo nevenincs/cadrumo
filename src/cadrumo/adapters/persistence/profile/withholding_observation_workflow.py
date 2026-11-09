@@ -31,12 +31,16 @@ from ....core.aggregation import AggregationCaptureKind
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
+from ....core.secure_object_write import (
+    ABSENT_SECURE_OBJECT_REVISION_ID,
+    SecureObjectRevisionAssertion,
+    SecureObjectWrite,
+)
 from ....core.time.clock import now
 from ..storage.envelope.contract import parameterized_envelope_type
 from ..storage.errors import SecureObjectRevisionConflictError, StorageError
 from ..storage.secure_object_namespaces import WITHHOLDING_WORKFLOW_NAMESPACE
-from ..storage.sql.secure_object_records import SecureObjectDeletion, SecureObjectRevisionAssertion
+from ..storage.sql.secure_object_records import SecureObjectDeletion
 from ..storage.sql.secure_objects import SecureObjectRepository
 from .percepciones_observations import PercepcionObservationRepositoryAdapter
 from .retencion_observations import RetencionObservationRepositoryAdapter

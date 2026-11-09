@@ -1207,6 +1207,22 @@ MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinitio
     default_object_key=SECURE_OBJECT_CATALOGUE_KEY,
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+    # A saved revision's rendering is either embedded whole or held as a
+    # discriminated reference to one row of the rendering-snapshot namespace.
+    record_formats=("calculation_revision_rendering_reference",),
+)
+MODELO_CALCULATION_RENDERING_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="modelo_calculation_rendering_snapshot",
+    namespace="cadrumo.domain.modelos.calculation_rendering_snapshots",
+    owner="cadrumo.domain.modelos",
+    # The body is public registry content, but which bodies a profile holds
+    # shows which modelo, year and period its taxpayer calculated.
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{rendering_digest}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+    record_formats=("calculation_rendering_snapshot_body",),
 )
 TRANSACTION_PARTICIPATION_INDEX_NAMESPACE = SecureObjectNamespaceDefinition(
     key="transaction_participation_index",
@@ -1235,5 +1251,17 @@ DOMAIN_NAMESPACE_DEFINITIONS = (
     MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE,
     MODELO_FILING_RECORD_CATALOGUE_NAMESPACE,
     MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
+    MODELO_CALCULATION_RENDERING_SNAPSHOT_NAMESPACE,
     TRANSACTION_PARTICIPATION_INDEX_NAMESPACE,
+)
+#: Namespaces whose rows are readable only together. The calculation-revision
+#: catalogue refers to rendering-snapshot rows by digest and refuses to load
+#: without them, so a ciphertext mirror publishes or withholds both as one unit.
+CO_READABLE_NAMESPACE_UNITS: tuple[frozenset[str], ...] = (
+    frozenset(
+        {
+            MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+            MODELO_CALCULATION_RENDERING_SNAPSHOT_NAMESPACE.namespace,
+        }
+    ),
 )

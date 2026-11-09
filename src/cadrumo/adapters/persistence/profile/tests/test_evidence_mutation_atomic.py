@@ -10,10 +10,7 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.purchase_invoice_evidence import LedgerEvidenceRepositoryAdapter
-from cadrumo.adapters.persistence.storage.sql.secure_object_records import (
-    SecureObjectDeletion,
-    SecureObjectRevisionAssertion,
-)
+from cadrumo.adapters.persistence.storage.sql.secure_object_records import SecureObjectDeletion
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.evidence import (
     MediaKind,
@@ -23,7 +20,7 @@ from cadrumo.application.ledger.evidence import (
 )
 from cadrumo.application.ledger.evidence_ports import EvidenceAttachmentIngestRequest, LedgerEvidencePorts
 from cadrumo.core.identity.digest import ContentDigest
-from cadrumo.core.secure_object_write import SecureObjectWrite
+from cadrumo.core.secure_object_write import SecureObjectRevisionAssertion, SecureObjectWrite
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.buckets.event_repository import emit_bucket_event
 

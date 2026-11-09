@@ -8,7 +8,7 @@ from typing import override
 import pytest
 
 from ....core.period import Period
-from ....core.secure_object_write import SecureObjectWrite
+from ....core.secure_object_write import SecureObjectWrite, SecureObjectWriteUnit
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (
@@ -69,9 +69,9 @@ class _ReadRepository(CalculationRevisionCatalogueRepositoryProtocol):
         pytest.fail("Selector must not persist a catalogue")
 
     @override
-    def to_secure_object_write(
+    def to_secure_object_write_unit(
         self, catalogue: CalculationRevisionCatalogue, *, expected_revision_id: str | None = None
-    ) -> SecureObjectWrite:
+    ) -> SecureObjectWriteUnit:
         pytest.fail("Selector must not prepare a write")
 
     @override

@@ -98,7 +98,7 @@ from .calculation_revision_m303_handoff import (
     M303RegimenSimplificadoAnnualSummaryHandoff,
 )
 from .calculation_revision_operator_layer import CalculationOperatorLayer
-from .calculation_revision_rendering import CalculationRenderingSnapshot
+from .calculation_revision_rendering import CalculationRenderingSnapshot, StoredCalculationRendering
 from .calculation_revision_sources import (
     ActivityAssetConsumption,
     CalculationSourceIssue,
@@ -496,7 +496,7 @@ class CalculationRevision(BaseModel):
     work_unit_id: WorkUnitId
     registry_snapshot_ref: RegistrySnapshotRef
     state: CalculationRevisionState
-    rendering_snapshot: CalculationRenderingSnapshot | None = None
+    rendering_snapshot: StoredCalculationRendering | None = None
     input_values_by_casilla_id: Mapping[CasillaId, str] = Field(default_factory=dict)
     binding_overrides: Mapping[BindingId, str] = Field(default_factory=dict)
     row_binding_values: Mapping[BindingId, Mapping[str, str]] = Field(default_factory=dict)

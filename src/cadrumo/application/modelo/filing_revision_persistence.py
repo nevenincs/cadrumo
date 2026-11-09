@@ -907,8 +907,11 @@ def persist_filed_revision(
         prior_domiciliation_election=prior_domiciliation_election,
     )
 
+    revisions_unit = calculation_repository.to_secure_object_write_unit(
+        revisions, expected_revision_id=revisions_revision_id
+    )
     extra_writes = (
-        calculation_repository.to_secure_object_write(revisions, expected_revision_id=revisions_revision_id),
+        *revisions_unit.writes,
         verification_repository.to_secure_object_write(
             reports, expected_revision_id=reports_revision_id, operation=operation
         ),
@@ -933,6 +936,7 @@ def persist_filed_revision(
         updated_filing_catalogue,
         extra_writes,
         expected_revision_id=filing_revision_id,
+        assertions=revisions_unit.assertions,
     )
 
     refresh_filing_retention_snapshot(

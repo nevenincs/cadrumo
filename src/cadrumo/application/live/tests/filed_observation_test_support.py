@@ -41,7 +41,7 @@ from ..iva_remote_state_ports import IvaRemoteStatePort
 
 if TYPE_CHECKING:
     from ....core.config import Settings
-    from ....core.secure_object_write import SecureObjectWrite
+    from ....core.secure_object_write import SecureObjectRevisionAssertion, SecureObjectWrite
     from ....domain.calculations.registry.schema import ModeloRevision
     from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
     from ...auth.session_types import AeatSession
@@ -323,9 +323,10 @@ class _InMemoryFilingRepository:
         extra_writes: tuple[SecureObjectWrite, ...],
         *,
         expected_revision_id: str | None = None,
+        assertions: tuple[SecureObjectRevisionAssertion, ...] = (),
     ) -> None:
         """Refuse atomic secure writes because this fake has no encrypted backend."""
-        del catalogue, extra_writes, expected_revision_id
+        del catalogue, extra_writes, expected_revision_id, assertions
         raise RuntimeError("test bundle does not provide secure filing writes")
 
 
