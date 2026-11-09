@@ -522,6 +522,14 @@
         "path": []
       }
     },
+    "ledger.invoice.attach_document": {
+      "may_write": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
     "ledger.invoice.duplicate": {
       "may_write": false,
       "review": false,
