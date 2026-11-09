@@ -29,6 +29,9 @@ export type ProviderWay = {
   /** Present where the way lists no models, so the person writes a model's
    * id; the efforts the way accepts with any model they write. */
   modelWritten?: { efforts: readonly Choice[] };
+  /** The way lists a model the catalog says this computer does not hold
+   * yet, which is downloaded from the local AI's settings. */
+  modelsToDownload?: boolean;
 };
 
 /** A model provider the person can choose, or see and not choose. It is one
@@ -54,6 +57,10 @@ export type ModelOption = {
    * no effort setting. */
   efforts: readonly Choice[];
   defaultEffort?: string;
+  /** False where the catalog says this computer does not hold the model: it
+   * is shown, cannot be chosen, and is downloaded from the local AI's
+   * settings. Absent or true, it can be chosen. */
+  installed?: boolean;
 };
 
 /** The provider, the way into it, the model and the effort a conversation

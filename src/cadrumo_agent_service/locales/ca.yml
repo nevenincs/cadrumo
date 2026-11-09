@@ -94,6 +94,7 @@ desktop:
     documents: Documents
     documents_attached: 'En aquesta conversa: {count}'
     documents_empty: Encara no hi ha documents en aquesta conversa
+    download_models: Baixa models
     drop_accepts: 'S''accepten: {types}'
     drop_hint: Mantén premuda la tecla {key} per deixar anar
     drop_release: Deixa anar per afegir els fitxers
@@ -114,6 +115,7 @@ desktop:
     history_empty: Encara no hi ha converses
     history_no_match: Cap conversa no coincideix amb «{query}».
     lane_no_catalog: No s’han pogut carregar els models. Torna-ho a provar.
+    lane_no_installed_model: Encara no hi ha cap model baixat. Baixa'n un als ajustos.
     lane_not_admitted: No està disponible en aquest ordinador. Tria'n un altre.
     lane_not_configured: Configura aquest proveïdor als ajustos.
     lane_not_observed: Encara no s'ha comprovat. El podràs triar quan l'agent estigui
@@ -131,10 +133,16 @@ desktop:
     message_label: Missatge
     message_placeholder: Pregunta per un model, un termini o els teus registres
     model: Model
+    model_not_installed: '{name} (sense baixar)'
+    model_not_installed_refused: El model triat no és en aquest ordinador. Baixa'l
+      o tria'n un altre.
     model_written: Aquest proveïdor no llista els seus models. Escriu el nom del model
       tal com l'escriu el proveïdor.
+    models_to_download: Alguns models encara no són en aquest ordinador. Baixa'ls
+      als ajustos de la IA local.
     more_files: +{count} més
     new_conversation: Conversa nova
+    no_installed_model: Encara no hi ha cap model d'IA baixat. Baixa'n un per començar.
     no_models: No hi ha models per triar
     no_provider: Configura un proveïdor d'IA per començar.
     platform_unsupported: L'agent d'IA encara no està disponible en aquesta plataforma.
@@ -307,14 +315,16 @@ desktop:
     load_failed: No s’han pogut carregar els proveïdors. Torna-ho a provar.
     local_engine_change_failed: No s’ha desat el teu canvi. Torna-ho a provar.
     local_engine_changing: Desant…
-    local_engine_lead: El programa que executa els models en aquest ordinador. La llista de models és la mateixa amb qualsevol dels dos.
+    local_engine_lead: El programa que executa els models en aquest ordinador. La
+      llista de models és la mateixa amb qualsevol dels dos.
     local_engine_llamacpp: llama.cpp
     local_engine_llamacpp_detail: Inclòs. No cal instal·lar res.
     local_engine_ollama: Ollama
     local_engine_ollama_detail: Es baixa i es configura quan el tries.
     local_engine_restarts: Canviar el motor o on s’executen els models reinicia l’assistent.
     local_engine_title: Motor local
-    local_engine_unavailable: llama.cpp no està inclòs en aquesta instal·lació. Tria Ollama.
+    local_engine_unavailable: llama.cpp no està inclòs en aquesta instal·lació. Tria
+      Ollama.
     local_model_absent: Sense baixar
     local_model_add: Afegeix
     local_model_add_label: Afegeix un model pel nom
@@ -350,13 +360,15 @@ desktop:
     local_placement_auto: Automàtic
     local_placement_auto_detail: Fa servir la targeta gràfica quan hi cap el model.
     local_placement_cpu_only: Només processador
-    local_placement_cpu_only_detail: Més lent. Fa servir només la memòria d’aquest ordinador.
+    local_placement_cpu_only_detail: Més lent. Fa servir només la memòria d’aquest
+      ordinador.
     local_placement_title: On s’executen els models
     next_step:
       close_other_sign_in: Tanca l'altre inici de sessió i torna-ho a provar.
       console_sign_in: Inicia la sessió des d'un terminal.
       install_cli: Instal·la l'aplicació del proveïdor i torna-ho a provar.
-      move_profile_outside_git: Mou la carpeta del perfil fora del projecte de Git i torna-ho a provar.
+      move_profile_outside_git: Mou la carpeta del perfil fora del projecte de Git
+        i torna-ho a provar.
       retry: Torna-ho a provar d'aquí a un moment.
       update_app: Actualitza aquesta aplicació a l'última versió i torna-ho a provar.
     reason_check_settings: Revisa aquesta configuració i torna-ho a provar.
@@ -388,35 +400,52 @@ desktop:
     sign_in_cancelled: S'ha cancel·lat l'inici de sessió.
     sign_in_cause:
       agent_stop_failed: No s'ha pogut aturar l'agent per acabar l'inici de sessió.
-      browser_relay_unavailable: No s'ha pogut passar la pàgina d'inici de sessió al navegador.
-      cleanup_unconfirmed: No s'ha pogut confirmar que l'inici de sessió s'hagi tancat correctament.
-      cli_exited_early: L'aplicació del proveïdor s'ha aturat abans d'acabar l'inici de sessió.
+      browser_relay_unavailable: No s'ha pogut passar la pàgina d'inici de sessió
+        al navegador.
+      cleanup_unconfirmed: No s'ha pogut confirmar que l'inici de sessió s'hagi tancat
+        correctament.
+      cli_exited_early: L'aplicació del proveïdor s'ha aturat abans d'acabar l'inici
+        de sessió.
       cli_not_found: L'aplicació del proveïdor no està instal·lada o no s'ha trobat.
-      cli_protocol_mismatch: L'aplicació del proveïdor ha respost d'una manera que aquesta versió no entén.
-      cli_reported_error: L'aplicació del proveïdor ha indicat un error durant l'inici de sessió.
+      cli_protocol_mismatch: L'aplicació del proveïdor ha respost d'una manera que
+        aquesta versió no entén.
+      cli_reported_error: L'aplicació del proveïdor ha indicat un error durant l'inici
+        de sessió.
       cli_start_failed: No s'ha pogut iniciar l'aplicació del proveïdor.
       helper_ended_without_result: L'inici de sessió ha acabat sense resultat.
       helper_exit_nonzero: L'inici de sessió ha acabat amb un error.
-      helper_output_invalid: L'inici de sessió ha donat una resposta que no s'ha pogut llegir.
+      helper_output_invalid: L'inici de sessió ha donat una resposta que no s'ha pogut
+        llegir.
       helper_start_failed: No s'ha pogut començar l'inici de sessió.
-      home_in_git_project: La carpeta del perfil és dins d'un projecte de Git i l'aplicació del proveïdor no hi inicia la sessió.
-      home_unavailable: No s'ha pogut usar la carpeta reservada per a l'inici de sessió d'aquest proveïdor.
+      home_in_git_project: La carpeta del perfil és dins d'un projecte de Git i l'aplicació
+        del proveïdor no hi inicia la sessió.
+      home_unavailable: No s'ha pogut usar la carpeta reservada per a l'inici de sessió
+        d'aquest proveïdor.
       host_disconnected: S'ha perdut el contacte amb l'inici de sessió mentre s'executava.
       host_input_invalid: L'inici de sessió ha rebut una entrada que no ha pogut usar.
       internal_error: L'inici de sessió ha tingut un error intern.
-      login_already_running: Ja hi ha un altre inici de sessió en curs per a aquest perfil.
+      login_already_running: Ja hi ha un altre inici de sessió en curs per a aquest
+        perfil.
       login_not_completed: L'inici de sessió no s'ha completat.
-      probe_cleanup_unconfirmed: No s'ha pogut confirmar que la comprovació de l'inici de sessió del proveïdor s'hagi tancat correctament.
-      probe_output_unreadable: La comprovació de l'inici de sessió del proveïdor ha donat una resposta que no s'ha pogut llegir.
-      probe_start_failed: No s'ha pogut començar la comprovació de l'inici de sessió del proveïdor.
-      probe_timed_out: La comprovació de l'inici de sessió del proveïdor ha trigat massa.
+      probe_cleanup_unconfirmed: No s'ha pogut confirmar que la comprovació de l'inici
+        de sessió del proveïdor s'hagi tancat correctament.
+      probe_output_unreadable: La comprovació de l'inici de sessió del proveïdor ha
+        donat una resposta que no s'ha pogut llegir.
+      probe_start_failed: No s'ha pogut començar la comprovació de l'inici de sessió
+        del proveïdor.
+      probe_timed_out: La comprovació de l'inici de sessió del proveïdor ha trigat
+        massa.
       profile_missing: No s'ha trobat el perfil d'aquest inici de sessió.
-      status_context_unavailable: No hi havia cap perfil obert amb què comprovar l'inici de sessió.
-      status_not_confirmed: L'inici de sessió ha acabat, però no s'ha pogut confirmar que hagis iniciat la sessió.
+      status_context_unavailable: No hi havia cap perfil obert amb què comprovar l'inici
+        de sessió.
+      status_not_confirmed: L'inici de sessió ha acabat, però no s'ha pogut confirmar
+        que hagis iniciat la sessió.
       status_read_failed: No s'ha pogut llegir si has iniciat la sessió.
-      status_unreadable: No s'ha pogut llegir la resposta sobre si has iniciat la sessió.
+      status_unreadable: No s'ha pogut llegir la resposta sobre si has iniciat la
+        sessió.
       timed_out: L'inici de sessió ha trigat massa.
-      unsupported_method: L'aplicació del proveïdor no admet aquesta manera d'iniciar la sessió.
+      unsupported_method: L'aplicació del proveïdor no admet aquesta manera d'iniciar
+        la sessió.
     sign_in_cleanup_failed: Reinicia Cadrumo abans de tornar a iniciar la sessió.
     sign_in_close: Tanca l'inici de sessió
     sign_in_code_checking: Comprovant el codi d’autorització…

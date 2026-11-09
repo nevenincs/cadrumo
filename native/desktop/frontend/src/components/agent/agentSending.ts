@@ -2,6 +2,7 @@ import type { Dispatch, RefObject, SetStateAction } from "react";
 import { failureCode } from "../../errors";
 import { selectionRecord } from "../../shell/agentCatalog";
 import { documentRefs } from "../../shell/agentDocuments";
+import { sendRefusalStep } from "../../shell/agentSendRefusals";
 import type { newestReply, useLiveConversation } from "../../shell/agentLive";
 import type {
   AgentApproval,
@@ -44,6 +45,7 @@ export function agentSending({
   promptOwner,
   currentPromptOwner,
   pendingPrompt,
+  refreshCatalog,
 }: {
   session: AgentSession | undefined;
   reader: string | null;
@@ -65,6 +67,8 @@ export function agentSending({
   promptOwner: PromptOwner;
   currentPromptOwner: RefObject<PromptOwner>;
   pendingPrompt: RefObject<{ owner: PromptOwner; id: string } | null>;
+  /** Reads the catalog again: a send was refused for a choice it offered. */
+  refreshCatalog: () => void;
 }) {
   const change = (next: Partial<AgentColumnView>) =>
     setView((held) => ({ ...held, ...next }));
@@ -110,7 +114,11 @@ export function agentSending({
         revision: held.revision + 1,
       }));
     } catch (error) {
-      if (current()) giveBack(request.text, failureCode(error));
+      const code = failureCode(error);
+      // A choice refused as one this computer cannot run came from a
+      // catalog older than the agent's answer: what is offered is read again.
+      if (sendRefusalStep(code) !== null) refreshCatalog();
+      if (current()) giveBack(request.text, code);
     }
   };
   // Pressing Send is the person's decision: the message goes, and nothing

@@ -1,4 +1,5 @@
 import { useId, useState, type ReactElement } from "react";
+import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { NativeSelect } from "@/components/ui/native-select";
 import {
@@ -8,7 +9,7 @@ import {
 } from "@/components/ui/popover";
 import { listOf } from "@/shared/lists";
 import { TextEditor } from "@/components/editors/TextEditor";
-import { startingSelection } from "../../shell/agentCatalog";
+import { heldModel, startingSelection } from "../../shell/agentCatalog";
 import { useStrings } from "../../shell/strings";
 import { ProviderSelect } from "./ProviderSelect";
 import type { AgentSelection, ModelOption, ProviderOption } from "./types";
@@ -20,7 +21,9 @@ import type { AgentSelection, ModelOption, ProviderOption } from "./types";
  * efforts of the model chosen. A provider reached more than one way is more
  * than one entry of the first list, and choosing an entry chooses the way.
  * It holds no choice of its own: every change is handed to `onChange`, and
- * what it shows is `selection`.
+ * what it shows is `selection`. A model the catalog says this computer does
+ * not hold is listed and cannot be chosen; the way on is downloading it,
+ * which `onDownloadModels` opens.
  */
 export function AgentSettingsPopover({
   providers,
@@ -30,6 +33,7 @@ export function AgentSettingsPopover({
   children,
   openRequests = 0,
   onClosed,
+  onDownloadModels,
 }: {
   providers: readonly ProviderOption[];
   /** Each way's models, by way id. */
@@ -44,6 +48,8 @@ export function AgentSettingsPopover({
   openRequests?: number;
   /** Called when the person closes the popover. */
   onClosed?: () => void;
+  /** Opens the settings where a model this computer lacks is downloaded. */
+  onDownloadModels?: () => void;
 }) {
   const t = useStrings();
   const [open, setOpen] = useState(false);
@@ -61,6 +67,20 @@ export function AgentSettingsPopover({
   const model = offered.find((option) => option.id === selection.modelId);
   const efforts = way?.modelWritten?.efforts ?? model?.efforts ?? [];
   const hasDefault = Boolean(model?.defaultEffort);
+  // The way to download is offered where the chosen way lists a model this
+  // computer lacks, or a way cannot be chosen until one is downloaded.
+  const download =
+    onDownloadModels &&
+    (way?.modelsToDownload === true ||
+      providers.some((held) =>
+        held.ways.some((each) => !each.selectable && each.modelsToDownload),
+      ))
+      ? () => {
+          setOpen(false);
+          onClosed?.();
+          onDownloadModels();
+        }
+      : undefined;
 
   // An entry of the list is one lane of one provider, and it starts with
   // that lane's own starting model.
@@ -76,7 +96,7 @@ export function AgentSettingsPopover({
   };
   const chooseModel = (next: string) => {
     const chosen = offered.find((option) => option.id === next);
-    if (!chosen) return;
+    if (!chosen || !heldModel(chosen)) return;
     // An effort the person chose carries over where the new model takes it;
     // otherwise the new model's own default applies.
     const effort =
@@ -151,15 +171,38 @@ export function AgentSettingsPopover({
               value={selection.modelId}
               onChange={(event) => chooseModel(event.target.value)}
             >
-              {offered.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.name}
-                </option>
-              ))}
+              {offered.map((option) =>
+                heldModel(option) ? (
+                  <option key={option.id} value={option.id}>
+                    {option.name}
+                  </option>
+                ) : (
+                  <option
+                    key={option.id}
+                    value={option.id}
+                    disabled
+                    data-installed="false"
+                  >
+                    {t("desktop.agent.model_not_installed", {
+                      name: option.name,
+                    })}
+                  </option>
+                ),
+              )}
             </NativeSelect>
           )}
           {model?.description && (
             <FieldDescription>{model.description}</FieldDescription>
+          )}
+          {download && (
+            <div className="grid justify-items-start gap-1.5">
+              <FieldDescription>
+                {t("desktop.agent.models_to_download")}
+              </FieldDescription>
+              <Button variant="outline" size="xs" onClick={download}>
+                {t("desktop.agent.download_models")}
+              </Button>
+            </div>
           )}
         </Field>
         {efforts.length > 0 && (

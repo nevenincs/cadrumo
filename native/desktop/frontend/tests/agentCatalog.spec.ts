@@ -1,8 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { FIXTURE_CATALOG } from "../src/dev/fixtures/agentCatalog";
+import {
+  FIXTURE_CATALOG,
+  fixtureModelPresence,
+} from "../src/dev/fixtures/agentCatalog";
 import {
   catalogChoices,
   offeredSelection,
+  restoredSelection,
   selectionRecord,
   startingSelection,
 } from "../src/shell/agentCatalog";
@@ -308,4 +312,96 @@ test("generation-scoped proofs are not presented as lane-wide capabilities", () 
     "desktop.agent.can_search_web",
     "desktop.agent.can_read_pdfs",
   ]);
+});
+
+// Whether this computer holds a model is the served catalog's `installed`,
+// never the column's guess. The made-up local lane serves one recommended
+// model as not downloaded.
+const LOCAL = "local/api";
+const servedLocal = () =>
+  (FIXTURE_CATALOG.providers ?? []).find(
+    (lane) => `${lane.provider_id}/${lane.transport}` === LOCAL,
+  );
+const absent = () =>
+  (servedLocal()?.catalog.models ?? []).filter(
+    (entry) => entry.installed === false,
+  );
+
+test("a model the catalog says this computer lacks is listed, marked and never chosen", () => {
+  expect(absent().length).toBeGreaterThan(0);
+  const missing = absent()[0]!;
+  const listed = choices.models[LOCAL] ?? [];
+  const shown = listed.find((model) => model.id === missing.entry_id);
+  expect(shown?.installed).toBe(false);
+  // Every model the catalog does not mark stays choosable as it was.
+  for (const model of listed)
+    if (model.id !== missing.entry_id) expect(model.installed).toBeUndefined();
+  const local = choices.providers
+    .flatMap((provider) => provider.ways)
+    .find((way) => way.id === LOCAL);
+  expect(local?.selectable).toBe(true);
+  expect(local?.modelsToDownload).toBe(true);
+  expect(choices.modelsToDownload).toBe(true);
+  const chosen = {
+    providerId: "local",
+    wayId: LOCAL,
+    modelId: missing.entry_id,
+  };
+  // A run never names it, and a kept choice of it is not restored.
+  expect(selectionRecord(FIXTURE_CATALOG, chosen)).toBeNull();
+  const restored = restoredSelection(choices, [chosen]);
+  expect(restored?.modelId).not.toBe(missing.entry_id);
+  expect(offeredSelection(choices, chosen)?.modelId).not.toBe(missing.entry_id);
+});
+
+test("a way starts with a model this computer holds, even where the catalog recommends one it lacks", () => {
+  const catalog = structuredClone(FIXTURE_CATALOG);
+  const local = catalog.providers?.find(
+    (lane) => `${lane.provider_id}/${lane.transport}` === LOCAL,
+  );
+  const missing = absent()[0]!;
+  local!.catalog.recommended_entry_id = missing.entry_id;
+  const offered = catalogChoices(words, catalog);
+  const provider = offered.providers.find((held) => held.id === "local")!;
+  const way = provider.ways.find((held) => held.id === LOCAL)!;
+  const start = startingSelection(provider, way, offered.models[LOCAL] ?? []);
+  expect(start).not.toBeNull();
+  expect(start?.modelId).not.toBe(missing.entry_id);
+  expect(
+    (offered.models[LOCAL] ?? []).find((model) => model.id === start?.modelId)
+      ?.installed,
+  ).toBeUndefined();
+});
+
+test("with no model of the local lane on this computer, the lane cannot be chosen and says why", () => {
+  const presence = fixtureModelPresence();
+  for (const entry of servedLocal()?.catalog.models ?? [])
+    presence.mark(entry.model, false);
+  const served = presence.report(FIXTURE_CATALOG);
+  const offered = catalogChoices(words, served);
+  const local = offered.providers
+    .flatMap((provider) => provider.ways)
+    .find((way) => way.id === LOCAL);
+  expect(local?.selectable).toBe(false);
+  expect(local?.unavailableReason).toBe(
+    "desktop.agent.lane_no_installed_model",
+  );
+  expect(local?.modelsToDownload).toBe(true);
+  expect(offered.modelsToDownload).toBe(true);
+  for (const model of offered.models[LOCAL] ?? [])
+    expect(model.installed).toBe(false);
+  // No kept choice of the lane survives, and a run never names its models.
+  const kept = {
+    providerId: "local",
+    wayId: LOCAL,
+    modelId: servedLocal()!.catalog.models![0]!.entry_id,
+  };
+  expect(restoredSelection(offered, [kept])?.wayId).not.toBe(LOCAL);
+  expect(selectionRecord(served, kept)).toBeNull();
+  // A lane held for another reason keeps that reason.
+  expect(
+    offered.providers
+      .flatMap((provider) => provider.ways)
+      .find((way) => way.id === "alpha/cli")?.unavailableReason,
+  ).toBe("desktop.agent.lane_signed_out");
 });

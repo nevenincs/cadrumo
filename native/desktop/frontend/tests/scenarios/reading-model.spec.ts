@@ -38,8 +38,8 @@ test("the model picked in the agent column is the one documents are read with, o
   await pickWay(target, picker, "local/api");
   await picker
     .getByLabel(label("desktop.agent.model"))
-    .selectOption("synthetic-vision:1");
+    .selectOption("synthetic-text:1");
   await expect
     .poll(() => storedReading(target))
-    .toEqual({ lane: "local_api", model: "synthetic-vision:1" });
+    .toEqual({ lane: "local_api", model: "synthetic-text:1" });
 });
