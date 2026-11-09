@@ -114,7 +114,7 @@ def test_iva_source_mesh_resolver_degrades_on_unreadable_storage(
             {"namespace": TRANSACTION_CATALOGUE_NAMESPACE.namespace},
         )
 
-    with caplog.at_level(logging.DEBUG, logger="cadrumo.application.aggregation.source_mesh"):
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.application.aggregation.source_resolution_operations"):
         resolution = _resolver(transaction_repository=transaction_repository, objects=objects).resolve(
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,

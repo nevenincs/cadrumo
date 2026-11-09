@@ -14,6 +14,7 @@ from typing import Never, SupportsIndex, override
 from pydantic import SecretStr
 
 from ...core.period import Period
+from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.ledger_filing_snapshot import FiledRegisterState
 from ...domain.modelos.work_unit import WorkUnitState
 from ..aeat_sync.workspace import (
@@ -377,7 +378,7 @@ def declaration_list_documents(
             status=_list_row_status(row.group),
             label_key=WorkbenchSearchLabelKey.DECLARATION,
             address=WorkbenchModeloAddress(
-                modelo=row.modelo, filing_year=year, period=Period.from_year_and_code(year, period_code)
+                modelo=ModeloCode(row.modelo), filing_year=year, period=Period.from_year_and_code(year, period_code)
             ),
             admission=admission,
             content_terms=tuple(
