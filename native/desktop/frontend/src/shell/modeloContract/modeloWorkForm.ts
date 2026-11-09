@@ -39,6 +39,8 @@ import type {
   SourceSurface,
 } from "./modeloWork";
 import type {
+  PublicSpanishTaxIdFormat,
+  ReconciliationSourceRequirementV1,
   RegistryAuthorityGrade,
   SourceFamily,
   SourcePolicyV1,
@@ -905,10 +907,22 @@ export type OperationCreateWorkStepV1 = {
 export type OperationNextStepV1 =
   | OperationCreateWorkStepV1
   | OperationCalculateWorkStepV1
+  | OperationVerifyWorkStepV1
   | OperationOpenWorkStepV1
   | OperationOpenProfileFieldStepV1
   | OperationCompleteProfileSetupStepV1
-  | OperationOpenMovementStepV1;
+  | OperationOpenMovementStepV1
+  | OperationOpenIvaWalletStepV1;
+
+/**
+ * Open the Saldo de IVA of the declaration one work unit holds, where its
+ * carried compensation is recorded.
+ */
+export type OperationOpenIvaWalletStepV1 = {
+  kind: "open_iva_wallet";
+  work_unit_id: WorkUnitId;
+  words: string;
+};
 
 /**
  * Open one ledger movement in the Libro, where the fact the refusal names is
@@ -936,6 +950,15 @@ export type OperationOpenProfileFieldStepV1 = {
  */
 export type OperationOpenWorkStepV1 = {
   kind: "open_work";
+  work_unit_id: WorkUnitId;
+  words: string;
+};
+
+/**
+ * Check the declaration one work unit holds, so its calculation is verified.
+ */
+export type OperationVerifyWorkStepV1 = {
+  kind: "verify_work";
   work_unit_id: WorkUnitId;
   words: string;
 };
@@ -1313,32 +1336,4 @@ export type PublicModeloWorkFormLoadV1 = {
 export type PublicScalarValueV1 = {
   kind: "string" | "integer" | "boolean" | "decimal" | "date" | "null";
   text: string;
-};
-
-/**
- * Typed local-human workbench view of the governed SpanishTaxIdFormat.
- */
-export type PublicSpanishTaxIdFormat = {
-  width: number;
-  country_prefix: string;
-  country_prefixed_width: number;
-  country_prefix_strip_width: number;
-  prefixed_nif_leaders: string;
-  nie_leaders: string;
-  cif_leaders: string;
-  nif_letters: string;
-  nif_check_modulus: number;
-  nie_prefix_substitutions: [string, string][];
-  cif_digit_only_kinds: string;
-  cif_letter_only_kinds: string;
-  cif_letter_table: string;
-};
-
-/**
- * One source declaration the to-do list names before the summary can be worked
- * out, and its door.
- */
-export type ReconciliationSourceRequirementV1 = {
-  words: string;
-  next_step: OperationNextStepV1;
 };
