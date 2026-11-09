@@ -1,0 +1,212 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.6.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-09 13:17+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:1
+msgid "Sign in to an AI provider by hand"
+msgstr "Bejelentkezés egy MI-szolgáltatóba kézzel"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:3
+msgid ""
+"Cadrumo signs in to an AI provider (Claude, Codex or Antigravity) from "
+"the desktop application, under Ajustes > Proveedores de IA. When that "
+"sign-in fails, it names this guide. The command below does the same sign-"
+"in from a console, with the provider's own login in your terminal. You "
+"sign in once; the application finds the result the next time it reads the"
+" provider's status."
+msgstr ""
+"A Cadrumo az asztali alkalmazásból jelentkezik be egy MI-szolgáltatóba "
+"(Claude, Codex vagy Antigravity), az Ajustes > Proveedores de IA alatt. "
+"Ha ez a bejelentkezés nem sikerül, erre az útmutatóra hivatkozik. Az "
+"alábbi parancs ugyanezt a bejelentkezést végzi el egy konzolból, a "
+"szolgáltató saját bejelentkezésével a terminálodban. Egyszer jelentkezel "
+"be; az alkalmazás akkor találja meg az eredményt, amikor legközelebb "
+"beolvassa a szolgáltató állapotát."
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:9
+msgid "Before you start"
+msgstr "Mielőtt hozzákezdesz"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:11
+msgid "You need:"
+msgstr "Ezekre lesz szükséged:"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:13
+msgid ""
+"A profile that has already been opened in Cadrumo, so the application has"
+" started its agent for it. The command refuses a profile whose agent has "
+"never started."
+msgstr ""
+"Egy profil, amelyet már megnyitottál a Cadrumóban, hogy az alkalmazás "
+"elindíthassa hozzá az ügynökét. A parancs elutasítja azt a profilt, "
+"amelynek az ügynöke még soha nem indult el."
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:16
+msgid ""
+"The desktop application's sign-in dialog closed. The dialog and this "
+"command share one sign-in at a time, and the command refuses while the "
+"dialog is open."
+msgstr ""
+"Az asztali alkalmazás bejelentkezési ablaka bezárva. Az ablak és ez a "
+"parancs egyszerre csak egy bejelentkezésen osztozik, és a parancs "
+"megtagadja a futást, amíg az ablak nyitva van."
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:18
+msgid ""
+"An installed Cadrumo package. A source checkout has no bundled agent, so "
+"the command refuses there."
+msgstr ""
+"Egy telepített Cadrumo-csomag. A forráskód egy példánya nem tartalmazza a"
+" beépített ügynököt, ezért ott a parancs megtagadja a futást."
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:20
+msgid ""
+"A storage folder outside any Git project. The provider's login refuses a "
+"folder inside one."
+msgstr ""
+"Egy tárolómappa minden Git-projekten kívül. A szolgáltató bejelentkezése "
+"elutasítja az olyan mappát, amely egy Git-projekten belül van."
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:23
+msgid ""
+"The command runs against the profile you have selected in Cadrumo. Pass "
+"`--profile` with a profile's UUID or exact label to use another."
+msgstr ""
+"A parancs a Cadrumóban kiválasztott profilodon fut. Egy másik profilhoz "
+"add meg a `--profile` kapcsolót a profil UUID-jával vagy pontos "
+"címkéjével."
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:26
+msgid "Sign in"
+msgstr "Bejelentkezés"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:28
+msgid "Run the command for your provider:"
+msgstr "Futtasd a szolgáltatódhoz tartozó parancsot:"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:36
+msgid ""
+"Codex also offers a device-code sign-in, for a machine where the browser "
+"cannot open a local address:"
+msgstr ""
+"A Codex eszközkódos bejelentkezést is kínál olyan géphez, ahol a böngésző"
+" nem tud helyi címet megnyitni:"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:43
+msgid ""
+"The provider's own login takes over the terminal. It may open your "
+"browser or print a code and an address to enter on another device. Follow"
+" its prompts there. Cadrumo does not read, store or log what the provider"
+" prints."
+msgstr ""
+"A szolgáltató saját bejelentkezése átveszi a terminált. Megnyithatja a "
+"böngésződet, vagy kiírhat egy kódot és egy címet, amelyet egy másik "
+"eszközön kell megadnod. Ott kövesd az utasításait. A Cadrumo nem olvassa,"
+" nem tárolja és nem naplózza, amit a szolgáltató kiír."
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:47
+msgid "What success looks like"
+msgstr "Milyen a sikeres eredmény"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:49
+msgid ""
+"When the provider's login ends, Cadrumo checks the result and prints one "
+"line, `<provider> sign-in status: signed in`, then the command exits with"
+" status 0. A line that says `signed out` or `unknown`, with its cause, "
+"means the sign-in did not complete; the command then exits with a non-"
+"zero status. Run it again after fixing the cause."
+msgstr ""
+"Amikor a szolgáltató bejelentkezése véget ér, a Cadrumo ellenőrzi az "
+"eredményt, és kiír egy sort, `<provider> sign-in status: signed in`, majd"
+" a parancs 0-s állapottal lép ki. Ha a sor `signed out` vagy `unknown` "
+"értéket mutat az okával együtt, a bejelentkezés nem fejeződött be; "
+"ilyenkor a parancs nem nulla állapottal lép ki. Az ok kijavítása után "
+"futtasd újra."
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:55
+msgid ""
+"Reopen the provider settings in Cadrumo. The application reads the sign-"
+"in on its next status read and shows the provider as signed in."
+msgstr ""
+"Nyisd meg újra a szolgáltató beállításait a Cadrumóban. Az alkalmazás a "
+"következő állapotolvasáskor beolvassa a bejelentkezést, és "
+"bejelentkezettként mutatja a szolgáltatót."
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:58
+msgid "Refusals"
+msgstr "Elutasítások"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:60
+msgid "The command stops before it runs the provider's login, and says why, when:"
+msgstr ""
+"A parancs leáll, mielőtt elindítaná a szolgáltató bejelentkezését, és "
+"megmondja, miért, ha:"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:62
+msgid ""
+"the provider is not `claude`, `codex` or `antigravity`, or `--device` is "
+"used with a provider other than `codex`;"
+msgstr ""
+"a szolgáltató nem `claude`, `codex` vagy `antigravity`, vagy a `--device`"
+" kapcsolót nem a `codex` szolgáltatóval használod;"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:64
+msgid "no profile is selected and `--profile` is not given;"
+msgstr "nincs kiválasztott profil, és a `--profile` nincs megadva;"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:65
+msgid ""
+"the profile's agent has not started yet: open Cadrumo with that profile "
+"selected, then run the command again;"
+msgstr ""
+"a profil ügynöke még nem indult el: nyisd meg a Cadrumót ezzel a "
+"profillal kiválasztva, majd futtasd újra a parancsot;"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:67
+msgid ""
+"the agent folder sits inside a Git project: point `CADRUMO_STORAGE_ROOT` "
+"at a folder outside any Git project;"
+msgstr ""
+"az ügynök mappája egy Git-projekten belül van: állítsd a "
+"`CADRUMO_STORAGE_ROOT` értékét egy minden Git-projekten kívüli mappára;"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:69
+msgid "the installation has no bundled agent;"
+msgstr "a telepítés nem tartalmaz beépített ügynököt;"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:70
+msgid ""
+"the application's sign-in dialog is still open: close it and run the "
+"command again."
+msgstr ""
+"az alkalmazás bejelentkezési ablaka még nyitva van: zárd be, és futtasd "
+"újra a parancsot."
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:73
+msgid "See also"
+msgstr "Lásd még"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:75
+msgid "[Diagnose and repair your local setup](troubleshooting.md)"
+msgstr "[Diagnosztizáld és javítsd a helyi beállításaidat](troubleshooting.md)"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:76
+msgid "[Environment overrides](../reference/environment-overrides.md)"
+msgstr "[Környezeti felülírások](../reference/environment-overrides.md)"

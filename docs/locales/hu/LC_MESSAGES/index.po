@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-07 04:04+0200\n"
+"POT-Creation-Date: 2026-11-09 13:17+0100\n"
 "PO-Revision-Date: 2026-07-19 10:00+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -186,6 +186,10 @@ msgid "Troubleshooting"
 msgstr "Hibaelhárítás"
 
 #: ../../index.md:175
+msgid "Sign in to an AI provider by hand"
+msgstr "Bejelentkezés egy MI-szolgáltatóba kézzel"
+
+#: ../../index.md:175
 msgid "How to publish a validated runtime authority"
 msgstr "Érvényesített futtatókörnyezeti autoritás közzététele"
 
@@ -197,39 +201,39 @@ msgstr "Jogi nyilatkozat"
 msgid "Help"
 msgstr "Súgó"
 
-#: ../../index.md:184
+#: ../../index.md:185
 msgid "Cadrumo reference"
 msgstr "Cadrumo referencia"
 
-#: ../../index.md:184
+#: ../../index.md:185
 msgid "Reference"
 msgstr "Referencia"
 
-#: ../../index.md:195
+#: ../../index.md:196
 msgid "Overview"
 msgstr "Áttekintés"
 
-#: ../../index.md:195
+#: ../../index.md:196
 msgid "How it works"
 msgstr "Hogyan működik"
 
-#: ../../index.md:202
+#: ../../index.md:203
 msgid "Updates and downloads"
 msgstr "Frissítések és letöltések"
 
-#: ../../index.md:202
+#: ../../index.md:203
 msgid "Architecture"
 msgstr "Architektúra"
 
-#: ../../index.md:202
+#: ../../index.md:203
 msgid "Authoring guide"
 msgstr "Szerzői útmutató"
 
-#: ../../index.md:202
+#: ../../index.md:203
 msgid "Project"
 msgstr "Projekt"
 
-#: ../../index.md:212
+#: ../../index.md:213
 msgid "Technical documentation"
 msgstr "Műszaki dokumentáció"
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-31 22:16+0100\n"
+"POT-Creation-Date: 2026-11-09 13:17+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
@@ -497,20 +497,32 @@ msgstr ""
 "számára, a biztonsági határ megőrzésével."
 
 #: ../../how-to/index.md:312
+msgid "Sign in to an AI provider by hand"
+msgstr "Bejelentkezés egy MI-szolgáltatóba kézzel"
+
+#: ../../how-to/index.md:316
+msgid ""
+"Sign in from a console when the in-app sign-in under Ajustes > "
+"Proveedores de IA fails."
+msgstr ""
+"Jelentkezz be egy konzolból, ha az alkalmazás Ajustes > Proveedores de IA"
+" alatti bejelentkezése nem sikerül."
+
+#: ../../how-to/index.md:319
 msgid "Troubleshooting"
 msgstr "Hibaelhárítás"
 
-#: ../../how-to/index.md:316
+#: ../../how-to/index.md:323
 msgid "Fix active-profile, storage, tax-rules, and authentication problems."
 msgstr ""
 "Javítsd ki az aktív profillal, a tárolással, az adószabályokkal és a "
 "hitelesítéssel kapcsolatos problémákat."
 
-#: ../../how-to/index.md:319
+#: ../../how-to/index.md:326
 msgid "How to publish a validated runtime authority"
 msgstr "Érvényesített futtatókörnyezeti autoritás közzététele"
 
-#: ../../how-to/index.md:323
+#: ../../how-to/index.md:330
 msgid ""
 "Publish and check the signed tax rules that Cadrumo reads, as a release "
 "maintainer."
