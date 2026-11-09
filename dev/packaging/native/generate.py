@@ -368,6 +368,7 @@ def generate(
         [
             f"pub const MANAGER_LOG: &str = {rust_string(components['manager_log_file'])};",
             f"pub const MANAGER_PREFERENCES: &str = {rust_string(components['manager_preferences'])};",
+            f"pub const LOCAL_ENGINE_SELECTION: &str = {rust_string(components['local_engine_selection'])};",
             f"pub const MANAGER_FAILED_VERSIONS: &str = {rust_string(components['manager_failed_versions'])};",
             f"pub const MANAGER_LANGUAGE_ENV: &str = {rust_string(components['language_variable'])};",
             f"pub const MANAGER_LANGUAGE_DEFAULT: &str = {rust_string(components['language_default'])};",

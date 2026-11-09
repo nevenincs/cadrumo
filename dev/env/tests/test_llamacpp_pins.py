@@ -112,6 +112,10 @@ def test_a_hand_edited_file_is_reported(committed: ServerPins) -> None:
         ('"program": "llama-server"', '"program": "llama-server", "program": "llama-server"'),
         ('    "github.com",\n', '    "github.com",\n    "github.com",\n'),
         ('"download_bytes": 37709845', '"download_bytes": 0'),
+        ("/llama.cpp/b12184/LICENSE", "/llama.cpp/b12000/LICENSE"),
+        ("https://raw.githubusercontent.com/ggml-org/", "https://mirror.example/ggml-org/"),
+        ('    "raw.githubusercontent.com",\n', ""),
+        ('"download_bytes": 1078', '"download_bytes": 0'),
     ),
 )
 def test_a_file_that_could_admit_other_bytes_or_sources_is_refused(old: str, new: str) -> None:
@@ -225,7 +229,7 @@ def test_a_download_through_the_declared_hosts_is_returned_and_its_hosts_recorde
     with httpx.Client(transport=httpx.MockTransport(handler), follow_redirects=True) as client:
         assert _fetch(client, "https://github.com/a.zip", declared_hosts(), visited) == b"bytes"
 
-    assert visited == set(declared_hosts())
+    assert visited == {"github.com", "release-assets.githubusercontent.com"}
 
 
 def _release(tag: str, names: list[str], *, draft: bool = False) -> dict[str, object]:

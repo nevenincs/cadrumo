@@ -476,6 +476,7 @@ def resolve_previous_filing_binding_values(
     period: str,
     activity_start_date: date | None = None,
     excluded_binding_ids: frozenset[BindingId] | None = None,
+    answered_binding_ids: frozenset[BindingId] = frozenset(),
 ) -> dict[BindingId, Decimal]:
     """Resolve direct previous-filing bindings from observed filed declarations.
 
@@ -484,6 +485,12 @@ def resolve_previous_filing_binding_values(
     filed casilla values they fold. The returned mapping is keyed by
     :class:`~cadrumo.domain.calculations.registry.ids.BindingId` and carries resolved
     :class:`decimal.Decimal` values for formula runtime consumption.
+
+    A binding in ``answered_binding_ids`` already has the caller's value. When
+    the observed return cannot show the boxes it reads, its own value is
+    unknown, so it is left unresolved for that answer rather than refused; one
+    the return does show still resolves, so a differing answer stays a
+    disagreement the calculation records.
     """
     available = tuple(observations)
     resolved: dict[BindingId, Decimal] = {}
@@ -504,7 +511,8 @@ def resolve_previous_filing_binding_values(
             activity_start_date=activity_start_date,
         )
         if isinstance(values, _UnobservedCasillas):
-            unobserved.append(values)
+            if binding.id not in answered_binding_ids:
+                unobserved.append(values)
             continue
         if values is None:
             continue

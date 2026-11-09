@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import type { AgentSession } from "../../shell/agentSession";
-import type { LocalModelHost } from "../../shell/localModels";
+import { localModelHostOf, type LocalModelHost } from "../../shell/localModels";
 import type { ReadingModelHost } from "../../shell/readingModel";
 
 /**
@@ -17,28 +17,10 @@ export function useLocalModelHosts(
   // Changes made to the lists in the settings, which the picker reads again.
   const [listChanges, setListChanges] = useState(0);
   const localModelHost = useMemo((): LocalModelHost | null => {
-    if (
-      !ready ||
-      !session?.localModels ||
-      !session.addLocalModel ||
-      !session.removeLocalModel ||
-      !session.resetLocalModels
-    )
-      return null;
-    const changed = <T>(made: Promise<T>) =>
-      made.then((value) => {
-        setListChanges((count) => count + 1);
-        return value;
-      });
-    const add = session.addLocalModel.bind(session);
-    const remove = session.removeLocalModel.bind(session);
-    const reset = session.resetLocalModels.bind(session);
-    return {
-      read: session.localModels.bind(session),
-      add: (lane, model, revision) => changed(add(lane, model, revision)),
-      remove: (lane, model, revision) => changed(remove(lane, model, revision)),
-      reset: (revision) => changed(reset(revision)),
-    };
+    if (!ready) return null;
+    return localModelHostOf(session, () =>
+      setListChanges((count) => count + 1),
+    );
   }, [session, ready]);
   const readingHost = useMemo((): ReadingModelHost | null => {
     if (!ready || !session?.localModels || !session.chooseReadingModel)

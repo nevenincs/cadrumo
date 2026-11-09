@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { startFromDocs } from "../support/scenarioShell";
 import { openLogs, errorsHeld, overLog } from "../support/scenarioLogView";
+import { panelToggle } from "../support/panel";
 
 // Whether the log follows its newest record: scrolls, keys and the end of a busy log.
 
@@ -230,6 +231,30 @@ test("the notice of dropped records stands at the start of the log only", async 
   await list.locator(".record").last().focus();
   await target.keyboard.press("Home");
   await expect(notice).toBeVisible({ timeout: 10000 });
+});
+
+test("the error count keeps every error since the window opened, not only those the ring still holds", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=10000&feed=30",
+  );
+  await openLogs(target);
+  await overLog(target);
+  // One generated record in seven is an error, so the ring's ten thousand
+  // records hold at most 1429 of them. Once it has let older records go, the
+  // count goes on past what it holds.
+  await expect
+    .poll(errorsHeld(target), { timeout: 30000 })
+    .toBeGreaterThan(1450);
+  // The rail's panel toggle names the same count.
+  const named = async () =>
+    Number(
+      /\d+/.exec(
+        (await panelToggle(target).ariaSnapshot()).replace(/[\s.,\u00a0]/g, ""),
+      )?.[0] ?? 0,
+    );
+  await expect.poll(named, { timeout: 5000 }).toBeGreaterThan(1450);
 });
 
 test("a reader far from the end is never given the whole log to draw", async ({

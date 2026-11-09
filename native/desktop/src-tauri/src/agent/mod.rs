@@ -29,7 +29,7 @@ use cadrumo_application::{diagnostics::Diagnostics, error::application::Result};
 use serde::Serialize;
 use serde_json::Value;
 use session::{Answer, RequestRef, SendRequest, Session};
-use std::sync::Arc;
+use std::{path::PathBuf, sync::Arc};
 use stream::StreamEvent;
 use supervisor::{Supervisor, protocol::Observation, protocol::Status};
 use tauri::{Manager, Runtime, State, ipc::Channel, plugin::TauriPlugin};
@@ -54,10 +54,24 @@ pub struct AgentHost {
     sign_in: Arc<SignIn>,
     drops: dropping::Drops,
     attendance: std::sync::Mutex<Option<(u32, tauri::async_runtime::JoinHandle<()>)>>,
+    /// The storage root the runtime manager reads its records from, which holds the
+    /// local engine selection this host hands on.
+    storage_root: PathBuf,
+    /// The package this process runs from, whose contents decide the local engine a
+    /// profile that chose none runs.
+    package_root: PathBuf,
+    /// Held across each read or choice of the local engine setting and the manager
+    /// record change that follows it, so an older read never overwrites a newer one.
+    engine_record: std::sync::Mutex<()>,
 }
 
 impl AgentHost {
-    fn new(sign_in: Arc<SignIn>, diagnostics: Arc<Diagnostics>) -> Self {
+    fn new(
+        sign_in: Arc<SignIn>,
+        diagnostics: Arc<Diagnostics>,
+        storage_root: PathBuf,
+        package_root: PathBuf,
+    ) -> Self {
         let watched = sign_in.clone();
         let changed: supervisor::protocol::Changed =
             Arc::new(move || Box::pin(watched.observation_changed()));
@@ -76,6 +90,8 @@ impl AgentHost {
             }) as std::pin::Pin<Box<dyn Future<Output = Result<Observation>> + Send>>
         });
         #[cfg(windows)]
+        let launched_from = package_root.clone();
+        #[cfg(windows)]
         let launch: supervisor::protocol::Launch = Arc::new(move |_bearer: &str, profile: &str| {
             let profile_id = sign_in.profile_id(profile)?;
             let person = sign_in.person(&profile_id)?;
@@ -84,6 +100,10 @@ impl AgentHost {
             Ok(supervisor::protocol::Prepared {
                 command,
                 person: Some(person),
+                local_engine_default:
+                    cadrumo_application::provisioning::local_ai::package_default_engine(
+                        &launched_from,
+                    ),
             })
         });
         #[cfg(windows)]
@@ -102,7 +122,89 @@ impl AgentHost {
             sign_in: held,
             drops: dropping::Drops::default(),
             attendance: std::sync::Mutex::new(None),
+            storage_root,
+            package_root,
+            engine_record: std::sync::Mutex::new(()),
         }
+    }
+
+    /// The hold over one read or choice of the local engine setting and its record change.
+    fn engine_record(&self) -> std::sync::MutexGuard<'_, ()> {
+        self.engine_record
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
+
+    /// The storage root the runtime manager reads its local engine selection from.
+    pub(crate) fn storage_root(&self) -> &std::path::Path {
+        &self.storage_root
+    }
+
+    /// The package this process runs from.
+    pub(crate) fn package_root(&self) -> &std::path::Path {
+        &self.package_root
+    }
+
+    /// Hands the person's local engine setting on to the runtime manager's selection
+    /// record: a stored choice is written unless the record holds it, no choice removes
+    /// the record so the package's defaults apply, and a setting nobody can read leaves it
+    /// alone. The service's setting stands whether or not the record could be changed: a
+    /// failure is recorded, and the next read changes it again.
+    fn record_local_engine(&self, setting: &local_models::LocalEngineSetting) {
+        if let Err(error) = local_models::sync_record(&self.storage_root, setting.record_sync()) {
+            self.diagnostics.host_failure(
+                cadrumo_application::diagnostics::HostStage::Agent,
+                cadrumo_application::error::application::ApplicationError::new(
+                    cadrumo_application::error::application::ErrorCode::WriteFailed,
+                    cadrumo_application::error::application::Operation::Cli,
+                )
+                .with_reason("local_engine_selection_store")
+                .caused_by(error),
+            );
+        }
+    }
+
+    /// Reads the person's local engine setting from the service admitted as `generation`
+    /// and hands it on to the runtime manager's selection record, under the record's hold.
+    /// A read that does not succeed leaves the record as it is.
+    fn sync_local_engine_once(&self, generation: u64) -> std::result::Result<(), SyncMiss> {
+        use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation};
+        let _record = self.engine_record();
+        let answer = self
+            .administer_generation(serde_json::json!({"action":"local_engine"}), generation)
+            .map_err(|error| match sync_error_code(&error) {
+                Some(code) => sync_miss(code, error),
+                None => SyncMiss::Superseded,
+            })?;
+        if let Some(code) = local_models::refusal(&answer) {
+            return Err(sync_miss(
+                code,
+                ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli).with_reason(code),
+            ));
+        }
+        let setting = local_models::parse_engine(&answer).ok_or_else(|| {
+            SyncMiss::Failed(
+                ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+                    .with_reason("admin_local_engine_contract"),
+            )
+        })?;
+        self.record_local_engine(&setting);
+        Ok(())
+    }
+
+    /// Hands the person's local engine setting on to the runtime manager each time the
+    /// agent becomes ready for a profile, so the record follows the profile signed in
+    /// even when the window never opens the setting.
+    fn sync_local_engine_when_ready(self: &Arc<Self>) {
+        let host = Arc::downgrade(self);
+        self.supervisor.on_ready(Arc::new(move || {
+            let host = host.clone();
+            // The read crosses the service's admin channel, and a retry waits, which block.
+            // Dropping the handle detaches the sync; nothing awaits it.
+            drop(tauri::async_runtime::spawn_blocking(move || {
+                sync_local_engine(&host)
+            }));
+        }));
     }
 
     /// Stops the launcher and everything it started, for good.
@@ -205,6 +307,87 @@ impl AgentHost {
     }
 }
 
+/// The waits before a ready sync of the local engine setting asks again after a
+/// transient miss; after the last one it gives up and records the miss.
+const SYNC_RETRIES: [std::time::Duration; 3] = [
+    std::time::Duration::from_secs(1),
+    std::time::Duration::from_secs(2),
+    std::time::Duration::from_secs(4),
+];
+
+/// Why a ready sync of the local engine setting did not change the manager record.
+enum SyncMiss {
+    /// The service admitted for that readiness is gone, or the person left: a later
+    /// readiness syncs again, so there is nothing to record.
+    Superseded,
+    /// The service is busy, not ready yet, or reconnecting: asking again may succeed.
+    Transient(cadrumo_application::error::application::ApplicationError),
+    /// Anything else, recorded at once.
+    Failed(cadrumo_application::error::application::ApplicationError),
+}
+
+/// The miss a read refused with the column code `code` is.
+fn sync_miss(
+    code: &str,
+    error: cadrumo_application::error::application::ApplicationError,
+) -> SyncMiss {
+    match code {
+        "agent_service_busy" | "agent_service_not_ready" | "agent_reconnecting" => {
+            SyncMiss::Transient(error)
+        }
+        "agent_signed_out" => SyncMiss::Superseded,
+        _ => SyncMiss::Failed(error),
+    }
+}
+
+/// The column code a failed read crosses as, or `None` when the service admitted for the
+/// readiness was replaced or retired.
+fn sync_error_code(
+    error: &cadrumo_application::error::application::ApplicationError,
+) -> Option<&'static str> {
+    if error.reason.as_deref() == Some("agent_admin_generation_changed") {
+        return None;
+    }
+    Some(match person_refusal(error) {
+        "agent_service_failed" => admin_refusal(error),
+        code => code,
+    })
+}
+
+/// Syncs the local engine setting for the service ready now, asking again after each
+/// transient miss while that same service stays admitted and the host lives, at most
+/// once per wait in [`SYNC_RETRIES`]. Only a miss it gives up on is recorded.
+fn sync_local_engine(host: &std::sync::Weak<AgentHost>) {
+    let Some(generation) = host
+        .upgrade()
+        .and_then(|held| held.supervisor.admin_generation().ok())
+    else {
+        return;
+    };
+    let mut waits = SYNC_RETRIES.iter();
+    loop {
+        let Some(held) = host.upgrade() else {
+            return;
+        };
+        let error = match held.sync_local_engine_once(generation) {
+            Ok(()) | Err(SyncMiss::Superseded) => return,
+            Err(SyncMiss::Failed(error)) => {
+                held.diagnostics
+                    .host_failure(cadrumo_application::diagnostics::HostStage::Agent, error);
+                return;
+            }
+            Err(SyncMiss::Transient(error)) => error,
+        };
+        let Some(wait) = waits.next() else {
+            held.diagnostics
+                .host_failure(cadrumo_application::diagnostics::HostStage::Agent, error);
+            return;
+        };
+        drop(held);
+        std::thread::sleep(*wait);
+    }
+}
+
 /// Calls racing service admission are retryable; other failures keep their diagnostics.
 fn command_refusal(
     diagnostics: &Diagnostics,
@@ -237,10 +420,19 @@ pub fn dialog_plugin<R: Runtime>() -> TauriPlugin<R> {
 
 pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
     let diagnostics = launch.diagnostics.clone();
+    let storage_root = launch.working_directory.clone();
+    let package_root = launch.package_root.clone();
     tauri::plugin::Builder::new("cadrumo-agent")
         .setup(move |app, _| {
             let sign_in = app.state::<Arc<SignIn>>().inner().clone();
-            app.manage(Arc::new(AgentHost::new(sign_in, diagnostics.clone())));
+            let host = Arc::new(AgentHost::new(
+                sign_in,
+                diagnostics.clone(),
+                storage_root.clone(),
+                package_root.clone(),
+            ));
+            host.sync_local_engine_when_ready();
+            app.manage(host);
             Ok(())
         })
         .build()
@@ -258,6 +450,8 @@ pub fn commands<R: Runtime>() -> Commands<R> {
         agent_local_model_remove,
         agent_local_models_reset,
         agent_reading_model_choose,
+        agent_local_engine,
+        agent_local_engine_choose,
         agent_model_licence,
         agent_skills,
         agent_skill,
@@ -647,6 +841,86 @@ async fn agent_local_models_reset(
                 "expected_revision": expected_revision,
             }),
         )
+    })
+    .await
+}
+
+/// The local engine and placement, as the agent service stores them. A readable setting
+/// is handed on to the runtime manager, which runs that engine's server.
+#[tauri::command]
+async fn agent_local_engine(
+    host: State<'_, Arc<AgentHost>>,
+) -> std::result::Result<local_models::LocalEngineSetting, Refused> {
+    blocking(&host, |host| {
+        let _record = host.engine_record();
+        let answer = host
+            .administer(serde_json::json!({"action":"local_engine"}), None)
+            .map_err(|error| host.refuse(admin_refusal(&error), error))?;
+        if let Some(code) = local_models::refusal(&answer) {
+            return refused(code);
+        }
+        let setting =
+            local_models::parse_engine(&answer).ok_or_else(|| local_engine_contract(host))?;
+        host.record_local_engine(&setting);
+        Ok(setting)
+    })
+    .await
+}
+
+/// An engine setting answer outside the service's contract.
+fn local_engine_contract(host: &AgentHost) -> Refused {
+    host.refuse(
+        "agent_service_failed",
+        cadrumo_application::error::application::ApplicationError::new(
+            cadrumo_application::error::application::ErrorCode::ReadFailed,
+            cadrumo_application::error::application::Operation::Cli,
+        )
+        .with_reason("admin_local_engine_contract"),
+    )
+}
+
+/// Stores `engine` and `placement` at the revision the person read. The service retires
+/// the agent tree when either changes and starts its replacement, which the supervisor
+/// reports as the agent's status; the setting is then handed on to the runtime manager.
+#[tauri::command]
+async fn agent_local_engine_choose(
+    host: State<'_, Arc<AgentHost>>,
+    engine: String,
+    placement: String,
+    expected_revision: String,
+) -> std::result::Result<local_models::LocalEngineSetting, Refused> {
+    let Some(chosen) = local_models::engine_token(&engine) else {
+        return refused("agent_invalid_request");
+    };
+    if local_models::placement_token(&placement).is_none()
+        || !local_models::is_revision(&expected_revision)
+    {
+        return refused("agent_invalid_request");
+    }
+    blocking(&host, move |host| {
+        // An engine this package cannot run never reaches the service.
+        if let Some(code) = local_models::engine_unavailable(chosen, &host.package_root) {
+            return refused(code);
+        }
+        let _record = host.engine_record();
+        let answer = host
+            .administer(
+                serde_json::json!({
+                    "action": "local_engine_choose",
+                    "engine": engine,
+                    "placement": placement,
+                    "expected_revision": expected_revision,
+                }),
+                None,
+            )
+            .map_err(|error| host.refuse(admin_refusal(&error), error))?;
+        if let Some(code) = local_models::change_refusal(&answer) {
+            return refused(code);
+        }
+        let setting =
+            local_models::parse_engine(&answer).ok_or_else(|| local_engine_contract(host))?;
+        host.record_local_engine(&setting);
+        Ok(setting)
     })
     .await
 }
@@ -1141,6 +1415,50 @@ async fn agent_attachment_policy(
 mod tests {
     use super::*;
     use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation};
+
+    #[test]
+    fn a_ready_sync_asks_again_only_after_a_transient_miss_and_a_bounded_number_of_times() {
+        let error = || ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli);
+        for code in [
+            "agent_service_busy",
+            "agent_service_not_ready",
+            "agent_reconnecting",
+        ] {
+            assert!(
+                matches!(sync_miss(code, error()), SyncMiss::Transient(_)),
+                "{code}"
+            );
+        }
+        assert!(matches!(
+            sync_miss("agent_signed_out", error()),
+            SyncMiss::Superseded
+        ));
+        for code in ["agent_service_failed", "agent_local_models_unknown"] {
+            assert!(
+                matches!(sync_miss(code, error()), SyncMiss::Failed(_)),
+                "{code}"
+            );
+        }
+        // A replaced or retired service supersedes the sync; a timeout is busy; a person
+        // who left is signed out; anything else failed.
+        assert_eq!(
+            sync_error_code(&error().with_reason("agent_admin_generation_changed")),
+            None
+        );
+        assert_eq!(
+            sync_error_code(&ApplicationError::new(ErrorCode::TimedOut, Operation::Cli)),
+            Some("agent_service_busy")
+        );
+        assert_eq!(
+            sync_error_code(&error().with_reason("person_not_signed_in")),
+            Some("agent_signed_out")
+        );
+        assert_eq!(
+            sync_error_code(&error().with_reason("agent_admin_unreadable")),
+            Some("agent_service_failed")
+        );
+        assert_eq!(SYNC_RETRIES, [1, 2, 4].map(std::time::Duration::from_secs));
+    }
 
     #[test]
     fn admission_races_are_quiet_and_retryable_only_while_starting() {

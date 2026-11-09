@@ -166,10 +166,23 @@ pub fn cause<T: std::fmt::Debug>(result: Result<T, Stop>) -> ApplicationError {
         .expect("a stop that carries its cause")
 }
 
+/// A storage root that holds no local engine selection, so the defaults apply.
+pub fn unselected() -> std::path::PathBuf {
+    std::env::temp_dir().join("cadrumo-desktop-tests-without-a-local-engine-selection")
+}
+
+/// A package root that carries no llama-server, so the default engine is Ollama.
+pub fn unpackaged() -> std::path::PathBuf {
+    std::env::temp_dir().join("cadrumo-desktop-tests-package-without-llama-server")
+}
+
 /// An admission over `replies`, and the replies to ask what it read.
 fn watched(replies: Replies) -> (Admission, Arc<Replies>) {
     let replies = Arc::new(replies);
-    (Admission::new(replies.clone()), replies)
+    (
+        Admission::new(replies.clone(), unselected(), unpackaged()),
+        replies,
+    )
 }
 
 fn admission_of(replies: Replies) -> Admission {
@@ -185,7 +198,10 @@ pub fn requested(lane: &str, model: &str) -> ModelDownload {
 }
 
 fn admitted(model: &str, size: Option<u64>) -> LocalModels {
-    LocalModels::new(vec![SelectedModel::new("download", model, size).unwrap()]).unwrap()
+    LocalModels::new(vec![
+        SelectedModel::new("download", model, size, None).unwrap(),
+    ])
+    .unwrap()
 }
 
 /// Override one read with a sequence, leaving the other service replies intact.
@@ -222,7 +238,10 @@ fn scripted(
         action,
         answers: Mutex::new(answers.into()),
     });
-    (Admission::new(agent.clone()), agent)
+    (
+        Admission::new(agent.clone(), unselected(), unpackaged()),
+        agent,
+    )
 }
 
 fn busy() -> Result<Value, ApplicationError> {
@@ -415,10 +434,14 @@ fn a_service_busy_past_the_budget_settles_the_download_start_as_unavailable() {
         ("catalog", "setup_catalogue_refused"),
         ("local_models", "setup_local_models_refused"),
     ] {
-        let admission = Admission::new(Arc::new(BusyForever {
-            replies: Replies::serving(&[TEXT], &[ADDED], &[(TEXT, Some(GB))]),
-            action,
-        }));
+        let admission = Admission::new(
+            Arc::new(BusyForever {
+                replies: Replies::serving(&[TEXT], &[ADDED], &[(TEXT, Some(GB))]),
+                action,
+            }),
+            unselected(),
+            unpackaged(),
+        );
         let began = Instant::now();
         let result = admission.download_with_budget(
             &requested(LOCAL, ADDED),
@@ -565,7 +588,7 @@ fn pending_download_discards_a_reply_after_cancellation_or_service_replacement()
             let service = service.clone();
             let cancellation = cancellation.clone();
             std::thread::spawn(move || {
-                Admission::new(service).download_with_budget(
+                Admission::new(service, unselected(), unpackaged()).download_with_budget(
                     &requested(LOCAL, TEXT),
                     &cancellation,
                     Duration::from_secs(4),
@@ -871,6 +894,190 @@ fn a_profile_that_is_signed_out_is_told_so() {
             refusal(admission_of(replies).download(&requested(LOCAL, ADDED))),
             Err(Refusal::NotSignedIn),
             "{name}"
+        );
+    }
+}
+
+/// A declared catalogue whose local lane recommends `model` and lists it with
+/// `artefacts` as stated.
+fn with_artefacts(model: &str, artefacts: Value) -> Value {
+    json!({
+        "kind": "declared",
+        "catalog": {"schema_version": 6, "providers": [
+            {"id": LOCAL, "provider": "synthetic_local", "transport": "api",
+             "recommended": {"text": model},
+             "models": [{"id": model, "size_bytes": GB, "artefacts": artefacts}]},
+        ]},
+    })
+}
+
+fn admitted_with_context(model: &str, context: Option<u32>) -> LocalModels {
+    LocalModels::new(vec![
+        SelectedModel::new(
+            "download",
+            model,
+            Some(GB),
+            context.map(|tokens| NonZeroU32::new(tokens).unwrap()),
+        )
+        .unwrap(),
+    ])
+    .unwrap()
+}
+
+#[test]
+fn a_download_is_admitted_with_the_context_its_catalogue_artefacts_state() {
+    let artefact = json!({"source": "registry", "name": TEXT});
+    for (name, artefacts, expected) in [
+        (
+            "a stated context",
+            json!({"ollama": null, "llamacpp": artefact, "llamacpp_default_context": 8192}),
+            Some(8192),
+        ),
+        (
+            "the largest context",
+            json!({"ollama": null, "llamacpp": artefact, "llamacpp_default_context": u32::MAX}),
+            Some(u32::MAX),
+        ),
+        (
+            "no context stated",
+            json!({"ollama": artefact, "llamacpp": null, "llamacpp_default_context": null}),
+            None,
+        ),
+        (
+            "no context member",
+            json!({"ollama": artefact, "llamacpp": null}),
+            None,
+        ),
+        ("no artefacts", Value::Null, None),
+    ] {
+        let replies = Replies::serving(&[TEXT], &[], &[])
+            .answering("catalog", with_artefacts(TEXT, artefacts));
+        assert_eq!(
+            admission_of(replies)
+                .download(&requested(LOCAL, TEXT))
+                .unwrap(),
+            admitted_with_context(TEXT, expected),
+            "{name}"
+        );
+    }
+    // An entry without the artefacts member states no context either.
+    let replies = Replies::serving(&[TEXT], &[], &[(TEXT, Some(GB))]);
+    assert_eq!(
+        admission_of(replies)
+            .download(&requested(LOCAL, TEXT))
+            .unwrap(),
+        admitted_with_context(TEXT, None)
+    );
+}
+
+#[test]
+fn a_context_that_is_no_positive_32_bit_count_is_a_catalogue_outside_the_contract() {
+    for stated in [
+        json!(0),
+        json!(-1),
+        json!(8192.5),
+        json!("8192"),
+        json!(u64::from(u32::MAX) + 1),
+        json!(true),
+    ] {
+        let artefacts = json!({
+            "ollama": null,
+            "llamacpp": {"source": "registry", "name": TEXT},
+            "llamacpp_default_context": stated,
+        });
+        let replies = Replies::serving(&[TEXT], &[], &[])
+            .answering("catalog", with_artefacts(TEXT, artefacts));
+        let result = admission_of(replies).download(&requested(LOCAL, TEXT));
+        assert!(
+            matches!(&result, Err(Stop::Host(error))
+                if error.code == ErrorCode::ReadFailed
+                    && error.reason.as_deref() == Some("setup_catalogue_contract")),
+            "{stated}: {result:?}"
+        );
+    }
+    let replies = Replies::serving(&[TEXT], &[], &[])
+        .answering("catalog", with_artefacts(TEXT, json!("registry")));
+    assert!(matches!(
+        admission_of(replies).download(&requested(LOCAL, TEXT)),
+        Err(Stop::Host(_))
+    ));
+}
+
+#[test]
+fn no_selection_record_is_the_engine_the_package_derives_with_automatic_placement() {
+    let admission = admission_of(Replies::default());
+    assert_eq!(
+        admission.local_engine().unwrap(),
+        (LocalEngine::Ollama, Placement::Auto)
+    );
+    let package = crate::agent::local_models::tests::Package::new(true);
+    let admission = Admission::new(Arc::new(Replies::default()), unselected(), package.root());
+    assert_eq!(
+        admission.local_engine().unwrap(),
+        (LocalEngine::LlamaCpp, Placement::Auto)
+    );
+}
+
+#[cfg(any(windows, target_os = "macos"))]
+mod selection {
+    use super::*;
+    use crate::agent::local_models::record_selection;
+
+    /// A storage root of its own, removed after the test.
+    struct Root(std::path::PathBuf);
+
+    impl Root {
+        fn new() -> Self {
+            use std::time::{SystemTime, UNIX_EPOCH};
+            Self(std::env::temp_dir().join(format!(
+                "cadrumo-desktop-admission-selection-{}-{}",
+                std::process::id(),
+                SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_nanos()
+            )))
+        }
+    }
+
+    impl Drop for Root {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.0);
+        }
+    }
+
+    #[test]
+    fn the_managers_selection_is_the_engine_and_placement_admitted() {
+        let root = Root::new();
+        record_selection(&root.0, LocalEngine::LlamaCpp, Placement::CpuOnly).unwrap();
+        let admission = Admission::new(Arc::new(Replies::default()), root.0.clone(), unpackaged());
+        assert_eq!(
+            admission.local_engine().unwrap(),
+            (LocalEngine::LlamaCpp, Placement::CpuOnly)
+        );
+    }
+
+    #[test]
+    fn a_selection_nobody_can_read_refuses_and_is_never_the_defaults() {
+        let root = Root::new();
+        record_selection(&root.0, LocalEngine::Ollama, Placement::Auto).unwrap();
+        cadrumo_manager::custody::write_local_record(
+            &root
+                .0
+                .join(cadrumo_manager::contract::LOCAL_ENGINE_SELECTION),
+            br#"{"schema":1,"engine":"llama_cpp","placement":"auto"}"#,
+            4096,
+        )
+        .unwrap();
+        let admission = Admission::new(Arc::new(Replies::default()), root.0.clone(), unpackaged());
+        let result = admission.local_engine();
+        assert_eq!(
+            result.as_ref().err().and_then(Stop::refusal),
+            Some(Refusal::Unavailable)
+        );
+        assert_eq!(
+            cause(result).reason.as_deref(),
+            Some("setup_local_engine_unreadable")
         );
     }
 }
