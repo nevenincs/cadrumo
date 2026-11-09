@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { scenarioOnly, send, settled, toolRow } from "../support/agent";
+import { servedLocalLanes } from "../support/servedLocalLanes";
 import { label } from "../support/strings";
 
 // Component setup through the one provisioning panel: one row per element
@@ -875,9 +876,10 @@ test("a local AI this computer cannot run says so once, offers no setup, and kee
   await expect(programRow(target)).toContainText(sentence);
   await once(localAi(target), sentence);
   await expect(programRow(target).getByRole("button")).toHaveCount(0);
-  await expect(
-    localAi(target).locator('[data-slot="local-models"]'),
-  ).toBeVisible();
+  // One model list per served lane; the sections carry no lane attribute.
+  const lists = localAi(target).locator('[data-slot="local-models"]');
+  await expect(lists).toHaveCount(servedLocalLanes().length);
+  await expect(lists.first()).toBeVisible();
   await noInternalWords(target);
   expect(await hostCalls(target)).not.toContain("setup.start local_ai");
 });

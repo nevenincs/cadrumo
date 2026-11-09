@@ -76,6 +76,7 @@ if TYPE_CHECKING:
         AutomationInventoryReader,
     )
     from ..application.user_profile.history_operation import ProfileHistoryReadPorts
+    from ..application.workbench_capture_memory import WorkbenchCaptureMemoryOwner
     from ..application.workbench_generation_operation import WorkbenchGenerationReader
     from ..application.workflow.run_read_ports import WorkflowRunReadPortsFactory
     from ..core.identity_check_verdict import IdentityCheckVerdictValue
@@ -304,6 +305,9 @@ class OperationCompositionInputs:
     execution_caller_reader: OperationExecutionCallerReader | None = None
     connectivity_probe: ConnectivityProbePort | None = None
     sede_view_stream_opener: SedeViewStreamOpener | None = None
+    #: The capture memory list-shaped reads share for the session's profile; ``None`` shares none.
+    #: Its owner closes it when a session ends, which only a composition that hears of that may promise.
+    capture_memory: WorkbenchCaptureMemoryOwner | None = None
 
     @cached_property
     def resolved_settings(self) -> Settings:

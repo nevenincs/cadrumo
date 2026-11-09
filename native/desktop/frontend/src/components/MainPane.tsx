@@ -147,6 +147,7 @@ export function MainPane({
   calendarOn: boolean;
   openDeclaration: {
     workUnitId: string | null;
+    arrival: number;
     memory: { current: DeclarationsMemory };
   };
   openWorkUnit: (workUnitId: string | null) => void;
@@ -219,6 +220,7 @@ export function MainPane({
     <>
       {declarationsOn && host.modelo ? (
         <DeclarationsPane
+          key={openDeclaration.arrival}
           port={host.modelo}
           reader={reader}
           workUnitId={openDeclaration.workUnitId}

@@ -145,6 +145,7 @@ def test_two_real_rows_survive_one_stale_coordinate_without_its_amount_or_histor
         filing_records=ModeloRecordCatalogue(),
         lifecycle_facts=(),
         zone_observations=_observations(),
+        profile=None,
         result_casilla_reader=result_box,
     )
     assert len(projection.declarations) == 2
@@ -182,6 +183,7 @@ def test_orphan_history_is_an_explicit_partial_source_without_erasing_valid_work
         filing_records=ModeloRecordCatalogue(),
         lifecycle_facts=(orphan,),
         zone_observations=_observations(),
+        profile=None,
     )
     assert len(projection.declarations) == len(projection.calculation_revisions) == 2
     assert projection.lifecycle == ()
@@ -200,6 +202,7 @@ def test_unavailable_declaration_source_never_exposes_even_a_refused_row(two_per
         filing_records=ModeloRecordCatalogue(),
         lifecycle_facts=(),
         zone_observations=_observations(declarations_unavailable=True),
+        profile=None,
     )
     assert projection.declarations == ()
     source = next(zone for zone in projection.zones if zone.zone is DeclarationsWorkspaceZone.DECLARATIONS)
@@ -240,6 +243,7 @@ def test_real_discard_remains_readable_and_the_same_target_refuses_recreation(tm
             filing_records=ModeloRecordCatalogue(),
             lifecycle_facts=(),
             zone_observations=_observations(),
+            profile=None,
         )
         assert len(projection.declarations) == 1
         row = projection.declarations[0]

@@ -366,7 +366,7 @@ async def test_overview_opened_for_a_new_declaration_goes_straight_to_the_picker
             _projection(authority_operation),
             context,
             work_create_handoff=lambda *_: ModeloWorkCreateResultV1(reused=False),
-            creation_targets=declaration_targets(authority_operation),
+            creation_targets=declaration_targets(authority_operation, profile=None),
         )
     )
     async with ScreenHostApp(screen).run_test(size=(100, 42)) as pilot:
@@ -403,7 +403,7 @@ def _select_declaration(table: DataTable[str], identity: str) -> None:
 async def test_declarations_create_selects_only_supported_targets_and_reopens_exact_work(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    targets = declaration_targets(authority_operation)
+    targets = declaration_targets(authority_operation, profile=None)
     target = DeclarationTarget("111", Period.from_year_and_code(2025, "2T"))
     assert target in targets
     calls: list[tuple[str, int, Period]] = []
@@ -457,7 +457,7 @@ async def test_declarations_create_keeps_the_submitted_address_and_refuses_a_sec
         _controller(
             _projection(authority_operation),
             work_create_handoff=create,
-            creation_targets=declaration_targets(authority_operation),
+            creation_targets=declaration_targets(authority_operation, profile=None),
         )
     )
     async with ScreenHostApp(screen).run_test(size=(100, 42)) as pilot:
@@ -495,7 +495,7 @@ async def test_declarations_create_shows_the_application_refusal_as_itself(
         _controller(
             _projection(authority_operation),
             work_create_handoff=create,
-            creation_targets=declaration_targets(authority_operation),
+            creation_targets=declaration_targets(authority_operation, profile=None),
         )
     )
     async with ScreenHostApp(screen).run_test(size=(100, 42)) as pilot:
@@ -1004,7 +1004,7 @@ async def test_creation_result_opens_the_exact_new_declaration_and_refreshes_sem
         original,
         modelo_workspace_factory=factory,
         work_create_handoff=create,
-        creation_targets=declaration_targets(authority_operation),
+        creation_targets=declaration_targets(authority_operation, profile=None),
     )
     controller.refresh_data = lambda: (latest if created_now else original, None)
     screen = DeclarationsOverviewScreen(controller)

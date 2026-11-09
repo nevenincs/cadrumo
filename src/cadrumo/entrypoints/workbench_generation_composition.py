@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from uuid import UUID
 
+from ..application.workbench_capture_memory import WorkbenchCaptureMemory
 from ..application.workbench_generation import (
     InstalledWorkbenchGenerationProviderV1,
 )
@@ -65,15 +66,23 @@ def compose_secure_workbench_generation_provider(
 
 
 def compose_secure_declaration_list_reader(
-    *, profile_id: str, operation: PinnedAuthorityOperation
+    *, profile_id: str, operation: PinnedAuthorityOperation, capture_memory: WorkbenchCaptureMemory | None
 ) -> Callable[[], DeclarationListInputs]:
     """Bind one explicit profile and pinned authority to the read door's declarations-list capture.
 
     The list reads the same repositories through the same door as a generation,
-    without the account session only Home shows.
+    without the account session only Home shows. ``capture_memory`` is the
+    memory the list-shaped reads of this profile share, so a read reuses the
+    legal calendar its predecessor computed; a reuse still needs the capture's
+    own freshly read profile, work-unit, filing, ledger and authority
+    identities to equal the stored ones. ``None`` recomputes every time.
     """
     read_door = _secure_read_door(
-        profile_id=profile_id, operation=operation, operation_contracts=None, account_session_reader=None
+        profile_id=profile_id,
+        operation=operation,
+        operation_contracts=None,
+        account_session_reader=None,
+        capture_memory=capture_memory,
     )
     return lambda: read_door().read_declaration_list_inputs()
 
@@ -84,6 +93,7 @@ def _secure_read_door(
     operation: PinnedAuthorityOperation,
     operation_contracts: OperationPublicContractSetV1 | None,
     account_session_reader: Callable[[], HomeAccountSession] | None,
+    capture_memory: WorkbenchCaptureMemory | None = None,
 ) -> Callable[[], SecureProfileWorkbenchGenerationReadDoorV1]:
     """Compose the read door over one profile's secure repositories, afresh for each capture."""
     from ..adapters.persistence.profile.credit_resolution_records import CreditResolutionRepositoryAdapter
@@ -144,6 +154,7 @@ def _secure_read_door(
             operation_contracts=operation_contracts,
             modelo_projection_reader=modelo_workspace_projection_reader(operation),
             calendar_aeat_reader=calendar_aeat_reader,
+            capture_memory=capture_memory,
         )
 
     return read_door

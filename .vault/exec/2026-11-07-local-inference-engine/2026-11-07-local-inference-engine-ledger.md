@@ -5,7 +5,7 @@ tags:
 date: '2026-11-07'
 modified: '2026-11-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:0af7e63cdbb8e5a9497390894747c2f3b173e22be090a27117287a39fde4a83f'
+body_hash: 'sha256:dda06ccc3c834f7b7d9a716391829f8735b36fec8fa0495a1d79ff5911bbce6e'
 related:
   - "[[2026-11-07-local-inference-engine-plan]]"
 ---
@@ -473,6 +473,7 @@ related:
 - `S18` `M` `native/application/CMakeLists.txt`
 - `S18` `verify:` `ctest manager.fmt manager.clippy application.fmt application.clippy desktop.fmt desktop.clippy` -> `pass`
 - `S18` `verify:` `ctest application.rust on feature/tui f521650cd6` -> `pass`
+- `S31` `by:` `opus`
 
 ## Notes
 
@@ -513,6 +514,10 @@ related:
 - `S29` Opus review done before close
 - `S30` Opus review done before close. Keeping a lane's earlier catalogue as stale when its measurement stops answering is the right contract, and settings invalidation now forgets it
 - `S18` Closed on the coordinator's direction with S18 landed on feature/tui; the reruns of manager.rust and application.package after the bound and unload-wait fixes are DESKTOP's on feature/tui
+- `S31` Left open 2026-11-09: it cannot be proven on the Windows host. It needs (1) a Linux build host or container at the glibc 2.28 floor for x86-64 and aarch64, for example a `manylinux_2_28` or AlmaLinux 8 image, running the Linux CMake preset
+- `S31` (2) the pinned b12184 upstream source tarball with its size and SHA-256 in native/llamacpp-pins.json, built unmodified with the CPU backend, `GGML_NATIVE` off, curl and OpenSSL off, and libgomp linked statically, then staged into bin/llama, where the ELF floor check in dev/packaging/native/platforms/elf.py must pass (the published Linux archives need glibc 2.34 and 2.38 and are refused)
+- `S31` (3) the application.package live test and the packaged desktop smoke run on that Linux build
+- `S31` (4) a decision for the open item that Linux without an installed manager runs no local AI server: either install the manager on Linux as a user service, or host the shared manager core in the window on Linux as DesktopHost does on Windows and macOS. Until then Linux ships without llama-server and keeps ollama as its default engine
 
 ## Notes
 

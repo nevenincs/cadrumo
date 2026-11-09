@@ -176,6 +176,7 @@ async def expire_custody(
     """Release custody at each lease, login and upload deadline; every handled command wakes it early."""
     # A new worker holds nothing until a command arrives, so it starts by waiting.
     delay: float | None = None
+    observed = frozenset[UUID]()
     while True:
         await _until_change(stop, changed, delay)
         if stop.is_set():
@@ -183,6 +184,10 @@ async def expire_custody(
         changed.clear()
         try:
             live_sessions = await asyncio.to_thread(custody.live_sessions)
+            if observed.difference(live_sessions):
+                # A lease lapsed or was retired since the last pass; its reads' reuse ends with it.
+                operations.end_session_reads()
+            observed = frozenset(live_sessions)
             uploads.expire(live_sessions=live_sessions)
             await asyncio.to_thread(human.expire)
             deadlines = [
@@ -251,6 +256,8 @@ async def handle_custody_control(context: WorkerControl, request: object) -> _Co
         )
         live_sessions = await asyncio.to_thread(context.custody.live_sessions)
         context.uploads.expire(live_sessions=live_sessions)
+        # Whatever a read kept for reuse ends with any session, not only the last.
+        context.operations.end_session_reads()
         if not live_sessions:
             # Locking or signing out ends the last session but not this worker.
             context.operations.forget_settled_ephemeral()

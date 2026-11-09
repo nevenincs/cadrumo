@@ -23,7 +23,7 @@ _FILED_IN_EVERY_SUPPORTED_YEAR = ("100", "189", "714")
 
 def _offered_years(operation: PinnedAuthorityOperation) -> dict[str, set[int]]:
     offered: dict[str, set[int]] = {}
-    for target in declaration_targets(operation):
+    for target in declaration_targets(operation, profile=None):
         offered.setdefault(target.modelo, set()).add(target.period.filing_year)
     return offered
 

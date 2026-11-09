@@ -144,6 +144,7 @@ def declaration_list_rows(
                 f"advice:{item.modelo}", item.modelo, None, "maybe", DeclarationListGroup.MAYBE, advice=item.reason
             )
             for item in calendar.coverage.advised
+            if not any(address[0] == item.modelo for address in local_addresses)
         )
     return tuple(rows)
 
@@ -627,9 +628,13 @@ def creation_targets(
     )
 
 
+def _due_not_started(rows: tuple[DeclarationListRow, ...]) -> list[DeclarationListRow]:
+    return sorted((row for row in rows if row.state == "not_started"), key=lambda row: row.deadline or date.max)
+
+
 def preferred_creation_target(rows: tuple[DeclarationListRow, ...]) -> DeclarationTarget | None:
     """The first return due and not started, when it names its period."""
-    due = sorted((row for row in rows if row.state == "not_started"), key=lambda row: row.deadline or date.max)
+    due = _due_not_started(rows)
     return DeclarationTarget(due[0].modelo, due[0].period) if due and due[0].period is not None else None
 
 
@@ -639,15 +644,17 @@ def starting_creation_targets(
     """For each modelo offered, the address the dialog starts on.
 
     That is the modelo's first return due and not started; else its latest period already ended on
-    ``as_of``, the last one a filer can owe; else its earliest offered period.
+    ``as_of``, the last one a filer can owe; else its earliest offered period. A period whose filing
+    family still waits on an unanswered profile fact is never the starting address, so no cadence is
+    suggested before the profile decides it.
     """
-    offered = set(targets)
+    eligible = {(target.modelo, target.period): target for target in targets if not target.profile_requirements}
     starting: dict[str, DeclarationTarget] = {}
     for row in sorted((row for row in rows if row.state == "not_started"), key=lambda row: row.deadline or date.max):
-        if row.period is not None and (target := DeclarationTarget(row.modelo, row.period)) in offered:
+        if row.period is not None and (target := eligible.get((row.modelo, row.period))) is not None:
             starting.setdefault(row.modelo, target)
     by_modelo: dict[str, list[DeclarationTarget]] = {}
-    for target in targets:
+    for target in eligible.values():
         by_modelo.setdefault(target.modelo, []).append(target)
     for modelo, own in by_modelo.items():
         if modelo in starting:

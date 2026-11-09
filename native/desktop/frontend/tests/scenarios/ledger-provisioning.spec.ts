@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { servedLocalLanes } from "../support/servedLocalLanes";
 import { label } from "../support/strings";
 
 // The Documents section on a computer whose local AI is not set up: a scan
@@ -181,9 +182,10 @@ async function heldByHardware(target: Page) {
   await expect(programRow(target)).toContainText(sentence);
   expect((await prompt(target).innerText()).split(sentence).length - 1).toBe(1);
   await expect(programRow(target).getByRole("button")).toHaveCount(0);
-  await expect(
-    prompt(target).locator('[data-slot="local-models"]'),
-  ).toBeVisible();
+  // One model list per served lane; the sections carry no lane attribute.
+  const lists = prompt(target).locator('[data-slot="local-models"]');
+  await expect(lists).toHaveCount(servedLocalLanes().length);
+  await expect(lists.first()).toBeVisible();
 }
 
 /** Puts the panel away from its footer. */
