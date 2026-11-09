@@ -795,16 +795,16 @@ def _collect_screened_invoice_results(
     deduction_authority_missing: list[Invoice] = []
     recargo_rate_divergences: list[_RecargoRateDivergence] = []
     recargo_split_unresolved: list[Invoice] = []
-    for invoice in invoices:
-        screened = screened_invoice_iva_result(
-            invoice,
-            linked_movements=tuple(
-                movement
-                for transaction_id in invoice.linked_transaction_ids
-                if (movement := linked_movements.get(transaction_id)) is not None
-            ),
-            operation=operation,
+    for stored in invoices:
+        paying = tuple(
+            movement
+            for transaction_id in stored.linked_transaction_ids
+            if (movement := linked_movements.get(transaction_id)) is not None
         )
+        # Every list below names the classified invoice, so a finding states
+        # the category the projection actually read.
+        invoice = invoice_with_paying_movement_category(stored, paying)
+        screened = screened_invoice_iva_result(invoice, linked_movements=paying, operation=operation)
         if screened.reverse_charge_underivable:
             reverse_charge_underivable.append(invoice)
         if screened.recargo_rate_divergence is not None:
@@ -830,6 +830,36 @@ def _collect_screened_invoice_results(
         recargo_rate_divergences=tuple(recargo_rate_divergences),
         recargo_split_unresolved=tuple(recargo_split_unresolved),
     )
+
+
+def invoice_with_paying_movement_category(invoice: Invoice, linked_movements: Sequence[Transaction]) -> Invoice:
+    """Return ``invoice`` under the IVA category its paying movements record, when it states none.
+
+    The invoice is the IVA source and its paying movement only the payment
+    evidence, yet the operator may have classified the operation on the
+    movement: an intra-community service, an export or a reverse charge. An
+    invoice read from the Libro de facturas can carry a base, a rate and a
+    counterparty but no category, and its cuota-less line would otherwise be
+    classified from the rate slot alone. That places a 0 % intra-community or
+    export base in a domestic category no base casilla selects.
+
+    The category recorded on the movement is the explicit classification of the
+    same operation, so it is read the way the deduction family already is: only
+    when every paying movement records one and they all agree. A movement with
+    no category reads as the rate-derived domestic default, which is itself a
+    classification, so a mixed set grounds nothing and the rate slot stays the
+    only signal. A category the invoice states itself always governs, and the
+    counterparty gate still screens the category either way.
+    """
+    if invoice.iva_category is not None or not linked_movements:
+        return invoice
+    categories = {movement.iva_category for movement in linked_movements}
+    if len(categories) != 1:
+        return invoice
+    (category,) = categories
+    if category is None:
+        return invoice
+    return invoice.model_copy(update={"iva_category": category})
 
 
 def screened_invoice_iva_result(

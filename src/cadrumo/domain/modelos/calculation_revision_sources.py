@@ -204,6 +204,12 @@ class CalculationNoteSentence(StrEnum):
     """
     M347_PROVINCIA_UNSTATED = "m347_provincia_unstated"
     """One Spanish Modelo 347 declarado whose provincia the person has not stated for the counterparty."""
+    UNROUTED_IVA_BASE = "unrouted_iva_base"
+    """One IVA record's base imponible that no box of the declaration draws for its category."""
+    UNROUTED_IVA_CUOTA = "unrouted_iva_cuota"
+    """One IVA record's cuota that no box of the declaration draws for its category."""
+    UNROUTED_IVA_RECARGO = "unrouted_iva_recargo"
+    """One IVA record's recargo de equivalencia that no box of the declaration draws for its category."""
 
 
 GRADE_CAP_NOTE_SENTENCES: Final[Mapping[BindingGradeCapReason, CalculationNoteSentence]] = MappingProxyType(

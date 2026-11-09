@@ -54,6 +54,7 @@ from .row_source_fingerprint import ModeloRowSourceFingerprint
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.schema import RegistrySnapshot
+    from .calculation_note_gate import SourceDisagreementResolutions
 
 
 class ModeloWorkOriginAnomaly(StrEnum):
@@ -277,8 +278,14 @@ def build_modelo_work_review(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
     calculation_catalogue: CalculationRevisionCatalogue | None = None,
+    resolutions: SourceDisagreementResolutions | None = None,
 ) -> ModeloWorkReview:
-    """Assemble a work review, optionally using this assembly's fresh calculation read."""
+    """Assemble a work review, optionally using this assembly's fresh calculation read.
+
+    ``resolutions`` are the accepted source disagreements the check honours;
+    without them none is honoured, so every disagreement note is a blocker.
+    """
+    from .calculation_note_gate import NO_SOURCE_DISAGREEMENT_RESOLUTIONS
     from .work_review_assembly import assemble_modelo_work_review
 
     return assemble_modelo_work_review(
@@ -291,6 +298,7 @@ def build_modelo_work_review(
         calculation_repository=calculation_repository,
         verification_repository=verification_repository,
         calculation_catalogue=calculation_catalogue,
+        resolutions=NO_SOURCE_DISAGREEMENT_RESOLUTIONS if resolutions is None else resolutions,
     )
 
 

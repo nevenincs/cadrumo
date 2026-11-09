@@ -202,11 +202,32 @@ def require_no_blocking_calculation_notes(
             "calculation_revision_id": revision.calculation_revision_id,
             "reason": first.reason,
             "reasons": ",".join(sorted({issue.reason for issue in blocking})),
+            "blocking_count": str(len(blocking)),
             **({} if box is None else {"box": box}),
+            **note_subject_facts(first),
             **({} if not finding_ids else {"finding_ids": ",".join(finding_ids)}),
             **({"resolutions_unreadable": "true"} if resolutions.unreadable and finding_ids else {}),
         },
     )
+
+
+_NOTE_SUBJECT_VALUES: Final[frozenset[str]] = frozenset({"row_date", "row_amount"})
+"""The fact values that name a note's own record by date and amount, and nothing private about a party."""
+
+
+def note_subject_facts(issue: CalculationSourceIssue) -> dict[str, str]:
+    """The record a note is about and the amount it leaves out, as stable tokens.
+
+    A refusal or a review that names only the reason leaves the filer nothing to
+    act on, so each also names the record the note was raised on and, where the
+    note's fact states them, that record's date and the amount it leaves out.
+    """
+    subject: dict[str, str] = {}
+    if issue.source_ref is not None:
+        subject["source_ref"] = issue.source_ref
+    if issue.fact is not None:
+        subject.update((name, value) for name, value in issue.fact.values if name in _NOTE_SUBJECT_VALUES and value)
+    return subject
 
 
 def _screened_snapshot(
@@ -489,6 +510,7 @@ __all__ = [
     "calculation_filed_before_grade_cap",
     "calculation_screen_outdated",
     "gate_refuses",
+    "note_subject_facts",
     "proven_zero_calculation_issues",
     "require_no_blocking_calculation_notes",
     "require_work_unit_calculation_screen_current",

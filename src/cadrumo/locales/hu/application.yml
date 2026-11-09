@@ -1862,6 +1862,12 @@ application:
         rögzít, amely nincs a nyilvántartásodban.
       row_unregistered_undated: Egy könyvelt tétel a nyilvántartásban nem szereplő
         eszközt rögzít.
+      unrouted_iva_base: A(z) {row_date} napi tétel {row_amount} összegű adóalapja
+        egyetlen rovatba sem kerül be ebben a nyilatkozatban.
+      unrouted_iva_cuota: A(z) {row_date} napi tétel {row_amount} összegű áfája egyetlen
+        rovatba sem kerül be ebben a nyilatkozatban.
+      unrouted_iva_recargo: A(z) {row_date} napi tétel {row_amount} összegű kiegyenlítő
+        pótléka (recargo de equivalencia) egyetlen rovatba sem kerül be ebben a nyilatkozatban.
       withholding_invoice_entity_professional_fee: A(z) {counterparty} által kiállított
         {invoice} számú kapott számla {amount} forrásadó-levonást (retención) tartalmaz
         egy szakmai díjon, de a kiállító társaság, és egy társaság szakmai szolgáltatásai
