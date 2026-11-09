@@ -639,6 +639,34 @@ test("a setup that fails at the item after a model's download says so on that mo
   ).toBeEnabled();
 });
 
+test("a download refused while its setup plans says why on that model's row at once, and can be asked for again", async ({
+  page: target,
+}) => {
+  await open(target);
+  const lane = await openLane(target);
+  const vision = lane.locator('li[data-model="synthetic-vision:1"]');
+  const download = vision.getByRole("button", {
+    name: label("desktop.providers.local_model_download"),
+  });
+  await target.evaluate(() =>
+    window.__scenarioSetup?.refuseStarts("not_in_this_build"),
+  );
+  await download.click();
+  // The setup settled before it planned any part for the model.
+  await expect(vision.getByRole("alert")).toContainText(
+    label("desktop.setup.failure.not_in_this_build"),
+  );
+  await expect(vision).toHaveAttribute("data-installed", "false");
+  await expect(laneReview(lane)).toHaveCount(0);
+  await expect(download).toBeEnabled();
+  // Asked again once the host no longer refuses, the plan replaces the
+  // failure on the same row.
+  await target.evaluate(() => window.__scenarioSetup?.refuseStarts(null));
+  await download.click();
+  await expect(laneReview(lane)).toHaveCount(1);
+  await expect(vision.getByRole("alert")).toHaveCount(0);
+});
+
 /** Asks for a check of the setup from the command palette. */
 async function checkFromPalette(target: Page) {
   const palette = target.getByRole("dialog", {
