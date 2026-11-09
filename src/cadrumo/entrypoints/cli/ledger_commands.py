@@ -748,10 +748,10 @@ def _refuse_needs_withholding_category(transaction_id: str) -> CliRefusedBoundar
     """
     from ...application.ledger.classify_validation import needs_withholding_category_verdict
     from ...application.ledger.staged_check_words import BLOCKER_FIX_LOCALE_KEYS
-    from ...domain.transactions.gross_validation import GROSS_NEEDS_WITHHOLDING_CATEGORY_MESSAGE_KEY
+    from ...domain.transactions.gross_validation import GROSS_NEEDS_WITHHOLDING_CATEGORY_LOCALE_KEY
     from .common import attach_cli_policy_verdict
 
-    refusal = tr(GROSS_NEEDS_WITHHOLDING_CATEGORY_MESSAGE_KEY)
+    refusal = tr(GROSS_NEEDS_WITHHOLDING_CATEGORY_LOCALE_KEY)
     fix = tr(BLOCKER_FIX_LOCALE_KEYS["needs_withholding_category"])
     details = f"{refusal} {fix}"
     return attach_cli_policy_verdict(
