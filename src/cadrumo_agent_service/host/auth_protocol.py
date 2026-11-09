@@ -8,7 +8,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, field_validator
 
-from ..providers.application.contracts import HelperCause
+from ..providers.application.contracts import HelperCause, ServiceCause
 from ..providers.application.next_steps import next_step_for
 
 MAX_AUTH_LINE = 16 * 1024
@@ -106,7 +106,7 @@ def snapshot(
     event: str,
     *,
     reason: str | None = None,
-    cause: str | None = None,
+    cause: HelperCause | ServiceCause | None = None,
     status_cause: str | None = None,
 ) -> dict[str, JsonValue]:
     """Build a secret-free outcome; browser data is added only while awaiting login.
