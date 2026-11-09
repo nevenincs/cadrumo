@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ledgerFailure } from "../../../shell/ledger";
+import { ledgerFailure, type LedgerFailureCode } from "../../../shell/ledger";
 import { modeloEditBody, type ModeloPort } from "../../../shell/modelo";
 import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
 import type {
@@ -21,6 +21,7 @@ import type {
 import type {
   ModeloWorkbenchFormProjectionV1,
   PublicModeloFormField,
+  ModeloFormCarryAttestation,
   PublicModeloWorkForm,
 } from "../../../shell/modeloContract/modeloWorkForm";
 import { takesEntry } from "./entryField";
@@ -67,7 +68,9 @@ type SetValue = {
 
 /** One staged edit as the edit contract names it: a box takes a typed
  * value, a clear or a restore; a binding that feeds a box takes an override
- * or its removal. `change` is the kind of change the filer made, as a
+ * or its removal, or, for a carry from an earlier filing, the filer's
+ * statement that it holds no amount, said in the words the form served for
+ * that statement. `change` is the kind of change the filer made, as a
  * preflight is told it: removing an override clears a value the filer gave,
  * or gives the box back to its source. */
 export type StagedIntent =
@@ -78,6 +81,12 @@ export type StagedIntent =
   | {
       kind: "remove_override";
       change: Exclude<ModeloEditHeldKind, "set">;
+    }
+  | {
+      kind: "attest_no_amount";
+      change: "set";
+      words: string;
+      effect: string;
     };
 
 export type StagedEdit = {
@@ -221,7 +230,8 @@ export function editSubmission(
     } else if (
       address.kind === "binding" &&
       (intent.kind === "set_override_value" ||
-        intent.kind === "remove_override")
+        intent.kind === "remove_override" ||
+        intent.kind === "attest_no_amount")
     )
       binding.push({ address, kind: intent.kind, ...value });
   }
@@ -263,6 +273,39 @@ export function entrySubmission(
       ],
     },
   };
+}
+
+/** What renewing an edit baseline came to: the renewed baseline; refused
+ * because the declaration moved under it, in the words the application
+ * served; or not answered. */
+export type BaselineRenewal =
+  | { kind: "renewed"; baseline: ModeloEditApplyBaselineV1 }
+  | { kind: "moved"; words: string | null }
+  | { kind: "failed"; code: LedgerFailureCode | "refused" };
+
+/** Renews `baseline` through the application, which re-admits it only when
+ * nothing but its lifetime changed. An editor renews before it reads an
+ * entry again and just before it applies, so a baseline that only ran out
+ * never reaches the filer as a declaration that changed. */
+export async function renewBaseline(
+  port: ModeloPort,
+  baseline: ModeloEditApplyBaselineV1,
+  language: OutputLanguage,
+): Promise<BaselineRenewal> {
+  try {
+    const outcome = await port.submit("modelo.edit.renew", {
+      baseline,
+      output_language: language,
+    });
+    // A renewal that settles as anything but an answer was refused.
+    if (outcome.kind !== "settled") return { kind: "failed", code: "refused" };
+    const renewed = outcome.result.renewed_baseline;
+    return renewed
+      ? { kind: "renewed", baseline: renewed }
+      : { kind: "moved", words: outcome.result.refusal_words };
+  } catch (error) {
+    return { kind: "failed", code: ledgerFailure(error).code };
+  }
 }
 
 /** Where a box is drawn: the page and section holding it. Boxes not yet
@@ -315,6 +358,12 @@ export function restaged(
   field: PublicModeloFormField,
 ): StagedIntent | null {
   const { intent } = edit;
+  // A statement stands only while the carry still holds no value: one an
+  // earlier return now supplies is dropped, never staged over it.
+  if (intent.kind === "attest_no_amount")
+    return field.takes_typed_value && field.origin !== "imported"
+      ? intent
+      : null;
   if (intent.change === "set") {
     if (!field.takes_typed_value) return null;
     if (
@@ -405,10 +454,20 @@ export type EntryOutcome =
 export type Reveal = { key: string | null; sectionId: string; seq: number };
 
 export type FormSession = {
+  /** The baseline every check and apply is sent on: the one the form's read
+   * admitted, or a renewal of it adopted since, whichever was issued later. */
+  baseline: ModeloEditApplyBaselineV1 | null;
+  /** Adopts a renewal of the baseline for every check and apply after it. */
+  adoptBaseline(baseline: ModeloEditApplyBaselineV1): void;
   staged: ReadonlyMap<string, StagedEdit>;
   stagedCount: number;
   stage(field: PublicModeloFormField, intent: StagedIntent): void;
   unstage(editKey: string): void;
+  /** The form's statements that no earlier-ejercicio amount is pending, one
+   * per family, each while some carry it names is not yet staged as stated. */
+  carryAttestations: ModeloFormCarryAttestation[];
+  /** Stages one statement on every carry it names, one edit each. */
+  attestCarries(attestation: ModeloFormCarryAttestation): void;
   discardAll(): void;
   /** Keeps the staged edits a preflight's `report` keeps, staged again
    * against the declaration as it stands, and drops the others. */
@@ -472,6 +531,9 @@ export function useFormSession({
   );
   const [reveal, setReveal] = useState<Reveal | null>(null);
   const seq = useRef(0);
+  const [renewed, setRenewed] = useState<ModeloEditApplyBaselineV1 | null>(
+    null,
+  );
 
   // Staged edits belong to one declaration; another one starts clean.
   const unit = envelope.work_unit_id;
@@ -482,6 +544,7 @@ export function useFormSession({
     setSelectedKey(null);
     setPageId(form.pages[0]?.id ?? null);
     setReveal(null);
+    setRenewed(null);
   }
   useEffect(() => {
     if (pageId === null && form.pages[0]) setPageId(form.pages[0].id);
@@ -561,7 +624,18 @@ export function useFormSession({
     });
   }, []);
 
-  const baseline = envelope.admitted_baseline;
+  const admittedBaseline = envelope.admitted_baseline;
+  // A baseline a later read admitted supersedes a renewal of an earlier one.
+  const baseline =
+    renewed &&
+    renewed.work_unit_id === unit &&
+    (!admittedBaseline || renewed.issued_at >= admittedBaseline.issued_at)
+      ? renewed
+      : admittedBaseline;
+  const adoptBaseline = useCallback(
+    (next: ModeloEditApplyBaselineV1) => setRenewed(next),
+    [],
+  );
   const grammars = useMemo(() => entryGrammars(baseline), [baseline]);
   const grammarOf = useCallback(
     (field: PublicModeloFormField) => grammars.get(editKey(field)) ?? null,
@@ -599,11 +673,33 @@ export function useFormSession({
       if (held?.entry === lexeme) return { kind: "unchanged" } as const;
       if (!baseline)
         return { kind: "failed", code: "not_admitted", words: null } as const;
-      try {
-        const outcome = await port.edit(
+      const check = (on: ModeloEditApplyBaselineV1) =>
+        port.edit(
           "modelo.edit.preflight",
-          modeloEditBody(entrySubmission(baseline, field, lexeme, language)),
+          modeloEditBody(entrySubmission(on, field, lexeme, language)),
         );
+      try {
+        let outcome = await check(baseline);
+        // A stale baseline is renewed once and the entry read again on the
+        // renewal: time passing alone never refuses an entry. When the
+        // declaration did move, the renewal is refused and says so.
+        if (
+          outcome.kind === "settled" &&
+          outcome.result.outcome.outcome === "refused" &&
+          outcome.result.outcome.refusal.kind === "stale_edit_baseline"
+        ) {
+          const renewal = await renewBaseline(port, baseline, language);
+          if (renewal.kind === "moved")
+            return {
+              kind: "failed",
+              code: "stale_edit_baseline",
+              words: renewal.words ?? outcome.result.refusal_words,
+            } as const;
+          if (renewal.kind === "renewed") {
+            adoptBaseline(renewal.baseline);
+            outcome = await check(renewal.baseline);
+          }
+        }
         if (outcome.kind !== "settled")
           return { kind: "failed", code: outcome.kind, words: null } as const;
         const read = outcome.result;
@@ -642,7 +738,7 @@ export function useFormSession({
         } as const;
       }
     },
-    [baseline, language, port, stage, staged, unstage],
+    [adoptBaseline, baseline, language, port, stage, staged, unstage],
   );
 
   const bring = useCallback((target: PlacedField | undefined) => {
@@ -698,11 +794,47 @@ export function useFormSession({
     [form.pages],
   );
 
+  // Each statement's carries, at the box whose edit address is its binding.
+  const attestCarries = useCallback(
+    (attestation: ModeloFormCarryAttestation) => {
+      for (const bindingId of attestation.binding_ids) {
+        const found = placed.find(
+          (p) =>
+            p.field.edit_address.kind === "binding" &&
+            p.field.edit_address.binding_id === bindingId,
+        );
+        if (found)
+          stage(found.field, {
+            kind: "attest_no_amount",
+            change: "set",
+            words: attestation.action_words,
+            effect: attestation.effect_words,
+          });
+      }
+    },
+    [placed, stage],
+  );
+  // A statement stands until every carry it served is staged as stated: a
+  // served carry the window cannot place keeps it standing.
+  const carryAttestations = editsAdmitted(envelope)
+    ? form.carry_attestations.filter(
+        (attestation) =>
+          !attestation.binding_ids.every(
+            (bindingId) =>
+              staged.get(`b:${bindingId}`)?.intent.kind === "attest_no_amount",
+          ),
+      )
+    : [];
+
   return {
+    baseline,
+    adoptBaseline,
     staged,
     stagedCount: staged.size,
     stage,
     unstage,
+    carryAttestations,
+    attestCarries,
     discardAll,
     rebase,
     rebased,

@@ -10,6 +10,7 @@ class DependencyFailureCategory(StrEnum):
 
     OFFLINE = "offline"
     HOST_UNREACHABLE = "host_unreachable"
+    SERVER_ERROR = "server_error"
     SECURE_CONNECTION_FAILED = "secure_connection_failed"
     BLOCKED_BY_NETWORK = "blocked_by_network"
     DISK_FULL = "disk_full"

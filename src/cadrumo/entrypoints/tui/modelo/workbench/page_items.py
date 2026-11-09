@@ -139,6 +139,8 @@ class WorkbenchPage:
     details: tuple[ModeloFormField, ...] = ()
     #: The declaration is recorded as filed, so nothing on it is left to enter or confirm.
     recorded: bool = False
+    #: The declaration has been calculated; before then no source has been read, so a box waits on the calculation.
+    calculated: bool = True
     #: ``False`` when the read model states the page does not apply this period, so it asks for no value.
     applies: bool = True
     #: What the last check found about the values of each section's tables of records, by section id.
@@ -199,12 +201,14 @@ def _section_record_attention(form: ModeloWorkForm, columns: set[str], *, asked:
 def workbench_pages(form: ModeloWorkForm) -> tuple[WorkbenchPage, ...]:
     """Return the form's pages, then the calculation details and the answers no page takes, each when it has any."""
     recorded = form.filing is not None
+    calculated = form.calculation_revision_id is not None
     pages = [
         WorkbenchPage(
             id=page.id,
             heading=page.heading,
             sections=page.sections,
             recorded=recorded,
+            calculated=calculated,
             applies=page.applies is not False,
             records=records_attention(form, page.sections, recorded=recorded, applies=page.applies is not False),
         )
@@ -221,13 +225,19 @@ def workbench_pages(form: ModeloWorkForm) -> tuple[WorkbenchPage, ...]:
                 sections=(),
                 details=details,
                 recorded=recorded,
+                calculated=calculated,
             )
         )
     answers = next((group for group in form.outline if group.kind is ModeloFormOutlineKind.ANSWERS), None)
     if answers is not None:
         pages.append(
             WorkbenchPage(
-                id=ANSWERS_PAGE_ID, heading=answers.heading, sections=(), details=form.answers, recorded=recorded
+                id=ANSWERS_PAGE_ID,
+                heading=answers.heading,
+                sections=(),
+                details=form.answers,
+                recorded=recorded,
+                calculated=calculated,
             )
         )
     return tuple(pages)
@@ -274,6 +284,7 @@ def _entry(
         rate_of_row=rate_of_row,
         row_base_empty=row_base_empty if rate_of_row else None,
         recorded=page.recorded,
+        calculated=page.calculated,
         applies=page.applies,
         row_label=row_label,
         column_label=None if row_label is None else label,
