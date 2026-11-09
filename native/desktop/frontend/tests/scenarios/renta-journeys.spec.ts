@@ -130,7 +130,9 @@ async function openCredits(target: Page, language: Language) {
   const panel = workspace(target).getByRole("tabpanel");
   const heading = (await servedForm(target, language)).form.form
     .withholding_credits_heading;
-  expect(heading).not.toBeNull();
+  expect(heading, "the form serves its credits heading").toEqual(
+    expect.any(String),
+  );
   await expect(panel.getByRole("heading", { name: heading! })).toBeVisible();
   return panel;
 }
