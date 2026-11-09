@@ -174,21 +174,23 @@ export type OwnAccountChoice = {
 };
 
 /**
- * The currency a new movement is offered, or null when the accounts do not
- * settle one.
+ * The currency a new movement is offered, or null when none is settled.
  *
  * It is the currency the profile's own accounts are kept in, as the backend
- * serves it. Where they disagree, nothing is offered: the person says which,
- * and the saved movement carries its currency either way.
+ * serves it, once they are read. Where they name none, it is the ledger's
+ * functional currency, which the backend serves as `fallback`. Where the
+ * accounts disagree, nothing is offered: the person says which, and the saved movement carries its
+ * currency either way.
  */
 export function servedDraftCurrency(
   accounts: readonly OwnAccountChoice[] | null,
+  fallback: string | null,
 ): string | null {
+  if (accounts === null) return null;
   const said = new Set(
-    (accounts ?? []).flatMap((account) =>
-      account.currency ? [account.currency] : [],
-    ),
+    accounts.flatMap((account) => (account.currency ? [account.currency] : [])),
   );
+  if (said.size === 0) return fallback;
   return said.size === 1 ? [...said][0]! : null;
 }
 
