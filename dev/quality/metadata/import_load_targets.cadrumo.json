@@ -2374,6 +2374,7 @@
         "cadrumo.domain.calculations.registry.facts.string_mapping",
         "cadrumo.domain.calculations.registry.facts.variants",
         "cadrumo.domain.calculations.registry.facturae_tax_type_codes",
+        "cadrumo.domain.calculations.registry.field_absence",
         "cadrumo.domain.calculations.registry.filing_bound_reach",
         "cadrumo.domain.calculations.registry.filing_kind_marker",
         "cadrumo.domain.calculations.registry.fixed_width_codec",
