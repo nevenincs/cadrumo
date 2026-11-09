@@ -283,10 +283,6 @@ _CLASSIFIED_UNSUPPLIED: Mapping[tuple[str, str], str] = {
     ("309", "decl.tipo-trigger"): "the non-periodic trigger is the operator's choice, declared informational",
     ("360", "decl.estado-miembro"): "the refund member state is the operator's choice, declared informational",
 }
-#: Revisions whose calculation refuses before any text casilla is assembled.
-_CLASSIFIED_ASSEMBLY_REFUSALS: Mapping[str, str] = {
-    "189": "filing_year role declared on the non-informational casilla ejercicio-declaracion",
-}
 _NUMERIC_CHANNELS = frozenset({BindingValueChannel.DECIMAL, BindingValueChannel.INTEGER})
 
 
@@ -375,7 +371,7 @@ def test_every_required_calculation_supplied_text_casilla_has_a_source(*, operat
 
     assert sorted(gaps - set(_CLASSIFIED_UNSUPPLIED)) == [], "unclassified required text casillas with no source"
     assert sorted(set(_CLASSIFIED_UNSUPPLIED) - gaps) == [], "classified gaps that now have a source"
-    assert refusals == set(_CLASSIFIED_ASSEMBLY_REFUSALS)
+    assert sorted(refusals) == [], "revisions whose calculation refuses before any text casilla is assembled"
 
 
 def test_an_identity_casilla_left_unbound_is_caught() -> None:
