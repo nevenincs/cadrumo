@@ -190,11 +190,11 @@ msgid ""
 msgstr ""
 "Hozd létre és számítsd ki az első előleget. A Modelo 130 halmozott, és az"
 " első valódi időszaknak nincs előzménye, ezért a három korábbi időszakból"
-" átvitt értéket nullaként kell megadni – ezt csak ebben a negyedévben "
-"kell tenned. Az alábbi lépéssor rögzíti a számlát és a negyedév két "
-"tételét, létrehozza és kiszámítja a tervezetet, ellenőrzi, majd "
-"exportálja. A negyedévet lezáró benyújtásrögzítés és egyeztetés parancsai"
-" ezután csak példaként szerepelnek, futtatás nélkül:"
+" átvitt értéket nullaként kell megadni (ezt csak ebben a negyedévben kell"
+" tenned). Az alábbi lépéssor rögzíti a számlát és a negyedév két tételét,"
+" létrehozza és kiszámítja a tervezetet, ellenőrzi, majd exportálja. A "
+"negyedévet lezáró benyújtásrögzítés és egyeztetés parancsai ezután csak "
+"példaként szerepelnek, futtatás nélkül:"
 
 #: ../../how-to/irpf-lifecycle.md:85
 #, python-brace-format

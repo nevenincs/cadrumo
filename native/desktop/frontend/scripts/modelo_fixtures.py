@@ -1567,7 +1567,9 @@ def _write_list(directory: Path, work: Any, name: str) -> None:
 
     bucket_id = work.work_unit.bucket_id
     lister = ModeloDeclarationsListExecutor(
-        lambda profile_id, operation: compose_secure_declaration_list_reader(profile_id=profile_id, operation=operation)
+        lambda profile_id, operation: compose_secure_declaration_list_reader(
+            profile_id=profile_id, operation=operation, capture_memory=None
+        )
     )
     for language in LANGUAGES:
         listed = _run_executor(

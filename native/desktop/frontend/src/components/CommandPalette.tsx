@@ -19,12 +19,21 @@ import { Icon } from "@/components/ui/icon";
 import { Kbd } from "@/components/ui/kbd";
 import { Spinner } from "@/components/ui/spinner";
 import type { DocsResultKind, DocsSearchResult } from "../ipc/docsBridge";
+import type {
+  ModeloDeclarationsSearchHitV1,
+  ModeloDeclarationsSearchResultV1,
+} from "../shell/modeloContract/modeloDeclarations";
 import { primaryChord, scoreAction, type Action } from "../shell/actions";
 import { useStrings } from "../shell/strings";
 
 /** Docs search provider; null until the documentation can answer queries. */
 export type DocsSearch =
   ((query: string) => Promise<DocsSearchResult[]>) | null;
+
+/** Declarations search provider; null where the window has no profile to
+ * search. */
+export type DeclarationsSearch =
+  ((query: string) => Promise<ModeloDeclarationsSearchResultV1>) | null;
 
 /** What a pasted `cadrumo:` link offers: the one entry that opens it, or,
  * with no `open`, the reason it cannot. */
@@ -53,6 +62,9 @@ const MIN_QUERY = 2;
 // While a query also searches the documentation, only the best few actions
 // share the list with its results. Untyped, every action is listed.
 const ACTIONS_WHEN_SEARCHING = 6;
+// Documentation yields the list to the actions: only its best few results
+// are shown while searching.
+const DOCS_WHEN_SEARCHING = 5;
 
 function Highlighted({
   text,
@@ -98,6 +110,8 @@ export function CommandPalette({
   actions,
   searchDocs,
   openDoc,
+  searchDeclarations = null,
+  openDeclarationHit,
   close,
   fallbackFocus,
   language,
@@ -109,6 +123,10 @@ export function CommandPalette({
   pastedLink?: (text: string) => PastedLink | null;
   searchDocs: DocsSearch;
   openDoc: (url: string) => void;
+  searchDeclarations?: DeclarationsSearch;
+  /** Opens the local work a hit names, or the Declaraciones list at its
+   * row. */
+  openDeclarationHit?: (hit: ModeloDeclarationsSearchHitV1) => void;
   close: () => void;
   /** Where focus goes when what the palette was opened from is gone. */
   fallbackFocus?: () => void;
@@ -128,6 +146,11 @@ export function CommandPalette({
     results: DocsSearchResult[];
     query: string;
     source: DocsSearch;
+  } | null>(null);
+  const [declarations, setDeclarations] = useState<{
+    query: string;
+    source: DeclarationsSearch;
+    hits: ModeloDeclarationsSearchHitV1[];
   } | null>(null);
   const trimmed = query.trim();
   // A pasted link is the whole answer: neither actions nor the
@@ -162,6 +185,37 @@ export function CommandPalette({
       window.clearTimeout(timer);
     };
   }, [trimmed, searching, searchDocs]);
+  // The declarations search runs beside the documentation's. A failure or an
+  // unavailable provider hides its section and says nothing.
+  const searchingDeclarations =
+    pasted === null &&
+    trimmed.length >= MIN_QUERY &&
+    searchDeclarations !== null &&
+    openDeclarationHit !== undefined;
+  useEffect(() => {
+    if (!searchingDeclarations || !searchDeclarations) return;
+    let current = true;
+    const timer = window.setTimeout(() => {
+      const identity = { query: trimmed, source: searchDeclarations };
+      searchDeclarations(trimmed)
+        .then(
+          (result) =>
+            current && setDeclarations({ ...identity, hits: result.hits }),
+        )
+        .catch(() => current && setDeclarations({ ...identity, hits: [] }));
+    }, SEARCH_DEBOUNCE_MS);
+    return () => {
+      current = false;
+      window.clearTimeout(timer);
+    };
+  }, [trimmed, searchingDeclarations, searchDeclarations]);
+  const hits =
+    searchingDeclarations &&
+    declarations?.query === trimmed &&
+    declarations.source === searchDeclarations
+      ? declarations.hits
+      : [];
+
   // A completed answer belongs to the query and provider that produced it,
   // including the debounce interval before the next request starts.
   const currentDocs =
@@ -193,6 +247,7 @@ export function CommandPalette({
                 x.rank - y.rank,
             )
             .map(({ result }) => result)
+            .slice(0, DOCS_WHEN_SEARCHING)
         : [],
     [searching, currentDocs],
   );
@@ -208,7 +263,7 @@ export function CommandPalette({
 
   // What the list cannot show as rows is said beside it, outside the listbox:
   // a listbox holds options and nothing else.
-  const nothingFound = searching && found.length === 0;
+  const nothingFound = searching && found.length === 0 && hits.length === 0;
   const awaited =
     nothingFound &&
     currentDocs?.state !== "done" &&
@@ -303,7 +358,10 @@ export function CommandPalette({
             </p>
           )}
           <CommandList
-            hidden={found.length + matched.length === 0 && pasted === null}
+            hidden={
+              found.length + matched.length + hits.length === 0 &&
+              pasted === null
+            }
           >
             <div className="palette-results grid gap-1">
               {pasted && (
@@ -326,9 +384,69 @@ export function CommandPalette({
                   </CommandGroup>
                 </section>
               )}
-              {/* While a query searches the documentation its section is the
-                  first one, results or not: what reads the first section
-                  never finds actions there in the meantime. */}
+              {hits.length > 0 && openDeclarationHit && (
+                <section>
+                  <CommandGroup
+                    heading={t("workspace.declarations.destination.overview")}
+                  >
+                    {hits.map((hit) => (
+                      <CommandItem
+                        key={hit.row_key}
+                        value={`declaration:${hit.row_key}`}
+                        onSelect={() => run(() => openDeclarationHit(hit))}
+                      >
+                        <Icon name="page" size="md" className={ROW_ICON} />
+                        <span className="grid min-w-0 flex-1 gap-0.5">
+                          <span className="palette-title truncate font-medium">
+                            {hit.title_words}
+                            {hit.period_words && ` · ${hit.period_words}`}
+                          </span>
+                          <span className="truncate text-xs text-muted-foreground">
+                            {hit.state_words}
+                          </span>
+                        </span>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </section>
+              )}
+              {matched.length > 0 && (
+                <section>
+                  <CommandGroup heading={t("desktop.palette.actions")}>
+                    {matched.map((action) => (
+                      <CommandItem
+                        key={action.id}
+                        value={`action:${action.id}`}
+                        onSelect={() => run(action.choose ?? action.run)}
+                      >
+                        <Icon
+                          name={action.icon}
+                          size="md"
+                          className={ROW_ICON}
+                        />
+                        <span className="flex min-w-0 flex-1 items-baseline gap-2">
+                          <span className="palette-title min-w-0 truncate font-medium">
+                            {action.label}
+                          </span>
+                          {action.context && (
+                            <span className="palette-context truncate text-xs text-muted-foreground">
+                              {action.context}
+                            </span>
+                          )}
+                        </span>
+                        {primaryChord(action) && (
+                          <Kbd className="palette-chord">
+                            {primaryChord(action)}
+                          </Kbd>
+                        )}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </section>
+              )}
+              {/* While a query searches the documentation its section is
+                  always present, results or not, so the list does not
+                  reshuffle as the answer arrives. */}
               {searching && (
                 <section>
                   {found.length > 0 && (
@@ -369,40 +487,6 @@ export function CommandPalette({
                       ))}
                     </CommandGroup>
                   )}
-                </section>
-              )}
-              {matched.length > 0 && (
-                <section>
-                  <CommandGroup heading={t("desktop.palette.actions")}>
-                    {matched.map((action) => (
-                      <CommandItem
-                        key={action.id}
-                        value={`action:${action.id}`}
-                        onSelect={() => run(action.choose ?? action.run)}
-                      >
-                        <Icon
-                          name={action.icon}
-                          size="md"
-                          className={ROW_ICON}
-                        />
-                        <span className="flex min-w-0 flex-1 items-baseline gap-2">
-                          <span className="palette-title min-w-0 truncate font-medium">
-                            {action.label}
-                          </span>
-                          {action.context && (
-                            <span className="palette-context truncate text-xs text-muted-foreground">
-                              {action.context}
-                            </span>
-                          )}
-                        </span>
-                        {primaryChord(action) && (
-                          <Kbd className="palette-chord">
-                            {primaryChord(action)}
-                          </Kbd>
-                        )}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
                 </section>
               )}
             </div>

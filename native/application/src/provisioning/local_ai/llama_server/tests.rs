@@ -196,7 +196,7 @@ fn the_preset_presents_each_whole_model_with_its_recorded_context_and_projector(
     // A registry vision model with a projector layer, and a text model.
     manifest(
         &models,
-        [registry[0], registry[1], "qwen3-vl", "4b-instruct"],
+        [registry[0], registry[1], "vision-reader", "4b-instruct"],
         &[
             blob(&models, MODEL_MEDIA_TYPE, b"vision weights"),
             blob(&models, PROJECTOR_MEDIA_TYPE, b"vision projector"),
@@ -209,7 +209,7 @@ fn the_preset_presents_each_whole_model_with_its_recorded_context_and_projector(
     );
     manifest(
         &models,
-        [registry[0], registry[1], "qwen3", "1.7b"],
+        [registry[0], registry[1], "text-reader", "small"],
         &[blob(&models, MODEL_MEDIA_TYPE, b"text weights")],
     );
     // A Hugging Face model file and its projector under its own host.
@@ -224,10 +224,14 @@ fn the_preset_presents_each_whole_model_with_its_recorded_context_and_projector(
     // Each of them states its own context.
     record(
         &models,
-        [registry[0], registry[1], "qwen3-vl", "4b-instruct"],
+        [registry[0], registry[1], "vision-reader", "4b-instruct"],
         16384,
     );
-    record(&models, [registry[0], registry[1], "qwen3", "1.7b"], 2048);
+    record(
+        &models,
+        [registry[0], registry[1], "text-reader", "small"],
+        2048,
+    );
     record(
         &models,
         ["huggingface.co", "Owner", "Model-GGUF", "Model-Q4_K_M"],
@@ -270,31 +274,31 @@ fn the_preset_presents_each_whole_model_with_its_recorded_context_and_projector(
     // Automatic placement adds no key: the offload is the router's.
     let expected = format!(
         "[{}]\nalias = {hf}\nmodel = {}\nmmproj = {}\nctx-size = 32768\n\n\
-         [{}]\nalias = qwen3-vl:4b-instruct\nmodel = {}\nmmproj = {}\nctx-size = 16384\n\n\
-         [{}]\nalias = qwen3:1.7b\nmodel = {}\nctx-size = 2048\n\n",
+         [{}]\nalias = vision-reader:instruct\nmodel = {}\nmmproj = {}\nctx-size = 16384\n\n\
+         [{}]\nalias = text-reader:small\nmodel = {}\nctx-size = 2048\n\n",
         router_id(hf),
         value_of(&models, b"hf weights"),
         value_of(&models, b"hf projector"),
-        router_id("qwen3-vl:4b-instruct"),
+        router_id("vision-reader:instruct"),
         value_of(&models, b"vision weights"),
         value_of(&models, b"vision projector"),
-        router_id("qwen3:1.7b"),
+        router_id("text-reader:small"),
         value_of(&models, b"text weights"),
     );
     assert_eq!(preset(&models, Placement::Auto), expected);
     // Processor only places no layer on a device, in every section.
     let cpu_only = format!(
         "[{}]\nalias = {hf}\nmodel = {}\nmmproj = {}\nctx-size = 32768\nn-gpu-layers = 0\n\n\
-         [{}]\nalias = qwen3-vl:4b-instruct\nmodel = {}\nmmproj = {}\nctx-size = 16384\n\
+         [{}]\nalias = vision-reader:instruct\nmodel = {}\nmmproj = {}\nctx-size = 16384\n\
          n-gpu-layers = 0\n\n\
-         [{}]\nalias = qwen3:1.7b\nmodel = {}\nctx-size = 2048\nn-gpu-layers = 0\n\n",
+         [{}]\nalias = text-reader:small\nmodel = {}\nctx-size = 2048\nn-gpu-layers = 0\n\n",
         router_id(hf),
         value_of(&models, b"hf weights"),
         value_of(&models, b"hf projector"),
-        router_id("qwen3-vl:4b-instruct"),
+        router_id("vision-reader:instruct"),
         value_of(&models, b"vision weights"),
         value_of(&models, b"vision projector"),
-        router_id("qwen3:1.7b"),
+        router_id("text-reader:small"),
         value_of(&models, b"text weights"),
     );
     assert_eq!(preset(&models, Placement::CpuOnly), cpu_only);
@@ -308,20 +312,20 @@ fn the_preset_presents_each_whole_model_with_its_recorded_context_and_projector(
         .join("llamacpp-context")
         .join(registry[0])
         .join(registry[1])
-        .join("qwen3")
-        .join("1.7b.json");
+        .join("text-reader")
+        .join("small.json");
     assert!(record_file.is_file());
     fs::write(&record_file, br#"{"schema":1,"llamacpp_context":0}"#).unwrap();
-    assert!(!preset(&models, Placement::Auto).contains("alias = qwen3:1.7b\n"));
-    assert!(preset(&models, Placement::Auto).contains("alias = qwen3-vl:4b-instruct\n"));
+    assert!(!preset(&models, Placement::Auto).contains("alias = text-reader:small\n"));
+    assert!(preset(&models, Placement::Auto).contains("alias = vision-reader:instruct\n"));
 }
 
 #[test]
 fn a_section_the_router_cannot_rewrite_names_each_model_and_the_alias_is_its_name() {
     let names = [
-        "qwen3:1.7b",
-        "qwen3:1.7B",
-        "qwen3-vl:4b-instruct",
+        "text-reader:small",
+        "text-reader:Small",
+        "vision-reader:instruct",
         "huggingface.co/Owner/Model-GGUF:Model-Q4_K_M",
     ];
     let ids: Vec<String> = names.iter().map(|name| router_id(name)).collect();
@@ -658,7 +662,10 @@ fn a_model_new_in_the_store_restarts_an_idle_router_and_waits_for_a_held_one_to_
     stand_in(
         &mut server,
         BUILD_INFO,
-        &[(HELPER_MODELS, OsStr::new("qwen3:1.7b,qwen3:4b"))],
+        &[(
+            HELPER_MODELS,
+            OsStr::new("text-reader:small,text-reader:large"),
+        )],
     );
     let address = free_address();
     let mut supervisor = supervisor(server, address);
@@ -668,7 +675,7 @@ fn a_model_new_in_the_store_restarts_an_idle_router_and_waits_for_a_held_one_to_
     let folder = server_folder(&locations).unwrap();
     let preset_file = folder.join(PRESET);
     assert_eq!(fs::read_to_string(&preset_file).unwrap(), "");
-    let (small, large) = (name("qwen3:1.7b"), name("qwen3:4b"));
+    let (small, large) = (name("text-reader:small"), name("text-reader:large"));
     assert_eq!(presentation(&folder, &small), Presentation::NotPresented);
 
     // Nothing changed: the same server keeps running.
@@ -676,7 +683,7 @@ fn a_model_new_in_the_store_restarts_an_idle_router_and_waits_for_a_held_one_to_
     assert_eq!(process_id(&supervisor), idle);
 
     // A model arrives while nothing is loaded: the router is started again with it.
-    let small_path = ["registry.ollama.ai", "library", "qwen3", "1.7b"];
+    let small_path = ["registry.ollama.ai", "library", "text-reader", "small"];
     manifest(
         &locations.models,
         small_path,
@@ -695,8 +702,8 @@ fn a_model_new_in_the_store_restarts_an_idle_router_and_waits_for_a_held_one_to_
         fs::read_to_string(&preset_file)
             .unwrap()
             .starts_with(&format!(
-                "[{}]\nalias = qwen3:1.7b\n",
-                router_id("qwen3:1.7b")
+                "[{}]\nalias = text-reader:small\n",
+                router_id("text-reader:small")
             ))
     );
     assert_eq!(
@@ -709,7 +716,7 @@ fn a_model_new_in_the_store_restarts_an_idle_router_and_waits_for_a_held_one_to_
 
     // Another arrives while the router holds a model: the model in use is never
     // unloaded for it, and the router drains, refusing every new load for a retry.
-    let large_path = ["registry.ollama.ai", "library", "qwen3", "4b"];
+    let large_path = ["registry.ollama.ai", "library", "text-reader", "4b"];
     manifest(
         &locations.models,
         large_path,
@@ -740,13 +747,13 @@ fn a_model_new_in_the_store_restarts_an_idle_router_and_waits_for_a_held_one_to_
             .as_array()
             .unwrap()
             .iter()
-            .any(|model| model["id"] == "qwen3:1.7b" && model["status"]["value"] == "loaded"),
+            .any(|model| model["id"] == "text-reader:small" && model["status"]["value"] == "loaded"),
         "the held model stays loaded: {models}"
     );
 
     // Once its holder lets it go, the next look starts the router again with both.
     let (status, _) = router
-        .post("/models/unload", br#"{"model":"qwen3:1.7b"}"#)
+        .post("/models/unload", br#"{"model":"text-reader:small"}"#)
         .unwrap();
     assert_eq!(status, 200);
     assert_running(&mut supervisor, now);
@@ -763,9 +770,9 @@ fn a_changed_placement_or_context_restarts_an_idle_router_and_waits_for_a_held_m
     stand_in(
         &mut server,
         BUILD_INFO,
-        &[(HELPER_MODELS, OsStr::new("qwen3:1.7b"))],
+        &[(HELPER_MODELS, OsStr::new("text-reader:small"))],
     );
-    let path = ["registry.ollama.ai", "library", "qwen3", "1.7b"];
+    let path = ["registry.ollama.ai", "library", "text-reader", "small"];
     manifest(
         &locations.models,
         path,
@@ -781,7 +788,7 @@ fn a_changed_placement_or_context_restarts_an_idle_router_and_waits_for_a_held_m
     let first = process_id(&supervisor);
     let folder = server_folder(&locations).unwrap();
     let preset_file = folder.join(PRESET);
-    let model = name("qwen3:1.7b");
+    let model = name("text-reader:small");
     let served = || fs::read_to_string(&preset_file).unwrap();
     assert!(served().contains("ctx-size = 4096\n"));
     assert!(!served().contains("n-gpu-layers"));
@@ -810,7 +817,7 @@ fn a_changed_placement_or_context_restarts_an_idle_router_and_waits_for_a_held_m
     assert_eq!(load(&folder, &model), Err(LoadRefused::Restarting));
     let router = supervisor.program().server().unwrap().loopback();
     let (status, _) = router
-        .post("/models/unload", br#"{"model":"qwen3:1.7b"}"#)
+        .post("/models/unload", br#"{"model":"text-reader:small"}"#)
         .unwrap();
     assert_eq!(status, 200);
     assert_running(&mut supervisor, now);
@@ -868,13 +875,13 @@ fn recorded_router(folder: &Path, fake: &FakeLlamaCpp, process_id: u32, models: 
 fn a_load_says_whether_it_stayed_and_a_restart_that_overtakes_it_is_retried_not_failed() {
     let root = tempfile::tempdir().unwrap();
     let folder = root.path().join(FOLDER);
-    let model = name("qwen3:1.7b");
+    let model = name("text-reader:small");
     assert_eq!(load(&folder, &model), Err(LoadRefused::NotRunning));
     assert_eq!(presentation(&folder, &model), Presentation::NotRunning);
 
     let fake = FakeLlamaCpp::start(BUILD_INFO);
-    recorded_router(&folder, &fake, 7, &["qwen3:1.7b"]);
-    let status = |fake: &FakeLlamaCpp| fake.state.lock().unwrap().models["qwen3:1.7b"];
+    recorded_router(&folder, &fake, 7, &["text-reader:small"]);
+    let status = |fake: &FakeLlamaCpp| fake.state.lock().unwrap().models["text-reader:small"];
     let loads = |fake: &FakeLlamaCpp| -> Vec<String> {
         fake.state
             .lock()
@@ -887,7 +894,7 @@ fn a_load_says_whether_it_stayed_and_a_restart_that_overtakes_it_is_retried_not_
     };
     assert_eq!(presentation(&folder, &model), Presentation::Presented);
     assert_eq!(
-        load(&folder, &name("qwen3:4b")),
+        load(&folder, &name("text-reader:large")),
         Err(LoadRefused::NotPresented)
     );
 
@@ -917,7 +924,7 @@ fn a_load_says_whether_it_stayed_and_a_restart_that_overtakes_it_is_retried_not_
         .lock()
         .unwrap()
         .models
-        .insert("qwen3:1.7b".into(), ModelStatus::Loaded);
+        .insert("text-reader:small".into(), ModelStatus::Loaded);
     assert_eq!(load(&folder, &model), Err(LoadRefused::Restarting));
     assert_eq!(status(&fake), ModelStatus::Loaded);
     assert_eq!(loads(&fake).len(), 3, "no unload: {:?}", loads(&fake));
@@ -953,7 +960,7 @@ fn a_load_says_whether_it_stayed_and_a_restart_that_overtakes_it_is_retried_not_
         .lock()
         .unwrap()
         .models
-        .insert("qwen3:1.7b".into(), ModelStatus::Unloaded);
+        .insert("text-reader:small".into(), ModelStatus::Unloaded);
     assert_eq!(load(&folder, &model), Ok(()));
     assert_eq!(status(&fake), ModelStatus::Loaded);
     assert_eq!(presentation(&folder, &model), Presentation::Presented);
@@ -973,8 +980,8 @@ fn a_full_check_a_drain_overtakes_waits_for_the_restart_within_its_budget() {
     let root = tempfile::tempdir().unwrap();
     let folder = root.path().join(FOLDER);
     let fake = FakeLlamaCpp::start(BUILD_INFO);
-    recorded_router(&folder, &fake, 7, &["qwen3:1.7b"]);
-    let model = name("qwen3:1.7b");
+    recorded_router(&folder, &fake, 7, &["text-reader:small"]);
+    let model = name("text-reader:small");
     let marker = folder.join(RESTARTING);
     fs::write(&marker, b"").unwrap();
     let requests = |fake: &FakeLlamaCpp| fake.state.lock().unwrap().requests.len();
@@ -992,7 +999,7 @@ fn a_full_check_a_drain_overtakes_waits_for_the_restart_within_its_budget() {
     assert!(started.elapsed() >= Duration::from_millis(500));
     ended.join().unwrap();
     assert_eq!(
-        fake.state.lock().unwrap().models["qwen3:1.7b"],
+        fake.state.lock().unwrap().models["text-reader:small"],
         ModelStatus::Unloaded
     );
 
@@ -1018,8 +1025,8 @@ fn a_load_the_router_refuses_reads_unexpected_whatever_its_words() {
     let root = tempfile::tempdir().unwrap();
     let folder = root.path().join(FOLDER);
     let fake = FakeLlamaCpp::start(BUILD_INFO);
-    recorded_router(&folder, &fake, 7, &["qwen3:1.7b"]);
-    let model = name("qwen3:1.7b");
+    recorded_router(&folder, &fake, 7, &["text-reader:small"]);
+    let model = name("text-reader:small");
     let refuse = |status: &str, body: serde_json::Value| {
         fake.state.lock().unwrap().failures.insert(
             "/models/load".into(),
@@ -1071,9 +1078,9 @@ fn a_load_the_router_took_and_then_failed_reads_not_enough_memory() {
     let root = tempfile::tempdir().unwrap();
     let folder = root.path().join(FOLDER);
     let fake = FakeLlamaCpp::start(BUILD_INFO);
-    recorded_router(&folder, &fake, 7, &["qwen3:1.7b"]);
-    let model = name("qwen3:1.7b");
-    let status = |fake: &FakeLlamaCpp| fake.state.lock().unwrap().models["qwen3:1.7b"];
+    recorded_router(&folder, &fake, 7, &["text-reader:small"]);
+    let model = name("text-reader:small");
+    let status = |fake: &FakeLlamaCpp| fake.state.lock().unwrap().models["text-reader:small"];
 
     // The router answers the load at once and lists the model unloaded and failed.
     fake.state.lock().unwrap().load_fails = true;
@@ -1101,8 +1108,8 @@ fn an_evicted_load_is_asked_for_again_and_reads_memory_busy_when_the_budget_ends
     let root = tempfile::tempdir().unwrap();
     let folder = root.path().join(FOLDER);
     let fake = FakeLlamaCpp::start(BUILD_INFO);
-    recorded_router(&folder, &fake, 7, &["qwen3:1.7b"]);
-    let model = name("qwen3:1.7b");
+    recorded_router(&folder, &fake, 7, &["text-reader:small"]);
+    let model = name("text-reader:small");
     let loads = |fake: &FakeLlamaCpp| {
         fake.state
             .lock()
@@ -1150,7 +1157,7 @@ fn an_evicted_load_is_asked_for_again_and_reads_memory_busy_when_the_budget_ends
     assert!(check(&folder, &model, Duration::from_secs(30)).unwrap());
     ended.join().unwrap();
     assert_eq!(
-        fake.state.lock().unwrap().models["qwen3:1.7b"],
+        fake.state.lock().unwrap().models["text-reader:small"],
         ModelStatus::Unloaded
     );
 }
@@ -1160,9 +1167,9 @@ fn a_full_check_waits_for_a_loading_model_within_its_budget_and_reads_a_late_one
     let root = tempfile::tempdir().unwrap();
     let folder = root.path().join(FOLDER);
     let fake = FakeLlamaCpp::start(BUILD_INFO);
-    recorded_router(&folder, &fake, 7, &["qwen3:1.7b"]);
-    let model = name("qwen3:1.7b");
-    let status = |fake: &FakeLlamaCpp| fake.state.lock().unwrap().models["qwen3:1.7b"];
+    recorded_router(&folder, &fake, 7, &["text-reader:small"]);
+    let model = name("text-reader:small");
+    let status = |fake: &FakeLlamaCpp| fake.state.lock().unwrap().models["text-reader:small"];
     let loads = |fake: &FakeLlamaCpp| {
         fake.state
             .lock()
@@ -1184,7 +1191,7 @@ fn a_full_check_waits_for_a_loading_model_within_its_budget_and_reads_a_late_one
                 .lock()
                 .unwrap()
                 .models
-                .insert("qwen3:1.7b".into(), ModelStatus::Loaded);
+                .insert("text-reader:small".into(), ModelStatus::Loaded);
         })
     };
     let started = Instant::now();
@@ -1209,19 +1216,19 @@ fn a_model_the_router_already_runs_is_checked_and_never_unloaded_by_the_check() 
     let root = tempfile::tempdir().unwrap();
     let folder = root.path().join(FOLDER);
     let fake = FakeLlamaCpp::start(BUILD_INFO);
-    recorded_router(&folder, &fake, 7, &["qwen3:1.7b"]);
-    let model = name("qwen3:1.7b");
+    recorded_router(&folder, &fake, 7, &["text-reader:small"]);
+    let model = name("text-reader:small");
     fake.state
         .lock()
         .unwrap()
         .models
-        .insert("qwen3:1.7b".into(), ModelStatus::Loaded);
+        .insert("text-reader:small".into(), ModelStatus::Loaded);
 
     // The router answers the load of a held model that it is already running.
     assert!(check(&folder, &model, Duration::from_secs(5)).unwrap());
     {
         let state = fake.state.lock().unwrap();
-        assert_eq!(state.models["qwen3:1.7b"], ModelStatus::Loaded);
+        assert_eq!(state.models["text-reader:small"], ModelStatus::Loaded);
         assert!(
             state
                 .requests
@@ -1244,7 +1251,7 @@ fn a_model_the_router_already_runs_is_checked_and_never_unloaded_by_the_check() 
         );
         state
             .models
-            .insert("qwen3:1.7b".into(), ModelStatus::Unloaded);
+            .insert("text-reader:small".into(), ModelStatus::Unloaded);
     }
     assert_eq!(load(&folder, &model), Ok(()));
 }

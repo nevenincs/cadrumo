@@ -229,6 +229,8 @@ def _m303_bundle_with_period_override(
                 "identity.legal_name": "Calculate Input SL",
                 "taxpayer_type.entity_type": "legal_entity",
                 "taxpayer_type.legal_entity_form": "sl",
+                # The Modelo 303 cadence is monthly for a gran empresa (RIVA art. 71.3), so the quarter needs the answer.
+                "censo.large_company": "false",
             },
         )
         with bundled_indexed_authority().operation() as operation:

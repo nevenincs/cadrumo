@@ -1748,6 +1748,7 @@
         "cadrumo.application.review.read_registration",
         "cadrumo.application.review.source_adapters",
         "cadrumo.application.search",
+        "cadrumo.application.search.declarations_search_operation",
         "cadrumo.application.search.installed_workbench",
         "cadrumo.application.search.workbench",
         "cadrumo.application.state_projection",

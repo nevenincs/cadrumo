@@ -52,7 +52,7 @@ from .modelo.declarations_workspace_contracts import (
 )
 from .overview.agenda import OverviewAgenda, build_overview_agenda
 from .overview.applicability_evidence import FilingYearApplicabilityEvidence, bind_filing_year_applicability_evidence
-from .overview.calendar import build_overview_calendar
+from .overview.calendar import build_overview_calendar, local_work_unit_entries
 from .overview.calendar_models import OverviewCalendar, OverviewCalendarRange
 from .overview.evidence import (
     AeatCalendarEvidenceSources,
@@ -248,7 +248,9 @@ def read_workbench_calendar_inputs(
         refusal = _taxpayer_profile_refusal(raw_values, operation=operation)
         return WorkbenchCalendarInputs(
             agenda_evidence_state=refusal,
-            declarations_calendar=_refused_declarations_calendar(refusal, as_of=as_of, observed_at=observed_at),
+            declarations_calendar=_refused_declarations_calendar(
+                refusal, as_of=as_of, observed_at=observed_at, work_units=work_units, operation=operation
+            ),
             agenda=None,
             agenda_refusal=refusal,
             refusal=refusal,
@@ -300,12 +302,18 @@ def _refused_declarations_calendar(
     *,
     as_of: date,
     observed_at: UtcInstant,
+    work_units: WorkUnitCatalogue,
+    operation: PinnedAuthorityOperation,
 ) -> DeclarationsCalendarProjectionV1:
     """Publish a Declarations calendar that states why it has no schedule.
 
+    The calendar still dates each local declaration from its own registry
+    window; only the generic obligation schedule is withheld.
+
     Declarations stays admitted when only the calendar is refused, and an
     admitted Declarations destination always carries a calendar. The honest
-    calendar here is an empty one whose every source says why it is empty.
+    calendar here carries no obligation schedule, only the local declarations' own
+    dated entries, and every source says why it has no more.
     """
     reason_code = refusal.reason_code
     if reason_code is None:
@@ -315,9 +323,12 @@ def _refused_declarations_calendar(
         local=CalendarEvidenceReadOutcome[LocalCalendarEvidenceSources](state=unavailable),
         aeat=CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources](state=unavailable),
     )
+    query_range = calendar_query_range(as_of)
     calendar = OverviewCalendar(
-        range=calendar_query_range(as_of),
-        entries=(),
+        range=query_range,
+        entries=local_work_unit_entries(
+            tuple(work_units.values()), calendar_range=query_range, today=as_of, operation=operation
+        ),
         generated_at=observed_at,
         evaluated_on=as_of,
         taxpayer_model_declared=False,

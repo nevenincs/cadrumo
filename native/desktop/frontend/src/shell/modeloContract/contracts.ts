@@ -42,6 +42,8 @@ import type {
 import type {
   ModeloDeclarationsListProjectionV1,
   ModeloDeclarationsListRequest,
+  ModeloDeclarationsSearchRequest,
+  ModeloDeclarationsSearchResultV1,
 } from "./modeloDeclarations";
 import type {
   ModeloEditApplyOperationRequestV2,
@@ -237,6 +239,7 @@ export const MODELO_DEFINITIONS = [
   "modelo.bindings.resolve.typed",
   "modelo.compare",
   "modelo.declarations.list",
+  "modelo.declarations.search",
   "modelo.edit.apply",
   "modelo.edit.apply_prerequisite",
   "modelo.edit.preflight",
@@ -396,6 +399,10 @@ type ModeloDeclarationsContracts = {
   "modelo.declarations.list": {
     request: ModeloDeclarationsListRequest;
     result: ModeloDeclarationsListProjectionV1;
+  };
+  "modelo.declarations.search": {
+    request: ModeloDeclarationsSearchRequest;
+    result: ModeloDeclarationsSearchResultV1;
   };
 };
 

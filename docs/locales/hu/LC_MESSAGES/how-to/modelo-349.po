@@ -52,7 +52,7 @@ msgstr ""
 "tartalmaz. A bevallás egy összesítő blokkot hordoz (hány uniós "
 "partnerrel, azaz közösségi adószámmal rendelkező gazdasági szereplővel "
 "kereskedtél, és milyen összegekben), valamint partnerenként egy "
-"részletsort – országkódot, EU-s IVA-számot, nevet, ügyletkulcsot és "
+"részletsort: országkódot, EU-s IVA-számot, nevet, ügyletkulcsot és "
 "adóalapot. Korábban bevallott időszak javításakor helyesbítő sorokat is "
 "tartalmaz."
 

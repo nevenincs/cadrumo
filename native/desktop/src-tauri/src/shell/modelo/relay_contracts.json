@@ -158,6 +158,18 @@
         "path": []
       }
     },
+    "modelo.declarations.search": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
     "modelo.edit.apply": {
       "bucket_field": false,
       "file_fields": {},

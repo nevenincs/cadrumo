@@ -200,6 +200,14 @@ def _modelo_declarations_list(ctx: PayloadContext) -> PayloadResult:
     return ctx.request(ctx.profile_subject, {"profile_id": ctx.profile_id, "output_language": OutputLanguage.ES})
 
 
+def _modelo_declarations_search(ctx: PayloadContext) -> PayloadResult:
+    modelo_operation_test_support.seeded_modelo_work_unit(ctx.profile_id, operation=ctx.operation)
+    return ctx.request(
+        ctx.profile_subject,
+        {"profile_id": ctx.profile_id, "output_language": OutputLanguage.ES, "query": "modelo", "limit": 20},
+    )
+
+
 def _modelo_work_history(ctx: PayloadContext) -> PayloadResult:
     unit = modelo_operation_test_support.seeded_modelo_work_unit(ctx.profile_id, operation=ctx.operation)
     return ctx.request(
@@ -763,6 +771,7 @@ MODELO_BUILDERS: dict[str, PayloadBuilder] = {
     "modelo.work.create": _modelo_work_create,
     "modelo.work.list": _modelo_work_list,
     "modelo.declarations.list": _modelo_declarations_list,
+    "modelo.declarations.search": _modelo_declarations_search,
     "modelo.work.history": _modelo_work_history,
     "modelo.work.review": _modelo_work_review,
     "modelo.work.form": _modelo_work_form,
