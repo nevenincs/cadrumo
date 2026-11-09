@@ -1973,8 +1973,9 @@ fn wait_for_server(
 /// Looks as [`wait_until`] does. A router started before a model arrived in the store
 /// presents it once the manager has started it again, which it does as soon as the router
 /// holds no model. By the end of the wait, a router that runs and takes loads yet does not
-/// present a selected model has that model absent; otherwise the local AI is
-/// `program_not_running`.
+/// present a selected model stops the setup: as not in this build when the model has no
+/// llama.cpp context to be presented with, and as unexpected when it has one, since its bytes
+/// were verified and are not damaged; otherwise the local AI is `program_not_running`.
 fn wait_for_router(
     router: &LlamaServer,
     models: &Models,
@@ -2002,7 +2003,16 @@ fn wait_for_router(
         return Ok(());
     }
     if router.running_server().is_some() && presentations().contains(&Presentation::NotPresented) {
-        return Err(Stop::Failed(failure_of(Observation::Absent)));
+        let unpresentable = models
+            .selection()
+            .as_slice()
+            .iter()
+            .any(|model| !models.presentable(model));
+        return Err(Stop::Failed(if unpresentable {
+            FailureCategory::NotInThisBuild
+        } else {
+            FailureCategory::Unexpected
+        }));
     }
     Err(no_server_within(router.latest_start_failure()))
 }
