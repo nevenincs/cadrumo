@@ -70,6 +70,7 @@ from .operation_shared import (
     MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
     MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
+    FirstWriteEffectAnnouncement,
     ModeloWorkVerifyProfileResolver,
     modelo_workspace_refresh_target_binding,
     resolve_active_workflow_profile,
@@ -424,7 +425,10 @@ class ModeloWorkVerifyExecutor:
 
         actor = execution_actor_label(self._execution_caller_reader, context, supplied=request.payload.actor)
         operation = context.authority_operation
-        repositories = self._verification_repository_bundle_factory(require_active_bucket_id(), operation=operation)
+        writes = FirstWriteEffectAnnouncement(context, asyncio.get_running_loop())
+        repositories = self._verification_repository_bundle_factory(
+            require_active_bucket_id(), operation=operation, mutation_writer=writes.write
+        )
 
         def prepare() -> tuple[TaxpayerProfile, ModeloLifecycleAdvisories]:
             profile = self._profile_resolver(operation)
@@ -450,10 +454,13 @@ class ModeloWorkVerifyExecutor:
         async def publish() -> str:
             async with context.cancellation.irreversible_section():
                 profile, advisories = await asyncio.to_thread(prepare)
-                await context.events.effect(OperationEffect.UNKNOWN)
+                # A gate refusing before the first write leaves the effect at
+                # none; the first write journals that records may change.
                 outcome = await asyncio.to_thread(verify_under_pinned_operation, profile)
                 report = outcome.report
-                await context.events.effect(OperationEffect.UPDATED if outcome.published else OperationEffect.NONE)
+                await context.events.effect(
+                    OperationEffect.UPDATED if outcome.published or writes.began else OperationEffect.NONE
+                )
                 return await context.operands.put(
                     ModeloWorkVerifyPublicResultV2(
                         verification=ModeloVerificationSnapshot.from_verification(outcome),
@@ -606,8 +613,9 @@ class ModeloWorkFileExecutor:
         actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor)
         from ...core.bucket_pointer import require_active_bucket_id
 
+        writes = FirstWriteEffectAnnouncement(context, asyncio.get_running_loop())
         filing_ports = self._filing_action_ports_factory(
-            bucket_id=require_active_bucket_id(), operation=context.authority_operation
+            bucket_id=require_active_bucket_id(), operation=context.authority_operation, mutation_writer=writes.write
         )
 
         def prepare() -> tuple[TaxpayerProfile, ModeloLifecycleAdvisories]:
@@ -623,7 +631,8 @@ class ModeloWorkFileExecutor:
         async def publish() -> str:
             async with context.cancellation.irreversible_section():
                 profile, advisories = await asyncio.to_thread(prepare)
-                await context.events.effect(OperationEffect.UNKNOWN)
+                # A precondition refusing before the first write leaves the
+                # effect at none; the first write journals that records may change.
                 outcome = await asyncio.to_thread(
                     file_modelo_revision,
                     payload.approval.calculation_revision_id,
@@ -640,7 +649,9 @@ class ModeloWorkFileExecutor:
                     operation=context.authority_operation,
                 )
                 record = outcome.record
-                await context.events.effect(OperationEffect.UPDATED if outcome.published else OperationEffect.NONE)
+                await context.events.effect(
+                    OperationEffect.UPDATED if outcome.published or writes.began else OperationEffect.NONE
+                )
                 return await context.operands.put(
                     ModeloWorkFilePublicResultV2(
                         record=ModeloFilingRecordSnapshot.from_record(record),
