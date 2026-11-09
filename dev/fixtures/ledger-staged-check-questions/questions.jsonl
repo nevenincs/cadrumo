@@ -817,3 +817,8 @@
 {"kind":"draft","question":"[{\"field\":\"business_classification\",\"value\":\"BUSINESS\"},{\"field\":\"direction\",\"value\":\"OUTGOING\"}]"}
 {"kind":"draft","question":"[{\"field\":\"direction\",\"value\":\"INCOMING\"}]"}
 {"kind":"draft","question":"[{\"field\":\"direction\",\"value\":\"OUTGOING\"}]"}
+{"kind":"draft","question":"[{\"field\":\"amount\",\"value\":\"-50.00\"},{\"field\":\"currency\",\"value\":\"EUR\"},{\"field\":\"description\",\"value\":\"TAXI AEROPUERTO\"}]"}
+{"kind":"draft","question":"[{\"field\":\"currency\",\"value\":\"EUR\"}]"}
+{"kind":"draft","question":"[{\"field\":\"currency\",\"value\":\"EUR\"},{\"field\":\"direction\",\"value\":\"INCOMING\"}]"}
+{"kind":"draft","question":"[{\"field\":\"currency\",\"value\":\"EUR\"},{\"field\":\"direction\",\"value\":\"OUTGOING\"}]"}
+{"kind":"draft","question":"[{\"field\":\"amount\",\"value\":\"12.4\"},{\"field\":\"booked_date\",\"value\":\"2026-10-21\"},{\"field\":\"currency\",\"value\":\"EUR\"},{\"field\":\"description\",\"value\":\"TAXI AEROPUERTO\"}]"}
