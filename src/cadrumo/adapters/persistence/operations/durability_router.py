@@ -28,6 +28,7 @@ from ....application.operations.persistence.journal import (
     OperationObservationMaterialization,
     OperationObservationReader,
     OperationPersistedSnapshot,
+    OperationRecoveryInventoryDelta,
     OperationRecoveryInventoryPage,
     OperationSecureReferenceStore,
 )
@@ -123,6 +124,10 @@ class DurabilityRoutedOperationPersistence(
         self, *, after: OperationId | None, limit: OperationInventoryLimit
     ) -> OperationRecoveryInventoryPage:
         return await self._journal.inventory_page(after=after, limit=limit)
+
+    @override
+    async def inventory_delta(self, *, known: frozenset[OperationId]) -> OperationRecoveryInventoryDelta:
+        return await self._journal.inventory_delta(known=known)
 
     @override
     async def resolve_idempotency(self, claim: OperationIdempotencyClaim) -> OperationId | None:
