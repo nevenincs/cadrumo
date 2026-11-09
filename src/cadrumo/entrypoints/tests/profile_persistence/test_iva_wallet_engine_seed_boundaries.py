@@ -20,7 +20,10 @@ from cadrumo.application.calculations.tests.filing_evidence import general_m303_
 from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from cadrumo.application.modelo.iva_wallet_gate import (
+    ModeloIvaWalletReconciliationBlocked,
+    require_persisted_iva_compensation_decision_matches_revision,
+)
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
     bundled_indexed_authority,
@@ -221,6 +224,20 @@ def test_persisted_first_period_zero_refreshes_when_later_seeded_history_arrives
 
             assert exc_info.value.context is not None
             assert exc_info.value.context["divergence"] == "wallet_missing"
+            # The refused calculation writes nothing, so the sticky zero is still
+            # stored; checking the revision it fed refreshes and stores the block.
+            assert (
+                IvaWalletDecisionRepository().load_decision(taxpayer_nif, period(TARGET_YEAR, "1T")) == first_decision
+            )
+            with pytest.raises(ModeloIvaWalletReconciliationBlocked):
+                require_persisted_iva_compensation_decision_matches_revision(
+                    work_unit,
+                    first_revision,
+                    repository=IvaWalletDecisionRepository(),
+                    observation_repository=CalculationObservationRepository(),
+                    history_repository=IvaCompensationHistoryRepository(),
+                    operation=_authority_operation_for_test,
+                )
             refreshed = IvaWalletDecisionRepository().load_decision(
                 taxpayer_nif,
                 period(TARGET_YEAR, "1T"),

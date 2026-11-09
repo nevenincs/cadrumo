@@ -26,6 +26,7 @@ from ...ledger.preflight import HeldTransactionCatalogue
 from ..invoice_iva_source import (
     InvoiceIvaFinding,
     InvoiceIvaFindingReason,
+    invoices_missing_source_document,
     period_invoice_iva_findings,
     period_invoice_iva_side,
 )
@@ -217,3 +218,27 @@ def test_a_link_held_on_the_movement_alone_still_makes_it_payment_evidence() -> 
     assert tuple(side.unpaid_window) == ()
     assert [observation.ledger_id for observation in side.source.observations] == [f"invoice:{invoice.invoice_id}:0"]
     assert side.source.findings == ()
+
+
+def test_a_received_invoice_without_its_factura_is_the_one_reported() -> None:
+    """LIVA art. 97: a typed invoice row is not the document a deduction rests on."""
+    evidenced = _movement("evidenced").model_copy(update={"purchase_invoice_evidence_id": "e" * 64})
+    plain = _movement("plain")
+    stored = _received("R-21", base=Decimal("100.00"))
+    paid_with_evidence = _received("R-22", base=Decimal("100.00"), paid_by=(evidenced,))
+    paid_without = _received("R-23", base=Decimal("100.00"), paid_by=(plain,))
+    issued = domestic_iva_invoice(
+        "V-21",
+        kind=InvoiceKind.ISSUED,
+        issued_at=date(2025, 4, 5),
+        taxable_base=Decimal("100.00"),
+        iva_amount=Decimal("21.00"),
+    )
+
+    missing = invoices_missing_source_document(
+        (stored, paid_with_evidence, paid_without, issued),
+        documented=frozenset({stored.invoice_id}),
+        window=TransactionCatalogue.from_transactions((evidenced, plain)),
+    )
+
+    assert [invoice.invoice_number for invoice in missing] == ["R-23"]

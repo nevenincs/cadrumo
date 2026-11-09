@@ -259,6 +259,16 @@ def _search_path_text(declaration: ApplicationEnvironment, profile: Mapping[str,
     return "set by the package to " + "; ".join(parts) + ", in that order"
 
 
+_PROFILE_NOTES = {
+    "agent-auth": (
+        "To sign in by hand when the desktop application's sign-in fails, run "
+        "`aeat config provider-login --provider <provider>`; see "
+        "[Sign in to an AI provider by hand](../how-to/sign-in-to-an-ai-provider-by-hand.md)."
+    ),
+}
+"""A sentence a profile's section adds after its declared facts, keyed by profile name."""
+
+
 def _profile_section(declaration: ApplicationEnvironment, name: str, profile: Mapping[str, Any]) -> list[str]:
     """Render one launch profile as a heading and a list of what it passes, accepts and sets."""
     if profile["inherit"]:
@@ -282,6 +292,8 @@ def _profile_section(declaration: ApplicationEnvironment, name: str, profile: Ma
     sets = _sets_text(declaration, profile)
     lines.append(f"- **Sets itself:** {_list_in_words(sets)}" if sets else "- **Sets itself:** nothing")
     lines.append(f"- **Search path (`PATH`):** {_search_path_text(declaration, profile)}")
+    if name in _PROFILE_NOTES:
+        lines.extend(["", _PROFILE_NOTES[name]])
     return lines
 
 

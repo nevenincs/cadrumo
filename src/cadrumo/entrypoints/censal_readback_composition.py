@@ -15,8 +15,9 @@ from ..application.user_profile.censal_readback import (
     CensalHistoryRead,
     read_censal_history,
     read_latest_censal_observation,
-    recheck_censal_history,
+    refresh_censal_history,
 )
+from ..application.workbench_capture_memory import WorkbenchCensusMemo, WorkbenchCensusMemoKey
 from ..core.paths import effective_storage_root
 
 
@@ -37,20 +38,47 @@ async def read_stored_censal_observation(profile_id: UUID) -> CensalObservation 
 
 @dataclass(frozen=True, slots=True)
 class StoredCensalHistoryReader:
-    """Read one profile's stored census once, and recheck it from the journal records that could change it."""
+    """Read one profile's stored census, and recheck it from the journal records that could change it.
+
+    With a ``memo`` a read starts from the classification the session's
+    previous capture left, when one is kept for this exact profile and
+    journal, and reads only the records that could have changed it; every
+    read and recheck keeps its own up-to-date classification for the next.
+    Without one, every read classifies the whole journal.
+    """
 
     profile_id: UUID
+    memo: WorkbenchCensusMemo | None = None
 
     def read(self) -> CensalHistoryRead:
         """Read the newest stored census observation and name the journal records it came from."""
-        return asyncio.run(
-            read_censal_history(self.profile_id, journal=_stored_journal(), operands=_profile_operands(self.profile_id))
+        storage_root = effective_storage_root()
+        key = WorkbenchCensusMemoKey(profile_id=self.profile_id, journal_root=str(storage_root))
+        kept = None if self.memo is None else self.memo.recall(key)
+        journal = OperationJournalRepository(storage_root=storage_root)
+        operands = _profile_operands(self.profile_id)
+        history = asyncio.run(
+            read_censal_history(self.profile_id, journal=journal, operands=operands)
+            if kept is None
+            else refresh_censal_history(self.profile_id, kept, journal=journal, operands=operands)
         )
+        self._keep(key, history)
+        return history
 
     def recheck(self, prior: CensalHistoryRead) -> CensalObservation | None:
         """Answer the lookup again now, reading only census records and records created since ``prior``."""
-        return asyncio.run(
-            recheck_censal_history(
-                self.profile_id, prior, journal=_stored_journal(), operands=_profile_operands(self.profile_id)
+        storage_root = effective_storage_root()
+        history = asyncio.run(
+            refresh_censal_history(
+                self.profile_id,
+                prior,
+                journal=OperationJournalRepository(storage_root=storage_root),
+                operands=_profile_operands(self.profile_id),
             )
         )
+        self._keep(WorkbenchCensusMemoKey(profile_id=self.profile_id, journal_root=str(storage_root)), history)
+        return history.observation
+
+    def _keep(self, key: WorkbenchCensusMemoKey, history: CensalHistoryRead) -> None:
+        if self.memo is not None:
+            self.memo.keep(key, history)

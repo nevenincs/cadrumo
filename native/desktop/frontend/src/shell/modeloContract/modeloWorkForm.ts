@@ -39,6 +39,11 @@ import type {
   SourceSurface,
 } from "./modeloWork";
 import type {
+  PublicModeloWorkFormLoadV1,
+  PublicRefundEligibility,
+  PublicScalarValueV1,
+  PublicSpanishTaxIdFormat,
+  ReconciliationSourceRequirementV1,
   RegistryAuthorityGrade,
   SourceFamily,
   SourcePolicyV1,
@@ -129,6 +134,8 @@ export type FormUnplacedReason =
   | "ambiguous_anchor"
   | "anchor_conflicts_with_section"
   | "pending_review";
+
+export type InvoiceId = string;
 
 export type ModeloExportRequestField =
   | "refund_election"
@@ -393,7 +400,9 @@ export type ModeloFormElectionReason =
   | "no_open_account"
   | "no_spanish_account"
   | "settlement_unsupported"
-  | "second_instalment_nothing";
+  | "second_instalment_nothing"
+  | "carry_forward_only"
+  | "redeme_unstated";
 
 /**
  * Whether the filer can answer an election now.
@@ -512,6 +521,7 @@ export type ModeloFormIssueLine = {
   resolution_answer: ModeloFormResolutionAnswer | null;
   answer_lead_words: string | null;
   answer_lead_words_language: OutputLanguage | null;
+  invoice_id: InvoiceId | null;
 };
 
 /**
@@ -519,6 +529,18 @@ export type ModeloFormIssueLine = {
  */
 export type ModeloFormLayoutProvenance =
   "reviewed" | "generated" | "inspection_only";
+
+/**
+ * What in the ledger holds the declaration's calculation, in the form's
+ * language.
+ *
+ * `transaction_id` is the movement to open, `None` when the hold is about the
+ * whole period rather than one movement.
+ */
+export type ModeloFormLedgerHold = {
+  words: string;
+  transaction_id: string | null;
+};
 
 /**
  * The missing values no box holds, which the check names, counted as the
@@ -863,6 +885,7 @@ export type ModeloWorkbenchFormProjectionV1 = {
   profile_requirements: string[];
   source_requirements: ReconciliationSourceRequirementV1[];
   receipt: ModeloFormReceipt | null;
+  ledger_hold: ModeloFormLedgerHold | null;
 };
 
 /**
@@ -905,10 +928,39 @@ export type OperationCreateWorkStepV1 = {
 export type OperationNextStepV1 =
   | OperationCreateWorkStepV1
   | OperationCalculateWorkStepV1
+  | OperationVerifyWorkStepV1
   | OperationOpenWorkStepV1
   | OperationOpenProfileFieldStepV1
   | OperationCompleteProfileSetupStepV1
-  | OperationOpenMovementStepV1;
+  | OperationOpenMovementStepV1
+  | OperationOpenIvaWalletStepV1
+  | OperationOpenIvaWalletOpeningBalanceStepV1;
+
+/**
+ * Record the opening IVA balance the period's carry reads, in the IVA balance
+ * of that declaration.
+ *
+ * The balance is the wallet's own, addressed by the modelo, filing year and
+ * period whose carry the refusal could not settle; the window opens that
+ * declaration's IVA balance at its opening-balance entry.
+ */
+export type OperationOpenIvaWalletOpeningBalanceStepV1 = {
+  kind: "open_iva_wallet_opening_balance";
+  modelo: string;
+  filing_year: number;
+  period_code: string;
+  words: string;
+};
+
+/**
+ * Open the Saldo de IVA of the declaration one work unit holds, where its
+ * carried compensation is recorded.
+ */
+export type OperationOpenIvaWalletStepV1 = {
+  kind: "open_iva_wallet";
+  work_unit_id: WorkUnitId;
+  words: string;
+};
 
 /**
  * Open one ledger movement in the Libro, where the fact the refusal names is
@@ -936,6 +988,15 @@ export type OperationOpenProfileFieldStepV1 = {
  */
 export type OperationOpenWorkStepV1 = {
   kind: "open_work";
+  work_unit_id: WorkUnitId;
+  words: string;
+};
+
+/**
+ * Check the declaration one work unit holds, so its calculation is verified.
+ */
+export type OperationVerifyWorkStepV1 = {
+  kind: "verify_work";
   work_unit_id: WorkUnitId;
   words: string;
 };
@@ -1080,6 +1141,7 @@ export type PublicModeloFormField = {
   confirm_value: ModeloEditWireScalar;
   takes_typed_value: boolean;
   clearable: boolean;
+  removable: boolean;
   own_value: ModeloEditWireScalar;
   confirm_comparable: ModeloEditWireScalar;
   state_digest: string;
@@ -1202,6 +1264,7 @@ export type PublicModeloFormResult = {
   direction: ModeloFormResultDirection;
   disposition: ResultDisposition | null;
   election_may_change: boolean;
+  refund_eligibility: PublicRefundEligibility | null;
 };
 
 /**
@@ -1246,98 +1309,4 @@ export type PublicModeloVerificationFinding = {
   message_facts: PublicFactEntryV1[];
   legal_refs: string[];
   source_refs: string[];
-};
-
-/**
- * Typed local-human workbench view of ModeloWorkForm.
- */
-export type PublicModeloWorkForm = {
-  modelo: string;
-  filing_year: number;
-  period: PublicPeriod;
-  registry_revision_id: string;
-  year_projection: ModeloFormYearProjection;
-  work_unit_id: string;
-  calculation_revision_id: string | null;
-  language: OutputLanguage;
-  layout_provenance: ModeloFormLayoutProvenance;
-  inspection_reason: ModeloFormInspectionReason | null;
-  seed_source: FormLayoutSeedSource | null;
-  pages: PublicModeloFormPage[];
-  outline: ModeloFormOutlineGroup[];
-  working_figures: PublicModeloFormField[];
-  unplaced: PublicModeloFormUnplacedField[];
-  answers: PublicModeloFormField[];
-  result_addresses: CasillaId[];
-  withholding_credits: ModeloFormCredit[];
-  counts: ModeloFormCounts;
-  progress: ModeloWorkProgress;
-  operator_entries_known: boolean;
-  edit_admitted: boolean;
-  verification: VerificationCompletenessStatus | null;
-  issues: PublicModeloFormIssue[];
-  calculation_notes: ModeloFormCalculationNote[];
-  calculation_notes_held: boolean;
-  source_groups: ModeloFormSourceGroup[];
-  result: PublicModeloFormResult | null;
-  deadline: ModeloFormDeadline | null;
-  aeat_data: ModeloFormAeatData | null;
-  projectable: boolean;
-  asks_imputation_election: boolean;
-  compares_taxation: boolean;
-  compares_borrador: boolean;
-  offers_iva_wallet: boolean;
-  filing: ModeloFormFiling | null;
-  last_export: ModeloFormExport | null;
-  edit_closure: ModeloFormEditClosure | null;
-  carry_attestations: ModeloFormCarryAttestation[];
-  modelo_title: string | null;
-  modelo_name: string | null;
-  modelo_number: string | null;
-  period_words: string | null;
-};
-
-/**
- * Typed local-human workbench view of ModeloWorkFormLoadV1.
- */
-export type PublicModeloWorkFormLoadV1 = {
-  form: PublicModeloWorkForm;
-  verified: boolean;
-  filed: boolean;
-};
-
-/**
- * Preserve scalar kind and decimal precision across the public schema.
- */
-export type PublicScalarValueV1 = {
-  kind: "string" | "integer" | "boolean" | "decimal" | "date" | "null";
-  text: string;
-};
-
-/**
- * Typed local-human workbench view of the governed SpanishTaxIdFormat.
- */
-export type PublicSpanishTaxIdFormat = {
-  width: number;
-  country_prefix: string;
-  country_prefixed_width: number;
-  country_prefix_strip_width: number;
-  prefixed_nif_leaders: string;
-  nie_leaders: string;
-  cif_leaders: string;
-  nif_letters: string;
-  nif_check_modulus: number;
-  nie_prefix_substitutions: [string, string][];
-  cif_digit_only_kinds: string;
-  cif_letter_only_kinds: string;
-  cif_letter_table: string;
-};
-
-/**
- * One source declaration the to-do list names before the summary can be worked
- * out, and its door.
- */
-export type ReconciliationSourceRequirementV1 = {
-  words: string;
-  next_step: OperationNextStepV1;
 };

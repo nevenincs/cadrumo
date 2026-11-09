@@ -76,6 +76,7 @@ if TYPE_CHECKING:
         AutomationAdministrationFactory,
         AutomationInventoryReader,
     )
+    from ..application.workbench_capture_memory import WorkbenchCaptureMemoryOwner
     from ..application.workbench_generation_operation import WorkbenchGenerationReader
     from ..application.workflow.run_read_ports import WorkflowRunReadPortsFactory
     from ..core.hex import Hex64Str
@@ -122,6 +123,7 @@ from .operation_composition_ledger import (
     compose_invoices_catalogue_read_operation,
     compose_invoices_catalogue_remove_operation,
     compose_invoices_catalogue_update_operation,
+    compose_invoices_document_attach_operation,
     compose_ledger_add_operation,
     compose_ledger_allocate_operation,
     compose_ledger_attachment_mutation_operation,
@@ -205,6 +207,7 @@ from .operation_composition_modelo import (
     compose_modelo_calculation_report_verification_operation,
     compose_modelo_credit_resolution_operation,
     compose_modelo_declarations_list_operation,
+    compose_modelo_declarations_search_operation,
     compose_modelo_dependency_operation,
     compose_modelo_filing_record_import_operation,
     compose_modelo_filing_record_list_operation,
@@ -284,6 +287,7 @@ _OPERATION_COMPOSITION_GROUPS: Mapping[str, _GroupComposer] = {
     "application.invoices.payment_match_operation": compose_ledger_invoice_match_operation,
     "application.invoices.catalogue_remove_operation": compose_invoices_catalogue_remove_operation,
     "application.invoices.catalogue_update_operation": compose_invoices_catalogue_update_operation,
+    "application.invoices.document_attach_operation": compose_invoices_document_attach_operation,
     "application.invoices.figures_preview_operation": compose_invoice_figures_preview_operation,
     "application.ledger.add_operation": compose_ledger_add_operation,
     "application.ledger.allocate_operation": compose_ledger_allocate_operation,
@@ -358,6 +362,7 @@ _OPERATION_COMPOSITION_GROUPS: Mapping[str, _GroupComposer] = {
         compose_modelo_calculation_report_verification_operation
     ),
     "application.modelo.declarations_list_operation": compose_modelo_declarations_list_operation,
+    "application.search.declarations_search_operation": compose_modelo_declarations_search_operation,
     "application.modelo.dependency_operation": compose_modelo_dependency_operation,
     "application.modelo.filing_record_import_operation": compose_modelo_filing_record_import_operation,
     "application.modelo.filing_record_list_operation": compose_modelo_filing_record_list_operation,
@@ -633,6 +638,7 @@ def compose_operation_dependencies(
     execution_caller_reader: OperationExecutionCallerReader | None = None,
     sede_view_stream_opener: SedeViewStreamOpener | None = None,
     journal_committed: Callable[[OperationPersistedSnapshot], None] | None = None,
+    capture_memory: WorkbenchCaptureMemoryOwner | None = None,
 ) -> OperationComposedServices:
     """Compose the manifest-backed production registry and all public services.
 
@@ -644,7 +650,10 @@ def compose_operation_dependencies(
     a stale profile repository. ``journal_committed`` is told each operation
     whose journal commit succeeded, for a host that reports progress.
     ``sede_view_stream_opener`` is the worker host's view stream; without it
-    the Sede view refuses every run.
+    the Sede view refuses every run. ``capture_memory`` is the owner of what
+    this graph's reads keep for one session, for a host that reads through it
+    as well; without one the graph owns a fresh owner. Either way the services
+    close it whenever a session ends.
     """
     from ..adapters.persistence.operations.durability_router import DurabilityRoutedOperationPersistence
     from ..adapters.persistence.operations.journal import OperationJournalRepository
@@ -654,11 +663,15 @@ def compose_operation_dependencies(
         OperationTypedFinancialOperandCustodyFilesystemRepository,
     )
     from ..application.operations.composition import compose_operation_services
+    from ..application.workbench_capture_memory import WorkbenchCaptureMemoryOwner
     from ..core.paths import effective_storage_root
     from ..core.time.clock import now
 
     if execution_authority is not None and execution_authority_factory is not None:
         raise ValueError("operation authority must have one owner")
+    # The services end the memory's reuse whenever the host reports a session's end.
+    if capture_memory is None:
+        capture_memory = WorkbenchCaptureMemoryOwner()
     inputs = OperationCompositionInputs(
         settings=settings or load_settings(),
         evidence_followup_ports=evidence_followup_ports,
@@ -691,6 +704,7 @@ def compose_operation_dependencies(
         modelo_profile_resolver=modelo_profile_resolver,
         execution_caller_reader=execution_caller_reader,
         sede_view_stream_opener=sede_view_stream_opener,
+        capture_memory=capture_memory,
     )
     resolved_settings = inputs.resolved_settings
     storage_root = effective_storage_root(settings=resolved_settings)
@@ -726,4 +740,5 @@ def compose_operation_dependencies(
             settings=resolved_settings
         ),
         execution_authority=execution_authority,
+        session_reads_end=capture_memory.close,
     )

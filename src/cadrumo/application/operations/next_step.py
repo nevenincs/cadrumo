@@ -1,10 +1,13 @@
 """The step a refused operation serves for putting the refusal right.
 
 A refusal can name one thing the filer does next: creating a declaration that
-does not exist yet, calculating one that has no calculation, opening one whose
+does not exist yet, calculating one that has no calculation, checking one whose
+calculation is not yet verified, opening one whose
 own form says what it still lacks, filling in one profile detail the refusal
-named, declaring the profile setup complete, or opening the ledger movement
-that stops a calculation. The step says which kind, what
+named, declaring the profile setup complete, opening the ledger movement
+that stops a calculation, opening the Saldo de IVA of a Modelo 303 whose
+carried compensation has no authority yet, or recording the opening IVA
+balance a period's carry reads. The step says which kind, what
 it concerns and the words that offer it, so a frontend does what it already
 knows for that kind and keeps no table of operator action identifiers. The kind
 is closed; an address that cannot be run is refused when the step is built.
@@ -77,6 +80,16 @@ class OperationCalculateWorkStepV1(BaseModel):
     words: _Words
 
 
+class OperationVerifyWorkStepV1(BaseModel):
+    """Check the declaration one work unit holds, so its calculation is verified."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["verify_work"] = "verify_work"
+    work_unit_id: WorkUnitId
+    words: _Words
+
+
 class OperationOpenWorkStepV1(BaseModel):
     """Open the declaration one work unit holds, where its own form says what it still lacks."""
 
@@ -116,13 +129,43 @@ class OperationOpenMovementStepV1(BaseModel):
     words: _Words
 
 
+class OperationOpenIvaWalletStepV1(BaseModel):
+    """Open the Saldo de IVA of the declaration one work unit holds, where its carried compensation is recorded."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["open_iva_wallet"] = "open_iva_wallet"
+    work_unit_id: WorkUnitId
+    words: _Words
+
+
+class OperationOpenIvaWalletOpeningBalanceStepV1(BaseModel):
+    """Record the opening IVA balance the period's carry reads, in the IVA balance of that declaration.
+
+    The balance is the wallet's own, addressed by the modelo, filing year and
+    period whose carry the refusal could not settle; the window opens that
+    declaration's IVA balance at its opening-balance entry.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["open_iva_wallet_opening_balance"] = "open_iva_wallet_opening_balance"
+    modelo: _Token
+    filing_year: FourDigitYear
+    period_code: _Token
+    words: _Words
+
+
 type OperationNextStepV1 = Annotated[
     OperationCreateWorkStepV1
     | OperationCalculateWorkStepV1
+    | OperationVerifyWorkStepV1
     | OperationOpenWorkStepV1
     | OperationOpenProfileFieldStepV1
     | OperationCompleteProfileSetupStepV1
-    | OperationOpenMovementStepV1,
+    | OperationOpenMovementStepV1
+    | OperationOpenIvaWalletStepV1
+    | OperationOpenIvaWalletOpeningBalanceStepV1,
     Field(discriminator="kind"),
 ]
 """The step a refusal serves: a closed kind, what it concerns, and the words that offer it."""
@@ -169,9 +212,12 @@ __all__ = [
     "OperationNextStepErrorMixin",
     "OperationNextStepV1",
     "OperationNextStepWording",
+    "OperationOpenIvaWalletOpeningBalanceStepV1",
+    "OperationOpenIvaWalletStepV1",
     "OperationOpenMovementStepV1",
     "OperationOpenProfileFieldStepV1",
     "OperationOpenWorkStepV1",
+    "OperationVerifyWorkStepV1",
     "error_next_step",
     "is_profile_field_path",
 ]

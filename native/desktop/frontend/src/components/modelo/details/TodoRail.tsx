@@ -5,8 +5,8 @@ import type {
   ModeloFormOrigin,
   ModeloWorkbenchFormProjectionV1,
   OperationNextStepV1,
-  PublicModeloWorkForm,
 } from "../../../shell/modeloContract/modeloWorkForm";
+import type { PublicModeloWorkForm } from "../../../shell/modeloContract/modeloWorkFormPart2";
 import { useStrings } from "../../../shell/strings";
 import { BoxNumber } from "../form/BoxNumber";
 import { OutlineNavigator } from "../workspace/OutlineNavigator";
@@ -51,6 +51,7 @@ function TodoList({
   onPicked,
   onOpenProfile,
   onOpenCheck,
+  onOpenMovement,
   onSourceStep,
 }: {
   envelope: ModeloWorkbenchFormProjectionV1;
@@ -58,10 +59,32 @@ function TodoList({
   onPicked?: () => void;
   onOpenProfile?: () => void;
   onOpenCheck?: () => void;
+  onOpenMovement?: (transactionId: string) => void;
   onSourceStep?: (step: OperationNextStepV1) => void;
 }) {
   const t = useStrings();
   const [openFailed, setOpenFailed] = useState(false);
+  // What in the ledger calculating would be refused for, in the read model's
+  // words; its door is the movement it names, when it names one.
+  const hold = envelope.ledger_hold;
+  const movement = hold?.transaction_id ?? null;
+  const ledgerLine = hold && (
+    <button
+      type="button"
+      data-todo-ledger=""
+      onClick={
+        movement && onOpenMovement ? () => onOpenMovement(movement) : undefined
+      }
+      disabled={!movement || !onOpenMovement}
+      className="flex w-full items-start gap-2 rounded-md border border-border px-2 py-2 text-left hover:bg-accent"
+    >
+      <Icon name="alert" size="xs" className="mt-0.5 text-warning" />
+      <span className="text-sm">{hold.words}</span>
+      {movement && (
+        <Icon name="forward" size="xs" className="mt-0.5 ml-auto text-faint" />
+      )}
+    </button>
+  );
   // The profile facts the read model says must be answered before the period
   // can be worked out, such as the one that decides its cadence; their door
   // is the profile.
@@ -126,6 +149,7 @@ function TodoList({
     return (
       <div className="flex flex-col gap-3 p-2">
         {profileLine}
+        {ledgerLine}
         {sourcesLine}
         <p className="flex gap-2 p-2 text-sm text-muted-foreground">
           <Icon name="lock" size="xs" className="mt-0.5" />
@@ -158,6 +182,7 @@ function TodoList({
     !todo.failed.length &&
     !elsewhereLine &&
     !profileLine &&
+    !ledgerLine &&
     !sourcesLine
   )
     return (
@@ -185,6 +210,7 @@ function TodoList({
   return (
     <div className="flex flex-col gap-3 p-2">
       {profileLine}
+      {ledgerLine}
       {sourcesLine}
       {elsewhereLine}
       {todo.groups.map(([origin, list]) => {
@@ -245,6 +271,7 @@ export function TodoRail({
   onPicked,
   onOpenProfile,
   onOpenCheck,
+  onOpenMovement,
   onSourceStep,
 }: {
   envelope: ModeloWorkbenchFormProjectionV1;
@@ -254,6 +281,8 @@ export function TodoRail({
   onOpenProfile?: () => void;
   /** Opens the check, which names the missing values no box holds. */
   onOpenCheck?: () => void;
+  /** Opens a ledger movement in the Libro, where the shell has one. */
+  onOpenMovement?: (transactionId: string) => void;
   /** Takes the step a declaration this one sums needs: creates it, or opens
    * it, where its own form says what is left. */
   onSourceStep?: (step: OperationNextStepV1) => void;
@@ -289,6 +318,7 @@ export function TodoRail({
             onPicked={onPicked}
             onOpenProfile={onOpenProfile}
             onOpenCheck={onOpenCheck}
+            onOpenMovement={onOpenMovement}
             onSourceStep={onSourceStep}
           />
         ) : (

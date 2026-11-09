@@ -2124,6 +2124,10 @@ desktop:
         A piszkozatod megmaradt.
       note: Megjegyzés
       proposed: Az általad javasolt érték
+      provincia: Adóügyi lakcím tartománya
+      provincia_save: Tartomány mentése
+      provincia_unstated: 'Nincs megadva: a 347-es nyomtatvány minden spanyol partnernél
+        bevallja.'
       scope:
         es_canarias: Kanári-szigetek
         es_ceuta_melilla: Ceuta és Melilla
@@ -3248,6 +3252,7 @@ desktop:
       added_no_rate: '{number} számla hozzáadva · még nincs EUR-árfolyam'
       any_class: Bármely típus
       any_payment: Bármely fizetés
+      attach_document: Dokumentum csatolása
       back: Vissza
       base: Adóalap
       cancel: Mégse
@@ -3285,6 +3290,8 @@ desktop:
       discard_new: Elveted ezt a számlát?
       discard_note: Még semmi sincs mentve.
       document: Bizonylat
+      document_already: Ez a dokumentum már a számlával együtt volt tárolva.
+      document_attached: A dokumentum a számlával együtt tárolva.
       duplicate: Már szerepel a katalógusban.
       empty: Még nincs számla. Adj hozzá egyet, vagy importálj számlakönyvet.
       empty_filtered: Nincs egyező számla.
@@ -3447,6 +3454,9 @@ desktop:
         s2: Baszkföld vagy Navarra
         s3: Spanyolország, kataszteri hivatkozás nélkül
         s4: Külföldön
+      source_document: A számla dokumentuma
+      source_document_hint: 'Csatold a PDF-et vagy az e-számlát: ez a dokumentum teszi
+        lehetővé az IVA levonását.'
       stored_note: '{kind} · {payment} · kapcsolva: {count}'
       this_is: Ez egy
       title: '{number} számla'
@@ -3760,6 +3770,7 @@ desktop:
       invoice_cash_accounting_regime_unmodelled: Pénzforgalmi
       invoice_category_contradicted: IVA-kategória
       invoice_deduction_family_unresolved: Levonás
+      invoice_recargo_split_unresolved: Pótlék
       linked_movement_contradicts_invoice: Számla
       missing_business_classification: Besorolás
       missing_category: Kategória
@@ -3787,6 +3798,7 @@ desktop:
       invoice_category_contradicted: Az IVA-kategória nem illik az országhoz
       invoice_deduction_family_unresolved: A számlából nem derül ki, melyik levonás
         illeti meg
+      invoice_recargo_split_unresolved: A pótlék nem osztható fel az áfakulcsai között
       linked_movement_contradicts_invoice: Eltér a számlájától
       missing_business_classification: Hiányzik a besorolás
       missing_category: Hiányzik a kategória
@@ -4367,7 +4379,6 @@ desktop:
       list: Levonások
       show: Megjelenítés az űrlapon
       show_box: A(z) {box} rovat megjelenítése az űrlapon
-      title: A jövedelmedből levont összegek
     details:
       close: Részletek bezárása
       hide: Részletek elrejtése
@@ -9372,6 +9383,7 @@ workspace:
       calculated: Számítás elkészült
       created: Bevallás létrehozva
       discarded: Bevallás elvetve
+      edited: Módosítások alkalmazva
       exported: Bevallás exportálva
       external_evidence_imported: Külső AEAT-adatok importálva
       filed: Benyújtás rögzítve
@@ -9445,6 +9457,8 @@ workspace:
         open_count: 'megnyitva: {count}'
         open_it: Megnyitás
         other: Egyéb modelók
+        profile_requirements: 'Hogy ez az időszak rád vonatkozik-e, attól függ, mit
+          mond a profilod a következőkről:'
         refused: A Cadrumo nem hozta létre a bevallást.
         search_placeholder: Keresés
         show_all: Minden nyomtatvány, nem csak a rád vonatkozók
@@ -9679,6 +9693,7 @@ workspace:
       reach: Mit változtat meg
       reach_others: 'Továbbá:'
       reading: A magyarázat betöltése…
+      remove: Értéked eltávolítása
       retrieved: 'Lekérve: {date}'
       undo: Visszavonás
       uses_outside_many: 'A nyomtatványon kívül tárolt adatokat is felhasznál: {count}.'
@@ -9791,6 +9806,9 @@ workspace:
         meg a feltételezett értékeket (megerősítendő: {count}).'
       election:
         amendment: Helyesbítő bevallást nem fizethetsz két részletben.
+        carry_forward_only: Visszatérítést csak az év utolsó időszakában kérhetsz,
+          kivéve ha szerepelsz a havi visszatérítési nyilvántartásban (REDEME). Ez
+          az egyenleg helyette a következő időszakokban kerül beszámításra.
         filing_window_unknown: Ennek a bevallásnak nem ismert a benyújtási határideje,
           ezért a két részletben fizetés nem ajánlható fel.
         no_open_account: Egyik saját bankszámlád sincs nyitva. Adj hozzá egyet a saját
@@ -9801,6 +9819,9 @@ workspace:
         nothing_to_refund: Az eredmény nem visszatérítés, így ez nem vonatkozik rá.
         past_filing_window: A benyújtási határidő lejárt, a két részletben fizetéshez
           pedig azon belül kell benyújtanod a bevallást.
+        redeme_unstated: Add meg a profilodban, hogy szerepelsz-e a havi visszatérítési
+          nyilvántartásban (REDEME). Az év utolsó időszakán kívül a visszatérítés
+          ettől függ, ezért csak a beszámítás érhető el.
         result_unknown: 'Előbb számold ki a bevallást: az eredménye dönt erről.'
         second_instalment_nothing: Ez az összeg olyan kicsi, hogy a második részlet
           nulla lenne, ezért egy összegben fizetendő.
@@ -9955,6 +9976,8 @@ workspace:
       no_deadline_short: Nincs nyilvántartott határidő
       own_calculation: A Cadrumo számítása; az AEAT még nem látta.
       result:
+        carry_forward_only_help: Visszatérítést csak az év utolsó időszakában kérhetsz.
+          Ez a javadra szóló egyenleg a következő időszakokban kerül beszámításra.
         choice_pending: 'Beszámítás vagy visszatérítés: a fájl létrehozásakor választ'
         choice_pending_short: Beszámítás vagy visszatérítés
         direction_unknown_help: A Cadrumo még nem jelzi, hogy ez az összeg fizetendő
@@ -9967,6 +9990,11 @@ workspace:
         other_boxes: 'A nyomtatvány további eredményrovatai: {boxes}'
         out_of_date_until_applied: elavult, amíg nem alkalmazod
         provisional: ideiglenes
+        redeme_unstated: 'Még nincs eldöntve: a visszatérítéshez a REDEME-adatod kell'
+        redeme_unstated_help: Az év utolsó időszakán kívül a visszatérítés kéréséhez
+          szerepelned kell a havi visszatérítési nyilvántartásban (REDEME). A profilod
+          nem mondja meg, hogy szerepelsz-e, ezért csak a beszámítás érhető el. Add
+          meg a profilodban.
         sign_help: A(z) [{box}] rovat a hivatalos nyomtatványon {value} értéket mutat.
           A fejléc az összeget előjel nélkül mutatja, az irányt pedig szavakkal jelzi.
         to_carry_forward: Később beszámítható
@@ -10261,6 +10289,7 @@ workspace:
       lead: Ez nem akadályozza a fájlt. Azt mondja el, mit hagynak ki az elemeid értékcsökkenési
         leírásai, hogy eldönthesd, mit adj hozzá.
       title: Érdemes tudni a benyújtás előtt
+    open_invoice: A számla megnyitása
     operation:
       calculated: 'Kiszámítva. {direction}: {value}.'
       checked:
@@ -10414,6 +10443,7 @@ workspace:
         Az értéked marad érvényben, amíg vissza nem állítod a forrást.'
       effect:
         clear: érték nélkül marad
+        remove: már nem a te értékedet tartalmazza, hanem azt, amit a bevallás ad
         replaces_aeat_draft: felülírja az AEAT-adatokból származó értéket
         replaces_earlier_filings: felülírja egy korábbi bevallásból származó értéket
         replaces_fixed_by_design: felülírja a nyomtatvány által rögzített értéket
@@ -10514,6 +10544,7 @@ workspace:
       nothing_to_restore: Ez a rovat már a forrás értékét mutatja.
     staged:
       clear: (törlésre kerül)
+      remove: (az értéked törlődik)
       restore: (vissza a forráshoz)
     step:
       calculate: Számítás
@@ -10547,7 +10578,8 @@ workspace:
         lásd, mire.
       none: Ezen a nyomtatványon semmi sem vár rád.
       profile: 'Mielőtt ez az időszak kiszámítható lenne, a profilodnak meg kell válaszolnia:'
-      sources: 'Mielőtt ez a bevallás kiszámítható lenne, az általa összesített bevallásoknál ez hiányzik:'
+      sources: 'Mielőtt ez a bevallás kiszámítható lenne, az általa összesített bevallásoknál
+        ez hiányzik:'
       title: Teendők
     value:
       not_applicable: nem alkalmazható

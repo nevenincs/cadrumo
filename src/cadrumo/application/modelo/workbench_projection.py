@@ -36,6 +36,7 @@ from ...domain.calculations.registry.schema_form_layouts import (
     FormPageCondition,
     FormUnplacedReason,
 )
+from ...domain.iva.refund_eligibility import RefundEligibilityBasis, RefundEligibilityOutcome
 from ...domain.modelos.verification_report import VerificationCompletenessStatus
 from ..operations.public_mirror import (
     PublicScalarValueV1,
@@ -99,7 +100,7 @@ from .work_form_next_step import ModeloFormNextStep
 from .work_form_service import ModeloWorkFormLoadV1
 from .work_form_typing_effect import ModeloFormTypingEffect
 from .work_review import ModeloWorkProgress
-from .workbench_read import ModeloWorkbenchFormReadV1
+from .workbench_read import ModeloFormLedgerHold, ModeloWorkbenchFormReadV1
 
 
 class PublicModeloFormEarlierFiling(BaseModel):
@@ -142,6 +143,21 @@ class PublicModeloFormPrintedRate(BaseModel):
     literal: str
 
 
+class PublicRefundEligibility(BaseModel):
+    """Typed local-human view of RefundEligibility: whether the IVA refund may be asked for, and why.
+
+    ``legal_refs`` are the registry's declared references for the provisions the
+    outcome rests on. A frontend renders the header's words; this carries the
+    machine-readable outcome beside them so none of it is re-derived there.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    outcome: RefundEligibilityOutcome
+    basis: RefundEligibilityBasis
+    legal_refs: tuple[str, ...]
+
+
 class PublicModeloFormResult(BaseModel):
     """Typed local-human workbench view of ModeloFormResult; the value keeps its exact decimal text."""
 
@@ -153,6 +169,7 @@ class PublicModeloFormResult(BaseModel):
     direction: ModeloFormResultDirection
     disposition: ResultDisposition | None
     election_may_change: bool
+    refund_eligibility: PublicRefundEligibility | None
 
 
 class PublicModeloFormField(BaseModel):
@@ -197,6 +214,7 @@ class PublicModeloFormField(BaseModel):
     confirm_value: ModeloEditWireScalar
     takes_typed_value: bool
     clearable: bool
+    removable: bool
     own_value: ModeloEditWireScalar
     confirm_comparable: ModeloEditWireScalar
     state_digest: str
@@ -374,6 +392,7 @@ class PublicModeloWorkForm(BaseModel):
     answers: tuple[PublicModeloFormField, ...] = ()
     result_addresses: tuple[CasillaId, ...]
     withholding_credits: tuple[ModeloFormCredit, ...] = ()
+    withholding_credits_heading: str | None = None
     counts: ModeloFormCounts
     progress: ModeloWorkProgress
     operator_entries_known: bool
@@ -510,6 +529,8 @@ class ModeloWorkbenchFormProjectionV1(BaseModel):
     source_requirements: tuple[ReconciliationSourceRequirementV1, ...] = ()
     #: The recorded filing's AEAT receipt state; ``None`` when the declaration is not recorded as filed.
     receipt: ModeloFormReceipt | None = None
+    #: What in the ledger holds calculating this declaration, in words, with the movement to open.
+    ledger_hold: ModeloFormLedgerHold | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -604,6 +625,7 @@ def _restore(projection: ModeloWorkbenchFormProjectionV1) -> ModeloWorkbenchForm
         export_offer=_restore_export_offer(projection.export_offer),
         receipt=projection.receipt,
         profile_requirements=projection.profile_requirements,
+        ledger_hold=projection.ledger_hold,
         source_requirements=projection.source_requirements,
     )
 
@@ -656,6 +678,7 @@ def project_modelo_workbench_form(
         export_offer=_project_export_offer(read.export_offer),
         receipt=read.receipt,
         profile_requirements=read.profile_requirements,
+        ledger_hold=read.ledger_hold,
         source_requirements=read.source_requirements,
     )
     _require_projection_roundtrip(read, projection)

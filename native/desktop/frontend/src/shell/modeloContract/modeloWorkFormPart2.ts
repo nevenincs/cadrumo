@@ -8,8 +8,159 @@
 // is always present; a field of what the window sends may be left out where
 // the model gives it a default.
 
-import type { BindingSourceKind } from "./modelo";
+import type {
+  BindingSourceKind,
+  CasillaId,
+  OutputLanguage,
+  PublicPeriod,
+  VerificationCompletenessStatus,
+} from "./modelo";
 import type { SourceSurface } from "./modeloWork";
+import type {
+  FormLayoutSeedSource,
+  ModeloFormAeatData,
+  ModeloFormCalculationNote,
+  ModeloFormCarryAttestation,
+  ModeloFormCounts,
+  ModeloFormCredit,
+  ModeloFormDeadline,
+  ModeloFormEditClosure,
+  ModeloFormExport,
+  ModeloFormFiling,
+  ModeloFormInspectionReason,
+  ModeloFormLayoutProvenance,
+  ModeloFormOutlineGroup,
+  ModeloFormSourceGroup,
+  ModeloFormYearProjection,
+  ModeloWorkProgress,
+  OperationNextStepV1,
+  PublicModeloFormField,
+  PublicModeloFormIssue,
+  PublicModeloFormPage,
+  PublicModeloFormResult,
+  PublicModeloFormUnplacedField,
+} from "./modeloWorkForm";
+
+/**
+ * Typed local-human workbench view of ModeloWorkForm.
+ */
+export type PublicModeloWorkForm = {
+  modelo: string;
+  filing_year: number;
+  period: PublicPeriod;
+  registry_revision_id: string;
+  year_projection: ModeloFormYearProjection;
+  work_unit_id: string;
+  calculation_revision_id: string | null;
+  language: OutputLanguage;
+  layout_provenance: ModeloFormLayoutProvenance;
+  inspection_reason: ModeloFormInspectionReason | null;
+  seed_source: FormLayoutSeedSource | null;
+  pages: PublicModeloFormPage[];
+  outline: ModeloFormOutlineGroup[];
+  working_figures: PublicModeloFormField[];
+  unplaced: PublicModeloFormUnplacedField[];
+  answers: PublicModeloFormField[];
+  result_addresses: CasillaId[];
+  withholding_credits: ModeloFormCredit[];
+  withholding_credits_heading: string | null;
+  counts: ModeloFormCounts;
+  progress: ModeloWorkProgress;
+  operator_entries_known: boolean;
+  edit_admitted: boolean;
+  verification: VerificationCompletenessStatus | null;
+  issues: PublicModeloFormIssue[];
+  calculation_notes: ModeloFormCalculationNote[];
+  calculation_notes_held: boolean;
+  source_groups: ModeloFormSourceGroup[];
+  result: PublicModeloFormResult | null;
+  deadline: ModeloFormDeadline | null;
+  aeat_data: ModeloFormAeatData | null;
+  projectable: boolean;
+  asks_imputation_election: boolean;
+  compares_taxation: boolean;
+  compares_borrador: boolean;
+  offers_iva_wallet: boolean;
+  filing: ModeloFormFiling | null;
+  last_export: ModeloFormExport | null;
+  edit_closure: ModeloFormEditClosure | null;
+  carry_attestations: ModeloFormCarryAttestation[];
+  modelo_title: string | null;
+  modelo_name: string | null;
+  modelo_number: string | null;
+  period_words: string | null;
+};
+
+/**
+ * Typed local-human workbench view of ModeloWorkFormLoadV1.
+ */
+export type PublicModeloWorkFormLoadV1 = {
+  form: PublicModeloWorkForm;
+  verified: boolean;
+  filed: boolean;
+};
+
+/**
+ * Typed local-human view of RefundEligibility: whether the IVA refund may be
+ * asked for, and why.
+ *
+ * `legal_refs` are the registry's declared references for the provisions the
+ * outcome rests on. A frontend renders the header's words; this carries the
+ * machine-readable outcome beside them so none of it is re-derived there.
+ */
+export type PublicRefundEligibility = {
+  outcome: RefundEligibilityOutcome;
+  basis: RefundEligibilityBasis;
+  legal_refs: string[];
+};
+
+/**
+ * Preserve scalar kind and decimal precision across the public schema.
+ */
+export type PublicScalarValueV1 = {
+  kind: "string" | "integer" | "boolean" | "decimal" | "date" | "null";
+  text: string;
+};
+
+/**
+ * Typed local-human workbench view of the governed SpanishTaxIdFormat.
+ */
+export type PublicSpanishTaxIdFormat = {
+  width: number;
+  country_prefix: string;
+  country_prefixed_width: number;
+  country_prefix_strip_width: number;
+  prefixed_nif_leaders: string;
+  nie_leaders: string;
+  cif_leaders: string;
+  nif_letters: string;
+  nif_check_modulus: number;
+  nie_prefix_substitutions: [string, string][];
+  cif_digit_only_kinds: string;
+  cif_letter_only_kinds: string;
+  cif_letter_table: string;
+};
+
+/**
+ * One source declaration the to-do list names before the summary can be worked
+ * out, and its door.
+ */
+export type ReconciliationSourceRequirementV1 = {
+  words: string;
+  next_step: OperationNextStepV1;
+};
+
+/**
+ * Which fact settled the outcome.
+ */
+export type RefundEligibilityBasis =
+  "final_period" | "redeme" | "non_final_period";
+
+/**
+ * What may be done with a negative Modelo 303 result in one period.
+ */
+export type RefundEligibilityOutcome =
+  "refund_allowed" | "carry_forward_only" | "undetermined_redeme_unstated";
 
 /**
  * How far one modelo registry revision's declared authority reaches.

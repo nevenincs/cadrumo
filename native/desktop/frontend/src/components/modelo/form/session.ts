@@ -22,8 +22,8 @@ import type {
   ModeloWorkbenchFormProjectionV1,
   PublicModeloFormField,
   ModeloFormCarryAttestation,
-  PublicModeloWorkForm,
 } from "../../../shell/modeloContract/modeloWorkForm";
+import type { PublicModeloWorkForm } from "../../../shell/modeloContract/modeloWorkFormPart2";
 import { takesEntry } from "./entryField";
 
 // The form's working state: the edits staged on it and the box chosen. It
@@ -67,7 +67,8 @@ type SetValue = {
 };
 
 /** One staged edit as the edit contract names it: a box takes a typed
- * value, a clear or a restore; a binding that feeds a box takes an override
+ * value, a clear, a restore, or the removal of the filer's own entry or
+ * clear on a box no source feeds; a binding that feeds a box takes an override
  * or its removal, or, for a carry from an earlier filing, the filer's
  * statement that it holds no amount, said in the words the form served for
  * that statement. `change` is the kind of change the filer made, as a
@@ -76,7 +77,7 @@ type SetValue = {
 export type StagedIntent =
   | ({ kind: "set_typed_value" } & SetValue)
   | { kind: "clear_declared_value"; change: "clear" }
-  | { kind: "restore_source_value"; change: "restore" }
+  | { kind: "restore_source_value"; change: "restore" | "remove" }
   | ({ kind: "set_override_value" } & SetValue)
   | {
       kind: "remove_override";
@@ -170,6 +171,17 @@ export function restoreIntent(
   return atBinding(field)
     ? { kind: "remove_override", change: "restore" }
     : { kind: "restore_source_value", change: "restore" };
+}
+
+/** The intent that takes the filer's own entry or clear out of a box no
+ * source feeds, so it holds what the declaration gives without it, or null
+ * where the box offers none. */
+export function removeIntent(
+  field: PublicModeloFormField,
+): StagedIntent | null {
+  return field.removable
+    ? { kind: "restore_source_value", change: "remove" }
+    : null;
 }
 
 /** The intent that confirms an assumed value as the filer's own, or null
@@ -376,6 +388,7 @@ export function restaged(
   }
   if (intent.change === "clear")
     return field.clearable ? clearIntent(field) : null;
+  if (intent.change === "remove") return removeIntent(field);
   return restoreIntent(field);
 }
 

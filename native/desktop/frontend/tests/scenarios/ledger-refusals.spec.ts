@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { showLedgerColumn } from "../support/ledgerPage";
+import { captureUnrecordedQuestions } from "../support/stagedCheckCapture";
 import { label } from "../support/strings";
 
 // What the Ledger says when a staged change cannot be saved. Each refusal
@@ -9,6 +10,7 @@ import { label } from "../support/strings";
 // the grid holds now, never what it held before a save.
 
 async function openLedger(target: Page, extra = "") {
+  await captureUnrecordedQuestions(target);
   await target.goto(
     `/scenarios.html?scenario=ledger&latency=0&bar=off${extra}`,
   );
@@ -65,7 +67,7 @@ async function usePreset(target: Page, preset: string) {
     .click();
   await target
     .locator(".ledger-columns")
-    .getByRole("button", {
+    .getByRole("radio", {
       name: label(`desktop.ledger.columns.preset.${preset}`),
       exact: true,
     })
@@ -78,11 +80,18 @@ test("an amount typed with a sign is refused for its sign, not reported as a mis
 }) => {
   await openLedger(target);
   await find(target, "bazar el faro");
-  const row = rowOf(target, "BAZAR EL FARO");
+  // The fixture draws several Bazar El Faro purchases; the first will do.
+  const row = rowOf(target, "BAZAR EL FARO").first();
   // The movement already goes out; the sign repeats what the direction says.
-  await typeInto(target, cellOf(row, "amount"), "-50,00");
-  // The cell keeps what was typed, marked as refused.
-  await expect(cellOf(row, "amount")).toContainText("-50,00");
+  await cellOf(row, "amount").click();
+  await target.keyboard.press("Enter");
+  await editor(target).fill("-50,00");
+  await target.keyboard.press("Enter");
+  // The editor keeps what was typed, marked as refused, and the value is
+  // staged so the review can say why.
+  await expect(editor(target)).toHaveAttribute("aria-invalid", "true");
+  await expect(editor(target)).toHaveValue("-50,00");
+  await target.keyboard.press("Escape");
 
   await openReview(target);
   const blocker = review(target).locator("[data-blocker=amount_signed]");

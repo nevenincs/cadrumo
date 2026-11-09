@@ -1,0 +1,212 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.6.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-09 13:17+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:1
+msgid "Sign in to an AI provider by hand"
+msgstr "Inicia la sessió en un proveïdor d'IA a mà"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:3
+msgid ""
+"Cadrumo signs in to an AI provider (Claude, Codex or Antigravity) from "
+"the desktop application, under Ajustes > Proveedores de IA. When that "
+"sign-in fails, it names this guide. The command below does the same sign-"
+"in from a console, with the provider's own login in your terminal. You "
+"sign in once; the application finds the result the next time it reads the"
+" provider's status."
+msgstr ""
+"Cadrumo inicia la sessió en un proveïdor d'IA (Claude, Codex o "
+"Antigravity) des de l'aplicació d'escriptori, a Ajustes > Proveedores de "
+"IA. Quan aquest inici de sessió falla, remet a aquesta guia. L'ordre de "
+"sota fa el mateix inici de sessió des d'una consola, amb l'inici de "
+"sessió del mateix proveïdor al teu terminal. Inicies la sessió una "
+"vegada; l'aplicació troba el resultat la propera vegada que llegeix "
+"l'estat del proveïdor."
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:9
+msgid "Before you start"
+msgstr "Abans de començar"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:11
+msgid "You need:"
+msgstr "Necessites:"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:13
+msgid ""
+"A profile that has already been opened in Cadrumo, so the application has"
+" started its agent for it. The command refuses a profile whose agent has "
+"never started."
+msgstr ""
+"Un perfil que ja s'hagi obert a Cadrumo, perquè l'aplicació n'hagi "
+"iniciat l'agent. L'ordre rebutja un perfil l'agent del qual no s'ha "
+"iniciat mai."
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:16
+msgid ""
+"The desktop application's sign-in dialog closed. The dialog and this "
+"command share one sign-in at a time, and the command refuses while the "
+"dialog is open."
+msgstr ""
+"El diàleg d'inici de sessió de l'aplicació d'escriptori tancat. El diàleg"
+" i aquesta ordre comparteixen un sol inici de sessió alhora, i l'ordre es"
+" nega mentre el diàleg és obert."
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:18
+msgid ""
+"An installed Cadrumo package. A source checkout has no bundled agent, so "
+"the command refuses there."
+msgstr ""
+"Un paquet de Cadrumo instal·lat. Una còpia del codi font no porta l'agent"
+" inclòs, així que l'ordre s'hi nega."
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:20
+msgid ""
+"A storage folder outside any Git project. The provider's login refuses a "
+"folder inside one."
+msgstr ""
+"Una carpeta d'emmagatzematge fora de qualsevol projecte Git. L'inici de "
+"sessió del proveïdor rebutja una carpeta que sigui dins d'un."
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:23
+msgid ""
+"The command runs against the profile you have selected in Cadrumo. Pass "
+"`--profile` with a profile's UUID or exact label to use another."
+msgstr ""
+"L'ordre s'executa sobre el perfil que tens seleccionat a Cadrumo. Passa "
+"`--profile` amb l'UUID o l'etiqueta exacta d'un perfil per fer-ne servir "
+"un altre."
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:26
+msgid "Sign in"
+msgstr "Inicia la sessió"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:28
+msgid "Run the command for your provider:"
+msgstr "Executa l'ordre del teu proveïdor:"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:36
+msgid ""
+"Codex also offers a device-code sign-in, for a machine where the browser "
+"cannot open a local address:"
+msgstr ""
+"Codex també ofereix un inici de sessió amb codi de dispositiu, per a un "
+"equip on el navegador no pot obrir una adreça local:"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:43
+msgid ""
+"The provider's own login takes over the terminal. It may open your "
+"browser or print a code and an address to enter on another device. Follow"
+" its prompts there. Cadrumo does not read, store or log what the provider"
+" prints."
+msgstr ""
+"L'inici de sessió del mateix proveïdor pren el control del terminal. Pot "
+"obrir el teu navegador o mostrar un codi i una adreça per introduir en un"
+" altre dispositiu. Segueix-hi les seves indicacions. Cadrumo no llegeix, "
+"no desa ni registra el que mostra el proveïdor."
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:47
+msgid "What success looks like"
+msgstr "Com és un resultat correcte"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:49
+msgid ""
+"When the provider's login ends, Cadrumo checks the result and prints one "
+"line, `<provider> sign-in status: signed in`, then the command exits with"
+" status 0. A line that says `signed out` or `unknown`, with its cause, "
+"means the sign-in did not complete; the command then exits with a non-"
+"zero status. Run it again after fixing the cause."
+msgstr ""
+"Quan acaba l'inici de sessió del proveïdor, Cadrumo comprova el resultat "
+"i mostra una línia, `<provider> sign-in status: signed in`, i l'ordre "
+"acaba amb l'estat 0. Una línia que diu `signed out` o `unknown`, amb la "
+"seva causa, vol dir que l'inici de sessió no s'ha completat; aleshores "
+"l'ordre acaba amb un estat diferent de zero. Torna-la a executar després "
+"de corregir la causa."
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:55
+msgid ""
+"Reopen the provider settings in Cadrumo. The application reads the sign-"
+"in on its next status read and shows the provider as signed in."
+msgstr ""
+"Torna a obrir la configuració del proveïdor a Cadrumo. L'aplicació "
+"llegeix l'inici de sessió en la seva propera lectura d'estat i mostra el "
+"proveïdor amb la sessió iniciada."
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:58
+msgid "Refusals"
+msgstr "Rebutjos"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:60
+msgid "The command stops before it runs the provider's login, and says why, when:"
+msgstr ""
+"L'ordre s'atura abans d'executar l'inici de sessió del proveïdor, i diu "
+"per què, quan:"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:62
+msgid ""
+"the provider is not `claude`, `codex` or `antigravity`, or `--device` is "
+"used with a provider other than `codex`;"
+msgstr ""
+"el proveïdor no és `claude`, `codex` ni `antigravity`, o es fa servir "
+"`--device` amb un proveïdor diferent de `codex`;"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:64
+msgid "no profile is selected and `--profile` is not given;"
+msgstr "no hi ha cap perfil seleccionat i no s'indica `--profile`;"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:65
+msgid ""
+"the profile's agent has not started yet: open Cadrumo with that profile "
+"selected, then run the command again;"
+msgstr ""
+"l'agent del perfil encara no s'ha iniciat: obre Cadrumo amb aquest perfil"
+" seleccionat i torna a executar l'ordre;"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:67
+msgid ""
+"the agent folder sits inside a Git project: point `CADRUMO_STORAGE_ROOT` "
+"at a folder outside any Git project;"
+msgstr ""
+"la carpeta de l'agent és dins d'un projecte Git: apunta "
+"`CADRUMO_STORAGE_ROOT` a una carpeta fora de qualsevol projecte Git;"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:69
+msgid "the installation has no bundled agent;"
+msgstr "la instal·lació no porta l'agent inclòs;"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:70
+msgid ""
+"the application's sign-in dialog is still open: close it and run the "
+"command again."
+msgstr ""
+"el diàleg d'inici de sessió de l'aplicació encara és obert: tanca'l i "
+"torna a executar l'ordre."
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:73
+msgid "See also"
+msgstr "Vegeu també"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:75
+msgid "[Diagnose and repair your local setup](troubleshooting.md)"
+msgstr "[Diagnostica i repara la teva configuració local](troubleshooting.md)"
+
+#: ../../how-to/sign-in-to-an-ai-provider-by-hand.md:76
+msgid "[Environment overrides](../reference/environment-overrides.md)"
+msgstr "[Substitucions d'entorn](../reference/environment-overrides.md)"

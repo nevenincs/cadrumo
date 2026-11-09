@@ -125,6 +125,7 @@ _LOCAL_READS: Final = (
     "modelo.bindings.resolve",
     "modelo.bindings.resolve.typed",
     "modelo.declarations.list",
+    "modelo.declarations.search",
     "modelo.filing_record.list",
     "modelo.filing_record.view",
     "modelo.history",
@@ -230,6 +231,7 @@ _LOCAL_WRITES: Final = (
     "ledger.inventory.retire",
     # The preview records valuation events despite its name.
     "ledger.inventory.valuation.preview",
+    "ledger.invoice.attach_document",
     "ledger.invoice.remove",
     "ledger.invoice.update",
     "ledger.link",

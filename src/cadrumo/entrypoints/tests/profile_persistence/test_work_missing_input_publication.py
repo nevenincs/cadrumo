@@ -58,6 +58,8 @@ def work_missing_input_publication_profile() -> None:
                 *RENTA_UNMARRIED_TAXPAYER_FACTS,
                 UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
                 UserProfileFact(path="withholding.colegio_concertado", value=False),
+                # Modelo 123 is filed by whoever pays capital income subject to retención (RIRPF art. 108.1).
+                UserProfileFact(path="withholding.pays_capital_income_with_retencion", value=True),
             )
         ),
         created_at=_CLOCK,

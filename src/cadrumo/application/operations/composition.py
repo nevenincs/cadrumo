@@ -160,6 +160,7 @@ class OperationComposedServices:
     _drain: Callable[[timedelta], Awaitable[OperationDrainResult]]
     _inventory: Callable[[OperationId | None, OperationInventoryLimit], Awaitable[OperationRecoveryInventoryPage]]
     _ephemeral: OperationEphemeralRouting | None
+    _session_reads_end: Callable[[], None] | None = None
 
     def discard_review_actor(self, operation_id: OperationId) -> None:
         """Discard process-local review authority after terminal settlement or retirement."""
@@ -177,12 +178,18 @@ class OperationComposedServices:
         if self._ephemeral is not None:
             self._ephemeral.forget_settled_ephemeral()
 
+    def end_session_reads(self) -> None:
+        """Drop what reads kept for reuse once a session ends, so none outlives a lock, sign-out or lapse."""
+        if self._session_reads_end is not None:
+            self._session_reads_end()
+
     async def shutdown(self) -> OperationDrainResult:
         """Close within the default bound and report remaining ownership."""
         try:
             return await self._shutdown()
         finally:
             self.result.forget_snapshot()
+            self.end_session_reads()
 
     async def drain(self, timeout: timedelta) -> OperationDrainResult:
         """Fence admissions and return unresolved ownership within one deadline."""
@@ -190,6 +197,7 @@ class OperationComposedServices:
             return await self._drain(timeout)
         finally:
             self.result.forget_snapshot()
+            self.end_session_reads()
 
     async def recovery_inventory(
         self, *, after: OperationId | None, limit: OperationInventoryLimit
@@ -251,6 +259,7 @@ def compose_operation_services(
     typed_financial_operand_custody: OperationTypedFinancialOperandCustodyRepository | None = None,
     execution_authority: OperationExecutionAuthority | None = None,
     ephemeral: OperationEphemeralRouting | None = None,
+    session_reads_end: Callable[[], None] | None = None,
 ) -> OperationComposedServices:
     """Bind one immutable registry to real runtime adapters and safe services.
 
@@ -258,7 +267,9 @@ def compose_operation_services(
     definition that declares transient financial operands needs it. The
     supervisor refuses to construct when such a definition is present without
     it, so omitting it stays a refusal rather than a silently operand-less
-    supervisor.
+    supervisor. ``session_reads_end`` drops what reads keep for reuse; the
+    services call it when the host reports a session's end and when they
+    drain or shut down.
     """
     public_contracts = registry.public_contract_set
     authority_broker = OperationResponseAuthorityBroker()
@@ -329,6 +340,7 @@ def compose_operation_services(
         _drain=drain,
         _inventory=inventory,
         _ephemeral=ephemeral,
+        _session_reads_end=session_reads_end,
     )
 
 

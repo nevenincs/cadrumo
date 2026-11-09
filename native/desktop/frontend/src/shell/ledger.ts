@@ -36,6 +36,8 @@ import type {
 import type {
   InvoiceAddRequest,
   InvoiceAddResult,
+  InvoiceDocumentAttachRequest,
+  InvoiceDocumentAttachResult,
   InvoiceImportRequest,
   InvoiceImportResult,
   InvoiceListRequest,
@@ -261,6 +263,7 @@ export const LEDGER_DEFINITIONS = [
   "ledger.inventory.retire",
   "ledger.inventory.valuation.preview",
   "ledger.invoice.add",
+  "ledger.invoice.attach_document",
   "ledger.invoice.duplicate",
   "ledger.invoice.import",
   "ledger.invoice.list",
@@ -455,12 +458,28 @@ export type LedgerNextStep =
   | { kind: "complete_profile_setup"; words: string }
   /** Opens one ledger movement in the Libro, where the fact the refusal
    * names is recorded. */
-  | { kind: "open_movement"; transaction_id: string; words: string };
+  | { kind: "open_movement"; transaction_id: string; words: string }
+  /** Opens the IVA balance of the declaration named here, at the entry that
+   * records the opening balance its carry reads. */
+  | {
+      kind: "open_iva_wallet_opening_balance";
+      modelo: string;
+      filing_year: number;
+      period_code: string;
+      words: string;
+    };
 
 /** The steps the profile page answers, the two a readiness refusal serves. */
 export type LedgerProfileStep = Extract<
   LedgerNextStep,
   { kind: "open_profile_field" } | { kind: "complete_profile_setup" }
+>;
+
+/** The step a declaration's IVA balance answers, naming the declaration whose
+ * opening balance is missing. */
+export type LedgerIvaWalletStep = Extract<
+  LedgerNextStep,
+  { kind: "open_iva_wallet_opening_balance" }
 >;
 
 /** The step the Libro answers, naming one movement. */
@@ -507,6 +526,20 @@ export function servedNextStep(detail: unknown): LedgerNextStep | null {
     return modelo !== null && period !== null && typeof year === "number"
       ? {
           kind: "create_work",
+          modelo,
+          filing_year: year,
+          period_code: period,
+          words,
+        }
+      : null;
+  }
+  if (served.kind === "open_iva_wallet_opening_balance") {
+    const modelo = text("modelo");
+    const period = text("period_code");
+    const year = served.filing_year;
+    return modelo !== null && period !== null && typeof year === "number"
+      ? {
+          kind: "open_iva_wallet_opening_balance",
           modelo,
           filing_year: year,
           period_code: period,
@@ -968,6 +1001,7 @@ export interface LedgerRequests {
   "ledger.staged.check": LedgerStagedCheckRequest;
   "ledger.invoice.update": InvoiceUpdateRequest;
   "ledger.invoice.remove": InvoiceRemoveRequest;
+  "ledger.invoice.attach_document": InvoiceDocumentAttachRequest;
   "ledger.status": LedgerStatusRequest;
   "ledger.preflight": LedgerPreflightRequest;
   "ledger.import": LedgerImportRequest;
@@ -1085,6 +1119,7 @@ export interface LedgerResults {
   "ledger.staged.check": LedgerStagedCheckResult;
   "ledger.invoice.update": InvoiceUpdateResult;
   "ledger.invoice.remove": InvoiceRemoveResult;
+  "ledger.invoice.attach_document": InvoiceDocumentAttachResult;
   "ledger.status": LedgerStatusResult;
   "ledger.preflight": LedgerPreflightResult;
   "ledger.import": LedgerImportResult;

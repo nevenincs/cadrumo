@@ -118,29 +118,35 @@ async def read_censal_history(
     )
 
 
-async def recheck_censal_history(
+async def refresh_censal_history(
     profile_id: UUID,
     prior: CensalHistoryRead,
     *,
     journal: CensalHistoryJournal,
     operands: OperationSecureReferenceStore,
-) -> CensalObservation | None:
-    """Answer the census lookup again, reading only the records that could change ``prior``'s answer.
+) -> CensalHistoryRead:
+    """Bring ``prior`` up to date as a full read would now, reading only the records that could change it.
 
     A record's definition and subject are fixed at creation and operation
     identifiers are never reused, so a record ``prior`` classified as another
     definition cannot become a census capture. The answer can change only
     through a census record ``prior`` saw (it settled, or it is gone) or a
-    record created since; this reads exactly those, and returns what a full
-    read would return now. Unlike a full read it does not re-read records
+    record created since; this reads exactly those. The records it names are
+    the ones a full read would name now: every present record, and among them
+    every census record. Unlike a full read it does not re-read records
     already known to belong to other definitions, so one of those becoming
     unreadable afterwards is not reported here.
     """
     subjects = _census_subjects(profile_id)
     delta = await journal.inventory_delta(known=prior.classified)
-    candidates = prior.census_operations & delta.present
-    created = (entry.operation_id for entry in delta.entries if _is_census_record(entry, subjects))
-    return await _latest_observation(sorted({*candidates, *created}), profile_id, subjects, journal, operands)
+    created = frozenset(entry.operation_id for entry in delta.entries)
+    created_census = frozenset(entry.operation_id for entry in delta.entries if _is_census_record(entry, subjects))
+    census_operations = (prior.census_operations & delta.present) | created_census
+    return CensalHistoryRead(
+        observation=await _latest_observation(sorted(census_operations), profile_id, subjects, journal, operands),
+        classified=(prior.classified & delta.present) | created,
+        census_operations=census_operations,
+    )
 
 
 async def _latest_observation(

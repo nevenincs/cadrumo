@@ -26,10 +26,14 @@ from cadrumo.adapters.persistence.profile.catalogue_reads import (
     InvoiceCatalogueReadAdapter,
     TransactionCatalogueReadAdapter,
 )
+from cadrumo.adapters.persistence.profile.counterparty_establishment import CounterpartyEstablishmentRepository
 from cadrumo.adapters.persistence.profile.credit_resolution_records import CreditResolutionRepositoryAdapter
 from cadrumo.adapters.persistence.profile.foreign_assets import ForeignAssetRegisterRepository
 from cadrumo.adapters.persistence.profile.inventory import InventoryLedgerRepository
-from cadrumo.adapters.persistence.profile.invoice_source_resolver import InvoiceCatalogueSourceResolverAdapter
+from cadrumo.adapters.persistence.profile.invoice_source_resolver import (
+    CounterpartyProvinciaAdapter,
+    InvoiceCatalogueSourceResolverAdapter,
+)
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -243,6 +247,9 @@ def calculation_ports_for_test(
             observation_repository=CalculationObservationRepository(objects=objects),
             invoice_source_ports=InvoiceSourceResolverPorts(
                 catalogue_reader=InvoiceCatalogueSourceResolverAdapter(repository=resolved_invoice_repository),
+                counterparty_provincias=CounterpartyProvinciaAdapter(
+                    repository=CounterpartyEstablishmentRepository(bucket_id=normalized_bucket_id, objects=objects),
+                ),
             ),
             percepciones_observation_ports=PercepcionObservationPorts(
                 repository=PercepcionObservationRepositoryAdapter(objects=objects),

@@ -61,11 +61,12 @@ from ..ledger.usage_ratio_repository import UsageRatioProfileLoader
 from ..operations.error_detail import served_words_language
 from ..operations.next_step import OperationNextStepWording, OperationOpenMovementStepV1
 from ..user_profile.projections import record_to_path_values
-from .action_errors import ModeloAggregationBindingError, ModeloLedgerPreflightBlockedError
+from .action_errors import ModeloAggregationInputConflictError, ModeloLedgerPreflightBlockedError
 from .calculation_helpers import load_work_unit_for_calculation, resolve_registry_snapshot_for_work_unit
 from .calculation_resolution import ResolvedCalculationChannels, resolve_calculation_binding_channels
 from .iva_wallet_gate import (
     apply_iva_compensation_decision_binding,
+    iva_wallet_door,
     resolve_iva_compensation_decision_for_calculation,
 )
 from .iva_wallet_values import taxpayer_nif_from_path_values
@@ -223,38 +224,39 @@ def prepare_calculation(
         backend_casilla_inputs=backend_casilla_inputs,
         transaction_repository=ledger_preflight_transaction_repository,
     )
-    iva_compensation_decision = resolve_iva_compensation_decision_for_calculation(
-        work_unit,
-        evaluated_at=evaluated_at,
-        snapshot=snapshot,
-        supplied_decision=iva_compensation_decision,
-        observation_repository=observation_repository,
-        repository=iva_compensation_decision_repository,
-        history_repository=iva_compensation_history_repository,
-        binding_values=binding_values,
-        backend_binding_values=backend_binding_values,
-        casilla_inputs=casilla_inputs,
-        backend_casilla_inputs=backend_casilla_inputs,
-        operation=operation,
-        profile_values=profile_values,
-    )
     period_date = filing_period_date or calculation_filing_date(work_unit.period)
     caller_binding_values = dict(binding_values or {})
     caller_enum_binding_values = dict(enum_binding_values or {})
     lower_precedence_binding_values = dict(backend_binding_values or {})
-    _apply_iva_compensation_decision_binding(
-        work_unit.modelo,
-        work_unit.filing_year,
-        work_unit.period,
-        bucket_id=work_unit.bucket_id,
-        revision=snapshot.revision,
-        taxpayer_nif=taxpayer_nif_from_path_values(profile_values),
-        casilla_inputs=casilla_inputs,
-        backend_casilla_inputs=backend_casilla_inputs,
-        caller_binding_values=caller_binding_values,
-        backend_binding_values=lower_precedence_binding_values,
-        decision=iva_compensation_decision,
-    )
+    with iva_wallet_door(work_unit.work_unit_id):
+        iva_compensation_decision = resolve_iva_compensation_decision_for_calculation(
+            work_unit,
+            evaluated_at=evaluated_at,
+            snapshot=snapshot,
+            supplied_decision=iva_compensation_decision,
+            observation_repository=observation_repository,
+            repository=iva_compensation_decision_repository,
+            history_repository=iva_compensation_history_repository,
+            binding_values=binding_values,
+            backend_binding_values=backend_binding_values,
+            casilla_inputs=casilla_inputs,
+            backend_casilla_inputs=backend_casilla_inputs,
+            operation=operation,
+            profile_values=profile_values,
+        )
+        _apply_iva_compensation_decision_binding(
+            work_unit.modelo,
+            work_unit.filing_year,
+            work_unit.period,
+            bucket_id=work_unit.bucket_id,
+            revision=snapshot.revision,
+            taxpayer_nif=taxpayer_nif_from_path_values(profile_values),
+            casilla_inputs=casilla_inputs,
+            backend_casilla_inputs=backend_casilla_inputs,
+            caller_binding_values=caller_binding_values,
+            backend_binding_values=lower_precedence_binding_values,
+            decision=iva_compensation_decision,
+        )
     channels = resolve_calculation_binding_channels(
         work_unit=work_unit,
         snapshot=snapshot,
@@ -359,6 +361,7 @@ _IVA_ONLY_PREFLIGHT_REASONS = frozenset(
         "movement_invoice_double_count",
         "invoice_cash_accounting_regime_unmodelled",
         "linked_movement_contradicts_invoice",
+        "invoice_recargo_split_unresolved",
     },
 )
 _M200_ACCOUNTING_RESULT_CASILLA: CasillaId = "DP200012:00501"
@@ -404,6 +407,99 @@ def open_movement_step(transaction_id: str) -> OperationNextStepWording:
 _OPEN_MOVEMENT_LOCALE_KEY = "application.modelo.projection_words.next_step.open_movement"
 
 
+@dataclass(frozen=True, slots=True)
+class LedgerPreflightHold:
+    """The first ledger-readiness issue that holds a revision's calculation, with its served words.
+
+    ``movement`` is the movement the issue names, ``None`` for an issue about
+    the whole period; ``context`` carries the words the refusal and the to-do
+    line are rendered with, in the language they were asked in.
+    """
+
+    reason: str
+    issue_transaction_id: str
+    movement: Transaction | None
+    context: Mapping[str, str]
+
+
+def ledger_preflight_hold(
+    *,
+    work_unit: WorkUnit,
+    revision: ModeloRevision,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    invoice_reader: InvoiceCatalogueReader,
+    usage_ratio_profile_loader: UsageRatioProfileLoader,
+    operation: PinnedAuthorityOperation,
+    profile_values: Mapping[str, str],
+    language: OutputLanguage,
+) -> LedgerPreflightHold | None:
+    """The ledger issue that holds this revision's calculation, or ``None`` when its ledger is ready.
+
+    Calculation refuses on it and the workbench's to-do list names it, so the
+    person is told before calculating exactly what calculating would refuse.
+    """
+    ledger_preflight_sources = frozenset(
+        str(binding.source) for binding in revision.bindings if binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES
+    )
+    if not ledger_preflight_sources:
+        return None
+    iva_regime = _iva_regime_from_path_values(profile_values)
+    if iva_regime is not None and iva_regime == iva_regime_simplificado_token():
+        return None
+    from ..ledger.preflight import preflight_ledger_tax_readiness
+
+    report = preflight_ledger_tax_readiness(
+        bucket_id=work_unit.bucket_id,
+        period=work_unit.period,
+        transaction_repository=transaction_repository,
+        usage_ratio_profile_loader=usage_ratio_profile_loader,
+        invoice_reader=invoice_reader,
+        operation=operation,
+    )
+    if report.ready:
+        return None
+    first_issue = next(
+        (
+            issue
+            for issue in report.issues
+            if _preflight_issue_blocks_revision(
+                reason=str(issue.reason.value),
+                ledger_preflight_sources=ledger_preflight_sources,
+            )
+        ),
+        None,
+    )
+    if first_issue is None:
+        return None
+    movement = (
+        None
+        if first_issue.transaction_id == "__period__"
+        else transaction_repository.load_by_ids({first_issue.transaction_id}).get(first_issue.transaction_id)
+    )
+    context = {
+        "need": tr(f"{_LEDGER_PREFLIGHT_NEED_KEY}.{first_issue.reason.value}", locale=language.value),
+        "period": period_words(report.period, language),
+    }
+    if movement is not None:
+        context.update(_movement_words(movement, language))
+    return LedgerPreflightHold(
+        reason=first_issue.reason.value,
+        issue_transaction_id=first_issue.transaction_id,
+        movement=movement,
+        context=context,
+    )
+
+
+def ledger_hold_words(hold: LedgerPreflightHold, language: OutputLanguage) -> str:
+    """The to-do line for a ledger hold: what to put right before the period can be calculated."""
+    key = (
+        "application.modelo.projection_words.ledger_hold.period"
+        if hold.movement is None
+        else "application.modelo.projection_words.ledger_hold.movement"
+    )
+    return tr(key, locale=language.value, **hold.context)
+
+
 def raise_if_ledger_preflight_blocks_calculation(
     *,
     work_unit: WorkUnit,
@@ -427,57 +523,26 @@ def raise_if_ledger_preflight_blocks_calculation(
 
     ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
-    ledger_preflight_sources = frozenset(
-        str(binding.source) for binding in revision.bindings if binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES
-    )
-    if not ledger_preflight_sources:
-        return
-    iva_regime = _iva_regime_from_path_values(profile_values)
-    if iva_regime is not None and iva_regime == iva_regime_simplificado_token():
-        return
-    from ..ledger.preflight import preflight_ledger_tax_readiness
-
-    report = preflight_ledger_tax_readiness(
-        bucket_id=work_unit.bucket_id,
-        period=work_unit.period,
+    hold = ledger_preflight_hold(
+        work_unit=work_unit,
+        revision=revision,
         transaction_repository=transaction_repository,
-        usage_ratio_profile_loader=usage_ratio_profile_loader,
         invoice_reader=invoice_reader,
+        usage_ratio_profile_loader=usage_ratio_profile_loader,
         operation=operation,
+        profile_values=profile_values,
+        language=served_words_language(),
     )
-    if report.ready:
+    if hold is None:
         return
-    blocking_issues = tuple(
-        issue
-        for issue in report.issues
-        if _preflight_issue_blocks_revision(
-            reason=str(issue.reason.value),
-            ledger_preflight_sources=ledger_preflight_sources,
-        )
-    )
-    if not blocking_issues:
-        return
-    first_issue = blocking_issues[0]
-    language = served_words_language()
-    movement = (
-        None
-        if first_issue.transaction_id == "__period__"
-        else transaction_repository.load_by_ids({first_issue.transaction_id}).get(first_issue.transaction_id)
-    )
-    context = {
-        "need": tr(f"{_LEDGER_PREFLIGHT_NEED_KEY}.{first_issue.reason.value}", locale=language.value),
-        "period": period_words(report.period, language),
-        "reason": first_issue.reason.value,
-    }
-    if movement is not None:
-        context.update(_movement_words(movement, language))
+    movement = hold.movement
     raise ModeloLedgerPreflightBlockedError(
         translated_message=(
             "application.modelo.errors.ledger_preflight_blocked_movement"
             if movement is not None
             else "application.modelo.errors.ledger_preflight_blocked_period"
         ),
-        context=context,
+        context={**hold.context, "reason": hold.reason},
         next_step=None if movement is None else open_movement_step(movement.transaction_id),
         precondition_failure=build_modelo_precondition_failure(
             subject_leaf_key="modelo.work.calculate",
@@ -487,10 +552,10 @@ def raise_if_ledger_preflight_blocks_calculation(
             evidence_values={
                 "work_unit_id": work_unit.work_unit_id,
                 "modelo": str(work_unit.modelo),
-                "year": report.period.filing_year,
-                "period": report.period.registry_token,
-                "transaction_id": first_issue.transaction_id,
-                "reason_code": first_issue.reason.value,
+                "year": work_unit.period.filing_year,
+                "period": work_unit.period.registry_token,
+                "transaction_id": hold.issue_transaction_id,
+                "reason_code": hold.reason,
             },
             provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
         ),
@@ -537,8 +602,8 @@ def _raise_if_m200_ledger_requires_accounting_result_input(
     )
     if ledger_transaction_count == 0:
         return
-    raise ModeloAggregationBindingError(
-        translated_message="errors.error.error_modelo_aggregation_binding",
+    raise ModeloAggregationInputConflictError(
+        translated_message="application.modelo.errors.m200_accounting_result_required",
         context={
             "modelo": str(work_unit.modelo),
             "filing_year": work_unit.filing_year,

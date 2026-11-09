@@ -1522,10 +1522,10 @@ application:
           tipus oficial.
         what_to_do: Revisa el recàrrec d'aquesta factura als teus registres.
       invoice_recargo_not_attributable_to_a_tier:
-        what: Un únic recàrrec cobreix línies amb diversos tipus d'IVA, així que no
-          s'ha pogut comparar amb els tipus oficials.
-        what_to_do: Revisa el recàrrec pel teu compte, o divideix la factura per tipus
-          d'IVA als teus registres.
+        what: Aquesta declaració es va calcular sense el recàrrec d'una factura que
+          cobreix diversos tipus d'IVA.
+        what_to_do: 'Torna a calcular: el recàrrec es declararà en cada tipus, o se
+          t''indicarà la factura que cal corregir.'
       invoice_reverse_charge_cuota_not_derivable:
         what: Una factura rebuda amb inversió del subjecte passiu no té tipus d'IVA,
           així que no s'ha calculat l'IVA que en deus.
@@ -1569,10 +1569,10 @@ application:
         what_to_do: Comprova aquests imports amb les instruccions oficials abans de
           presentar.
       m347_declarado_provincia_unrecorded:
-        what: 'Falta {box} d''alguns declarats: correspon al seu domicili fiscal i
+        what: 'Falta {box} d''aquest declarat: correspon al seu domicili fiscal i
           les teves factures no l''indiquen.'
-        what_to_do: Consigna el codi de província del domicili fiscal de cada declarat
-          indicat abans de presentar la declaració.
+        what_to_do: Obre la seva factura i indica la província del seu domicili fiscal;
+          val per a totes les seves factures en tornar a calcular.
       m347_metalico_unrecorded:
         what: Les teves factures no indiquen com es van cobrar, així que {box} queda
           sense import en tots els registres.
@@ -1849,6 +1849,7 @@ application:
         El seu mètode deixa l''import a la teva elecció, de manera que no suma res
         a la casella {box}.'
       m347_provincia_unrecorded: 'Declarats sense codi de província: {parties}.'
+      m347_provincia_unstated: Falta la província del domicili fiscal de {party}.
       possibly_durable_expense: El moviment del {row_date} per {row_amount} es dedueix
         com a despesa corrent i la seva descripció sembla la d'un element durador.
       prior_filing_unrecorded: Per calcular la casella {box}, registra el teu Modelo
@@ -2257,6 +2258,9 @@ application:
         i torna a executar aeat app modelo work verify: la comprovació no es completa
         mentre un apunt deduïble no tingui factura, de manera que l''esborrany continua
         obert i recull el justificant.'
+      detail_row_identity_conflict: Una fila de detall que has introduït no coincideix
+        amb la que donen els teus registres per al mateix declarat; corregeix-la o
+        treu-la abans de calcular.
       export_cross_bucket_refused: La revisió indicada pertany a un bucket diferent
         del bucket del perfil actiu. Canvia de perfil abans d'exportar.
       export_draft_approval_failed: No s'ha pogut aprovar l'esborrany per a la revisió
@@ -2409,6 +2413,9 @@ application:
         invoice_deduction_family_unresolved: 'la factura rebuda que paga no indica
           quina deducció correspon: classifica el moviment, per exemple com a despesa
           corrent o com a bé d''inversió'
+        invoice_recargo_split_unresolved: 'una factura emesa porta un únic recàrrec
+          d''equivalència sobre diversos tipus d''IVA que no coincideix amb la suma
+          del recàrrec de cada tipus: corregeix el recàrrec de la factura'
         linked_movement_contradicts_invoice: la seva base o la seva quota no coincideixen
           amb les de la factura que paga
         missing_business_classification: falta classificar-lo com a professional,
@@ -2438,6 +2445,8 @@ application:
         files inutilitzables: %{malformed_rows}'
       m036_declaration_profile_bucket_mismatch: La declaració del model 036 indica
         un perfil diferent del bucket on es registraria
+      m200_accounting_result_required: El Model 200 necessita el resultat comptable
+        de l'exercici abans de calcular-se a partir del llibre.
       m210_ledger_manual_agrupacion_rows: El Model 210 en mode registres deriva les
         files anuals d'agrupació de rendes de les classificacions dels teus registres;
         no aportis files manuals d'agrupació de rendes.
@@ -2457,6 +2466,8 @@ application:
         el càlcul.'
       m303_filing_evidence_invalid: L'evidència de la instància de declaració del
         model 303 no ha superat la validació.
+      m349_operator_rows_required: El llibre d'aquest període té operacions intracomunitàries
+        sense les seves files d'operador del Model 349; afegeix-les abans de calcular.
       novel_source_kind_rejected: 'Tipus d''origen de càlcul no reconegut(s) %{novel_source_kinds}
         a la versió %{revision_id}: les definicions del model declaren un origen de
         valor que cap resolutor de càlcul gestiona. Afegeix un resolutor o marca''l
@@ -2520,6 +2531,8 @@ application:
         calculation_revision_id.
       revision_pick_id_requires_explicit_selector: calculation_revision_id només és
         vàlid amb el selector de revisió explícita.
+      source_owned_binding_override: Has introduït un valor en una casella que s'obté
+        dels teus registres; treu-lo o corregeix el registre del qual prové.
       verification_report_not_found: No s'ha trobat cap informe de comprovació amb
         id=%{verification_report_id}.
       work_period_token_invalid: '--period ''%{token}'' no és un token de període
@@ -2876,6 +2889,9 @@ application:
         a presentat (%{blocking_period} %{blocking_filing_year}) ha usat aquesta base
         de compensació inicial. Canviar-la alteraria una declaració registrada com
         a presentada.'
+      next_step:
+        open: Obre el Saldo d'IVA
+        open_opening_balance: Registra el saldo inicial d'IVA del %{modelo}, %{period}
       override_fresh_wallet_blocked: 'Anul·lació rebutjada: una lectura actual de
         la cartera d''AEAT ja resol el Model 303 %{period} %{filing_year}. L''evidència
         recent d''AEAT és l''autoritat i una anul·lació no l''ha de substituir.'
@@ -2953,11 +2969,16 @@ application:
           pagos_fraccionados: Pagaments fraccionats ingressats (declaracions del Modelo
             130)
           rendimiento_neto: Rendiment net fins ara (declaracions del Modelo 130)
+      ledger_hold:
+        movement: 'Abans de calcular %{period}, revisa el moviment del %{movement_date},
+          «%{movement_description}», %{movement_amount}: %{need}.'
+        period: 'Abans de calcular %{period}: %{need}.'
       next_step:
         calculate_work: Calcula el %{modelo}, %{period}
         create_work: Crea el %{modelo}, %{period}
         open_movement: Obre el moviment al Llibre
         open_work: Obre el %{modelo}, %{period}
+        verify_work: Comprova el %{modelo}, %{period}
       no_m130_revisions: Les declaracions del Modelo 130 de l'exercici %{year} encara
         no s'han calculat, de manera que no hi ha base per estimar la declaració anual.
         Calcula un trimestre i torna a demanar l'estimació.
@@ -3064,6 +3085,10 @@ application:
             35/2006). Cada import es registra com un 0 que has declarat, diferent
             d'una xifra escrita; si després una declaració anterior mostra un import,
             la declaració assenyala la diferència.
+      credits_heading:
+        mixed: Retencions
+        practised: Retencions que has practicat
+        suffered: Retencions practicades sobre els teus ingressos
       finding_action:
         add_activity_start: Afegeix al teu perfil la data en què va començar la teva
           activitat i torna a calcular.

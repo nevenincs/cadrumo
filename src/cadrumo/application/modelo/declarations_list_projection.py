@@ -19,6 +19,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
+from ...domain.user_profile.labels import profile_field_label_key
 from ..overview.calendar_models import OverviewAeatSubmissionState, OverviewLocalFilingState
 from ..overview.coverage import CoverageAdviceReason
 from .declaration_targets import DeclarationTarget
@@ -242,6 +243,12 @@ class ModeloDeclarationCreationTargetV1(BaseModel):
     #: period already ended, else its earliest.
     suggested: bool = False
     existing: ModeloDeclarationExistingV1 | None = None
+    #: The profile facts, as their labels in the filer's language, still unanswered that decide whether this
+    #: period is filed at all, such as the one choosing a monthly or a quarterly cadence; empty when the
+    #: profile decides it.
+    profile_requirements: tuple[str, ...] = ()
+    #: What the dialog says above ``profile_requirements``; ``None`` when they are empty.
+    profile_requirements_words: str | None = None
 
 
 def _worded_creation_target(
@@ -261,6 +268,7 @@ def _worded_creation_target(
         None,
     )
     deadline = deadlines.get((target.modelo, target.period))
+    requirements = tuple(_profile_field_words(path, language) for path in target.profile_requirements)
     return ModeloDeclarationCreationTargetV1(
         modelo=target.modelo,
         modelo_title=modelo_title(target.modelo, language),
@@ -276,7 +284,16 @@ def _worded_creation_target(
         else ModeloDeclarationExistingV1(
             work_unit_id=str(existing.declaration.work_unit_id), state_words=state_words(existing, language)
         ),
+        profile_requirements=requirements,
+        profile_requirements_words=tr("workspace.declarations.list.new.profile_requirements", locale=language.value)
+        if requirements
+        else None,
     )
+
+
+def _profile_field_words(path: str, language: OutputLanguage) -> str:
+    section_key, field_key = path.split(".", 1)
+    return tr(profile_field_label_key(section_key, field_key), locale=language.value)
 
 
 def worded_creation_targets(

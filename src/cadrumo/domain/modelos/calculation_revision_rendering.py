@@ -38,6 +38,7 @@ from ...core.identity.documents import TAX_ID_FORMAT_CONTEXT
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.type_guards import is_object_dict, is_object_list_or_tuple, is_object_mapping, is_object_set_or_frozenset
 from ..calculations.registry.facts.atoms import TAGGED_FACT_ATOM_CONTEXT
+from ..calculations.registry.field_absence import absent_when_none
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.ids import RevisionId
 from ..calculations.registry.revision_contracts import DeclaredPredecessor, NoPredecessor
@@ -59,7 +60,12 @@ def _complete_registry_value(value: object) -> object:
         # These types own the authored wire form accepted by their discriminator.
         return _complete_registry_value(value.model_dump(mode="python"))
     if isinstance(value, BaseModel):
-        return {name: _complete_registry_value(getattr(value, name)) for name in type(value).model_fields}
+        return {
+            name: _complete_registry_value(item)
+            for name, field in type(value).model_fields.items()
+            for item in (getattr(value, name),)
+            if not (field.exclude_if is absent_when_none and absent_when_none(item))
+        }
     if isinstance(value, Mapping):
         mapping = _OBJECT_MAPPING_ADAPTER.validate_python(value)
         return {key: _complete_registry_value(item) for key, item in mapping.items()}
@@ -79,7 +85,10 @@ def retain_registry_schema_fields(value: object, *, predecessor: bool = False) -
                 value.pop("serialization", None)
         if value.get("type") == "model-field" and not predecessor:
             value.pop("serialization_exclude", None)
-            value.pop("serialization_exclude_if", None)
+            # A field added after snapshots were saved stays out while absent,
+            # so an earlier snapshot's complete payload is unchanged.
+            if value.get("serialization_exclude_if") is not absent_when_none:
+                value.pop("serialization_exclude_if", None)
         for item in value.values():
             retain_registry_schema_fields(item, predecessor=predecessor)
     elif is_object_list_or_tuple(value):

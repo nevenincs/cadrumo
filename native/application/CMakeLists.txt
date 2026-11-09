@@ -66,7 +66,9 @@ if(BUILD_TESTING)
       --features platform,diagnostics-test-support
       ${application_test_arguments})
   # The live runtime tests read the generated Modelo 303 envelope from this build tree's window projections.
-  set_tests_properties(application.rust PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 600
+  # The bound catches a hang only: the crate takes about two minutes on an idle host and
+  # several times that beside other test runs, and a per-test TIMEOUT overrides ctest --timeout.
+  set_tests_properties(application.rust PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 1800
     ENVIRONMENT "CADRUMO_WINDOW_FIXTURES=${CADRUMO_PATH_WINDOW_FIXTURES}")
   # The package test reads the complete application package: the staged one, which only a
   # payload graph assembles, or a separately supplied artifact root.

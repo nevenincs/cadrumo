@@ -15,6 +15,8 @@ export function tauriModelo(
   return {
     declarations: (outputLanguage) =>
       call("modelo_declarations", { outputLanguage }),
+    search: (query, outputLanguage, limit) =>
+      call("modelo_declarations_search", { query, outputLanguage, limit }),
     form: (workUnitId, outputLanguage) =>
       call("modelo_form", { workUnitId, outputLanguage }),
     casillaHelp: (request) =>

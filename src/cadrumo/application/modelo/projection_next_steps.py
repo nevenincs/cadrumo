@@ -24,12 +24,14 @@ from ..operations.next_step import (
     OperationCreateWorkStepV1,
     OperationNextStepWording,
     OperationOpenWorkStepV1,
+    OperationVerifyWorkStepV1,
 )
 from .work_form_wording import modelo_number, period_words
 
 _CREATE_WORK_LOCALE_KEY: Final[str] = "application.modelo.projection_words.next_step.create_work"
 _CALCULATE_WORK_LOCALE_KEY: Final[str] = "application.modelo.projection_words.next_step.calculate_work"
 _OPEN_WORK_LOCALE_KEY: Final[str] = "application.modelo.projection_words.next_step.open_work"
+_VERIFY_WORK_LOCALE_KEY: Final[str] = "application.modelo.projection_words.next_step.verify_work"
 
 
 def create_work_step(*, modelo: str, period: Period) -> OperationNextStepWording:
@@ -68,6 +70,23 @@ def calculate_work_step(unit: WorkUnit) -> OperationNextStepWording:
     return worded
 
 
+def verify_work_step(unit: WorkUnit) -> OperationNextStepWording:
+    """Offer checking the declaration ``unit`` holds, which verifies its calculation."""
+
+    def worded(language: OutputLanguage) -> OperationVerifyWorkStepV1:
+        return OperationVerifyWorkStepV1(
+            work_unit_id=unit.work_unit_id,
+            words=tr(
+                _VERIFY_WORK_LOCALE_KEY,
+                modelo=modelo_number(str(unit.modelo), language),
+                period=period_words(unit.period, language),
+                locale=language.value,
+            ),
+        )
+
+    return worded
+
+
 def open_work_step(unit: WorkUnit) -> OperationNextStepWording:
     """Offer opening the declaration ``unit`` holds."""
 
@@ -85,4 +104,4 @@ def open_work_step(unit: WorkUnit) -> OperationNextStepWording:
     return worded
 
 
-__all__ = ["calculate_work_step", "create_work_step", "open_work_step"]
+__all__ = ["calculate_work_step", "create_work_step", "open_work_step", "verify_work_step"]

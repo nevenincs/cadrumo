@@ -30,6 +30,7 @@ from ...domain.calculations.registry.schema_base import CasillaDataType
 from ...domain.deadlines.effective_close import EffectiveFilingDeadline
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...domain.deadlines.models import ObligationStatus
+from ...domain.iva.refund_eligibility import RefundEligibilityOutcome
 from ..overview.calendar import holiday_coverage_statement
 from ..overview.calendar_models import OverviewAeatSubmissionState, OverviewLocalFilingState
 from ..overview.coverage import CoverageAdviceReason
@@ -143,6 +144,7 @@ def declaration_list_rows(
                 f"advice:{item.modelo}", item.modelo, None, "maybe", DeclarationListGroup.MAYBE, advice=item.reason
             )
             for item in calendar.coverage.advised
+            if not any(address[0] == item.modelo for address in local_addresses)
         )
     return tuple(rows)
 
@@ -357,14 +359,32 @@ def state_words(row: DeclarationListRow, language: OutputLanguage) -> str:
     )
 
 
+_CHOICE_PENDING_LOCALE_KEY: Final[str] = "workspace.modelo.header.result.choice_pending"
+_REDEME_UNSTATED_LOCALE_KEY: Final[str] = "workspace.modelo.header.result.redeme_unstated"
+_RESULT_DIRECTION_LOCALE_KEY_PREFIX: Final[str] = "workspace.modelo.header.result."
+
+
+def _settlement_key(result: ModeloFormResult) -> str:
+    """The words a known result settles under, from the same resolver the form reads.
+
+    A carried IVA credit the filer may still ask back says so; one whose refund
+    waits on an unstated REDEME inscription says that instead of claiming the
+    credit is carried, which is not yet established.
+    """
+    if result.election_may_change:
+        return _CHOICE_PENDING_LOCALE_KEY
+    eligibility = result.refund_eligibility
+    if eligibility is not None and eligibility.outcome is RefundEligibilityOutcome.UNDETERMINED_REDEME_UNSTATED:
+        return _REDEME_UNSTATED_LOCALE_KEY
+    return _RESULT_DIRECTION_LOCALE_KEY_PREFIX + _DIRECTION_WORDS[result.direction]
+
+
 def _valued_result_words(result: ModeloFormResult, value: Decimal, language: OutputLanguage) -> str:
     """A known amount with the way it settles, keeping the sign only where nothing says the direction."""
     locale = language.value
     shown_value = value if result.direction is ModeloFormResultDirection.UNKNOWN else abs(value)
     amount = format_casilla_value(shown_value, data_type=CasillaDataType.MONEY, language=language)
-    key = "workspace.modelo.header.result." + _DIRECTION_WORDS[result.direction]
-    if result.election_may_change:
-        key = "workspace.modelo.header.result.choice_pending"
+    key = _settlement_key(result)
     if result.direction is ModeloFormResultDirection.TO_DEDUCT_LATER:
         return tr(key, amount=amount, locale=locale)
     if result.direction in AMOUNTLESS_RESULT_DIRECTIONS:
@@ -608,9 +628,13 @@ def creation_targets(
     )
 
 
+def _due_not_started(rows: tuple[DeclarationListRow, ...]) -> list[DeclarationListRow]:
+    return sorted((row for row in rows if row.state == "not_started"), key=lambda row: row.deadline or date.max)
+
+
 def preferred_creation_target(rows: tuple[DeclarationListRow, ...]) -> DeclarationTarget | None:
     """The first return due and not started, when it names its period."""
-    due = sorted((row for row in rows if row.state == "not_started"), key=lambda row: row.deadline or date.max)
+    due = _due_not_started(rows)
     return DeclarationTarget(due[0].modelo, due[0].period) if due and due[0].period is not None else None
 
 
@@ -620,15 +644,17 @@ def starting_creation_targets(
     """For each modelo offered, the address the dialog starts on.
 
     That is the modelo's first return due and not started; else its latest period already ended on
-    ``as_of``, the last one a filer can owe; else its earliest offered period.
+    ``as_of``, the last one a filer can owe; else its earliest offered period. A period whose filing
+    family still waits on an unanswered profile fact is never the starting address, so no cadence is
+    suggested before the profile decides it.
     """
-    offered = set(targets)
+    eligible = {(target.modelo, target.period): target for target in targets if not target.profile_requirements}
     starting: dict[str, DeclarationTarget] = {}
     for row in sorted((row for row in rows if row.state == "not_started"), key=lambda row: row.deadline or date.max):
-        if row.period is not None and (target := DeclarationTarget(row.modelo, row.period)) in offered:
+        if row.period is not None and (target := eligible.get((row.modelo, row.period))) is not None:
             starting.setdefault(row.modelo, target)
     by_modelo: dict[str, list[DeclarationTarget]] = {}
-    for target in targets:
+    for target in eligible.values():
         by_modelo.setdefault(target.modelo, []).append(target)
     for modelo, own in by_modelo.items():
         if modelo in starting:

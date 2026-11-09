@@ -47,6 +47,7 @@ from .binding_terminal_origin import TerminalOriginExpectation
 from .binding_value_contract import BindingValueChannel, BindingValueContract
 from .credit_reconciliation import CreditReconciliationEntry
 from .errors import RegistryValidationError
+from .field_absence import absent_when_none
 from .ids import (
     ApplicationLinkId,
     BindingId,
@@ -246,8 +247,10 @@ class BindingDefinition(RegistryModel):
     grade_cap: BindingGradeCap | None = None
     # The statement a filer may make that this earlier-filing carry holds
     # nothing; absent means the carry never takes one (see
-    # :mod:`.binding_absence_attestation`).
-    absence_attestation: AbsenceAttestationFamilyField | None = None
+    # :mod:`.binding_absence_attestation`). Added after revisions saved their
+    # snapshots, so it is left out of every dump while absent (see
+    # :mod:`.field_absence`).
+    absence_attestation: AbsenceAttestationFamilyField | None = Field(default=None, exclude_if=absent_when_none)
     legal_refs: LegalRefs
     source_refs: SourceRefs
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)

@@ -16,7 +16,7 @@ from cadrumo.adapters.persistence.profile.transactions import TransactionCatalog
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.modelo.action_errors import ModeloAggregationBindingError
+from cadrumo.application.modelo.action_errors import ModeloAggregationBindingError, ModeloAggregationInputConflictError
 from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -187,7 +187,10 @@ def test_bucket_calculation_rejects_source_owned_binding_overrides(
         operation=operation,
     )
 
-    with pytest.raises(ModeloAggregationBindingError) as excinfo, bundled_indexed_authority().operation() as operation:
+    with (
+        pytest.raises(ModeloAggregationInputConflictError) as excinfo,
+        bundled_indexed_authority().operation() as operation,
+    ):
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -195,7 +198,7 @@ def test_bucket_calculation_rejects_source_owned_binding_overrides(
             binding_values={binding_id: Decimal("99.00")},
             clock=_T1,
         )
-    assert excinfo.value.translated_message == "errors.error.error_modelo_aggregation_binding"
+    assert excinfo.value.translated_message == "application.modelo.errors.source_owned_binding_override"
 
     assert cr_repo.load().revisions == {}
 

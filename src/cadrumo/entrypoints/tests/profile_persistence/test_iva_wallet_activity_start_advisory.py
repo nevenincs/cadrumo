@@ -112,10 +112,5 @@ def test_missing_activity_start_still_blocks_the_first_period_zero(
 
         assert decision.reason_identity is IvaCompensationDecisionReason.NO_USABLE_AUTHORITY
 
-        assert (
-            IvaWalletDecisionRepository().load_decision(
-                TAXPAYER_NIF,
-                period(2026, "1T"),
-            )
-            == decision
-        )
+        # The blocked decision is refused at calculation, which therefore stores none.
+        assert IvaWalletDecisionRepository().load_decision(TAXPAYER_NIF, period(2026, "1T")) is None

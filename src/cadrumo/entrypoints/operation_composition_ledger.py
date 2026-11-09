@@ -182,6 +182,29 @@ def compose_invoices_catalogue_update_operation(inputs: OperationCompositionInpu
     return built((definition,), (build_invoice_update_registration(definition),))
 
 
+def compose_invoices_document_attach_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose the custody write that keeps a document as an invoice's source."""
+    from ..application.invoices.document_attach_operation import (
+        InvoiceDocumentAttachPorts,
+        build_invoice_document_attach_definition,
+        build_invoice_document_attach_registration,
+    )
+    from .adapter_composition_work_ports import build_ledger_evidence_ports
+
+    lifecycle = inputs.invoice_lifecycle()
+    attachments = inputs.attachments()
+
+    def ports(*, bucket_id: str) -> InvoiceDocumentAttachPorts:
+        return InvoiceDocumentAttachPorts(
+            evidence=build_ledger_evidence_ports(bucket_id=bucket_id),
+            invoice_reader=lifecycle(bucket_id=bucket_id).read_ports.invoice_reader,
+            attachment_store=attachments(bucket_id),
+        )
+
+    definition = build_invoice_document_attach_definition(ports, execution_caller_reader=inputs.execution_caller_reader)
+    return built((definition,), (build_invoice_document_attach_registration(definition),))
+
+
 def compose_invoice_figures_preview_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose the read that answers an invoice draft with the backend's own figures."""
     from ..adapters.persistence.profile.catalogue_creation import CatalogueCreationRateProviderAdapter

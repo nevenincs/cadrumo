@@ -78,10 +78,11 @@ def test_an_autoconsumo_base_refuses_verification_and_export(tmp_path: Path) -> 
 
     assert exported.exit_code != 0, exported.output
     error = require_error_document(exported.output)["error"]
-    assert (error["category"], error["code"]) == ("ERROR", "ERROR_MODELO_CALCULATION_REVISION_STATE"), error
+    # An unverified draft is the filer's to check, so the export is refused, not failed.
+    assert (error["category"], error["code"]) == ("REFUSED", "REFUSED_MODELO_REVISION_NOT_SEALED"), error
     assert error["context"]["state"] == CalculationRevisionState.BORRADOR.value
     assert error["context"]["calculation_revision_id"] == revision.calculation_revision_id
-    assert error["context"]["terminal_condition"] == "failed"
+    assert error["context"]["terminal_condition"] == "refused"
     assert error["context"]["operation_id"]
     assert not output.exists()
 

@@ -31,6 +31,7 @@ export function CreditsPanel({
   session,
   estimate,
   locale,
+  openingBalanceAsked = 0,
   onGo,
   onOpenSurface,
   canOpenSurface,
@@ -47,6 +48,9 @@ export function CreditsPanel({
     take: ((step: LedgerWorkStep) => void) | null;
   };
   locale: string;
+  /** Counts the times a refusal's opening-balance door was taken, so the IVA
+   * balance opens that entry again each time. Zero while none was. */
+  openingBalanceAsked?: number;
   onGo(address: ModeloFormAddressV1): void;
   onOpenSurface(surface: OpenableSurface): void;
   canOpenSurface(surface: OpenableSurface): boolean;
@@ -78,8 +82,9 @@ export function CreditsPanel({
   };
   return (
     <div className="flex flex-col gap-8">
-      {credits.length > 0 && (
+      {credits.length > 0 && form.withholding_credits_heading !== null && (
         <Credits
+          heading={form.withholding_credits_heading}
           credits={credits}
           dependents={dependents}
           lines={envelope.issue_lines}
@@ -101,7 +106,11 @@ export function CreditsPanel({
         />
       )}
       {hasIvaWallet(envelope) && walletPeriod !== null && (
-        <IvaWallet period={walletPeriod} locale={locale} />
+        <IvaWallet
+          period={walletPeriod}
+          locale={locale}
+          openingBalanceAsked={openingBalanceAsked}
+        />
       )}
     </div>
   );

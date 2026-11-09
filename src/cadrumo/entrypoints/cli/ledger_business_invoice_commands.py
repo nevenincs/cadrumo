@@ -69,6 +69,7 @@ from .date_parsing import parse_iso_date
 from .decimal_parsing import parse_decimal_amount, parse_optional_decimal_amount
 from .ledger_catalogue_invoice_results import (
     CatalogueInvoiceCreatePayload,
+    CatalogueInvoiceDocumentAttachPayload,
     CatalogueInvoiceImportResult,
     CatalogueInvoiceLinePayload,
     CatalogueInvoiceListResult,
@@ -81,6 +82,7 @@ from .ledger_catalogue_invoice_results import (
 from .ledger_support import ledger_cli_no_recovery, ledger_invoice_validation_no_recovery
 from .operation_invoice_catalogue import (
     add_invoice_catalogue,
+    attach_invoice_document,
     read_invoice_catalogue,
     remove_invoice_catalogue,
     update_invoice_catalogue,
@@ -748,6 +750,28 @@ def invoice_remove(
             effect=completed.effect,
             refusal_code=completed.refusal_code,
         ) from None
+
+
+def invoice_attach_document(ctx: typer.Context, invoice_id: str, source_path: str) -> None:
+    """Keep one document as the source of an invoice, resolving a full id or unambiguous prefix."""
+    attached = attach_invoice_document(
+        ctx, invoice_id=invoice_id, source_path=source_path, source_directory=str(Path.cwd())
+    )
+    result = CatalogueInvoiceDocumentAttachPayload(
+        invoice_id=attached.invoice_id,
+        attachment_id=str(attached.attachment_id),
+        already_linked=attached.already_linked,
+    )
+    emit_envelope(
+        ctx,
+        command="ledger.invoice.attach_document",
+        result=result,
+        lines=(
+            f"invoice_id\t{result.invoice_id}",
+            f"attachment_id\t{result.attachment_id}",
+            f"already_linked\t{str(result.already_linked).lower()}",
+        ),
+    )
 
 
 def invoice_update(

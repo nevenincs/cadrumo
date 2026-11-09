@@ -162,10 +162,26 @@ def profile_agent_root(storage_root: Path, profile_id: UUID) -> Path:
     """
     base = storage_root / AGENT_DIRECTORY
     base.mkdir(exist_ok=True)
-    opaque = hmac.new(_root_key(base), b"cadrumo.agent-root.v1\0" + profile_id.bytes, hashlib.sha256).hexdigest()
-    root = base / opaque[:32]
+    root = base / _opaque_name(_root_key(base), profile_id)
     root.mkdir(exist_ok=True)
     return root
+
+
+def existing_profile_agent_root(storage_root: Path, profile_id: UUID) -> Path | None:
+    """Return the profile's agent directory when the service already made it, else ``None``; creates nothing."""
+    base = storage_root / AGENT_DIRECTORY
+    key_path = base / _ROOT_KEY_NAME
+    if not key_path.is_file():
+        return None
+    key = key_path.read_bytes()
+    if len(key) != _ROOT_KEY_BYTES:
+        raise AgentProgramRefusalError(AgentLauncherRefusal.SERVICE_FAILED)
+    root = base / _opaque_name(key, profile_id)
+    return root if root.is_dir() else None
+
+
+def _opaque_name(key: bytes, profile_id: UUID) -> str:
+    return hmac.new(key, b"cadrumo.agent-root.v1\0" + profile_id.bytes, hashlib.sha256).hexdigest()[:32]
 
 
 def profile_agent_workspace(agent_root: Path) -> Path:

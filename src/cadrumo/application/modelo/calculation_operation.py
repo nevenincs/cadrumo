@@ -43,7 +43,7 @@ from .action_errors import (
 )
 from .calculation_action_ports import CalculationActionPortsFactory
 from .calculation_advisory_projection import ModeloCalculationAdvisories
-from .calculation_bucket_actions import refuse_blocked_ledger_preflight
+from .calculation_bucket_actions import refuse_blocked_ledger_preflight, refuse_empty_retenciones_window
 from .calculation_projection import ModeloCalculationSnapshot
 from .m303_filing_evidence import m303_filing_evidence_failure
 from .m303_ordinary_filing_evidence_authoring import author_ordinary_m303_evidence_for_work
@@ -302,7 +302,10 @@ def _ordinary_m303_filing_instance_evidence(
     if supplied is None:
         raise M303FilingEvidenceError(
             precondition_failure=m303_filing_evidence_failure(
-                "missing", {"modelo": str(work_unit.modelo), "evidence_present": False}
+                "joint_return_unanswered",
+                {"modelo": str(work_unit.modelo), "evidence_present": False},
+                action_argument_values={"work_unit_id": work_unit.work_unit_id},
+                missing_action_arguments=("joint_return_elected",),
             )
         )
     return author_ordinary_m303_evidence_for_work(
@@ -405,6 +408,15 @@ class ModeloWorkCalculateExecutor:
                 ports=prepared.ports,
             ),
             task_name="modelo-work-calculate-ledger-preflight",
+        )
+        # So is a withholding period with no retención and no answer saying none was paid.
+        await await_cancellation_complete(
+            asyncio.to_thread(
+                refuse_empty_retenciones_window,
+                prepared.work_unit.work_unit_id,
+                ports=prepared.ports,
+            ),
+            task_name="modelo-work-calculate-retenciones-preflight",
         )
 
         async def publish() -> str:

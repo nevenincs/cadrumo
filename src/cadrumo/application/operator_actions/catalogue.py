@@ -548,6 +548,22 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.modelo.work.calculate_joint_return",
+            target_command_key="modelo.work.calculate",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="joint_return_elected",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="joint_return_elected",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="work_unit_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="work_unit_id",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.modelo.work.verify",
             target_command_key="modelo.work.verify",
             argument_specifications=(
