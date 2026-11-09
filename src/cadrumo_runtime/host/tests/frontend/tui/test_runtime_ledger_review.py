@@ -25,6 +25,7 @@ from cadrumo.application.ledger.evidence_followup_contracts import (
     LedgerEvidenceFollowupOperationPorts,
     LedgerEvidenceReviewListProjection,
     LedgerEvidenceReviewListRequest,
+    OffHostReadAskable,
 )
 from cadrumo.application.ledger.evidence_followup_registration import (
     build_ledger_evidence_followup_definitions,
@@ -86,6 +87,7 @@ def _registry() -> OperationRegistry:
             ExtractionDraftRepositoryFactory, cast(object, lambda **_kwargs: None)
         ),
         consent_entries_factory=cast(EvidenceConsentEntriesFactory, cast(object, lambda **_kwargs: ())),
+        off_host_read_askable=cast(OffHostReadAskable, cast(object, lambda **_kwargs: False)),
     )
     review = build_ledger_review_definition(actions)
     followup = build_ledger_evidence_followup_definitions(followup_ports)

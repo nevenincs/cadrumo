@@ -1,7 +1,8 @@
 """Record the sentences the Ledger operations serve, for the browser fixtures that answer for them.
 
 The prorrata register, capital-goods and inventory operations serve a finished sentence with every
-refusal, and the evidence review serves one for each reason a read draft cannot be confirmed. This
+refusal, the evidence review serves one for each reason a read draft cannot be confirmed, and an
+off-host evidence read the consent gate refuses settles with the gate's own sentence. This
 words each through the same functions the operations call, for every reason in every language, so
 the browser fixtures show what the backend serves and hold no text of their own. A sentence the
 operation fills from a refusal's facts is recorded with each fact as a ``{name}`` placeholder, which
@@ -138,6 +139,35 @@ def _confirmation_block() -> dict[str, dict[str, str]]:
     return _worded(tuple(reason.value for reason in ConfirmationBlockReason), word)
 
 
+def _off_host_consent() -> dict[str, dict[str, str]]:
+    """The sentence an off-host read refused by the consent gate settles with, as its error detail words it."""
+    from cadrumo.adapters.outbound.llm.consent import mint_evidence_consent_token
+    from cadrumo.adapters.outbound.llm.errors import LLMConsentError
+    from cadrumo.application.operations.error_detail import operation_refusal_words
+    from cadrumo.core.config import load_settings
+
+    def word(reason: str) -> tuple[str, str]:
+        if reason != "mint_refused":
+            raise SystemExit(f"no off-host consent refusal is named {reason}")
+        try:
+            mint_evidence_consent_token(
+                settings=load_settings().model_copy(update={"cadrumo_evidence_cloud_upload_permitted": False}),
+                profile_eligible=False,
+                acknowledged=True,
+                surface="ledger_served_words",
+                evidence_content_address="0" * 64,
+            )
+        except LLMConsentError as refused:
+            worded = operation_refusal_words(refused)
+        else:
+            raise SystemExit("the consent gate minted with every bar closed")
+        if worded is None:
+            raise SystemExit("the consent gate's refusal serves no sentence")
+        return _served(worded)
+
+    return _worded(("mint_refused",), word)
+
+
 def _served(worded: tuple[str, object], names: tuple[str, ...] = ()) -> tuple[str, str]:
     """A served sentence and its language's token, its sentinels turned into placeholders."""
     sentence, language = worded
@@ -151,6 +181,7 @@ def render_fixture() -> str:
         "capital_goods": _capital_goods(),
         "inventory": _inventory(),
         "confirmation_block": _confirmation_block(),
+        "off_host_consent": _off_host_consent(),
     }
     return json.dumps(words, ensure_ascii=False, indent=2) + "\n"
 

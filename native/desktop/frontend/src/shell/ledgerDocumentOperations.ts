@@ -307,6 +307,10 @@ export type EvidenceReviewViewResult = {
       detail: string;
     }[];
   } | null;
+  /** Whether this profile may be asked to send its documents off this
+   * computer to be read. Absent or false, no such read is offered; true, each
+   * read still asks for its own acknowledgement. */
+  off_host_read_offered?: boolean;
 };
 
 /** Reads one document into a reviewable draft: on this computer, or off it

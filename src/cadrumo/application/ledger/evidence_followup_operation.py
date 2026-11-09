@@ -370,6 +370,8 @@ def _review_view_projection(
     projected_draft: InvoiceDraftProjectionV1,
     party_advisory: PartyAttributionAdvisoryProjection | None,
     country_advisory: CountryVocabularyAdvisoryProjection | None,
+    *,
+    off_host_read_offered: bool,
 ) -> LedgerEvidenceReviewViewProjection:
     return LedgerEvidenceReviewViewProjection(
         profile_id=profile_id,
@@ -385,6 +387,7 @@ def _review_view_projection(
         blockers=tuple(ConfirmationBlockerProjectionV1.from_blocker(row) for row in confirmation_blockers(draft)),
         party_attribution_advisory=party_advisory,
         country_vocabulary_advisory=country_advisory,
+        off_host_read_offered=off_host_read_offered,
     )
 
 
@@ -406,6 +409,7 @@ def _read_review_view(
         projected_draft,
         _party_attribution_projection(party_advisory),
         _country_vocabulary_projection(country_advisory),
+        off_host_read_offered=ports.off_host_read_askable(bucket_id=bucket_id),
     )
     if result.evidence_reference != payload.evidence_reference:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)

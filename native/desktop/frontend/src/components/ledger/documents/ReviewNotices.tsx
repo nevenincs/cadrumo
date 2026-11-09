@@ -11,8 +11,14 @@ import { fieldLabel } from "./documentWords";
 /** How the last reading or confirmation went, when it needs saying. */
 export type ReviewNotice =
   | { kind: "changed" }
-  /** `recovery` is the setup action the refusal names, if any. */
-  | { kind: "refused"; code: string; recovery: string | null }
+  /** `recovery` is the setup action the refusal names, if any; `words`
+   * the sentence the backend served for it, if any. */
+  | {
+      kind: "refused";
+      code: string;
+      recovery: string | null;
+      words: string | null;
+    }
   | { kind: "unknown" }
   | { kind: "failed"; code: string }
   | { kind: "checked"; saved: boolean };
@@ -47,6 +53,9 @@ export function ReviewNotices({
         <Alert tone="danger" role="alert" icon={<Icon name="refused" />}>
           <AlertTitle>{t("desktop.ledger.documents.not_done")}</AlertTitle>
           <AlertDescription className="flex flex-wrap items-center gap-2">
+            {notice.kind === "refused" && notice.words && (
+              <span className="ledger-draft-refusal">{notice.words}</span>
+            )}
             {notice.kind === "refused" && (
               <SetupOffer action={notice.recovery} />
             )}

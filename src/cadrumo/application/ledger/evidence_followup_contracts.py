@@ -91,6 +91,14 @@ class EvidenceConsentEntriesFactory(Protocol):
         ...
 
 
+class OffHostReadAskable(Protocol):
+    """Whether the exact profile may be asked to acknowledge an off-host read."""
+
+    def __call__(self, *, bucket_id: str) -> bool:
+        """Answer the deployment and profile bars for ``bucket_id``; the acknowledgement stays per call."""
+        ...
+
+
 @dataclass(frozen=True, slots=True)
 class LedgerEvidenceFollowupOperationPorts:
     """Explicit capabilities needed by the five evidence follow-up reads."""
@@ -99,6 +107,7 @@ class LedgerEvidenceFollowupOperationPorts:
     attachment_store_factory: AttachmentStoreFactory
     extraction_draft_repository_factory: ExtractionDraftRepositoryFactory
     consent_entries_factory: EvidenceConsentEntriesFactory
+    off_host_read_askable: OffHostReadAskable
 
 
 class LedgerEvidenceAttachmentQueueRequest(BaseModel):
@@ -320,6 +329,12 @@ class LedgerEvidenceReviewViewProjection(BaseModel):
     ``label_reading_fallback`` is read off the stored record, not the draft: the
     draft store moves it there when it writes, so the draft a review loads never
     carries it.
+
+    ``off_host_read_offered`` says whether the person may be asked to send this
+    profile's documents off this computer to be read: the deployment permits it,
+    gestor mode is off and the profile is eligible. It never stands for the
+    acknowledgement, which each read asks for again, and it is ``False`` unless
+    the backend found every bar open.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -332,6 +347,7 @@ class LedgerEvidenceReviewViewProjection(BaseModel):
     blockers: _BlockerRows = ()
     party_attribution_advisory: PartyAttributionAdvisoryProjection | None = None
     country_vocabulary_advisory: CountryVocabularyAdvisoryProjection | None = None
+    off_host_read_offered: bool = False
 
     @field_validator("drafted_at")
     @classmethod
@@ -463,5 +479,6 @@ __all__ = [
     "LedgerEvidenceReviewViewExecutionResult",
     "LedgerEvidenceReviewViewProjection",
     "LedgerEvidenceReviewViewRequest",
+    "OffHostReadAskable",
     "project_consent_withdrawal_survey",
 ]
