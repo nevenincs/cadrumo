@@ -230,6 +230,8 @@ export function useSignIn(host: Host) {
   const statusRead = useRef<{
     generation: number;
     promise: Promise<void>;
+    /** Settles once the status itself is taken, before any profile list. */
+    taken: Promise<void>;
   } | null>(null);
   const submitting = useRef(false);
   const currentRefusal = refusal ?? status?.refusal ?? null;
@@ -288,6 +290,8 @@ export function useSignIn(host: Host) {
       )
         return;
       const generation = ++request.current;
+      let statusTaken!: () => void;
+      const taken = new Promise<void>((resolve) => (statusTaken = resolve));
       const promise = Promise.resolve().then(async () => {
         try {
           if (
@@ -311,6 +315,7 @@ export function useSignIn(host: Host) {
           if (managerObserved) setObservingStartup(false);
           setStatus(next);
           adopt(next);
+          statusTaken();
           // A list that names another profile as selected than the status
           // does is older than it: not shown beside it, and never a ground
           // for naming the profile a password goes to.
@@ -356,11 +361,12 @@ export function useSignIn(host: Host) {
             setStatus(failed);
           }
         } finally {
+          statusTaken();
           if (statusRead.current?.generation === generation)
             statusRead.current = null;
         }
       });
-      statusRead.current = { generation, promise };
+      statusRead.current = { generation, promise, taken };
       await promise;
     },
     [adopt, host, managerAllows, managerObserved],
@@ -541,7 +547,7 @@ export function useSignIn(host: Host) {
                   statusRead.current = null;
               }
             });
-            statusRead.current = { generation, promise };
+            statusRead.current = { generation, promise, taken: promise };
             await promise;
           })();
         }
@@ -605,7 +611,17 @@ export function useSignIn(host: Host) {
   }, [signedInPhase]);
   // A view refused for a missing session may hear before this state does;
   // a fresh read settles whether the session is gone.
-  useEffect(() => confirmSessionWith(() => refresh()), [refresh]);
+  // The profile list that follows a status is no part of the answer.
+  useEffect(
+    () =>
+      confirmSessionWith(async () => {
+        const reading = statusRead.current;
+        if (reading && reading.generation === request.current)
+          await reading.taken;
+        else await refresh();
+      }),
+    [refresh],
+  );
   const sessionEnded = useCallback(
     () => sessionEnding.current || windowSessionEnded(),
     [],
