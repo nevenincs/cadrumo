@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 import re
 from collections.abc import Iterable, Mapping
@@ -41,6 +42,7 @@ from ....core.atomic_write import DurableWriteBatch, atomic_write_hardened_bytes
 from ....core.directory_scan import (
     scan_directory,
 )
+from ....core.errors.error_codes import RETIRED_ERROR_CODE_SUCCESSORS, current_error_code
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hex import HEX_PATTERN_64
 from ....core.identity.digest import ContentDigest
@@ -70,6 +72,34 @@ def _unreadable_reason(error: RepositoryError) -> str:
         )
         return ";".join(failures)[:512]
     return type(cause if cause is not None else error).__name__
+
+
+def _parse_journal_record(raw: str) -> OperationJournalRecord:
+    """Validate a stored record, reading a failure code the catalogue has since retired as its successor.
+
+    A record keeps the code it was settled under for as long as it lives; the
+    stored bytes are not rewritten. Only a record that fails validation and
+    names a retired code is read again with each such code replaced.
+    """
+    try:
+        return OperationJournalRecord.model_validate_json(raw)
+    except ValidationError:
+        if not any(retired in raw for retired in RETIRED_ERROR_CODE_SUCCESSORS):
+            raise
+    return OperationJournalRecord.model_validate_json(json.dumps(_with_current_failure_codes(json.loads(raw))))
+
+
+def _with_current_failure_codes(value: object) -> object:
+    if isinstance(value, dict):
+        return {
+            key: current_error_code(item)
+            if key == "failure_error_code" and isinstance(item, str)
+            else _with_current_failure_codes(item)
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [_with_current_failure_codes(item) for item in value]
+    return value
 
 
 class OperationReplayRequest(BaseModel):
@@ -175,7 +205,7 @@ class SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
         super().__init__(
             journal_dirname=storage_location(StorageCategory.OPERATION_JOURNAL).subpath,
             storage_root=storage_root,
-            parse_operation=OperationJournalRecord.model_validate_json,
+            parse_operation=_parse_journal_record,
             error_type=RepositoryError,
             not_found_type=RepositoryError,
             corrupt_type=RepositoryError,
