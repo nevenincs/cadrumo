@@ -135,6 +135,7 @@ def seed_profile(*, tax_id: str | None = None, profile_overrides: dict[str, str]
         "identity.surnames": "Operator",
         "iva.m303_regime_composition": "general",
         "iva.redeme_enrolled": "false",
+        "censo.large_company": "false",
         "iva.cash_accounting_regime_enrolled": "false",
         "iva.voluntary_sii_enrolled": "false",
         "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
