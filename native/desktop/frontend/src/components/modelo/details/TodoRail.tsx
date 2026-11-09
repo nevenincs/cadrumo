@@ -5,8 +5,8 @@ import type {
   ModeloFormOrigin,
   ModeloWorkbenchFormProjectionV1,
   OperationNextStepV1,
-  PublicModeloWorkForm,
 } from "../../../shell/modeloContract/modeloWorkForm";
+import type { PublicModeloWorkForm } from "../../../shell/modeloContract/modeloWorkFormPart2";
 import { useStrings } from "../../../shell/strings";
 import { BoxNumber } from "../form/BoxNumber";
 import { OutlineNavigator } from "../workspace/OutlineNavigator";

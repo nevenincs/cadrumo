@@ -94,11 +94,16 @@ class _Gateway:
     host_token: str
 
     def lane_that_is_not_selectable(self) -> ModelRunLane:
-        """Choose the first served lane the agent's own health does not offer for selection on this computer."""
+        """Choose the first served lane the agent's own health does not offer for selection on this computer.
+
+        A lane whose admission is still unknown has not been measured yet: a run start
+        measures it and may admit it, so only a lane unselectable for a settled reason counts.
+        """
         for record in self._lane_records():
-            if record["health"]["selectable"] is not True and record["catalog"]["models"]:
+            health = record["health"]
+            if health["selectable"] is not True and health["admission"] != "unknown" and record["catalog"]["models"]:
                 return self._lane_of(record)
-        pytest.fail("the agent catalog lists no lane with a declared model that is unselectable here")
+        pytest.fail("the agent catalog lists no measured lane with a declared model that is unselectable here")
 
     def lane_that_runs_off_host(self, *, takes_image: bool = False, honours_no_option: bool = False) -> ModelRunLane:
         """Choose the first selectable, background-runnable lane that reads off host, by its served properties.
