@@ -966,6 +966,10 @@ cli:
           720)
         period_help: 'Token de període d''agregació: 0A anual, 1T-4T trimestres, 01-12
           mesos.'
+        received_invoice_finding: 'Model {modelo} {period} {filing_year}: {invoice_count}
+          factura(es) rebuda(es) declaren una retenció que aquest període no pot declarar
+          ({reason}), de manera que el seu càlcul queda retingut. Calcula el model
+          per veure cada factura i corregeix-la.'
         received_invoice_retencion_help: 'JSON `InvoiceWithholdingEvidenceRequest`:
           una assignació de retenció d''una factura rebuda, amb la seva prova de pagament
           o d''exigibilitat. Una assignació per ordre; el valor del camp `scheme`
@@ -2891,15 +2895,20 @@ cli:
         actiu.
       view_help: Mostrar els fets d'un perfil (per defecte el perfil actiu)
     provider_login:
-      device_help: 'Fes servir l''inici de sessió amb codi de dispositiu (només codex).'
-      device_unsupported: '--device només està disponible per a %{supported}.'
-      help: 'Inicia la sessió en un proveïdor d''IA a mà des d''aquesta consola.'
-      json_unsupported: '--format json no està disponible per a provider-login: és una ordre interactiva de terminal. Executa-la sense --format.'
-      no_profile: 'No hi ha cap perfil seleccionat. Selecciona un perfil a l''aplicació o indica --profile.'
-      profile_help: 'UUID o etiqueta exacta del perfil; ometeu-ho per fer servir el perfil seleccionat.'
+      device_help: Fes servir l'inici de sessió amb codi de dispositiu (només codex).
+      device_unsupported: --device només està disponible per a %{supported}.
+      help: Inicia la sessió en un proveïdor d'IA a mà des d'aquesta consola.
+      json_unsupported: '--format json no està disponible per a provider-login: és
+        una ordre interactiva de terminal. Executa-la sense --format.'
+      no_profile: No hi ha cap perfil seleccionat. Selecciona un perfil a l'aplicació
+        o indica --profile.
+      profile_help: UUID o etiqueta exacta del perfil; ometeu-ho per fer servir el
+        perfil seleccionat.
       provider_help: 'Proveïdor on iniciar la sessió: claude, codex o antigravity.'
-      signed_in: 'Sessió iniciada a %{provider}. Torna a obrir els ajustos del proveïdor a l''aplicació per veure-ho.'
-      unsupported_provider: 'No es pot iniciar la sessió a mà al proveïdor %{provider}. Fes servir un de: %{supported}.'
+      signed_in: Sessió iniciada a %{provider}. Torna a obrir els ajustos del proveïdor
+        a l'aplicació per veure-ho.
+      unsupported_provider: 'No es pot iniciar la sessió a mà al proveïdor %{provider}.
+        Fes servir un de: %{supported}.'
     repair:
       connectivity_help: Comprovar connectivitat del navegador i la Seu AEAT
       help: Diagnosticar i reparar configuració local, definicions dels models, perfil,

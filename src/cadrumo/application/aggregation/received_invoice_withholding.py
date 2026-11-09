@@ -28,11 +28,6 @@ rather than dropped, so a declaration is never completed without a retención th
 person recorded. A finding belongs to the quarter of the invoice's first payment,
 or of its date while it is unpaid. An unpaid invoice whose retención follows
 payment is otherwise simply not yet due and raises nothing.
-
-:func:`stored_invoice_withholding_findings` reads one stored invoice on its own,
-for the invoice list and review: a retención stated on income the supplier's
-income tax does not subject to retención is wrong whenever it is paid, so it is
-found before any payment.
 """
 
 from __future__ import annotations
@@ -163,24 +158,6 @@ def withholding_subjectness(
     if value == _NOT_SUBJECT:
         return False, refs
     return None, ()
-
-
-def stored_invoice_withholding_findings(
-    invoice: Invoice, transactions: TransactionCatalogue
-) -> tuple[ReceivedInvoiceWithholdingFinding, ...]:
-    """Return what is wrong with one stored invoice's stated retención whatever declaration reads it.
-
-    Only a retención on income the supplier's income tax does not subject to
-    retención is reported here; the rest depends on the declaration and its
-    period. ``transactions`` is the bucket's movement catalogue, in which a
-    movement may hold the link on its side alone.
-    """
-    if not _states_retencion(invoice):
-        return ()
-    live = _live(transactions)
-    (linked,) = with_movement_side_links((invoice,), window=TransactionCatalogue.from_transactions(live.values()))
-    found = _not_subject_finding(linked, _payments(linked, live))
-    return () if found is None else (found,)
 
 
 def _states_retencion(invoice: Invoice) -> bool:
@@ -488,6 +465,5 @@ __all__ = [
     "captured_invoice_ids",
     "received_invoice_withholding",
     "recipient_tax_regime",
-    "stored_invoice_withholding_findings",
     "withholding_subjectness",
 ]

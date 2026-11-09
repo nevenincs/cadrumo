@@ -156,6 +156,37 @@ def _calculation_rows_absent_notices(projection: ModeloAggregateProjection) -> l
     ]
 
 
+def _received_invoice_finding_notices(projection: ModeloAggregateProjection) -> list[Notice]:
+    """Warn once for each reason received invoices' stated retención holds this window back.
+
+    The calculation holds the declaration back on the same invoices and names
+    each one; this report gives their count, so it never reads as complete.
+    """
+    period = projection.period.to_period()
+    return [
+        Notice(
+            severity=NoticeSeverity.WARNING,
+            code="modelo.aggregate.received_invoice_finding",
+            message=tr(
+                "cli.app.modelo.aggregate.received_invoice_finding",
+                modelo=projection.modelo,
+                filing_year=period.filing_year,
+                period=period.registry_token,
+                invoice_count=finding.invoice_count,
+                reason=finding.kind.value,
+            ),
+            context={
+                "modelo": projection.modelo,
+                "filing_year": str(period.filing_year),
+                "period": period.registry_token,
+                "invoice_count": str(finding.invoice_count),
+                "reason": finding.kind.value,
+            },
+        )
+        for finding in projection.received_invoice_findings
+    ]
+
+
 def _refuse_misplaced_ledger_payment_withholding(
     modelo: str,
     *,
@@ -329,7 +360,10 @@ def aggregate_modelo(
             ledger_payment=ledger_payment_requests[0] if ledger_payment_requests else None,
         )
         aggregate_result = _aggregate_operation_result(aggregate_projection)
-        notices = _calculation_rows_absent_notices(aggregate_projection)
+        notices = [
+            *_calculation_rows_absent_notices(aggregate_projection),
+            *_received_invoice_finding_notices(aggregate_projection),
+        ]
     lines = _aggregate_output_lines(aggregate_result, notices=notices)
     emit_envelope(ctx, command="modelo.aggregate", result=aggregate_result, lines=lines, notices=notices)
 
