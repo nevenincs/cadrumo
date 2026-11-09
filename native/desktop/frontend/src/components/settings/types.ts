@@ -3,6 +3,8 @@
 // key is ever part of it; the section can say whether a key is there, never
 // what it is.
 
+import type { CliStateCause, NextStep } from "../../shell/providerSignInWords";
+
 /** How a provider is reached: by a key, a key and a gateway's address,
  * only the provider's own sign-in, or nothing at all, for a server on this
  * computer. */
@@ -50,6 +52,11 @@ export type ProviderStatus = {
   source: ProviderSource;
   /** Where the app stands, for a command-line way. */
   cliState?: CliState;
+  /** Why the app's state is not established, as a closed word the service
+   * serves; only a command-line way has one. */
+  cliStateCause?: CliStateCause;
+  /** What the person can do about `cliStateCause`. */
+  nextStep?: NextStep;
   /** A key is stored for it, kept while it is turned off. */
   credentialSaved?: boolean;
   /** Why it is not ready, as a stable code, where it says. */

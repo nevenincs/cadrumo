@@ -102,13 +102,36 @@ export const FIXTURE_SIGN_IN_PROVIDERS: readonly string[] = [
 ].slice(0, 1);
 
 export type ProviderSignInFixtureFailure =
-  "provider_unavailable" | "provider_error";
+  "provider_unavailable" | "provider_error" | "busy";
+
+/** The words a failed attempt carries beside its reason. They are plain
+ * text here, as a host may send any: the window keeps only the closed ones. */
+export type ProviderSignInFixtureDetail = {
+  cause?: string;
+  next_step?: string;
+  status_cause?: string;
+};
+
+/** What a lane's app says of its state when the probe could not confirm it. */
+export type ProviderLaneFixtureState = Pick<
+  ProviderSettingsRecord,
+  "cli_state" | "cli_state_cause" | "next_step"
+>;
+
+/** The console command the made-up service serves, as the real one does. */
+const CONSOLE_SIGN_IN_COMMAND =
+  "aeat config provider-login --provider {provider}";
 
 export type ProviderSignInFixtureControls = {
   failNextSettingsRead: () => void;
   deferNextStart: () => void;
   completeStart: () => void;
-  failNextStart: (reason: ProviderSignInFixtureFailure) => void;
+  failNextStart: (
+    reason: ProviderSignInFixtureFailure,
+    detail?: ProviderSignInFixtureDetail,
+  ) => void;
+  /** Sets what a lane's app reports; the next settings read serves it. */
+  leaveLaneUnconfirmed: (id: string, state: ProviderLaneFixtureState) => void;
   setMethods: (methods: readonly ProviderSignInMethod[]) => void;
   failNextStatus: () => void;
   failNextSubmit: () => void;
@@ -126,6 +149,7 @@ export type ProviderSignInFixtureControls = {
 // Keep the presentation controls shared so the exposed window handle and the
 // host instance mounted by React always address the same next operation.
 let failNextStart: ProviderSignInFixtureFailure | null = null;
+let failNextDetail: ProviderSignInFixtureDetail = {};
 let deferNextStart = false;
 let completeDeferredStart: (() => void) | null = null;
 let failNextStatus = false;
@@ -278,9 +302,14 @@ export function providerSettingsFixture({
       completeDeferredStart?.();
       completeDeferredStart = null;
     },
-    failNextStart(reason) {
+    failNextStart(reason, detail = {}) {
       failNextStart = reason;
+      failNextDetail = detail;
       say(`providerSignInFailureQueued ${reason}`);
+    },
+    leaveLaneUnconfirmed(id, state) {
+      const record = records.get(id);
+      if (record) records.set(id, { ...record, ...state });
     },
     setMethods(methods) {
       fixtureSignInMethods = [...methods];
@@ -357,7 +386,9 @@ export function providerSettingsFixture({
       revision: await revisionOf(record.id, ++changes),
     });
     const failure = failNextStart;
+    const detail = failNextDetail;
     failNextStart = null;
+    failNextDetail = {};
     if (failure) say(`providerSignInFailureReturned ${failure}`);
     const attemptId = `3d9e8452-6ce3-4f70-9dd5-${(++fixtureAttemptNumber)
       .toString(16)
@@ -368,6 +399,8 @@ export function providerSettingsFixture({
           provider,
           event: "failed",
           reason: failure,
+          // What a host sends beside the reason; the window checks it.
+          ...(detail as Partial<ProviderSignInSnapshot>),
         }
       : {
           attempt_id: attemptId,
@@ -513,6 +546,7 @@ export function providerSettingsFixture({
             [...fixtureSignInMethods],
           ]),
         ),
+        console_sign_in_command: CONSOLE_SIGN_IN_COMMAND,
       };
     },
     signIn: signInControlsSettings,

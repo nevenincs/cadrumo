@@ -156,6 +156,7 @@ export function AgentSettingsPanel({
                 signIn={providerSettings.signIn}
                 signInProviders={settings.read.value.signInProviders}
                 signInMethods={settings.read.value.signInMethods}
+                consoleSignInCommand={settings.read.value.consoleSignInCommand}
                 revisions={settings.read.value.revisions}
                 identity={reader}
                 busyId={settings.busyId}
