@@ -607,6 +607,38 @@ async function downloadVision(target: Page, lane: Locator) {
   return vision;
 }
 
+test("a setup that fails at the item after a model's download says so on that model's row at once, without a sign-in", async ({
+  page: target,
+}) => {
+  await open(target);
+  const lane = await openLane(target);
+  const vision = lane.locator('li[data-model="synthetic-vision:1"]');
+  await vision
+    .getByRole("button", {
+      name: label("desktop.providers.local_model_download"),
+    })
+    .click();
+  await laneReview(lane)
+    .getByRole("button", {
+      name: label("desktop.setup.approve_size", { size: "3.2 GB" }),
+    })
+    .click();
+  await expect(vision.locator("[data-setup-progress]")).toBeVisible();
+  await target.evaluate(() =>
+    window.__scenarioSetup?.failItem("damaged_download"),
+  );
+  await expect(vision.getByRole("alert")).toContainText(
+    label("desktop.setup.failure.damaged_download"),
+  );
+  await expect(vision).toHaveAttribute("data-installed", "false");
+  // The download can be asked for again from the same row.
+  await expect(
+    vision.getByRole("button", {
+      name: label("desktop.providers.local_model_download"),
+    }),
+  ).toBeEnabled();
+});
+
 /** Asks for a check of the setup from the command palette. */
 async function checkFromPalette(target: Page) {
   const palette = target.getByRole("dialog", {

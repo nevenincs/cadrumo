@@ -83,6 +83,7 @@ if TYPE_CHECKING:
     )
     from cadrumo.application.user_profile.automation_enrollment import AutomationInventory
     from cadrumo.application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
+    from cadrumo.application.workbench_capture_memory import WorkbenchCaptureMemoryOwner
     from cadrumo.application.workbench_generation_contracts import WorkbenchGenerationV1
     from cadrumo.application.workbench_generation_operation import WorkbenchGenerationOperationRequest
     from cadrumo.core.operations import OperationFrontendProjection
@@ -170,6 +171,8 @@ class ProfileWorkerOperationHost:
         self._lifetime = ExitStack()
         self._authority: PinnedAuthorityOperation | None = None
         self.services: OperationComposedServices | None = None
+        # What this worker's reads keep for one session; the composed services close it when a session ends.
+        self._capture_memory: WorkbenchCaptureMemoryOwner | None = None
         self._client = authorization
         # Committed operations reach the runtime as a cue to their observers.
         self._record_effects: set[OperationId] = set()
@@ -258,8 +261,11 @@ class ProfileWorkerOperationHost:
         return await asyncio.to_thread(self.composed)
 
     def _compose(self) -> OperationComposedServices:
+        from cadrumo.application.workbench_capture_memory import WorkbenchCaptureMemoryOwner
         from cadrumo.entrypoints.operation_composition import compose_operation_dependencies
 
+        capture_memory = WorkbenchCaptureMemoryOwner()
+        self._capture_memory = capture_memory
         with startup_phase(_log, "worker_operation_compose"), self.governed():
             return compose_operation_dependencies(
                 authority_operation=self.pinned(),
@@ -273,6 +279,7 @@ class ProfileWorkerOperationHost:
                 execution_caller_reader=self._execution_caller,
                 sede_view_stream_opener=None if self._view_streams is None else self._open_sede_view,
                 journal_committed=self._journal_committed,
+                capture_memory=capture_memory,
             )
 
     def warm_imports(self) -> None:
@@ -405,6 +412,8 @@ class ProfileWorkerOperationHost:
                 posture=HomeSessionPosture.ACTIVE, profile_label=profile.label, expires_at=lease.expires_at
             )
 
+        capture_memory = self._capture_memory
+
         def capture() -> WorkbenchGenerationV1:
             with override_settings(cadrumo_output_language=payload.output_language.value):
                 provider = compose_secure_workbench_generation_provider(
@@ -412,6 +421,9 @@ class ProfileWorkerOperationHost:
                     operation=self.pinned(),
                     operation_contracts=services.public_contracts,
                     account_session_reader=account_session,
+                    census_memory=None
+                    if capture_memory is None
+                    else capture_memory.for_profile(str(payload.profile_id)).census,
                 )
                 result = provider()
                 account_session()

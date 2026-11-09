@@ -76,6 +76,7 @@ if TYPE_CHECKING:
         AutomationAdministrationFactory,
         AutomationInventoryReader,
     )
+    from ..application.workbench_capture_memory import WorkbenchCaptureMemoryOwner
     from ..application.workbench_generation_operation import WorkbenchGenerationReader
     from ..application.workflow.run_read_ports import WorkflowRunReadPortsFactory
     from ..core.hex import Hex64Str
@@ -637,6 +638,7 @@ def compose_operation_dependencies(
     execution_caller_reader: OperationExecutionCallerReader | None = None,
     sede_view_stream_opener: SedeViewStreamOpener | None = None,
     journal_committed: Callable[[OperationPersistedSnapshot], None] | None = None,
+    capture_memory: WorkbenchCaptureMemoryOwner | None = None,
 ) -> OperationComposedServices:
     """Compose the manifest-backed production registry and all public services.
 
@@ -648,7 +650,10 @@ def compose_operation_dependencies(
     a stale profile repository. ``journal_committed`` is told each operation
     whose journal commit succeeded, for a host that reports progress.
     ``sede_view_stream_opener`` is the worker host's view stream; without it
-    the Sede view refuses every run.
+    the Sede view refuses every run. ``capture_memory`` is the owner of what
+    this graph's reads keep for one session, for a host that reads through it
+    as well; without one the graph owns a fresh owner. Either way the services
+    close it whenever a session ends.
     """
     from ..adapters.persistence.operations.durability_router import DurabilityRoutedOperationPersistence
     from ..adapters.persistence.operations.journal import OperationJournalRepository
@@ -665,7 +670,8 @@ def compose_operation_dependencies(
     if execution_authority is not None and execution_authority_factory is not None:
         raise ValueError("operation authority must have one owner")
     # The services end the memory's reuse whenever the host reports a session's end.
-    capture_memory = WorkbenchCaptureMemoryOwner()
+    if capture_memory is None:
+        capture_memory = WorkbenchCaptureMemoryOwner()
     inputs = OperationCompositionInputs(
         settings=settings or load_settings(),
         evidence_followup_ports=evidence_followup_ports,

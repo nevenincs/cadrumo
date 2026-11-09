@@ -1,4 +1,6 @@
-"""A profile worker host drops the calendar work its list reads kept when a session ends and when it closes.
+"""A profile worker host drops the calendar work and census classification its reads kept when a session ends.
+
+It drops them again when it closes.
 
 The host holds real composed operation services over the real journal; the
 capture memory is the one those services were composed with.
@@ -9,6 +11,7 @@ from __future__ import annotations
 from datetime import timedelta
 from pathlib import Path
 from typing import Any, cast
+from uuid import UUID
 
 import pytest
 
@@ -22,7 +25,12 @@ from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody impo
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.operations.composition import compose_operation_services
 from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
-from cadrumo.application.workbench_capture_memory import WorkbenchCaptureMemory, WorkbenchCaptureMemoryOwner
+from cadrumo.application.user_profile.censal_readback import CensalHistoryRead
+from cadrumo.application.workbench_capture_memory import (
+    WorkbenchCaptureMemory,
+    WorkbenchCaptureMemoryOwner,
+    WorkbenchCensusMemoKey,
+)
 from cadrumo.domain.calculations.registry.tests.shared_authority_isolation import isolated_shared_authority
 
 from ...adapters.worker_authorization_client import WorkerAuthorizationClient
@@ -44,7 +52,12 @@ def _kept(memory: WorkbenchCaptureMemory) -> bool:
 
     memory.calendar.reuse(key, build)
     memory.calendar.reuse(key, build)
-    return len(builds) == 1
+    census_key = WorkbenchCensusMemoKey(profile_id=UUID(_PROFILE), journal_root="journal")
+    census = CensalHistoryRead(observation=None, classified=frozenset(), census_operations=frozenset())
+    memory.census.keep(census_key, census)
+    census_kept = memory.census.recall(census_key) == census
+    assert census_kept is (len(builds) == 1), "the calendar work and the census classification end together"
+    return census_kept
 
 
 @pytest.mark.asyncio
