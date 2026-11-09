@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
+  CATALOG_BUSY_QUIET_MS,
   catalogBusyPause,
   catalogReadBusy,
   catalogReadRetry,
@@ -74,6 +75,15 @@ export function useAgentCatalog({
   }, [status]);
   const askedUnder = useRef(status);
   const busyPauses = useRef(0);
+  // The busy wait the column is in: the service state it began under, when
+  // its first busy refusal came, and whether its outliving the quiet bound
+  // was noted. Busy refusals within the bound are the start the column
+  // expects; the first one past it is noted once as a warning.
+  const busyWait = useRef<{
+    under: AgentServiceStatus["state"];
+    since: number;
+    noted: boolean;
+  } | null>(null);
   // Whether a read is wanted, so a busy refusal is followed by another.
   const reading = useRef(false);
   const catalogRequest = useMemo(
@@ -90,8 +100,24 @@ export function useAgentCatalog({
             askedUnder.current = published.current;
             busyPauses.current = 0;
           }
+          // The wait is keyed by the service's state rather than by each
+          // publication, so a repeated notice of the same state does not
+          // start it afresh.
+          const under = published.current?.state ?? "starting";
+          const expected = () => {
+            const now = performance.now();
+            let wait = busyWait.current;
+            if (wait?.under !== under) {
+              wait = { under, since: now, noted: false };
+              busyWait.current = wait;
+            }
+            if (wait.noted || now - wait.since < CATALOG_BUSY_QUIET_MS)
+              return true;
+            wait.noted = true;
+            return false;
+          };
           return session.providerCatalog(
-            catalogReadRetry(() => reading.current),
+            catalogReadRetry(() => reading.current, expected),
           );
         }
       : null;
@@ -139,6 +165,12 @@ export function useAgentCatalog({
   const followBusy = catalogBusy && readCatalog !== null;
   useEffect(() => {
     if (catalog.kind === "ready") busyPauses.current = 0;
+    // An answer, or a refusal that waiting does not cure, ends the busy wait.
+    if (
+      catalog.kind === "ready" ||
+      (catalog.kind === "failed" && !catalogReadBusy(catalog.code))
+    )
+      busyWait.current = null;
     if (!followBusy) return;
     if (askedUnder.current !== status) {
       setBusyReads((count) => count + 1);
