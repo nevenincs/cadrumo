@@ -5,7 +5,7 @@ tags:
 date: '2026-11-07'
 modified: '2026-11-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:aee52db55aa4f076fa3bd42d9f0086ca122b8752f151fc77a9671308ed338fd2'
+body_hash: 'sha256:0af7e63cdbb8e5a9497390894747c2f3b173e22be090a27117287a39fde4a83f'
 related:
   - "[[2026-11-07-local-inference-engine-plan]]"
 ---
@@ -470,6 +470,9 @@ related:
 - `S30` `verify:` `pytest providers/tests/test_catalog_probes.py providers/tests/test_ollama_probe.py -n 8 --dist=loadgroup` -> `pass`
 - `S30` `verify:` `LANDER merge verification, cadrumo-agent main 6fa7bbc` -> `pass`
 - `S30` `by:` `vaultspec-standard-executor`
+- `S18` `M` `native/application/CMakeLists.txt`
+- `S18` `verify:` `ctest manager.fmt manager.clippy application.fmt application.clippy desktop.fmt desktop.clippy` -> `pass`
+- `S18` `verify:` `ctest application.rust on feature/tui f521650cd6` -> `pass`
 
 ## Notes
 
@@ -509,6 +512,7 @@ related:
 - `S09` Opus review done before close. One visible bounded retry only where a retry can change the outcome; a request that already suppressed reasoning is refused at once with the typed no-answer condition (qwen3-vl:2b evidence)
 - `S29` Opus review done before close
 - `S30` Opus review done before close. Keeping a lane's earlier catalogue as stale when its measurement stops answering is the right contract, and settings invalidation now forgets it
+- `S18` Closed on the coordinator's direction with S18 landed on feature/tui; the reruns of manager.rust and application.package after the bound and unload-wait fixes are DESKTOP's on feature/tui
 
 ## Notes
 
