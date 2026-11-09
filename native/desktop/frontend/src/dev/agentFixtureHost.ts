@@ -113,6 +113,9 @@ export type FixtureAsks = "questions" | "approval" | "review";
 /** What the conversations have stored: the fixture documents, nothing at
  * all, storage the host does not serve, or storage that cannot be read. */
 export type FixtureDocuments = "stored" | "none" | "unavailable" | "failed";
+/** Which of the local lane's models the made-up computer holds: none, as
+ * before any setup, or all, as after every download. */
+export type FixtureLocalModels = "none" | "all";
 /** How the service answers the catalog: served, busy starting the agent
  * until the scenario publishes the agent's status, busy while the agent
  * starts and for a moment after the scenario publishes it ready, or starting
@@ -226,7 +229,7 @@ export function fixtureAgent({
   skills = "bundled",
   catalog = "served",
   models,
-  noModelsHeld = false,
+  localModels,
 }: {
   say: (call: string) => void;
   wait: () => Promise<void>;
@@ -248,8 +251,9 @@ export function fixtureAgent({
   catalog?: FixtureCatalog;
   /** Which models this computer holds, as the served catalog reports them. */
   models?: FixtureModelPresence;
-  /** The local lane holds none of its models yet, as before any setup. */
-  noModelsHeld?: boolean;
+  /** The local lane holds none of its models yet, as before any setup, or
+   * all of them, as after every download; where left out, as written. */
+  localModels?: FixtureLocalModels;
 }): {
   agent: AgentViews;
   session: AgentSession;
@@ -303,12 +307,12 @@ export function fixtureAgent({
           `${held.provider_id}_${held.transport}` === FIXTURE_LOCAL_LANE,
       )?.catalog.recommended ?? {},
     );
-  // Before any setup, the local lane's program holds none of its models.
-  if (noModelsHeld)
+  // The local lane's program holds none of its models, or all of them.
+  if (localModels)
     for (const entry of (FIXTURE_CATALOG.providers ?? []).find(
       (held) => `${held.provider_id}_${held.transport}` === FIXTURE_LOCAL_LANE,
     )?.catalog.models ?? [])
-      models?.mark(entry.model, false);
+      models?.mark(entry.model, localModels === "all");
   /** The models of a lane of the catalog the service would answer now, by
    * catalogue lane id, as a run names them. */
   const laneModels = (laneId: string) => {
