@@ -9429,6 +9429,7 @@ workspace:
       calculated: Cálculo completado
       created: Declaración creada
       discarded: Declaración descartada
+      edited: Cambios aplicados
       exported: Declaración exportada
       external_evidence_imported: Datos externos de la AEAT importados
       filed: Presentación registrada
@@ -9741,6 +9742,7 @@ workspace:
       reach: Qué cambia
       reach_others: 'También:'
       reading: Leyendo la explicación…
+      remove: Quitar tu valor
       retrieved: Consultado el {date}
       undo: Deshacer
       uses_outside_many: 'También usa datos que se guardan fuera de este modelo: {count}.'
@@ -9851,6 +9853,9 @@ workspace:
         registrar la presentación (por confirmar: {count}).'
       election:
         amendment: Una autoliquidación rectificativa no se puede pagar en dos plazos.
+        carry_forward_only: La devolución solo se puede pedir en el último periodo
+          del año, salvo que estés inscrito en el registro de devolución mensual (REDEME).
+          Este saldo se compensa en los periodos siguientes.
         filing_window_unknown: No se conoce el plazo de presentación de esta declaración,
           así que no se puede ofrecer el pago en dos plazos.
         no_open_account: Ninguna de tus cuentas bancarias propias está abierta. Añade
@@ -9862,6 +9867,9 @@ workspace:
         nothing_to_refund: El resultado no es una devolución, así que esto no se aplica.
         past_filing_window: El plazo de presentación ha terminado, y pagar en dos
           plazos exige presentar la declaración dentro de él.
+        redeme_unstated: Indica en tu perfil si estás inscrito en el registro de devolución
+          mensual (REDEME). Fuera del último periodo del año la devolución depende
+          de ello, así que solo se ofrece la compensación.
         result_unknown: 'Calcula antes la declaración: su resultado lo decide.'
         second_instalment_nothing: Este importe es tan pequeño que el segundo plazo
           quedaría en cero, así que se paga de una sola vez.
@@ -10015,6 +10023,8 @@ workspace:
       no_deadline_short: No consta el plazo
       own_calculation: Cálculo de Cadrumo. La AEAT no lo ha visto.
       result:
+        carry_forward_only_help: La devolución solo se puede pedir en el último periodo
+          del año. Este saldo a tu favor se compensa en los periodos siguientes.
         choice_pending: 'A compensar o a devolver: lo eliges al generar el fichero'
         choice_pending_short: A compensar o a devolver
         direction_unknown_help: Cadrumo aún no indica si este importe es a ingresar
@@ -10028,6 +10038,11 @@ workspace:
         other_boxes: 'Otras casillas de resultado de este modelo: {boxes}'
         out_of_date_until_applied: desactualizado hasta que lo apliques
         provisional: provisional
+        redeme_unstated: 'Sin decidir: la devolución necesita tu dato de REDEME'
+        redeme_unstated_help: Fuera del último periodo del año, pedir la devolución
+          exige estar inscrito en el registro de devolución mensual (REDEME). Tu perfil
+          no dice si lo estás, así que solo se ofrece la compensación. Indícalo en
+          tu perfil.
         sign_help: La casilla [{box}] figura en el modelo oficial como {value}. Arriba
           se muestra el importe sin signo y el sentido en palabras.
         to_carry_forward: A compensar
@@ -10469,6 +10484,7 @@ workspace:
         Tu valor mandará hasta que restaures el origen.'
       effect:
         clear: quedará sin valor
+        remove: deja de llevar tu valor y vuelve a lo que da la declaración
         replaces_aeat_draft: sustituye el valor de los datos de la AEAT
         replaces_earlier_filings: sustituye el valor de una declaración anterior
         replaces_fixed_by_design: sustituye el valor fijado por el modelo
@@ -10566,6 +10582,7 @@ workspace:
       nothing_to_restore: Esta casilla ya muestra el valor de su origen.
     staged:
       clear: (se vaciará)
+      remove: (se quitará tu valor)
       restore: (vuelve al origen)
     step:
       calculate: Calcular

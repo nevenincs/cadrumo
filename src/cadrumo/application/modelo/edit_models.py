@@ -942,6 +942,8 @@ class ModeloEditHeldKind(StrEnum):
     SET = "set"
     CLEAR = "clear"
     RESTORE = "restore"
+    #: The filer's own entry or clear taken out of a box no source feeds.
+    REMOVE = "remove"
 
 
 type ModeloEditHeldAddressV1 = Annotated[

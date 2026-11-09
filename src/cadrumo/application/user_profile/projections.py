@@ -14,7 +14,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from datetime import date
-from typing import TypeGuard
+from types import MappingProxyType
+from typing import Final, TypeGuard
 
 from pydantic import BaseModel
 
@@ -409,7 +410,30 @@ def profile_path_values_for_bucket(bucket_id: str) -> dict[str, str] | None:
     return record_to_path_values(record)
 
 
+#: The schema path of the taxpayer's REDEME (Registro de devolución mensual)
+#: answer. Named once: every reader of the IVA refund election resolves the same
+#: path, so the form, the list and the export cannot read different facts.
+REDEME_ENROLMENT_FACT_PATH: Final[str] = "iva.redeme_enrolled"
+
+_BOOLEAN_FACT_TOKENS: Final[Mapping[str, bool]] = MappingProxyType({"true": True, "false": False})
+
+
+def declared_redeme_enrolment(path_values: Mapping[str, str] | None) -> bool | None:
+    """Read the taxpayer's REDEME answer from projected path values, or ``None`` while unstated.
+
+    ``None`` covers an absent profile, an absent answer and a stored token that
+    is neither canonical boolean: none of those is a stated "no", and reading
+    one as a no would rule the taxpayer out of a refund they are entitled to
+    (LIVA art. 115.Dos) without their ever having been asked.
+    """
+    if path_values is None:
+        return None
+    return _BOOLEAN_FACT_TOKENS.get(path_values.get(REDEME_ENROLMENT_FACT_PATH, ""))
+
+
 __all__ = [
+    "REDEME_ENROLMENT_FACT_PATH",
+    "declared_redeme_enrolment",
     "fact_value",
     "facts_to_values",
     "profile_fact_index",
