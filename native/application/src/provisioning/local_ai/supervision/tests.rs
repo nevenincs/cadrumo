@@ -447,7 +447,7 @@ fn crash_and_restart(supervisor: &mut ServerSupervisor<EngineProgram>, now: Inst
 
 /// A model new in the store, as a pull that states its llama.cpp context leaves it.
 fn model_arrives(locations: &Locations) {
-    let path = ["registry.ollama.ai", "library", "qwen3", "1.7b"];
+    let path = ["registry.ollama.ai", "library", "text-reader", "small"];
     llama_tests::manifest(
         &locations.models,
         path,

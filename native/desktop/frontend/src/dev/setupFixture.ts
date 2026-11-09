@@ -84,6 +84,11 @@ export type SetupFixtureControls = {
   retry(attempt: number, delaySeconds: number): void;
   /** The first item now running fails in this way; its setup settles. */
   fail(category: SetupFailureCategory): void;
+  /** The first running setup fails at its item, not in any part, as when the
+   * host's check of what it fetched finds it damaged: no part carries the
+   * failure, the setup settles failed with it, and the row keeps the state
+   * it had until the status is read again. */
+  failItem(category: SetupFailureCategory): void;
   /** The first running setup, or `item`'s, stops part-way, as when the
    * computer sleeps or Cadrumo closes. */
   interrupt(item?: SetupItemId): void;
@@ -844,6 +849,36 @@ export function setupFixture({
                   parts: held.parts.map((each) =>
                     each === part ? { ...each, step: null, result: cut } : each,
                   ),
+                }
+              : held,
+          ),
+        },
+        "failed",
+      );
+      put({ ...ended, failure: category });
+      publish();
+    },
+    failItem(category) {
+      const run = active();
+      const entry = current(run);
+      const seed = entry && seedOf(entry.item);
+      if (!run || !entry || !seed) return;
+      seed.row = before.get(seed.row.item) ?? seed.row;
+      before.delete(seed.row.item);
+      const ended = settle(
+        {
+          ...run,
+          items: run.items.map((held) =>
+            held.item === entry.item
+              ? {
+                  ...held,
+                  step: null,
+                  retry: null,
+                  result: {
+                    changed: false,
+                    failure: category,
+                    transferred_bytes: 0,
+                  },
                 }
               : held,
           ),

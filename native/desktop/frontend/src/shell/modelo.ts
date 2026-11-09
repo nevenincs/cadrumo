@@ -29,7 +29,10 @@ import {
   type ModeloContracts,
 } from "./modeloContract/contracts";
 import { type OutputLanguage } from "./modeloContract/modelo";
-import { type ModeloDeclarationsListProjectionV1 } from "./modeloContract/modeloDeclarations";
+import {
+  type ModeloDeclarationsListProjectionV1,
+  type ModeloDeclarationsSearchResultV1,
+} from "./modeloContract/modeloDeclarations";
 import { type ModeloEditOperatorInputV2 } from "./modeloContract/modeloEdit";
 import { type ModeloCasillaHelpProjectionV1 } from "./modeloContract/modeloWorkCasillaHelp";
 import { type ModeloWorkbenchFormProjectionV1 } from "./modeloContract/modeloWorkForm";
@@ -117,6 +120,13 @@ export type ModeloPort = {
   declarations(
     language: OutputLanguage,
   ): Promise<ModeloDeclarationsListProjectionV1>;
+  /** The declarations and works that match `query`, said in `language`,
+   * best first. */
+  search(
+    query: string,
+    language: OutputLanguage,
+    limit?: number,
+  ): Promise<ModeloDeclarationsSearchResultV1>;
   /** One declaration's form, with the edit baseline admitted with it or why
    * it cannot be edited. */
   form(

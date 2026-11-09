@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#agent-owned-models'
 date: '2026-10-25'
-modified: '2026-11-08'
+modified: '2026-11-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:f3c264e3eb74be36e48f442a36dd3ccd04565db714e0987cddf3970d86e2141a'
+body_hash: 'sha256:b0f373d94c43028b7412d8d6c69e1621703b06c0d9a5ba6f41b37d9394ce3a77'
 related:
   - "[[2026-10-24-rust-component-provisioning-reference]]"
   - "[[2026-10-24-rust-component-provisioning-adr]]"
@@ -149,5 +149,9 @@ Basis: the coordinator's acceptance on 2026-11-08, which applies rulings already
 
 - **Finding.** The thinking `qwen3:4b` (Qwen3 4B Thinking 2507) reasons whatever a request asks on llama-server b12184. Its template opens the reasoning in the prompt, and no per-request or launch setting stopped it. The invoice reading with a JSON schema and a 400-token reply was schema-valid 0/5 under every control. On Ollama 0.40.13 with `think:false` the same model was 5/5 at 42 tokens, so the failure is specific to llama.cpp.
 - **Measured replacement.** `qwen3:4b-instruct` is Qwen3 4B Instruct 2507 Q4_K_M, model layer 2,497,280,480 B. It does not reason. The same reading was schema-valid 5/5 on Ollama with `think:false`, at 56 tokens and 0.5 s warm. It was also 5/5 on llama-server b12184 from the same registry model layer, at 40 tokens and 0.6 to 0.7 s, with or without `enable_thinking:false`. The product's 38-key extraction schema was separately measured 5/5 on llama-server.
-- **Recommended set.** For local text reading, cadrumo-agent's catalogue recommends `qwen3:4b-instruct` in place of `qwen3:4b`. It is the text slot, the default and the recommendation on both engines. The catalogue routes llama.cpp through the Ollama registry too, using the same layer, with `llamacpp_default_context` 8192. No third-party Hugging Face repository is pinned. The official `Qwen/Qwen3-4B-Instruct-2507-GGUF` did not resolve (401), and a measured community GGUF was not adopted.
+- **Recommended set.** For local text reading, cadrumo-agent's catalogue recommends `qwen3:4b-instruct` in place of `qwen3:4b`. It is the text slot, the default and the recommendation on both engines. The catalogue routes llama.cpp through the Ollama registry too, using the same layer, with `llamacpp_default_context` 16384 (8192 until 2026-11-09; see the next item). No third-party Hugging Face repository is pinned. The official `Qwen/Qwen3-4B-Instruct-2507-GGUF` did not resolve (401), and a measured community GGUF was not adopted.
+- **Context raised to 16384 (2026-11-09).** Basis: the coordinator's ruling of 2026-11-09 that agent turns must work on the bundled default engine. The evidence is two live probes on the packaged llama-server b12184 with `qwen3:4b-instruct`, each on its own loopback port and stopped by exact PID.
+  - At a preset `ctx-size` of 8192, a background request through the real service returned schema-valid JSON. An agent turn was refused before any prompt with `model_does_not_fit`: its first request, with the assistant's instructions and a tool server, needs about 12,816 tokens. Free RAM was 67,984 MiB before, 63,571 MiB loaded and 68,438 MiB after.
+  - At 16384, both the agent turn and the background request passed. The agent turn called `read_attachment` through the production approval route and replied from the file. Free RAM was 70,172 MiB before, 65,949 MiB loaded and 69,585 MiB after, about 4.2 GB in use.
+  - The catalogue's `llamacpp_default_context` for `qwen3:4b-instruct` is therefore 16384, and the llama.cpp lane's completed-turn proof is recorded on it. The other local models keep 8192.
 - **Unchanged.** Cadrumo still names no model (constraint 6), and the catalogue schema shape is unchanged. Vision reading is unaffected, because this slot covers text only.
