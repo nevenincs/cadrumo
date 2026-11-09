@@ -368,7 +368,7 @@ def _paid_on(movement: Transaction) -> date:
 
 def _income_kind(payments: Iterable[Transaction]) -> WithholdingIncomeKind | None:
     """Return the one income kind the paying movements' IRPF categories state, or ``None``."""
-    kinds = set()
+    kinds: set[WithholdingIncomeKind] = set()
     for movement in payments:
         if has_rent_irpf_category(movement.irpf_category, direction=TransactionDirection.OUTGOING):
             kinds.add(WithholdingIncomeKind.URBAN_RENT)
