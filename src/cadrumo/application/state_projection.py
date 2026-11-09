@@ -304,6 +304,7 @@ def _modelo_profile_refusal(
     from .modelo.profile_readiness_gate import (
         modelo_applicability_refusal,
         pre_activity_period_refusal,
+        taxpayer_projection_missing_paths,
     )
     from .operator_actions.preconditions import profile_setup_incomplete_verdict
     from .user_profile.completeness import missing_required_field_paths
@@ -319,11 +320,18 @@ def _modelo_profile_refusal(
         if record.setup_state is ProfileSetupState.INCOMPLETE
         else None
     )
-    applicability_refusal = modelo_applicability_refusal(
-        record=record,
-        bucket_id=bucket_id,
-        modelo=request.modelo,
-        operation=operation,
+    # An unanswered question the taxpayer projection needs leaves
+    # applicability unknown; the profile report already lists it as missing,
+    # so this limb claims no verdict rather than failing on the projection.
+    applicability_refusal = (
+        None
+        if taxpayer_projection_missing_paths(record, operation=operation)
+        else modelo_applicability_refusal(
+            record=record,
+            bucket_id=bucket_id,
+            modelo=request.modelo,
+            operation=operation,
+        )
     )
     pre_activity_refusal = pre_activity_period_refusal(
         record=record,

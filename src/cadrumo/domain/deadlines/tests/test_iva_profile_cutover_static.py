@@ -158,6 +158,11 @@ _FACT_CONTAINER_NON_PROFILE_EXCLUSIONS = (
         "test_the_general_regime_does_not_ask_for_the_modelo_303_composition",
         "deliberately incomplete general-regime claim proves the overview owes no composition",
     ),
+    _ProfileShapeExclusion(
+        "src/cadrumo/application/tests/test_workbench_generation_undeclared_works.py",
+        "test_a_refused_taxpayer_projection_still_dates_each_local_declaration",
+        "deliberately incomplete IVA claim proves a refused projection still dates each local declaration",
+    ),
 )
 
 

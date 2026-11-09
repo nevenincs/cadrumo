@@ -463,6 +463,22 @@ def _governed_facts_scope(operation: PinnedAuthorityOperation) -> AbstractContex
     return validating_governed_facts(operation)
 
 
+def taxpayer_projection_missing_paths(
+    record: UserProfileRecord,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[str, ...]:
+    """Return the unanswered profile questions the taxpayer projection cannot be built without.
+
+    Applicability is judged on that projection, so while any is unanswered
+    applicability is unknown: a readiness surface reports the questions as
+    missing and claims no applicability verdict either way.
+    """
+    values = record_to_path_values(record)
+    with _governed_facts_scope(operation):
+        return modelo_iva_block_missing_paths(values)
+
+
 def require_taxpayer_projection_facts_declared(
     *,
     record: UserProfileRecord,
@@ -479,9 +495,7 @@ def require_taxpayer_projection_facts_declared(
     operator's to give, so it is refused here as a readiness gap whose door
     opens that question, before any projection or effect.
     """
-    values = record_to_path_values(record)
-    with _governed_facts_scope(operation):
-        missing_paths = modelo_iva_block_missing_paths(values)
+    missing_paths = taxpayer_projection_missing_paths(record, operation=operation)
     if not missing_paths:
         return
     grounding_index = deferred_profile_grounding_index(operation)
@@ -983,4 +997,5 @@ __all__ = [
     "require_profile_ready_for_modelo_work",
     "require_profile_ready_for_work_unit",
     "require_taxpayer_projection_facts_declared",
+    "taxpayer_projection_missing_paths",
 ]

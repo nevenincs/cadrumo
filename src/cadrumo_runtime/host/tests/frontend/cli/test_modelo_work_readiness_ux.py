@@ -120,6 +120,42 @@ def test_work_create_refuses_unanswered_iva_question_with_its_profile_field_door
     assert unwrap_schema_envelope(listed.output)["work_unit_count"] == 0
 
 
+def test_readiness_reports_unanswered_iva_question_as_a_missing_profile_field(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Readiness lists the unanswered question as the gap and claims no applicability verdict."""
+    create_modelo_operator_profile()
+    _drop_operator_profile_fact(_UNANSWERED_IVA_QUESTION)
+    with bundled_indexed_authority().operation() as operation:
+        filing_year = operation.supported_filing_years().horizon
+    revision_id = str(published_snapshot("303", filing_year=filing_year, period="1T").revision.id)
+
+    with caplog.at_level("ERROR"):
+        readiness = invoke_modelo_scenario_cli(
+            [
+                "--format", "json",
+                "app", "modelo", "readiness",
+                "--modelo", "303",
+                "--revision-id", revision_id,
+                "--year", str(filing_year),
+                "--period", "1T",
+            ],
+        )  # fmt: skip
+
+    assert readiness.exit_code == 2, readiness.output
+    payload = unwrap_schema_envelope(readiness.output)
+    assert payload["ready"] is False
+    assert payload["profile_ready"] is False
+    assert payload["profile_refusal"] == ""
+    section_key, field_key = _UNANSWERED_IVA_QUESTION.split(".")
+    (row,) = [entry for entry in payload["missing"] if entry["selector"] == _UNANSWERED_IVA_QUESTION]
+    assert (row["section_key"], row["field_key"]) == (section_key, field_key)
+    assert row["label"] and row["label"] != row["selector"]
+    assert "ERROR_DEADLINES_PROFILE" not in readiness.output
+    assert "Traceback" not in readiness.output
+    assert not [record for record in caplog.records if record.levelname == "ERROR"]
+
+
 def test_work_create_with_every_iva_question_answered_creates_the_work() -> None:
     """ANTI-VACUITY: the same profile with the question answered is not refused."""
     create_modelo_operator_profile()

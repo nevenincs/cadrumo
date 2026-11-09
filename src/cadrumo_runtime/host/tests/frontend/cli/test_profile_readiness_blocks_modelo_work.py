@@ -57,6 +57,10 @@ def _create_defaulted_natural_person_profile(profile_name: str) -> None:
             "identity.name": "Lucia",
             "identity.surnames": "Navarro",
             "activities.description": "",
+            # Stated, not defaulted: an unstated large-company condition selects
+            # neither Modelo 303 cadence, so readiness would also ask for it and
+            # the activity description would no longer be the one gap.
+            "censo.large_company": "false",
         },
         log_in=False,
     )
@@ -166,6 +170,14 @@ def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_r
             "renta_taxpayer.birth_date": "1952-02-12",
             "renta_taxpayer.marital_status": "3",
             "renta_family.situacion_familiar": "soltero",
+            # Stated, not defaulted: an unstated residence leaves the IRPF route,
+            # and with it Modelo 130 applicability, undecided. An unstated
+            # Art. 109 RIRPF coverage schedules no Modelo 130 quarter, and an
+            # unstated large-company condition selects neither Modelo 303
+            # cadence, so neither would reach the calendar as not applicable.
+            "taxpayer_type.fiscal_residency": "resident_irpf",
+            "irpf.art109_activity_income_withholding_ge_70pct": "false",
+            "censo.large_company": "false",
         },
         log_in=False,
     )
@@ -198,8 +210,8 @@ def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_r
         )  # fmt: skip
         assert calendar.exit_code == 0, calendar.output
         assert "100\t2025 0A" in calendar.output
-        assert "130" in calendar.output
-        assert "303" in calendar.output
+        assert "suppressed	130	2026 1T	verdict=not_applicable" in calendar.output
+        assert "suppressed	303	2026 1T	verdict=not_applicable" in calendar.output
 
         readiness = _invoke_profile_cli(
             "pere-landlord",
