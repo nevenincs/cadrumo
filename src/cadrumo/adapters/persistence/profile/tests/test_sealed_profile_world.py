@@ -8,6 +8,7 @@ real registration door.
 from __future__ import annotations
 
 import re
+from datetime import timedelta
 from pathlib import Path
 from uuid import UUID
 
@@ -20,6 +21,7 @@ from .....application.workflow.profile_bucket_scan import resolve_profile_bucket
 from .....core.config import load_settings
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_location
+from .....core.time.clock import frozen_clock, now
 from .....domain.user_profile.values import UserProfileFact
 from ...storage.master_key.active_session import close_active_bucket_session, current_active_bucket_session
 from ...storage.tests.profile_capsule_runtime import (
@@ -189,3 +191,47 @@ def test_register_cli_profile_copies_into_an_unused_root_and_registers_beside_a_
         pointer = resolve_profile_bucket("shared seed")
         assert pointer is not None and pointer.bucket_id == first
         close_active_bucket_session()
+
+
+_REFUSAL = "register the frozen-clock test's profile under its own label or world key"
+
+
+def test_a_copy_on_a_clock_earlier_than_its_seal_is_refused_before_anything_is_copied(tmp_path: Path) -> None:
+    world = _registered_world("sealed before the copy's clock")
+    _, decode = profile_authority_contexts()
+    destination = tmp_path / "copy"
+    with (
+        frozen_clock(world.sealed_at - timedelta(days=1)),
+        pytest.raises(AssertionError, match=_REFUSAL),
+        copied_profile_world(world, destination, profile_decode_context=decode),
+    ):
+        pass
+    assert not destination.exists()
+    assert current_active_bucket_session() is None
+
+
+def test_register_cli_profile_refuses_a_world_sealed_after_the_frozen_clock(tmp_path: Path) -> None:
+    """The shared registration seals a world on the real clock; a test frozen before that seal may not reuse it."""
+    label = "sealed on the real clock"
+    with isolated_profile_storage_root(tmp_path=tmp_path / "real"):
+        register_cli_profile(label=label, log_in=False)
+        close_active_bucket_session()
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path / "frozen"),
+        frozen_clock(now() - timedelta(days=1)),
+        pytest.raises(AssertionError, match=_REFUSAL),
+    ):
+        register_cli_profile(label=label, log_in=False)
+    assert current_active_bucket_session() is None
+
+
+def test_a_copy_at_its_seal_instant_or_later_updates_its_record_at_that_clock(tmp_path: Path) -> None:
+    world = _registered_world("copied at or after its seal")
+    _, decode = profile_authority_contexts()
+    identity = UUID(world.profile_id)
+    for name, instant in (("at the seal", world.sealed_at), ("a day later", world.sealed_at + timedelta(days=1))):
+        with frozen_clock(instant), copied_profile_world(world, tmp_path / name, profile_decode_context=decode):
+            upsert_test_profile_facts(world.profile_id, (UserProfileFact(path="identity.tax_id", value="12345678Z"),))
+            with bound_test_profile_record(identity) as repository:
+                record = repository.load(identity)
+            assert record.created_at <= record.updated_at == instant

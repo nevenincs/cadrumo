@@ -250,7 +250,7 @@ def _record_design_sources(sources: Mapping[str, SourceReference]) -> dict[str, 
     return {
         source_id: source
         for source_id, source in sources.items()
-        if _record_design_manifest_path(source.corpus_path) is not None
+        if record_design_manifest_path(source.corpus_path) is not None
     }
 
 
@@ -258,7 +258,7 @@ def _record_design_manifest_paths(sources: Mapping[str, SourceReference]) -> set
     return {
         manifest_path
         for source in sources.values()
-        if (manifest_path := _record_design_manifest_path(source.corpus_path)) is not None
+        if (manifest_path := record_design_manifest_path(source.corpus_path)) is not None
     }
 
 
@@ -326,7 +326,12 @@ def _bundle_root(root: Path) -> Path:
     )
 
 
-def _record_design_manifest_path(corpus_path: str) -> PurePosixPath | None:
+def record_design_manifest_path(corpus_path: str) -> PurePosixPath | None:
+    """The acquisition manifest a record-design source's identity is checked against; ``None`` for any other source.
+
+    A record design lives under ``corpus/aeat_official/disenos_registro/modelo_<id>/``, and that modelo's
+    ``manifest.json`` records the official identity of every design file in it.
+    """
     parts = Path(corpus_path).parts
     prefix = ("corpus", "aeat_official", "disenos_registro")
     if len(parts) < len(prefix) + 2 or parts[: len(prefix)] != prefix or not parts[len(prefix)].startswith("modelo_"):

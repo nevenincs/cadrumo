@@ -2761,8 +2761,7 @@ desktop:
       whole_counts: Movimientos · todo el libro
     import:
       accepts:
-        bank: CSV, XLSX, XLS, OFX, QFX o PDF · hasta 128 archivos · no se leen las
-          carpetas de dentro
+        bank: '{formats} · hasta 128 archivos · no se leen las carpetas de dentro'
         book: CSV, TSV, XLSX, XLSM o XLS
         documents: PDF, PNG, JPG, TIFF, WEBP, HEIC o XML Facturae, UBL o CII · no
           se leen las carpetas de dentro

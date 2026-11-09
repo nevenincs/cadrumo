@@ -384,7 +384,6 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "verified",
             "unreadable",
         ),
-        "desktop.ledger.import.provider.": ("auto", "csv", "ofx", "qfx", "xlsx", "xls", "pdf"),
         "desktop.ledger.import.direction.": ("incoming", "outgoing", "internal_transfer"),
         "desktop.ledger.import.filter.": ("bank", "book", "documents"),
         "desktop.ledger.import.kind.": ("bank", "book", "documents"),

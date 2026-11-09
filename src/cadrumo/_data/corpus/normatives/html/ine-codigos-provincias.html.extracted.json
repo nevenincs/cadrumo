@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ine-codigos-provincias.html",
+  "source_sha256": "5129d5ae9739a7822f3f8d421db2463d5c2fba9ff5e061ff1de16c046d999178",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.4",
+  "attribution": "Source: Instituto Nacional de Estadística (INE). Reused with attribution.",
+  "units": [
+    {
+      "text": "INEbase/ Clasificaciones / Relación de municipios, provincias, comunidades y ciudades autónomas y sus códigos / Relación de provincias con sus códigos\nEnglish\nCenso Electoral\nSede electrónica\nCompartir\nX\nFacebook\nLinkedin\nWhatsApp\nCorreo Electrónico\nCopiar al portapapeles\nINEbase\nDemografía y población\nPadrón. Población por municipios\nRelación de municipios y sus códigos por provincias\nRelación de provincias con sus códigos\nCódigo\nLiteral\n02\nAlbacete\n03\nAlicante/Alacant\n04\nAlmería\n01\nAraba/Álava\n33\nAsturias\n05\nÁvila\n06\nBadajoz\n07\nBalears, Illes\n08\nBarcelona\n48\nBizkaia\n09\nBurgos\n10\nCáceres\n11\nCádiz\n39\nCantabria\n12\nCastellón/Castelló\n13\nCiudad Real\n14\nCórdoba\n15\nCoruña, A\nCódigo\nLiteral\n16\nCuenca\n20\nGipuzkoa\n17\nGirona\n18\nGranada\n19\nGuadalajara\n21\nHuelva\n22\nHuesca\n23\nJaén\n24\nLeón\n25\nLleida\n27\nLugo\n28\nMadrid\n29\nMálaga\n30\nMurcia\n31\nNavarra\n32\nOurense\n34\nPalencia\n35\nPalmas, Las\nCódigo\nLiteral\n36\nPontevedra\n26\nRioja, La\n37\nSalamanca\n38\nSanta Cruz de Tenerife\n40\nSegovia\n41\nSevilla\n42\nSoria\n43\nTarragona\n44\nTeruel\n45\nToledo\n46\nValencia/València\n47\nValladolid\n49\nZamora\n50\nZaragoza\n51\nCeuta\n52\nMelilla",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

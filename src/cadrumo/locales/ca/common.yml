@@ -2760,8 +2760,7 @@ desktop:
       whole_counts: Moviments · tot el llibre
     import:
       accepts:
-        bank: CSV, XLSX, XLS, OFX, QFX o PDF · fins a 128 fitxers · no es llegeixen
-          les carpetes de dins
+        bank: '{formats} · fins a 128 fitxers · no es llegeixen les carpetes de dins'
         book: CSV, TSV, XLSX, XLSM o XLS
         documents: PDF, PNG, JPG, TIFF, WEBP, HEIC o XML Facturae, UBL o CII · no
           es llegeixen les carpetes de dins

@@ -16,6 +16,9 @@ period model, so a window does no period arithmetic: the periods of a year with
 their days, neighbours and names in ``output_language``, the periods holding
 ``on_date`` (today in Spain when none is given), the period holding a span, and
 the periods holding each day asked.
+
+The statement formats this installation parses are served with them, so a
+window offers no format whose parser is not installed.
 """
 
 from __future__ import annotations
@@ -69,6 +72,7 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .actions_import import installed_ledger_providers
 from .entry_limits import LedgerEntryLimitsProjection, ledger_entry_limits
 from .invoice_label_vocabulary import CURRENCY_CODES
 from .period_options import LedgerPeriodsProjection, LedgerPeriodsQuery, PeriodDay, ledger_periods
@@ -95,6 +99,7 @@ type EntryOptionFamily = Literal[
     "prorrata_sector_letter",
     "capital_good_kind",
     "capital_good_disposal",
+    "import_format",
 ]
 
 
@@ -305,6 +310,7 @@ def ledger_entry_options(
         ("prorrata_sector_letter", _plain(item.token for item in prorrata.sector_letters)),
         ("capital_good_kind", _plain(capital.kind_choices)),
         ("capital_good_disposal", _plain(capital.disposal_regime_choices)),
+        ("import_format", _plain(installed_ledger_providers())),
     )
     return LedgerEntryOptionsProjection(
         profile_id=profile_id,
