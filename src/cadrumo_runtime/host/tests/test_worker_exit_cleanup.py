@@ -372,6 +372,10 @@ def test_rejected_handshake_retains_first_failed_close_and_does_not_close_channe
 class _Operations:
     def __init__(self, failures: int) -> None:
         self.owner = _Release(failures)
+        self.session_reads_ended = 0
+
+    def end_session_reads(self) -> None:
+        self.session_reads_ended += 1
 
     @property
     def calls(self) -> int:
@@ -432,6 +436,7 @@ def test_control_dispatch_timing_names_retirement_and_keeps_behavior_unchanged(
     discarded: list[UUID] = []
     expired: list[tuple[UUID, ...]] = []
     forgotten: list[bool] = []
+    ended: list[bool] = []
     output: list[bytes] = []
 
     class Custody(_ServeCustody):
@@ -445,6 +450,9 @@ def test_control_dispatch_timing_names_retirement_and_keeps_behavior_unchanged(
     class Operations:
         def forget_settled_ephemeral(self) -> None:
             forgotten.append(True)
+
+        def end_session_reads(self) -> None:
+            ended.append(True)
 
         def in_flight_operation_count(self) -> int:
             return 0
@@ -492,6 +500,7 @@ def test_control_dispatch_timing_names_retirement_and_keeps_behavior_unchanged(
     assert retired == discarded == [session_id]
     assert expired == [()]
     assert forgotten == [True]
+    assert ended == [True]
     assert output
     assert context.changed.is_set(), "a handled command must wake idle custody expiry"
     delivered = delivered_records(caplog, worker_service.log.name)
@@ -695,11 +704,12 @@ def test_retirement_keeps_worker_loop_responsive(phase: str) -> None:
             def expire(self, *, live_sessions: tuple[UUID, ...]) -> None:
                 assert live_sessions == (parent,)
 
+        operations = _Operations(0)
         context = worker_service.WorkerControl(
             channel=cast(WorkerChannel, object()),
             custody=cast(ProfileWorkerCustody, Custody()),
             human=cast(ProfileWorkerHumanLogin, Human()),
-            operations=cast(ProfileWorkerOperationHost, _Operations(0)),
+            operations=cast(ProfileWorkerOperationHost, operations),
             uploads=cast(worker_service.WorkerSubmissionStaging, Uploads()),
             failed=asyncio.Event(),
             operation_release=cast(worker_service.worker_cleanup.WorkerRelease[OperationDrainResult], object()),
@@ -709,6 +719,7 @@ def test_retirement_keeps_worker_loop_responsive(phase: str) -> None:
         request = ProfileWorkerRetireRequest(request_id=uuid4(), session_id=uuid4())
         assert await worker_service.handle_custody_control(context, request) == "status"
         assert progressed.is_set()
+        assert operations.session_reads_ended == 1, "a retired child ends kept reads though its parent lives on"
 
     asyncio.run(exercise())
 
@@ -823,6 +834,71 @@ def test_idle_custody_expiry_runs_only_at_a_deadline_or_a_handled_command() -> N
         stop.set()
         await asyncio.wait_for(expiry, timeout=5)
         assert not failed.is_set()
+
+    asyncio.run(exercise())
+
+
+def test_a_lapsed_lease_ends_the_reads_kept_for_reuse_and_an_unchanged_one_does_not() -> None:
+    """Expiry that finds a held lease gone ends every read's reuse; one that finds nothing changed leaves it."""
+
+    async def exercise() -> None:
+        stop, failed, changed = asyncio.Event(), asyncio.Event(), _handled()
+        lease = uuid4()
+        # Held, still held, lapsed, and nothing held: only the third pass loses a lease.
+        observations = iter(((lease,), (lease,), (), ()))
+        passes = 0
+        ended_at: list[int] = []
+
+        class Custody(_ServeCustody):
+            @override
+            def live_sessions(self) -> tuple[UUID, ...]:
+                nonlocal passes
+                passes += 1
+                held = next(observations)
+                if passes == 4:
+                    stop.set()
+                return held
+
+        class Uploads:
+            def expire(self, *, live_sessions: tuple[UUID, ...]) -> None:
+                del live_sessions
+
+            def seconds_until_expiry(self) -> float | None:
+                return None
+
+        class Observed(_Operations):
+            @override
+            def end_session_reads(self) -> None:
+                super().end_session_reads()
+                ended_at.append(passes)
+
+        operations = Observed(0)
+
+        async def wake_each_pass() -> None:
+            while not stop.is_set():
+                changed.set()
+                await asyncio.sleep(0.01)
+
+        waker = asyncio.create_task(wake_each_pass())
+        try:
+            await asyncio.wait_for(
+                worker_service.expire_custody(
+                    stop,
+                    failed,
+                    cast(ProfileWorkerCustody, Custody()),
+                    cast(worker_service.WorkerSubmissionStaging, Uploads()),
+                    cast(ProfileWorkerHumanLogin, _IdleHuman()),
+                    changed,
+                    cast(ProfileWorkerOperationHost, operations),
+                ),
+                timeout=5,
+            )
+        finally:
+            stop.set()
+            await waker
+        assert not failed.is_set()
+        assert ended_at == [3]
+        assert operations.session_reads_ended == 1
 
     asyncio.run(exercise())
 

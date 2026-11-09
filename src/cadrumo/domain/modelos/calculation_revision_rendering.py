@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable, Mapping
 from copy import deepcopy
 from dataclasses import dataclass, field
@@ -32,6 +33,7 @@ from ...core.identity.documents import TAX_ID_FORMAT_CONTEXT
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.type_guards import is_object_dict, is_object_list_or_tuple, is_object_mapping, is_object_set_or_frozenset
 from ..calculations.registry.facts.atoms import TAGGED_FACT_ATOM_CONTEXT
+from ..calculations.registry.field_absence import absent_when_none
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.ids import RevisionId
 from ..calculations.registry.revision_contracts import DeclaredPredecessor, NoPredecessor
@@ -53,7 +55,12 @@ def _complete_registry_value(value: object) -> object:
         # These types own the authored wire form accepted by their discriminator.
         return _complete_registry_value(value.model_dump(mode="python"))
     if isinstance(value, BaseModel):
-        return {name: _complete_registry_value(getattr(value, name)) for name in type(value).model_fields}
+        return {
+            name: _complete_registry_value(item)
+            for name, field in type(value).model_fields.items()
+            for item in (getattr(value, name),)
+            if not (field.exclude_if is absent_when_none and absent_when_none(item))
+        }
     if isinstance(value, Mapping):
         mapping = _OBJECT_MAPPING_ADAPTER.validate_python(value)
         return {key: _complete_registry_value(item) for key, item in mapping.items()}
@@ -73,7 +80,10 @@ def retain_registry_schema_fields(value: object, *, predecessor: bool = False) -
                 value.pop("serialization", None)
         if value.get("type") == "model-field" and not predecessor:
             value.pop("serialization_exclude", None)
-            value.pop("serialization_exclude_if", None)
+            # A field added after snapshots were saved stays out while absent,
+            # so an earlier snapshot's complete payload is unchanged.
+            if value.get("serialization_exclude_if") is not absent_when_none:
+                value.pop("serialization_exclude_if", None)
         for item in value.values():
             retain_registry_schema_fields(item, predecessor=predecessor)
     elif is_object_list_or_tuple(value):
@@ -123,11 +133,32 @@ REGISTRY_SERIALIZER = RegistrySerializerMemo()
 def registry_payload(snapshot: RegistrySnapshot) -> dict[str, object]:
     """Serialize a registry snapshot to a JSON-mode mapping.
 
-    ``snapshot`` is a :class:`RegistrySnapshot`.
+    ``snapshot`` is a :class:`RegistrySnapshot`. Each call returns a mapping of
+    its own; the serialization is computed once per live snapshot object and
+    serializer, and later calls rebuild an equal mapping from it.
     """
-    return _STRING_MAPPING_ADAPTER.validate_python(
-        REGISTRY_SERIALIZER.serializer().to_python(snapshot, mode="json", by_alias=False, exclude_computed_fields=True)
+    serializer = REGISTRY_SERIALIZER.serializer()
+    return VERIFIED_REGISTRY.registry_payload(
+        snapshot,
+        serializer,
+        lambda: _STRING_MAPPING_ADAPTER.validate_python(
+            serializer.to_python(snapshot, mode="json", by_alias=False, exclude_computed_fields=True)
+        ),
     )
+
+
+def _reproducible_json(payload: dict[str, object]) -> str | None:
+    """Encode ``payload`` when decoding the text gives back an equal mapping, else ``None``.
+
+    A JSON-mode serialization holds only JSON values, but anything the text
+    would not give back unchanged -- a tuple, a non-finite number -- keeps the
+    payload out of the memo rather than altering what a later call returns.
+    """
+    try:
+        encoded = json.dumps(payload, ensure_ascii=False, allow_nan=False, separators=(",", ":"))
+    except (TypeError, ValueError):
+        return None
+    return encoded if json.loads(encoded) == payload else None
 
 
 type _LabelIdentity = tuple[tuple[str, str], ...]
@@ -155,6 +186,7 @@ class _SnapshotDigests:
     snapshot: ReferenceType[RegistrySnapshot]
     registry_digest: str | None = None
     rendering_digests: dict[_RenderingDigestKey, str] = field(default_factory=dict)
+    registry_payload: tuple[SchemaSerializer, str] | None = None
 
 
 class VerifiedRegistryMemo:
@@ -256,6 +288,32 @@ class VerifiedRegistryMemo:
             if len(digests.rendering_digests) < _MAX_RENDERING_DIGESTS_PER_SNAPSHOT:
                 digests.rendering_digests[key] = digest
         return digest
+
+    def registry_payload(
+        self,
+        snapshot: RegistrySnapshot,
+        serializer: SchemaSerializer,
+        compute: Callable[[], dict[str, object]],
+    ) -> dict[str, object]:
+        """Return a fresh JSON-mode mapping of a :class:`RegistrySnapshot` under ``serializer``.
+
+        Every saved revision of a declaration embeds the same snapshot, and a
+        catalogue write serializes each of them again. The serialization is kept
+        as JSON text for the snapshot object and the serializer it came from, and
+        each later call decodes its own mapping from that text, so no caller
+        shares or can alter what another receives.
+        """
+        digests = self._digests_of(snapshot)
+        if digests is None:
+            return compute()
+        held = digests.registry_payload
+        if held is not None and held[0] is serializer:
+            return _STRING_MAPPING_ADAPTER.validate_python(json.loads(held[1]))
+        payload = compute()
+        encoded = _reproducible_json(payload)
+        if encoded is not None:
+            digests.registry_payload = (serializer, encoded)
+        return payload
 
     def _digests_of(self, snapshot: RegistrySnapshot) -> _SnapshotDigests | None:
         key = id(snapshot)

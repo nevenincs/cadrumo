@@ -101,7 +101,7 @@ impl Stored {
 }
 
 fn selected(role: &str, name: &str, size_bytes: u64) -> SelectedModel {
-    SelectedModel::new(role, name, Some(size_bytes)).unwrap()
+    SelectedModel::new(role, name, Some(size_bytes), None).unwrap()
 }
 
 /// The vision role reads with one model and two text roles share another.
@@ -176,7 +176,7 @@ fn a_selection_takes_well_formed_triples_only_and_orders_them_by_role() {
         ("text_extraction", "synthetic-text:", 1),
     ] {
         assert!(
-            SelectedModel::new(role, name, Some(size)).is_err(),
+            SelectedModel::new(role, name, Some(size), None).is_err(),
             "{role} {name} {size}"
         );
     }
@@ -203,13 +203,21 @@ fn a_selection_takes_well_formed_triples_only_and_orders_them_by_role() {
             "text_extraction",
             ModelArtefact::HuggingFace(declared.clone()),
             None,
+            None,
         )
         .unwrap(),
-        SelectedModel::new("column_role_mapping", &declared.name().to_string(), None).unwrap(),
+        SelectedModel::new(
+            "column_role_mapping",
+            &declared.name().to_string(),
+            None,
+            None,
+        )
+        .unwrap(),
     ]);
     assert!(two_sources.is_err(), "one model has one source");
     assert!(
-        SelectedModel::of_artefact("program", ModelArtefact::HuggingFace(declared), None).is_err()
+        SelectedModel::of_artefact("program", ModelArtefact::HuggingFace(declared), None, None)
+            .is_err()
     );
     let ordered = LocalModels::new(vec![
         selected("vision_transcription", VISION, 1),
@@ -342,6 +350,7 @@ fn the_plan_has_a_part_per_selected_role_and_counts_a_shared_model_once() {
             SelectedModel::of_artefact(
                 "vision_transcription",
                 ModelArtefact::HuggingFace(declared.clone()),
+                None,
                 None,
             )
             .unwrap(),
@@ -668,9 +677,12 @@ fn a_registry_model_is_fetched_by_the_engine_into_the_store_with_no_server() {
 fn a_model_of_unknown_size_is_planned_unsized_and_fetched_against_its_manifest_sizes() {
     let root = tempfile::tempdir().unwrap();
     let stored = Stored::new(5);
-    assert!(SelectedModel::new("download", TEXT, Some(0)).is_err());
+    assert!(SelectedModel::new("download", TEXT, Some(0), None).is_err());
     let models = Models::new(
-        LocalModels::new(vec![SelectedModel::new("download", TEXT, None).unwrap()]).unwrap(),
+        LocalModels::new(vec![
+            SelectedModel::new("download", TEXT, None, None).unwrap(),
+        ])
+        .unwrap(),
         root.path().join("models"),
     );
     let model = &models.selection().as_slice()[0];
@@ -736,8 +748,8 @@ fn a_fetch_reaches_only_the_hosts_the_approved_plan_names() {
     let fetched = fetch(&fixture.models, model, &publishers.network(), &storage_only);
     assert!(
         matches!(
-            fetched.result,
-            Err(LocalAiError::Failed(FailureCategory::BlockedByNetwork))
+            &fetched.result,
+            Err(error) if error.category() == FailureCategory::BlockedByNetwork
         ),
         "{:?}",
         fetched.result
@@ -792,6 +804,7 @@ fn a_hugging_face_model_is_fetched_from_its_declared_files_into_the_same_store()
             SelectedModel::of_artefact(
                 "vision_transcription",
                 ModelArtefact::HuggingFace(declared.clone()),
+                None,
                 None,
             )
             .unwrap(),
@@ -1174,4 +1187,264 @@ fn removal_clears_the_partial_folder_and_the_blobs_no_remaining_manifest_names()
         "an unreadable kept manifest keeps every blob"
     );
     assert!(partials.iter().all(|path| !path.exists()));
+}
+
+/// A selection of `name` alone, stating `context` as its llama.cpp context.
+fn stating(root: &Path, name: &str, context: Option<u32>) -> Models {
+    Models::new(
+        LocalModels::new(vec![
+            SelectedModel::new(
+                "download",
+                name,
+                None,
+                context.map(|context| NonZeroU32::new(context).unwrap()),
+            )
+            .unwrap(),
+        ])
+        .unwrap(),
+        root.to_path_buf(),
+    )
+}
+
+fn context(value: u32) -> Option<NonZeroU32> {
+    NonZeroU32::new(value)
+}
+
+#[test]
+fn a_context_record_reads_back_is_replaced_and_refuses_what_it_cannot_hold() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path().join("models");
+    let name = ModelName::parse(TEXT).unwrap();
+    assert_eq!(recorded_context(&root, &name), None, "nothing recorded yet");
+
+    record_context(&root, &name, NonZeroU32::new(4096).unwrap()).unwrap();
+    let file = root
+        .join("cadrumo")
+        .join("llamacpp-context")
+        .join("registry.ollama.ai")
+        .join("library")
+        .join("synthetic-text")
+        .join("test.json");
+    assert_eq!(
+        fs::read_to_string(&file).unwrap(),
+        r#"{"schema":1,"llamacpp_context":4096}"#
+    );
+    assert_eq!(recorded_context(&root, &name), context(4096));
+    // Outside the folders Ollama reads.
+    assert!(!root.join("manifests").exists() && !root.join("blobs").exists());
+
+    record_context(&root, &name, NonZeroU32::new(8192).unwrap()).unwrap();
+    assert_eq!(recorded_context(&root, &name), context(8192));
+    assert_eq!(
+        fs::read_dir(file.parent().unwrap()).unwrap().count(),
+        1,
+        "a replacement leaves no other file"
+    );
+
+    // A tag with a dot keeps it: `.json` is added, never put in its place.
+    let dotted = ModelName::parse("synthetic-text:v1.5").unwrap();
+    record_context(&root, &dotted, NonZeroU32::new(2048).unwrap()).unwrap();
+    assert!(file.with_file_name("v1.5.json").is_file());
+    assert_eq!(recorded_context(&root, &dotted), context(2048));
+    assert_eq!(recorded_context(&root, &name), context(8192));
+
+    for bytes in [
+        br#"{"schema":1,"llamacpp_context":0}"#.as_slice(),
+        br#"{"schema":2,"llamacpp_context":4096}"#,
+        br#"{"schema":1,"llamacpp_context":4096,"extra":0}"#,
+        br#"{"schema":1}"#,
+        br#"{"schema":1,"llamacpp_context":-1}"#,
+        br#"{"schema":1,"llamacpp_context":"4096"}"#,
+        b"{",
+    ] {
+        fs::write(&file, bytes).unwrap();
+        assert_eq!(
+            recorded_context(&root, &name),
+            None,
+            "{}",
+            String::from_utf8_lossy(bytes)
+        );
+    }
+    // A record longer than any context record is not read.
+    let mut long = br#"{"schema":1,"llamacpp_context":4096}"#.to_vec();
+    long.resize(8192, b' ');
+    fs::write(&file, long).unwrap();
+    assert_eq!(recorded_context(&root, &name), None);
+}
+
+#[cfg(unix)]
+#[test]
+fn a_context_record_behind_a_link_is_neither_read_nor_written() {
+    use std::os::unix::fs::symlink;
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path().join("models");
+    let name = ModelName::parse(TEXT).unwrap();
+    let outside = directory.path().join("outside");
+    fs::create_dir_all(&outside).unwrap();
+    fs::write(
+        outside.join("test.json"),
+        br#"{"schema":1,"llamacpp_context":4096}"#,
+    )
+    .unwrap();
+    let folder = root
+        .join("cadrumo")
+        .join("llamacpp-context")
+        .join("registry.ollama.ai")
+        .join("library");
+    fs::create_dir_all(&folder).unwrap();
+    symlink(&outside, folder.join("synthetic-text")).unwrap();
+
+    assert_eq!(recorded_context(&root, &name), None);
+    assert!(record_context(&root, &name, NonZeroU32::new(2048).unwrap()).is_err());
+    assert_eq!(
+        fs::read(outside.join("test.json")).unwrap(),
+        br#"{"schema":1,"llamacpp_context":4096}"#,
+        "nothing is written through the link"
+    );
+}
+
+#[test]
+fn a_pull_records_the_stated_context_also_for_a_model_already_stored_and_fetches_nothing() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path().join("models");
+    let name = ModelName::parse(TEXT).unwrap();
+    let stored = Stored::new(5);
+    let publishers = Publishers::start(stored.routes(TEXT), Vec::new());
+
+    // A fetched pull records the context once the model is whole.
+    let models = stating(&root, TEXT, Some(4096));
+    let model = &models.selection().as_slice()[0];
+    let fetched = fetch(
+        &models,
+        model,
+        &publishers.network(),
+        &approved_for(&models, "download"),
+    );
+    assert_eq!(fetched.result.unwrap(), PRESENT);
+    assert_eq!(recorded_context(&root, &name), context(4096));
+    let targets = publishers.server.targets().len();
+    assert!(targets > 0);
+
+    // A pull of a stored model that states another context records it and fetches
+    // nothing.
+    let models = stating(&root, TEXT, Some(2048));
+    let model = &models.selection().as_slice()[0];
+    let again = fetch(
+        &models,
+        model,
+        &publishers.network(),
+        &approved_for(&models, "download"),
+    );
+    assert_eq!(again.result.unwrap(), PRESENT);
+    assert_eq!(recorded_context(&root, &name), context(2048));
+    assert_eq!(
+        publishers.server.targets().len(),
+        targets,
+        "nothing fetched"
+    );
+
+    // A pull that states no context leaves the earlier record as it was.
+    let models = stating(&root, TEXT, None);
+    let model = &models.selection().as_slice()[0];
+    let silent = fetch(
+        &models,
+        model,
+        &publishers.network(),
+        &approved_for(&models, "download"),
+    );
+    assert_eq!(silent.result.unwrap(), PRESENT);
+    assert_eq!(recorded_context(&root, &name), context(2048));
+    assert_eq!(publishers.server.targets().len(), targets);
+
+    // A model stored before any context was stated gets one from its next pull, with no
+    // download.
+    let vision = ModelName::parse(VISION).unwrap();
+    Stored::new(9).write(&root, VISION);
+    assert_eq!(recorded_context(&root, &vision), None);
+    let models = stating(&root, VISION, Some(16384));
+    let model = &models.selection().as_slice()[0];
+    let present = fetch(
+        &models,
+        model,
+        &publishers.network(),
+        &approved_for(&models, "download"),
+    );
+    assert_eq!(present.result.unwrap(), PRESENT);
+    assert_eq!(recorded_context(&root, &vision), context(16384));
+    assert_eq!(publishers.server.targets().len(), targets);
+}
+
+#[test]
+fn a_model_with_no_llamacpp_context_reads_not_in_this_build_before_anything_is_fetched() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path().join("models");
+    let router = directory.path().join("llama-server");
+    let hardware = Hardware::default();
+
+    // Neither stored nor stating a context: the router could never present it, so it is
+    // refused rather than planned as a download.
+    let models = stating(&root, TEXT, None);
+    let model = &models.selection().as_slice()[0];
+    assert!(!models.presentable(model));
+    assert_eq!(
+        models.observe_presented(model, &hardware, &router),
+        Observation::Blocked(BlockedReason::NotInThisBuild)
+    );
+
+    // Stating one, the same absent model is planned as a download.
+    let models = stating(&root, TEXT, Some(4096));
+    let model = &models.selection().as_slice()[0];
+    assert!(models.presentable(model));
+    assert_eq!(
+        models.observe_presented(model, &hardware, &router),
+        Observation::Absent
+    );
+
+    // A stored model with a recorded context but none stated still goes on to the router,
+    // which is not recorded here.
+    let name = ModelName::parse(TEXT).unwrap();
+    Stored::new(5).write(&root, TEXT);
+    record_context(&root, &name, NonZeroU32::new(2048).unwrap()).unwrap();
+    let models = stating(&root, TEXT, None);
+    let model = &models.selection().as_slice()[0];
+    assert!(models.presentable(model));
+    assert_eq!(
+        models.observe_presented(model, &hardware, &router),
+        Observation::Failed(FailureCategory::ProgramNotRunning)
+    );
+}
+
+#[test]
+fn removal_deletes_the_removed_models_contexts_and_keeps_a_kept_models() {
+    let fixture = fixture();
+    let root = fixture.models_root();
+    fixture.text.write(&root, TEXT);
+    fixture.vision.write(&root, VISION);
+    let (text, vision) = (
+        ModelName::parse(TEXT).unwrap(),
+        fixture.vision_name().clone(),
+    );
+    let kept = ModelName::parse("synthetic-kept:test").unwrap();
+    Stored::new(3).write(&root, "synthetic-kept:test");
+    for (name, value) in [(&text, 4096), (&vision, 2048), (&kept, 8192)] {
+        record_context(&root, name, NonZeroU32::new(value).unwrap()).unwrap();
+    }
+
+    fixture.models.remove().unwrap();
+    assert_eq!(recorded_context(&root, &text), None);
+    assert_eq!(recorded_context(&root, &vision), None);
+    assert_eq!(
+        recorded_context(&root, &kept),
+        context(8192),
+        "a kept model keeps its context"
+    );
+
+    // A model removed by name loses its context, also when its manifest is already gone.
+    let unselected = Models::new(LocalModels::default(), root.clone());
+    record_context(&root, &text, NonZeroU32::new(4096).unwrap()).unwrap();
+    unselected.remove_named(&text).unwrap();
+    assert_eq!(recorded_context(&root, &text), None);
+    assert_eq!(recorded_context(&root, &kept), context(8192));
+    unselected.remove_named(&kept).unwrap();
+    assert_eq!(recorded_context(&root, &kept), None);
 }

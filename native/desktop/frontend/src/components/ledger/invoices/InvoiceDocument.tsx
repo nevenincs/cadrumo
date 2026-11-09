@@ -3,7 +3,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
-import type { LedgerPort } from "../../../shell/ledger";
+import type { FileToken, LedgerPort } from "../../../shell/ledger";
 import { useStrings } from "../../../shell/strings";
 import { landingSettle, useWritePause, WriteHold } from "../WritePause";
 import { EditorSection } from "./InvoiceFields";
@@ -28,7 +28,7 @@ export function InvoiceDocument({
   const pause = useWritePause();
   const [adding, setAdding] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
-  const tokens = useRef<string[]>([]);
+  const tokens = useRef<FileToken[]>([]);
 
   async function attach() {
     setAdding(true);

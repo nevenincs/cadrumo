@@ -236,7 +236,7 @@ export type ModeloEditHeldChangeV1 = {
 /**
  * The kind of change a frontend holds on a box.
  */
-export type ModeloEditHeldKind = "set" | "clear" | "restore";
+export type ModeloEditHeldKind = "set" | "clear" | "restore" | "remove";
 
 /**
  * How the parser read an entry, reported so an editor can show its reading

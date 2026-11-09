@@ -2,6 +2,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { showLedgerColumn } from "../support/ledgerPage";
+import { captureUnrecordedQuestions } from "../support/stagedCheckCapture";
 import { label } from "../support/strings";
 
 // Staged editing on the Ledger page over the scenario's ledger: cell
@@ -18,6 +19,7 @@ const engine = readFileSync(
 );
 
 async function open(target: Page, extra = "", scheme?: "light" | "dark") {
+  await captureUnrecordedQuestions(target);
   if (scheme)
     await target.addInitScript((appearance) => {
       localStorage.setItem(
@@ -673,17 +675,12 @@ test("a new movement starts empty, is staged like an edit, and its add is the sa
   await target.locator(".ledger-add").click();
   await fillDraft(target, "TAXI AEROPUERTO");
   expect(await trayCount(target)).toBe(1);
-  // The currency is asked for too, in the review.
+  // The currency is not asked for: the new movement carries the one the
+  // profile's own accounts are kept in, as the backend serves it.
   await openReview(target);
-  const blocker = review(target).locator("[data-blocker=draft_incomplete]");
-  await expect(blocker).toBeVisible();
-  await blocker.getByLabel(label("desktop.ledger.field.currency")).fill("EUR");
-  await blocker
-    .getByRole("button", {
-      name: label("desktop.ledger.apply.fix.set_currency"),
-    })
-    .click();
-  await expect(blocker).toHaveCount(0);
+  await expect(
+    review(target).locator("[data-blocker=draft_incomplete]"),
+  ).toHaveCount(0);
   await ledgerControls.nextWrites(target, ["unknown"]);
   await save(target);
   await expect(review(target).locator(".ledger-apply-unknown")).toBeVisible();

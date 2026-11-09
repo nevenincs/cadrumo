@@ -42,12 +42,14 @@ from .providers.application.attachment_releases import (
     AttachmentReleases,
     DisclosureRefusalCode,
 )
-from .providers.application.contracts import LocalModelListResult, ProviderSettingsRefusal
+from .providers.application.contracts import LocalEngineStatus, LocalModelListResult, ProviderSettingsRefusal
 from .providers.application.local_model_list import LocalModelListService
 from .providers.application.model_runs import ModelRunService
+from .providers.application.next_steps import CONSOLE_SIGN_IN_COMMAND
 from .providers.application.ports import ProviderCatalogUnavailableError
 from .providers.application.resolution import ProviderCredentialResolver
 from .providers.application.service import AssistantAuthChoice, BaseUrlChange, ProviderSettingsService
+from .providers.domain.record import LocalEngine, LocalPlacement
 from .providers.persistence.attachment_disclosures import SecureAttachmentDisclosureStore
 from .providers.persistence.store import SecureLocalModelListStore, SecureProviderSettingsStore
 from .service_attachment_admin import answer_attachment_admin
@@ -83,9 +85,14 @@ class AgentServiceAdministration(ABC):
         storage_root: Path,
         gateway_bearer: bytearray,
         emit: Callable[[dict[str, Any]], None],
+        local_engine_default: LocalEngine,
         wake: Callable[[], None] | None = None,
     ) -> None:
-        """Bind provider custody and process ownership to the verified service connection."""
+        """Bind provider custody and process ownership to the verified service connection.
+
+        ``local_engine_default`` is the engine a profile that chose none runs,
+        as the desktop derived it from the package.
+        """
         self.client = client
         self._root = storage_root
         self._guard = RLock()
@@ -140,7 +147,9 @@ class AgentServiceAdministration(ABC):
             catalog_source=self._catalog,
             cli_state_probe=self._login_status.probe,
         )
-        self._local_models = LocalModelListService(store=model_list, catalog_source=self._catalog)
+        self._local_models = LocalModelListService(
+            store=model_list, catalog_source=self._catalog, default_engine=local_engine_default
+        )
         self._controller: AgentHostController | None = None
         self._auth_attempt: AuthAttempt | None = None
         self._auth_resume_valid: Callable[[], bool] | None = None
@@ -200,6 +209,8 @@ class AgentServiceAdministration(ABC):
         scope: str | None = None,
         grant_id: str | None = None,
         conversation_id: str | None = None,
+        engine: str | None = None,
+        placement: str | None = None,
     ) -> Any:
         """Apply one bounded masked administration request under the live lease."""
         if action.startswith("attachment_"):
@@ -219,6 +230,8 @@ class AgentServiceAdministration(ABC):
             return self._observe_sign_in(attempt_id, cancel=action == "connect_cancel")
         if action == "local_models":
             return self._local_model_list()
+        if action == "local_engine":
+            return self._local_engine()
         if action in {"catalog", "status"}:
             return self._cached_read(action)
         arguments: dict[str, Any] = {
@@ -230,6 +243,8 @@ class AgentServiceAdministration(ABC):
             "attempt_id": attempt_id,
             "model": model,
             "secret": secret,
+            "engine": engine,
+            "placement": placement,
         }
         return self._lifecycle_admin(action, arguments)
 
@@ -366,6 +381,8 @@ class AgentServiceAdministration(ABC):
         attempt_id: str | None,
         model: str | None,
         secret: bytearray | None,
+        engine: str | None = None,
+        placement: str | None = None,
     ) -> Any:
         if self._closing.is_set():
             return {"kind": "refused", "code": "service_stopping"}
@@ -379,6 +396,8 @@ class AgentServiceAdministration(ABC):
             return {"kind": "starting"}
         if action in {"local_model_add", "local_model_remove", "local_models_reset", "reading_model_choose"}:
             return self._change_local_models(action, lane=provider, model=model, expected_revision=expected_revision)
+        if action == "local_engine_choose":
+            return self._choose_local_engine(engine, placement, expected_revision)
         if provider is None or expected_revision is None:
             return {"kind": "refused", "code": "invalid_request"}
         return self._provider_admin(action, provider, expected_revision, base_url, choice, method, secret)
@@ -394,6 +413,45 @@ class AgentServiceAdministration(ABC):
         if self.client.lease != lease:
             return {"kind": "refused", "code": "signed_out"}
         return observed
+
+    def _local_engine(self) -> dict[str, Any]:
+        """Read the local engine setting; a plain store read that never waits on the agent tree."""
+        if self._closing.is_set():
+            return {"kind": "refused", "code": "service_stopping"}
+        lease = self.client.lease
+        if lease is None:
+            return {"kind": "refused", "code": "signed_out"}
+        observed = self._local_models.engine_status().model_dump(mode="json")
+        if self.client.lease != lease:
+            return {"kind": "refused", "code": "signed_out"}
+        return observed
+
+    def _choose_local_engine(
+        self, engine: str | None, placement: str | None, expected_revision: str | None
+    ) -> dict[str, Any]:
+        if engine is None or placement is None or expected_revision is None:
+            return {"kind": "refused", "code": "invalid_request"}
+        before = self._local_models.engine_status()
+        result = self._local_models.choose_engine(
+            LocalEngine(engine), LocalPlacement(placement), expected_revision=expected_revision
+        )
+        # The tree is replaced only when the setting it runs under changes,
+        # not when an unchosen default becomes the person's choice.
+        changed = (
+            isinstance(result, LocalEngineStatus)
+            and isinstance(before, LocalEngineStatus)
+            and result.revision != expected_revision
+            and (before.engine, before.placement) != (result.engine, result.placement)
+        )
+        controller = self._controller
+        if changed and controller is not None:
+            # The setting moves no provider-settings generation: the tree it
+            # superseded is marked and replaced on the start thread, which
+            # retires it and publishes what follows.
+            controller.supersede()
+            self._forget_reads()
+            self._replace_superseded()
+        return result.model_dump(mode="json")
 
     def _apply_local_model_change(
         self, action: str, lane: str | None, model: str | None, expected_revision: str
@@ -451,6 +509,7 @@ class AgentServiceAdministration(ABC):
         """Serve no kept catalog or status once what they were read from has changed."""
         self._catalog_read.forget()
         self._status_read.forget()
+        self._login_status.forget()
 
     def _provider_status(self) -> dict[str, Any]:
         """Observe settings without waiting for gateway startup after sign-in.
@@ -469,6 +528,7 @@ class AgentServiceAdministration(ABC):
             return observed.model_dump(mode="json")
         status = observed.model_dump(mode="json")
         status["hosted_certifications"] = self._hosted_certifications()
+        status["console_sign_in_command"] = CONSOLE_SIGN_IN_COMMAND
         try:
             methods = self._catalog.gui_sign_in_methods()
             status["sign_in_providers"] = list(methods)

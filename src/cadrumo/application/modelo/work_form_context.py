@@ -11,6 +11,7 @@ from collections.abc import Mapping
 
 from ...core.casilla_id import CasillaId
 from ...core.external_constants import OutputLanguage
+from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ...domain.calculations.registry.export_field_casilla import (
     export_field_casilla_id,
     layout_fields_in_emission_order,
@@ -18,6 +19,7 @@ from ...domain.calculations.registry.export_field_casilla import (
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
+from ...domain.iva.refund_eligibility import RedemeEnrolmentState
 from ...domain.modelos.calculation_revision import FILED_REVISION_STATES, CalculationRevision
 from .calculation_note_gate import NO_SOURCE_DISAGREEMENT_RESOLUTIONS, SourceDisagreementResolutions
 from .calculation_required_inputs import calculation_required_inputs
@@ -129,13 +131,19 @@ class WorkFormContext:
         element_names: Mapping[str, str] | None = None,
         known_truths: Mapping[BindingId, bool] | None = None,
         resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
+        redeme: RedemeEnrolmentState = RedemeEnrolmentState.UNSTATED,
     ) -> None:
         """Index one work review and its pinned revision for repeated form lookups.
 
         ``resolutions`` are the source disagreements the operator accepted, which
         the form's hold on filing lifts exactly as the gate does.
+
+        ``redeme`` is the filer's stated inscription in the Registro de
+        devolución mensual, which the settlement result needs to answer whether
+        a carried IVA credit may be elected as a refund in this period.
         """
         self.review = review
+        self.redeme = redeme
         self.resolutions = resolutions
         self.element_names: Mapping[str, str] = element_names or {}
         self.unworked = unworked_casilla_ids
@@ -156,8 +164,22 @@ class WorkFormContext:
         self.entered = entered_casilla_ids
         self.overridden = overridden_binding_ids
         self.cleared: frozenset[str] = frozenset(() if revision is None else revision.cleared_casilla_ids)
+        self.stated = _stated_absences(revision, self.bindings)
         self.placed_boxes: dict[str, str] = {}
         self.casillas_by_export_position = _export_position_index(snapshot, self.bindings)
+
+
+def _stated_absences(
+    revision: CalculationRevision | None, bindings: Mapping[str, BindingDefinition]
+) -> dict[BindingId, AbsenceAttestationFamily]:
+    """The carries the filer stated hold nothing, each with the family of the statement its binding declares."""
+    layer = None if revision is None else revision.operator_layer
+    stated: dict[BindingId, AbsenceAttestationFamily] = {}
+    for binding_id in () if layer is None else layer.attested_binding_ids:
+        binding = bindings.get(binding_id)
+        if binding is not None and binding.absence_attestation is not None:
+            stated[binding_id] = binding.absence_attestation
+    return stated
 
 
 def _surface_key(entry: ModeloEditPermittedSurfaceEntryV1) -> tuple[str, str]:

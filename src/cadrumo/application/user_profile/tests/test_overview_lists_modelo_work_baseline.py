@@ -25,6 +25,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE_ID = "33333333-3333-4333-8333-333333333333"
 _ACTIVITY_DESCRIPTION = "activities.description"
+_COLEGIO_CONCERTADO = "withholding.colegio_concertado"
 
 
 def _overview(income_category: str):
@@ -87,3 +88,19 @@ def test_a_salaried_profile_is_not_asked_for_an_activity() -> None:
     with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
         assert _ACTIVITY_DESCRIPTION not in modelo_work_profile_baseline_missing_paths(record)
     assert _ACTIVITY_DESCRIPTION not in overview.missing_required
+
+
+def test_the_one_source_list_holds_no_per_modelo_header_attestation() -> None:
+    """ANTI-VACUITY: the manager lists filing-grade baseline facts, not one modelo's header mark.
+
+    The Modelo 111 colegio concertado attestation is modelo-scoped and
+    conditional, so it belongs to that modelo's preflight and not to the
+    profile-wide list an operator reads. Listing it here would put the same
+    irrelevant prerequisite on a consultant's profile page that the work-create
+    gate used to refuse on.
+    """
+    record, overview = _overview(_economic_activity())
+
+    with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
+        assert _COLEGIO_CONCERTADO not in modelo_work_profile_baseline_missing_paths(record)
+    assert _COLEGIO_CONCERTADO not in overview.missing_required

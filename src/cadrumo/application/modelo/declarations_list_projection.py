@@ -19,6 +19,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
+from ...domain.user_profile.labels import profile_field_label_key
 from ..overview.calendar_models import OverviewAeatSubmissionState, OverviewLocalFilingState
 from ..overview.coverage import CoverageAdviceReason
 from .declaration_targets import DeclarationTarget
@@ -38,10 +39,10 @@ from .declarations_list import (
     next_step_words,
     opens_aeat_filing,
     opens_local_work,
-    preferred_creation_target,
     result_words,
     row_days,
     row_help_words,
+    starting_creation_targets,
     state_words,
 )
 from .declarations_workspace_contracts import DeclarationsWorkspaceFilingRefV1
@@ -238,16 +239,23 @@ class ModeloDeclarationCreationTargetV1(BaseModel):
     deadline_text: str | None = None
     #: Whether the list shows the filer this modelo, so the dialog offers it before being asked to show every one.
     expected: bool
-    #: The first return due and not started, which the dialog starts on.
+    #: The address the dialog starts on for this modelo: its first return due and not started, else its latest
+    #: period already ended, else its earliest.
     suggested: bool = False
     existing: ModeloDeclarationExistingV1 | None = None
+    #: The profile facts, as their labels in the filer's language, still unanswered that decide whether this
+    #: period is filed at all, such as the one choosing a monthly or a quarterly cadence; empty when the
+    #: profile decides it.
+    profile_requirements: tuple[str, ...] = ()
+    #: What the dialog says above ``profile_requirements``; ``None`` when they are empty.
+    profile_requirements_words: str | None = None
 
 
 def _worded_creation_target(
     target: DeclarationTarget,
     rows: tuple[DeclarationListRow, ...],
     expected: frozenset[str],
-    suggested: DeclarationTarget | None,
+    starting: frozenset[DeclarationTarget],
     deadlines: dict[tuple[str, Period], date],
     language: OutputLanguage,
 ) -> ModeloDeclarationCreationTargetV1:
@@ -260,6 +268,7 @@ def _worded_creation_target(
         None,
     )
     deadline = deadlines.get((target.modelo, target.period))
+    requirements = tuple(_profile_field_words(path, language) for path in target.profile_requirements)
     return ModeloDeclarationCreationTargetV1(
         modelo=target.modelo,
         modelo_title=modelo_title(target.modelo, language),
@@ -269,27 +278,41 @@ def _worded_creation_target(
         deadline=deadline,
         deadline_text=None if deadline is None else date_text(deadline, language),
         expected=target.modelo in expected,
-        suggested=target == suggested,
+        suggested=target in starting,
         existing=None
         if existing is None or existing.declaration is None
         else ModeloDeclarationExistingV1(
             work_unit_id=str(existing.declaration.work_unit_id), state_words=state_words(existing, language)
         ),
+        profile_requirements=requirements,
+        profile_requirements_words=tr("workspace.declarations.list.new.profile_requirements", locale=language.value)
+        if requirements
+        else None,
     )
 
 
+def _profile_field_words(path: str, language: OutputLanguage) -> str:
+    section_key, field_key = path.split(".", 1)
+    return tr(profile_field_label_key(section_key, field_key), locale=language.value)
+
+
 def worded_creation_targets(
-    rows: tuple[DeclarationListRow, ...], admitted: tuple[DeclarationTarget, ...], language: OutputLanguage
+    rows: tuple[DeclarationListRow, ...],
+    admitted: tuple[DeclarationTarget, ...],
+    language: OutputLanguage,
+    *,
+    as_of: date,
 ) -> tuple[ModeloDeclarationCreationTargetV1, ...]:
-    """Every address the new-declaration dialog offers, said in the filer's language."""
+    """Every address the new-declaration dialog offers, said in the filer's language, as of the list's day."""
     expected = applicable_modelos(rows)
-    suggested = preferred_creation_target(rows)
+    targets = creation_targets(rows, admitted)
+    starting = starting_creation_targets(rows, targets, as_of=as_of)
     deadlines = {
         (row.modelo, row.period): row.calendar.adjusted_closes_on
         for row in rows
         if row.calendar is not None and row.period is not None
     }
     worded: list[ModeloDeclarationCreationTargetV1] = []
-    for target in creation_targets(rows, admitted):
-        worded.append(_worded_creation_target(target, rows, expected, suggested, deadlines, language))
+    for target in targets:
+        worded.append(_worded_creation_target(target, rows, expected, starting, deadlines, language))
     return tuple(worded)

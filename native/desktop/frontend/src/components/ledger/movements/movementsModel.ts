@@ -279,6 +279,47 @@ export const TO_CLASSIFY_REASON = "missing_business_classification";
  * value. */
 export const NO_RATE_REASON = "unsupported_currency";
 
+/**
+ * The column a movement's field is typed in, for the fields a backend
+ * refusal names. A field with no column of its own is absent, and a door
+ * that names only such fields leads nowhere.
+ */
+export const COLUMN_OF_FIELD: Readonly<Record<string, ColumnId>> = {
+  amount: "amount",
+  direction: "direction",
+  booked_date: "date",
+  value_date: "date",
+  operation_date: "date",
+  accrual_date: "date",
+  description: "description",
+  counterparty: "counterparty",
+  counterparty_country: "counterparty",
+  counterparty_identification_state: "counterparty",
+  group_label: "group_label",
+  own_account_id: "account",
+  business_classification: "classification",
+  business_pct: "classification",
+  category_id: "category",
+  usage_ratio_id: "category",
+  taxable_base: "taxable_base",
+  iva_rate: "iva_rate",
+  iva_amount: "iva_amount",
+  iva_category: "iva_category",
+  irpf_category: "irpf_category",
+  notes: "notes",
+};
+
+/** The columns a set of named fields is typed in, in the catalogue's order. */
+export function columnsOfFields(fields: readonly string[]): ColumnId[] {
+  const wanted = new Set(
+    fields.flatMap((field) => {
+      const column = COLUMN_OF_FIELD[field];
+      return column ? [column] : [];
+    }),
+  );
+  return COLUMN_IDS.filter((column) => wanted.has(column));
+}
+
 /** The column a reason marks and the preset that shows it. */
 export const REASON_FIX: Record<
   string,

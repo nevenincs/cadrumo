@@ -1,9 +1,10 @@
-"""The five coded payer facts raise their unset warning on a real profile record.
+"""The six coded payer facts raise their unset warning on a real profile record.
 
 ``withholding.has_employees``,
 ``withholding.pays_professionals_with_retencion``,
 ``withholding.pays_rent_with_retencion``,
-``withholding.pays_capital_income_with_retencion`` and
+``withholding.pays_capital_income_with_retencion``,
+``withholding.pays_non_resident_income_with_retencion`` and
 ``iva.does_intracomunitario`` each declare an unset-warning locale key in
 :data:`~cadrumo.application.overview.calendar_warnings.PROFILE_FIELD_WARNING_LOCALE_KEYS`,
 yet no calendar could reach it while the setup binding catalogue forced a
@@ -15,7 +16,7 @@ through the warning helper alone.
 Both canonical projections are covered, because the calendar's ``raw_values``
 argument is fed from either one depending on the caller:
 :func:`~cadrumo.application.user_profile.projections.record_to_path_values`
-keys the five facts at their dotted schema path, while
+keys the six facts at their dotted schema path, while
 :func:`~cadrumo.application.user_profile.projections.record_to_values` keys
 them at the registry selector token the applicability rules name. A warning
 that only resolves under one shape is a surface-dependent gap, which is why
@@ -75,6 +76,7 @@ PAYER_FACT_WARNING_CODES = (
     "pays_professionals_with_retencion",
     "pays_rent_with_retencion",
     "pays_capital_income_with_retencion",
+    "pays_non_resident_income_with_retencion",
     "does_intracomunitario",
 )
 """The registry selector token each payer fact's warning is coded by.

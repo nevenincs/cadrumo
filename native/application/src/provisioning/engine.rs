@@ -60,13 +60,13 @@ use super::{
     },
     browser::{self, BrowserLayout, DriverManifest, LaunchContext},
     connection::Network,
-    failure::FailureCategory,
+    failure::{FailureCategory, TransferFailure},
     follow::{self, Changes},
     items::{Destination, ItemId, Locations, PROGRAM_PART},
     local_ai::{
-        self, LocalAiError, LocalEngine, NotRunningCause, StartFailureKind,
+        self, LocalAiError, LocalEngine, NotRunningCause, Placement, StartFailureKind,
         hardware::Hardware,
-        llama_server::{self, LOAD_CONTEXT, LlamaServer, LlamaServerUnavailable, Presentation},
+        llama_server::{self, LlamaServer, LlamaServerUnavailable, Presentation},
         models::{LocalModels, ModelName, Models},
         program::{Program, START_BUDGET, Server},
         supervision::EngineProgram,
@@ -197,8 +197,9 @@ impl Outcome {
 
 /// What one command found and did. `rows` is every item's state after the command;
 /// `plan` is the plan a setup reports; `item` and `failure` name the item and the
-/// category a refusal or failure is for, and `failure_cause` what ran out or broke when
-/// that category is `program_not_running`, for diagnostics only; `items` are the items a
+/// category a refusal or failure is for, `failure_cause` what ran out or broke when
+/// that category is `program_not_running`, and `download_failure` the facts of a
+/// download that ended the item, both for diagnostics only; `items` are the items a
 /// removal removed, or the items another engine is changing.
 #[derive(Clone, Debug)]
 pub struct Report {
@@ -209,6 +210,7 @@ pub struct Report {
     pub item: Option<ItemId>,
     pub failure: Option<FailureCategory>,
     pub failure_cause: Option<Box<NotRunningCause>>,
+    pub download_failure: Option<Box<TransferFailure>>,
     pub items: Vec<ItemId>,
 }
 
@@ -222,6 +224,7 @@ impl Report {
             item: None,
             failure: None,
             failure_cause: None,
+            download_failure: None,
             items: Vec::new(),
         }
     }
@@ -234,6 +237,11 @@ impl Report {
 
     fn with_cause(mut self, cause: Option<NotRunningCause>) -> Self {
         self.failure_cause = cause.map(Box::new);
+        self
+    }
+
+    fn with_download_failure(mut self, failure: Option<TransferFailure>) -> Self {
+        self.download_failure = failure.map(Box::new);
         self
     }
 
@@ -296,6 +304,9 @@ pub struct EngineConfig {
     pub llama_server_folder: PathBuf,
     /// The llama.cpp build tag the package pins its llama-server at.
     pub llama_server_build: String,
+    /// Where the llama-server runs a model, as the person selected it. The component
+    /// engine never runs the server, so this only completes the program it checks.
+    pub placement: Placement,
     /// The complete environment a browser check launches the browser with.
     pub browser_environment: BTreeMap<OsString, OsString>,
     /// The owner's temporary folder; a browser check's throwaway profile lives inside it.
@@ -343,6 +354,8 @@ enum Stop {
     Failed(FailureCategory),
     /// Failed as `program_not_running`, for the cause it keeps.
     NotRunning(NotRunningCause),
+    /// A download failed, as its category, for the facts it keeps.
+    Download(TransferFailure),
 }
 
 impl Stop {
@@ -352,6 +365,15 @@ impl Stop {
             Self::Busy => None,
             Self::Failed(category) => Some((category, None)),
             Self::NotRunning(cause) => Some((FailureCategory::ProgramNotRunning, Some(cause))),
+            Self::Download(failure) => Some((failure.category, None)),
+        }
+    }
+
+    /// The facts of the download this stop failed in, for diagnostics.
+    fn download_failure(&self) -> Option<TransferFailure> {
+        match self {
+            Self::Download(failure) => Some(failure.clone()),
+            _ => None,
         }
     }
 }
@@ -380,6 +402,7 @@ impl From<Error> for Stop {
     fn from(error: Error) -> Self {
         match error {
             Error::Busy => Self::Busy,
+            Error::Download(failure) => Self::Download(failure),
             error => Self::Failed(browser::failure_category(&error)),
         }
     }
@@ -389,6 +412,7 @@ impl From<LocalAiError> for Stop {
     fn from(error: LocalAiError) -> Self {
         match error {
             LocalAiError::Engine(Error::Busy) => Self::Busy,
+            LocalAiError::Engine(Error::Download(failure)) => Self::Download(failure),
             LocalAiError::NotRunning(cause) => Self::NotRunning(cause),
             error => Self::Failed(error.category()),
         }
@@ -599,7 +623,9 @@ impl Engine {
             activity: ActivityStore::new(config.locations.activity.clone())?,
             receipts: ReceiptStore::new(config.locations.receipts.clone())?,
             local_models: LocalModels::default(),
-            local_engine: LocalEngine::default(),
+            // Until the person's choice is selected, the default follows what the
+            // package carries.
+            local_engine: local_ai::llama_server_folder_default(&config.llama_server_folder),
             config,
             #[cfg(test)]
             browser_leading: Vec::new(),
@@ -618,7 +644,8 @@ impl Engine {
 
     /// Selects the local engine every later command plans, sets up, checks and removes
     /// the local AI for: the person's selection, the one the runtime manager runs the
-    /// server of. It replaces any earlier selection; until then the default engine is.
+    /// server of. It replaces any earlier selection; until then the engine is the package's
+    /// default, as `local_ai::package_default_engine` reads it.
     pub fn select_local_engine(&mut self, engine: LocalEngine) {
         self.local_engine = engine;
     }
@@ -675,7 +702,7 @@ impl Engine {
             Err(report) if report.outcome == Outcome::Busy => {
                 return self.follow_only(&report.items, &sink, cancellation);
             }
-            Err(report) => return report,
+            Err(report) => return *report,
         };
         for entry in &plan.entries {
             sink.emit(Event::Phase {
@@ -715,7 +742,7 @@ impl Engine {
                     Err(report) if report.outcome == Outcome::Busy => {
                         return self.follow_only(&report.items, &sink, cancellation);
                     }
-                    Err(report) => return report,
+                    Err(report) => return *report,
                 },
             },
         };
@@ -780,12 +807,15 @@ impl Engine {
                     removed.push(item);
                     continue;
                 }
-                Err(stop) => match stop.failure() {
-                    None => report(Outcome::Busy, None),
-                    Some((category, cause)) => {
-                        report(Outcome::Failed, Some(category)).with_cause(cause)
+                Err(stop) => {
+                    let download = stop.download_failure();
+                    match stop.failure() {
+                        None => report(Outcome::Busy, None),
+                        Some((category, cause)) => report(Outcome::Failed, Some(category))
+                            .with_cause(cause)
+                            .with_download_failure(download),
                     }
-                },
+                }
             };
             return Report {
                 rows: self.quick_rows(&ItemId::ALL),
@@ -823,12 +853,16 @@ impl Engine {
                 items: vec![item],
                 ..Report::new(Outcome::Removed, rows)
             },
-            Err(stop) => match stop.failure() {
-                None => Report::new(Outcome::Busy, rows).for_item(item, None),
-                Some((category, cause)) => Report::new(Outcome::Failed, rows)
-                    .for_item(item, Some(category))
-                    .with_cause(cause),
-            },
+            Err(stop) => {
+                let download = stop.download_failure();
+                match stop.failure() {
+                    None => Report::new(Outcome::Busy, rows).for_item(item, None),
+                    Some((category, cause)) => Report::new(Outcome::Failed, rows)
+                        .for_item(item, Some(category))
+                        .with_cause(cause)
+                        .with_download_failure(download),
+                }
+            }
         }
     }
 
@@ -920,7 +954,7 @@ impl Engine {
                     &self.config.llama_server_folder,
                     &self.config.llama_server_build,
                     &self.config.locations,
-                    LOAD_CONTEXT,
+                    self.config.placement,
                 )
                 .map_err(|reason| match reason {
                     LlamaServerUnavailable::NotPackaged => NoProgram::NotInThisBuild,
@@ -1283,7 +1317,7 @@ impl Engine {
     fn planned(
         &mut self,
         items: Option<&[ItemId]>,
-    ) -> Result<(Vec<StatusRow>, Option<SetupPlan>), Report> {
+    ) -> Result<(Vec<StatusRow>, Option<SetupPlan>), Box<Report>> {
         let mut surveys: Vec<(ItemId, Survey)> = ItemId::ALL
             .into_iter()
             .map(|item| (item, self.survey(item)))
@@ -1302,10 +1336,10 @@ impl Engine {
             .map(|row| row.item)
             .collect();
         if let Some(first) = running.first() {
-            return Err(Report {
+            return Err(Box::new(Report {
                 items: running.clone(),
                 ..Report::new(Outcome::Busy, rows.clone()).for_item(*first, None)
-            });
+            }));
         }
         let chosen: Vec<ItemId> = match items {
             None => state::items_to_set_up(&rows),
@@ -1325,8 +1359,10 @@ impl Engine {
                         _ => None,
                     };
                     if let Some(category) = refusal {
-                        return Err(Report::new(Outcome::Refused, rows.clone())
-                            .for_item(row.item, Some(category)));
+                        return Err(Box::new(
+                            Report::new(Outcome::Refused, rows.clone())
+                                .for_item(row.item, Some(category)),
+                        ));
                     }
                     chosen.push(row.item);
                 }
@@ -1442,6 +1478,7 @@ impl Engine {
         let mut slots = slots.into_iter();
         let mut stopped = None;
         let mut failure_cause = None;
+        let mut download_failure = None;
         for (entry, slot) in plan.entries.iter().zip(&mut slots) {
             let item = entry.item;
             let done = match slot {
@@ -1465,6 +1502,7 @@ impl Engine {
                 },
                 Slot::Failed(category) => Err(Stop::Failed(category)),
             };
+            let download = done.as_ref().err().and_then(Stop::download_failure);
             let (outcome, failure) = match done.map_err(Stop::failure) {
                 Ok(()) => continue,
                 Err(None) => (Outcome::Busy, None),
@@ -1473,6 +1511,7 @@ impl Engine {
                 }
                 Err(Some((category, cause))) => {
                     failure_cause = cause;
+                    download_failure = download;
                     (Outcome::Failed, Some(category))
                 }
             };
@@ -1498,7 +1537,8 @@ impl Engine {
         Some(
             Report::new(ended_outcome(stop.outcome), Vec::new())
                 .for_item(stop.item, stop.failure)
-                .with_cause(failure_cause),
+                .with_cause(failure_cause)
+                .with_download_failure(download_failure),
         )
     }
 
@@ -1933,8 +1973,9 @@ fn wait_for_server(
 /// Looks as [`wait_until`] does. A router started before a model arrived in the store
 /// presents it once the manager has started it again, which it does as soon as the router
 /// holds no model. By the end of the wait, a router that runs and takes loads yet does not
-/// present a selected model has that model absent; otherwise the local AI is
-/// `program_not_running`.
+/// present a selected model stops the setup: as not in this build when the model has no
+/// llama.cpp context to be presented with, and as unexpected when it has one, since its bytes
+/// were verified and are not damaged; otherwise the local AI is `program_not_running`.
 fn wait_for_router(
     router: &LlamaServer,
     models: &Models,
@@ -1962,7 +2003,16 @@ fn wait_for_router(
         return Ok(());
     }
     if router.running_server().is_some() && presentations().contains(&Presentation::NotPresented) {
-        return Err(Stop::Failed(failure_of(Observation::Absent)));
+        let unpresentable = models
+            .selection()
+            .as_slice()
+            .iter()
+            .any(|model| !models.presentable(model));
+        return Err(Stop::Failed(if unpresentable {
+            FailureCategory::NotInThisBuild
+        } else {
+            FailureCategory::Unexpected
+        }));
     }
     Err(no_server_within(router.latest_start_failure()))
 }
@@ -2030,6 +2080,10 @@ fn finish(writer: ItemWriter<'_>, outcome: Result<(), Stop>) -> Result<(), Stop>
         Err(Stop::NotRunning(cause)) => {
             writer.failed(FailureCategory::ProgramNotRunning)?;
             Err(Stop::NotRunning(cause))
+        }
+        Err(Stop::Download(failure)) => {
+            writer.failed(failure.category)?;
+            Err(Stop::Download(failure))
         }
         Err(Stop::Busy) => {
             writer.held()?;

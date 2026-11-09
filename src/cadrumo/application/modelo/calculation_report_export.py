@@ -37,6 +37,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -266,7 +267,7 @@ def build_modelo_calculation_report_for_revision(
     published document is rendered from.
 
     Raises:
-        CalculationRevisionStateError: The revision is not sealed.
+        ModeloRevisionNotSealedError: The revision is not sealed.
         ModeloCalculationReportTaxpayerUnknownError: The profile declares no
             usable taxpayer identity.
     """
@@ -276,7 +277,7 @@ def build_modelo_calculation_report_for_revision(
         export_ports=export_ports,
         operation=operation,
     )
-    require_exportable_revision_state(revision)
+    require_exportable_revision_state(revision, work_unit=work_unit)
     # A sealed revision verified before a note was screened is refused as export
     # refuses it; only a revision already recorded as filed keeps its history.
     require_work_unit_calculation_screen_current(
@@ -364,6 +365,7 @@ def export_modelo_calculation_report(
     operation: PinnedAuthorityOperation,
     clock: datetime | None = None,
     pdf_writer: CalculationSummaryPdfWriter | None = None,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> ModeloCalculationReportResult:
     """Publish one sealed revision's calculation report to the operator's path.
 
@@ -384,6 +386,8 @@ def export_modelo_calculation_report(
             when omitted.
         pdf_writer: The outbound writer that draws a summary PDF. Required for
             the PDF format and ignored by every other.
+        mutation_writer: Optional admission around the file's publication, so
+            an operation journals a possible effect only once a write begins.
 
     Returns:
         :class:`ModeloCalculationReportResult`: The published file's identity and
@@ -440,8 +444,23 @@ def export_modelo_calculation_report(
     return _report_result(
         report=report,
         document=document,
-        receipt=sink.write(document.payload),
+        receipt=_published(sink, document.payload, mutation_writer=mutation_writer),
     )
+
+
+def _published(
+    sink: LocalFileExportSink,
+    payload: bytes,
+    *,
+    mutation_writer: Callable[[Callable[[], None]], None] | None,
+) -> LocalFileExportReceipt:
+    """Write the document through the admission, when one is given, and return the landed file's facts."""
+    if mutation_writer is None:
+        return sink.write(payload)
+    receipts: list[LocalFileExportReceipt] = []
+    mutation_writer(lambda: receipts.append(sink.write(payload)))
+    (receipt,) = receipts
+    return receipt
 
 
 def _report_result(

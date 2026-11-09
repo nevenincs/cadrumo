@@ -12,6 +12,12 @@ accepted only when the downloaded bytes, the size the listing states and the
 digest the listing publishes all agree. Review the diff: the pins are the only
 content authority for the bundled program.
 
+The release archives do not all carry llama.cpp's own MIT licence, which the
+package must ship beside the program. The generator also pins the ``LICENSE``
+file of the same build tag from the repository's raw content host by size and
+SHA-256. Upstream publishes no digest for it, so the recorded digest is the
+downloaded file's, and the diff review is its check.
+
 Upstream tags ``vX.Y.Z`` hold no binaries; the binary releases are the numbered
 build tags ``bNNNNN``. The listing is searched for the newest build tag that
 publishes every archive this tool installs, or ``--tag`` names one.
@@ -53,11 +59,16 @@ from dev.paths import REPO_ROOT
 PINS_PATH: Final = REPO_ROOT / "native" / "llamacpp-pins.json"
 
 #: The only hosts the archives may be fetched from; the file names them for the build.
-PROGRAM_HOSTS: Final[tuple[str, ...]] = ("github.com", "release-assets.githubusercontent.com")
+PROGRAM_HOSTS: Final[tuple[str, ...]] = (
+    "github.com",
+    "raw.githubusercontent.com",
+    "release-assets.githubusercontent.com",
+)
 
 _REPOSITORY: Final = "ggml-org/llama.cpp"
 _RELEASES_API: Final = f"https://api.github.com/repos/{_REPOSITORY}/releases"
 _DOWNLOAD_PREFIX: Final = f"https://github.com/{_REPOSITORY}/releases/download"
+_RAW_PREFIX: Final = f"https://raw.githubusercontent.com/{_REPOSITORY}"
 _LISTING_PAGE_SIZE: Final = 30
 _TIMEOUT_S: Final = 120.0
 _CHUNK_BYTES: Final = 1024 * 1024
@@ -123,6 +134,21 @@ class ServerArchivePin(BaseModel):
         return value
 
 
+class LicensePin(BaseModel):
+    """llama.cpp's licence file at the pinned build tag and the exact bytes the package ships as its notice."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    url: _Url
+    download_bytes: PositiveInt
+    sha256: _Sha256
+
+
+def license_url(tag: str) -> str:
+    """Return the address of the repository's licence file at build ``tag``."""
+    return f"{_RAW_PREFIX}/{tag}/LICENSE"
+
+
 class ServerPins(BaseModel):
     """Every pinned archive of one upstream build, and the hosts their downloads may pass."""
 
@@ -133,6 +159,7 @@ class ServerPins(BaseModel):
     tag: _Tag
     hosts: tuple[_Host, ...] = Field(min_length=1)
     archives: tuple[ServerArchivePin, ...] = Field(min_length=1)
+    license: LicensePin
 
     @field_validator("hosts", "archives", mode="before")
     @classmethod
@@ -151,6 +178,10 @@ class ServerPins(BaseModel):
                 raise ValueError(f"{pin.target} is served from a host the file does not name")
             if not pin.url.startswith(f"{_DOWNLOAD_PREFIX}/{self.tag}/"):
                 raise ValueError(f"{pin.target} is not an archive of build {self.tag}")
+        if self.license.url != license_url(self.tag):
+            raise ValueError(f"the licence is not the LICENSE file of build {self.tag}")
+        if (urlsplit(self.license.url).hostname or "") not in self.hosts:
+            raise ValueError("the licence is served from a host the file does not name")
         return self
 
 
@@ -188,6 +219,11 @@ def render_pins(pins: ServerPins) -> str:
             }
             for pin in pins.archives
         ],
+        "license": {
+            "url": pins.license.url,
+            "download_bytes": pins.license.download_bytes,
+            "sha256": pins.license.sha256,
+        },
     }
     return json.dumps(document, indent=2) + "\n"
 
@@ -339,12 +375,19 @@ def generate(tag: str | None) -> ServerPins:
                     sha256=listed.sha256,
                 )
             )
+        print(f"llamacpp-pins: LICENSE of {resolved}", file=sys.stderr, flush=True)
+        notice = _fetch(client, license_url(resolved), hosts, visited)
     return ServerPins(
         program="llama-server",
         repository=_REPOSITORY,
         tag=resolved,
         hosts=tuple(sorted(visited)),
         archives=tuple(archives),
+        license=LicensePin(
+            url=license_url(resolved),
+            download_bytes=len(notice),
+            sha256=hashlib.sha256(notice).hexdigest(),
+        ),
     )
 
 

@@ -298,7 +298,7 @@ fn progress(run: &Run, total: u64) -> Vec<u64> {
 }
 
 fn present(root: &Path) -> Observation {
-    let selected = SelectedModel::new("text", NAME, None).unwrap();
+    let selected = SelectedModel::new("text", NAME, None, None).unwrap();
     let models = Models::new(
         LocalModels::new(vec![selected.clone()]).unwrap(),
         root.to_path_buf(),

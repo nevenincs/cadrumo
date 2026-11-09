@@ -46,13 +46,15 @@ from ..overview.home import (
     HomeSessionPosture,
     HomeZoneState,
 )
+from ..user_profile.censal_observation import CensalObservation
 from ..user_profile.censal_operation import (
     build_censal_operation_registration,
 )
+from ..user_profile.censal_readback import CensalHistoryRead
 from ..workbench_generation import (
     InstalledWorkbenchGenerationProviderV1,
 )
-from ..workbench_generation_reader import SecureProfileWorkbenchGenerationReadDoorV1
+from ..workbench_generation_reader import NotificationCustodyCount, SecureProfileWorkbenchGenerationReadDoorV1
 from .workbench_generation_support import (
     NOW,
     PROFILE_ID,
@@ -72,6 +74,48 @@ _PHASE_EVENTS = frozenset(
     {"workbench_capture_phase", "workbench_calendar_phase", "overview_applicability_phase", "declarations_list_phase"}
 )
 _PRIVATE_NAME = "synthetic-private-taxpayer-canary"
+
+
+class _Custody:
+    """A custody counter whose count holds, then answers ``recounted`` when rechecked; it logs each call."""
+
+    def __init__(self, count: int, *, recounted: int | None = None, calls: list[str] | None = None) -> None:
+        self._count = count
+        self._recounted = count if recounted is None else recounted
+        self.calls = [] if calls is None else calls
+
+    def count(self) -> NotificationCustodyCount:
+        self.calls.append("custody")
+        return NotificationCustodyCount(count=self._count, stored_keys=())
+
+    def recount(self, prior: NotificationCustodyCount) -> int:
+        assert prior.count == self._count
+        self.calls.append("custody recheck")
+        return self._recounted
+
+
+class _Census:
+    """A census reader that reads ``observation``, then answers ``rechecked``; it logs each call."""
+
+    def __init__(
+        self,
+        observation: CensalObservation | None,
+        *,
+        rechecked: CensalObservation | None = None,
+        calls: list[str] | None = None,
+    ) -> None:
+        self._read = CensalHistoryRead(observation=observation, classified=frozenset(), census_operations=frozenset())
+        self._rechecked = rechecked
+        self.calls = [] if calls is None else calls
+
+    def read(self) -> CensalHistoryRead:
+        self.calls.append("census")
+        return self._read
+
+    def recheck(self, prior: CensalHistoryRead) -> CensalObservation | None:
+        assert prior is self._read
+        self.calls.append("census recheck")
+        return self._rechecked
 
 
 def _declaration_list_door(operation: PinnedAuthorityOperation) -> SecureProfileWorkbenchGenerationReadDoorV1:
@@ -94,8 +138,8 @@ def _declaration_list_door(operation: PinnedAuthorityOperation) -> SecureProfile
         ledger_action_ports=ledger_ports(
             operation, transactions=StableStore(TransactionCatalogue()), invoices=StableStore(InvoiceCatalogue())
         ),
-        notification_custody_reader=lambda: 4,
-        census_observation_reader=lambda: None,
+        notification_custody_reader=_Custody(4),
+        census_observation_reader=_Census(None),
     )
 
 
@@ -149,8 +193,6 @@ def test_the_declaration_list_capture_records_every_phase_with_its_seconds_and_c
         "calendar_aeat_evidence",
         "calendar_memo_key",
         "calendar_inputs",
-        "custody_count",
-        "census_observation",
         "recheck_profile_record",
         "recheck_work_units",
         "recheck_calculation_revisions",
@@ -160,8 +202,6 @@ def test_the_declaration_list_capture_records_every_phase_with_its_seconds_and_c
         "recheck_ledger",
         "recheck_verification_reports",
         "recheck_bucket_events",
-        "recheck_custody_count",
-        "recheck_census_observation",
         "recheck",
         "declaration_list_inputs",
     ]
@@ -176,7 +216,7 @@ def test_the_declaration_list_capture_records_every_phase_with_its_seconds_and_c
     assert counts["work_units"] == counts["declarations_portfolio"] == counts["declaration_summaries"] == 1
     assert counts["calculation_revisions"] == counts["filings"] == counts["bucket_events"] == 0
     assert counts["ledger_transactions"] == counts["ledger_invoices"] == 0
-    assert counts["custody_count"] is None, "a phase that counts nothing says so rather than claiming zero"
+    assert counts["calendar_inputs"] is None, "a phase that counts nothing says so rather than claiming zero"
     _assert_phase_records_are_timed_correlated_and_value_free(records)
 
 
@@ -389,13 +429,57 @@ def test_secure_generation_refuses_a_census_capture_changed_during_read(
         captured_at=NOW,
         source_url=CENSO_SOURCE_URL_FIXTURE,
     )
-    reads = iter((None, observation))
     door = replace(
         plain_generation_door(authority_operation, profile=Repository(profile_record(authority_operation))),
-        census_observation_reader=lambda: next(reads),
+        census_observation_reader=_Census(None, rechecked=observation),
     )
     with pytest.raises(InternalInvariantError, match="changed during capture"):
         door.read_workbench_generation_inputs()
+
+
+def test_secure_generation_refuses_a_notification_document_stored_during_read(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """AEAT Sync cannot publish a custody count that was never true at one instant."""
+    from dataclasses import replace
+
+    door = replace(
+        plain_generation_door(authority_operation, profile=Repository(profile_record(authority_operation))),
+        notification_custody_reader=_Custody(4, recounted=5),
+    )
+    with pytest.raises(InternalInvariantError, match="changed during capture"):
+        door.read_workbench_generation_inputs()
+
+
+@pytest.mark.parametrize(
+    ("surface", "expected_calls"),
+    (("generation", ["custody", "census", "custody recheck", "census recheck"]), ("declarations", [])),
+)
+def test_only_a_generation_reads_the_census_and_custody_count_it_shows_in_aeat_sync(
+    authority_operation: PinnedAuthorityOperation, surface: str, expected_calls: list[str]
+) -> None:
+    """The list shows neither, so it never pays the census scan of every journaled operation.
+
+    A generation reads each once and rechecks each once at the close of the
+    capture; neither is read whole a second time.
+    """
+    from dataclasses import replace
+
+    calls: list[str] = []
+    door = replace(
+        _declaration_list_door(authority_operation),
+        account_session_reader=lambda: HomeAccountSession(
+            posture=HomeSessionPosture.ACTIVE, profile_label="Perfil local", expires_at=NOW
+        ),
+        census_observation_reader=_Census(None, calls=calls),
+        notification_custody_reader=_Custody(4, calls=calls),
+    )
+    if surface == "generation":
+        door.read_workbench_generation_inputs()
+    else:
+        door.read_declaration_list_inputs()
+
+    assert calls == expected_calls
 
 
 def test_a_resident_s_calendar_survives_the_registered_result_round_trip(

@@ -153,8 +153,34 @@ class ProfileFieldDefinition(BaseModel):
     #: such obligation. This axis carries the modelo-scoped requirement instead,
     #: and ONLY the filing-preflight walk consults it.
     required_for_modelos: tuple[Modelo, ...] = Field(default=())
+    #: Payer facts that must all read a declared yes before the modelo-scoped
+    #: requirement applies.
+    #:
+    #: ``required_for_modelos`` alone is a blanket demand: every taxpayer filing
+    #: that modelo owes the fact, including those the fact cannot concern. A
+    #: field whose obligation depends on what the declarant does names the
+    #: registry payer facts that decide it here, and the preflight walk reads
+    #: them through the dated payer-fact catalogue. While a condition is
+    #: unanswered the requirement is the condition's own fact, not this field:
+    #: asking for a header attestation before knowing whether it can apply is
+    #: how an irrelevant prerequisite reached an operator.
+    required_for_modelos_when_payer_facts: tuple[str, ...] = Field(default=())
+    #: Entity-set fact naming the IAE groups one declared activity must fall in
+    #: before the modelo-scoped requirement applies, ANDed with every payer-fact
+    #: condition above.
+    required_for_modelos_when_activity_iae_groups_fact: str | None = None
+    #: Profile path holding each activity's IAE epigraph the group condition reads.
+    required_for_modelos_when_activity_iae_epigraph_path: str | None = None
     schedule_predicates: tuple[_Selector, ...] = Field(default=())
     legal_refs: tuple[_Description, ...] = Field(default=())
+    #: Registry source references grounding this field, newest design first.
+    #:
+    #: ``legal_refs`` grounds a fact in the law; a fact the taxpayer declares
+    #: only because an AEAT design has a position for it is grounded in that
+    #: design, and the design in force for the supported years is a different
+    #: document from the one the position first appeared in. Both belong here,
+    #: and a reader checking the requirement follows them rather than a comment.
+    source_refs: tuple[_Description, ...] = Field(default=())
     minimum: Decimal | None = None
     maximum: Decimal | None = None
     #: Whether the filing path carries this string field into a bounded producer record.
@@ -206,6 +232,35 @@ class ProfileFieldDefinition(BaseModel):
             entries = _OBJECT_SEQUENCE_ADAPTER.validate_python(value)
             return tuple(Modelo(entry) if isinstance(entry, str) else entry for entry in entries)
         return value
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _conditions_gate_a_modelo_scoped_requirement(self) -> Self:
+        """Refuse a condition with nothing to gate, and a half-declared activity condition.
+
+        A condition on a field no modelo requires would be read by nothing, so
+        it would silently describe a rule that never runs. The IAE group
+        condition needs both the fact naming the groups and the path holding the
+        epigraphs: either alone cannot judge an activity.
+        """
+        activity_parts = (
+            self.required_for_modelos_when_activity_iae_groups_fact,
+            self.required_for_modelos_when_activity_iae_epigraph_path,
+        )
+        conditioned = bool(self.required_for_modelos_when_payer_facts) or any(
+            part is not None for part in activity_parts
+        )
+        if conditioned and not self.required_for_modelos:
+            raise UserProfileValidationError(
+                f"field {self.key!r}: a modelo-scoped condition needs required_for_modelos",
+            )
+        if any(part is not None for part in activity_parts) and not all(part is not None for part in activity_parts):
+            raise UserProfileValidationError(
+                f"field {self.key!r}: an IAE group condition declares both the fact and the epigraph path",
+            )
+        if len(set(self.required_for_modelos_when_payer_facts)) != len(self.required_for_modelos_when_payer_facts):
+            raise UserProfileValidationError(f"field {self.key!r}: duplicate payer-fact conditions are not allowed")
+        return self
 
     @field_validator("sensitivity", mode="before")
     @classmethod
@@ -435,6 +490,14 @@ class ProfileSchemaDefinition(BaseModel):
     def field_paths(self) -> tuple[str, ...]:
         """Canonical dotted field paths declared by the schema."""
         return tuple(f"{section.key}.{field.key}" for section in self.sections for field in section.fields)
+
+    def schedule_predicate_path(self, predicate: str) -> str | None:
+        """Return the dotted path of the field that answers a filing-schedule predicate, if one declares it."""
+        for section in self.sections:
+            for field in section.fields:
+                if predicate in field.schedule_predicates:
+                    return f"{section.key}.{field.key}"
+        return None
 
     def section(self, key: str) -> ProfileSectionDefinition:
         """Return a :class:`ProfileSectionDefinition` by canonical section key."""

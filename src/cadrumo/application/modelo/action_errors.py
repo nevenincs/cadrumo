@@ -123,6 +123,10 @@ class CalculationRevisionStateError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when a state transition is requested from an incompatible source state."""
 
 
+class ModeloRevisionNotSealedError(OperationNextStepErrorMixin, CalculationRevisionStateError):
+    """Refused: an artefact was asked of a calculation not yet verified, which checking the declaration settles."""
+
+
 class ModeloRecordNotFoundError(ModeloError):
     """Raised when a filing record lookup fails."""
 
@@ -272,8 +276,12 @@ class ModeloLocalObservationError(ModeloError):
     """Raised when an operator-supplied local observation cannot be persisted."""
 
 
-class ModeloCrossPeriodCleanStateError(ModeloPreconditionErrorMixin, ModeloError):
-    """Raised when a filing-grade workflow lacks clean prior-filing proof."""
+class ModeloCrossPeriodCleanStateError(OperationNextStepErrorMixin, ModeloPreconditionErrorMixin, ModeloError):
+    """Raised when a filing-grade workflow lacks clean prior-filing proof.
+
+    When the refusal knows which prior declaration to put right first, it
+    serves that declaration's step.
+    """
 
 
 class ModeloWorkflowGateError(ModeloError):
@@ -344,6 +352,17 @@ class CalculationRegistryUnavailableError(ModeloError):
 
 class ModeloAggregationBindingError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when bucket-derived aggregation bindings conflict with caller input."""
+
+
+class ModeloAggregationInputConflictError(ModeloAggregationBindingError):
+    """Raised before anything is written when an input the filer supplied contradicts its own sources.
+
+    A refusal the filer puts right, not a failure: a figure typed over a
+    computed box, a Modelo 210 income type or manual rows chosen against the
+    ledger route, detail rows that disagree with the rows the records give, or
+    a Modelo 200 ledger without its accounting result. The base error remains
+    for resolver wiring the filer never touches.
+    """
 
 
 class ModeloLedgerPreflightBlockedError(OperationNextStepErrorMixin, ModeloPreconditionErrorMixin, ModeloError):

@@ -60,6 +60,10 @@ export const SETUP_SHAPES = [
    * downloads from unreachable: the setup settles failed before its review,
    * leaving its row as it was. */
   "unreachable",
+  /** Nothing set up, and every setup's download server answers with an error
+   * until the retries run out: the setup settles failed at its download,
+   * leaving its row as it was. */
+  "server_error",
   /** As `ready`, but a start stays in its planning with nothing reported,
    * as while the host checks a model with the agent service, until
    * `finishPlanning` lets its plan reach review. */
@@ -80,6 +84,11 @@ export type SetupFixtureControls = {
   retry(attempt: number, delaySeconds: number): void;
   /** The first item now running fails in this way; its setup settles. */
   fail(category: SetupFailureCategory): void;
+  /** The first running setup fails at its item, not in any part, as when the
+   * host's check of what it fetched finds it damaged: no part carries the
+   * failure, the setup settles failed with it, and the row keeps the state
+   * it had until the status is read again. */
+  failItem(category: SetupFailureCategory): void;
   /** The first running setup, or `item`'s, stops part-way, as when the
    * computer sleeps or Cadrumo closes. */
   interrupt(item?: SetupItemId): void;
@@ -191,6 +200,7 @@ function readied(held: SetupRow): SetupRow {
 const RECOVERY: Record<SetupFailureCategory, SetupRow["recovery"]> = {
   offline: "check_again",
   host_unreachable: "try_again",
+  server_error: "try_again",
   secure_connection_failed: "try_again",
   blocked_by_network: "try_again",
   disk_full: "try_again",
@@ -848,6 +858,36 @@ export function setupFixture({
       put({ ...ended, failure: category });
       publish();
     },
+    failItem(category) {
+      const run = active();
+      const entry = current(run);
+      const seed = entry && seedOf(entry.item);
+      if (!run || !entry || !seed) return;
+      seed.row = before.get(seed.row.item) ?? seed.row;
+      before.delete(seed.row.item);
+      const ended = settle(
+        {
+          ...run,
+          items: run.items.map((held) =>
+            held.item === entry.item
+              ? {
+                  ...held,
+                  step: null,
+                  retry: null,
+                  result: {
+                    changed: false,
+                    failure: category,
+                    transferred_bytes: 0,
+                  },
+                }
+              : held,
+          ),
+        },
+        "failed",
+      );
+      put({ ...ended, failure: category });
+      publish();
+    },
     interrupt(item) {
       const run = active(item);
       const entry = current(run);
@@ -991,8 +1031,14 @@ export function setupFixture({
         .map((seed) => planned(seed, model));
       if (download) say(`setup.download ${download.lane} ${download.model}`);
       operations += 1;
-      if (shape === "unreachable" && chosen.length > 0) {
-        const failure: SetupFailureCategory = "host_unreachable";
+      const settled: SetupFailureCategory | null =
+        shape === "unreachable"
+          ? "host_unreachable"
+          : shape === "server_error"
+            ? "server_error"
+            : null;
+      if (settled !== null && chosen.length > 0) {
+        const failure: SetupFailureCategory = settled;
         const result = { changed: false, failure, transferred_bytes: 0 };
         put({
           item: wanted,
@@ -1001,7 +1047,9 @@ export function setupFixture({
           review: null,
           items: chosen.map((seed) => ({
             ...progress(seed),
-            step: "preflight",
+            // The network check finds an unreachable host before the review;
+            // a server's error answers come during the download.
+            step: failure === "host_unreachable" ? "preflight" : "download",
             result,
           })),
           cancellable: false,

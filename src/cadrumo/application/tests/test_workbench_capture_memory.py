@@ -25,7 +25,7 @@ from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord, create_user_profile_record
 from ..overview.calendar import build_overview_calendar
 from ..overview.home import HomeAccountSession, HomeSessionPosture
-from ..workbench_capture_memory import WorkbenchCaptureMemory, WorkbenchMemoSlot
+from ..workbench_capture_memory import WorkbenchCaptureMemory, WorkbenchCaptureMemoryOwner, WorkbenchMemoSlot
 from ..workbench_generation import (
     InstalledWorkbenchGenerationProviderV1,
 )
@@ -231,3 +231,54 @@ def test_a_slot_builds_once_per_unchanged_key() -> None:
     assert slot.reuse(tomorrow, build(tomorrow)) == "2026-09-04"
     assert slot.reuse(today, build(today)) == "2026-09-03"
     assert builds == [today, tomorrow, today]
+
+
+def _kept(memory: WorkbenchCaptureMemory) -> bool:
+    """Whether the memory still stores and serves work: a second reuse of one key builds nothing."""
+    key = cast(Any, object())
+    builds: list[int] = []
+
+    def build() -> Any:
+        builds.append(1)
+        return cast(Any, object())
+
+    memory.calendar.reuse(key, build)
+    memory.calendar.reuse(key, build)
+    return len(builds) == 1
+
+
+def test_an_owner_hands_one_profile_the_same_open_memory() -> None:
+    owner = WorkbenchCaptureMemoryOwner()
+
+    memory = owner.for_profile(_PROFILE_ID)
+
+    assert owner.for_profile(_PROFILE_ID) is memory
+    assert _kept(memory)
+
+
+def test_another_profile_closes_the_memory_the_first_kept() -> None:
+    owner = WorkbenchCaptureMemoryOwner()
+    first = owner.for_profile(_PROFILE_ID)
+
+    second = owner.for_profile("22222222-2222-4222-8222-222222222222")
+
+    assert second is not first
+    assert not _kept(first), "a closed memory stores nothing for the previous profile"
+    assert _kept(second)
+
+
+def test_a_session_end_closes_the_memory_and_the_next_read_starts_empty() -> None:
+    owner = WorkbenchCaptureMemoryOwner()
+    before = owner.for_profile(_PROFILE_ID)
+    key = cast(Any, object())
+    kept = cast(Any, object())
+    before.calendar.reuse(key, lambda: kept)
+
+    owner.close()
+
+    after = owner.for_profile(_PROFILE_ID)
+    assert after is not before
+    assert not _kept(before), "a capture still holding the closed memory stores nothing"
+    assert after.calendar.reuse(key, lambda: cast(Any, object())) is not kept, "nothing kept before the end is served"
+    owner.close()
+    owner.close()

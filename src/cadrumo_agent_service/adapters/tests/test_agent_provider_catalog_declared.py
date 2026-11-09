@@ -49,9 +49,15 @@ def test_the_agents_declaration_parses_with_typed_models_and_background_runs() -
         assert entry.background.runnable or not entry.background.inputs, entry.id
     on_host = [entry for entry in catalog.providers if entry.auth_kind is ProviderAuthKind.NONE]
     assert on_host, "the agent declares no keyless lane on this computer"
+    # Both engines' lanes take background requests, so every keyless lane runs them.
+    assert {entry.id for entry in on_host if not entry.background.runnable} == set()
+    # A lane whose models a running router presents declares none while no router runs; the lanes that state
+    # their models in the declaration must state them whole.
+    declaring = [entry for entry in on_host if entry.models]
+    assert declaring, "no keyless lane declares its models"
     for entry in on_host:
         assert entry.reads_off_host is False, entry.id
-        assert entry.background.runnable, entry.id
+    for entry in declaring:
         assert entry.recommended, entry.id
         stated = [model for model in entry.models if model.licence is not None and model.size_bytes is not None]
         assert stated, entry.id

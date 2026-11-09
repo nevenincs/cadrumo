@@ -594,8 +594,8 @@ def test_runtime_tunables_are_settings_not_registry_constants() -> None:
         "cadrumo_auth_clave_movil_lock_buffer_s": 90,
         "cadrumo_auth_certificate_lock_ttl_s": 180,
         "cadrumo_log_stderr_level": "ERROR",
-        "cadrumo_log_file_level": "DEBUG",
-        "cadrumo_log_root_level": "DEBUG",
+        "cadrumo_log_file_level": "INFO",
+        "cadrumo_log_root_level": "INFO",
         "cadrumo_google_drive_vault_folder_name": "cadrumo-vault",
     }
 

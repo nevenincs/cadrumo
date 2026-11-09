@@ -374,7 +374,14 @@ export type CalculationNoteSentence =
   | "household_rows_incomplete"
   | "profile_fact_unrecorded"
   | "prior_filing_unrecorded"
-  | "m347_provincia_unrecorded";
+  | "withholding_invoice_kind_undeclared"
+  | "withholding_invoice_entity_professional_fee"
+  | "withholding_invoice_recipient_unknown"
+  | "withholding_invoice_non_resident"
+  | "withholding_invoice_rate_unrecognised"
+  | "withholding_invoice_incomplete"
+  | "m347_provincia_unrecorded"
+  | "m347_provincia_unstated";
 
 export type CalculationRevisionId = string;
 

@@ -19,12 +19,15 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.result_disposition import ResultDisposition
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_references import TemporalProjectionDirection
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage
+from ...domain.iva.refund_eligibility import RefundEligibility
 from ...domain.modelos.calculation_revision_sources import CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT, CalculationNoteFact
 from .work_form_findings import ModeloFormAttention
 
@@ -97,24 +100,51 @@ class ModeloFormYearProjection(ModeloFormBase):
     across; ``authored_filing_year`` is the year that edition authors and
     ``reachable_grade`` the rung of authority the year reaches. The registry's
     temporal resolver and grade rule supply all three; a surface renders them.
+    ``words`` says, for a carried year only, that the declaration calculates
+    under that edition's rules and cannot be checked for filing or exported:
+    the same sentence verification refuses it with, served before any check.
     """
 
     direction: TemporalProjectionDirection
     authored_filing_year: int
     reachable_grade: RegistryAuthorityGrade
+    words: str | None = None
 
 
-def year_projection(snapshot: RegistrySnapshot) -> ModeloFormYearProjection:
-    """The projection the pinned snapshot's registry resolution states for its filing year.
+_PROJECTED_YEAR_LOCALE_KEY = "application.modelo.findings.registry_filing_year_projected"
+
+
+def year_projection(
+    snapshot: RegistrySnapshot, *, modelo: str, period: str, language: OutputLanguage
+) -> ModeloFormYearProjection:
+    """The projection the pinned snapshot's registry resolution states for its filing year, said in ``language``.
 
     Args:
         snapshot: The pinned :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`
             whose temporal resolution and reachable grade the projection carries.
+        modelo: The declaration's modelo.
+        period: The declaration's registry period token.
+        language: The filer's language.
     """
+    direction = snapshot.revision_projection_direction
+    authored = snapshot.edition_filing_year
+    words = (
+        None
+        if direction is TemporalProjectionDirection.AUTHORED
+        else tr(
+            _PROJECTED_YEAR_LOCALE_KEY,
+            modelo=modelo,
+            filing_year=snapshot.filing_year,
+            period=period,
+            authored_filing_year=authored,
+            locale=language.value,
+        )
+    )
     return ModeloFormYearProjection(
-        direction=snapshot.revision_projection_direction,
-        authored_filing_year=snapshot.edition_filing_year,
+        direction=direction,
+        authored_filing_year=authored,
         reachable_grade=snapshot.effective_authority_grade,
+        words=words,
     )
 
 
@@ -174,6 +204,13 @@ class ModeloFormResult(ModeloFormBase):
     registry names the settlement box but declares no such rule, the direction
     is unknown. ``election_may_change`` says the filer's refund election can
     still turn a carried credit into a refund.
+
+    ``refund_eligibility`` is why it can or cannot, for a carried IVA credit:
+    the law admits the refund only at the year's last period or for a taxpayer
+    inscribed in the Registro de devolución mensual (LIVA art. 115). It is
+    ``None`` for every result with no refund election to make, and
+    ``election_may_change`` is true exactly when that eligibility allows the
+    refund, so the two can never disagree.
     """
 
     casilla_id: CasillaId
@@ -182,6 +219,15 @@ class ModeloFormResult(ModeloFormBase):
     direction: ModeloFormResultDirection
     disposition: ResultDisposition | None = None
     election_may_change: bool = False
+    refund_eligibility: RefundEligibility | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _election_agrees_with_its_eligibility(self) -> ModeloFormResult:
+        allowed = self.refund_eligibility is not None and self.refund_eligibility.refund_allowed
+        if self.election_may_change != allowed:
+            raise ValueError("a refund election is offered exactly when its eligibility allows the refund")
+        return self
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

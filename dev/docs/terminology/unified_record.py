@@ -471,7 +471,14 @@ def _from_concept(record: ConceptCardRecord, sweep_score: float | None) -> Searc
 
 
 def _from_casilla(record: CasillaSearchRecord, sweep_score: float | None) -> SearchRecord:
-    title = f"Modelo {record.modelo.value} · casilla {record.casilla_id}"
+    # The title is the casilla's served Spanish label (the site's source
+    # language); the registry id stays in metadata and never titles a result.
+    label = record.descriptions.get(OutputLanguage.ES, "").strip()
+    title = (
+        f"Modelo {record.modelo.value} · {label}"[:320]
+        if label
+        else f"Modelo {record.modelo.value} · casilla {record.casilla_id}"
+    )
     return SearchRecord(
         id=casilla_search_record_id(record.modelo.value, record.casilla_id),
         kind=SearchRecordKind.CASILLA,

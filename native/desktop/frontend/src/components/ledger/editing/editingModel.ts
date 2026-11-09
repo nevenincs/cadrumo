@@ -208,6 +208,23 @@ export type EditRefusal = {
   limit?: number;
 };
 
+/**
+ * Whether the backend, not the grammar, owns this refusal, so the typed text
+ * is staged as a refused value rather than dropped.
+ *
+ * A signed amount is the one case: a movement's amount is a magnitude and its
+ * direction carries which way the money went, which is the writer's contract
+ * and not a way of spelling a number. Staged, the check names both facts and
+ * says in its own words why they disagree; dropped, the amount looked like a
+ * fact nobody had filled in. Every other grammar refusal stays here.
+ */
+export function backendOwnsRefusal(
+  field: StageField | DraftField,
+  refusal: EditRefusal,
+): boolean {
+  return field === "amount" && refusal.key === "signed";
+}
+
 /** The words a choice is known by in the page's language, so a pasted
  * label means the same as the token. */
 export type ChoiceLabels = {

@@ -32,6 +32,8 @@ const REASON_MARK: Record<ModeloFormElectionReason, IconName> = {
   no_spanish_account: "info",
   settlement_unsupported: "refused",
   second_instalment_nothing: "info",
+  carry_forward_only: "info",
+  redeme_unstated: "unknown",
 };
 
 function Figure({ figure }: { figure: PublicModeloFormElectionFigure }) {

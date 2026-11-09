@@ -199,11 +199,15 @@ def _assert_blocked(exit_code: int, output: str, *, revision_id: str, action: st
     assert _english_sentence() in str(error["message"]), output
 
 
-def _assert_unverified(exit_code: int, output: str, *, revision_id: str) -> None:
-    """The public state guard names the exact unverified calculation, without claiming a grant."""
+def _assert_unverified(exit_code: int, output: str, *, revision_id: str, code: str) -> None:
+    """The public state guard names the exact unverified calculation, without claiming a grant.
+
+    An export of it is refused, for the filer settles it by checking the
+    declaration; filing it is the generic state guard.
+    """
     assert exit_code != 0, output
     error = require_error_document(output)["error"]
-    assert error["code"] == "ERROR_MODELO_CALCULATION_REVISION_STATE", output
+    assert error["code"] == code, output
     assert error["context"]["calculation_revision_id"] == revision_id, output
     assert error["context"]["state"] == "borrador", output
 
@@ -249,13 +253,18 @@ def test_a_blocking_note_refuses_export_and_filing_until_a_recalculation_clears_
     assert require_error_document(output)["error"]["code"] == "REFUSED_MODELO_CALCULATION_REVISION_SELECTOR_STATE"
     assert not refused_output.exists()
     exit_code, output = _export(work_unit_id, refused_output, revision_id=blocked_revision_id)
-    _assert_unverified(exit_code, output, revision_id=blocked_revision_id)
+    _assert_unverified(exit_code, output, revision_id=blocked_revision_id, code="REFUSED_MODELO_REVISION_NOT_SEALED")
     assert not refused_output.exists()
 
     filed = invoke_cached_cli(
         ["--format", "json", "--language", "en", "app", "modelo", "work", "file", blocked_revision_id],
     )
-    _assert_unverified(filed.exit_code, filed.output, revision_id=blocked_revision_id)
+    _assert_unverified(
+        filed.exit_code,
+        filed.output,
+        revision_id=blocked_revision_id,
+        code="ERROR_MODELO_CALCULATION_REVISION_STATE",
+    )
     status = invoke_cached_cli(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
     assert status.exit_code == 0, status.output
     assert unwrap_schema_envelope(status.output)["filed_calculation_revision_id"] is None

@@ -288,6 +288,7 @@ desktop:
     change_failed: Could not save. Refresh and try again.
     connection_api: API key
     connection_app: Installed app
+    console_command_label: 'Run this command in a terminal:'
     detail_app_missing: Install the {provider} app, then sign in.
     detail_off: 'Off: the agent doesn''t offer or use it.'
     detail_off_kept: 'Off: the agent doesn''t offer or use it. Its API key is kept
@@ -298,6 +299,16 @@ desktop:
     key_label: '{provider} API key'
     key_note: It's saved encrypted on this computer and never shown again.
     load_failed: Could not load providers. Try again.
+    local_engine_change_failed: 'Your change wasn''t saved. Try again.'
+    local_engine_changing: Saving…
+    local_engine_lead: The program that runs models on this computer. The model list stays the same either way.
+    local_engine_llamacpp: llama.cpp
+    local_engine_llamacpp_detail: Built in. Nothing to install.
+    local_engine_ollama: Ollama
+    local_engine_ollama_detail: Downloaded and set up when you choose it.
+    local_engine_restarts: Changing the engine or where models run restarts the assistant.
+    local_engine_title: Local engine
+    local_engine_unavailable: 'llama.cpp isn''t included in this installation. Choose Ollama instead.'
     local_model_absent: Not downloaded
     local_model_add: Add
     local_model_add_label: Add a model by name
@@ -327,6 +338,18 @@ desktop:
     local_models_title: Models on this computer
     local_models_unreadable: Your saved model list can't be read. Reset it to start
       again from the recommended models.
+    local_placement_auto: Automatic
+    local_placement_auto_detail: Uses the graphics card when the model fits.
+    local_placement_cpu_only: Processor only
+    local_placement_cpu_only_detail: 'Slower. Uses only this computer''s memory.'
+    local_placement_title: Where models run
+    next_step:
+      close_other_sign_in: Close the other sign-in, then try again.
+      console_sign_in: Sign in from a terminal instead.
+      install_cli: Install the provider's app, then try again.
+      move_profile_outside_git: Move the profile's folder out of the Git project, then try again.
+      retry: Try again in a moment.
+      update_app: Update this app to the latest version, then try again.
     reason_check_settings: Check these settings and try again.
     reason_record_unreadable: The saved API key can't be read. Add it again.
     refresh: Try again
@@ -353,6 +376,37 @@ desktop:
     sign_in_cancel_failed: Cadrumo couldn't cancel sign-in yet. Keep this dialog open
       while it checks.
     sign_in_cancelled: Sign-in was cancelled.
+    sign_in_cause:
+      agent_stop_failed: The agent couldn't be stopped to finish the sign-in.
+      browser_relay_unavailable: The sign-in page couldn't be passed on to your browser.
+      cleanup_unconfirmed: It couldn't be confirmed that the sign-in closed cleanly.
+      cli_exited_early: The provider's app stopped before the sign-in finished.
+      cli_not_found: The provider's app isn't installed or couldn't be found.
+      cli_protocol_mismatch: The provider's app answered in a way this version doesn't understand.
+      cli_reported_error: The provider's app reported an error during sign-in.
+      cli_start_failed: The provider's app couldn't be started.
+      helper_ended_without_result: The sign-in ended without a result.
+      helper_exit_nonzero: The sign-in ended with an error.
+      helper_output_invalid: The sign-in gave an answer that couldn't be read.
+      helper_start_failed: The sign-in couldn't be started.
+      home_in_git_project: The profile's folder is inside a Git project, and the provider's app won't sign in there.
+      home_unavailable: The folder kept for this provider's sign-in couldn't be used.
+      host_disconnected: Contact with the sign-in was lost while it was running.
+      host_input_invalid: The sign-in was given an input it couldn't use.
+      internal_error: The sign-in hit an internal error.
+      login_already_running: Another sign-in is already running for this profile.
+      login_not_completed: The sign-in wasn't completed.
+      probe_cleanup_unconfirmed: It couldn't be confirmed that the check of the provider's sign-in closed cleanly.
+      probe_output_unreadable: The check of the provider's sign-in gave an answer that couldn't be read.
+      probe_start_failed: The check of the provider's sign-in couldn't be started.
+      probe_timed_out: The check of the provider's sign-in took too long.
+      profile_missing: The profile for this sign-in couldn't be found.
+      status_context_unavailable: There was no open profile to check the sign-in against.
+      status_not_confirmed: The sign-in finished, but it couldn't be confirmed that you're signed in.
+      status_read_failed: Whether you're signed in couldn't be read.
+      status_unreadable: The answer about whether you're signed in couldn't be read.
+      timed_out: The sign-in took too long.
+      unsupported_method: The provider's app doesn't support this way of signing in.
     sign_in_cleanup_failed: Restart Cadrumo before signing in again.
     sign_in_close: Close sign-in
     sign_in_code_checking: Checking the authorization code…
@@ -391,6 +445,7 @@ desktop:
     status_saved: Saved
     status_setup_needed: Not set up
     status_sign_in_needed: Not signed in
+    status_unconfirmed: Sign-in not confirmed
     title: AI providers
     use_in_agent: Use {provider} ({connection}) in the agent
   rail:

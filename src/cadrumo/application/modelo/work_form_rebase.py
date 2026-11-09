@@ -71,6 +71,7 @@ _ACCEPTS: Final[Mapping[ModeloEditHeldKind, Callable[[ModeloFormField], bool]]] 
         ModeloEditHeldKind.SET: lambda field: field.takes_typed_value,
         ModeloEditHeldKind.CLEAR: lambda field: field.clearable,
         ModeloEditHeldKind.RESTORE: lambda field: field.restorable,
+        ModeloEditHeldKind.REMOVE: lambda field: field.removable,
     }
 )
 """The field's own flag that says whether it takes each kind of change; total over the kinds."""

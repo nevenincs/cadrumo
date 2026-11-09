@@ -30,6 +30,11 @@ from .runtime_profile_backend import runtime_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+#: The profile the May replay registers. A registered profile world is shared
+#: by label, so a world first registered on the real clock would date its
+#: creation after the replay's frozen updates, which the record refuses.
+_MAY_REPLAY_PROFILE = "may-replay"
+
 #: The general-rate cuota the shared fixture binds, the only printed amount in [27].
 _GENERAL_CUOTA = Decimal("1000.00")
 _AUTOCONSUMO_BASE = Decimal("1000.00")
@@ -46,7 +51,7 @@ def test_an_autoconsumo_base_refuses_verification_and_export(tmp_path: Path) -> 
     # enforced. This non-live tax clock does not change monotonic deadlines.
     with (
         frozen_clock(datetime(2026, 5, 21, 12, 3, tzinfo=UTC)),
-        runtime_cli_profile(tmp_path=tmp_path),
+        runtime_cli_profile(tmp_path=tmp_path, label=_MAY_REPLAY_PROFILE),
         bundled_indexed_authority().operation() as operation,
     ):
         _nif, _bucket, report, revision, *_repositories = calculate_and_verify_modelo_303_revision(
@@ -73,10 +78,11 @@ def test_an_autoconsumo_base_refuses_verification_and_export(tmp_path: Path) -> 
 
     assert exported.exit_code != 0, exported.output
     error = require_error_document(exported.output)["error"]
-    assert (error["category"], error["code"]) == ("ERROR", "ERROR_MODELO_CALCULATION_REVISION_STATE"), error
+    # An unverified draft is the filer's to check, so the export is refused, not failed.
+    assert (error["category"], error["code"]) == ("REFUSED", "REFUSED_MODELO_REVISION_NOT_SEALED"), error
     assert error["context"]["state"] == CalculationRevisionState.BORRADOR.value
     assert error["context"]["calculation_revision_id"] == revision.calculation_revision_id
-    assert error["context"]["terminal_condition"] == "failed"
+    assert error["context"]["terminal_condition"] == "refused"
     assert error["context"]["operation_id"]
     assert not output.exists()
 
@@ -86,7 +92,7 @@ def test_the_same_declaration_without_autoconsumo_verifies_and_exports(tmp_path:
     # enforced. This non-live tax clock does not change monotonic deadlines.
     with (
         frozen_clock(datetime(2026, 5, 21, 12, 3, tzinfo=UTC)),
-        runtime_cli_profile(tmp_path=tmp_path),
+        runtime_cli_profile(tmp_path=tmp_path, label=_MAY_REPLAY_PROFILE),
         bundled_indexed_authority().operation() as operation,
     ):
         _nif, _bucket, report, revision, *_repositories = calculate_and_verify_modelo_303_revision(

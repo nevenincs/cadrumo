@@ -31,7 +31,10 @@ import {
 } from "../shell/modelo";
 import { RELAY_PAYLOAD_LIMIT } from "../shell/relayBounds";
 import { type OutputLanguage } from "../shell/modeloContract/modelo";
-import { type ModeloDeclarationsListProjectionV1 } from "../shell/modeloContract/modeloDeclarations";
+import {
+  type ModeloDeclarationsListProjectionV1,
+  type ModeloDeclarationsSearchResultV1,
+} from "../shell/modeloContract/modeloDeclarations";
 import type { ModeloFilingRecordViewProjection } from "../shell/modeloContract/modeloFilingRecord";
 import {
   type ModeloEditOperatorInputV2,
@@ -67,7 +70,12 @@ import { hex64 } from "./fixtures/ledger";
  *
  * The write shapes answer that Modelo 130's writes as the application
  * answered them: `edit` applies a typed value, `renewal` reads a form whose
- * baseline has since run out, renews it and reads the form again, and
+ * baseline has since run out, renews it and reads the form again,
+ * `renewal-entry` types a box on that form only after its baseline ran out,
+ * so the entry is answered stale until it is read on the renewed baseline,
+ * `renewal-apply` settles the first apply on the renewed form as refused for
+ * its baseline going stale and the next one as the application applied it,
+ * and
  * `prerequisite` reads a third quarter whose apply is refused on an earlier
  * filing it waits on;
  * `exported` is the checked declaration with its file made, which exports
@@ -149,6 +157,8 @@ export const MODELO_SHAPES = [
   "incomplete",
   "edit",
   "renewal",
+  "renewal-entry",
+  "renewal-apply",
   "prerequisite",
   "exported",
   "export-unverified",
@@ -193,6 +203,9 @@ export const MODELO_SHAPES = [
   "unknown",
   "unavailable",
   "slow",
+  /** The served list, with no period suggested for the first modelo it
+   * offers. */
+  "unsuggested",
 ] as const;
 /** The shapes a scenario names, and `renta-y<year>`: the couple of a filing
  * year the registry supports, whose own edition decides what its Modelo 100
@@ -278,6 +291,7 @@ function withAssetNotes(
       ...ASSET_NOTES.map((note): ModeloFormIssueLine => ({
         level: "check",
         box: null,
+        invoice_id: null,
         where: null,
         message: note.message,
         action: t("workspace.modelo.notes.lead"),
@@ -308,6 +322,7 @@ function withWithholdingLine(
       {
         level: "blocks",
         box: null,
+        invoice_id: null,
         where: null,
         message:
           "The withholding payers took from your income is not recorded yet.",
@@ -349,6 +364,19 @@ function withStoredDefaults(
 
 /** The declarations list with the asset notes' sentences on the first local
  * Modelo 130 row, as what its calculation noted that withholds nothing. */
+/** The list without a served suggestion for the first modelo it offers. */
+function withoutSuggestion(
+  list: ModeloDeclarationsListProjectionV1,
+): ModeloDeclarationsListProjectionV1 {
+  const modelo = list.creation_targets[0]?.modelo;
+  return {
+    ...list,
+    creation_targets: list.creation_targets.map((target) =>
+      target.modelo === modelo ? { ...target, suggested: false } : target,
+    ),
+  };
+}
+
 function withListNotes(
   list: ModeloDeclarationsListProjectionV1,
 ): ModeloDeclarationsListProjectionV1 {
@@ -525,6 +553,8 @@ export function modeloFixture(options: Options): ModeloPort {
 
   // What the scenario's writes did, as far as they settled.
   let applied = false;
+  // Whether the `renewal-apply` shape has refused an apply as stale yet.
+  let staleApplied = false;
   // How far the answer to the disagreement the applied 130 states has come.
   let answered: "open" | "accepted" | "revoked" = "open";
   let recorded = false;
@@ -570,6 +600,8 @@ export function modeloFixture(options: Options): ModeloPort {
       // Read half an hour ago; read again after its renewal, it admits a
       // fresh baseline.
       case "renewal":
+      case "renewal-entry":
+      case "renewal-apply":
         return renewals > 0 ? "130-1T-renewed" : "130-1T-expiring";
       case "rebase":
         return renewals > 0 ? "130-1T-rebased" : "130-1T-rebase";
@@ -804,6 +836,15 @@ export function modeloFixture(options: Options): ModeloPort {
     return card || reject("unavailable");
   };
 
+  const fold = (text: string) =>
+    text
+      .normalize("NFD")
+      .replace(/\p{M}/gu, "")
+      .toLocaleLowerCase()
+      .replace(/[^\p{L}\p{N}\s]/gu, "")
+      .split(/\s+/)
+      .filter(Boolean);
+
   const port: ModeloPort = {
     async declarations(language) {
       if (typeof window !== "undefined") window.__fixtureModelo = port;
@@ -824,7 +865,45 @@ export function modeloFixture(options: Options): ModeloPort {
       );
       if (!list) return reject("unavailable");
       const read = withStoredDefaults(list);
-      return shape === "list-notes" ? withListNotes(read) : read;
+      return shape === "list-notes"
+        ? withListNotes(read)
+        : shape === "unsuggested"
+          ? withoutSuggestion(read)
+          : read;
+    },
+    async search(query, language, limit) {
+      say(`modelo search ${language}`);
+      const words = fold(query);
+      if (words.length === 0) return reject("invalid");
+      const list = await port.declarations(language);
+      const matches = list.rows.filter((row) => {
+        const haystack = fold(
+          [row.modelo, row.modelo_title, row.period_words ?? ""].join(" "),
+        ).join(" ");
+        return words.every((word) => haystack.includes(word));
+      });
+      const result: ModeloDeclarationsSearchResultV1 = {
+        result_version: 1,
+        profile_id: list.profile_id,
+        output_language: language,
+        hits: matches.slice(0, limit ?? 8).map((row, rank) => ({
+          rank,
+          score: matches.length - rank,
+          kind: row.opens_local_work ? "work" : "declaration",
+          row_key: row.key,
+          modelo: row.modelo,
+          modelo_number: row.modelo_number,
+          title_words: row.modelo_title,
+          filing_year: row.filing_year ?? 0,
+          period_code: row.period_code ?? "",
+          period_words: row.period_words,
+          state_words: row.state_words,
+          work_unit_id: row.work_unit_id,
+          opens_local_work: row.opens_local_work,
+        })),
+        total_matches: matches.length,
+      };
+      return result;
     },
     async form(workUnitId, language) {
       say(`modelo form ${language}`);
@@ -1183,8 +1262,16 @@ export function modeloFixture(options: Options): ModeloPort {
               : catalogue[`preflight-${form}-stale`]
                 ? `preflight-${form}-stale`
                 : await reviewHeld(form, held);
+          // An entry typed only once the form's baseline ran out is answered
+          // as the application answers it then: stale.
+          const late = `${read}-late`;
+          const answered =
+            shape === "renewal-entry" && entries.length > 0 && catalogue[late]
+              ? late
+              : read;
           const preflight =
-            read && (await envelope<ModeloEditPreflightProjectionV1>(read));
+            answered &&
+            (await envelope<ModeloEditPreflightProjectionV1>(answered));
           if (!preflight) return unserved();
           // Read for exactly this baseline and, where it reports on them,
           // exactly the changes this window holds.
@@ -1206,6 +1293,13 @@ export function modeloFixture(options: Options): ModeloPort {
         }
         if (shape === "prerequisite")
           reject("refused", { operation_id: nextOperation() });
+        if (shape === "renewal-apply" && !staleApplied) {
+          staleApplied = true;
+          reject("refused", {
+            operation_id: nextOperation(),
+            reason: "REFUSED_MODELO_EDIT_BASELINE_STALE",
+          });
+        }
         const result = await envelope<unknown>(`apply-${form}`);
         if (!result) return unserved();
         applied = true;

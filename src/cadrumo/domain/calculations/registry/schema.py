@@ -33,6 +33,7 @@ from ....core.period import Period, RegistrySelectorPeriodCode
 from ....core.revision_review import RevisionReviewStatus
 from ....core.tax_domain import TaxDomain
 from ....core.type_guards import is_object_mapping
+from .binding_absence_attestation import AbsenceAttestationFamilyField
 from .binding_borrador_participation import BorradorParticipation, BorradorParticipationField
 from .binding_grade_cap import BindingGradeCap
 from .binding_provider import BindingProvider
@@ -46,6 +47,7 @@ from .binding_terminal_origin import TerminalOriginExpectation
 from .binding_value_contract import BindingValueChannel, BindingValueContract
 from .credit_reconciliation import CreditReconciliationEntry
 from .errors import RegistryValidationError
+from .field_absence import absent_when_none
 from .ids import (
     ApplicationLinkId,
     BindingId,
@@ -243,6 +245,12 @@ class BindingDefinition(RegistryModel):
     # Absent means the binding reaches as far as its revision's grade; a cap
     # only narrows that reach (see :mod:`.binding_grade_cap`).
     grade_cap: BindingGradeCap | None = None
+    # The statement a filer may make that this earlier-filing carry holds
+    # nothing; absent means the carry never takes one (see
+    # :mod:`.binding_absence_attestation`). Added after revisions saved their
+    # snapshots, so it is left out of every dump while absent (see
+    # :mod:`.field_absence`).
+    absence_attestation: AbsenceAttestationFamilyField | None = Field(default=None, exclude_if=absent_when_none)
     legal_refs: LegalRefs
     source_refs: SourceRefs
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
@@ -280,6 +288,31 @@ class BindingDefinition(RegistryModel):
             raise RegistryValidationError(
                 f"binding {self.id!r}: borrador_participation is declared but the binding is not aeat_prefilled",
                 context={"id": self.id, "borrador_participation": self.borrador_participation.value},
+            )
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_absence_attestation_reads_an_earlier_decimal(self) -> BindingDefinition:
+        """Refuse a statement of absence on a binding that is not a decimal carry from an earlier filing.
+
+        Only such a carry is unknown, rather than zero, while no earlier return
+        supplies it; on any other binding the statement would assert a figure.
+        """
+        if self.absence_attestation is None:
+            return self
+        if (
+            self.source is not BindingSourceKind.PREVIOUS_FILING
+            or self.value.channel is not BindingValueChannel.DECIMAL
+        ):
+            raise RegistryValidationError(
+                f"binding {self.id!r}: absence_attestation needs a decimal binding read from an earlier filing",
+                context={
+                    "id": self.id,
+                    "absence_attestation": self.absence_attestation.value,
+                    "source": self.source.value,
+                    "channel": self.value.channel.value,
+                },
             )
         return self
 

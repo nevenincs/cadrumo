@@ -12,6 +12,12 @@
 //! `POST /fake/exit` for a test to look into, or end, the helper child. A test scripts
 //! the rest through [`FakeState`]: readiness, the models and their statuses, a scripted
 //! answer or a hang-up for any path.
+//!
+//! It answers a load as the router does: `200` at once, whatever then becomes of the model,
+//! and `400` that the model is already running when it is held. A load that fails shows only
+//! in the model's entry in the list, as `unloaded` with `failed` and an exit code, never in
+//! an answer body. A load that another caller's load evicts shows there as `unloaded` with
+//! no `failed` flag.
 
 use serde_json::{Value, json};
 use std::{
@@ -69,13 +75,15 @@ pub(crate) enum ModelStatus {
     Loaded,
     Unloaded,
     Loading,
+    /// A load that was taken and then failed: listed as `unloaded`, with `failed` set.
+    Failed,
 }
 
 impl ModelStatus {
     fn as_str(self) -> &'static str {
         match self {
             Self::Loaded => "loaded",
-            Self::Unloaded => "unloaded",
+            Self::Unloaded | Self::Failed => "unloaded",
             Self::Loading => "loading",
         }
     }
@@ -103,6 +111,12 @@ pub(crate) struct FakeState {
     /// Whether a load leaves its model `loading` instead of `loaded`, as a load that has
     /// begun and not finished.
     pub load_leaves_loading: bool,
+    /// Whether a load is taken, answered `200`, and then fails: the model's entry reads
+    /// unloaded, failed, with exit code 1, as the router lists a model whose process ended.
+    pub load_fails: bool,
+    /// Whether a load is taken, answered `200`, and then evicted by another caller's load
+    /// into the router's one place: the model's entry reads unloaded with no `failed` flag.
+    pub load_evicted: bool,
     /// Every request line, in order.
     pub requests: Vec<String>,
     /// Every request body, in order, `null` when it was none or not JSON.
@@ -177,22 +191,6 @@ fn answer(state: &Shared, mut stream: TcpStream) {
     };
     let mut guard = state.lock().unwrap();
     guard.requests.push(request.line.clone());
-    if let Some(log) = &guard.log {
-        let mut file = std::fs::File::options()
-            .create(true)
-            .append(true)
-            .open(log)
-            .unwrap();
-        writeln!(
-            file,
-            "{} {}",
-            request.line,
-            String::from_utf8_lossy(&request.body)
-        )
-        .unwrap();
-    }
-    let body: Value = serde_json::from_slice(&request.body).unwrap_or(Value::Null);
-    guard.bodies.push(body.clone());
     let mut parts = request.line.split(' ');
     let method = parts.next().unwrap_or_default().to_owned();
     let target = parts
@@ -202,6 +200,33 @@ fn answer(state: &Shared, mut stream: TcpStream) {
         .next()
         .unwrap_or_default()
         .to_owned();
+    // The health answer is decided before the request is logged and is logged with it, so a
+    // reader of the log never sees a health request whose answer could still change.
+    let ready = guard.ready && guard.ready_file.as_ref().is_none_or(|file| file.exists());
+    let health = (method == "GET"
+        && target == "/health"
+        && !guard.hang_ups.contains(&target)
+        && !guard.failures.contains_key(&target))
+    .then_some(if ready { 200 } else { 503 });
+    if let Some(log) = &guard.log {
+        let mut file = std::fs::File::options()
+            .create(true)
+            .append(true)
+            .open(log)
+            .unwrap();
+        let answered = health
+            .map(|status| format!(" answered {status}"))
+            .unwrap_or_default();
+        writeln!(
+            file,
+            "{} {}{answered}",
+            request.line,
+            String::from_utf8_lossy(&request.body)
+        )
+        .unwrap();
+    }
+    let body: Value = serde_json::from_slice(&request.body).unwrap_or(Value::Null);
+    guard.bodies.push(body.clone());
 
     // The routes that look into the fake answer whatever is scripted for the others.
     match (method.as_str(), target.as_str()) {
@@ -236,9 +261,8 @@ fn answer(state: &Shared, mut stream: TcpStream) {
     }
     match (method.as_str(), target.as_str()) {
         ("GET", "/health") => {
-            let ready = guard.ready && guard.ready_file.as_ref().is_none_or(|file| file.exists());
             drop(guard);
-            if ready {
+            if health == Some(200) {
                 respond(&mut stream, "200 OK", &json!({ "status": "ok" }));
             } else {
                 respond(
@@ -262,10 +286,15 @@ fn answer(state: &Shared, mut stream: TcpStream) {
                 .models
                 .iter()
                 .map(|(id, status)| {
+                    let mut status_entry = json!({ "value": status.as_str() });
+                    if *status == ModelStatus::Failed {
+                        status_entry["failed"] = json!(true);
+                        status_entry["exit_code"] = json!(1);
+                    }
                     json!({
                         "id": id,
                         "object": "model",
-                        "status": { "value": status.as_str() },
+                        "status": status_entry,
                     })
                 })
                 .collect();
@@ -279,22 +308,34 @@ fn answer(state: &Shared, mut stream: TcpStream) {
         ("POST", "/models/load" | "/models/unload") => {
             let loading = target == "/models/load";
             let leaves_loading = guard.load_leaves_loading;
+            let fails = guard.load_fails;
+            let evicted = guard.load_evicted;
             let reply = match body["model"].as_str() {
                 None => ("400 Bad Request", error_body("the request names no model")),
                 Some(model) => match guard.models.get_mut(model) {
                     None => ("404 Not Found", error_body("model not found")),
+                    Some(ModelStatus::Loaded | ModelStatus::Loading) if loading => {
+                        ("400 Bad Request", error_body("model is already running"))
+                    }
                     Some(status) => {
-                        *status = match (loading, leaves_loading) {
-                            (true, true) => ModelStatus::Loading,
-                            (true, false) => ModelStatus::Loaded,
-                            (false, _) => ModelStatus::Unloaded,
+                        *status = match (loading, fails, evicted, leaves_loading) {
+                            (true, true, _, _) => ModelStatus::Failed,
+                            (true, false, true, _) => ModelStatus::Unloaded,
+                            (true, false, false, true) => ModelStatus::Loading,
+                            (true, false, false, false) => ModelStatus::Loaded,
+                            (false, _, _, _) => ModelStatus::Unloaded,
                         };
                         ("200 OK", json!({ "success": true }))
                     }
                 },
             };
+            // Whatever happens to the router while a load is on its way happens for a
+            // model it knows, whether it started the load or held the model.
             if loading
-                && reply.0 == "200 OK"
+                && matches!(reply.0, "200 OK" | "400 Bad Request")
+                && body["model"]
+                    .as_str()
+                    .is_some_and(|model| guard.models.contains_key(model))
                 && let Some(on_load) = guard.on_load.as_mut()
             {
                 on_load();
@@ -306,7 +347,7 @@ fn answer(state: &Shared, mut stream: TcpStream) {
             let reply = match body["model"].as_str().map(|model| guard.models.get(model)) {
                 None => ("400 Bad Request", error_body("the request names no model")),
                 Some(None) => ("404 Not Found", error_body("model not found")),
-                Some(Some(ModelStatus::Unloaded)) => {
+                Some(Some(ModelStatus::Unloaded | ModelStatus::Failed)) => {
                     ("400 Bad Request", error_body("model is not loaded"))
                 }
                 Some(Some(ModelStatus::Loaded | ModelStatus::Loading)) => (
@@ -571,6 +612,62 @@ mod tests {
                 "POST /models/unload HTTP/1.1",
                 "POST /models/load HTTP/1.1"
             ]
+        );
+    }
+
+    #[test]
+    fn a_failed_load_shows_only_in_the_list_and_a_held_model_is_already_running() {
+        let fake = FakeLlamaCpp::start("b1");
+        let loopback = Loopback::new(fake.address()).unwrap();
+        {
+            let mut state = fake.state.lock().unwrap();
+            state.models.insert("m".into(), ModelStatus::Unloaded);
+            state.load_fails = true;
+        }
+
+        let (status, body) = loopback.post("/models/load", br#"{"model":"m"}"#).unwrap();
+        assert_eq!((status, json_of(&body)), (200, json!({ "success": true })));
+        let (_, body) = loopback.get("/models").unwrap();
+        assert_eq!(
+            json_of(&body)["data"][0]["status"],
+            json!({ "value": "unloaded", "failed": true, "exit_code": 1 })
+        );
+        let (status, _) = loopback
+            .post("/v1/completions", br#"{"model":"m","prompt":"x"}"#)
+            .unwrap();
+        assert_eq!(status, 400, "a model whose load failed generates nothing");
+
+        // The next load can succeed, and a model then held answers a load as running.
+        fake.state.lock().unwrap().load_fails = false;
+        let (status, _) = loopback.post("/models/load", br#"{"model":"m"}"#).unwrap();
+        assert_eq!(status, 200);
+        assert_eq!(fake.state.lock().unwrap().models["m"], ModelStatus::Loaded);
+        let (status, body) = loopback.post("/models/load", br#"{"model":"m"}"#).unwrap();
+        assert_eq!(status, 400);
+        assert_eq!(json_of(&body), error_body("model is already running"));
+        let (_, body) = loopback.get("/models").unwrap();
+        assert_eq!(
+            json_of(&body)["data"][0]["status"],
+            json!({ "value": "loaded" })
+        );
+    }
+
+    #[test]
+    fn an_evicted_load_is_taken_and_listed_unloaded_with_no_failed_flag() {
+        let fake = FakeLlamaCpp::start("b1");
+        let loopback = Loopback::new(fake.address()).unwrap();
+        {
+            let mut state = fake.state.lock().unwrap();
+            state.models.insert("m".into(), ModelStatus::Unloaded);
+            state.load_evicted = true;
+        }
+
+        let (status, body) = loopback.post("/models/load", br#"{"model":"m"}"#).unwrap();
+        assert_eq!((status, json_of(&body)), (200, json!({ "success": true })));
+        let (_, body) = loopback.get("/models").unwrap();
+        assert_eq!(
+            json_of(&body)["data"][0]["status"],
+            json!({ "value": "unloaded" })
         );
     }
 

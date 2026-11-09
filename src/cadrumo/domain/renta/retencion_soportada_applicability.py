@@ -25,7 +25,6 @@ IAE groups the governed fact :data:`IAE_URBAN_RENTAL_GROUPS_FACT_ID` declares.
 
 from __future__ import annotations
 
-import re
 from collections.abc import Mapping, Sequence
 from datetime import date
 from enum import StrEnum
@@ -33,10 +32,12 @@ from types import MappingProxyType
 from typing import Final
 
 from ...core.retencion_soportada import RetencionSoportadaClase
-from ..calculations.registry.errors import RegistryValidationError
-from ..calculations.registry.facts.resolution import EntitySetFactQuery, ResolvedEntitySetFact
-from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
-from ..calculations.registry.schema_base import DateAxis
+from ..calculations.registry.governed_fact_scope import GovernedFactSource
+from ..calculations.registry.iae_activity_groups import (
+    ActivityGroupMembership,
+    activity_group_membership,
+    iae_activity_groups,
+)
 
 __all__ = [
     "IAE_URBAN_RENTAL_GROUPS_FACT_ID",
@@ -106,11 +107,13 @@ the rental group; that reading only ever asks for payer evidence, never proves
 an absence, so it fails closed.
 """
 
-_IAE_GROUP: Final[re.Pattern[str]] = re.compile(r"[0-9]{3}")
-"""A three-digit IAE group, the only shape a fact entity may take."""
-
-_IAE_EPIGRAPH: Final[re.Pattern[str]] = re.compile(r"(?P<group>[0-9]{3})(?:\.[0-9])?")
-"""A three-digit IAE group, optionally followed by one epigraph digit; nothing else parses."""
+_MEMBERSHIP_APPLICABILITY: Final[Mapping[ActivityGroupMembership, RetencionSoportadaApplicability]] = MappingProxyType(
+    {
+        ActivityGroupMembership.DECLARED: RetencionSoportadaApplicability.DECLARED,
+        ActivityGroupMembership.DECLARED_ABSENT: RetencionSoportadaApplicability.DECLARED_ABSENT,
+        ActivityGroupMembership.UNKNOWN: RetencionSoportadaApplicability.UNKNOWN,
+    },
+)
 
 
 def iae_urban_rental_groups(
@@ -125,20 +128,11 @@ def iae_urban_rental_groups(
         GovernedFactNotApplicableError: When the fact does not reach ``effective_date``.
         RegistryValidationError: When the fact is not a non-empty set of three-digit groups.
     """
-    selected = require_governed_fact_authority(authority, subject=IAE_URBAN_RENTAL_GROUPS_FACT_ID)
-    resolved = selected.resolve_governed_fact(
-        EntitySetFactQuery(
-            fact_id=IAE_URBAN_RENTAL_GROUPS_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date,
-        ),
+    return iae_activity_groups(
+        IAE_URBAN_RENTAL_GROUPS_FACT_ID,
+        effective_date=effective_date,
+        authority=authority,
     )
-    if not isinstance(resolved, ResolvedEntitySetFact):
-        raise RegistryValidationError(f"{IAE_URBAN_RENTAL_GROUPS_FACT_ID} must resolve as an entity-set fact")
-    groups = frozenset(resolved.payload.entities)
-    if not groups or any(_IAE_GROUP.fullmatch(group) is None for group in groups):
-        raise RegistryValidationError(f"{IAE_URBAN_RENTAL_GROUPS_FACT_ID} must declare three-digit IAE groups")
-    return groups
 
 
 def arrendamiento_actividad_applicability(
@@ -153,20 +147,19 @@ def arrendamiento_actividad_applicability(
     ``None`` for an activity that records none. Any activity in a rental group
     the fact declares on ``effective_date`` is declared; every activity parsing
     to another group is a proven absence; no activity, or any epigraph that does
-    not parse, is unknown. The group is read exactly: a prefix of a rental group
-    is not that group. The fact is read only once an activity is declared.
+    not parse, is unknown. The group reading itself belongs to
+    :func:`domain.calculations.registry.iae_activity_groups.activity_group_membership`,
+    which every rule keying off an IAE classification shares; only the mapping
+    into this module's own vocabulary is local.
     """
-    if activity_epigraphs is None or len(activity_epigraphs) == 0:
-        return RetencionSoportadaApplicability.UNKNOWN
-    rental_groups = iae_urban_rental_groups(effective_date=effective_date, authority=authority)
-    groups = [
-        None if epigraph is None else _IAE_EPIGRAPH.fullmatch(epigraph.strip()) for epigraph in activity_epigraphs
+    return _MEMBERSHIP_APPLICABILITY[
+        activity_group_membership(
+            activity_epigraphs,
+            fact_id=IAE_URBAN_RENTAL_GROUPS_FACT_ID,
+            effective_date=effective_date,
+            authority=authority,
+        )
     ]
-    if any(match is not None and match.group("group") in rental_groups for match in groups):
-        return RetencionSoportadaApplicability.DECLARED
-    if any(match is None for match in groups):
-        return RetencionSoportadaApplicability.UNKNOWN
-    return RetencionSoportadaApplicability.DECLARED_ABSENT
 
 
 def retencion_soportada_applicability(

@@ -445,17 +445,19 @@ fn crash_and_restart(supervisor: &mut ServerSupervisor<EngineProgram>, now: Inst
     assert_engine_running(supervisor, due);
 }
 
-/// A model new in the store, as a fetch leaves it.
+/// A model new in the store, as a pull that states its llama.cpp context leaves it.
 fn model_arrives(locations: &Locations) {
+    let path = ["registry.ollama.ai", "library", "text-reader", "small"];
     llama_tests::manifest(
         &locations.models,
-        ["registry.ollama.ai", "library", "qwen3", "1.7b"],
+        path,
         &[llama_tests::blob(
             &locations.models,
             MODEL_MEDIA_TYPE,
             b"text weights",
         )],
     );
+    llama_tests::record(&locations.models, path, 4096);
 }
 
 #[test]

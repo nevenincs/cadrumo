@@ -59,7 +59,9 @@ _DOCS: Final[Path] = REPO_ROOT / "docs"
 #: that had been retired, excluding nothing while still reading as a reviewed
 #: decision. A declaration nobody re-checks is the failure this module exists to
 #: prevent, so it must not reproduce it.
-_DECLARED_GENERATED_PAGES: Final[frozenset[str]] = frozenset({"reference/environment-overrides.md"})
+_DECLARED_GENERATED_PAGES: Final[frozenset[str]] = frozenset(
+    {"reference/environment-overrides.md", "reference/third-party-notices-windows-x86-64.md"}
+)
 
 
 def _candidate_pages(docs_root: Path) -> frozenset[str]:

@@ -40,16 +40,6 @@ import type { Landing } from "../WritePause";
 export const IMPORT_KINDS = ["bank", "book", "documents"] as const;
 export type ImportKind = (typeof IMPORT_KINDS)[number];
 
-export const LEDGER_PROVIDERS: readonly LedgerProvider[] = [
-  "auto",
-  "csv",
-  "ofx",
-  "qfx",
-  "xlsx",
-  "xls",
-  "pdf",
-];
-
 /** The most own accounts a preview reads each file against, all files
  * together. Beyond it the person chooses every file's account. */
 export const ACCOUNT_PROBE_LIMIT = 48;

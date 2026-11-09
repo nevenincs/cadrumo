@@ -14,6 +14,7 @@ from ...domain.calculations.registry.retenciones_bindings import (
     resolve_retenciones_aggregation_binding_row_values,
     resolve_retenciones_aggregation_binding_values,
 )
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ..calculations.m115_no_relevant_payments import is_m115_no_relevant_payment_period
 from .errors import RetencionesWindowEmptyError
 from .modelo_bindings_support import (
@@ -22,6 +23,13 @@ from .modelo_bindings_support import (
     revision_has_binding_source,
 )
 from .preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
+from .received_invoice_withholding import (
+    ReceivedInvoiceWithholding,
+    ReceivedInvoiceWithholdingFinding,
+    ReceivedInvoiceWithholdingFindingKind,
+    captured_invoice_ids,
+    received_invoice_withholding,
+)
 from .retencion_observations_repository import (
     RetencionObservationPersistenceError,
     RetencionObservationPorts,
@@ -50,11 +58,13 @@ from .source_resolution_operations import (
     source_provenance_for,
     storage_degradation_resolution,
 )
-from .withholding_modelo_routing import annual_source_observations_modelo
+from .withholding_modelo_routing import annual_source_observations_modelo, invoice_evidence_modelos
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.calculations.registry.ids import BindingId
     from ...domain.calculations.registry.schema import ModeloRevision
+    from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 
 _RETENCIONES_AGGREGATORS = {
     Modelo("111").value: aggregate_retenciones_111,
@@ -86,10 +96,17 @@ class RetencionesAggregationSourceResolver:
         *,
         ports: RetencionObservationPorts,
         m115_no_relevant_payment_periods: frozenset[tuple[int, str]] = frozenset(),
+        invoice_catalogue: InvoiceCatalogueReadPorts | None = None,
     ) -> None:
-        """Use the required retención-observation capability bundle."""
+        """Use the required retención-observation capability bundle.
+
+        ``invoice_catalogue`` lets a periodic modelo read the received invoices
+        that state a retención beside the stored allocations; without it only
+        the store is read.
+        """
         self._ports = ports
         self._m115_no_relevant_payment_periods = m115_no_relevant_payment_periods
+        self._invoice_catalogue = invoice_catalogue
 
     @staticmethod
     def aggregate(
@@ -147,6 +164,58 @@ class RetencionesAggregationSourceResolver:
             return self._ports.repository.load_annual_source_observations(source_modelo, period.filing_year)
         return self._ports.repository.load_observations(modelo, period)
 
+    def _received_invoice_withholding(
+        self,
+        context: CalculationSourceContext,
+        stored: tuple[RetencionObservation, ...],
+    ) -> ReceivedInvoiceWithholding:
+        """Read the received invoices a periodic modelo declares, beside what the store holds."""
+        if (
+            self._invoice_catalogue is None
+            or annual_source_observations_modelo(context.modelo) is not None
+            or context.modelo not in invoice_evidence_modelos()
+        ):
+            return ReceivedInvoiceWithholding(observations=(), findings=())
+        return received_invoice_withholding(
+            self._invoice_catalogue.invoice_reader.load(),
+            self._invoice_catalogue.transaction_reader.load(),
+            bucket_id=context.bucket_id,
+            modelo=context.modelo,
+            period=context.period,
+            captured_invoice_ids=captured_invoice_ids(stored),
+        )
+
+    def empty_window_refusal(self, context: CalculationSourceContext) -> RetencionesWindowEmptyError | None:
+        """Return the refusal :meth:`resolve` raises for ``context``'s window, without resolving it.
+
+        The window is refused when it holds no stored or invoice-stated
+        retención, no finding about one, and is not an attested Modelo 115
+        period without relevant payments. A store that cannot be read is not
+        judged here: :meth:`resolve` reports it as degraded.
+        """
+        try:
+            stored = self.load_calculation_observations(
+                modelo=context.modelo,
+                period=context.period,
+                revision=context.revision,
+            )
+        except (RetencionObservationPersistenceError, *STORAGE_DEGRADATION_ERRORS):
+            return None
+        if stored is None or stored:
+            return None
+        invoices = self._received_invoice_withholding(context, stored)
+        if invoices.observations or invoices.findings or self._m115_attested(context):
+            return None
+        return _empty_window_refusal(context)
+
+    def _m115_attested(self, context: CalculationSourceContext) -> bool:
+        """Report whether ``context`` is a Modelo 115 period attested to have no relevant payment."""
+        return context.modelo == form_for_role("withholding.lease_periodic") and is_m115_no_relevant_payment_period(
+            filing_year=context.filing_year,
+            period_token=context.period.registry_token,
+            attested_periods=self._m115_no_relevant_payment_periods,
+        )
+
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve the retenciones binding values for the declared modelo context."""
         try:
@@ -164,14 +233,18 @@ class RetencionesAggregationSourceResolver:
             )
         if observations is None:
             return empty_source_resolution(self.resolver_id, self.owned_sources)
-        if not observations:
-            is_m115 = context.modelo == form_for_role("withholding.lease_periodic")
-            is_m115_no_relevant_payment = is_m115 and is_m115_no_relevant_payment_period(
-                filing_year=context.filing_year,
-                period_token=context.period.registry_token,
-                attested_periods=self._m115_no_relevant_payment_periods,
+        invoices = self._received_invoice_withholding(context, observations)
+        observations = (*observations, *invoices.observations)
+        findings = tuple(_finding_diagnostic(self.resolver_id, finding) for finding in invoices.findings)
+        if not observations and findings:
+            return CalculationSourceResolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                unresolved_binding_ids=_retenciones_binding_ids(context.revision),
+                diagnostics=findings,
             )
-            if is_m115_no_relevant_payment:
+        if not observations:
+            if self._m115_attested(context):
                 with source_context_operation(context) as operation:
                     aggregation = self.aggregate(context.modelo, (), period=context.period, operation=operation)
                 return CalculationSourceResolution(
@@ -207,8 +280,11 @@ class RetencionesAggregationSourceResolver:
             owned_sources=self.owned_sources,
             binding_values=resolve_retenciones_aggregation_binding_values(context.revision, aggregation),
             row_binding_values=resolve_retenciones_aggregation_binding_row_values(context.revision, aggregation),
-            diagnostics=administrador_retencion_rate_advisory_observations(
-                observations, effective_date=context.period.end_date
+            diagnostics=(
+                *administrador_retencion_rate_advisory_observations(
+                    observations, effective_date=context.period.end_date
+                ),
+                *findings,
             ),
             provenance=source_provenance_for(
                 aggregation.rollups,
@@ -263,3 +339,50 @@ def _empty_window_refusal(context: CalculationSourceContext) -> RetencionesWindo
         ),
         next_step=None if profile_path is None else open_profile_path_step(profile_path),
     )
+
+
+_FINDING_SENTENCES = {
+    ReceivedInvoiceWithholdingFindingKind.INCOME_KIND_UNDECLARED: (
+        CalculationNoteSentence.WITHHOLDING_INVOICE_KIND_UNDECLARED
+    ),
+    ReceivedInvoiceWithholdingFindingKind.ENTITY_PROFESSIONAL_FEE: (
+        CalculationNoteSentence.WITHHOLDING_INVOICE_ENTITY_PROFESSIONAL_FEE
+    ),
+    ReceivedInvoiceWithholdingFindingKind.RECIPIENT_UNKNOWN: (
+        CalculationNoteSentence.WITHHOLDING_INVOICE_RECIPIENT_UNKNOWN
+    ),
+    ReceivedInvoiceWithholdingFindingKind.NON_RESIDENT: CalculationNoteSentence.WITHHOLDING_INVOICE_NON_RESIDENT,
+    ReceivedInvoiceWithholdingFindingKind.RATE_UNRECOGNISED: (
+        CalculationNoteSentence.WITHHOLDING_INVOICE_RATE_UNRECOGNISED
+    ),
+    ReceivedInvoiceWithholdingFindingKind.INVOICE_INCOMPLETE: CalculationNoteSentence.WITHHOLDING_INVOICE_INCOMPLETE,
+}
+"""The sentence that states each reason a received invoice's retención reaches no declaration."""
+
+
+def _finding_diagnostic(resolver_id: str, finding: ReceivedInvoiceWithholdingFinding) -> CalculationSourceDiagnostic:
+    """Hold back the declaration on a received invoice whose stated retención it cannot place.
+
+    The retención was recorded, so completing the declaration without it would
+    under-declare; the note names the invoice so the person can put it right.
+    """
+    return CalculationSourceDiagnostic(
+        reason="source_domain_not_ready",
+        source_kind="retenciones_aggregation",
+        resolver_id=resolver_id,
+        source_ref=f"invoice:{finding.invoice_id}",
+        message=(
+            f"received invoice {finding.invoice_id} states a retención that reaches no declaration: "
+            f"{finding.kind.value}"
+        ),
+        fact=CalculationNoteFact.of(
+            _FINDING_SENTENCES[finding.kind],
+            invoice=finding.invoice_number,
+            counterparty=finding.counterparty_name,
+            amount=finding.retencion,
+        ),
+    )
+
+
+def _retenciones_binding_ids(revision: ModeloRevision) -> tuple[BindingId, ...]:
+    return tuple(binding.id for binding in revision.bindings if binding.source == "retenciones_aggregation")

@@ -458,12 +458,28 @@ export type LedgerNextStep =
   | { kind: "complete_profile_setup"; words: string }
   /** Opens one ledger movement in the Libro, where the fact the refusal
    * names is recorded. */
-  | { kind: "open_movement"; transaction_id: string; words: string };
+  | { kind: "open_movement"; transaction_id: string; words: string }
+  /** Opens the IVA balance of the declaration named here, at the entry that
+   * records the opening balance its carry reads. */
+  | {
+      kind: "open_iva_wallet_opening_balance";
+      modelo: string;
+      filing_year: number;
+      period_code: string;
+      words: string;
+    };
 
 /** The steps the profile page answers, the two a readiness refusal serves. */
 export type LedgerProfileStep = Extract<
   LedgerNextStep,
   { kind: "open_profile_field" } | { kind: "complete_profile_setup" }
+>;
+
+/** The step a declaration's IVA balance answers, naming the declaration whose
+ * opening balance is missing. */
+export type LedgerIvaWalletStep = Extract<
+  LedgerNextStep,
+  { kind: "open_iva_wallet_opening_balance" }
 >;
 
 /** The step the Libro answers, naming one movement. */
@@ -510,6 +526,20 @@ export function servedNextStep(detail: unknown): LedgerNextStep | null {
     return modelo !== null && period !== null && typeof year === "number"
       ? {
           kind: "create_work",
+          modelo,
+          filing_year: year,
+          period_code: period,
+          words,
+        }
+      : null;
+  }
+  if (served.kind === "open_iva_wallet_opening_balance") {
+    const modelo = text("modelo");
+    const period = text("period_code");
+    const year = served.filing_year;
+    return modelo !== null && period !== null && typeof year === "number"
+      ? {
+          kind: "open_iva_wallet_opening_balance",
           modelo,
           filing_year: year,
           period_code: period,

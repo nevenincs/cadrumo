@@ -1088,19 +1088,28 @@ application:
     staged_check:
       served:
         blocker:
+          amount_signed: 'Az összeg mennyiség, nem előjeles szám: az irány mondja
+            meg, hogy a pénz bejött-e vagy kiment.'
           cannot_clear: 'Ez az érték nem törölhető: a mezőnek értéket kell tartalmaznia.'
           draft_incomplete: Az új tételhez mentés előtt kell könyvelési dátum, összeg,
             pénznem, irány és leírás.
           mixed_needs_share: A Vegyes tételnek üzleti arány kell.
           needs_classification: Ehhez a változtatáshoz előbb be kell sorolni a tételt.
+          needs_withholding_category: A megadott alap és áfa többet ad ki, mint a
+            tényleges pénzmozgás. Ez a különbség IRPF-levonás, a mozgás viszont nem
+            ad meg IRPF-kategóriát.
           share_needs_mixed: Üzleti arány csak Vegyes tételnél van.
           transfer_with_tax: A saját számlák közötti átvezetés nem hordoz adóadatot.
         fix:
+          amount_signed: Írd be az összeget előjel nélkül, és az iránnyal add meg,
+            hogy bejött vagy kiment.
           cannot_clear: Tartsd meg a tárolt értéket.
           draft_incomplete: Egészítsd ki, ami az új tételből hiányzik.
           mixed_needs_share: Add meg az üzleti arányt százalékként, például 50-et
             az 50%-hoz.
           needs_classification: Sorold be a tételt Üzletinek vagy Magánnak.
+          needs_withholding_category: Add meg, melyik IRPF-kategóriába tartozik a
+            levonás, vagy javítsd az alapot és az áfát, hogy kiadják az összeget.
           share_needs_mixed: Vesd el az arányt, vagy sorold a tételt Vegyesnek.
           transfer_with_tax: Vedd le az adóadatokat az átvezetésről, vagy változtasd
             meg az irányát.
@@ -1477,10 +1486,10 @@ application:
         what: Egy számlán rögzített egyenértékűségi pótlék eltér a hivatalos kulcstól.
         what_to_do: Ellenőrizd a számlához tartozó pótlékot a nyilvántartásodban.
       invoice_recargo_not_attributable_to_a_tier:
-        what: Egyetlen pótlék több áfakulcsú sort is lefed, ezért nem lehetett összevetni
-          a hivatalos kulcsokkal.
-        what_to_do: Ellenőrizd te magad a pótlékot, vagy oszd fel a számlát áfakulcsonként
-          a nyilvántartásodban.
+        what: Ezt a bevallást egy több áfakulcsot lefedő számla pótléka nélkül számoltuk
+          ki.
+        what_to_do: 'Számold újra: a pótlék kulcsonként bekerül a bevallásba, vagy
+          megmutatjuk a javítandó számlát.'
       invoice_reverse_charge_cuota_not_derivable:
         what: Egy fordított adózású beérkezett számlán nincs áfakulcs, ezért a rá
           fizetendő áfa nem lett kiszámolva.
@@ -1521,10 +1530,10 @@ application:
           erősíti meg hivatalos forrás.
         what_to_do: Benyújtás előtt vesd össze ezeket az összegeket a hivatalos útmutatóval.
       m347_declarado_provincia_unrecorded:
-        what: 'Néhány bejelentett partnernél hiányzik ez: {box}. Az adóügyi lakcímükhöz
+        what: 'Ennél a bejelentett partnernél hiányzik ez: {box}. Az adóügyi lakcíméhez
           tartozik, amit a számláid nem tüntetnek fel.'
-        what_to_do: A bevallás benyújtása előtt add meg minden felsorolt partner adóügyi
-          lakcímének tartománykódját.
+        what_to_do: Nyisd meg a számláját, és add meg az adóügyi lakcíme szerinti
+          tartományt; újraszámoláskor minden számlájára érvényes.
       m347_metalico_unrecorded:
         what: 'A számláid nem mutatják, hogyan fizették ki őket, ezért ez egyik rekordban
           sem tartalmaz összeget: {box}.'
@@ -1804,6 +1813,7 @@ application:
       instalment_free_gap: '{element}: {start} és {end} között nincs rögzített értékcsökkenési
         leírás. A módszere rád bízza az összeget, ezért semmit sem ad a(z) {box} mezőhöz.'
       m347_provincia_unrecorded: 'Tartománykód nélküli partnerek: {parties}.'
+      m347_provincia_unstated: Hiányzik {party} adóügyi lakcímének tartománya.
       possibly_durable_expense: A(z) {row_date} napi, {row_amount} összegű tétel folyó
         költségként kerül levonásra, a leírása pedig tartós eszközre utal.
       prior_filing_unrecorded: A(z) {box} mező kiszámításához rögzítsd a(z) {year}.
@@ -1836,6 +1846,30 @@ application:
         rögzít, amely nincs a nyilvántartásodban.
       row_unregistered_undated: Egy könyvelt tétel a nyilvántartásban nem szereplő
         eszközt rögzít.
+      withholding_invoice_entity_professional_fee: A(z) {counterparty} által kiállított
+        {invoice} számú kapott számla {amount} forrásadó-levonást (retención) tartalmaz
+        egy szakmai díjon, de a kiállító társaság, és egy társaság szakmai szolgáltatásai
+        után nincs levonás. Javítsd a számlát, hogy ne tartalmazzon levonást.
+      withholding_invoice_incomplete: A(z) {counterparty} által kiállított {invoice}
+        számú kapott számla {amount} forrásadó-levonást (retención) tartalmaz, de
+        hiányzik róla a kiállító adószáma vagy az euróban kifejezett összege. Egészítsd
+        ki a számlát.
+      withholding_invoice_kind_undeclared: A(z) {counterparty} által kiállított {invoice}
+        számú kapott számla {amount} forrásadó-levonást (retención) tartalmaz, de
+        a kifizetéséből nem derül ki, hogy bérleti díjról vagy egy tevékenység díjáról
+        van-e szó. Nyisd meg a kifizetés tételét, és válaszd ki az IRPF-kategóriáját.
+      withholding_invoice_non_resident: A(z) {counterparty} által kiállított {invoice}
+        számú kapott számla {amount} forrásadó-levonást (retención) tartalmaz, de
+        a kiállító nem spanyol illetőségű, így ez a levonás nem ebben a bevallásban
+        szerepel. Ellenőrizd a számla országát és adószámát.
+      withholding_invoice_rate_unrecognised: A(z) {counterparty} által kiállított
+        {invoice} számú kapott számla {amount} forrásadó-levonást (retención) tartalmaz,
+        amely egyetlen tevékenységi levonási kulcsnak sem felel meg. Ellenőrizd a
+        számla alapját és levonását.
+      withholding_invoice_recipient_unknown: A(z) {counterparty} által kiállított
+        {invoice} számú kapott számla {amount} forrásadó-levonást (retención) tartalmaz,
+        de az adószámából (NIF) nem derül ki, hogy a kiállító IRPF vagy társasági
+        adó (Impuesto sobre Sociedades) alá tartozik. Ellenőrizd a számla adószámát.
     calc_diagnostic_words:
       income_class:
         actividad_economica: Gazdasági tevékenységből származó
@@ -2176,11 +2210,15 @@ application:
       cross_period_clean_state_incomplete: A keresztidőszaki tiszta állapot igazolása
         hiányos a Modelo {modelo} ({period} {filing_year}) bevalláshoz; {finding_count}
         probléma maradt.
+      cross_period_sources_not_filed: 'A(z) %{modelo_words} (%{year}) az év bevallásait összesíti, és ezek még nincsenek benyújtva: %{sources}. Ha benyújtottad őket, számold újra.'
       deductible_iva_evidence_missing: 'A nyilvántartásaidban szereplő, levonható
         IVA-t tartalmazó tételekhez kapcsolt beszerzési számla szükséges. Kapcsold
         a számlát a tételhez, majd futtasd újra a aeat app modelo work verify parancsot:
         az ellenőrzés nem fejeződik be, amíg egy levonható tételhez nincs számla,
         így a piszkozat nyitva marad, és átveszi a bizonylatot.'
+      detail_row_identity_conflict: Egy általad megadott részletező sor nem egyezik
+        a nyilvántartásaid szerinti sorral ugyanarra a nyilatkozóra; javítsd vagy
+        töröld a számítás előtt.
       export_cross_bucket_refused: A megcímzett revízió nem az aktív profil bucketjéhez
         tartozik. Exportálás előtt váltson profilt.
       export_draft_approval_failed: Nem sikerült jóváhagyni a(z) %{calculation_revision_id}
@@ -2330,6 +2368,9 @@ application:
         invoice_deduction_family_unresolved: 'a kifizetett bejövő számlából nem derül
           ki, melyik levonás illeti meg: sorold be a tételt, például folyó költségként
           vagy beruházási javakként'
+        invoice_recargo_split_unresolved: 'egy kiállított számla több áfakulcsra egyetlen
+          kiegyenlítő pótlékot (recargo de equivalencia) tartalmaz, amely eltér az
+          egyes kulcsok pótlékának összegétől: javítsd a számla pótlékát'
         linked_movement_contradicts_invoice: az adóalapja vagy az IVA-összege eltér
           a kifizetett számláétól
         missing_business_classification: még nincs besorolva üzleti, magán vagy vegyes
@@ -2361,6 +2402,8 @@ application:
         használhatatlan sor van: %{malformed_rows}'
       m036_declaration_profile_bucket_mismatch: A Modelo 036 bevallása más profilt
         nevez meg, mint az a tároló, amelybe rögzülne
+      m200_accounting_result_required: A Modelo 200 főkönyvből való számításához szükség
+        van az év számviteli eredményére.
       m210_ledger_manual_agrupacion_rows: A Modelo 210 nyilvántartás-módban az éves
         csoportosított jövedelemsorokat a nyilvántartásaid besorolásaiból származtatja;
         ne adj meg kézi agrupacion-renta sorokat.
@@ -2379,6 +2422,9 @@ application:
         IDOBELYEG`, majd próbáld újra a számítást.'
       m303_filing_evidence_invalid: A Modelo 303 bevallási példányának bizonyítéka
         nem felelt meg az ellenőrzésnek.
+      m349_operator_rows_required: Ennek az időszaknak a főkönyvében Közösségen belüli
+        ügyletek vannak a Modelo 349 partnersorai nélkül; add hozzá őket a számítás
+        előtt.
       novel_source_kind_rejected: 'Ismeretlen számítási forrástípus(ok) %{novel_source_kinds}
         a(z) %{revision_id} változatban: a nyomtatványdefiníciók olyan értékforrást
         deklarálnak, amelyet egyetlen számítási feloldó sem kezel. Adj hozzá egy feloldót,
@@ -2442,6 +2488,8 @@ application:
         szükséges.
       revision_pick_id_requires_explicit_selector: A calculation_revision_id csak
         explicit revízió kiválasztóval érvényes.
+      source_owned_binding_override: Olyan mezőbe írtál értéket, amely a nyilvántartásaidból
+        származik; töröld, vagy javítsd a forrásbejegyzést.
       verification_report_not_found: 'Nem található ellenőrzési jelentés ezzel az
         azonosítóval: %{verification_report_id}.'
       work_period_token_invalid: 'A --period ''%{token}'' nem érvényes időszak-token
@@ -2800,6 +2848,9 @@ application:
         Modelo 303 (%{blocking_period} %{blocking_filing_year}) felhasználta ezt a
         kezdő kompenzációs alapot. Módosítása egy benyújtottként rögzített bevallást
         változtatna meg.'
+      next_step:
+        open: IVA-egyenleg megnyitása
+        open_opening_balance: 'Rögzítsd a nyitó IVA-egyenleget: %{modelo}, %{period}'
       override_fresh_wallet_blocked: 'Felülbírálás elutasítva: az AEAT pénztárának
         aktuális leolvasása már feloldja a Modelo 303-at %{period} %{filing_year}.
         A friss AEAT-bizonyíték a mérvadó, és a felülbírálás nem írhatja felül.'
@@ -2875,11 +2926,16 @@ application:
           ingresos: Eddigi bevétel (Modelo 130 bevallások)
           pagos_fraccionados: Befizetett előlegfizetések (Modelo 130 bevallások)
           rendimiento_neto: Eddigi nettó jövedelem (Modelo 130 bevallások)
+      ledger_hold:
+        movement: 'A(z) %{period} kiszámítása előtt nézd át a(z) %{movement_date}
+          tételt („%{movement_description}”, %{movement_amount}): %{need}.'
+        period: 'A(z) %{period} kiszámítása előtt: %{need}.'
       next_step:
         calculate_work: 'Számítsd ki: %{modelo}, %{period}'
         create_work: 'Hozd létre: %{modelo}, %{period}'
         open_movement: Nyisd meg a tételt a Naplóban
         open_work: 'Nyisd meg: %{modelo}, %{period}'
+        verify_work: 'Ellenőrizd: %{modelo}, %{period}'
       no_m130_revisions: A(z) %{year} adóév Modelo 130 bevallásait még nem számoltad
         ki, így nincs miből becslést készíteni az éves bevallásról. Számolj ki egy
         negyedévet, majd kérd újra a becslést.
@@ -2913,6 +2969,11 @@ application:
         be.
       stage_refused: 'A `quickfile` a(z) %{stage} szakasznál leállt: a szakaszt %{error_code}
         kóddal elutasították.'
+    reconciliation_sources:
+      standing:
+        missing: '%{modelo}, %{period}: nincs kiszámítva'
+        unfiled: '%{modelo}, %{period}: ellenőrizve, nincs benyújtva'
+        unverified: '%{modelo}, %{period}: kiszámítva, nincs ellenőrizve'
     taxation_comparison_words:
       below_materiality: A két eredmény {difference} összeggel tér el, ami kevesebb,
         mint {threshold}, ezért bármelyik adózási mód megfelelő.
@@ -2969,6 +3030,20 @@ application:
         onwards: A Modelo {modelo} nyomtatvány {box}. mezője, {years}. és az azt követő
           adóévek.
         year_span: A Modelo {modelo} nyomtatvány {box}. mezője, {years}. adóév.
+      carry_attestation:
+        renta_negative_general_bases_pending:
+          action: Nincs korábbi évekből fennmaradó összegem
+          effect: 'Általad kijelentett 0-ként rögzítve: nincs korábbi évekből fennmaradó
+            összeg.'
+          origin: Kijelentetted, hogy nincs fennmaradó összeg
+          statement: Rögzíti, hogy az előző négy adóévből nincs beszámításra váró
+            negatív általános adóalapod (Ley 35/2006, 50.3. cikk). Minden összeg általad
+            kijelentett 0-ként kerül rögzítésre, a beírt számtól elkülönítve; ha egy
+            korábbi bevallás később összeget mutat, a bevallás jelzi az eltérést.
+      credits_heading:
+        mixed: Levonások
+        practised: Az általad levont összegek
+        suffered: A jövedelmedből levont összegek
       finding_action:
         add_activity_start: Add meg a profilodban, mikor kezdődött a tevékenységed,
           majd számolj újra.

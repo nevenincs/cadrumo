@@ -26,6 +26,7 @@ from ...adapters.agent_programs import PACKAGE_AGENT_VARIABLE
 from ...adapters.agent_provider_catalog import AgentProviderCatalogSource
 from ...providers.application.tests.runtime_connection import RuntimeConnection, service_client, synthetic_lease
 from ...providers.application.tests.synthetic_catalog import synthetic_catalog, synthetic_document
+from ...providers.domain.record import LocalEngine
 from ...service import AgentService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -88,7 +89,11 @@ def _rig(tmp_path: Path, agent: _Agent, *, claimed_session: list[UUID | None]) -
     client = service_client(connection)
     client.claim()
     service = AgentService(
-        client=client, storage_root=tmp_path, gateway_bearer=bytearray(b"synthetic-gateway-bearer"), emit=lambda _: None
+        local_engine_default=LocalEngine.LLAMACPP,
+        client=client,
+        storage_root=tmp_path,
+        gateway_bearer=bytearray(b"synthetic-gateway-bearer"),
+        emit=lambda _: None,
     )
     return _Rig(service, connection, agent)
 

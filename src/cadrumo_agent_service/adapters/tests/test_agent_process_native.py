@@ -13,7 +13,7 @@ from collections.abc import Callable, Mapping, Sequence
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from types import SimpleNamespace
-from typing import cast, override
+from typing import Any, cast, override
 
 import pytest
 
@@ -39,8 +39,9 @@ from ...host.launch_environment import HOSTED_ROOT_VARIABLE
 from ...host.launcher_protocol import AgentLauncherRefusal, launcher_refusal_for
 from ...host.native_refusal import NativeLaunchRefusal, NativeLaunchRefusalCode
 from ...host.store_lifecycle import InvocationCancellation
+from ...providers.domain.record import LocalEngine
 from ...service import AgentService
-from ..agent_process import WindowsAgentInvocationRunner, WindowsAgentProcessLauncher
+from ..agent_process import WindowsAgentInvocationRunner, WindowsAgentProcessLauncher, _await_invocation_exit
 from . import agent_host_fixture
 
 pytestmark = [
@@ -342,9 +343,13 @@ def test_an_agent_that_fills_its_standard_error_is_not_blocked_and_its_drain_end
 
 
 def test_a_tree_that_ignores_stop_is_ended_only_at_timeout(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
-    """A sleeping tree is allowed to finish until the injected timeout."""
+    """A sleeping tree is allowed to finish until the injected timeout.
+
+    The 3 s policy is the stop budget under test; the start gets its own
+    deadline so a slow fixture launch cannot spend it before the stop begins.
+    """
     controller = _controller(tmp_path, "deaf", _CredentialSource(), timeout=3)
-    controller.start()
+    controller.start(deadline=TimeoutPolicy(30).deadline())
     grandchild = _received(tmp_path)["grandchild"]
     assert isinstance(grandchild, int)
     try:
@@ -434,6 +439,7 @@ def test_cancel_wakes_readiness_and_startup_owner_retires_the_tree(
 
     monkeypatch.setattr(controller._launcher, "launch", observed_launch)
     service = AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
         client=cast(
             InstalledServiceClient, SimpleNamespace(lease=None, connection=SimpleNamespace(close=lambda: None))
         ),
@@ -488,6 +494,7 @@ def test_service_cancel_before_controller_exists_wakes_its_contained_preparation
 
     monkeypatch.setattr(cancellation, "subscribe", subscribed)
     service = AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
         client=cast(
             InstalledServiceClient, SimpleNamespace(lease=object(), connection=SimpleNamespace(close=lambda: None))
         ),
@@ -534,6 +541,30 @@ def test_service_cancel_before_controller_exists_wakes_its_contained_preparation
             service.close()
 
 
+class _RunningWaiter:
+    """An invocation that is still running: its exit wait returns only once the waiter is closed."""
+
+    def __init__(self) -> None:
+        self.closed = threading.Event()
+
+    def wait(self, *, timeout: float | None) -> int:
+        self.closed.wait(timeout)
+        return 0
+
+    def close(self) -> None:
+        self.closed.set()
+
+
+def test_a_deadline_that_passed_while_the_invocation_started_is_answered_as_a_timeout() -> None:
+    waiter = _RunningWaiter()
+    process = SimpleNamespace(retain_waiter=lambda: waiter)
+
+    status = _await_invocation_exit(cast("Any", process), TimeoutDeadline(time.monotonic() - 1.0), None)
+
+    assert status is None
+    waiter.close()
+
+
 def test_contained_preparation_reports_timeout_and_confirms_termination(tmp_path: Path) -> None:
     runner = WindowsAgentInvocationRunner()
     result = runner.run(
@@ -576,6 +607,7 @@ def test_service_close_wakes_a_pending_served_catalogue_body(tmp_path: Path, can
     server_owner = threading.Thread(target=server.serve_forever)
     server_owner.start()
     service = AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
         client=cast(
             InstalledServiceClient, SimpleNamespace(lease=None, connection=SimpleNamespace(close=lambda: None))
         ),

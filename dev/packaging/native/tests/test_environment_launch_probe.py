@@ -521,3 +521,49 @@ def test_the_probe_prints_each_check_and_exits_one_when_a_check_fails(
     stand_in.agent_mode("crash")
     assert probe.main(arguments, launcher=_launcher(stand_in), names=names) == 1
     assert "FAIL hosted gateway: the gateway ended with status 1" in capsys.readouterr().out
+
+
+def test_the_nearest_folder_holding_a_git_entry_is_the_project(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    (project / "nested" / "deep").mkdir(parents=True)
+    (project / ".git").write_text("gitdir: elsewhere\n", encoding="utf-8")
+
+    assert probe.git_project(project / "nested" / "deep") == project
+    assert probe.git_project(project) == project
+
+
+def test_a_windows_temporary_folder_inside_a_git_project_is_a_set_up_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    project = tmp_path / "project"
+    (project / "local").mkdir(parents=True)
+    (project / ".git").mkdir()
+    monkeypatch.setattr(probe, "_platform", lambda: "windows")
+    monkeypatch.setenv("LOCALAPPDATA", str(project / "local"))
+
+    with pytest.raises(probe.SetupError, match="inside the Git project") as refusal:
+        probe.probe_base()
+    assert str(project.resolve()) in str(refusal.value)
+
+
+def test_a_windows_host_without_local_application_data_is_a_set_up_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(probe, "_platform", lambda: "windows")
+    monkeypatch.delenv("LOCALAPPDATA", raising=False)
+
+    with pytest.raises(probe.SetupError, match="LOCALAPPDATA is not set"):
+        probe.probe_base()
+
+
+def test_the_probe_root_is_made_in_the_per_user_temporary_folder_whatever_temp_names(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("TEMP", str(tmp_path))
+    monkeypatch.setenv("TMP", str(tmp_path))
+    monkeypatch.setenv("TMPDIR", str(tmp_path))
+
+    base = probe.probe_base()
+
+    assert not base.is_relative_to(tmp_path.resolve())
+    assert probe.git_project(base) is None
+    if sys.platform == "win32":
+        assert base == (Path(os.environ["LOCALAPPDATA"]) / "Temp").resolve()

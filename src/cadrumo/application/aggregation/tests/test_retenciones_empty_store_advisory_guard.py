@@ -136,3 +136,38 @@ def test_resolver_empty_application_port_fails_before_silent_zero() -> None:
     assert verdict.action is None
     assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
     assert verdict.evidence[0].values["modelo"] == "180"
+
+
+def _m180_context(revision: ModeloRevision) -> CalculationSourceContext:
+    return CalculationSourceContext(
+        bucket_id="operator",
+        modelo="180",
+        filing_year=2024,
+        period=Period.from_year_and_code(2024, "0A"),
+        revision=revision,
+    )
+
+
+def test_the_pre_calculation_check_refuses_the_window_resolve_refuses_with_the_same_words() -> None:
+    resolver = RetencionesAggregationSourceResolver(
+        ports=RetencionObservationPorts(repository=_EmptyRetencionObservationRepository()),
+    )
+    context = _m180_context(_m180_retenciones_revision())
+
+    refusal = resolver.empty_window_refusal(context)
+    with pytest.raises(RetencionesWindowEmptyError) as raised:
+        resolver.resolve(context)
+
+    assert refusal is not None
+    assert refusal.translated_message == raised.value.translated_message
+    assert refusal.context == raised.value.context
+
+
+def test_the_pre_calculation_check_refuses_nothing_when_the_revision_reads_no_retenciones_store() -> None:
+    resolver = RetencionesAggregationSourceResolver(
+        ports=RetencionObservationPorts(repository=_EmptyRetencionObservationRepository()),
+    )
+    context = _m180_context(_m180_retenciones_revision().model_copy(update={"bindings": ()}))
+
+    assert resolver.empty_window_refusal(context) is None
+    assert not resolver.resolve(context).binding_values

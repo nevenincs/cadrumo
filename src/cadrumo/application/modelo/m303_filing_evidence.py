@@ -36,12 +36,16 @@ _EVIDENCE_SCENARIO_PREFIX = "modelo.work.calculate.m303_filing_evidence"
 def m303_filing_evidence_failure(
     scenario_code: str,
     evidence_values: Mapping[str, str | int | bool | Decimal],
+    *,
+    action_argument_values: Mapping[str, str | int | bool | Decimal] | None = None,
+    missing_action_arguments: tuple[str, ...] = (),
 ) -> ModeloPreconditionFailure:
     """Return the declared failure for one Modelo 303 filing-evidence scenario.
 
     The scenario identity resolves its own condition and recovery from the
     declared catalogue, so this producer supplies only the observed facts and
-    never an action or a rendered explanation of its own.
+    the values of the declared action's arguments, never an action or a
+    rendered explanation of its own.
     """
     return build_modelo_precondition_failure_for_scenario(
         subject_leaf_key=_EVIDENCE_SUBJECT_LEAF_KEY,
@@ -49,6 +53,8 @@ def m303_filing_evidence_failure(
         evidence_id=f"{_EVIDENCE_SCENARIO_PREFIX}.{scenario_code}.observation",
         evidence_values=evidence_values,
         provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        action_argument_values=action_argument_values,
+        missing_action_arguments=missing_action_arguments,
     )
 
 

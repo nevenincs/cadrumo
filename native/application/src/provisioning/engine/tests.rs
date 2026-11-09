@@ -17,7 +17,7 @@ use crate::provisioning::{
         fake_ollama::FakeOllama,
         llama_server::{PRESET, server_folder},
         loopback::{ExchangeFailure, ExchangePhase},
-        models::SelectedModel,
+        models::{SelectedModel, record_context},
         program::{
             Program, SERVER_RECORD, SERVER_RECORD_SCHEMA, START_FAILURE_RECORD, ServerRecord,
         },
@@ -30,6 +30,7 @@ use serde_json::{Value, json};
 use std::{
     collections::VecDeque,
     io::{Cursor, Write},
+    num::NonZeroU32,
     sync::{Mutex, mpsc},
 };
 
@@ -38,6 +39,8 @@ const GIB: u64 = 1024 * 1024 * 1024;
 const TEXT: &str = "synthetic-text:test";
 const VISION: &str = "synthetic-vision:test";
 const KEPT: &str = "synthetic-kept:test";
+/// The llama.cpp context the llama.cpp world's catalogue states for every model.
+const LLAMA_CONTEXT: NonZeroU32 = NonZeroU32::new(4096).unwrap();
 const PROGRAM_VERSION: &str = "9.9.9";
 const PROGRAM_PATH: &str = "/ollama/ollama/releases/download/v9.9.9/ollama.zip";
 /// The llama.cpp build the package pins its llama-server at, and the router reports.
@@ -225,6 +228,9 @@ struct World {
     driver: bool,
     /// The local models the engines are given, as role, name and size.
     selection: Vec<(String, String, u64)>,
+    /// The llama.cpp context the selection states for each model; none in the Ollama
+    /// world, whose catalogue states none.
+    llamacpp_context: Option<NonZeroU32>,
     /// The fixture computer's memory, with no NVIDIA card.
     memory_bytes: u64,
     /// Measure this computer as the installation does, instead of a fixture.
@@ -313,9 +319,11 @@ impl World {
             ollama,
             llama: None,
             llama_package,
-            local_engine: LocalEngine::default(),
+            // The Ollama world; `llama_cpp` selects the other engine.
+            local_engine: LocalEngine::Ollama,
             driver,
             selection: Vec::new(),
+            llamacpp_context: None,
             memory_bytes: 64 * GIB,
             measure_hardware: false,
         }
@@ -330,6 +338,7 @@ impl World {
             crate::provisioning::local_ai::llama_server::tests::package(world.directory.path());
         world.llama = Some(FakeLlamaCpp::start(LLAMA_BUILD));
         world.local_engine = LocalEngine::LlamaCpp;
+        world.llamacpp_context = Some(LLAMA_CONTEXT);
         world
     }
 
@@ -344,6 +353,15 @@ impl World {
 
     fn models(&self) -> PathBuf {
         self.root().join("models/ollama")
+    }
+
+    /// Stores `model` under `name` as an earlier setup left it: whole, with the context
+    /// the world's selection states recorded, as that setup's pull recorded it.
+    fn store(&self, model: &StoredModel, name: &str) {
+        model.store(&self.models(), name);
+        if let Some(context) = self.llamacpp_context {
+            record_context(&self.models(), &ModelName::parse(name).unwrap(), context).unwrap();
+        }
     }
 
     fn programs(&self) -> PathBuf {
@@ -377,6 +395,7 @@ impl World {
                 .map_or_else(|| "127.0.0.1:23743".parse().unwrap(), FakeOllama::address),
             llama_server_folder: self.llama_package.clone(),
             llama_server_build: LLAMA_BUILD.into(),
+            placement: Placement::default(),
             browser_environment: fake_environment(&format!("version={BROWSER_VERSION}")),
             scratch: root.join("tmp"),
             free_space: Box::new(|_| Some(1024 * GIB)),
@@ -388,7 +407,9 @@ impl World {
         let selected = self
             .selection
             .iter()
-            .map(|(role, name, size)| SelectedModel::new(role, name, Some(*size)))
+            .map(|(role, name, size)| {
+                SelectedModel::new(role, name, Some(*size), self.llamacpp_context)
+            })
             .collect::<Result<_, _>>()
             .unwrap();
         engine.select_local_models(LocalModels::new(selected).unwrap());
@@ -527,7 +548,7 @@ impl World {
         let llama = self.llama.as_ref().unwrap();
         let folder = self.router_folder();
         fs::create_dir_all(&folder).unwrap();
-        let presented = llama_server::preset(&self.models(), LOAD_CONTEXT);
+        let presented = llama_server::preset(&self.models(), Placement::default());
         fs::write(folder.join(PRESET), &presented).unwrap();
         {
             let mut state = llama.state.lock().unwrap();
@@ -605,6 +626,18 @@ impl World {
                 state.failures.remove(path);
             }
         }
+    }
+
+    /// Makes each load the stand-in router takes end with the model's process exiting, or
+    /// ends that.
+    fn router_load_fails(&self, fails: bool) {
+        self.llama
+            .as_ref()
+            .unwrap()
+            .state
+            .lock()
+            .unwrap()
+            .load_fails = fails;
     }
 
     /// A setup of the local AI the person approves as reviewed, whose router the manager
@@ -1685,8 +1718,8 @@ fn a_model_the_router_does_not_present_reads_absent_and_its_setup_downloads_noth
     let text = StoredModel::new(1);
     let vision = StoredModel::new(9);
     let world = World::llama_cpp(&text, &vision);
-    text.store(&world.models(), TEXT);
-    vision.store(&world.models(), VISION);
+    world.store(&text, TEXT);
+    world.store(&vision, VISION);
     world.serve_router();
     assert_eq!(
         row(&world.status(), ItemId::LocalAi).state,
@@ -1722,12 +1755,41 @@ fn a_model_the_router_does_not_present_reads_absent_and_its_setup_downloads_noth
 }
 
 #[test]
-fn a_load_the_router_refuses_or_an_answer_without_a_token_fails_the_full_check() {
+fn with_llama_cpp_selected_a_model_stating_no_context_is_refused_before_any_download() {
+    let text = StoredModel::new(1);
+    let vision = StoredModel::new(9);
+    let mut world = World::llama_cpp(&text, &vision);
+    world.llamacpp_context = None;
+    world.serve_router();
+
+    // The router could never present a model with no llama.cpp context, so the local AI
+    // reads not in this build rather than offering a download that ends damaged.
+    assert_eq!(
+        row(&world.status(), ItemId::LocalAi).state,
+        ItemState::Blocked(BlockedReason::NotInThisBuild)
+    );
+    let refused = world.plan(Some(vec![ItemId::LocalAi]));
+    assert_eq!(
+        (refused.outcome, refused.failure),
+        (Outcome::Refused, Some(FailureCategory::NotInThisBuild)),
+        "{refused:?}"
+    );
+    assert!(world.registry_requests().is_empty(), "nothing was fetched");
+    assert!(world.ollama_requests().is_empty());
+
+    // Stating the context, the same selection plans its download.
+    world.llamacpp_context = Some(LLAMA_CONTEXT);
+    let planned = world.plan(Some(vec![ItemId::LocalAi]));
+    assert!(planned.plan.is_some(), "{planned:?}");
+}
+
+#[test]
+fn a_load_that_fails_or_an_answer_without_a_token_fails_the_full_check() {
     let text = StoredModel::new(1);
     let vision = StoredModel::new(9);
     let world = World::llama_cpp(&text, &vision);
-    text.store(&world.models(), TEXT);
-    vision.store(&world.models(), VISION);
+    world.store(&text, TEXT);
+    world.store(&vision, VISION);
     world.serve_router();
     let full = |world: &World| row(&world.verify(&[ItemId::LocalAi]), ItemId::LocalAi).state;
     assert_eq!(full(&world), ItemState::Ready);
@@ -1747,19 +1809,20 @@ fn a_load_the_router_refuses_or_an_answer_without_a_token_fails_the_full_check()
         "nothing generates once the load is refused"
     );
 
-    // A refusal that says in its own words the model did not fit is out of memory.
-    world.script_router(
-        "/models/load",
-        Some((
-            "500 Internal Server Error",
-            json!({ "error": { "message": "failed to allocate memory for the model" } }),
-        )),
-    );
+    // The router takes the load and answers it at once; the model's process then ends,
+    // which only the router's list says, and for a stored model that is memory.
+    world.script_router("/models/load", None);
+    world.router_load_fails(true);
     assert_eq!(
         full(&world),
         ItemState::Failed(FailureCategory::NotEnoughMemory)
     );
-    world.script_router("/models/load", None);
+    assert_eq!(
+        count(&world.router_requests(), "POST /v1/completions"),
+        4,
+        "nothing generates with a model whose load failed"
+    );
+    world.router_load_fails(false);
 
     // The router answers the generation with no token.
     world.script_router(

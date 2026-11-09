@@ -25,6 +25,7 @@ from ..events import OperationEventCode
 from ..financial_operand_contract import OperationTransientFinancialOperandRequirementV1
 from ..interactions import OperationConsumedInteraction, OperationPendingInteraction
 from ..models import (
+    OperationDefinitionId,
     OperationId,
     OperationIdentity,
     OperationRevision,
@@ -354,6 +355,15 @@ class OperationRecoveryInventoryEntry(BaseModel):
 
     operation_id: OperationId
     disposition: OperationRecoveryInventoryDisposition
+    #: The definition the record was opened for, read with its classification; absent exactly when it is refused.
+    definition_id: OperationDefinitionId | None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _definition_named_unless_refused(self) -> OperationRecoveryInventoryEntry:
+        if (self.definition_id is None) != (self.disposition is OperationRecoveryInventoryDisposition.REFUSED):
+            raise ValueError("an operation inventory entry names its definition exactly when its record was read")
+        return self
 
 
 class OperationRecoveryInventoryPage(BaseModel):
@@ -375,6 +385,38 @@ class OperationRecoveryInventoryPage(BaseModel):
         if self.has_more and not ids:
             raise ValueError("operation inventory continuation requires a scanned entry")
         return self
+
+
+class OperationRecoveryInventoryDelta(BaseModel):
+    """Every record a journal holds at one instant, classifying only those outside a caller's known set.
+
+    ``present`` names every record identifier, so a known record that is gone
+    shows as absent; ``entries`` classifies exactly the present records the
+    caller did not already know, in identifier order.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    present: frozenset[OperationId]
+    entries: tuple[OperationRecoveryInventoryEntry, ...]
+
+    @model_validator(mode="after")
+    def _validate_entries(self) -> OperationRecoveryInventoryDelta:
+        ids = tuple(entry.operation_id for entry in self.entries)
+        if ids != tuple(sorted(set(ids))):
+            raise ValueError("operation inventory delta entries must be unique and ordered")
+        if not self.present.issuperset(ids):
+            raise ValueError("operation inventory delta classifies only present records")
+        return self
+
+
+@runtime_checkable
+class OperationRecoveryInventoryDeltaReader(Protocol):
+    """Name every journal record and classify only those a caller has not classified yet."""
+
+    async def inventory_delta(self, *, known: frozenset[OperationId]) -> OperationRecoveryInventoryDelta:
+        """List every present record and classify each one outside ``known``, under one journal exclusion."""
+        ...
 
 
 @runtime_checkable

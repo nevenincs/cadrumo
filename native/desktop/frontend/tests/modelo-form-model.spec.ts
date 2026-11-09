@@ -13,6 +13,7 @@ import {
   noteMoved,
   rebasedEdits,
   rebasedOf,
+  removeIntent,
   restaged,
   restoreIntent,
   UNPLACED_PAGE,
@@ -153,6 +154,34 @@ test("the staged edits make one submission of typed values only", () => {
   expect(input.submission.lexemes).toBeUndefined();
 });
 
+test("a carry stated to hold nothing is sent as the statement, with no value", () => {
+  const fed = box(m130, "05");
+  const statement = {
+    kind: "attest_no_amount",
+    change: "set",
+    words: "served action",
+    effect: "served effect",
+  } as const;
+  const edit = staged(fed, statement);
+  expect(
+    editSubmission(m130.admitted_baseline!, [edit], "en").submission
+      .binding_intents,
+  ).toEqual([{ address: editAddress(fed), kind: "attest_no_amount" }]);
+  // The staged edit says what the form served, never words of its own.
+  expect(stagedText(((key: string) => key) as Translate, edit)).toBe(
+    "served action",
+  );
+  const open = {
+    ...fed,
+    takes_typed_value: true,
+    origin: "not_imported_yet",
+  } as const;
+  expect(restaged(edit, open)).toEqual(statement);
+  expect(restaged(edit, { ...open, takes_typed_value: false })).toBeNull();
+  // An earlier return stored meanwhile supplies the carry: the statement goes.
+  expect(restaged(edit, { ...open, origin: "imported" })).toBeNull();
+});
+
 test("an entry is read by a preflight carrying only what was typed", () => {
   const baseline = m130.admitted_baseline!;
   const input = entrySubmission(baseline, box(m130, "06"), "1.234,56", "es");
@@ -262,6 +291,25 @@ test("a staged intent says the kind of change a renewal is told", () => {
   expect(clearIntent(own).change).toBe("clear");
   expect(clearIntent(fed).change).toBe("clear");
   expect(restoreIntent({ ...fed, restorable: true })?.change).toBe("restore");
+});
+
+test("the filer's own entry or clear is taken out only where the read offers it, and said as a removal", () => {
+  const own = box(m130, "06");
+  expect(removeIntent({ ...own, removable: false })).toBeNull();
+  const remove = removeIntent({ ...own, removable: true });
+  expect(remove).toEqual({ kind: "restore_source_value", change: "remove" });
+  if (!remove) throw new Error("the box offers removal");
+  const held = staged({ ...own, removable: true }, remove);
+  expect(restaged(held, { ...own, removable: true })).toEqual(remove);
+  expect(restaged(held, { ...own, removable: false })).toBeNull();
+  const words: Translate = (key) => key;
+  expect(stagedText(words, held)).toBe("workspace.modelo.staged.remove");
+  expect(
+    stagedText(
+      words,
+      staged(own, { kind: "restore_source_value", change: "restore" }),
+    ),
+  ).toBe("workspace.modelo.staged.restore");
 });
 
 test("the notice counts each box a report moved once, until acknowledged", () => {

@@ -41,7 +41,12 @@ def test_parse_loop_collects_invalid_classification_and_keeps_valid_rows() -> No
     (failure,) = failures
     assert failure.row_index == 1
     assert failure.transaction_id == _TX_INVALID
-    assert "NOT_A_CLASSIFICATION" in failure.reason
+    # The reason names the column and what it takes. It does not echo the cell
+    # back, and it carries none of Pydantic's own reporting.
+    assert failure.reason.startswith("classification: ")
+    assert "BUSINESS" in failure.reason and "PERSONAL" in failure.reason
+    assert "NOT_A_CLASSIFICATION" not in failure.reason
+    assert "pydantic" not in failure.reason.lower()
 
 
 def test_parse_loop_reports_malformed_row_without_dropping_later_rows() -> None:

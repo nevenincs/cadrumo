@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#application-distribution'
 date: '2026-10-04'
-modified: '2026-10-31'
+modified: '2026-11-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:358fa514e65cd58ed6fabd9e44780cabf0eae16f0699362eaceb07de58a0f2ea'
+body_hash: 'sha256:82882940739fa15aca148514ec7568d4709673d1655b6baf5163948e5afa391b'
 related:
   - '[[2026-10-04-application-distribution-research]]'
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
@@ -102,3 +102,14 @@ This extends the earlier interpreter foundation's installer exclusion for this a
 Basis: the user's ruling of 2026-10-31 that Cadrumo, an open-source project, will never hold an Apple Developer ID or any other real code-signing certificate and will never be notarized, and that this was never planned. The ad-hoc identity `-`, with a seal that `codesign --verify --deep --strict` accepts as a build gate, is the permanent macOS distribution signature. The ruling names any real code-signing certificate, so it covers Windows Authenticode equally: Windows images and installers ship without a publisher signature. The user pre-approved ADR changes for the macOS platform bring-up, recorded in the Description of `2026-10-30-macos-platform-plan`; this is its Step `S19`.
 
 "Signing is explicit and must not claim publisher verification without actual credentials and verification." stands and is now permanent: no distributed artifact claims publisher verification, because no credentials will exist. macOS bundles carry the ad-hoc seal; Windows and Linux artifacts carry no code signature. The authorization phrase "everything except signing certificates" in this record's amendments describes a permanent exclusion, not deferred work. `RELEASING.md` and the user installation page, `docs/workstation-setup.md`, state the unsigned posture and the macOS first-run path; neither describes a signing step.
+
+## Amendment 2026-11-08 - the package carries what the application offers
+
+Basis: the operator's ruling of 2026-11-08, relayed by the coordinator for desktop finding D48 after the packaged app offered the calculation-summary PDF without its `pdf` extra: "whatever the window offers, the package carries", with no GPL component in the installer, and a third-party notices page generated from the assembled package with a gate, never hand-maintained. This amends the "Native bundle Python closure" section; the rest of that section stands.
+
+- `BUNDLED_EXTRAS` is derived from `OPTIONAL_EXTRAS` minus `BUNDLE_EXCLUDED_EXTRAS`, a mapping that names each excluded extra with its reason (`dev/packaging/native/product.py`). Today the bundle carries `google`, `browser` and `pdf`; `ofx` is excluded because `ofxtools` is GPL-3.0-only. The bullet "Every other extra stays out of the bundle" is replaced by this rule; the wheel's default install stays core-only.
+- A surface whose extra is excluded is withdrawn through a served capability fact, never a frontend check: `ledger.entry-options` serves the `import_format` family from `installed_ledger_providers()`, and the window and the TUI offer only those formats. The host file picker's extension allowlist stays the outer bound.
+- Package assembly generates `docs/reference/third-party-notices-<target>.md` from the assembled candidate (`dev/packaging/native/third_party_notices.py`): the interpreter, the native programs and runtime libraries, both Node.js runtimes, the Python distributions and the agent runtime's JavaScript packages, each with version, declared licence and the licence text's location in the package. Assembly refuses a stale page, a missing listed licence text, a program file attributed to no component, and any GPL or AGPL component.
+- The llama.cpp MIT licence text is pinned and staged by the llama-server acquisition owner; D48 lands after that commit.
+
+Open, second phase of D48 (required before any distribution build, not for the APP-QA Release build): the notices page does not yet list the Rust crates statically linked into the native executables (from `Cargo.lock` under the `native/deny.toml` policy) or the npm packages bundled into the desktop window's frontend.

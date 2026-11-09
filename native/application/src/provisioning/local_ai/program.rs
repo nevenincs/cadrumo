@@ -84,18 +84,20 @@ pub const UNPACKED_PER_DOWNLOADED_BYTE: u64 = 6;
 pub const MAX_ARCHIVE_ENTRIES: usize = 1024;
 /// The component store's bound on any component's unpacked size.
 const STORE_UNPACKED_LIMIT: u64 = 32 * 1024 * 1024 * 1024;
-/// Bound for the server to announce that it listens and, for llama-server, to answer
-/// ready. Exceeding it ends the server.
-pub const START_BUDGET: Duration = Duration::from_secs(30);
+/// Bound for the server to announce that it listens, for llama-server to answer ready,
+/// and for either to answer with its version. Exceeding it ends the server. Ollama first
+/// answers only after its hardware discovery, which takes some twenty seconds on an idle
+/// computer, so the bound leaves room for a computer that is busy as well.
+pub const START_BUDGET: Duration = Duration::from_secs(60);
 /// What Ollama writes on standard error once it accepts connections.
 const OLLAMA_LISTENING: &str = "Listening on ";
 /// What llama-server writes on standard error once it accepts connections. Build b12184
 /// writes `srv  server_on_li: listening on http://<host>:<port>`, and earlier builds
 /// `main: server is listening on http://<host>:<port> - starting the main loop`.
 const LLAMA_SERVER_LISTENING: &str = "listening on http://";
-/// How often a llama-server that listens is asked whether it is ready.
+/// How often a server that listens is asked whether it is ready, or its version.
 const READY_PACE: Duration = Duration::from_millis(100);
-/// Bound for each readiness question, so the start budget holds.
+/// Bound for each readiness or version question, so the start budget holds.
 const READY_QUESTION_BOUND: Duration = Duration::from_secs(2);
 /// The longest standard-error line the engine reads at once.
 const LOG_LINE_LIMIT: u64 = 64 * 1024;
@@ -224,12 +226,16 @@ impl ServerRecord {
     }
 }
 
-/// The start-failure record: a static kind identifier and nothing else.
+/// The start-failure record: a static kind identifier and, for a start whose version
+/// was not confirmed, what the last version question got. A record an earlier build
+/// wrote has no `last_check` and reads the same.
 #[derive(Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 struct StartFailureRecord {
     schema: u32,
     reason: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    last_check: Option<String>,
 }
 
 /// The kind of the latest failed server start recorded under `programs`, when one is
@@ -245,12 +251,13 @@ pub fn latest_start_failure(programs: &Path) -> Option<StartFailureKind> {
 }
 
 // The record is diagnostic: a start's outcome stands whether or not it could be written.
-pub(super) fn record_start_failure(programs: &Path, kind: StartFailureKind) {
+pub(super) fn record_start_failure(programs: &Path, failure: &ServerStartFailure) {
     let _ = filesystem::replace_json(
         &programs.join(START_FAILURE_RECORD),
         &StartFailureRecord {
             schema: START_FAILURE_RECORD_SCHEMA,
-            reason: kind.reason().to_owned(),
+            reason: failure.kind().reason().to_owned(),
+            last_check: failure.last_check(),
         },
     );
 }
@@ -374,8 +381,10 @@ impl Server {
                 matches!(server.loopback.get(llama_server::HEALTH), Ok((200, _)))
             }
         };
-        (record.version == version && ready && server.confirm_version(version).is_ok())
-            .then_some(server)
+        (record.version == version
+            && ready
+            && server.confirm_version(server.loopback, version).is_ok())
+        .then_some(server)
     }
 
     /// Whether the process this handle started has ended. An observed server is never
@@ -396,9 +405,9 @@ impl Server {
 
     /// Starts `command` contained as `engine`'s server and waits for the program to
     /// announce that it listens, for llama-server then to answer ready, and then for it
-    /// to answer with `version`. A program that exits, stays silent or unready past
-    /// [`START_BUDGET`] or answers otherwise is ended and reads `program_not_running`,
-    /// with the [`ServerStartFailure`] that decided it.
+    /// to answer with `version`. A program that exits, stays silent, unready or without
+    /// a version answer past [`START_BUDGET`] or answers otherwise is ended and reads
+    /// `program_not_running`, with the [`ServerStartFailure`] that decided it.
     pub(super) fn spawn(
         engine: LocalEngine,
         command: ServeCommand,
@@ -467,11 +476,7 @@ impl Server {
                 LocalEngine::Ollama => Ok(()),
                 LocalEngine::LlamaCpp => server.ready(started + START_BUDGET),
             })
-            .and_then(|()| {
-                server
-                    .confirm_version(version)
-                    .map_err(ServerStartFailure::Version)
-            });
+            .and_then(|()| server.answered_version(version, started + START_BUDGET));
         if let Err(cause) = answered {
             server.halt();
             return Err(LocalAiError::NotRunning(NotRunningCause::Start(cause)));
@@ -558,15 +563,49 @@ impl Server {
         }
     }
 
-    /// The version the server reports, or how it failed to: Ollama's `/api/version`, or
-    /// the `build_info` of llama-server's `/props`.
-    fn reported_version(&self) -> Result<String, VersionFailure> {
+    /// Asks a server that announced it listens its version until it reports `version`,
+    /// another version or an answer that is no version document, its process ends, or
+    /// `deadline` passes. A program can announce that it listens before it answers any
+    /// request: Ollama does, and then discovers the computer's GPUs for many seconds
+    /// before it serves. So an unanswered question, or another status, is asked again;
+    /// the failure keeps what the last question got.
+    fn answered_version(
+        &mut self,
+        version: &str,
+        deadline: Instant,
+    ) -> Result<(), ServerStartFailure> {
+        let loopback = self.loopback.with_io_timeout(READY_QUESTION_BOUND);
+        loop {
+            let last = match self.confirm_version(loopback, version) {
+                Ok(()) => return Ok(()),
+                Err(failure @ (VersionFailure::Different { .. } | VersionFailure::Unreadable)) => {
+                    return Err(ServerStartFailure::Version(failure));
+                }
+                Err(failure) => failure,
+            };
+            if let Some(exit) = self
+                .child
+                .as_mut()
+                .and_then(|child| child.try_wait().ok().flatten())
+            {
+                return Err(ServerStartFailure::Closed { exit: Some(exit) });
+            }
+            let remaining = deadline.saturating_duration_since(Instant::now());
+            if remaining.is_zero() {
+                return Err(ServerStartFailure::Version(last));
+            }
+            std::thread::sleep(READY_PACE.min(remaining));
+        }
+    }
+
+    /// The version the server reports through `loopback`, or how it failed to: Ollama's
+    /// `/api/version`, or the `build_info` of llama-server's `/props`.
+    fn reported_version(&self, loopback: Loopback) -> Result<String, VersionFailure> {
         let (path, field) = match self.engine {
             LocalEngine::Ollama => ("/api/version", "version"),
             LocalEngine::LlamaCpp => (llama_server::PROPERTIES, "build_info"),
         };
-        let (status, body) = self
-            .loopback
+        let (status, body) = loopback
             .get(path)
             .map_err(|error| VersionFailure::Unreachable(error.to_string()))?;
         if status != 200 {
@@ -580,10 +619,11 @@ impl Server {
             .ok_or(VersionFailure::Unreadable)
     }
 
-    /// Whether the server reports `expected`: exactly for Ollama, and for llama-server a
-    /// build that is the pinned build tag, alone or followed by its commit.
-    fn confirm_version(&self, expected: &str) -> Result<(), VersionFailure> {
-        let found = self.reported_version()?;
+    /// Whether the server reports `expected` through `loopback`: exactly for Ollama, and
+    /// for llama-server a build that is the pinned build tag, alone or followed by its
+    /// commit.
+    fn confirm_version(&self, loopback: Loopback, expected: &str) -> Result<(), VersionFailure> {
+        let found = self.reported_version(loopback)?;
         let confirmed = match self.engine {
             LocalEngine::Ollama => found == expected,
             LocalEngine::LlamaCpp => llama_server::build_matches(&found, expected),
@@ -994,6 +1034,11 @@ impl Program {
         // The engine writes a model's blobs before its manifest into the store this server
         // reads, so the server must not clear blobs no manifest names yet when it starts.
         set("OLLAMA_NOPRUNE", OsStr::new("1"));
+        // The server answers from this computer only: without it, it fetches model
+        // recommendations from ollama.com and refreshes cloud model details. Its other
+        // network use is the pull, which the engine never asks of it; it has no
+        // telemetry setting, and only Ollama's desktop app checks for updates.
+        set("OLLAMA_NO_CLOUD", OsStr::new("1"));
         set("OLLAMA_HOME", home.as_os_str());
         set("HOME", home.as_os_str());
         set("USERPROFILE", home.as_os_str());
@@ -1068,7 +1113,7 @@ impl Program {
             Ok(server) => server,
             Err(error) => {
                 if let LocalAiError::NotRunning(NotRunningCause::Start(failure)) = &error {
-                    record_start_failure(&self.locations.programs, failure.kind());
+                    record_start_failure(&self.locations.programs, failure);
                 }
                 return Err(error);
             }

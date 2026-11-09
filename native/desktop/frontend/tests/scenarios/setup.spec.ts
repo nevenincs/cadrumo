@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { scenarioOnly, send, settled, toolRow } from "../support/agent";
+import { servedLocalLanes } from "../support/servedLocalLanes";
 import { label } from "../support/strings";
 
 // Component setup through the one provisioning panel: one row per element
@@ -31,6 +32,7 @@ const INTERNAL = [
   "not_in_this_build",
   "damaged_download",
   "host_unreachable",
+  "server_error",
   "blocked_by_network",
   "disk_full",
   "interrupted",
@@ -528,6 +530,24 @@ test("a setup its network check refuses says why in its row and offers its setup
   await noInternalWords(target);
 });
 
+test("a setup whose download server answers with errors says to try again later and offers its setup again", async ({
+  page: target,
+}) => {
+  await open(target, "server_error");
+  await openLocalAi(target);
+  await setUpButton(programRow(target)).click();
+  await expect(programRow(target).getByRole("alert")).toHaveText(
+    label("desktop.setup.failure.server_error"),
+  );
+  expect(label("desktop.setup.failure.server_error")).not.toBe(
+    label("desktop.setup.failure.host_unreachable"),
+  );
+  await expect(programRow(target)).not.toContainText(NOT_SET_UP);
+  await expect(setUpButton(programRow(target))).toBeEnabled();
+  expect(await hostCalls(target)).toContain("setup.start local_ai");
+  await noInternalWords(target);
+});
+
 test("builds no current receipt records are checked again, with no download, and the check reads them ready", async ({
   page: target,
 }) => {
@@ -856,9 +876,10 @@ test("a local AI this computer cannot run says so once, offers no setup, and kee
   await expect(programRow(target)).toContainText(sentence);
   await once(localAi(target), sentence);
   await expect(programRow(target).getByRole("button")).toHaveCount(0);
-  await expect(
-    localAi(target).locator('[data-slot="local-models"]'),
-  ).toBeVisible();
+  // One model list per served lane; the sections carry no lane attribute.
+  const lists = localAi(target).locator('[data-slot="local-models"]');
+  await expect(lists).toHaveCount(servedLocalLanes().length);
+  await expect(lists.first()).toBeVisible();
   await noInternalWords(target);
   expect(await hostCalls(target)).not.toContain("setup.start local_ai");
 });

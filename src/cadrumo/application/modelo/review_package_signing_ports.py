@@ -8,6 +8,7 @@ application service.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
 from typing import TYPE_CHECKING, Protocol
 
@@ -39,8 +40,17 @@ class ReviewPackageSigningKeypairReader(Protocol):
 class ReviewPackageSigningKeypairCapabilityFactory(Protocol):
     """Construct a signing-keypair capability for one profile bucket."""
 
-    def __call__(self, *, bucket_id: str) -> ReviewPackageSigningKeypairCapability:
-        """Return the capability for ``bucket_id``."""
+    def __call__(
+        self,
+        *,
+        bucket_id: str,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    ) -> ReviewPackageSigningKeypairCapability:
+        """Return the capability for ``bucket_id``.
+
+        ``mutation_writer``, when supplied, admits the commit that mints a
+        missing keypair.
+        """
         ...
 
 

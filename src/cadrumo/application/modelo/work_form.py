@@ -75,6 +75,7 @@ from ...domain.calculations.registry.schema_form_layouts import (
     FormLayoutReviewState,
     FormPlacementKind,
 )
+from ...domain.iva.refund_eligibility import RedemeEnrolmentState
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from .calculation_note_gate import NO_SOURCE_DISAGREEMENT_RESOLUTIONS, SourceDisagreementResolutions
@@ -83,9 +84,10 @@ from .edit_models import (
     ModeloEditPermittedSurfaceEntryV1,
 )
 from .work_form_answers import answer_fields
+from .work_form_carry_attestation import form_carry_attestations
 from .work_form_context import WorkFormContext
 from .work_form_counts import count_work_form_fields
-from .work_form_credits import withholding_credits
+from .work_form_credits import withholding_credits, withholding_credits_heading
 from .work_form_declaration_facts import ModeloFormDeadline, ModeloFormEditClosure, year_projection
 from .work_form_errors import ModeloWorkFormLayoutError
 from .work_form_field_projection import project_casilla_field
@@ -140,6 +142,7 @@ def build_modelo_work_form(
     producer_values: Mapping[FilingProducerKey, ModeloFormScalar] | None = None,
     profile_binding_values: Mapping[BindingId, ModeloFormScalar] | None = None,
     resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
+    redeme: RedemeEnrolmentState = RedemeEnrolmentState.UNSTATED,
 ) -> ModeloWorkForm:
     """Join one work review with its revision's declared layout into a classified editor form.
 
@@ -174,6 +177,11 @@ def build_modelo_work_form(
     ``resolutions`` are the source disagreements the operator accepted. The
     form holds filing on a disagreement exactly as the gate does, so one a
     resolution covers is no longer held.
+
+    ``redeme`` is the filer's stated inscription in the Registro de devolución
+    mensual. The settlement result needs it to say whether a negative IVA
+    result may be elected as a refund in this period or only carried forward;
+    its default leaves the answer unstated rather than assuming one.
 
     ``known_truths`` are the yes-or-no facts already known for the filer, by
     boolean binding. They decide which guarded inputs the calculation is
@@ -221,6 +229,7 @@ def build_modelo_work_form(
         element_names=element_names,
         known_truths=known_truths,
         resolutions=resolutions,
+        redeme=redeme,
     )
     held = calculation_diagnostics is not None
     inspection = _inspection_only_for_unusable_layout(
@@ -372,7 +381,9 @@ def _assemble_work_form(
         filing_year=review.filing_year,
         period=review.period,
         registry_revision_id=snapshot.revision.id,
-        year_projection=year_projection(snapshot),
+        year_projection=year_projection(
+            snapshot, modelo=str(review.modelo), period=review.period.registry_token, language=language
+        ),
         work_unit_id=review.work_unit_id,
         calculation_revision_id=review.calculation_revision_id,
         language=language,
@@ -393,6 +404,7 @@ def _assemble_work_form(
         answers=tuple(answers),
         result_addresses=result_casilla_ids(context),
         withholding_credits=withholding_credits(tuple(every_field), snapshot.revision),
+        withholding_credits_heading=withholding_credits_heading(tuple(every_field), language),
         counts=count_work_form_fields(every_field, filed=context.filed),
         progress=review.progress,
         operator_entries_known=entered_casilla_ids is not None,
@@ -406,6 +418,7 @@ def _assemble_work_form(
         aeat_data=project_aeat_data(context, aeat_data_imported_at),
         filing=project_filing_summary(context),
         edit_closure=ModeloFormEditClosure.RECORDED_AS_FILED if context.filed else None,
+        carry_attestations=form_carry_attestations(context),
     )
 
 

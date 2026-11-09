@@ -29,12 +29,14 @@ from ...core.external_constants import OutputLanguage
 from ...core.identity.documents import SpanishTaxIdFormat
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.result_disposition import ResultDisposition
+from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ...domain.calculations.registry.schema_form_layouts import (
     FormCellKind,
     FormLayoutSeedSource,
     FormPageCondition,
     FormUnplacedReason,
 )
+from ...domain.iva.refund_eligibility import RefundEligibilityBasis, RefundEligibilityOutcome
 from ...domain.modelos.verification_report import VerificationCompletenessStatus
 from ..operations.public_mirror import (
     PublicScalarValueV1,
@@ -48,6 +50,7 @@ from .calculation_report import CalculationReportRowRole
 from .edit_apply_scalar_contracts import ModeloEditWireScalar
 from .edit_baseline_projection import ModeloEditApplyBaselineV1
 from .edit_models import ModeloEditAdmittedV1, ModeloEditRefusedV1
+from .reconciliation_sources import ReconciliationSourceRequirementV1
 from .source_policy import SourceFamily
 from .work_form_declaration_facts import (
     ModeloFormAeatData,
@@ -79,6 +82,7 @@ from .work_form_models import (
     ModeloFormAddressV1,
     ModeloFormBinding,
     ModeloFormBlocker,
+    ModeloFormCarryAttestation,
     ModeloFormCounts,
     ModeloFormCredit,
     ModeloFormEditability,
@@ -139,6 +143,21 @@ class PublicModeloFormPrintedRate(BaseModel):
     literal: str
 
 
+class PublicRefundEligibility(BaseModel):
+    """Typed local-human view of RefundEligibility: whether the IVA refund may be asked for, and why.
+
+    ``legal_refs`` are the registry's declared references for the provisions the
+    outcome rests on. A frontend renders the header's words; this carries the
+    machine-readable outcome beside them so none of it is re-derived there.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    outcome: RefundEligibilityOutcome
+    basis: RefundEligibilityBasis
+    legal_refs: tuple[str, ...]
+
+
 class PublicModeloFormResult(BaseModel):
     """Typed local-human workbench view of ModeloFormResult; the value keeps its exact decimal text."""
 
@@ -150,6 +169,7 @@ class PublicModeloFormResult(BaseModel):
     direction: ModeloFormResultDirection
     disposition: ResultDisposition | None
     election_may_change: bool
+    refund_eligibility: PublicRefundEligibility | None
 
 
 class PublicModeloFormField(BaseModel):
@@ -190,9 +210,11 @@ class PublicModeloFormField(BaseModel):
     value_text: str | None
     restorable: bool
     filers_own: bool
+    stated_absent: AbsenceAttestationFamily | None = None
     confirm_value: ModeloEditWireScalar
     takes_typed_value: bool
     clearable: bool
+    removable: bool
     own_value: ModeloEditWireScalar
     confirm_comparable: ModeloEditWireScalar
     state_digest: str
@@ -370,6 +392,7 @@ class PublicModeloWorkForm(BaseModel):
     answers: tuple[PublicModeloFormField, ...] = ()
     result_addresses: tuple[CasillaId, ...]
     withholding_credits: tuple[ModeloFormCredit, ...] = ()
+    withholding_credits_heading: str | None = None
     counts: ModeloFormCounts
     progress: ModeloWorkProgress
     operator_entries_known: bool
@@ -390,6 +413,7 @@ class PublicModeloWorkForm(BaseModel):
     filing: ModeloFormFiling | None
     last_export: ModeloFormExport | None
     edit_closure: ModeloFormEditClosure | None
+    carry_attestations: tuple[ModeloFormCarryAttestation, ...] = ()
     modelo_title: str | None
     modelo_name: str | None
     modelo_number: str | None
@@ -501,6 +525,8 @@ class ModeloWorkbenchFormProjectionV1(BaseModel):
     export_offer: PublicModeloFormExportOffer | None = None
     #: The profile details the readiness gate still asks for, each as its label in the form's language.
     profile_requirements: tuple[str, ...] = ()
+    #: The declarations an annual summary sums whose filed figures are not there yet, each with its step.
+    source_requirements: tuple[ReconciliationSourceRequirementV1, ...] = ()
     #: The recorded filing's AEAT receipt state; ``None`` when the declaration is not recorded as filed.
     receipt: ModeloFormReceipt | None = None
     #: What in the ledger holds calculating this declaration, in words, with the movement to open.
@@ -600,6 +626,7 @@ def _restore(projection: ModeloWorkbenchFormProjectionV1) -> ModeloWorkbenchForm
         receipt=projection.receipt,
         profile_requirements=projection.profile_requirements,
         ledger_hold=projection.ledger_hold,
+        source_requirements=projection.source_requirements,
     )
 
 
@@ -652,6 +679,7 @@ def project_modelo_workbench_form(
         receipt=read.receipt,
         profile_requirements=read.profile_requirements,
         ledger_hold=read.ledger_hold,
+        source_requirements=read.source_requirements,
     )
     _require_projection_roundtrip(read, projection)
     return projection

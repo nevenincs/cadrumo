@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#local-inference-engine'
 date: '2026-11-07'
-modified: '2026-11-08'
+modified: '2026-11-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:6604ff7693f7d0a80df3932ea0e3a126c183d1cb619befe590a2c6552397fc20'
+body_hash: 'sha256:dda06ccc3c834f7b7d9a716391829f8735b36fec8fa0495a1d79ff5911bbce6e'
 related:
   - "[[2026-11-07-local-inference-engine-plan]]"
 ---
@@ -194,6 +194,286 @@ related:
 - `S18` `M` `native/application/tests/live_package.rs`
 - `S18` `M` `native/CONTRACT.md`
 - `S18` `by:` `vaultspec-standard-executor`
+- `S18` `M` `native/application/src/provisioning/local_ai/llama_server/tests.rs`
+- `S18` `by:` `implementation-engineer`
+- `S18` `M` `native/application/src/diagnostics/lifecycle.rs`
+- `S18` `M` `native/application/src/provisioning/local_ai/mod.rs`
+- `S18` `M` `native/application/src/provisioning/local_ai/models/tests.rs`
+- `S18` `M` `native/application/src/provisioning/local_ai/supervision/tests.rs`
+- `S18` `M` `native/manager/src/background.rs`
+- `S18` `M` `native/manager/src/diagnostics.rs`
+- `S18` `M` `native/manager/src/local_engine.rs`
+- `S18` `M` `native/manager/src/supervision/local_ai.rs`
+- `S18` `verify:` `rustfmt --edition 2024 --check` -> `pass`
+- `S18` `by:` `implementation-engineer-high`
+- `S18` `by:` `opus`
+- `S18` `M` `dev/locales/desktop_chrome.py`
+- `S18` `M` `dev/locales/desktop_interface_keys.py`
+- `S18` `M` `native/application/src/error/application.rs`
+- `S18` `M` `native/application/src/provisioning/failure.rs`
+- `S18` `M` `native/application/src/provisioning/local_ai/fake_ollama.rs`
+- `S18` `M` `native/application/src/provisioning/local_ai/program/tests.rs`
+- `S18` `M` `native/application/src/provisioning/local_ai/registry.rs`
+- `S18` `M` `native/application/src/provisioning/transfer.rs`
+- `S18` `M` `native/application/tests/provisioning_faults.rs`
+- `S18` `M` `native/desktop/frontend/src/dev/setupFixture.ts`
+- `S18` `M` `native/desktop/frontend/src/ipc/componentSetup.ts`
+- `S18` `M` `native/desktop/frontend/tests/scenarios/setup.spec.ts`
+- `S18` `M` `native/desktop/src-tauri/src/shell/setup/components.rs`
+- `S18` `M` `native/desktop/src-tauri/src/shell/setup/wire.rs`
+- `S18` `M` `src/cadrumo/locales/ca/common.yml`
+- `S18` `M` `src/cadrumo/locales/en/common.yml`
+- `S18` `M` `src/cadrumo/locales/es/common.yml`
+- `S18` `M` `src/cadrumo/locales/hu/common.yml`
+- `S18` `M` `src/cadrumo_client/contracts/failure_categories.py`
+- `S18` `verify:` `rustfmt --edition 2024 --check` -> `pass`
+- `S18` `verify:` `pytest dev/locales/tests` -> `fail`
+- `S18` `verify:` `rustfmt --edition 2024 --check` -> `pass`
+- `S21` `M` `native/desktop/src-tauri/src/shell/setup/components_tests.rs`
+- `S21` `verify:` `just test-native Debug (manager.rust, application.rust)` -> `fail`
+- `S21` `verify:` `just check-rust Debug` -> `pass`
+- `S21` `verify:` `cmake --build --preset debug --target desktop-host-unit-test` -> `fail`
+- `S23` `M` `native/desktop/frontend/src/dev/providerSettingsFixture.ts`
+- `S23` `verify:` `just test-frontend Debug` -> `fail`
+- `S02` `M` `cadrumo-agent:.env.example`
+- `S02` `M` `cadrumo-agent:dev/package_runner/lanes.py`
+- `S02` `M` `cadrumo-agent:dev/provider_metadata/inputs/manual_lanes.json`
+- `S02` `M` `cadrumo-agent:dev/provider_metadata/inputs/providers.json`
+- `S02` `M` `cadrumo-agent:dev/provider_metadata/lanes.py`
+- `S02` `M` `cadrumo-agent:dev/tests/test_package_runner.py`
+- `S02` `M` `cadrumo-agent:dev/tests/test_provider_metadata_compile.py`
+- `S02` `M` `cadrumo-agent:docs/operations.rst`
+- `S02` `M` `cadrumo-agent:openapi.json`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/api/tests/test_capability_disclosure.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/api/tests/test_provider_model_routes.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/control/_infra_config_values.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/control/infra_config.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/control/startup_refusal.py`
+- `S02` `A` `cadrumo-agent:src/cadrumo_agent/control/tests/test_llamacpp_base_url_setting.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/graph/enums.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/provider_definitions.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/providers/_lane_models.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/providers/execution_modes.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/providers/factory.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/providers/provider_metadata.json`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/providers/provider_readiness.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/providers/registry.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/providers/served_catalog.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_capability_proofs.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_catalog_probes.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_catalog_registration.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_catalog_service.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_declared_catalog.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_factory.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_hosted_control_admission.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_hosted_lane_proof.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_hosted_lanes.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_model_licences.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_no_implicit_model_authority.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_provider_icons.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_provider_metadata_file.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_registry.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_served_catalog.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/providers/warmup.py`
+- `S02` `M` `cadrumo-agent:src/cadrumo_agent/utils/tests/test_enums.py`
+- `S02` `verify:` `ruff check` -> `pass`
+- `S02` `verify:` `ruff format --check` -> `pass`
+- `S02` `verify:` `ty check` -> `pass`
+- `S02` `verify:` `pytest providers control api -n 8 --dist=loadgroup` -> `pass`
+- `S02` `verify:` `LANDER merge verification, cadrumo-agent main 678ee74` -> `pass`
+- `S02` `by:` `vaultspec-high-executor`
+- `S03` `M` `cadrumo-agent:dev/provider_metadata/compile.py`
+- `S03` `M` `cadrumo-agent:dev/provider_metadata/inputs.py`
+- `S03` `M` `cadrumo-agent:dev/provider_metadata/inputs/manual_lanes.json`
+- `S03` `M` `cadrumo-agent:dev/provider_metadata/inputs/providers.json`
+- `S03` `M` `cadrumo-agent:dev/provider_metadata/merge.py`
+- `S03` `M` `cadrumo-agent:dev/tests/test_provider_metadata_compile.py`
+- `S03` `M` `cadrumo-agent:docs/operations.rst`
+- `S03` `M` `cadrumo-agent:openapi.json`
+- `S03` `M` `cadrumo-agent:src/cadrumo_agent/api/tests/test_provider_metadata_routes.py`
+- `S03` `M` `cadrumo-agent:src/cadrumo_agent/cli/tests/test_declared_providers.py`
+- `S03` `M` `cadrumo-agent:src/cadrumo_agent/providers/declared_catalog.py`
+- `S03` `A` `cadrumo-agent:src/cadrumo_agent/providers/model_artefacts.py`
+- `S03` `M` `cadrumo-agent:src/cadrumo_agent/providers/provider_metadata.json`
+- `S03` `M` `cadrumo-agent:src/cadrumo_agent/providers/provider_metadata.py`
+- `S03` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_declared_catalog.py`
+- `S03` `A` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_model_artefacts.py`
+- `S03` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_provider_metadata.py`
+- `S03` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_provider_metadata_file.py`
+- `S03` `M` `cadrumo-agent:src/cadrumo_agent/providers/vendor_listings.py`
+- `S03` `verify:` `ruff check` -> `pass`
+- `S03` `verify:` `ruff format --check` -> `pass`
+- `S03` `verify:` `ty check` -> `pass`
+- `S03` `verify:` `pytest catalogue and Ollama tests (385)` -> `pass`
+- `S03` `verify:` `LANDER merge verification, cadrumo-agent main c723535` -> `pass`
+- `S03` `verify:` `LLAMA-DESKTOP P04.S32 gateway re-run against cee63d3` -> `pass`
+- `S03` `by:` `vaultspec-standard-executor`
+- `S04` `A` `cadrumo-agent:src/cadrumo_agent/providers/tests/_fake_llama_server.py`
+- `S04` `A` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_fake_llama_server.py`
+- `S04` `verify:` `ruff check` -> `pass`
+- `S04` `verify:` `ruff format --check` -> `pass`
+- `S04` `verify:` `ty check` -> `pass`
+- `S04` `verify:` `pytest providers/tests/test_fake_llama_server.py` -> `pass`
+- `S04` `verify:` `LANDER merge verification, cadrumo-agent main 678ee74` -> `pass`
+- `S04` `by:` `vaultspec-standard-executor`
+- `S05` `M` `cadrumo-agent:src/cadrumo_agent/providers/_input_documents.py`
+- `S05` `A` `cadrumo-agent:src/cadrumo_agent/providers/_local_chat_parts.py`
+- `S05` `A` `cadrumo-agent:src/cadrumo_agent/providers/_local_chat_turn.py`
+- `S05` `A` `cadrumo-agent:src/cadrumo_agent/providers/llamacpp_chat_model.py`
+- `S05` `M` `cadrumo-agent:src/cadrumo_agent/providers/ollama_chat_model.py`
+- `S05` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_background_pdf_pages.py`
+- `S05` `A` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_llamacpp_chat_model.py`
+- `S05` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_ollama_chat_model.py`
+- `S05` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_ollama_chat_model_rounds.py`
+- `S05` `verify:` `ruff check` -> `pass`
+- `S05` `verify:` `ruff format --check` -> `pass`
+- `S05` `verify:` `ty check` -> `pass`
+- `S05` `verify:` `pytest -n 8 --dist=loadgroup lane suite, failing ids compared with main 6fa7bbc, none lane-only` -> `pass`
+- `S05` `verify:` `LANDER merge verification, cadrumo-agent main de56a46` -> `pass`
+- `S05` `by:` `vaultspec-high-executor`
+- `S06` `M` `cadrumo-agent:src/cadrumo_agent/providers/_lane_runtime.py`
+- `S06` `A` `cadrumo-agent:src/cadrumo_agent/providers/_local_server_reads.py`
+- `S06` `A` `cadrumo-agent:src/cadrumo_agent/providers/llamacpp_catalog.py`
+- `S06` `A` `cadrumo-agent:src/cadrumo_agent/providers/llamacpp_probe.py`
+- `S06` `M` `cadrumo-agent:src/cadrumo_agent/providers/ollama_catalog.py`
+- `S06` `M` `cadrumo-agent:src/cadrumo_agent/providers/ollama_probe.py`
+- `S06` `M` `cadrumo-agent:src/cadrumo_agent/providers/provider_readiness.py`
+- `S06` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_catalog_freshness.py`
+- `S06` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_catalog_probes.py`
+- `S06` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_catalog_registration.py`
+- `S06` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_catalog_service.py`
+- `S06` `A` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_llamacpp_catalog.py`
+- `S06` `A` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_llamacpp_probe.py`
+- `S06` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_ollama_catalog.py`
+- `S06` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_ollama_probe.py`
+- `S06` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_served_catalog.py`
+- `S06` `M` `cadrumo-agent:src/cadrumo_agent/providers/warmup.py`
+- `S06` `verify:` `ruff check` -> `pass`
+- `S06` `verify:` `ruff format --check` -> `pass`
+- `S06` `verify:` `ty check` -> `pass`
+- `S06` `verify:` `pytest -n 8 --dist=loadgroup lane suite, failing ids compared with main 6fa7bbc, none lane-only` -> `pass`
+- `S06` `verify:` `LANDER merge verification, cadrumo-agent main de56a46` -> `pass`
+- `S06` `by:` `vaultspec-high-executor`
+- `S07` `M` `cadrumo-agent:.env.example`
+- `S07` `M` `cadrumo-agent:dev/provider_metadata/inputs/manual_lanes.json`
+- `S07` `M` `cadrumo-agent:dev/provider_metadata/inputs/providers.json`
+- `S07` `M` `cadrumo-agent:docs/operations.rst`
+- `S07` `M` `cadrumo-agent:openapi.json`
+- `S07` `M` `cadrumo-agent:src/cadrumo_agent/api/routes/_gateway_run_start.py`
+- `S07` `A` `cadrumo-agent:src/cadrumo_agent/api/tests/test_llamacpp_background_run.py`
+- `S07` `A` `cadrumo-agent:src/cadrumo_agent/api/tests/test_llamacpp_run_start.py`
+- `S07` `A` `cadrumo-agent:src/cadrumo_agent/api/tests/test_ollama_background_run.py`
+- `S07` `M` `cadrumo-agent:src/cadrumo_agent/api/tests/test_run_start_sizing.py`
+- `S07` `M` `cadrumo-agent:src/cadrumo_agent/domain_config.py`
+- `S07` `M` `cadrumo-agent:src/cadrumo_agent/graph/_compiler_models.py`
+- `S07` `M` `cadrumo-agent:src/cadrumo_agent/providers/_lane_models.py`
+- `S07` `M` `cadrumo-agent:src/cadrumo_agent/providers/background_inputs.py`
+- `S07` `M` `cadrumo-agent:src/cadrumo_agent/providers/background_options.py`
+- `S07` `M` `cadrumo-agent:src/cadrumo_agent/providers/factory.py`
+- `S07` `A` `cadrumo-agent:src/cadrumo_agent/providers/llamacpp_residency.py`
+- `S07` `M` `cadrumo-agent:src/cadrumo_agent/providers/ollama_residency.py`
+- `S07` `M` `cadrumo-agent:src/cadrumo_agent/providers/provider_metadata.json`
+- `S07` `M` `cadrumo-agent:src/cadrumo_agent/providers/registry.py`
+- `S07` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/_fake_llama_server.py`
+- `S07` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/_fake_ollama_server.py`
+- `S07` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_background_inputs.py`
+- `S07` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_background_options.py`
+- `S07` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_declared_catalog.py`
+- `S07` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_factory.py`
+- `S07` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_hosted_lanes.py`
+- `S07` `A` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_llamacpp_lane.py`
+- `S07` `A` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_llamacpp_residency.py`
+- `S07` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_ollama_residency.py`
+- `S07` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_provider_metadata_file.py`
+- `S07` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_registry.py`
+- `S07` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_server_lane_proof.py`
+- `S07` `verify:` `ruff check` -> `pass`
+- `S07` `verify:` `ruff format --check` -> `pass`
+- `S07` `verify:` `ty check` -> `pass`
+- `S07` `verify:` `pytest -n 8 --dist=loadgroup lane suite, failing ids compared with main 6fa7bbc, none lane-only` -> `pass`
+- `S07` `verify:` `LANDER merge verification, cadrumo-agent main de56a46` -> `pass`
+- `S07` `by:` `vaultspec-high-executor`
+- `S08` `M` `cadrumo-agent:src/cadrumo_agent/api/routes/_gateway_provider_model_endpoints.py`
+- `S08` `A` `cadrumo-agent:src/cadrumo_agent/api/tests/test_llamacpp_model_routes.py`
+- `S08` `M` `cadrumo-agent:src/cadrumo_agent/providers/model_licences.py`
+- `S08` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_model_licences.py`
+- `S08` `verify:` `ruff check` -> `pass`
+- `S08` `verify:` `ruff format --check` -> `pass`
+- `S08` `verify:` `ty check` -> `pass`
+- `S08` `verify:` `pytest -n 8 --dist=loadgroup lane suite, failing ids compared with main 6fa7bbc, none lane-only` -> `pass`
+- `S08` `verify:` `LANDER merge verification, cadrumo-agent main de56a46` -> `pass`
+- `S08` `by:` `vaultspec-standard-executor`
+- `S09` `M` `cadrumo-agent:.env.example`
+- `S09` `M` `cadrumo-agent:dev/provider_metadata/inputs/manual_lanes.json`
+- `S09` `M` `cadrumo-agent:docs/architecture.rst`
+- `S09` `M` `cadrumo-agent:docs/operations.rst`
+- `S09` `M` `cadrumo-agent:openapi.json`
+- `S09` `M` `cadrumo-agent:src/cadrumo_agent/conftest.py`
+- `S09` `M` `cadrumo-agent:src/cadrumo_agent/domain_config.py`
+- `S09` `M` `cadrumo-agent:src/cadrumo_agent/graph/compiler.py`
+- `S09` `M` `cadrumo-agent:src/cadrumo_agent/graph/enums.py`
+- `S09` `M` `cadrumo-agent:src/cadrumo_agent/graph/nodes/worker.py`
+- `S09` `M` `cadrumo-agent:src/cadrumo_agent/graph/tests/test_background_reply_options.py`
+- `S09` `M` `cadrumo-agent:src/cadrumo_agent/providers/conditions.py`
+- `S09` `M` `cadrumo-agent:src/cadrumo_agent/providers/ollama_chat_model.py`
+- `S09` `M` `cadrumo-agent:src/cadrumo_agent/providers/provider_metadata.json`
+- `S09` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_conditions.py`
+- `S09` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_declared_catalog.py`
+- `S09` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_ollama_chat_model.py`
+- `S09` `A` `cadrumo-agent:src/cadrumo_agent/providers/tests/_fake_ollama_server.py`
+- `S09` `A` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_ollama_chat_model_rounds.py`
+- `S09` `verify:` `ruff check` -> `pass`
+- `S09` `verify:` `ruff format --check` -> `pass`
+- `S09` `verify:` `ty check` -> `pass`
+- `S09` `verify:` `pytest Ollama chat model and fake-server round tests` -> `pass`
+- `S09` `verify:` `LANDER merge verification, cadrumo-agent main 39926d6 and b37dcbf` -> `pass`
+- `S09` `by:` `vaultspec-standard-executor`
+- `S29` `M` `cadrumo-agent:.env.example`
+- `S29` `M` `cadrumo-agent:src/cadrumo_agent/api/_gateway_shutdown.py`
+- `S29` `M` `cadrumo-agent:src/cadrumo_agent/api/app.py`
+- `S29` `M` `cadrumo-agent:src/cadrumo_agent/api/routes/_gateway_action_endpoints.py`
+- `S29` `M` `cadrumo-agent:src/cadrumo_agent/api/routes/gateway.py`
+- `S29` `M` `cadrumo-agent:src/cadrumo_agent/api/schemas/provider_catalog.py`
+- `S29` `M` `cadrumo-agent:src/cadrumo_agent/api/tests/test_capability_disclosure.py`
+- `S29` `A` `cadrumo-agent:src/cadrumo_agent/api/tests/test_interactive_catalog_read.py`
+- `S29` `M` `cadrumo-agent:src/cadrumo_agent/api/tests/test_openapi_artifact.py`
+- `S29` `M` `cadrumo-agent:src/cadrumo_agent/domain_config.py`
+- `S29` `M` `cadrumo-agent:src/cadrumo_agent/providers/_background_lane_proofs.py`
+- `S29` `M` `cadrumo-agent:src/cadrumo_agent/providers/_capability_proof_states.py`
+- `S29` `M` `cadrumo-agent:src/cadrumo_agent/providers/_catalog_discovery.py`
+- `S29` `A` `cadrumo-agent:src/cadrumo_agent/providers/_lane_probes.py`
+- `S29` `M` `cadrumo-agent:src/cadrumo_agent/providers/_lane_runtime.py`
+- `S29` `M` `cadrumo-agent:src/cadrumo_agent/providers/binary_version.py`
+- `S29` `M` `cadrumo-agent:src/cadrumo_agent/providers/factory.py`
+- `S29` `M` `cadrumo-agent:src/cadrumo_agent/providers/lane_admission.py`
+- `S29` `M` `cadrumo-agent:src/cadrumo_agent/providers/ollama_probe.py`
+- `S29` `M` `cadrumo-agent:src/cadrumo_agent/providers/provider_catalog.py`
+- `S29` `M` `cadrumo-agent:src/cadrumo_agent/providers/provider_catalog_service.py`
+- `S29` `A` `cadrumo-agent:src/cadrumo_agent/providers/tests/_slow_lanes.py`
+- `S29` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_binary_version.py`
+- `S29` `A` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_catalog_probes.py`
+- `S29` `A` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_catalog_runtime_measurement.py`
+- `S29` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_ollama_probe.py`
+- `S29` `verify:` `ruff check` -> `pass`
+- `S29` `verify:` `ruff format --check` -> `pass`
+- `S29` `verify:` `ty check` -> `pass`
+- `S29` `verify:` `pytest providers/tests/test_catalog_probes.py api/tests/test_interactive_catalog_read.py` -> `pass`
+- `S29` `verify:` `LANDER merge verification, cadrumo-agent main 8ca1df9` -> `pass`
+- `S29` `by:` `vaultspec-standard-executor`
+- `S30` `M` `cadrumo-agent:src/cadrumo_agent/providers/ollama_probe.py`
+- `S30` `M` `cadrumo-agent:src/cadrumo_agent/providers/provider_catalog_service.py`
+- `S30` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_catalog_probes.py`
+- `S30` `M` `cadrumo-agent:src/cadrumo_agent/providers/tests/test_ollama_probe.py`
+- `S30` `verify:` `ruff check` -> `pass`
+- `S30` `verify:` `ruff format --check` -> `pass`
+- `S30` `verify:` `ty check` -> `pass`
+- `S30` `verify:` `pytest providers/tests/test_catalog_probes.py providers/tests/test_ollama_probe.py -n 8 --dist=loadgroup` -> `pass`
+- `S30` `verify:` `LANDER merge verification, cadrumo-agent main 6fa7bbc` -> `pass`
+- `S30` `by:` `vaultspec-standard-executor`
+- `S18` `M` `native/application/CMakeLists.txt`
+- `S18` `verify:` `ctest manager.fmt manager.clippy application.fmt application.clippy desktop.fmt desktop.clippy` -> `pass`
+- `S18` `verify:` `ctest application.rust on feature/tui f521650cd6` -> `pass`
+- `S31` `by:` `opus`
 
 ## Notes
 
@@ -221,6 +501,23 @@ related:
 - `S16` Review-finding fixes (transfer retry window, store reclaim, progress offset, drain marker and bounded check wait, refused-load body, router alias ids, live package tests): Rust build, clippy and cargo tests are pending the root slot; rustfmt --edition 2024 --check passes on the changed files.
 - `S17` Review-finding fixes (transfer retry window, store reclaim, progress offset, drain marker and bounded check wait, refused-load body, router alias ids, live package tests): Rust build, clippy and cargo tests are pending the root slot; rustfmt --edition 2024 --check passes on the changed files.
 - `S18` Review-finding fixes (transfer retry window, store reclaim, progress offset, drain marker and bounded check wait, refused-load body, router alias ids, live package tests): Rust build, clippy and cargo tests are pending the root slot; rustfmt --edition 2024 --check passes on the changed files.
+- `S18` Rust build pending the root slot
+- `S18` Not compiled or tested here: the Rust build, clippy and cargo tests run in the root slot
+- `S18` dev/locales/tests: 2882 passed, 3 pre-existing failures in `test_parity` and `test_audit` (ledger preflight keys), unrelated to these keys; Rust not compiled or tested in this worktree, root slot owns the build, clippy and cargo tests
+- `S21` UNPROVEN manager.rust: fixed-port waits in `only_the_selected_engines_server_is_ever_started` hang (owner LIE, fix 6c106f3630 not in p04), PID 66512 stopped. UNPROVEN application.rust `a_router_that_listens_is_waited_for_until_ready_and_then_its_build_is_confirmed:` `fake_llamacpp.rs:194` logs the request before the ready gate at :253 (owner LIE). OPEN desktop-host-unit-test (owner LLAMA-DESKTOP): stalled at `shell::setup::components::tests::explicit_download_plans_only_that_model_and_a_resume_keeps_it` (PID 32956 stopped); `a_size_the_catalogue_states_differently_is_a_plan_the_person_approves_anew` and `an_added_model_no_catalogue_sizes_is_planned_with_an_unknown_download` fail alone, Failed/SecureConnectionFailed before Review; `agent::runner::tests::a_launcher_that_overruns_its_grace_is_ended_with_its_tree` fails alone, process alive after Terminated; 2 manager helper tests failed under load, pass alone. Landed on integration/build-candidate open by coordinator ruling 2026-11-08.
+- `S23` OPEN (owner LLAMA-DESKTOP): 65 failed, 2488 passed, 9 skipped. 56 provider-reads.spec.ts failures plus local-models, ledger-provisioning, setup and providers specs receive lanes `local_api` and `llamacpp_api,` since 77b60a63fb serves both engine lanes; the window must render served lanes. log-viewport and modelo-calculate-unresolved failures untraced.
+- `S03` Opus review done before close. The text slot, default and recommendation moved from qwen3:4b to qwen3:4b-instruct on both engines through the registry route, `llamacpp_default_context` 8192, under the 2026-11-08 amendment to 2026-10-25-agent-owned-models-adr
+- `S04` Router /models, /models/load and /models/unload were extended with the S07 residency work in cadrumo-agent main de56a46
+- `S05` Acceptance cell re-run on llama-server b12184: the thinking qwen3:4b stayed schema-valid 0/5 under every reasoning control, so the catalogue recommends qwen3:4b-instruct, which was 5/5 on Ollama with think off and 5/5 on llama-server from the same registry layer (2026-11-08 amendment to 2026-10-25-agent-owned-models-adr); BACKEND-LEDGER measured the product's 38-key extraction schema 5/5 on llama-server
+- `S07` The context and offload come from the router preset and the agent loads by alias only (2026-11-08 amendment to 2026-11-07-local-inference-engine-adr). The lane is registered and served unproven: no LaneProof exists until a live test completes a real turn on llama-server; that live turn is pending coordinator approval
+- `S09` Opus review done before close. One visible bounded retry only where a retry can change the outcome; a request that already suppressed reasoning is refused at once with the typed no-answer condition (qwen3-vl:2b evidence)
+- `S29` Opus review done before close
+- `S30` Opus review done before close. Keeping a lane's earlier catalogue as stale when its measurement stops answering is the right contract, and settings invalidation now forgets it
+- `S18` Closed on the coordinator's direction with S18 landed on feature/tui; the reruns of manager.rust and application.package after the bound and unload-wait fixes are DESKTOP's on feature/tui
+- `S31` Left open 2026-11-09: it cannot be proven on the Windows host. It needs (1) a Linux build host or container at the glibc 2.28 floor for x86-64 and aarch64, for example a `manylinux_2_28` or AlmaLinux 8 image, running the Linux CMake preset
+- `S31` (2) the pinned b12184 upstream source tarball with its size and SHA-256 in native/llamacpp-pins.json, built unmodified with the CPU backend, `GGML_NATIVE` off, curl and OpenSSL off, and libgomp linked statically, then staged into bin/llama, where the ELF floor check in dev/packaging/native/platforms/elf.py must pass (the published Linux archives need glibc 2.34 and 2.38 and are refused)
+- `S31` (3) the application.package live test and the packaged desktop smoke run on that Linux build
+- `S31` (4) a decision for the open item that Linux without an installed manager runs no local AI server: either install the manager on Linux as a user service, or host the shared manager core in the window on Linux as DesktopHost does on Windows and macOS. Until then Linux ships without llama-server and keeps ollama as its default engine
 
 ## Notes
 

@@ -26,7 +26,7 @@ from collections.abc import Callable, Mapping
 from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from datetime import date
-from typing import TYPE_CHECKING, Final, NamedTuple
+from typing import TYPE_CHECKING, Final, NamedTuple, Protocol
 from zoneinfo import ZoneInfo
 
 from pydantic import ValidationError
@@ -47,6 +47,7 @@ from ..domain.buckets.event import (
 from ..domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ..domain.invoices.catalogue import InvoiceCatalogue
 from ..domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
+from ..domain.iva.refund_eligibility import RedemeEnrolmentState, redeme_enrolment_state
 from ..domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -101,7 +102,8 @@ from .overview.evidence import (
 )
 from .overview.home import HomeAccountSession
 from .user_profile.censal_observation import CensalObservation
-from .user_profile.projections import record_to_path_values
+from .user_profile.censal_readback import CensalHistoryRead, CensalHistoryReader
+from .user_profile.projections import declared_redeme_enrolment, record_to_path_values
 from .workbench_capture_memory import WorkbenchCalendarMemoKey, WorkbenchCaptureMemory
 from .workbench_generation_calendar import (
     CalendarMemo,
@@ -265,6 +267,7 @@ def _read_declarations_workspace(
     observed_at: UtcInstant,
     result_casilla_reader: DeclarationResultCasillaReaderV1 | None,
     lifecycle_facts: tuple[DeclarationsSanitizedLifecycleFactV1, ...] | None,
+    profile: UserProfileRecord,
 ) -> DeclarationsWorkspaceProjectionV1 | None:
     history_observation = (
         DeclarationsWorkspaceZoneObservationV1(
@@ -283,6 +286,7 @@ def _read_declarations_workspace(
             calculation_revisions=calculation_revisions,
             filing_records=filing_records,
             lifecycle_facts=() if lifecycle_facts is None else lifecycle_facts,
+            profile=profile,
             result_casilla_reader=result_casilla_reader,
             zone_observations=(
                 declarations_observation(DeclarationsWorkspaceZone.DECLARATIONS, observed_at),
@@ -322,6 +326,45 @@ class _StoredCatalogues(NamedTuple):
     filings_revision: str
     verification: VerificationReportCatalogue | None
     bucket_events: BucketEventHistoryCatalogue | None
+
+
+@dataclass(frozen=True, slots=True)
+class NotificationCustodyCount:
+    """How many notification documents a profile holds, with the stored rows that count was taken over.
+
+    ``stored_keys`` is listed before the documents are counted, so a document
+    stored in between shows as a changed key set when the count is checked.
+    """
+
+    count: int
+    stored_keys: tuple[str, ...]
+
+
+class NotificationCustodyCounter(Protocol):
+    """Count a profile's notification documents once, then answer that count again cheaply."""
+
+    def count(self) -> NotificationCustodyCount:
+        """List the stored rows, then count the documents they hold."""
+        ...
+
+    def recount(self, prior: NotificationCustodyCount) -> int:
+        """The count a full read would give now; ``prior``'s count when its rows are unchanged."""
+        ...
+
+
+class _AeatSyncSourceReads(NamedTuple):
+    """What a generation read for AEAT Sync alone, rechecked unchanged with the declaration sources."""
+
+    custody: NotificationCustodyCount | None
+    census: CensalHistoryRead | None
+
+    @property
+    def custody_count(self) -> int | None:
+        return None if self.custody is None else self.custody.count
+
+    @property
+    def census_observation(self) -> CensalObservation | None:
+        return None if self.census is None else self.census.observation
 
 
 class _DeclarationSources(NamedTuple):
@@ -366,7 +409,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     Unbound, no acceptance is honoured and every disagreement counts as a blocker, which is the stricter reading.
     """
     reconciliation_reader: Callable[[], tuple[ModeloReconciliationRecord, ...]] | None = None
-    notification_custody_reader: Callable[[], int] | None = None
+    notification_custody_reader: NotificationCustodyCounter | None = None
     """Counts the notification documents this profile already holds locally.
 
     Unbound means this session did not read the store, which AEAT Sync reports
@@ -374,7 +417,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     zero the operator can act on.
     """
     result_casilla_reader: DeclarationResultCasillaReaderV1 | None = None
-    census_observation_reader: Callable[[], CensalObservation | None] | None = None
+    census_observation_reader: CensalHistoryReader | None = None
     """Names the casilla that settles one modelo revision, or nothing.
 
     Injected rather than resolved in the door, which holds repositories and no
@@ -410,8 +453,10 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             raise InternalInvariantError("a workbench generation needs the live account session")
         _timed("account_session", account_session_reader)
         capture = self._capture_declaration_sources()
-        custody_count = _timed("custody_count", self._load_custody_count)
-        census_observation = _timed("census_observation", self._load_census_observation)
+        aeat_sync_reads = _AeatSyncSourceReads(
+            custody=_timed("custody_count", self._load_custody_count),
+            census=_timed("census_observation", self._load_census_observation),
+        )
         ledger_ports = self.ledger_action_ports
         ledger = (
             None
@@ -437,9 +482,9 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                 declared_tax_id(capture.raw_values),
                 observed_at=capture.observed_at,
                 filings=tuple(capture.catalogues.filings.records.values()),
-                custody_count=custody_count,
+                custody_count=aeat_sync_reads.custody_count,
                 censo_values=capture.raw_values,
-                census_observation=census_observation,
+                census_observation=aeat_sync_reads.census_observation,
                 filed_evidence=capture.aeat_projection,
             ),
         )
@@ -453,8 +498,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             ledger_sources=capture.ledger_sources,
             verification=capture.catalogues.verification,
             bucket_events=capture.catalogues.bucket_events,
-            custody_count=custody_count,
-            census_observation=census_observation,
+            aeat_sync_reads=aeat_sync_reads,
         ):
             raise InternalInvariantError("secure workbench generation changed during capture")
         return _timed(
@@ -478,7 +522,10 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
 
         It reads the same repositories, through the same projections, as a
         generation does, and is checked unchanged across the capture the same
-        way, without the account session only Home needs.
+        way, without the account session only Home needs. The notification
+        custody count and the census observation feed only AEAT Sync, so the
+        list neither reads nor rechecks them: the census is found by scanning
+        every operation the profile's journal holds.
         """
         with diagnostic_scope(), _capture_phase("declaration_list_inputs"):
             return self._capture_declaration_list_inputs()
@@ -494,8 +541,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             ledger_sources=capture.ledger_sources,
             verification=capture.catalogues.verification,
             bucket_events=capture.catalogues.bucket_events,
-            custody_count=_timed("custody_count", self._load_custody_count),
-            census_observation=_timed("census_observation", self._load_census_observation),
+            aeat_sync_reads=None,
         ):
             raise InternalInvariantError("secure declarations list changed during capture")
         return DeclarationListInputs(
@@ -518,6 +564,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             verification,
             bucket_events,
         ) = catalogues
+        raw_values = record_to_path_values(record)
         declarations = self._read_declarations_projection(
             work_units=work_units,
             revisions=revisions,
@@ -525,8 +572,9 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             filings=filings,
             bucket_events=bucket_events,
             observed_at=observed_at,
+            profile=record,
+            redeme=redeme_enrolment_state(declared_redeme_enrolment(raw_values)),
         )
-        raw_values = record_to_path_values(record)
         # The ledger is read before the calendar: its invoices answer the
         # ledger-derived obligation signals the calendar decides on.
         ledger_revision = _timed("ledger_revision", self._ledger_revision)
@@ -569,6 +617,8 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         filings: ModeloRecordCatalogue,
         bucket_events: BucketEventHistoryCatalogue | None,
         observed_at: UtcInstant,
+        profile: UserProfileRecord,
+        redeme: RedemeEnrolmentState = RedemeEnrolmentState.UNSTATED,
     ) -> DeclarationsWorkspaceProjectionV1 | None:
         lifecycle_facts = (
             None
@@ -596,6 +646,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                 observed_at=observed_at,
                 result_casilla_reader=self.result_casilla_reader,
                 lifecycle_facts=lifecycle_facts,
+                profile=profile,
             ),
             count=lambda workspace: None if workspace is None else len(workspace.declarations),
         )
@@ -617,6 +668,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                                     verification=verification,
                                     operation=self.operation,
                                     resolutions=self._resolutions_of(ref),
+                                    redeme=redeme,
                                 )
                             }
                         )
@@ -705,9 +757,15 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         ledger_sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None,
         verification: VerificationReportCatalogue | None,
         bucket_events: BucketEventHistoryCatalogue | None,
-        custody_count: int | None,
-        census_observation: CensalObservation | None = None,
+        aeat_sync_reads: _AeatSyncSourceReads | None,
     ) -> bool:
+        """Re-read every source the capture used and say whether each still equals what it read.
+
+        ``aeat_sync_reads`` is what a generation read for AEAT Sync alone;
+        ``None`` for a capture that read neither of them. Neither is read whole
+        again: each reader answers what a full read would give now from the
+        rows or journal records that could have changed it.
+        """
         with _capture_phase("recheck"):
             final_record = _timed("recheck_profile_record", lambda: self.profile_repository.load(self.profile_id))
             _, final_work_units_revision = _timed("recheck_work_units", self.work_unit_repository.load_revisioned)
@@ -724,8 +782,15 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                 and _timed("recheck_ledger", lambda: self._ledger_is_unchanged(ledger_revision, ledger_sources))
                 and _timed("recheck_verification_reports", self._load_verification_reports) == verification
                 and _timed("recheck_bucket_events", self._load_bucket_events) == bucket_events
-                and _timed("recheck_custody_count", self._load_custody_count) == custody_count
-                and _timed("recheck_census_observation", self._load_census_observation) == census_observation
+                and (
+                    aeat_sync_reads is None
+                    or (
+                        _timed("recheck_custody_count", lambda: self._recount_custody(aeat_sync_reads.custody))
+                        == aeat_sync_reads.custody_count
+                        and _timed("recheck_census_observation", lambda: self._recheck_census(aeat_sync_reads.census))
+                        == aeat_sync_reads.census_observation
+                    )
+                )
             )
 
     def _load_stored_catalogues(self) -> _StoredCatalogues:
@@ -779,9 +844,15 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         """Read the bucket event log, or nothing when no host bound one."""
         return None if self.bucket_event_repository is None else self.bucket_event_repository.load()
 
-    def _load_census_observation(self) -> CensalObservation | None:
+    def _load_census_observation(self) -> CensalHistoryRead | None:
         """Read the stored census observation, or nothing when no host bound a reader."""
-        return None if self.census_observation_reader is None else self.census_observation_reader()
+        return None if self.census_observation_reader is None else self.census_observation_reader.read()
+
+    def _recheck_census(self, prior: CensalHistoryRead | None) -> CensalObservation | None:
+        """Answer the census again from ``prior``'s journal records and any created since."""
+        if self.census_observation_reader is None or prior is None:
+            return None
+        return self.census_observation_reader.recheck(prior)
 
     def _ledger_revision(self) -> tuple[str, str] | None:
         """State both ledger stores' revisions without decrypting them, when both can.
@@ -811,16 +882,22 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             return self._ledger_revision() == revision
         return self._load_ledger_sources(phase_prefix="recheck_") == sources
 
-    def _load_custody_count(self) -> int | None:
+    def _load_custody_count(self) -> NotificationCustodyCount | None:
         """Count documents in local custody, or nothing when no reader is bound.
 
-        Read inside the capture window and re-read at its close like every
+        Read inside the capture window and rechecked at its close like every
         other source: a document landing mid-capture would otherwise let AEAT
         Sync publish a count that was never true at any single instant.
         """
         if self.notification_custody_reader is None:
             return None
-        return self.notification_custody_reader()
+        return self.notification_custody_reader.count()
+
+    def _recount_custody(self, prior: NotificationCustodyCount | None) -> int | None:
+        """The custody count a full read would give now, or nothing when no reader is bound."""
+        if self.notification_custody_reader is None or prior is None:
+            return None
+        return self.notification_custody_reader.recount(prior)
 
     def _load_verification_reports(self) -> VerificationReportCatalogue | None:
         """Read the verification catalogue, or nothing when no host bound one.

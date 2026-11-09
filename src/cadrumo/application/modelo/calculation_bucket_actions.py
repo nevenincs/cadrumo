@@ -42,7 +42,7 @@ from ...domain.transactions.protocols import TransactionCatalogueRepositoryProto
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..user_profile.projections import record_to_path_values
 from .action_errors import (
-    ModeloAggregationBindingError,
+    ModeloAggregationInputConflictError,
 )
 from .calculation_action_ports import (
     CalculationActionPorts,
@@ -398,6 +398,49 @@ def refuse_blocked_ledger_preflight(work_unit_id: str, *, ports: CalculationActi
     )
 
 
+def refuse_empty_retenciones_window(work_unit_id: str, *, ports: CalculationActionPorts) -> None:
+    """Refuse, before anything is written, a withholding period that holds no retención.
+
+    The retenciones resolver refuses the same window during source
+    resolution, which runs after the calculation's preparatory writes; this
+    applies its rule first, so the person's missing answer is reported as a
+    refusal with nothing changed.
+    """
+    from ..aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
+    from ..aggregation.source_mesh import CalculationSourceContext
+    from ..calculations.m115_no_relevant_payments import m115_no_relevant_payment_periods_for_bucket
+    from .work_profile import ModeloWorkProfilePathValues
+
+    work_unit, snapshot, checked_profile = load_bucket_aggregation_context(
+        work_unit_id,
+        work_unit_repository=ports.work_unit_repository,
+        profile=None,
+        operation=ports.operation,
+    )
+    resolver = RetencionesAggregationSourceResolver(
+        ports=ports.retencion_observation_ports,
+        m115_no_relevant_payment_periods=m115_no_relevant_payment_periods_for_bucket(
+            work_unit.bucket_id,
+            profile_path_values_reader=ModeloWorkProfilePathValues(profile=checked_profile),
+        ),
+        invoice_catalogue=ports.invoice_catalogue_read_ports,
+    )
+    refusal = resolver.empty_window_refusal(
+        CalculationSourceContext(
+            bucket_id=work_unit.bucket_id,
+            work_unit_id=work_unit.work_unit_id,
+            modelo=work_unit.modelo,
+            filing_year=work_unit.filing_year,
+            period=work_unit.period,
+            revision=snapshot.revision,
+            profile=checked_profile,
+            operation=ports.operation,
+        )
+    )
+    if refusal is not None:
+        raise refusal
+
+
 def _prepare_bucket_aggregation_calculation(
     *,
     work_unit_id: str,
@@ -645,12 +688,14 @@ def _caller_operator_layer(
     preparation: BucketAggregationPreparation,
     text_casilla_inputs: Mapping[CasillaId, str] | None,
     enum_binding_values: Mapping[BindingId, str] | None,
+    attested_binding_ids: tuple[BindingId, ...],
 ) -> CalculationOperatorLayer:
     """Project the validated caller tier of one run onto the persisted operator layer.
 
     Only the caller channels are read: the backend, bound, profile and borrador
     tiers merged into the revision's replay maps never reach the layer, so a
-    later replay cannot promote a source value into an operator override.
+    later replay cannot promote a source value into an operator override. The
+    overrides the operator stated hold nothing stay marked as that statement.
     """
     return CalculationOperatorLayer(
         decimal_casilla_inputs={
@@ -661,6 +706,7 @@ def _caller_operator_layer(
             **{binding_id: canonical_decimal_string(value) for binding_id, value in preparation.binding_values.items()},
             **dict(enum_binding_values or {}),
         },
+        attested_binding_ids=attested_binding_ids,
     )
 
 
@@ -720,6 +766,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     text_casilla_inputs: Mapping[CasillaId, str] | None = None,
     cleared_casilla_ids: tuple[CasillaId, ...] = (),
     record_operator_layer: bool = False,
+    attested_binding_ids: tuple[BindingId, ...] = (),
     m210_official_tipo_renta_code: str | None = None,
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
     binding_values: Mapping[BindingId, Decimal] | None = None,
@@ -772,6 +819,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 preparation=preparation,
                 text_casilla_inputs=text_casilla_inputs,
                 enum_binding_values=enum_binding_values,
+                attested_binding_ids=attested_binding_ids,
             )
             if record_operator_layer
             else None
@@ -1061,7 +1109,7 @@ def _reject_manual_m210_gross_income_override_in_ledger_mode(
     if mode is not M210GrossIncomeSourceMode.LEDGER:
         return
     if "rendimientos_integros" in casilla_inputs:
-        raise ModeloAggregationBindingError(
+        raise ModeloAggregationInputConflictError(
             translated_message="application.modelo.errors.caller_casilla_source_binding_conflict",
             context={"casillas": ["rendimientos_integros"]},
         )
@@ -1076,13 +1124,13 @@ def _validate_m210_official_tipo_renta_selection(
     """Keep raw M210 code and conceptual formula token coherent at the application boundary."""
     if m210_official_tipo_renta_code is None:
         if mode is M210GrossIncomeSourceMode.LEDGER:
-            raise ModeloAggregationBindingError(
+            raise ModeloAggregationInputConflictError(
                 translated_message="application.modelo.errors.m210_ledger_source_selection_required",
             )
         return
     expected_tipo_renta = m210_tipo_renta_code_projection().get(m210_official_tipo_renta_code)
     if expected_tipo_renta is None or text_casilla_inputs.get("tipo_renta") != expected_tipo_renta.value:
-        raise ModeloAggregationBindingError(
+        raise ModeloAggregationInputConflictError(
             translated_message="application.modelo.errors.m210_official_tipo_renta_selection_mismatch",
             context={
                 "official_tipo_renta_code": m210_official_tipo_renta_code,
@@ -1101,7 +1149,7 @@ def _reject_manual_m210_agrupacion_rows_in_ledger_mode(
     if mode is M210GrossIncomeSourceMode.LEDGER and any(
         isinstance(row, Modelo210AgrupacionRentaRow) for row in detail_rows
     ):
-        raise ModeloAggregationBindingError(
+        raise ModeloAggregationInputConflictError(
             translated_message="application.modelo.errors.m210_ledger_manual_agrupacion_rows",
         )
 
@@ -1119,7 +1167,7 @@ def _merge_bucket_bound_inputs(
         if casilla_id in casillas and casillas[casilla_id].input_kind == InputKind.COMPUTED
     )
     if computed:
-        raise ModeloAggregationBindingError(
+        raise ModeloAggregationInputConflictError(
             translated_message="application.modelo.errors.computed_casilla_binding_conflict",
             context={"computed": computed},
         )

@@ -419,6 +419,9 @@ cli:
         arrendamiento_local_negocio_help: Marca que la factura emitida por el arrendador
           corresponde al alquiler de un local de negocio. Usa las opciones de situación
           y referencia catastral para registrar los datos del inmueble.
+        attach_document_help: Guarda el documento de una factura (su PDF o la factura
+          electrónica) junto a ella.
+        attach_document_source_help: Ruta del archivo del documento.
         country_code_help: 'Código de país ISO 3166-1 alfa-2 de la contraparte. Obligatorio:
           determina el encaminamiento de ambas declaraciones informativas, por lo
           que nunca se presupone.'
@@ -2909,6 +2912,16 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; por defecto el perfil
         activo.
       view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
+    provider_login:
+      device_help: 'Usa el inicio de sesión con código de dispositivo (solo codex).'
+      device_unsupported: '--device solo está disponible para %{supported}.'
+      help: 'Inicia sesión en un proveedor de IA a mano desde esta consola.'
+      json_unsupported: '--format json no está disponible para provider-login: es una orden interactiva de terminal. Ejecútala sin --format.'
+      no_profile: 'No hay ningún perfil seleccionado. Selecciona un perfil en la aplicación o indica --profile.'
+      profile_help: 'UUID o etiqueta exacta del perfil; omítelo para usar el perfil seleccionado.'
+      provider_help: 'Proveedor en el que iniciar sesión: claude, codex o antigravity.'
+      signed_in: 'Sesión iniciada en %{provider}. Vuelve a abrir los ajustes del proveedor en la aplicación para verlo.'
+      unsupported_provider: 'No se puede iniciar sesión a mano en el proveedor %{provider}. Usa uno de: %{supported}.'
     repair:
       connectivity_help: Comprobar conectividad del navegador y la Sede AEAT
       help: Diagnosticar y reparar configuración local, definiciones de los modelos,
