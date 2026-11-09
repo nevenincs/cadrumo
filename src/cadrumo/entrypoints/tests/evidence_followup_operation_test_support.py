@@ -286,6 +286,8 @@ def prepare_evidence_followup_conformance_case(
             ),
             party_attribution_advisory=projected_party_advisory,
             country_vocabulary_advisory=projected_country_advisory,
+            # The deployment has not opted in to off-host reads, so no profile on it may be asked.
+            off_host_read_offered=False,
         )
     else:
         raise ValueError(f"unsupported evidence follow-up operation: {definition_id}")

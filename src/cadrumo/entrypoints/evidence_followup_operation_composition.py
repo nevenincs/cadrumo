@@ -4,14 +4,17 @@ from __future__ import annotations
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from ..adapters.outbound.llm.consent import off_host_evidence_read_askable
 from ..adapters.persistence.llm.consent_ledger import EvidenceConsentLedger
 from ..adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
 from ..application.ledger.consent_withdrawal import ConsentedDispatch
 from ..application.ledger.evidence_followup_contracts import (
     LedgerEvidenceFollowupOperationPorts,
+    OffHostReadAskable,
 )
 from ..application.ledger.extraction_draft_repository import ExtractionDraftRepositoryProtocol
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
+from ..application.user_profile.capabilities import cloud_evidence_upload_eligible_for_active_profile
 from ..core.bucket_pointer import require_active_bucket_id
 from ..core.config import Settings
 from ..core.identity.bucket import canonical_bucket_id
@@ -49,6 +52,17 @@ def _consent_entries(*, bucket_id: str) -> tuple[ConsentedDispatch, ...]:
     )
 
 
+def _off_host_read_askable(settings: Settings) -> OffHostReadAskable:
+    def askable(*, bucket_id: str) -> bool:
+        _require_profile(bucket_id)
+        return off_host_evidence_read_askable(
+            settings,
+            profile_eligible=cloud_evidence_upload_eligible_for_active_profile(settings=settings),
+        )
+
+    return askable
+
+
 def build_ledger_evidence_followup_operation_ports(*, settings: Settings) -> LedgerEvidenceFollowupOperationPorts:
     """Provide guarded factories; construction opens no profile stores."""
     return LedgerEvidenceFollowupOperationPorts(
@@ -56,6 +70,7 @@ def build_ledger_evidence_followup_operation_ports(*, settings: Settings) -> Led
         attachment_store_factory=_attachment_store,
         extraction_draft_repository_factory=_extraction_drafts,
         consent_entries_factory=_consent_entries,
+        off_host_read_askable=_off_host_read_askable(settings),
     )
 
 

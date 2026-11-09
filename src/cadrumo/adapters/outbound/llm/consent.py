@@ -61,6 +61,7 @@ __all__ = [
     "classify_off_host_evidence_read",
     "cloud_evidence_read_permitted",
     "mint_evidence_consent_token",
+    "off_host_evidence_read_askable",
 ]
 
 _MINT_REFUSAL_LOCALE_KEY = "llm.evidence.consent.mint_refused"
@@ -147,6 +148,35 @@ def classify_off_host_evidence_read(
     return OffHostEvidenceReadOutcome.OFF_HOST_CONSENTED
 
 
+def off_host_evidence_read_askable(settings: Settings, *, profile_eligible: bool) -> bool:
+    """Whether a surface may ask the operator to acknowledge an off-host read at all.
+
+    The standing half of :func:`cloud_evidence_read_permitted`: every condition
+    except the per-invocation acknowledgement. A surface offers the consent gate
+    only while this holds, because a gate it offered while this is ``False``
+    would take an acknowledgement that mints nothing. Asking is never the same
+    as permitting: the read still needs the operator's acknowledgement of that
+    one call, and :func:`mint_evidence_consent_token` decides it again then.
+
+    ``profile_eligible`` is a REQUIRED keyword with no default for the same
+    reason as on :func:`cloud_evidence_read_permitted`.
+
+    Args:
+        settings: Resolved deployment settings carrying the consent posture.
+        profile_eligible: Whether the active profile's standing eligibility bar
+            is on.
+
+    Returns:
+        ``True`` only when gestor mode is off, the deployment has opted in and
+        the profile is eligible.
+    """
+    if settings.cadrumo_evidence_gestor_mode:
+        return False
+    if not settings.cadrumo_evidence_cloud_upload_permitted:
+        return False
+    return profile_eligible
+
+
 def cloud_evidence_read_permitted(settings: Settings, *, profile_eligible: bool, acknowledged: bool) -> bool:
     """Whether an off-host read of taxpayer evidence is permitted for THIS invocation.
 
@@ -184,13 +214,7 @@ def cloud_evidence_read_permitted(settings: Settings, *, profile_eligible: bool,
     Returns:
         ``True`` only when all four conditions above hold.
     """
-    if settings.cadrumo_evidence_gestor_mode:
-        return False
-    if not settings.cadrumo_evidence_cloud_upload_permitted:
-        return False
-    if not profile_eligible:
-        return False
-    return acknowledged
+    return off_host_evidence_read_askable(settings, profile_eligible=profile_eligible) and acknowledged
 
 
 class EvidenceConsentToken(BaseModel):

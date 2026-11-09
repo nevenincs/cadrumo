@@ -20,11 +20,13 @@ The sweep walks the production AST for those call sites and requires each to
 source ``profile_eligible`` from
 :func:`~application.user_profile.cloud_evidence_upload_eligible_for_active_profile`.
 
-**One production surface mints today**, and the sweep finds it: the off-host
-evidence extract verb in ``entrypoints/cli/_ledger_evidence_cli.py``. It passes
-because it sources ``profile_eligible`` from the canonical resolver rather than
-asserting its own eligibility, so what follows is a statement about a live
-surface and not about an empty set.
+**One production surface mints today, and one offers**, and the sweep finds
+both: the off-host evidence extract operation's composition in
+``entrypoints/invoice_evidence_operation_composition.py``, and the evidence
+review's offer in ``entrypoints/evidence_followup_operation_composition.py``.
+They pass because they source ``profile_eligible`` from the canonical resolver
+rather than asserting their own eligibility, so what follows is a statement
+about live surfaces and not about an empty set.
 
 The sweep would still be non-vacuous at zero call sites, because it also pins
 the MECHANISM that makes the zero-site case safe: ``profile_eligible`` is
@@ -46,6 +48,7 @@ from cadrumo.adapters.outbound.llm.consent import (
     EvidenceConsentToken,
     cloud_evidence_read_permitted,
     mint_evidence_consent_token,
+    off_host_evidence_read_askable,
 )
 from cadrumo.adapters.outbound.llm.errors import LLMConsentError
 from cadrumo.application.user_profile.capabilities import CapabilitySource, resolve_capability
@@ -70,8 +73,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 _NOW = datetime(_FILING_YEAR, 6, 15, 10, 0, tzinfo=UTC)
 _MINTER = "mint_evidence_consent_token"
+#: Reads the same bar to decide whether a surface may offer the consent gate at all.
+_OFFER = "off_host_evidence_read_askable"
+_GATE_MODULE = "adapters/outbound/llm/consent.py"
 _RESOLVER = "cloud_evidence_upload_eligible_for_active_profile"
-_PRODUCTION_ROOT = Path(__file__).resolve().parents[3]
+_PRODUCTION_ROOT = Path(__file__).resolve().parents[4]
 
 
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
@@ -160,9 +166,27 @@ def test_no_token_can_be_minted_for_an_ineligible_profile() -> None:
     assert isinstance(token, EvidenceConsentToken)
 
 
+@pytest.mark.parametrize("gestor", [False, True])
+@pytest.mark.parametrize("permitted", [False, True])
+@pytest.mark.parametrize("eligible", [False, True])
+@pytest.mark.parametrize("acknowledged", [False, True])
+def test_a_read_is_permitted_exactly_where_the_gate_is_offered_and_acknowledged(
+    *, gestor: bool, permitted: bool, eligible: bool, acknowledged: bool
+) -> None:
+    """The offer is the gate without the acknowledgement, so no offered gate is one that cannot mint."""
+    settings = Settings(cadrumo_evidence_gestor_mode=gestor, cadrumo_evidence_cloud_upload_permitted=permitted)
+
+    offered = off_host_evidence_read_askable(settings, profile_eligible=eligible)
+
+    assert offered is (not gestor and permitted and eligible)
+    assert cloud_evidence_read_permitted(settings, profile_eligible=eligible, acknowledged=acknowledged) is (
+        offered and acknowledged
+    )
+
+
 def test_the_eligibility_argument_is_keyword_only_and_undefaultable() -> None:
     """What makes the zero-call-site sweep below safe rather than vacuous."""
-    for function in (cloud_evidence_read_permitted, mint_evidence_consent_token):
+    for function in (cloud_evidence_read_permitted, mint_evidence_consent_token, off_host_evidence_read_askable):
         parameter = inspect.signature(function).parameters["profile_eligible"]
         assert parameter.kind is inspect.Parameter.KEYWORD_ONLY, function.__name__
         assert parameter.default is inspect.Parameter.empty, (
@@ -205,7 +229,10 @@ def _production_modules() -> list[Path]:
 
 
 def _minting_call_sites() -> list[tuple[str, int, ast.Call]]:
-    """Return every production call to the token minter, located by AST.
+    """Return every production call to the token minter or the offer, located by AST.
+
+    The offer decides whether a surface asks at all, so it reads the bar the
+    minter reads and is held to the same source.
 
     An AST walk rather than a text scan: a source slice cannot tell a call from
     a mention in a docstring or a comment, and this module's own prose names the
@@ -219,7 +246,7 @@ def _minting_call_sites() -> list[tuple[str, int, ast.Call]]:
                 continue
             target = node.func
             name = target.attr if isinstance(target, ast.Attribute) else getattr(target, "id", None)
-            if name == _MINTER:
+            if name in {_MINTER, _OFFER}:
                 sites.append((path.relative_to(_PRODUCTION_ROOT).as_posix(), node.lineno, node))
     return sites
 
@@ -231,15 +258,18 @@ def test_every_minting_surface_sources_eligibility_from_the_canonical_resolver()
     would reinstate a per-surface decision above a profile-scoped bar, which is
     the failure this test exists to prevent.
 
-    **This is no longer vacuous: one production surface mints.** The sweep finds
-    ``entrypoints/cli/_ledger_evidence_cli.py``, the off-host evidence extract
-    verb, and it passes because that surface sources ``profile_eligible`` from
-    the canonical resolver rather than asserting its own. The signature test
-    above still holds the line for the next surface to appear.
+    **This is no longer vacuous: one production surface mints and one offers.**
+    The sweep finds the extract operation's and the evidence review's
+    compositions under ``entrypoints/``, and they pass because they source
+    ``profile_eligible`` from the canonical resolver rather than asserting their
+    own. The signature test above still holds the line for the next surface.
     """
     offenders: list[str] = []
     for relative, lineno, call in _minting_call_sites():
         argument = next((kw.value for kw in call.keywords if kw.arg == "profile_eligible"), None)
+        if relative == _GATE_MODULE and isinstance(argument, ast.Name) and argument.id == "profile_eligible":
+            # The gate composing its own halves forwards the bar its caller passed; it reads none itself.
+            continue
         if argument is None:
             offenders.append(f"{relative}:{lineno} passes no profile_eligible")
             continue

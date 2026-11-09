@@ -229,12 +229,17 @@ def _unused_consent_entries(*, bucket_id: str) -> tuple[ConsentedDispatch, ...]:
     raise AssertionError(bucket_id)
 
 
+def _unused_off_host_read_askable(*, bucket_id: str) -> bool:
+    raise AssertionError(bucket_id)
+
+
 def _unopened_ports() -> LedgerEvidenceFollowupOperationPorts:
     return LedgerEvidenceFollowupOperationPorts(
         settings=load_settings(),
         attachment_store_factory=cast(AttachmentStoreFactory, _unused_attachment_store),
         extraction_draft_repository_factory=cast(ExtractionDraftRepositoryFactory, _unused_draft_store),
         consent_entries_factory=cast(EvidenceConsentEntriesFactory, _unused_consent_entries),
+        off_host_read_askable=_unused_off_host_read_askable,
     )
 
 
