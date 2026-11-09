@@ -13,6 +13,33 @@ import type { SourceSurface } from "./modeloWork";
 import type { OperationNextStepV1 } from "./modeloWorkForm";
 
 /**
+ * Preserve scalar kind and decimal precision across the public schema.
+ */
+export type PublicScalarValueV1 = {
+  kind: "string" | "integer" | "boolean" | "decimal" | "date" | "null";
+  text: string;
+};
+
+/**
+ * Typed local-human workbench view of the governed SpanishTaxIdFormat.
+ */
+export type PublicSpanishTaxIdFormat = {
+  width: number;
+  country_prefix: string;
+  country_prefixed_width: number;
+  country_prefix_strip_width: number;
+  prefixed_nif_leaders: string;
+  nie_leaders: string;
+  cif_leaders: string;
+  nif_letters: string;
+  nif_check_modulus: number;
+  nie_prefix_substitutions: [string, string][];
+  cif_digit_only_kinds: string;
+  cif_letter_only_kinds: string;
+  cif_letter_table: string;
+};
+
+/**
  * One source declaration the to-do list names before the summary can be worked
  * out, and its door.
  */

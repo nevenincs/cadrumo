@@ -16,8 +16,10 @@ from decimal import Decimal
 import pytest
 
 from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import tr
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ..edit_apply_scalar_contracts import wire_scalar_value
 from ..source_policy import SourceOverridePolicy
 from ..value_presentation import absent_value_text, format_casilla_value
@@ -189,3 +191,30 @@ def test_a_box_holds_the_filers_own_value_when_typed_here_or_replacing_its_sourc
         ModeloFormField.model_validate(
             {**dict(revised_field(field, origin=ModeloFormOrigin.IMPORTED)), "filers_own": True}
         )
+
+
+def _supported_years() -> tuple[int, ...]:
+    support = published_supported_filing_years()
+    assert support is not None
+    return tuple(sorted(support.years))
+
+
+@pytest.mark.parametrize("year", _supported_years())
+@pytest.mark.parametrize("language", [OutputLanguage.ES, OutputLanguage.EN])
+def test_before_any_calculation_a_box_awaiting_its_source_waits_on_the_calculation_not_on_the_source(
+    operation: PinnedAuthorityOperation, language: OutputLanguage, year: int
+) -> None:
+    form = built_form(operation, "100", year, "0A", language=language)
+    waiting = [field for field in form.fields() if field.origin is ModeloFormOrigin.NOT_IMPORTED_YET]
+    assert waiting, "a Modelo 100 before its first calculation has boxes still waiting on their source"
+    not_calculated = tr("workspace.modelo.origin.not_calculated_yet", locale=language.value)
+
+    before = {field.address: field for field in worded_form(form).fields()}
+    after = {
+        field.address: field
+        for field in worded_form(form.model_copy(update={"calculation_revision_id": "c" * 64})).fields()
+    }
+
+    for field in waiting:
+        assert before[field.address].origin_words == not_calculated
+        assert after[field.address].origin_words != not_calculated

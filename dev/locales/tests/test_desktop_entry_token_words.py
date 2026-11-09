@@ -31,6 +31,7 @@ _WORDED = {
     "prorrata_sector_letter": ("desktop.ledger.prorrata.letra.", str),
     "capital_good_kind": ("desktop.ledger.capital.kind.", str),
     "capital_good_disposal": ("desktop.ledger.capital.disposal.", str),
+    "import_format": ("desktop.ledger.import.provider.", str),
 }
 
 

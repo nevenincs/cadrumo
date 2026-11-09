@@ -15,7 +15,12 @@ import type {
 } from "../../../shell/modeloContract/modeloEdit";
 import type { ModeloEditApplyBaselineV1 } from "../../../shell/modeloContract/modeloEditWork";
 import type { ModeloWorkbenchFormProjectionV1 } from "../../../shell/modeloContract/modeloWorkForm";
-import { editKey, editSubmission, type FormSession } from "../form/session";
+import {
+  editKey,
+  editSubmission,
+  renewBaseline,
+  type FormSession,
+} from "../form/session";
 import { useModeloOperation } from "../WriteScope";
 import { mayRenew } from "./operationRun";
 
@@ -24,7 +29,11 @@ import { mayRenew } from "./operationRun";
 // stale baseline is renewed once, as the application allows only when nothing
 // moved under it; either way the declaration is read again and the edits are
 // checked on the baseline left, the renewed one or the one the new read
-// admits, and that check says what became of each held edit. An
+// admits, and that check says what became of each held edit. An apply
+// refused only because its baseline went stale changed nothing, so its
+// baseline is renewed once and the apply sent again: taking time over the
+// review never refuses it. A renewal refused because the declaration moved
+// checks the edits again instead of applying them. An
 // apply whose settlement was not observed is unknown: it may have committed,
 // so it is never sent again, and nothing more is applied until the
 // operation finishes and the declaration is read again. Staged edits are cleared only by an apply the
@@ -50,8 +59,13 @@ export type ReviewPhase =
   | { kind: "applying" }
   | { kind: "applied" }
   /** The apply was refused, or never reached the runtime; nothing was
-   * changed and the edits are still staged. */
-  | { kind: "not_applied"; code: LedgerFailureCode | "refused" }
+   * changed and the edits are still staged. `words` is why, as the
+   * application served it; null when it served none. */
+  | {
+      kind: "not_applied";
+      code: LedgerFailureCode | "refused";
+      words: string | null;
+    }
   /** The apply was sent and its settlement was not seen. */
   | { kind: "unknown"; operationId: string | null };
 
@@ -61,6 +75,10 @@ type Checked = {
   phase: ReviewPhase;
   report: ModeloFormRebaseEntryV1[] | null;
 };
+
+/** The refusal an apply settles with when its baseline went stale: nothing
+ * was written, so it may be sent again on a renewed baseline. */
+const BASELINE_STALE = "REFUSED_MODELO_EDIT_BASELINE_STALE";
 
 /** What one renewal came to, for every check that waited on it. */
 type Renewal = Promise<ReviewPhase | null>;
@@ -130,18 +148,10 @@ async function renewal(
   onRenewed: (baseline: ModeloEditApplyBaselineV1) => void,
   onReread: () => Promise<boolean>,
 ): Promise<ReviewPhase | null> {
-  try {
-    const outcome = await port.submit("modelo.edit.renew", {
-      baseline,
-      output_language: language,
-    });
-    if (outcome.kind !== "settled")
-      return { kind: "check_failed", code: "refused" };
-    const next = outcome.result.renewed_baseline;
-    if (next) onRenewed(next);
-  } catch (error) {
-    return { kind: "check_failed", code: ledgerFailure(error).code };
-  }
+  const renewed = await renewBaseline(port, baseline, language);
+  if (renewed.kind === "failed")
+    return { kind: "check_failed", code: renewed.code };
+  if (renewed.kind === "renewed") onRenewed(renewed.baseline);
   return (await onReread())
     ? null
     : { kind: "check_failed", code: "unavailable" };
@@ -166,9 +176,6 @@ export function useEditReview({
   onPrerequisiteHeld?: (held: boolean) => void;
 }) {
   const [phase, setPhase] = useState<ReviewPhase>({ kind: "checking" });
-  const [renewed, setRenewed] = useState<ModeloEditApplyBaselineV1 | null>(
-    null,
-  );
   const { holds, target, hold, run: runWrite } = useModeloOperation();
   const blocked = hold !== undefined;
   const alive = useRef(true);
@@ -191,12 +198,8 @@ export function useEditReview({
     ++checks.current;
   }, [blocked]);
 
-  const admitted = envelope.admitted_baseline;
-  // A baseline the form admitted after the renewal supersedes it.
-  const baseline =
-    renewed && (!admitted || renewed.issued_at >= admitted.issued_at)
-      ? renewed
-      : admitted;
+  // The session holds the one baseline the form's checks and applies share.
+  const baseline = session.baseline;
   const check = useCallback(async () => {
     if (!alive.current || holds.blocking(target)) return;
     if (!baseline) {
@@ -242,7 +245,7 @@ export function useEditReview({
           stale,
           language,
           (next) => {
-            if (isCurrent()) setRenewed(next);
+            if (isCurrent()) session.adoptBaseline(next);
           },
           () => (isCurrent() ? onReread() : Promise.resolve(false)),
         );
@@ -375,27 +378,46 @@ export function useEditReview({
     if (!baseline || holds.blocking(target) || phase.kind !== "checked") return;
     ++checks.current;
     setPhase({ kind: "applying" });
-    const run = await runWrite(
-      () =>
-        port.edit(
-          "modelo.edit.apply",
-          modeloEditBody(
-            editSubmission(baseline, session.staged.values(), language),
+    const send = (on: ModeloEditApplyBaselineV1) =>
+      runWrite(
+        () =>
+          port.edit(
+            "modelo.edit.apply",
+            modeloEditBody(
+              editSubmission(on, session.staged.values(), language),
+            ),
           ),
-        ),
-      () => alive.current,
-    );
+        () => alive.current,
+      );
+    let on = baseline;
+    let run = await send(on);
+    if (run?.kind === "refused" && run.reason === BASELINE_STALE) {
+      const renewal = await renewBaseline(port, on, language);
+      if (!alive.current) return;
+      if (renewal.kind === "moved") {
+        // The declaration moved since the check: the edits are checked
+        // again on it, and nothing is applied.
+        moved.current = false;
+        void check();
+        return;
+      }
+      if (renewal.kind === "renewed") {
+        on = renewal.baseline;
+        run = await send(on);
+      }
+    }
     if (!run || !alive.current) return;
     if (run.kind === "settled" || run.kind === "saved_unread") {
       session.discardAll();
-      setRenewed(null);
       if (alive.current) setPhase({ kind: "applied" });
       await onReread();
     } else if (run.kind === "refused") {
-      if (alive.current) setPhase({ kind: "not_applied", code: "refused" });
-      await readPrerequisite(baseline, run.operationId);
+      if (alive.current)
+        setPhase({ kind: "not_applied", code: "refused", words: run.words });
+      await readPrerequisite(on, run.operationId);
     } else if (run.kind === "not_sent") {
-      if (alive.current) setPhase({ kind: "not_applied", code: run.code });
+      if (alive.current)
+        setPhase({ kind: "not_applied", code: run.code, words: null });
     } else {
       if (alive.current)
         setPhase({ kind: "unknown", operationId: run.operationId });
@@ -411,6 +433,7 @@ export function useEditReview({
     onReread,
     language,
     readPrerequisite,
+    check,
   ]);
 
   return {

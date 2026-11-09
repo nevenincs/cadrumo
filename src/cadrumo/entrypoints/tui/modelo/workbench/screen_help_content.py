@@ -90,7 +90,13 @@ class WorkbenchHelpContentMixin:
         field = entry.field
         if self.recorded:
             parts = [
-                origin_text(field, recorded=True, aeat_imported=aeat_imported_on(self.form), language=self._language)
+                origin_text(
+                    field,
+                    recorded=True,
+                    aeat_imported=aeat_imported_on(self.form),
+                    language=self._language,
+                    calculated=entry.calculated,
+                )
             ]
             reason = read_only_reason(field, self._language, recorded=True)
             if reason is not None:
@@ -99,7 +105,14 @@ class WorkbenchHelpContentMixin:
         parts = (
             []
             if entry.staged_replaces_absence
-            else [origin_text(field, aeat_imported=aeat_imported_on(self.form), language=self._language)]
+            else [
+                origin_text(
+                    field,
+                    aeat_imported=aeat_imported_on(self.form),
+                    language=self._language,
+                    calculated=entry.calculated,
+                )
+            ]
         )
         attention = entry.attention
         if attention is not None:

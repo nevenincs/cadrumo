@@ -383,17 +383,20 @@ def origin_text(
     recorded: bool = False,
     aeat_imported: date | None = None,
     language: OutputLanguage | None = None,
+    calculated: bool = True,
 ) -> str:
     """The origin glyph followed by its words, as a help band or an editor states it.
 
     On a declaration ``recorded`` as filed a box that would ask for a value
     draws no glyph, as its row draws none, and says only what it holds.
     ``aeat_imported`` and ``language`` date a value taken from imported AEAT
-    tax data, as :func:`origin_words` does.
+    tax data, as :func:`origin_words` does, and ``calculated`` says whether
+    the declaration has been calculated, as it does there.
     """
     if recorded and field.origin in ASKS_FOR_A_VALUE:
-        return origin_words(field, recorded=True)
-    return f"{origin_glyph(field)} {origin_words(field, aeat_imported=aeat_imported, language=language)}"
+        return origin_words(field, recorded=True, calculated=calculated)
+    words = origin_words(field, aeat_imported=aeat_imported, language=language, calculated=calculated)
+    return f"{origin_glyph(field)} {words}"
 
 
 def attention_words_key(attention: Attention) -> str:

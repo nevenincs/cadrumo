@@ -74,6 +74,15 @@ pub fn server_address(engine: LocalEngine) -> Option<SocketAddr> {
     .filter(|address| address.ip().is_loopback())
 }
 
+/// A loopback address on a port the system has just assigned, for a test's server of any
+/// engine: a test never takes the declared ports, which a running Cadrumo holds.
+#[cfg(test)]
+pub(crate) fn free_loopback(_: LocalEngine) -> Option<SocketAddr> {
+    std::net::TcpListener::bind("127.0.0.1:0")
+        .and_then(|listener| listener.local_addr())
+        .ok()
+}
+
 /// Why the manager runs no local AI server for the selected engine.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Unavailable {
@@ -123,13 +132,18 @@ impl LocalAiHost {
     /// The engine and the placement are the person's selection, which the caller reads from
     /// where it is kept and passes here. The placement is the llama-server's, and Ollama's
     /// own device detection ignores it.
-    pub fn for_package(
+    ///
+    /// The server listens on `address`: the package's declared one, [`server_address`], and
+    /// in a test one the system has just assigned, so a test never takes the ports a running
+    /// Cadrumo holds. No address reads [`Unavailable::Address`].
+    pub(crate) fn at(
         package_root: &Path,
         storage_root: &Path,
         engine: LocalEngine,
         placement: Placement,
+        address: Option<SocketAddr>,
     ) -> Result<Self, Unavailable> {
-        let address = server_address(engine).ok_or(Unavailable::Address)?;
+        let address = address.ok_or(Unavailable::Address)?;
         let locations = Locations::under(storage_root);
         // The supervisor reads the operator's proxy setting from this manager's own
         // environment, once: a process's environment block cannot be changed from
@@ -219,16 +233,24 @@ impl LocalAiHost {
         *lock(&self.published.0)
     }
 
-    /// Waits until the supervision publishes a state for which `until` holds.
-    pub fn wait_until(&self, until: impl Fn(&Published) -> bool) -> Published {
+    /// Waits until the supervision publishes a state for which `until` holds, for at most
+    /// `within`; `None` when it has not by then.
+    pub fn wait_until(
+        &self,
+        within: Duration,
+        until: impl Fn(&Published) -> bool,
+    ) -> Option<Published> {
+        let deadline = Instant::now() + within;
         let (published, changed) = &*self.published;
         let mut current = lock(published);
         while !until(&current) {
+            let left = deadline.checked_duration_since(Instant::now())?;
             current = changed
-                .wait(current)
-                .unwrap_or_else(|error| error.into_inner());
+                .wait_timeout(current, left)
+                .unwrap_or_else(|error| error.into_inner())
+                .0;
         }
-        *current
+        Some(*current)
     }
 
     /// Stops the server and starts nothing until [`Self::resume`]. Asked once; the stop
@@ -377,6 +399,20 @@ mod tests {
     use cadrumo_application::provisioning::local_ai::program::latest_start_failure;
     use std::{fs, path::PathBuf};
 
+    /// The longest a test waits for the supervision to publish a state.
+    const WAIT: Duration = Duration::from_secs(30);
+
+    /// The host of ngine on a loopback port the system has just assigned, never the
+    /// package's declared one, which a running Cadrumo holds.
+    fn start_host(
+        package: &Path,
+        state: &Path,
+        engine: LocalEngine,
+        placement: Placement,
+    ) -> Result<LocalAiHost, Unavailable> {
+        LocalAiHost::at(package, state, engine, placement, free_loopback(engine))
+    }
+
     /// A folder of this test's own under the temporary folder, removed when dropped.
     struct Scratch(PathBuf);
 
@@ -456,9 +492,8 @@ mod tests {
             .expect("an absent record has the defaults");
         assert_eq!(selection.engine, LocalEngine::LlamaCpp);
         assert_eq!(selection.placement, Placement::Auto);
-        let host =
-            LocalAiHost::for_package(&package, &state, selection.engine, selection.placement)
-                .expect("the package carries llama-server");
+        let host = start_host(&package, &state, selection.engine, selection.placement)
+            .expect("the package carries llama-server");
         assert!(host.set_placement(Placement::Auto), "the llama-server runs");
     }
 
@@ -478,7 +513,7 @@ mod tests {
             Unavailable::Platform
         };
         assert_eq!(
-            LocalAiHost::for_package(&package, &state, selection.engine, selection.placement).err(),
+            start_host(&package, &state, selection.engine, selection.placement).err(),
             Some(expected)
         );
         assert!(!state.exists(), "nothing ran");
@@ -488,8 +523,7 @@ mod tests {
     fn a_package_without_the_selected_engines_program_runs_no_server_and_says_why() {
         let root = Scratch::new("absent");
         let (package, state) = (root.path().join("package"), root.path().join("state"));
-        let ollama =
-            LocalAiHost::for_package(&package, &state, LocalEngine::Ollama, Placement::Auto).err();
+        let ollama = start_host(&package, &state, LocalEngine::Ollama, Placement::Auto).err();
         let expected = if Platform::current().is_some() {
             Unavailable::OllamaNotPinned
         } else {
@@ -498,8 +532,7 @@ mod tests {
         assert_eq!(ollama, Some(expected));
         // A Linux package carries no llama-server until its source build lands.
         assert_eq!(
-            LocalAiHost::for_package(&package, &state, LocalEngine::LlamaCpp, Placement::Auto)
-                .err(),
+            start_host(&package, &state, LocalEngine::LlamaCpp, Placement::Auto).err(),
             Some(Unavailable::LlamaServer(
                 LlamaServerUnavailable::NotPackaged
             ))
@@ -518,10 +551,10 @@ mod tests {
         let ollama_folder = state.join("components").join("ollama");
 
         // Ollama selected and not set up: the packaged llama-server is never started.
-        if let Ok(host) =
-            LocalAiHost::for_package(&package, &state, LocalEngine::Ollama, Placement::Auto)
-        {
-            let first = host.wait_until(|published| published.looks >= 1);
+        if let Ok(host) = start_host(&package, &state, LocalEngine::Ollama, Placement::Auto) {
+            let first = host
+                .wait_until(WAIT, |published| published.looks >= 1)
+                .expect("the supervision publishes within its bound");
             assert_eq!(first.state, ServerState::NotSetUp);
             drop(host);
         }
@@ -529,15 +562,16 @@ mod tests {
 
         // llama-server selected: it is started, and fails here, while Ollama is never
         // looked at.
-        let host =
-            LocalAiHost::for_package(&package, &state, LocalEngine::LlamaCpp, Placement::Auto)
-                .expect("the package carries llama-server");
-        let tried = host.wait_until(|published| {
-            matches!(
-                published.state,
-                ServerState::Restarting { .. } | ServerState::Failed
-            )
-        });
+        let host = start_host(&package, &state, LocalEngine::LlamaCpp, Placement::Auto)
+            .expect("the package carries llama-server");
+        let tried = host
+            .wait_until(WAIT, |published| {
+                matches!(
+                    published.state,
+                    ServerState::Restarting { .. } | ServerState::Failed
+                )
+            })
+            .expect("the supervision publishes within its bound");
         assert_ne!(tried.state, ServerState::Running);
         drop(host);
         assert!(
@@ -556,17 +590,14 @@ mod tests {
         package_with_failing_llama_server(&package);
         let state = root.path().join("state");
 
-        let llama =
-            LocalAiHost::for_package(&package, &state, LocalEngine::LlamaCpp, Placement::Auto)
-                .expect("the package carries llama-server");
+        let llama = start_host(&package, &state, LocalEngine::LlamaCpp, Placement::Auto)
+            .expect("the package carries llama-server");
         assert!(llama.set_placement(Placement::CpuOnly));
         assert!(llama.set_placement(Placement::Auto));
         drop(llama);
 
         // The Ollama host has no placement of the manager's to change.
-        if let Ok(ollama) =
-            LocalAiHost::for_package(&package, &state, LocalEngine::Ollama, Placement::CpuOnly)
-        {
+        if let Ok(ollama) = start_host(&package, &state, LocalEngine::Ollama, Placement::CpuOnly) {
             assert!(!ollama.set_placement(Placement::Auto));
         }
     }
@@ -576,7 +607,7 @@ mod tests {
         let root = Scratch::new("paced");
         let package = root.path().join("package");
         package_with_pins(&package);
-        let Ok(mut host) = LocalAiHost::for_package(
+        let Ok(mut host) = host(
             &package,
             &root.path().join("state"),
             LocalEngine::Ollama,
@@ -586,13 +617,19 @@ mod tests {
             assert!(Platform::current().is_none());
             return;
         };
-        let first = host.wait_until(|published| published.looks >= 1);
+        let first = host
+            .wait_until(WAIT, |published| published.looks >= 1)
+            .expect("the supervision publishes within its bound");
         assert_eq!(first.state, ServerState::NotSetUp);
         host.stop();
         host.stop();
-        let stopped = host.wait_until(|published| published.state == ServerState::Stopped);
+        let stopped = host
+            .wait_until(WAIT, |published| published.state == ServerState::Stopped)
+            .expect("the supervision publishes within its bound");
         host.resume();
-        let resumed = host.wait_until(|published| published.looks > stopped.looks);
+        let resumed = host
+            .wait_until(WAIT, |published| published.looks > stopped.looks)
+            .expect("the supervision publishes within its bound");
         assert_eq!(resumed.state, ServerState::NotSetUp);
         drop(host);
         assert!(

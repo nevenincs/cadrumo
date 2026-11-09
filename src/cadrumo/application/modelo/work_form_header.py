@@ -491,12 +491,12 @@ def _field_amount(field: ModeloFormField | None) -> Decimal | None:
     return Decimal(field.value)
 
 
-def _figure(field: ModeloFormField, language: OutputLanguage) -> str:
+def _figure(field: ModeloFormField, language: OutputLanguage, *, calculated: bool) -> str:
     """What another result box shows: its figure, else the words for where its value stands."""
     if field.origin is ModeloFormOrigin.NOT_APPLICABLE:
         return tr(_NOT_APPLICABLE_VALUE_LOCALE_KEY, locale=language.value)
     figure = field_value_text(field, language)
-    return figure if figure is not None else origin_words(field, language=language)
+    return figure if figure is not None else origin_words(field, language=language, calculated=calculated)
 
 
 def _other_boxes_help(selected: _SelectedResult, form: ModeloWorkForm, language: OutputLanguage) -> str | None:
@@ -508,7 +508,9 @@ def _other_boxes_help(selected: _SelectedResult, form: ModeloWorkForm, language:
     if not others:
         return None
     named = ", ".join(
-        f"[{field.box}] {_figure(field, language)}" if (field.box is not None and field.box) else field.label.text
+        f"[{field.box}] {_figure(field, language, calculated=form.calculation_revision_id is not None)}"
+        if (field.box is not None and field.box)
+        else field.label.text
         for field in others
     )
     return tr("workspace.modelo.header.result.other_boxes", boxes=named, locale=language.value)

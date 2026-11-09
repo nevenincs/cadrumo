@@ -84,6 +84,7 @@ from .edit_models import (
     ModeloEditPermittedSurfaceEntryV1,
 )
 from .work_form_answers import answer_fields
+from .work_form_carry_attestation import form_carry_attestations
 from .work_form_context import WorkFormContext
 from .work_form_counts import count_work_form_fields
 from .work_form_credits import withholding_credits
@@ -416,6 +417,7 @@ def _assemble_work_form(
         aeat_data=project_aeat_data(context, aeat_data_imported_at),
         filing=project_filing_summary(context),
         edit_closure=ModeloFormEditClosure.RECORDED_AS_FILED if context.filed else None,
+        carry_attestations=form_carry_attestations(context),
     )
 
 

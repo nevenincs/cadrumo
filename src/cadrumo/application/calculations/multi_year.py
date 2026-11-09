@@ -140,6 +140,10 @@ class PreviousFilingSourceResolver:
                     profile_path_values_reader=self._profile_read_ports.path_values,
                 ),
                 excluded_binding_ids=self._excluded_binding_ids,
+                # A carry the caller answers is not refused for being unknown
+                # in an earlier return that cannot show it: the answer is its value.
+                answered_binding_ids=frozenset(context.caller_binding_values)
+                | frozenset(context.caller_enum_binding_values),
             )
         except (PersistenceDegradationError, IvaCompensationHistoryPersistenceError) as exc:
             return storage_degradation_resolution(

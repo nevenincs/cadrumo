@@ -3055,6 +3055,17 @@ application:
         one_year: Casella {box} del model {modelo}, exercici {years}.
         onwards: Casella {box} del model {modelo}, exercicis {years} i posteriors.
         year_span: Casella {box} del model {modelo}, exercicis {years}.
+      carry_attestation:
+        renta_negative_general_bases_pending:
+          action: No tinc imports pendents d'exercicis anteriors
+          effect: 'Es registra com un 0 que has declarat: res pendent d''exercicis
+            anteriors.'
+          origin: Has declarat que no queda res pendent
+          statement: Indica que no et queda cap base liquidable general negativa dels
+            quatre exercicis anteriors pendent de compensar (art. 50.3 de la Llei
+            35/2006). Cada import es registra com un 0 que has declarat, diferent
+            d'una xifra escrita; si després una declaració anterior mostra un import,
+            la declaració assenyala la diferència.
       finding_action:
         add_activity_start: Afegeix al teu perfil la data en què va començar la teva
           activitat i torna a calcular.
