@@ -358,8 +358,17 @@ def build_amendment_action_ports(
     )
 
 
-def build_filing_action_ports(*, bucket_id: str, operation: PinnedAuthorityOperation) -> FilingActionPorts:
-    """Compose every persisted authority required by one Modelo filing."""
+def build_filing_action_ports(
+    *,
+    bucket_id: str,
+    operation: PinnedAuthorityOperation,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+) -> FilingActionPorts:
+    """Compose every persisted authority required by one Modelo filing.
+
+    ``mutation_writer`` admits each actual secure-object commit, so every
+    repository in the bundle shares the one fenced secure-object repository.
+    """
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ..adapters.persistence.profile.calculation_observations import (
         CalculationObservationRepository,
@@ -380,6 +389,8 @@ def build_filing_action_ports(*, bucket_id: str, operation: PinnedAuthorityOpera
 
     normalized_bucket_id = bucket_id.strip()
     objects = secure_object_repository_for_bucket(normalized_bucket_id)
+    if mutation_writer is not None:
+        objects = objects.with_mutation_writer(mutation_writer)
     calculation_binding = bind_calculation_revision_persistence_from_profile(
         bucket_id=normalized_bucket_id,
         objects=objects,
@@ -413,8 +424,8 @@ def build_filing_action_ports(*, bucket_id: str, operation: PinnedAuthorityOpera
         draft_review_ports=build_draft_review_ports(
             bucket_id=normalized_bucket_id, operation=operation, objects=objects
         ),
-        workflow_gate_ports=build_workflow_gate_ports(bucket_id=normalized_bucket_id),
-        retencion_observation_ports=build_retencion_observation_ports(bucket_id=normalized_bucket_id),
+        workflow_gate_ports=build_workflow_gate_ports(bucket_id=normalized_bucket_id, objects=objects),
+        retencion_observation_ports=build_retencion_observation_ports(bucket_id=normalized_bucket_id, objects=objects),
         credit_resolution_reader=CreditResolutionRepositoryAdapter(objects=objects),
     )
 
@@ -569,9 +580,16 @@ def build_ledger_membership_ports(
 
 
 def build_verification_repository_bundle(
-    bucket_id: str, *, operation: PinnedAuthorityOperation, objects: SecureObjectRepository | None = None
+    bucket_id: str,
+    *,
+    operation: PinnedAuthorityOperation,
+    objects: SecureObjectRepository | None = None,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> VerificationRepositoryBundle:
     """Bind one profile's repositories and rectificativa identity to the held authority.
+
+    ``mutation_writer`` admits each actual secure-object commit; it fences a
+    repository this call opens, so it cannot be combined with ``objects``.
 
     Parameter types: ``objects``
     (:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`).
@@ -595,10 +613,16 @@ def build_verification_repository_bundle(
     from ..application.aggregation.percepciones_observations_repository import PercepcionObservationPorts
     from ..application.modelo.verification_repository_ports import VerificationRepositoryBundle
     from ..application.workflow.persistence import WorkflowRunRepository
+    from ..core.errors.hierarchy import InternalInvariantError
     from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
 
     normalized_bucket_id = bucket_id.strip()
-    objects = objects if objects is not None else secure_object_repository_for_bucket(normalized_bucket_id)
+    if objects is not None and mutation_writer is not None:
+        raise InternalInvariantError("a verification writer fences only the repository it opens")
+    if objects is None:
+        objects = secure_object_repository_for_bucket(normalized_bucket_id)
+        if mutation_writer is not None:
+            objects = objects.with_mutation_writer(mutation_writer)
     calculation_binding = bind_calculation_revision_persistence_from_profile(
         bucket_id=normalized_bucket_id,
         objects=objects,

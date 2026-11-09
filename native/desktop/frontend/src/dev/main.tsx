@@ -182,6 +182,7 @@ declare global {
         client: typeof import("react-dom/client");
         gate: typeof import("../shell/sessionGate");
         run: typeof import("../shell/aeatSyncRun");
+        signIn: typeof import("../shell/signIn");
       }>;
     };
   }
@@ -226,6 +227,7 @@ window.__scenarioModules = {
     client: await import("react-dom/client"),
     gate: await import("../shell/sessionGate"),
     run: await import("../shell/aeatSyncRun"),
+    signIn: await import("../shell/signIn"),
   }),
   profileViews: async () => ({
     react: await import("react"),

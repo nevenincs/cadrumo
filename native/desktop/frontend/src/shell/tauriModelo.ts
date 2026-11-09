@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { ShellToken, TokenHeader } from "../ipc/contract";
 import type { HostCall } from "./hostCall";
+import { refuseIfEnded, sessionBound } from "./sessionGate";
 import type { LedgerOutcome, LedgerReview } from "./ledger";
 import type { ModeloPort, ModeloResult } from "./modelo";
 
@@ -12,15 +13,18 @@ export function tauriModelo(
   token: ShellToken | null,
   call: HostCall,
 ): ModeloPort {
+  // Only a signed-in session can ask these; files are forgotten whatever
+  // the session's state.
+  const bound = sessionBound(call);
   return {
     declarations: (outputLanguage) =>
-      call("modelo_declarations", { outputLanguage }),
+      bound("modelo_declarations", { outputLanguage }),
     search: (query, outputLanguage, limit) =>
-      call("modelo_declarations_search", { query, outputLanguage, limit }),
+      bound("modelo_declarations_search", { query, outputLanguage, limit }),
     form: (workUnitId, outputLanguage) =>
-      call("modelo_form", { workUnitId, outputLanguage }),
+      bound("modelo_form", { workUnitId, outputLanguage }),
     casillaHelp: (request) =>
-      call("modelo_casilla_help", {
+      bound("modelo_casilla_help", {
         workUnitId: request.workUnitId,
         casillaId: request.casillaId,
         registryRevisionId: request.registryRevisionId,
@@ -28,7 +32,7 @@ export function tauriModelo(
         outputLanguage: request.language,
       }),
     async submit(definition, payload, ...workUnit) {
-      const outcome = await call("modelo_submit", {
+      const outcome = await bound("modelo_submit", {
         definition,
         payload,
         ...(workUnit.length ? { workUnit: workUnit[0] } : {}),
@@ -42,6 +46,7 @@ export function tauriModelo(
     async edit(definition, body) {
       try {
         if (!token) throw new Error("Missing desktop launch token.");
+        refuseIfEnded();
         const command =
           definition === "modelo.edit.apply"
             ? "modelo_edit_apply"
@@ -54,19 +59,19 @@ export function tauriModelo(
         body.fill(0);
       }
     },
-    observe: (operation) => call("modelo_observe", { operation }),
+    observe: (operation) => bound("modelo_observe", { operation }),
     async review<Review>(operation: string) {
-      const review = await call("modelo_review", { operation });
+      const review = await bound("modelo_review", { operation });
       return review as LedgerReview<Review>;
     },
     answer: (operation, reviewDigest, decision) =>
-      call("modelo_answer", { operation, reviewDigest, decision }),
+      bound("modelo_answer", { operation, reviewDigest, decision }),
     cancel: (operation, revision) =>
-      call("modelo_cancel", { operation, revision }),
+      bound("modelo_cancel", { operation, revision }),
     pickFile: (purpose, filterLabel) =>
-      call("modelo_files_pick", { purpose, filterLabel }),
+      bound("modelo_files_pick", { purpose, filterLabel }),
     saveFile: (format, filterLabel, suggestedName) =>
-      call("modelo_files_save", {
+      bound("modelo_files_save", {
         format,
         filterLabel,
         suggestedName: suggestedName ?? null,
@@ -74,6 +79,6 @@ export function tauriModelo(
     forgetFiles: (tokens) =>
       call("modelo_files_forget", { tokens }).then(() => undefined),
     revealFile: (token) =>
-      call("modelo_files_reveal", { token }).then(() => undefined),
+      bound("modelo_files_reveal", { token }).then(() => undefined),
   };
 }

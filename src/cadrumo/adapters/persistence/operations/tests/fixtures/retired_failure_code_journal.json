@@ -1,0 +1,180 @@
+{
+  "snapshot": {
+    "schema_version": 9,
+    "identity": {
+      "operation_id": "19cdffcbaca4c9092ac8ff2b1934408a9115a00b89c11b7b3382b6d1cc1700b1",
+      "definition_id": "modelo.work.calculate",
+      "subject_ref": "5eedd6bb79b2ca57d4276a7dbc338a8d8dc755056e27c7c3d54a9183d2b172f7"
+    },
+    "definition_contract_digest": "2c6a57c6337a49229acd0cee5662e85ec48a8554cae1ff4dc0a84f9a61cb33d7",
+    "request_storage": "secure_reference",
+    "request_reference": "eb0856442ca419f212737354222f61ef4c113586e9274652268a457c88b39279",
+    "admission_provenance_reference": "7f6bf6cb6d6c2b057cebde9c2e1d78721bbe8965db4fb31e5069611b5f5a28cd",
+    "credential_free_request_json": null,
+    "manual_edit_values_purged": null,
+    "secret_requirement": null,
+    "financial_requirement": null,
+    "executor_entered_at": "2026-11-08T07:23:46.690120Z",
+    "revision": 6,
+    "lifecycle": "terminal",
+    "terminal_condition": "failed",
+    "effect": "unknown",
+    "phase_code": "modelo.work.calculate.ledger",
+    "started_at": "2026-11-08T07:23:46.625581Z",
+    "updated_at": "2026-11-08T07:23:47.294779Z",
+    "execution_deadline": "2026-11-08T08:23:46.690116Z",
+    "cleanup_deadline": null,
+    "cancellation_requested_at": null,
+    "cancellation_acknowledged_at": null,
+    "cancellation_deferred": false,
+    "event_cursor": 5,
+    "terminal_receipt": {
+      "identity": {
+        "operation_id": "19cdffcbaca4c9092ac8ff2b1934408a9115a00b89c11b7b3382b6d1cc1700b1",
+        "definition_id": "modelo.work.calculate",
+        "subject_ref": "5eedd6bb79b2ca57d4276a7dbc338a8d8dc755056e27c7c3d54a9183d2b172f7"
+      },
+      "revision": 6,
+      "condition": "failed",
+      "effect": "unknown",
+      "settled_at": "2026-11-08T07:23:47.294779Z",
+      "result_ref": null,
+      "refusal_ref": null,
+      "refusal_detail_ref": null,
+      "failure_error_code": "ERROR_MODELO_IVA_WALLET_RECONCILIATION_BLOCKED",
+      "diagnostic_ref": "sha256:2319a5ee9dc3c836b5ec23ec52e1fec49e43b52c7e4398696ad7e81a6b4bd8c8",
+      "error_detail_ref": "42a3eb064b1cc017f22a111d215937e2f6329adc933d0e50f1da065065802fdc"
+    },
+    "events": [
+      {
+        "identity": {
+          "operation_id": "19cdffcbaca4c9092ac8ff2b1934408a9115a00b89c11b7b3382b6d1cc1700b1",
+          "definition_id": "modelo.work.calculate",
+          "subject_ref": "5eedd6bb79b2ca57d4276a7dbc338a8d8dc755056e27c7c3d54a9183d2b172f7"
+        },
+        "revision": 6,
+        "sequence": 4,
+        "timestamp": "2026-11-08T07:23:47.294779Z",
+        "code": "operation.diagnostic",
+        "kind": "diagnostic",
+        "diagnostic_ref": "sha256:2319a5ee9dc3c836b5ec23ec52e1fec49e43b52c7e4398696ad7e81a6b4bd8c8"
+      },
+      {
+        "identity": {
+          "operation_id": "19cdffcbaca4c9092ac8ff2b1934408a9115a00b89c11b7b3382b6d1cc1700b1",
+          "definition_id": "modelo.work.calculate",
+          "subject_ref": "5eedd6bb79b2ca57d4276a7dbc338a8d8dc755056e27c7c3d54a9183d2b172f7"
+        },
+        "revision": 6,
+        "sequence": 5,
+        "timestamp": "2026-11-08T07:23:47.294779Z",
+        "code": "operation.terminal",
+        "kind": "terminal",
+        "receipt": {
+          "identity": {
+            "operation_id": "19cdffcbaca4c9092ac8ff2b1934408a9115a00b89c11b7b3382b6d1cc1700b1",
+            "definition_id": "modelo.work.calculate",
+            "subject_ref": "5eedd6bb79b2ca57d4276a7dbc338a8d8dc755056e27c7c3d54a9183d2b172f7"
+          },
+          "revision": 6,
+          "condition": "failed",
+          "effect": "unknown",
+          "settled_at": "2026-11-08T07:23:47.294779Z",
+          "result_ref": null,
+          "refusal_ref": null,
+          "refusal_detail_ref": null,
+          "failure_error_code": "ERROR_MODELO_IVA_WALLET_RECONCILIATION_BLOCKED",
+          "diagnostic_ref": "sha256:2319a5ee9dc3c836b5ec23ec52e1fec49e43b52c7e4398696ad7e81a6b4bd8c8",
+          "error_detail_ref": "42a3eb064b1cc017f22a111d215937e2f6329adc933d0e50f1da065065802fdc"
+        }
+      }
+    ],
+    "idempotency_claim": null,
+    "pending_interaction": null,
+    "consumed_interactions": []
+  },
+  "history": [
+    {
+      "identity": {
+        "operation_id": "19cdffcbaca4c9092ac8ff2b1934408a9115a00b89c11b7b3382b6d1cc1700b1",
+        "definition_id": "modelo.work.calculate",
+        "subject_ref": "5eedd6bb79b2ca57d4276a7dbc338a8d8dc755056e27c7c3d54a9183d2b172f7"
+      },
+      "revision": 1,
+      "sequence": 1,
+      "timestamp": "2026-11-08T07:23:46.698531Z",
+      "code": "operation.started",
+      "kind": "notice",
+      "notice_code": "operation.started",
+      "display_code": null
+    },
+    {
+      "identity": {
+        "operation_id": "19cdffcbaca4c9092ac8ff2b1934408a9115a00b89c11b7b3382b6d1cc1700b1",
+        "definition_id": "modelo.work.calculate",
+        "subject_ref": "5eedd6bb79b2ca57d4276a7dbc338a8d8dc755056e27c7c3d54a9183d2b172f7"
+      },
+      "revision": 2,
+      "sequence": 2,
+      "timestamp": "2026-11-08T07:23:46.712157Z",
+      "code": "modelo.work.calculate.ledger",
+      "kind": "phase",
+      "phase_code": "modelo.work.calculate.ledger"
+    },
+    {
+      "identity": {
+        "operation_id": "19cdffcbaca4c9092ac8ff2b1934408a9115a00b89c11b7b3382b6d1cc1700b1",
+        "definition_id": "modelo.work.calculate",
+        "subject_ref": "5eedd6bb79b2ca57d4276a7dbc338a8d8dc755056e27c7c3d54a9183d2b172f7"
+      },
+      "revision": 4,
+      "sequence": 3,
+      "timestamp": "2026-11-08T07:23:46.913794Z",
+      "code": "operation.effect",
+      "kind": "effect",
+      "effect": "unknown"
+    },
+    {
+      "identity": {
+        "operation_id": "19cdffcbaca4c9092ac8ff2b1934408a9115a00b89c11b7b3382b6d1cc1700b1",
+        "definition_id": "modelo.work.calculate",
+        "subject_ref": "5eedd6bb79b2ca57d4276a7dbc338a8d8dc755056e27c7c3d54a9183d2b172f7"
+      },
+      "revision": 6,
+      "sequence": 4,
+      "timestamp": "2026-11-08T07:23:47.294779Z",
+      "code": "operation.diagnostic",
+      "kind": "diagnostic",
+      "diagnostic_ref": "sha256:2319a5ee9dc3c836b5ec23ec52e1fec49e43b52c7e4398696ad7e81a6b4bd8c8"
+    },
+    {
+      "identity": {
+        "operation_id": "19cdffcbaca4c9092ac8ff2b1934408a9115a00b89c11b7b3382b6d1cc1700b1",
+        "definition_id": "modelo.work.calculate",
+        "subject_ref": "5eedd6bb79b2ca57d4276a7dbc338a8d8dc755056e27c7c3d54a9183d2b172f7"
+      },
+      "revision": 6,
+      "sequence": 5,
+      "timestamp": "2026-11-08T07:23:47.294779Z",
+      "code": "operation.terminal",
+      "kind": "terminal",
+      "receipt": {
+        "identity": {
+          "operation_id": "19cdffcbaca4c9092ac8ff2b1934408a9115a00b89c11b7b3382b6d1cc1700b1",
+          "definition_id": "modelo.work.calculate",
+          "subject_ref": "5eedd6bb79b2ca57d4276a7dbc338a8d8dc755056e27c7c3d54a9183d2b172f7"
+        },
+        "revision": 6,
+        "condition": "failed",
+        "effect": "unknown",
+        "settled_at": "2026-11-08T07:23:47.294779Z",
+        "result_ref": null,
+        "refusal_ref": null,
+        "refusal_detail_ref": null,
+        "failure_error_code": "ERROR_MODELO_IVA_WALLET_RECONCILIATION_BLOCKED",
+        "diagnostic_ref": "sha256:2319a5ee9dc3c836b5ec23ec52e1fec49e43b52c7e4398696ad7e81a6b4bd8c8",
+        "error_detail_ref": "42a3eb064b1cc017f22a111d215937e2f6329adc933d0e50f1da065065802fdc"
+      }
+    }
+  ]
+}
