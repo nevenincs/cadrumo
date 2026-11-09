@@ -5,6 +5,8 @@ tags:
 date: '2026-11-08'
 related:
   - "[[2026-09-21-iva-workflow-adr]]"
+  - '[[2026-09-24-ledger-invoice-lifecycle-research]]'
+  - '[[2026-09-21-iva-workflow-reference]]'
 supersedes:
   - '2026-09-21-iva-workflow-adr'
 modified: '2026-11-08'

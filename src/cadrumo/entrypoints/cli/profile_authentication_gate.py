@@ -195,6 +195,7 @@ PROFILE_CONNECTION_KEYS = frozenset(
         "app_ledger_invoice_list",
         "app_ledger_invoice_preview",
         "app_ledger_invoice_view",
+        "app_ledger_invoice_attach_document",
         "app_ledger_invoice_remove",
         "app_ledger_invoice_update",
         "app_ledger_import",

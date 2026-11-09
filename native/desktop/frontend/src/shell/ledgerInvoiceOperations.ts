@@ -416,6 +416,20 @@ export type InvoiceUpdateResult = {
   bucket_event_ids: string[];
 };
 
+/** Keeps one document as an invoice's source; the host fills its folder.
+ * The same document again changes nothing and says it was already there. */
+export type InvoiceDocumentAttachRequest = {
+  invoice_id: string;
+  source_path: FileToken;
+};
+
+export type InvoiceDocumentAttachResult = {
+  profile_id: string;
+  invoice_id: string;
+  attachment_id: string;
+  already_linked: boolean;
+};
+
 /** Removes an invoice that no movement is linked to. */
 export type InvoiceRemoveRequest = { invoice_id: string };
 

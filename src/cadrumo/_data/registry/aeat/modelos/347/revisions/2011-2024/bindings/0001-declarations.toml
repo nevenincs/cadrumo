@@ -208,9 +208,9 @@ required_text = ["operaciones con terceras personas"]
 
 # Type 2 declarado CODIGO PROVINCIA (positions 77-78 in both designs): "En el
 # caso de no residentes sin establecimiento permanente se consignara 99". The
-# row family carries 99 for a counterparty observed outside Spain and no content
-# for a Spanish one, whose provincia is that of its domicilio fiscal and is not
-# held as structured data; the resolver discloses that gap.
+# row family carries 99 for a counterparty observed outside Spain and, for a
+# Spanish one, the INE code of its domicilio fiscal's province the person stated
+# for the counterparty; until it is stated the resolver discloses that gap.
 
 [[revisions."2011-2024".bindings]]
 id = "modelo-347-contraparte-row-provincia-codigo"

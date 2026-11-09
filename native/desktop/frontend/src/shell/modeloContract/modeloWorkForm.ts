@@ -135,6 +135,8 @@ export type FormUnplacedReason =
   | "anchor_conflicts_with_section"
   | "pending_review";
 
+export type InvoiceId = string;
+
 export type ModeloExportRequestField =
   | "refund_election"
   | "payment_election"
@@ -519,6 +521,7 @@ export type ModeloFormIssueLine = {
   resolution_answer: ModeloFormResolutionAnswer | null;
   answer_lead_words: string | null;
   answer_lead_words_language: OutputLanguage | null;
+  invoice_id: InvoiceId | null;
 };
 
 /**
@@ -526,6 +529,18 @@ export type ModeloFormIssueLine = {
  */
 export type ModeloFormLayoutProvenance =
   "reviewed" | "generated" | "inspection_only";
+
+/**
+ * What in the ledger holds the declaration's calculation, in the form's
+ * language.
+ *
+ * `transaction_id` is the movement to open, `None` when the hold is about the
+ * whole period rather than one movement.
+ */
+export type ModeloFormLedgerHold = {
+  words: string;
+  transaction_id: string | null;
+};
 
 /**
  * The missing values no box holds, which the check names, counted as the
@@ -870,6 +885,7 @@ export type ModeloWorkbenchFormProjectionV1 = {
   profile_requirements: string[];
   source_requirements: ReconciliationSourceRequirementV1[];
   receipt: ModeloFormReceipt | null;
+  ledger_hold: ModeloFormLedgerHold | null;
 };
 
 /**
@@ -1293,54 +1309,4 @@ export type PublicModeloVerificationFinding = {
   message_facts: PublicFactEntryV1[];
   legal_refs: string[];
   source_refs: string[];
-};
-
-/**
- * Typed local-human workbench view of ModeloWorkForm.
- */
-export type PublicModeloWorkForm = {
-  modelo: string;
-  filing_year: number;
-  period: PublicPeriod;
-  registry_revision_id: string;
-  year_projection: ModeloFormYearProjection;
-  work_unit_id: string;
-  calculation_revision_id: string | null;
-  language: OutputLanguage;
-  layout_provenance: ModeloFormLayoutProvenance;
-  inspection_reason: ModeloFormInspectionReason | null;
-  seed_source: FormLayoutSeedSource | null;
-  pages: PublicModeloFormPage[];
-  outline: ModeloFormOutlineGroup[];
-  working_figures: PublicModeloFormField[];
-  unplaced: PublicModeloFormUnplacedField[];
-  answers: PublicModeloFormField[];
-  result_addresses: CasillaId[];
-  withholding_credits: ModeloFormCredit[];
-  withholding_credits_heading: string | null;
-  counts: ModeloFormCounts;
-  progress: ModeloWorkProgress;
-  operator_entries_known: boolean;
-  edit_admitted: boolean;
-  verification: VerificationCompletenessStatus | null;
-  issues: PublicModeloFormIssue[];
-  calculation_notes: ModeloFormCalculationNote[];
-  calculation_notes_held: boolean;
-  source_groups: ModeloFormSourceGroup[];
-  result: PublicModeloFormResult | null;
-  deadline: ModeloFormDeadline | null;
-  aeat_data: ModeloFormAeatData | null;
-  projectable: boolean;
-  asks_imputation_election: boolean;
-  compares_taxation: boolean;
-  compares_borrador: boolean;
-  offers_iva_wallet: boolean;
-  filing: ModeloFormFiling | null;
-  last_export: ModeloFormExport | null;
-  edit_closure: ModeloFormEditClosure | null;
-  carry_attestations: ModeloFormCarryAttestation[];
-  modelo_title: string | null;
-  modelo_name: string | null;
-  modelo_number: string | null;
-  period_words: string | null;
 };

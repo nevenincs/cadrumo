@@ -53,6 +53,17 @@ class M349FiledDeclarationReader(Protocol):
         ...
 
 
+class CounterpartyProvinciaReader(Protocol):
+    """Read the provincia a person stated for a Spanish counterparty."""
+
+    def provincia_of(self, tax_identifier: str) -> str | None:
+        """Return the counterparty's stated INE provincia code, or ``None`` when none is stated.
+
+        Raise :class:`InvoiceSourcePersistenceError` when the stated facts cannot be read.
+        """
+        ...
+
+
 @dataclass(frozen=True, slots=True)
 class InvoiceSourceResolverPorts:
     """Capabilities for one invoice source-mesh resolver.
@@ -60,13 +71,17 @@ class InvoiceSourceResolverPorts:
     ``m349_filed_declarations`` is absent where a composition never calculates a
     declaration, such as the overview's applicability read. A correction of an
     earlier Modelo 349 period then has no known declared base, and is refused.
+    ``counterparty_provincias`` is absent where no declarado record is built;
+    every Spanish declarado's provincia is then unstated.
     """
 
     catalogue_reader: InvoiceSourceCatalogueReader
     m349_filed_declarations: M349FiledDeclarationReader | None = None
+    counterparty_provincias: CounterpartyProvinciaReader | None = None
 
 
 __all__ = [
+    "CounterpartyProvinciaReader",
     "InvoiceSourceCatalogueReader",
     "InvoiceSourcePersistenceError",
     "InvoiceSourceResolverPorts",
