@@ -187,9 +187,12 @@ def profile_session_path(*, storage_root: Path, profile_id: UUID) -> Path:
 
 def profile_session_retirement_path(*, storage_root: Path, profile_id: UUID) -> Path:
     """Return the bounded local receipt for one interrupted session-key swap."""
-    return profile_session_path(storage_root=storage_root, profile_id=profile_id).with_name(
-        PROFILE_SESSION_RETIREMENT_FILENAME,
-    )
+    return _retirement_path_beside(profile_session_path(storage_root=storage_root, profile_id=profile_id))
+
+
+def _retirement_path_beside(receipt_path: Path) -> Path:
+    """Return the retirement journal beside an already validated receipt path."""
+    return receipt_path.with_name(PROFILE_SESSION_RETIREMENT_FILENAME)
 
 
 def profile_session_lock_path(receipt_path: Path) -> Path:
@@ -280,11 +283,26 @@ def write_acceleration_receipt(
     predecessor: bytes | None,
 ) -> bytes:
     """CAS-publish a canonical receipt through the custody local-record owner."""
+    return _publish_receipt(
+        profile_session_path(storage_root=storage_root, profile_id=profile_id),
+        profile_id=profile_id,
+        record=record,
+        predecessor=predecessor,
+    )
+
+
+def _publish_receipt(
+    path: Path,
+    *,
+    profile_id: UUID,
+    record: acceleration_receipt_crypto.PersistedProfileSession,
+    predecessor: bytes | None,
+) -> bytes:
+    """CAS-publish ``record`` at ``path``, the profile's already validated receipt path."""
     if record.profile_id != profile_id:
         raise StorageValidationError(
             f"session record profile {record.profile_id!s} does not match target profile {profile_id!s}",
         )
-    path = profile_session_path(storage_root=storage_root, profile_id=profile_id)
     payload = receipt_bytes(record)
     ensure_profile_session_directory(path)
     compare_and_replace_profile_custody_local_record(
@@ -758,11 +776,12 @@ def refresh_profile_session_with_key(
     if deadline <= now:
         return False
     binding = sign_in.binding
+    # The one validated receipt path names the lock, the retirement journal and the write.
     path = profile_session_path(storage_root=sign_in.root, profile_id=binding.profile_id)
     with profile_custody_root_lock(sign_in.root), profile_custody_local_lock(profile_session_lock_path(path)):
         if (
             read_optional_profile_custody_local_record(
-                profile_session_retirement_path(storage_root=sign_in.root, profile_id=binding.profile_id),
+                _retirement_path_beside(path),
                 maximum_bytes=_PROFILE_SESSION_RETIREMENT_MAX_BYTES,
             )
             is not None
@@ -797,12 +816,7 @@ def refresh_profile_session_with_key(
                 idle_deadline=max(record.idle_deadline, deadline),
                 absolute_deadline=max(record.absolute_deadline, deadline),
             )
-            write_acceleration_receipt(
-                storage_root=sign_in.root,
-                profile_id=binding.profile_id,
-                record=successor,
-                predecessor=payload,
-            )
+            _publish_receipt(path, profile_id=binding.profile_id, record=successor, predecessor=payload)
             return True
         finally:
             zeroise(material)

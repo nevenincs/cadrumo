@@ -2,20 +2,24 @@
 
 from __future__ import annotations
 
+import secrets
 import sys
 import time
+from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
-from typing import NoReturn
+from typing import Any, NoReturn
 from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.custody import acceleration_keychain
+from cadrumo.adapters.persistence.storage.bucket import keystore_paths
+from cadrumo.adapters.persistence.storage.custody import acceleration_keychain, filesystem_primitives
 from cadrumo.adapters.persistence.storage.custody import acceleration_receipt as receipt
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyRecordError
+from cadrumo.adapters.persistence.storage.custody.filesystem_primitives import windows_component_paths
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
 from cadrumo.adapters.persistence.storage.custody.tests import receipt_binding_probe as binding_probe
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
@@ -192,6 +196,8 @@ def _publication_failure(login: _Login, bound: _Bound) -> None:
         login.path.rmdir()
 
 
+_PERSISTING_MODES = frozenset({"success", "reseal_checks"})
+
 _EARLY_MODES: dict[str, Callable[[_Login, _Bound], None]] = {
     "retired_before_mint": _retired_before_mint,
     "lease_gone": _lease_gone,
@@ -208,7 +214,7 @@ def _mint_receipt(login: _Login, bound: _Bound, mode: str) -> _Minted | None:
     assert acknowledged.idle_deadline == bound.outcome.idle_deadline
     assert acknowledged.absolute_deadline == bound.outcome.absolute_deadline
     assert not acknowledged.resumed
-    assert acknowledged.session_persisted == (mode == "success")
+    assert acknowledged.session_persisted == (mode in _PERSISTING_MODES)
     assert custody.require(lease.session_id) == lease
     if mode == "unavailable":
         assert not path.exists() and store.writes == 0
@@ -302,6 +308,77 @@ def _logout_fences_resealing(
     login.store.available = True
 
 
+def _reseal_checks(login: _Login, bound: _Bound) -> None:
+    """Each fence of the reseal refuses, and one reseal validates its path and verifies its root once."""
+    lease, path = bound.lease, login.path
+    key = login.human._sealing_keys[lease.session_id]
+    later = lease.expires_at + timedelta(hours=1)
+
+    def reseal(deadline: datetime, receipt_key: bytearray = key) -> bool:
+        return receipt.refresh_profile_session_with_key(
+            sign_in=bound.sign_in,
+            receipt_key=receipt_key,
+            login_id=lease.originating_login_id or "",
+            now=now(),
+            deadline=deadline,
+        )
+
+    original = path.read_bytes()
+    journal = receipt.profile_session_retirement_path(
+        storage_root=login.root, profile_id=login.identity.binding.profile_id
+    )
+    # An interrupted key swap owns the receipt until it is recovered.
+    journal.write_bytes(b"pending key swap")
+    try:
+        assert not reseal(later)
+    finally:
+        journal.unlink()
+    # Another key cannot open the receipt it would reseal.
+    assert not reseal(later, bytearray(secrets.token_bytes(len(key))))
+    # A deadline the receipt already covers writes nothing.
+    assert reseal(lease.expires_at)
+    assert path.read_bytes() == original
+    # Without a receipt there is nothing to reseal, and none is minted.
+    path.unlink()
+    try:
+        assert not reseal(later)
+        assert not path.exists()
+    finally:
+        path.write_bytes(original)
+
+    validations: list[str] = []
+    opened: Counter[str] = Counter()
+    validate = keystore_paths.validate_keystore_separation
+    open_component = filesystem_primitives.open_verified_component
+
+    def counting_validation(root: Path, bucket_id: str, **kwargs: Any) -> None:
+        validations.append(bucket_id)
+        validate(root, bucket_id, **kwargs)
+
+    def counting_open(current: str, access: int, **kwargs: Any) -> int:
+        opened[current] += 1
+        return open_component(current, access, **kwargs)
+
+    prior = receipt.inspect_profile_session(storage_root=login.root, profile_id=login.identity.binding.profile_id)
+    assert prior is not None
+    assert min(prior.idle_deadline, prior.absolute_deadline) < later
+    with pytest.MonkeyPatch.context() as counting:
+        counting.setattr(keystore_paths, "validate_keystore_separation", counting_validation)
+        counting.setattr(filesystem_primitives, "open_verified_component", counting_open)
+        assert reseal(later)
+
+    # The lock, the retirement journal and the write share one validated path,
+    # and the storage root is verified once for the root lock it provisions.
+    assert len(validations) == 1
+    assert {component: opened[component] for component in windows_component_paths(login.root)} == dict.fromkeys(
+        windows_component_paths(login.root), 1
+    )
+    updated = receipt.inspect_profile_session(storage_root=login.root, profile_id=login.identity.binding.profile_id)
+    assert updated is not None
+    assert updated.idle_deadline == max(prior.idle_deadline, later)
+    assert updated.absolute_deadline == max(prior.absolute_deadline, later)
+
+
 def _run_mode(login: _Login, patcher: pytest.MonkeyPatch, mode: str) -> None:
     if mode == "throttled":
         _refuse_throttled(login, patcher)
@@ -318,6 +395,9 @@ def _run_mode(login: _Login, patcher: pytest.MonkeyPatch, mode: str) -> None:
         return
     minted = _mint_receipt(login, bound, mode)
     if minted is None:
+        return
+    if mode == "reseal_checks":
+        _reseal_checks(login, bound)
         return
     successor, renewed, keys = _resume_and_renew(login, bound, minted)
     _keep_authority_after_failed_reseal(login, renewed)
@@ -357,6 +437,7 @@ def _exercise(tmp_path: Path, mode: str) -> None:
         "lease_gone",
         "advanced_before_mint",
         "throttled",
+        "reseal_checks",
     ],
 )
 def test_worker_human_login_receipt_lifecycle(tmp_path: Path, mode: str) -> None:

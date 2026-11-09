@@ -102,6 +102,8 @@ _VALUES = {
     ),
     "reason": "The payer states the lower amount in its own copy.",
     "parties": "B00015016, B00015057",
+    "invoice": "F-2025/0042",
+    "counterparty": "Asesoría Ejemplo SL",
 }
 _RAW = re.compile(
     r"[0-9a-f]{12,}"  # a hash or the tail of one

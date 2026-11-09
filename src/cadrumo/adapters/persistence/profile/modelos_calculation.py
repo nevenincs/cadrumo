@@ -40,6 +40,8 @@ Core types:
 from __future__ import annotations
 
 from collections import OrderedDict
+from dataclasses import dataclass
+from datetime import date
 from threading import Lock
 from typing import TYPE_CHECKING
 
@@ -53,8 +55,10 @@ from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ....core.modelo import Modelo
 from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
+from ....core.time.clock import today_madrid
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.form_codes import form_for_role
+from ....domain.calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_repository import CalculationRevisionPersistenceError
@@ -121,6 +125,44 @@ class _OverrideFreePayloadDigests:
 _OVERRIDE_FREE_PAYLOADS = _OverrideFreePayloadDigests()
 
 
+@dataclass(frozen=True, slots=True, eq=False)
+class _ValidationInputs:
+    """Everything one catalogue validation reads, compared by identity or value.
+
+    The pinned operation and the governed-fact scope are compared by identity,
+    so a validation is never reused under another authority reader or
+    governed-fact source; the parent authorities by value, as read for this
+    call. The result is held by one repository, which composition builds for
+    each operation's ports.
+    """
+
+    revision_id: str
+    payload_digest: str
+    operation: PinnedAuthorityOperation
+    governed_facts: GovernedFactSource | None
+    validated_on: date
+    aggregate_context: CalculationRevisionAggregateContext
+
+    def matches(self, other: _ValidationInputs) -> bool:
+        """Report whether ``other`` would validate exactly as these inputs did."""
+        return (
+            self.revision_id == other.revision_id
+            and self.payload_digest == other.payload_digest
+            and self.operation is other.operation
+            and self.governed_facts is other.governed_facts
+            and self.validated_on == other.validated_on
+            and self.aggregate_context == other.aggregate_context
+        )
+
+
+@dataclass(frozen=True, slots=True, eq=False)
+class _ValidatedCatalogue:
+    """The immutable catalogue one repository last validated, with the inputs it was validated from."""
+
+    inputs: _ValidationInputs
+    catalogue: CalculationRevisionCatalogue
+
+
 class CalculationRevisionCatalogueRepository:
     """Repository over encrypted SQL-backed calculation-revision catalogue storage.
 
@@ -150,6 +192,7 @@ class CalculationRevisionCatalogueRepository:
         """Bind the repository to a bucket id and/or an explicit secure-object store."""
         self._bucket_id = bucket_id.strip() if bucket_id is not None else None
         self._m303_rectificativa_taxpayer_tax_id = m303_rectificativa_taxpayer_tax_id
+        self._last_validated: _ValidatedCatalogue | None = None
         if objects is not None:
             self._objects = objects
         else:
@@ -223,13 +266,15 @@ class CalculationRevisionCatalogueRepository:
         return catalogue
 
     def _load_revisioned(self, *, operation: PinnedAuthorityOperation) -> tuple[CalculationRevisionCatalogue, str]:
-        """Validate one fresh record with one captured parent catalogue for either read door."""
-        from ..storage.envelope.contract import Envelope
+        """Validate one fresh record with one captured parent catalogue for either read door.
+
+        The row is always read and its authorities always captured afresh. Only
+        when every input of the validation is the one this repository last
+        validated -- the same row revision and bytes, the same pinned operation
+        and governed facts, the same day and equal parent authorities -- is that
+        result returned instead of decoding the same bytes again.
+        """
         from ..storage.errors import ClassificationError, EnvelopeVersionError
-        from ..storage.schema_lineage import (
-            inner_envelope_classification_is_expected,
-            inner_envelope_version_is_current,
-        )
 
         _catalogue_phase("load_store_begin")
         try:
@@ -252,11 +297,42 @@ class CalculationRevisionCatalogueRepository:
             return CalculationRevisionCatalogue(), ABSENT_SECURE_OBJECT_REVISION_ID
         _catalogue_phase("load_validation_begin")
         aggregate_context = self._calculation_revision_aggregate_context(operation=operation)
+        inputs = _ValidationInputs(
+            revision_id=record.revision_id,
+            payload_digest=sha256_hex(record.payload),
+            operation=operation,
+            governed_facts=governed_facts_in_scope(),
+            validated_on=today_madrid(),
+            aggregate_context=aggregate_context,
+        )
+        held = self._last_validated
+        if held is not None and held.inputs.matches(inputs):
+            catalogue = held.catalogue
+        else:
+            catalogue = self._validated_catalogue(record.payload, aggregate_context=aggregate_context)
+            self._last_validated = _ValidatedCatalogue(inputs=inputs, catalogue=catalogue)
+        _catalogue_phase("load_validation_end")
+        _OVERRIDE_FREE_PAYLOADS.remember(record.payload, catalogue)
+        return catalogue, record.revision_id
+
+    def _validated_catalogue(
+        self,
+        payload: bytes,
+        *,
+        aggregate_context: CalculationRevisionAggregateContext,
+    ) -> CalculationRevisionCatalogue:
+        """Decode and validate one stored payload against the authorities it was read with."""
+        from ..storage.envelope.contract import Envelope
+        from ..storage.schema_lineage import (
+            inner_envelope_classification_is_expected,
+            inner_envelope_version_is_current,
+        )
+
         envelope: Envelope[CalculationRevisionCatalogue] | None = None
         validation_failed = False
         try:
             envelope = Envelope[CalculationRevisionCatalogue].model_validate_json(
-                record.payload,
+                payload,
                 context={
                     CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY: aggregate_context,
                     "secure_calculation_revision": True,
@@ -315,9 +391,7 @@ class CalculationRevisionCatalogueRepository:
         for revision in envelope.payload.values():
             assert_revision_snapshot_evidence_coverage(revision)
         self._require_parent_coordinates(envelope.payload, work_units=aggregate_context.work_units)
-        _catalogue_phase("load_validation_end")
-        _OVERRIDE_FREE_PAYLOADS.remember(record.payload, envelope.payload)
-        return envelope.payload, record.revision_id
+        return envelope.payload
 
     def stored_catalogue_is_known_override_free(self) -> bool:
         """Report whether the stored row's bytes are already known to hold no relation override.
