@@ -16,6 +16,7 @@ from types import MappingProxyType
 from typing import Final
 
 from ...core.aggregation import BindingSourceKind
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import lookup_translation, output_language, tr
 from ...core.period import Period, PeriodKind
@@ -252,7 +253,7 @@ STATED_ABSENT_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = Mappi
 )
 """What a carry the filer stated holds nothing says beside it, by the family of the statement."""
 if frozenset(STATED_ABSENT_LOCALE_KEYS) != frozenset(AbsenceAttestationFamily):
-    raise RuntimeError("every statement family the registry can declare needs its words")
+    raise InternalInvariantError("every statement family the registry can declare needs its words")
 
 
 def _special_origin_words(
