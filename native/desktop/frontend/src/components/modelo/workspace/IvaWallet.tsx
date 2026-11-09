@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { YearEditor } from "@/components/editors/YearEditor";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -23,9 +23,13 @@ import { useIvaWalletBalance } from "./ivaWalletRead";
 export function IvaWallet({
   period,
   locale,
+  openingBalanceAsked = 0,
 }: {
   period: LedgerPeriod;
   locale: string;
+  /** Counts the times a refusal's opening-balance door was taken; each rise
+   * opens the balance entry. Zero while none was. */
+  openingBalanceAsked?: number;
 }) {
   const scope = useModeloWriteScope();
   const t = useStrings();
@@ -39,7 +43,11 @@ export function IvaWallet({
   );
   return (
     <ModeloWriteScope {...scope} target={walletWriteKey} owner={owner}>
-      <WalletBalance period={period} locale={locale} />
+      <WalletBalance
+        period={period}
+        locale={locale}
+        openingBalanceAsked={openingBalanceAsked}
+      />
     </ModeloWriteScope>
   );
 }
@@ -47,9 +55,11 @@ export function IvaWallet({
 function WalletBalance({
   period,
   locale,
+  openingBalanceAsked,
 }: {
   period: LedgerPeriod;
   locale: string;
+  openingBalanceAsked: number;
 }) {
   const t = useStrings();
   const { port, holds, hold, owner } = useModeloOperation();
@@ -59,6 +69,11 @@ function WalletBalance({
   const year = parsed.kind === "value" ? parsed.value : null;
   const { read, reload } = useIvaWalletBalance(port, holds, year);
   const [managing, setManaging] = useState(false);
+  // A refusal's door asked for the opening-balance entry. It opens unless an
+  // operation of this declaration is running, which is what holds the button.
+  useEffect(() => {
+    if (openingBalanceAsked > 0 && !hold) setManaging(true);
+  }, [openingBalanceAsked, hold]);
   const amount = (value: string) =>
     formatAmount(locale, value, { currency: "EUR" });
   const values =

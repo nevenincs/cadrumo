@@ -64,7 +64,11 @@ from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.result_casillas import derive_result_disposition, result_disposition_casilla_ids
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.deadlines.models import ChargeAccount, TaxpayerProfile
-from ...domain.iva.refund_eligibility import is_last_filing_period_of_year, refund_disposition_available
+from ...domain.iva.refund_eligibility import (
+    RedemeEnrolmentState,
+    redeme_enrolment_state,
+    refund_eligibility_for_period,
+)
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
 from .action_errors import (
@@ -495,25 +499,30 @@ def _apply_modelo_303_refund_election(
                 "iva_profile_present": False,
             },
         )
-    redeme = iva_profile.redeme_enrolled
+    redeme = redeme_enrolment_state(iva_profile.redeme_enrolled)
+    eligibility = refund_eligibility_for_period(period=period, redeme=redeme)
     # Standing REDEME election: resolve eligible negative periods to devolución,
     # independent of the per-filing flag.
-    if redeme and refund_disposition_available(redeme_enrolled=redeme, period=period):
+    if redeme is RedemeEnrolmentState.ENROLLED and eligibility.refund_allowed:
         return ResultDisposition.DEVOLUCION
 
     if refund_election is not RefundElection.DEVOLVER:
         return declaration_type
 
-    # Per-filing opt-in for a non-REDEME taxpayer: only lawful in the last filing
-    # period of the year. Refuse an out-of-window election instead of silently
-    # discarding the refund request or silently filing an unlawful refund.
-    if not is_last_filing_period_of_year(period):
+    # Per-filing opt-in for a non-REDEME taxpayer: only lawful where the shared
+    # resolver admits the refund, which outside the year's last filing period
+    # needs a stated REDEME inscription. Refuse anything else instead of
+    # silently discarding the refund request or silently filing an unlawful
+    # refund, and never read an unstated inscription as a no.
+    if not eligibility.refund_allowed:
         raise ModeloRefundElectionNotEligibleError(
             translated_message="application.modelo.errors.refund_election_not_eligible",
             context={
                 "modelo": Modelo("303").value,
                 "filing_year": str(period.filing_year),
                 "period": period.registry_token,
+                "refund_eligibility": eligibility.outcome.value,
+                "refund_eligibility_basis": eligibility.basis.value,
             },
         )
     return ResultDisposition.DEVOLUCION

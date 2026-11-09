@@ -75,6 +75,7 @@ from ...domain.calculations.registry.schema_form_layouts import (
     FormLayoutReviewState,
     FormPlacementKind,
 )
+from ...domain.iva.refund_eligibility import RedemeEnrolmentState
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from .calculation_note_gate import NO_SOURCE_DISAGREEMENT_RESOLUTIONS, SourceDisagreementResolutions
@@ -141,6 +142,7 @@ def build_modelo_work_form(
     producer_values: Mapping[FilingProducerKey, ModeloFormScalar] | None = None,
     profile_binding_values: Mapping[BindingId, ModeloFormScalar] | None = None,
     resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
+    redeme: RedemeEnrolmentState = RedemeEnrolmentState.UNSTATED,
 ) -> ModeloWorkForm:
     """Join one work review with its revision's declared layout into a classified editor form.
 
@@ -175,6 +177,11 @@ def build_modelo_work_form(
     ``resolutions`` are the source disagreements the operator accepted. The
     form holds filing on a disagreement exactly as the gate does, so one a
     resolution covers is no longer held.
+
+    ``redeme`` is the filer's stated inscription in the Registro de devolución
+    mensual. The settlement result needs it to say whether a negative IVA
+    result may be elected as a refund in this period or only carried forward;
+    its default leaves the answer unstated rather than assuming one.
 
     ``known_truths`` are the yes-or-no facts already known for the filer, by
     boolean binding. They decide which guarded inputs the calculation is
@@ -222,6 +229,7 @@ def build_modelo_work_form(
         element_names=element_names,
         known_truths=known_truths,
         resolutions=resolutions,
+        redeme=redeme,
     )
     held = calculation_diagnostics is not None
     inspection = _inspection_only_for_unusable_layout(

@@ -13,6 +13,7 @@ from uuid import uuid4
 import pytest
 from pydantic import JsonValue
 
+from .. import auth_attempt as auth_attempt_module
 from ..auth_attempt import AuthAttempt
 from ..auth_protocol import AuthEvent, AuthProtocol, snapshot
 
@@ -110,7 +111,7 @@ def _release_and_join(release: Event, worker: Thread, submitter: Thread) -> None
 
 def test_code_submission_uses_same_pipe_once_and_does_not_expose_the_code() -> None:
     attempt, stream, queue, helper_id = _awaiting_code_exchange(url="https://example.org/login?state=opaque")
-    outcomes: list[tuple[str, str | None]] = []
+    outcomes: list[tuple[str, str | None, str | None]] = []
     worker = Thread(target=lambda: outcomes.append(attempt._exchange(stream, queue)))
     worker.start()
     try:
@@ -130,7 +131,7 @@ def test_code_submission_uses_same_pipe_once_and_does_not_expose_the_code() -> N
         assert json.loads(lines[1]) == {"version": 1, "action": "auth_code", "code": code.decode()}
         queue.put(_frame(helper_id, "succeeded"))
         worker.join(3)
-        assert outcomes == [("succeeded", None)]
+        assert outcomes == [("succeeded", None, None)]
     finally:
         attempt.cancel()
         worker.join(3)
@@ -225,7 +226,7 @@ def test_terminal_event_withdraws_code_state_before_a_waiting_submission() -> No
     attempt, stream, queue, helper_id = _awaiting_code_exchange(
         url="https://example.org/login", protocol=PausedProtocol("example")
     )
-    outcomes: list[tuple[str, str | None]] = []
+    outcomes: list[tuple[str, str | None, str | None]] = []
     worker = Thread(target=lambda: outcomes.append(attempt._exchange(stream, queue)))
     worker.start()
     submissions: list[str] = []
@@ -238,7 +239,7 @@ def test_terminal_event_withdraws_code_state_before_a_waiting_submission() -> No
         assert submitting.wait(3)
     finally:
         _release_and_join(release, worker, submitter)
-    assert outcomes == [("failed", None)]
+    assert outcomes == [("failed", None, None)]
     assert submissions == ["refused"]
     assert len(stream.getvalue().splitlines()) == 1  # only the start command
 
@@ -261,12 +262,14 @@ def test_bad_stream_withdraws_code_state_before_a_waiting_submission(raw: bytes 
         url="https://example.org/login", protocol=PausedProtocol("example")
     )
     failures: list[str] = []
+    failure_causes: list[str | None] = []
 
     def exchange() -> None:
         try:
             attempt._exchange(stream, queue)
         except ValueError as error:
             failures.append(str(error))
+            failure_causes.append(getattr(error, "cause", None))
 
     worker = Thread(target=exchange)
     worker.start()
@@ -281,6 +284,46 @@ def test_bad_stream_withdraws_code_state_before_a_waiting_submission(raw: bytes 
     finally:
         _release_and_join(release, worker, submitter)
     assert failures == ["invalid_auth_event"]
+    assert failure_causes == ["helper_ended_without_result" if raw is None else "helper_output_invalid"]
     assert submissions == ["refused"]
     assert attempt._cancel.is_set()
     assert len(stream.getvalue().splitlines()) == 1
+
+
+def test_a_helper_failure_keeps_the_helper_cause_through_the_exchange() -> None:
+    attempt, stream, queue, helper_id = _awaiting_code_exchange(url="https://example.org/login")
+    queue.put(_frame(helper_id, "failed", reason="provider_error", cause="cli_reported_error"))
+    assert attempt._exchange(stream, queue) == ("failed", "provider_error", "cli_reported_error")
+
+
+def test_an_exchange_past_its_deadline_is_a_timed_out_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+    valid = Event()
+    valid.set()
+    attempt = _exchange_attempt(valid)
+    monkeypatch.setattr(auth_attempt_module, "EXCHANGE_SECONDS", -1)
+    assert attempt._exchange(io.BytesIO(), Queue()) == ("failed", "timeout", "timed_out")
+
+
+def test_a_failed_preparation_is_an_agent_stop_failure(tmp_path: Path) -> None:
+    def prepare() -> None:
+        raise RuntimeError("PRIVATE-DETAIL")
+
+    attempt = AuthAttempt(
+        provider="example",
+        lane="example_cli",
+        executable=tmp_path / "absent.exe",
+        arguments=(),
+        directory=tmp_path,
+        environment={},
+        valid=lambda: True,
+        prepare=prepare,
+    )
+    attempt.close()
+    assert attempt.observe() == {
+        "attempt_id": attempt.id,
+        "provider": "example_cli",
+        "event": "failed",
+        "reason": "cleanup_failed",
+        "cause": "agent_stop_failed",
+        "next_step": "retry",
+    }

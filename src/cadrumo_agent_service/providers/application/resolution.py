@@ -41,12 +41,14 @@ from ..domain.record import (
 )
 from .contracts import (
     CliState,
+    CliStateCause,
     ProviderCredentialSource,
     ProviderReadiness,
     ProviderSettingsMode,
     ProviderStatusEntry,
     ProviderStatusReason,
 )
+from .next_steps import next_step_for
 from .ports import (
     ProviderCatalogSource,
     ProviderCatalogUnavailableError,
@@ -163,6 +165,7 @@ def status_entry(
     read: ProviderRecordRead,
     *,
     cli_state: CliState | None,
+    cli_state_cause: CliStateCause | None = None,
 ) -> ProviderStatusEntry:
     """Project one lane's read into masked status."""
     mode = lane_mode(entry, read)
@@ -189,6 +192,8 @@ def status_entry(
         base_url=credential.base_url if credential is not None else None,
         default_base_url=entry.default_base_url,
         cli_state=cli_state,
+        cli_state_cause=cli_state_cause,
+        next_step=next_step_for(cli_state_cause.value if cli_state_cause is not None else None),
         revision=read_revision(read),
     )
 

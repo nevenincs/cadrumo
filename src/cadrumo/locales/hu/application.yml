@@ -2834,6 +2834,8 @@ application:
         Modelo 303 (%{blocking_period} %{blocking_filing_year}) felhasználta ezt a
         kezdő kompenzációs alapot. Módosítása egy benyújtottként rögzített bevallást
         változtatna meg.'
+      next_step:
+        open_opening_balance: 'Rögzítsd a nyitó IVA-egyenleget: %{modelo}, %{period}'
       override_fresh_wallet_blocked: 'Felülbírálás elutasítva: az AEAT pénztárának
         aktuális leolvasása már feloldja a Modelo 303-at %{period} %{filing_year}.
         A friss AEAT-bizonyíték a mérvadó, és a felülbírálás nem írhatja felül.'

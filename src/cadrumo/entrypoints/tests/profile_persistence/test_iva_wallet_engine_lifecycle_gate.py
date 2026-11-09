@@ -29,6 +29,8 @@ from cadrumo.application.modelo.iva_wallet_gate import (
 )
 from cadrumo.application.modelo.lifecycle_clock_gate import ModeloLifecycleClockPrecedesError
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
+from cadrumo.application.operations.next_step import OperationOpenIvaWalletOpeningBalanceStepV1
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
@@ -186,6 +188,14 @@ def test_modelo_303_lifecycle_gate_requires_persisted_wallet_authority(
             _require_persisted_iva_compensation_decision_matches_revision(work_unit, revision)
 
         assert exc_info.value.translated_message == "application.modelo.errors.iva_wallet_not_seeded"
+        # The refusal names the way out: the wallet's opening balance for this
+        # very declaration. Without it the filer has to find that entry alone.
+        step = exc_info.value.operation_next_step(OutputLanguage.ES)
+        assert isinstance(step, OperationOpenIvaWalletOpeningBalanceStepV1)
+        assert step.modelo == str(work_unit.modelo)
+        assert step.filing_year == work_unit.filing_year
+        assert step.period_code == str(work_unit.period.code)
+        assert step.words.strip() != ""
 
 
 def test_modelo_303_lifecycle_gate_rejects_wallet_authority_amount_drift(

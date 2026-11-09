@@ -47,6 +47,8 @@ from typing import TYPE_CHECKING, Final, NamedTuple, Never, override
 
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import InternalInvariantError
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import tr
 from ...core.identity.tax_id import same_tax_identifier
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period
@@ -75,11 +77,17 @@ from ..calculations.observations_repository import (
     CalculationObservationRepositoryProtocol,
     IvaWalletDecisionRepositoryProtocol,
 )
+from ..operations.next_step import (
+    OperationNextStepErrorMixin,
+    OperationNextStepWording,
+    OperationOpenIvaWalletOpeningBalanceStepV1,
+)
 from ..user_profile.projections import profile_path_values_for_bucket
 from .action_errors import ModeloPreconditionErrorMixin
 from .iva_wallet_prior_period import prior_period_carry_evidence
 from .iva_wallet_values import revision_iva_compensation_amount, taxpayer_nif_from_path_values
 from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure
+from .work_form_wording import modelo_number, period_words
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -120,7 +128,11 @@ class _PriorCompensationInputs(NamedTuple):
     backend_casilla_value: Decimal | None
 
 
-class ModeloIvaWalletReconciliationBlockedError(ModeloPreconditionErrorMixin, ModeloError):
+class ModeloIvaWalletReconciliationBlockedError(
+    OperationNextStepErrorMixin,
+    ModeloPreconditionErrorMixin,
+    ModeloError,
+):
     """Raised when Modelo 303 calculation is blocked by IVA wallet reconciliation."""
 
     def __init__(
@@ -129,17 +141,21 @@ class ModeloIvaWalletReconciliationBlockedError(ModeloPreconditionErrorMixin, Mo
         translated_message: str,
         precondition_failure: ModeloPreconditionFailure,
         context: Mapping[str, object] | None = None,
+        next_step: OperationNextStepWording | None = None,
     ) -> None:
         """Carry the reconciliation failure that blocked the modelo 303 calculation.
 
         ``translated_message`` is the user-facing refusal text, ``precondition_failure``
-        identifies the specific IVA wallet mismatch that triggered the block, and
-        ``context`` carries any additional diagnostic fields for the caller.
+        identifies the specific IVA wallet mismatch that triggered the block,
+        ``context`` carries any additional diagnostic fields for the caller, and
+        ``next_step`` is the door the refusal offers for putting it right, where
+        it names one.
         """
         super().__init__(
             context=context,
             translated_message=translated_message,
             precondition_failure=precondition_failure,
+            next_step=next_step,
         )
 
     @property
@@ -207,6 +223,52 @@ def _blocked_refusal(decision: IvaCompensationReconciliationDecision) -> tuple[s
     )
 
 
+_OPEN_OPENING_BALANCE_LOCALE_KEY: Final[str] = "application.modelo.iva_wallet.next_step.open_opening_balance"
+
+_OPENING_BALANCE_DOOR_REASON_CODES: Final[frozenset[str]] = frozenset(
+    {
+        "not_seeded",
+        "no_usable_authority",
+        "local_evidence_unreadable",
+        "first_period_zero_ungrounded",
+    },
+)
+"""The refusal reasons the wallet's opening-balance entry is the way out of.
+
+Each of these says the period's carry has no usable recorded authority, which
+is exactly what declaring the opening balance supplies. A stale wallet, a
+divergence, or a reason that asks for an override names a different wallet
+entry, so it keeps no step here rather than offering a door that would not
+settle it.
+"""
+
+
+def open_iva_wallet_opening_balance_step(*, modelo: str, period: Period) -> OperationNextStepWording:
+    """Offer recording the opening IVA balance ``period``'s carry reads."""
+
+    def worded(language: OutputLanguage) -> OperationOpenIvaWalletOpeningBalanceStepV1:
+        return OperationOpenIvaWalletOpeningBalanceStepV1(
+            modelo=modelo,
+            filing_year=period.filing_year,
+            period_code=str(period.code),
+            words=tr(
+                _OPEN_OPENING_BALANCE_LOCALE_KEY,
+                modelo=modelo_number(modelo, language),
+                period=period_words(period, language),
+                locale=language.value,
+            ),
+        )
+
+    return worded
+
+
+def _opening_balance_door(reason_code: str, carry_period: Period | None) -> OperationNextStepWording | None:
+    """The opening-balance entry for ``carry_period``, where ``reason_code`` is one it settles."""
+    if carry_period is None or reason_code not in _OPENING_BALANCE_DOOR_REASON_CODES:
+        return None
+    return open_iva_wallet_opening_balance_step(modelo=form_for_role("iva.periodic"), period=carry_period)
+
+
 def _raise_iva_wallet_precondition(
     *,
     subject_leaf_key: str,
@@ -215,8 +277,14 @@ def _raise_iva_wallet_precondition(
     evidence_values: Mapping[str, str | int | bool | Decimal],
     context: Mapping[str, object] | None = None,
     cause: BaseException | None = None,
+    carry_period: Period | None = None,
 ) -> Never:
-    """Raise one locale-neutral IVA-wallet readiness refusal."""
+    """Raise one locale-neutral IVA-wallet readiness refusal.
+
+    ``carry_period`` is the Modelo 303 period whose carry the gate was settling.
+    Where the reason is one the wallet's opening balance settles, the refusal
+    carries the step that opens that entry; nothing is written either way.
+    """
     error = ModeloIvaWalletReconciliationBlocked(
         translated_message=translated_message,
         context=context,
@@ -228,6 +296,7 @@ def _raise_iva_wallet_precondition(
             evidence_values=evidence_values,
             provenance=ActionEvidenceProvenance.APPLICATION_STATE,
         ),
+        next_step=_opening_balance_door(reason_code, carry_period),
     )
     if cause is not None:
         raise error from cause
@@ -331,6 +400,7 @@ def _require_no_unproven_prior_amounts(
             "wallet_blocked": True,
         },
         context={"divergence": str(decision.divergence), "reason": blocked_reason},
+        carry_period=decision.target_period,
     )
 
 
@@ -449,7 +519,7 @@ def _prior_compensation_inputs(
     )
 
 
-def _require_decision_for_supplied_inputs(inputs: _PriorCompensationInputs) -> None:
+def _require_decision_for_supplied_inputs(inputs: _PriorCompensationInputs, *, carry_period: Period) -> None:
     supplied_values = tuple(value for value in inputs if value is not None)
     if not supplied_values:
         return
@@ -462,6 +532,7 @@ def _require_decision_for_supplied_inputs(inputs: _PriorCompensationInputs) -> N
             "casilla_id": _M303_PRIOR_COMPENSATION_CASILLA_ID,
             "supplied_value_count": len(supplied_values),
         },
+        carry_period=carry_period,
     )
 
 
@@ -522,6 +593,7 @@ def _validated_decision_amount(
                 "wallet_blocked": True,
             },
             context={"divergence": str(decision.divergence), "reason": blocked_reason},
+            carry_period=target.period,
         )
     if decision.selected_amount is None:
         _raise_iva_wallet_precondition(
@@ -637,7 +709,7 @@ def apply_iva_compensation_decision_binding(
         backend_binding_values=backend_binding_values,
     )
     if decision is None:
-        _require_decision_for_supplied_inputs(inputs)
+        _require_decision_for_supplied_inputs(inputs, carry_period=target.period)
         return
     validated_decision, selected = _validated_decision_amount(
         decision,
@@ -683,6 +755,7 @@ def require_persisted_iva_compensation_decision_for_work_unit(
             reason_code="not_seeded",
             translated_message="application.modelo.errors.iva_wallet_not_seeded",
             evidence_values={"persisted_decision_present": False},
+            carry_period=work_unit.period,
         )
     if persisted != supplied_decision:
         _raise_iva_wallet_precondition(
@@ -968,6 +1041,7 @@ def _require_first_period_zero_decision_grounded(
             "divergence": "first_period_zero_unproven",
             "reason": "first_period_zero_ungrounded",
         },
+        carry_period=work_unit.period,
     )
 
 
@@ -1142,6 +1216,7 @@ def require_persisted_iva_compensation_decision_matches_revision(
             reason_code="not_seeded",
             translated_message="application.modelo.errors.iva_wallet_not_seeded",
             evidence_values={"persisted_decision_present": False},
+            carry_period=work_unit.period,
         )
     if decision.blocked:
         blocked_reason, blocked_message = _blocked_refusal(decision)
@@ -1154,6 +1229,7 @@ def require_persisted_iva_compensation_decision_matches_revision(
                 "wallet_blocked": True,
             },
             context={"divergence": str(decision.divergence), "reason": blocked_reason},
+            carry_period=work_unit.period,
         )
     if decision.target_period != work_unit.period:
         _raise_iva_wallet_precondition(

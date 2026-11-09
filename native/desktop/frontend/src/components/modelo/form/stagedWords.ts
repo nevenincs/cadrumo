@@ -20,6 +20,11 @@ export function stagedText(t: Translate, edit: StagedEdit): string {
     case "clear_declared_value":
       return t("workspace.modelo.staged.clear");
     case "restore_source_value":
+      return t(
+        edit.intent.change === "remove"
+          ? "workspace.modelo.staged.remove"
+          : "workspace.modelo.staged.restore",
+      );
     case "remove_override":
       return t("workspace.modelo.staged.restore");
     case "attest_no_amount":

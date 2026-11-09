@@ -308,6 +308,13 @@ Pull and store the AEAT receipt, then compare it with your local record of the f
 Expose the toolset to Claude or any MCP client, with the safety boundary intact.
 :::
 
+:::{grid-item-card} Sign in to an AI provider by hand
+:link: sign-in-to-an-ai-provider-by-hand
+:link-type: doc
+
+Sign in from a console when the in-app sign-in under Ajustes > Proveedores de IA fails.
+:::
+
 :::{grid-item-card} Troubleshooting
 :link: troubleshooting
 :link-type: doc
