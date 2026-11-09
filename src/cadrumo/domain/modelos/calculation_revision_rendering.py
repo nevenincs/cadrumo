@@ -18,10 +18,13 @@ from pydantic import (
     BaseModel,
     Field,
     FieldSerializationInfo,
+    SerializationInfo,
+    SerializerFunctionWrapHandler,
     TypeAdapter,
     ValidationInfo,
     field_serializer,
     field_validator,
+    model_serializer,
     model_validator,
 )
 from pydantic_core import SchemaSerializer
@@ -183,9 +186,11 @@ class _SnapshotDigests:
 class VerifiedRegistryMemo:
     """Reuse the validation of saved registry snapshot bytes that were already validated.
 
-    Every saved calculation revision embeds the complete public registry
-    snapshot it was calculated under, and every catalogue read revalidated
-    that snapshot and recomputed both digests over it. The outcome depends only
+    Every saved calculation revision carries the complete public registry
+    snapshot it was calculated under: embedded whole in a revision stored
+    before bodies were stored once per rendering digest, and supplied from
+    that one stored body afterwards. Without this memo a read revalidated each
+    saved snapshot and recomputed both digests over it. The outcome depends only
     on the snapshot bytes, the revision identities supplied for validation and
     the governed facts in scope. An entry is keyed by all three and is used
     only while that same governed-fact owner is alive.
@@ -288,8 +293,8 @@ class VerifiedRegistryMemo:
     ) -> dict[str, object]:
         """Return a fresh JSON-mode mapping of a :class:`RegistrySnapshot` under ``serializer``.
 
-        Every saved revision of a declaration embeds the same snapshot, and a
-        catalogue write serializes each of them again. The serialization is kept
+        Every saved revision of a declaration carries the same snapshot, and
+        each serialization of it within one operation would traverse it again. The serialization is kept
         as JSON text for the snapshot object and the serializer it came from, and
         each later call decodes its own mapping from that text, so no caller
         shares or can alter what another receives.
@@ -382,6 +387,152 @@ def _label_keys(value: object) -> set[str]:
     return set()
 
 
+def _canonical_directory_ids(value: tuple[RevisionId, ...] | None) -> tuple[RevisionId, ...] | None:
+    if value is not None and (not value or tuple(sorted(set(value))) != value):
+        raise ValueError("saved rendering directory identities must be sorted, unique and nonempty")
+    return value
+
+
+def _saved_registry_snapshot(value: object, info: ValidationInfo) -> object:
+    """Validate a saved registry snapshot under the directory identities saved beside it."""
+    directory_ids = info.data.get("revision_directory_ids")
+    if isinstance(value, RegistrySnapshot):
+        return value
+    context: dict[object, object] = dict(info.context) if is_object_mapping(info.context) else {}
+    if directory_ids is not None:
+        identifiers = _REVISION_ID_SEQUENCE_ADAPTER.validate_python(directory_ids)
+        context[MODELO_REVISION_IDS_CONTEXT] = frozenset(identifiers)
+    if info.mode == "json":
+        payload = _SAVED_JSON_ADAPTER.dump_json(value)
+        return VERIFIED_REGISTRY.validated(
+            payload,
+            context=context,
+            validate=lambda: RegistrySnapshot.model_validate_json(payload, context=context),
+        )
+    return RegistrySnapshot.model_validate(value, context=context)
+
+
+def _complete_registry_fields(value: RegistrySnapshot, info: FieldSerializationInfo) -> dict[str, object]:
+    if info.mode == "python":
+        return _STRING_MAPPING_ADAPTER.validate_python(_complete_registry_value(value))
+    return registry_payload(value)
+
+
+def _require_consistent_body(
+    snapshot: RegistrySnapshot,
+    labels: tuple[SavedRenderingLabel, ...],
+    directory_ids: tuple[RevisionId, ...] | None,
+) -> None:
+    if len({label.key for label in labels}) != len(labels):
+        raise ValueError("saved rendering labels contain duplicate identities")
+    if directory_ids is not None and frozenset(directory_ids) != snapshot.modelo.directory_revision_ids:
+        raise ValueError("saved rendering directory identities disagree with its captured snapshot")
+
+
+#: Field naming how a saved revision stores its rendering. A rendering embedded
+#: whole, as in every revision stored before this field existed, has no such
+#: field; a reader never infers the form from any other missing field.
+SAVED_RENDERING_FORM_FIELD = "form"
+#: The stored form other than the embedded one: a reference by rendering digest.
+SAVED_RENDERING_REFERENCE_FORM = "rendering_digest_reference"
+#: Serialization context key under which each saved rendering is written as its reference.
+SAVED_RENDERING_REFERENCE_SERIALIZATION = "calculation_rendering_by_reference"
+#: Validation context key carrying the verified :class:`SavedRenderingBody` of each referenced digest.
+SAVED_RENDERING_BODIES_CONTEXT = "calculation_rendering_bodies"
+
+
+class SavedRenderingBody(BaseModel):
+    """The shareable part of a saved rendering: registry payload, saved labels and directory identities.
+
+    Renderings with the same rendering digest have equal bodies, so a profile
+    stores each distinct body once. A body carries no authority generation, no
+    digest claim and no grade: those stay on each revision's reference, and
+    nothing resolves calculation authority from a body.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    revision_directory_ids: tuple[RevisionId, ...] | None = Field(default=None, exclude_if=lambda value: value is None)
+    registry_snapshot: RegistrySnapshot
+    labels: tuple[SavedRenderingLabel, ...] = ()
+
+    @field_validator("revision_directory_ids")
+    @classmethod
+    def _require_canonical_directory_ids(cls, value: tuple[RevisionId, ...] | None) -> tuple[RevisionId, ...] | None:
+        return _canonical_directory_ids(value)
+
+    @field_validator("registry_snapshot", mode="before")
+    @classmethod
+    def _restore_directory_validation(cls, value: object, info: ValidationInfo) -> object:
+        return _saved_registry_snapshot(value, info)
+
+    @field_serializer("registry_snapshot")
+    def _retain_registry_fields(self, value: RegistrySnapshot, info: FieldSerializationInfo) -> dict[str, object]:
+        """Persist excluded localization/schema fields required to decode original geometry."""
+        return _complete_registry_fields(value, info)
+
+    @model_validator(mode="after")
+    def _consistent(self) -> Self:
+        _require_consistent_body(self.registry_snapshot, self.labels, self.revision_directory_ids)
+        return self
+
+    @property
+    def rendering_digest(self) -> str:
+        """The rendering digest recomputed from this body: the key it is stored under."""
+        return _rendering_digest(self.registry_snapshot, self.labels, self.revision_directory_ids)
+
+
+class SavedRenderingReference(BaseModel):
+    """A saved revision's rendering held by the digest of its stored :class:`SavedRenderingBody`."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    form: Literal["rendering_digest_reference"]
+    schema_version: Literal[1] = 1
+    authority_generation: Hex64Str
+    registry_digest: Hex64Str
+    rendering_digest: Hex64Str
+
+
+def saved_rendering_reference_digest(value: object) -> str | None:
+    """Return the digest a stored rendering refers to, or ``None`` when it is embedded or absent.
+
+    Raises:
+        ValueError: The rendering names a storage form this reader does not know,
+            or a reference carries no digest.
+    """
+    if not is_object_mapping(value) or SAVED_RENDERING_FORM_FIELD not in value:
+        return None
+    if value.get(SAVED_RENDERING_FORM_FIELD) != SAVED_RENDERING_REFERENCE_FORM:
+        raise ValueError("saved rendering names an unknown storage form")
+    digest = value.get("rendering_digest")
+    if not isinstance(digest, str):
+        raise ValueError("saved rendering reference carries no rendering digest")
+    return digest
+
+
+def hydrate_saved_rendering(value: object, context: object) -> object:
+    """Replace a stored rendering reference with the rendering rebuilt from its verified body.
+
+    An embedded, absent or already built rendering is returned unchanged for
+    ordinary validation. A reference is rebuilt from the body supplied under
+    :data:`SAVED_RENDERING_BODIES_CONTEXT`, and the rebuilt rendering
+    recomputes both digests the reference claims.
+
+    Raises:
+        ValueError: The form is unknown, or no body is supplied for the digest.
+    """
+    digest = saved_rendering_reference_digest(value)
+    if digest is None:
+        return value
+    reference = SavedRenderingReference.model_validate(value)
+    bodies = context.get(SAVED_RENDERING_BODIES_CONTEXT) if is_object_mapping(context) else None
+    body = bodies.get(digest) if is_object_mapping(bodies) else None
+    if not isinstance(body, SavedRenderingBody):
+        raise ValueError("saved rendering reference has no supplied body")
+    return CalculationRenderingSnapshot.from_saved_body(reference, body)
+
+
 class CalculationRenderingSnapshot(BaseModel):
     """Digest-bound registry geometry and display rules captured under the calculation pin."""
 
@@ -398,35 +549,25 @@ class CalculationRenderingSnapshot(BaseModel):
     @field_validator("revision_directory_ids")
     @classmethod
     def _require_canonical_directory_ids(cls, value: tuple[RevisionId, ...] | None) -> tuple[RevisionId, ...] | None:
-        if value is not None and (not value or tuple(sorted(set(value))) != value):
-            raise ValueError("saved rendering directory identities must be sorted, unique and nonempty")
-        return value
+        return _canonical_directory_ids(value)
 
     @field_validator("registry_snapshot", mode="before")
     @classmethod
     def _restore_directory_validation(cls, value: object, info: ValidationInfo) -> object:
-        directory_ids = info.data.get("revision_directory_ids")
-        if isinstance(value, RegistrySnapshot):
-            return value
-        context: dict[object, object] = dict(info.context) if is_object_mapping(info.context) else {}
-        if directory_ids is not None:
-            identifiers = _REVISION_ID_SEQUENCE_ADAPTER.validate_python(directory_ids)
-            context[MODELO_REVISION_IDS_CONTEXT] = frozenset(identifiers)
-        if info.mode == "json":
-            payload = _SAVED_JSON_ADAPTER.dump_json(value)
-            return VERIFIED_REGISTRY.validated(
-                payload,
-                context=context,
-                validate=lambda: RegistrySnapshot.model_validate_json(payload, context=context),
-            )
-        return RegistrySnapshot.model_validate(value, context=context)
+        return _saved_registry_snapshot(value, info)
 
     @field_serializer("registry_snapshot")
     def _retain_registry_fields(self, value: RegistrySnapshot, info: FieldSerializationInfo) -> dict[str, object]:
         """Persist excluded localization/schema fields required to decode original geometry."""
-        if info.mode == "python":
-            return _STRING_MAPPING_ADAPTER.validate_python(_complete_registry_value(value))
-        return registry_payload(value)
+        return _complete_registry_fields(value, info)
+
+    @model_serializer(mode="wrap")
+    def _by_reference_when_stored_once(self, handler: SerializerFunctionWrapHandler, info: SerializationInfo) -> object:
+        """Write only the reference when the caller stores the body on its own, else the whole rendering."""
+        context = info.context
+        if is_object_mapping(context) and context.get(SAVED_RENDERING_REFERENCE_SERIALIZATION) is True:
+            return self.saved_reference().model_dump(mode=info.mode)
+        return handler(self)
 
     @model_validator(mode="after")
     def _registry_digest_matches(self) -> Self:
@@ -435,13 +576,41 @@ class CalculationRenderingSnapshot(BaseModel):
         snapshot = self.registry_snapshot
         if _registry_digest(snapshot) != self.registry_digest:
             raise ValueError("saved rendering registry digest does not match its captured snapshot")
-        if self.revision_directory_ids is not None and frozenset(self.revision_directory_ids) != (
-            self.registry_snapshot.modelo.directory_revision_ids
-        ):
-            raise ValueError("saved rendering directory identities disagree with its captured snapshot")
+        _require_consistent_body(snapshot, self.labels, self.revision_directory_ids)
         if _rendering_digest(snapshot, self.labels, self.revision_directory_ids) != self.rendering_digest:
             raise ValueError("saved rendering metadata digest does not match its captured schema and labels")
         return self
+
+    def saved_body(self) -> SavedRenderingBody:
+        """Return the shareable body a profile stores once per rendering digest."""
+        return SavedRenderingBody(
+            revision_directory_ids=self.revision_directory_ids,
+            registry_snapshot=self.registry_snapshot,
+            labels=self.labels,
+        )
+
+    def saved_reference(self) -> SavedRenderingReference:
+        """Return the reference a saved revision persists in place of its body."""
+        return SavedRenderingReference(
+            form=SAVED_RENDERING_REFERENCE_FORM,
+            schema_version=self.schema_version,
+            authority_generation=self.authority_generation,
+            registry_digest=self.registry_digest,
+            rendering_digest=self.rendering_digest,
+        )
+
+    @classmethod
+    def from_saved_body(cls, reference: SavedRenderingReference, body: SavedRenderingBody) -> Self:
+        """Rebuild a saved rendering from its reference and stored body, rechecking both digests."""
+        return cls(
+            schema_version=reference.schema_version,
+            authority_generation=reference.authority_generation,
+            registry_digest=reference.registry_digest,
+            revision_directory_ids=body.revision_directory_ids,
+            registry_snapshot=body.registry_snapshot,
+            labels=body.labels,
+            rendering_digest=reference.rendering_digest,
+        )
 
     @classmethod
     def capture(cls, snapshot: RegistrySnapshot, *, authority_generation: Hex64Str) -> Self:

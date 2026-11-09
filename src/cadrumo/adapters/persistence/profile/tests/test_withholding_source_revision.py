@@ -15,10 +15,7 @@ from cadrumo.adapters.persistence.profile.retencion_observations import Retencio
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.profile.withholding_observation_workflow import WithholdingObservationWorkflowAdapter
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import WITHHOLDING_WORKFLOW_NAMESPACE
-from cadrumo.adapters.persistence.storage.sql.secure_object_records import (
-    SecureObjectDeletion,
-    SecureObjectRevisionAssertion,
-)
+from cadrumo.adapters.persistence.storage.sql.secure_object_records import SecureObjectDeletion
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.invoice_retencion import build_invoice_withholding_capture
@@ -32,7 +29,7 @@ from cadrumo.application.aggregation.withholding_observation_service import (
 )
 from cadrumo.application.aggregation.withholding_producer import WithholdingEvidenceCaptureCommand, WithholdingProducer
 from cadrumo.core.aggregation import BindingSourceKind
-from cadrumo.core.secure_object_write import SecureObjectWrite
+from cadrumo.core.secure_object_write import SecureObjectRevisionAssertion, SecureObjectWrite
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.transactions.models import TransactionCatalogue
 

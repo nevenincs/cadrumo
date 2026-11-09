@@ -15,14 +15,11 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
-from cadrumo.adapters.persistence.storage.sql.secure_object_records import (
-    SecureObjectDeletion,
-    SecureObjectRevisionAssertion,
-)
+from cadrumo.adapters.persistence.storage.sql.secure_object_records import SecureObjectDeletion
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.ledger.persistence_ports import LedgerPersistenceConflictError
 from cadrumo.core.aggregation import BindingSourceKind
-from cadrumo.core.secure_object_write import SecureObjectWrite
+from cadrumo.core.secure_object_write import SecureObjectRevisionAssertion, SecureObjectWrite
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

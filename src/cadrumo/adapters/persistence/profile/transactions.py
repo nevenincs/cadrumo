@@ -75,7 +75,8 @@ if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
 
     from ....core.secure_object_write import SecureObjectWrite
     from ..storage.envelope.contract import Envelope
-    from ..storage.sql.secure_object_records import SecureObjectDeletion, SecureObjectRevisionAssertion
+    from ....core.secure_object_write import SecureObjectRevisionAssertion
+    from ..storage.sql.secure_object_records import SecureObjectDeletion
     from ..storage.sql.secure_objects import SecureObjectRepository
 
 
@@ -519,7 +520,7 @@ class TransactionCatalogueRepository:
         include_assertions: bool,
     ) -> tuple[str | None, tuple[SecureObjectRevisionAssertion, ...]]:
         """Read the full revision digest and optional in-batch row assertions."""
-        from ..storage.sql.secure_object_records import SecureObjectRevisionAssertion
+        from ....core.secure_object_write import SecureObjectRevisionAssertion
 
         index_key = transaction_index_object_key(self._bucket_id)
         transaction_ids = tuple(sorted(self._load_index_ids()))

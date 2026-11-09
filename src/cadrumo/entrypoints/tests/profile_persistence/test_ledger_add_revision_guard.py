@@ -14,16 +14,13 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.attachment import AttachmentStore
-from ....adapters.persistence.storage.sql.secure_object_records import (
-    SecureObjectDeletion,
-    SecureObjectRevisionAssertion,
-)
+from ....adapters.persistence.storage.sql.secure_object_records import SecureObjectDeletion
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.ledger.action_ports import LedgerActionPorts
 from ....application.ledger.models import ManualLedgerTransactionCommand
 from ....application.ledger.persistence_ports import LedgerPersistenceConflictError
 from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
-from ....core.secure_object_write import SecureObjectWrite
+from ....core.secure_object_write import SecureObjectRevisionAssertion, SecureObjectWrite
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue

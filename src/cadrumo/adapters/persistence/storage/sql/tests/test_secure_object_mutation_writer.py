@@ -11,11 +11,14 @@ from sqlalchemy import Connection, event
 
 from ......core.classification.policies import SensitivityClass
 from ......core.errors.hierarchy import InternalInvariantError
-from ......core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
+from ......core.secure_object_write import (
+    ABSENT_SECURE_OBJECT_REVISION_ID,
+    SecureObjectRevisionAssertion,
+    SecureObjectWrite,
+)
 from ...errors import SecureObjectRevisionConflictError
 from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from .. import secure_object_writes
-from ..secure_object_records import SecureObjectRevisionAssertion
 from ..secure_objects import SecureObjectRepository
 from .secure_objects_support import repo_at
 

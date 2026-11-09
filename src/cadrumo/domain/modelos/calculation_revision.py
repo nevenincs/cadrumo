@@ -98,7 +98,7 @@ from .calculation_revision_m303_handoff import (
     M303RegimenSimplificadoAnnualSummaryHandoff,
 )
 from .calculation_revision_operator_layer import CalculationOperatorLayer
-from .calculation_revision_rendering import CalculationRenderingSnapshot
+from .calculation_revision_rendering import CalculationRenderingSnapshot, hydrate_saved_rendering
 from .calculation_revision_sources import (
     ActivityAssetConsumption,
     CalculationSourceIssue,
@@ -637,6 +637,14 @@ class CalculationRevision(BaseModel):
         if value is None:
             return None
         return validate_utc_aware(value)
+
+    @field_validator("rendering_snapshot", mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _hydrate_stored_rendering(cls, value: object, info: ValidationInfo) -> object:
+        # Storage holds a rendering either embedded or as a reference to a body
+        # stored once per digest; after validation it is always the whole rendering.
+        return hydrate_saved_rendering(value, info.context)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

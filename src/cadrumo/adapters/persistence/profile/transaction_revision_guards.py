@@ -14,7 +14,7 @@ from ..storage.secure_object_namespaces import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ..storage.sql.secure_object_records import SecureObjectRevisionAssertion
+    from ....core.secure_object_write import SecureObjectRevisionAssertion
 
 
 def resolved_transaction_row_revisions(row_revisions: Mapping[str, str | None]) -> dict[str, str] | None:
@@ -31,8 +31,7 @@ def absent_transaction_index_assertions(
     index_key: str, include_assertions: bool
 ) -> tuple[SecureObjectRevisionAssertion, ...]:
     """Prepare the absent membership witness only for an assertion-bearing read."""
-    from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
-    from ..storage.sql.secure_object_records import SecureObjectRevisionAssertion
+    from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectRevisionAssertion
 
     assertions = (
         (

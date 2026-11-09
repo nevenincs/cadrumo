@@ -714,7 +714,6 @@ def build_withholding_observation_service(*, bucket_id: str) -> WithholdingObser
     from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ..adapters.persistence.profile.withholding_observation_workflow import WithholdingObservationWorkflowAdapter
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-    from ..adapters.persistence.storage.sql.secure_object_records import SecureObjectRevisionAssertion
     from ..application.aggregation.withholding_observation_service import (
         WithholdingObservationMutationError,
         WithholdingObservationService,
@@ -722,6 +721,7 @@ def build_withholding_observation_service(*, bucket_id: str) -> WithholdingObser
     )
     from ..application.ledger.persistence_ports import LedgerPersistenceConflictError
     from ..core.aggregation import BindingSourceKind
+    from ..core.secure_object_write import SecureObjectRevisionAssertion
 
     objects = secure_object_repository_for_bucket(bucket_id.strip())
 
