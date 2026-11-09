@@ -24,6 +24,7 @@ from .filesystem_primitives import (
     ProfileCustodyPasswordReadOperation,
     anchor_directory,
     ensure_profile_custody_local_directory,
+    hold_profile_custody_local_directory,
     posix_directory_fd,
     shared_directory_anchors,
     windows_create_file_api,
@@ -122,19 +123,22 @@ def profile_custody_root_lock(root: Path, *, timeout_seconds: float = 30.0) -> G
     # Pointer creation is a normal first-profile operation.  Anchor the one
     # storage-root component before opening its lock leaf so first use neither
     # follows a substituted root nor requires an unrelated bootstrap write.
-    ensure_profile_custody_local_directory(root)
-    with profile_custody_local_lock(root / ".profile-custody-root.lock", timeout_seconds=timeout_seconds):
-        owners[root] = _ProfileCustodyRootLockOwnership(
-            pid=current_pid,
-            thread_id=current_thread_id,
-            depth=1,
-        )
-        try:
-            yield
-        finally:
-            ownership = owners.pop(root)
-            if ownership.pid != current_pid or ownership.thread_id != current_thread_id or ownership.depth != 1:
-                raise ProfileCustodyRecordError("profile custody root lock ownership changed before release")
+    # The provisioned root stays held, so the lock's anchor stands on that
+    # verified chain instead of opening every component of the root again.
+    with shared_directory_anchors(), ExitStack() as storage_root:
+        hold_profile_custody_local_directory(storage_root, root)
+        with profile_custody_local_lock(root / ".profile-custody-root.lock", timeout_seconds=timeout_seconds):
+            owners[root] = _ProfileCustodyRootLockOwnership(
+                pid=current_pid,
+                thread_id=current_thread_id,
+                depth=1,
+            )
+            try:
+                yield
+            finally:
+                ownership = owners.pop(root)
+                if ownership.pid != current_pid or ownership.thread_id != current_thread_id or ownership.depth != 1:
+                    raise ProfileCustodyRecordError("profile custody root lock ownership changed before release")
 
 
 @contextmanager

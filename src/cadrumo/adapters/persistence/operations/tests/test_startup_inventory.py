@@ -274,3 +274,46 @@ def test_the_census_readback_still_refuses_a_history_holding_an_unreadable_recor
             )
 
     asyncio.run(exercise())
+
+
+def test_an_inventory_delta_names_every_record_and_classifies_only_the_unknown_ones(tmp_path: Path) -> None:
+    """Known records are named without being read; unknown ones are classified as a page would."""
+    ids = tuple(character * 64 for character in "abcd")
+
+    async def exercise() -> None:
+        for operation_id in ids:
+            await _create(tmp_path, operation_id, terminal=operation_id == ids[1])
+        corrupt = _journal_path(tmp_path, ids[3])
+        document = json.loads(corrupt.read_text(encoding="utf-8"))
+        document["history"] = []
+        corrupt.write_text(json.dumps(document), encoding="utf-8")
+        journal = _CountedLoads(storage_root=tmp_path)
+        everything = await journal.inventory_page(after=None, limit=4)
+
+        delta = await journal.inventory_delta(known=frozenset({ids[0], ids[2]}))
+
+        assert delta.present == frozenset(ids)
+        assert delta.entries == tuple(entry for entry in everything.entries if entry.operation_id in {ids[1], ids[3]})
+        assert [entry.disposition for entry in delta.entries] == [
+            OperationRecoveryInventoryDisposition.TERMINAL,
+            OperationRecoveryInventoryDisposition.REFUSED,
+        ]
+        assert (await journal.inventory_delta(known=frozenset(ids))).entries == ()
+        assert journal.loads == 0
+
+    asyncio.run(exercise())
+
+
+def test_an_inventory_delta_of_an_absent_journal_is_empty_and_a_malformed_name_is_refused(tmp_path: Path) -> None:
+    absent = OperationJournalRepository(storage_root=tmp_path / "absent")
+    empty = asyncio.run(absent.inventory_delta(known=frozenset()))
+    assert empty.present == frozenset() and empty.entries == ()
+    assert not (tmp_path / "absent").exists()
+
+    async def exercise() -> None:
+        await _create(tmp_path, "a" * 64)
+        (tmp_path / "operation-journals" / "malformed.json").write_text("{}", encoding="utf-8")
+        with pytest.raises(RepositoryError, match="invalid operation journal inventory filename"):
+            await OperationJournalRepository(storage_root=tmp_path).inventory_delta(known=frozenset({"a" * 64}))
+
+    asyncio.run(exercise())

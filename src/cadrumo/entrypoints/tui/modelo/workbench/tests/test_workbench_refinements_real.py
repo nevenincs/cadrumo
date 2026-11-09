@@ -134,7 +134,7 @@ async def test_a_real_boxs_help_band_says_its_source_once_in_the_rows_words(
 
             await settle_until(pilot, _origin_shown, "the help band to show the origin of the chosen box")
             band = str(screen.query_one("#wb-help", Static).render()).splitlines()
-            words = origin_text(field)
+            words = origin_text(field, calculated=form.calculation_revision_id is not None)
             said = {
                 lookup_translation(binding.policy.origin_sentence_key, locale="en")
                 for binding in field.bindings

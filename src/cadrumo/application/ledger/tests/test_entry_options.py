@@ -50,6 +50,8 @@ from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
+from .. import actions_import
+from ..actions_import import LedgerProviderID, installed_ledger_providers
 from ..entry_options_operation import (
     LEDGER_ENTRY_OPTIONS_OPERATION_DEFINITION_ID,
     LedgerEntryOptionsExecutionResult,
@@ -101,6 +103,7 @@ def test_every_family_is_served_once(served: dict[str, tuple[tuple[str, str | No
         "prorrata_sector_letter",
         "capital_good_kind",
         "capital_good_disposal",
+        "import_format",
     }
 
 
@@ -217,6 +220,21 @@ def test_capital_goods_kinds_and_disposals_are_the_register_vocabularies(
     assert _values(served, "capital_good_disposal") == [str(regime) for regime in catalogue.disposal_regime_choices]
     for kind in _values(served, "capital_good_kind"):
         assert str(catalogue.require_kind(kind)) == kind
+
+
+def test_import_formats_are_the_installed_parsers(served: dict[str, tuple[tuple[str, str | None], ...]]) -> None:
+    assert _values(served, "import_format") == [str(provider) for provider in installed_ledger_providers()]
+    assert all(label is None for _, label in served["import_format"])
+
+
+def test_a_format_whose_extra_is_absent_is_not_offered(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(actions_import, "optional_extra_available", lambda extra: extra.extra != "ofx")
+    without = installed_ledger_providers()
+    monkeypatch.setattr(actions_import, "optional_extra_available", lambda extra: True)
+    with_all = installed_ledger_providers()
+
+    assert with_all == tuple(LedgerProviderID)
+    assert without == tuple(p for p in LedgerProviderID if p not in {LedgerProviderID.OFX, LedgerProviderID.QFX})
 
 
 def test_a_dated_catalogue_is_read_on_the_day_asked_and_the_undated_ones_ignore_it(

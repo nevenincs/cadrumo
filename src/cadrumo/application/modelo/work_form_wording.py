@@ -19,6 +19,7 @@ from ...core.aggregation import BindingSourceKind
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import lookup_translation, output_language, tr
 from ...core.period import Period, PeriodKind
+from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from .edit_models import ModeloEditNonWritableReason
 from .edit_value_grammar import ModeloEditRatioUnit, ratio_unit
 from .source_policy import SourceFamily
@@ -242,6 +243,18 @@ FILED_LOCALE_KEYS: Final[Mapping[ModeloFormOrigin, str]] = MappingProxyType(
 """Words for an origin that asks for a value, on a declaration recorded as filed: what the value is, not a request."""
 
 
+STATED_ABSENT_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = MappingProxyType(
+    {
+        AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING: (
+            "application.modelo.work_form.carry_attestation.renta_negative_general_bases_pending.origin"
+        ),
+    }
+)
+"""What a carry the filer stated holds nothing says beside it, by the family of the statement."""
+if frozenset(STATED_ABSENT_LOCALE_KEYS) != frozenset(AbsenceAttestationFamily):
+    raise RuntimeError("every statement family the registry can declare needs its words")
+
+
 def _special_origin_words(
     field: ModeloFormField,
     *,
@@ -250,6 +263,8 @@ def _special_origin_words(
     language: OutputLanguage | None,
 ) -> str | None:
     locale = _locale(language)
+    if field.stated_absent is not None:
+        return tr(STATED_ABSENT_LOCALE_KEYS[field.stated_absent], locale=locale)
     if recorded and field.origin in FILED_LOCALE_KEYS:
         return tr(FILED_LOCALE_KEYS[field.origin], locale=locale)
     if field.origin in HELD_ZERO_LOCALE_KEYS and holds_zero(field.value):
@@ -285,6 +300,7 @@ def origin_words(
     recorded: bool = False,
     aeat_imported: date | None = None,
     language: OutputLanguage | None = None,
+    calculated: bool = True,
 ) -> str:
     """Say where one field's value stands, in the few words every frontend shows beside it.
 
@@ -295,11 +311,16 @@ def origin_words(
     zero, never that it is empty. On a declaration ``recorded`` as filed nothing
     is asked any more, so a box that would ask for a value says what it holds
     instead. Given the day ``aeat_imported`` the AEAT tax data was imported, a
-    value taken from it names that day, written for ``language``.
+    value taken from it names that day, written for ``language``. On a
+    declaration not ``calculated`` yet no source has been read, so a box still
+    waiting on one says it waits on the calculation, never that its source
+    lacks the value.
     """
     special = _special_origin_words(field, recorded=recorded, aeat_imported=aeat_imported, language=language)
     if special is not None:
         return special
+    if not calculated and field.origin is ModeloFormOrigin.NOT_IMPORTED_YET:
+        return tr(origin_words_key(ModeloFormOrigin.NOT_CALCULATED_YET), locale=_locale(language))
     return _source_origin_words(field, language)
 
 
@@ -495,11 +516,14 @@ def worded_form(form: ModeloWorkForm) -> ModeloWorkForm:
     language = form.language
     recorded = form.edit_closure is ModeloFormEditClosure.RECORDED_AS_FILED
     imported = aeat_imported_on(form)
+    calculated = form.calculation_revision_id is not None
 
     def word(field: ModeloFormField) -> ModeloFormField:
         return field.model_copy(
             update={
-                "origin_words": origin_words(field, recorded=recorded, aeat_imported=imported, language=language),
+                "origin_words": origin_words(
+                    field, recorded=recorded, aeat_imported=imported, language=language, calculated=calculated
+                ),
                 "origin_explanation": origin_explanation(field, language),
                 "editability_words": editability_text(field, language),
                 "value_text": field_value_text(field, language),

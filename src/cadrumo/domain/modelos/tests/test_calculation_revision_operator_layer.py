@@ -158,3 +158,28 @@ def test_an_empty_layer_is_known_and_empty() -> None:
     assert CalculationOperatorLayer().is_empty
     assert not _LAYER.is_empty
     assert _LAYER.casilla_ids() == frozenset({_C06, _C08})
+
+
+def test_an_attested_binding_is_a_statement_apart_from_a_typed_zero() -> None:
+    typed = CalculationOperatorLayer(binding_overrides={_BINDING: "0"})
+    attested = CalculationOperatorLayer(binding_overrides={_BINDING: "0"}, attested_binding_ids=(_BINDING,))
+
+    assert _revision_id(attested) != _revision_id(typed)
+    assert CalculationOperatorLayer.model_validate_json(attested.model_dump_json()) == attested
+
+
+def test_a_layer_with_no_attested_binding_keeps_the_identity_it_had_before_attestation() -> None:
+    assert "attested_binding_ids" not in CalculationOperatorLayer(binding_overrides={_BINDING: "0"}).identity_payload()
+
+
+@pytest.mark.parametrize("override", [None, "5"])
+def test_an_attested_binding_must_hold_the_attested_zero(override: str | None) -> None:
+    overrides = {} if override is None else {_BINDING: override}
+    with pytest.raises(ValidationError, match="attested zero"):
+        CalculationOperatorLayer(binding_overrides=overrides, attested_binding_ids=(_BINDING,))
+
+
+def test_attested_bindings_are_unique_and_sorted() -> None:
+    later = "modelo-130-retenciones-anteriores"
+    with pytest.raises(ValidationError, match="unique and sorted"):
+        CalculationOperatorLayer(binding_overrides={_BINDING: "0", later: "0"}, attested_binding_ids=(later, _BINDING))

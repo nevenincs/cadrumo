@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from textual.app import ComposeResult
 from textual.widgets import Button, DirectoryTree, Input, Select, Static
 
-from ....application.ledger.actions_import import LedgerProviderID
+from ....application.ledger.actions_import import LedgerProviderID, installed_ledger_providers
 from ....application.ledger.own_account_operation import LedgerOwnAccountRequest, OwnAccountProjection
 from ....application.ledger.workspace import LedgerWorkspaceArea
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
@@ -27,14 +27,21 @@ from .workspace_screen import LedgerRouteRequested
 #: The account choice that binds rows only through the statement's own account identifier.
 _UNBOUND_ACCOUNT: Final = "-"
 
-#: The readers an operator may pick for a bank statement, automatic first.
-IMPORT_PROVIDERS: Final[tuple[LedgerProviderID, ...]] = (
+#: The readers the import screen has words for, automatic first.
+_LABELLED_PROVIDERS: Final[tuple[LedgerProviderID, ...]] = (
     LedgerProviderID.AUTO,
     LedgerProviderID.CSV,
     LedgerProviderID.OFX,
     LedgerProviderID.XLSX,
     LedgerProviderID.PDF,
 )
+
+
+def import_providers() -> tuple[LedgerProviderID, ...]:
+    """Return the readers an operator may pick: the labelled ones this installation parses."""
+    installed = set(installed_ledger_providers())
+    return tuple(provider for provider in _LABELLED_PROVIDERS if provider in installed)
+
 
 _SOURCE_KIND_LOCALE_KEYS: Final[dict[LedgerImportSourceKind, str]] = {
     LedgerImportSourceKind.BANK_STATEMENT: "tui.ledger.import.kind.bank_statement",
@@ -134,7 +141,7 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
                 "tui.ledger.import.provider_label",
             )
             yield Select[str](
-                tuple((tr(_PROVIDER_LOCALE_KEYS[provider]), provider.value) for provider in IMPORT_PROVIDERS),
+                tuple((tr(_PROVIDER_LOCALE_KEYS[provider]), provider.value) for provider in import_providers()),
                 value=LedgerProviderID.AUTO.value,
                 allow_blank=False,
                 id="ledger-import-provider",
@@ -398,4 +405,4 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
         self._offer_again()
 
 
-__all__ = ["IMPORT_PROVIDERS", "LedgerImportScreen", "import_outcome_lines"]
+__all__ = ["LedgerImportScreen", "import_outcome_lines", "import_providers"]

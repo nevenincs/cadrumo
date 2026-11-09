@@ -251,6 +251,28 @@ impl ServerStartFailure {
             Self::Version(_) => StartFailureKind::VersionUnconfirmed,
         }
     }
+
+    /// What the last version question got, for a start whose version was not
+    /// confirmed; none for any other kind.
+    pub fn last_check(&self) -> Option<String> {
+        match self {
+            Self::Version(failure) => Some(failure.check()),
+            _ => None,
+        }
+    }
+}
+
+impl VersionFailure {
+    /// What the version question got, without any value the server sent: `unreachable`,
+    /// `status_` and the HTTP status, `unreadable`, or `different_version`.
+    pub fn check(&self) -> String {
+        match self {
+            Self::Unreachable(_) => "unreachable".to_owned(),
+            Self::Status(status) => format!("status_{status}"),
+            Self::Unreadable => "unreadable".to_owned(),
+            Self::Different { .. } => "different_version".to_owned(),
+        }
+    }
 }
 
 /// What a start of the local AI server was doing when it failed, and how. Locale-neutral

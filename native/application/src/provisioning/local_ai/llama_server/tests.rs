@@ -368,17 +368,44 @@ fn the_router_runs_from_the_preset_on_its_address_with_no_model_loaded_or_evicte
             OsString::from("--no-models-autoload"),
         ]
     );
+    // No argument names a model to fetch: no Hugging Face repository or file, and no
+    // model URL.
+    const FETCHING: [&str; 12] = [
+        "-hf",
+        "-hfr",
+        "--hf-repo",
+        "-hff",
+        "--hf-file",
+        "-hfd",
+        "-hfrd",
+        "--hf-repo-draft",
+        "-mu",
+        "--model-url",
+        "-dr",
+        "--docker-repo",
+    ];
+    assert!(
+        command.arguments.iter().all(|argument| argument
+            .to_str()
+            .is_none_or(|text| !FETCHING.contains(&text))),
+        "{:?}",
+        command.arguments
+    );
     let environment = |name: &str| command.environment.get(OsStr::new(name)).cloned();
     // The address is the router's alone: the model instances it starts inherit its
-    // environment and must not read it as theirs.
-    assert!(
+    // environment and must not read it as theirs. The one setting they share is the
+    // offline mode, so none of them reaches the network.
+    assert_eq!(
         command
             .environment
             .keys()
-            .all(|name| !name.to_string_lossy().starts_with("LLAMA_ARG_")),
+            .filter(|name| name.to_string_lossy().starts_with("LLAMA_ARG_"))
+            .collect::<Vec<_>>(),
+        [OsStr::new("LLAMA_ARG_OFFLINE")],
         "{:?}",
         command.environment
     );
+    assert_eq!(environment("LLAMA_ARG_OFFLINE"), Some(OsString::from("1")));
     assert_eq!(
         environment("LLAMA_CACHE"),
         Some(folder.join("home").join("cache").into_os_string())
@@ -467,11 +494,12 @@ fn a_router_that_listens_is_waited_for_until_ready_and_then_its_build_is_confirm
             (HELPER_LOG, log.as_os_str()),
         ],
     );
-    // The router answers 503 until the gate is there, which opens once it has been asked.
+    // The router answers 503 until the gate is there, which opens once a health request
+    // has been answered 503.
     let opener = {
         let (ready, log) = (ready.clone(), log.clone());
         std::thread::spawn(move || {
-            logged(&log, "GET /health");
+            logged(&log, "answered 503");
             fs::write(&ready, b"").unwrap();
         })
     };
@@ -480,8 +508,10 @@ fn a_router_that_listens_is_waited_for_until_ready_and_then_its_build_is_confirm
     opener.join().unwrap();
 
     let written = fs::read_to_string(&log).unwrap();
-    let health = written.matches("GET /health").count();
-    assert!(health >= 2, "asked while unready and once ready: {written}");
+    assert!(
+        written.contains("answered 503") && written.contains("answered 200"),
+        "asked while unready and once ready: {written}"
+    );
     assert!(
         written.find("GET /props").unwrap() > written.rfind("GET /health").unwrap(),
         "the build is asked once it is ready: {written}"

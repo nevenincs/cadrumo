@@ -191,22 +191,6 @@ fn answer(state: &Shared, mut stream: TcpStream) {
     };
     let mut guard = state.lock().unwrap();
     guard.requests.push(request.line.clone());
-    if let Some(log) = &guard.log {
-        let mut file = std::fs::File::options()
-            .create(true)
-            .append(true)
-            .open(log)
-            .unwrap();
-        writeln!(
-            file,
-            "{} {}",
-            request.line,
-            String::from_utf8_lossy(&request.body)
-        )
-        .unwrap();
-    }
-    let body: Value = serde_json::from_slice(&request.body).unwrap_or(Value::Null);
-    guard.bodies.push(body.clone());
     let mut parts = request.line.split(' ');
     let method = parts.next().unwrap_or_default().to_owned();
     let target = parts
@@ -216,6 +200,33 @@ fn answer(state: &Shared, mut stream: TcpStream) {
         .next()
         .unwrap_or_default()
         .to_owned();
+    // The health answer is decided before the request is logged and is logged with it, so a
+    // reader of the log never sees a health request whose answer could still change.
+    let ready = guard.ready && guard.ready_file.as_ref().is_none_or(|file| file.exists());
+    let health = (method == "GET"
+        && target == "/health"
+        && !guard.hang_ups.contains(&target)
+        && !guard.failures.contains_key(&target))
+    .then_some(if ready { 200 } else { 503 });
+    if let Some(log) = &guard.log {
+        let mut file = std::fs::File::options()
+            .create(true)
+            .append(true)
+            .open(log)
+            .unwrap();
+        let answered = health
+            .map(|status| format!(" answered {status}"))
+            .unwrap_or_default();
+        writeln!(
+            file,
+            "{} {}{answered}",
+            request.line,
+            String::from_utf8_lossy(&request.body)
+        )
+        .unwrap();
+    }
+    let body: Value = serde_json::from_slice(&request.body).unwrap_or(Value::Null);
+    guard.bodies.push(body.clone());
 
     // The routes that look into the fake answer whatever is scripted for the others.
     match (method.as_str(), target.as_str()) {
@@ -250,9 +261,8 @@ fn answer(state: &Shared, mut stream: TcpStream) {
     }
     match (method.as_str(), target.as_str()) {
         ("GET", "/health") => {
-            let ready = guard.ready && guard.ready_file.as_ref().is_none_or(|file| file.exists());
             drop(guard);
-            if ready {
+            if health == Some(200) {
                 respond(&mut stream, "200 OK", &json!({ "status": "ok" }));
             } else {
                 respond(

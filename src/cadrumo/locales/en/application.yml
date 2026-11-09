@@ -2894,6 +2894,15 @@ application:
         one_year: Box {box} of modelo {modelo}, tax year {years}.
         onwards: Box {box} of Modelo {modelo}, tax years {years} onwards.
         year_span: Box {box} of Modelo {modelo}, tax years {years}.
+      carry_attestation:
+        renta_negative_general_bases_pending:
+          action: I have no amounts pending from earlier years
+          effect: 'Recorded as a 0 you stated: nothing pending from earlier years.'
+          origin: You stated nothing is pending
+          statement: States that no negative general taxable base from the four previous
+            years is still pending offset (art. 50.3 Ley 35/2006). Each carry is recorded
+            as a 0 you stated, apart from a figure you typed; if an earlier return
+            later shows an amount, the declaration flags the difference.
       finding_action:
         add_activity_start: Add the date your activity started to your profile, then
           calculate again.

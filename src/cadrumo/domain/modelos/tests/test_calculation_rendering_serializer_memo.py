@@ -5,6 +5,7 @@ from __future__ import annotations
 import gc
 import json
 from collections.abc import Iterator
+from typing import Any
 
 import pytest
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError
@@ -277,3 +278,85 @@ def test_label_changes_on_a_digested_snapshot_are_refused(rendering_batch: _Rend
 
     with pytest.raises(ValidationError, match="metadata digest does not match"):
         CalculationRenderingSnapshot.model_validate({**dict(captured), "labels": relabelled})
+
+
+def test_a_snapshot_is_serialized_once_and_each_call_receives_its_own_equal_mapping(
+    rendering_batch: _RenderingBatch, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    snapshot = rendering_batch.snapshots[0].registry_snapshot
+    compiled = rendering.compile_registry_serializer()
+    # The uncached traversal is the independent expected value.
+    expected = compiled.to_python(snapshot, mode="json", by_alias=False, exclude_computed_fields=True)
+    serializer = _CountingSerializer(compiled)
+    monkeypatch.setattr(rendering, "REGISTRY_SERIALIZER", _FixedSerializer(serializer))
+
+    first = rendering.registry_payload(snapshot)
+    revision = first["revision"]
+    assert isinstance(revision, dict)
+    revision["localization_key"] = "altered by a caller"
+    first.pop("sources")
+    second = rendering.registry_payload(snapshot)
+    third = rendering.registry_payload(snapshot)
+
+    assert second == third == expected
+    assert second is not third
+    assert second["revision"] is not third["revision"]
+    assert serializer.traversals == 1
+
+
+class _CountingSerializer:
+    """Delegate to a compiled serializer and count the traversals it performs."""
+
+    def __init__(self, compiled: SchemaSerializer) -> None:
+        self._compiled = compiled
+        self.traversals = 0
+
+    def to_python(self, value: object, **options: Any) -> Any:
+        self.traversals += 1
+        return self._compiled.to_python(value, **options)
+
+
+class _FixedSerializer:
+    def __init__(self, serializer: _CountingSerializer) -> None:
+        self._serializer = serializer
+
+    def serializer(self) -> _CountingSerializer:
+        return self._serializer
+
+
+def test_a_held_serialization_is_used_only_for_its_own_snapshot_and_serializer(
+    rendering_batch: _RenderingBatch,
+) -> None:
+    memo = rendering.VerifiedRegistryMemo(max_payload_bytes=0)
+    first, second = (value.registry_snapshot for value in rendering_batch.snapshots)
+    serializer = rendering.REGISTRY_SERIALIZER.serializer()
+    other_serializer = rendering.compile_registry_serializer()
+    computed: list[str] = []
+
+    def compute(label: str) -> dict[str, object]:
+        computed.append(label)
+        return {"label": label}
+
+    assert memo.registry_payload(first, serializer, lambda: compute("first")) == {"label": "first"}
+    assert memo.registry_payload(first, serializer, lambda: compute("again")) == {"label": "first"}
+    assert memo.registry_payload(second, serializer, lambda: compute("second")) == {"label": "second"}
+    assert memo.registry_payload(first, other_serializer, lambda: compute("recompiled")) == {"label": "recompiled"}
+    assert computed == ["first", "second", "recompiled"]
+
+
+@pytest.mark.parametrize("payload", ({"rows": (1, 2)}, {"rate": float("nan")}, {"amount": object()}))
+def test_a_payload_the_text_would_not_reproduce_is_computed_on_every_call(
+    rendering_batch: _RenderingBatch, payload: dict[str, object]
+) -> None:
+    memo = rendering.VerifiedRegistryMemo(max_payload_bytes=0)
+    snapshot = rendering_batch.snapshots[0].registry_snapshot
+    serializer = rendering.REGISTRY_SERIALIZER.serializer()
+    computed: list[dict[str, object]] = []
+
+    def compute() -> dict[str, object]:
+        computed.append(payload)
+        return payload
+
+    assert memo.registry_payload(snapshot, serializer, compute) is payload
+    assert memo.registry_payload(snapshot, serializer, compute) is payload
+    assert len(computed) == 2

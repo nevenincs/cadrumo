@@ -93,12 +93,28 @@ def ensure_profile_custody_local_directory(path: Path) -> None:
             descriptor = posix_open_child_directory(parent_fd, path.name)
             os.close(descriptor)
             return
-    # The child's anchor stands on the parent's held, verified chain rather than opening it again.
     with shared_directory_anchors(), ExitStack() as anchors:
-        anchor_directory(anchors, path.parent, final_access=0x80000000)
-        if not _windows_child_entry_present(path):
-            _create_custody_child(lambda: path.mkdir(mode=0o700))
-        anchor_directory(anchors, path, final_access=0x80000000)
+        hold_profile_custody_local_directory(anchors, path)
+
+
+def hold_profile_custody_local_directory(stack: ExitStack, path: Path) -> None:
+    """Provision one custody-owned directory and keep its verified Windows chain held on ``stack``.
+
+    It provisions exactly as :func:`ensure_profile_custody_local_directory`
+    does. Inside a :func:`shared_directory_anchors` scope, an anchor the
+    caller opens on ``path`` while ``stack`` stays open stands on these
+    handles instead of opening and verifying every component again.
+    """
+    if os.name != "nt":
+        ensure_profile_custody_local_directory(path)
+        return
+    if path.name in {"", ".", ".."}:
+        raise ProfileCustodyRecordError("local custody directory must name one child")
+    # The child's anchor stands on the parent's held, verified chain rather than opening it again.
+    anchor_directory(stack, path.parent, final_access=0x80000000)
+    if not _windows_child_entry_present(path):
+        _create_custody_child(lambda: path.mkdir(mode=0o700))
+    anchor_directory(stack, path, final_access=0x80000000)
 
 
 def _posix_child_entry_present(parent_fd: int, name: str) -> bool:

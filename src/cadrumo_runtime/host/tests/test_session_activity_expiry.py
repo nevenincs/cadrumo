@@ -11,6 +11,7 @@ from uuid import uuid4
 
 import pytest
 
+from cadrumo.core.config import load_settings
 from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.profile_access import ProfileStatus
@@ -66,8 +67,12 @@ def test_cli_and_tui_activity_renew_shared_login_then_idle_pushes_desktop_sign_o
             SignInStatusRequest(request_id=uuid4(), profile_id=runtime.profile_id, watch=True),
             deadline=time.monotonic() + 5,
         )
+        # Activity renews by the configured idle window. A resumed lease is
+        # issued at admission but ends at the stored sign-in's idle deadline,
+        # counted from when the sign-in was stored, so it can be shorter.
+        idle_window = timedelta(minutes=load_settings().cadrumo_bucket_default_idle_lock_minutes)
         original = runtime.lease(clients[0][1])
-        idle_window = original.expires_at - original.issued_at
+        assert original.expires_at <= original.issued_at + idle_window
         for connection, session_id in clients:
             runtime.clock.ahead += idle_window * 0.75
             reply = runtime.session(connection, session_id, "session_activity")
