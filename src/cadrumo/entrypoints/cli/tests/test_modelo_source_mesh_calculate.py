@@ -82,6 +82,9 @@ _OPERATOR_FACTS: dict[str, str] = {
     "iva.cash_accounting_regime_enrolled": "false",
     "iva.voluntary_sii_enrolled": "false",
     "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+    # Not a gran empresa, so the 303 and the withholding modelos are quarterly
+    # (RIVA art. 71.3, RIRPF art. 108.1).
+    "censo.large_company": "false",
     # The operator pays an employee and a rented workshop with retencion, so the
     # payer modelos 111, 115, 180 and 190 apply to the profile.
     "withholding.has_employees": "true",

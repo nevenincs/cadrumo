@@ -71,7 +71,7 @@ from ...domain.modelos.row_models import (
     resolve_detail_row_owning_modelos,
 )
 from ...domain.modelos.work_unit import WorkUnit
-from .action_errors import ModeloAggregationBindingError, ModeloCrossPeriodCleanStateError
+from .action_errors import ModeloAggregationInputConflictError, ModeloCrossPeriodCleanStateError
 from .preconditions import build_modelo_precondition_failure
 from .work_form_wording import modelo_number
 
@@ -204,8 +204,8 @@ def union_detail_rows_by_identity(
                 if getattr(resolver_row, field) != getattr(caller_row, field)
             ),
         )
-        raise ModeloAggregationBindingError(
-            translated_message="errors.error.error_modelo_aggregation_binding",
+        raise ModeloAggregationInputConflictError(
+            translated_message="application.modelo.errors.detail_row_identity_conflict",
             context={
                 "reason": "detail_row_identity_conflict",
                 "row_type": caller_row.row_type,

@@ -2216,6 +2216,9 @@ application:
         a számlát a tételhez, majd futtasd újra a aeat app modelo work verify parancsot:
         az ellenőrzés nem fejeződik be, amíg egy levonható tételhez nincs számla,
         így a piszkozat nyitva marad, és átveszi a bizonylatot.'
+      detail_row_identity_conflict: Egy általad megadott részletező sor nem egyezik
+        a nyilvántartásaid szerinti sorral ugyanarra a nyilatkozóra; javítsd vagy
+        töröld a számítás előtt.
       export_cross_bucket_refused: A megcímzett revízió nem az aktív profil bucketjéhez
         tartozik. Exportálás előtt váltson profilt.
       export_draft_approval_failed: Nem sikerült jóváhagyni a(z) %{calculation_revision_id}
@@ -2399,6 +2402,8 @@ application:
         használhatatlan sor van: %{malformed_rows}'
       m036_declaration_profile_bucket_mismatch: A Modelo 036 bevallása más profilt
         nevez meg, mint az a tároló, amelybe rögzülne
+      m200_accounting_result_required: A Modelo 200 főkönyvből való számításához szükség
+        van az év számviteli eredményére.
       m210_ledger_manual_agrupacion_rows: A Modelo 210 nyilvántartás-módban az éves
         csoportosított jövedelemsorokat a nyilvántartásaid besorolásaiból származtatja;
         ne adj meg kézi agrupacion-renta sorokat.
@@ -2417,6 +2422,9 @@ application:
         IDOBELYEG`, majd próbáld újra a számítást.'
       m303_filing_evidence_invalid: A Modelo 303 bevallási példányának bizonyítéka
         nem felelt meg az ellenőrzésnek.
+      m349_operator_rows_required: Ennek az időszaknak a főkönyvében Közösségen belüli
+        ügyletek vannak a Modelo 349 partnersorai nélkül; add hozzá őket a számítás
+        előtt.
       novel_source_kind_rejected: 'Ismeretlen számítási forrástípus(ok) %{novel_source_kinds}
         a(z) %{revision_id} változatban: a nyomtatványdefiníciók olyan értékforrást
         deklarálnak, amelyet egyetlen számítási feloldó sem kezel. Adj hozzá egy feloldót,
@@ -2480,6 +2488,8 @@ application:
         szükséges.
       revision_pick_id_requires_explicit_selector: A calculation_revision_id csak
         explicit revízió kiválasztóval érvényes.
+      source_owned_binding_override: Olyan mezőbe írtál értéket, amely a nyilvántartásaidból
+        származik; töröld, vagy javítsd a forrásbejegyzést.
       verification_report_not_found: 'Nem található ellenőrzési jelentés ezzel az
         azonosítóval: %{verification_report_id}.'
       work_period_token_invalid: 'A --period ''%{token}'' nem érvényes időszak-token
@@ -2839,6 +2849,7 @@ application:
         kezdő kompenzációs alapot. Módosítása egy benyújtottként rögzített bevallást
         változtatna meg.'
       next_step:
+        open: IVA-egyenleg megnyitása
         open_opening_balance: 'Rögzítsd a nyitó IVA-egyenleget: %{modelo}, %{period}'
       override_fresh_wallet_blocked: 'Felülbírálás elutasítva: az AEAT pénztárának
         aktuális leolvasása már feloldja a Modelo 303-at %{period} %{filing_year}.
@@ -2924,6 +2935,7 @@ application:
         create_work: 'Hozd létre: %{modelo}, %{period}'
         open_movement: Nyisd meg a tételt a Naplóban
         open_work: 'Nyisd meg: %{modelo}, %{period}'
+        verify_work: 'Ellenőrizd: %{modelo}, %{period}'
       no_m130_revisions: A(z) %{year} adóév Modelo 130 bevallásait még nem számoltad
         ki, így nincs miből becslést készíteni az éves bevallásról. Számolj ki egy
         negyedévet, majd kérd újra a becslést.

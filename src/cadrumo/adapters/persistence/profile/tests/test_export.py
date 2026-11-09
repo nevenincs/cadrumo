@@ -38,8 +38,8 @@ from cadrumo.adapters.persistence.profile.tests.modelo_export_support import (
 from cadrumo.application.filing.export import export_layout_renderability_reason
 from cadrumo.application.modelo.action_errors import (
     CalculationRevisionNotFoundError,
-    CalculationRevisionStateError,
     ModeloCrossPeriodCleanStateError,
+    ModeloRevisionNotSealedError,
 )
 from cadrumo.application.modelo.export import export_modelo_revision
 from cadrumo.application.modelo.export_contracts import (
@@ -49,7 +49,10 @@ from cadrumo.application.modelo.export_contracts import (
     ModeloExportResult,
     ModeloIvaWalletDecisionProvenance,
 )
+from cadrumo.application.operations.error_detail import build_operation_error_detail
+from cadrumo.application.operations.next_step import OperationVerifyWorkStepV1
 from cadrumo.core.config import override_settings
+from cadrumo.core.errors.error_codes import ErrorCategory, get_registered_error_code
 from cadrumo.core.period import Period
 from cadrumo.domain.filing.schema import ModeloCasillaProvenance
 from cadrumo.domain.modelos.calculation_repository import (
@@ -220,9 +223,9 @@ def test_export_refuses_borrador_revision(
     already verified, not a work-in-progress."""
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         bucket_id = seed_profile()
-        _, calc_rev_id = seed_revision(bucket_id=bucket_id, state=CalculationRevisionState.BORRADOR)
+        work_unit_id, calc_rev_id = seed_revision(bucket_id=bucket_id, state=CalculationRevisionState.BORRADOR)
 
-        with pytest.raises(CalculationRevisionStateError) as exc_info:
+        with pytest.raises(ModeloRevisionNotSealedError) as exc_info:
             export_modelo_revision(
                 ModeloExportCommand(
                     calculation_revision_id=calc_rev_id,
@@ -238,6 +241,13 @@ def test_export_refuses_borrador_revision(
             "calculation_revision_id": calc_rev_id,
             "state": CalculationRevisionState.BORRADOR.value,
         }
+        # The filer puts it right by checking the declaration, so it is refused, effect none, with that door.
+        assert get_registered_error_code(exc_info.value).category is ErrorCategory.REFUSED
+        detail = build_operation_error_detail(exc_info.value)
+        assert detail is not None
+        assert isinstance(detail.next_step, OperationVerifyWorkStepV1)
+        assert detail.next_step.work_unit_id == work_unit_id
+        assert detail.next_step.words.strip() != ""
 
 
 def test_export_refuses_persisted_registry_revision_divergence(

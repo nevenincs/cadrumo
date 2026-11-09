@@ -19,7 +19,11 @@ from ....adapters.persistence.profile.tests.secure_objects_fixture import secure
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from ....application.modelo.action_errors import ModeloAggregationBindingError, ModeloLedgerPreflightBlockedError
+from ....application.modelo.action_errors import (
+    ModeloAggregationBindingError,
+    ModeloAggregationInputConflictError,
+    ModeloLedgerPreflightBlockedError,
+)
 from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -592,7 +596,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_conflicting_b
         ),
     )
 
-    with pytest.raises(ModeloAggregationBindingError) as excinfo, _calculation_ports() as ports:
+    with pytest.raises(ModeloAggregationInputConflictError) as excinfo, _calculation_ports() as ports:
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=ports,
@@ -601,7 +605,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_conflicting_b
             binding_values={"modelo-303-iva-repercutido-general-cuota": Decimal("99.00")},
             clock=_T1,
         )
-    assert excinfo.value.translated_message == "errors.error.error_modelo_aggregation_binding"
+    assert excinfo.value.translated_message == "application.modelo.errors.source_owned_binding_override"
 
     assert cr_repo.load().revisions == {}
     assert all(
@@ -616,7 +620,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_empty_bucket_
     wu_repo, cr_repo, event_repo, _tx_repo = _repositories(secure_objects)
     work_unit = _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo, operation=operation)
 
-    with pytest.raises(ModeloAggregationBindingError) as excinfo, _calculation_ports() as ports:
+    with pytest.raises(ModeloAggregationInputConflictError) as excinfo, _calculation_ports() as ports:
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=ports,
@@ -625,7 +629,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_empty_bucket_
             binding_values={"modelo-303-iva-repercutido-general-cuota": Decimal("99.00")},
             clock=_T1,
         )
-    assert excinfo.value.translated_message == "errors.error.error_modelo_aggregation_binding"
+    assert excinfo.value.translated_message == "application.modelo.errors.source_owned_binding_override"
 
     assert cr_repo.load().revisions == {}
     assert all(

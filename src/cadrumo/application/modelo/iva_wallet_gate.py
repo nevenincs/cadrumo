@@ -39,7 +39,8 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Generator, Mapping
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
@@ -49,6 +50,7 @@ from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
+from ...core.identity.hex_ids import WorkUnitId
 from ...core.identity.tax_id import same_tax_identifier
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period
@@ -81,6 +83,7 @@ from ..operations.next_step import (
     OperationNextStepErrorMixin,
     OperationNextStepWording,
     OperationOpenIvaWalletOpeningBalanceStepV1,
+    OperationOpenIvaWalletStepV1,
 )
 from ..user_profile.projections import profile_path_values_for_bucket
 from .action_errors import ModeloPreconditionErrorMixin
@@ -128,12 +131,15 @@ class _PriorCompensationInputs(NamedTuple):
     backend_casilla_value: Decimal | None
 
 
-class ModeloIvaWalletReconciliationBlockedError(
-    OperationNextStepErrorMixin,
-    ModeloPreconditionErrorMixin,
-    ModeloError,
-):
-    """Raised when Modelo 303 calculation is blocked by IVA wallet reconciliation."""
+class ModeloIvaWalletReconciliationBlockedError(OperationNextStepErrorMixin, ModeloPreconditionErrorMixin, ModeloError):
+    """Raised when Modelo 303 calculation is blocked by IVA wallet reconciliation.
+
+    A refusal the filer puts right, not a failure: the carried compensation
+    needs an authority they supply in the declaration's Saldo de IVA (the AEAT
+    wallet captured, the amount declared on the previous return registered, or
+    an override). :func:`iva_wallet_door` names that door where the work unit
+    is known.
+    """
 
     def __init__(
         self,
@@ -171,6 +177,53 @@ class ModeloIvaWalletReconciliationBlockedError(
 
 
 ModeloIvaWalletReconciliationBlocked = ModeloIvaWalletReconciliationBlockedError
+
+
+class ModeloIvaWalletAuthorityUnavailableError(ModeloIvaWalletReconciliationBlockedError):
+    """Raised when the registry the wallet gate reads cannot be read for the work unit.
+
+    Nothing the filer records puts this right, so it stays a failure and serves
+    no door, while still being caught wherever a wallet block is.
+    """
+
+
+_OPEN_IVA_WALLET_LOCALE_KEY: Final = "application.modelo.iva_wallet.next_step.open"
+
+
+def open_iva_wallet_step(work_unit_id: WorkUnitId) -> OperationNextStepWording:
+    """Offer opening the Saldo de IVA of ``work_unit_id``, worded in the step's own language."""
+
+    def worded(language: OutputLanguage) -> OperationOpenIvaWalletStepV1:
+        return OperationOpenIvaWalletStepV1(
+            work_unit_id=work_unit_id,
+            words=tr(_OPEN_IVA_WALLET_LOCALE_KEY, locale=language.value),
+        )
+
+    return worded
+
+
+@contextmanager
+def iva_wallet_door(work_unit_id: WorkUnitId) -> Generator[None]:
+    """Serve the Saldo de IVA of ``work_unit_id`` as the door of a wallet refusal raised inside.
+
+    The gate's helpers refuse without knowing the work unit; the boundary that
+    holds it names the door once, here. An unreadable registry is no refusal of
+    the filer's and passes through unchanged.
+    """
+    try:
+        yield
+    except ModeloIvaWalletAuthorityUnavailableError:
+        raise
+    except ModeloIvaWalletReconciliationBlockedError as refused:
+        message = refused.translated_message
+        if message is None or refused.operation_next_step(OutputLanguage.ES) is not None:
+            raise
+        raise ModeloIvaWalletReconciliationBlockedError(
+            translated_message=message,
+            precondition_failure=refused.precondition_failure,
+            context=refused.context,
+            next_step=open_iva_wallet_step(work_unit_id),
+        ) from refused
 
 
 def _blocked_refusal(decision: IvaCompensationReconciliationDecision) -> tuple[str, str]:
@@ -277,15 +330,16 @@ def _raise_iva_wallet_precondition(
     evidence_values: Mapping[str, str | int | bool | Decimal],
     context: Mapping[str, object] | None = None,
     cause: BaseException | None = None,
+    error_type: type[ModeloIvaWalletReconciliationBlockedError] = ModeloIvaWalletReconciliationBlockedError,
     carry_period: Period | None = None,
 ) -> Never:
-    """Raise one locale-neutral IVA-wallet readiness refusal.
+    """Raise one locale-neutral IVA-wallet readiness refusal, or ``error_type`` where it is no refusal.
 
     ``carry_period`` is the Modelo 303 period whose carry the gate was settling.
     Where the reason is one the wallet's opening balance settles, the refusal
     carries the step that opens that entry; nothing is written either way.
     """
-    error = ModeloIvaWalletReconciliationBlocked(
+    error = error_type(
         translated_message=translated_message,
         context=context,
         precondition_failure=build_modelo_precondition_failure(
@@ -313,6 +367,7 @@ def _persisted_decision_for_calculation(
     history_repository: IvaCompensationHistoryRepositoryProtocol,
     profile_values: Mapping[str, str] | None,
     evaluated_at: datetime | None = None,
+    persist_blocked: bool = True,
 ) -> IvaCompensationReconciliationDecision | None:
     persisted = load_persisted_iva_compensation_decision_for_work_unit(
         work_unit,
@@ -331,6 +386,7 @@ def _persisted_decision_for_calculation(
         history_repository=history_repository,
         profile_values=profile_values,
         evaluated_at=evaluated_at,
+        persist_blocked=persist_blocked,
     )
     return _require_first_period_zero_decision_grounded(
         work_unit,
@@ -379,7 +435,7 @@ def _resolve_caller_supplied_prior_compensation(
             subject_leaf_key="modelo.work.calculate",
             profile_values=profile_values,
         )
-    _save_iva_compensation_decision(decision, repository=repository)
+        _save_iva_compensation_decision(decision, repository=repository)
     return decision
 
 
@@ -461,6 +517,9 @@ def resolve_iva_compensation_decision_for_calculation(
             repository=repository,
             profile_values=profile_values,
         )
+    # A blocked decision is refused right after this returns, so the
+    # calculation stores none: the refusal then writes nothing and settles with
+    # no effect. Verification, filing and export still store a blocked refresh.
     persisted = _persisted_decision_for_calculation(
         work_unit,
         snapshot=snapshot,
@@ -470,6 +529,7 @@ def resolve_iva_compensation_decision_for_calculation(
         history_repository=history_repository,
         profile_values=profile_values,
         evaluated_at=evaluated_at,
+        persist_blocked=False,
     )
     if persisted is not None:
         return persisted
@@ -858,6 +918,7 @@ def _registry_snapshot_for_work_unit(
         _raise_iva_wallet_precondition(
             subject_leaf_key=subject_leaf_key,
             reason_code="registry_snapshot_unavailable",
+            error_type=ModeloIvaWalletAuthorityUnavailableError,
             translated_message="application.modelo.errors.iva_wallet_registry_snapshot_unavailable",
             evidence_values={
                 "modelo_id": str(work_unit.modelo),
@@ -888,6 +949,7 @@ def _refresh_local_iva_compensation_decision_if_evidence_changed(
     history_repository: IvaCompensationHistoryRepositoryProtocol,
     profile_values: Mapping[str, str] | None,
     evaluated_at: datetime | None = None,
+    persist_blocked: bool = True,
 ) -> IvaCompensationReconciliationDecision:
     if decision.selected_authority == "taxpayer_override":
         return decision
@@ -905,7 +967,8 @@ def _refresh_local_iva_compensation_decision_if_evidence_changed(
     )
     if refreshed is None or _decision_replay_basis(refreshed) == _decision_replay_basis(decision):
         return decision
-    _save_iva_compensation_decision(refreshed, repository=repository)
+    if persist_blocked or not refreshed.blocked:
+        _save_iva_compensation_decision(refreshed, repository=repository)
     return refreshed
 
 
@@ -1167,7 +1230,7 @@ def _reconcile_local_iva_compensation(
         subject_leaf_key="modelo.work.calculate",
         profile_values=profile_values,
     )
-    if persist:
+    if persist and not decision.blocked:
         _save_iva_compensation_decision(decision, repository=repository)
     return decision
 
@@ -1197,6 +1260,31 @@ def require_persisted_iva_compensation_decision_matches_revision(
         The matching :class:`IvaCompensationReconciliationDecision` for Modelo
         303, or ``None`` for non-Modelo 303 work units.
     """
+    with iva_wallet_door(work_unit.work_unit_id):
+        return _persisted_decision_matching_revision(
+            work_unit,
+            revision,
+            repository=repository,
+            observation_repository=observation_repository,
+            history_repository=history_repository,
+            operation=operation,
+            subject_leaf_key=subject_leaf_key,
+            evaluated_at=evaluated_at,
+        )
+
+
+def _persisted_decision_matching_revision(
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+    *,
+    repository: IvaWalletDecisionRepositoryProtocol,
+    observation_repository: CalculationObservationRepositoryProtocol,
+    history_repository: IvaCompensationHistoryRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
+    subject_leaf_key: str = "modelo.export",
+    evaluated_at: datetime | None = None,
+) -> IvaCompensationReconciliationDecision | None:
+    """The check behind :func:`require_persisted_iva_compensation_decision_matches_revision`, without its door."""
     if work_unit.modelo != form_for_role("iva.periodic"):
         return None
     profile_values = profile_path_values_for_bucket(work_unit.bucket_id)

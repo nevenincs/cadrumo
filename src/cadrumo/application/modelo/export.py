@@ -940,7 +940,7 @@ def _prepare_modelo_export(
         filing_repository=export_ports.filing,
         justificante_repository=export_ports.justificante,
     )
-    require_exportable_revision_state(revision)
+    require_exportable_revision_state(revision, work_unit=work_unit)
     # A handoff whose filed source was replaced makes the revision a statement
     # about superseded facts, so it is refused before anything judges that
     # revision's own evidence -- the order verification and filing keep too.

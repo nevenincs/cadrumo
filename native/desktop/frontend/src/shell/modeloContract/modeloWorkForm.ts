@@ -39,6 +39,7 @@ import type {
   SourceSurface,
 } from "./modeloWork";
 import type {
+  PublicModeloWorkFormLoadV1,
   PublicRefundEligibility,
   PublicScalarValueV1,
   PublicSpanishTaxIdFormat,
@@ -927,10 +928,12 @@ export type OperationCreateWorkStepV1 = {
 export type OperationNextStepV1 =
   | OperationCreateWorkStepV1
   | OperationCalculateWorkStepV1
+  | OperationVerifyWorkStepV1
   | OperationOpenWorkStepV1
   | OperationOpenProfileFieldStepV1
   | OperationCompleteProfileSetupStepV1
   | OperationOpenMovementStepV1
+  | OperationOpenIvaWalletStepV1
   | OperationOpenIvaWalletOpeningBalanceStepV1;
 
 /**
@@ -946,6 +949,16 @@ export type OperationOpenIvaWalletOpeningBalanceStepV1 = {
   modelo: string;
   filing_year: number;
   period_code: string;
+  words: string;
+};
+
+/**
+ * Open the Saldo de IVA of the declaration one work unit holds, where its
+ * carried compensation is recorded.
+ */
+export type OperationOpenIvaWalletStepV1 = {
+  kind: "open_iva_wallet";
+  work_unit_id: WorkUnitId;
   words: string;
 };
 
@@ -975,6 +988,15 @@ export type OperationOpenProfileFieldStepV1 = {
  */
 export type OperationOpenWorkStepV1 = {
   kind: "open_work";
+  work_unit_id: WorkUnitId;
+  words: string;
+};
+
+/**
+ * Check the declaration one work unit holds, so its calculation is verified.
+ */
+export type OperationVerifyWorkStepV1 = {
+  kind: "verify_work";
   work_unit_id: WorkUnitId;
   words: string;
 };
@@ -1287,63 +1309,4 @@ export type PublicModeloVerificationFinding = {
   message_facts: PublicFactEntryV1[];
   legal_refs: string[];
   source_refs: string[];
-};
-
-/**
- * Typed local-human workbench view of ModeloWorkForm.
- */
-export type PublicModeloWorkForm = {
-  modelo: string;
-  filing_year: number;
-  period: PublicPeriod;
-  registry_revision_id: string;
-  year_projection: ModeloFormYearProjection;
-  work_unit_id: string;
-  calculation_revision_id: string | null;
-  language: OutputLanguage;
-  layout_provenance: ModeloFormLayoutProvenance;
-  inspection_reason: ModeloFormInspectionReason | null;
-  seed_source: FormLayoutSeedSource | null;
-  pages: PublicModeloFormPage[];
-  outline: ModeloFormOutlineGroup[];
-  working_figures: PublicModeloFormField[];
-  unplaced: PublicModeloFormUnplacedField[];
-  answers: PublicModeloFormField[];
-  result_addresses: CasillaId[];
-  withholding_credits: ModeloFormCredit[];
-  withholding_credits_heading: string | null;
-  counts: ModeloFormCounts;
-  progress: ModeloWorkProgress;
-  operator_entries_known: boolean;
-  edit_admitted: boolean;
-  verification: VerificationCompletenessStatus | null;
-  issues: PublicModeloFormIssue[];
-  calculation_notes: ModeloFormCalculationNote[];
-  calculation_notes_held: boolean;
-  source_groups: ModeloFormSourceGroup[];
-  result: PublicModeloFormResult | null;
-  deadline: ModeloFormDeadline | null;
-  aeat_data: ModeloFormAeatData | null;
-  projectable: boolean;
-  asks_imputation_election: boolean;
-  compares_taxation: boolean;
-  compares_borrador: boolean;
-  offers_iva_wallet: boolean;
-  filing: ModeloFormFiling | null;
-  last_export: ModeloFormExport | null;
-  edit_closure: ModeloFormEditClosure | null;
-  carry_attestations: ModeloFormCarryAttestation[];
-  modelo_title: string | null;
-  modelo_name: string | null;
-  modelo_number: string | null;
-  period_words: string | null;
-};
-
-/**
- * Typed local-human workbench view of ModeloWorkFormLoadV1.
- */
-export type PublicModeloWorkFormLoadV1 = {
-  form: PublicModeloWorkForm;
-  verified: boolean;
-  filed: boolean;
 };
