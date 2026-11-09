@@ -22,6 +22,7 @@ use cadrumo_application::provisioning::{
     local_ai::{
         Placement, ServerCall, StartFailureKind,
         loopback::{ExchangeFailure, ExchangePhase},
+        registry,
     },
     pins::{ComponentPins, Platform},
     test_servers::{Released, Reply, Request, TestCertificate, TlsServer, response},
@@ -176,7 +177,13 @@ impl Fixture {
         std::fs::create_dir_all(&pins).unwrap();
         std::fs::write(pins.join("browser_archives.toml"), table).unwrap();
         driver(&scratch.0.join("driver"));
-        let certificate = TestCertificate::new(&[HOST, MODEL_HOST]);
+        // A model on the registry may be fetched from its storage hosts too, and a plan
+        // reaches every host a model may come from, so the publisher answers for each.
+        let model_hosts = registry::source_hosts(&ModelName::parse(TEXT).unwrap());
+        let names: Vec<&str> = std::iter::once(HOST)
+            .chain(model_hosts.iter().map(|host| host.as_str()))
+            .collect();
+        let certificate = TestCertificate::new(&names);
         let server = TlsServer::start(&certificate, move |request: &Request| {
             let Some(bytes) = served.get(request.target()) else {
                 return Reply::Bytes(response(
