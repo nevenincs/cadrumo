@@ -5,7 +5,7 @@ tags:
 date: '2026-11-08'
 modified: '2026-11-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:df241d045e1f8677f326df5ecd7f6dedfd1612dac70c99f9f86ecfcd5dc18d82'
+body_hash: 'sha256:3e1d5ff046cd27fddd79683be4f1b42914258dc432460d42eb4d9551b71863e6'
 related:
   - "[[2026-11-08-prior-carry-attestation-plan]]"
 ---
@@ -68,6 +68,9 @@ related:
 - `S03` `M` `src/cadrumo/application/modelo/work_form_wording.py`
 - `S03` `verify:` `operation-contract-manifest --check` -> `pass`
 - `S03` `verify:` `lint-imports` -> `pass`
+- `S03` `A` `src/cadrumo/application/modelo/tests/test_work_form_carry_attestation_words.py`
+- `S03` `M` `src/cadrumo/domain/calculations/registry/tests/test_binding_absence_attestation.py`
+- `S03` `verify:` `dev/locales/tests parity+audit` -> `pass`
 
 ## Notes
 
@@ -79,3 +82,4 @@ related:
 - `S02` f12fa675a4: stated carry visible on its field
 - `S03` f12fa675a4; locale failures are the root-only dictionary/aeat-script cases
 - `S04` f12fa675a4; Playwright spec needs root `node_modules,` not run
+- `S03` 8d495903b0: re-review locale-key-fanout and validator prong

@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#prior-carry-attestation'
 date: '2026-11-08'
-modified: '2026-11-08'
+modified: '2026-11-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:98620c406a30fd4633b4308d3ee189f8d77cc07b235faf50fbace6d5b02aea9c'
+body_hash: 'sha256:152782379f6defe17f6a51fdacb38ee7f506fb9df8a57e6327a16eb82a9e0174'
 related:
   - "[[2026-11-08-prior-carry-attestation-plan]]"
 ---
@@ -60,3 +60,31 @@ Recorded on `renta/d33-m100-carry` after the coordinator approved the registry d
 - attested-provenance: resolved. An attested carry's field serves `stated_absent` and its family's origin words (`src/cadrumo/application/modelo/work_form_field_projection.py`, `src/cadrumo/application/modelo/work_form_wording.py`). A typed zero serves neither; the same test file pins this for every Modelo 100 envelope year.
 - review-effect-words: resolved. Each staged statement shows its family's served effect words.
 - decision-reconciliation: open. The D4 amendment of `2026-08-24-modelo-edit-contract-adr` awaits authorization. `2026-11-08-prior-carry-attestation-adr` now names the registry declaration.
+
+## Re-review 2026-11-08
+
+Independent read-only re-review of `f12fa675a4` and `913990e6ce`: verdict PASS. The attestation-scope, attested-provenance and review-effect-words findings are closed. New findings below, each needing current-code verification.
+
+### locale-key-fanout | medium | A second declared family without words would make the whole work form fail to load
+
+The per-family locale-key maps in `src/cadrumo/application/modelo/work_form_carry_attestation.py` and `src/cadrumo/application/modelo/work_form_wording.py` were unguarded subscripts. Resolved in the follow-up commit: each map is checked at import against every `AbsenceAttestationFamily` member. `src/cadrumo/application/modelo/tests/test_work_form_carry_attestation_words.py` pins authored, distinct words for each family in every output language. The maps stay string-valued dict literals, because the locale key scanner confirms only those.
+
+### attested-resolution-provenance | medium | The statement is visible only on the work form
+
+The ADR's resolution-and-verification bullet says the earlier-filing resolver states an attested carry as attested by the filer. No resolver provenance, source diagnostic or verification finding reads `attested_binding_ids` yet (`src/cadrumo/application/modelo/calculation_bucket_actions.py:666`), so a verification report or calculation projection shows casilla 1380 as `0` either way. Open. Either implement that provenance, or the ADR bullet and the docstring at `src/cadrumo/domain/modelos/calculation_revision_operator_layer.py:21` are narrowed; the choice is the coordinator's.
+
+### carry-row-first-binding | low | The field statement reads only a box's first binding
+
+`src/cadrumo/application/modelo/work_form_field_projection.py:101` reads `row.concrete_bindings[:1]`. Each of the four carries owns its box one to one today, so there is no current effect. Recorded.
+
+### submitted-baseline-scope | low | The registry declaration gates the offer, not a forged submitted surface
+
+`reconfirm_modelo_edit_baseline` does not re-derive the permitted surface, so a fabricated surface entry could attest a non-declared binding. This is the pre-existing trust posture for every intent kind. `SET_OVERRIDE_VALUE` already admits a typed `0` there, so the change adds no financial exposure. Recorded.
+
+### validator-non-decimal-prong | low | The validator's non-decimal branch was untested
+
+Resolved in the follow-up commit: `src/cadrumo/domain/calculations/registry/tests/test_binding_absence_attestation.py` refuses the statement on an earlier-filing read typed as an integer, which validates without it, for every envelope year.
+
+### wire-type-staleness-gate | low | The regenerated window types were not checked by their staleness gate
+
+`node scripts/modelo-fixtures.mjs --check` and the window spec need `node_modules`, which this worktree lacks. Owner DESKTOP. The generated types correspond to the Python models by inspection.
