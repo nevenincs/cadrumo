@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import cast
@@ -134,7 +135,12 @@ def _bundle(*records: ModeloRecord, repository_bucket_id: str | None = None) -> 
 
 
 def _setup(bundle: VerificationRepositoryBundle):
-    def factory(profile_id: str, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
+    def factory(
+        profile_id: str,
+        *,
+        operation: PinnedAuthorityOperation,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    ) -> VerificationRepositoryBundle:
         assert profile_id == str(_PROFILE)
         assert operation is not None
         return bundle

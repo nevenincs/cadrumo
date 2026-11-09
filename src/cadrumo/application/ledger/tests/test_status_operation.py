@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from decimal import Decimal
 from uuid import UUID
 
@@ -47,7 +48,13 @@ def _unexpected_ports(*, bucket_id: str, operation: PinnedAuthorityOperation) ->
     raise AssertionError(f"access resolution attempted to compose ports for {bucket_id} with {operation!r}")
 
 
-def _unexpected_repositories(bucket_id: str, /, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
+def _unexpected_repositories(
+    bucket_id: str,
+    /,
+    *,
+    operation: PinnedAuthorityOperation,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+) -> VerificationRepositoryBundle:
     raise AssertionError(f"access resolution attempted to compose repositories for {bucket_id} with {operation!r}")
 
 

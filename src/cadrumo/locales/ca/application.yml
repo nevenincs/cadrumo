@@ -1899,6 +1899,12 @@ application:
         que no és al teu registre.
       row_unregistered_undated: Un moviment registra un element que no consta al teu
         registre.
+      unrouted_iva_base: La base imposable de {row_amount} del registre del {row_date}
+        no arriba a cap casella d'aquesta declaració.
+      unrouted_iva_cuota: La quota d'IVA de {row_amount} del registre del {row_date}
+        no arriba a cap casella d'aquesta declaració.
+      unrouted_iva_recargo: El recàrrec d'equivalència de {row_amount} del registre
+        del {row_date} no arriba a cap casella d'aquesta declaració.
       withholding_invoice_entity_professional_fee: La factura rebuda {invoice} de
         {counterparty} declara una retenció de {amount} sobre uns honoraris professionals,
         però qui l'emet és una societat, i els serveis professionals d'una societat

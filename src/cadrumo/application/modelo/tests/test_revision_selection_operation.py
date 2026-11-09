@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from collections.abc import Callable
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import cast
@@ -291,7 +292,12 @@ def test_each_fresh_boundary_derives_period_from_selected_persisted_unit(
             calculation_loads.append(operation)
             return CalculationRevisionCatalogue()
 
-    def bundle(profile_id: str, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
+    def bundle(
+        profile_id: str,
+        *,
+        operation: PinnedAuthorityOperation,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    ) -> VerificationRepositoryBundle:
         assert profile_id == str(_PROFILE)
         assert operation is authority_operation
         return cast(
@@ -365,7 +371,12 @@ def test_revision_selection_is_admitted_on_the_external_client_frontend_without_
         def load(self) -> WorkUnitCatalogue:
             return WorkUnitCatalogue(work_units={unit.work_unit_id: unit})
 
-    def bundle(profile_id: str, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
+    def bundle(
+        profile_id: str,
+        *,
+        operation: PinnedAuthorityOperation,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    ) -> VerificationRepositoryBundle:
         assert profile_id == str(_PROFILE)
         assert operation is authority_operation
         return cast(
@@ -405,7 +416,12 @@ def test_revision_selection_is_admitted_on_the_external_client_frontend_without_
 def test_fresh_submission_without_authority_pin_refuses_before_repository_creation() -> None:
     bundle_calls = 0
 
-    def bundle(_profile_id: str, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
+    def bundle(
+        _profile_id: str,
+        *,
+        operation: PinnedAuthorityOperation,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    ) -> VerificationRepositoryBundle:
         nonlocal bundle_calls
         bundle_calls += 1
         raise AssertionError("a live revision resolution must be pinned before private repository access")
@@ -440,7 +456,12 @@ def test_fresh_submission_without_authority_pin_refuses_before_repository_creati
 def test_revision_request_identity_refuses_before_missing_pin_and_shape() -> None:
     bundle_calls = 0
 
-    def bundle(_profile_id: str, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
+    def bundle(
+        _profile_id: str,
+        *,
+        operation: PinnedAuthorityOperation,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    ) -> VerificationRepositoryBundle:
         nonlocal bundle_calls
         bundle_calls += 1
         raise AssertionError("profile admission must finish before repository creation")
@@ -641,7 +662,9 @@ def test_revision_capture_passes_one_authority_pin_through_every_catalogue_read(
     )
 
     result_ref = asyncio.run(
-        ModeloWorkRevisionExecutor(lambda _profile_id, *, operation: bundle).execute(request, context)
+        ModeloWorkRevisionExecutor(lambda _profile_id, *, operation, mutation_writer=None: bundle).execute(
+            request, context
+        )
     )
 
     assert result_ref == _REPORT_ID
@@ -659,5 +682,10 @@ def test_revision_capture_passes_one_authority_pin_through_every_catalogue_read(
     assert events.effects == [OperationEffect.NONE]
 
 
-def _unavailable_bundle(_profile_id: str, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
+def _unavailable_bundle(
+    _profile_id: str,
+    *,
+    operation: PinnedAuthorityOperation,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+) -> VerificationRepositoryBundle:
     raise AssertionError("historical result access must not reopen private repositories")

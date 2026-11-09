@@ -533,7 +533,9 @@ def emit_registry_closure_command(
 @app.command("stamp")
 def stamp(
     modelo: Annotated[str, typer.Argument(help="Modelo id to stamp, e.g. 130.")],
-    revision: Annotated[str, typer.Argument(help="Revision id to stamp, e.g. 2019-y-siguientes.")],
+    revision: Annotated[
+        str, typer.Argument(help="Revision id to stamp: the name of one of the modelo's revision directories.")
+    ],
     engineered_by: Annotated[
         str | None,
         typer.Option("--engineered-by", help="Who built this revision."),

@@ -89,6 +89,11 @@ export type SetupFixtureControls = {
    * failure, the setup settles failed with it, and the row keeps the state
    * it had until the status is read again. */
   failItem(category: SetupFailureCategory): void;
+  /** Every later start, or none once `null`, is refused this way while its
+   * setup plans, as when the host's check before any download refuses it:
+   * the start returns without a rejection and the setup settles failed with
+   * the category on its item, naming no part, its row as it was. */
+  refuseStarts(category: SetupFailureCategory | null): void;
   /** The first running setup, or `item`'s, stops part-way, as when the
    * computer sleeps or Cadrumo closes. */
   interrupt(item?: SetupItemId): void;
@@ -348,6 +353,8 @@ export function setupFixture({
           );
         })
       : act();
+  // The category every start is refused with while it plans, if any.
+  let refusing: SetupFailureCategory | null = null;
   // The setups asked to stop, by operation id.
   const pendingCancel = new Set<string>();
   // Each planned row as it stood before its setup ran, for an item a setup
@@ -888,6 +895,9 @@ export function setupFixture({
       put({ ...ended, failure: category });
       publish();
     },
+    refuseStarts(category) {
+      refusing = category;
+    },
     interrupt(item) {
       const run = active(item);
       const entry = current(run);
@@ -1031,6 +1041,27 @@ export function setupFixture({
         .map((seed) => planned(seed, model));
       if (download) say(`setup.download ${download.lane} ${download.model}`);
       operations += 1;
+      if (refusing !== null && chosen.length > 0) {
+        const failure: SetupFailureCategory = refusing;
+        put({
+          item: wanted,
+          operation_id: `setup-${operations}`,
+          stage: "settled",
+          review: null,
+          // Refused while it plans: no part is planned yet.
+          items: chosen.map((seed) => ({
+            ...progress(seed),
+            step: "plan",
+            result: { changed: false, failure, transferred_bytes: 0 },
+            parts: [],
+          })),
+          cancellable: false,
+          cancel_requested: false,
+          outcome: "failed",
+          failure,
+        });
+        return Promise.resolve(publish());
+      }
       const settled: SetupFailureCategory | null =
         shape === "unreachable"
           ? "host_unreachable"

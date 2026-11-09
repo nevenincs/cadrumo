@@ -17,6 +17,10 @@ from cadrumo.application.modelo.action_errors import CalculationRevisionNotFound
 from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
+from cadrumo.application.modelo.calculation_note_gate import (
+    ModeloCalculationBlockedError,
+    require_no_blocking_calculation_notes,
+)
 from cadrumo.application.modelo.work_addressing import ModeloExactWorkUnitTarget
 from cadrumo.application.modelo.work_review import (
     ModeloWorkOriginAnomaly,
@@ -44,6 +48,7 @@ from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.modelo_work_progress_state import ModeloWorkProgressState
+from cadrumo.core.operator_action_enums import OperatorActionAxis
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
@@ -62,6 +67,11 @@ from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
     derive_calculation_revision_id_from_revision,
+)
+from cadrumo.domain.modelos.calculation_revision_sources import (
+    CalculationNoteFact,
+    CalculationNoteSentence,
+    CalculationSourceIssue,
 )
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
@@ -553,6 +563,118 @@ def test_review_progress_reads_a_persisted_blocking_verdict(repos: Repos) -> Non
     assert review.progress.state is ModeloWorkProgressState.BLOCKED
     assert review.progress.materialised_count == 1
     assert review.progress.target_count == len(manifest.casillas)
+
+
+def _persist_303_revision(repos: Repos, *issues: CalculationSourceIssue) -> tuple[WorkUnit, CalculationRevision]:
+    """Persist a Modelo 303 2025 1T work unit whose current revision carries ``issues``."""
+    work_repo, calculation_repo, _, _, _ = repos
+    work_unit = _persist_work_unit(repos, modelo=ModeloCode("303"), filing_year=2025, period_code="1T")
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit.work_unit_id,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        casilla_values={},
+        source_issues=issues,
+        filing_instance_evidence=None,
+        source_provenance=(),
+    )
+    revision = CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
+        state=CalculationRevisionState.BORRADOR,
+        casilla_values={},
+        created_at=T0,
+        updated_at=T0,
+        filing_instance_evidence=None,
+        source_provenance=(),
+        source_issues=issues,
+    )
+    calculation_repo.save(upsert_calculation_revision(calculation_repo.load(), revision))
+    work_repo.save(
+        upsert_work_unit(
+            work_repo.load(),
+            work_unit.model_copy(update={"current_calculation_revision_id": revision_id}),
+        ),
+    )
+    return work_unit, revision
+
+
+def _review(repos: Repos, work_unit: WorkUnit) -> ModeloWorkReview:
+    work_repo, calculation_repo, _, verification_repo, _ = repos
+    with bundled_indexed_authority().operation() as operation:
+        return build_modelo_work_review(
+            work_unit.bucket_id,
+            work_unit.modelo,
+            work_unit.filing_year,
+            work_unit.period,
+            operation=operation,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+        )
+
+
+def test_a_note_that_refuses_the_check_is_a_review_blocker_naming_the_same_record_and_amount(repos: Repos) -> None:
+    """Review and check read one note selection, so a refused check never meets an empty review.
+
+    The check refuses before it persists a report, so a review that listed only
+    report findings showed no blocker for a declaration the check refused. The
+    unrouted base names its invoice, date and amount in both.
+    """
+    unrouted = CalculationSourceIssue(
+        reason="unrouted_declarable_quantity",
+        binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        message="IVA row carries 1500.00 EUR of 'base_amount_sum' that no binding draws",
+        resolver_id="ledger_iva_aggregation",
+        source_ref="invoice:" + "a" * 64,
+        fact=CalculationNoteFact.of(
+            CalculationNoteSentence.UNROUTED_IVA_BASE,
+            rows=("invoice:" + "a" * 64 + ":0",),
+            row_date="2025-01-31",
+            row_amount=Decimal("1500.00"),
+        ),
+    )
+    advisory = CalculationSourceIssue(
+        reason="terminal_origin_mismatch",
+        binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        message="a value reached the declaration by an undeclared route",
+    )
+    work_unit, revision = _persist_303_revision(repos, unrouted, advisory)
+
+    review = _review(repos, work_unit)
+    with pytest.raises(ModeloCalculationBlockedError) as refused:
+        require_no_blocking_calculation_notes(revision, action="verify")
+
+    context = refused.value.context or {}
+    (blocker,) = review.blockers
+    assert blocker.native_code == context["reasons"] == "unrouted_declarable_quantity"
+    assert blocker.axis is OperatorActionAxis.IMPORT_LEDGER_DATA
+    assert dict(blocker.facts) == {
+        "source_ref": "invoice:" + "a" * 64,
+        "row_date": "2025-01-31",
+        "row_amount": "1500.00",
+    }
+    assert {key: context[key] for key in ("source_ref", "row_date", "row_amount")} == dict(blocker.facts)
+    assert context["blocking_count"] == "1"
+
+
+def test_a_revision_without_a_blocking_note_adds_no_review_blocker(repos: Repos) -> None:
+    """A note that withholds nothing passes the check and is no review blocker either."""
+    advisory = CalculationSourceIssue(
+        reason="terminal_origin_mismatch",
+        binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        message="a value reached the declaration by an undeclared route",
+    )
+    work_unit, revision = _persist_303_revision(repos, advisory)
+
+    require_no_blocking_calculation_notes(revision, action="verify")
+    assert _review(repos, work_unit).blockers == ()
 
 
 def test_review_progress_schema_refuses_unnamed_or_impossible_counts() -> None:

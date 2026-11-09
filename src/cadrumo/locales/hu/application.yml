@@ -44,8 +44,8 @@ application:
         bevallandó forrásadó-levonás (retención): az időszakban nincs rögzítve olyan
         bérleti díj kifizetése, amely levonással járt. Ha levonással fizetted egy
         üzlethelyiség bérleti díját, rögzítsd a kapott számlát és a kifizetését; ha
-        nem volt ilyen, jelöld a profilodban, hogy ebben az időszakban nem volt levonással
-        járó bérletidíj-fizetés. Semmi sem lett mentve.'
+        nem volt ilyen, jelöld a profilodban, hogy ebben az időszakban nem fizettél
+        levonással bérleti díjat. Semmi sem lett mentve.'
       window_empty_work: 'A Modelo %{modelo} bevallásban %{period} időszakra nincs
         bevallandó forrásadó-levonás (retención): az időszakban nincs rögzítve olyan
         kifizetés, amely levonással járt. Ha levonással fizettél szakembereknek vagy
@@ -1862,6 +1862,12 @@ application:
         rögzít, amely nincs a nyilvántartásodban.
       row_unregistered_undated: Egy könyvelt tétel a nyilvántartásban nem szereplő
         eszközt rögzít.
+      unrouted_iva_base: A(z) {row_date} napi tétel {row_amount} összegű adóalapja
+        egyetlen rovatba sem kerül be ebben a nyilatkozatban.
+      unrouted_iva_cuota: A(z) {row_date} napi tétel {row_amount} összegű áfája egyetlen
+        rovatba sem kerül be ebben a nyilatkozatban.
+      unrouted_iva_recargo: A(z) {row_date} napi tétel {row_amount} összegű kiegyenlítő
+        pótléka (recargo de equivalencia) egyetlen rovatba sem kerül be ebben a nyilatkozatban.
       withholding_invoice_entity_professional_fee: A(z) {counterparty} által kiállított
         {invoice} számú kapott számla {amount} forrásadó-levonást (retención) tartalmaz
         egy szakmai díjon, de a kiállító társaság, és egy társaság szakmai szolgáltatásai
@@ -2369,7 +2375,7 @@ application:
       ledger_preflight_need:
         anomaly_non_declarable_iva_category: az IVA-kategóriája egyik nyomtatványon
           sem vallható be
-        anomaly_non_declarable_recargo_equivalencia: recargo de equivalenciát tartalmaz,
+        anomaly_non_declarable_recargo_equivalencia: recargo de equivalencia terheli,
           amely ezen a nyomtatványon nem vallható be
         censo_ratio_mismatch: a használati aránya eltér a cenzusodban szereplőtől
         domestic_identification_on_intra_community_transaction: Közösségen belüli

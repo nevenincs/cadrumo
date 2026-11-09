@@ -1498,15 +1498,15 @@ application:
           source that confirms them.
         what_to_do: Check those amounts against the official instructions before filing.
       m347_declarado_provincia_unrecorded:
-        what: '{box} is missing for this declarado: it belongs to its domicilio fiscal,
+        what: '{box} is missing for this declared party: it belongs to its tax domicile,
           which your invoices do not state.'
-        what_to_do: Open its invoice and state the provincia of its domicilio fiscal;
-          it applies to all its invoices when you calculate again.
+        what_to_do: Open its invoice and state the province of its tax domicile; it
+          applies to all its invoices when you calculate again.
       m347_metalico_unrecorded:
         what: Your invoices do not say how they were collected, so {box} holds no
           amount on any record.
-        what_to_do: If any declarado paid you in cash above the amount that must be
-          declared, enter that amount on its record before you file the declaration.
+        what_to_do: If any declared party paid you in cash above the amount that must
+          be declared, enter that amount on its record before you file the declaration.
       m349_clave_inferred_from_category:
         what: Cadrumo chose the operation type of a line in the EU sales listing from
           the invoice's VAT category, and it may be another type.
@@ -1766,8 +1766,8 @@ application:
       household_rows_incomplete: '{group}: {stated} stated, {recorded} recorded.'
       instalment_free_gap: '{element}: no depreciation charge is recorded from {start}
         to {end}. Its method leaves the amount to you, so it adds nothing to box {box}.'
-      m347_provincia_unrecorded: 'Declarados without a provincia code: {parties}.'
-      m347_provincia_unstated: The provincia of {party}'s domicilio fiscal is missing.
+      m347_provincia_unrecorded: 'Declared parties without a province code: {parties}.'
+      m347_provincia_unstated: The province of {party}'s tax domicile is missing.
       possibly_durable_expense: The ledger entry of {row_date} for {row_amount} deducts
         as a current expense, and its description reads like a long-term asset.
       prior_filing_unrecorded: To calculate box {box}, record your Modelo {modelo}
@@ -1800,6 +1800,12 @@ application:
         asset your register does not hold.
       row_unregistered_undated: A ledger entry records an asset your register does
         not hold.
+      unrouted_iva_base: The tax base of {row_amount} on the record of {row_date}
+        reaches no box of this declaration.
+      unrouted_iva_cuota: The IVA charged of {row_amount} on the record of {row_date}
+        reaches no box of this declaration.
+      unrouted_iva_recargo: The recargo de equivalencia of {row_amount} on the record
+        of {row_date} reaches no box of this declaration.
       withholding_invoice_entity_professional_fee: Received invoice {invoice} from
         {counterparty} states a withholding of {amount} on a professional fee, but
         its issuer is a company, and a company's professional services carry no withholding.
@@ -2306,7 +2312,7 @@ application:
           expense or as a bien de inversión'
         invoice_recargo_split_unresolved: 'an issued invoice carries one recargo de
           equivalencia over several VAT rates that differs from the sum of each rate''s
-          recargo: correct the invoice''s recargo'
+          recargo de equivalencia: correct the invoice''s recargo de equivalencia'
         linked_movement_contradicts_invoice: its base or IVA amount differs from the
           invoice it pays
         missing_business_classification: it is not yet classified as business, personal

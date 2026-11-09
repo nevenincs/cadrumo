@@ -466,9 +466,10 @@ impl LaneRecord<'_> {
             .as_u64()
     }
 
-    /// The context llama.cpp loads `model` with, as the catalogue's artefacts for it state
-    /// it: `None` when it lists no such model, its entry has no artefacts, or they state
-    /// no context; refused when a stated context is no positive 32-bit count.
+    /// The context llama.cpp loads `model` with, as the catalogue states it: a ready
+    /// agent's record states it on the model's own entry, the declared catalogue under the
+    /// entry's artefacts. `None` when it lists no such model or states no context there;
+    /// refused when a stated context is no positive 32-bit count.
     fn stated_context(self, model: &str) -> Result<Option<NonZeroU32>, MalformedContext> {
         let Some(entry) = self
             .models
@@ -477,12 +478,17 @@ impl LaneRecord<'_> {
         else {
             return Ok(None);
         };
-        let artefacts = match entry.get("artefacts") {
-            None | Some(Value::Null) => return Ok(None),
-            Some(Value::Object(artefacts)) => artefacts,
-            Some(_) => return Err(MalformedContext),
+        // A ready record names its models `model`; the declared catalogue names them `id`.
+        let stated = if self.key == "model" {
+            entry.get("llamacpp_default_context")
+        } else {
+            match entry.get("artefacts") {
+                None | Some(Value::Null) => return Ok(None),
+                Some(Value::Object(artefacts)) => artefacts.get("llamacpp_default_context"),
+                Some(_) => return Err(MalformedContext),
+            }
         };
-        match artefacts.get("llamacpp_default_context") {
+        match stated {
             None | Some(Value::Null) => Ok(None),
             Some(stated) => stated
                 .as_u64()

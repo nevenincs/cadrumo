@@ -46,6 +46,11 @@ export type PanelState = {
 /** A model of a local lane whose download the person asked for. */
 export type AskedModel = { lane: string; model: string };
 
+/** A download the person asked for, and the local AI's setup that answers
+ * it: not `prior`, the local AI's latest setup when the person clicked, but
+ * the next one the window reads, bound by its operation once it is read. */
+type Ask = AskedModel & { prior: string | null; operation: string | null };
+
 export type ProvisioningStore = {
   /** Whether this window offers setup now. */
   offered: boolean;
@@ -70,6 +75,11 @@ export type ProvisioningStore = {
   /** The model whose download the person asked for, held from the click
    * until that setup settles or its start is refused. */
   asked: AskedModel | null;
+  /** The model whose download the person asked for, with the setup that ask
+   * started once it settled: held until another setup of the local AI
+   * replaces it, so how it ended is said on that model's row even where the
+   * setup named no part for the model. */
+  settledAsk: (AskedModel & { run: SetupRun }) | null;
   /** The model whose row answers the local AI's plan now: the model last
    * asked for, while the local AI's setup awaits the answer on a plan that
    * holds a part for it. Null leaves the answer on the local AI's own row. */
@@ -141,6 +151,7 @@ const NO_PROVISIONING: ProvisioningStore = {
   modelPart: () => null,
   programPart: () => null,
   asked: null,
+  settledAsk: null,
   reviewedModel: () => null,
   act: () => undefined,
   downloadModel: () => false,
@@ -202,9 +213,9 @@ export function useProvisioningStore(
   const { offered, snapshot } = control;
   const rows = useMemo(() => snapshot?.rows ?? [], [snapshot]);
   const [panel, setPanel] = useState<PanelState>(CLOSED);
-  // The model whose download the person asked for, for this profile, while
-  // that setup is under way.
-  const [asked, setAsked] = useState<AskedModel | null>(null);
+  // The model whose download the person asked for, for this profile, and the
+  // setup that ask started.
+  const [ask, setAsk] = useState<Ask | null>(null);
   const opened = useRef(onOpen);
   opened.current = onOpen;
   // The launch's opening, decided by the first status read and still owed
@@ -265,7 +276,7 @@ export function useProvisioningStore(
   );
   useEffect(() => {
     deferred.current = null;
-    setAsked(null);
+    setAsk(null);
   }, [owner]);
   useEffect(() => {
     const action = deferred.current;
@@ -296,17 +307,48 @@ export function useProvisioningStore(
   const live = anyLive(snapshot);
   const { start, verify, removeModel } = control;
   // The asked model is the one whose download is under way: from the click,
-  // while its start waits for an answer or the local AI's setup has not
-  // settled. Once neither holds, the download ended or its start was
-  // refused, and what runs next is not that model's.
+  // while its start waits for an answer or the setup it started has not
+  // settled. Once that setup settles, how it ended stays the asked model's
+  // until another setup of the local AI replaces it, however early it ended:
+  // a setup refused while it plans names no part for the model. A start
+  // answered or refused with no setup of its own leaves nothing asked, and
+  // what runs next is not that model's.
   const localAiItem = localAiRow?.item ?? null;
-  const underway =
-    localAiItem !== null &&
-    (control.startingOf(localAiItem) ||
-      liveRunOf(snapshot, localAiItem) !== null);
+  const localRun = localAiItem !== null ? runOf(snapshot, localAiItem) : null;
+  const askStarting = localAiItem !== null && control.startingOf(localAiItem);
+  const own =
+    ask === null
+      ? null
+      : (ask.operation ??
+        (localRun !== null && localRun.operation_id !== ask.prior
+          ? localRun.operation_id
+          : null));
+  const askRun =
+    own !== null && localRun?.operation_id === own ? localRun : null;
   useEffect(() => {
-    if (asked !== null && !underway) setAsked(null);
-  }, [asked, underway]);
+    if (ask === null) return;
+    if (ask.operation === null) {
+      if (own !== null) setAsk({ ...ask, operation: own });
+      else if (!askStarting) setAsk(null);
+    } else if (askRun === null) setAsk(null);
+  }, [ask, own, askRun, askStarting]);
+  const asked = useMemo(
+    (): AskedModel | null =>
+      ask !== null &&
+      (askRun !== null
+        ? askRun.stage !== "settled"
+        : own === null && askStarting)
+        ? { lane: ask.lane, model: ask.model }
+        : null,
+    [ask, askRun, own, askStarting],
+  );
+  const settledAsk = useMemo(
+    () =>
+      ask !== null && askRun?.stage === "settled"
+        ? { lane: ask.lane, model: ask.model, run: askRun }
+        : null,
+    [ask, askRun],
+  );
 
   return useMemo((): ProvisioningStore => {
     const progressOf = (item: SetupItemId) =>
@@ -328,6 +370,7 @@ export function useProvisioningStore(
         localParts().find((part) => part.model === model) ?? null,
       programPart: () => localParts().find((part) => !part.model) ?? null,
       asked,
+      settledAsk,
       reviewedModel: () =>
         asked !== null &&
         localAiRow !== null &&
@@ -351,7 +394,12 @@ export function useProvisioningStore(
         if (!row || liveRunOf(snapshot, row.item)) return false;
         control.clearRefusal();
         start(row.item, { download: { lane, model } });
-        setAsked({ lane, model });
+        setAsk({
+          lane,
+          model,
+          prior: runOf(snapshot, row.item)?.operation_id ?? null,
+          operation: null,
+        });
         return true;
       },
       removeModel,
@@ -366,6 +414,7 @@ export function useProvisioningStore(
     offered,
     control,
     asked,
+    settledAsk,
     snapshot,
     rows,
     live,

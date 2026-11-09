@@ -1003,6 +1003,72 @@ fn a_context_that_is_no_positive_32_bit_count_is_a_catalogue_outside_the_contrac
     ));
 }
 
+/// A ready agent's catalogue whose local lane recommends `model` and lists it with
+/// `fields` on its own entry.
+fn ready_with(model: &str, fields: Value) -> Value {
+    let mut entry = json!({"model": model, "size_bytes": GB});
+    for (name, value) in fields.as_object().unwrap() {
+        entry[name] = value.clone();
+    }
+    json!({
+        "api_version": "v1",
+        "providers": [
+            {"provider_id": "synthetic_local", "transport": "api",
+             "catalog": {"recommended": {"text": model}, "models": [entry]}},
+        ],
+    })
+}
+
+#[test]
+fn a_download_is_admitted_with_the_context_a_ready_catalogue_states_on_the_model() {
+    for (name, fields, expected) in [
+        (
+            "a stated context",
+            json!({"llamacpp_default_context": 16384}),
+            Some(16384),
+        ),
+        (
+            "no context stated",
+            json!({"llamacpp_default_context": null}),
+            None,
+        ),
+        ("no context member", json!({}), None),
+        // A ready record states the context on the entry; artefacts there say nothing.
+        (
+            "a context only under artefacts",
+            json!({"artefacts": {"llamacpp_default_context": 8192}}),
+            None,
+        ),
+    ] {
+        let replies =
+            Replies::serving(&[TEXT], &[], &[]).answering("catalog", ready_with(TEXT, fields));
+        assert_eq!(
+            admission_of(replies)
+                .download(&requested(LOCAL, TEXT))
+                .unwrap(),
+            admitted_with_context(TEXT, expected),
+            "{name}"
+        );
+    }
+    for stated in [
+        json!(0),
+        json!(8192.5),
+        json!("8192"),
+        json!(u64::from(u32::MAX) + 1),
+    ] {
+        let replies = Replies::serving(&[TEXT], &[], &[]).answering(
+            "catalog",
+            ready_with(TEXT, json!({"llamacpp_default_context": stated})),
+        );
+        let result = admission_of(replies).download(&requested(LOCAL, TEXT));
+        assert!(
+            matches!(&result, Err(Stop::Host(error))
+                if error.reason.as_deref() == Some("setup_catalogue_contract")),
+            "{stated}: {result:?}"
+        );
+    }
+}
+
 #[test]
 fn no_selection_record_is_the_engine_the_package_derives_with_automatic_placement() {
     let admission = admission_of(Replies::default());

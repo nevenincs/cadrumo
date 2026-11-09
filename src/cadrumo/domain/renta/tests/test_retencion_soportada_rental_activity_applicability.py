@@ -23,12 +23,12 @@ from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
 from ...calculations.registry.governed_fact_scope import CandidateFactAuthority
+from ...calculations.registry.iae_activity_groups import iae_activity_groups
 from ...calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from ..retencion_soportada_applicability import (
     IAE_URBAN_RENTAL_GROUPS_FACT_ID,
     RetencionSoportadaApplicability,
     arrendamiento_actividad_applicability,
-    iae_urban_rental_groups,
     retencion_soportada_applicability,
 )
 
@@ -82,18 +82,26 @@ def test_the_fact_is_the_one_the_module_reads() -> None:
 
 @pytest.mark.parametrize("filing_year", _supported_years())
 def test_every_supported_year_reads_the_rental_group(authority: CandidateFactAuthority, filing_year: int) -> None:
-    assert iae_urban_rental_groups(effective_date=date(filing_year, 12, 31), authority=authority) == {"861"}
+    assert iae_activity_groups(
+        IAE_URBAN_RENTAL_GROUPS_FACT_ID, effective_date=date(filing_year, 12, 31), authority=authority
+    ) == {"861"}
 
 
 def test_a_year_below_the_support_floor_is_refused(authority: CandidateFactAuthority) -> None:
     with pytest.raises(RegistryValidationError, match="outside the supported filing years"):
-        iae_urban_rental_groups(effective_date=date(_support().floor - 1, 12, 31), authority=authority)
+        iae_activity_groups(
+            IAE_URBAN_RENTAL_GROUPS_FACT_ID, effective_date=date(_support().floor - 1, 12, 31), authority=authority
+        )
 
 
 @pytest.mark.parametrize("entities", [["86"], ["861.1"], ["8611"]])
 def test_a_fact_entity_that_is_not_a_three_digit_group_is_refused(entities: list[str]) -> None:
     with pytest.raises(RegistryValidationError, match="three-digit IAE groups"):
-        iae_urban_rental_groups(effective_date=date(_support().horizon, 12, 31), authority=_with_entities(entities))
+        iae_activity_groups(
+            IAE_URBAN_RENTAL_GROUPS_FACT_ID,
+            effective_date=date(_support().horizon, 12, 31),
+            authority=_with_entities(entities),
+        )
 
 
 def test_the_group_compared_is_the_fact_s_not_one_held_in_code(ejercicio_end: date) -> None:

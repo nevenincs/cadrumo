@@ -10,9 +10,14 @@ from typing import Any, cast
 
 import pytest
 
-from ...application.tests.test_workbench_capture_memory import _calendar_builds
-from ...application.tests.test_workbench_generation_undeclared_works import _work_unit
-from ...application.tests.workbench_generation_support import NOW, Repository, plain_generation_door, profile_record
+from ...application.tests.workbench_generation_support import (
+    NOW,
+    Repository,
+    calendar_builds,
+    plain_generation_door,
+    profile_record,
+    work_unit,
+)
 from ...application.workbench_capture_memory import WorkbenchCaptureMemory, WorkbenchCaptureMemoryOwner
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.work_unit import WorkUnitCatalogue
@@ -27,7 +32,7 @@ class _Profile:
     """One profile's stores, read afresh by each list capture as the exact-profile door does."""
 
     def __init__(self, authority_operation: PinnedAuthorityOperation) -> None:
-        unit = _work_unit(authority_operation, "303", NOW.year, "1T")
+        unit = work_unit(authority_operation, "303", NOW.year, "1T")
         self.operation = authority_operation
         self.work_units = Repository(WorkUnitCatalogue.model_construct(work_units={unit.work_unit_id: unit}))
         self.profile = Repository(profile_record(authority_operation))
@@ -37,7 +42,7 @@ class _Profile:
         door = plain_generation_door(
             self.operation, profile=self.profile, work_units=cast(Any, self.work_units), capture_memory=memory
         )
-        return _calendar_builds(door.read_declaration_list_inputs)
+        return calendar_builds(door.read_declaration_list_inputs)
 
 
 def test_a_second_list_capture_reuses_the_calendar_the_first_computed(

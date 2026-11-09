@@ -20,6 +20,7 @@ from ...domain.modelos.protocols import (
     VerificationReportCatalogueRepositoryProtocol,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from .credit_resolution_repository import CreditResolutionReader
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,6 +32,9 @@ class ModeloHistoryPorts:
     filing_repository: ModeloRecordCatalogueRepositoryProtocol
     verification_repository: VerificationReportCatalogueRepositoryProtocol
     bucket_event_repository: BucketEventHistoryRepositoryProtocol
+    #: The accepted source disagreements a review judges blocking notes with, as the check does.
+    #: Without it none is honoured, so every disagreement note reads as a blocker.
+    credit_resolution: CreditResolutionReader | None = None
 
 
 class ModeloHistoryPortsFactory(Protocol):

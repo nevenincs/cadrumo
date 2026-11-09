@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import sys
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
+from types import FrameType
 from typing import Any, cast
 
 import pytest
@@ -33,6 +36,7 @@ from ..modelo.declarations_workspace_contracts import DeclarationsWorkspaceProje
 from ..modelo.workspace_models import (
     ModeloWorkspaceProjectionV1,
 )
+from ..overview.calendar import build_overview_calendar
 from ..overview.calendar_models import OverviewCalendar, OverviewCalendarRange
 from ..overview.home import (
     HomeAccountSession,
@@ -100,6 +104,45 @@ def declaration_work_unit(operation: PinnedAuthorityOperation) -> WorkUnit:
         created_at=NOW,
         updated_at=NOW,
     )
+
+
+def work_unit(operation: PinnedAuthorityOperation, modelo: str, filing_year: int, code: str) -> WorkUnit:
+    period = Period.from_year_and_code(filing_year, code)
+    revision_id = operation.snapshot(modelo, filing_year=filing_year, period=code).revision.id
+    """Create one local work unit for ``modelo`` under the pinned revision for that period."""
+    return WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=PROFILE_ID, modelo=modelo, filing_year=filing_year, period=period, revision_id=revision_id
+        ),
+        bucket_id=PROFILE_ID,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        revision_id=revision_id,
+        name=f"local {modelo}",
+        created_at=NOW,
+        updated_at=NOW,
+    )
+
+
+def calendar_builds(action: Callable[[], object]) -> int:
+    """Count calls into the real calendar builder while ``action`` runs."""
+    code = build_overview_calendar.__code__
+    builds = 0
+    previous = sys.getprofile()
+
+    def observe(frame: FrameType, event: str, arg: object) -> None:
+        nonlocal builds
+        del arg
+        if event == "call" and frame.f_code is code:
+            builds += 1
+
+    sys.setprofile(observe)
+    try:
+        action()
+    finally:
+        sys.setprofile(previous)
+    return builds
 
 
 @dataclass
