@@ -12,6 +12,7 @@ from cadrumo.application.operator_actions.models import PreconditionVerdict
 from cadrumo.core.errors.failure_report import log_boundary_failure, raising_product_frame
 from cadrumo.core.errors.hierarchy import CadrumoError, RecordedRegisteredError
 from cadrumo.core.errors.record_fault import internal_record_fault_context
+from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 
 from ..contracts.contracts import RefusalError
 
@@ -40,9 +41,11 @@ def boundary_failure_level(error: BaseException) -> int:
     """Return the log level for a failure a frontend ends its command with.
 
     Internal faults and local-runtime transport refusals are errors: the
-    runtime could not be used at all. Any other registered refusal, such as a
-    signed-out session, is an expected outcome of the profile's state and is a
-    warning.
+    runtime could not be used at all. A registered refusal that changed nothing,
+    such as a signed-out session or a failed readiness gate, is an expected
+    outcome of the profile's state and is informational. A refusal that
+    carries an applied, partial or unknown effect, or a settlement other than
+    ``REFUSED``, and any other registered category, is a warning.
     """
     from cadrumo.core.errors.error_codes import ErrorCategory, get_registered_error_code
 
@@ -54,17 +57,35 @@ def boundary_failure_level(error: BaseException) -> int:
         seen.add(id(link))
         link = link.__cause__ or link.__context__
     try:
-        internal = get_registered_error_code(error).category is ErrorCategory.INTERNAL
+        category = get_registered_error_code(error).category
     except Exception:
-        internal = True
-    return logging.ERROR if internal else logging.WARNING
+        return logging.ERROR
+    if category is ErrorCategory.INTERNAL:
+        return logging.ERROR
+    if category is ErrorCategory.REFUSED and _refusal_changed_nothing(error):
+        return logging.INFO
+    return logging.WARNING
+
+
+def _refusal_changed_nothing(error: BaseException) -> bool:
+    """Read the settled condition and effect a refusal carries; absent facts mean nothing was attempted."""
+    context = error.context if isinstance(error, CadrumoError) else None
+    if not isinstance(context, Mapping):
+        return True
+    try:
+        condition = context.get("terminal_condition")
+        if condition is not None and OperationTerminalCondition(condition) is not OperationTerminalCondition.REFUSED:
+            return False
+        effect = context.get("effect")
+        return effect is None or OperationEffect(effect) is OperationEffect.NONE
+    except ValueError:
+        return False
 
 
 def log_cli_boundary_failure(boundary: str, error: BaseException, *, durable: bool = True) -> str:
     """Log a failure a command frontend is about to render, returning its correlation id.
 
-    The level comes from :func:`boundary_failure_level`; never below WARNING,
-    since the command ends here with an error document. ``durable=False`` is
+    The level comes from :func:`boundary_failure_level`. ``durable=False`` is
     for a refusal raised before any command ran, which must not configure
     process state just to be logged. The record stays off stderr, which
     carries the error document.

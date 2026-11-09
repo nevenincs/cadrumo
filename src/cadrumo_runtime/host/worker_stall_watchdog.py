@@ -11,9 +11,13 @@ The dump is frames only: thread ids, file paths, function names and line
 numbers, never a local or an argument. It goes to a file named for the worker's
 process id in the diagnostic log directory, created owner-only (``0600`` where
 the platform has modes; on Windows the log directory's own access list applies,
-as it does to the log file). A worker that never stalls leaves no file. The
-file stops being armed once it holds ``MAX_DUMP_BYTES``, and a new watchdog
-keeps at most ``RETAINED_DUMP_FILES`` dump files in the directory.
+as it does to the log file). ``faulthandler``'s native thread writes through a
+descriptor that must exist before the stall, since nothing in a stalled worker
+can create one, so the file is opened empty when the timer is armed. A worker
+that never stalls leaves no file: a clean exit removes it, and a new watchdog
+removes the empty file of a worker that no longer runs. The file stops being
+armed once it holds ``MAX_DUMP_BYTES``, and a new watchdog keeps at most
+``RETAINED_DUMP_FILES`` dump files in the directory.
 
 ``faulthandler`` has one such timer per process, so this is the only user of it
 in a worker.
@@ -35,6 +39,7 @@ from typing import Final
 
 from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from cadrumo.core.logging import default_log_file_path, get_logger
+from cadrumo.core.pid_liveness import pid_is_alive
 
 _LOGGER = get_logger(__name__)
 
@@ -145,8 +150,18 @@ def _open_dump(path: Path) -> FileIO:
     return FileIO(os.open(path, flags, 0o600), "a")
 
 
+def _owner_has_gone(name: str) -> bool:
+    """Whether the process named by a dump file's name no longer runs."""
+    digits = name.removeprefix(DUMP_NAME_PREFIX).removesuffix(DUMP_NAME_SUFFIX)
+    return digits.isdecimal() and not pid_is_alive(int(digits))
+
+
 def _prune(directory: Path, keep: Path) -> None:
-    """Remove the oldest dump files so that with ``keep`` at most ``RETAINED_DUMP_FILES`` remain."""
+    """Remove stale dump files so that with ``keep`` at most ``RETAINED_DUMP_FILES`` remain.
+
+    An empty file whose worker has gone never held a stall, so it is removed
+    whatever its age; the rest are removed oldest first.
+    """
     found: list[tuple[float, Path]] = []
     with suppress(OSError), os.scandir(directory) as entries:
         for entry in entries:
@@ -154,7 +169,11 @@ def _prune(directory: Path, keep: Path) -> None:
                 path = Path(entry.path)
                 if path != keep:
                     with suppress(OSError):
-                        found.append((entry.stat().st_mtime, path))
+                        status = entry.stat()
+                        if status.st_size == 0 and _owner_has_gone(entry.name):
+                            path.unlink()
+                        else:
+                            found.append((status.st_mtime, path))
     found.sort(reverse=True)
     # A file another worker still holds open cannot be removed on Windows; the refusal is not an error here.
     for _, path in found[RETAINED_DUMP_FILES - 1 :]:
