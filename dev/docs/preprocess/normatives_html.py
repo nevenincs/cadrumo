@@ -71,7 +71,8 @@ _BASE_ATTRIBUTION = (
 _SOURCE_ATTRIBUTIONS: Final = {
     "ine-codigos-comunidades-autonomas.html": (
         "Source: Instituto Nacional de Estadística (INE). Reused with attribution."
-    )
+    ),
+    "ine-codigos-provincias.html": ("Source: Instituto Nacional de Estadística (INE). Reused with attribution."),
 }
 
 # The BOE legal text lives inside <div id="textoxslt">; the page footer
