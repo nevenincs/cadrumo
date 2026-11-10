@@ -73,14 +73,6 @@ _OPERATION_WATCHES_PER_CONNECTION = 64
 # A person's submitted changes not yet observed settled; the oldest gives way.
 _PERSON_WRITES_PENDING = 256
 
-_PERSON_WRITE_FRONTENDS: Final = frozenset({OperationFrontendProjection.TUI, OperationFrontendProjection.DESKTOP})
-"""The person's frontends whose own submitted change counts as the person's input.
-
-Each is driven by a person's keyboard and pointer. A command line invocation
-reports its attended input once, at admission; an unattended one is a script and
-never keeps a sign-in alive. Every other frontend is an automation's.
-"""
-
 _SAVED_EFFECTS: Final = frozenset({OperationEffect.UPDATED, OperationEffect.PARTIAL})
 """Settled effects that saved a change; an unknown effect is no evidence that anything saved."""
 
@@ -459,11 +451,13 @@ class ProfileConnectionOperationMixin:
         request: OperationRequest,
         reply: OperationReply | AccessRefusal,
     ) -> None:
-        """Remember a change the person submitted on their own frontend, to renew their session once it saves.
+        """Remember a change the person submitted on an attended connection, to renew their session once it saves.
 
-        A read, and anything an automation's process submits, is never
-        remembered. The renewal itself still requires the live human session
-        that submitted the change.
+        Attendance is the connection's accepted report of the person's own
+        input under the submitting session, which a script resuming a sign-in
+        never makes. A read, and anything an automation's process submits, is
+        never remembered. The renewal itself still requires the live human
+        session that submitted the change.
         """
         if not isinstance(request, OperationSubmit | OperationSubmitPayload) or not isinstance(
             reply, OperationSubmitted
@@ -473,7 +467,7 @@ class ProfileConnectionOperationMixin:
             connection = self._connections.get(context.connection_id)
         if (
             connection is None
-            or connection.frontend not in _PERSON_WRITE_FRONTENDS
+            or connection.attended_session_id != request.session_id
             or not host.may_change_records(request.definition_id)
         ):
             return
