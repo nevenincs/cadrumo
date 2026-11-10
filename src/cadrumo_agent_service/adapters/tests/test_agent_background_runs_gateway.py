@@ -143,14 +143,20 @@ class _Gateway:
 
         A lane's health is probed on demand, so a read just after start-up can
         show a lane unselectable that a later read admits. Two successive reads
-        that agree on every lane's selectability are taken as settled.
+        that agree on every lane's selectability are taken as settled, once no
+        configured lane still awaits its first measurement: such a lane reads
+        unselectable alike in both until its launcher is measured. A lane that
+        is not configured is never measured, so it does not hold the wait.
         """
         previous: list[tuple[Any, Any, Any]] | None = None
         records: list[dict[str, Any]] = []
         for _ in range(_HEALTH_SETTLE_READS):
             records = self._read_lane_records()
             state = [(r["provider_id"], r["transport"], r["health"]["selectable"]) for r in records]
-            if state == previous:
+            unmeasured = any(
+                r["health"]["configured"] == "available" and r["health"]["admission"] == "unknown" for r in records
+            )
+            if state == previous and not unmeasured:
                 break
             previous = state
             time.sleep(_HEALTH_SETTLE_PAUSE_SECONDS)

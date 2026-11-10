@@ -746,6 +746,10 @@ class ProfileCustodyPort(Protocol):
         """Load the committed password proof material for one profile."""
         ...
 
+    def password_kdf_at_fallback(self, profile_id: UUID, *, root: Path | None = None) -> bool:
+        """Whether the committed password envelope holds the fixed fallback KDF point."""
+        ...
+
     def is_authentication_proof_failure(
         self,
         error: BaseException,
@@ -1012,6 +1016,14 @@ def load_profile_custody_password_material(
     return profile_custody_port().load_password_material(profile_id, root=root)
 
 
+def profile_custody_password_kdf_at_fallback(profile_id: UUID, *, root: Path | None = None) -> bool:
+    """Report whether a profile's committed password envelope holds the fixed fallback KDF point.
+
+    Reads only committed, non-secret envelope metadata; no key material is touched.
+    """
+    return profile_custody_port().password_kdf_at_fallback(profile_id, root=root)
+
+
 def map_profile_authentication_proof_failure(
     error: BaseException,
     *,
@@ -1120,6 +1132,7 @@ __all__ = [
     "load_profile_custody_recovery_material",
     "map_profile_authentication_proof_failure",
     "profile_custody_owner_root",
+    "profile_custody_password_kdf_at_fallback",
     "profile_custody_port",
     "profile_custody_record_session_material",
     "profile_custody_recovery_envelope_path",

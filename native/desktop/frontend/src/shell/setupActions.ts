@@ -1,9 +1,13 @@
 import { useMemo } from "react";
-import type { SetupItemId, SetupRun } from "@/ipc/componentSetup";
+import type {
+  SetupItemId,
+  SetupRun,
+  SetupStartOptions,
+} from "@/ipc/componentSetup";
 import { itemName } from "../components/setup/setupWords";
 import type { Action } from "./actions";
 import type { ProvisioningStore } from "./provisioning";
-import { liveRunOf, needsSetup, type SetupControl } from "./setup";
+import { liveRunOf, needsSetup, startOf, type SetupControl } from "./setup";
 import type { Translate } from "./strings";
 
 /** Component setup's: the panel, a check, each element, a retry and a cancel. */
@@ -22,7 +26,7 @@ export function useSetupActions({
   setupOffered: boolean;
   setupSnapshot: SetupControl["snapshot"];
   setupLive: SetupRun[];
-  setupRetryable: { item: SetupItemId; resume: boolean }[];
+  setupRetryable: { item: SetupItemId; start: SetupStartOptions }[];
   setupCancellable: SetupRun[];
   openSetup: ProvisioningStore["open"];
 }): Action[] {
@@ -62,7 +66,7 @@ export function useSetupActions({
         run: () => {
           openSetup(row.item);
           if (needsSetup(row) && liveRunOf(setupSnapshot, row.item) === null)
-            setup.start(row.item, { resume: row.recovery === "resume" });
+            setup.start(row.item, startOf(row.recovery));
         },
       })),
       {
@@ -73,8 +77,8 @@ export function useSetupActions({
         enabled: () => setupOffered && setupRetryable.length > 0,
         run: () => {
           openSetup(null);
-          for (const { item, resume } of setupRetryable)
-            setup.start(item, { resume });
+          for (const { item, start } of setupRetryable)
+            setup.start(item, start);
         },
       },
       {

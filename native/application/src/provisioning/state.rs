@@ -58,6 +58,9 @@ pub enum RecoveryAction {
     TryAgain,
     Resume,
     CheckAgain,
+    /// Installs the engine's program afresh: the system refused files that still match
+    /// their receipt, so trying again would start the same files. The models stay.
+    ReinstallEngineProgram,
 }
 
 /// The ordered steps of one item's setup.
@@ -304,8 +307,9 @@ pub fn derive_row(
     }
 }
 
-/// The one button a state offers, or `None` when the person has nothing to do: a
-/// computer below the model floor and a build without the item have no button.
+/// The one button a state offers, or `None` when the person has nothing to do here: a
+/// computer below the model floor, a build without the item and a damaged package have no
+/// button.
 pub fn recovery_for(state: ItemState) -> Option<RecoveryAction> {
     match state {
         ItemState::Ready | ItemState::Provisioning | ItemState::Verifying => None,
@@ -315,10 +319,16 @@ pub fn recovery_for(state: ItemState) -> Option<RecoveryAction> {
         ItemState::Blocked(BlockedReason::Offline) => Some(RecoveryAction::CheckAgain),
         ItemState::Blocked(BlockedReason::NeedsPerson) => Some(RecoveryAction::SetUp),
         ItemState::Blocked(BlockedReason::Hardware | BlockedReason::NotInThisBuild) => None,
-        ItemState::Failed(FailureCategory::NotInThisBuild | FailureCategory::NotEnoughMemory) => {
-            None
-        }
+        // Only repairing or reinstalling Cadrumo replaces the program that came with it.
+        ItemState::Failed(
+            FailureCategory::NotInThisBuild
+            | FailureCategory::NotEnoughMemory
+            | FailureCategory::EnginePackageDamaged,
+        ) => None,
         ItemState::Failed(FailureCategory::Interrupted) => Some(RecoveryAction::Resume),
+        ItemState::Failed(FailureCategory::EngineProgramUnusable) => {
+            Some(RecoveryAction::ReinstallEngineProgram)
+        }
         ItemState::Failed(_) => Some(RecoveryAction::TryAgain),
     }
 }
@@ -478,13 +488,21 @@ mod tests {
             ItemState::Failed(FailureCategory::DamagedDownload)
         );
         assert_eq!(failed.recovery, Some(RecoveryAction::TryAgain));
-        // A program the system refused offers the same one button as any failure.
+        // A program the system refused is installed afresh: its files match their
+        // receipt, so trying again would start the same files.
         let unusable = row(
             Observation::Absent,
             Activity::Idle,
             Some(FailureCategory::EngineProgramUnusable),
         );
-        assert_eq!(unusable.recovery, Some(RecoveryAction::TryAgain));
+        assert_eq!(
+            unusable.recovery,
+            Some(RecoveryAction::ReinstallEngineProgram)
+        );
+        assert_eq!(
+            serde_json::to_value(&unusable).unwrap()["recovery"],
+            "reinstall_engine_program"
+        );
         let absent = row(Observation::Absent, Activity::Idle, None);
         assert_eq!(
             (absent.state, absent.recovery),
@@ -513,8 +531,28 @@ mod tests {
             (ItemState::Blocked(BlockedReason::NotInThisBuild), None),
             (ItemState::Failed(FailureCategory::NotEnoughMemory), None),
             (
+                ItemState::Failed(FailureCategory::EnginePackageDamaged),
+                None,
+            ),
+            (
                 ItemState::Failed(FailureCategory::Offline),
                 Some(RecoveryAction::TryAgain),
+            ),
+            (
+                ItemState::Failed(FailureCategory::ProgramNotRunning),
+                Some(RecoveryAction::TryAgain),
+            ),
+            (
+                ItemState::Failed(FailureCategory::DamagedDownload),
+                Some(RecoveryAction::TryAgain),
+            ),
+            (
+                ItemState::Failed(FailureCategory::Interrupted),
+                Some(RecoveryAction::Resume),
+            ),
+            (
+                ItemState::Failed(FailureCategory::EngineProgramUnusable),
+                Some(RecoveryAction::ReinstallEngineProgram),
             ),
         ] {
             assert_eq!(recovery_for(state), recovery, "{state:?}");

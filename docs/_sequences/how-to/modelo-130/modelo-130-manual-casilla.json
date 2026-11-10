@@ -407,7 +407,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "b65718217c204c22746fc9982d6992057b3f72ee2be1d6ae04da53ddab6ee010"
+          "value": "68495cb6d778f723587403f438fc869f3c6ac5587456d58c23c2c6862dbda909"
         }
       ],
       "envelope": {
@@ -451,7 +451,7 @@
             "modelo-130-retenciones-agrarias": "0",
             "modelo-130-volumen-ingresos-agrario": "0"
           },
-          "calculation_revision_id": "b65718217c204c22746fc9982d6992057b3f72ee2be1d6ae04da53ddab6ee010",
+          "calculation_revision_id": "68495cb6d778f723587403f438fc869f3c6ac5587456d58c23c2c6862dbda909",
           "casilla_values": {
             "01": "1000.00",
             "02": "525.00",
@@ -601,7 +601,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision b65718217c204c22746fc9982d6992057b3f72ee2be1d6ae04da53ddab6ee010 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 68495cb6d778f723587403f438fc869f3c6ac5587456d58c23c2c6862dbda909 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
@@ -676,7 +676,7 @@
         "modelo",
         "work",
         "revision",
-        "b65718217c204c22746fc9982d6992057b3f72ee2be1d6ae04da53ddab6ee010"
+        "68495cb6d778f723587403f438fc869f3c6ac5587456d58c23c2c6862dbda909"
       ],
       "captures": [],
       "envelope": {
@@ -703,7 +703,7 @@
             "modelo-130-retenciones-agrarias": "0",
             "modelo-130-volumen-ingresos-agrario": "0"
           },
-          "calculation_revision_id": "b65718217c204c22746fc9982d6992057b3f72ee2be1d6ae04da53ddab6ee010",
+          "calculation_revision_id": "68495cb6d778f723587403f438fc869f3c6ac5587456d58c23c2c6862dbda909",
           "casilla_values": {
             "01": "1000.00",
             "02": "525.00",

@@ -2501,6 +2501,10 @@ application:
         en la versión %{revision_id}: las definiciones del modelo declaran un origen
         de valor que ningún resolutor de cálculo gestiona. Añade un resolutor o márcalo
         como diferido antes de calcular.'
+      prior_carries_nothing_open: 'El Modelo %{modelo} de %{filing_year} no tiene
+        ningún importe de ejercicios anteriores que puedas declarar como no pendiente:
+        cada uno ya tiene un valor o tu declaración, o la declaración no arrastra
+        ninguno. No se ha cambiado nada.'
       prior_carries_unstated:
         renta_negative_general_bases_pending: 'No se puede calcular el Modelo %{modelo}
           de %{filing_year}: no consta si quedan bases liquidables generales negativas
@@ -3650,6 +3654,9 @@ application:
     notices:
       censo_divergences_open: '{count} dato(s) del perfil o del certificado siguen
         difiriendo del Certificado de Situación Censal y quedan sin resolver: {axes}.'
+      kdf_at_fallback: La contraseña de este perfil tiene la protección mínima, porque
+        este equipo no pudo confirmar a tiempo un ajuste más fuerte al crear el perfil.
+        Cambia la contraseña para reforzarla; puedes volver a introducir la misma.
   wizard:
     errors:
       command_input_invalid: 'Los datos del perfil no superaron la validación: %{details}'

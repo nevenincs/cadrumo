@@ -4860,6 +4860,7 @@ desktop:
   setup:
     action:
       check_again: Torna a comprovar
+      reinstall_engine_program: Reinstal·la el programa
       resume: Reprèn
       set_up: Configura
       try_again: Torna-ho a provar
@@ -4882,8 +4883,11 @@ desktop:
       cancelled: Has cancel·lat la configuració.
       damaged_download: La baixada estava malmesa i no s'ha pogut fer servir.
       disk_full: No hi ha prou espai lliure al disc.
+      engine_package_damaged: El programa d'IA local que inclou Cadrumo està malmès
+        o és per a un altre tipus d'ordinador. Repara o reinstal·la Cadrumo per solucionar-ho.
       engine_program_unusable: 'No s''ha pogut iniciar el programa d''IA local: està
-        malmès o no funciona en aquest ordinador. Reparar la IA local el reinstal·la.'
+        malmès o no funciona en aquest ordinador. Reinstal·lar-lo el torna a configurar
+        i conserva els teus models.'
       host_unreachable: No s'ha pogut contactar amb el servidor de baixada. Comprova
         la teva connexió a internet i torna-ho a provar.
       interrupted: La configuració es va interrompre abans d'acabar.

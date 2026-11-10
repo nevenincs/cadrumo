@@ -308,6 +308,10 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             target_command_key="config.profile.list",
         ),
         ActionCatalogueEntry(
+            action_id="operator.profile.passphrase.change",
+            target_command_key="config.passphrase.change",
+        ),
+        ActionCatalogueEntry(
             action_id="operator.profile.status",
             target_command_key="config.profile.status",
         ),
@@ -593,6 +597,17 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
                     source=ActionArgumentSource.REQUEST_CONTEXT,
                     source_key="joint_return_elected",
                 ),
+                ActionArgumentBindingSpecification(
+                    argument_name="work_unit_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="work_unit_id",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.modelo.work.attest_prior_carries",
+            target_command_key="modelo.work.attest_prior_carries",
+            argument_specifications=(
                 ActionArgumentBindingSpecification(
                     argument_name="work_unit_id",
                     source=ActionArgumentSource.VERDICT_CONTEXT,

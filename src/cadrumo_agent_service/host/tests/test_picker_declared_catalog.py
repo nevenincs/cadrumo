@@ -62,7 +62,7 @@ def _declared_document() -> dict[str, Any]:
     return document
 
 
-def test_the_fallback_serves_the_agents_declared_document_unchanged_in_its_envelope(
+def test_the_fallback_serves_the_agents_declared_document_scoped_to_the_selected_engine(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     document = _declared_document()
@@ -84,10 +84,14 @@ def test_the_fallback_serves_the_agents_declared_document_unchanged_in_its_envel
     monkeypatch.setattr(
         administration_module, "declared_provider_catalog_response", lambda: declared_catalog_envelope(document)
     )
+    monkeypatch.setattr(service._local_models, "selected_engine", lambda: LocalEngine.LLAMACPP)
 
     catalog = service.admin("catalog")
 
-    assert catalog == {"kind": "declared", "catalog": document}
+    # The declared document is served whole except the other engine's keyless lane.
+    scoped = {**document, "providers": [lane for lane in document["providers"] if lane["id"] != "ollama_api"]}
+    assert any(lane["id"] == "ollama_api" for lane in document["providers"])
+    assert catalog == {"kind": "declared", "catalog": scoped}
     lanes = document["providers"]
     assert lanes, "the agent declares no lane"
     # The picker filters a declared lane by these two fields and the desktop

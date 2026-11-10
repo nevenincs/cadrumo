@@ -728,11 +728,13 @@ impl Components {
     /// Plans a setup of `item` and waits until it asks for an answer, runs or settles.
     /// A setup of `item` already running is joined; another item's setup runs beside it.
     /// With `resume`, a plan this window approved for the item before applies without
-    /// asking again.
+    /// asking again. With `reinstall`, the local AI's downloaded program is installed
+    /// afresh even where its files match their receipt.
     pub async fn start(
         &self,
         item: ItemId,
         resume: bool,
+        reinstall: bool,
         download: Option<wire::ModelDownload>,
     ) -> Result<(), Stop> {
         let mut changes = self.changes();
@@ -773,6 +775,7 @@ impl Components {
             let request = SetupRequest {
                 items: Some(vec![item]),
                 approved: None,
+                reinstall,
             };
             let run_id = id.clone();
             let spawned = self.spawn(&mut window, "setup-run", move || {
@@ -1628,6 +1631,7 @@ fn recovery(action: RecoveryAction) -> wire::Recovery {
         RecoveryAction::TryAgain => wire::Recovery::TryAgain,
         RecoveryAction::Resume => wire::Recovery::Resume,
         RecoveryAction::CheckAgain => wire::Recovery::CheckAgain,
+        RecoveryAction::ReinstallEngineProgram => wire::Recovery::ReinstallEngineProgram,
     }
 }
 
@@ -1657,6 +1661,7 @@ fn failure(category: FailureCategory) -> wire::Failure {
         FailureCategory::ProgramMissing => wire::Failure::ProgramMissing,
         FailureCategory::ProgramNotRunning => wire::Failure::ProgramNotRunning,
         FailureCategory::EngineProgramUnusable => wire::Failure::EngineProgramUnusable,
+        FailureCategory::EnginePackageDamaged => wire::Failure::EnginePackageDamaged,
         FailureCategory::Interrupted => wire::Failure::Interrupted,
         FailureCategory::NeedsSignIn => wire::Failure::NeedsSignIn,
         FailureCategory::NotInThisBuild => wire::Failure::NotInThisBuild,

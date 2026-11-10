@@ -37,9 +37,23 @@ export type UserProfile = {
   valid: boolean;
   sections: ProfileSection[];
   missing_required: string[];
-  notices: { severity: string; message: string }[];
+  notices: ProfileNotice[];
   pages: number;
 };
+/** The catalogue action a served notice offers. The window runs only actions
+ * it maps to a door it already has; any other is shown as text alone. */
+export type ProfileNoticeAction = {
+  action_id: string;
+  target_command_key: string;
+};
+export type ProfileNotice = {
+  severity: string;
+  code: string;
+  message: string;
+  action: ProfileNoticeAction | null;
+};
+/** The catalogue action that opens the password-change door. */
+export const PASSWORD_CHANGE_ACTION_ID = "operator.profile.passphrase.change";
 export type ProfileEdit =
   | { kind: "field"; path: string; value: string }
   | {

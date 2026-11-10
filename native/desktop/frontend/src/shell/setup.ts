@@ -4,10 +4,12 @@ import type {
   SetupCheckMode,
   SetupItemId,
   SetupModelDownload,
+  SetupRecovery,
   SetupRemoval,
   SetupRow,
   SetupRun,
   SetupSnapshot,
+  SetupStartOptions,
 } from "../ipc/componentSetup";
 import { failureCode } from "../errors";
 import { useCachedRead, type AgentRead } from "./agentViews";
@@ -61,10 +63,7 @@ export type SetupControl = {
   /** Sets up one item, beside any other item's setup. `resume` after an
    * interruption: a plan unchanged from the one this window approved runs
    * again without a second approval. */
-  start(
-    item: SetupItemId,
-    options?: { resume?: boolean; download?: SetupModelDownload },
-  ): void;
+  start(item: SetupItemId, options?: SetupStartOptions): void;
   /** Answers the plan `item`'s setup shows, bound to the digest it was shown
    * with. */
   answer(item: SetupItemId, decision: "apply" | "reject"): void;
@@ -118,8 +117,20 @@ export function needsSetup(row: SetupRow): boolean {
     row.recovery === "set_up" ||
     row.recovery === "update" ||
     row.recovery === "try_again" ||
-    row.recovery === "resume"
+    row.recovery === "resume" ||
+    row.recovery === "reinstall_engine_program"
   );
+}
+
+/** The start a row's served button runs: a resume of the plan approved
+ * before, the reinstall of the engine's program, or a setup. */
+export function startOf(
+  recovery: SetupRecovery | null,
+): Pick<SetupStartOptions, "resume" | "reinstall"> {
+  return {
+    resume: recovery === "resume",
+    reinstall: recovery === "reinstall_engine_program",
+  };
 }
 
 /** The operator actions that lead to setup as a whole. */

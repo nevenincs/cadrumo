@@ -376,7 +376,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491"
+          "value": "52eaf16243c090935b61da7c89c6af1dbca97aee0fe896d451d39cb710fbcbd3"
         }
       ],
       "envelope": {
@@ -396,21 +396,6 @@
               "source_kind": "ledger_iva_aggregation"
             },
             "message": "Some invoices have no date for when the operation took place, so their issue date chose the period.",
-            "severity": "warning"
-          },
-          {
-            "action": null,
-            "code": "modelo.work.calculate.source_advisory",
-            "context": {
-              "binding_source": "ledger_iva_aggregation",
-              "detail": "2 ledger row(s) were placed in this period on their bank movement date because no operation date is recorded: c866d7043d51, fcd9d7ce87ab. LIVA art. 75 fixes the devengo by the operation, not the collection, so a sale near a period end can belong to the previous one",
-              "level": "check",
-              "reason": "iva_row_placed_on_movement_date",
-              "remedy": "Record the operation date on each row. For a pago anticipado, art. 75.Dos dates the amount received at its collection, so record the collection date",
-              "resolver_id": "ledger_iva_aggregation",
-              "source_kind": "ledger_iva_aggregation"
-            },
-            "message": "Some ledger rows have no operation date, so their bank date chose the IVA period. IVA falls due when the operation takes place, not when the money moves.",
             "severity": "warning"
           },
           {
@@ -475,7 +460,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491",
+          "calculation_revision_id": "52eaf16243c090935b61da7c89c6af1dbca97aee0fe896d451d39cb710fbcbd3",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -1042,7 +1027,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 52eaf16243c090935b61da7c89c6af1dbca97aee0fe896d451d39cb710fbcbd3 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -1053,7 +1038,7 @@
               "parent_source_ref": null,
               "resolved_binding_source": "ledger_iva_aggregation",
               "resolver_id": "ledger_iva_aggregation",
-              "source_ref": "transaction:c866d7043d518f43f8d261b5c7d6437f1363d6dc16be0d68184bc64e5b0a9860"
+              "source_ref": "<object-key>"
             },
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -1064,7 +1049,7 @@
               "parent_source_ref": null,
               "resolved_binding_source": "ledger_iva_aggregation",
               "resolver_id": "ledger_iva_aggregation",
-              "source_ref": "transaction:fcd9d7ce87ab885ff0fdb3b1f1041c2640b0c4e2927f43b79da5d9d4fcd36990"
+              "source_ref": "<object-key>"
             },
             {
               "contributor_binding_source": "prorrata_regularizacion",
@@ -1117,13 +1102,13 @@
         "modelo",
         "work",
         "verify",
-        "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491"
+        "52eaf16243c090935b61da7c89c6af1dbca97aee0fe896d451d39cb710fbcbd3"
       ],
       "captures": [
         {
           "json_path": "result.verification_report_id",
           "name": "verification_report_id",
-          "value": "b617c4e32d514330bf02f4f146204bd9c46b162f6075720ea82428541c244ca8"
+          "value": "1f7f478855f9be4603ab3a8fce9ebc002fb862c8c3544d3bf6b8d1d2f2f6e088"
         }
       ],
       "envelope": {
@@ -1151,13 +1136,14 @@
             "action": null,
             "code": "modelo.work.verify.finding.advisory",
             "context": {
-              "binding_id": "fcd9d7ce87ab885ff0fdb3b1f1041c2640b0c4e2927f43b79da5d9d4fcd36990",
+              "binding_id": "fb6e7958a359941aa9c093e7950098a3a1be27723c6b8fa18422c78ad089bb73",
               "diagnostic_reason_code": "missing_transaction_evidence",
+              "invoice_id": "fb6e7958a359941aa9c093e7950098a3a1be27723c6b8fa18422c78ad089bb73",
+              "invoice_number": "F-0001",
               "kind": "advisory",
               "legal_refs": "ley-37-1992:art-97, rd-1619-2012:art-2",
               "severity": "warning",
-              "source_kind_code": "output_iva_evidence",
-              "source_refs": "aeat-modelo-303-procedure, boe-modelo-303-2008-form, aeat-dr-303-2026, aeat-dr-303-2024-early, aeat-dr-303-2024-late, boe-modelo-303-2024-form-pdf"
+              "source_kind_code": "output_iva_evidence"
             },
             "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
             "severity": "warning"
@@ -1171,7 +1157,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491",
+          "calculation_revision_id": "52eaf16243c090935b61da7c89c6af1dbca97aee0fe896d451d39cb710fbcbd3",
           "completeness_status": "complete",
           "findings": [
             {
@@ -1201,14 +1187,7 @@
               ],
               "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
               "severity": "warning",
-              "source_refs": [
-                "aeat-modelo-303-procedure",
-                "boe-modelo-303-2008-form",
-                "aeat-dr-303-2026",
-                "aeat-dr-303-2024-early",
-                "aeat-dr-303-2024-late",
-                "boe-modelo-303-2024-form-pdf"
-              ]
+              "source_refs": []
             }
           ],
           "granted_verificado_completo": true,
@@ -1222,7 +1201,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "b617c4e32d514330bf02f4f146204bd9c46b162f6075720ea82428541c244ca8",
+          "verification_report_id": "1f7f478855f9be4603ab3a8fce9ebc002fb862c8c3544d3bf6b8d1d2f2f6e088",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -1244,7 +1223,7 @@
         "verification-report",
         "list",
         "--calculation-revision-id",
-        "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491"
+        "52eaf16243c090935b61da7c89c6af1dbca97aee0fe896d451d39cb710fbcbd3"
       ],
       "captures": [],
       "envelope": {
@@ -1260,12 +1239,12 @@
           }
         ],
         "result": {
-          "calculation_revision_id_filter": "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491",
+          "calculation_revision_id_filter": "52eaf16243c090935b61da7c89c6af1dbca97aee0fe896d451d39cb710fbcbd3",
           "operation": "modelo.verification_report.list",
           "report_count": 1,
           "reports": [
             {
-              "calculation_revision_id": "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491",
+              "calculation_revision_id": "52eaf16243c090935b61da7c89c6af1dbca97aee0fe896d451d39cb710fbcbd3",
               "completeness_status": "complete",
               "findings": [
                 {
@@ -1295,14 +1274,7 @@
                   ],
                   "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
                   "severity": "warning",
-                  "source_refs": [
-                    "aeat-modelo-303-procedure",
-                    "boe-modelo-303-2008-form",
-                    "aeat-dr-303-2026",
-                    "aeat-dr-303-2024-early",
-                    "aeat-dr-303-2024-late",
-                    "boe-modelo-303-2024-form-pdf"
-                  ]
+                  "source_refs": []
                 }
               ],
               "granted_verificado_completo": true,
@@ -1315,7 +1287,7 @@
               },
               "resolved_casilla_ids": [],
               "run_at": "2026-04-01T09:00:00+00:00",
-              "verification_report_id": "b617c4e32d514330bf02f4f146204bd9c46b162f6075720ea82428541c244ca8",
+              "verification_report_id": "1f7f478855f9be4603ab3a8fce9ebc002fb862c8c3544d3bf6b8d1d2f2f6e088",
               "verified_by": "docs-sequence-sandbox"
             }
           ]
@@ -1338,7 +1310,7 @@
         "modelo",
         "verification-report",
         "view",
-        "b617c4e32d514330bf02f4f146204bd9c46b162f6075720ea82428541c244ca8"
+        "1f7f478855f9be4603ab3a8fce9ebc002fb862c8c3544d3bf6b8d1d2f2f6e088"
       ],
       "captures": [],
       "envelope": {
@@ -1354,7 +1326,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491",
+          "calculation_revision_id": "52eaf16243c090935b61da7c89c6af1dbca97aee0fe896d451d39cb710fbcbd3",
           "completeness_status": "complete",
           "findings": [
             {
@@ -1384,14 +1356,7 @@
               ],
               "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
               "severity": "warning",
-              "source_refs": [
-                "aeat-modelo-303-procedure",
-                "boe-modelo-303-2008-form",
-                "aeat-dr-303-2026",
-                "aeat-dr-303-2024-early",
-                "aeat-dr-303-2024-late",
-                "boe-modelo-303-2024-form-pdf"
-              ]
+              "source_refs": []
             }
           ],
           "granted_verificado_completo": true,
@@ -1405,7 +1370,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "b617c4e32d514330bf02f4f146204bd9c46b162f6075720ea82428541c244ca8",
+          "verification_report_id": "1f7f478855f9be4603ab3a8fce9ebc002fb862c8c3544d3bf6b8d1d2f2f6e088",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

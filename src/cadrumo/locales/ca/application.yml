@@ -2503,6 +2503,10 @@ application:
         a la versió %{revision_id}: les definicions del model declaren un origen de
         valor que cap resolutor de càlcul gestiona. Afegeix un resolutor o marca''l
         com a ajornat abans de calcular.'
+      prior_carries_nothing_open: 'El Modelo %{modelo} de %{filing_year} no té cap
+        import d''exercicis anteriors que puguis declarar com a no pendent: cadascun
+        ja té un valor o la teva declaració, o la declaració no n''arrossega cap.
+        No s''ha canviat res.'
       prior_carries_unstated:
         renta_negative_general_bases_pending: 'No es pot calcular el Modelo %{modelo}
           de %{filing_year}: no consta si queden bases liquidables generals negatives
@@ -3652,6 +3656,10 @@ application:
     notices:
       censo_divergences_open: '{count} dada/es del perfil o del certificat encara
         difereixen del Certificat de Situació Censal i resten sense resoldre: {axes}.'
+      kdf_at_fallback: La contrasenya d'aquest perfil té la protecció mínima, perquè
+        aquest ordinador no va poder confirmar a temps una configuració més forta
+        quan es va crear el perfil. Canvia la contrasenya per reforçar-la; pots tornar
+        a introduir la mateixa.
   wizard:
     errors:
       command_input_invalid: 'Les dades del perfil no han superat la validació: %{details}'

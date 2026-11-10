@@ -157,7 +157,12 @@ def _binding_findings(
         if head.layer_known and binding_id not in head.operator_bindings:
             return [_finding(NOTHING_TO_RESTORE, ModeloEditFindingSeverity.INFO, intent.address)]
         return []
-    findings = _value_findings(intent, submission, tax_id_format=tax_id_format)
+    # The statement carries no value to read: execution records it as the attested zero.
+    findings = (
+        []
+        if intent.kind is ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT
+        else _value_findings(intent, submission, tax_id_format=tax_id_format)
+    )
     if not findings and head.source_feeds_binding(binding_id):
         findings.append(_finding(OVERRIDES_SOURCE_VALUE, ModeloEditFindingSeverity.WARNING, intent.address))
     return findings

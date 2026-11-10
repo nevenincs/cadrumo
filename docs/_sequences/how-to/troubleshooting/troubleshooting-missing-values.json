@@ -31,7 +31,7 @@
           }
         ],
         "result": {
-          "authority_generation": "4eacb89fe2dccf8983a510596ca600bb75e8e6054bdc9863bde5e276600d1222",
+          "authority_generation": "9b0835db772ae5d73888d03d6eccf7182ba47a7ba24bcb333adc203f11bc3baf",
           "binding_count": 50,
           "bindings": [
             {"binding_id":"modelo-303-iva-repercutido-general-cuota","borrador_capable":false,"filing_year":2026,"input_channel":"decimal","legal_refs":["ley-37-1992:art-88","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"modelo":"303","period":"1T","readiness":"data from your records","relation_inputs":[],"revision":"2026-hasta-01-y-1t","source":"ledger_iva_aggregation","source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"typed_enum":null},
