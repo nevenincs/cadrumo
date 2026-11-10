@@ -285,6 +285,103 @@ test("Delete clears an optional cell, and a required one says it cannot be clear
   expect(submitted).not.toContain("ledger ledger.classify.bulk");
 });
 
+test("the category picker lists a clear choice that stages a clear, reviews it and saves no category", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await find(target, "comision mantenimiento");
+  const row = rowOf(target, "COMISION MANTENIMIENTO CUENTA");
+  const stored = label("desktop.ledger.category.gastos_bancarios");
+  await expect(cellOf(row, "category")).toContainText(stored);
+  await chooseIn(
+    target,
+    cellOf(row, "category"),
+    label("desktop.ledger.inspector.clear"),
+  );
+  await expect(cellOf(row, "category").locator("[data-staged]")).toContainText(
+    label("desktop.ledger.edit.cleared"),
+  );
+  await openReview(target);
+  const summary = review(target).locator(".ledger-summary");
+  const line = summary
+    .locator("tr")
+    .filter({ hasText: label("desktop.ledger.column.category") });
+  await expect(line).toContainText(stored);
+  await expect(line).toContainText(label("desktop.ledger.edit.cleared"));
+  await save(target);
+  const submitted = await target.evaluate(
+    () => window.__scenarioHostCalls ?? [],
+  );
+  expect(submitted).toContain("ledger ledger.classify.single");
+  await review(target).locator(".ledger-apply-done").click();
+  await expect(cellOf(row, "category")).not.toContainText(stored);
+});
+
+test("a Mixed movement made Personal shows its category cleared, lists it in the review on its own line, saves none, and one undo restores it", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await find(target, "fibra hogar");
+  const row = rowOf(target, "FIBRA HOGAR ALBOR");
+  const category = label(
+    "desktop.ledger.category.suministros_home_office_internet",
+  );
+  await expect(cellOf(row, "category")).toContainText(category);
+  await chooseIn(
+    target,
+    cellOf(row, "classification"),
+    label("desktop.ledger.classification.personal"),
+  );
+  await expect(
+    cellOf(row, "classification").locator("[data-staged]"),
+  ).toContainText(label("desktop.ledger.classification.personal"));
+  // The category is shown cleared, not still held beside Personal.
+  await expect(cellOf(row, "category").locator("[data-staged]")).toContainText(
+    label("desktop.ledger.edit.cleared"),
+  );
+  await openReview(target);
+  const summary = review(target).locator(".ledger-summary");
+  // Classification, business share and category are three lines of their own.
+  for (const column of ["classification", "category"]) {
+    const line = summary
+      .locator("tr")
+      .filter({ hasText: label(`desktop.ledger.column.${column}`) });
+    await expect(line).toHaveCount(1);
+  }
+  const line = summary
+    .locator("tr")
+    .filter({ hasText: label("desktop.ledger.column.category") });
+  await expect(line).toContainText(category);
+  await expect(line).toContainText(label("desktop.ledger.edit.cleared"));
+  await expect(line.locator("td").nth(2)).toHaveText("1");
+  await save(target);
+  await review(target).locator(".ledger-apply-done").click();
+  await expect(cellOf(row, "category")).not.toContainText(category);
+});
+
+test("undoing a change to Personal restores the category and share it cleared", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await find(target, "fibra hogar");
+  const row = rowOf(target, "FIBRA HOGAR ALBOR");
+  await chooseIn(
+    target,
+    cellOf(row, "classification"),
+    label("desktop.ledger.classification.personal"),
+  );
+  await expect(cellOf(row, "category").locator("[data-staged]")).toHaveCount(1);
+  await target.keyboard.press("Control+KeyZ");
+  await expect(cellOf(row, "category").locator("[data-staged]")).toHaveCount(0);
+  await expect(
+    cellOf(row, "classification").locator("[data-staged]"),
+  ).toHaveCount(0);
+  await expect(cellOf(row, "category")).toContainText(
+    label("desktop.ledger.category.suministros_home_office_internet"),
+  );
+  await expect(tray(target)).toHaveCount(0);
+});
+
 /** The scenario ledger's controls for what no person does here. */
 const ledgerControls = {
   nextWrites: (target: Page, outcomes: ("unknown" | "refused")[]) =>

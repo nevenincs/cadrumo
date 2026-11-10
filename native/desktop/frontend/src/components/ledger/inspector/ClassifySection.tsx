@@ -341,7 +341,7 @@ export function ClassifySection({
           {fieldName(t, "usage_ratio_id")}
         </dt>
         <dd className="px-1.5 py-1 text-sm">
-          {row.transaction.usage_ratio_id ??
+          {effective.usage_ratio_id ??
             (takesBusinessShare(effective.business_classification ?? "") ===
             true
               ? t("desktop.ledger.inspector.ratio_missing")
