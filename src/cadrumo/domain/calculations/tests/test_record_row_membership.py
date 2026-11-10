@@ -6,6 +6,7 @@ from pydantic import ValidationError
 from ....core.aggregation import BindingSourceKind
 from ..record_row_membership import ClosedRecordRowSet, RecordRowMembership, validate_closed_record_row_sets
 from ..registry.schema_references import RegistrySnapshotRef
+from ..registry.tests.authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -16,7 +17,7 @@ def _closed_rows(rows: tuple[RecordRowMembership, ...]) -> ClosedRecordRowSet:
         bucket_id="fictional-profile",
         work_unit_id="a" * 64,
         registry_snapshot_ref=RegistrySnapshotRef(
-            modelo="369", revision_id="esquema-exterior", modelo_year=2025, period="EXT-1T"
+            modelo="369", revision_id="esquema-exterior", modelo_year=filing_year_envelope().horizon, period="EXT-1T"
         ),
         authority_generation="b" * 64,
         source_kind=BindingSourceKind.LEDGER_OSS_AGGREGATION,

@@ -26,6 +26,7 @@ from ..formula_runtime import RegistryCalculationResult, calculate_registry_snap
 from ..runtime_graph import expression_binding_refs
 from ..schema import RegistrySnapshot
 from ..schema_formula import FormulaExpression
+from .authored_editions import newest_authored_edition
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
@@ -42,12 +43,13 @@ _CONTACT_AND_IDENTITY_TEXT: tuple[CasillaId, ...] = (
     _NUMERO_IDENTIFICATIVO,
     _NUMERO_IDENTIFICATIVO_ANTERIOR,
 )
+_EXERCISE = newest_authored_edition("190")
 # A numeric manual casilla of the same revision, left empty by the caller.
 _NUMERIC_MANUAL: CasillaId = validated_casilla_id("perc.descendientes-menores-3-total")
 
 
-def _snapshot_190_2022() -> RegistrySnapshot:
-    return published_snapshot("190", filing_year=2022, period="0A")
+def _snapshot_190() -> RegistrySnapshot:
+    return published_snapshot("190", filing_year=_EXERCISE, period="0A")
 
 
 def _calculate(
@@ -65,7 +67,7 @@ def _calculate(
     return calculate_registry_snapshot(
         snapshot,
         inputs=inputs or {},
-        date_context={"filing_period": date(2022, 12, 31)},
+        date_context={"filing_period": date(_EXERCISE, 12, 31)},
         binding_values={binding_id: Decimal("100") for binding_id in formula_bindings},
         text_inputs=text_inputs,
     )
@@ -77,7 +79,7 @@ def _observations_by_id(result: RegistryCalculationResult) -> dict[CasillaId, Ca
 
 def test_the_190_2022_contact_and_identity_casillas_are_text_casillas() -> None:
     """The cases below exercise text casillas, as the registry itself declares them."""
-    snapshot = _snapshot_190_2022()
+    snapshot = _snapshot_190()
 
     text_ids = text_family_casilla_ids(snapshot.revision.casillas)
 
@@ -86,7 +88,7 @@ def test_the_190_2022_contact_and_identity_casillas_are_text_casillas() -> None:
 
 
 def test_absent_190_2022_text_casillas_carry_no_observation() -> None:
-    result = _calculate(_snapshot_190_2022())
+    result = _calculate(_snapshot_190())
     observations = _observations_by_id(result)
 
     for casilla_id in _CONTACT_AND_IDENTITY_TEXT:
@@ -95,7 +97,7 @@ def test_absent_190_2022_text_casillas_carry_no_observation() -> None:
 
 
 def test_an_absent_numeric_casilla_still_calculates_as_zero() -> None:
-    result = _calculate(_snapshot_190_2022())
+    result = _calculate(_snapshot_190())
     observation = _observations_by_id(result)[_NUMERIC_MANUAL]
 
     assert observation.value_kind == CasillaObservationValueKind.DECIMAL
@@ -111,7 +113,7 @@ def test_populated_190_2022_text_casillas_materialise_as_text() -> None:
         _NUMERO_IDENTIFICATIVO: "1901234567890",
     }
 
-    result = _calculate(_snapshot_190_2022(), text_inputs=dict(supplied))
+    result = _calculate(_snapshot_190(), text_inputs=dict(supplied))
     observations = _observations_by_id(result)
 
     for casilla_id, text in supplied.items():
@@ -123,12 +125,12 @@ def test_populated_190_2022_text_casillas_materialise_as_text() -> None:
 
 def test_a_number_supplied_for_a_text_casilla_is_refused() -> None:
     with pytest.raises(RegistryValidationError, match="text casillas cannot be supplied as numeric inputs"):
-        _calculate(_snapshot_190_2022(), inputs={_TELEFONO: Decimal("0")})
+        _calculate(_snapshot_190(), inputs={_TELEFONO: Decimal("0")})
 
 
 def test_materialising_a_zero_for_an_absent_text_casilla_is_caught() -> None:
     """Detector: the old structural zero for a text casilla cannot become an observation."""
-    snapshot = _snapshot_190_2022()
+    snapshot = _snapshot_190()
 
     with pytest.raises(RegistryValidationError, match="cannot carry a numeric observation"):
         materialise_observations(
@@ -139,7 +141,7 @@ def test_materialising_a_zero_for_an_absent_text_casilla_is_caught() -> None:
 
 
 def test_a_formula_figure_written_into_a_text_casilla_is_caught() -> None:
-    snapshot = _snapshot_190_2022()
+    snapshot = _snapshot_190()
     telefono = casillas_by_id(snapshot.revision)[_TELEFONO]
     computed = CasillaObservation(
         casilla_id=_TELEFONO,
@@ -160,7 +162,7 @@ def test_a_formula_figure_written_into_a_text_casilla_is_caught() -> None:
 
 def test_a_populated_text_casilla_still_materialises_as_text() -> None:
     """The detector does not refuse the text channel it protects."""
-    snapshot = _snapshot_190_2022()
+    snapshot = _snapshot_190()
 
     observations = materialise_observations(
         values={},
@@ -175,7 +177,7 @@ def test_a_populated_text_casilla_still_materialises_as_text() -> None:
 
 
 def test_a_formula_reading_a_text_casilla_as_a_number_is_refused() -> None:
-    snapshot = _snapshot_190_2022()
+    snapshot = _snapshot_190()
 
     with pytest.raises(RegistryValidationError, match="cannot be read as a numeric formula operand"):
         evaluate_expression(
@@ -183,7 +185,7 @@ def test_a_formula_reading_a_text_casilla_as_a_number_is_refused() -> None:
             values={},
             binding_values={},
             parameters={},
-            date_context={"filing_period": date(2022, 12, 31)},
+            date_context={"filing_period": date(_EXERCISE, 12, 31)},
             relation_values={},
             unresolved_relation_ids=frozenset(),
             unresolved_casilla_ids=set(),

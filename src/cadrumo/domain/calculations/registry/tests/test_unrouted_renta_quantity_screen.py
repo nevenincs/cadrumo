@@ -15,6 +15,7 @@ import pytest
 
 from ..schema import ModeloRevision
 from . import unrouted_renta_quantity_screen_scenarios as scenarios
+from .authored_editions import filing_year_envelope
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -22,7 +23,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def published_130_revision() -> ModeloRevision:
     """Resolve the shipped Modelo 130 revision used by this runtime screen."""
-    return published_snapshot("130", filing_year=2026, period="1T").revision
+    return published_snapshot("130", filing_year=filing_year_envelope().horizon, period="1T").revision
 
 
 def test_the_committed_revision_draws_every_quantity_its_rows_carry() -> None:
