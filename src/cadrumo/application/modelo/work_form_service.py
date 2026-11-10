@@ -292,6 +292,22 @@ def _profile_context_values(
         return dict[FilingProducerKey, ModeloFormScalar]()
 
 
+def _needed_profile_bindings(
+    layout: FormLayoutDefinition, snapshot: RegistrySnapshot, revision: CalculationRevision | None
+) -> set[BindingId]:
+    """Profile-sourced bindings the layout's context fields read that the revision has no saved answer for."""
+    profiles = {binding.id for binding in snapshot.revision.bindings if binding.source is BindingSourceKind.PROFILE}
+    return {
+        field.binding
+        for page in layout.pages
+        for section in page.sections
+        for block in section.blocks
+        if isinstance(block, FormContextFieldBlock)
+        and (field := resolve_form_context_field(snapshot.revision, block)).binding in profiles
+        and (revision is None or field.binding not in revision.binding_overrides)
+    }
+
+
 def _profile_binding_context_values(
     layout: FormLayoutDefinition | None,
     snapshot: RegistrySnapshot,
@@ -304,16 +320,7 @@ def _profile_binding_context_values(
     """Resolve only declared profile binding context that has no saved answer."""
     if layout is None or not _current_profile_context_allowed(layout, snapshot, lifecycle_state):
         return dict[BindingId, ModeloFormScalar]()
-    profiles = {binding.id for binding in snapshot.revision.bindings if binding.source is BindingSourceKind.PROFILE}
-    needed = {
-        field.binding
-        for page in layout.pages
-        for section in page.sections
-        for block in section.blocks
-        if isinstance(block, FormContextFieldBlock)
-        and (field := resolve_form_context_field(snapshot.revision, block)).binding in profiles
-        and (revision is None or field.binding not in revision.binding_overrides)
-    }
+    needed = _needed_profile_bindings(layout, snapshot, revision)
     if not needed:
         return dict[BindingId, ModeloFormScalar]()
     try:

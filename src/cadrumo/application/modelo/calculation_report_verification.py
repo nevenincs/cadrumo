@@ -70,6 +70,7 @@ from .calculation_summary_pdf_ports import (
 )
 from .calculation_summary_presentation import (
     CalculationSummaryChromeUnavailableError,
+    CalculationSummaryPresentation,
     build_calculation_summary_presentation,
 )
 from .review_package_signing import ReviewPackageSigningError, ReviewPackageSigningKeypair
@@ -372,7 +373,24 @@ def _text_layer_gaps(
     except CalculationSummaryChromeUnavailableError:
         return ("chrome",)
     page = _compact(contents.page_text)
-    gaps = [
+    gaps = _identity_gaps(page, report=report, statement=statement)
+    gaps.extend(
+        f"resolution {fact.label}"
+        for fact in presentation.resolutions
+        if _compact(fact.label) not in page or _compact(fact.value) not in page
+    )
+    cursor = page.find(_compact(presentation.sections[0].heading)) if presentation.sections else 0
+    if cursor < 0:
+        return (*gaps, "sections")
+    gaps.extend(_casilla_gaps(page, presentation, cursor))
+    return tuple(gaps)
+
+
+def _identity_gaps(
+    page: str, *, report: ModeloCalculationReport, statement: CalculationReportCertificationStatement
+) -> list[str]:
+    """The identity and digest labels whose value the compacted page text does not show."""
+    return [
         label
         for label, value in (
             ("taxpayer_tax_id", report.header.taxpayer_tax_id),
@@ -383,14 +401,11 @@ def _text_layer_gaps(
         )
         if _compact(value) not in page
     ]
-    gaps.extend(
-        f"resolution {fact.label}"
-        for fact in presentation.resolutions
-        if _compact(fact.label) not in page or _compact(fact.value) not in page
-    )
-    cursor = page.find(_compact(presentation.sections[0].heading)) if presentation.sections else 0
-    if cursor < 0:
-        return (*gaps, "sections")
+
+
+def _casilla_gaps(page: str, presentation: CalculationSummaryPresentation, cursor: int) -> list[str]:
+    """The casillas whose number is not followed by its value, walking the page text in order from ``cursor``."""
+    gaps: list[str] = []
     for section in presentation.sections:
         for row in section.rows:
             number = _compact(row.casilla_number)
@@ -401,7 +416,7 @@ def _text_layer_gaps(
                 gaps.append(f"casilla {row.casilla_number}")
                 continue
             cursor = value_at + len(value)
-    return tuple(gaps)
+    return gaps
 
 
 def _check_statement(
