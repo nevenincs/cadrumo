@@ -3,6 +3,7 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import type { AgentAccess, useAgentAccess } from "../../shell/agentAccess";
+import type { AgentEngineHealth } from "../../shell/agentSession";
 import type { CatalogLane } from "../../shell/localModelLanes";
 import type { LocalModelHost } from "../../shell/localModels";
 import type {
@@ -74,6 +75,7 @@ export function AgentSettingsPanel({
   onSignInTerminal,
   localModelHost,
   localLanes,
+  engines,
   localProviderId,
   catalogStatus,
   onRetryCatalog,
@@ -103,6 +105,8 @@ export function AgentSettingsPanel({
   localModelHost: LocalModelHost | null;
   /** The catalog's lanes with their models. */
   localLanes: CatalogLane[];
+  /** What the catalog states of each local engine's lane, by lane id. */
+  engines: Readonly<Record<string, AgentEngineHealth>>;
   /** The provider lane on this computer, the local AI. */
   localProviderId: string | undefined;
   catalogStatus: "ready" | "loading" | "failed";
@@ -167,6 +171,7 @@ export function AgentSettingsPanel({
                 onReset={settings.reset}
                 onRefresh={settings.refresh}
                 onSignInTerminal={onSignInTerminal}
+                engines={engines}
                 localModels={
                   localModelHost
                     ? (lane) => {

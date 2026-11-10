@@ -54,6 +54,8 @@ export function refusalWords(t: Translate, code: string): string {
       return t("desktop.agent.conversation_id_taken");
     case "agent_gateway_model_not_installed":
       return t("desktop.agent.model_not_installed_refused");
+    case "agent_gateway_model_does_not_fit":
+      return t("desktop.agent.model_does_not_fit_refused");
     default:
       return t("desktop.agent.request_failed");
   }

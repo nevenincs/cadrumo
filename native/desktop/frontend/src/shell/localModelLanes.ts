@@ -1,8 +1,4 @@
-import type {
-  AgentLocalEngine,
-  AgentLocalEngineToken,
-  AgentLocalModels,
-} from "../ipc/contract";
+import type { AgentLocalEngine, AgentLocalModels } from "../ipc/contract";
 import { isDeclared } from "./agentCatalog";
 import type {
   AgentCatalogAnswer,
@@ -10,6 +6,7 @@ import type {
   AgentRecommendedCapability,
   AgentTransport,
 } from "./agentSession";
+import { parseEngineHealth } from "./agentSession";
 import type { Translate } from "./strings";
 
 // A local lane's model list: the models cadrumo-agent's catalog recommends
@@ -93,7 +90,11 @@ export function catalogLanes(answer: AgentCatalogAnswer): CatalogLane[] {
       ];
     });
   return (answer.providers ?? []).flatMap((lane): CatalogLane[] => {
-    if (!understood(lane.transport) || lane.model_source !== "catalog")
+    if (
+      !understood(lane.transport) ||
+      lane.model_source !== "catalog" ||
+      parseEngineHealth(lane) === "malformed"
+    )
       return [];
     const models = (lane.catalog.models ?? []).map((entry): LaneModel => ({
       id: entry.model,
@@ -154,24 +155,16 @@ export function laneModelList(
   return [...recommended, ...extra];
 }
 
-const ENGINES: readonly string[] = [
-  "llamacpp",
-  "ollama",
-] satisfies AgentLocalEngineToken[];
-
-/** Whether `lane` is a local engine's lane: its provider is an engine token. */
-export const isEngineLane = (lane: Pick<CatalogLane, "provider">): boolean =>
-  ENGINES.includes(lane.provider);
-
-/** Whether `lane` is a local engine's lane that is not the one selected.
- * With no readable engine nothing is held back. */
+/** Whether `lane` is a local engine's lane that is not the one selected: its
+ * provider is one of the engines the service offers. With no readable engine
+ * nothing is held back. */
 export function heldBackByEngine(
   lane: Pick<CatalogLane, "provider">,
   engine: AgentLocalEngine | null,
 ): boolean {
   return (
     engine?.state === "readable" &&
-    isEngineLane(lane) &&
+    engine.choices.engine.some((offered) => offered === lane.provider) &&
     lane.provider !== engine.engine
   );
 }
