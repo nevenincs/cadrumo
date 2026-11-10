@@ -3,6 +3,7 @@ import { DataGridHeader } from "./data-grid-header";
 import { gridColumnPresentation } from "./dataGridPresentation";
 
 import { gridKeyboard } from "./dataGridKeyboard";
+import { pasteRange } from "./dataGridClipboard";
 import {
   useGridNavigation,
   cellCount,
@@ -71,6 +72,7 @@ function DataGrid<R>({
   onToggleSection,
   onCopy,
   onPaste,
+  clipboard,
   onFill,
   onColumnResize: onColumnResizeProp,
   onColumnOrder,
@@ -384,6 +386,9 @@ function DataGrid<R>({
       onMenu,
       onActivate,
       onCommit,
+      onCopy,
+      onPaste,
+      clipboard,
     },
     startEdit,
     readOnlyReason,
@@ -600,7 +605,10 @@ function DataGrid<R>({
               const target = currentRange();
               if (!target) return;
               event.preventDefault();
-              onPaste(target, event.clipboardData.getData("text/plain"));
+              onPaste(
+                pasteRange(target, selection, dataKeys),
+                event.clipboardData.getData("text/plain"),
+              );
             }}
           >
             <DataGridHeader

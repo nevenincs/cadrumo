@@ -11,7 +11,9 @@ import {
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import type { DataGridHandle, GridRow } from "@/components/ui/dataGridTypes";
+import type { GridClipboard } from "@/components/ui/dataGridClipboard";
 import { exactly } from "@/components/ui/dataGridModel";
+import { failureCode } from "../../../errors";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { Toast } from "@/components/ui/toast";
@@ -168,6 +170,8 @@ export function MovementsSection({
   onImportCleared,
   editing: pageEditing,
   linked,
+  copy,
+  paste,
   onMakeRule,
   onOpenRatios,
 }: {
@@ -201,6 +205,10 @@ export function MovementsSection({
   editing: SectionEditing;
   /** The movement a link selects, held by the page. */
   linked: LinkedRow;
+  /** Puts text on the host clipboard. */
+  copy?(text: string): Promise<void>;
+  /** Reads the host clipboard. */
+  paste?(): Promise<string>;
   /** Opens the rule dialog prefilled from movements, where the page has
    * one. */
   onMakeRule?: OpenRuleFromSelection;
@@ -655,6 +663,36 @@ export function MovementsSection({
     onDraftFocused: pageEditing.onDraftFocused,
   });
 
+  // The grid reaches the clipboard through the host, since the desktop
+  // webview raises no copy or paste event for the keys; a refusal is said.
+  const clipboard = useMemo<GridClipboard | undefined>(
+    () =>
+      copy && paste
+        ? {
+            write: (text) =>
+              void copy(text).then(
+                () => setToast(t("desktop.toast.copied")),
+                () => setToast(t("desktop.toast.copy_failed")),
+              ),
+            read: () =>
+              paste().then(
+                (text) => text,
+                (error: unknown) => {
+                  setToast(
+                    t(
+                      failureCode(error) === "output_limit"
+                        ? "desktop.toast.paste_too_large"
+                        : "desktop.toast.paste_failed",
+                    ),
+                  );
+                  return null;
+                },
+              ),
+          }
+        : undefined,
+    [copy, paste, t],
+  );
+
   // ---- Leading to the fix ----------------------------------------------------
   const leadTo = (next: MovementFilters, column: ColumnId) => {
     setFocusWanted({ column, rows: visible });
@@ -1073,6 +1111,7 @@ export function MovementsSection({
         onCommit={edit.onCommit}
         onPaste={edit.onPaste}
         onCopy={edit.onCopy}
+        clipboard={clipboard}
         onFill={edit.onFill}
         density={view.density}
         sort={{ column: effectiveSort.key, direction: effectiveSort.direction }}

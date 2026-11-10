@@ -1057,3 +1057,116 @@ for (const scheme of ["light", "dark"] as const)
     await openReview(target);
     expect(await audit(target)).toEqual([]);
   });
+
+// The desktop webview raises no copy or paste event for the keys, so the
+// grid takes the chords itself and goes through the host's clipboard. These
+// presses are real keyboard input; the scenario host keeps the clipboard.
+
+const primary = process.platform === "darwin" ? "Meta" : "Control";
+const hostCalls = (target: Page) =>
+  target.evaluate(() => window.__scenarioHostCalls ?? []);
+const clipboardCalls = async (target: Page, verb: string) =>
+  (await hostCalls(target)).filter((call) => call.startsWith(verb));
+const stagedText = (row: Locator, column: string) =>
+  cellOf(row, column).locator("[data-staged]");
+
+test("Copy and Paste on the keys go through the host clipboard and stage one cell", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  const source = rowOf(target, "PAPELERIA TRAZO");
+  const destination = rowOf(target, "PARKING CENTRO MUNICIPAL");
+  const category = (await cellOf(source, "category").innerText()).trim();
+  expect(category).not.toBe("");
+  await cellOf(source, "category").click();
+  await target.keyboard.press(`${primary}+c`);
+  await expect
+    .poll(() => clipboardCalls(target, "writeClipboard"))
+    .toHaveLength(1);
+  await expect(
+    target.getByText(label("desktop.toast.copied"), { exact: true }),
+  ).toBeVisible();
+  await cellOf(destination, "category").click();
+  await target.keyboard.press(`${primary}+v`);
+  await expect(stagedText(destination, "category")).toContainText(category);
+  // One press is one paste: the browser's own event did not apply it again.
+  expect(await clipboardCalls(target, "readClipboard")).toHaveLength(1);
+  expect(await trayCount(target)).toBe(1);
+});
+
+test("a single copied value pasted on several selected rows fills that column of every one, staged", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  const source = rowOf(target, "PAPELERIA TRAZO");
+  const names = [
+    "COMISION MANTENIMIENTO CUENTA",
+    "PARKING CENTRO MUNICIPAL",
+    "TREN ALTA VELOCIDAD BILLETE",
+  ];
+  const category = (await cellOf(source, "category").innerText()).trim();
+  await cellOf(source, "category").click();
+  await target.keyboard.press(`${primary}+c`);
+  await expect
+    .poll(() => clipboardCalls(target, "writeClipboard"))
+    .toHaveLength(1);
+  await cellOf(rowOf(target, names[0]!), "category").click();
+  for (const name of names.slice(1))
+    await cellOf(rowOf(target, name), "category").click({
+      modifiers: [primary],
+    });
+  await target.keyboard.press(`${primary}+v`);
+  const preview = target.locator(".ledger-paste");
+  await expect(preview).toBeVisible();
+  await preview.locator(".ledger-paste-apply").click();
+  await expect(preview).toHaveCount(0);
+  for (const name of names)
+    await expect(stagedText(rowOf(target, name), "category")).toContainText(
+      category,
+    );
+  // The rows outside the selection are untouched, and nothing is saved.
+  await expect(stagedText(source, "category")).toHaveCount(0);
+  expect(await trayCount(target)).toBe(names.length);
+  expect(await hostCalls(target)).not.toContain(
+    "ledger ledger.classify.single",
+  );
+});
+
+test("Cut copies the cell, stages its clearing, and what it took can be pasted", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  const source = rowOf(target, "COMISION MANTENIMIENTO CUENTA");
+  const destination = rowOf(target, "PARKING CENTRO MUNICIPAL");
+  const category = (await cellOf(source, "category").innerText()).trim();
+  expect(category).not.toBe("");
+  await cellOf(source, "category").click();
+  await target.keyboard.press(`${primary}+x`);
+  await expect(stagedText(source, "category")).toContainText(
+    label("desktop.ledger.edit.cleared"),
+  );
+  expect(await clipboardCalls(target, "writeClipboard")).toHaveLength(1);
+  await cellOf(destination, "category").click();
+  await target.keyboard.press(`${primary}+v`);
+  await expect(stagedText(destination, "category")).toContainText(category);
+  // A required cell is copied but not cleared by a cut.
+  await cellOf(destination, "amount").click();
+  await target.keyboard.press(`${primary}+x`);
+  await expect(
+    cellOf(destination, "amount").locator("[data-refused]"),
+  ).toHaveCount(1);
+});
+
+test("the keys leave an open cell editor to its own native editing", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  const row = rowOf(target, "PAPELERIA TRAZO");
+  await cellOf(row, "counterparty").click();
+  await target.keyboard.press("Enter");
+  await expect(editor(target)).toBeVisible();
+  await target.keyboard.press(`${primary}+c`);
+  await target.keyboard.press(`${primary}+v`);
+  expect(await clipboardCalls(target, "writeClipboard")).toHaveLength(0);
+  expect(await clipboardCalls(target, "readClipboard")).toHaveLength(0);
+});
