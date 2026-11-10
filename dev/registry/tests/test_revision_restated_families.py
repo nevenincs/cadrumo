@@ -35,7 +35,9 @@ from ..conformance.loader_directory_mode_support import write_standard_manifest
 from .synthetic_delta_edition_support import (
     MODELO_ID,
     PREDECESSOR_EDITION,
+    PREDECESSOR_EDITION_YEAR,
     SUCCESSOR_EDITION,
+    SUCCESSOR_EDITION_YEAR,
     delta_casilla,
     delta_formula,
     write_revision,
@@ -50,7 +52,7 @@ _RESTATED_FORMULAS: Final = (
 
 
 def _build_modelo(root: Path, *, successor_extra: str = "", predecessor_extra: str = "") -> Path:
-    """A two-edition modelo: a 2024 root and a 2025 delta naming it.
+    """A two-edition modelo: a root and a delta naming it.
 
     Both editions state casillas and formulas, so a restatement claim about
     ``formulas`` has members behind it and a claim about ``constructs`` -- a
@@ -62,19 +64,19 @@ def _build_modelo(root: Path, *, successor_extra: str = "", predecessor_extra: s
     write_revision(
         modelo_dir,
         PREDECESSOR_EDITION,
-        year=2024,
+        year=PREDECESSOR_EDITION_YEAR,
         casillas=delta_casilla(PREDECESSOR_EDITION, "0001", number="1", lineage="base")
         + delta_casilla(PREDECESSOR_EDITION, "0002", number="2", lineage="cuota"),
-        formulas=delta_formula(PREDECESSOR_EDITION, "modelo-999-2024-cuota", target="0002"),
+        formulas=delta_formula(PREDECESSOR_EDITION, f"modelo-999-{PREDECESSOR_EDITION}-cuota", target="0002"),
         extra_manifest=predecessor_extra,
     )
     write_revision(
         modelo_dir,
         SUCCESSOR_EDITION,
-        year=2025,
+        year=SUCCESSOR_EDITION_YEAR,
         predecessor=PREDECESSOR_EDITION,
         casillas=delta_casilla(SUCCESSOR_EDITION, "0002", number="22", lineage="cuota"),
-        formulas=delta_formula(SUCCESSOR_EDITION, "modelo-999-2025-cuota", target="0002"),
+        formulas=delta_formula(SUCCESSOR_EDITION, f"modelo-999-{SUCCESSOR_EDITION}-cuota", target="0002"),
         extra_manifest=successor_extra,
     )
     return modelo_dir
