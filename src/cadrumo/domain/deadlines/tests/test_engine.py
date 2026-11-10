@@ -776,48 +776,59 @@ class TestTargetObligation:
     than extinguishing the duty to present it.
     """
 
-    @pytest.mark.parametrize("filing_year", _SUPPORTED_YEARS)
-    def test_a_closed_window_keeps_the_obligation_and_serves_its_recargo(
-        self, operation: PinnedAuthorityOperation, filing_year: int
-    ) -> None:
-        engine = DeadlineEngine(authority=operation)
-        profile = _profile(pays_rent_with_retencion=True)
-        period = _period(filing_year, "1T")
-        upcoming = engine.target_obligation(
-            profile, modelo=_RENT_WITHHOLDING_MODELO, period=period, today=date(filing_year, 1, 1)
+    @staticmethod
+    def _rent_quarter(operation: PinnedAuthorityOperation, filing_year: int, *, today: date) -> ModeloDeadline:
+        """Return the declared rent-withholding payer's first-quarter target obligation on ``today``."""
+        target = DeadlineEngine(authority=operation).target_obligation(
+            _profile(pays_rent_with_retencion=True),
+            modelo=_RENT_WITHHOLDING_MODELO,
+            period=_period(filing_year, "1T"),
+            today=today,
         )
-        assert upcoming is not None
+        assert target is not None
+        return target
+
+    @pytest.mark.parametrize("filing_year", _SUPPORTED_YEARS)
+    def test_an_open_target_carries_no_recargo(self, operation: PinnedAuthorityOperation, filing_year: int) -> None:
+        upcoming = self._rent_quarter(operation, filing_year, today=date(filing_year, 1, 1))
+        assert upcoming.period == _period(filing_year, "1T")
         assert upcoming.status is not ObligationStatus.OVERDUE
         assert upcoming.recovery is None
 
-        day_after = upcoming.adjusted_closes_on + timedelta(days=1)
-        late = engine.target_obligation(profile, modelo=_RENT_WITHHOLDING_MODELO, period=period, today=day_after)
-        assert late is not None
-        assert (late.period, late.adjusted_closes_on) == (period, upcoming.adjusted_closes_on)
-        assert late.status is ObligationStatus.OVERDUE
+    @pytest.mark.parametrize("filing_year", _SUPPORTED_YEARS)
+    def test_a_closed_window_keeps_the_obligation_with_the_first_recargo_band(
+        self, operation: PinnedAuthorityOperation, filing_year: int
+    ) -> None:
+        close = self._rent_quarter(operation, filing_year, today=date(filing_year, 1, 1)).adjusted_closes_on
+        late = self._rent_quarter(operation, filing_year, today=close + timedelta(days=1))
+        assert (late.adjusted_closes_on, late.status) == (close, ObligationStatus.OVERDUE)
         assert late.recovery is not None
         assert late.recovery.still_filable is True
-        assert late.recovery.recargo_band.surcharge_pct == _statutory_recargo_pct(
-            r"porcentaje igual al (\d+) por ciento"
-        )
-        assert late.recovery.recargo_band.interest_applies is False
+        band = late.recovery.recargo_band
+        assert band.surcharge_pct == _statutory_recargo_pct(r"porcentaje igual al (\d+) por ciento")
+        assert band.interest_applies is False
 
-        close = upcoming.adjusted_closes_on
+    @pytest.mark.parametrize("filing_year", _SUPPORTED_YEARS)
+    def test_a_target_over_twelve_months_late_serves_the_final_band_like_the_schedule(
+        self, operation: PinnedAuthorityOperation, filing_year: int
+    ) -> None:
+        close = self._rent_quarter(operation, filing_year, today=date(filing_year, 1, 1)).adjusted_closes_on
         long_after = date(close.year + 2, close.month, 1)
-        stale = engine.target_obligation(profile, modelo=_RENT_WITHHOLDING_MODELO, period=period, today=long_after)
-        assert stale is not None
+        stale = self._rent_quarter(operation, filing_year, today=long_after)
         assert stale.recovery is not None
-        assert stale.recovery.recargo_band.surcharge_pct == _statutory_recargo_pct(
-            r"el recargo sera del (\d+) por ciento"
-        )
-        assert stale.recovery.recargo_band.interest_applies is True
+        band = stale.recovery.recargo_band
+        assert band.surcharge_pct == _statutory_recargo_pct(r"el recargo sera del (\d+) por ciento")
+        assert band.interest_applies is True
 
-        schedule = engine.compute(profile, filing_year, today=long_after)
-        assert [
+        schedule = DeadlineEngine(authority=operation).compute(
+            _profile(pays_rent_with_retencion=True), filing_year, today=long_after
+        )
+        matching = [
             obligation
             for obligation in schedule.obligations
-            if obligation.modelo == _RENT_WITHHOLDING_MODELO and obligation.period == period
-        ] == [stale]
+            if obligation.modelo == _RENT_WITHHOLDING_MODELO and obligation.period == stale.period
+        ]
+        assert matching == [stale]
 
     @pytest.mark.parametrize("filing_year", _SUPPORTED_YEARS)
     def test_an_unanswered_window_fact_does_not_rule_the_target_out(
