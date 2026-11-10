@@ -194,6 +194,13 @@ MODELO_CORE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 "cli.app.modelo.work.set_override_help",
                 multiple=True,
             ),
+            _option(
+                "binding",
+                ("--binding",),
+                TEXT_VALUE,
+                "cli.app.modelo.work.amend_binding_help",
+                multiple=True,
+            ),
             # The rows an amendment declares, and the separate statement that
             # it declares none. Two flags rather than one because absence and
             # emptiness are different answers here: see

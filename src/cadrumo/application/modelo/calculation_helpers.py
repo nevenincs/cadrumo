@@ -38,7 +38,7 @@ from ...domain.calculations.registry.authority import (
 )
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.binding_value_contract import BindingValueChannel
-from ...domain.calculations.registry.bindings import CasillaObservation
+from ...domain.calculations.registry.bindings import CasillaObservation, resolve_available_bound_inputs_by_casilla_id
 from ...domain.calculations.registry.casilla_membership import casillas_by_id, text_family_casilla_ids
 from ...domain.calculations.registry.formula_runtime import (
     RegistryCalculationEntry,
@@ -401,6 +401,7 @@ def calculate_amendment(
         prior_paid_values=prior_paid_values,
         authored=authored,
         bindings=bindings,
+        stated_bound_inputs=_stated_bound_inputs(snapshot, binding_overrides or {}),
         formulas=formulas,
     )
     recalculated = {observation.casilla_id: observation for observation in result.observations}
@@ -483,6 +484,20 @@ def _amendment_bindings(
     return bindings
 
 
+def _stated_bound_inputs(
+    snapshot: RegistrySnapshot,
+    binding_overrides: Mapping[BindingId, str],
+) -> dict[CasillaId, Decimal]:
+    """Lift the numeric bindings the correction states onto their bound casillas, as calculation does.
+
+    A bound casilla fed by a ledger or profile source reads its value from the
+    input channel, so without this lift a stated binding would leave the filed
+    or replayed figure standing in its casilla.
+    """
+    decimal_bindings, _enum, _dates, _boolean = _amendment_binding_channels(snapshot, binding_overrides)
+    return resolve_available_bound_inputs_by_casilla_id(snapshot.revision, decimal_bindings)
+
+
 def _recalculate_amendment(
     *,
     source_revision: CalculationRevision,
@@ -491,12 +506,20 @@ def _recalculate_amendment(
     prior_paid_values: Mapping[CasillaId, Decimal],
     authored: Mapping[CasillaId, str],
     bindings: Mapping[BindingId, str],
+    stated_bound_inputs: Mapping[CasillaId, Decimal],
     formulas: Mapping[CasillaId, FormulaDefinition],
 ) -> tuple[RegistryCalculationResult, dict[CasillaId, Decimal], dict[CasillaId, str]]:
-    """Run the registry engine over the corrected inputs; return its result and the replayed inputs."""
+    """Run the registry engine over the corrected inputs; return its result and the replayed inputs.
+
+    A casilla a stated binding feeds is a corrected figure like an operator
+    override: it ranks below the operator's own casilla corrections and its
+    dependents are recalculated.
+    """
     decimal_bindings, enum_bindings, date_bindings, boolean_bindings = _amendment_binding_channels(snapshot, bindings)
     text_ids = text_family_casilla_ids(snapshot.revision.casillas)
-    inputs = _amendment_numeric_inputs(source_revision, formulas, text_ids, {**overrides, **prior_paid_values})
+    inputs = _amendment_numeric_inputs(
+        source_revision, formulas, text_ids, {**stated_bound_inputs, **overrides, **prior_paid_values}
+    )
     text_inputs = {key: raw for key, raw in source_revision.input_values_by_casilla_id.items() if key in text_ids}
     resolved_binding_ids = {*decimal_bindings, *enum_bindings, *date_bindings, *boolean_bindings}
     missing_binding_ids = tuple(
@@ -523,7 +546,7 @@ def _recalculate_amendment(
         text_inputs=text_inputs,
         formula_overrides=formula_overrides,
         retained_formula_observations=_retained_formula_observations(source_revision, formulas, formula_overrides),
-        recalculate_from_casilla_ids=frozenset({*overrides, *prior_paid_values}),
+        recalculate_from_casilla_ids=frozenset({*stated_bound_inputs, *overrides, *prior_paid_values}),
         recalculate_from_binding_ids=_changed_binding_ids(bindings, source_revision.binding_overrides),
     )
     return result, inputs, text_inputs
