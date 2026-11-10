@@ -150,6 +150,17 @@ def _period_close_rate(invoice: Invoice, *, line_index: int, last_day: date) -> 
     return lookup.rate
 
 
+def _rectificativas_naming(target: Invoice, catalogue: InvoiceCatalogue, projection_period: Period) -> list[Invoice]:
+    """Return the rectificativas issued by the period's end that name ``target``."""
+    return [
+        other
+        for other in catalogue.values()
+        if is_rectificativa(other)
+        and other.issued_at <= projection_period.end_date
+        and target in rectified_invoices(other, catalogue)
+    ]
+
+
 def _refuse_earlier_correction_it_cannot_state(
     invoice: Invoice, target: Invoice, catalogue: InvoiceCatalogue, projection_period: Period
 ) -> None:
@@ -165,13 +176,7 @@ def _refuse_earlier_correction_it_cannot_state(
             tr("aggregation.oss_ioss.errors.correction_currency_unsourced"),
             context={**context, "currency": invoice.currency, "corrected_currency": target.currency},
         )
-    named = [
-        other
-        for other in catalogue.values()
-        if is_rectificativa(other)
-        and other.issued_at <= projection_period.end_date
-        and target in rectified_invoices(other, catalogue)
-    ]
+    named = _rectificativas_naming(target, catalogue, projection_period)
     base = sum((other.base_total for other in named), Decimal("0"))
     cuota = sum((other.iva_total for other in named), Decimal("0"))
     if base > target.base_total or cuota > target.iva_total:
