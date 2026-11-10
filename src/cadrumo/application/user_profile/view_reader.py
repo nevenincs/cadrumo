@@ -31,7 +31,7 @@ from ..workflow.profile_health import ProfileHealthStatus, assess_profile_record
 from .commands import ProfileValidationIssue, ProfileValidationReport
 from .family_question import family_question_items
 from .family_rows import family_row_items
-from .overview import build_profile_overview
+from .overview import ProfileOverview, build_profile_overview
 from .password_kdf_notice import profile_kdf_floor_notice
 from .profile_record_repository import ProfileRecordRepository
 from .projections import record_to_path_values
@@ -237,6 +237,23 @@ def _overview_notice_item(notice: Notice) -> ProfileViewNoticeItem:
     )
 
 
+def _overview_section_items(overview: ProfileOverview) -> tuple[ProfileViewItem, ...]:
+    """Flatten each overview section into its heading item followed by its field items."""
+    return tuple(
+        item
+        for section in overview.sections
+        for item in (
+            ProfileViewSectionItem(
+                key=section.key,
+                title=section.title,
+                summary=section.summary,
+                repeatable=section.repeatable,
+            ),
+            *(ProfileViewFieldItem(section_key=section.key, field=field) for field in section.fields),
+        )
+    )
+
+
 def _build_overview_source(
     record: UserProfileRecord,
     common: ProfileViewCommon,
@@ -257,22 +274,9 @@ def _build_overview_source(
     # A page item carries only a success action; a precondition action has no wire shape here.
     if any(notice.action is not None and not isinstance(notice.action, ResolvedNoticeAction) for notice in notices):
         return _refused_page(common, ProfileViewRefusalCode.PROJECTION_UNAVAILABLE)
-    section_items = tuple(
-        item
-        for section in overview.sections
-        for item in (
-            ProfileViewSectionItem(
-                key=section.key,
-                title=section.title,
-                summary=section.summary,
-                repeatable=section.repeatable,
-            ),
-            *(ProfileViewFieldItem(section_key=section.key, field=field) for field in section.fields),
-        )
-    )
     missing_items = tuple(ProfileViewMissingItem(path=path) for path in overview.missing_required)
     notice_items = tuple(_overview_notice_item(notice) for notice in notices)
-    return (*section_items, *missing_items, *notice_items)
+    return (*_overview_section_items(overview), *missing_items, *notice_items)
 
 
 def _build_page_source(
