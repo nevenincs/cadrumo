@@ -33,6 +33,7 @@ casilla_ids = [
     "sujeto.domicilio-provincia",
     "sujeto.domicilio-codigo-postal",
     "sujeto.telefono-contacto",
+    "declarante.indicador-pagina-complementaria",
     "representante.nif",
     "representante.apellidos-razon-social",
     "representante.domicilio-sigla-via",
