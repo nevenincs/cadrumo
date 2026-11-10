@@ -43,5 +43,7 @@ pub mod state;
 pub mod transfer;
 pub mod url;
 
+#[cfg(test)]
+pub(crate) mod test_program;
 #[cfg(any(test, feature = "test-support"))]
 pub mod test_servers;

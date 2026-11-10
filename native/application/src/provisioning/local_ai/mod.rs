@@ -280,7 +280,8 @@ impl VersionFailure {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ServerStartFailure {
     /// The operating system refused the server's process group, its creation or its
-    /// containment, so nothing ran.
+    /// containment, so nothing ran. A creation that did not finish within the spawn
+    /// budget reads [`LaunchStep::Create`] with the kind `TimedOut`.
     Launch {
         step: LaunchStep,
         kind: io::ErrorKind,

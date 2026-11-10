@@ -11,7 +11,10 @@
 //! reaped; that a kill also ends what the browser started rests on the owner's process
 //! containment, a kill-on-close job on Windows and a process scope on Linux and macOS.
 
-use crate::component::Cancellation;
+use crate::{
+    component::Cancellation,
+    process::creation::{self, CreationFailure},
+};
 use std::{
     collections::BTreeMap,
     ffi::OsString,
@@ -66,6 +69,8 @@ pub enum LaunchFailure {
     Exited,
     /// It did not announce, answer or close within the budget.
     TimedOut,
+    /// Its process was not created within the spawn budget.
+    CreationTimedOut,
     /// Its endpoint did not speak the protocol, or named no version.
     NoVersion,
     /// The throwaway profile could not be made.
@@ -115,13 +120,7 @@ pub(super) fn browser_version(
     }
     #[cfg(unix)]
     crate::process::group::place(&mut command).map_err(|_| LaunchFailure::Unrunnable)?;
-    let child = crate::process::creation::run(|| command.spawn()).map_err(|error| {
-        if error.kind() == io::ErrorKind::PermissionDenied {
-            LaunchFailure::NotPermitted
-        } else {
-            LaunchFailure::Unrunnable
-        }
-    })?;
+    let child = creation::spawn_within(creation::SPAWN_BUDGET, command).map_err(not_created)?;
     // The budget is the browser's: creation waits for every other launch holding the
     // creation step and for the system's scan of the program, neither of which it spends.
     let deadline = Instant::now() + budget;
@@ -130,6 +129,17 @@ pub(super) fn browser_version(
     running.close(deadline);
     drop(profile);
     result
+}
+
+/// Why the browser's process was not created, in the launch's words.
+fn not_created(failure: CreationFailure) -> LaunchFailure {
+    match failure {
+        CreationFailure::Failed(error) if error.kind() == io::ErrorKind::PermissionDenied => {
+            LaunchFailure::NotPermitted
+        }
+        CreationFailure::Failed(_) => LaunchFailure::Unrunnable,
+        CreationFailure::TimedOut { .. } => LaunchFailure::CreationTimedOut,
+    }
 }
 
 /// The throwaway profile folder, removed when dropped.

@@ -33,7 +33,7 @@ const BUILD_INFO: &str = "b12184-c0ab6e5c0";
 pub(crate) fn package(root: &Path) -> PathBuf {
     let folder = root.join("package").join("bin").join("llama");
     fs::create_dir_all(&folder).unwrap();
-    fs::copy(std::env::current_exe().unwrap(), folder.join(EXECUTABLE)).unwrap();
+    crate::provisioning::test_program::place(&folder.join(EXECUTABLE));
     folder
 }
 
@@ -184,7 +184,7 @@ fn a_package_root_defaults_to_the_llama_server_it_carries_and_to_ollama_without_
     let folder = package_path(&package, cadrumo_platform::LLAMA_SERVER);
     fs::create_dir_all(&folder).unwrap();
     assert_eq!(package_default_engine(&package), LocalEngine::Ollama);
-    fs::copy(std::env::current_exe().unwrap(), folder.join(EXECUTABLE)).unwrap();
+    crate::provisioning::test_program::place(&folder.join(EXECUTABLE));
     assert_eq!(package_default_engine(&package), LocalEngine::LlamaCpp);
 }
 
