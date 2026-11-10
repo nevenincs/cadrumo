@@ -55,6 +55,7 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, ValidationError
 
 from .....core.base64_codec import b64_decode, b64_encode
+from .....core.diagnostic_log import diagnostic_phase
 from .....core.identity.profile import canonical_profile_bucket_id
 from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG
@@ -104,6 +105,9 @@ from .sign_in_generation import (
 from .zeroise import zeroise
 
 _log = get_logger(__name__)
+
+_MINT_PHASE_EVENT: Final = "profile_session_mint_phase"
+"""One record per receipt-mint sub-step; closed phase labels and durations only."""
 
 PROFILE_SESSION_RECORD_MAX_BYTES: Final[int] = 8 * 1024
 """Strict ceiling for one canonical ``session.v2.json`` receipt."""
@@ -661,7 +665,8 @@ def _mint_profile_session(
     with profile_custody_local_lock(profile_session_lock_path(receipt_path)):
         # A prior crash or retirement failure has one bounded exact-byte
         # decision to finish before another random account can be minted.
-        recover_pending_retirement(storage_root=storage_root, profile_id=profile_id)
+        with diagnostic_phase(_log, _MINT_PHASE_EVENT, "pending_retirement_recovery"):
+            recover_pending_retirement(storage_root=storage_root, profile_id=profile_id)
         prior = _read_receipt(receipt_path)
         predecessor = None if prior is None else prior[0]
 
@@ -691,28 +696,31 @@ def _mint_profile_session(
             # process dies before a later phase, recovery sees whether the
             # exact current receipt is predecessor or successor and retires
             # only the corresponding staged/displaced UUID-pair account.
-            compare_and_replace_profile_custody_local_record(
-                retirement_path,
-                expected=None,
-                replacement=journal,
-                maximum_bytes=_PROFILE_SESSION_RETIREMENT_MAX_BYTES,
-            )
+            with diagnostic_phase(_log, _MINT_PHASE_EVENT, "retirement_journal_write"):
+                compare_and_replace_profile_custody_local_record(
+                    retirement_path,
+                    expected=None,
+                    replacement=journal,
+                    maximum_bytes=_PROFILE_SESSION_RETIREMENT_MAX_BYTES,
+                )
             try:
-                store_acceleration_secret(
-                    profile_id=profile_id,
-                    session_id=session_id,
-                    session_key=bytes(session_key_buffer),
-                )
-                published = write_acceleration_receipt(
-                    storage_root=storage_root,
-                    profile_id=profile_id,
-                    record=record,
-                    predecessor=predecessor,
-                )
-                verified = read_optional_profile_custody_local_record(
-                    receipt_path,
-                    maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES,
-                )
+                with diagnostic_phase(_log, _MINT_PHASE_EVENT, "keychain_store"):
+                    store_acceleration_secret(
+                        profile_id=profile_id,
+                        session_id=session_id,
+                        session_key=bytes(session_key_buffer),
+                    )
+                with diagnostic_phase(_log, _MINT_PHASE_EVENT, "receipt_write"):
+                    published = write_acceleration_receipt(
+                        storage_root=storage_root,
+                        profile_id=profile_id,
+                        record=record,
+                        predecessor=predecessor,
+                    )
+                    verified = read_optional_profile_custody_local_record(
+                        receipt_path,
+                        maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES,
+                    )
                 if verified != published:
                     raise StorageValidationError("profile-session receipt publication could not be verified")
             except BaseException:
@@ -726,7 +734,8 @@ def _mint_profile_session(
                     _log.debug("profile-session mint cleanup deferred error_type=%s", type(exc).__name__)
                 raise
             try:
-                recover_pending_retirement(storage_root=storage_root, profile_id=profile_id)
+                with diagnostic_phase(_log, _MINT_PHASE_EVENT, "predecessor_retirement"):
+                    recover_pending_retirement(storage_root=storage_root, profile_id=profile_id)
             except KeyringUnavailableError as exc:
                 # The new receipt/key pair is already verified and remains a
                 # valid acceleration.  Retiring its displaced predecessor is

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from contextlib import ExitStack
 from math import isfinite
+from typing import Final
 from uuid import UUID, uuid4
 
 from pydantic import SecretBytes
@@ -25,6 +26,8 @@ from cadrumo.application.user_profile.access_contracts import (
 )
 from cadrumo.application.user_profile.access_policy import intersect_scopes
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodySnapshot
+from cadrumo.core.diagnostic_log import diagnostic_phase
+from cadrumo.core.logging import get_logger
 from cadrumo.core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import AccessScope
@@ -37,6 +40,11 @@ from .session_admission_candidates import (
 )
 from .session_authority_contracts import HumanAdmissionControl, SessionAuthorityFacts
 from .session_authority_delegation import SessionAuthorityDelegation
+
+_log = get_logger(__name__)
+
+_PUBLISH_PHASE_EVENT: Final = "human_admission_publish_phase"
+"""One record per sub-step held under the admission guard; closed phase labels and durations only."""
 
 
 def _human_candidate_expired(deadline: float, monotonic_now: float) -> bool:
@@ -421,20 +429,24 @@ class SessionAuthorityAdmission(SessionAuthorityDelegation):
             denial = _human_candidate_denial(candidate.control, candidate.generation, self._human_admission_generation)
             if denial is not None:
                 return denial
-            current = self._facts(connection_id)
+            with diagnostic_phase(_log, _PUBLISH_PHASE_EVENT, "facts"):
+                current = self._facts(connection_id)
             if isinstance(current, AccessDenied):
                 return current
             if _human_candidate_expired(candidate.deadline, current.context.monotonic_now):
                 return AccessDenied(code=AccessDenialCode.SESSION_EXPIRED)
-            decision = self._evaluate(candidate.session, current, None, None)
+            with diagnostic_phase(_log, _PUBLISH_PHASE_EVENT, "evaluate"):
+                decision = self._evaluate(candidate.session, current, None, None)
             if isinstance(decision, AccessDenied):
                 return decision
-            if candidate.rebinding:
-                refusal = self._publish_rebound(candidate.session)
-                if refusal is not None:
-                    return refusal
-            else:
-                self._sessions[candidate.session.session_id] = candidate.session
+            with diagnostic_phase(_log, _PUBLISH_PHASE_EVENT, "publish"):
+                if candidate.rebinding:
+                    refusal = self._publish_rebound(candidate.session)
+                else:
+                    self._sessions[candidate.session.session_id] = candidate.session
+                    refusal = None
+            if refusal is not None:
+                return refusal
             refusal = self._mint_published_human_receipt(connection_id, candidate.session)
             if refusal is not None:
                 return refusal
@@ -457,17 +469,21 @@ class SessionAuthorityAdmission(SessionAuthorityDelegation):
         re-observation retires is refused uncommitted; its retirement discards
         the pending receipt, so none exists.
         """
-        if not self.owner.capture_human_sign_in(session.session_id):
+        with diagnostic_phase(_log, _PUBLISH_PHASE_EVENT, "receipt_capture"):
+            captured = self.owner.capture_human_sign_in(session.session_id)
+        if not captured:
             return None
-        current = self._facts(connection_id)
-        if isinstance(current, AccessDenied):
-            return current
-        decision = self._evaluate(session, current, None, None)
+        with diagnostic_phase(_log, _PUBLISH_PHASE_EVENT, "receipt_recheck"):
+            current = self._facts(connection_id)
+            decision = current if isinstance(current, AccessDenied) else self._evaluate(session, current, None, None)
         if isinstance(decision, AccessDenied):
             return decision
         if self._sessions.get(session.session_id) != session:
             return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
-        self.owner.mint_human_receipt(session.session_id)
+        # The worker stores the receipt key in the OS keychain and writes the
+        # receipt; its own phase records separate those two.
+        with diagnostic_phase(_log, _PUBLISH_PHASE_EVENT, "receipt_mint"):
+            self.owner.mint_human_receipt(session.session_id)
         return None
 
     def refresh_api_key(
