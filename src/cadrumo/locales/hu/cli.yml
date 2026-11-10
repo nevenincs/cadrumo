@@ -1782,6 +1782,10 @@ cli:
           visszaadva.'
         file_internal_disambiguation: Ez a benyújtás kizárólag belső, és nem kerül
           beküldésre az AEAT-hoz.
+        filing_evidence_option_other_modelo: 'Elutasítva. A Modelo %{modelo} nyomtatvány
+          nem fogadja el ezeket a kapcsolókat: %{options}. Ezek kizárólag a Modelo
+          %{applies_to} nyomtatványhoz tartoznak. Töröld őket, és futtasd újra a számítást;
+          semmi sem lett kiszámolva.'
         formula_operation_calculation: számítás
         formula_operation_clamp: korlátozás
         formula_operation_conditional: feltételes
