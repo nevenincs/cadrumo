@@ -19,6 +19,7 @@ from .ledger_action_persistence_support import (
     BUCKET_ID,
     repositories,
 )
+from .workspace_support import FILING_YEAR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -210,7 +211,7 @@ def test_update_manual_transaction_fields_clears_a_business_category_and_keeps_t
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 1),
+                booked_date=date(FILING_YEAR, 5, 1),
                 amount=Decimal("40.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="office supplies",
@@ -219,7 +220,7 @@ def test_update_manual_transaction_fields_clears_a_business_category_and_keeps_t
                 idempotency_key="category-clear",
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(FILING_YEAR, 5, 1, 8, 0, tzinfo=UTC),
         )
         assert created.transaction.category_id == "office-supplies"
 
@@ -236,7 +237,7 @@ def test_update_manual_transaction_fields_clears_a_business_category_and_keeps_t
             actor="operator-C",
             source_command="aeat app ledger classify",
             ports=ports,
-            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(FILING_YEAR, 5, 2, 10, 0, tzinfo=UTC),
         )
 
     stored = transaction_repository.load().transactions[created.ref.transaction_id]
