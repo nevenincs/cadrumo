@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Input
@@ -13,6 +15,7 @@ from .....application.ledger.evidence_mutation_operation import (
 from .....application.ledger.evidence_read_operation import LedgerEvidenceQueryRequest
 from .....core.config import override_settings
 from .....core.i18n.render import tr
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...components.dialogs import ConfirmScreen
 from ...tests.settling import settle
 from ..controller import LedgerWorkspaceController
@@ -29,6 +32,8 @@ from .evidence_files_fixtures import (
     text_of,
 )
 from .workspace_fixtures import WorkspaceHostApp, ledger_context, ledger_projection, ledger_review_action
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -73,8 +78,8 @@ async def test_a_correction_is_reviewed_confirmed_and_returns_to_the_same_record
             assert tr(
                 "tui.ledger.evidence_files.records.detail.invoice",
                 supplier="Suministros Delta SL",
-                number="F-2026-0002",
-                date="2026-03-14",
+                number=f"F-{_YEAR}-0002",
+                date=date(_YEAR, 3, 14).isoformat(),
             ) in text_of(screen, "#evidence-files-detail")
             assert screen.query_one("#evidence-files-field-supplier", Input).value == "Suministros Delta SL"
 
@@ -129,7 +134,7 @@ async def test_a_removal_cancelled_at_its_dialog_writes_nothing_and_a_confirmed_
                 record=synthetic_evidence_id(1)[:12],
                 file="factura-0001.pdf",
                 supplier="Suministros Delta SL",
-                number="F-2026-0001",
+                number=f"F-{_YEAR}-0001",
             )
 
             await press(pilot, "evidence-files-confirm")
@@ -174,14 +179,14 @@ async def test_a_refused_correction_is_shown_on_the_write_step() -> None:
         async with WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             await _select(pilot, 0)
-            _type(pilot, "#evidence-files-field-invoice-number", "F-2026-0099")
+            _type(pilot, "#evidence-files-field-invoice-number", f"F-{_YEAR}-0099")
             await press(pilot, "evidence-files-review-update")
             await press(pilot, "evidence-files-confirm")
             write = pilot.app.screen
             assert isinstance(write, LedgerEvidenceFilesWriteScreen)
             assert write.flow_state is LedgerFlowState.FAILED
             assert text_of(write, "#ledger-refusal") == tr(EVIDENCE_FILES_REFUSAL_KEY)
-            assert store.records[synthetic_evidence_id(1)].invoice_number == "F-2026-0001"
+            assert store.records[synthetic_evidence_id(1)].invoice_number == f"F-{_YEAR}-0001"
 
 
 @pytest.mark.asyncio

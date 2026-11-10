@@ -9,7 +9,7 @@ findings) check every answer. Values are synthetic.
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import Literal, cast
 from uuid import UUID
 
@@ -62,6 +62,7 @@ from .....core.errors.hierarchy import CadrumoError, RecordedRegisteredError
 from .....core.operations import OperationEffect
 from .....domain.buckets.event import BucketEventObjectType, BucketEventType
 from .....domain.buckets.event_repository import build_bucket_event
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.transactions.enums import BusinessClassification, TransactionLifecycleState
 from ...account import AccountSessionExpiredError
 from ...operations.outcome import OperationOutcomeUnknownError
@@ -75,7 +76,8 @@ ENTRIES_PROFILE_ID = UUID("7dd00000-0000-4000-8000-0000000000dd")
 REFUSED_ADD_AMOUNT = "13.13"
 ENTRIES_REFUSAL_CODE = "REFUSED_CLI_VALIDATION_BOUNDARY"
 ENTRIES_REFUSAL_KEY = "errors.refused.refused_cli_validation_boundary"
-_NOW = datetime(2026, 4, 2, 9, 30, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_NOW = datetime(_YEAR, 4, 2, 9, 30, tzinfo=UTC)
 _LIFECYCLE_STATES: dict[LedgerLifecycleOperationId, TransactionLifecycleState] = {
     "ledger.archive": TransactionLifecycleState.ARCHIVED,
     "ledger.stash": TransactionLifecycleState.STASHED,
@@ -100,7 +102,7 @@ def synthetic_entry(
     classification: str = "BUSINESS",
 ) -> LedgerTransactionReviewProjection:
     """One synthetic entry in the shape ``ledger.list`` returns."""
-    booked = booked_date or f"2026-{index % 12 + 1:02d}-{index % 28 + 1:02d}"
+    booked = booked_date or date(_YEAR, index % 12 + 1, index % 28 + 1).isoformat()
     transaction = LedgerTransactionProjection(
         transaction_id=entry_id(index),
         date=booked,
@@ -136,8 +138,8 @@ def synthetic_entry(
         source_jurisdiction=None,
         value_in_eur=None,
         fx_rate=None,
-        created_at="2026-01-01T00:00:00+00:00",
-        modified_at="2026-01-01T00:00:00+00:00",
+        created_at=datetime(_YEAR, 1, 1, tzinfo=UTC).isoformat(),
+        modified_at=datetime(_YEAR, 1, 1, tzinfo=UTC).isoformat(),
     )
     status = (
         LedgerReviewStatus.EXCLUDED

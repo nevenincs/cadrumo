@@ -21,6 +21,7 @@ from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from .....core.period import Period, StandardPeriodCode
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...components.host import ScreenHostApp
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
@@ -30,6 +31,9 @@ from ..calendar import DeclarationsCalendarScreen
 from ..controller import calendar_address_focus_key, calendar_focus_key
 from ..models import DeclarationsCalendarScopeV1
 from .calendar_fixtures import calendar_controller, calendar_projection
+
+_YEAR = filing_year_envelope().horizon
+"""The exercise the calendar fixture is built for."""
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -41,17 +45,17 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 def test_calendar_focus_accepts_all_filing_period_families_and_resolves_exact_row(token: str) -> None:
     projection = calendar_projection()
     target = projection.entries[0].model_copy(
-        update={"period": Period.from_year_and_code(2026, token), "recovery_action": None}
+        update={"period": Period.from_year_and_code(_YEAR, token), "recovery_action": None}
     )
     projection = projection.model_copy(update={"entries": (*projection.entries[1:], target)})
     focus = TuiFocusIdentityV1(
         destination="workbench.declarations",
-        semantic_key=calendar_address_focus_key("130", 2026, token),
+        semantic_key=calendar_address_focus_key("130", _YEAR, token),
     )
     controller = calendar_controller(
         projection, context=TuiScreenContextV1(destination="workbench.declarations", focus=focus)
     )
-    assert controller.context_identity() == f"130|2026|{token}"
+    assert controller.context_identity() == f"130|{_YEAR}|{token}"
     assert calendar_focus_key(target) == focus.semantic_key
 
 
@@ -135,7 +139,7 @@ def test_recovery_action_must_match_catalogue_and_natural_address() -> None:
         calendar_controller(base.model_copy(update={"entries": (wrong_action, *base.entries[1:])}))
     wrong_address = base.entries[0].model_copy(
         update={
-            "recovery_action": declare_next_action("operator.modelo.work.create", modelo="303", year=2026, period="1T")
+            "recovery_action": declare_next_action("operator.modelo.work.create", modelo="303", year=_YEAR, period="1T")
         }
     )
     with pytest.raises(ValueError, match="natural address"):
@@ -204,7 +208,7 @@ async def test_recovery_row_requires_explicit_modal_confirmation_before_host_han
     base = calendar_projection()
     recovery_row = base.entries[0].model_copy(
         update={
-            "recovery_action": declare_next_action("operator.modelo.work.create", modelo="130", year=2026, period="1T")
+            "recovery_action": declare_next_action("operator.modelo.work.create", modelo="130", year=_YEAR, period="1T")
         }
     )
     projection = base.model_copy(update={"entries": (recovery_row, *base.entries[1:])})
@@ -263,7 +267,7 @@ async def test_a_recovery_refused_for_an_incomplete_profile_setup_shows_the_appl
     base = calendar_projection()
     recovery_row = base.entries[0].model_copy(
         update={
-            "recovery_action": declare_next_action("operator.modelo.work.create", modelo="130", year=2026, period="1T")
+            "recovery_action": declare_next_action("operator.modelo.work.create", modelo="130", year=_YEAR, period="1T")
         }
     )
     projection = base.model_copy(update={"entries": (recovery_row, *base.entries[1:])})
@@ -295,7 +299,7 @@ async def test_recovery_confirmation_escape_cancels_without_dismissing_calendar_
     base = calendar_projection()
     recovery_row = base.entries[0].model_copy(
         update={
-            "recovery_action": declare_next_action("operator.modelo.work.create", modelo="130", year=2026, period="1T")
+            "recovery_action": declare_next_action("operator.modelo.work.create", modelo="130", year=_YEAR, period="1T")
         }
     )
     projection = base.model_copy(update={"entries": (recovery_row, *base.entries[1:])})
@@ -321,7 +325,7 @@ async def test_recovery_handoff_failure_is_localized_without_exposing_host_error
     base = calendar_projection()
     recovery_row = base.entries[0].model_copy(
         update={
-            "recovery_action": declare_next_action("operator.modelo.work.create", modelo="130", year=2026, period="1T")
+            "recovery_action": declare_next_action("operator.modelo.work.create", modelo="130", year=_YEAR, period="1T")
         }
     )
     projection = base.model_copy(update={"entries": (recovery_row, *base.entries[1:])})
@@ -384,12 +388,12 @@ async def test_context_focus_hidden_filter_reorder_resize_and_child_return_resto
         await settle(pilot)
         table = screen.query_one("#declarations-calendar-agenda", DataTable)
         assert app.focused is table
-        target_key = "303|2026|2T"
+        target_key = f"303|{_YEAR}|2T"
         assert table.ordered_rows[table.cursor_row].key.value == target_key
 
         screen.query_one("#declarations-calendar-search", Input).value = "111"
         await settle(pilot)
-        assert table.ordered_rows[table.cursor_row].key.value == "111|2026|3T"
+        assert table.ordered_rows[table.cursor_row].key.value == f"111|{_YEAR}|3T"
         screen.query_one("#declarations-calendar-search", Input).value = ""
         await settle(pilot)
         assert table.ordered_rows[table.cursor_row].key.value == target_key

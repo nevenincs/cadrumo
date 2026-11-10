@@ -12,6 +12,7 @@ from textual.widgets import Button, Input, Select, Static
 from .....core.aggregation import IntracomOperationType
 from .....core.config import override_settings
 from .....core.i18n.render import lookup_translation
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.invoices.business_premises import SituacionInmueble
 from .....domain.iva.schema import InvoiceKind
 from ...components.host import ScreenHostApp
@@ -26,6 +27,8 @@ from ..models import (
 )
 from ..workspace_injection import LedgerWorkspaceInjection
 from .workspace_fixtures import ledger_context, ledger_projection, ledger_review_action
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -107,7 +110,7 @@ def _header(screen: LedgerInvoiceEntryScreen) -> None:
         counterparty_name="Papeleria Sol SL",
         counterparty_nif="B00010157",
         invoice_number="LINES-001",
-        invoice_date="2026-03-15",
+        invoice_date=date(_YEAR, 3, 15).isoformat(),
     )
 
 
@@ -123,7 +126,12 @@ async def test_mixed_rate_lines_and_invoice_facts_reach_the_add_door_as_typed() 
         async with ScreenHostApp[None](screen).run_test(size=(110, 200)) as pilot:
             await settle(pilot)
             _header(screen)
-            _fill(screen, operation_date="2026-03-14", recargo_amount="0.77", rectifies_invoice_number="LINES-000")
+            _fill(
+                screen,
+                operation_date=date(_YEAR, 3, 14).isoformat(),
+                recargo_amount="0.77",
+                rectifies_invoice_number="LINES-000",
+            )
             screen.query_one("#ledger-invoice-operation-type", Select).value = IntracomOperationType.A.value
             for line in _LINES:
                 _type_line(screen, line)
@@ -140,7 +148,7 @@ async def test_mixed_rate_lines_and_invoice_facts_reach_the_add_door_as_typed() 
             summary = _text(screen, "#ledger-invoice-summary")
             assert "Printer paper" in summary
             assert "Reference book" in summary
-            assert "Modelo 349 key A · operation date 2026-03-14" in summary
+            assert f"Modelo 349 key A · operation date {date(_YEAR, 3, 14).isoformat()}" in summary
             assert "Equivalence surcharge 0.77 EUR" in summary
             assert "Corrects invoice LINES-000" in summary
             assert screen.query_one("#ledger-invoice-line-add", Button).disabled
@@ -156,7 +164,7 @@ async def test_mixed_rate_lines_and_invoice_facts_reach_the_add_door_as_typed() 
     assert entry.taxable_base is None
     assert entry.iva_rate is None
     assert entry.operation_type is IntracomOperationType.A
-    assert entry.operation_date == date(2026, 3, 14)
+    assert entry.operation_date == date(_YEAR, 3, 14)
     assert entry.recargo_amount == Decimal("0.77")
     assert entry.rectifies_invoice_number == "LINES-000"
 
@@ -216,7 +224,11 @@ async def test_invoice_amounts_and_dates_refuse_every_shape_the_command_line_ref
     base_label = lookup_translation("tui.ledger.invoice.field.taxable_base", locale="en")
     assert date_label is not None
     assert base_label is not None
-    refused_dates = ("20260315", "2026-W11-7", "2026-03-32")
+    refused_dates = (
+        date(_YEAR, 3, 15).strftime("%Y%m%d"),
+        f"{_YEAR}-W11-7",
+        date(_YEAR, 3, 31).isoformat()[:-2] + "32",
+    )
     refused_amounts = ("1e3", "+5", "1_000", "NaN", "Infinity", "1.234", "10.005")
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(110, 200)) as pilot:
@@ -229,7 +241,7 @@ async def test_invoice_amounts_and_dates_refuse_every_shape_the_command_line_ref
                 assert screen.flow_state is LedgerFlowState.EDITING, raw
                 assert f"{date_label} must be a date written YYYY-MM-DD." in _text(screen, "#ledger-refusal"), raw
             for raw in refused_amounts:
-                _fill(screen, invoice_date="2026-03-15", taxable_base=raw, iva_rate="21")
+                _fill(screen, invoice_date=date(_YEAR, 3, 15).isoformat(), taxable_base=raw, iva_rate="21")
                 screen.query_one("#ledger-invoice-review", Button).press()
                 await settle(pilot)
                 assert screen.flow_state is LedgerFlowState.EDITING, raw

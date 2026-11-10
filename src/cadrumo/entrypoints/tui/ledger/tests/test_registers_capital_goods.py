@@ -15,6 +15,7 @@ from .....application.bienes_inversion.registered_requests import (
 from .....application.operations.public_scalar import PublicDecimal
 from .....core.config import override_settings
 from .....core.i18n.render import tr
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...tests.settling import settle
 from ..controller import LedgerWorkspaceController
 from ..registers_capital_goods import (
@@ -25,8 +26,10 @@ from ..registers_capital_goods import (
 )
 from ..registers_presentation import REGISTER_PAGE_SIZE
 from ..workspace_injection import LedgerWorkspaceInjection
-from .registers_fixtures import REGISTERS_PROFILE_ID, MemoryCapitalGoodsDoor, synthetic_capital_good
+from .registers_fixtures import CAPITAL_GOOD_YEAR, REGISTERS_PROFILE_ID, MemoryCapitalGoodsDoor, synthetic_capital_good
 from .workspace_fixtures import WorkspaceHostApp, ledger_context, ledger_projection, ledger_review_action
+
+_ACQUISITION_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -51,7 +54,7 @@ def _keys(screen: LedgerCapitalGoodsScreen) -> list[str]:
     return [str(row.key.value) for row in screen.query_one("#capital-goods", DataTable).ordered_rows]
 
 
-def _fill(screen: LedgerCapitalGoodsScreen, identifier: str = "BI-02", year: str = "2025") -> None:
+def _fill(screen: LedgerCapitalGoodsScreen, identifier: str = "BI-02", year: str = str(_ACQUISITION_YEAR)) -> None:
     for selector, value in (
         ("#capital-identifier", identifier),
         ("#capital-description", "Synthetic delivery van"),
@@ -81,7 +84,7 @@ async def test_a_declared_capital_good_round_trips_into_the_listed_register() ->
                 profile_id=REGISTERS_PROFILE_ID,
                 identifier="BI-02",
                 description="Synthetic delivery van",
-                acquisition_year=2025,
+                acquisition_year=_ACQUISITION_YEAR,
                 acquisition_ledger_id="tx-synthetic-02",
                 cuota_soportada=PublicDecimal(decimal="4200.00"),
                 prorrata_inicial_pct=PublicDecimal(decimal="80"),
@@ -153,7 +156,7 @@ async def test_choosing_a_good_shows_its_reported_detail() -> None:
                 "tui.ledger.registers.capital_goods.detail",
                 identifier="BI-01",
                 description=record.description,
-                year=2024,
+                year=CAPITAL_GOOD_YEAR,
                 kind="synthetic_kind",
                 cuota="2100.00",
                 prorrata="80",

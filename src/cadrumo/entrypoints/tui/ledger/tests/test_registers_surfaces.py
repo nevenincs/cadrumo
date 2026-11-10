@@ -17,6 +17,7 @@ from .....application.user_profile.language_resolver import adopt_profile_output
 from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...components.host import ScreenHostApp
 from ...tests.frame import geometry_band
 from ...tests.settling import settle
@@ -34,6 +35,7 @@ from ..registers_prorrata import (
 from ..tools import LedgerToolV1
 from ..workspace_injection import LedgerWorkspaceInjection
 from .registers_fixtures import (
+    INVENTORY_YEAR,
     REGISTERS_PROFILE_ID,
     MemoryCapitalGoodsDoor,
     MemoryInventoryDoor,
@@ -43,6 +45,8 @@ from .registers_fixtures import (
     synthetic_prorrata_entry,
 )
 from .workspace_fixtures import WorkspaceHostApp, ledger_context, ledger_projection, ledger_review_action
+
+_EARLIER_YEAR = filing_year_envelope().floor
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -57,7 +61,10 @@ def _controller(*, tools: tuple[LedgerToolV1, ...] = ()) -> LedgerWorkspaceContr
 
 def _prorrata() -> LedgerRegisterScreen:
     door = MemoryProrrataRegisterDoor(
-        entries=(synthetic_prorrata_entry(2024, definitive="78"), synthetic_prorrata_entry(2025, sector_id="S1")),
+        entries=(
+            synthetic_prorrata_entry(_EARLIER_YEAR, definitive="78"),
+            synthetic_prorrata_entry(INVENTORY_YEAR, sector_id="S1"),
+        ),
         sectors=(ProrrataSectorDefinitionProjection(sector_id="S1", letra="a", member_activity_codes=("A01",)),),
     )
     return LedgerProrrataRegisterScreen(_controller(), cast(LedgerProrrataRegisterDoorV1, door))
@@ -69,7 +76,9 @@ def _capital_goods() -> LedgerRegisterScreen:
 
 
 def _inventory() -> LedgerRegisterScreen:
-    door = MemoryInventoryDoor(rows=(synthetic_inventory_row("act-01"), synthetic_inventory_row("act-02", 2025)))
+    door = MemoryInventoryDoor(
+        rows=(synthetic_inventory_row("act-01"), synthetic_inventory_row("act-02", _EARLIER_YEAR))
+    )
     return LedgerInventoryScreen(_controller(), cast(LedgerInventoryDoorV1, door))
 
 
@@ -145,7 +154,7 @@ async def test_every_register_door_call_runs_in_a_worker() -> None:
             await settle(pilot)
             cast("Select[str]", screen.query_one("#prorrata-action", Select)).value = "seed"
             await settle(pilot)
-            screen.query_one("#prorrata-ejercicio", Input).value = "2026"
+            screen.query_one("#prorrata-ejercicio", Input).value = str(INVENTORY_YEAR)
             for button_id in ("register-review", "register-confirm"):
                 screen.query_one(f"#{button_id}", Button).press()
                 await settle(pilot)
@@ -234,6 +243,6 @@ async def test_a_language_change_rewords_the_register_in_place_and_keeps_the_cho
             adopt_profile_output_language(None)
     assert action.value == "valuation_preview"
     assert header == expected_header
-    assert chosen == "act-02|2025"
-    assert screen.selected_key == "act-02|2025"
+    assert chosen == f"act-02|{_EARLIER_YEAR}"
+    assert screen.selected_key == f"act-02|{_EARLIER_YEAR}"
     assert table.row_count == 2
