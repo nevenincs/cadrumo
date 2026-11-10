@@ -8,6 +8,7 @@ tests pin the corrected answers and the property that produces them.
 from __future__ import annotations
 
 import datetime
+import re
 from dataclasses import dataclass
 
 import pytest
@@ -15,6 +16,7 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError, RegistryError
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..analysis.revision_selection_probe import declared_period_codes, probe_modelo
 from ..compiler.authority import admitted_revision_id, compiled_bundled_authority
@@ -110,7 +112,7 @@ def test_the_three_one_stop_shop_schemes_each_resolve_to_themselves(
     codes each declares - monthly for the import scheme, ``EXT``-prefixed for the
     exterior scheme - every one resolves to itself.
     """
-    probes = probe_modelo(authority, "369", filing_year=2024)
+    probes = probe_modelo(authority, "369", filing_year=filing_year_envelope().horizon)
 
     assert probes, "the probe returned nothing, so the assertions below would hold vacuously"
     assert {probe.revision for probe in probes} >= {"esquema-importacion", "esquema-union"}
@@ -164,8 +166,19 @@ def test_a_year_outside_the_declared_window_is_reported_as_a_named_refusal(
     refuses 2015. That is the disagreement between name and window, established
     without the wrong-code artefact that first appeared to show it.
     """
-    serves = probe_modelo(authority, "322", filing_year=2022)
-    refuses = probe_modelo(authority, "322", filing_year=2015)
+    # The revision whose name claims a span that begins before the window it declares: asked from the
+    # declared opening year it serves, and asked from the year before it the name claims but the window refuses.
+    (spanning,) = (
+        revision
+        for revision in authority.modelo("322").revisions.values()
+        if (span := re.fullmatch(r"(\d{4})-(\d{4})", str(revision.id))) is not None
+        and int(span.group(1)) < revision.valid_from.year - 1
+    )
+    spanning_id = str(spanning.id)
+    serving_year = spanning.valid_from.year
+    refused_year = serving_year - 1
+    serves = probe_modelo(authority, "322", filing_year=serving_year)
+    refuses = probe_modelo(authority, "322", filing_year=refused_year)
 
     # The presence guard and the claim are asserted separately. ``all`` over an
     # empty list is TRUE, so the guard is what stops a vacuous pass -- and
@@ -175,17 +188,19 @@ def test_a_year_outside_the_declared_window_is_reported_as_a_named_refusal(
     # reading this test was written to replace, not the name-versus-window
     # disagreement it exists to hold. Live each selection carries 12 probes of
     # 48.
-    named = [probe for probe in serves if probe.revision == "2008-2022"]
-    assert named, "no probe named revision 2008-2022 for 2022, so the resolution claim below is vacuous"
+    named = [probe for probe in serves if probe.revision == spanning_id]
+    assert named, f"no probe named revision {spanning_id} for {serving_year}, so the resolution claim below is vacuous"
     unresolved = [probe for probe in named if not probe.resolves_to_itself]
-    assert not unresolved, f"revision 2008-2022 serves 2022, so every probe must resolve to itself: {unresolved}"
+    assert not unresolved, (
+        f"revision {spanning_id} serves {serving_year}, so every probe must resolve to itself: {unresolved}"
+    )
 
-    blocked = [probe for probe in refuses if probe.revision == "2008-2022"]
-    assert blocked, "no probe named revision 2008-2022 for 2015, so the refusal claim below is vacuous"
+    blocked = [probe for probe in refuses if probe.revision == spanning_id]
+    assert blocked, f"no probe named revision {spanning_id} for {refused_year}, so the refusal claim below is vacuous"
     served = [
         probe for probe in blocked if probe.resolved is not None or not (probe.refusal is not None and probe.refusal)
     ]
-    assert not served, f"2015 is outside the declared window, so every probe must refuse by name: {served}"
+    assert not served, f"{refused_year} is outside the declared window, so every probe must refuse by name: {served}"
 
 
 def test_a_mid_year_split_resolves_rather_than_reporting_the_probes_own_ambiguity(
