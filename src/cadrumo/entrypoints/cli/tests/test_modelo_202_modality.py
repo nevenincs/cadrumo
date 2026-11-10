@@ -43,6 +43,7 @@ from ....adapters.persistence.storage.tests.secure_sql import (
 from ....domain.calculations.registry.applicability_modelo202 import Modelo202Modality, derive_modelo_202_modality
 from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ....domain.contribuyente.entity_type import EntityType
+from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....tests.cli_envelope import unwrap_schema_envelope
 
@@ -62,6 +63,7 @@ def _sl_profile(incn: Decimal | None) -> TaxpayerProfile:
         irpf_income_categories=frozenset(),
         iva_regime=IVARegime("GENERAL"),
         incn_prior_12_months=incn,
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )
 
 

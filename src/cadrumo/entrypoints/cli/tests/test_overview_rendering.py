@@ -21,7 +21,7 @@ from datetime import date
 import pytest
 
 from cadrumo.domain.contribuyente.entity_type import EntityType
-from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
+from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, ModeloEnrollment
 
 from ....application.overview.calendar import build_overview_calendar
 from ....application.overview.calendar_models import OverviewCalendarRange, OverviewStatusReport
@@ -352,6 +352,7 @@ def test_calendar_warning_messages_are_translated_for_simplificado_forfait_gap()
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
         iva_regime=IVARegime("SIMPLIFICADO"),
+        enrollment=ModeloEnrollment(large_company=False),
     )
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
     with bundled_indexed_authority().operation() as operation:
