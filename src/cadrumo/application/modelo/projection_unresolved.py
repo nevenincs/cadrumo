@@ -7,7 +7,7 @@ source resolution's diagnostics and the engine's unresolved outcomes.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Collection, Iterable, Mapping
 
 from pydantic import BaseModel, Field
 
@@ -16,7 +16,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.binding_targets import revision_bindings_by_id, sole_bound_casilla
 from ...domain.calculations.registry.formula_runtime import RegistryCalculationResult
 from ...domain.calculations.registry.ids import BindingId, FormulaId, LegalRefId, SourceRefId
-from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from .printed_boxes import PrintedBoxes
@@ -71,6 +71,8 @@ def unresolved_binding_rows(
     diagnostics: Iterable[CalculationSourceDiagnostic],
     revision: ModeloRevision,
     boxes: PrintedBoxes,
+    *,
+    typed_casilla_ids: Collection[CasillaId] = (),
 ) -> tuple[ModeloProjectionUnresolvedBinding, ...]:
     """Report each unresolved binding once, by the diagnostic that names its box.
 
@@ -78,12 +80,17 @@ def unresolved_binding_rows(
     same way, from the ids a source resolution left unresolved and the
     diagnostics it raised for them.
 
+    A binding that feeds a box the filer typed is no gap: the filer's figure
+    is that box's value, so a row naming the box would call a valued box empty.
+    A binding that names no box, or another box, is still reported.
+
     Args:
         unresolved_binding_ids: The bindings the source resolution left unresolved.
         diagnostics: The diagnostics that resolution raised.
         revision: The pinned :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
             whose bindings name the box each unresolved binding feeds.
         boxes: The boxes that revision's form prints, which name each box by its printed number.
+        typed_casilla_ids: The boxes the filer typed for this run; the projection has none.
     """
     bindings_by_id = revision_bindings_by_id(revision)
     by_binding = {
@@ -91,34 +98,40 @@ def unresolved_binding_rows(
         for diagnostic in diagnostics
         if diagnostic.reason == "unresolved_binding" and diagnostic.binding_id is not None
     }
-    rows: list[ModeloProjectionUnresolvedBinding] = []
-    for binding_id in unresolved_binding_ids:
-        diagnostic = by_binding.get(binding_id)
-        if diagnostic is None:
-            casilla_id = sole_bound_casilla(revision, binding_id)
-            rows.append(
-                ModeloProjectionUnresolvedBinding(
-                    binding_id=binding_id,
-                    casilla_id=casilla_id,
-                    box=boxes.number(casilla_id),
-                    source_kind=str(bindings_by_id[binding_id].source),
-                    reason="unresolved_binding",
-                )
-            )
-            continue
-        casilla_id = diagnostic.casilla_id or sole_bound_casilla(revision, binding_id)
-        rows.append(
-            ModeloProjectionUnresolvedBinding(
-                binding_id=binding_id,
-                casilla_id=casilla_id,
-                box=boxes.number(casilla_id),
-                source_kind=diagnostic.source_kind,
-                reason=diagnostic.reason,
-                note=diagnostic.fact.sentence if diagnostic.fact is not None else None,
-                fact=diagnostic.fact,
-            )
+    rows = (
+        _unresolved_binding_row(binding_id, by_binding.get(binding_id), revision, bindings_by_id, boxes)
+        for binding_id in unresolved_binding_ids
+    )
+    return tuple(row for row in rows if row.casilla_id is None or row.casilla_id not in typed_casilla_ids)
+
+
+def _unresolved_binding_row(
+    binding_id: BindingId,
+    diagnostic: CalculationSourceDiagnostic | None,
+    revision: ModeloRevision,
+    bindings_by_id: Mapping[BindingId, BindingDefinition],
+    boxes: PrintedBoxes,
+) -> ModeloProjectionUnresolvedBinding:
+    """One unresolved binding, named by its diagnostic's box or else the sole box it feeds."""
+    if diagnostic is None:
+        casilla_id = sole_bound_casilla(revision, binding_id)
+        return ModeloProjectionUnresolvedBinding(
+            binding_id=binding_id,
+            casilla_id=casilla_id,
+            box=boxes.number(casilla_id),
+            source_kind=str(bindings_by_id[binding_id].source),
+            reason="unresolved_binding",
         )
-    return tuple(rows)
+    casilla_id = diagnostic.casilla_id or sole_bound_casilla(revision, binding_id)
+    return ModeloProjectionUnresolvedBinding(
+        binding_id=binding_id,
+        casilla_id=casilla_id,
+        box=boxes.number(casilla_id),
+        source_kind=diagnostic.source_kind,
+        reason=diagnostic.reason,
+        note=diagnostic.fact.sentence if diagnostic.fact is not None else None,
+        fact=diagnostic.fact,
+    )
 
 
 def unresolved_casilla_rows(
