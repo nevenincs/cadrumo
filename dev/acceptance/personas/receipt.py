@@ -100,6 +100,8 @@ class PersonaReceipt:
     as_of: str
     authority_generation: str
     executable: str
+    build: str = ""
+    """The build the executable came from, as its operator names it (the source commit of a staged build)."""
     steps: tuple[StepRecord, ...] = ()
     cli_gaps: tuple[CliGap, ...] = ()
     obligations: tuple[ObligationCheck, ...] = ()
@@ -128,6 +130,7 @@ class PersonaReceipt:
             "as_of": self.as_of,
             "authority_generation": self.authority_generation,
             "executable": self.executable,
+            "build": self.build,
             "commands": self.commands,
             "notes": list(self.notes),
             "cli_gaps": [_gap_dict(item) for item in self.cli_gaps],

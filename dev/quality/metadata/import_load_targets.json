@@ -4322,6 +4322,7 @@
         "dev.acceptance.ledger.scenario",
         "dev.acceptance.personas",
         "dev.acceptance.personas.assessment",
+        "dev.acceptance.personas.commands",
         "dev.acceptance.personas.receipt",
         "dev.acceptance.profile",
         "dev.acceptance.profile.cli_journey",
