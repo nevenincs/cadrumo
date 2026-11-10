@@ -243,3 +243,30 @@ test("an answer outside the contract states nothing", async ({
     await expect(doors(laneRow(target, engine))).toHaveCount(0);
   }
 });
+
+// A way that takes no key is a server on this computer: it is named as that
+// and offers no key to add, on either engine's lane.
+for (const engine of ENGINES) {
+  test(`${engine}: the keyless lane is not called a key connection and offers no key`, async ({
+    page: target,
+  }) => {
+    await open(target);
+    await openSettings(target);
+    const row = laneRow(target, engine);
+    await expect(
+      row.getByRole("heading", {
+        name: label("desktop.providers.connection_local"),
+      }),
+    ).toBeVisible();
+    await expect(
+      settings(target).locator(`[data-lane-summary="${engine}_api"]`),
+    ).toContainText(label("desktop.providers.connection_local"));
+    await expect(row).not.toContainText(
+      label("desktop.providers.connection_api"),
+    );
+    await expect(
+      row.getByRole("button", { name: label("desktop.providers.add_key") }),
+    ).toHaveCount(0);
+    await expect(row.locator("input[type=password]")).toHaveCount(0);
+  });
+}

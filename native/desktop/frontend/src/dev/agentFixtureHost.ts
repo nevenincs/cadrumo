@@ -78,6 +78,7 @@ import {
   LINKS,
   LINKS_REPLY,
   LINK_TO,
+  MODEL_DOES_NOT_FIT,
   RICH,
   RICH_REPLY,
   RICH_THOUGHTS,
@@ -1241,6 +1242,9 @@ export function fixtureAgent({
         throw coded("agent_reply_in_progress");
       // A model this computer does not hold is refused before a run starts.
       if (notHeld(request)) throw coded("agent_gateway_model_not_installed");
+      // A model this computer cannot run is refused the same way.
+      if (MODEL_DOES_NOT_FIT.test(text))
+        throw coded("agent_gateway_model_does_not_fit");
       // Each named document is read where the conversation stored it, as
       // it was when it was named.
       const named: AgentDocumentReference[] = [];

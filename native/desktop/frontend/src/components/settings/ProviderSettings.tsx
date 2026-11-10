@@ -133,11 +133,15 @@ function StatusMark({ status }: { status: ConnectionStatus }) {
   );
 }
 
+/** How a way is reached, in words. A way that takes no key is a server on
+ * this computer, whatever its transport, and is not called a key connection. */
 function connectionWords(
   t: Translate,
-  transport: ProviderStatus["transport"],
+  provider: Pick<ProviderStatus, "transport" | "authKind">,
 ): string {
-  return transport === "api"
+  if (provider.authKind === "none")
+    return t("desktop.providers.connection_local");
+  return provider.transport === "api"
     ? t("desktop.providers.connection_api")
     : t("desktop.providers.connection_app");
 }
@@ -363,7 +367,7 @@ function WayRow({
   const off = provider.mode === "disabled";
   const state = connectionStatus(provider, engine);
   const detail = detailWords(t, provider, engine);
-  const connection = connectionWords(t, provider.transport);
+  const connection = connectionWords(t, provider);
   // A keyless lane runs against the server on this computer that Cadrumo
   // launches the agent with, not the address the agent declares by default,
   // so no address is shown for it.
@@ -571,7 +575,7 @@ function ProviderGroupRow({
                     nameTone(state),
                   )}
                 >
-                  {connectionWords(t, lane.transport)}
+                  {connectionWords(t, lane)}
                   <StatusMark status={state} />
                 </span>
               );
@@ -697,7 +701,7 @@ export function ProviderSettings({
     !normalizedQuery ||
     [
       group.name,
-      connectionWords(t, lane.transport),
+      connectionWords(t, lane),
       statusWords(t, connectionStatus(lane, engineOf(lane))),
     ]
       .join(" ")
