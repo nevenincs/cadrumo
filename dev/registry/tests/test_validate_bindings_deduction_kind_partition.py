@@ -40,12 +40,22 @@ from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, Iva
 
 from ..compiler.loader import load_modelo_directory
 from ..compiler.validate_bindings import validate_binding_registration_section
+from .authored_edition_support import authored_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _MODELOS_ROOT = Path(__file__).resolve().parents[3] / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
-_FRAGMENT = Path("revisions") / "2022" / "bindings" / "0001-declarations.toml"
-_REVISION = "2025"
+#: The oldest authored revision holds the baseline fragment every later edition inherits its bindings from.
+_FRAGMENT = Path("revisions") / str(authored_revisions("303")[0].id) / "bindings" / "0001-declarations.toml"
+#: The newest authored modelo 303 revision that governs one whole calendar year.
+_WHOLE_YEAR = [
+    revision
+    for revision in authored_revisions("303")
+    if revision.valid_to is not None
+    and (revision.valid_from.month, revision.valid_from.day) == (1, 1)
+    and (revision.valid_to.month, revision.valid_to.day) == (12, 31)
+][-1]
+_REVISION = str(_WHOLE_YEAR.id)
 _CORRIENTES_KINDS = 'deduction_fact_kinds = ["domestic_current"], '
 _CORRIENTES_BASE = "modelo-303-iva-soportado-interiores-base"
 _INVESTMENT_BASE = "modelo-303-iva-soportado-interiores-bienes-inversion-base"
@@ -93,7 +103,7 @@ def _failures(tree: Path) -> list[str]:
 def _investment_row() -> IvaLedgerObservation:
     return IvaLedgerObservation(
         ledger_id="ordenador",
-        transaction_date=date(2025, 2, 15),
+        transaction_date=date(_WHOLE_YEAR.valid_from.year, 2, 15),
         category=IvaCategory("domestic_general"),
         rate_kind=IvaRateKind("general"),
         flow_direction=IvaFlowDirection.from_registry("soportado"),
