@@ -199,11 +199,13 @@ def _expiry_after_last_request(runtime: StoredSignInRuntime, client: FrontendCli
     return runtime.lease(client.session_id).expires_at
 
 
-def test_a_saved_change_on_the_persons_frontend_renews_the_idle_deadline(
+def test_a_saved_change_on_an_attended_connection_renews_the_idle_deadline(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
         tui = _person(runtime, OperationFrontendProjection.TUI)
+        # The person's input report attends the connection; it renews nothing so soon after signing in.
+        tui.note_activity()
         idle_window = timedelta(minutes=load_settings().cadrumo_bucket_default_idle_lock_minutes)
         signed_in = runtime.lease(tui.session_id).expires_at
         runtime.clock.ahead += idle_window / 2
@@ -241,7 +243,7 @@ def test_a_saved_change_on_the_persons_frontend_renews_the_idle_deadline(
         assert _expiry_after_last_request(runtime, tui) == renewed
 
 
-def test_a_command_line_or_attended_automation_change_does_not_renew(
+def test_an_unattended_script_or_attended_automation_change_does_not_renew(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
@@ -273,9 +275,12 @@ def test_a_command_line_or_attended_automation_change_does_not_renew(
         # Far enough that renewal would show, inside the attended session's own bounded lifetime.
         runtime.clock.ahead += timedelta(minutes=1)
 
-        # A command line invocation reports attended input at admission, never through what it submits.
+        # A script resumes the sign-in without reporting the person's input, so its saved change is no one's input.
         assert _settled(cli, _submit(cli, "ledger.rule.add", _rule(cli, "^cli"))).effect is OperationEffect.UPDATED
         assert _expiry_after_last_request(runtime, cli) == signed_in
+        assert _expiry_after_last_request(runtime, tui) == signed_in
+        # Nor is a change on the person's own frontend before that connection has reported any input.
+        assert _settled(tui, _submit(tui, "ledger.rule.add", _rule(tui, "^tui"))).effect is OperationEffect.UPDATED
         assert _expiry_after_last_request(runtime, tui) == signed_in
 
         # An automation's change, though the person let it follow their sign-in, is not the person's input.
