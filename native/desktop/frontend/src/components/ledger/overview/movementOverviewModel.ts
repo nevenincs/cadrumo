@@ -174,11 +174,19 @@ function classificationGroup(input: MovementOverviewInput): OverviewGroup {
               : null,
           }),
   });
-  if (tx.classification_reason)
+  // The person's own words are shown as stored; for a command's name the
+  // ledger serves the word, and a row with no reason has no line.
+  const reason =
+    row.classification_reason_source === "stated"
+      ? tx.classification_reason
+      : row.classification_reason_source === "command"
+        ? row.classification_reason_words
+        : "";
+  if (reason)
     list.push({
       id: "classification_reason",
       label: t("desktop.ledger.overview.reason"),
-      value: stored(tx.classification_reason),
+      value: stored(reason),
     });
   return {
     id: "classification",

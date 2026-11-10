@@ -70,6 +70,11 @@ export function movement(
     review_status: status,
     group_label: group,
     own_account_id: account,
+    // A synthetic reason is the person's own words, or none.
+    classification_reason_source:
+      transaction.classification_reason === "" ? "none" : "stated",
+    classification_reason_words: "",
+    classification_reason_words_language: null,
   };
 }
 

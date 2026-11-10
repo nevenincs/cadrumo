@@ -574,11 +574,13 @@ export function fixtureLedger(): FixtureLedger {
           ? "rule"
           : "operator",
       classified_at: unprocessed ? null : created,
+      // A mixed-use row carries the reason its person typed; the others were
+      // written by a command, which names itself where no reason was given.
       classification_reason: unprocessed
         ? ""
-        : kind.classification === "PERSONAL"
-          ? "rule:hoja-verde"
-          : "operator",
+        : kind.classification === "MIXED"
+          ? "Reparto acordado con la asesoría"
+          : "aeat app ledger classify",
       classification_confidence: null,
       source_jurisdiction: null,
       value_in_eur: extra.value_in_eur ?? null,

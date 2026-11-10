@@ -1119,6 +1119,9 @@ application:
         november: Noviembre
         october: Octubre
         september: Septiembre
+    reason:
+      served:
+        command: Registrado por un comando, sin motivo indicado
     staged_check:
       served:
         blocker:

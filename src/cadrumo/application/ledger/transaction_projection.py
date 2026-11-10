@@ -3,16 +3,46 @@
 from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
+from typing import Final, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import tr
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.calculations.registry.form_codes import require_form_width
 from ...domain.transactions.own_accounts import OwnAccountId
 from ..review.filter import LedgerReviewStatus
 from .models import LedgerTransactionPayload
+
+type LedgerReasonSource = Literal["none", "stated", "command"]
+"""Whose words a row's classification reason is: nobody's, the person's own, or a command's name."""
+
+_COMMAND_REASON_PREFIX: Final = "aeat app ledger"
+"""How every command that records a classification without a stated reason names itself."""
+
+COMMAND_REASON_WORDS_LOCALE_KEY: Final = "application.ledger.reason.served.command"
+"""The word served in place of a command's name."""
+
+
+def classification_reason_source(reason: str) -> LedgerReasonSource:
+    """Say whose words a stored classification reason is.
+
+    A classification written without a stated reason stores the name of the
+    command that wrote it, so a reason that names one of the product's own
+    commands is a machine source, never something a person wrote.
+    """
+    text = reason.strip()
+    if not text:
+        return "none"
+    return "command" if text.startswith(_COMMAND_REASON_PREFIX) else "stated"
+
+
+def classification_reason_words(source: LedgerReasonSource, language: OutputLanguage) -> str:
+    """The word that stands for a machine source in ``language``; a person's words and none are served as stored."""
+    return tr(COMMAND_REASON_WORDS_LOCALE_KEY, locale=language.value) if source == "command" else ""
 
 
 class LedgerM210IncomeProjection(BaseModel):
@@ -107,6 +137,9 @@ class LedgerTransactionReviewProjection(BaseModel):
 
     The own account is the register id the row is bound to, never its account
     number, so a listing can show and group by account without a second read.
+    The reason's source says whether ``transaction.classification_reason`` is
+    the person's own words; for a machine source the reason is a command's name
+    and the served word, in the language named, stands for it.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -115,3 +148,6 @@ class LedgerTransactionReviewProjection(BaseModel):
     review_status: LedgerReviewStatus
     group_label: str | None
     own_account_id: OwnAccountId | None
+    classification_reason_source: LedgerReasonSource
+    classification_reason_words: str
+    classification_reason_words_language: OutputLanguage | None

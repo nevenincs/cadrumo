@@ -1,6 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import servedWords from "@fixtures/ledger-served-words/ledgerServedWords.json" with { type: "json" };
 import { label } from "../support/strings";
 
 // The overview of one ledger entry over the scenario's ledger: a movement,
@@ -126,6 +127,32 @@ test("a movement's overview opens from the row's context menu", async ({
   await target.keyboard.press("Escape");
   await expect(overview(target)).toHaveCount(0);
   await focusOnMovement(target);
+});
+
+test("a command's name is not shown as the reason: the overview says the word the ledger serves", async ({
+  page: target,
+}) => {
+  await open(target);
+  // A classified row: the scenario's rows written by a command store its name
+  // as their reason, and the ledger serves a word for it.
+  const classified = movementGrid(target)
+    .locator("[data-kind=data]")
+    .filter({
+      has: target.locator("[data-column=description]", { hasText: MOVEMENT }),
+    })
+    .filter({
+      has: target.locator("[data-column=classification]", {
+        hasText: label("desktop.ledger.classification.business"),
+      }),
+    })
+    .first();
+  await cellOf(classified, "description").click();
+  await target.keyboard.press("Alt+Enter");
+  await expect(overview(target)).toBeVisible();
+  await expect(fact(target, "classification_reason")).toHaveText(
+    servedWords.classification_reason.command.en,
+  );
+  await expect(overview(target)).not.toContainText("aeat app ledger");
 });
 
 // ---- Invoices ----------------------------------------------------------------

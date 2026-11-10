@@ -1115,6 +1115,9 @@ application:
         november: Novembre
         october: Octubre
         september: Setembre
+    reason:
+      served:
+        command: Registrat per una ordre, sense cap motiu indicat
     staged_check:
       served:
         blocker:

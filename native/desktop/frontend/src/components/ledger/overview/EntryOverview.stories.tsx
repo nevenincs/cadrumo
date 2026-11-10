@@ -11,7 +11,7 @@ import {
   useLedgerRead,
 } from "@/dev/LedgerStage";
 import type { LedgerShape } from "@/dev/ledgerFixture";
-import type { LedgerPort } from "../../../shell/ledger";
+import type { LedgerPort, OutputLanguage } from "../../../shell/ledger";
 import type { CatalogueInvoice } from "../../../shell/ledgerInvoiceOperations";
 import { useOwnAccounts } from "../../../shell/ledgerMovementReads";
 import { useStrings } from "../../../shell/strings";
@@ -80,7 +80,7 @@ function Movement({ pick, unknown = false, locale }: MovementArgs) {
     () => (unknown ? withoutLineage(fixturePort) : fixturePort),
     [fixturePort, unknown],
   );
-  const read = useLedgerRead(fixturePort);
+  const read = useLedgerRead(fixturePort, undefined, locale as OutputLanguage);
   const accounts = useOwnAccounts(fixturePort, STORY_READER, true);
   const action = useAction("movement");
   const [id] = useState(() => storyMovementIds(pick, 1)[0] ?? null);

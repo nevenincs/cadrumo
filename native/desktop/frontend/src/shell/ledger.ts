@@ -729,12 +729,23 @@ export type LedgerTransaction = {
   modified_at: string;
 };
 
+/** Whose words a row's classification reason is: nobody's (none is stored),
+ * the person's own, or the name of the command that wrote the row. */
+export type LedgerReasonSource = "none" | "stated" | "command";
+
 export type LedgerRow = {
   transaction: LedgerTransaction;
   review_status: LedgerReviewStatus;
   group_label: string | null;
   /** The own account's register id, never its number; null for none. */
   own_account_id: string | null;
+  /** Whether `transaction.classification_reason` is the person's own words
+   * (shown as stored) or a command's name (not shown: its word is served). */
+  classification_reason_source: LedgerReasonSource;
+  /** The word served for a command's name, in the language asked; empty
+   * unless the source is a command. */
+  classification_reason_words: string;
+  classification_reason_words_language: OutputLanguage | null;
 };
 
 /** The order is the product's: filter, group selection, sort, group
@@ -748,6 +759,8 @@ export type LedgerListRequest = {
   sort_by?: LedgerSortField | null;
   sort_order?: LedgerSortOrder;
   exclude_llm_rejected?: boolean;
+  /** The language the rows' reason words are said in. */
+  output_language?: OutputLanguage;
 };
 
 export type LedgerListResult = {

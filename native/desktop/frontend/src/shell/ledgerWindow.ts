@@ -15,6 +15,7 @@ import {
   type LedgerPreflightResult,
   type LedgerRow,
   type LedgerSortField,
+  type OutputLanguage,
   type LedgerSortOrder,
   type LedgerStatusResult,
 } from "./ledger";
@@ -66,6 +67,8 @@ export type LedgerWindowScope = {
   sort_order?: LedgerSortOrder;
   by_group?: boolean;
   exclude_llm_rejected?: boolean;
+  /** The language the rows' served words are said in. */
+  output_language?: OutputLanguage;
 };
 
 /** A scope as one comparable text: two scopes that read the same rows in
@@ -77,18 +80,26 @@ export function scopeKey(scope: LedgerWindowScope): string {
     scope.sort_order ?? "asc",
     scope.by_group === true,
     scope.exclude_llm_rejected === true,
+    scope.output_language ?? null,
   ]);
 }
 export function scopeOfKey(key: string): LedgerWindowScope {
-  const [filters, sortBy, sortOrder, byGroup, excludeRejected] = JSON.parse(
-    key,
-  ) as [string[], LedgerSortField, LedgerSortOrder, boolean, boolean];
+  const [filters, sortBy, sortOrder, byGroup, excludeRejected, language] =
+    JSON.parse(key) as [
+      string[],
+      LedgerSortField,
+      LedgerSortOrder,
+      boolean,
+      boolean,
+      OutputLanguage | null,
+    ];
   return {
     ...(filters.length ? { filters } : {}),
     sort_by: sortBy,
     sort_order: sortOrder,
     ...(byGroup ? { by_group: true } : {}),
     ...(excludeRejected ? { exclude_llm_rejected: true } : {}),
+    ...(language ? { output_language: language } : {}),
   };
 }
 
@@ -252,6 +263,9 @@ export function nextPageRequest(
     sort_order: scope.sort_order ?? "asc",
     ...(scope.by_group ? { by_group: true } : {}),
     ...(scope.exclude_llm_rejected ? { exclude_llm_rejected: true } : {}),
+    ...(scope.output_language
+      ? { output_language: scope.output_language }
+      : {}),
     offset: current.rows.length,
     limit: Math.min(LEDGER_PAGE_SIZE, remaining),
   };

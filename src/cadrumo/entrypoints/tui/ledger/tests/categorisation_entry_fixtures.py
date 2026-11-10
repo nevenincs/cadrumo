@@ -151,7 +151,13 @@ class MemoryLedger:
             profile_id=request.profile_id,
             rows=tuple(
                 LedgerTransactionReviewProjection(
-                    transaction=row, review_status=self._status(row), group_label=None, own_account_id=None
+                    transaction=row,
+                    review_status=self._status(row),
+                    group_label=None,
+                    own_account_id=None,
+                    classification_reason_source="none",
+                    classification_reason_words="",
+                    classification_reason_words_language=None,
                 )
                 for row in window
             ),

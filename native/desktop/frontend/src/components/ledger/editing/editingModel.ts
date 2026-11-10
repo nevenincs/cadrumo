@@ -1021,6 +1021,9 @@ export function draftRow(draft: Draft): LedgerRow {
     review_status: "pending",
     group_label: null,
     own_account_id: fields.own_account_id ?? null,
+    classification_reason_source: "none",
+    classification_reason_words: "",
+    classification_reason_words_language: null,
   };
 }
 

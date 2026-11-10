@@ -8,6 +8,7 @@ from pydantic import BaseModel, NonNegativeInt, PositiveInt, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.transactions.models import Transaction
@@ -28,16 +29,28 @@ from .manual_read import ledger_transaction_payload
 from .read_access import resolve_ledger_read_access
 from .read_ports import LedgerReadPortsFactory
 from .review_projection import ledger_transaction_review_status
-from .transaction_projection import LedgerTransactionProjection, LedgerTransactionReviewProjection
+from .transaction_projection import (
+    LedgerTransactionProjection,
+    LedgerTransactionReviewProjection,
+    classification_reason_source,
+    classification_reason_words,
+)
 
 
-def ledger_list_row(transaction: Transaction) -> LedgerTransactionReviewProjection:
-    """One listed row: the canonical payload plus the list's own facts."""
+def ledger_list_row(
+    transaction: Transaction, language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
+) -> LedgerTransactionReviewProjection:
+    """One listed row: the canonical payload plus the list's own facts, its reason's words said in ``language``."""
+    source = classification_reason_source(transaction.classification_reason)
+    words = classification_reason_words(source, language)
     return LedgerTransactionReviewProjection(
         transaction=LedgerTransactionProjection.from_payload(ledger_transaction_payload(transaction)),
         review_status=ledger_transaction_review_status(transaction),
         group_label=transaction.group_label,
         own_account_id=transaction.own_account_id,
+        classification_reason_source=source,
+        classification_reason_words=words,
+        classification_reason_words_language=language if words else None,
     )
 
 
@@ -58,6 +71,7 @@ class LedgerListRequest(BaseModel):
     sort_by: LedgerSortField | None = None
     sort_order: LedgerSortOrder = LedgerSortOrder.ASC
     exclude_llm_rejected: bool = False
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
     def filter_spec(self) -> LedgerReviewFilterSpec:
         """Resolve scope and execution through the same canonical grammar."""
@@ -140,7 +154,7 @@ class LedgerListExecutor:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             return LedgerListProjection(
                 profile_id=payload.profile_id,
-                rows=tuple(ledger_list_row(item.transaction) for item in page.results),
+                rows=tuple(ledger_list_row(item.transaction, payload.output_language) for item in page.results),
                 total=page.total,
                 truncated=page.truncated,
                 offset=payload.offset,
