@@ -20,6 +20,7 @@ from cadrumo_client.commands import profile_selection
 from cadrumo_client.commands.custody_payloads import ConfigLogoutResult
 from cadrumo_client.commands.errors import CliRefusedBoundaryError, attach_cli_policy_verdict
 from cadrumo_client.commands.output import activate_subcommand_output_language
+from cadrumo_client.commands.profile_selection import LoginTarget
 from cadrumo_client.commands.secure_input import (
     MachineSecretPayload,
     MachineSecretSelection,
@@ -373,6 +374,43 @@ def _prove_logout_person(
         proof[:] = bytes(len(proof))
 
 
+def _logout_target(name: str | None) -> tuple[str | None, LoginTarget | None]:
+    """Resolve the profile a sign-out addresses: the named one, else the runtime's selection."""
+    if name is None:
+        selected = profile_selection.runtime_selected_profile_id()
+        return selected, (None if selected is None else profile_selection.runtime_login_target(selected))
+    target = profile_selection.require_runtime_login_target(name)
+    return target.bucket_id, target
+
+
+def _sign_out_profile(
+    ctx: typer.Context,
+    selected: str,
+    machine_secret: MachineSecretSelection | None,
+    *,
+    require_password: bool,
+) -> HumanSignedOut:
+    """Revoke one profile's human sign-in over its own runtime connection, proving the person first when asked."""
+    client = asyncio.run(open_installed_client(profile_id=UUID(selected), frontend=OperationFrontendProjection.CLI))
+    try:
+        from cadrumo_client.commands.profile_binding import subscribe_profile_notices
+
+        subscribe_profile_notices(ctx, client)
+        if machine_secret is not None:
+            _prove_logout_person(client, machine_secret, require_password=require_password)
+        return client.human_sign_out()
+    except FrontendRefusedError as error:
+        _raise_frontend_refusal(error)
+    except ProfileReceiptRefusedError as error:
+        raise CliRefusedBoundaryError(
+            str(error.reason),
+            context={"reason": str(error.reason)},
+            translated_message="cli.config.errors.profile_session_logout_unproven",
+        ) from None
+    finally:
+        client.close()
+
+
 def config_logout(
     ctx: typer.Context,
     name: str | None = None,
@@ -389,34 +427,12 @@ def config_logout(
     activate_subcommand_output_language(ctx, output_language)
 
     machine_secret = select_machine_secret_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
-    if name is None:
-        selected = profile_selection.runtime_selected_profile_id()
-        target = None if selected is None else profile_selection.runtime_login_target(selected)
-    else:
-        target = profile_selection.require_runtime_login_target(name)
-        selected = target.bucket_id
-    outcome = None
-    if selected is not None:
-        client = asyncio.run(open_installed_client(profile_id=UUID(selected), frontend=OperationFrontendProjection.CLI))
-        try:
-            from cadrumo_client.commands.profile_binding import subscribe_profile_notices
-
-            subscribe_profile_notices(ctx, client)
-            if machine_secret is None:
-                outcome = client.human_sign_out()
-            else:
-                _prove_logout_person(client, machine_secret, require_password=name is not None)
-                outcome = client.human_sign_out()
-        except FrontendRefusedError as error:
-            _raise_frontend_refusal(error)
-        except ProfileReceiptRefusedError as error:
-            raise CliRefusedBoundaryError(
-                str(error.reason),
-                context={"reason": str(error.reason)},
-                translated_message="cli.config.errors.profile_session_logout_unproven",
-            ) from None
-        finally:
-            client.close()
+    selected, target = _logout_target(name)
+    outcome = (
+        None
+        if selected is None
+        else _sign_out_profile(ctx, selected, machine_secret, require_password=name is not None)
+    )
     # Selection is a non-authoritative login target, not human access: the
     # runtime keeps it for the next login, and a sign-out writes none.
     signed_out = selected

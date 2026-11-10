@@ -126,66 +126,13 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
         proof_endpoint_owner = WorkerResourceCleanup(proof_endpoint.close)
         self._listener_cleanup = (endpoint_owner, operation_endpoint_owner, proof_endpoint_owner)
         self._pending_channel_cleanup: list[WorkerResourceCleanup] = []
-        try:
-            self._scope = (
-                WindowsProcessScope()
-                if sys.platform == "win32"
-                else MacosProcessScope(
-                    worker_id=identity.worker_id, storage_root=storage_root, worker_script=worker_script
-                )
-                if sys.platform == "darwin"
-                else LinuxProcessScope(worker_id=identity.worker_id, worker_script=worker_script)
-            )
-        except BaseException as error:
-            retained_scope = unreturned_windows_process_scope(error)
-            if retained_scope is not None:
-                # Native construction already attempted release. Transfer its
-                # actual remaining owner before a public refusal drops errors.
-                self._scope = retained_scope
-                self._stopping.set()
-                error.__dict__["_profile_worker_candidate"] = self
-            raise
+        self._open_process_scope(identity, storage_root=storage_root, worker_script=worker_script)
         retiring_listeners = False
         try:
             endpoint.listen()
             operation_endpoint.listen()
             proof_endpoint.listen()
-            environment = worker_launch_environment(storage_root=storage_root, profile_id=identity.binding.profile_id)
-            environment[PYDANTIC_PLUGINS_VARIABLE] = PYDANTIC_PLUGINS_DISABLED
-            product_version = version("cadrumo")
-            worker_entrypoint = (
-                ("-m", "cadrumo_runtime.host.worker")
-                if worker_script is None
-                else (str(worker_script.resolve(strict=True)),)
-            )
-            interpreter, *interpreter_arguments = interpreter_command()
-            interpreter = _direct_windows_interpreter(interpreter, environment)
-            arguments = (
-                *interpreter_arguments,
-                "-I",
-                "-B",
-                *worker_entrypoint,
-                "--storage-root",
-                str(storage_root),
-                "--worker-id",
-                str(identity.worker_id),
-                "--parent-pid",
-                str(os.getpid()),
-                "--expected-version",
-                product_version,
-            )
-            scope = self._scope
-            if isinstance(scope, LinuxProcessScope | MacosProcessScope):
-                self._process = scope.launch(
-                    executable=Path(interpreter), arguments=arguments, directory=storage_root, environment=environment
-                )
-            else:
-                # Only a Windows worker's standard error reaches this parent; the
-                # POSIX guardians discard it.
-                self._process, standard_error = scope.launch_with_standard_error(
-                    executable=Path(interpreter), arguments=arguments, directory=storage_root, environment=environment
-                )
-                self._standard_error = WorkerStandardErrorTail(standard_error)
+            product_version = self._launch_worker(identity, storage_root=storage_root, worker_script=worker_script)
             launched = True
             self.watch_exit(exited)
             startup_watchdog = Timer(self._startup_deadline.remaining_seconds(), self._startup_expired.set)
@@ -228,6 +175,70 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
                 owners += (endpoint_owner, operation_endpoint_owner, proof_endpoint_owner)
             release_worker_resources(*owners, primary_error=error)
             raise
+
+    def _open_process_scope(
+        self, identity: ProfileWorkerIdentity, *, storage_root: Path, worker_script: Path | None
+    ) -> None:
+        """Open the platform containment scope, retaining any owner a failed native construction left."""
+        try:
+            self._scope = (
+                WindowsProcessScope()
+                if sys.platform == "win32"
+                else MacosProcessScope(
+                    worker_id=identity.worker_id, storage_root=storage_root, worker_script=worker_script
+                )
+                if sys.platform == "darwin"
+                else LinuxProcessScope(worker_id=identity.worker_id, worker_script=worker_script)
+            )
+        except BaseException as error:
+            retained_scope = unreturned_windows_process_scope(error)
+            if retained_scope is not None:
+                # Native construction already attempted release. Transfer its
+                # actual remaining owner before a public refusal drops errors.
+                self._scope = retained_scope
+                self._stopping.set()
+                error.__dict__["_profile_worker_candidate"] = self
+            raise
+
+    def _launch_worker(self, identity: ProfileWorkerIdentity, *, storage_root: Path, worker_script: Path | None) -> str:
+        """Launch the isolated worker interpreter inside the scope and return the expected product version."""
+        environment = worker_launch_environment(storage_root=storage_root, profile_id=identity.binding.profile_id)
+        environment[PYDANTIC_PLUGINS_VARIABLE] = PYDANTIC_PLUGINS_DISABLED
+        product_version = version("cadrumo")
+        worker_entrypoint = (
+            ("-m", "cadrumo_runtime.host.worker")
+            if worker_script is None
+            else (str(worker_script.resolve(strict=True)),)
+        )
+        interpreter, *interpreter_arguments = interpreter_command()
+        interpreter = _direct_windows_interpreter(interpreter, environment)
+        arguments = (
+            *interpreter_arguments,
+            "-I",
+            "-B",
+            *worker_entrypoint,
+            "--storage-root",
+            str(storage_root),
+            "--worker-id",
+            str(identity.worker_id),
+            "--parent-pid",
+            str(os.getpid()),
+            "--expected-version",
+            product_version,
+        )
+        scope = self._scope
+        if isinstance(scope, LinuxProcessScope | MacosProcessScope):
+            self._process = scope.launch(
+                executable=Path(interpreter), arguments=arguments, directory=storage_root, environment=environment
+            )
+        else:
+            # Only a Windows worker's standard error reaches this parent; the
+            # POSIX guardians discard it.
+            self._process, standard_error = scope.launch_with_standard_error(
+                executable=Path(interpreter), arguments=arguments, directory=storage_root, environment=environment
+            )
+            self._standard_error = WorkerStandardErrorTail(standard_error)
+        return product_version
 
     def watch_exit(self, exited: Callable[[ProfileWorkerProcess], None] | None) -> None:
         """Report an unrequested exit as soon as the process ends, not when a later exchange fails.
