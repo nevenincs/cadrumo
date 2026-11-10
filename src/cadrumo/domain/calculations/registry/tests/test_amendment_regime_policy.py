@@ -10,8 +10,17 @@ from .....core.amendment_kind_regime import resolve_amendment_kind_regime
 from .....core.period import Period
 from ..amendment_regime_policy import amendment_regime_policy
 from ..errors import RegistryValidationError
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+# The policy rows are synthetic: the exercise after the horizon stands for a boundary no published row declares.
+_BOUNDARY_YEAR = filing_year_envelope().horizon + 1
+_AFTER_BOUNDARY_YEAR = _BOUNDARY_YEAR + 1
+_BOUNDARY = date(_BOUNDARY_YEAR, 1, 1)
+_BOUNDARY_TEXT = _BOUNDARY.isoformat()
+_PERIOD_END_BOUNDARY = date(_BOUNDARY_YEAR, 9, 30)
+_RESTRICTION_START = date(_BOUNDARY_YEAR, 4, 1)
 
 
 def _entries(models: tuple[str, ...]) -> dict[str, str]:
@@ -24,7 +33,7 @@ def _entries(models: tuple[str, ...]) -> dict[str, str]:
         "boundary.order": ",".join(models),
     }
     for modelo in models:
-        entries[f"boundary.{modelo}.date"] = "2030-01-01"
+        entries[f"boundary.{modelo}.date"] = _BOUNDARY_TEXT
         entries[f"boundary.{modelo}.source"] = "synthetic independently declared evidence"
     return entries
 
@@ -32,7 +41,7 @@ def _entries(models: tuple[str, ...]) -> dict[str, str]:
 @pytest.mark.parametrize("models", [("100", "200"), ("100", "200", "303", "390")])
 def test_declared_support_can_have_two_or_four_models(models: tuple[str, ...]) -> None:
     policy = amendment_regime_policy(_entries(models))
-    assert dict(policy.rectificativa_effective_from) == {modelo: date(2030, 1, 1) for modelo in models}
+    assert dict(policy.rectificativa_effective_from) == {modelo: _BOUNDARY for modelo in models}
     assert policy.pre_rectificativa_kinds == frozenset({"prior"})
     assert policy.post_rectificativa_kinds == frozenset({"current"})
 
@@ -55,7 +64,7 @@ def test_missing_entire_declared_row_is_refused() -> None:
 
 @pytest.mark.parametrize("field", ["date", "source", "source_fact", "source_path"])
 def test_undeclared_and_dangling_rows_are_refused(field: str) -> None:
-    entries = _entries(("100", "200")) | {f"boundary.303.{field}": "2030-01-01"}
+    entries = _entries(("100", "200")) | {f"boundary.303.{field}": _BOUNDARY_TEXT}
     with pytest.raises(RegistryValidationError, match=r"match boundary\.order"):
         amendment_regime_policy(entries)
 
@@ -70,7 +79,7 @@ def test_duplicate_or_malformed_model_declarations_are_refused(declaration: str)
 @pytest.mark.parametrize("key", ["boundary.bad.date", "boundary.200.unknown", "boundary.200.date.extra"])
 def test_malformed_boundary_entries_are_refused(key: str) -> None:
     with pytest.raises(RegistryValidationError):
-        amendment_regime_policy(_entries(("100", "200")) | {key: "2030-01-01"})
+        amendment_regime_policy(_entries(("100", "200")) | {key: _BOUNDARY_TEXT})
 
 
 def test_malformed_date_and_blank_evidence_are_refused() -> None:
@@ -84,7 +93,7 @@ def test_source_fact_can_supply_the_declared_evidence() -> None:
     del entries["boundary.200.source"]
     entries["boundary.200.source_fact"] = "synthetic-source-fact"
     entries["boundary.200.source_path"] = "facts/synthetic-source.toml"
-    assert amendment_regime_policy(entries).rectificativa_effective_from["200"] == date(2030, 1, 1)
+    assert amendment_regime_policy(entries).rectificativa_effective_from["200"] == _BOUNDARY
 
 
 def test_source_path_alone_is_not_source_evidence() -> None:
@@ -98,7 +107,7 @@ def test_source_path_alone_is_not_source_evidence() -> None:
 def _restricted_entries() -> dict[str, str]:
     return _entries(("100", "200")) | {
         "restriction.order": "130",
-        "restriction.130.date": "2020-04-01",
+        "restriction.130.date": _RESTRICTION_START.isoformat(),
         "restriction.130.kinds": "prior",
         "restriction.130.source": "synthetic-restriction-evidence",
     }
@@ -107,18 +116,18 @@ def _restricted_entries() -> dict[str, str]:
 def test_optional_restriction_projects_a_dated_closed_intersection() -> None:
     assert not amendment_regime_policy(_entries(("100", "200"))).kind_restrictions
     restriction = amendment_regime_policy(_restricted_entries()).kind_restrictions["130"]
-    assert restriction.effective_from == date(2020, 4, 1)
+    assert restriction.effective_from == _RESTRICTION_START
     assert restriction.permitted_kinds == frozenset({"prior"})
 
 
 @pytest.mark.parametrize(
     ("year", "code", "expected", "effective"),
     [
-        (2030, "08", {"prior", "replacement"}, False),
-        (2030, "2T", {"prior", "replacement"}, False),
-        (2030, "09", {"current"}, True),
-        (2030, "3T", {"current"}, True),
-        (2031, "0A", {"current"}, True),
+        (_BOUNDARY_YEAR, "08", {"prior", "replacement"}, False),
+        (_BOUNDARY_YEAR, "2T", {"prior", "replacement"}, False),
+        (_BOUNDARY_YEAR, "09", {"current"}, True),
+        (_BOUNDARY_YEAR, "3T", {"current"}, True),
+        (_AFTER_BOUNDARY_YEAR, "0A", {"current"}, True),
     ],
 )
 def test_parsed_restriction_intersects_the_selected_regime_at_its_period_end_boundary(
@@ -129,9 +138,9 @@ def test_parsed_restriction_intersects_the_selected_regime_at_its_period_end_bou
         "procedure.replacement.value": "replacement",
         "regime.pre_order": "prior,replacement",
         "regime.post_order": "current,replacement",
-        "boundary.100.date": "2030-09-30",
+        "boundary.100.date": _PERIOD_END_BOUNDARY.isoformat(),
         "restriction.order": "100",
-        "restriction.100.date": "2030-09-30",
+        "restriction.100.date": _PERIOD_END_BOUNDARY.isoformat(),
         "restriction.100.kinds": "current",
         "restriction.100.source": "synthetic-procedure-guidance",
     }
@@ -161,7 +170,7 @@ def test_restrictions_require_the_complete_declared_row(missing: str) -> None:
         ("restriction.order", "130,"),
         ("restriction.order", " "),
         ("restriction.130.date", "invalid"),
-        ("restriction.130.date", "2020-02-30"),
+        ("restriction.130.date", f"{_BOUNDARY_YEAR}-02-30"),
         ("restriction.130.date", "20200401"),
         ("restriction.130.date", " "),
         ("restriction.130.kinds", "unknown"),
@@ -171,7 +180,7 @@ def test_restrictions_require_the_complete_declared_row(missing: str) -> None:
         ("restriction.130.source", " "),
         ("restriction.131.source", "undeclared-row"),
         ("restriction.130.unknown", "unknown-field"),
-        ("restriction.130.date.extra", "2020-04-01"),
+        ("restriction.130.date.extra", _RESTRICTION_START.isoformat()),
     ],
 )
 def test_malformed_restriction_fields_fail_closed(key: str, value: str) -> None:
