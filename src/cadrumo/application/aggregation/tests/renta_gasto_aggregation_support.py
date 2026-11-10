@@ -32,7 +32,7 @@ def gasto_raw_transaction(
             source_sha256="b" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2025, 4, 6, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(1980, 4, 6, 12, 0, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={"Concepto": provider_id},
@@ -77,7 +77,7 @@ def gasto_transaction(
             "iva_amount": iva_amount,
             "irpf_category": irpf_category,
             "lifecycle_state": lifecycle_state,
-            "classified_at": datetime(2025, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(1980, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )

@@ -6,19 +6,22 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
-FILING_EVIDENCE_NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+
+FILING_EVIDENCE_NOW = datetime(_YEAR, 4, 6, 12, 0, tzinfo=UTC)
 
 
 def filing_evidence_transaction() -> Transaction:
     raw = RawTransaction(
         provider_transaction_id="provider-row-evidence",
-        booked_date=date(2025, 2, 10),
-        value_date=date(2025, 2, 11),
+        booked_date=date(_YEAR, 2, 10),
+        value_date=date(_YEAR, 2, 11),
         amount=Decimal("121.00"),
         currency="EUR",
         counterparty="Proveedor SL",

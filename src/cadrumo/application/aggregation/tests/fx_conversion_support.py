@@ -25,7 +25,7 @@ def usd_raw(provider_id: str, *, amount: Decimal = USD_AMOUNT) -> RawTransaction
             source_sha256="c" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2024, 1, 16, 9, 0, tzinfo=UTC),
+            ingested_at=datetime(1980, 1, 16, 9, 0, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={"Reference": provider_id},
