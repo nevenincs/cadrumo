@@ -41,6 +41,9 @@ _NONE = (
 )
 _PARALLEL_SCHEME_MODELO = "369"
 # Four consecutive exercises of the support envelope name the editions of the synthetic trees.
+assert len(filing_year_envelope().years) >= 4, (
+    "the support envelope must span at least 4 exercises for these synthetic editions"
+)
 _Y1, _Y2, _Y3, _Y4 = filing_year_envelope().years[-4:]
 _I1, _I2, _I3, _I4 = (str(year) for year in (_Y1, _Y2, _Y3, _Y4))
 # A revision id no tree in this module authors.

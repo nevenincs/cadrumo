@@ -26,6 +26,9 @@ from ..compiler.authority import compiled_bundled_authority
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 # Three consecutive exercises of the support envelope name the revisions of the findings below.
+assert len(filing_year_envelope().years) >= 3, (
+    "the support envelope must span at least 3 exercises for these synthetic editions"
+)
 _I1, _I2, _I3 = (str(year) for year in filing_year_envelope().years[-3:])
 
 

@@ -15,6 +15,9 @@ from ..conformance.loader_directory_mode_support import write_standard_manifest
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 # Two consecutive exercises of the support envelope name the earlier edition and its successor.
+assert len(filing_year_envelope().years) >= 2, (
+    "the support envelope must span at least 2 exercises for these synthetic editions"
+)
 _Y1, _Y2 = filing_year_envelope().years[-2:]
 _I1, _I2 = str(_Y1), str(_Y2)
 

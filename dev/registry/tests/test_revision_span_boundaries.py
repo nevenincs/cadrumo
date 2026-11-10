@@ -156,7 +156,11 @@ import pytest
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    split_exercise_revisions,
+)
 from cadrumo.domain.calculations.registry.tests.revision_span_declaration_support import (
     NON_EJERCICIO_COVERAGE_AXIS,
     OPEN_BOUNDED_ERA_DESIGNS,
@@ -199,6 +203,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 # Five consecutive exercises of the support envelope name the synthetic design filenames; the year
 # below the floor stands in for the year of an orden, which is never coverage.
+assert len(filing_year_envelope().years) >= 5, (
+    "the support envelope must span at least 5 exercises for these synthetic editions"
+)
 _Y = filing_year_envelope().years[-5:]
 _ORDEN = filing_year_envelope().floor - 1
 
@@ -818,8 +825,16 @@ def test_the_added_boxes_attach_to_the_epoch_that_introduced_them() -> None:
     # does. Re-deriving the order here from the coverage helper would make this test
     # insensitive to the ordering function it exists to guard.
     ordered, _unorderable = designs_in_publication_order("303")
-    window = [path for path in ordered if min(design_coverage_years(path)) >= 2023]
-    assert len(window) >= 3, "fewer than three Modelo 303 designs from 2023 on; this assertion would be vacuous"
+    # The mid-year split is the authored revision pair serving the 08/2T and 09/3T periods of one
+    # exercise; the transition into it starts from the exercise authored just before.
+    early, _late = split_exercise_revisions("303", early_period="2T", late_period="3T")
+    authored = authored_revisions("303")
+    split_year = early.valid_from.year
+    previous_year = authored[authored.index(early) - 1].valid_from.year
+    window = [path for path in ordered if min(design_coverage_years(path)) >= previous_year]
+    assert len(window) >= 3, (
+        f"fewer than three Modelo 303 designs from {previous_year} on; this assertion would be vacuous"
+    )
 
     introduced: dict[str, set[str]] = {}
     for earlier, later in pairwise(window):
@@ -827,18 +842,19 @@ def test_the_added_boxes_attach_to_the_epoch_that_introduced_them() -> None:
         label = f"{left} mid-year" if left == right else f"{left}/{right}"
         introduced[label] = numbered(later) - numbered(earlier)
 
-    for label in ("2023/2024", "2024 mid-year"):
+    transition, mid_year = f"{previous_year}/{split_year}", f"{split_year} mid-year"
+    for label in (transition, mid_year):
         assert label in introduced, (
             f"the {label} boundary is absent from the ordered walk, so this assertion would be vacuous"
         )
 
-    assert not introduced["2023/2024"], (
-        "the 2023-to-early-2024 transition must introduce NO new numbered box -- boxes "
-        f"{sorted(introduced['2023/2024'], key=int)} attributed there instead, which is the "
-        "signature of the two 2024 halves being paired in the wrong order"
+    assert not introduced[transition], (
+        f"the {previous_year}-to-early-{split_year} transition must introduce NO new numbered box -- boxes "
+        f"{sorted(introduced[transition], key=int)} attributed there instead, which is the "
+        f"signature of the two {split_year} halves being paired in the wrong order"
     )
-    assert introduced["2024 mid-year"], (
-        "the mid-2024 transition must introduce the numbered boxes AEAT added at periods "
+    assert introduced[mid_year], (
+        f"the mid-{split_year} transition must introduce the numbered boxes AEAT added at periods "
         "09 and 3T, but none attributed there, so the halves are paired in the wrong order"
     )
 

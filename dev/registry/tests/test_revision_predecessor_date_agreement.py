@@ -31,6 +31,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _LEGAL_REF = "ley-58-2003:art-29"
 # Two consecutive exercises of the support envelope stand in for an earlier and a later edition.
+assert len(filing_year_envelope().years) >= 2, (
+    "the support envelope must span at least 2 exercises for these synthetic editions"
+)
 _EARLIER, _LATER = filing_year_envelope().years[-2:]
 
 

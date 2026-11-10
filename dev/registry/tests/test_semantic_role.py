@@ -39,6 +39,9 @@ from .synthetic_locale_fixtures import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 # Three consecutive exercises of the support envelope name the editions of the synthetic one-revision trees.
+assert len(filing_year_envelope().years) >= 3, (
+    "the support envelope must span at least 3 exercises for these synthetic editions"
+)
 _EDITIONS = tuple(str(year) for year in filing_year_envelope().years[-3:])
 _ED_1, _ED_2, _ED_3 = _EDITIONS
 

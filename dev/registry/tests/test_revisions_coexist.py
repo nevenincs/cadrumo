@@ -57,6 +57,9 @@ __all__ = ["synthetic_locale_scope"]
 
 CENSUS_PERIODS = ("alta", "modificacion", "baja")
 # Four consecutive exercises of the support envelope place the synthetic windows.
+assert len(filing_year_envelope().years) >= 4, (
+    "the support envelope must span at least 4 exercises for these synthetic editions"
+)
 _A, _B, _C, _D = filing_year_envelope().years[-4:]
 # A date later than every exercise the envelope supports.
 _BEYOND = filing_year_envelope().horizon + 1
