@@ -103,15 +103,11 @@ def test_a_successor_naming_a_later_non_overlapping_edition_is_refused_naming_bo
         load_modelo_directory(modelo_dir)
 
     _write_edition(modelo_dir, _Edition(str(_EARLIER), f"{_EARLIER}-01-01", (_EARLIER,), "01"))
-    _write_edition(
-        modelo_dir, _Edition(str(_LATER), f"{_LATER}-01-01", (_LATER,), "02", predecessor=str(_EARLIER))
-    )
+    _write_edition(modelo_dir, _Edition(str(_LATER), f"{_LATER}-01-01", (_LATER,), "02", predecessor=str(_EARLIER)))
     repaired = load_modelo_directory(modelo_dir)
     assert repaired.revisions[str(_LATER)].predecessor == DeclaredPredecessor(revision_id=str(_EARLIER))
 
-    _write_edition(
-        modelo_dir, _Edition(str(_EARLIER), f"{_EARLIER}-01-01", (_EARLIER,), "01", predecessor=str(_LATER))
-    )
+    _write_edition(modelo_dir, _Edition(str(_EARLIER), f"{_EARLIER}-01-01", (_EARLIER,), "01", predecessor=str(_LATER)))
     _write_edition(modelo_dir, _Edition(str(_LATER), f"{_LATER}-01-01", (_LATER,), "02"))
     with pytest.raises(RegistryLoadError, match=_BACKWARDS):
         load_modelo_directory(modelo_dir)
@@ -127,9 +123,7 @@ def test_an_overlapping_pair_is_exempt_whichever_way_the_edge_points(tmp_path: P
     loaded = load_modelo_directory(modelo_dir)
     assert loaded.revisions["variante-a"].predecessor == DeclaredPredecessor(revision_id="variante-b")
 
-    _write_edition(
-        modelo_dir, _Edition("variante-a", f"{_EARLIER}-01-01", (_EARLIER,), "01", predecessor="variante-b")
-    )
+    _write_edition(modelo_dir, _Edition("variante-a", f"{_EARLIER}-01-01", (_EARLIER,), "01", predecessor="variante-b"))
     with pytest.raises(RegistryLoadError, match="does not take effect before it"):
         load_modelo_directory(modelo_dir)
 

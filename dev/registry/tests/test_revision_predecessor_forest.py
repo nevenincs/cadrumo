@@ -208,9 +208,7 @@ def test_a_self_target_is_refused_at_the_loader_and_by_the_forest_rule(tmp_path:
 
     _write_edition(modelo_dir, _Edition(_I3, _Y3, manifest_extra=_names(_I2)))
     assert load_modelo_directory(modelo_dir).revisions[_I3].predecessor is not None
-    validate_predecessor_forest(
-        "999", named={_I2: _I1, _I3: _I2}, declared_roots=frozenset(), keyless=frozenset({_I1})
-    )
+    validate_predecessor_forest("999", named={_I2: _I1, _I3: _I2}, declared_roots=frozenset(), keyless=frozenset({_I1}))
 
 
 def test_an_unknown_target_is_refused(tmp_path: Path) -> None:

@@ -437,7 +437,9 @@ def test_a_deadline_window_source_is_validated_against_the_window_not_the_revisi
     assert calendario.applies_from > revision.valid_to, (
         "precondition: the next-year calendario must start after the revision closes"
     )
-    fourth_quarter = next(window for window in revision.deadline_windows if window.id.endswith(f"{_DEADLINE_FILING_YEAR}-4t"))
+    fourth_quarter = next(
+        window for window in revision.deadline_windows if window.id.endswith(f"{_DEADLINE_FILING_YEAR}-4t")
+    )
     assert _NEXT_YEAR_CALENDARIO in fourth_quarter.source_refs
     assert fourth_quarter.closes_on > revision.valid_to
 
