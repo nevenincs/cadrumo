@@ -1069,8 +1069,8 @@ export type RecordedCalculationNote = {
  * Attributes: COMPENSAR: Keep the negative result as compensación (`C`), the
  * default carry-forward disposition. DEVOLVER: Request devolución (`D`)
  * through the shared Modelo 303 resolver. The resolver honours it only when
- * `refund_disposition_available` says the period can lawfully refund;
- * otherwise it raises the application-level refund-election refusal.
+ * `resolve_refund_eligibility` says the period can lawfully refund; otherwise
+ * it raises the application-level refund-election refusal.
  */
 export type RefundElection = "compensar" | "devolver";
 
