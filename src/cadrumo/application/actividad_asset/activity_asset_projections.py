@@ -27,17 +27,19 @@ from .activity_asset_read_models import (
     ActivityAssetTimelineEvent,
 )
 from .activity_asset_results import (
-    ActivityAssetInspectionRevision,
     ActivityAssetM130Period,
-    require_claim_identity,
-    require_filing_frame,
-    require_inspected_asset_revisions,
 )
 from .operation_dtos import (
     ActivityAssetFilingHandoffSnapshot,
     ActivityAssetHistoryClaimResultSnapshot,
     ActivityAssetHistorySnapshot,
     ScheduledAmortizationChargeSnapshot,
+)
+from .result_requirements import (
+    ActivityAssetInspectionRevision,
+    require_claim_identity,
+    require_filing_frame,
+    require_inspected_asset_revisions,
 )
 
 

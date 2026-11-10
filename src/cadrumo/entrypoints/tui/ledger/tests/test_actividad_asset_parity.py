@@ -11,8 +11,8 @@ from threading import Event
 import pytest
 from textual.widgets import Button, Input, Static
 
+from .....application.actividad_asset.filing_handoff import M100ClaimGapProjection
 from .....application.actividad_asset.operation_dtos import ActivityAssetDisposalSnapshot
-from .....application.actividad_asset.operations import M100ClaimGapProjection
 from .....application.actividad_asset.schedule_walk import M100GapKind
 from .....application.actividad_asset.served_words import m100_gap_words
 from .....application.calculations.actividad_asset_schedule import vehicle_affectation_verdict

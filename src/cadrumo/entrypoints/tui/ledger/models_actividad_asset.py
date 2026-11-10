@@ -19,9 +19,9 @@ from ....application.actividad_asset.activity_asset_read_models import (
     ActivityAssetFormOptionsView,
     ActivityAssetTimelineEvent,
 )
+from ....application.actividad_asset.filing_handoff import ActivityAssetFilingHandoff
 from ....application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from ....application.actividad_asset.operation_dtos import ActivityAssetDisposalSnapshot
-from ....application.actividad_asset.operations import ActivityAssetFilingHandoff
 from ....core.filing_year import FilingYear
 from ....core.hex import Hex64Str
 from ....core.models import STRICT_FROZEN_CONFIG

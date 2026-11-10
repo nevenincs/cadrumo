@@ -35,7 +35,8 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
+from collections.abc import Set as AbstractSet
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
@@ -810,6 +811,64 @@ def _section_field_views(
     return views
 
 
+def _declared_only(paths: Iterable[str], declared: AbstractSet[str]) -> tuple[str, ...]:
+    """Keep the paths whose field key the schema declares."""
+    return tuple(path for path in paths if section_field_key(path) in declared)
+
+
+def _required_field_paths(
+    record: UserProfileRecord,
+    resolved_schema: ProfileSchemaDefinition,
+    values: Mapping[str, str],
+) -> tuple[list[str], frozenset[str]]:
+    """Return the missing required paths and the conditionally required path set."""
+    # Row-aware, and it has to be: a repeatable section's rows live at
+    # ``section.INDEX.field``, so testing the unindexed path reported every
+    # such required field as missing on every profile forever - the
+    # completeness count an operator reads was permanently wrong. Stripping
+    # the index would not have fixed it either, because a section with no
+    # rows has no facts to strip; the rule that was missing is that an
+    # absent row demands nothing.
+    missing_required: list[str] = list(missing_required_field_paths(resolved_schema, values))
+    # Cross-field requirements come from the same completeness contract the
+    # taxpayer projection enforces, so the manager never lists fewer required
+    # fields than a filing or the workbench will demand.
+    # The profile-status baseline for modelo work is READ from the gate that
+    # refuses on it rather than restated here. That gate is the authority on
+    # what filing-grade work needs, and while this surface held its own answer
+    # the header said every required detail was filled in and creating a
+    # declaration was refused for want of one of them. The import is local
+    # because the gate reads this package's own completeness and preflight
+    # contracts, so a module-level one would close a cycle.
+    from ..modelo.profile_readiness_gate import (
+        modelo_work_profile_baseline_missing_paths,
+        modelo_work_profile_baseline_paths,
+    )
+
+    # Only a path this schema declares: a baseline fact the resolved schema has
+    # no field for has no row to fill in either, and naming it would report a
+    # blank the page cannot show.
+    declared = {f"{section.key}.{field.key}" for section in resolved_schema.sections for field in section.fields}
+    # One pinned generation for the whole walk: the conditional rules and the
+    # baseline read the same governed entity-type and income-category
+    # vocabularies, and two scopes could judge them against two generations.
+    with pinned_registry_scope():
+        baseline_required = _declared_only(modelo_work_profile_baseline_paths(record), declared)
+        conditionally_required = frozenset((*conditional_profile_required_paths(values), *baseline_required))
+        missing_required.extend(
+            path for path in conditional_profile_missing_required(values) if path not in missing_required
+        )
+        # A baseline path is unindexed, so a blank fact already reported at its
+        # own row path is the same unfilled detail, not counted twice.
+        reported = {section_field_key(path) for path in missing_required}
+        missing_required.extend(
+            path
+            for path in _declared_only(modelo_work_profile_baseline_missing_paths(record), declared)
+            if section_field_key(path) not in reported
+        )
+    return missing_required, conditionally_required
+
+
 def build_profile_overview(
     record: UserProfileRecord,
     *,
@@ -862,79 +921,33 @@ def build_profile_overview(
     wizard_choices = profile_wizard_choice_sets(flow)
     ejercicio_answers = _NO_EJERCICIO_ANSWERS if flow is None else profile_field_ejercicio_answers(flow, record.facts)
 
-    sections: list[ProfileSectionView] = []
-    # Row-aware, and it has to be: a repeatable section's rows live at
-    # ``section.INDEX.field``, so testing the unindexed path reported every
-    # such required field as missing on every profile forever - the
-    # completeness count an operator reads was permanently wrong. Stripping
-    # the index would not have fixed it either, because a section with no
-    # rows has no facts to strip; the rule that was missing is that an
-    # absent row demands nothing.
-    missing_required: list[str] = list(missing_required_field_paths(resolved_schema, values))
-    # Cross-field requirements come from the same completeness contract the
-    # taxpayer projection enforces, so the manager never lists fewer required
-    # fields than a filing or the workbench will demand.
-    # The profile-status baseline for modelo work is READ from the gate that
-    # refuses on it rather than restated here. That gate is the authority on
-    # what filing-grade work needs, and while this surface held its own answer
-    # the header said every required detail was filled in and creating a
-    # declaration was refused for want of one of them. The import is local
-    # because the gate reads this package's own completeness and preflight
-    # contracts, so a module-level one would close a cycle.
-    from ..modelo.profile_readiness_gate import (
-        modelo_work_profile_baseline_missing_paths,
-        modelo_work_profile_baseline_paths,
-    )
-
-    # Only a path this schema declares: a baseline fact the resolved schema has
-    # no field for has no row to fill in either, and naming it would report a
-    # blank the page cannot show.
-    declared = {f"{section.key}.{field.key}" for section in resolved_schema.sections for field in section.fields}
-    # One pinned generation for the whole walk: the conditional rules and the
-    # baseline read the same governed entity-type and income-category
-    # vocabularies, and two scopes could judge them against two generations.
-    with pinned_registry_scope():
-        baseline_required = tuple(
-            path for path in modelo_work_profile_baseline_paths(record) if section_field_key(path) in declared
-        )
-        conditionally_required = frozenset((*conditional_profile_required_paths(values), *baseline_required))
-        missing_required.extend(
-            path for path in conditional_profile_missing_required(values) if path not in missing_required
-        )
-        # A baseline path is unindexed, so a blank fact already reported at its
-        # own row path is the same unfilled detail, not counted twice.
-        reported = {section_field_key(path) for path in missing_required}
-        missing_required.extend(
-            path
-            for path in modelo_work_profile_baseline_missing_paths(record)
-            if section_field_key(path) in declared and section_field_key(path) not in reported
-        )
+    missing_required, conditionally_required = _required_field_paths(record, resolved_schema, values)
     # The same presence rule the completeness check reads, so the rows this
     # renders and the rows it reports missing fields for are one set.
     present = frozenset(path for path, value in values.items() if profile_value_is_present(value))
-    for section in resolved_schema.sections:
-        sections.append(
-            ProfileSectionView(
-                key=section.key,
-                title=profile_section_title(section),
-                summary=profile_section_summary(section),
-                repeatable=section.repeatable,
-                fields=tuple(
-                    view.model_copy(update={"ejercicio_answer": ejercicio_answers.get(view.path)})
-                    for view in _section_field_views(
-                        section,
-                        values,
-                        present,
-                        resolved_schema,
-                        field_help,
-                        resolved_schema.derived_selectors,
-                        conditionally_required,
-                        code_lists,
-                        wizard_choices,
-                    )
-                ),
+    sections = [
+        ProfileSectionView(
+            key=section.key,
+            title=profile_section_title(section),
+            summary=profile_section_summary(section),
+            repeatable=section.repeatable,
+            fields=tuple(
+                view.model_copy(update={"ejercicio_answer": ejercicio_answers.get(view.path)})
+                for view in _section_field_views(
+                    section,
+                    values,
+                    present,
+                    resolved_schema,
+                    field_help,
+                    resolved_schema.derived_selectors,
+                    conditionally_required,
+                    code_lists,
+                    wizard_choices,
+                )
             ),
         )
+        for section in resolved_schema.sections
+    ]
 
     from .cotejo_apply import censo_divergence_notice
 

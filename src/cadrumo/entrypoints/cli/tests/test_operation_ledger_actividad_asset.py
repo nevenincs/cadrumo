@@ -69,7 +69,11 @@ from ....application.actividad_asset.activity_asset_read_models import (
     ActivityAssetElectionLimits,
     ActivityAssetFormOptionsView,
 )
-from ....application.actividad_asset.activity_asset_results import ActivityAssetInspectionRevision
+from ....application.actividad_asset.filing_handoff import (
+    ActivityAssetFilingHandoff,
+    M130AccrualProjection,
+    M130Contribution,
+)
 from ....application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from ....application.actividad_asset.operation_dtos import (
     ActivityAssetDisposalSnapshot,
@@ -79,11 +83,7 @@ from ....application.actividad_asset.operation_dtos import (
     ActivityAssetRevisionSnapshot,
     ScheduledAmortizationChargeSnapshot,
 )
-from ....application.actividad_asset.operations import (
-    ActivityAssetFilingHandoff,
-    M130AccrualProjection,
-    M130Contribution,
-)
+from ....application.actividad_asset.result_requirements import ActivityAssetInspectionRevision
 from ....application.operations.public_scalar import PublicDecimal
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.renta.actividad_asset.claims import AmortizationClaim, ClaimProjection, asset_schedule_history

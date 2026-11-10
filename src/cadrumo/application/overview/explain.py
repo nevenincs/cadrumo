@@ -565,6 +565,26 @@ def _scheduling_rationale(
         ) from exc
 
 
+def _known_filing_close(profile: TaxpayerProfile, *, modelo: str, year: int) -> date | None:
+    """The latest effective close of the modelo's matching windows, or ``None`` when any is unknown or none exists."""
+    with bundled_indexed_authority().operation() as operation:
+        deadline_engine = DeadlineEngine(authority=operation)
+        try:
+            windows = deadline_engine.deadline_windows(year)
+        except NoDeadlineWindowsError:
+            return None
+        # Lateness is counted from the close the filer actually has, the same
+        # effective close every other surface judges against.
+        deadlines = tuple(
+            effective_filing_deadline(window.closes_on, modelo=modelo, operation=operation)
+            for code, revision, window in windows
+            if code == modelo and _deadline_window_matches(deadline_engine, profile, revision, window)
+        )
+    if not deadlines or not all(deadline.close_known for deadline in deadlines):
+        return None
+    return max(deadline.closes_on for deadline in deadlines)
+
+
 def explain_out_of_plazo_warning(
     profile: TaxpayerProfile,
     *,
@@ -581,22 +601,9 @@ def explain_out_of_plazo_warning(
 
     ``profile`` is a :class:`TaxpayerProfile`.
     """
-    with bundled_indexed_authority().operation() as operation:
-        deadline_engine = DeadlineEngine(authority=operation)
-        try:
-            windows = deadline_engine.deadline_windows(year)
-        except NoDeadlineWindowsError:
-            return None
-        # Lateness is counted from the close the filer actually has, the same
-        # effective close every other surface judges against.
-        deadlines = tuple(
-            effective_filing_deadline(window.closes_on, modelo=modelo, operation=operation)
-            for code, revision, window in windows
-            if code == modelo and _deadline_window_matches(deadline_engine, profile, revision, window)
-        )
-    if not deadlines or not all(deadline.close_known for deadline in deadlines):
+    closes_on = _known_filing_close(profile, modelo=modelo, year=year)
+    if closes_on is None:
         return None
-    closes_on = max(deadline.closes_on for deadline in deadlines)
     twelve_month_boundary = twelve_month_anniversary(closes_on)
     if today < twelve_month_boundary:
         return None

@@ -63,6 +63,7 @@ from cadrumo.application.actividad_asset.activity_asset_read_models import (
     ActivityAssetFormOptionsView,
     ActivityAssetTimelineEvent,
 )
+from cadrumo.application.actividad_asset.filing_handoff import ActivityAssetFilingHandoff
 from cadrumo.application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from cadrumo.application.actividad_asset.operation_dtos import (
     ActivityAssetCorrectionRevisionSnapshot,
@@ -71,7 +72,6 @@ from cadrumo.application.actividad_asset.operation_dtos import (
     ActivityAssetRevisionSnapshot,
     ScheduledAmortizationChargeSnapshot,
 )
-from cadrumo.application.actividad_asset.operations import ActivityAssetFilingHandoff
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
 from cadrumo.application.operations.public_scalar import PublicDecimal
 from cadrumo.core.external_constants import OutputLanguage
