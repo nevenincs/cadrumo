@@ -90,7 +90,6 @@ pub(super) fn browser_version(
     cancellation: &Cancellation,
 ) -> Result<String, LaunchFailure> {
     cancellation.check().map_err(|_| LaunchFailure::Cancelled)?;
-    let deadline = Instant::now() + budget;
     let profile = Profile::new(scratch)?;
     let mut command = Command::new(program.executable);
     command
@@ -123,6 +122,9 @@ pub(super) fn browser_version(
             LaunchFailure::Unrunnable
         }
     })?;
+    // The budget is the browser's: creation waits for every other launch holding the
+    // creation step and for the system's scan of the program, neither of which it spends.
+    let deadline = Instant::now() + budget;
     let mut running = Running::new(child)?;
     let result = running.version(deadline, cancellation);
     running.close(deadline);

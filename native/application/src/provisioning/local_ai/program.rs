@@ -443,9 +443,11 @@ impl Server {
             group.map(|group| group.guard)
         };
         let loopback = Loopback::new(command.address)?;
-        let started = Instant::now();
         let mut child = crate::process::creation::run(|| process.spawn())
             .map_err(|error| launch_failure(LaunchStep::Create, &error))?;
+        // The start budget is the program's: creation waits for every other process
+        // holding the creation step and for the system's scan of the program.
+        let started = Instant::now();
         let guard = match containment.contain(&child) {
             Ok(guard) => guard,
             Err(error) => {
