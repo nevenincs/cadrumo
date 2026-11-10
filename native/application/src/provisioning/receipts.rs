@@ -252,11 +252,13 @@ impl ReceiptStore {
         }
     }
 
-    /// Removes the item's receipt when its install is removed.
+    /// Removes the item's receipt when its install is removed or replaced; the removal is
+    /// durable once this returns.
     pub fn remove(&self, item: ItemId) -> Result<(), Error> {
         match fs::remove_file(self.path(item)) {
-            Err(error) if error.kind() != std::io::ErrorKind::NotFound => Err(error.into()),
-            _ => Ok(()),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+            Err(error) => Err(error.into()),
+            Ok(()) => filesystem::sync_folder(&self.root),
         }
     }
 }

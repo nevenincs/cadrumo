@@ -20,6 +20,7 @@ import {
   liveRunOf,
   runOf,
   setupTargetOf,
+  startOf,
   type SetupControl,
 } from "./setup";
 
@@ -381,8 +382,7 @@ export function useProvisioningStore(
       act: (row) => {
         control.clearRefusal();
         if (row.recovery === "check_again") verify([row.item]);
-        else if (row.recovery !== null)
-          start(row.item, { resume: row.recovery === "resume" });
+        else if (row.recovery !== null) start(row.item, startOf(row.recovery));
       },
       downloadModel: (lane, model) => {
         // Read from the snapshot this store was built from, which is the one

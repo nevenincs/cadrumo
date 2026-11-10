@@ -16,7 +16,7 @@ import {
   routeCensoRefusals,
   routeProvisioningRefusals,
 } from "./provisioningRecovery";
-import { liveRuns, runOf, useSetup } from "./setup";
+import { liveRuns, runOf, startOf, useSetup } from "./setup";
 import type { Translate } from "./strings";
 
 export function useWindowSetup({
@@ -75,7 +75,17 @@ export function useWindowSetup({
           ended === "plan_changed" ||
           row.state === "failed";
         return again
-          ? [{ item: row.item, resume: ended === "interrupted" }]
+          ? [
+              {
+                item: row.item,
+                // An interrupted setup resumes; any other runs the row's
+                // served button.
+                start:
+                  ended === "interrupted"
+                    ? { resume: true }
+                    : { ...startOf(row.recovery), resume: false },
+              },
+            ]
           : [];
       }),
     [setupSnapshot],

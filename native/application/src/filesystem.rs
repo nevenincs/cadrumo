@@ -143,10 +143,20 @@ pub(crate) fn replace_json<T: serde::Serialize>(path: &Path, value: &T) -> Resul
         let _ = fs::remove_file(&pending);
     }
     written?;
-    #[cfg(unix)]
     if let Some(parent) = path.parent() {
-        File::open(parent)?.sync_all()?;
+        sync_folder(parent)?;
     }
+    Ok(())
+}
+
+/// Makes the names a rename or removal just changed in `folder` durable where the
+/// platform needs to be asked: on Unix the folder itself is synced. On Windows the file
+/// system journals a rename or removal with the change, so nothing more is asked.
+pub(crate) fn sync_folder(folder: &Path) -> Result<(), Error> {
+    #[cfg(unix)]
+    File::open(folder)?.sync_all()?;
+    #[cfg(not(unix))]
+    let _ = folder;
     Ok(())
 }
 

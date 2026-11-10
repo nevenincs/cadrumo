@@ -954,6 +954,25 @@ impl Program {
         Ok(self.store.download_and_activate(&self.artifact, transfer)?)
     }
 
+    /// Installs the pinned version afresh, for a program the system refused to start
+    /// although its files match their receipt. The running server is stopped first and
+    /// kept from starting again; then the local AI's receipt is removed and every stored
+    /// copy of the version retired, so nothing trusts or reuses the refused files; then the
+    /// version is downloaded and activated as [`Self::install`] does, its receipt written
+    /// in the version before the active pointer names it. A stop at any step leaves the
+    /// program missing, never ready, and the next install or reinstall downloads it again,
+    /// resuming a partial download. The models are not touched.
+    pub fn reinstall(
+        &mut self,
+        receipts: &ReceiptStore,
+        transfer: &mut Transfer<'_>,
+    ) -> Result<ActiveComponent, LocalAiError> {
+        let _change = self.change()?;
+        receipts.remove(ItemId::LocalAi)?;
+        self.store.retire(&self.artifact)?;
+        Ok(self.store.download_and_activate(&self.artifact, transfer)?)
+    }
+
     /// Removes every version but the active one, once the pinned version verified, with
     /// the running server stopped first.
     pub fn prune(&mut self) -> Result<(), LocalAiError> {
