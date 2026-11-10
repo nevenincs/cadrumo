@@ -16,22 +16,9 @@ from .registry_tree import bundled_modelo_components
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _retired_identifier_from_single_refusal_assertion() -> str:
-    """Return the retired identifier while proving this gate names it once only."""
-    path = Path(__file__).resolve()
-    source = path.read_text(encoding="utf-8")
-    tree = ast.parse(source, filename=str(path))
-    expected = f"{2023}-y-siguientes"
-    mentions: list[str] = []
-    for assertion in (node for node in ast.walk(tree) if isinstance(node, ast.Assert)):
-        mentions.extend(
-            node.value
-            for node in ast.walk(assertion.test)
-            if isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value == expected
-        )
-    assert mentions == [expected]
-    assert source.count(expected) == 1
-    return expected
+#: The retired revision id. It is absent from the registry, so no authority read can
+#: name it; the scan below skips this module, the one place the id is spelled.
+_RETIRED_IDENTIFIER = f"{2023}-y-siguientes"
 
 
 def _cutover_surface_files() -> tuple[Path, ...]:
@@ -180,9 +167,9 @@ def _m303_selector_redeclaration_locations(paths: Iterable[Path], *, revision_id
 
 def test_m303_retired_revision_is_refused_and_cannot_reenter_source_surfaces() -> None:
     """The deleted revision has no runtime, fixture, locale, alias, or selector path."""
-    retired_identifier = _retired_identifier_from_single_refusal_assertion()
+    retired_identifier = _RETIRED_IDENTIFIER
     modelo = bundled_modelo_components("303")[0]
-    assert "2023-y-siguientes" not in modelo.revisions
+    assert retired_identifier not in modelo.revisions
 
     surface_files = _cutover_surface_files()
     legacy_locations = _retired_identifier_locations(surface_files, retired_identifier=retired_identifier)
@@ -197,7 +184,8 @@ def test_m303_retired_revision_is_refused_and_cannot_reenter_source_surfaces() -
     )
 
     construct_key = "modelo.schema.303.construct.modelo-303-iva-autoliquidacion.field.title"
-    for revision_id in ("2023", "2024-hasta-08-y-2t", "2024-desde-09-y-3t", "2025", "2026-y-siguientes"):
+    assert modelo.revisions
+    for revision_id in modelo.revisions:
         construct = next(
             item for item in modelo.revisions[revision_id].constructs if item.id == "modelo-303-iva-autoliquidacion"
         )

@@ -11,6 +11,7 @@ from .....core.resources.bundled_data import bundled_path
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema_input_kind import InputKind
+from .authored_editions import filing_year_envelope
 from .registry_tree import bundled_modelo_components
 from .snapshot_support import build_snapshot
 
@@ -24,7 +25,7 @@ def test_modelo_115_validated_snapshot_owns_workflow_surfaces() -> None:
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2026,
+        filing_year=filing_year_envelope().horizon,
         period="1T",
     )
 
@@ -56,7 +57,7 @@ def test_modelo_115_binds_retenciones_aggregation_and_calculates_rent_withholdin
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2026,
+        filing_year=filing_year_envelope().horizon,
         period="1T",
     )
     casillas = {casilla.id: casilla for casilla in snapshot.revision.casillas}
@@ -84,7 +85,7 @@ def test_modelo_115_binds_retenciones_aggregation_and_calculates_rent_withholdin
     result = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
-        date_context={"filing_period": date(2026, 3, 31)},
+        date_context={"filing_period": date(filing_year_envelope().horizon, 3, 31)},
         binding_values=binding_values,
     )
 
