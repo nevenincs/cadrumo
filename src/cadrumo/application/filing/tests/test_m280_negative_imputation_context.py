@@ -23,6 +23,8 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 from cadrumo.domain.filing.errors import FilingExportValidationError
 from cadrumo.domain.filing.schema import ModeloDraft
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("operation")]
 _SOURCE_DIGESTS = {"aeat-dr-280-2022": "45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701"}
 
@@ -37,7 +39,7 @@ _GUARDED_IDS = (
 
 def _record() -> ExportRecordDefinition:
     """The published declarado record exactly as the hydrated layout declares it."""
-    layout = published_revision("280", "2025").export_layouts[0]
+    layout = published_revision("280", str(open_ended_revision("280").id)).export_layouts[0]
     return next(record for record in layout.records if record.id == "modelo-280-declarado")
 
 
@@ -88,7 +90,9 @@ def _render_application_record(
 ) -> str:
     return render_record(
         record,
-        draft=ModeloDraft.model_construct(modelo=Modelo("280"), period=Period.from_year_and_code(2022, "0A")),
+        draft=ModeloDraft.model_construct(
+            modelo=Modelo("280"), period=Period.from_year_and_code(filing_year_envelope().floor, "0A")
+        ),
         producer_values={},
         producer_snapshot=FilingProducerSnapshot.model_construct(),
         casilla_values={"extincion-plan": key, "rendimientos-negativos-imputables": amount},

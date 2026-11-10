@@ -2,7 +2,7 @@
 
 The normal path end to end: synthetic invoices through the real 347 resolver,
 its binding and row values into ``build_draft``, and ``export_draft`` writing
-the file and reading it back. The 2025 design (aeat-dr-347-2025) fixes the
+the file and reading it back. The newest design fixes the
 bytes asserted here: the type 1 EJERCICIO at positions 5-8, the TIPO DE SOPORTE
 at 58 ("'T': Transmisión telemática", the only way Cadrumo files), the type 2 kind
 ``D`` at 76, the signed annual amount at 83-98 ("N" when negative, otherwise a
@@ -40,6 +40,7 @@ from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....domain.calculations.registry.applicability import derive_modelo_applicability
 from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.filing.errors import FilingExportValidationError
 from ....domain.filing.protocols import ModeloInputScalar, ModeloInputValue
 from ....domain.invoices.catalogue import InvoiceCatalogue
@@ -61,7 +62,7 @@ from .export_support import m151_producer_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = 2025
+_YEAR = filing_year_envelope().horizon
 _BUCKET_ID = "24242424-2424-4242-8242-242424242424"
 
 
@@ -214,7 +215,7 @@ def test_a_347_filer_without_leases_exports_a_fichero_that_reads_back(
         inputs=_resolved_inputs(operation),
         schema_provider=provider,
     ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
-    output_path = tmp_path / "modelo-347-2025.txt"
+    output_path = tmp_path / f"modelo-347-{_YEAR}.txt"
 
     export_draft(
         draft,
@@ -230,7 +231,7 @@ def test_a_347_filer_without_leases_exports_a_fichero_that_reads_back(
     # Position 76 marks the type 2 kind; the inmueble record ("I") is a lessor's
     # statement and has its own test, so the declarado ("D") records are read here.
     declarados = [line for line in type_2 if line[75] == "D"]
-    assert declarante[:8] == "13472025"
+    assert declarante[:8] == f"1347{_YEAR}"
     assert declarante[57] == "T"
     assert declarante[135:144] == "000000002"
     assert declarante[144:160] == " 000000001573000"
@@ -265,7 +266,7 @@ def _exported_lines(
         inputs=_resolved_inputs(operation, invoices, profile),
         schema_provider=provider,
     ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
-    output_path = tmp_path / "modelo-347-2025.txt"
+    output_path = tmp_path / f"modelo-347-{_YEAR}.txt"
     export_draft(
         draft,
         output_path=output_path,
@@ -342,7 +343,7 @@ def _export_with_inputs(
         inputs={**_resolved_inputs(operation, invoices), **extra_inputs},
         schema_provider=provider,
     ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
-    output_path = tmp_path / "modelo-347-2025.txt"
+    output_path = tmp_path / f"modelo-347-{_YEAR}.txt"
     export_draft(
         draft,
         output_path=output_path,
@@ -376,7 +377,7 @@ def test_a_single_valued_casilla_is_refused_instead_of_copied_onto_every_counter
     assert context is not None
     assert context["casilla_ids"] == (casilla_id,)
     assert context["row_count"] == 2
-    assert not (tmp_path / "modelo-347-2025.txt").exists()
+    assert not (tmp_path / f"modelo-347-{_YEAR}.txt").exists()
 
 
 def test_absent_or_zero_single_valued_casillas_leave_every_row_without_cash(
@@ -450,7 +451,7 @@ def test_a_modulos_filer_files_the_declarados_art_32_b_keeps(
         assert declarante[135:144] == "000000001"
         assert declarante[144:160] == " 000000000968000"
     assert len(declarados) == len(amounts)
-    assert declarante[:8] == "13472025"
+    assert declarante[:8] == f"1347{_YEAR}"
 
 
 def test_a_filer_outside_estimacion_objetiva_files_both_directions_whatever_its_special_regime(

@@ -28,6 +28,7 @@ from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_
 from ....domain.calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.models import M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
 from ....domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from ....domain.filing_evidence import FilingEvidenceReference
@@ -144,11 +145,12 @@ def test_exonerado_complete_revision_evidence_exports_page_four_without_override
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Persisted A28 facts need no caller-authored export applicability envelope."""
-    period = Period.from_year_and_code(2025, "4T")
-    provider = build_runtime_schema_provider(filing_year=2025, period=period, modelos=("303",), operation=operation)
+    year = filing_year_envelope().horizon
+    period = Period.from_year_and_code(year, "4T")
+    provider = build_runtime_schema_provider(filing_year=year, period=period, modelos=("303",), operation=operation)
     computed_endpoints = {
         str(formula.target_casilla_id)
-        for formula in operation.snapshot("303", filing_year=2025, period=period.code).revision.formulas
+        for formula in operation.snapshot("303", filing_year=year, period=period.code).revision.formulas
     }
     inputs = {
         "iva.repercutido.general.base": Decimal("0"),
@@ -262,9 +264,9 @@ def test_exonerado_complete_revision_evidence_exports_page_four_without_override
     layout = provider.get_subview("303").export_layouts[0]
     parsed = parse_export_payload(layout, written)
     assert "m303-exonerado-390" in {field.record_id for field in parsed.fields}
-    closer = b"</T303020254T0000>"
+    closer = f"</T3030{year}{period.code}0000>".encode()
     assert written.endswith(closer)
-    for malformed in (written[:-1], written[: -len(closer)] + b"</T303020253T0000>"):
+    for malformed in (written[:-1], written[: -len(closer)] + f"</T3030{year}3T0000>".encode()):
         with pytest.raises(RegistryValidationError, match="does not end with its relative closer"):
             parse_export_payload(layout, malformed)
 

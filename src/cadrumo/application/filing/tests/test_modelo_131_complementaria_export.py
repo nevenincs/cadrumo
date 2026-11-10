@@ -18,6 +18,7 @@ from ....core.casilla_id import validated_casilla_id
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
+from ....domain.calculations.registry.tests.authored_editions import authored_revisions
 from ....domain.filing.software_identity import development_mock_software_identity
 from ....domain.submission.models import ModeloDraftStatus
 from ..draft_construction import build_draft
@@ -74,10 +75,18 @@ def _exported_file(tmp_path: Path, *, filing_year: int, period: str, complementa
     return output_path.read_bytes()
 
 
+# The oldest authored design predates the byte, so every later design is covered,
+# each at the first period it serves.
+_CARRYING_DESIGNS = authored_revisions("131")[1:]
+
+
 @pytest.mark.parametrize(
     ("filing_year", "period"),
-    [(2024, "1T"), (2025, "1T"), (2026, "1T"), (2026, "3T")],
-    ids=("2024", "2025", "2026", "2026-3t-4t"),
+    [
+        (design.valid_from.year, design.period_selector.periods_for_year(design.valid_from.year)[0])
+        for design in _CARRYING_DESIGNS
+    ],
+    ids=[str(design.id) for design in _CARRYING_DESIGNS],
 )
 @pytest.mark.parametrize(
     ("complementaria", "byte"),

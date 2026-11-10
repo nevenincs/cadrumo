@@ -22,6 +22,7 @@ from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....domain.calculations.registry.export_parse import parse_export_payload
+from ....domain.calculations.registry.tests.authored_editions import authored_revisions
 from ....domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from ....domain.submission.models import ModeloDraftStatus
 from ..draft_construction import build_draft
@@ -56,12 +57,31 @@ class _Coordinate:
     base_field: str
     cuota_field: str
     top_rate: Decimal
+    newer_design: bool
 
 
-#: The escala above 200.000 charges 26 % in 2022 and 27 % in 2023.
+_OLDER_DESIGN, _NEWER_DESIGN = authored_revisions("151")
+assert _OLDER_DESIGN.valid_to is not None
+
+#: The escala above 200.000 charges 26 % under the older design (to its last exercise) and 27 %
+#: under the newer one (from its first).
 _COORDINATES = (
-    _Coordinate(2022, "m151-page-08", "m151-2015.pagina08.f041", "m151-2015.pagina08.f043", Decimal("0.26")),
-    _Coordinate(2023, "m151-page-10", "m151-2023.pagina10.f041", "m151-2023.pagina10.f043", Decimal("0.27")),
+    _Coordinate(
+        _OLDER_DESIGN.valid_to.year,
+        "m151-page-08",
+        "m151-2015.pagina08.f041",
+        "m151-2015.pagina08.f043",
+        Decimal("0.26"),
+        False,
+    ),
+    _Coordinate(
+        _NEWER_DESIGN.valid_from.year,
+        "m151-page-10",
+        "m151-2023.pagina10.f041",
+        "m151-2023.pagina10.f043",
+        Decimal("0.27"),
+        True,
+    ),
 )
 
 
@@ -116,7 +136,7 @@ def test_boxes_18_and_20_carry_the_computed_ahorro_chain(coordinate: _Coordinate
     assert str(cuota_box.casilla_id) == str(_CUOTA_AHORRO)
     assert Decimal(str(base_box.value)) == _BASE_AHORRO_VALUE
     assert Decimal(str(cuota_box.value)) == expected
-    if coordinate.year == 2023:
+    if coordinate.newer_design:
         marker = by_field[("m151-did", "m151-2023.did.f014")]
         assert marker.raw == "0"
         assert marker.value == 0

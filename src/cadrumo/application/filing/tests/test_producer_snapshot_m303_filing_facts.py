@@ -29,6 +29,7 @@ from ....domain.bienes_inversion.register import (
 )
 from ....domain.bienes_inversion.tests.explicit_parameters import params_for
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.models import (
     ModeloIVAProfile,
     TaxpayerProfile,
@@ -73,6 +74,8 @@ from .producer_snapshot_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
+
 
 _M303_2026_IR_SHA256 = "0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6b9b8489b"
 
@@ -88,7 +91,7 @@ def _bien_inversion(identifier: str) -> BienInversionIvaRecord:
     return BienInversionIvaRecord(
         identifier=identifier,
         description=f"Bien de inversión {identifier}",
-        acquisition_year=2024,
+        acquisition_year=_YEAR - 2,
         cuota_soportada=Decimal("5000.00"),
         prorrata_inicial_pct=Decimal("70"),
         kind=BienInversionKind.from_registry("mueble"),
@@ -112,7 +115,7 @@ def _m303_prorrata_transition_arrival(
     *,
     operation: PinnedAuthorityOperation,
 ) -> tuple[M303ProrrataTransitionArrival, ProrrataRegister]:
-    period = Period.from_year_and_code(2026, "4T")
+    period = Period.from_year_and_code(_YEAR, "4T")
     entry = ProrrataRegisterEntry(
         ejercicio=period.filing_year,
         regime=(
@@ -122,14 +125,14 @@ def _m303_prorrata_transition_arrival(
         ),
         especial_transition=ProrrataEspecialTransitionEvidence(
             kind=transition,
-            evidence_reference=f"modelo-303-2026-prorrata-{transition.value}",
+            evidence_reference=f"modelo-303-{_YEAR}-prorrata-{transition.value}",
         ),
         source_registry_snapshot_refs=(),
     )
     prior_entries = (
         (
             ProrrataRegisterEntry(
-                ejercicio=2025,
+                ejercicio=_YEAR - 1,
                 regime=ProrrataRegisterRegime.from_registry("especial"),
                 especial_transition=None,
                 source_registry_snapshot_refs=(),
@@ -156,7 +159,7 @@ def _m303_foral_snapshot(
         joint_return_elected=True,
         annual_volume_nonzero=False,
         insolvency=M303InsolvencyFilingFact(
-            judicial_order_date=date(2026, 8, 11),
+            judicial_order_date=date(_YEAR, 8, 11),
             subtype=M303InsolvencyFilingSubtype.POST_ORDER,
         ),
         exonerado_390=m303_exonerado_390_evidence(applicable=True),
@@ -246,7 +249,7 @@ def test_modelo_303_hydrocarbon_entitlement_uses_the_official_period_and_yes_no_
 ) -> None:
     """DP30301 Nota 8/9 reserves ``0`` and maps the applicable decision to 1/2.
 
-    The 2026 official design writes ``0`` for quarterly/01 filings and admits
+    The official design of the newest edition writes ``0`` for quarterly/01 filings and admits
     the typed entitlement only from period 02.  This test mutates the boolean
     itself so true and false cannot silently collapse into a numeric default.
     """
@@ -257,7 +260,7 @@ def test_modelo_303_hydrocarbon_entitlement_uses_the_official_period_and_yes_no_
     # This lexical branch reads only the typed filing period.  A partial typed
     # instance keeps the proof at the producer boundary instead of requiring a
     # whole bundled-registry load unrelated to this source-stated wire rule.
-    facts = M303FilingFacts.model_construct(period=Period.from_year_and_code(2026, period_code))
+    facts = M303FilingFacts.model_construct(period=Period.from_year_and_code(_YEAR, period_code))
     lexical = m303_profile_lexicals(profile, facts)
 
     assert lexical.hydrocarbon_deposit_advance_payment_deduction_entitled == expected
@@ -309,7 +312,7 @@ def test_modelo_303_annual_volume_marker_prints_only_for_a_390_exempt_filer_in_t
     """DP30301 Nota 3: "0" in every period but 12 and 4T, and there too for a filer not exempt from Modelo 390."""
     facts = m303_filing_facts(annual_volume_nonzero=answer).model_copy(
         update={
-            "period": Period.from_year_and_code(2026, period_code),
+            "period": Period.from_year_and_code(_YEAR, period_code),
             "exonerado_390": m303_exonerado_390_evidence(applicable=exonerado_390),
         }
     )
@@ -397,7 +400,7 @@ def test_modelo_303_foral_note_5_overrides_each_a16_to_a30_lexical_branch(
 
 
 def test_modelo_303_foral_note_5_retains_blank_prorrata_slots_before_final_period() -> None:
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
     snapshot = _m303_foral_snapshot(
         prorrata_transition=M303ProrrataTransitionArrival(
             period=period, is_applicable=False, transition=None, register_evidence=()
@@ -451,7 +454,7 @@ def test_m303_insolvency_fact_projects_coupled_date_and_official_subtype_code(
     facts = m303_filing_facts().model_copy(
         update={
             "insolvency": M303InsolvencyFilingFact(
-                judicial_order_date=date(2026, 8, 11),
+                judicial_order_date=date(_YEAR, 8, 11),
                 subtype=subtype,
             ),
         },
@@ -470,20 +473,20 @@ def test_m303_insolvency_fact_projects_coupled_date_and_official_subtype_code(
     )
     values = filing_producer_values(snapshot)
     assert values[FilingProducerKey.M303_INSOLVENCY_DECLARED] == "1"
-    assert values[FilingProducerKey.M303_INSOLVENCY_JUDICIAL_ORDER_DATE] == "11082026"
+    assert values[FilingProducerKey.M303_INSOLVENCY_JUDICIAL_ORDER_DATE] == f"1108{_YEAR}"
     assert values[FilingProducerKey.M303_INSOLVENCY_FILING_SUBTYPE] == expected
 
 
 _NON_OFFICIAL_PERIOD_REFUSAL = (
     r"official quarterly or monthly period"
-    r"|modelo 303: no revision for year=2026 period='0A'"
+    rf"|modelo 303: no revision for year={_YEAR} period='0A'"
     r"|has no calendar date span"
 )
 
 
 @pytest.mark.parametrize("period_code", ("0A", "1P", "EXT-1T"))
 def test_m303_filing_facts_refuse_annual_and_non_official_filing_periods(period_code: str) -> None:
-    period = Period.from_year_and_code(2026, period_code)
+    period = Period.from_year_and_code(_YEAR, period_code)
 
     # Refused wherever the period first meets a component that needs an official
     # quarterly or monthly period: its evidence, its arrivals, or the facts.
@@ -516,7 +519,7 @@ def test_m303_filing_facts_refuse_annual_and_non_official_filing_periods(period_
 
 @pytest.mark.parametrize("period_code", ("0A", "EXT-1T"))
 def test_m303_filing_facts_resolver_refuses_non_official_period_before_producer_output(period_code: str) -> None:
-    period = Period.from_year_and_code(2026, period_code)
+    period = Period.from_year_and_code(_YEAR, period_code)
 
     with pytest.raises((ValueError, PeriodError), match=_NON_OFFICIAL_PERIOD_REFUSAL):
         register, bienes_register, regularisation = empty_m303_export_arrivals(period.filing_year)
@@ -640,7 +643,7 @@ def test_m303_filing_facts_are_refused_for_every_non_m303_modelo(
 
 def test_m303_filing_facts_refuse_a_regularisation_result_for_another_year() -> None:
     payload = m303_filing_facts().model_dump()
-    payload["regularisation_result"]["regularizacion_year"] = 2025
+    payload["regularisation_result"]["regularizacion_year"] = _YEAR - 1
 
     with pytest.raises(ValidationError, match="regularisation result must use the filing year"):
         M303FilingFacts.model_validate(payload)
@@ -650,9 +653,9 @@ def test_m303_filing_facts_accept_the_canonical_bienes_regularisation_result() -
     register = BienesInversionIvaRegister(records=(_bien_inversion("canonical-bien"),))
     regularisation = compute_registro_regularizacion(
         register,
-        regularizacion_year=2026,
+        regularizacion_year=_YEAR,
         prorrata_definitiva_by_identifier={"canonical-bien": Decimal("80")},
-        parameters=params_for(2026),
+        parameters=params_for(_YEAR),
     )
 
     facts = M303FilingFacts.model_validate(
@@ -669,13 +672,13 @@ def test_m303_filing_facts_accept_the_canonical_bienes_regularisation_result() -
 def test_m303_filing_facts_refuse_an_empty_regularisation_for_a_register_bien() -> None:
     register = BienesInversionIvaRegister(records=(_bien_inversion("unrepresented-bien"),))
     empty = RegistroRegularizacionResult(
-        regularizacion_year=2026,
+        regularizacion_year=_YEAR,
         rows=(),
         proposed_casilla_43=Decimal("0"),
         computed_count=0,
         pending_percentage_count=0,
         sector_contributions=(),
-        parameters_provenance=params_for(2026).provenance,
+        parameters_provenance=params_for(_YEAR).provenance,
     )
 
     with pytest.raises(ValidationError, match="canonical projection of the supplied Bienes register"):
@@ -692,9 +695,9 @@ def test_m303_filing_facts_refuse_a_regularisation_from_another_bienes_register(
     foreign_register = BienesInversionIvaRegister(records=(_bien_inversion("foreign-bien"),))
     foreign_regularisation = compute_registro_regularizacion(
         foreign_register,
-        regularizacion_year=2026,
+        regularizacion_year=_YEAR,
         prorrata_definitiva_by_identifier={"foreign-bien": Decimal("80")},
-        parameters=params_for(2026),
+        parameters=params_for(_YEAR),
     )
 
     with pytest.raises(ValidationError, match="canonical projection of the supplied Bienes register"):
@@ -710,18 +713,18 @@ def test_m303_filing_facts_refuse_a_regularisation_that_omits_an_in_window_bien(
     register = BienesInversionIvaRegister(records=(_bien_inversion("first-bien"), _bien_inversion("second-bien")))
     canonical = compute_registro_regularizacion(
         register,
-        regularizacion_year=2026,
+        regularizacion_year=_YEAR,
         prorrata_definitiva_by_identifier={},
-        parameters=params_for(2026),
+        parameters=params_for(_YEAR),
     )
     omitted = RegistroRegularizacionResult(
-        regularizacion_year=2026,
+        regularizacion_year=_YEAR,
         rows=(canonical.rows[0],),
         proposed_casilla_43=Decimal("0"),
         computed_count=0,
         pending_percentage_count=1,
         sector_contributions=(),
-        parameters_provenance=params_for(2026).provenance,
+        parameters_provenance=params_for(_YEAR).provenance,
     )
 
     with pytest.raises(ValidationError, match="canonical projection of the supplied Bienes register"):
@@ -742,7 +745,7 @@ def test_m303_filing_facts_refuse_final_period_register_coverage_gaps() -> None:
 
 
 def test_m303_filing_facts_refuse_transition_arrival_evidence_from_another_register() -> None:
-    period = Period.from_year_and_code(2026, "4T")
+    period = Period.from_year_and_code(_YEAR, "4T")
     canonical_entry = ProrrataRegisterEntry(
         ejercicio=period.filing_year,
         regime=ProrrataRegisterRegime.from_registry("especial"),
@@ -778,7 +781,7 @@ def test_m303_evidence_requires_the_modelo_390_exemption_only_in_the_last_period
     period_code: str, required: bool
 ) -> None:
     """DP30301 Nota 4 asks for the exemption in 12 and 4T only; any other period may omit it."""
-    payload = m303_instance_evidence(Period.from_year_and_code(2026, period_code)).model_dump(mode="python")
+    payload = m303_instance_evidence(Period.from_year_and_code(_YEAR, period_code)).model_dump(mode="python")
     payload["exonerado_390"] = None
     payload["annual_volume_nonzero"] = None
 

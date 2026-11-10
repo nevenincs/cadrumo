@@ -27,11 +27,13 @@ from ....domain.calculations.export_field_kind import CasillaFieldKind
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema_exports import ExportRecordDefinition
+from ....domain.calculations.registry.tests.authored_editions import authored_revisions, open_ended_revision
 from ..record_renderer import record_render_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_M347_REVISIONS = ("2025-y-siguientes", "2011-2024")
+_M347_REVISIONS = tuple(str(revision.id) for revision in authored_revisions("347"))
+_M303_REVISION = str(open_ended_revision("303").id)
 _IMPORTE: BindingId = "modelo-347-inmueble-row-importe"
 
 
@@ -112,7 +114,7 @@ def test_a_required_fixed_record_keeps_its_occurrence(operation: PinnedAuthority
 
 def test_an_optional_record_with_projection_fields_keeps_its_occurrence(operation: PinnedAuthorityOperation) -> None:
     """Its content arrives through projections, so empty casillas say nothing about it."""
-    record = _record(operation, "303", "2025", "m303-exonerado-390")
+    record = _record(operation, "303", _M303_REVISION, "m303-exonerado-390")
     kinds = {field.kind for field in record.fields}
     assert record.required is False and record.binding_record is None
     assert {CasillaFieldKind.CASILLA, CasillaFieldKind.PROJECTION} <= kinds
@@ -121,7 +123,7 @@ def test_an_optional_record_with_projection_fields_keeps_its_occurrence(operatio
 
 
 def test_an_optional_record_of_producer_headers_keeps_its_occurrence(operation: PinnedAuthorityOperation) -> None:
-    record = _record(operation, "303", "2025", "m303-domiciliacion")
+    record = _record(operation, "303", _M303_REVISION, "m303-domiciliacion")
     assert record.required is False and record.binding_record is None
     assert not any(field.kind is CasillaFieldKind.CASILLA for field in record.fields)
 

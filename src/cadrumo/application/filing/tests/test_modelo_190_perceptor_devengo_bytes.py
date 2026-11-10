@@ -1,4 +1,4 @@
-"""Modelo 190 perceptor EJERCICIO DEVENGO reaches the fichero as the 2025 design prints it.
+"""Modelo 190 perceptor EJERCICIO DEVENGO reaches the fichero as the design prints it.
 
 Synthetic rows go through ``build_draft`` and ``export_draft`` and the written
 bytes are read back as records of 500 positions. The expectations come from the
@@ -23,6 +23,7 @@ from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.filing.errors import FilingExportValidationError
 from ....domain.filing.protocols import ModeloInputScalar, ModeloInputValue
 from ....domain.submission.models import ModeloDraftStatus
@@ -33,7 +34,8 @@ from .export_support import m151_producer_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = 2025
+_YEAR = filing_year_envelope().horizon
+_PRIOR_YEAR = _YEAR - 1
 _RECORD_LENGTH = 500
 _PREFIX = "modelo-190-perceptor-row-"
 
@@ -71,7 +73,7 @@ def _export(operation: PinnedAuthorityOperation, tmp_path: Path, rows: list[dict
         inputs=inputs,
         schema_provider=provider,
     ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
-    output_path = tmp_path / "modelo-190-2025.txt"
+    output_path = tmp_path / f"modelo-190-{_YEAR}.txt"
     export_draft(
         draft,
         output_path=output_path,
@@ -93,22 +95,22 @@ def test_an_ordinary_row_has_no_devengo_year_and_an_atraso_carries_the_earlier_y
         tmp_path,
         [
             _row("12345678Z", "PERCEPTOR ORDINARIO"),
-            _row("X0001502F", "PERCEPTOR ATRASO", **{"ejercicio-devengo": "2024"}),
+            _row("X0001502F", "PERCEPTOR ATRASO", **{"ejercicio-devengo": str(_PRIOR_YEAR)}),
         ],
     )
     assert ordinary[147:151] == "0000"
-    assert atraso[147:151] == "2024"
+    assert atraso[147:151] == str(_PRIOR_YEAR)
     for record in (ordinary, atraso):
         assert record[0:1] == "2"
-        assert record[4:8] == "2025"
+        assert record[4:8] == str(_YEAR)
         assert record[77:78] == "A"
         assert record[78:80] == "01"
 
 
-@pytest.mark.parametrize("year", ["2025", "2026"])
+@pytest.mark.parametrize("year", [str(_YEAR), str(_YEAR + 1)])
 def test_a_positive_atraso_must_name_an_exercise_before_the_declaration(
     operation: PinnedAuthorityOperation, tmp_path: Path, year: str
 ) -> None:
     with pytest.raises(FilingExportValidationError, match="earlier than the declaration year"):
         _export(operation, tmp_path, [_row("12345678Z", "PERCEPTOR", **{"ejercicio-devengo": year})])
-    assert not (tmp_path / "modelo-190-2025.txt").exists()
+    assert not (tmp_path / f"modelo-190-{_YEAR}.txt").exists()
