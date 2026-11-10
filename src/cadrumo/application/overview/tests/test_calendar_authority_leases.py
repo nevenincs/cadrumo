@@ -20,6 +20,7 @@ from ....domain.calculations.registry.applicability import (
     iter_modelo_applicability_rules,
 )
 from ....domain.calculations.registry.authority import IndexedRegistryAuthority, PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ..calendar import build_overview_calendar
@@ -29,8 +30,9 @@ from ..coverage import build_obligation_coverage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_RANGE = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-_TODAY = date(2026, 4, 1)
+_YEAR = filing_year_envelope().horizon
+_RANGE = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 12, 31))
+_TODAY = date(_YEAR, 4, 1)
 
 
 def _lease_code() -> CodeType:

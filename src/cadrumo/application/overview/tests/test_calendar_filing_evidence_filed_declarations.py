@@ -22,6 +22,9 @@ from .calendar_test_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
+# The shared fixtures file the first quarter of this exercise.
+_YEAR = PERIOD_2025_1T.filing_year
+
 
 def test_filed_declaration_observation_with_stored_justificante_marks_verified() -> None:
     csv = "CSVFILED3031T2025"
@@ -127,7 +130,7 @@ def test_filed_declaration_observation_without_stored_justificante_is_observed_o
 
 
 def test_imported_justificante_record_marks_aeat_verified_without_implying_local_calculation() -> None:
-    imported_at = datetime(2025, 4, 16, 11, 0, tzinfo=UTC)
+    imported_at = datetime(_YEAR, 4, 16, 11, 0, tzinfo=UTC)
     csv = "JUST3032025X1T7"
     evidence = calendar_filing_evidence_from_sources(
         filing_records=(
@@ -156,10 +159,10 @@ def test_imported_justificante_record_marks_aeat_verified_without_implying_local
 def test_imported_justificante_record_for_nonmatching_receipt_metadata_is_not_verified() -> None:
     csv = "JUST3032025X1T7"
     cases = (
-        ("wrong-taxpayer", "303", 2025, PERIOD_2025_1T, "Y0001503E"),
-        ("wrong-modelo", "130", 2025, PERIOD_2025_1T, "X0001500M"),
-        ("wrong-ejercicio", "303", 2024, PERIOD_2025_1T, "X0001500M"),
-        ("wrong-period", "303", 2025, Period.from_year_and_code(2025, "2T"), "X0001500M"),
+        ("wrong-taxpayer", "303", _YEAR, PERIOD_2025_1T, "Y0001503E"),
+        ("wrong-modelo", "130", _YEAR, PERIOD_2025_1T, "X0001500M"),
+        ("wrong-ejercicio", "303", _YEAR - 1, PERIOD_2025_1T, "X0001500M"),
+        ("wrong-period", "303", _YEAR, Period.from_year_and_code(_YEAR, "2T"), "X0001500M"),
     )
 
     for case_id, modelo, filing_year, period, tax_id in cases:
@@ -170,7 +173,7 @@ def test_imported_justificante_record_for_nonmatching_receipt_metadata_is_not_ve
                     external_evidence=external_evidence(
                         ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
                         csv,
-                        imported_at=datetime(2025, 4, 16, 11, 0, tzinfo=UTC),
+                        imported_at=datetime(_YEAR, 4, 16, 11, 0, tzinfo=UTC),
                     ),
                     filed_by="aeat-import",
                 ),

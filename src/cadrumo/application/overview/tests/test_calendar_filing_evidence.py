@@ -48,12 +48,15 @@ from .calendar_test_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
+# The shared fixtures file the first quarter of this exercise.
+_YEAR = PERIOD_2025_1T.filing_year
+
 
 def _justificante_capture_snapshot(
     *,
     csv: str = "CSVLIVE3031T2025",
     modelo: str = "303",
-    filing_year: int = 2025,
+    filing_year: int = _YEAR,
     period: Period = PERIOD_2025_1T,
     expediente_id: str = "20253031T2025",
     state: SnapshotLifecycleState = SnapshotLifecycleState.ACTIVE,
@@ -96,13 +99,13 @@ def test_local_modelo_record_does_not_mark_aeat_submission() -> None:
 def test_modelo_record_projects_local_filing_calendar_event() -> None:
     events = calendar_events_from_modelo_records(
         (modelo_record(),),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
+        OverviewCalendarRange(from_date=date(_YEAR, 4, 1), to_date=date(_YEAR, 4, 30)),
     )
 
     assert len(events) == 1
     event = events[0]
     assert event.event_type is OverviewCalendarEventType.FILING
-    assert event.event_date == date(2025, 4, 14)
+    assert event.event_date == date(_YEAR, 4, 14)
     assert event.source == "modelo_filing_record"
     assert event.reference_id
     assert event.modelo == "303"
@@ -122,17 +125,17 @@ def test_modelo_record_calendar_event_reports_verified_aeat_justificante_axis() 
                 external_evidence=external_evidence(ExternalEvidenceKind.AEAT_LIVE_CAPTURE, csv),
             ),
         ),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
+        OverviewCalendarRange(from_date=date(_YEAR, 4, 1), to_date=date(_YEAR, 4, 30)),
         justificantes=(calendar_justificante_metadata(csv=csv),),
         expected_tax_id="X0001500M",
     )
 
     assert len(events) == 1
     event = events[0]
-    assert event.event_date == date(2025, 4, 15)
+    assert event.event_date == date(_YEAR, 4, 15)
     assert event.status == "ready_to_file:vigente"
     assert event.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
-    assert event.aeat_submitted_at == datetime(2025, 4, 15, 9, 30, tzinfo=UTC)
+    assert event.aeat_submitted_at == datetime(_YEAR, 4, 15, 9, 30, tzinfo=UTC)
     assert event.justificante_verified is True
     assert event.verified_justificante_csv == csv
 
@@ -143,7 +146,7 @@ def test_justificante_capture_snapshot_projects_verified_calendar_event_without_
 
     events = calendar_events_from_justificante_capture_snapshots(
         (snapshot,),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
+        OverviewCalendarRange(from_date=date(_YEAR, 4, 1), to_date=date(_YEAR, 4, 30)),
         justificantes=(calendar_justificante_metadata(csv=csv),),
         expected_tax_id="X0001500M",
     )
@@ -151,12 +154,12 @@ def test_justificante_capture_snapshot_projects_verified_calendar_event_without_
     assert len(events) == 1
     event = events[0]
     assert event.event_type is OverviewCalendarEventType.FILING
-    assert event.event_date == date(2025, 4, 15)
+    assert event.event_date == date(_YEAR, 4, 15)
     assert event.source == "aeat_sede_live_capture"
     assert event.reference_id == snapshot.expediente_id
     assert event.snapshot_id == snapshot.snapshot_id
     assert event.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
-    assert event.aeat_submitted_at == datetime(2025, 4, 15, 9, 30, tzinfo=UTC)
+    assert event.aeat_submitted_at == datetime(_YEAR, 4, 15, 9, 30, tzinfo=UTC)
     assert event.justificante_verified is True
     assert event.verified_justificante_csv == csv
 
@@ -179,7 +182,7 @@ def test_justificante_capture_snapshot_creates_verified_evidence_without_local_r
     assert row.aeat_reference_id == snapshot.expediente_id
     assert row.aeat_snapshot_id == snapshot.snapshot_id
     assert row.aeat_evidence_kind == "aeat_sede_live_capture"
-    assert row.aeat_submitted_at == datetime(2025, 4, 15, 9, 30, tzinfo=UTC)
+    assert row.aeat_submitted_at == datetime(_YEAR, 4, 15, 9, 30, tzinfo=UTC)
     assert row.justificante_verified is True
     assert row.verified_justificante_csv == csv
 
@@ -195,7 +198,7 @@ def test_justificante_capture_snapshot_requires_matching_taxpayer_metadata() -> 
     )
     events = calendar_events_from_justificante_capture_snapshots(
         (snapshot,),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
+        OverviewCalendarRange(from_date=date(_YEAR, 4, 1), to_date=date(_YEAR, 4, 30)),
         justificantes=(calendar_justificante_metadata(csv=csv, tax_id="B00015040"),),
         expected_tax_id="X0001500M",
     )
@@ -208,7 +211,7 @@ def test_calendar_filing_evidence_refuses_contradictory_justificante_state() -> 
     with pytest.raises(ValidationError):
         OverviewCalendarFilingEvidence(
             modelo="303",
-            filing_year=2025,
+            filing_year=_YEAR,
             period=PERIOD_2025_1T,
             aeat_submission_state=OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED,
             justificante_verified=False,
@@ -217,7 +220,7 @@ def test_calendar_filing_evidence_refuses_contradictory_justificante_state() -> 
     with pytest.raises(ValidationError):
         OverviewCalendarFilingEvidence(
             modelo="303",
-            filing_year=2025,
+            filing_year=_YEAR,
             period=PERIOD_2025_1T,
             aeat_submission_state=OverviewAeatSubmissionState.SUBMITTED_OBSERVED,
             justificante_verified=True,
@@ -227,12 +230,12 @@ def test_calendar_filing_evidence_refuses_contradictory_justificante_state() -> 
 def test_calendar_event_refuses_contradictory_justificante_state() -> None:
     base = {
         "event_type": OverviewCalendarEventType.FILING,
-        "event_date": date(2025, 4, 15),
+        "event_date": date(_YEAR, 4, 15),
         "source": "filed_declaration_observation",
         "summary": "Modelo 303 filed declaration",
         "reference_id": "12345678901234567890",
         "modelo": "303",
-        "filing_year": 2025,
+        "filing_year": _YEAR,
         "period": PERIOD_2025_1T,
     }
 
@@ -258,18 +261,18 @@ def test_calendar_event_refuses_contradictory_justificante_state() -> None:
 def test_period_bearing_calendar_models_roundtrip_through_json() -> None:
     evidence = OverviewCalendarFilingEvidence(
         modelo="303",
-        filing_year=2025,
+        filing_year=_YEAR,
         period=PERIOD_2025_1T,
         local_filing_state=OverviewLocalFilingState.READY_TO_FILE,
     )
     event = OverviewCalendarEvent(
         event_type=OverviewCalendarEventType.FILING,
-        event_date=date(2025, 4, 15),
+        event_date=date(_YEAR, 4, 15),
         source="filed_declaration_observation",
         summary="Modelo 303 filed declaration",
         reference_id="12345678901234567890",
         modelo="303",
-        filing_year=2025,
+        filing_year=_YEAR,
         period=PERIOD_2025_1T,
         aeat_submission_state=OverviewAeatSubmissionState.SUBMITTED_OBSERVED,
         justificante_verified=False,
@@ -277,20 +280,20 @@ def test_period_bearing_calendar_models_roundtrip_through_json() -> None:
     entry = OverviewCalendarEntry(
         modelo="303",
         period=PERIOD_2025_1T,
-        opens_on=date(2025, 4, 1),
-        closes_on=date(2025, 4, 20),
-        adjusted_closes_on=date(2025, 4, 21),
+        opens_on=date(_YEAR, 4, 1),
+        closes_on=date(_YEAR, 4, 20),
+        adjusted_closes_on=date(_YEAR, 4, 21),
         shift_reason="weekend",
         holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
-        evaluated_on=date(2025, 4, 1),
+        evaluated_on=date(_YEAR, 4, 1),
         status=ObligationStatus.UPCOMING,
         user_state=OverviewPeriodState.DUE,
-        filing_year=2025,
+        filing_year=_YEAR,
         filing_evidence=evidence,
     )
     suppressed = SuppressedCalendarEntry(
         modelo="390",
-        period=Period.from_year_and_code(2025, "0A"),
+        period=Period.from_year_and_code(_YEAR, "0A"),
         verdict=ApplicabilityVerdict.NOT_APPLICABLE,
         reason="not enrolled",
     )
@@ -318,7 +321,7 @@ def test_live_capture_external_evidence_requires_persisted_justificante_to_verif
     row = evidence[0]
     assert row.local_filing_state is OverviewLocalFilingState.READY_TO_FILE
     assert row.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
-    assert row.aeat_submitted_at == datetime(2025, 4, 15, 9, 30, tzinfo=UTC)
+    assert row.aeat_submitted_at == datetime(_YEAR, 4, 15, 9, 30, tzinfo=UTC)
     assert row.aeat_evidence_kind == "aeat_live_capture"
     assert row.justificante_verified is True
     assert row.verified_justificante_csv == csv
@@ -427,7 +430,7 @@ def test_expedientes_event_marks_observed_submission_but_not_justificante_verifi
     row = evidence[0]
     assert row.local_filing_state is OverviewLocalFilingState.READY_TO_FILE
     assert row.aeat_submission_state is OverviewAeatSubmissionState.SUBMITTED_OBSERVED
-    assert row.aeat_submitted_at == datetime(2025, 4, 15, 9, 30, tzinfo=UTC)
+    assert row.aeat_submitted_at == datetime(_YEAR, 4, 15, 9, 30, tzinfo=UTC)
     assert row.aeat_reference_id == "12345678901234567890"
     assert row.justificante_verified is False
 
@@ -460,18 +463,18 @@ def test_non_alta_expedientes_event_does_not_create_submission_evidence() -> Non
 def test_non_alta_calendar_event_is_not_enriched_by_matching_verified_evidence() -> None:
     event = OverviewCalendarEvent(
         event_type=OverviewCalendarEventType.FILING,
-        event_date=date(2025, 4, 15),
+        event_date=date(_YEAR, 4, 15),
         source="aeat_sede_expedientes",
-        summary="Modelo 303 2025 1T filed at AEAT",
+        summary=f"Modelo 303 {_YEAR} 1T filed at AEAT",
         reference_id="12345678901234567890",
         modelo="303",
-        filing_year=2025,
+        filing_year=_YEAR,
         period=PERIOD_2025_1T,
         status="BAJA",
     )
     verified_evidence = OverviewCalendarFilingEvidence(
         modelo="303",
-        filing_year=2025,
+        filing_year=_YEAR,
         period=PERIOD_2025_1T,
         aeat_submission_state=OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED,
         aeat_reference_id="12345678901234567890",
@@ -560,7 +563,7 @@ def test_official_calculation_observation_source_with_matching_justificante_is_v
     row = evidence[0]
     assert row.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
     assert row.aeat_evidence_kind == "aeat_csv_register"
-    assert row.aeat_submitted_at == datetime(2025, 4, 15, 9, 30, tzinfo=UTC)
+    assert row.aeat_submitted_at == datetime(_YEAR, 4, 15, 9, 30, tzinfo=UTC)
     assert row.verified_justificante_csv == csv
     assert row.justificante_verified is True
 
@@ -584,7 +587,7 @@ def test_verified_modelo_record_receipt_time_survives_calculation_observation_me
                 external_evidence=external_evidence(
                     ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
                     csv,
-                    imported_at=datetime(2025, 4, 16, 11, 0, tzinfo=UTC),
+                    imported_at=datetime(_YEAR, 4, 16, 11, 0, tzinfo=UTC),
                 ),
             ),
         ),
@@ -596,7 +599,7 @@ def test_verified_modelo_record_receipt_time_survives_calculation_observation_me
     assert len(evidence) == 1
     row = evidence[0]
     assert row.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
-    assert row.aeat_submitted_at == datetime(2025, 4, 15, 9, 30, tzinfo=UTC)
+    assert row.aeat_submitted_at == datetime(_YEAR, 4, 15, 9, 30, tzinfo=UTC)
     assert row.verified_justificante_csv == csv
     assert row.justificante_verified is True
 
