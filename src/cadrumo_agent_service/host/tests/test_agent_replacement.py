@@ -31,7 +31,11 @@ from ...host.launcher_protocol import AgentLauncherRefusal
 from ...providers.application.contracts import ProviderSettingsRefusalCode
 from ...providers.application.local_model_list import LocalModelListService
 from ...providers.application.tests.memory_store import MemoryLocalModelListStore
-from ...providers.application.tests.synthetic_catalog import ProvidedProviderCatalogSource, synthetic_catalog
+from ...providers.application.tests.synthetic_catalog import (
+    ProvidedProviderCatalogSource,
+    StaticLiveModels,
+    synthetic_catalog,
+)
 from ...providers.domain.record import LocalEngine
 from ...service import AgentService
 from ...service_support import LIFECYCLE_ADMISSION_SECONDS
@@ -237,6 +241,7 @@ def _with_memory_model_list(service: AgentService) -> MemoryLocalModelListStore:
     service._local_models = LocalModelListService(
         store=store,
         catalog_source=ProvidedProviderCatalogSource(synthetic_catalog()),
+        live_models=StaticLiveModels(),
         default_engine=LocalEngine.LLAMACPP,
     )
     return store

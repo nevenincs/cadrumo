@@ -568,7 +568,9 @@ def test_a_model_installed_on_the_local_server_is_read_with_through_the_live_cat
     assert installed.licence.spdx is None
 
     model_list = MemoryLocalModelListStore()
-    service = LocalModelListService(store=model_list, catalog_source=declared, default_engine=LocalEngine.OLLAMA)
+    service = LocalModelListService(
+        store=model_list, catalog_source=declared, live_models=live, default_engine=LocalEngine.OLLAMA
+    )
     added = service.add("ollama_api", model=_INSTALLED_MODEL, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID)
     assert isinstance(added, LocalModelListStatus), added
     chosen = service.choose_reading("ollama_api", model=_INSTALLED_MODEL, expected_revision=added.revision)
@@ -581,6 +583,7 @@ def test_a_model_installed_on_the_local_server_is_read_with_through_the_live_cat
             resolver=resolver,
             catalog_source=declared,
             live_models=served,
+            selected_engine=lambda: LocalEngine.OLLAMA,
             gateway=gateway.runs(),
         ).lookup(role)
 

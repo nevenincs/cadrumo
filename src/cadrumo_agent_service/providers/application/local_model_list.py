@@ -31,6 +31,7 @@ server holds it.
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Final
 
@@ -39,7 +40,14 @@ from pydantic import TypeAdapter, ValidationError
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo.core.time.clock import now
 
-from ..domain.catalog import ProviderAuthKind, ProviderCatalog, ProviderCatalogEntry
+from ..domain.catalog import (
+    BackgroundInput,
+    LiveCatalogModel,
+    ModelCapability,
+    ProviderAuthKind,
+    ProviderCatalog,
+    ProviderCatalogEntry,
+)
 from ..domain.record import (
     DEFAULT_LOCAL_PLACEMENT,
     LOCAL_MODEL_LIST_MAX_MODELS,
@@ -59,10 +67,12 @@ from .contracts import (
     LocalModelListStatus,
     ProviderSettingsRefusal,
     ProviderSettingsRefusalCode,
+    ReadingSource,
     is_provider_settings_revision,
 )
 from .ports import (
     AbsentLocalModelList,
+    LiveCatalogModels,
     LocalModelListRead,
     LocalModelListStore,
     ProviderCatalogSource,
@@ -117,6 +127,104 @@ def listed_models(entry: ProviderCatalogEntry, added: Iterable[str]) -> tuple[st
     return tuple(dict.fromkeys((*entry.recommended.values(), *added)))
 
 
+@dataclass(frozen=True, slots=True)
+class EffectiveReading:
+    """The model documents are read with now, and where it comes from; ``model`` is ``None`` only for ``NONE``."""
+
+    model: ListedModel | None
+    source: ReadingSource
+
+
+def effective_reading(
+    *,
+    record: LocalModelListRecord | None,
+    catalog: ProviderCatalog,
+    engine: LocalEngine | None,
+    live_models: LiveCatalogModels,
+    capability: ModelCapability = ModelCapability.TEXT,
+) -> EffectiveReading:
+    """Return the model a reading for ``capability`` runs with: the one rule every consumer of the selection shares.
+
+    The person's stored choice wins while it is usable: its lane is one the
+    ``engine`` is served, and, on a lane on this computer, the model is still
+    on the lane's list and the live catalogue does not say the server lacks it.
+    A choice on a lane the catalogue does not report, or on a lane that is not
+    local, stays the choice: whether that lane can run is the run's answer.
+    Otherwise the first installed model on the person's list stands in,
+    searching the lanes on this computer in catalogue order: the lane's
+    recommended model for ``capability`` when it is installed, else the first
+    installed model in the lane's list order (recommended, then added), so a
+    model taken off the list never returns as the stand-in. Only a model the live catalogue
+    states installed stands in; an unknown state never does. With neither, no
+    model is selected. The stand-in is an answer, never a stored record.
+    """
+    chosen = None if record is None else record.reading
+    added = () if record is None else record.models
+    if chosen is not None and _choice_is_usable(chosen, added, catalog, engine, live_models):
+        return EffectiveReading(model=chosen, source=ReadingSource.CHOSEN)
+    for entry in local_lanes(catalog, lambda: engine):
+        stand_in = _first_installed(entry, added, live_models, capability)
+        if stand_in is not None:
+            return EffectiveReading(model=ListedModel(lane=entry.id, model=stand_in), source=ReadingSource.DEFAULT)
+    return EffectiveReading(model=None, source=ReadingSource.NONE)
+
+
+def _choice_is_usable(
+    chosen: ListedModel,
+    added: tuple[ListedModel, ...],
+    catalog: ProviderCatalog,
+    engine: LocalEngine | None,
+    live_models: LiveCatalogModels,
+) -> bool:
+    entry = next((held for held in catalog.providers if held.id == chosen.lane), None)
+    if entry is None:
+        return True
+    if not serves_engine_lane(entry.provider, engine):
+        return False
+    if entry.auth_kind is not ProviderAuthKind.NONE:
+        return True
+    if not _model_is_listed(entry, chosen.model, added):
+        return False
+    return _installed(entry, chosen.model, live_models) is not False
+
+
+def _live_entries(entry: ProviderCatalogEntry, live_models: LiveCatalogModels) -> tuple[LiveCatalogModel, ...]:
+    return live_models.lane_models(entry.provider, entry.transport.value) or ()
+
+
+def _live_entry(entry: ProviderCatalogEntry, model: str, live_models: LiveCatalogModels) -> LiveCatalogModel | None:
+    return next((held for held in _live_entries(entry, live_models) if held.id == model), None)
+
+
+def _installed(entry: ProviderCatalogEntry, model: str, live_models: LiveCatalogModels) -> bool | None:
+    """Return whether the live catalogue says the lane's server holds ``model``; ``None`` where it does not say."""
+    live = _live_entry(entry, model, live_models)
+    return None if live is None else live.installed
+
+
+def _first_installed(
+    entry: ProviderCatalogEntry,
+    added: tuple[ListedModel, ...],
+    live_models: LiveCatalogModels,
+    capability: ModelCapability,
+) -> str | None:
+    if not entry.background.runnable:
+        return None
+    live = {held.id: held for held in _live_entries(entry, live_models)}
+    reads_images = BackgroundInput.IMAGE in entry.background.inputs
+    eligible = [
+        model
+        for model in listed_models(entry, (held.model for held in added if held.lane == entry.id))
+        if (held := live.get(model)) is not None
+        and held.installed is True
+        and (capability is not ModelCapability.VISION or (held.vision is True and reads_images))
+    ]
+    preferred = entry.recommended.get(capability.value)
+    if preferred in eligible:
+        return preferred
+    return eligible[0] if eligible else None
+
+
 class LocalModelListService:
     """The models added to local lanes' lists and the person's guarded changes, for one admitted profile."""
 
@@ -125,26 +233,30 @@ class LocalModelListService:
         *,
         store: LocalModelListStore,
         catalog_source: ProviderCatalogSource,
+        live_models: LiveCatalogModels,
         default_engine: LocalEngine,
         clock: Callable[[], datetime] = now,
     ) -> None:
-        """Bind the service to one profile's model list store and the agent's declared catalog.
+        """Bind the service to one profile's model list store and the agent's declared and live catalogues.
 
         ``default_engine`` is the engine a profile that chose none runs: the
         desktop derives it from what the package carries and hands it over at
-        start, so no default engine is decided here.
+        start, so no default engine is decided here. ``live_models`` tells
+        which models the local server holds, which the reading model is
+        decided from.
         """
         self._store = store
         self._catalog_source = catalog_source
+        self._live_models = live_models
         self._default_engine = default_engine
         self._clock = clock
 
     def status(self) -> LocalModelListResult:
-        """Return the added models, the reading model and the local lanes, or a typed refusal."""
+        """Return the added models, the model documents are read with and the local lanes, or a typed refusal."""
         read = self._store.read()
         if isinstance(read, StoreRefusal):
             return _refused(ProviderSettingsRefusalCode(read.code.value))
-        return _list_status(read, self._local_lane_ids())
+        return self._list_status(read)
 
     def add(self, lane: str, *, model: str, expected_revision: str) -> LocalModelListResult:
         """Add ``model`` to the list of the local lane ``lane``.
@@ -166,7 +278,7 @@ class LocalModelListService:
         record, read = current
         added = () if record is None else record.models
         if _model_is_listed(entry, model, added):
-            return _list_status(read, self._local_lane_ids())
+            return self._list_status(read)
         kept = _kept(added, catalog)
         if len(kept) >= LOCAL_MODEL_LIST_MAX_MODELS:
             return _refused(ProviderSettingsRefusalCode.MODEL_LIST_FULL)
@@ -208,7 +320,7 @@ class LocalModelListService:
         record, read = current
         chosen = ListedModel(lane=lane, model=model)
         if _reading_of(record) == chosen:
-            return _list_status(read, self._local_lane_ids())
+            return self._list_status(read)
         added = () if record is None else record.models
         return self._list_answer(self._commit(_kept(added, catalog), chosen, _setting_of(record), expected_revision))
 
@@ -251,7 +363,7 @@ class LocalModelListService:
         read = self._store.read()
         if not isinstance(read, AbsentLocalModelList):
             return _refused(ProviderSettingsRefusalCode.COMMITTED_READBACK_FAILED)
-        return _list_status(read, self._local_lane_ids())
+        return self._list_status(read)
 
     def selected_engine(self) -> LocalEngine | None:
         """Return the engine the profile runs: the person's choice, else the default.
@@ -262,12 +374,27 @@ class LocalModelListService:
         status = self.engine_status()
         return status.engine if isinstance(status, LocalEngineStatus) else None
 
-    def _local_lane_ids(self) -> tuple[str, ...]:
-        """Return the local lane ids the selected engine is served; none when the catalogue cannot be read."""
+    def _list_status(self, read: LocalModelListRead) -> LocalModelListStatus:
+        """Project a list read onto its added models, the model read with now and the local lanes.
+
+        The catalogue is read once. Without it no lane is local and nothing
+        tells which stored choice is usable, so the stored choice is served as
+        it is.
+        """
         catalog = self._catalog()
+        record = read.record if isinstance(read, StoredLocalModelList) else None
         if isinstance(catalog, ProviderSettingsRefusal):
-            return ()
-        return tuple(entry.id for entry in local_lanes(catalog, self.selected_engine))
+            stored = _reading_of(record)
+            reading = EffectiveReading(
+                model=stored, source=ReadingSource.NONE if stored is None else ReadingSource.CHOSEN
+            )
+            return _list_status(read, (), reading)
+        engine = self.selected_engine()
+        lanes = tuple(entry.id for entry in local_lanes(catalog, lambda: engine))
+        reading = effective_reading(
+            record=record, catalog=catalog, engine=engine, live_models=self._live_models.snapshot()
+        )
+        return _list_status(read, lanes, reading)
 
     def _catalog(self) -> ProviderCatalog | ProviderSettingsRefusal:
         try:
@@ -319,7 +446,7 @@ class LocalModelListService:
     def _list_answer(self, committed: StoredLocalModelList | ProviderSettingsRefusal) -> LocalModelListResult:
         if isinstance(committed, ProviderSettingsRefusal):
             return committed
-        return _list_status(committed, self._local_lane_ids())
+        return self._list_status(committed)
 
 
 def _model_is_listed(entry: ProviderCatalogEntry, model: str, added: tuple[ListedModel, ...]) -> bool:
@@ -385,17 +512,25 @@ def _list_revision(read: LocalModelListRead) -> str:
     return read.revision
 
 
-def _list_status(read: LocalModelListRead, lanes: tuple[str, ...]) -> LocalModelListStatus:
+def _list_status(read: LocalModelListRead, lanes: tuple[str, ...], reading: EffectiveReading) -> LocalModelListStatus:
     """Project a list read onto its added models, in the order added, the model read with and the local lanes."""
     if isinstance(read, UnreadableLocalModelList):
-        return LocalModelListStatus(unreadable=True, models=(), reading=None, local_lanes=lanes, revision=read.revision)
+        return LocalModelListStatus(
+            unreadable=True,
+            models=(),
+            reading=None,
+            reading_source=ReadingSource.NONE,
+            local_lanes=lanes,
+            revision=read.revision,
+        )
     record = read.record if isinstance(read, StoredLocalModelList) else None
     models = () if record is None else record.models
-    reading = _reading_of(record)
+    model = reading.model
     return LocalModelListStatus(
         unreadable=False,
         models=tuple(LocalModelListEntry(lane=held.lane, model=held.model) for held in models),
-        reading=None if reading is None else LocalModelListEntry(lane=reading.lane, model=reading.model),
+        reading=None if model is None else LocalModelListEntry(lane=model.lane, model=model.model),
+        reading_source=reading.source,
         local_lanes=lanes,
         revision=_list_revision(read),
     )
@@ -405,4 +540,12 @@ def _refused(code: ProviderSettingsRefusalCode) -> ProviderSettingsRefusal:
     return ProviderSettingsRefusal(code=code)
 
 
-__all__ = ["LocalModelListService", "engine_lanes", "listed_models", "local_lanes", "serves_engine_lane"]
+__all__ = [
+    "EffectiveReading",
+    "LocalModelListService",
+    "effective_reading",
+    "engine_lanes",
+    "listed_models",
+    "local_lanes",
+    "serves_engine_lane",
+]

@@ -121,11 +121,18 @@ class AgentServiceAdministration(ABC):
         )
         model_list = SecureLocalModelListStore(client=client)
         live_models = ServedCatalogModels(self._live_catalog)
+        self._local_models = LocalModelListService(
+            store=model_list,
+            catalog_source=self._catalog,
+            live_models=live_models,
+            default_engine=local_engine_default,
+        )
         self._model_runs = ModelRunService(
             model_list=model_list,
             resolver=resolver,
             catalog_source=self._catalog,
             live_models=live_models,
+            selected_engine=self._local_models.selected_engine,
             gateway=HostedBackgroundRuns(
                 endpoint=self._background_endpoint, bearer=gateway_bearer, host_token=self._host_token
             ),
@@ -141,9 +148,6 @@ class AgentServiceAdministration(ABC):
         )
         self._login_status = AgentProviderAuthStatusProbe(
             context=self._login_context, cancellation=self._read_cancellation
-        )
-        self._local_models = LocalModelListService(
-            store=model_list, catalog_source=self._catalog, default_engine=local_engine_default
         )
         self._providers = ProviderSettingsService(
             store=self._store,

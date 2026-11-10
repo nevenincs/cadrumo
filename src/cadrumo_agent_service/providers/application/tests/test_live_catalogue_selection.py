@@ -86,6 +86,7 @@ def _runs(live: StaticLiveModels, reading: str, *added: str) -> ModelRunService:
         resolver=ProviderCredentialResolver(store=MemoryProviderSettingsStore(), catalog_source=source),
         catalog_source=source,
         live_models=live,
+        selected_engine=lambda: LocalEngine.LLAMACPP,
         gateway=_NoMediaGateway(),
     )
 
