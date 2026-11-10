@@ -15,6 +15,7 @@ from ....core.casilla_id import validated_casilla_id
 from ....core.directory_scan import scan_directory
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -27,9 +28,12 @@ from ..registry_helpers import assert_revision_content_integrity
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
+_YEAR = filing_year_envelope().horizon
+
+
 def _m303_revision(*, operation: PinnedAuthorityOperation) -> CalculationRevision:
     evidence = general_m303_filing_evidence(
-        Period.from_year_and_code(2026, "1T"),
+        Period.from_year_and_code(_YEAR, "1T"),
         reference="test:revision-integrity:m303",
         operation=operation,
     )
@@ -45,14 +49,14 @@ def _m303_revision(*, operation: PinnedAuthorityOperation) -> CalculationRevisio
         filing_instance_evidence=evidence,
         source_provenance=(),
     )
-    instant = datetime(2026, 4, 20, 10, 0, tzinfo=UTC)
+    instant = datetime(_YEAR, 4, 20, 10, 0, tzinfo=UTC)
     return CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="303",
-            revision_id="2026-y-siguientes",
-            modelo_year=2026,
+            revision_id=str(revision_serving_period("303", _YEAR, "1T").id),
+            modelo_year=_YEAR,
             period="1T",
         ),
         state=CalculationRevisionState.BORRADOR,

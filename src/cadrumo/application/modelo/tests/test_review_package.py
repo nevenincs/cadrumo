@@ -27,6 +27,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -47,23 +48,24 @@ from ..review_package import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 7, 3, 12, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_NOW = datetime(_YEAR, 7, 3, 12, 0, tzinfo=UTC)
 _BASE_CASILLA = validated_casilla_id("base", surface="test_review_package")
 _CUOTA_CASILLA = validated_casilla_id("cuota", surface="test_review_package")
 _DRAFT_BYTES = b"FICHERO-BOE-BYTES-FOR-REVIEW-PACKAGE-TEST"
 
 
 def _work_unit(*, bucket_id: str = "bucket-review-package") -> WorkUnit:
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
     revision_id = published_snapshot(
         "303",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period.registry_token,
     ).revision.id
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo="303",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
         revision_id=revision_id,
     )
@@ -71,10 +73,10 @@ def _work_unit(*, bucket_id: str = "bucket-review-package") -> WorkUnit:
         work_unit_id=work_unit_id,
         bucket_id=bucket_id,
         modelo=ModeloCode("303"),
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
         revision_id=revision_id,
-        name="303-2026-1T",
+        name=f"303-{_YEAR}-1T",
         created_at=_NOW,
         updated_at=_NOW,
         state=WorkUnitState.BORRADOR,
@@ -159,7 +161,7 @@ def test_build_review_package_then_verify_clean(
     assert build_result.manifest.work_unit_id == work_unit.work_unit_id
     assert build_result.manifest.bucket_id == work_unit.bucket_id
     assert build_result.manifest.modelo == "303"
-    assert build_result.manifest.filing_year == 2026
+    assert build_result.manifest.filing_year == _YEAR
     assert build_result.manifest.registry_snapshot_ref == revision.registry_snapshot_ref
     assert build_result.manifest.has_ledger_evidence is False
     assert build_result.manifest.notes == "shared with accountant for Q1 review"
