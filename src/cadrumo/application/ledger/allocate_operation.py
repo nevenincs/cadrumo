@@ -21,7 +21,10 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.categories.spending_category_catalogue import require_spending_category
 from ...domain.iva.prorrata import ProrrataReferenceText
 from ...domain.transactions.errors import TransactionValidationError
-from ...domain.transactions.model_validation import classification_for_business_share
+from ...domain.transactions.model_validation import (
+    classification_for_business_share,
+    validate_figures_without_business,
+)
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
@@ -85,6 +88,43 @@ class LedgerAllocateOperationResult(BaseModel):
     bucket_event_ids: _BucketEventIds = ()
 
 
+def allocation_patch(
+    payload: LedgerAllocateRequest, *, operation: PinnedAuthorityOperation
+) -> ManualLedgerTransactionPatch:
+    """Return the classification write an allocation request asks for.
+
+    The share decides the classification. A share of nothing is a personal row,
+    so a category, usage ratio or prorrata reference named with it is refused
+    rather than silently dropped.
+    """
+    share = try_parse_canonical_decimal(payload.business_pct, signed=False)
+    if share is None:
+        raise TransactionValidationError("business_pct must be canonical decimal text")
+    allocation_classification = classification_for_business_share(share)
+    validate_figures_without_business(
+        allocation_classification,
+        {
+            "category_id": payload.category_id,
+            "usage_ratio_id": payload.usage_ratio_id,
+            "prorrata_reference": payload.prorrata_reference,
+        },
+    )
+    category_id = payload.category_id
+    if category_id is not None:
+        category_id = require_spending_category(category_id.strip(), authority=operation).value
+    patch_values: dict[str, object] = {
+        "business_classification": allocation_classification,
+        "business_pct": share,
+    }
+    if category_id is not None:
+        patch_values["category_id"] = category_id
+    if payload.usage_ratio_id is not None:
+        patch_values["usage_ratio_id"] = payload.usage_ratio_id
+    if payload.prorrata_reference is not None:
+        patch_values["prorrata_reference"] = payload.prorrata_reference
+    return ManualLedgerTransactionPatch.model_validate(patch_values)
+
+
 class LedgerAllocateExecutor:
     """Apply the canonical allocation action with exact worker profile custody."""
 
@@ -118,25 +158,7 @@ class LedgerAllocateExecutor:
             operation: PinnedAuthorityOperation = context.authority_operation
             ports = self._ports_factory(bucket_id=bucket_id, operation=operation)
             require_exact_ledger_action_ports(ports, bucket_id=bucket_id, operation=operation)
-            share = try_parse_canonical_decimal(payload.business_pct, signed=False)
-            if share is None:
-                raise TransactionValidationError("business_pct must be canonical decimal text")
-            allocation_classification = classification_for_business_share(share)
-            category_id = payload.category_id
-            if category_id is not None:
-                category_id = require_spending_category(category_id.strip(), authority=operation).value
-            patch_values: dict[str, object] = {
-                "business_classification": allocation_classification,
-                "business_pct": share,
-            }
-            if category_id is not None:
-                patch_values["category_id"] = category_id
-            if payload.usage_ratio_id is not None:
-                patch_values["usage_ratio_id"] = payload.usage_ratio_id
-            if payload.prorrata_reference is not None:
-                patch_values["prorrata_reference"] = payload.prorrata_reference
-            patch = ManualLedgerTransactionPatch.model_validate(patch_values)
-            return ports, patch
+            return ports, allocation_patch(payload, operation=operation)
 
         ports, patch = await asyncio.to_thread(prepare)
 
@@ -228,6 +250,7 @@ __all__ = [
     "LedgerAllocateExecutor",
     "LedgerAllocateOperationResult",
     "LedgerAllocateRequest",
+    "allocation_patch",
     "build_ledger_allocate_definition",
     "build_ledger_allocate_registration",
     "resolve_ledger_allocate_access",

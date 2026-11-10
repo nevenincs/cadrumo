@@ -733,8 +733,13 @@ def command_from_patch(
     )
     usage_ratio_id = optional_patched(patch, patch_fields, "usage_ratio_id", current.usage_ratio_id)
     prorrata_reference = optional_patched(patch, patch_fields, "prorrata_reference", current.prorrata_reference)
-    if "business_classification" in patch_fields:
-        cleared = fields_cleared_by_classification(business_classification)
+    # A write that changes the classification drops what the new one does not keep.
+    cleared = (
+        fields_cleared_by_classification(business_classification)
+        if "business_classification" in patch_fields
+        else frozenset[str]()
+    )
+    if cleared:
         business_pct = _unless_cleared("business_pct", business_pct, cleared)
         usage_ratio_id = _unless_cleared("usage_ratio_id", usage_ratio_id, cleared)
         category_id = _unless_cleared("category_id", category_id, cleared)
@@ -760,7 +765,11 @@ def command_from_patch(
         "investment_asset_id",
         current.investment_asset_id,
     )
-    iva_vehicle_use = optional_patched(patch, patch_fields, "iva_vehicle_use", current.iva_vehicle_use)
+    iva_vehicle_use = _unless_cleared(
+        "iva_vehicle_use",
+        optional_patched(patch, patch_fields, "iva_vehicle_use", current.iva_vehicle_use),
+        cleared,
+    )
     counterparty_country = optional_patched(
         patch,
         patch_fields,

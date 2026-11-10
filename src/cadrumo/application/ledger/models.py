@@ -54,7 +54,11 @@ from ...domain.transactions.lineage_models import (
     TransactionLifecycleLineageEntry,
 )
 from ...domain.transactions.m210_income_classification import M210IncomeClassification
-from ...domain.transactions.model_validation import validate_business_pct_coupling
+from ...domain.transactions.model_validation import (
+    refusable_figures_of,
+    validate_business_pct_coupling,
+    validate_figures_without_business,
+)
 from ...domain.transactions.models import (
     BucketTransactionRef,
     Transaction,
@@ -277,6 +281,15 @@ class ManualLedgerTransactionCommand(ManualLedgerTransactionInput):
     def _validate_business_percentage(self) -> Self:
         """Ask the domain whether this classification and share agree."""
         validate_business_pct_coupling(self.business_classification, self.business_pct)
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_figures_without_business(self) -> Self:
+        """Ask the domain whether this classification takes the business figures the command writes."""
+        validate_figures_without_business(
+            self.business_classification, refusable_figures_of(self.business_classification, self)
+        )
         return self
 
     @model_validator(mode="after")
