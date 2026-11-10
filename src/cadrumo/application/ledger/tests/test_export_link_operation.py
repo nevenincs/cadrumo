@@ -26,6 +26,7 @@ from ....core.operations import (
 )
 from ....core.time.clock import now
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.iva.schema import InvoiceKind
 from ....domain.transactions.enums import TransactionDirection, TransactionLifecycleState
@@ -243,7 +244,7 @@ def test_link_refuses_an_ambiguous_invoice_prefix_naming_every_candidate_without
                 counterparty_tax_id="B00015016",
                 counterparty_country="ES",
                 invoice_number=f"synthetic-prefix-{number}",
-                issued_at=date(2024, 4, 10),
+                issued_at=date(filing_year_envelope().horizon, 4, 10),
                 currency="EUR",
                 taxable_base=Decimal("10"),
                 iva_rate=Decimal("21"),
@@ -440,7 +441,7 @@ def test_exact_scope_and_dual_category_consent_on_every_frontend(subject: Subjec
         LedgerExportRequest(
             profile_id=POLICY_PROFILE_ID,
             output_path=str(tmp_path / "ledger.csv"),
-            period=PublicPeriod(filing_year=2024, code="2T"),
+            period=PublicPeriod(filing_year=filing_year_envelope().horizon, code="2T"),
         )
         if kind == "export"
         else LedgerLinkRequest(

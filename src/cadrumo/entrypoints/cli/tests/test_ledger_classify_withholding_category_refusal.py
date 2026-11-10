@@ -11,11 +11,13 @@ from __future__ import annotations
 
 import json
 import re
+from datetime import date
 
 import pytest
 
 from ....application.ledger.staged_check_words import BLOCKER_FIX_LOCALE_KEYS
 from ....core.i18n.render import tr
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.gross_validation import (
     GROSS_NEEDS_WITHHOLDING_CATEGORY_FIELD,
     GROSS_NEEDS_WITHHOLDING_CATEGORY_LOCALE_KEY,
@@ -27,8 +29,8 @@ __all__ = ["recorded_fx_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-# A received invoice of 2000.00 plus 420.00 IVA, settled net of a 300.00 withholding.
-_CASH = "2120.00"
+# A received invoice of 4000.00 plus 840.00 IVA, settled net of a 600.00 withholding.
+_CASH = "4240.00"
 _ACTIVITY_CATEGORY = "actividad_economica"
 
 
@@ -41,7 +43,7 @@ def _add_received_row() -> str:
             "ledger",
             "add",
             "--date",
-            "2026-05-02",
+            date(filing_year_envelope().horizon, 5, 2).isoformat(),
             "--amount",
             _CASH,
             "--direction",
@@ -74,11 +76,11 @@ def _classify(transaction_id: str, *extra: str, language: str = "en", as_json: b
             "--classification",
             "BUSINESS",
             "--taxable-base",
-            "2000",
+            "4000",
             "--iva-rate",
             "0.21",
             "--iva-amount",
-            "420",
+            "840",
             *extra,
         ],
     )
@@ -156,4 +158,4 @@ def test_naming_the_category_classifies_the_same_invoice() -> None:
     assert classified.exit_code == 0, classified.output
     transaction = json.loads(classified.output)["result"]["transaction"]
     assert transaction["irpf_category"] == _ACTIVITY_CATEGORY
-    assert transaction["taxable_base"] == "2000"
+    assert transaction["taxable_base"] == "4000"

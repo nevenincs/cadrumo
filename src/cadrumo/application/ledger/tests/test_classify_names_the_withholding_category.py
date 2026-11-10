@@ -20,6 +20,7 @@ import pytest
 
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -38,9 +39,9 @@ from .bulk_classify_operation_support import PROFILE_ID, BulkClassifySubject
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
-# A received invoice of 2000.00 plus 420.00 IVA, settled net of a 300.00 withholding.
-_CASH = Decimal("2120.00")
+_NOW = datetime(filing_year_envelope().horizon, 5, 4, 9, 30, tzinfo=UTC)
+# A received invoice of 4000.00 plus 840.00 IVA, settled net of a 600.00 withholding.
+_CASH = Decimal("4240.00")
 _ACTIVITY_CATEGORY = "actividad_economica"
 
 
@@ -131,7 +132,7 @@ def _classify(
 
 def test_a_substrate_above_the_cash_is_refused_as_a_missing_withholding_category(subject: BulkClassifySubject) -> None:
     """The refusal carries the typed kind the window's blocker is built from, and writes nothing."""
-    result = _classify(subject, taxable_base="2000", iva_amount="420")
+    result = _classify(subject, taxable_base="4000", iva_amount="840")
 
     assert result.outcome == "validation_error"
     assert result.validation_kind == "needs_withholding_category"
@@ -150,14 +151,14 @@ def test_a_gap_no_category_explains_stays_the_bare_input_refusal(subject: BulkCl
 
 def test_the_same_substrate_is_stored_once_the_withholding_category_is_named(subject: BulkClassifySubject) -> None:
     """Named, the withholding accepts the gap and the substrate is stored."""
-    result = _classify(subject, taxable_base="2000", iva_amount="420", irpf_category=_ACTIVITY_CATEGORY)
+    result = _classify(subject, taxable_base="4000", iva_amount="840", irpf_category=_ACTIVITY_CATEGORY)
 
     assert result.outcome == "classified"
     assert result.validation_kind == "none"
     stored = next(iter(subject.repository.current.transactions.values()))
     assert (stored.taxable_base, stored.iva_amount, stored.irpf_category) == (
-        Decimal("2000.00"),
-        Decimal("420.00"),
+        Decimal("4000.00"),
+        Decimal("840.00"),
         _ACTIVITY_CATEGORY,
     )
 
