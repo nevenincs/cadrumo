@@ -40,6 +40,19 @@ def _inventory(directory: Path) -> dict[str, str]:
     return {name: digest(directory / name) for name in REQUIRED_LIBRARIES}
 
 
+def _crt_folders(build: Path, version: tuple[int, ...]) -> tuple[list[tuple[tuple[int, ...], Path]], list[str]]:
+    """Split the x64 CRT folders of one redistributable build into complete candidates and incomplete notes."""
+    candidates: list[tuple[tuple[int, ...], Path]] = []
+    incomplete: list[str] = []
+    for crt in sorted((build / "x64").glob(_CRT_FOLDER)):
+        missing = [name for name in REQUIRED_LIBRARIES if not (crt / name).is_file()]
+        if missing:
+            incomplete.append(f"{crt} lacks {', '.join(missing)}")
+        else:
+            candidates.append((version, crt))
+    return candidates, incomplete
+
+
 def locate_msvc_redist(visual_studio: Path, msvc_version: str) -> Path:
     """Return the x64 runtime folder of the redistributable that belongs to the selected toolset.
 
@@ -60,12 +73,9 @@ def locate_msvc_redist(visual_studio: Path, msvc_version: str) -> Path:
         version = _VERSION.fullmatch(child.name)
         if version is None or version.groups()[:2] != line or not child.is_dir():
             continue
-        for crt in sorted((child / "x64").glob(_CRT_FOLDER)):
-            missing = [name for name in REQUIRED_LIBRARIES if not (crt / name).is_file()]
-            if missing:
-                incomplete.append(f"{crt} lacks {', '.join(missing)}")
-            else:
-                candidates.append((tuple(int(part) for part in version.groups()), crt))
+        found, lacking = _crt_folders(child, tuple(int(part) for part in version.groups()))
+        candidates.extend(found)
+        incomplete.extend(lacking)
     if not candidates:
         raise MsvcRedistError(
             f"no x64 redistributable folder of the MSVC {'.'.join(line)} line holds "

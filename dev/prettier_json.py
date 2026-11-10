@@ -16,22 +16,27 @@ _WIDTH = 80
 _INDENT = "  "
 
 
+def _inline_list(value: list[Any]) -> str | None:
+    """A list on one line, or ``None`` where Prettier breaks it: a matrix of several rows, or an item that breaks."""
+    if not value:
+        return "[]"
+    if len(value) > 1 and all(isinstance(item, list) and len(item) > 1 for item in value):
+        return None
+    parts: list[str] = []
+    for item in value:
+        part = _inline(item)
+        if part is None:
+            return None
+        parts.append(part)
+    return "[" + ", ".join(parts) + "]"
+
+
 def _inline(value: Any) -> str | None:
     """``value`` on one line as Prettier prints a JSON value that fits, or ``None`` where it breaks."""
     if isinstance(value, dict):
         return None if value else "{}"
     if isinstance(value, list):
-        if not value:
-            return "[]"
-        if len(value) > 1 and all(isinstance(item, list) and len(item) > 1 for item in value):
-            return None
-        parts: list[str] = []
-        for item in value:
-            part = _inline(item)
-            if part is None:
-                return None
-            parts.append(part)
-        return "[" + ", ".join(parts) + "]"
+        return _inline_list(value)
     return json.dumps(value, ensure_ascii=False)
 
 

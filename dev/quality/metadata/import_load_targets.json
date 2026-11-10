@@ -4892,6 +4892,8 @@
         "dev.packaging.native.linux_manager_probe",
         "dev.packaging.native.linux_packages",
         "dev.packaging.native.llama_server",
+        "dev.packaging.native.llama_server_archive",
+        "dev.packaging.native.llama_server_errors",
         "dev.packaging.native.macos_bundle",
         "dev.packaging.native.macos_info",
         "dev.packaging.native.macos_launchagent",

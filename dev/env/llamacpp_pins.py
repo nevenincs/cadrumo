@@ -166,6 +166,12 @@ class ServerPins(BaseModel):
     def _tuple_from_json_array(cls, value: object) -> object:
         return tuple(value) if is_object_list(value) else value
 
+    def _validate_archive_origin(self, pin: ServerArchivePin) -> None:
+        if (urlsplit(pin.url).hostname or "") not in self.hosts:
+            raise ValueError(f"{pin.target} is served from a host the file does not name")
+        if not pin.url.startswith(f"{_DOWNLOAD_PREFIX}/{self.tag}/"):
+            raise ValueError(f"{pin.target} is not an archive of build {self.tag}")
+
     @model_validator(mode="after")
     def _validate_table(self) -> ServerPins:
         targets = [pin.target for pin in self.archives]
@@ -174,10 +180,7 @@ class ServerPins(BaseModel):
         if list(self.hosts) != sorted(set(self.hosts)):
             raise ValueError("the hosts are listed once each, in order")
         for pin in self.archives:
-            if (urlsplit(pin.url).hostname or "") not in self.hosts:
-                raise ValueError(f"{pin.target} is served from a host the file does not name")
-            if not pin.url.startswith(f"{_DOWNLOAD_PREFIX}/{self.tag}/"):
-                raise ValueError(f"{pin.target} is not an archive of build {self.tag}")
+            self._validate_archive_origin(pin)
         if self.license.url != license_url(self.tag):
             raise ValueError(f"the licence is not the LICENSE file of build {self.tag}")
         if (urlsplit(self.license.url).hostname or "") not in self.hosts:

@@ -12,7 +12,7 @@ import tempfile
 import time
 from collections.abc import Callable
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 
 from dev.paths import REPO_ROOT
 
@@ -479,13 +479,107 @@ def _require_tools_installed(result: CommandResult) -> None:
         raise RuntimeError(f"Installing the pinned build tools failed with exit status {result.returncode}")
 
 
+def _agent_action(paths: dict[str, Path], arguments: argparse.Namespace, configured: dict[str, Any]) -> Path:
+    from .agent import build_agent, gate_agent_dependencies
+    from .agent_runtime import build_agent_runtime
+
+    if arguments.agent_source is None:
+        raise ValueError("Agent construction requires the configured source folder")
+    destination = paths["agent"]
+    destination.mkdir(parents=True, exist_ok=True)
+    build_agent(destination, arguments.agent_source, selected_uv(configured))
+    gate_agent_dependencies(destination, arguments.agent_source, arguments.target, selected_uv(configured))
+    tools = configured["desktop_tools"]
+    build_agent_runtime(
+        destination / "runtime",
+        arguments.agent_source,
+        arguments.target,
+        node=Path(tools["node"]),
+        npm_cli=Path(tools["npm_cli"]),
+    )
+    return destination
+
+
+def _tools_action(build: Path, paths: dict[str, Path], configured: dict[str, Any]) -> Path:
+    destination = reset(build, str(paths["tools"].relative_to(build)))
+    uv = selected_uv(configured)
+    pins = json.loads((REPO_ROOT / "native/toolchain.json").read_text(encoding="utf-8"))
+    result = run_command(
+        [
+            uv,
+            "pip",
+            "install",
+            "--python",
+            sys.executable,
+            "--target",
+            str(destination),
+            "--only-binary",
+            ":all:",
+            "--no-deps",
+            "--link-mode",
+            "copy",
+            f"resvg-py=={pins['resvg_py']}",
+        ],
+        cwd=REPO_ROOT,
+        inherit_output=True,
+    )
+    _require_tools_installed(result)
+    return destination
+
+
+def _product_action(
+    arguments: argparse.Namespace,
+    configured: dict[str, Any],
+    paths: dict[str, Path],
+    runtime: Path,
+    timings: BuildTimings | None,
+) -> Path:
+    from ..wheel_metadata import installed_wheel_matches
+    from .agent import agent_wheel, validate_wheel_dependencies
+    from .product import build_product
+
+    destination = paths["product"]
+    destination.mkdir(parents=True, exist_ok=True)
+    sync_base_dependencies(runtime / "dependencies", destination)
+    build_product(
+        destination / "build",
+        Path(sys.executable),
+        destination / "dependencies",
+        arguments.target,
+        inputs=arguments.inputs,
+        build_toolchain=configured,
+        timings=timings,
+    )
+    pin = (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
+    wheel = agent_wheel(paths["agent"])
+    validate_wheel_dependencies(wheel, arguments.target, pin, paths["agent"])
+    if not installed_wheel_matches(wheel, destination / "dependencies"):
+        result = run_command(
+            [
+                selected_uv(configured),
+                "pip",
+                "install",
+                "--python",
+                sys.executable,
+                "--no-deps",
+                "--reinstall",
+                "--link-mode",
+                "copy",
+                "--target",
+                str(destination / "dependencies"),
+                str(wheel),
+            ],
+            cwd=REPO_ROOT,
+        )
+        if result.returncode:
+            raise RuntimeError(result.stderr)
+    write_text(destination / "agent-wheel.json", (paths["agent"] / "agent-wheel.json").read_text(encoding="utf-8"))
+    return destination
+
+
 def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTimings | None = None) -> Path:
     """Execute a generated-output action after its reuse and concurrency checks."""
-    from ..wheel_metadata import installed_wheel_matches
-    from .agent import agent_wheel, build_agent, gate_agent_dependencies, validate_wheel_dependencies
-    from .agent_runtime import build_agent_runtime
     from .layout import load_layout
-    from .product import build_product
     from .provision import provision
 
     paths = build_paths(build)
@@ -495,48 +589,13 @@ def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTi
     sdk_root = paths.get("python_sdk", runtime)
     sdk = sdk_root / contract["sdk"]["root"]
     if arguments.action == "agent":
-        if arguments.agent_source is None:
-            raise ValueError("Agent construction requires the configured source folder")
-        destination = paths["agent"]
-        destination.mkdir(parents=True, exist_ok=True)
-        build_agent(destination, arguments.agent_source, selected_uv(configured))
-        gate_agent_dependencies(destination, arguments.agent_source, arguments.target, selected_uv(configured))
-        tools = configured["desktop_tools"]
-        build_agent_runtime(
-            destination / "runtime",
-            arguments.agent_source,
-            arguments.target,
-            node=Path(tools["node"]),
-            npm_cli=Path(tools["npm_cli"]),
-        )
+        destination = _agent_action(paths, arguments, configured)
     elif arguments.action == "sdk":
         destination = _build_sdk(build, arguments, configured, contract, sdk_root, sdk)
     elif arguments.action == "llama":
         destination = _build_llama_server(build, arguments, paths)
     elif arguments.action == "tools":
-        destination = reset(build, str(paths["tools"].relative_to(build)))
-        uv = selected_uv(configured)
-        pins = json.loads((REPO_ROOT / "native/toolchain.json").read_text(encoding="utf-8"))
-        result = run_command(
-            [
-                uv,
-                "pip",
-                "install",
-                "--python",
-                sys.executable,
-                "--target",
-                str(destination),
-                "--only-binary",
-                ":all:",
-                "--no-deps",
-                "--link-mode",
-                "copy",
-                f"resvg-py=={pins['resvg_py']}",
-            ],
-            cwd=REPO_ROOT,
-            inherit_output=True,
-        )
-        _require_tools_installed(result)
+        destination = _tools_action(build, paths, configured)
     elif arguments.action == "provision":
         destination = reset(build, str(runtime.relative_to(build)))
         provision(
@@ -547,42 +606,7 @@ def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTi
             agent_dependencies=paths["agent"],
         )
     elif arguments.action == "product":
-        destination = paths["product"]
-        destination.mkdir(parents=True, exist_ok=True)
-        sync_base_dependencies(runtime / "dependencies", destination)
-        build_product(
-            destination / "build",
-            Path(sys.executable),
-            destination / "dependencies",
-            arguments.target,
-            inputs=arguments.inputs,
-            build_toolchain=configured,
-            timings=timings,
-        )
-        pin = (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
-        wheel = agent_wheel(paths["agent"])
-        validate_wheel_dependencies(wheel, arguments.target, pin, paths["agent"])
-        if not installed_wheel_matches(wheel, destination / "dependencies"):
-            result = run_command(
-                [
-                    selected_uv(configured),
-                    "pip",
-                    "install",
-                    "--python",
-                    sys.executable,
-                    "--no-deps",
-                    "--reinstall",
-                    "--link-mode",
-                    "copy",
-                    "--target",
-                    str(destination / "dependencies"),
-                    str(wheel),
-                ],
-                cwd=REPO_ROOT,
-            )
-            if result.returncode:
-                raise RuntimeError(result.stderr)
-        write_text(destination / "agent-wheel.json", (paths["agent"] / "agent-wheel.json").read_text(encoding="utf-8"))
+        destination = _product_action(arguments, configured, paths, runtime, timings)
     else:
         destination = _assemble_action(build, arguments, timings, paths, runtime, sdk)
     return destination
