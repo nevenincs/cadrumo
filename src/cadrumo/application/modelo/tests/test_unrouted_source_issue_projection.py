@@ -14,6 +14,7 @@ import pytest
 
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from ...aggregation.source_diagnostic_reason import CalculationSourceDiagnosticReason
 from ...aggregation.source_mesh import CalculationSourceDiagnostic
@@ -27,7 +28,7 @@ def _project(
     operation: PinnedAuthorityOperation, diagnostics: tuple[CalculationSourceDiagnostic, ...]
 ) -> tuple[CalculationSourceIssue, ...]:
     """Project diagnostics against the Modelo 130 first-quarter revision, whose box 01 the form prints."""
-    snapshot = operation.snapshot("130", filing_year=2026, period="1T")
+    snapshot = operation.snapshot("130", filing_year=filing_year_envelope().horizon, period="1T")
     return unrouted_source_issues(diagnostics, snapshot_printed_boxes(operation, snapshot))
 
 
@@ -232,7 +233,7 @@ def test_a_printed_box_whose_source_produced_nothing_persists_with_its_box(opera
 
 def test_a_working_figure_whose_source_produced_nothing_does_not_persist(operation: PinnedAuthorityOperation) -> None:
     """Teeth for the rule above: the same condition on a box the form does not print is not a filed figure."""
-    revision = operation.snapshot("130", filing_year=2026, period="1T").revision
+    revision = operation.snapshot("130", filing_year=filing_year_envelope().horizon, period="1T").revision
     unprinted = next(
         str(casilla.id) for casilla in revision.casillas if casilla.form_number is None and not casilla.number.isdigit()
     )

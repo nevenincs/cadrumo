@@ -12,6 +12,7 @@ import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..printed_boxes import snapshot_printed_boxes
 from ..projection_unresolved import (
@@ -27,7 +28,7 @@ _WORKING_FIGURE = "saldo-negativo-fin-periodo"
 def test_a_working_figure_serves_no_box_and_a_printed_box_serves_its_number(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    snapshot = published_snapshot("130", filing_year=2025, period="1T")
+    snapshot = published_snapshot("130", filing_year=filing_year_envelope().horizon, period="1T")
     boxes = snapshot_printed_boxes(authority_operation, snapshot)
     nothing_worked_out = RegistryCalculationResult(modelo=snapshot.modelo.id, revision=snapshot.revision.id)
 
@@ -45,7 +46,7 @@ def test_a_working_figure_serves_no_box_and_a_printed_box_serves_its_number(
 def test_an_unresolved_binding_serves_the_number_of_the_box_it_feeds(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    snapshot = published_snapshot("130", filing_year=2025, period="1T")
+    snapshot = published_snapshot("130", filing_year=filing_year_envelope().horizon, period="1T")
     boxes = snapshot_printed_boxes(authority_operation, snapshot)
     binding_ids = tuple(binding.id for binding in snapshot.revision.bindings)
 
