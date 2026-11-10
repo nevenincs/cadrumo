@@ -1084,6 +1084,127 @@ fn no_selection_record_is_the_engine_the_package_derives_with_automatic_placemen
     );
 }
 
+/// An admission over `agent` whose reads are timed into the returned diagnostics.
+fn measured(agent: Arc<dyn Agent>) -> (Admission, Arc<Diagnostics>) {
+    let diagnostics = Arc::new(Diagnostics::default());
+    (
+        Admission::new(agent, unselected(), unpackaged()).measured(diagnostics.clone()),
+        diagnostics,
+    )
+}
+
+/// The read, outcome and whether a time was recorded, for each timed read in order.
+fn timed_reads(diagnostics: &Diagnostics) -> Vec<(String, String, bool)> {
+    diagnostics
+        .snapshot(0)
+        .events
+        .iter()
+        .filter_map(|event| event.service)
+        .map(|fact| {
+            let record = serde_json::to_value(fact).unwrap();
+            assert_eq!(record["event"], "setup_admission_read");
+            let mut keys: Vec<&str> = record
+                .as_object()
+                .unwrap()
+                .keys()
+                .map(String::as_str)
+                .collect();
+            keys.sort_unstable();
+            assert_eq!(keys, ["elapsedMs", "event", "outcome", "read"]);
+            (
+                record["read"].as_str().unwrap().to_owned(),
+                record["outcome"].as_str().unwrap().to_owned(),
+                record["elapsedMs"].is_u64(),
+            )
+        })
+        .collect()
+}
+
+fn read(name: &str, outcome: &str) -> (String, String, bool) {
+    (name.to_owned(), outcome.to_owned(), true)
+}
+
+#[test]
+fn each_read_of_a_download_start_and_a_removal_is_timed_once_without_naming_what_was_read() {
+    let replies = Replies::serving(&[TEXT], &[ADDED], &[(ADDED, Some(GB))]);
+    let (admission, diagnostics) = measured(Arc::new(replies));
+    admission.download(&requested(LOCAL, ADDED)).unwrap();
+    assert_eq!(
+        timed_reads(&diagnostics),
+        [
+            read("status", "answered"),
+            read("catalog", "answered"),
+            read("local_models", "answered"),
+        ]
+    );
+    admission.listed().unwrap();
+    assert_eq!(timed_reads(&diagnostics).len(), 6);
+    let recorded = format!("{:?}", diagnostics.snapshot(0).events);
+    for payload in [LOCAL, HOSTED, TEXT, ADDED] {
+        assert!(!recorded.contains(payload), "{payload}");
+    }
+}
+
+#[test]
+fn a_recommended_model_needs_no_list_read_and_a_busy_read_is_timed_as_one() {
+    let agent = Arc::new(ScriptedRead {
+        replies: Replies::serving(&[TEXT], &[ADDED], &[(TEXT, Some(GB))]),
+        action: "catalog",
+        answers: Mutex::new(vec![busy(), Ok(served(&[TEXT], &[(TEXT, Some(GB))]))].into()),
+    });
+    let (admission, diagnostics) = measured(agent.clone());
+    admission.download(&requested(LOCAL, TEXT)).unwrap();
+    assert_eq!(agent.replies.asked(), ["status", "catalog", "catalog"]);
+    assert_eq!(
+        timed_reads(&diagnostics),
+        [read("status", "answered"), read("catalog", "answered")]
+    );
+}
+
+#[test]
+fn a_read_is_timed_whatever_ends_it_and_the_reads_after_it_are_not_made() {
+    let invalid_list =
+        Replies::serving(&[], &[], &[]).answering("local_models", json!({"models": "none"}));
+    let signed_out = json!({"kind": "refused", "code": "signed_out"});
+    let cases = [
+        (
+            "no status reply",
+            Replies::default(),
+            vec![read("status", "unanswered")],
+        ),
+        (
+            "a signed-out status",
+            Replies::serving(&[], &[ADDED], &[]).answering("status", signed_out),
+            vec![read("status", "refused")],
+        ),
+        (
+            "a refused catalogue",
+            Replies::serving(&[], &[ADDED], &[]).answering(
+                "catalog",
+                json!({"kind": "refused", "code": "catalog_unavailable"}),
+            ),
+            vec![read("status", "answered"), read("catalog", "unanswered")],
+        ),
+        (
+            "a list outside the contract",
+            invalid_list,
+            vec![
+                read("status", "answered"),
+                read("catalog", "answered"),
+                read("local_models", "invalid"),
+            ],
+        ),
+    ];
+    for (name, replies, expected) in cases {
+        let (admission, diagnostics) = measured(Arc::new(replies));
+        assert!(
+            admission.download(&requested(LOCAL, ADDED)).is_err(),
+            "{name}"
+        );
+        assert_eq!(timed_reads(&diagnostics), expected, "{name}");
+    }
+}
+
 #[cfg(any(windows, target_os = "macos"))]
 mod selection {
     use super::*;

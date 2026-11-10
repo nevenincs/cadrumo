@@ -48,6 +48,10 @@ use crate::{
 };
 use cadrumo_application::{
     component::Cancellation,
+    diagnostics::{
+        Diagnostics,
+        service::{AdmissionRead, AdmissionReadOutcome, ServiceFact},
+    },
     error::application::{ApplicationError, ChildRefusal, ErrorCode, Operation},
     provisioning::local_ai::{
         LocalEngine, Placement,
@@ -184,6 +188,8 @@ pub struct Admission {
     selection_root: PathBuf,
     /// The package this process runs from, whose contents decide the default engine.
     package_root: PathBuf,
+    /// Where the time of each read is recorded; none records nothing.
+    diagnostics: Option<Arc<Diagnostics>>,
 }
 
 impl Admission {
@@ -192,7 +198,36 @@ impl Admission {
             agent,
             selection_root,
             package_root,
+            diagnostics: None,
         }
+    }
+
+    /// This admission, recording how long each of its reads takes in `diagnostics`.
+    pub fn measured(mut self, diagnostics: Arc<Diagnostics>) -> Self {
+        self.diagnostics = Some(diagnostics);
+        self
+    }
+
+    /// Runs `read`, then records its elapsed time and outcome class whether it answered
+    /// or not. Only the closed read name, the class and the milliseconds are recorded.
+    fn timed<T>(
+        &self,
+        which: AdmissionRead,
+        read: impl FnOnce() -> Result<T, Stop>,
+    ) -> Result<T, Stop> {
+        let started = Instant::now();
+        let result = read();
+        if let Some(diagnostics) = &self.diagnostics {
+            diagnostics.service(
+                None,
+                ServiceFact::SetupAdmissionRead {
+                    read: which,
+                    outcome: outcome_of(&result),
+                    elapsed_ms: u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX),
+                },
+            );
+        }
+        result
     }
 
     /// The local engine and placement the runtime manager runs, which every engine of a
@@ -335,6 +370,15 @@ impl Admission {
         &self,
         pending: Option<&Pending<'_>>,
     ) -> Result<local_models::LocalModels, Stop> {
+        self.timed(AdmissionRead::LocalModels, || {
+            self.read_added_models(pending)
+        })
+    }
+
+    fn read_added_models(
+        &self,
+        pending: Option<&Pending<'_>>,
+    ) -> Result<local_models::LocalModels, Stop> {
         let answer = self
             .read("local_models", pending)
             .map_err(|error| unanswered(error, "setup_local_models_unanswered"))?;
@@ -356,6 +400,10 @@ impl Admission {
 
     /// Every lane the profile lists, with the kind of access it takes.
     fn lanes(&self, pending: Option<&Pending<'_>>) -> Result<Vec<Entry>, Stop> {
+        self.timed(AdmissionRead::Status, || self.read_lanes(pending))
+    }
+
+    fn read_lanes(&self, pending: Option<&Pending<'_>>) -> Result<Vec<Entry>, Stop> {
         let status = if let Some(pending) = pending {
             self.read("status", Some(pending))
                 .map_err(CommandFailure::Host)
@@ -385,6 +433,10 @@ impl Admission {
 
     /// cadrumo-agent's catalogue, as the service relays it.
     fn catalogue(&self, pending: Option<&Pending<'_>>) -> Result<Value, Stop> {
+        self.timed(AdmissionRead::Catalog, || self.read_catalogue(pending))
+    }
+
+    fn read_catalogue(&self, pending: Option<&Pending<'_>>) -> Result<Value, Stop> {
         let answer = self
             .read("catalog", pending)
             .map_err(|error| unanswered(error, "setup_catalogue_unanswered"))?;
@@ -407,6 +459,16 @@ impl Admission {
                 READ_PAUSE,
             )
         }
+    }
+}
+
+/// The class a read's end falls in for the timing record.
+fn outcome_of<T>(result: &Result<T, Stop>) -> AdmissionReadOutcome {
+    match result {
+        Ok(_) => AdmissionReadOutcome::Answered,
+        Err(Stop::Refused(_)) => AdmissionReadOutcome::Refused,
+        Err(Stop::Unavailable(_)) => AdmissionReadOutcome::Unanswered,
+        Err(Stop::Host(_)) => AdmissionReadOutcome::Invalid,
     }
 }
 
