@@ -1684,6 +1684,9 @@ cli:
           changes.'
         file_internal_disambiguation: This filing is internal only and is not submitted
           to the AEAT.
+        filing_evidence_option_other_modelo: 'Refused. Modelo %{modelo} takes none
+          of these options: %{options}. They belong to Modelo %{applies_to} only.
+          Remove them and run the calculation again; nothing was calculated.'
         formula_operation_calculation: calculation
         formula_operation_clamp: limit
         formula_operation_conditional: conditional
