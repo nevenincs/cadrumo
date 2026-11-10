@@ -44,9 +44,19 @@ from .replay import (
 # -- assessment ------------------------------------------------------------------------------------------------------
 
 
+_INCOMPLETE_PROFILE = "REFUSED_CLI_BOUNDARY"
+"""The calendar's refusal of a profile whose answers it depends on are missing."""
+
+
 def _calendar(journey: Journey, year: int) -> CalendarView:
     args = ("app", "overview", "calendar", "--from", f"{year}-01-01", "--to", f"{year + 1}-12-31")
     reply = journey.run(f"obligations.{year}.calendar", args)
+    if not reply.ok and reply.refusal is not None and reply.refusal.startswith(_INCOMPLETE_PROFILE):
+        journey.note(
+            f"obligations.{year}.calendar: the CLI refuses the calendar of a profile with unanswered facts unless "
+            "--allow-incomplete is given, where the in-process overview read answers; read again with it"
+        )
+        reply = journey.run(f"obligations.{year}.calendar_incomplete", (*args, "--allow-incomplete"))
     if not reply.ok:
         return CalendarView(refusal=reply.refusal)
     return calendar_view(reply.result, year)
