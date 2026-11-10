@@ -19,6 +19,7 @@ from cadrumo.domain.categories.spending_category import SpendingCategory
 from ....core.citation_grounding import CitationGrounding
 from ....core.i18n.translatable import Translatable as tr
 from ....tests.aeat_literal_fixtures import CITATION_MANUAL_PDF_URL_FIXTURE
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..profile import CategoryProfile
 from ..proportionality import (
     CategoryCitation,
@@ -30,17 +31,20 @@ from ..proportionality_catalogue import require_proportionality_kind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
+_ENVELOPE = filing_year_envelope()
+_YEAR = _ENVELOPE.horizon
+
 
 def _citation() -> CategoryCitation:
     return CategoryCitation(
         source=CategoryCitationSource.MANUAL_RENTA,
-        reference="Manual práctico Renta 2025",
+        reference=f"Manual práctico Renta {_YEAR}",
         locator="test",
         url=parse_http_url(CITATION_MANUAL_PDF_URL_FIXTURE),
         quote="Texto de prueba suficientemente concreto.",
-        source_ref="aeat-renta-2025-manual-parte1",
-        valid_from=date(2025, 1, 1),
-        valid_to=date(2025, 12, 31),
+        source_ref=f"aeat-renta-{_YEAR}-manual-parte1",
+        valid_from=date(_YEAR, 1, 1),
+        valid_to=date(_YEAR, 12, 31),
     )
 
 
@@ -55,12 +59,12 @@ def test_category_citation_rejects_blank_quote_at_schema_boundary() -> None:
     with pytest.raises(ValidationError, match="must carry its verbatim quotation"):
         CategoryCitation(
             source=CategoryCitationSource.MANUAL_RENTA,
-            reference="Manual práctico Renta 2025",
+            reference=f"Manual práctico Renta {_YEAR}",
             locator="test",
             url=parse_http_url(CITATION_MANUAL_PDF_URL_FIXTURE),
             quote="   ",
-            valid_from=date(2025, 1, 1),
-            valid_to=date(2025, 12, 31),
+            valid_from=date(_YEAR, 1, 1),
+            valid_to=date(_YEAR, 12, 31),
         )
 
 
@@ -75,14 +79,14 @@ def test_category_citation_accepts_a_missing_quote_only_with_a_stated_reason() -
     """
     citation = CategoryCitation(
         source=CategoryCitationSource.MANUAL_RENTA,
-        reference="Manual práctico Renta 2025",
+        reference=f"Manual práctico Renta {_YEAR}",
         locator="test",
         url=parse_http_url(CITATION_MANUAL_PDF_URL_FIXTURE),
         quote="",
         grounding=CitationGrounding.SOURCE_NOT_BUNDLED,
         grounding_reason="El Manual práctico no está en el corpus consolidado empaquetado.",
-        valid_from=date(2025, 1, 1),
-        valid_to=date(2025, 12, 31),
+        valid_from=date(_YEAR, 1, 1),
+        valid_to=date(_YEAR, 12, 31),
     )
 
     assert citation.grounding is CitationGrounding.SOURCE_NOT_BUNDLED
@@ -90,13 +94,13 @@ def test_category_citation_accepts_a_missing_quote_only_with_a_stated_reason() -
     with pytest.raises(ValidationError, match="must record WHY"):
         CategoryCitation(
             source=CategoryCitationSource.MANUAL_RENTA,
-            reference="Manual práctico Renta 2025",
+            reference=f"Manual práctico Renta {_YEAR}",
             locator="test",
             url=parse_http_url(CITATION_MANUAL_PDF_URL_FIXTURE),
             quote="",
             grounding=CitationGrounding.SOURCE_NOT_BUNDLED,
-            valid_from=date(2025, 1, 1),
-            valid_to=date(2025, 12, 31),
+            valid_from=date(_YEAR, 1, 1),
+            valid_to=date(_YEAR, 12, 31),
         )
 
 

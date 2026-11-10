@@ -1,8 +1,9 @@
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
 
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..models import (
     CurrencyNormalizationStatus,
     EurRateLookup,
@@ -15,10 +16,11 @@ from .fx_lookup import eur_rate_lookup
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-# Published ECB euro reference rate for 2025-03-14 (EUR-base: 1 EUR = 1.0889 USD).
-_ECB_2025_03_14_USD_QUOTE = Decimal("1.0889")
-_ECB_2025_03_14_USD_RATE = Decimal("1") / _ECB_2025_03_14_USD_QUOTE
-_RATE_DATE = date(2025, 3, 14)
+# A euro reference rate in the ECB's EUR-base form (1 EUR = 1.0889 USD), published on a Friday.
+_USD_QUOTE = Decimal("1.0889")
+_USD_RATE = Decimal("1") / _USD_QUOTE
+_MARCH_14 = date(filing_year_envelope().horizon, 3, 14)
+_RATE_DATE = _MARCH_14 + timedelta(days=(4 - _MARCH_14.weekday()) % 7)
 _RATE_SOURCE_ID = "test_reference"
 
 
@@ -32,7 +34,7 @@ class _StaticRateProvider:
 
     def _rate(self, currency: str, rate_date: date) -> Decimal | None:
         if currency == "USD" and rate_date == _RATE_DATE:
-            return _ECB_2025_03_14_USD_RATE
+            return _USD_RATE
         return None
 
 
@@ -43,7 +45,7 @@ def _provider() -> _StaticRateProvider:
 def test_currency_normalization_native_eur() -> None:
     svc = CurrencyNormalizationService()
     amount = MonetaryAmount(amount=Decimal("100.00"), currency="EUR")
-    result = svc.normalize(amount, date(2026, 1, 1))
+    result = svc.normalize(amount, date(filing_year_envelope().horizon, 1, 1))
 
     assert result.status == CurrencyNormalizationStatus.NATIVE_EUR
     assert result.eur_amount == Decimal("100.00")
@@ -55,7 +57,7 @@ def test_currency_normalization_native_eur() -> None:
 def test_currency_normalization_missing_provider() -> None:
     svc = CurrencyNormalizationService(rate_provider=None)
     amount = MonetaryAmount(amount=Decimal("100.00"), currency="USD")
-    result = svc.normalize(amount, date(2026, 1, 1))
+    result = svc.normalize(amount, date(filing_year_envelope().horizon, 1, 1))
 
     assert result.status == CurrencyNormalizationStatus.MISSING_RATE
     # No euro amount at all: a zero would read as a converted figure.
@@ -81,8 +83,8 @@ def test_currency_normalization_success() -> None:
     result = svc.normalize(amount, _RATE_DATE)
 
     assert result.status == CurrencyNormalizationStatus.NORMALIZED
-    assert result.eur_amount == (Decimal("100.00") * _ECB_2025_03_14_USD_RATE).quantize(Decimal("0.01"))
-    assert result.rate == _ECB_2025_03_14_USD_RATE
+    assert result.eur_amount == (Decimal("100.00") * _USD_RATE).quantize(Decimal("0.01"))
+    assert result.rate == _USD_RATE
     # The rate authority by name, not the bare fact that a provider answered:
     # "provider" duplicated the NORMALIZED status and named nothing an auditor
     # could re-fetch the observation from.
@@ -103,7 +105,7 @@ def test_monetary_amount_normalises_lowercase_and_padded_currency_on_constructio
 def test_currency_normalization_lowercase_and_padded_native_eur(raw_currency: str) -> None:
     svc = CurrencyNormalizationService()
     amount = MonetaryAmount(amount=Decimal("100.00"), currency=raw_currency)
-    result = svc.normalize(amount, date(2026, 1, 1))
+    result = svc.normalize(amount, date(filing_year_envelope().horizon, 1, 1))
 
     assert result.status == CurrencyNormalizationStatus.NATIVE_EUR
     assert result.eur_amount == Decimal("100.00")
@@ -137,9 +139,7 @@ class _WeekendProvider:
     rate_source_id = _RATE_SOURCE_ID
 
     def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
-        return eur_rate_lookup(
-            _ECB_2025_03_14_USD_RATE, rate_date=rate_date, source=_RATE_SOURCE_ID, observation_date=_RATE_DATE
-        )
+        return eur_rate_lookup(_USD_RATE, rate_date=rate_date, source=_RATE_SOURCE_ID, observation_date=_RATE_DATE)
 
 
 def test_an_unsupported_currency_normalizes_to_no_euro_amount() -> None:
@@ -152,7 +152,7 @@ def test_an_unsupported_currency_normalizes_to_no_euro_amount() -> None:
 
 
 def test_a_weekend_conversion_records_the_publication_it_used() -> None:
-    sunday = date(2025, 3, 16)
+    sunday = _RATE_DATE + timedelta(days=2)
     svc = CurrencyNormalizationService(rate_provider=_WeekendProvider())
 
     result = svc.normalize(MonetaryAmount(amount=Decimal("100.00"), currency="USD"), sunday)
@@ -176,7 +176,11 @@ def test_an_unresolvable_rate_leaves_the_record_unstamped() -> None:
     [
         ({"status": EurRateLookupStatus.FOUND}, "carries its rate and observation date"),
         (
-            {"status": EurRateLookupStatus.FOUND, "rate": Decimal("1.1"), "observation_date": date(2025, 3, 15)},
+            {
+                "status": EurRateLookupStatus.FOUND,
+                "rate": Decimal("1.1"),
+                "observation_date": _RATE_DATE + timedelta(days=1),
+            },
             "cannot postdate",
         ),
         (

@@ -25,12 +25,16 @@ from pydantic import ValidationError
 
 from ....core.period import Period
 from ...calculations.registry.schema_references import RegistrySnapshotRef
+from ...calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ...submission.models import ModeloDraftStatus
 from ..schema import ModeloDraft, ModeloValue, ModeloValueKind, registry_schema_version
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
-_TIMESTAMP = datetime(2026, 5, 3, 12, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_REVISION_ID = str(open_ended_revision("130").id)
+
+_TIMESTAMP = datetime(_YEAR, 5, 3, 12, 0, tzinfo=UTC)
 # Two independently valid Spanish NIFs: each passes the AEAT control-letter
 # checksum on its own, which is exactly why per-field typing cannot catch the
 # divergence between them.
@@ -42,11 +46,11 @@ def _draft_kwargs() -> dict[str, object]:
     return {
         "draft_id": "draft-identity-test",
         "modelo": "130",
-        "period": Period.from_year_and_code(2026, "1T"),
+        "period": Period.from_year_and_code(_YEAR, "1T"),
         "snapshot_ref": RegistrySnapshotRef(
             modelo="130",
-            revision_id="2019-y-siguientes",
-            modelo_year=2026,
+            revision_id=_REVISION_ID,
+            modelo_year=_YEAR,
             period="1T",
         ),
         "status": ModeloDraftStatus.BORRADOR,
@@ -60,7 +64,7 @@ def _draft_kwargs() -> dict[str, object]:
         ),
         "created_at": _TIMESTAMP,
         "updated_at": _TIMESTAMP,
-        "schema_version": "registry:130:2019-y-siguientes",
+        "schema_version": f"registry:130:{_REVISION_ID}",
     }
 
 
@@ -147,9 +151,9 @@ def test_draft_refuses_a_modelo_that_contradicts_its_snapshot() -> None:
 
 def test_schema_marker_helper_is_the_shape_the_draft_requires() -> None:
     """The canonical helper's output is exactly what the coherence check accepts."""
-    marker = registry_schema_version(modelo="130", revision_id="2019-y-siguientes")
+    marker = registry_schema_version(modelo="130", revision_id=_REVISION_ID)
 
-    assert marker == "registry:130:2019-y-siguientes"
+    assert marker == f"registry:130:{_REVISION_ID}"
 
     draft = ModeloDraft.model_validate(
         {

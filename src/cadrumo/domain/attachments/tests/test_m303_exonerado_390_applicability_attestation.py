@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 import pytest
 
 from ....core.period import Period
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..errors import AttachmentValidationError
 from ..m303_filing_evidence import (
     M303Exonerado390ApplicabilityAssertion,
@@ -17,15 +18,17 @@ from ..m303_filing_evidence import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_YEAR = filing_year_envelope().horizon
+
 
 def _attestation() -> M303Exonerado390ApplicabilityAttestation:
     return M303Exonerado390ApplicabilityAttestation(
         schema_version=1,
         role="m303_exonerado_390_applicability",
         asserted_value=M303Exonerado390ApplicabilityAssertion.NOT_APPLICABLE,
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "1T"),
-        observed_at=datetime(2025, 3, 31, 12, tzinfo=UTC),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        observed_at=datetime(_YEAR, 3, 31, 12, tzinfo=UTC),
         profile_witness=M303Exonerado390ApplicabilityProfileWitness(
             profile_id="3a1f0b2c-4d5e-4f60-8a71-92b3c4d5e6f7",
             record_revision=4,
