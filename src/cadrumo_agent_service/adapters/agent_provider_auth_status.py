@@ -22,7 +22,7 @@ from ..host.launch_environment import (
     agent_binary_directories,
     system_environment,
 )
-from ..host.store_lifecycle import InvocationCancellation
+from ..host.store_lifecycle import AgentInvocationResult, InvocationCancellation
 from ..providers.application.contracts import CliObservation, CliState, CliStateCause
 from ..providers.domain.catalog import ProviderCatalogEntry
 from .agent_process import WindowsAgentInvocationRunner
@@ -141,16 +141,10 @@ class AgentProviderAuthStatusProbe:
     def _read(self, root: Path, timeout: float) -> _Reading:
         try:
             image = agent_image(agent_root=root)
-            environment = system_environment(os.environ)
-            environment[HOSTED_ROOT_VARIABLE] = str(root)
-            external = agent_binary_directories(python=hosted_python(), received=os.environ)
-            if external is not None and external != "":
-                environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE] = external
-            with self._runner_lock:
-                if self._unsettled_runner is not None:
-                    return _failed(CliStateCause.STATUS_READ_FAILED)
-                runner = WindowsAgentInvocationRunner(cancellation=self._cancellation)
-                self._active_runner = runner
+            environment = _status_environment(root)
+            runner = self._claim_runner()
+            if runner is None:
+                return _failed(CliStateCause.STATUS_READ_FAILED)
             try:
                 completed = runner.run(
                     executable=image.executable,
@@ -161,23 +155,46 @@ class AgentProviderAuthStatusProbe:
                     output_limit=4096,
                 )
             finally:
-                with self._runner_lock:
-                    if self._active_runner is runner:
-                        self._active_runner = None
-                    if not runner.settled:
-                        self._unsettled_runner = runner
-            if completed.status != 0:
-                return _failed(CliStateCause.STATUS_READ_FAILED)
-            try:
-                result = _Statuses.model_validate_json(completed.standard_output)
-            except ValueError:
-                return _failed(CliStateCause.STATUS_UNREADABLE)
-            return _Reading(
-                result.providers,
-                {
-                    provider: None if cause is None else CliStateCause(cause)
-                    for provider, cause in result.causes.items()
-                },
-            )
+                self._release_runner(runner)
+            return _parsed_statuses(completed)
         except (AgentProgramRefusalError, AgentHostError, RefusalError, OSError, ValueError):
             return _failed(CliStateCause.STATUS_READ_FAILED)
+
+    def _claim_runner(self) -> WindowsAgentInvocationRunner | None:
+        """Start one supplier runner, or none while an earlier one's scope is unconfirmed."""
+        with self._runner_lock:
+            if self._unsettled_runner is not None:
+                return None
+            runner = WindowsAgentInvocationRunner(cancellation=self._cancellation)
+            self._active_runner = runner
+            return runner
+
+    def _release_runner(self, runner: WindowsAgentInvocationRunner) -> None:
+        """Retain a runner whose scope did not settle, so no later read starts beside it."""
+        with self._runner_lock:
+            if self._active_runner is runner:
+                self._active_runner = None
+            if not runner.settled:
+                self._unsettled_runner = runner
+
+
+def _status_environment(root: Path) -> dict[str, str]:
+    environment = system_environment(os.environ)
+    environment[HOSTED_ROOT_VARIABLE] = str(root)
+    external = agent_binary_directories(python=hosted_python(), received=os.environ)
+    if external is not None and external != "":
+        environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE] = external
+    return environment
+
+
+def _parsed_statuses(completed: AgentInvocationResult) -> _Reading:
+    if completed.status != 0:
+        return _failed(CliStateCause.STATUS_READ_FAILED)
+    try:
+        result = _Statuses.model_validate_json(completed.standard_output)
+    except ValueError:
+        return _failed(CliStateCause.STATUS_UNREADABLE)
+    return _Reading(
+        result.providers,
+        {provider: None if cause is None else CliStateCause(cause) for provider, cause in result.causes.items()},
+    )

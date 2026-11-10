@@ -214,3 +214,154 @@ def test_a_helper_that_failed_is_never_confirmed(tmp_path: Path) -> None:
     answer = _settled(_attempt(tmp_path, "failed", confirm=confirm))
     assert answer["event"] == "failed"
     assert reads == []
+
+
+_WITHDRAWING_HELPER = textwrap.dedent(
+    """
+    import json, pathlib, sys, time
+    mode, sentinel = sys.argv[1], pathlib.Path(sys.argv[2])
+    attempt = "00000000-0000-4000-8000-000000000001"
+
+    def emit(event, **fields):
+        frame = {"version": 1, "attempt_id": attempt, "provider": "example", "event": event, **fields}
+        sys.stdout.write(json.dumps(frame) + "\\n")
+        sys.stdout.flush()
+
+    emit("ready")
+    sys.stdin.readline()
+    if mode == "withdrawn_before_started":
+        sentinel.write_text("withdrawn", encoding="utf-8")
+        emit("started")
+        sys.stdin.readline()
+        sys.exit(0)
+    emit("started")
+    emit("succeeded")
+    if mode == "withdrawn_after_success":
+        time.sleep(0.5)
+        sentinel.write_text("withdrawn", encoding="utf-8")
+    sys.exit(0)
+    """
+)
+
+
+def _withdrawing_attempt(
+    tmp_path: Path,
+    mode: str,
+    *,
+    confirm: Callable[[], tuple[bool, str | None]] | None = None,
+    prepare: Callable[[], None] | None = None,
+) -> tuple[AuthAttempt, Path]:
+    """An attempt whose authority holds until the sentinel file exists."""
+    script = tmp_path / "withdrawing_helper.py"
+    script.write_text(_WITHDRAWING_HELPER, encoding="utf-8", newline="\n")
+    sentinel = tmp_path / "withdrawn"
+    attempt = AuthAttempt(
+        provider="example",
+        lane="example_cli",
+        executable=Path(sys.executable),
+        arguments=(str(script), mode, str(sentinel)),
+        directory=tmp_path,
+        environment=system_environment(os.environ),
+        valid=lambda: not sentinel.exists(),
+        confirm=confirm,
+        prepare=prepare,
+    )
+    return attempt, sentinel
+
+
+def _settlement(attempt: AuthAttempt, caplog: pytest.LogCaptureFixture) -> dict[str, str]:
+    """Read the settled outcome from its log line; a withdrawn attempt's observe() answers only a cancellation."""
+    with caplog.at_level(logging.DEBUG, logger=_LOGGER):
+        deadline = time.monotonic() + HANG_GUARD_SECONDS
+        while attempt.active and time.monotonic() < deadline:
+            time.sleep(0.05)
+        attempt.close()
+        ((_level, message),) = _messages(caplog)
+    return dict(field.split("=", 1) for field in message.split(" ") if "=" in field)
+
+
+def test_success_without_a_confirmation_reader_is_served_as_success(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    attempt, _sentinel = _withdrawing_attempt(tmp_path, "succeeded")
+    settled = _settlement(attempt, caplog)
+    assert (settled["event"], settled["reason"], settled["cause"]) == ("succeeded", "none", "none")
+    assert attempt.observe()["event"] == "succeeded"
+
+
+def test_success_after_authority_was_withdrawn_is_cancelled_and_never_confirmed(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    reads: list[str] = []
+
+    def confirm() -> tuple[bool, str | None]:
+        reads.append("read")
+        return True, None
+
+    attempt, sentinel = _withdrawing_attempt(tmp_path, "withdrawn_after_success", confirm=confirm)
+    settled = _settlement(attempt, caplog)
+    assert sentinel.exists()
+    assert (settled["event"], settled["reason"], settled["cause"], settled["status_cause"]) == (
+        "cancelled",
+        "none",
+        "none",
+        "none",
+    )
+    assert reads == []
+
+
+def test_authority_withdrawn_during_the_confirmation_cancels_and_keeps_the_status_cause(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    sentinel = tmp_path / "withdrawn"
+
+    def confirm() -> tuple[bool, str | None]:
+        sentinel.write_text("withdrawn", encoding="utf-8")
+        return True, "probe_timed_out"
+
+    attempt, _sentinel = _withdrawing_attempt(tmp_path, "succeeded", confirm=confirm)
+    settled = _settlement(attempt, caplog)
+    assert (settled["event"], settled["reason"], settled["cause"], settled["status_cause"]) == (
+        "cancelled",
+        "none",
+        "none",
+        "probe_timed_out",
+    )
+
+
+def test_authority_withdrawn_by_the_preparation_cancels_before_the_helper_starts(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    sentinel = tmp_path / "withdrawn"
+
+    def prepare() -> None:
+        sentinel.write_text("withdrawn", encoding="utf-8")
+
+    attempt, _sentinel = _withdrawing_attempt(tmp_path, "succeeded", prepare=prepare)
+    settled = _settlement(attempt, caplog)
+    assert (settled["event"], settled["reason"], settled["cause"]) == ("cancelled", "none", "none")
+    assert settled["cleanup_confirmed"] == "True"
+
+
+def test_a_failing_preparation_is_a_failed_cleanup_before_the_helper_starts(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    def prepare() -> None:
+        raise RuntimeError("PRIVATE-DETAIL")
+
+    attempt, _sentinel = _withdrawing_attempt(tmp_path, "succeeded", prepare=prepare)
+    settled = _settlement(attempt, caplog)
+    assert (settled["event"], settled["reason"], settled["cause"]) == ("failed", "cleanup_failed", "agent_stop_failed")
+    answer = attempt.observe()
+    assert (answer["event"], answer["reason"], answer["cause"]) == ("failed", "cleanup_failed", "agent_stop_failed")
+    assert "PRIVATE-DETAIL" not in str(answer)
+
+
+def test_an_event_published_after_authority_was_withdrawn_cancels_without_a_cause(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    attempt, sentinel = _withdrawing_attempt(tmp_path, "withdrawn_before_started")
+    settled = _settlement(attempt, caplog)
+    assert sentinel.exists()
+    assert (settled["event"], settled["reason"], settled["cause"]) == ("cancelled", "none", "none")
+    assert settled["cleanup_confirmed"] == "True"

@@ -92,12 +92,28 @@ def prepare_provider_login(
     """
     environment = os.environ if received is None else received
     python = Path(sys.executable if interpreter is None else interpreter)
+    _require_sign_in_flow(provider, device=device)
+    root = _sign_in_root(storage_root, profile_id)
+    executable = _bundled_agent(environment, python)
+    return ProviderLogin(
+        executable=executable,
+        arguments=(*AGENT_COMMAND_LINE, "auth", "login", "--provider", provider, *(("--device",) if device else ())),
+        directory=root,
+        environment=_launch_environment(root, environment, python),
+    )
+
+
+def _require_sign_in_flow(provider: str, *, device: bool) -> None:
     if provider not in SIGN_IN_PROVIDERS:
         raise ProviderLoginRefusalError(
             f"Provider {provider!r} cannot be signed in by hand. Use one of: {', '.join(SIGN_IN_PROVIDERS)}."
         )
     if device and provider not in DEVICE_PROVIDERS:
         raise ProviderLoginRefusalError(f"--device is only available for {', '.join(DEVICE_PROVIDERS)}.")
+
+
+def _sign_in_root(storage_root: Path, profile_id: UUID) -> Path:
+    """Return the profile's existing agent root, refused when absent or inside a Git project."""
     try:
         root = existing_profile_agent_root(storage_root, profile_id)
     except AgentProgramRefusalError as error:
@@ -112,21 +128,19 @@ def prepare_provider_login(
             "The agent folder sits inside a Git project, which a provider sign-in refuses. "
             "Point CADRUMO_STORAGE_ROOT at a folder outside any Git project."
         )
-    executable = _bundled_agent(environment, python)
+    return root
+
+
+def _launch_environment(root: Path, received: Mapping[str, str], python: Path) -> dict[str, str]:
     try:
-        packaged_python = hosted_python(received=environment, interpreter=python)
+        packaged_python = hosted_python(received=received, interpreter=python)
     except AgentProgramRefusalError:
         packaged_python = None
     launch_environment = {**system_environment(os.environ), HOSTED_ROOT_VARIABLE: str(root)}
-    external = agent_binary_directories(python=packaged_python, received=environment)
+    external = agent_binary_directories(python=packaged_python, received=received)
     if external is not None and external != "":
         launch_environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE] = external
-    return ProviderLogin(
-        executable=executable,
-        arguments=(*AGENT_COMMAND_LINE, "auth", "login", "--provider", provider, *(("--device",) if device else ())),
-        directory=root,
-        environment=launch_environment,
-    )
+    return launch_environment
 
 
 def selected_profile_id(profile: str | None) -> UUID:
