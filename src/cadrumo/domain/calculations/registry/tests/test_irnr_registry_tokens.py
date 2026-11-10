@@ -18,10 +18,11 @@ from ..authority_artifact import SnapshotGlobalsComponentQuery
 from ..convenio import resolve_convenio_override
 from ..irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
 from ..snapshot_globals import SnapshotGlobalCatalogues
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
-_EFFECTIVE_DATE = date(2025, 1, 1)
+_EFFECTIVE_DATE = date(filing_year_envelope().horizon, 1, 1)
 
 
 def test_tipo_renta_tokens_are_published_by_the_validated_catalogue() -> None:

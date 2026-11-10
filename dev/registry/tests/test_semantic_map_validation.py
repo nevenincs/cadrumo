@@ -13,8 +13,10 @@ from cadrumo.core.filing_projection_ref import (
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,
 )
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.authority import compiled_bundled_authority
 from ..pipeline import semantic_map_validation
@@ -32,21 +34,34 @@ from .semantic_map_intermediate_support import intermediate_payload
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+def _design_epoch(source_ref: str) -> str:
+    """Return the record-design epoch the published authority declares for one design source."""
+    with bundled_indexed_authority().operation() as operation:
+        epoch = operation.source_reference(source_ref).record_design_epoch
+    assert epoch is not None, f"design source {source_ref} declares no record-design epoch"
+    return str(epoch)
+
+
+_M200_EPOCH = _design_epoch("aeat-dr-200-2025")
+# A design epoch below the support floor, which no parser design carries.
+_WRONG_EPOCH = str(filing_year_envelope().floor - 1)
+
+
 @pytest.fixture
 def _m303_snapshot():
-    return compiled_bundled_authority().inspect_revision("303", filing_year=2025, period="4T")
+    return compiled_bundled_authority().inspect_revision("303", filing_year=filing_year_envelope().horizon, period="4T")
 
 
 @pytest.fixture
 def _m200_inspection() -> RegistryRevisionInspection:
     """A revision that declares projection endpoints the map must biject with."""
-    return compiled_bundled_authority().inspect_revision("200", filing_year=2025, period="0A")
+    return compiled_bundled_authority().inspect_revision("200", filing_year=filing_year_envelope().horizon, period="0A")
 
 
 @pytest.fixture
 def _m130_inspection() -> RegistryRevisionInspection:
     """A revision that declares no projection endpoint, so a synthetic map can validate."""
-    return compiled_bundled_authority().inspect_revision("130", filing_year=2026, period="1T")
+    return compiled_bundled_authority().inspect_revision("130", filing_year=filing_year_envelope().horizon, period="1T")
 
 
 def _semantic_map_payload(
@@ -55,7 +70,7 @@ def _semantic_map_payload(
     source_ref: str = "aeat-dr-200-2025",
     source_sha256: str = "92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509",
     modelo: str = "200",
-    design_epoch: str = "2025",
+    design_epoch: str = _M200_EPOCH,
     variable_envelopes: tuple[dict[str, object], ...] = (),
 ) -> dict[str, object]:
     return {
@@ -228,8 +243,8 @@ def _real_source_sha256(snapshot: RegistryRevisionInspection, source_ref: str = 
 #: reaches its own assertion again. The projection-specific cases keep modelo 200
 #: and modelo 303 deliberately: their subject IS the declaration bijection.
 _M130_MODELO = "130"
-_M130_EPOCH = "2019"
 _M130_DESIGN_REF = "aeat-dr-130-2019-v12"
+_M130_EPOCH = _design_epoch(_M130_DESIGN_REF)
 _M130_LEGAL_REF = "rd-439-2007:art-110"
 
 
@@ -399,8 +414,12 @@ def test_validation_refuses_changed_or_mixed_semantic_map_source_identity(
 @pytest.mark.parametrize(
     ("modelo", "design_epoch", "message"),
     (
-        ("303", "2025", "semantic map modelo '303' does not match target revision modelo '200'"),
-        ("200", "2024", "semantic map design epoch '2024' does not match parser design epoch '2025'"),
+        ("303", _M200_EPOCH, "semantic map modelo '303' does not match target revision modelo '200'"),
+        (
+            "200",
+            _WRONG_EPOCH,
+            f"semantic map design epoch '{_WRONG_EPOCH}' does not match parser design epoch '{_M200_EPOCH}'",
+        ),
     ),
 )
 def test_validation_refuses_a_semantic_map_authored_for_the_wrong_modelo_or_design_epoch(

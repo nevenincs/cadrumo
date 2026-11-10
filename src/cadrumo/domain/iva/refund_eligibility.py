@@ -200,6 +200,9 @@ def refund_eligibility_for_period(
     The convenience entry point for a caller that holds no resolved scheme. A
     caller that already has one calls :func:`resolve_refund_eligibility`
     directly rather than resolving the fact twice.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
     """
     scheme = resolve_refund_eligibility_policy_for_period(period, authority=authority)
     return resolve_refund_eligibility(period=period, period_scheme=scheme, redeme=redeme)

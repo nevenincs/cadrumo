@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FIXTURE_CATALOG } from "../../src/dev/fixtures/agentCatalog";
+import { catalogLanes } from "../../src/shell/localModelLanes";
 import {
   agentColumn as column,
   ask,
@@ -24,7 +25,14 @@ const LOCAL = "local/api";
 const servedLocal = (FIXTURE_CATALOG.providers ?? []).find(
   (lane) => `${lane.provider_id}/${lane.transport}` === LOCAL,
 )!;
-const servedModels = servedLocal.catalog.models ?? [];
+// The picker offers a local lane's list: the models the lane recommends, and
+// those the person added, none here.
+const recommended = catalogLanes(FIXTURE_CATALOG).find(
+  (lane) => lane.id === LOCAL.replace("/", "_"),
+)!.recommended;
+const servedModels = (servedLocal.catalog.models ?? []).filter((entry) =>
+  recommended.includes(entry.model),
+);
 const absent = servedModels.filter((entry) => entry.installed === false);
 const held = servedModels.filter((entry) => entry.installed !== false);
 
@@ -170,3 +178,30 @@ test("a send for a model this computer no longer holds is refused in words with 
   await download(alert).click();
   await expect(settings(target)).toBeVisible();
 });
+
+// A model this computer cannot run is refused with its own sentence and the
+// way on, the local AI's settings, on either engine's lane; the generic
+// failure is never shown for it.
+for (const lane of ["llamacpp/api", "ollama/api"]) {
+  test(`a send for a model that does not fit on ${lane} is refused in the served words with the way on`, async ({
+    page: target,
+  }) => {
+    await open(target);
+    const picker = await openModelPicker(target);
+    await pickWay(target, picker, lane);
+    await target.keyboard.press("Escape");
+    await expect(picker).toBeHidden();
+    await ask(target, "Esto no cabe");
+    const alert = column(target)
+      .getByRole("alert")
+      .filter({ hasText: label("desktop.agent.model_does_not_fit_refused") });
+    await expect(alert).toBeVisible();
+    await expect(alert).not.toContainText(
+      label("desktop.agent.request_failed"),
+    );
+    // The message is given back to try again.
+    await expect(messageField(target)).toHaveValue("Esto no cabe");
+    await download(alert).click();
+    await expect(settings(target)).toBeVisible();
+  });
+}

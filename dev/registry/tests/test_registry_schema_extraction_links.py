@@ -28,6 +28,11 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
     CalculationCompletenessCasilla,
     CalculationCompletenessManifest,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    open_ended_revision,
+)
 
 from ..conformance.registry_schema_support import (
     NUMERIC_CASILLA_01,
@@ -41,8 +46,20 @@ from ..conformance.registry_schema_support import (
     revision as committed_revision,
 )
 from .profile_schema_support import committed_registry_validator
+from .synthetic_delta_edition_support import (
+    PREDECESSOR_EDITION,
+    PREDECESSOR_EDITION_YEAR,
+    SUCCESSOR_EDITION,
+    SUCCESSOR_EDITION_YEAR,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
+
+_DEADLINE_YEAR = filing_year_envelope().horizon
+_DEADLINE_YEAR_TEXT = str(_DEADLINE_YEAR)
+# Two overlapping keyed-bracket windows: a wide one around a narrow one that ends with the predecessor edition.
+_WIDE_WINDOW_YEAR = PREDECESSOR_EDITION_YEAR - 4
+_NARROW_WINDOW_YEAR = PREDECESSOR_EDITION_YEAR - 1
 
 
 def _filing_and_workflow_revision(modelo: ModeloDefinition) -> ModeloRevision:
@@ -59,19 +76,19 @@ def _filing_and_workflow_revision(modelo: ModeloDefinition) -> ModeloRevision:
 def test_modelo_revision_accepts_strict_continuidad_validation_with_evolution() -> None:
     revision = ModeloRevision.model_validate(
         {
-            "id": "2025",
-            "localization_key": "test.schema.revision.2025.label",
-            "valid_from": date(2025, 1, 1),
-            "period_selector": {"years": (2025,), "periods": ("0A",)},
+            "id": SUCCESSOR_EDITION,
+            "localization_key": f"test.schema.revision.{SUCCESSOR_EDITION}.label",
+            "valid_from": date(SUCCESSOR_EDITION_YEAR, 1, 1),
+            "period_selector": {"years": (SUCCESSOR_EDITION_YEAR,), "periods": ("0A",)},
             "legal_refs": ("ley-35-2006:art-48",),
             "source_refs": ("aeat-manual",),
             "continuidad_validation": "strict",
             "casilla_continuidad_evolutions": (
                 {
-                    "id": "renta-2024-2025-base-general-label",
+                    "id": f"renta-{PREDECESSOR_EDITION}-{SUCCESSOR_EDITION}-base-general-label",
                     "continuidad_id": "renta-base-liquidacion-general",
-                    "from_revision": "2024",
-                    "to_revision": "2025",
+                    "from_revision": PREDECESSOR_EDITION,
+                    "to_revision": SUCCESSOR_EDITION,
                     "evolution_kind": "label_evolved",
                     "legal_refs": ("ley-35-2006:art-48",),
                     "source_refs": ("aeat-manual",),
@@ -470,7 +487,7 @@ def test_validator_rejects_export_field_without_layout_authority_source() -> Non
 
 def test_validator_rejects_submitted_file_profile_without_exported_casilla() -> None:
     modelo, catalogues = committed_modelo("131")
-    revision = modelo.revisions["2026"]
+    revision = modelo.revisions[str(open_ended_revision("131").id)]
     profile = next(item for item in revision.extraction_profiles if item.surface == "export_record")
     target = profile.target_casillas[0].casilla_id
     removed_export_fields = {
@@ -569,11 +586,11 @@ def test_validator_rejects_dispatch_table_referencing_unknown_parameter() -> Non
     """The lookup_bracket_by_ccaa dispatch_table leaf must resolve every value
     to a declared parameter; otherwise the registry would only fault at runtime."""
     modelo, catalogues = committed_modelo("100")
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[str(authored_revisions("100")[-1].id)]
     formula = next(item for item in revision.formulas if item.target_casilla_id == "0529")
     mutated_expression, corrupted = _corrupt_first_ccaa_dispatch(
         formula.expression,
-        "renta-2025-not-a-declared-parameter",
+        f"renta-{SUCCESSOR_EDITION}-not-a-declared-parameter",
     )
     assert corrupted, "fixture must expose a dispatch_table leaf"
 
@@ -584,7 +601,7 @@ def test_validator_rejects_dispatch_table_referencing_unknown_parameter() -> Non
     with pytest.raises(
         RegistryValidationError,
         match=r"dispatch_table\['madrid'\] references unknown parameter "
-        r"'renta-2025-not-a-declared-parameter'",
+        rf"'renta-{SUCCESSOR_EDITION}-not-a-declared-parameter'",
     ):
         committed_registry_validator(catalogues).validate_modelo(
             with_revision(modelo, mutated_revision),
@@ -609,45 +626,51 @@ def test_deadline_window_any_mode_requires_conditions() -> None:
 
 def test_deadline_window_accepts_current_display_periods_at_schema_boundary() -> None:
     cases = (
-        ("2026 1T", "1T"),
-        ("2026 0A", "0A"),
-        ("2026 03", "03"),
-        ("2026 1P", "1P"),
-        ("2026 EXT-1T", "EXT-1T"),
+        (f"{_DEADLINE_YEAR_TEXT} 1T", "1T"),
+        (f"{_DEADLINE_YEAR_TEXT} 0A", "0A"),
+        (f"{_DEADLINE_YEAR_TEXT} 03", "03"),
+        (f"{_DEADLINE_YEAR_TEXT} 1P", "1P"),
+        (f"{_DEADLINE_YEAR_TEXT} EXT-1T", "EXT-1T"),
     )
     for authored_period, expected_code in cases:
         window = DeadlineWindowDefinition.model_validate(
             {
                 "id": f"test-window-{authored_period.lower().replace(' ', '-')}",
-                "filing_year": 2026,
+                "filing_year": _DEADLINE_YEAR,
                 "period": authored_period,
                 "period_kind": "quarterly",
-                "opens_on": date(2026, 4, 1),
-                "closes_on": date(2026, 4, 20),
+                "opens_on": date(_DEADLINE_YEAR, 4, 1),
+                "closes_on": date(_DEADLINE_YEAR, 4, 20),
                 "legal_refs": ("test-law:art-1",),
                 "source_refs": ("test-source",),
             },
         )
 
-        expected_period = Period.from_year_and_code(2026, expected_code)
+        expected_period = Period.from_year_and_code(_DEADLINE_YEAR, expected_code)
         assert window.period == expected_period
-        assert window.model_dump()["period"] == {"filing_year": 2026, "code": expected_code}
-        assert window.model_dump(mode="json")["period"] == {"filing_year": 2026, "code": expected_code}
-        assert '"period":"2026' not in window.model_dump_json()
+        assert window.model_dump()["period"] == {"filing_year": _DEADLINE_YEAR, "code": expected_code}
+        assert window.model_dump(mode="json")["period"] == {"filing_year": _DEADLINE_YEAR, "code": expected_code}
+        assert f'"period":"{_DEADLINE_YEAR_TEXT}' not in window.model_dump_json()
         assert DeadlineWindowDefinition.model_validate(window.model_dump()).period == expected_period
 
 
 def test_deadline_window_rejects_combined_period_shapes() -> None:
-    for combined_period in ("2026Q1", "2026-1T", "2026-0A", "2026-03", "2026"):
+    for combined_period in (
+        f"{_DEADLINE_YEAR_TEXT}Q1",
+        f"{_DEADLINE_YEAR_TEXT}-1T",
+        f"{_DEADLINE_YEAR_TEXT}-0A",
+        f"{_DEADLINE_YEAR_TEXT}-03",
+        _DEADLINE_YEAR_TEXT,
+    ):
         with pytest.raises(ValueError, match="expected 'YYYY <period-code>'"):
             DeadlineWindowDefinition.model_validate(
                 {
                     "id": f"test-window-{combined_period.lower()}",
-                    "filing_year": 2026,
+                    "filing_year": _DEADLINE_YEAR,
                     "period": combined_period,
                     "period_kind": "quarterly",
-                    "opens_on": date(2026, 4, 1),
-                    "closes_on": date(2026, 4, 20),
+                    "opens_on": date(_DEADLINE_YEAR, 4, 1),
+                    "closes_on": date(_DEADLINE_YEAR, 4, 20),
                     "legal_refs": ("test-law:art-1",),
                     "source_refs": ("test-source",),
                 },
@@ -657,21 +680,23 @@ def test_deadline_window_rejects_combined_period_shapes() -> None:
 def test_deadline_window_identity_year_matches_period_despite_following_year_dates() -> None:
     payload = {
         "id": "test-following-january-window",
-        "filing_year": 2024,
-        "period": "2024 0A",
+        "filing_year": PREDECESSOR_EDITION_YEAR,
+        "period": f"{PREDECESSOR_EDITION} 0A",
         "period_kind": "annual",
-        "opens_on": date(2025, 1, 1),
-        "closes_on": date(2025, 1, 31),
+        "opens_on": date(SUCCESSOR_EDITION_YEAR, 1, 1),
+        "closes_on": date(SUCCESSOR_EDITION_YEAR, 1, 31),
         "legal_refs": ("test-law:art-1",),
         "source_refs": ("test-source",),
     }
 
     window = DeadlineWindowDefinition.model_validate(payload)
-    assert window.filing_year == window.period.filing_year == 2024
-    assert window.closes_on.year == 2025
+    assert window.filing_year == window.period.filing_year == PREDECESSOR_EDITION_YEAR
+    assert window.closes_on.year == SUCCESSOR_EDITION_YEAR
 
-    with pytest.raises(ValueError, match=r"filing_year 2025 must match period filing_year 2024"):
-        DeadlineWindowDefinition.model_validate({**payload, "filing_year": 2025})
+    with pytest.raises(
+        ValueError, match=rf"filing_year {SUCCESSOR_EDITION} must match period filing_year {PREDECESSOR_EDITION}"
+    ):
+        DeadlineWindowDefinition.model_validate({**payload, "filing_year": SUCCESSOR_EDITION_YEAR})
 
 
 def test_keyed_bracket_table_parses_with_distinct_keys() -> None:
@@ -734,14 +759,14 @@ def test_keyed_bracket_table_rejects_duplicate_key_within_same_window() -> None:
                 KeyedBracketEntry(
                     key="general",
                     value=Decimal("0.24"),
-                    valid_from=date(2020, 1, 1),
-                    valid_to=date(2025, 12, 31),
+                    valid_from=date(_WIDE_WINDOW_YEAR, 1, 1),
+                    valid_to=date(SUCCESSOR_EDITION_YEAR, 12, 31),
                 ),
                 KeyedBracketEntry(
                     key="general",
                     value=Decimal("0.30"),
-                    valid_from=date(2023, 1, 1),
-                    valid_to=date(2024, 12, 31),
+                    valid_from=date(_NARROW_WINDOW_YEAR, 1, 1),
+                    valid_to=date(PREDECESSOR_EDITION_YEAR, 12, 31),
                 ),
             ),
             id="wide-then-narrow",
@@ -751,14 +776,14 @@ def test_keyed_bracket_table_rejects_duplicate_key_within_same_window() -> None:
                 KeyedBracketEntry(
                     key="general",
                     value=Decimal("0.30"),
-                    valid_from=date(2023, 1, 1),
-                    valid_to=date(2024, 12, 31),
+                    valid_from=date(_NARROW_WINDOW_YEAR, 1, 1),
+                    valid_to=date(PREDECESSOR_EDITION_YEAR, 12, 31),
                 ),
                 KeyedBracketEntry(
                     key="general",
                     value=Decimal("0.24"),
-                    valid_from=date(2020, 1, 1),
-                    valid_to=date(2025, 12, 31),
+                    valid_from=date(_WIDE_WINDOW_YEAR, 1, 1),
+                    valid_to=date(SUCCESSOR_EDITION_YEAR, 12, 31),
                 ),
             ),
             id="narrow-then-wide",
@@ -790,14 +815,14 @@ def test_keyed_bracket_table_allows_disjoint_windows_for_the_same_key() -> None:
             KeyedBracketEntry(
                 key="general",
                 value=Decimal("0.24"),
-                valid_from=date(2024, 1, 1),
-                valid_to=date(2024, 12, 31),
+                valid_from=date(PREDECESSOR_EDITION_YEAR, 1, 1),
+                valid_to=date(PREDECESSOR_EDITION_YEAR, 12, 31),
             ),
             KeyedBracketEntry(
                 key="general",
                 value=Decimal("0.30"),
-                valid_from=date(2025, 1, 1),
-                valid_to=date(2025, 12, 31),
+                valid_from=date(SUCCESSOR_EDITION_YEAR, 1, 1),
+                valid_to=date(SUCCESSOR_EDITION_YEAR, 12, 31),
             ),
         ),
         legal_refs=("trlirnr-rdleg-5-2004:art-25.1.a",),
@@ -823,8 +848,8 @@ def test_keyed_bracket_table_rejects_mixed_brackets_and_keyed_brackets() -> None
         upper_bound=Decimal("12450"),
         fixed_addition=Decimal("0"),
         marginal_rate=Decimal("0.19"),
-        valid_from=date(2025, 1, 1),
-        valid_to=date(2025, 12, 31),
+        valid_from=date(SUCCESSOR_EDITION_YEAR, 1, 1),
+        valid_to=date(SUCCESSOR_EDITION_YEAR, 12, 31),
     )
     with pytest.raises(ValidationError, match="cannot mix"):
         ParameterDefinition(

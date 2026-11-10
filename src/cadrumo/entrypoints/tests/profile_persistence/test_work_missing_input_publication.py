@@ -26,7 +26,7 @@ from ....application.modelo.calculation_bucket_actions import (
 )
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from ....application.modelo.work_missing_input import ModeloWorkMissingInputError
+from ....application.modelo.work_missing_input import ModeloPriorCarryAbsenceUnstatedError, ModeloWorkMissingInputError
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import RegistryValidationError
@@ -143,11 +143,16 @@ def test_real_missing_required_binding_stops_before_revision_publication(
                 clock=_CLOCK,
             )
         assert refused.value.binding_id == REQUIRED_BINDING
-        assert refused.value.translated_message in {
+        # The binding is a carry the filer can state holds nothing, so the
+        # refusal is worded as that open statement; the engine's stays its cause.
+        assert isinstance(refused.value, ModeloPriorCarryAbsenceUnstatedError)
+        assert refused.value.open_carry_ids == (REQUIRED_BINDING,)
+        cause = refused.value.__cause__
+        assert isinstance(cause, RegistryValidationError)
+        assert cause.translated_message in {
             "errors.calc.binding_value_missing",
             "errors.calc.bound_casilla_binding_value_missing",
         }
-        assert isinstance(refused.value.__cause__, RegistryValidationError)
         assert revision_repo.load().revisions == {}
         stored_unit = work_repo.load().get(unit.work_unit_id)
         assert stored_unit is not None

@@ -68,8 +68,12 @@ from .export_settlement import SettlementRefusal, declared_settlement
 from .settlement_casilla import declaration_settlement_casilla_id
 from .value_presentation import format_casilla_value
 from .work_form_declaration_facts import ModeloFormResult, ModeloFormResultDirection
+from .work_form_field_vocabulary import (
+    ModeloFormCasillaAddressV1,
+    ModeloFormOrigin,
+)
 from .work_form_header import ModeloFormExportHoldReason, export_hold, form_recorded
-from .work_form_models import ModeloFormCasillaAddressV1, ModeloFormOrigin, ModeloWorkForm
+from .work_form_models import ModeloWorkForm
 from .work_form_wording import day_text
 
 if TYPE_CHECKING:
@@ -287,6 +291,9 @@ class ModeloFormArtefactOption(BaseModel):
 
     artefact: ModeloExportArtefact
     words: str = Field(min_length=1)
+    #: The kind of file the artefact is saved as, the extension the save dialog filters on; ``None``
+    #: where the revision declares no layout for a filing file.
+    save_format: str | None = Field(default=None, min_length=1)
     availability: ModeloFormAvailability
 
 
@@ -483,6 +490,25 @@ def _asked_elections(modelo: str, period: Period) -> tuple[ModeloFormElection, .
         ModeloFormElection.REFUND_ACCOUNT: result_disposition_declares(modelo, ResultDisposition.DEVOLUCION),
     }
     return tuple(election for election, is_asked in asked.items() if is_asked)
+
+
+_FILING_SAVE_FORMATS: Final[Mapping[ExportLayoutFormat, str]] = MappingProxyType(
+    {ExportLayoutFormat.FIXED_WIDTH: "boe", ExportLayoutFormat.XML_DICTIONARY: "xml"}
+)
+_COPY_SAVE_FORMATS: Final[Mapping[ModeloExportArtefact, str]] = MappingProxyType(
+    {
+        ModeloExportArtefact.CALCULATION_REPORT_CSV: "csv",
+        ModeloExportArtefact.CALCULATION_REPORT_PDF: "pdf",
+        ModeloExportArtefact.CALCULATION_REVIEW_XLSX: "xlsx",
+    }
+)
+
+
+def artefact_save_format(artefact: ModeloExportArtefact, file_format: ExportLayoutFormat | None) -> str | None:
+    """The kind of file an artefact is saved as: the filing file by its layout, a copy by its own kind."""
+    if artefact is ModeloExportArtefact.FICHERO_BOE:
+        return None if file_format is None else _FILING_SAVE_FORMATS[file_format]
+    return _COPY_SAVE_FORMATS[artefact]
 
 
 def revision_file_format(snapshot: RegistrySnapshot) -> ExportLayoutFormat | None:
@@ -955,6 +981,7 @@ def form_export_offer(
             ModeloFormArtefactOption(
                 artefact=artefact,
                 words=tr(EXPORT_ARTEFACT_LOCALE_KEYS[artefact], locale=locale),
+                save_format=artefact_save_format(artefact, file_format),
                 availability=artefact_availability(artefact, form, language, verified=verified),
             )
             for artefact in EXPORT_ARTEFACT_LOCALE_KEYS

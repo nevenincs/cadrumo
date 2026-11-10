@@ -135,7 +135,7 @@ def _raise_gross_mismatch(
     )
 
 
-GROSS_NEEDS_WITHHOLDING_CATEGORY_MESSAGE_KEY = "errors.error.ledger_gross_above_cash_needs_withholding_category"
+GROSS_NEEDS_WITHHOLDING_CATEGORY_LOCALE_KEY = "errors.error.ledger_gross_above_cash_needs_withholding_category"
 """The sentence said for a substrate above the cash that a declared withholding category would settle."""
 
 GROSS_NEEDS_WITHHOLDING_CATEGORY_DETAIL = (
@@ -155,7 +155,7 @@ def _raise_needs_withholding_category() -> NoReturn:
     """
     raise TransactionValidationError(
         GROSS_NEEDS_WITHHOLDING_CATEGORY_DETAIL,
-        translated_message=GROSS_NEEDS_WITHHOLDING_CATEGORY_MESSAGE_KEY,
+        translated_message=GROSS_NEEDS_WITHHOLDING_CATEGORY_LOCALE_KEY,
     )
 
 

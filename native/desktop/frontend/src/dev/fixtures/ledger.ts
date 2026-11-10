@@ -4,7 +4,11 @@
 // ledger is generated from a fixed seed, so every run sees the same rows.
 
 import type { CatalogueInvoice } from "../../shell/ledgerInvoiceOperations";
-import type { LedgerTransaction, PublicDecimal } from "../../shell/ledger";
+import type {
+  LedgerMovementWithholding,
+  LedgerTransaction,
+  PublicDecimal,
+} from "../../shell/ledger";
 import { exampleInvoices } from "./ledgerInvoices";
 import { settlementOf } from "../ledgerSettlement";
 import { fixtureDay, fixtureInstant, fixtureYear } from "@/dev/fixtureDates";
@@ -34,6 +38,8 @@ export type FixtureMovement = {
   llm_rejected: boolean;
   /** The idempotency key a manual add carried, if any. */
   idempotency_key: string | null;
+  /** What the invoices it pays leave on it, as the list serves it. */
+  withholding: LedgerMovementWithholding[];
 };
 export type FixtureEvidence = {
   evidence_id: string;
@@ -467,7 +473,25 @@ function receivedInvoice(
   };
 }
 
-export function fixtureLedger(): FixtureLedger {
+/** A natural person's professional fee, paid net of its retención: 300.00 of
+ * base, 63.00 of IVA and 45.00 withheld, paid as 318.00. */
+const PRACTISED_FEE: Kind = {
+  description: "TRANSFERENCIA PEDRO GESTOR EJEMPLO HONORARIOS",
+  counterparty: "Pedro Gestor Ejemplo",
+  direction: "OUTGOING",
+  classification: "BUSINESS",
+  category: "asesoria_fiscal",
+  iva: "general",
+  account: "acc-01",
+  low: 31800,
+  high: 31800,
+};
+
+/** `practisedRetencion` adds the fee above, with its invoice, so a payment
+ * carries the retención the list serves for it. */
+export function fixtureLedger(
+  options: { practisedRetencion?: boolean } = {},
+): FixtureLedger {
   const random = generator(20_260_101);
   const movements: FixtureMovement[] = [];
   const invoices: CatalogueInvoice[] = [];
@@ -595,6 +619,7 @@ export function fixtureLedger(): FixtureLedger {
       sealed: month <= 3,
       llm_rejected: extra.llm_rejected ?? false,
       idempotency_key: null,
+      withholding: [],
     });
     return transaction;
   };
@@ -888,6 +913,47 @@ export function fixtureLedger(): FixtureLedger {
   fee.taxable_base = null;
   fee.iva_rate = null;
   fee.iva_amount = null;
+
+  if (options.practisedRetencion) {
+    const paid = day(8, 13);
+    const number = `${FIXTURE_YEAR}-GES-001`;
+    const invoiceId = hex64(`invoice:${number}`);
+    const payment = push(PRACTISED_FEE, paid, 31800, { invoice_id: invoiceId });
+    payment.taxable_base = money(30000);
+    payment.iva_rate = "0.21";
+    payment.iva_amount = money(6300);
+    payment.irpf_category = "actividad_economica";
+    const received = receivedInvoice(
+      invoiceId,
+      number,
+      paid,
+      30000,
+      6300,
+      payment.transaction_id,
+    );
+    invoices.push({
+      ...received,
+      counterparty_name: PRACTISED_FEE.counterparty,
+      counterparty_tax_id: "12345678Z",
+      retention_rate: { decimal: "0.15" },
+      retention_amount: decimal(4500),
+      settlement_amount: settlementOf(
+        decimal(36300).decimal,
+        decimal(4500).decimal,
+      ),
+    });
+    movements.at(-1)!.withholding = [
+      {
+        invoice_id: invoiceId,
+        invoice_number: number,
+        modelo: "111",
+        scheme: "actividades_profesionales",
+        retencion: "45",
+        recognised_on: paid,
+        held_back: null,
+      },
+    ];
+  }
 
   return {
     movements,

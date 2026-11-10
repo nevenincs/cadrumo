@@ -22,6 +22,7 @@ import pytest
 from cadrumo.core.descendant_relacion import DescendantRelacion
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..descendant import DescendantInfo
 from ..family_fact_context import FamilyFactResolutionContext
 from ..family_profile import RentaFamilyProfile
@@ -29,7 +30,9 @@ from ..family_types import within_multi_year_applicability_window
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_CONTEXT = FamilyFactResolutionContext(PublishedGovernedFactSource(), date(2025, 12, 31), date(2025, 12, 31))
+EXERCISE = filing_year_envelope().horizon
+
+_CONTEXT = FamilyFactResolutionContext(PublishedGovernedFactSource(), date(EXERCISE, 12, 31), date(EXERCISE, 12, 31))
 
 
 @pytest.mark.parametrize("filing_year", PublishedGovernedFactSource().supported_filing_years().years)
@@ -47,15 +50,15 @@ def test_applicability_window_spans_three_periods_ending_at_the_filing_year(fili
 
 
 def test_applicability_window_single_year_when_no_following_periods() -> None:
-    assert within_multi_year_applicability_window(2025, 2025, following_periods=0) is True
-    assert within_multi_year_applicability_window(2024, 2025, following_periods=0) is False
+    assert within_multi_year_applicability_window(EXERCISE, EXERCISE, following_periods=0) is True
+    assert within_multi_year_applicability_window(EXERCISE - 1, EXERCISE, following_periods=0) is False
 
 
 def test_applicability_window_rejects_negative_following_periods() -> None:
     from ..errors import ProfileValidationError
 
     with pytest.raises(ProfileValidationError):
-        within_multi_year_applicability_window(2025, 2025, following_periods=-1)
+        within_multi_year_applicability_window(EXERCISE, EXERCISE, following_periods=-1)
 
 
 def _child(*, birth: date, adoption: date | None = None, convive: bool = True, shared: bool = False) -> DescendantInfo:
@@ -75,9 +78,9 @@ def _child(*, birth: date, adoption: date | None = None, convive: bool = True, s
 
 def test_eligibility_uses_inscripcion_date_as_entry_when_present() -> None:
     """A child born in 2018 but adopted in 2024 is in the 2025 window via the inscription."""
-    child = _child(birth=date(2018, 5, 1), adoption=date(2024, 3, 10))
-    assert child.entry_year() == 2024
-    assert child.is_nacimiento_adopcion_eligible(2025, context=_CONTEXT) is True
+    child = _child(birth=date(EXERCISE - 7, 5, 1), adoption=date(EXERCISE - 1, 3, 10))
+    assert child.entry_year() == (EXERCISE - 1)
+    assert child.is_nacimiento_adopcion_eligible(EXERCISE, context=_CONTEXT) is True
 
 
 def test_acogimiento_resolucion_never_moves_the_madrid_entry_year() -> None:
@@ -90,30 +93,30 @@ def test_acogimiento_resolucion_never_moves_the_madrid_entry_year() -> None:
     fostered in 2024 would enter the Madrid window they have no right to.
     """
     fostered = DescendantInfo(
-        birth_date=date(2018, 5, 1),
+        birth_date=date(EXERCISE - 7, 5, 1),
         relacion=DescendantRelacion.from_registry("acogimiento_preadoptivo_o_permanente"),
-        acogimiento_resolucion_date=date(2024, 3, 10),
+        acogimiento_resolucion_date=date(EXERCISE - 1, 3, 10),
     )
-    assert fostered.entry_year() == 2018
-    assert fostered.is_nacimiento_adopcion_eligible(2025, context=_CONTEXT) is False
+    assert fostered.entry_year() == (EXERCISE - 7)
+    assert fostered.is_nacimiento_adopcion_eligible(EXERCISE, context=_CONTEXT) is False
     # The same placement DOES open the Art. 58.2 window, which is what makes the
     # two anchors genuinely different rather than one being unused.
-    assert fostered.is_eligible_minimo_incremento_menor_tres(2025, context=_CONTEXT) is True
+    assert fostered.is_eligible_minimo_incremento_menor_tres(EXERCISE, context=_CONTEXT) is True
 
 
 def test_eligibility_excludes_non_cohabiting_and_out_of_window_children() -> None:
     cases = (
-        ("non-cohabiting", _child(birth=date(2024, 2, 1), convive=False)),
-        ("out-of-window", _child(birth=date(2020, 1, 1))),
+        ("non-cohabiting", _child(birth=date(EXERCISE - 1, 2, 1), convive=False)),
+        ("out-of-window", _child(birth=date(EXERCISE - 5, 1, 1))),
     )
     for case_id, child in cases:
-        assert child.is_nacimiento_adopcion_eligible(2025, context=_CONTEXT) is False, case_id
+        assert child.is_nacimiento_adopcion_eligible(EXERCISE, context=_CONTEXT) is False, case_id
 
 
 def test_prorrateo_share_reflects_shared_custody() -> None:
     cases = (
-        ("not-shared", _child(birth=date(2024, 1, 1)), Decimal("1")),
-        ("shared", _child(birth=date(2024, 1, 1), shared=True), Decimal("0.5")),
+        ("not-shared", _child(birth=date(EXERCISE - 1, 1, 1)), Decimal("1")),
+        ("shared", _child(birth=date(EXERCISE - 1, 1, 1), shared=True), Decimal("0.5")),
     )
     for case_id, child, expected in cases:
         assert child.nacimiento_adopcion_prorrateo_share(context=_CONTEXT) == expected, case_id
@@ -122,17 +125,17 @@ def test_prorrateo_share_reflects_shared_custody() -> None:
 def test_profile_eligible_count_ignores_out_of_window_and_non_cohabiting() -> None:
     profile = RentaFamilyProfile(
         descendientes=(
-            _child(birth=date(2024, 6, 1)),  # eligible
-            _child(birth=date(2023, 2, 1)),  # eligible (entry year 2023, in window)
-            _child(birth=date(2020, 1, 1)),  # out of window
-            _child(birth=date(2025, 1, 1), convive=False),  # non-cohabiting
+            _child(birth=date(EXERCISE - 1, 6, 1)),  # eligible
+            _child(birth=date(EXERCISE - 2, 2, 1)),  # eligible (entry year 2023, in window)
+            _child(birth=date(EXERCISE - 5, 1, 1)),  # out of window
+            _child(birth=date(EXERCISE, 1, 1), convive=False),  # non-cohabiting
         ),
     )
-    assert profile.madrid_nacimiento_adopcion_eligible_count(2025, context=_CONTEXT) == 2
+    assert profile.madrid_nacimiento_adopcion_eligible_count(EXERCISE, context=_CONTEXT) == 2
 
 
 def test_unidad_familiar_otros_miembros_base_is_zero_for_single_filer() -> None:
     """The single/monoparental filer's other-members base is zero; the filer's own
     base (0435 + 0460) is added by the registry formula."""
-    profile = RentaFamilyProfile(descendientes=(_child(birth=date(2024, 6, 1)),))
+    profile = RentaFamilyProfile(descendientes=(_child(birth=date(EXERCISE - 1, 6, 1)),))
     assert profile.unidad_familiar_otros_miembros_base() == Decimal("0")

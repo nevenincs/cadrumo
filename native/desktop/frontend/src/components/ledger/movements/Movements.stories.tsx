@@ -9,6 +9,7 @@ import { pointsText } from "../editing/editingModel";
 import { periodText } from "../ledgerWords";
 import { ClassifyDialog } from "./ClassifyDialog";
 import { ColumnChooser } from "./ColumnChooser";
+import { SelectionActions } from "./ClassifyMenus";
 import {
   DEFAULT_SORT,
   NO_FILTERS,
@@ -307,3 +308,61 @@ export const ClassifyPartial = classify({
   partial: true,
   range: { count: 12, onSelect: noop },
 });
+
+const categoryAsked = fn();
+const categoryCleared = fn();
+
+function Selection() {
+  return (
+    <div className="p-3">
+      <SelectionActions
+        availabilityOf={() => ({
+          kind: "ready",
+          ids: ["a", "b", "c"],
+          skipped: 0,
+          partial: false,
+        })}
+        classify={noop}
+        count={3}
+        hidden={false}
+        onCategory={categoryAsked}
+        onClearCategory={categoryCleared}
+        onMakeRule={noop}
+      />
+    </div>
+  );
+}
+
+export const SelectionActionsMenu: StoryObj = {
+  name: "Selection actions",
+  render: () => <Selection />,
+  play: async ({ canvasElement }) => {
+    categoryAsked.mockClear();
+    categoryCleared.mockClear();
+    const trigger = await waitFor(() => {
+      const found = canvasElement.querySelector<HTMLElement>(
+        ".ledger-selection-actions",
+      );
+      if (!found) throw new Error("the selection actions are not drawn yet");
+      return found;
+    });
+    // The control names its count in words, not only an icon.
+    expect(trigger.textContent).toMatch(/3/);
+    await userEvent.click(trigger);
+    const items = await waitFor(() => {
+      const found = [
+        ...document.body.querySelectorAll<HTMLElement>("[role=menuitem]"),
+      ];
+      if (found.length === 0) throw new Error("the menu is not drawn yet");
+      return found;
+    });
+    const texts = items.map((item) => item.textContent ?? "");
+    const category = texts.findIndex((text) => text.endsWith("…"));
+    expect(category).toBeGreaterThan(-1);
+    // Category, its removal, then the rule: in that order.
+    expect(texts.length - category).toBe(3);
+    await userEvent.click(items[category]!);
+    await waitFor(() => expect(categoryAsked).toHaveBeenCalledTimes(1));
+    expect(categoryCleared).not.toHaveBeenCalled();
+  },
+};

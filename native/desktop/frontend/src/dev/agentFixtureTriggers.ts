@@ -79,3 +79,6 @@ export const TOOL_REFUSALS: readonly (readonly [
   ],
 ];
 export const BUSY_ELSEWHERE = /ocupado/i;
+/** A message the made-up agent refuses because the chosen model does not fit
+ * this computer. */
+export const MODEL_DOES_NOT_FIT = /no cabe/i;

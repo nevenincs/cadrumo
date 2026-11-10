@@ -24,16 +24,18 @@ import pytest
 from textual.pilot import Pilot
 from textual.widgets import Button, Checkbox, Static
 
-from ......application.modelo.work_form_findings import ModeloFormIssue
-from ......application.modelo.work_form_models import (
+from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormBindingAddressV1,
     ModeloFormCasillaAddressV1,
     ModeloFormEditability,
+    ModeloFormOrigin,
+    address_key,
+)
+from ......application.modelo.work_form_findings import ModeloFormIssue
+from ......application.modelo.work_form_models import (
     ModeloFormFieldBlock,
     ModeloFormGridBlock,
-    ModeloFormOrigin,
     ModeloWorkForm,
-    address_key,
     edit_address,
     revised_field,
 )

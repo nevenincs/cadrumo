@@ -2368,6 +2368,12 @@ application:
         on version %{revision_id}: the modelo definitions declare a value source that
         no calculation resolver handles. Add a resolver or mark it as deferred before
         calculating.'
+      prior_carries_unstated:
+        renta_negative_general_bases_pending: 'Modelo %{modelo} for %{filing_year}
+          cannot be calculated: it is not known whether negative general taxable bases
+          from earlier years are still pending offset (boxes %{boxes}). Store the
+          previous year''s return, or state in the declaration that none is pending.
+          Nothing was saved.'
       profile_readiness_missing: 'Profile is incomplete for Modelo %{modelo} %{period}
         %{filing_year}; complete these profile facts first: %{profile_requirements}.'
       profile_readiness_not_applicable: 'Modelo %{modelo} is not applicable to the

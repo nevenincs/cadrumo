@@ -22,6 +22,7 @@ from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalo
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ..compiler import fact_providers
 from ..compiler.authority import compile_validated_authority
@@ -142,24 +143,36 @@ def test_canonical_compiler_validator_reports_a_missing_migrated_fact() -> None:
 
 def test_real_resolution_tracks_known_legal_change_boundaries() -> None:
     """Inside the supported filing years, each authored legal change is its own variant."""
-    administrator_rate = "lirpf-art-101:retencion-administrador-reducida"
-    assert (
-        _resolve_scalar(administrator_rate, date(2022, 12, 31)).variant_id
-        != _resolve_scalar(administrator_rate, date(2023, 1, 1)).variant_id
-    )
-    professional_rate = "rirpf-art-95:retencion-actividades-profesionales-general"
-    assert (
-        _resolve_scalar(professional_rate, date(2023, 1, 25)).variant_id
-        != _resolve_scalar(professional_rate, date(2023, 1, 26)).variant_id
-    )
+    envelope = committed_supported_filing_years().date_envelope()
+
+    def changes_inside_the_envelope(fact_id: str) -> list[date]:
+        return sorted(
+            variant.valid_from
+            for variant in _catalogue().facts[fact_id].variants
+            if variant.valid_from is not None and envelope.floor < variant.valid_from <= envelope.horizon
+        )
+
+    def assert_each_change_is_its_own_variant(fact_id: str) -> list[date]:
+        changes = changes_inside_the_envelope(fact_id)
+        assert changes, f"{fact_id} authors no legal change inside the supported filing years"
+        for change in changes:
+            assert (
+                _resolve_scalar(fact_id, change - timedelta(days=1)).variant_id
+                != _resolve_scalar(fact_id, change).variant_id
+            ), f"{fact_id} does not change variant on {change}"
+        return changes
+
+    assert_each_change_is_its_own_variant("lirpf-art-101:retencion-administrador-reducida")
+    assert_each_change_is_its_own_variant("rirpf-art-95:retencion-actividades-profesionales-general")
     exclusion = "lirpf-dt-32:eo-exclusion-rendimientos-conjunto-eur"
-    assert _resolve_scalar(exclusion, date(2024, 12, 31)).payload.value == Decimal("250000")
-    assert _resolve_scalar(exclusion, date(2025, 1, 1)).payload.value == Decimal("150000")
+    latest_change = assert_each_change_is_its_own_variant(exclusion)[-1]
+    assert _resolve_scalar(exclusion, latest_change - timedelta(days=1)).payload.value == Decimal("250000")
+    assert _resolve_scalar(exclusion, latest_change).payload.value == Decimal("150000")
     assert _resolve_entities(
-        "rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario", date(2022, 1, 1)
+        "rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario", envelope.floor
     ).payload.entities == frozenset({"subvencion_capital", "indemnizacion"})
     assert _resolve_entities(
-        "rd-439-2007-art-109:conceptos-ingreso-excluidos-base-agraria", date(2022, 1, 1)
+        "rd-439-2007-art-109:conceptos-ingreso-excluidos-base-agraria", envelope.floor
     ).payload.entities == frozenset({"subvencion_corriente", "subvencion_capital", "indemnizacion"})
 
 
@@ -203,7 +216,7 @@ def test_the_gate_applies_only_to_a_registry_that_enrolls_fact_providers(monkeyp
 
 _STAGED_MODELO = "210"
 #: An edition of the modelo's delta chain; staging resolves it into the complete edition it stands for.
-_STAGED_REVISION = "2025"
+_STAGED_REVISION = str(authored_revisions(_STAGED_MODELO)[-2].id)
 _REMOVED_FACT_ID = "lirpf-art-101:retencion-administrador-general"
 _REMOVED_FACT_FILE = "0001-lirpf-art-101-retencion-administrador-general.toml"
 

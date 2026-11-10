@@ -19,8 +19,9 @@ if TYPE_CHECKING:
 
 
 def compose_ledger_read_ports(*, bucket_id: str, operation: PinnedAuthorityOperation) -> LedgerReadPorts:
-    """Bind only the transaction and event repositories used by ledger reads."""
+    """Bind only the transaction, event and invoice repositories used by ledger reads."""
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
@@ -29,6 +30,7 @@ def compose_ledger_read_ports(*, bucket_id: str, operation: PinnedAuthorityOpera
         operation=operation,
         transaction_repository=TransactionCatalogueRepository(bucket_id=bucket_id),
         bucket_event_repository=BucketEventHistoryRepository(objects=objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=bucket_id),
     )
 
 

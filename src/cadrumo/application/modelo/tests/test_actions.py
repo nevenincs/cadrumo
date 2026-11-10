@@ -53,7 +53,8 @@ from ..art52_advisory import art52_reduccion_advisory_finding
 from ..calculation_source_guards import reject_caller_overrides_of_source_bindings
 from ..dt12_advisory import dt12_reduccion_advisory_finding
 from ..dt12_antiquity_advisory import dt12_antiquity_advisory_finding
-from ..iva_wallet_gate import ModeloIvaWalletReconciliationBlocked, apply_iva_compensation_decision_binding
+from ..iva_wallet_binding import apply_iva_compensation_decision_binding
+from ..iva_wallet_refusal import ModeloIvaWalletReconciliationBlocked
 from ..revision_replay_inputs import informational_casilla_replay_inputs
 from ..verification_gate_findings import iva_wallet_error_verification_finding
 from ..verification_predicates import evaluate_verification_predicates

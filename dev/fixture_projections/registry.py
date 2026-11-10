@@ -304,6 +304,12 @@ FAMILIES: Final[tuple[FixtureFamily, ...]] = (
         questions="dev/fixtures/ledger-entry-option-questions",
         support=(f"{_LEDGER_TESTS}/entry_option_periods_recording_support.py",),
     ),
+    _script(
+        "ledger-result-schemas",
+        "ledger_result_schemas.py",
+        ("ledgerResultSchemas.json",),
+        "The result schema each ledger operation serves, which the scenario host's answers are held to.",
+    ),
     FixtureFamily(
         name="docs-sequence-seeds",
         summary="The persona-derived profile frames of the documentation seed recipes.",

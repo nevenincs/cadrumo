@@ -16,6 +16,7 @@ import pytest
 from ..revision_order import revisions_overlap
 from ..schema import ModeloRevision
 from ..schema_references import PeriodSelector
+from .authored_editions import filing_year_envelope
 from .referential_integrity_support import (
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
@@ -25,6 +26,9 @@ from .referential_integrity_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+# Revision windows are laid out from the support floor: only whether they share a year matters.
+_Y = filing_year_envelope().floor
 
 
 def _revision(*, revision_id: str, valid_from: date, period_selector: PeriodSelector) -> ModeloRevision:
@@ -45,14 +49,14 @@ def _revision(*, revision_id: str, valid_from: date, period_selector: PeriodSele
 def test_revisions_with_disjoint_years_do_not_overlap() -> None:
     """The legitimate path: two revisions with non-overlapping year windows."""
     left = _revision(
-        revision_id="test-2023",
-        valid_from=date(2023, 1, 1),
-        period_selector=PeriodSelector(years=(2023,), periods=("0A",)),
+        revision_id="test-first",
+        valid_from=date(_Y, 1, 1),
+        period_selector=PeriodSelector(years=(_Y,), periods=("0A",)),
     )
     right = _revision(
-        revision_id="test-2024",
-        valid_from=date(2024, 1, 1),
-        period_selector=PeriodSelector(years=(2024,), periods=("0A",)),
+        revision_id="test-second",
+        valid_from=date(_Y + 1, 1, 1),
+        period_selector=PeriodSelector(years=(_Y + 1,), periods=("0A",)),
     )
     assert not revisions_overlap(left, right)
 
@@ -60,14 +64,14 @@ def test_revisions_with_disjoint_years_do_not_overlap() -> None:
 def test_revisions_with_shared_years_and_periods_overlap() -> None:
     """The legitimate path: two revisions with the same year and period do overlap."""
     left = _revision(
-        revision_id="test-2024-a",
-        valid_from=date(2024, 1, 1),
-        period_selector=PeriodSelector(years=(2024,), periods=("0A",)),
+        revision_id="test-a",
+        valid_from=date(_Y, 1, 1),
+        period_selector=PeriodSelector(years=(_Y,), periods=("0A",)),
     )
     right = _revision(
-        revision_id="test-2024-b",
-        valid_from=date(2024, 6, 1),
-        period_selector=PeriodSelector(years=(2024,), periods=("0A",)),
+        revision_id="test-b",
+        valid_from=date(_Y, 6, 1),
+        period_selector=PeriodSelector(years=(_Y,), periods=("0A",)),
     )
     assert revisions_overlap(left, right)
 
@@ -95,13 +99,13 @@ def test_a_dropped_period_selector_is_refused_not_silently_treated_as_overlappin
     """
     left = _revision(
         revision_id="test-drift",
-        valid_from=date(2024, 1, 1),
-        period_selector=PeriodSelector(years=(2024,), periods=("0A",)),
+        valid_from=date(_Y, 1, 1),
+        period_selector=PeriodSelector(years=(_Y,), periods=("0A",)),
     )
     right = _revision(
         revision_id="test-drift-2",
-        valid_from=date(2025, 1, 1),
-        period_selector=PeriodSelector(years=(2025,), periods=("0A",)),
+        valid_from=date(_Y + 1, 1, 1),
+        period_selector=PeriodSelector(years=(_Y + 1,), periods=("0A",)),
     )
     del left.__dict__["period_selector"]
 

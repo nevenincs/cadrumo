@@ -19,6 +19,10 @@ pub enum FailureCategory {
     MemoryBusy,
     ProgramMissing,
     ProgramNotRunning,
+    /// The engine's program could not be started because the system refused it as no
+    /// usable image: damaged after it was installed or packaged, or built for another
+    /// computer. Neither engine's program is a download at that point.
+    EngineProgramUnusable,
     Interrupted,
     NeedsSignIn,
     NotInThisBuild,
@@ -27,7 +31,7 @@ pub enum FailureCategory {
 }
 
 impl FailureCategory {
-    pub const ALL: [Self; 17] = [
+    pub const ALL: [Self; 18] = [
         Self::Offline,
         Self::HostUnreachable,
         Self::ServerError,
@@ -40,6 +44,7 @@ impl FailureCategory {
         Self::MemoryBusy,
         Self::ProgramMissing,
         Self::ProgramNotRunning,
+        Self::EngineProgramUnusable,
         Self::Interrupted,
         Self::NeedsSignIn,
         Self::NotInThisBuild,
@@ -61,6 +66,7 @@ impl FailureCategory {
             Self::MemoryBusy => "memory_busy",
             Self::ProgramMissing => "program_missing",
             Self::ProgramNotRunning => "program_not_running",
+            Self::EngineProgramUnusable => "engine_program_unusable",
             Self::Interrupted => "interrupted",
             Self::NeedsSignIn => "needs_sign_in",
             Self::NotInThisBuild => "not_in_this_build",
@@ -78,6 +84,7 @@ impl FailureCategory {
             Self::DiskFull
                 | Self::NoPermission
                 | Self::DamagedDownload
+                | Self::EngineProgramUnusable
                 | Self::NotEnoughMemory
                 | Self::MemoryBusy
                 | Self::NotInThisBuild
@@ -221,7 +228,11 @@ mod tests {
                 serde_json::Value::String(category.as_str().into())
             );
         }
-        assert_eq!(FailureCategory::ALL.len(), 17);
+        assert_eq!(FailureCategory::ALL.len(), 18);
+        assert_eq!(
+            FailureCategory::EngineProgramUnusable.as_str(),
+            "engine_program_unusable"
+        );
     }
 
     #[test]

@@ -215,6 +215,7 @@ const RECOVERY: Record<SetupFailureCategory, SetupRow["recovery"]> = {
   memory_busy: "try_again",
   program_missing: "try_again",
   program_not_running: "try_again",
+  engine_program_unusable: "try_again",
   interrupted: "resume",
   needs_sign_in: "try_again",
   not_in_this_build: null,

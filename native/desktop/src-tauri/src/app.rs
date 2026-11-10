@@ -135,6 +135,11 @@ pub fn run(
     let token = ShellToken::mint()?;
     let origins = shell::origins(context.config(), window);
     let script = token.script(&origins)?;
+    #[cfg(feature = "native-automation")]
+    let script = match shell::automation_nonce::current()? {
+        Some(nonce) => format!("{nonce}{script}"),
+        None => script,
+    };
     let modules = vec![
         terminal::commands(),
         docs::commands(),

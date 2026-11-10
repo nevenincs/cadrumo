@@ -123,11 +123,20 @@ export function GroupActions({
 export function SelectionActions({
   availabilityOf,
   classify,
+  count,
   hidden,
+  onCategory,
+  onClearCategory,
   onMakeRule,
 }: {
   availabilityOf: (kind: ClassifyKind) => ClassifyAvailability;
   classify: (kind: ClassifyKind) => void;
+  /** How many movements are selected. */
+  count: number;
+  /** Asks one spending category for the selection. */
+  onCategory: () => void;
+  /** Stages the removal of the spending category from the selection. */
+  onClearCategory: () => void;
   /** Selected movements the grid does not draw, which a rule cannot take. */
   hidden: boolean;
   onMakeRule?: () => void;
@@ -136,13 +145,15 @@ export function SelectionActions({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <IconButton
-          label={t("desktop.ledger.selection.actions")}
+        <Button
+          type="button"
+          variant="outline"
           size="sm"
           className="ledger-selection-actions"
         >
-          <Icon name="more" />
-        </IconButton>
+          {t("desktop.ledger.selection.actions_count", { count })}
+          <Icon name="chevronDown" size="xs" />
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {CLASSIFY_KINDS.map((kind) => (
@@ -156,6 +167,13 @@ export function SelectionActions({
             <DropdownMenuShortcut chord={CLASSIFY_CHORDS[kind]} />
           </DropdownMenuItem>
         ))}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={onCategory}>
+          {t("desktop.ledger.group.category")}…
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={onClearCategory}>
+          {t("desktop.ledger.selection.clear_category")}
+        </DropdownMenuItem>
         {onMakeRule && (
           <>
             <DropdownMenuSeparator />

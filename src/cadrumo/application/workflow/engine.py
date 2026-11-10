@@ -431,18 +431,19 @@ class WorkflowEngine:
     ) -> WorkflowDeadlineTarget:
         """Stage 3 — compute the target obligation.
 
-        The schedule is computed through
+        Without a target, the schedule is computed through
         :func:`compute_obligation_schedule`, the single producer of the
         pending-obligation datum shared with the operator state
-        read-projection, so this gate and ``projection.pending_obligations``
-        cannot draw a divergent obligation set. The gate then applies
-        its own narrow filtering (``next_deadline`` or per-target
-        ``(modelo, period)`` match) over that shared schedule.
+        read-projection, and the gate takes its ``next_deadline``. An exact
+        ``(modelo, period)`` target is addressed through the deadline
+        engine's ``target_obligation``, over the windows of the target's own
+        filing year.
 
         For :attr:`WorkflowPurpose.FILE`, aborts with
-        ``NO_PENDING_OBLIGATION`` when the schedule is empty or the
-        narrow-target is absent, and with ``DEADLINE_PASSED`` when the
-        selected obligation has already closed against ``today``.
+        ``NO_PENDING_OBLIGATION`` when no obligation exists for the target or
+        its window has not opened. A targeted obligation whose window has
+        closed is still owed and proceeds as an extemporánea local filing;
+        only an untargeted closed obligation aborts with ``DEADLINE_PASSED``.
 
         For :attr:`WorkflowPurpose.VERIFY`, neither abort fires:
         verification asserts a calculation is internally sound and has
@@ -461,7 +462,6 @@ class WorkflowEngine:
                 target_modelo=target_modelo,
                 target_period=target_period,
                 today=today,
-                purpose=purpose,
             )
         except SiteHealthError as exc:
             self._record_site_unavailable(

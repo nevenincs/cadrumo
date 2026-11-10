@@ -311,6 +311,7 @@ test("an agent column whose service stays busy past the quiet bound records one 
 // A send refusal the column has no next step for stays an error.
 for (const [code, level] of [
   ["agent_gateway_model_not_installed", "WARNING"],
+  ["agent_gateway_model_does_not_fit", "WARNING"],
   ["agent_gateway_422", "ERROR"],
 ] as const)
   test(`a send refused with ${code} is reported at ${level}`, async ({

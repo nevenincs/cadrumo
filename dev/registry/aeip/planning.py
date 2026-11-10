@@ -185,10 +185,9 @@ def _classify_pair(earlier: AeipOccurrence, later: AeipOccurrence) -> str:
 
     An anexo-A event row declares no structural core, so the two axes that can
     drift are the published label and the legal refs. Both must be compared:
-    the 2025 revision adds an ordinal reference to every row in the family, so
-    a pair crossing that boundary really has evolved its legal refs, and
-    recording it as ``unchanged`` would be a drift the strict cross-revision
-    validator refuses. A retirement is planned separately.
+    a pair whose rows cite different refs has evolved them, and recording it
+    as ``unchanged`` would be a drift the strict cross-revision validator
+    refuses. A retirement is planned separately.
     """
     label_moved = normalise(earlier.label) != normalise(later.label)
     refs_moved = tuple(earlier.legal_refs) != tuple(later.legal_refs)

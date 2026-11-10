@@ -18,22 +18,24 @@ from rich.style import Style
 from textual.app import App, ComposeResult
 from textual.widgets import Static
 
-from ......application.modelo.work_form_models import (
+from ......application.modelo.work_form_field_vocabulary import (
     NEEDS_ATTENTION,
     ORIGIN_STANDINGS,
     ModeloFormBlocker,
     ModeloFormEditability,
+    ModeloFormOrigin,
+    ModeloFormScalar,
+    ModeloFormStanding,
+    address_key,
+)
+from ......application.modelo.work_form_models import (
     ModeloFormField,
     ModeloFormFieldBlock,
     ModeloFormGridBlock,
     ModeloFormGridCell,
-    ModeloFormOrigin,
     ModeloFormRepeatingBlock,
     ModeloFormRepeatingRow,
-    ModeloFormScalar,
-    ModeloFormStanding,
     ModeloWorkForm,
-    address_key,
     revised_field,
 )
 from ......core.config import override_settings

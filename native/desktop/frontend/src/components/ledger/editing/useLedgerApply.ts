@@ -159,6 +159,7 @@ async function readMissing(
         review_status: answer.result.review_status,
         group_label: read.get(id)?.group_label ?? null,
         own_account_id: read.get(id)?.own_account_id ?? null,
+        withholding: read.get(id)?.withholding ?? [],
       });
     } catch (error) {
       return readFailure(error);

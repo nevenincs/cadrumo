@@ -46,11 +46,11 @@ def _load_master() -> tuple[
     dict[str, tuple[date, str, str | None, str, str, str, str]],
 ]:
     recorded = json.loads(_MASTER_PATH.read_text(encoding="utf-8"))
-    publications = {
+    publications: dict[str, tuple[date, date, str, str, str]] = {
         key: (date.fromisoformat(row[0]), date.fromisoformat(row[1]), row[2], row[3], row[4])
         for key, row in recorded["publications"].items()
     }
-    events = {
+    events: dict[str, tuple[date, str, str | None, str, str, str, str]] = {
         key: (date.fromisoformat(row[0]), row[1], row[2], row[3], row[4], row[5], row[6])
         for key, row in recorded["events"].items()
     }

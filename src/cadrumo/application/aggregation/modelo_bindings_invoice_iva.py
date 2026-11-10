@@ -991,6 +991,40 @@ def screened_invoice_line_observations(
     return tuple(observations)
 
 
+def _agreed_classification(classified: Sequence[Transaction]) -> Transaction | None:
+    """Return the first classified movement when all of them record the same identity."""
+    identities = {
+        (
+            movement.deduction_fact_kind,
+            movement.deduction_provenance,
+            movement.investment_asset_id,
+            movement.rectifies_ledger_id,
+        )
+        for movement in classified
+    }
+    return classified[0] if len(identities) == 1 else None
+
+
+def _category_is_domestic(invoice: Invoice, *, devengo_date: date, operation: PinnedAuthorityOperation) -> bool:
+    """Return whether the invoice's declared IVA category, if any, is a domestic one."""
+    declarations = resolve_iva_deduction_catalogue(effective_date=devengo_date, authority=operation).declarations
+    domestic_categories = frozenset(
+        token.strip() for token in declarations["category.domestic"].split(",") if token.strip()
+    )
+    return invoice.iva_category is None or invoice.iva_category.value in domestic_categories
+
+
+def _has_line_at_or_above(invoice: Invoice, threshold: Decimal) -> bool:
+    """Return whether any cuota-bearing line's EUR base reaches ``threshold``, refusing an unrated line."""
+    for line_index, line in enumerate(invoice.lines):
+        if line.iva_amount <= Decimal("0"):
+            continue
+        base_amount_eur, _iva_amount_eur = line_eur_amounts_or_refuse(invoice, line_index, line)
+        if base_amount_eur >= threshold:
+            return True
+    return False
+
+
 def invoice_deduction_authority(
     invoice: Invoice,
     *,
@@ -1016,29 +1050,12 @@ def invoice_deduction_authority(
         if movement.deduction_fact_kind is not None and movement.deduction_provenance is not None
     )
     if classified:
-        identities = {
-            (
-                movement.deduction_fact_kind,
-                movement.deduction_provenance,
-                movement.investment_asset_id,
-                movement.rectifies_ledger_id,
-            )
-            for movement in classified
-        }
-        return classified[0] if len(identities) == 1 else None
-    declarations = resolve_iva_deduction_catalogue(effective_date=devengo_date, authority=operation).declarations
-    domestic_categories = frozenset(
-        token.strip() for token in declarations["category.domestic"].split(",") if token.strip()
-    )
-    if invoice.iva_category is not None and invoice.iva_category.value not in domestic_categories:
+        return _agreed_classification(classified)
+    if not _category_is_domestic(invoice, devengo_date=devengo_date, operation=operation):
         return None
     threshold = bien_inversion_threshold(operation_date=devengo_date, operation=operation)
-    for line_index, line in enumerate(invoice.lines):
-        if line.iva_amount <= Decimal("0"):
-            continue
-        base_amount_eur, _iva_amount_eur = line_eur_amounts_or_refuse(invoice, line_index, line)
-        if base_amount_eur >= threshold:
-            return None
+    if _has_line_at_or_above(invoice, threshold):
+        return None
     return InvoiceEvidenceDeduction(
         deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current"),
         deduction_provenance=IvaDeductionClassificationProvenance(

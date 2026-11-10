@@ -57,7 +57,7 @@ def test_a_symlink_is_refused_even_though_it_exists(tmp_path: Path) -> None:
 def test_containment_answers_both_ways(tmp_path: Path) -> None:
     """Inside is true, outside is false, and a sibling is not inside."""
     parent = tmp_path / "parent"
-    child = parent / "revisions" / "2025"
+    child = parent / "revisions" / "edition"
     sibling = tmp_path / "elsewhere"
 
     assert contains(parent, child)

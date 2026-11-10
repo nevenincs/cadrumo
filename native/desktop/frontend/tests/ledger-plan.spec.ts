@@ -687,6 +687,40 @@ test("reclassifying Mixed movements saves them together: the classification clea
   expect(blockersOf(kept, M)).toEqual(["mixed_needs_share"]);
 });
 
+test("making a Mixed movement Personal stages the category clear and the plan says the classification write drops it", () => {
+  const A = hexId("a");
+  const rows = contextOf(mixed(A));
+  const outcome = classifyCells(
+    {
+      kind: "personal",
+      ids: [A],
+      check: recordedCheck(EMPTY_CONTENT, rows.rows, { ids: [A] }),
+    },
+    rows.rows,
+  );
+  expect(outcome.kind).toBe("staged");
+  if (outcome.kind !== "staged") return;
+  const cleared = outcome.event.cells
+    .filter((cell) => cell.value.kind === "clear")
+    .map((cell) => cell.field)
+    .sort();
+  expect(cleared).toEqual(["business_pct", "category_id"]);
+  const content = reduceStage(EMPTY_STAGE, outcome.event).content;
+  const plan = planRecorded(content, rows);
+  // Review lists the category clear on its own.
+  expect(plan.entries[0]!.clears.sort()).toEqual(cleared);
+  expect(plan.entries[0]!.routes.category_id).toBe("bulk");
+  expect(stepKinds(plan)).toEqual(["bulk"]);
+  const bulk = plan.steps[0] as Extract<PlanStep, { kind: "bulk" }>;
+  // The bulk's blank means unchanged and carries no clear; the write of
+  // Personal is what drops the category, so the row names the field it
+  // drops and no column.
+  expect(bulk.rows[0]!.fields).toContain("category_id");
+  expect(bulk.request.csv_text.split("\n")[0]).toBe(
+    "transaction_id,classification",
+  );
+});
+
 test("the classification write also carries the clears of what it drops on a Personal movement", () => {
   const A = hexId("a");
   const plan = planRecorded(

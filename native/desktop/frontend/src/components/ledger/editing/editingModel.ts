@@ -51,7 +51,10 @@ import {
   lockedByDirection,
   takesChanges,
 } from "../../../shell/ledgerContract";
-import { takesBusinessShare } from "../../../shell/ledgerClassifications";
+import {
+  fieldsDroppedBy,
+  takesBusinessShare,
+} from "../../../shell/ledgerClassifications";
 import type { ColumnId } from "../movements/movementsModel";
 
 // ---- Columns and fields --------------------------------------------------------
@@ -113,6 +116,9 @@ export const textLimitOf = (field: StageField | DraftField): number | null =>
 
 /** The choice that binds a movement to no own account: a clear of it. */
 export const NO_ACCOUNT = "none:account";
+
+/** The choice that gives a movement no spending category: a clear of it. */
+export const NO_CATEGORY = "none:category";
 
 /** The field a column stages on a stored movement. The date shown is the
  * value date where there is one, else the booked date, and an edit changes
@@ -376,7 +382,7 @@ export function rowCells(
   field: StageField,
   input: CellValue | null,
 ): StageCell[] {
-  if (input?.value === NO_ACCOUNT) input = null;
+  if (input?.value === NO_ACCOUNT || input?.value === NO_CATEGORY) input = null;
   const value: StagedValue =
     input === null ? { kind: "clear" } : { kind: "set", value: input.value };
   const cells: StageCell[] = [
@@ -391,13 +397,14 @@ export function rowCells(
       value: { kind: "set", value: input.share },
       stored: storedShare,
     });
-  else if (takesBusinessShare(input.value) === false && storedShare != null)
-    cells.push({
-      id,
-      field: "business_pct",
-      value: { kind: "clear" },
-      stored: storedShare,
-    });
+  // What the new classification drops is cleared with it, so that the grid,
+  // the inspector and the review say so and one undo restores it.
+  for (const dropped of fieldsDroppedBy(input.value)) {
+    const name = dropped as StageField;
+    const held = storedFieldValue(row, name);
+    if (held != null && !cells.some((cell) => cell.field === name))
+      cells.push({ id, field: name, value: { kind: "clear" }, stored: held });
+  }
   return cells;
 }
 
@@ -412,7 +419,7 @@ export function draftEdits(
   field: DraftField,
   input: CellValue | null,
 ): DraftEdit[] {
-  if (input?.value === NO_ACCOUNT) input = null;
+  if (input?.value === NO_ACCOUNT || input?.value === NO_CATEGORY) input = null;
   const edits: DraftEdit[] = [{ key, field, value: input?.value ?? null }];
   if (field === "business_classification" && input) {
     if (input.share !== undefined)
@@ -1014,6 +1021,7 @@ export function draftRow(draft: Draft): LedgerRow {
     review_status: "pending",
     group_label: null,
     own_account_id: fields.own_account_id ?? null,
+    withholding: [],
   };
 }
 

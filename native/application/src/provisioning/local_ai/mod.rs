@@ -115,8 +115,10 @@ pub fn reading(
 #[derive(Debug)]
 pub enum LocalAiError {
     Failed(FailureCategory),
-    /// The server did not come up or did not answer. Its category is always
-    /// `program_not_running`; the cause is for logs and tests, and no surface words it.
+    /// The server did not come up or did not answer. Its category is
+    /// `program_not_running`, or `engine_program_unusable` when the operating system refused the
+    /// program itself ([`NotRunningCause::category`]); the cause is for logs and tests,
+    /// and no surface words it.
     NotRunning(NotRunningCause),
     Engine(Error),
 }
@@ -159,7 +161,7 @@ impl LocalAiError {
     pub fn category(&self) -> FailureCategory {
         match self {
             Self::Failed(category) => *category,
-            Self::NotRunning(_) => FailureCategory::ProgramNotRunning,
+            Self::NotRunning(cause) => cause.category(),
             Self::Engine(Error::Download(failure)) => failure.category,
             Self::Engine(Error::Cancelled) => FailureCategory::Cancelled,
             Self::Engine(Error::Io(error)) => super::transfer::file_failure(error).category,
@@ -187,11 +189,9 @@ impl fmt::Display for LocalAiError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Failed(category) => write!(f, "local AI failed: {category}"),
-            Self::NotRunning(cause) => write!(
-                f,
-                "local AI failed: {}: {cause}",
-                FailureCategory::ProgramNotRunning
-            ),
+            Self::NotRunning(cause) => {
+                write!(f, "local AI failed: {}: {cause}", cause.category())
+            }
             Self::Engine(error) => write!(f, "local AI failed: {error}"),
         }
     }
@@ -209,16 +209,19 @@ pub enum StartFailureKind {
     Silent,
     NotReady,
     VersionUnconfirmed,
+    /// The operating system refused the program as no usable image for this computer.
+    ProgramDamaged,
 }
 
 impl StartFailureKind {
-    const ALL: [Self; 6] = [
+    const ALL: [Self; 7] = [
         Self::Launch,
         Self::LogUnreadable,
         Self::Closed,
         Self::Silent,
         Self::NotReady,
         Self::VersionUnconfirmed,
+        Self::ProgramDamaged,
     ];
 
     /// A static identifier for this kind, as a diagnostic record keeps it.
@@ -230,6 +233,23 @@ impl StartFailureKind {
             Self::Silent => "server_start_budget_expired",
             Self::NotReady => "server_not_ready",
             Self::VersionUnconfirmed => "server_version_unconfirmed",
+            Self::ProgramDamaged => "server_program_damaged",
+        }
+    }
+
+    /// The category a program with no running server reads as, given the kind of its
+    /// latest failed start when that start failed.
+    pub fn category_after(latest_start: Option<Self>) -> FailureCategory {
+        latest_start.map_or(FailureCategory::ProgramNotRunning, Self::category)
+    }
+
+    /// The category a program that could not start for this kind of failure reads as:
+    /// a program the operating system refuses is damaged, whichever engine it serves,
+    /// and every other failure is a program that is not running.
+    pub fn category(self) -> FailureCategory {
+        match self {
+            Self::ProgramDamaged => FailureCategory::EngineProgramUnusable,
+            _ => FailureCategory::ProgramNotRunning,
         }
     }
 
@@ -249,6 +269,7 @@ impl ServerStartFailure {
             Self::Silent { .. } => StartFailureKind::Silent,
             Self::NotReady { .. } => StartFailureKind::NotReady,
             Self::Version(_) => StartFailureKind::VersionUnconfirmed,
+            Self::ProgramDamaged => StartFailureKind::ProgramDamaged,
         }
     }
 
@@ -280,7 +301,8 @@ impl VersionFailure {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ServerStartFailure {
     /// The operating system refused the server's process group, its creation or its
-    /// containment, so nothing ran.
+    /// containment, so nothing ran. A creation that did not finish within the spawn
+    /// budget reads [`LaunchStep::Create`] with the kind `TimedOut`.
     Launch {
         step: LaunchStep,
         kind: io::ErrorKind,
@@ -301,6 +323,9 @@ pub enum ServerStartFailure {
     },
     /// The program announced it listens and was then asked its version.
     Version(VersionFailure),
+    /// Creating the process failed because the program file is no valid image for this
+    /// computer: it is truncated, damaged or built for another architecture.
+    ProgramDamaged,
 }
 
 /// The step of launching the server that the operating system refused.
@@ -360,11 +385,25 @@ impl fmt::Display for ServerStartFailure {
                 budget.as_secs()
             ),
             Self::Version(failure) => write!(f, "its version could not be confirmed: {failure}"),
+            Self::ProgramDamaged => f.write_str("the program is no valid image for this computer"),
         }
     }
 }
 
 impl NotRunningCause {
+    /// The category this cause fails with: `engine_program_unusable` for a program the
+    /// operating system refused, in this start or in the latest one a wait found, and
+    /// `program_not_running` for every other cause.
+    pub fn category(&self) -> FailureCategory {
+        match self {
+            Self::Start(failure) => failure.kind().category(),
+            Self::NoServerWithin { latest_start, .. } => {
+                StartFailureKind::category_after(*latest_start)
+            }
+            Self::Request { .. } | Self::ListStatus { .. } => FailureCategory::ProgramNotRunning,
+        }
+    }
+
     /// A static identifier for this cause, as a diagnostic record keeps it.
     pub fn reason(&self) -> &'static str {
         match self {

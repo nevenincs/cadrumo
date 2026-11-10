@@ -12,20 +12,19 @@ from ....iva.prorrata import ProrrataInputs, compute_prorrata_general
 from ..formula_runtime_ops import apply_rounding
 from ..schema import RegistrySnapshot
 from ..schema_rounding import RegistryRoundingCode
+from .authored_editions import filing_year_envelope, supported_authored_exercises
 from .prorrata_porcentaje_grounding_support import snapshot_prorrata_percentage
 
 FORMULA_ID = "modelo-303-iva-prorrata-porcentaje"
 
 
-#: 2022 resolves to the `2022` revision, 2024 to its early-period epoch.
-#: The art. 104.Dos sentence has stood unamended since BOE-A-1992-28740, so it
-#: binds both.
-#:
-#: This named 2020, which resolved to the then-open 2009-2022 span. That span
-#: was retired when the revision was renamed to `2022`, so 2020 now resolves to
-#: no revision and every case here died on resolution rather than on the
-#: rounding code it asserts.
-LIVE_FILING_YEARS = (2022, 2024)
+#: Every supported exercise an authored modelo 303 revision governs, each once,
+#: including both epochs of an exercise the registry splits by period. The
+#: art. 104.Dos sentence has stood unamended since BOE-A-1992-28740, so it binds
+#: all of them. A year no revision governs would die on resolution rather than on
+#: the rounding code it asserts, so the exercises are read off the authored
+#: editions instead of being named.
+LIVE_FILING_YEARS = tuple(dict.fromkeys(supported_authored_exercises("303")))
 
 
 #: (con-derecho, total) volume pairs whose percentage has a fractional part
@@ -64,7 +63,7 @@ def domain_percentage(con_derecho: Decimal, total: Decimal) -> Decimal:
             operaciones_con_derecho_deduccion=con_derecho,
             operaciones_sin_derecho_deduccion=total - con_derecho,
         ),
-        year=2024,
+        year=filing_year_envelope().horizon,
         kind=ProrrataKind.from_registry("definitiva"),
     ).percentage
 

@@ -94,6 +94,33 @@ pub enum RefusedFeature {
     SedeView,
 }
 
+/// One of the three reads the setup admission check makes of the agent service before a
+/// local model download. Named for the service's administration action, never a payload.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AdmissionRead {
+    /// The lanes the profile lists, with the kind of access each takes.
+    ProviderLanes,
+    /// cadrumo-agent's model catalogue.
+    Catalog,
+    /// The models the person added to their lanes' lists.
+    LocalModels,
+}
+
+/// How an admission read ended, whatever it was for.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AdmissionReadOutcome {
+    /// The service replied and the reply was usable.
+    Answered,
+    /// The service did not answer, or refused for a reason other than a sign-out.
+    Unanswered,
+    /// Nobody is signed in, or the service refused with a code the person can act on.
+    Refused,
+    /// The service replied, but the reply is outside its contract.
+    Invalid,
+}
+
 /// Why a feature could not start.
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -140,6 +167,12 @@ pub enum ServiceFact {
         attempts: u32,
     },
     AgentProtocolRefused {},
+    /// How long one setup admission read took, from the request to its settled outcome.
+    SetupAdmissionRead {
+        read: AdmissionRead,
+        outcome: AdmissionReadOutcome,
+        elapsed_ms: u64,
+    },
     ManagerInstallationStarted {
         scope: InstallationScope,
     },

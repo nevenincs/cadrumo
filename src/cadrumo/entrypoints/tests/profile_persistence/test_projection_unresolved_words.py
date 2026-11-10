@@ -14,8 +14,8 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.application.modelo.projection import UNRESOLVED_OPERAND_REASON
 from cadrumo.application.modelo.projection_operation import ModeloProjectOperationProjection
+from cadrumo.application.modelo.projection_unresolved import UNRESOLVED_OPERAND_REASON
 from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLanguage
 from cadrumo.core.i18n.render import lookup_translation

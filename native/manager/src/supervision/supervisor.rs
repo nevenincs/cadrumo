@@ -815,7 +815,6 @@ impl Supervisor {
 
     /// Launch and watch one runtime; `None` when the image could not be started.
     fn launch(&mut self) -> Option<Ended> {
-        let startup_deadline = Instant::now() + self.config.startup_timeout;
         let launched = {
             // Linearize launch with SessionEnd acceptance. A request accepted
             // before this gate cannot be followed by a new child process.
@@ -838,6 +837,10 @@ impl Supervisor {
                 return None;
             }
         };
+        // The startup budget is the runtime's: creation waits for the launch gate, for
+        // every other process holding the creation step and for the system's scan of the
+        // image, none of which the runtime spends.
+        let startup_deadline = Instant::now() + self.config.startup_timeout;
         self.generation += 1;
         let pid = child.id();
         self.emit(Event::Launched {

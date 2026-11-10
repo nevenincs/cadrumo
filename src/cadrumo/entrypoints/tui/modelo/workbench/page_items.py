@@ -27,10 +27,17 @@ from types import MappingProxyType
 from typing import Final
 
 from .....application.modelo.source_policy import SourceFamily
-from .....application.modelo.work_form_findings import ModeloFormAttention
-from .....application.modelo.work_form_models import (
+from .....application.modelo.work_form_field_vocabulary import (
     FED_BY_A_SOURCE,
     ORIGINS_WITHOUT_A_VALUE,
+    ModeloFormOrigin,
+    ModeloFormStanding,
+    ModeloFormText,
+    ModeloFormTextDisclosure,
+    address_key,
+)
+from .....application.modelo.work_form_findings import ModeloFormAttention
+from .....application.modelo.work_form_models import (
     ModeloFormBindingInputsBlock,
     ModeloFormBlock,
     ModeloFormContextFieldBlock,
@@ -40,15 +47,10 @@ from .....application.modelo.work_form_models import (
     ModeloFormGridCell,
     ModeloFormGridColumn,
     ModeloFormGridRow,
-    ModeloFormOrigin,
     ModeloFormOutlineKind,
     ModeloFormRepeatingBlock,
     ModeloFormSection,
-    ModeloFormStanding,
-    ModeloFormText,
-    ModeloFormTextDisclosure,
     ModeloWorkForm,
-    address_key,
     section_fields,
 )
 from .....application.modelo.work_form_scalar_values import holds_zero

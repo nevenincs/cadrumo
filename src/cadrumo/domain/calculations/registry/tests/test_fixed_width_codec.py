@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import calendar
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -24,8 +26,15 @@ from ..fixed_width_codec import (
 )
 from ..fixed_width_parser import parse_fixed_width_export_field
 from ..schema_exports import ExportFieldDefinition, ExportRecordDefinition
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
+
+_YEAR = filing_year_envelope().horizon
+_YEAR_TAIL = str(_YEAR)[-2:]
+_LEAP_YEAR = next(year for year in filing_year_envelope().years if calendar.isleap(year))
+_COMMON_YEAR = next(year for year in filing_year_envelope().years if not calendar.isleap(year))
+_SAMPLE_DATE = date(_YEAR, 3, 14)
 
 
 def _field(**overrides: object) -> ExportFieldDefinition:
@@ -344,8 +353,8 @@ def test_a_scaled_domain_member_is_charged_the_width_its_own_scale_spends() -> N
         ),
         (
             {"length": 2, "value_policy": ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS},
-            2026,
-            "26",
+            _YEAR,
+            _YEAR_TAIL,
             ParsedExportPolicyWireValue(
                 policy=ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS,
                 raw="26",
@@ -392,7 +401,7 @@ def test_a_scaled_domain_member_is_charged_the_width_its_own_scale_spends() -> N
             "0012345678901",
             "0012345678901",
         ),
-        ({"length": 4, "value_policy": ExportValuePolicy.FOUR_DIGIT_YEAR}, 2026, "2026", Decimal(2026)),
+        ({"length": 4, "value_policy": ExportValuePolicy.FOUR_DIGIT_YEAR}, _YEAR, str(_YEAR), Decimal(_YEAR)),
         ({"length": 2, "value_policy": ExportValuePolicy.TWO_DIGIT_MONTH}, 8, "08", Decimal(8)),
         ({"length": 2, "value_policy": ExportValuePolicy.TWO_DIGIT_DAY}, "9", "09", Decimal(9)),
         (
@@ -404,9 +413,9 @@ def test_a_scaled_domain_member_is_charged_the_width_its_own_scale_spends() -> N
                 "date_format": "aaaammdd",
                 "value_policy": ExportValuePolicy.YYYYMMDD,
             },
-            "20240229",
-            "20240229",
-            "20240229",
+            f"{_LEAP_YEAR}0229",
+            f"{_LEAP_YEAR}0229",
+            f"{_LEAP_YEAR}0229",
         ),
         (
             {
@@ -417,9 +426,9 @@ def test_a_scaled_domain_member_is_charged_the_width_its_own_scale_spends() -> N
                 "date_format": "ddmmaaaa",
                 "value_policy": ExportValuePolicy.DDMMYYYY,
             },
-            "29022024",
-            "29022024",
-            "29022024",
+            f"2902{_LEAP_YEAR}",
+            f"2902{_LEAP_YEAR}",
+            f"2902{_LEAP_YEAR}",
         ),
     ),
 )
@@ -457,9 +466,9 @@ def test_complete_reviewed_policy_set_renders_and_parses_exact_wire_bytes(
             Decimal("-123.45"),
             "N",
         ),
-        (ExportValuePolicy.YYYYMMDD_TEXT_YEAR, {"length": 4}, "20250314", "2025"),
-        (ExportValuePolicy.YYYYMMDD_TEXT_MONTH, {"length": 2}, "20250314", "03"),
-        (ExportValuePolicy.YYYYMMDD_TEXT_DAY, {"length": 2}, "20250314", "14"),
+        (ExportValuePolicy.YYYYMMDD_TEXT_YEAR, {"length": 4}, _SAMPLE_DATE.strftime("%Y%m%d"), str(_YEAR)),
+        (ExportValuePolicy.YYYYMMDD_TEXT_MONTH, {"length": 2}, _SAMPLE_DATE.strftime("%Y%m%d"), "03"),
+        (ExportValuePolicy.YYYYMMDD_TEXT_DAY, {"length": 2}, _SAMPLE_DATE.strftime("%Y%m%d"), "14"),
     ),
 )
 def test_noninvertible_parts_preserve_their_exact_wire_bytes(
@@ -526,7 +535,7 @@ def test_enumeration_is_the_only_policy_that_can_combine_with_allowed_values() -
         _field(
             length=4,
             value_policy=ExportValuePolicy.FOUR_DIGIT_YEAR,
-            allowed_values=("2026",),
+            allowed_values=(str(_YEAR),),
         )
 
 
@@ -545,7 +554,7 @@ def test_enumeration_is_the_only_policy_that_can_combine_with_allowed_values() -
                 "date_format": "aaaammdd",
                 "value_policy": ExportValuePolicy.YYYYMMDD,
             },
-            "20230229",
+            f"{_COMMON_YEAR}0229",
         ),
         (
             {
@@ -556,7 +565,7 @@ def test_enumeration_is_the_only_policy_that_can_combine_with_allowed_values() -
                 "date_format": "ddmmaaaa",
                 "value_policy": ExportValuePolicy.DDMMYYYY,
             },
-            "29022023",
+            f"2902{_COMMON_YEAR}",
         ),
         (
             {
@@ -811,10 +820,10 @@ def test_record_renders_when_an_optional_numeric_casilla_is_absent() -> None:
     """
     body = render_fixed_width_export_record_body(
         _absence_record(required=False),
-        field_values={"01": "2010"},
+        field_values={"01": str(_YEAR)},
     )
 
-    assert body == b"20100000"
+    assert body == f"{_YEAR}0000".encode()
 
 
 def _occurrence_block_record() -> ExportRecordDefinition:
@@ -875,7 +884,7 @@ def test_record_refuses_when_a_required_numeric_casilla_is_absent() -> None:
     with pytest.raises(FixedWidthRecordRenderError) as excinfo:
         render_fixed_width_export_record_body(
             _absence_record(required=True),
-            field_values={"01": "2010"},
+            field_values={"01": str(_YEAR)},
         )
 
     error = excinfo.value
@@ -1060,7 +1069,7 @@ def test_an_absent_optional_year_zero_fill_reads_back_as_absence() -> None:
 
     assert render_fixed_width_export_field(optional, None) == "0000"
     assert parse_fixed_width_export_field(optional, "0000") is None
-    assert parse_fixed_width_export_field(optional, "2025") == 2025
+    assert parse_fixed_width_export_field(optional, str(_YEAR)) == _YEAR
     with pytest.raises(RegistryValidationError, match="four-digit year"):
         parse_fixed_width_export_field(required, "0000")
     with pytest.raises(RegistryValidationError, match="four-digit year"):
@@ -1122,9 +1131,9 @@ def test_a_year_carried_as_an_integral_decimal_renders_and_a_fractional_one_refu
     """Integer casillas retain Decimal values through the filing renderer."""
     field = _field(length=4, value_policy=ExportValuePolicy.FOUR_DIGIT_YEAR)
 
-    for year in ("1000", "2025", "9999"):
+    for year in ("1000", str(_YEAR), "9999"):
         assert render_fixed_width_export_field(field, Decimal(year)) == year
-    for invalid in ("2025.5", "NaN", "sNaN", "Infinity", "-Infinity"):
+    for invalid in (f"{_YEAR}.5", "NaN", "sNaN", "Infinity", "-Infinity"):
         with pytest.raises(RegistryValidationError, match="four-digit-year export value"):
             render_fixed_width_export_field(field, Decimal(invalid))
     for outside in ("999", "10000"):

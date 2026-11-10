@@ -2,23 +2,40 @@
 
 from __future__ import annotations
 
+import calendar
 from collections import Counter
-from datetime import date
+from datetime import date, timedelta
+from decimal import Decimal
 
 import pytest
 
+from ....core.filing_year import FOUR_DIGIT_YEAR_FIRST
 from ....core.modelo import Modelo
 from ....core.period import Period
+from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.deadline_coordinate import DeadlineSemanticCoordinate, deadline_semantic_coordinate
 from ...calculations.registry.schedules import applicable_filing_schedules, evaluate_profile_conditions
-from ...calculations.registry.tests.authored_editions import deadline_source_with_sha256, source_exercise
+from ...calculations.registry.tests.authored_editions import (
+    deadline_source_with_sha256,
+    filing_year_envelope,
+    source_exercise,
+)
 from ...calculations.registry.tests.legal_text import legal_text_match, spanish_date
 from ...calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
     published_supported_filing_years,
 )
 from ...contribuyente.renta_codes import FiscalResidency
-from ..engine import DeadlineEngine, applies_to, explain, next_deadline
+from ..effective_close import DEFAULT_DUE_SOON_DAYS
+from ..engine import (
+    DEADLINE_WINDOW_INDEX,
+    DeadlineEngine,
+    DeadlineWindowYearIndex,
+    applies_to,
+    explain,
+    indexed_deadline_window_year,
+    next_deadline,
+)
 from ..errors import DeadlineValidationError, NoDeadlineWindowsError, ScheduleComputationError
 from ..models import (
     IrpfEstimationRegime,
@@ -36,6 +53,8 @@ from ..models import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _SUPPORTED_YEARS = PublishedGovernedFactSource().supported_filing_years().years
+_YEAR = filing_year_envelope().horizon
+"""The newest supported exercise, whose schedule the profile-driven cases compute."""
 # The AEAT Calendario del contribuyente whose pinned PDF prints the Modelo 130 first
 # quarter as April 1-20 with direct debit through April 15; the exercise is the one
 # the Modelo 130 windows cite it for.
@@ -70,9 +89,14 @@ def _renta_campaign(legal_ref: str, cutoff_month: int, cutoff_day: int) -> tuple
 
 # Each IRPF campaign's plazo general, read from its Orden's own article: Orden
 # HAC/277/2026 art. 7 and Orden HAC/265/2024 art. 8.
-_RENTA_CAMPAIGNS = (
-    pytest.param(*_renta_campaign("orden-hac-277-2026:art-7", 6, 25), id="orden-hac-277-art-7"),
-    pytest.param(*_renta_campaign("orden-hac-265-2024:art-8", 6, 26), id="orden-hac-265-art-8"),
+_RENTA_CAMPAIGN_ROWS = (
+    _renta_campaign("orden-hac-277-2026:art-7", 6, 25),
+    _renta_campaign("orden-hac-265-2024:art-8", 6, 26),
+)
+_RENTA_CAMPAIGN_IDS = ("orden-hac-277-art-7", "orden-hac-265-art-8")
+_RENTA_CAMPAIGNS = tuple(
+    pytest.param(*row, id=campaign_id)
+    for row, campaign_id in zip(_RENTA_CAMPAIGN_ROWS, _RENTA_CAMPAIGN_IDS, strict=True)
 )
 
 
@@ -127,7 +151,7 @@ def _assert_exact_once(
 
 class TestCompute:
     def test_registry_deadline_windows_drive_schedule(self) -> None:
-        schedule = _engine().compute(_profile(), 2026, today=date(2026, 1, 1))
+        schedule = _engine().compute(_profile(), _YEAR, today=date(_YEAR, 1, 1))
 
         # Verify that M130 and M303 quarterly windows are present and sorted by
         # close date. The full obligation set is larger — modelos with
@@ -141,21 +165,21 @@ class TestCompute:
             if obligation.modelo in {"130", "303"}
         ]
         assert irpf_iva == [
-            ("130", _period(2026, "1T")),
-            ("303", _period(2026, "1T")),
-            ("130", _period(2026, "2T")),
-            ("303", _period(2026, "2T")),
-            ("130", _period(2026, "3T")),
-            ("303", _period(2026, "3T")),
-            ("130", _period(2026, "4T")),
-            ("303", _period(2026, "4T")),
+            ("130", _period(_YEAR, "1T")),
+            ("303", _period(_YEAR, "1T")),
+            ("130", _period(_YEAR, "2T")),
+            ("303", _period(_YEAR, "2T")),
+            ("130", _period(_YEAR, "3T")),
+            ("303", _period(_YEAR, "3T")),
+            ("130", _period(_YEAR, "4T")),
+            ("303", _period(_YEAR, "4T")),
         ]
 
     def test_profile_condition_can_remove_registry_deadline(self) -> None:
         schedule = _engine().compute(
             _profile(art109_activity_income_withholding_ge_70pct=True),
-            2026,
-            today=date(2026, 1, 1),
+            _YEAR,
+            today=date(_YEAR, 1, 1),
         )
 
         modelos = [obligation.modelo for obligation in schedule.obligations]
@@ -163,7 +187,7 @@ class TestCompute:
         assert modelos.count(Modelo("303")) == 4, "M303 must appear for all four quarters"
 
     def test_registry_any_condition_can_add_withholding_deadline_for_employee_payer(self) -> None:
-        schedule = _engine().compute(_profile(has_employees=True), 2026, today=date(2026, 1, 1))
+        schedule = _engine().compute(_profile(has_employees=True), _YEAR, today=date(_YEAR, 1, 1))
 
         modelos = [obligation.modelo for obligation in schedule.obligations]
         assert modelos.count(Modelo("111")) == 4, "M111 must appear for all four quarters when has_employees=True"
@@ -173,8 +197,8 @@ class TestCompute:
     def test_registry_any_condition_can_add_withholding_deadline_for_professional_payer(self) -> None:
         schedule = _engine().compute(
             _profile(pays_professionals_with_retencion=True),
-            2026,
-            today=date(2026, 1, 1),
+            _YEAR,
+            today=date(_YEAR, 1, 1),
         )
 
         assert [obligation.modelo for obligation in schedule.obligations if obligation.modelo == "111"] == [
@@ -190,35 +214,35 @@ class TestCompute:
                 has_employees=True,
                 enrollment=ModeloEnrollment(large_company=True),
             ),
-            2026,
-            today=date(2026, 1, 1),
+            _YEAR,
+            today=date(_YEAR, 1, 1),
         )
         withholding_periods = [obligation.period for obligation in schedule.obligations if obligation.modelo == "111"]
 
         assert withholding_periods == [
-            _period(2026, "01"),
-            _period(2026, "02"),
-            _period(2026, "03"),
-            _period(2026, "04"),
-            _period(2026, "05"),
-            _period(2026, "06"),
-            _period(2026, "07"),
-            _period(2026, "08"),
-            _period(2026, "09"),
-            _period(2026, "10"),
-            _period(2026, "11"),
-            _period(2026, "12"),
+            _period(_YEAR, "01"),
+            _period(_YEAR, "02"),
+            _period(_YEAR, "03"),
+            _period(_YEAR, "04"),
+            _period(_YEAR, "05"),
+            _period(_YEAR, "06"),
+            _period(_YEAR, "07"),
+            _period(_YEAR, "08"),
+            _period(_YEAR, "09"),
+            _period(_YEAR, "10"),
+            _period(_YEAR, "11"),
+            _period(_YEAR, "12"),
         ]
 
     def test_intracommunity_profile_selects_quarterly_modelo_349_when_threshold_is_not_exceeded(self) -> None:
         schedule = _engine().compute(
             _profile(does_intracomunitario=True),
-            2026,
-            today=date(2026, 1, 1),
+            _YEAR,
+            today=date(_YEAR, 1, 1),
         )
         periods = [obligation.period for obligation in schedule.obligations if obligation.modelo == "349"]
 
-        assert periods == [_period(2026, quarter) for quarter in ("1T", "2T", "3T", "4T")]
+        assert periods == [_period(_YEAR, quarter) for quarter in ("1T", "2T", "3T", "4T")]
 
     def test_intracommunity_threshold_selects_monthly_modelo_349(self) -> None:
         schedule = _engine().compute(
@@ -234,24 +258,24 @@ class TestCompute:
                     hydrocarbon_deposit_advance_payment_deduction_entitled=False,
                 ),
             ),
-            2026,
-            today=date(2026, 1, 1),
+            _YEAR,
+            today=date(_YEAR, 1, 1),
         )
         periods = [obligation.period for obligation in schedule.obligations if obligation.modelo == "349"]
 
         assert periods == [
-            _period(2026, "01"),
-            _period(2026, "02"),
-            _period(2026, "03"),
-            _period(2026, "04"),
-            _period(2026, "05"),
-            _period(2026, "06"),
-            _period(2026, "07"),
-            _period(2026, "08"),
-            _period(2026, "09"),
-            _period(2026, "10"),
-            _period(2026, "11"),
-            _period(2026, "12"),
+            _period(_YEAR, "01"),
+            _period(_YEAR, "02"),
+            _period(_YEAR, "03"),
+            _period(_YEAR, "04"),
+            _period(_YEAR, "05"),
+            _period(_YEAR, "06"),
+            _period(_YEAR, "07"),
+            _period(_YEAR, "08"),
+            _period(_YEAR, "09"),
+            _period(_YEAR, "10"),
+            _period(_YEAR, "11"),
+            _period(_YEAR, "12"),
         ]
 
     @pytest.mark.parametrize("filing_year", _SUPPORTED_YEARS)
@@ -283,14 +307,14 @@ class TestCompute:
         ]
 
     def test_precalculation_schedule_does_not_emit_qualified_m210_variants(self) -> None:
-        schedule = _engine().compute(_profile(), 2025, today=date(2025, 1, 1))
+        schedule = _engine().compute(_profile(), _YEAR - 1, today=date(_YEAR - 1, 1, 1))
 
         assert all(item.modelo != "210" for item in schedule.obligations)
 
     def test_periodic_coordinate_gate_rejects_dropped_and_duplicate_rows(self) -> None:
         expected = [
-            deadline_semantic_coordinate("303", _period(2025, "1T"), None, None),
-            deadline_semantic_coordinate("303", _period(2025, "2T"), None, None),
+            deadline_semantic_coordinate("303", _period(_YEAR, "1T"), None, None),
+            deadline_semantic_coordinate("303", _period(_YEAR, "2T"), None, None),
         ]
 
         with pytest.raises(AssertionError):
@@ -353,7 +377,7 @@ class TestCompute:
             _assert_exact_once(actual, expected)
 
     def test_registry_condition_can_add_rental_withholding_deadline(self) -> None:
-        schedule = _engine().compute(_profile(pays_rent_with_retencion=True), 2026, today=date(2026, 1, 1))
+        schedule = _engine().compute(_profile(pays_rent_with_retencion=True), _YEAR, today=date(_YEAR, 1, 1))
 
         assert [obligation.modelo for obligation in schedule.obligations if obligation.modelo == "115"] == [
             "115",
@@ -365,8 +389,8 @@ class TestCompute:
     def test_registry_condition_can_add_capital_income_withholding_deadline(self) -> None:
         schedule = _engine().compute(
             _profile(pays_capital_income_with_retencion=True),
-            2026,
-            today=date(2026, 1, 1),
+            _YEAR,
+            today=date(_YEAR, 1, 1),
         )
 
         assert [obligation.modelo for obligation in schedule.obligations if obligation.modelo == "123"] == [
@@ -379,8 +403,8 @@ class TestCompute:
     def test_registry_condition_can_add_objective_estimation_deadline(self) -> None:
         schedule = _engine().compute(
             _profile(irpf_estimation_regime=IrpfEstimationRegime.from_registry("objetiva")),
-            2026,
-            today=date(2026, 1, 1),
+            _YEAR,
+            today=date(_YEAR, 1, 1),
         )
 
         assert [obligation.modelo for obligation in schedule.obligations if obligation.modelo == "131"] == [
@@ -430,7 +454,7 @@ class TestCompute:
         }
 
     def test_obligations_sorted_by_close_date(self) -> None:
-        schedule = _engine().compute(_profile(), 2026, today=date(2026, 1, 1))
+        schedule = _engine().compute(_profile(), _YEAR, today=date(_YEAR, 1, 1))
         closes = [o.closes_on for o in schedule.obligations]
         assert closes == sorted(closes)
 
@@ -496,25 +520,26 @@ class TestPreRegistrationObligationGate:
 
 class TestStatusTransitions:
     def _find_q1(self, schedule: Schedule) -> ModeloDeadline:
-        return next(o for o in schedule.obligations if o.period == _period(2026, "1T"))
+        return next(o for o in schedule.obligations if o.period == _period(_YEAR, "1T"))
 
     def test_q1_status_transitions(self) -> None:
+        close = self._find_q1(_engine().compute(_profile(), _YEAR, today=date(_YEAR, 1, 1))).adjusted_closes_on
         cases = (
-            (date(2026, 4, 21), ObligationStatus.OVERDUE),
-            (date(2026, 4, 20), ObligationStatus.DUE_TODAY),
-            (date(2026, 4, 7), ObligationStatus.DUE_SOON),
-            (date(2026, 1, 1), ObligationStatus.UPCOMING),
+            (close + timedelta(days=1), ObligationStatus.OVERDUE),
+            (close, ObligationStatus.DUE_TODAY),
+            (close - timedelta(days=DEFAULT_DUE_SOON_DAYS), ObligationStatus.DUE_SOON),
+            (date(_YEAR, 1, 1), ObligationStatus.UPCOMING),
         )
 
         for today, expected_status in cases:
-            schedule = _engine().compute(_profile(), 2026, today=today)
+            schedule = _engine().compute(_profile(), _YEAR, today=today)
             assert self._find_q1(schedule).status == expected_status, today
 
 
 class TestNextDeadline:
     def test_returns_earliest_non_overdue(self) -> None:
-        schedule = _engine().compute(_profile(), 2026, today=date(2026, 1, 1))
-        result = next_deadline(schedule, today=date(2026, 1, 1))
+        schedule = _engine().compute(_profile(), _YEAR, today=date(_YEAR, 1, 1))
+        result = next_deadline(schedule, today=date(_YEAR, 1, 1))
         assert result is not None
         # next_deadline returns the obligation with the earliest closing date
         # that is not yet overdue on the reference day.
@@ -522,7 +547,7 @@ class TestNextDeadline:
         assert result.closes_on == earliest_close
 
     def test_returns_none_when_all_overdue(self) -> None:
-        schedule = _engine().compute(_profile(), 2026, today=date(2026, 1, 1))
+        schedule = _engine().compute(_profile(), _YEAR, today=date(_YEAR, 1, 1))
         result = next_deadline(schedule, today=date(2999, 1, 1))
         assert result is None
 
@@ -619,11 +644,11 @@ class TestAnnualFilingWindows:
 
     def test_modelo_100_explain_no_longer_errors(self) -> None:
         engine = _engine()
-        assert engine.explain(_profile(), "100", year=2025)
-        assert engine.explain(_profile(), "100", year=2023)
+        for filing_year, *_ in _RENTA_CAMPAIGN_ROWS:
+            assert engine.explain(_profile(), "100", year=filing_year)
 
     def test_modelo_303_quarterly_windows_resolve(self) -> None:
-        for year in (2024, 2025, 2026):
+        for year in _SUPPORTED_YEARS:
             quarterly_periods = sorted(
                 (
                     window.period
@@ -649,33 +674,38 @@ class TestAnnualFilingWindows:
                 key=lambda p: p.code,
             )
             assert len(monthly_periods) > 0, f"M303 monthly windows absent for {year}"
-        january_2026 = next(
+
+    @pytest.mark.parametrize("year", _SUPPORTED_YEARS)
+    def test_modelo_303_january_window_closes_on_the_last_day_of_february(self, year: int) -> None:
+        january = next(
             window
-            for code, _revision, window in _engine().deadline_windows(2026)
-            if code == "303" and window.period == _period(2026, "01")
+            for code, _revision, window in _engine().deadline_windows(year)
+            if code == "303" and window.period == _period(year, "01")
         )
-        assert january_2026.closes_on == date(2026, 3, 2)
-        assert january_2026.payment_cutoff_on == date(2026, 2, 25)
+        february_end = date(year, 2, calendar.monthrange(year, 2)[1])
+        # A close on a Saturday or Sunday moves to the Monday after it.
+        weekend_shift = 7 - february_end.weekday() if february_end.weekday() >= 5 else 0
+        shifted_close = february_end + timedelta(days=weekend_shift)
+        anexo_day = date(year, 2, 24 if calendar.isleap(year) else 23)
+
+        assert january.closes_on == shifted_close
+        assert january.payment_cutoff_on is not None
+        assert anexo_day <= january.payment_cutoff_on <= january.closes_on
 
     def test_modelo_347_annual_window_resolves(self) -> None:
-        for year, closes_on in ((2025, date(2026, 3, 2)), (2026, date(2027, 2, 28))):
+        for year in _SUPPORTED_YEARS:
             windows = [window for code, _revision, window in _engine().deadline_windows(year) if code == "347"]
             assert [window.period for window in windows] == [_period(year, "0A")]
-            assert windows[0].closes_on == closes_on
+            # The last day of February of the following year, or the Monday after it when
+            # that day is a Saturday or Sunday.
+            february_end = date(year + 1, 2, calendar.monthrange(year + 1, 2)[1])
+            weekend_shift = 7 - february_end.weekday() if february_end.weekday() >= 5 else 0
+            assert windows[0].closes_on in {february_end, february_end + timedelta(days=weekend_shift)}
 
-    @pytest.mark.parametrize(
-        ("filing_year", "opens_on", "closes_on"),
-        (
-            (2024, date(2025, 1, 1), date(2025, 1, 31)),
-            (2025, date(2026, 1, 1), date(2026, 1, 31)),
-        ),
-    )
-    def test_modelo_180_january_window_resolves_under_its_tax_year(
-        self,
-        filing_year: int,
-        opens_on: date,
-        closes_on: date,
-    ) -> None:
+    @pytest.mark.parametrize("filing_year", _SUPPORTED_YEARS)
+    def test_modelo_180_january_window_resolves_under_its_tax_year(self, filing_year: int) -> None:
+        opens_on = date(filing_year + 1, 1, 1)
+        closes_on = date(filing_year + 1, 1, 31)
         schedule = _engine().compute(_profile(), filing_year, today=opens_on)
 
         obligation = next(
@@ -690,14 +720,14 @@ class TestEnginePurity:
     def test_compute_does_not_mutate_profile(self) -> None:
         profile = _profile()
         original = profile.model_dump()
-        _engine().compute(profile, 2026, today=date(2026, 1, 1))
+        _engine().compute(profile, _YEAR, today=date(_YEAR, 1, 1))
         assert profile.model_dump() == original
 
     def test_compute_is_deterministic_modulo_generated_at(self) -> None:
         engine = _engine()
         profile = _profile()
-        a = engine.compute(profile, 2026, today=date(2026, 1, 1))
-        b = engine.compute(profile, 2026, today=date(2026, 1, 1))
+        a = engine.compute(profile, _YEAR, today=date(_YEAR, 1, 1))
+        b = engine.compute(profile, _YEAR, today=date(_YEAR, 1, 1))
         assert a.obligations == b.obligations
         assert a.profile == b.profile
         assert a.year == b.year
@@ -710,9 +740,9 @@ class TestComputeFailures:
         # registry-integrity fault. It is still a ScheduleComputationError
         # subclass, so existing broad callers keep working.
         with pytest.raises(NoDeadlineWindowsError) as excinfo:
-            _engine().compute(_profile(), 1999, today=date(1999, 1, 1))
+            _engine().compute(_profile(), FOUR_DIGIT_YEAR_FIRST, today=date(FOUR_DIGIT_YEAR_FIRST, 1, 1))
         assert isinstance(excinfo.value, ScheduleComputationError)
-        assert excinfo.value.context == {"filing_year": 1999}
+        assert excinfo.value.context == {"filing_year": FOUR_DIGIT_YEAR_FIRST}
 
     def test_negative_due_soon_days_rejected(self) -> None:
         with pytest.raises(DeadlineValidationError, match=r"due_soon_days must be >= 0"):
@@ -721,6 +751,154 @@ class TestComputeFailures:
 
 class TestScheduleRoundTrip:
     def test_full_round_trip(self) -> None:
-        schedule = _engine().compute(_profile(), 2026, today=date(2026, 1, 1))
+        schedule = _engine().compute(_profile(), _YEAR, today=date(_YEAR, 1, 1))
         restored = Schedule.model_validate_json(schedule.model_dump_json())
         assert restored == schedule
+
+
+# Modelo 115 owes its quarterly windows only to a taxpayer who pays urban rent
+# subject to retención, a fact a window condition reads, so it separates an
+# answered "yes" from an unanswered question.
+_RENT_WITHHOLDING_MODELO = "115"
+_RECARGO_LEGAL_REF = "ley-58-2003:art-27.2"
+
+
+def _statutory_recargo_pct(pattern: str) -> Decimal:
+    """Read one Art. 27.2 LGT surcharge percentage from the provision's own text."""
+    return Decimal(legal_text_match(_RECARGO_LEGAL_REF, pattern).group(1))
+
+
+class TestTargetObligation:
+    """One exact filing target keeps its obligation after its window closes.
+
+    Ley 58/2003 art. 27.1 defines the recargo as an accessory charge on a
+    return presented "fuera de plazo"; it presupposes the late return rather
+    than extinguishing the duty to present it.
+    """
+
+    @staticmethod
+    def _rent_quarter(operation: PinnedAuthorityOperation, filing_year: int, *, today: date) -> ModeloDeadline:
+        """Return the declared rent-withholding payer's first-quarter target obligation on ``today``."""
+        target = DeadlineEngine(authority=operation).target_obligation(
+            _profile(pays_rent_with_retencion=True),
+            modelo=_RENT_WITHHOLDING_MODELO,
+            period=_period(filing_year, "1T"),
+            today=today,
+        )
+        assert target is not None
+        return target
+
+    @pytest.mark.parametrize("filing_year", _SUPPORTED_YEARS)
+    def test_an_open_target_carries_no_recargo(self, operation: PinnedAuthorityOperation, filing_year: int) -> None:
+        upcoming = self._rent_quarter(operation, filing_year, today=date(filing_year, 1, 1))
+        assert upcoming.period == _period(filing_year, "1T")
+        assert upcoming.status is not ObligationStatus.OVERDUE
+        assert upcoming.recovery is None
+
+    @pytest.mark.parametrize("filing_year", _SUPPORTED_YEARS)
+    def test_a_closed_window_keeps_the_obligation_with_the_first_recargo_band(
+        self, operation: PinnedAuthorityOperation, filing_year: int
+    ) -> None:
+        close = self._rent_quarter(operation, filing_year, today=date(filing_year, 1, 1)).adjusted_closes_on
+        late = self._rent_quarter(operation, filing_year, today=close + timedelta(days=1))
+        assert (late.adjusted_closes_on, late.status) == (close, ObligationStatus.OVERDUE)
+        assert late.recovery is not None
+        assert late.recovery.still_filable is True
+        band = late.recovery.recargo_band
+        assert band.surcharge_pct == _statutory_recargo_pct(r"porcentaje igual al (\d+) por ciento")
+        assert band.interest_applies is False
+
+    @pytest.mark.parametrize("filing_year", _SUPPORTED_YEARS)
+    def test_a_target_over_twelve_months_late_serves_the_final_band_like_the_schedule(
+        self, operation: PinnedAuthorityOperation, filing_year: int
+    ) -> None:
+        close = self._rent_quarter(operation, filing_year, today=date(filing_year, 1, 1)).adjusted_closes_on
+        long_after = date(close.year + 2, close.month, 1)
+        stale = self._rent_quarter(operation, filing_year, today=long_after)
+        assert stale.recovery is not None
+        band = stale.recovery.recargo_band
+        assert band.surcharge_pct == _statutory_recargo_pct(r"el recargo sera del (\d+) por ciento")
+        assert band.interest_applies is True
+
+        schedule = DeadlineEngine(authority=operation).compute(
+            _profile(pays_rent_with_retencion=True), filing_year, today=long_after
+        )
+        matching = [
+            obligation
+            for obligation in schedule.obligations
+            if obligation.modelo == _RENT_WITHHOLDING_MODELO and obligation.period == stale.period
+        ]
+        assert matching == [stale]
+
+    @pytest.mark.parametrize("filing_year", _SUPPORTED_YEARS)
+    def test_an_unanswered_window_fact_does_not_rule_the_target_out(
+        self, operation: PinnedAuthorityOperation, filing_year: int
+    ) -> None:
+        engine = DeadlineEngine(authority=operation)
+        profile = _profile()
+        assert profile.pays_rent_with_retencion is None
+        period = _period(filing_year, "1T")
+        today = date(filing_year + 2, 1, 1)
+
+        schedule = engine.compute(profile, filing_year, today=today)
+        assert all(obligation.modelo != _RENT_WITHHOLDING_MODELO for obligation in schedule.obligations)
+
+        target = engine.target_obligation(profile, modelo=_RENT_WITHHOLDING_MODELO, period=period, today=today)
+        assert target is not None
+        assert target.period == period
+        assert target.status is ObligationStatus.OVERDUE
+
+    @pytest.mark.parametrize("filing_year", _SUPPORTED_YEARS)
+    def test_a_declared_no_rules_the_target_out(self, operation: PinnedAuthorityOperation, filing_year: int) -> None:
+        engine = DeadlineEngine(authority=operation)
+        target = engine.target_obligation(
+            _profile(pays_rent_with_retencion=False),
+            modelo=_RENT_WITHHOLDING_MODELO,
+            period=_period(filing_year, "1T"),
+            today=date(filing_year + 2, 1, 1),
+        )
+        assert target is None
+
+    @pytest.mark.parametrize("filing_year", _SUPPORTED_YEARS)
+    def test_an_unselected_filing_schedule_rules_the_target_out(
+        self, operation: PinnedAuthorityOperation, filing_year: int
+    ) -> None:
+        """A cadence the profile has not chosen selects no period; answering it is a readiness requirement."""
+        engine = DeadlineEngine(authority=operation)
+        target = engine.target_obligation(
+            _profile(pays_rent_with_retencion=True, enrollment=ModeloEnrollment(large_company=None)),
+            modelo=_RENT_WITHHOLDING_MODELO,
+            period=_period(filing_year, "1T"),
+            today=date(filing_year + 2, 1, 1),
+        )
+        assert target is None
+
+    def test_duplicate_canonical_windows_are_refused(
+        self, operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A consumer must not hide an upstream duplicate by choosing its first row."""
+        filing_year = _SUPPORTED_YEARS[-1]
+        index = indexed_deadline_window_year(operation, filing_year)
+        row = next(
+            item
+            for item in index.dated
+            if item[0] == _RENT_WITHHOLDING_MODELO and item[2].period == _period(filing_year, "1T")
+        )
+        monkeypatch.setitem(
+            DEADLINE_WINDOW_INDEX,
+            (operation.pin(), filing_year),
+            DeadlineWindowYearIndex(dated=(*index.dated, row), projected=index.projected),
+        )
+
+        with pytest.raises(ScheduleComputationError) as raised:
+            DeadlineEngine(authority=operation).target_obligation(
+                _profile(pays_rent_with_retencion=True),
+                modelo=_RENT_WITHHOLDING_MODELO,
+                period=_period(filing_year, "1T"),
+                today=date(filing_year, 1, 1),
+            )
+
+        assert str(raised.value) == "errors.error.error_deadlines_schedule_computation"
+        assert raised.value.context is not None
+        assert raised.value.context["registry_stage"] == "target_obligation"
+        assert raised.value.context["match_count"] == 2

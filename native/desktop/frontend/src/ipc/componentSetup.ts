@@ -51,6 +51,7 @@ export type SetupFailureCategory =
   | "memory_busy"
   | "program_missing"
   | "program_not_running"
+  | "engine_program_unusable"
   | "interrupted"
   | "needs_sign_in"
   | "not_in_this_build"

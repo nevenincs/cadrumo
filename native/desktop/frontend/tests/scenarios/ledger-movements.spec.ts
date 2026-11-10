@@ -678,11 +678,25 @@ test("the movement menus show the classify chords the page binds, and pressing t
   await rowWith(target, "FRA 2026-058")
     .locator("[data-column=status]")
     .click({ modifiers: ["Control"] });
-  await page(target).locator(".ledger-selection-actions").click();
+  // The control says what it is and how many it holds, and its menu offers a
+  // category and the removal of one beside the classifications.
+  const actions = page(target).locator(".ledger-selection-actions");
+  await expect(actions).toHaveText(
+    label("desktop.ledger.selection.actions_count", { count: 2 }),
+  );
+  await actions.click();
   for (const [kind, letter] of CLASSIFY_KEYS)
     await expect(
       item(`desktop.ledger.classify.as_${kind}`).locator("kbd"),
     ).toHaveText([ALT, letter]);
+  await expect(item("desktop.ledger.group.category")).toHaveCount(0);
+  await expect(
+    menu.getByRole("menuitem", {
+      name: `${label("desktop.ledger.group.category")}…`,
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(item("desktop.ledger.selection.clear_category")).toBeVisible();
   await target.keyboard.press("Escape");
   await expect(menu).toHaveCount(0);
   await target.keyboard.press("Alt+KeyB");

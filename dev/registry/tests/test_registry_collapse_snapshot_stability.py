@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from .. import registry_collapse_run as collapse_run
 from ..registry_collapse_fingerprints import fingerprint_optional_tree, fingerprint_tree
@@ -27,8 +27,8 @@ def _prepare_fixture(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> tuple[P
     monkeypatch.setattr(collapse_run, "source_dependency_paths", lambda _root: (source_file,))
     monkeypatch.setattr(collapse_run, "tool_fingerprints", lambda _root: ())
     monkeypatch.setattr(collapse_run, "selected_sources", lambda _root, _modelos: ((), 0))
-    support = SupportedFilingYearsCatalogue(floor=2024, horizon=2025, hard_ceiling=2025)
-    monkeypatch.setattr(collapse_run, "run_support", lambda _root: (support, 2025))
+    support = filing_year_envelope()
+    monkeypatch.setattr(collapse_run, "run_support", lambda _root: (support, support.horizon))
     return registry_root, source_root, source_file, tmp_path / "publication"
 
 

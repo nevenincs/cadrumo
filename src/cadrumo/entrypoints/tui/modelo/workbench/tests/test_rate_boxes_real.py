@@ -23,14 +23,14 @@ from typing import override
 import pytest
 from textual.app import App, ComposeResult
 
-from ......application.modelo.work_form_models import (
+from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormCasillaAddressV1,
     ModeloFormEditability,
     ModeloFormOrigin,
     ModeloFormPrintedRate,
-    ModeloWorkForm,
     address_key,
 )
+from ......application.modelo.work_form_models import ModeloWorkForm
 from ......application.modelo.work_form_wording import origin_words
 from ......application.modelo.work_review import ModeloWorkReviewCasilla
 from ......core.config import override_settings

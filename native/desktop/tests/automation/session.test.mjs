@@ -17,6 +17,7 @@ import { resolve } from "node:path";
 import { buildPath } from "../../scripts/build-paths.mjs";
 import {
   hostEnvironment,
+  proveOwnership,
   waitForWebDriver,
   within,
   queuePickerSelection,
@@ -400,29 +401,137 @@ function windowsTools({
 
 test("Windows listener verification requires the exact PID, its image and an unshared port", () => {
   const state = { pid: 4242, port: 4444, executable: HOST };
-  const refused = /does not belong to this native test host/;
+  const foreign = /does not belong to this native test host/;
+  const host = /native test host process cannot be confirmed/;
+  const sockets = /listening sockets cannot be read/;
   const verify = (changed, tools) =>
     verifyListener({ ...state, ...changed }, "win32", windowsTools(tools));
   verify({}, {});
-  assert.throws(() => verify({ pid: 4243 }, {}), refused);
-  assert.throws(() => verify({ port: 6666 }, {}), refused);
-  assert.throws(() => verify({}, { netstatStatus: 1 }), refused);
-  assert.throws(() => verify({}, { processStatus: 1 }), refused);
+  assert.throws(() => verify({ pid: 4243 }, {}), foreign);
+  // A port the table does not show is not refused: the table can be blind on
+  // Windows, and the launch nonce proves ownership instead.
+  verify({ port: 6666 }, {});
+  assert.throws(() => verify({}, { netstatStatus: 1 }), sockets);
+  assert.throws(() => verify({}, { processStatus: 1 }), host);
   assert.throws(
     () => verify({}, { path: OTHER, command: `"${OTHER}" --gui` }),
-    refused,
+    host,
   );
-  assert.throws(
-    () => verify({}, { command: `"${HOST}" --gui --extra` }),
-    refused,
-  );
+  assert.throws(() => verify({}, { command: `"${HOST}" --gui --extra` }), host);
   const shared = `${NETSTAT}\r\n  TCP    0.0.0.0:4444          0.0.0.0:0              LISTENING       999`;
-  assert.throws(() => verify({}, { netstat: shared }), refused);
+  assert.throws(() => verify({}, { netstat: shared }), foreign);
   const wildcard = NETSTAT.replace(
     "127.0.0.1:4444         0.0.0.0:0",
     "0.0.0.0:4444           0.0.0.0:0",
   );
-  assert.throws(() => verify({}, { netstat: wildcard }), refused);
+  assert.throws(() => verify({}, { netstat: wildcard }), foreign);
+});
+
+test("an empty Windows socket table leaves ownership to the nonce, but a foreign owner it shows still refuses", () => {
+  const state = { pid: 4242, port: 4444, executable: HOST };
+  const empty =
+    "Active Connections\r\n\r\n  Proto  Local Address          Foreign Address        State           PID\r\n";
+  verifyListener(state, "win32", windowsTools({ netstat: empty }));
+  const foreign = `${empty}  TCP    127.0.0.1:4444         0.0.0.0:0              LISTENING       999\r\n`;
+  assert.throws(
+    () => verifyListener(state, "win32", windowsTools({ netstat: foreign })),
+    /does not belong/,
+  );
+});
+
+const NONCE = "ab".repeat(32);
+/** A driver whose current window is one of its open windows. */
+function driver({ current = "main", open = ["main"], answers = {} } = {}) {
+  const state = { current, switched: [] };
+  return {
+    state,
+    getWindowHandles: async () => open,
+    getWindowHandle: async () => {
+      if (state.current === null) throw new Error("no such window");
+      return state.current;
+    },
+    switchToWindow: async (handle) => {
+      state.switched.push(handle);
+      state.current = handle;
+    },
+    execute: async () => {
+      if (!open.includes(state.current)) throw new Error("no such window");
+      return answers[state.current] ?? null;
+    },
+  };
+}
+const answering = (value) => driver({ answers: { main: value } });
+
+test("a launched host answers its own nonce", async () => {
+  await proveOwnership(answering(NONCE), NONCE);
+});
+
+test("a closed startup window hands the proof to the open workspace window", async () => {
+  const browser = driver({
+    current: "startup",
+    open: ["main"],
+    answers: { main: NONCE },
+  });
+  await proveOwnership(browser, NONCE);
+  assert.deepEqual(browser.state.switched, ["main"]);
+});
+
+test("an open current window is kept and an unnamed one is the fallback", async () => {
+  const kept = driver({
+    current: "startup",
+    open: ["startup", "main"],
+    answers: { startup: NONCE },
+  });
+  await proveOwnership(kept, NONCE);
+  assert.deepEqual(kept.state.switched, []);
+  const unnamed = driver({
+    current: null,
+    open: ["other"],
+    answers: { other: NONCE },
+  });
+  await proveOwnership(unnamed, NONCE);
+  assert.deepEqual(unnamed.state.switched, ["other"]);
+});
+
+test("a host with no open window is refused", async () => {
+  await assert.rejects(
+    proveOwnership(driver({ current: "startup", open: [] }), NONCE),
+    /did not answer this launch's nonce/,
+  );
+});
+
+test("a foreign, stale, missing or malformed nonce answer is refused", async () => {
+  const refused = /did not answer this launch's nonce/;
+  for (const presented of [
+    null,
+    undefined,
+    "",
+    "cd".repeat(32),
+    NONCE.slice(1),
+    `${NONCE}0`,
+    NONCE.toUpperCase(),
+    42,
+  ])
+    await assert.rejects(proveOwnership(answering(presented), NONCE), refused);
+  const failing = {
+    ...driver(),
+    execute: async () => {
+      throw new Error("no session");
+    },
+  };
+  await assert.rejects(proveOwnership(failing, NONCE), refused);
+  await assert.rejects(
+    proveOwnership(answering(NONCE), "not-a-nonce"),
+    refused,
+  );
+});
+
+test("the launch nonce reaches the host environment only when supplied", () => {
+  const inherited = { CADRUMO_AUTOMATION_NONCE: "inherited" };
+  const without = hostEnvironment(inherited, "/run", "/package", 4445);
+  assert.equal(without.CADRUMO_AUTOMATION_NONCE, undefined);
+  const supplied = hostEnvironment({}, "/run", "/package", 4445, NONCE);
+  assert.equal(supplied.CADRUMO_AUTOMATION_NONCE, NONCE);
 });
 
 test("unix listener verification keeps the ps and lsof path", () => {

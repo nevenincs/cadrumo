@@ -11,7 +11,10 @@ from ..formula_expression import evaluate_expression
 from ..schema import BindingDefinition, ModeloDefinition, RegistrySnapshot
 from ..schema_catalogues import RegistryCatalogues
 from ..schema_formula import FormulaExpression, ParameterDefinition
+from .authored_editions import filing_year_envelope, revision_covering
 from .snapshot_support import build_snapshot
+
+_EXERCISE = filing_year_envelope().horizon
 
 
 def evaluate(
@@ -91,13 +94,13 @@ def committed_modelo_130_snapshot(
     results), so it must not fail on the revision-review, filing-capability or
     legal-review attestation gates that belong to a filing question.
     """
-    return registry_snapshot("130", 2026, "1T", grade=RegistryAuthorityGrade.CALCULATION)
+    return registry_snapshot("130", _EXERCISE, "1T", grade=RegistryAuthorityGrade.CALCULATION)
 
 
 def committed_modelo_180_snapshot(
     registry_snapshot: Callable[..., RegistrySnapshot],
 ) -> RegistrySnapshot:
-    return registry_snapshot("180", 2026, "0A", grade=RegistryAuthorityGrade.CALCULATION)
+    return registry_snapshot("180", _EXERCISE, "0A", grade=RegistryAuthorityGrade.CALCULATION)
 
 
 def modelo_180_snapshot_with_inactive_relation_period(
@@ -112,7 +115,7 @@ def modelo_180_snapshot_with_inactive_relation_period(
     """
     modelos, catalogues = registry_tree
     modelo = next(item for item in modelos if item.id == "180")
-    revision = modelo.revisions["2023-y-siguientes"]
+    revision = modelo.revisions[str(revision_covering("180", _EXERCISE).id)]
     selector = revision.period_selector.model_copy(update={"periods": ("0A", "1T")})
     widened_revision = revision.model_copy(update={"period_selector": selector})
     widened_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: widened_revision}})
@@ -120,7 +123,7 @@ def modelo_180_snapshot_with_inactive_relation_period(
         widened_modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2026,
+        filing_year=_EXERCISE,
         period="1T",
         grade=RegistryAuthorityGrade.CALCULATION,
     )

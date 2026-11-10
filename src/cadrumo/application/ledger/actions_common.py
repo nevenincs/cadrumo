@@ -42,7 +42,13 @@ from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryPr
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.errors import TransactionNotFoundError, TransactionValidationError
-from ...domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue
+from ...domain.transactions.models import (
+    BucketTransactionRef,
+    Transaction,
+    TransactionCatalogue,
+    withheld_figures,
+    withheld_figures_event_entries,
+)
 from ...domain.transactions.own_accounts import OwnAccountRegister, OwnAccountRegisterError, OwnBankAccount
 from ...domain.usage_ratios.errors import UsageRatioValidationError
 from ...domain.usage_ratios.model import UsageRatioProfile, validate_usage_ratio_reference
@@ -970,6 +976,16 @@ def command_matches_current(command: ManualLedgerTransactionCommand, current: Tr
     raising a mutation-required error.
     """
     return _command_idempotency_projection(command) == _transaction_idempotency_projection(current)
+
+
+def withheld_figures_event_payload(current: Transaction) -> dict[str, str]:
+    """Return the event entries that record the business figures a write of ``current`` stops storing.
+
+    A personal row stored before such rows were refused business figures is
+    read without them, so its next write persists their absence; the event of
+    that write names each one with its prior value.
+    """
+    return withheld_figures_event_entries(withheld_figures(current))
 
 
 def build_ledger_bucket_event(

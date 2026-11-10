@@ -18,7 +18,7 @@ from ....application.ledger.staged_check_words import BLOCKER_FIX_LOCALE_KEYS
 from ....core.i18n.render import tr
 from ....domain.transactions.gross_validation import (
     GROSS_NEEDS_WITHHOLDING_CATEGORY_FIELD,
-    GROSS_NEEDS_WITHHOLDING_CATEGORY_MESSAGE_KEY,
+    GROSS_NEEDS_WITHHOLDING_CATEGORY_LOCALE_KEY,
 )
 from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
 from .profile_world_fixtures import recorded_fx_isolated_backend
@@ -96,7 +96,7 @@ def test_a_net_of_withholding_invoice_is_refused_in_the_catalogue_words_of_the_l
 
     assert refused.exit_code != 0
     output = _words(refused.output)
-    assert _words(tr(GROSS_NEEDS_WITHHOLDING_CATEGORY_MESSAGE_KEY, locale=language)) in output
+    assert _words(tr(GROSS_NEEDS_WITHHOLDING_CATEGORY_LOCALE_KEY, locale=language)) in output
     assert _words(tr(BLOCKER_FIX_LOCALE_KEYS["needs_withholding_category"], locale=language)) in output
     for internal in ("taxable_base", "iva_amount", "recargo_amount", "!="):
         assert internal not in output
@@ -145,7 +145,7 @@ def test_a_gap_no_category_explains_stays_refused_without_the_remedy() -> None:
     assert refused.exit_code != 0
     error = json.loads(refused.output)["error"]
     assert error["action"] is None or error["action"]["action"] is None
-    assert _words(tr(GROSS_NEEDS_WITHHOLDING_CATEGORY_MESSAGE_KEY, locale="en")) not in _words(refused.output)
+    assert _words(tr(GROSS_NEEDS_WITHHOLDING_CATEGORY_LOCALE_KEY, locale="en")) not in _words(refused.output)
 
 
 def test_naming_the_category_classifies_the_same_invoice() -> None:

@@ -12,9 +12,11 @@ from ..bindings import CasillaObservation, RegistryModeloObservation
 from ..errors import RegistryValidationError
 from ..observation_fold import fold_observed_requirement_values, gather_observed_requirement_values
 from ..relations import RegistryFoldRequirement
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_FILING_YEAR = filing_year_envelope().horizon
 _LEGAL_REF = "rd-439-2007:art-108"
 _SOURCE_REF = "aeat-modelo-111-instructions"
 _TOTAL_RETENCIONES = validated_casilla_id("28", surface="test modelo 111 total retenciones")
@@ -25,7 +27,7 @@ _MONTHS = tuple(f"{month:02d}" for month in range(1, 13))
 def _requirement(periods: tuple[str, ...]) -> RegistryFoldRequirement:
     return RegistryFoldRequirement(
         source_modelo="111",
-        filing_year=2025,
+        filing_year=_FILING_YEAR,
         periods=periods,
         source_casilla_ids=(_TOTAL_RETENCIONES,),
         target_bindings=("renta-certificado-trabajo-retenciones",),
@@ -44,7 +46,7 @@ def _resolve(requirement: RegistryFoldRequirement, filings: tuple[RegistryModelo
 def _filing(period: str, value: str) -> RegistryModeloObservation:
     return RegistryModeloObservation(
         modelo="111",
-        filing_year=2025,
+        filing_year=_FILING_YEAR,
         period=period,
         observations=(
             CasillaObservation(

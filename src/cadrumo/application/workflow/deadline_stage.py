@@ -1,18 +1,19 @@
 """Deadline resolution helpers for the workflow engine.
 
 The deadline stage projects the active :class:`TaxpayerProfile` through the
-domain deadline engine and selects one :class:`ModeloDeadline` from the computed
-:class:`Schedule`. It keeps workflow verification and filing gates aligned with
-the shared :func:`~domain.deadlines.engine.compute_obligation_schedule` producer
-used by state projections.
+domain deadline engine and selects one :class:`ModeloDeadline`: the exact
+work-unit target's obligation, or the next one of the computed
+:class:`Schedule`, the shared
+:func:`~domain.deadlines.engine.compute_obligation_schedule` producer used by
+state projections.
 
 See Also:
     :class:`~application.workflow.engine.WorkflowEngine`
         Composition root that calls these helpers from the
         ``COMPUTING_DEADLINES`` stage.
     :class:`~application.workflow.run_models.WorkflowPurpose`
-        Purpose enum that decides whether a missing or late filing-window
-        obligation aborts the run or remains informational context.
+        Purpose enum that decides whether a missing filing-window obligation
+        aborts the run or remains informational context.
     :func:`~application.state_projection.build_pending_obligations`
         Projection-side consumer of the same deadline schedule producer.
     :mod:`domain.deadlines`
@@ -29,13 +30,12 @@ from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOu
 from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.deadlines.engine import compute_obligation_schedule, next_deadline
-from ...domain.deadlines.errors import NoDeadlineWindowsError, ScheduleComputationError
-from ...domain.deadlines.models import ModeloDeadline, Schedule, TaxpayerProfile
+from ...domain.deadlines.models import ModeloDeadline, TaxpayerProfile
 from ..operator_actions.preconditions import no_action_precondition_verdict
 from .abort import WorkflowAbortReason
 from .errors import WorkflowAbortSignalError
 from .protocols import DeadlineEngineProtocol
-from .run_models import WorkflowPurpose, WorkflowStage, WorkflowStep
+from .run_models import WorkflowStage, WorkflowStep
 
 
 def resolve_deadline_stage_obligation(
@@ -45,9 +45,15 @@ def resolve_deadline_stage_obligation(
     target_modelo: str | None,
     target_period: Period | None,
     today: date,
-    purpose: WorkflowPurpose,
 ) -> ModeloDeadline | None:
     """Return the obligation the workflow deadline stage should evaluate.
+
+    An exact work-unit target is addressed through
+    :meth:`~domain.deadlines.engine.DeadlineEngine.target_obligation`, which
+    reads the windows of the target's own filing year: a past period keeps its
+    obligation after its window closes, and a fact the taxpayer has not
+    answered does not rule it out. Without a target the stage takes the next
+    open obligation of the current schedule.
 
     Args:
         deadline_engine: Deadline engine implementation that produces a
@@ -57,60 +63,14 @@ def resolve_deadline_stage_obligation(
         target_period: Optional exact :class:`Period` filter for a work-unit
             target.
         today: Reference date for deadline status classification.
-        purpose: Workflow purpose controlling late-local-file fallback behavior.
 
     Returns:
         The selected :class:`ModeloDeadline`, or ``None`` when no matching
         obligation exists.
     """
-    schedule = _deadline_stage_schedule(
-        deadline_engine,
-        profile,
-        target_modelo=target_modelo,
-        target_period=target_period,
-        today=today,
-        purpose=purpose,
-    )
     if target_modelo is not None and target_period is not None:
-        return target_obligation_from_schedule(
-            schedule,
-            target_modelo=target_modelo,
-            target_period=target_period,
-        )
-    return next_deadline(schedule, today=today)
-
-
-def target_obligation_from_schedule(
-    schedule: Schedule,
-    *,
-    target_modelo: str,
-    target_period: Period,
-) -> ModeloDeadline | None:
-    """Select an exact workflow target without masking schedule multiplicity.
-
-    Deadline identity and matching remain owned by the registry authority and
-    deadline engine.  This application boundary only narrows their canonical
-    schedule to the work-unit target.  More than one row is therefore an
-    upstream integrity failure, never a choice this consumer may arbitrate.
-
-    ``schedule`` is a :class:`Schedule`.
-    """
-    matches = tuple(
-        obligation
-        for obligation in schedule.obligations
-        if obligation.modelo == target_modelo and obligation.period == target_period
-    )
-    if len(matches) > 1:
-        raise ScheduleComputationError(
-            "canonical deadline schedule contains multiple obligations for one workflow target",
-            context={
-                "modelo": target_modelo,
-                "filing_year": str(target_period.filing_year),
-                "period": target_period.registry_token,
-                "match_count": str(len(matches)),
-            },
-        )
-    return matches[0] if matches else None
+        return deadline_engine.target_obligation(profile, modelo=target_modelo, period=target_period, today=today)
+    return next_deadline(compute_obligation_schedule(deadline_engine, profile, today=today), today=today)
 
 
 def abort_missing_deadline_obligation(
@@ -136,28 +96,6 @@ def abort_missing_deadline_obligation(
         ),
     )
     raise WorkflowAbortSignalError(reason=WorkflowAbortReason.NO_PENDING_OBLIGATION)
-
-
-def _deadline_stage_schedule(
-    deadline_engine: DeadlineEngineProtocol,
-    profile: TaxpayerProfile,
-    *,
-    target_modelo: str | None,
-    target_period: Period | None,
-    today: date,
-    purpose: WorkflowPurpose,
-) -> Schedule:
-    if (
-        purpose is WorkflowPurpose.FILE
-        and target_modelo is not None
-        and target_period is not None
-        and target_period.filing_year != today.year
-    ):
-        try:
-            return deadline_engine.compute(profile, target_period.filing_year, today=today)
-        except NoDeadlineWindowsError:
-            return compute_obligation_schedule(deadline_engine, profile, today=today)
-    return compute_obligation_schedule(deadline_engine, profile, today=today)
 
 
 __all__ = ["abort_missing_deadline_obligation", "resolve_deadline_stage_obligation"]

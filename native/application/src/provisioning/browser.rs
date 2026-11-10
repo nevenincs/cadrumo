@@ -870,9 +870,11 @@ impl LaunchFailure {
             Self::Unrunnable => FailureCategory::DamagedDownload,
             Self::NotPermitted => FailureCategory::NoPermission,
             Self::Cancelled => FailureCategory::Cancelled,
-            Self::Exited | Self::TimedOut | Self::NoVersion | Self::ProfileUnavailable => {
-                FailureCategory::Unexpected
-            }
+            Self::Exited
+            | Self::TimedOut
+            | Self::CreationTimedOut
+            | Self::NoVersion
+            | Self::ProfileUnavailable => FailureCategory::Unexpected,
         }
     }
 }
@@ -1672,11 +1674,7 @@ pub(crate) mod tests {
             .find(|build| build.name() == "chromium-headless-shell")
             .unwrap()
             .clone();
-        fs::copy(
-            std::env::current_exe().unwrap(),
-            headless.executable.under(&root),
-        )
-        .unwrap();
+        crate::provisioning::test_program::place(&headless.executable.under(&root));
         let scratch = fixture.directory.path().join("tmp");
         let cancellation = Cancellation::default();
 

@@ -16,7 +16,7 @@ import pytest
 from textual.widgets import OptionList, Static
 
 from ......application.modelo.source_policy import SourceFamily, source_policy
-from ......application.modelo.work_form_models import address_key
+from ......application.modelo.work_form_field_vocabulary import address_key
 from ......application.modelo.work_form_source_groups import source_groups
 from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings

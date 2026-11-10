@@ -26,10 +26,11 @@ from .....core.aggregation import RetencionClave
 from ..authority import PinnedAuthorityOperation
 from ..governed_fact_scope import validating_governed_facts
 from ..withholding_bindings import WithholdingObservation, retencion_clave_declarations
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_ON = date(2024, 3, 15)
+_ON = date(filing_year_envelope().horizon, 3, 15)
 
 
 @pytest.fixture(autouse=True)
@@ -48,7 +49,7 @@ def _observation(*, clave: RetencionClave | str, subclave: str = "") -> Withhold
         {
             "source_id": "row-1",
             "perceptor_tax_id": "00001500M",
-            "transaction_date": date(2024, 3, 15),
+            "transaction_date": _ON,
             "clave": clave,  # pydantic mode="before" validator coerces str → RetencionClave
             "subclave": subclave,
             "percibido_dinerario": Decimal("1000"),

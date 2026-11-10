@@ -24,6 +24,7 @@ from ..binding_value_contract import (
 )
 from ..inventory_bindings import InventoryProvider, validate_inventory_binding
 from ..schema import BindingDefinition
+from .authored_editions import filing_year_envelope, newest_authored_edition
 
 _MONEY_VALUE = BindingValueContract(data_type=BindingDataType.MONEY, channel=BindingValueChannel.DECIMAL)
 
@@ -115,8 +116,8 @@ def test_inventory_binding_validator_refuses_crossed_operation_destination_ident
 @pytest.mark.parametrize(
     "mutation",
     [
-        {"filing_year": 2024},
-        {"filing_year": "2025"},
+        {"filing_year": filing_year_envelope().floor},
+        {"filing_year": str(filing_year_envelope().horizon)},
         {"modelo": "130"},
         {"projection_grain": "taxpayer_year"},
         {"actividad_id": "literal-activity-forbidden"},
@@ -191,7 +192,7 @@ def test_inventory_binding_reuses_the_canonical_row_set_projection() -> None:
         value=_MONEY_VALUE,
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
         legal_refs=("rd-439-2007:art-75",),
-        source_refs=("aeat-renta-2025-inventory",),
+        source_refs=(f"aeat-renta-{newest_authored_edition('100')}-inventory",),
     )
 
     row_set = binding_row_set_selector(binding)

@@ -5,7 +5,14 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import Final
 
-from .work_form_models import ModeloFormCounts, ModeloFormField, ModeloFormOrigin, ModeloFormStanding
+from .work_form_field_vocabulary import (
+    ModeloFormOrigin,
+    ModeloFormStanding,
+)
+from .work_form_models import (
+    ModeloFormCounts,
+    ModeloFormField,
+)
 
 _TO_DO_TALLIES: Final[tuple[str, ...]] = ("needs_input", "default_to_confirm", "needs_you")
 

@@ -44,6 +44,7 @@ from ..snapshot_proof import (
     validator_digest,
 )
 from ..temporal import ModeloRevisionDirectory, select_revision_metadata
+from .authored_editions import filing_year_envelope
 from .snapshot_proof_support import count_cross_checks, republished_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -262,7 +263,11 @@ def test_a_proof_key_takes_the_declared_spelling_of_a_lower_case_period(operatio
     )
 
     key = snapshot_proof_key(
-        revision, modelo_id="m", filing_year=2025, period=token.lower(), grade=RegistryAuthorityGrade.FILING
+        revision,
+        modelo_id="m",
+        filing_year=filing_year_envelope().horizon,
+        period=token.lower(),
+        grade=RegistryAuthorityGrade.FILING,
     )
 
     assert key.period == token
@@ -280,7 +285,11 @@ def test_a_proof_key_keeps_a_concrete_event_and_the_symbolic_event_selector(
 
     def period(requested: str) -> str:
         return snapshot_proof_key(
-            revision, modelo_id="m", filing_year=2025, period=requested, grade=RegistryAuthorityGrade.FILING
+            revision,
+            modelo_id="m",
+            filing_year=filing_year_envelope().horizon,
+            period=requested,
+            grade=RegistryAuthorityGrade.FILING,
         ).period
 
     assert period("EVENT-3") == "EVENT-3"

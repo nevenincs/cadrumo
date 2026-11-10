@@ -36,6 +36,11 @@ from typing import Final
 from rich.cells import cell_len
 from rich.text import Text
 
+from .....application.modelo.work_form_field_vocabulary import (
+    ModeloFormText,
+    ModeloFormTextDisclosure,
+    address_key,
+)
 from .....application.modelo.work_form_findings import ModeloFormAttention
 from .....application.modelo.work_form_models import (
     ModeloFormBindingInputsBlock,
@@ -44,10 +49,7 @@ from .....application.modelo.work_form_models import (
     ModeloFormFieldBlock,
     ModeloFormGridBlock,
     ModeloFormSection,
-    ModeloFormText,
-    ModeloFormTextDisclosure,
     ModeloWorkForm,
-    address_key,
     section_fields,
 )
 from .....core.i18n.render import tr

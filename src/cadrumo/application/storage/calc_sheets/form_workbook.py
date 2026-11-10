@@ -25,7 +25,8 @@ from ...export.review_form_data import ReviewSavedForm
 from ...filing.export_producer import filing_producer_values
 from ...filing.producer_snapshot import FilingProducerSnapshot
 from ...modelo.work_form_context_values import form_context_value
-from ...modelo.work_form_models import ModeloFormRepeatingRow, ModeloFormScalar
+from ...modelo.work_form_field_vocabulary import ModeloFormScalar
+from ...modelo.work_form_models import ModeloFormRepeatingRow
 from ...modelo.work_form_records import saved_form_records
 from .engine import registry_sha
 from .errors import CalcSheetsEngineError

@@ -32,6 +32,7 @@ from ...storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..buckets import BucketEventHistoryRepository
+from ..invoices import InvoiceCatalogueRepository
 from ..transactions import TransactionCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -128,6 +129,7 @@ def test_full_load_and_manual_listing_equal_the_fully_validated_oracle(
             operation=authority_operation,
             transaction_repository=repository,
             bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
+            invoice_repository=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository),
         )
         listed = list_manual_transactions(bucket_id=_BUCKET_ID, ports=ports)
         listed_from_held_catalogue = list_manual_transactions(bucket_id=_BUCKET_ID, ports=ports, catalogue=loaded)

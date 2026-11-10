@@ -103,8 +103,7 @@ export type ModeloFilePurpose =
   "evidence" | "report" | "package" | "signature" | "envelope";
 /** The kind of file a save writes; a token of another kind than the field
  * takes is refused with `invalid`. */
-export type ModeloSaveFormat =
-  "boe" | "xml" | "csv" | "pdf" | "xlsx" | "zip" | "sig" | "sealed";
+export type ModeloSaveFormat = string;
 
 /** The operator input of one preflight or apply, as UTF-8 bytes: the edit
  * session's admitted baseline and its staged intents, and for a preflight

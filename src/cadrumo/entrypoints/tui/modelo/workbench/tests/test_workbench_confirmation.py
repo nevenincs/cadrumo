@@ -20,13 +20,13 @@ import pytest
 from textual.color import Color
 from textual.widgets import Button, Checkbox, Static
 
-from ......application.modelo.work_form_models import (
+from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormBindingAddressV1,
     ModeloFormCasillaAddressV1,
     ModeloFormEditability,
-    ModeloFormField,
     ModeloFormOrigin,
 )
+from ......application.modelo.work_form_models import ModeloFormField
 from ......application.modelo.work_form_typing_effect import ModeloFormDisplacement
 from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings

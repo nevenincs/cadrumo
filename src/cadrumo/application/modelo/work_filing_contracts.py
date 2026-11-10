@@ -11,6 +11,7 @@ from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from ..operations.models import CredentialFreeOperationRequest
+from .calculation_advisory_projection import ModeloWorkDeadlinePostureSnapshot
 from .filing_projection import ModeloFilingRecordSnapshot
 from .lifecycle_advisories import ModeloLifecycleAdvisories
 from .work_change_contracts import ModeloWorkUnitSubjectId
@@ -63,6 +64,12 @@ class ModeloWorkFilePublicResultV2(BaseModel):
     filing time, normalised so a caller outside this package always reads a
     value: a record that kept no posture reads ``unknown``. It is a calendar
     posture, and assesses nothing.
+
+    ``deadline`` serves an extemporánea filing's lateness, read on the filing's
+    own presentation date: the effective plazo close, the days overdue and the
+    unassessed Ley 58/2003 art. 27.2 rate preview from the governed band table.
+    ``fallback_recargo_legal_ref`` is the pinned reference a frontend cites when
+    no band resolved. Both are absent for any other timeliness.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
@@ -72,6 +79,8 @@ class ModeloWorkFilePublicResultV2(BaseModel):
     advisories: ModeloLifecycleAdvisories
     published: bool
     filing_timeliness: FilingTimeliness
+    deadline: ModeloWorkDeadlinePostureSnapshot | None = None
+    fallback_recargo_legal_ref: Annotated[str, Field(min_length=1, max_length=256)] | None = None
     filing_record_id: Annotated[str, Field(min_length=1, max_length=128)]
     work_unit_id: ModeloWorkUnitSubjectId
     calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
@@ -79,18 +88,45 @@ class ModeloWorkFilePublicResultV2(BaseModel):
 
     @model_validator(mode="after")
     def _record_summary(self) -> Self:
-        if (
-            self.filing_record_id != self.record.filing_record_id
-            or self.work_unit_id != self.record.work_unit_id
-            or self.calculation_revision_id != self.record.calculation_revision_id
-            or self.advisories.calculation_revision_id != self.calculation_revision_id
-            or self.advisories.work_unit_id != self.work_unit_id
-            or self.advisories.modelo != self.record.modelo
-            or self.advisories.filing_year != self.record.filing_year
-            or self.advisories.period != self.record.period.to_period().registry_token
-        ):
+        if not (_matches_record(self) and _advisories_match(self)):
             raise ValueError("filing summary does not match its committed record")
         kept = self.record.filing_timeliness
         if self.filing_timeliness is not (kept if kept is not None else FilingTimeliness.UNKNOWN):
             raise ValueError("filing timeliness does not match the posture the record kept")
+        _require_served_lateness_matches_posture(self)
         return self
+
+
+def _require_served_lateness_matches_posture(result: ModeloWorkFilePublicResultV2) -> None:
+    """Refuse a served deadline beside a non-late posture, or a fallback reference that does not fit it."""
+    deadline = result.deadline
+    if deadline is not None and (
+        result.filing_timeliness is not FilingTimeliness.EXTEMPORANEA or deadline.days_overdue is None
+    ):
+        raise ValueError("a served deadline posture belongs only to an extemporánea filing")
+    needs_ref = (
+        deadline is not None and deadline.days_overdue is not None and deadline.conditional_recargo_preview is None
+    )
+    if (result.fallback_recargo_legal_ref is not None) != needs_ref:
+        raise ValueError("deadline fallback legal reference does not match posture")
+
+
+def _matches_record(result: ModeloWorkFilePublicResultV2) -> bool:
+    record = result.record
+    return (
+        result.filing_record_id == record.filing_record_id
+        and result.work_unit_id == record.work_unit_id
+        and result.calculation_revision_id == record.calculation_revision_id
+    )
+
+
+def _advisories_match(result: ModeloWorkFilePublicResultV2) -> bool:
+    advisories = result.advisories
+    record = result.record
+    return (
+        advisories.calculation_revision_id == result.calculation_revision_id
+        and advisories.work_unit_id == result.work_unit_id
+        and advisories.modelo == record.modelo
+        and advisories.filing_year == record.filing_year
+        and advisories.period == record.period.to_period().registry_token
+    )

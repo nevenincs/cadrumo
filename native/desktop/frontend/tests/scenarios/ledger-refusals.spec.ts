@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { captureUnrecordedQuestions } from "../support/stagedCheckCapture";
+import { servedBlockerSentences } from "../support/stagedCheck";
 import { label } from "../support/strings";
 
 // What the Ledger says when a staged change cannot be saved. Each refusal
@@ -41,12 +42,32 @@ async function find(target: Page, words: string) {
   await expect(dataRows(target).first()).toBeVisible();
 }
 
+/** Searches every period: the received fee is dated outside the quarter the
+ * page opens on, so the search offers it under "more in other periods". */
+async function findInAnyPeriod(target: Page, words: string) {
+  await search(target).fill(words);
+  await page(target).locator(".ledger-elsewhere").getByRole("button").click();
+  await expect(dataRows(target).first()).toBeVisible();
+}
+
 async function typeInto(target: Page, cell: Locator, value: string) {
   await cell.click();
   await target.keyboard.press("Enter");
   await expect(editor(target)).toBeVisible();
   await editor(target).fill(value);
   await target.keyboard.press("Enter");
+}
+
+/** Picks a served option in a choice cell, which opens a searchable list
+ * rather than the text editor. */
+async function chooseIn(target: Page, cell: Locator, option: string) {
+  await cell.click();
+  await target.keyboard.press("Enter");
+  const list = target.locator(".ledger-cell-choice");
+  await expect(list).toBeVisible();
+  await target.keyboard.type(option);
+  await list.getByRole("option", { name: option, exact: true }).click();
+  await expect(list).toHaveCount(0);
 }
 
 async function openReview(target: Page) {
@@ -99,12 +120,9 @@ test("an amount typed with a sign is refused for its sign, not reported as a mis
   const blocker = review(target).locator("[data-blocker=amount_signed]");
   await expect(blocker).toBeVisible();
   // The sentence is the backend's: it names the magnitude and the direction.
-  await expect(blocker).toContainText(
-    label("application.ledger.staged_check.served.blocker.amount_signed"),
-  );
-  await expect(blocker).toContainText(
-    label("application.ledger.staged_check.served.fix.amount_signed"),
-  );
+  const sentences = servedBlockerSentences("amount_signed");
+  await expect(blocker).toContainText(sentences.words);
+  await expect(blocker).toContainText(sentences.fixWords);
   // Nothing says the amount is a fact nobody filled in.
   await expect(
     review(target).locator("[data-blocker=draft_incomplete]"),
@@ -138,7 +156,7 @@ test("the IVA preset's save refusal names the IRPF category and its door reveals
 }) => {
   await openLedger(target);
   await usePreset(target, "iva");
-  await find(target, "estudio garcia");
+  await findInAnyPeriod(target, "estudio garcia");
   const row = rowOf(target, "ESTUDIO GARCIA").first();
   // A received invoice settled net of the IRPF withheld on it: the cash is
   // below the base plus the cuota, and only the IRPF category says why.
@@ -153,9 +171,7 @@ test("the IVA preset's save refusal names the IRPF category and its door reveals
   await expect(blocker).toBeVisible();
   // The words are the backend's, and name no Pydantic text and no field code.
   await expect(blocker).toContainText(
-    label(
-      "application.ledger.staged_check.served.blocker.needs_withholding_category",
-    ),
+    servedBlockerSentences("needs_withholding_category").words,
   );
   await expect(blocker).not.toContainText("pydantic");
   await expect(blocker).not.toContainText("irpf_category");
@@ -190,12 +206,12 @@ test("naming the IRPF category clears the refusal and the row saves", async ({
 }) => {
   await openLedger(target);
   await usePreset(target, "everything");
-  await find(target, "estudio garcia");
+  await findInAnyPeriod(target, "estudio garcia");
   const row = rowOf(target, "ESTUDIO GARCIA").first();
   await typeInto(target, cellOf(row, "taxable_base"), "2000,00");
   await typeInto(target, cellOf(row, "iva_rate"), "21");
   await typeInto(target, cellOf(row, "iva_amount"), "420,00");
-  await typeInto(
+  await chooseIn(
     target,
     cellOf(row, "irpf_category"),
     label("desktop.ledger.irpf_category.actividad_economica"),
@@ -212,7 +228,7 @@ test("an IVA deduction kind is reviewed by its served word, never by its stored 
 }) => {
   const kind = "application.ledger.entry_options.deduction_fact_kind";
   await openLedger(target);
-  await find(target, "estudio garcia");
+  await findInAnyPeriod(target, "estudio garcia");
   const row = rowOf(target, "ESTUDIO GARCIA").first();
   await row.locator("[data-column=status]").click();
   const panel = target.locator("aside.ledger-panel");
@@ -236,14 +252,17 @@ test("the live region says what the grid holds now, not what it held before the 
 }) => {
   await openLedger(target);
   await usePreset(target, "iva");
-  await find(target, "estudio garcia");
+  await findInAnyPeriod(target, "estudio garcia");
   const row = rowOf(target, "ESTUDIO GARCIA").first();
   await typeInto(target, cellOf(row, "taxable_base"), "1000,00");
   // A keyboard move over the staged cell says it is unsaved.
   await cellOf(row, "taxable_base").click();
   await target.keyboard.press("ArrowDown");
   await target.keyboard.press("ArrowUp");
-  const spoken = grid(target).locator("[aria-live=polite]");
+  // The grid speaks beside its role=grid element, which may hold only rows.
+  const spoken = page(target).locator(
+    "[data-slot=data-grid] > [aria-live=polite]",
+  );
   await expect(spoken).toContainText(label("desktop.ledger.edit.row_unsaved"));
 
   await openReview(target);

@@ -16,7 +16,8 @@ from ....domain.iva_compensation.reconciliation import (
     IvaCompensationAuthoritySource,
     IvaCompensationReconciliationDecision,
 )
-from ..iva_wallet_gate import ModeloIvaWalletReconciliationBlocked, apply_iva_compensation_decision_binding
+from ..iva_wallet_binding import apply_iva_compensation_decision_binding
+from ..iva_wallet_refusal import ModeloIvaWalletReconciliationBlocked
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
 

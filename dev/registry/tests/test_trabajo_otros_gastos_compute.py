@@ -34,13 +34,19 @@ import pytest
 
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.domain.calculations.registry.schema import FormulaDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.formula_runtime_support import evaluate
 
+from .authored_edition_support import authored_revisions
 from .registry_schema_support import committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_IN_SCOPE_REVISIONS: tuple[str, ...] = ("2021", "2022", "2023", "2024", "2025")
+_IN_SCOPE_REVISIONS: tuple[str, ...] = tuple(
+    str(revision.id)
+    for revision in authored_revisions("100")
+    if revision.valid_to is None or revision.valid_to.year >= filing_year_envelope().floor
+)
 
 # LIRPF art. 19.2.f automatic "otros gastos" figure (bundled consolidated
 # ley-35-2006.html, anchor a19: "En concepto de otros gastos distintos de los

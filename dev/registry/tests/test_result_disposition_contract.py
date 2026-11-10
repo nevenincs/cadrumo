@@ -15,6 +15,7 @@ from cadrumo.domain.calculations.registry.result_casillas import (
     derive_result_disposition,
     result_disposition_casilla_ids,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..conformance.registry_schema_support import committed_registry_tree
 
@@ -27,7 +28,7 @@ def _pinned_generation() -> Iterator[None]:
         yield
 
 
-_ANY_PERIOD = Period.from_year_and_code(2025, "1T")
+_ANY_PERIOD = Period.from_year_and_code(filing_year_envelope().horizon, "1T")
 """A positive result pays in every period, so the period this contract derives it in does not matter."""
 
 

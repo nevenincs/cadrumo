@@ -57,12 +57,12 @@ from textual.widgets import Button, Input, Static
 from .....application.modelo.edit_models import MAX_EDIT_LEXEME_LENGTH
 from .....application.modelo.source_policy import SourceSurface
 from .....application.modelo.value_presentation import LOCALE_NUMBER_FORMATS, format_casilla_value
-from .....application.modelo.work_form_models import (
+from .....application.modelo.work_form_field_vocabulary import (
     ModeloFormEditability,
-    ModeloFormField,
     ModeloFormOrigin,
     ModeloFormScalar,
 )
+from .....application.modelo.work_form_models import ModeloFormField
 from .....application.modelo.work_form_wording import editability_text
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr

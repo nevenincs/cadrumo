@@ -45,9 +45,11 @@ from ..period_offset_math import same_ejercicio_prior_quarter_anchors
 from ..relations import source_presence_gaps
 from ..schema import BindingDefinition, ModeloRevision
 from ..schema_references import PeriodSelector
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
+_YEAR = filing_year_envelope().horizon
 _REFERENCE_LEGAL_ID = "rd-439-2007:art-110"
 _REFERENCE_SOURCE_ID = "aeat-modelo-130-instructions"
 _M130_PAGO_FRACCIONADO_CASILLA: CasillaId = validated_casilla_id(
@@ -71,8 +73,8 @@ def _revision(*, bindings: tuple[BindingDefinition, ...]) -> ModeloRevision:
     return ModeloRevision(
         id="test-previous-filing-revision",
         localization_key="test.schema.revision.test-previous-filing.label",
-        valid_from=date(2025, 1, 1),
-        period_selector=PeriodSelector(years=(2025,), periods=("1T", "2T", "3T", "4T")),
+        valid_from=date(_YEAR, 1, 1),
+        period_selector=PeriodSelector(years=(_YEAR,), periods=("1T", "2T", "3T", "4T")),
         legal_refs=(_REFERENCE_LEGAL_ID,),
         source_refs=(_REFERENCE_SOURCE_ID,),
         bindings=bindings,
@@ -103,7 +105,7 @@ def _span_binding(
 def _source_observation(
     period: str,
     *casilla_values: tuple[CasillaId, Decimal],
-    year: int = 2025,
+    year: int = _YEAR,
 ) -> RegistryModeloObservation:
     return RegistryModeloObservation(
         modelo="130",
@@ -172,7 +174,7 @@ def test_coalesced_optional_bindings_preserve_each_registry_presence_group() -> 
 
     requirement = previous_filing_observation_requirements(
         _revision(bindings=(first, second)),
-        filing_year=2025,
+        filing_year=_YEAR,
         period="2T",
     )[0]
 
@@ -204,7 +206,7 @@ def _resolve_binding(
     resolved = resolve_previous_filing_binding_values(
         _revision(bindings=(binding,)),
         observations,
-        filing_year=2025,
+        filing_year=_YEAR,
         period=target_period,
     )
     return resolved[binding.id]
@@ -235,9 +237,9 @@ def test_same_ejercicio_prior_quarter_sequence_matches_independent_aeat_anchors(
 @pytest.mark.parametrize("target_period", ["1T", "2T", "3T", "4T"])
 def test_expanding_span_emits_independently_enumerated_anchor_set(target_period: str) -> None:
     revision = _revision(bindings=(_span_binding(source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA,)),))
-    requirements = previous_filing_observation_requirements(revision, filing_year=2025, period=target_period)
+    requirements = previous_filing_observation_requirements(revision, filing_year=_YEAR, period=target_period)
     assert (
-        tuple((item.filing_year - 2025, item.periods[0]) for item in requirements)
+        tuple((item.filing_year - _YEAR, item.periods[0]) for item in requirements)
         == _EXPECTED_SPAN_ANCHORS[target_period]
     )
 
@@ -245,7 +247,7 @@ def test_expanding_span_emits_independently_enumerated_anchor_set(target_period:
 def test_expanding_span_first_quarter_is_empty() -> None:
     """1T has no same-ejercicio prior quarter; the span is empty (absent-by-design)."""
     revision = _revision(bindings=(_span_binding(source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA,)),))
-    assert previous_filing_observation_requirements(revision, filing_year=2025, period="1T") == ()
+    assert previous_filing_observation_requirements(revision, filing_year=_YEAR, period="1T") == ()
 
 
 def test_expanding_span_classified_direct_previous_filing_binding() -> None:
@@ -258,7 +260,7 @@ def test_expanding_span_classified_direct_previous_filing_binding() -> None:
     binding = _span_binding(source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA,))
     requirements = previous_filing_observation_requirements(
         _revision(bindings=(binding,)),
-        filing_year=2025,
+        filing_year=_YEAR,
         period="2T",
     )
     assert [(item.source_modelo, item.periods, item.source_casilla_ids) for item in requirements] == [
@@ -276,7 +278,7 @@ def test_previous_filing_requirement_rejects_ungrounded_binding_snapshot() -> No
     with pytest.raises(ValidationError) as exc_info:
         previous_filing_observation_requirements(
             _revision(bindings=(binding,)),
-            filing_year=2025,
+            filing_year=_YEAR,
             period="2T",
         )
 
@@ -289,7 +291,7 @@ def test_expanding_span_rejects_non_quarterly_target() -> None:
     with pytest.raises(RegistryValidationError, match="only quarterly codes"):
         previous_filing_observation_requirements(
             _revision(bindings=(_span_binding(source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA,)),)),
-            filing_year=2025,
+            filing_year=_YEAR,
             period="0A",
         )
 

@@ -40,6 +40,7 @@ import {
 import type { OwnAccountChoice } from "../../../shell/ledgerMovementReads";
 import {
   NO_ACCOUNT,
+  NO_CATEGORY,
   clearRefusal,
   parseCell,
   pointsText,
@@ -364,9 +365,12 @@ function useChoices(
       case "category":
         return {
           label: t("desktop.ledger.column.category"),
-          options: vocabulary.categoryFamilies.flatMap(([family, members]) =>
-            members.map((value) => categoryOption(t, family, value)),
-          ),
+          options: [
+            { value: NO_CATEGORY, label: t("desktop.ledger.inspector.clear") },
+            ...vocabulary.categoryFamilies.flatMap(([family, members]) =>
+              members.map((value) => categoryOption(t, family, value)),
+            ),
+          ],
         };
       case "iva_category":
         return {

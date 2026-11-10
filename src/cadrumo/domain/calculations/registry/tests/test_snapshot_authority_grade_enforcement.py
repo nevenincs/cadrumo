@@ -11,12 +11,13 @@ from ..governed_fact_scope import validating_governed_facts
 from ..schema import ModeloDefinition, RegistrySnapshot
 from ..schema_catalogues import RegistryCatalogues
 from ..snapshot import build_validated_snapshot
+from .authored_editions import filing_year_envelope
 from .registry_tree import bundled_modelo_components
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _MODEL = "130"
-_YEAR = 2026
+_YEAR = filing_year_envelope().horizon
 _PERIOD = "1T"
 
 

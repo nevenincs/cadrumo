@@ -50,7 +50,7 @@ def gasto_transaction(
     irpf_category: str | None = None,
     business_classification: BusinessClassification = BusinessClassification.BUSINESS,
     business_pct: Decimal | None = None,
-    category_id: str = "asesoria_fiscal",
+    category_id: str | None = "asesoria_fiscal",
     usage_ratio_id: str | None = None,
     direction: TransactionDirection = TransactionDirection.OUTGOING,
     lifecycle_state: TransactionLifecycleState = TransactionLifecycleState.ACTIVE,

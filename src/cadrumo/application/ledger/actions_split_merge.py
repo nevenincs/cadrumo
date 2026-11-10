@@ -48,6 +48,7 @@ from .actions_common import (
     resolve_revision_guarded_transaction_repository,
     save_transaction_catalogue_and_events,
     transaction_modelo_source_ids,
+    withheld_figures_event_payload,
 )
 from .fx_value_consistency import require_consistent_fx_value
 from .manual_update import command_from_patch, prepare_manual_transaction_update
@@ -1121,6 +1122,7 @@ def _build_merge_event(
             # children could not record its own event. The cohort stays
             # recoverable through the split_group_id carried here.
             "child_count": str(len(sorted_child_ids)),
+            **withheld_figures_event_payload(parent),
         },
     )
 

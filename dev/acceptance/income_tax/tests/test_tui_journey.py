@@ -278,7 +278,11 @@ def _form_with_assumed_withholding(*, entries_known: bool) -> Any:
     the confirmation dialog can list: a box a source fills is confirmed in its
     own panel instead, since keeping a value there would replace the source.
     """
-    from cadrumo.application.modelo.work_form_models import ModeloFormField, ModeloFormFieldBlock, ModeloFormOrigin
+    from cadrumo.application.modelo.work_form_field_vocabulary import ModeloFormOrigin
+    from cadrumo.application.modelo.work_form_models import (
+        ModeloFormField,
+        ModeloFormFieldBlock,
+    )
     from cadrumo.entrypoints.tui.modelo.workbench.tests.workbench_fixture import synthetic_form
 
     form = synthetic_form(needs_input=False)
@@ -292,6 +296,7 @@ def _form_with_assumed_withholding(*, entries_known: bool) -> Any:
                 "held_zero",
                 "takes_typed_value",
                 "clearable",
+                "removable",
                 "own_value",
                 "confirm_comparable",
                 "state_digest",
@@ -333,7 +338,7 @@ def test_assumed_values_are_confirmed_reviewed_and_submitted_for_apply_through_t
     """
     from decimal import Decimal
 
-    from cadrumo.application.modelo.work_form_models import ModeloFormCasillaAddressV1
+    from cadrumo.application.modelo.work_form_field_vocabulary import ModeloFormCasillaAddressV1
     from cadrumo.core.config import override_settings
     from cadrumo.entrypoints.tui.components.host import ScreenHostApp
     from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen

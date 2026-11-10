@@ -31,6 +31,7 @@ const INTERNAL = [
   "needs_person",
   "not_in_this_build",
   "damaged_download",
+  "engine_program_unusable",
   "host_unreachable",
   "server_error",
   "blocked_by_network",
