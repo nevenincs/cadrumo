@@ -26,9 +26,10 @@ from cadrumo.application.ledger.counterparty_establishment import record_counter
 from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
+from cadrumo.application.modelo.work_form_field_vocabulary import ModeloFormCasillaAddressV1
 from cadrumo.application.modelo.work_form_findings import ModeloFormAttention
 from cadrumo.application.modelo.work_form_issue_lines import form_issue_lines
-from cadrumo.application.modelo.work_form_models import ModeloFormCasillaAddressV1, ModeloWorkForm
+from cadrumo.application.modelo.work_form_models import ModeloWorkForm
 from cadrumo.application.modelo.work_form_service import load_modelo_work_form
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr

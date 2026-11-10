@@ -9,7 +9,10 @@ import pytest
 from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_input_kind import InputKind
-from ..work_form_models import ModeloFormEditability, ModeloFormOrigin
+from ..work_form_field_vocabulary import (
+    ModeloFormEditability,
+    ModeloFormOrigin,
+)
 from ..work_review import build_modelo_work_review_casillas
 from .work_form_fixture import built_form, form_casilla, form_snapshot
 

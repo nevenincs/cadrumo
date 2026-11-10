@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .workbook_demo_cases import edition_id, has_differentiated_sectors, newest_edition_id
+from .workbook_demo_cases import demonstrates_sector_deductions, edition_id, newest_edition_id
 
 if TYPE_CHECKING:
     from .workbook_demo_cases import DemoCase
@@ -31,7 +31,7 @@ def _notice_base(case: DemoCase) -> str:
             "de hechos guardados del ejemplo "
             "y no se recalculan al editar las cifras. Este documento no está listo para presentar."
         )
-    if case.modelo == "390" and has_differentiated_sectors(case.modelo, case.revision):
+    if case.modelo == "390" and demonstrates_sector_deductions(case):
         notice += (
             " Ejemplo ficticio de actividades con regímenes de deducción diferenciados: "
             "las nueve cuotas de cada grupo se han fijado en 100, 200 y 300 euros respectivamente. "

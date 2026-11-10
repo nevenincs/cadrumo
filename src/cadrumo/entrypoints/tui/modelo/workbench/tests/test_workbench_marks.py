@@ -13,10 +13,16 @@ from typing import Final, override
 import pytest
 from textual.app import App, ComposeResult
 
-from ......application.modelo.work_form_findings import ModeloFormAttention
-from ......application.modelo.work_form_models import (
+from ......application.modelo.work_form_field_vocabulary import (
     ORIGIN_STANDINGS,
     ModeloFormBlocker,
+    ModeloFormOrigin,
+    ModeloFormStanding,
+    ModeloFormText,
+    ModeloFormTextDisclosure,
+)
+from ......application.modelo.work_form_findings import ModeloFormAttention
+from ......application.modelo.work_form_models import (
     ModeloFormCounts,
     ModeloFormField,
     ModeloFormFieldBlock,
@@ -24,12 +30,8 @@ from ......application.modelo.work_form_models import (
     ModeloFormGridCell,
     ModeloFormGridColumn,
     ModeloFormGridRow,
-    ModeloFormOrigin,
     ModeloFormPage,
     ModeloFormSection,
-    ModeloFormStanding,
-    ModeloFormText,
-    ModeloFormTextDisclosure,
     ModeloWorkForm,
     revised_field,
 )

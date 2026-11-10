@@ -20,7 +20,7 @@ from .edit_models import (
     ModeloEditWritableScalarSurfaceEntryV1,
 )
 from .source_policy import SourceOverridePolicy, source_policy
-from .work_form_models import (
+from .work_form_field_vocabulary import (
     ABSENT_FROM_ADMISSION,
     ModeloFormBinding,
     ModeloFormEditability,

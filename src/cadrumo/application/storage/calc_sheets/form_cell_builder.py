@@ -21,7 +21,8 @@ from ....domain.calculations.registry.schema_form_layouts import (
 )
 from ...export.review_form_data import ReviewSavedForm
 from ...modelo.settlement_casilla import declaration_result_casillas
-from ...modelo.work_form_models import ModeloFormRepeatingRow, ModeloFormScalar
+from ...modelo.work_form_field_vocabulary import ModeloFormScalar
+from ...modelo.work_form_models import ModeloFormRepeatingRow
 from .errors import CalcSheetsEngineError
 from .form_geometry import form_column_widths, form_sources
 from .form_value_presentation import compact_date_casillas, compact_date_expression

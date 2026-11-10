@@ -12,9 +12,16 @@ from typing import TYPE_CHECKING, Final
 from textual.content import Content
 
 from .....application.modelo.source_policy import SourceSurface
+from .....application.modelo.work_form_field_vocabulary import (
+    ModeloFormOrigin,
+    address_key,
+)
 from .....application.modelo.work_form_findings import ModeloFormAttention
 from .....application.modelo.work_form_issue_lines import form_verdict
-from .....application.modelo.work_form_models import ModeloFormOrigin, ModeloWorkForm, address_key, section_fields
+from .....application.modelo.work_form_models import (
+    ModeloWorkForm,
+    section_fields,
+)
 from .....application.modelo.work_form_next_step import applicable_fields
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr

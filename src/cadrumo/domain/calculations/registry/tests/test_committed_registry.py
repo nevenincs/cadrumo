@@ -17,7 +17,13 @@ from ..export import resolve_export_layout
 from ..export_parse import parse_export_payload
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema import RegistrySnapshot
-from .authored_editions import authored_revisions
+from .authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    revision_covering,
+    revision_first_exercise,
+    revision_serving_period,
+)
 from .published_authority import (
     PublishedGovernedFactSource,
     published_authored_revision,
@@ -27,6 +33,8 @@ from .relation_fixture import resolve_relation_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
+_YEAR = filing_year_envelope().horizon
+
 
 def _inputs(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal]:
     return validated_casilla_id_map(values, surface="committed registry input casillas")
@@ -35,7 +43,7 @@ def _inputs(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal]:
 def test_committed_modelo_130_registry_snapshot_is_calculable(
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
-    snapshot = registry_snapshot("130", 2026, "1T")
+    snapshot = registry_snapshot("130", _YEAR, "1T")
     result = calculate_registry_snapshot(
         snapshot,
         inputs=_inputs(
@@ -49,7 +57,7 @@ def test_committed_modelo_130_registry_snapshot_is_calculable(
                 "18": Decimal("0"),
             },
         ),
-        date_context={"filing_period": date(2026, 3, 31)},
+        date_context={"filing_period": date(_YEAR, 3, 31)},
         binding_values={
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
@@ -57,8 +65,9 @@ def test_committed_modelo_130_registry_snapshot_is_calculable(
         enum_binding_values={"modelo-130-estimacion-directa-modalidad": "directa_normal"},
     )
 
-    assert snapshot.revision.id == "2019-y-siguientes"
-    assert snapshot.revision.period_selector.year_from == 2019
+    covering = revision_covering("130", _YEAR)
+    assert snapshot.revision.id == covering.id
+    assert snapshot.revision.period_selector.year_from == revision_first_exercise("130", str(covering.id))
     assert {entry.target_casilla_id for entry in result.entries} == {
         "02",
         "provisiones-gastos-dificil-justificacion",
@@ -82,7 +91,7 @@ def test_committed_modelo_130_registry_snapshot_is_calculable(
 def test_committed_modelo_111_registry_snapshot_calculates_liquidacion_from_retentions(
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
-    snapshot = registry_snapshot("111", 2026, "1T")
+    snapshot = registry_snapshot("111", _YEAR, "1T")
     result = calculate_registry_snapshot(
         snapshot,
         inputs=_inputs(
@@ -99,7 +108,7 @@ def test_committed_modelo_111_registry_snapshot_calculates_liquidacion_from_rete
                 "29": Decimal("40.00"),
             },
         ),
-        date_context={"filing_period": date(2026, 3, 31)},
+        date_context={"filing_period": date(_YEAR, 3, 31)},
     )
 
     assert {entry.target_casilla_id for entry in result.entries} == {"28", "30"}
@@ -117,7 +126,7 @@ def test_committed_modelo_111_registry_snapshot_calculates_liquidacion_from_rete
 def test_committed_modelo_115_registry_snapshot_calculates_rental_withholding(
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
-    snapshot = registry_snapshot("115", 2026, "1T")
+    snapshot = registry_snapshot("115", _YEAR, "1T")
     result = calculate_registry_snapshot(
         snapshot,
         inputs=_inputs(
@@ -128,7 +137,7 @@ def test_committed_modelo_115_registry_snapshot_calculates_rental_withholding(
                 "04": Decimal("10.00"),
             },
         ),
-        date_context={"filing_period": date(2026, 3, 31)},
+        date_context={"filing_period": date(_YEAR, 3, 31)},
     )
 
     entries = {entry.target_casilla_id: entry for entry in result.entries}
@@ -143,7 +152,7 @@ def test_committed_modelo_115_registry_snapshot_calculates_rental_withholding(
 def test_committed_modelo_123_registry_snapshot_calculates_current_totals(
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
-    snapshot = registry_snapshot("123", 2026, "1T")
+    snapshot = registry_snapshot("123", _YEAR, "1T")
     result = calculate_registry_snapshot(
         snapshot,
         inputs=_inputs(
@@ -159,7 +168,7 @@ def test_committed_modelo_123_registry_snapshot_calculates_current_totals(
                 "13": Decimal("12.25"),
             },
         ),
-        date_context={"filing_period": date(2026, 3, 31)},
+        date_context={"filing_period": date(_YEAR, 3, 31)},
     )
 
     entries = {entry.target_casilla_id: entry for entry in result.entries}
@@ -221,24 +230,12 @@ def _assert_retenciones_sum_shape(
     assert {entry.target_casilla_id for entry in result.entries} == {"06", "08"}
 
 
-@pytest.mark.parametrize(
-    ("filing_year", "revision_id", "filing_period", "source_ref", "legal_ref"),
-    [
-        (2022, "2019-2023", date(2022, 3, 31), "aeat-dr-131-2019-2023-v101", "orden-hfp-1335-2021:art-4"),
-        (2023, "2019-2023", date(2023, 3, 31), "aeat-dr-131-2019-2023-v101", "orden-hfp-1172-2022:art-4"),
-        (2024, "2024", date(2024, 3, 31), "aeat-dr-131-2024", "orden-hfp-1359-2023:art-4"),
-        (2025, "2025", date(2025, 3, 31), "aeat-dr-131-2025", "orden-hac-1347-2024:art-4"),
-        (2026, "2026", date(2026, 3, 31), "aeat-dr-131-2026", "orden-hac-1425-2025:art-4"),
-    ],
-)
+@pytest.mark.parametrize("filing_year", filing_year_envelope().years)
 def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_totals(
     filing_year: int,
-    revision_id: str,
-    filing_period: date,
-    source_ref: str,
-    legal_ref: str,
     registry_snapshot: Callable[..., RegistrySnapshot],
 ) -> None:
+    filing_period = date(filing_year, 3, 31)
     snapshot = registry_snapshot("131", filing_year, "1T", grade=RegistryAuthorityGrade.CALCULATION)
     result = calculate_registry_snapshot(
         snapshot,
@@ -258,7 +255,8 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
         binding_values={"modelo-131-resultados-negativos-anteriores": Decimal("10")},
     )
 
-    assert snapshot.revision.id == revision_id
+    declared = revision_serving_period("131", filing_year, "1T")
+    assert snapshot.revision.id == declared.id
     entries = {entry.target_casilla_id: entry for entry in result.entries}
     expected_entries = {
         "04",
@@ -294,8 +292,14 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
     assert entries["11"].operand_refs == ("modelo-131-resultados-negativos-anteriores", "10")
     assert entries["13"].operand_refs == ("10", "11", "12")
     assert entries["15"].operand_refs == ("13", "14")
-    assert source_ref in snapshot.sources
-    assert legal_ref in snapshot.legal
+    # Each year's own design and Orden travel with the snapshot: the sources and legal
+    # references its authored revision declares are all resolvable from it, and that
+    # revision cites the AEAT record design and an Orden approving it.
+    assert snapshot.revision.source_refs
+    assert set(snapshot.revision.source_refs) <= set(snapshot.sources)
+    assert set(snapshot.revision.legal_refs) <= set(snapshot.legal)
+    assert any(ref.startswith("aeat-dr-131") for ref in snapshot.revision.source_refs)
+    assert any(ref.startswith("orden-") and ref.endswith(":art-4") for ref in snapshot.revision.legal_refs)
 
 
 def test_committed_modelo_131_refuses_the_year_below_the_supported_floor(
@@ -303,20 +307,21 @@ def test_committed_modelo_131_refuses_the_year_below_the_supported_floor(
 ) -> None:
     supported_years = published_supported_filing_years()
     assert supported_years is not None
-    # The 2019-2023 revision is authored from 2019, so this refusal comes from the
+    # The revision covering the year below the floor is authored from before it, so this refusal comes from the
     # support floor rather than from a missing authored edition -- and the refusal
     # now SAYS so, rather than reporting an absence the corpus contradicts.
-    assert published_authored_revision("131", year=supported_years.floor - 1).id == "2019-2023"
+    below_floor_revision = revision_covering("131", supported_years.floor - 1)
+    assert published_authored_revision("131", year=supported_years.floor - 1).id == below_floor_revision.id
     with pytest.raises(FilingYearOutsideSupportEnvelopeError) as excinfo:
         registry_snapshot("131", supported_years.floor - 1, "1T", grade=RegistryAuthorityGrade.CALCULATION)
     assert excinfo.value.floor == supported_years.floor
-    assert "2019-2023" in excinfo.value.covering_revision_ids
+    assert str(below_floor_revision.id) in excinfo.value.covering_revision_ids
 
 
 def test_committed_modelo_180_registry_snapshot_calculates_annual_summary_from_modelo_115_relations_and_count_binding(
     registry_snapshot: Callable[..., RegistrySnapshot],
 ) -> None:
-    snapshot = registry_snapshot("180", 2026, "0A", grade=RegistryAuthorityGrade.CALCULATION)
+    snapshot = registry_snapshot("180", _YEAR, "0A", grade=RegistryAuthorityGrade.CALCULATION)
     relation_values = resolve_relation_values(
         snapshot.revision,
         {
@@ -338,7 +343,7 @@ def test_committed_modelo_180_registry_snapshot_calculates_annual_summary_from_m
     result = calculate_registry_snapshot(
         snapshot,
         inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
-        date_context={"filing_period": date(2026, 12, 31)},
+        date_context={"filing_period": date(_YEAR, 12, 31)},
         binding_values=binding_values,
         relation_values=relation_values,
     )
@@ -353,7 +358,7 @@ def test_committed_modelo_180_registry_snapshot_calculates_annual_summary_from_m
 _MODELO_180_DECLARANTE_FIELDS: dict[tuple[int, int], str] = {
     (1, 1): "1",
     (2, 4): "180",
-    (5, 8): "2026",
+    (5, 8): str(_YEAR),
     (9, 17): "B12345678",
     # Razon social of the declarante. The layout declares this slot required and
     # the parse path re-renders every value_policy-free field to prove the
@@ -378,7 +383,7 @@ _MODELO_180_DECLARANTE_FIELDS: dict[tuple[int, int], str] = {
 _MODELO_180_PERCEPTOR_FIELDS: dict[tuple[int, int], str] = {
     (1, 1): "2",
     (2, 4): "180",
-    (5, 8): "2026",
+    (5, 8): str(_YEAR),
     (9, 17): "B12345678",
     (18, 26): "12345678Z",
     (27, 35): "X0001502F",
@@ -388,7 +393,7 @@ _MODELO_180_PERCEPTOR_FIELDS: dict[tuple[int, int], str] = {
     (79, 92): "N" + "2500".zfill(13),
     (93, 96): "0000",
     (97, 109): "475".zfill(13),
-    (110, 113): "2025",
+    (110, 113): str(_YEAR),
     (114, 114): "1",
     (115, 134): "1234567VK4713C0001XY",
     (135, 139): "CL".ljust(5),
@@ -429,7 +434,7 @@ _MODELO_180_EXPECTED_CASILLAS: tuple[tuple[CasillaId, object], ...] = (
     _expected_casilla_value("perc.base", Decimal("-25.00")),
     _expected_casilla_value("perc.porcentaje-retencion", Decimal("0.00")),
     _expected_casilla_value("perc.retenciones", Decimal("4.75")),
-    _expected_casilla_value("perc.ejercicio-devengo", Decimal("2025")),
+    _expected_casilla_value("perc.ejercicio-devengo", Decimal(_YEAR)),
     _expected_casilla_value("perc.situacion-inmueble", Decimal("1")),
     _expected_casilla_value("perc.referencia-catastral", "1234567VK4713C0001XY"),
     _expected_casilla_value("perc.inmueble-tipo-via", "CL"),
@@ -475,7 +480,7 @@ def _modelo_180_parsed_casillas(
     ``row_field_casilla_ids`` -- so a value parsed at the wrong position, or a
     slot mapped to the wrong casilla, still fails its case.
     """
-    snapshot = registry_snapshot("180", 2026, "0A")
+    snapshot = registry_snapshot("180", _YEAR, "0A")
     layout = resolve_export_layout(snapshot).layout
     declarante = _fixed_width_record(500, _MODELO_180_DECLARANTE_FIELDS)
     perceptor = _fixed_width_record(500, _MODELO_180_PERCEPTOR_FIELDS)

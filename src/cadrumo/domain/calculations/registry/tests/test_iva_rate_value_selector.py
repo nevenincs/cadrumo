@@ -37,10 +37,14 @@ from ..ledger_iva_bindings import (
 )
 from ..schema import BindingDefinition, ModeloRevision
 from ..schema_references import PeriodSelector
+from .authored_editions import authored_revisions, filing_year_envelope
 
 _MONEY_VALUE = BindingValueContract(data_type=BindingDataType.MONEY, channel=BindingValueChannel.DECIMAL)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
+
+_YEAR = filing_year_envelope().horizon
+_REVISION_ID = str(authored_revisions("390")[-1].id)
 
 
 def _binding(binding_id: str, *, applied_rates: tuple[Decimal, ...] | None) -> BindingDefinition:
@@ -63,18 +67,18 @@ def _binding(binding_id: str, *, applied_rates: tuple[Decimal, ...] | None) -> B
         value=_MONEY_VALUE,
         aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
         legal_refs=("ley-37-1992:art-91",),
-        source_refs=("aeat-dr-390-2025",),
+        source_refs=(f"aeat-dr-390-{_YEAR}",),
     )
 
 
 def _revision(*bindings: BindingDefinition) -> ModeloRevision:
     return ModeloRevision(
-        id="2010-y-siguientes",
-        localization_key="test.schema.revision.2010-y-siguientes.label",
-        valid_from=date(2024, 1, 1),
-        period_selector=PeriodSelector(year_from=2024, periods=("0A",)),
+        id=_REVISION_ID,
+        localization_key=f"test.schema.revision.{_REVISION_ID}.label",
+        valid_from=date(_YEAR, 1, 1),
+        period_selector=PeriodSelector(year_from=_YEAR, periods=("0A",)),
         legal_refs=("ley-37-1992:art-91",),
-        source_refs=("aeat-dr-390-2025",),
+        source_refs=(f"aeat-dr-390-{_YEAR}",),
         bindings=bindings,
     )
 
@@ -87,7 +91,7 @@ def _row(ledger_id: str, *, applied_rate: Decimal | None, base: str) -> IvaLedge
     """
     return IvaLedgerObservation(
         ledger_id=ledger_id,
-        transaction_date=date(2024, 11, 15),
+        transaction_date=date(_YEAR, 11, 15),
         category=IvaCategory("domestic_super_reduced"),
         rate_kind=IvaRateKind("super_reduced"),
         flow_direction=IvaFlowDirection.from_registry("repercutido"),

@@ -61,7 +61,7 @@ from ...application.modelo.edit_review_wording import STATED_BY_THE_REVIEW
 from ...application.modelo.edit_transient_operand import modelo_edit_financial_operand
 from ...application.modelo.value_presentation import format_casilla_value
 from ...application.modelo.work_amend_contracts import ModeloWorkAmendOverride
-from ...application.modelo.work_form_models import ModeloFormCasillaAddressV1
+from ...application.modelo.work_form_field_vocabulary import ModeloFormCasillaAddressV1
 from ...application.modelo.work_form_rebase import ModeloFormRebaseOutcome, held_change
 from ...application.modelo.work_form_scalar_values import comparable_entry
 from ...application.modelo.work_form_service import load_modelo_work_form

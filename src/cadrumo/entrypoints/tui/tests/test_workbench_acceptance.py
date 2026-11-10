@@ -24,12 +24,14 @@ import pytest
 from textual.pilot import Pilot
 from textual.widgets import OptionList, Static
 
-from ....application.modelo.work_form_models import (
+from ....application.modelo.work_form_field_vocabulary import (
     ModeloFormCasillaAddressV1,
     ModeloFormEditability,
+    address_key,
+)
+from ....application.modelo.work_form_models import (
     ModeloFormField,
     ModeloWorkForm,
-    address_key,
 )
 from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage

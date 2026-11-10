@@ -4,11 +4,14 @@ import pytest
 from pydantic import TypeAdapter
 
 from cadrumo.application.storage.calc_sheets.errors import CalcSheetsEngineError
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from .. import workbook_probe
 from ..compiler.authority import compiled_bundled_authority
 from ..form_layout.coverage import coverage_rows
 from ..workbook_probe import ProbeResult, declared_probe_frame, probe_authority, probe_revision
+
+_M130_REVISION = str(open_ended_revision("130").id)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -20,9 +23,7 @@ def authority():
 
 def _row(authority):
     return next(
-        row
-        for row in coverage_rows(authority.modelos)
-        if row.modelo_id == "130" and row.revision_id == "2019-y-siguientes"
+        row for row in coverage_rows(authority.modelos) if row.modelo_id == "130" and row.revision_id == _M130_REVISION
     )
 
 
@@ -82,13 +83,13 @@ def test_compiler_refusals_and_unexpected_errors_remain_distinct(authority, monk
 
 def test_declared_but_outside_supported_span_has_no_probe_frame(authority):
     modelo = authority.modelo("130")
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions[_M130_REVISION]
     support = authority.supported_filing_years()
-    outside = support.model_copy(update={"floor": 2090, "horizon": 2090})
+    outside = support.model_copy(update={"floor": support.horizon + 1, "horizon": support.horizon + 1})
     closed = revision.model_copy(
         update={
             "period_selector": revision.period_selector.model_copy(
-                update={"years": (2025,), "year_from": None, "year_to": None}
+                update={"years": (support.floor,), "year_from": None, "year_to": None}
             )
         }
     )

@@ -73,7 +73,12 @@ def test_modelo_189_current_registry_uses_current_edition_sources_without_fake_c
     roles_by_id = {casilla.id: casilla.semantic_role for casilla in revision.casillas}
     assert roles_by_id["declarante-nif"] == "irpf_declarante_nif"
     assert roles_by_id["ejercicio-declaracion"] == "filing_year"
-    assert {casilla.input_kind for casilla in revision.casillas} == {"manual"}
+    # The ejercicio is the filing year the declaration itself is for, so it is
+    # informational; every reported value is still entered by hand and none
+    # is calculated.
+    kinds_by_id = {casilla.id: casilla.input_kind for casilla in revision.casillas}
+    assert kinds_by_id.pop("ejercicio-declaracion") == "informational"
+    assert set(kinds_by_id.values()) == {"manual"}
     assert not revision.formulas
     assert revision.completeness_manifest is None
     assert_deadline_window_for_filing_year(revision, _CURRENT_EDITION, f"modelo-189-{_CURRENT_EDITION}-0a")

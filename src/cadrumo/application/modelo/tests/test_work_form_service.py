@@ -18,7 +18,8 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.filing.schema import ModeloValueKind
 from ..work_form import build_modelo_work_form
-from ..work_form_models import ModeloFormOrigin, ModeloWorkForm
+from ..work_form_field_vocabulary import ModeloFormOrigin
+from ..work_form_models import ModeloWorkForm
 from ..work_form_service import modelo_work_form_changes
 from ..work_review import ModeloWorkReview
 from .work_form_fixture import uncalculated_review

@@ -70,6 +70,11 @@ REVIEWED: dict[tuple[str, str], tuple[str, str, str]] = {
         "0c83baa05a29ccd3e0a246170c60af514e0848ecbb1ef20d5108157d376950da",
         "8e71508cd3cefdad1e8f66cb1ef1e59e2ef104aab07560f9ee930f6f2518fbc1",
     ),
+    ("840", "aeat-dr-840"): (
+        "d0348a78787db7eb767dd8093ea84773c248c0b92bcefb512972573aff34391a",
+        "990412f8984db2d033fc338611ed0e590026f4e7508094515030255b832cf74d",
+        "c839bf107292960480fe79c2e44be80c89c2a6292bdece1d4d18962cee834b93",
+    ),
 }
 
 

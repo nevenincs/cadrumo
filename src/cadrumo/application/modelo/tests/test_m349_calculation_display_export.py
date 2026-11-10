@@ -40,7 +40,8 @@ from ..calculation_helpers import build_typed_observations
 from ..calculation_modelo_adjustments import drop_row_field_template_outputs
 from ..revision_replay_inputs import revision_detail_record_binding_inputs
 from ..work_form import build_modelo_work_form
-from ..work_form_models import ModeloFormCasillaAddressV1, ModeloFormRepeatingBlock
+from ..work_form_field_vocabulary import ModeloFormCasillaAddressV1
+from ..work_form_models import ModeloFormRepeatingBlock
 from ..work_form_records import saved_form_records
 from ..work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_work_review_casillas
 

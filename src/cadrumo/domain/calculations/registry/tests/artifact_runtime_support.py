@@ -36,6 +36,8 @@ from .published_authority import published_supported_filing_years
 
 LEGAL_ID = "ley-35-2006:art-1"
 SOURCE_ID = "aeat-dr-130-2019-v12"
+# Review, retrieval and in-force stamps of the synthetic references: epoch-era, so no filing year hides in them.
+_FIXTURE_STAMP = date(1980, 1, 1)
 _WORKBOOK_SOURCE_ID = "aeat-dr-130-2019-v12-layout"
 
 
@@ -48,7 +50,7 @@ def _minimal_source_ref() -> SourceReference:
         corpus_path="registry/aeat/sources/aeat-dr-130-2019-v12.pdf",
         sha256="a" * 64,
         bytes=1024,
-        retrieved_at=date(2024, 1, 1),
+        retrieved_at=_FIXTURE_STAMP,
         source_url="https://www.aeat.es/",
         review_status="pending_review",
     )
@@ -143,9 +145,9 @@ def minimal_catalogues(*, facts_restated_on: date | None = None) -> RegistryCata
         corpus_ref="boe/lirpf#art-1",
         document_id="BOE-A-2006-20764",
         permalink="https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
-        effective_from=date(2006, 11, 30),
+        effective_from=_FIXTURE_STAMP,
         review_status="operator_reviewed",
-        reviewed_at=date(2026, 7, 1),
+        reviewed_at=_FIXTURE_STAMP,
         reviewed_by="artifact runtime fixture",
         required_text=("art-1",),
     )
@@ -270,7 +272,7 @@ def minimal_revision(
         id="test-revision",
         review_status="agent_reviewed",
         reviewed_by="artifact runtime fixture",
-        reviewed_at=date(2026, 7, 1),
+        reviewed_at=_FIXTURE_STAMP,
         # The highest grade this revision satisfies: it declares no export
         # layout, so a filing claim would fail its own snapshot checks and
         # block publication of any artifact carrying it.

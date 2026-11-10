@@ -21,7 +21,11 @@ from collections.abc import Iterator
 import pytest
 from textual.widget import Widget
 
-from ....application.modelo.work_form_models import ModeloFormTextDisclosure, ModeloWorkForm, address_key
+from ....application.modelo.work_form_field_vocabulary import (
+    ModeloFormTextDisclosure,
+    address_key,
+)
+from ....application.modelo.work_form_models import ModeloWorkForm
 from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
 from ....tests.terminal_sizes import TERMINAL_ORDINARY

@@ -60,17 +60,19 @@ from .disagreement_words import credit_resolution_lead_words
 from .finding_message_text import finding_message_text
 from .source_policy import SourceSurface
 from .work_form_declaration_facts import ModeloFormCalculationNote, ModeloFormResolutionAnswer
-from .work_form_findings import ModeloFormAttention, ModeloFormIssue
-from .work_form_models import (
+from .work_form_field_vocabulary import (
     ModeloFormAddressV1,
     ModeloFormBindingAddressV1,
     ModeloFormCasillaAddressV1,
-    ModeloFormField,
     ModeloFormOrigin,
-    ModeloFormRepeatingBlock,
     ModeloFormTextDisclosure,
-    ModeloWorkForm,
     address_key,
+)
+from .work_form_findings import ModeloFormAttention, ModeloFormIssue
+from .work_form_models import (
+    ModeloFormField,
+    ModeloFormRepeatingBlock,
+    ModeloWorkForm,
 )
 from .work_form_next_step import applicable_fields, failed_results
 

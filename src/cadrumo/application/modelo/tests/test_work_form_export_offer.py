@@ -68,11 +68,13 @@ from ..work_form_export_offer import (
     form_receipt,
     revision_file_format,
 )
-from ..work_form_header import export_hold
-from ..work_form_models import (
+from ..work_form_field_vocabulary import (
     TYPED_EDITABILITIES,
     ModeloFormEditability,
     ModeloFormOrigin,
+)
+from ..work_form_header import export_hold
+from ..work_form_models import (
     ModeloWorkForm,
     map_form_fields,
     revised_field,

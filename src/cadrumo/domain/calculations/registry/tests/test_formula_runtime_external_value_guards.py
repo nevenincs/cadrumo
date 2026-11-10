@@ -48,7 +48,7 @@ def _source(corpus_path: str) -> SourceReference:
         corpus_path=corpus_path,
         sha256="a" * 64,
         bytes=1,
-        retrieved_at=date(2026, 8, 1),
+        retrieved_at=date(1980, 8, 1),
         source_url="https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186",
         review_status="pending_review",
     )

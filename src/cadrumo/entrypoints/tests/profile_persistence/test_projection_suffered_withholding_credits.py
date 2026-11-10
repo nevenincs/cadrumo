@@ -18,10 +18,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.modelo.projection import (
-    UNRESOLVED_OPERAND_REASON,
-    ModeloProjectServiceResult,
-)
+from cadrumo.application.modelo.projection import ModeloProjectServiceResult
+from cadrumo.application.modelo.projection_unresolved import UNRESOLVED_OPERAND_REASON
 from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.calculation_revision_sources import CalculationNoteSentence

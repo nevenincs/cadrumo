@@ -52,7 +52,7 @@ async def verify(pilot: Any, *, work_unit_id: str) -> TuiOutcome:
 
 async def workbench_resultado(pilot: Any, *, work_unit_id: str) -> tuple[str | None, bool]:
     """Read ``iva.resultado`` off the workbench's form: its origin, and whether its value equals the oracle."""
-    from cadrumo.application.modelo.work_form_models import address_key
+    from cadrumo.application.modelo.work_form_field_vocabulary import address_key
 
     form = (await open_work(pilot, work_unit_id=work_unit_id)).form
     if form is None:

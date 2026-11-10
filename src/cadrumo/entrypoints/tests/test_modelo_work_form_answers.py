@@ -26,13 +26,15 @@ from ...application.modelo.edit_models import (
     ModeloEditBindingAddressV1,
     ModeloEditBindingIntentKind,
 )
-from ...application.modelo.work_form_models import (
+from ...application.modelo.work_form_field_vocabulary import (
     ModeloFormBindingAddressV1,
     ModeloFormEditability,
-    ModeloFormField,
     ModeloFormOrigin,
-    ModeloFormOutlineKind,
     ModeloFormStanding,
+)
+from ...application.modelo.work_form_models import (
+    ModeloFormField,
+    ModeloFormOutlineKind,
     ModeloWorkForm,
 )
 from ...application.modelo.work_form_service import load_modelo_work_form

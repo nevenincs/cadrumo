@@ -42,13 +42,13 @@ from rich.cells import cell_len
 from .....application.modelo.value_presentation import (
     absent_value_text,
 )
-from .....application.modelo.work_form_models import (
+from .....application.modelo.work_form_field_vocabulary import (
     ORIGINS_WITHOUT_A_VALUE,
     ModeloFormEditability,
-    ModeloFormField,
     ModeloFormOrigin,
     ModeloFormTextDisclosure,
 )
+from .....application.modelo.work_form_models import ModeloFormField
 from .....application.modelo.work_form_wording import (
     bare_rate,
     field_value_text,

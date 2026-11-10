@@ -74,6 +74,10 @@ class _ReportRevisionChangedBeforeCommit(VerificationReportCatalogueRepository):
 class _CalculationRevisionChangedBeforeCommit(CalculationRevisionCatalogueRepository):
     """Advance the current encrypted calculation row before its guarded batch."""
 
+    #: ``save`` builds its own write unit through this hook, so the concurrent
+    #: save it injects must build an ordinary unit rather than race again.
+    _concurrent_save_running = False
+
     @override
     def to_secure_object_write_unit(
         self,
@@ -83,7 +87,12 @@ class _CalculationRevisionChangedBeforeCommit(CalculationRevisionCatalogueReposi
     ) -> SecureObjectWriteUnit:
         """Keep the old row but change its persistence revision after the read."""
         unit = super().to_secure_object_write_unit(catalogue, expected_revision_id=expected_revision_id)
-        self.save(self.load())
+        if not self._concurrent_save_running:
+            self._concurrent_save_running = True
+            try:
+                self.save(self.load())
+            finally:
+                self._concurrent_save_running = False
         return unit
 
 

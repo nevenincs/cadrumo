@@ -76,7 +76,7 @@ from ....application.modelo.calculation_note_gate import (
 from ....application.modelo.calculation_source_mesh_actions import resolve_bucket_source_mesh
 from ....application.modelo.credit_resolution import credit_resolution_for_finding, find_finding
 from ....application.modelo.credit_resolution_repository import store_credit_resolution
-from ....application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from ....application.modelo.iva_wallet_refusal import ModeloIvaWalletReconciliationBlocked
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.casilla_id import CasillaId, validated_casilla_id

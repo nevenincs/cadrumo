@@ -14,24 +14,27 @@ from ..analysis.unresolvable_note_pointers import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+#: A revision label the planted corpus invents; the screen reads it as an opaque directory name.
+_REVISION = "synthetic-edition"
+
 
 def test_a_field_citing_a_single_text_label_is_resolvable() -> None:
     """One text behind the label means the pointer has one reading."""
-    row = UnresolvableNotePointer("999", "2026", "f1", "nota2", distinct_texts=1)
+    row = UnresolvableNotePointer("999", _REVISION, "f1", "nota2", distinct_texts=1)
 
     assert row.is_resolvable
 
 
 def test_a_field_citing_a_many_text_label_is_not() -> None:
     """Several texts mean the artefact records no reading having been chosen."""
-    row = UnresolvableNotePointer("999", "2026", "f1", "nota2", distinct_texts=3)
+    row = UnresolvableNotePointer("999", _REVISION, "f1", "nota2", distinct_texts=3)
 
     assert not row.is_resolvable
 
 
 def test_a_field_with_no_note_pointer_is_not_reported(tmp_path: Path) -> None:
     """A content cell that states its own meaning cites nothing and needs no note."""
-    export = tmp_path / "999" / "revisions" / "2026" / "export"
+    export = tmp_path / "999" / "revisions" / _REVISION / "export"
     export.mkdir(parents=True)
     (export / "_generation.provenance.json").write_text(
         json.dumps(

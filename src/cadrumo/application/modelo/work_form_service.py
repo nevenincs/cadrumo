@@ -88,14 +88,16 @@ from .taxation_comparison import revision_compares_taxation
 from .work_addressing import law_selected_revision_for_work_target
 from .work_form import build_modelo_work_form
 from .work_form_declaration_facts import ModeloFormDeadline, ModeloFormExport
-from .work_form_models import (
+from .work_form_field_vocabulary import (
     ModeloFormAddressV1,
-    ModeloFormField,
     ModeloFormOrigin,
     ModeloFormScalar,
     ModeloFormText,
-    ModeloWorkForm,
     address_key,
+)
+from .work_form_models import (
+    ModeloFormField,
+    ModeloWorkForm,
 )
 from .work_review import build_modelo_work_review
 
@@ -297,15 +299,18 @@ def _needed_profile_bindings(
 ) -> set[BindingId]:
     """Profile-sourced bindings the layout's context fields read that the revision has no saved answer for."""
     profiles = {binding.id for binding in snapshot.revision.bindings if binding.source is BindingSourceKind.PROFILE}
-    return {
-        field.binding
-        for page in layout.pages
-        for section in page.sections
-        for block in section.blocks
-        if isinstance(block, FormContextFieldBlock)
-        and (field := resolve_form_context_field(snapshot.revision, block)).binding in profiles
-        and (revision is None or field.binding not in revision.binding_overrides)
-    }
+    needed: set[BindingId] = set()
+    for page in layout.pages:
+        for section in page.sections:
+            for block in section.blocks:
+                if not isinstance(block, FormContextFieldBlock):
+                    continue
+                binding = resolve_form_context_field(snapshot.revision, block).binding
+                if binding is None or binding not in profiles:
+                    continue
+                if revision is None or binding not in revision.binding_overrides:
+                    needed.add(binding)
+    return needed
 
 
 def _profile_binding_context_values(

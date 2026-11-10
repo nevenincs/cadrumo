@@ -36,11 +36,11 @@ NON_EJERCICIO_COVERAGE_AXIS: dict[tuple[str, str], str] = {
     (
         "036",
         "01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx",
-    ): "censal declaration scoped by the date it comes into force ('03-02-2025-y-siguientes'), not by ejercicio",
+    ): "censal declaration scoped by the date it comes into force (a day-month-year stamp in the filename), not by ejercicio",
     (
         "036",
         "02-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-provisional-107-kb-xlsx.xlsx",
-    ): "the provisional edition of the same in-force-date scope ('03-02-2025-y-siguientes')",
+    ): "the provisional edition of the same in-force-date scope (the same stamp in the filename)",
     (
         "210",
         "01-210-devengos-a-partir-de-2026.xlsx",

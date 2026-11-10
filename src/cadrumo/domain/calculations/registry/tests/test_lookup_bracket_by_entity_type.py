@@ -28,9 +28,13 @@ from .formula_runtime_support import evaluate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+# The fixture parameters hold from long before any exercise and never lapse, so
+# no support year decides which row the dispatch under test resolves.
+_SINCE = date(1980, 1, 1)
+
 
 def _pyme_bracket_param() -> ParameterDefinition:
-    """LIS Art. 29.1 micro-empresa two-tranche scale (2025 window).
+    """LIS Art. 29.1 micro-empresa two-tranche scale (open synthetic window).
 
     The numbers reproduce the registry-grounded
     ``is.modelo-200.tipo-gravamen-pyme`` parameter so the test exercises
@@ -50,16 +54,14 @@ def _pyme_bracket_param() -> ParameterDefinition:
                     upper_bound=Decimal("50000"),
                     fixed_addition=Decimal("0"),
                     marginal_rate=Decimal("0.17"),
-                    valid_from=date(2025, 1, 1),
-                    valid_to=date(2025, 12, 31),
+                    valid_from=_SINCE,
                 ),
                 BracketEntry(
                     lower_bound=Decimal("50000"),
                     upper_bound=None,
                     fixed_addition=Decimal("8500"),
                     marginal_rate=Decimal("0.20"),
-                    valid_from=date(2025, 1, 1),
-                    valid_to=date(2025, 12, 31),
+                    valid_from=_SINCE,
                 ),
             ),
         },
@@ -82,8 +84,7 @@ def _alt_bracket_param() -> ParameterDefinition:
                     upper_bound=None,
                     fixed_addition=Decimal("0"),
                     marginal_rate=Decimal("0.25"),
-                    valid_from=date(2025, 1, 1),
-                    valid_to=date(2025, 12, 31),
+                    valid_from=_SINCE,
                 ),
             ),
         },
@@ -168,7 +169,7 @@ def test_lookup_bracket_by_entity_type_rejects_a_scalar_parameter() -> None:
                     {
                         "value": Decimal("25"),
                         "date_axis": "filing_period",
-                        "valid_from": date(2025, 1, 1),
+                        "valid_from": _SINCE,
                     },
                 ),
             },
