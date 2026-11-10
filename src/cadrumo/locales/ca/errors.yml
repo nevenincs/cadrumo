@@ -104,8 +104,8 @@ errors:
       valor conservat o substituït perquè no són caselles de fórmula d'aquesta revisió.
     formula_recalculation_binding_unrecorded: El recàlcul de la rectificació arriba
       a caselles de fórmula ({casilla_ids}) que depenen de {binding_ids}. La presentació
-      mai no ho va registrar; indica-ho com a substitució explícita d'enllaç a la
-      rectificació.
+      mai no ho va registrar; indica-ho a la rectificació amb --binding BINDING_ID=VALUE
+      (aeat app modelo work amend).
     formula_recalculation_unresolved: 'El recàlcul de la rectificació ha deixat sense
       resoldre caselles de fórmula obligatòries: {casilla_ids}.'
     lookup_dispatch_arg_count: L'operador {op} de la fórmula espera {expected} arguments.

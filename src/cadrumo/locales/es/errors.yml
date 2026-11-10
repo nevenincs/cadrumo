@@ -102,7 +102,8 @@ errors:
       un valor conservado o sustituido porque no son casillas de fórmula de esta revisión.
     formula_recalculation_binding_unrecorded: El recálculo de la rectificación alcanza
       casillas de fórmula ({casilla_ids}) que dependen de {binding_ids}. La presentación
-      nunca lo registró; indícalo como sustitución explícita de enlace en la rectificación.
+      nunca lo registró; indícalo en la rectificación con --binding BINDING_ID=VALUE
+      (aeat app modelo work amend).
     formula_recalculation_unresolved: 'El recálculo de la rectificación dejó sin resolver
       casillas de fórmula obligatorias: {casilla_ids}.'
     lookup_dispatch_arg_count: El operador {op} de la fórmula espera {expected} argumentos.

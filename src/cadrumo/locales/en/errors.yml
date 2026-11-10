@@ -99,7 +99,8 @@ errors:
       revision.
     formula_recalculation_binding_unrecorded: The amendment recalculation reaches
       formula casilla(s) {casilla_ids}, which depend on {binding_ids}. The filing
-      never recorded it; supply it as an explicit binding override on the amendment.
+      never recorded it; state it on the amendment with --binding BINDING_ID=VALUE
+      (aeat app modelo work amend).
     formula_recalculation_unresolved: 'The amendment recalculation left required formula
       casilla(s) unresolved: {casilla_ids}.'
     lookup_dispatch_arg_count: Formula op {op} expects {expected} arguments.
