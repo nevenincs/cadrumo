@@ -440,6 +440,27 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.modelo.iva_wallet.seed",
+            target_command_key="modelo.iva_wallet.seed",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="amount",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="amount",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="filing_year",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="filing_year",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="period",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="period",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.modelo.work.file",
             target_command_key="modelo.work.file",
             argument_specifications=(

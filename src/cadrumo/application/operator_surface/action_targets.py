@@ -199,6 +199,13 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
     ActionTarget("modelo.describe", ("app", "modelo", "describe"), "ModeloDescribeResult", required_inputs=("modelo",)),
     ActionTarget("modelo.filing_record.list", ("app", "modelo", "filing-record", "list"), "ModeloRecordListResult"),
     ActionTarget(
+        "modelo.iva_wallet.seed",
+        ("app", "modelo", "iva-wallet", "seed"),
+        "IvaWalletSeedResult",
+        required_inputs=("filing_year", "period", "amount"),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
         "modelo.verification_report.list",
         ("app", "modelo", "verification-report", "list"),
         "VerificationReportListResult",
