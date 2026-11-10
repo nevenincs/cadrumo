@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { captureUnrecordedQuestions } from "../support/stagedCheckCapture";
+import { servedBlockerSentences } from "../support/stagedCheck";
 import { label } from "../support/strings";
 
 // What the Ledger says when a staged change cannot be saved. Each refusal
@@ -99,12 +100,9 @@ test("an amount typed with a sign is refused for its sign, not reported as a mis
   const blocker = review(target).locator("[data-blocker=amount_signed]");
   await expect(blocker).toBeVisible();
   // The sentence is the backend's: it names the magnitude and the direction.
-  await expect(blocker).toContainText(
-    label("application.ledger.staged_check.served.blocker.amount_signed"),
-  );
-  await expect(blocker).toContainText(
-    label("application.ledger.staged_check.served.fix.amount_signed"),
-  );
+  const sentences = servedBlockerSentences("amount_signed");
+  await expect(blocker).toContainText(sentences.words);
+  await expect(blocker).toContainText(sentences.fixWords);
   // Nothing says the amount is a fact nobody filled in.
   await expect(
     review(target).locator("[data-blocker=draft_incomplete]"),
@@ -153,9 +151,7 @@ test("the IVA preset's save refusal names the IRPF category and its door reveals
   await expect(blocker).toBeVisible();
   // The words are the backend's, and name no Pydantic text and no field code.
   await expect(blocker).toContainText(
-    label(
-      "application.ledger.staged_check.served.blocker.needs_withholding_category",
-    ),
+    servedBlockerSentences("needs_withholding_category").words,
   );
   await expect(blocker).not.toContainText("pydantic");
   await expect(blocker).not.toContainText("irpf_category");
