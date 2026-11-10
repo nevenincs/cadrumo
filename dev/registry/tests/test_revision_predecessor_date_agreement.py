@@ -22,6 +22,7 @@ from cadrumo.domain.calculations.registry.revision_contracts import (
     validate_predecessor_date_agreement,
 )
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import write_standard_manifest
@@ -29,6 +30,11 @@ from ..conformance.loader_directory_mode_support import write_standard_manifest
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _LEGAL_REF = "ley-58-2003:art-29"
+# Two consecutive exercises of the support envelope stand in for an earlier and a later edition.
+assert len(filing_year_envelope().years) >= 2, (
+    "the support envelope must span at least 2 exercises for these synthetic editions"
+)
+_EARLIER, _LATER = filing_year_envelope().years[-2:]
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,8 +86,12 @@ def _write_editions(root: Path, *editions: _Edition) -> Path:
     return modelo_dir
 
 
-_BACKWARDS = re.escape("revision '2024' (valid 2024-01-01 to open; years 2024; periods 0A) declares predecessor ") + (
-    re.escape("'2025' (valid 2025-01-01 to open; years 2025; periods 0A), which does not take effect before it")
+_BACKWARDS = re.escape(
+    f"revision '{_EARLIER}' (valid {_EARLIER}-01-01 to open; years {_EARLIER}; periods 0A) declares predecessor "
+) + (
+    re.escape(
+        f"'{_LATER}' (valid {_LATER}-01-01 to open; years {_LATER}; periods 0A), which does not take effect before it"
+    )
 )
 
 
@@ -89,19 +99,19 @@ def test_a_successor_naming_a_later_non_overlapping_edition_is_refused_naming_bo
     """The backwards edge refuses with both editions and their windows; turning it round loads."""
     modelo_dir = _write_editions(
         tmp_path,
-        _Edition("2024", "2024-01-01", (2024,), "01", predecessor="2025"),
-        _Edition("2025", "2025-01-01", (2025,), "02"),
+        _Edition(str(_EARLIER), f"{_EARLIER}-01-01", (_EARLIER,), "01", predecessor=str(_LATER)),
+        _Edition(str(_LATER), f"{_LATER}-01-01", (_LATER,), "02"),
     )
     with pytest.raises(RegistryLoadError, match=_BACKWARDS):
         load_modelo_directory(modelo_dir)
 
-    _write_edition(modelo_dir, _Edition("2024", "2024-01-01", (2024,), "01"))
-    _write_edition(modelo_dir, _Edition("2025", "2025-01-01", (2025,), "02", predecessor="2024"))
+    _write_edition(modelo_dir, _Edition(str(_EARLIER), f"{_EARLIER}-01-01", (_EARLIER,), "01"))
+    _write_edition(modelo_dir, _Edition(str(_LATER), f"{_LATER}-01-01", (_LATER,), "02", predecessor=str(_EARLIER)))
     repaired = load_modelo_directory(modelo_dir)
-    assert repaired.revisions["2025"].predecessor == DeclaredPredecessor(revision_id="2024")
+    assert repaired.revisions[str(_LATER)].predecessor == DeclaredPredecessor(revision_id=str(_EARLIER))
 
-    _write_edition(modelo_dir, _Edition("2024", "2024-01-01", (2024,), "01", predecessor="2025"))
-    _write_edition(modelo_dir, _Edition("2025", "2025-01-01", (2025,), "02"))
+    _write_edition(modelo_dir, _Edition(str(_EARLIER), f"{_EARLIER}-01-01", (_EARLIER,), "01", predecessor=str(_LATER)))
+    _write_edition(modelo_dir, _Edition(str(_LATER), f"{_LATER}-01-01", (_LATER,), "02"))
     with pytest.raises(RegistryLoadError, match=_BACKWARDS):
         load_modelo_directory(modelo_dir)
 
@@ -110,13 +120,13 @@ def test_an_overlapping_pair_is_exempt_whichever_way_the_edge_points(tmp_path: P
     """Editions sharing a live window have no date order, so a later-starting predecessor loads."""
     modelo_dir = _write_editions(
         tmp_path,
-        _Edition("variante-a", "2024-01-01", (2024, 2025), "01", predecessor="variante-b"),
-        _Edition("variante-b", "2025-01-01", (2025,), "02"),
+        _Edition("variante-a", f"{_EARLIER}-01-01", (_EARLIER, _LATER), "01", predecessor="variante-b"),
+        _Edition("variante-b", f"{_LATER}-01-01", (_LATER,), "02"),
     )
     loaded = load_modelo_directory(modelo_dir)
     assert loaded.revisions["variante-a"].predecessor == DeclaredPredecessor(revision_id="variante-b")
 
-    _write_edition(modelo_dir, _Edition("variante-a", "2024-01-01", (2024,), "01", predecessor="variante-b"))
+    _write_edition(modelo_dir, _Edition("variante-a", f"{_EARLIER}-01-01", (_EARLIER,), "01", predecessor="variante-b"))
     with pytest.raises(RegistryLoadError, match="does not take effect before it"):
         load_modelo_directory(modelo_dir)
 
@@ -132,17 +142,17 @@ def _window(valid_from: date, *years: int, periods: tuple[str, ...] = ("0A",)) -
 def test_a_same_day_non_overlapping_predecessor_is_not_earlier() -> None:
     """Disjoint periods with one start date give no order for the edge to agree with."""
     windows = {
-        "mensual": _window(date(2025, 1, 1), 2025, periods=("01",)),
-        "anual": _window(date(2025, 1, 1), 2025, periods=("0A",)),
+        "mensual": _window(date(_LATER, 1, 1), _LATER, periods=("01",)),
+        "anual": _window(date(_LATER, 1, 1), _LATER, periods=("0A",)),
     }
     with pytest.raises(RegistryValidationError, match=r"revision 'mensual' .* declares predecessor 'anual'"):
         validate_predecessor_date_agreement("999", named={"mensual": "anual"}, windows=windows)
 
-    earlier = {**windows, "anual": _window(date(2024, 1, 1), 2025, periods=("0A",))}
+    earlier = {**windows, "anual": _window(date(_EARLIER, 1, 1), _LATER, periods=("0A",))}
     validate_predecessor_date_agreement("999", named={"mensual": "anual"}, windows=earlier)
 
 
 def test_an_edge_to_an_edition_without_a_window_is_refused_not_crashed() -> None:
-    windows = {"2025": _window(date(2025, 1, 1), 2025)}
-    with pytest.raises(RegistryValidationError, match="revision '2024' has no declared validity window"):
-        validate_predecessor_date_agreement("999", named={"2025": "2024"}, windows=windows)
+    windows = {str(_LATER): _window(date(_LATER, 1, 1), _LATER)}
+    with pytest.raises(RegistryValidationError, match=f"revision '{_EARLIER}' has no declared validity window"):
+        validate_predecessor_date_agreement("999", named={str(_LATER): str(_EARLIER)}, windows=windows)
