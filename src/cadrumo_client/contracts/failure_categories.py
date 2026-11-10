@@ -20,6 +20,7 @@ class DependencyFailureCategory(StrEnum):
     MEMORY_BUSY = "memory_busy"
     PROGRAM_MISSING = "program_missing"
     PROGRAM_NOT_RUNNING = "program_not_running"
+    ENGINE_PROGRAM_UNUSABLE = "engine_program_unusable"
     INTERRUPTED = "interrupted"
     NEEDS_SIGN_IN = "needs_sign_in"
     NOT_IN_THIS_BUILD = "not_in_this_build"

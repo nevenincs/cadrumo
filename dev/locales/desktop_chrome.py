@@ -175,6 +175,7 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "cancelled",
             "damaged_download",
             "disk_full",
+            "engine_program_unusable",
             "host_unreachable",
             "interrupted",
             "memory_busy",

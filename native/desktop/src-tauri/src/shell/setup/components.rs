@@ -1656,6 +1656,7 @@ fn failure(category: FailureCategory) -> wire::Failure {
         FailureCategory::MemoryBusy => wire::Failure::MemoryBusy,
         FailureCategory::ProgramMissing => wire::Failure::ProgramMissing,
         FailureCategory::ProgramNotRunning => wire::Failure::ProgramNotRunning,
+        FailureCategory::EngineProgramUnusable => wire::Failure::EngineProgramUnusable,
         FailureCategory::Interrupted => wire::Failure::Interrupted,
         FailureCategory::NeedsSignIn => wire::Failure::NeedsSignIn,
         FailureCategory::NotInThisBuild => wire::Failure::NotInThisBuild,

@@ -116,7 +116,7 @@ pub fn reading(
 pub enum LocalAiError {
     Failed(FailureCategory),
     /// The server did not come up or did not answer. Its category is
-    /// `program_not_running`, or `damaged_download` when the operating system refused the
+    /// `program_not_running`, or `engine_program_unusable` when the operating system refused the
     /// program itself ([`NotRunningCause::category`]); the cause is for logs and tests,
     /// and no surface words it.
     NotRunning(NotRunningCause),
@@ -248,7 +248,7 @@ impl StartFailureKind {
     /// and every other failure is a program that is not running.
     pub fn category(self) -> FailureCategory {
         match self {
-            Self::ProgramDamaged => FailureCategory::DamagedDownload,
+            Self::ProgramDamaged => FailureCategory::EngineProgramUnusable,
             _ => FailureCategory::ProgramNotRunning,
         }
     }
@@ -391,7 +391,7 @@ impl fmt::Display for ServerStartFailure {
 }
 
 impl NotRunningCause {
-    /// The category this cause fails with: `damaged_download` for a program the
+    /// The category this cause fails with: `engine_program_unusable` for a program the
     /// operating system refused, in this start or in the latest one a wait found, and
     /// `program_not_running` for every other cause.
     pub fn category(&self) -> FailureCategory {

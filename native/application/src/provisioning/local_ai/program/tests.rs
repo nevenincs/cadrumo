@@ -659,7 +659,7 @@ fn a_server_the_system_cannot_create_says_which_step_failed_and_why() {
 
 #[cfg(windows)]
 #[test]
-fn a_creation_the_system_refuses_as_no_program_image_reads_as_a_damaged_program() {
+fn a_creation_the_system_refuses_as_no_program_image_reads_as_an_unusable_engine_program() {
     // ERROR_BAD_EXE_FORMAT and ERROR_EXE_MACHINE_TYPE_MISMATCH.
     for code in [193, 216] {
         let error = launch_failure(LaunchStep::Create, &io::Error::from_raw_os_error(code));
@@ -672,7 +672,7 @@ fn a_creation_the_system_refuses_as_no_program_image_reads_as_a_damaged_program(
             ),
             "{code}: {error}"
         );
-        assert_eq!(error.category(), FailureCategory::DamagedDownload);
+        assert_eq!(error.category(), FailureCategory::EngineProgramUnusable);
     }
     // Any other refusal, and the same code from another step, keeps its own account.
     let denied = launch_failure(LaunchStep::Create, &io::Error::from_raw_os_error(5));
@@ -717,7 +717,7 @@ exit 3
         .recv_timeout(BOUND)
         .expect("the start returned: an error dialog is not waiting");
     assert!(damaged);
-    assert_eq!(category, FailureCategory::DamagedDownload);
+    assert_eq!(category, FailureCategory::EngineProgramUnusable);
 }
 
 #[test]
@@ -734,15 +734,15 @@ fn a_damaged_program_is_recorded_and_reads_as_damaged_until_a_start_succeeds() {
     let latest = latest_start_failure(programs);
     assert_eq!(latest, Some(StartFailureKind::ProgramDamaged));
     // A wait that runs out after such a start, and a quick look with no server running,
-    // read the program as damaged; any other kind, or none, reads as not running.
+    // read the program as unusable; any other kind, or none, reads as not running.
     let waited = NotRunningCause::NoServerWithin {
         budget: START_BUDGET,
         latest_start: latest,
     };
-    assert_eq!(waited.category(), FailureCategory::DamagedDownload);
+    assert_eq!(waited.category(), FailureCategory::EngineProgramUnusable);
     assert_eq!(
         StartFailureKind::category_after(latest),
-        FailureCategory::DamagedDownload
+        FailureCategory::EngineProgramUnusable
     );
     for other in [
         None,
