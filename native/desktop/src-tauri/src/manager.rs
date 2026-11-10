@@ -53,6 +53,20 @@ async fn wait_for_readiness(
         .map_err(|_| failure(ErrorCode::TimedOut).with_reason("runtime_timeout"))?
 }
 
+/// A requested stop ends the wait as an unavailable session; only an elapsed
+/// deadline is a timeout, and the stop wins when both are ready.
+async fn wait_for_readiness_or_stop(
+    ready: impl std::future::Future<Output = Result<()>>,
+    stopped: impl std::future::Future<Output = ()>,
+    startup_timeout: Duration,
+) -> Result<()> {
+    tokio::select! {
+        biased;
+        () = stopped => Err(failure(ErrorCode::SessionUnavailable)),
+        result = wait_for_readiness(ready, startup_timeout) => result,
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum StartOutcome {
@@ -137,7 +151,10 @@ impl ManagerStart {
         self: &Arc<Self>,
         sign_in: &Arc<crate::shell::sign_in::SignIn>,
     ) -> Result<()> {
-        let result = wait_for_readiness(
+        let closing = self.closing.notified();
+        tokio::pin!(closing);
+        closing.as_mut().enable();
+        let result = wait_for_readiness_or_stop(
             async {
                 if self.start_existing().await? != StartOutcome::Dispatched {
                     return Err(failure(ErrorCode::ManagerUnavailable));
@@ -177,6 +194,7 @@ impl ManagerStart {
                     }
                 }
             },
+            closing,
             STARTUP_TIMEOUT,
         )
         .await;
