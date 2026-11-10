@@ -9,6 +9,7 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import SecretStr, ValidationError
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.application.user_profile.access_contracts import SessionKind, SessionState
 from cadrumo.application.user_profile.access_projections import PublicAccessSession
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind, AutomationDenialReceipt
@@ -112,7 +113,7 @@ def test_live_specs_have_distinct_management_doors_and_no_password_argument() ->
 def test_session_payload_flattens_periods_and_reports_remaining_access() -> None:
     profile_id = uuid4()
     destination_id = uuid4()
-    instant = datetime(2026, 9, 27, 12, tzinfo=UTC)
+    instant = datetime(1980, 9, 27, 12, tzinfo=UTC)
     session = PublicAccessSession(
         session_id=uuid4(),
         profile_id=profile_id,
@@ -134,7 +135,7 @@ def test_session_payload_flattens_periods_and_reports_remaining_access() -> None
                     )
                 }
             ),
-            periods=frozenset({Period.from_year_and_code(2026, "3T")}),
+            periods=frozenset({Period.from_year_and_code(filing_year_envelope().horizon, "3T")}),
             allow_period_independent=False,
             allow_delegation=False,
         ),

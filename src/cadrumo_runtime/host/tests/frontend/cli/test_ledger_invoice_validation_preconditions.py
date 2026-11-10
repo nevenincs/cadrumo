@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 import json
+from datetime import date
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from .cli_runner import invoke_cached_cli
 from .runtime_profile_backend import runtime_profile_backend_fixture
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -50,7 +55,7 @@ def test_invoice_add_pydantic_invoice_validation_emits_the_canonical_terminal_ac
             "--invoice-number",
             "S130-NESTED-001",
             "--invoice-date",
-            "2026-03-15",
+            date(_YEAR, 3, 15).isoformat(),
             "--taxable-base",
             "100.00",
             "--country-code",

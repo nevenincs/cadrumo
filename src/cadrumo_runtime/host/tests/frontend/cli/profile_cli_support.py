@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from collections.abc import Callable, Generator, Iterator
 from contextlib import contextmanager
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -13,6 +14,7 @@ from click.testing import Result
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.core.config import override_settings
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
     NativeCliProfileFixture,
@@ -174,7 +176,7 @@ def partial_taxpayer_invoker(tmp_path: Path, *, label: str) -> Generator[Callabl
                 "identity.name": "Operator",
                 "identity.surnames": "Example",
                 "activities.description": "design",
-                "censo.activity_start_date": "2024-01-01",
+                "censo.activity_start_date": date(filing_year_envelope().floor, 1, 1).isoformat(),
                 "contact.postcode": "28013",
                 "tax_residence.ccaa": "cataluna",
                 "renta_filing.declaration_type": "1",

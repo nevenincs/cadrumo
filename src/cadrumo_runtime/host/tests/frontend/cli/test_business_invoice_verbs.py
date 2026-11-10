@@ -11,14 +11,18 @@ from __future__ import annotations
 
 import json
 from collections.abc import Sequence
+from datetime import date
 
 import pytest
 from click.testing import Result
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.cli_envelope import require_schema_envelope
 
 from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import ProfileSeeder, seed_profile
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["seed_profile"]
@@ -54,7 +58,7 @@ def _add_args(
         "--invoice-number",
         number,
         "--invoice-date",
-        "2026-03-15",
+        date(_YEAR, 3, 15).isoformat(),
         "--taxable-base",
         base,
         "--country-code",
@@ -149,7 +153,7 @@ def test_invoice_add_refuses_missing_taxable_base() -> None:
             "--invoice-number",
             "INV-001",
             "--invoice-date",
-            "2026-03-15",
+            date(_YEAR, 3, 15).isoformat(),
             "--country-code",
             "ES",
         ],
@@ -197,9 +201,9 @@ def test_invoice_add_accepts_ordered_json_lines_and_reads_back_canonical_documen
             "--invoice-number",
             "LINES-001",
             "--invoice-date",
-            "2026-03-15",
+            date(_YEAR, 3, 15).isoformat(),
             "--operation-date",
-            "2026-03-14",
+            date(_YEAR, 3, 14).isoformat(),
             "--country-code",
             "ES",
             "--series",
@@ -226,7 +230,7 @@ def test_invoice_add_accepts_ordered_json_lines_and_reads_back_canonical_documen
     view_payload = require_schema_envelope(viewed.output)
     assert [entry["description"] for entry in view_payload["lines"]] == ["first line", "second line"]
     assert view_payload["series"] == "L"
-    assert view_payload["operation_date"] == "2026-03-14"
+    assert view_payload["operation_date"] == date(_YEAR, 3, 14).isoformat()
     assert view_payload["operation_date_role"] == "OPERATION_PERFORMED"
     assert {"invoice_class", "iva_category", "rectifies_invoice_number"}.issubset(view_payload)
 
@@ -257,7 +261,7 @@ def test_invoice_add_refuses_invalid_structured_line_without_mutation(line: str)
             "--invoice-number",
             "LINES-REFUSED",
             "--invoice-date",
-            "2026-03-15",
+            date(_YEAR, 3, 15).isoformat(),
             "--country-code",
             "ES",
             "--line",
@@ -299,7 +303,7 @@ def test_invoice_add_refuses_mixed_scalar_and_structured_input_before_mutation()
             "--invoice-number",
             "LINES-MIXED",
             "--invoice-date",
-            "2026-03-15",
+            date(_YEAR, 3, 15).isoformat(),
             "--country-code",
             "ES",
             "--taxable-base",
@@ -337,7 +341,7 @@ def test_invoice_kind_is_required_on_add() -> None:
             "--invoice-number",
             "INV-001",
             "--invoice-date",
-            "2026-03-15",
+            date(_YEAR, 3, 15).isoformat(),
             "--taxable-base",
             "0",
             "--country-code",
@@ -360,7 +364,7 @@ def test_invoice_kind_rejects_unknown_value() -> None:
             "--invoice-number",
             "INV-001",
             "--invoice-date",
-            "2026-03-15",
+            date(_YEAR, 3, 15).isoformat(),
             "--taxable-base",
             "0",
             "--country-code",

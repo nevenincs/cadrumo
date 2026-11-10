@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import gc
 from collections.abc import Callable, Iterator
+from datetime import date
 from uuid import UUID
 
 import pytest
@@ -29,17 +30,20 @@ from cadrumo.core.config import load_settings
 from cadrumo.core.paths import effective_storage_root
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.authority_artifact import ProfileDecodeContext
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli
 
 from .portable_human_cli_runtime import portable_human_cli_runtime
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _isolated = isolated_profile_storage_fixture(name="_isolated", dispose_engine_around=True)
 
 _LEDGER_ADD = (
-    "app", "ledger", "add", "--date", "2026-03-10", "--amount", "121.00",
+    "app", "ledger", "add", "--date", date(_YEAR, 3, 10).isoformat(), "--amount", "121.00",
     "--direction", "OUTGOING", "--description", "Supplier",
 )  # fmt: skip
 
