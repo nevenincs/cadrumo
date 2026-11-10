@@ -13,7 +13,8 @@ export const catalogue = JSON.parse(
 
 /** The language the window under test speaks: English on the scenario host,
  * and on the live desktop the profile's own, which its lane names. */
-const windowLanguage = process.env.CADRUMO_DEV_DESKTOP_LIVE_LANGUAGE || "en";
+export const windowLanguage =
+  process.env.CADRUMO_DEV_DESKTOP_LIVE_LANGUAGE || "en";
 
 /** The chrome string for `key` in `locale`, with `{name}` values filled in. */
 export function label(
