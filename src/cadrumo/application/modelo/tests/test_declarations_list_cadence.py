@@ -20,6 +20,7 @@ import pytest
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.user_profile.labels import profile_field_label_key
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ...tests.workbench_generation_support import PROFILE_ID, Repository, plain_generation_door
@@ -40,7 +41,7 @@ _FACTS: dict[str, object] = {
     "taxpayer_type.entity_type": "natural_person",
     "taxpayer_type.irpf_income_categories": "actividad_economica",
     "activities.description": "Servicios profesionales",
-    "censo.activity_start_date": "2022-01-10",
+    "censo.activity_start_date": date(filing_year_envelope().floor, 1, 10).isoformat(),
     "irpf.estimation_regime": "directa_simplificada",
     "iva.regime": "GENERAL",
     "iva.m303_regime_composition": "general",

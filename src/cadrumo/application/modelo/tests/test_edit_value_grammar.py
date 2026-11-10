@@ -10,6 +10,7 @@ from __future__ import annotations
 import pytest
 
 from ....domain.calculations.registry.schema_base import CasillaDataType
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..edit_value_grammar import (
     ModeloEditRatioUnit,
@@ -20,6 +21,8 @@ from ..edit_value_grammar import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
 
 _EXPECTED_CHANNEL: dict[str, ModeloEditValueChannel] = {
     CasillaDataType.MONEY: ModeloEditValueChannel.DECIMAL,
@@ -32,7 +35,7 @@ _EXPECTED_CHANNEL: dict[str, ModeloEditValueChannel] = {
 }
 
 
-@pytest.mark.parametrize(("modelo", "year", "period"), [("303", 2025, "1T"), ("714", 2025, "0A")])
+@pytest.mark.parametrize(("modelo", "year", "period"), [("303", _YEAR, "1T"), ("714", _YEAR, "0A")])
 def test_each_casilla_projects_onto_the_channel_the_engine_reads(modelo: str, year: int, period: str) -> None:
     revision = published_snapshot(modelo, filing_year=year, period=period).revision
 
@@ -52,7 +55,7 @@ def test_each_casilla_projects_onto_the_channel_the_engine_reads(modelo: str, ye
 
 
 def test_a_ratio_unit_is_known_only_where_its_bounds_say_so() -> None:
-    revision = published_snapshot("303", filing_year=2025, period="1T").revision
+    revision = published_snapshot("303", filing_year=_YEAR, period="1T").revision
     units = {
         casilla.id: casilla_value_grammar(casilla).ratio_unit
         for casilla in revision.casillas
@@ -80,7 +83,7 @@ def test_a_ratio_unit_is_known_only_where_its_bounds_say_so() -> None:
 
 
 def test_binding_grammar_follows_the_override_route_of_each_binding() -> None:
-    revision = published_snapshot("714", filing_year=2025, period="0A").revision
+    revision = published_snapshot("714", filing_year=_YEAR, period="0A").revision
     grammars = [binding_value_grammar(binding, revision=revision) for binding in revision.bindings]
 
     assert any(grammar.channel is ModeloEditValueChannel.DECIMAL for grammar in grammars)

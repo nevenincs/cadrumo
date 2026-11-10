@@ -9,6 +9,7 @@ from pydantic import ValidationError
 
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ...calculations.cross_period_models import (
     CrossPeriodCleanStateBlocker,
@@ -28,7 +29,9 @@ from ..dependency_projection import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_PERIOD = Period.from_year_and_code(2026, "1T")
+_YEAR = filing_year_envelope().horizon
+
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 
 
@@ -36,7 +39,7 @@ def _requirement() -> CrossPeriodDependencyRequirement:
     casilla = validated_casilla_id("71", surface="test casilla id")
     return CrossPeriodDependencyRequirement(
         source_modelo="303",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=_PERIOD,
         source_casilla_ids=(casilla,),
         required_source_casilla_ids=(casilla,),
@@ -52,8 +55,8 @@ def _requirement() -> CrossPeriodDependencyRequirement:
 def _item() -> CrossPeriodDependencyInventoryItem:
     return CrossPeriodDependencyInventoryItem(
         target_modelo="303",
-        target_revision_id="2026-y-siguientes",
-        target_filing_year=2026,
+        target_revision_id=str(revision_serving_period("303", _YEAR, "1T").id),
+        target_filing_year=_YEAR,
         target_period=_PERIOD,
         dependencies=(_requirement(),),
     )
@@ -85,7 +88,7 @@ def test_requirement_and_item_round_trip_through_canonical_invariants() -> None:
     assert projected.dependency_count == 1 and projected.source_modelos == ("303",)
     assert DependencyInventoryItemSnapshot.model_validate_json(projected.model_dump_json()) == projected
     with pytest.raises(ValidationError, match="filing_year"):
-        DependencyRequirementSnapshot.model_validate(snapshot.model_dump() | {"filing_year": 2025})
+        DependencyRequirementSnapshot.model_validate(snapshot.model_dump() | {"filing_year": _YEAR - 1})
     with pytest.raises(ValidationError, match="derived fields"):
         DependencyInventoryItemSnapshot.model_validate(projected.model_dump() | {"source_modelos": ("130",)})
 
@@ -103,14 +106,14 @@ def test_evidence_keeps_member_nifs_and_rejects_fake_clean_or_identity() -> None
     with pytest.raises(ValidationError):
         DependencyEvidenceSnapshot.model_validate(snapshot.model_dump() | {"filing_record_id": "not-a-record"})
     with pytest.raises(ValidationError, match="period differs"):
-        DependencyEvidenceSnapshot.model_validate(snapshot.model_dump() | {"filing_year": 2025})
+        DependencyEvidenceSnapshot.model_validate(snapshot.model_dump() | {"filing_year": _YEAR - 1})
 
 
 def test_clean_state_uses_only_emitted_rows_and_aggregate_blockers() -> None:
     verdict = CrossPeriodCleanStateVerdict(
         bucket_id=str(_PROFILE),
         target_modelo="303",
-        target_filing_year=2026,
+        target_filing_year=_YEAR,
         target_period=_PERIOD,
         dependencies=(
             _evidence(blockers=(CrossPeriodCleanStateBlocker.INCOMPLETE_GROUP_MEMBER_COVERAGE,)),
@@ -127,4 +130,4 @@ def test_clean_state_uses_only_emitted_rows_and_aggregate_blockers() -> None:
     with pytest.raises(ValidationError, match="contradicts its evidence rows"):
         DependencyCleanStateSnapshot.model_validate(snapshot.model_dump() | {"clean": True})
     with pytest.raises(ValidationError, match="target period differs"):
-        DependencyCleanStateSnapshot.model_validate(snapshot.model_dump() | {"target_filing_year": 2025})
+        DependencyCleanStateSnapshot.model_validate(snapshot.model_dump() | {"target_filing_year": _YEAR - 1})
