@@ -447,7 +447,7 @@ def test_every_live_provider_member_stays_relative_to_the_filing_context() -> No
         ),
         pytest.param(
             "edition_year",
-            create_model("_FabricatedProviderEditionYear", edition_year=(Literal[2024, 2025], ...)),
+            create_model("_FabricatedProviderEditionYear", edition_year=(Literal[0, 1], ...)),
             id="int_literal",
         ),
         pytest.param(

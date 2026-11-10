@@ -18,6 +18,7 @@ from ..actividad_asset_disposal_bindings import (
 from ..authority import bundled_indexed_authority
 from ..binding_targets import BindingConsumerKind, binding_consumers
 from ..schema import ModeloRevision
+from .authored_editions import newest_authored_edition, revision_covering, supported_authored_exercises
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -37,14 +38,17 @@ class _Figure:
     amount: Decimal
 
 
-def _revision(revision_id: str) -> ModeloRevision:
+_NEWEST_EXERCISE = newest_authored_edition("100")
+
+
+def _revision(exercise: int) -> ModeloRevision:
     with bundled_indexed_authority().operation() as operation:
-        return operation.revision("100", revision_id)
+        return operation.revision("100", str(revision_covering("100", exercise).id))
 
 
-@pytest.mark.parametrize("revision_id", ["2022", "2023", "2024", "2025"])
-def test_two_sales_fill_two_rows_each_with_its_own_gain(revision_id: str) -> None:
-    revision = _revision(revision_id)
+@pytest.mark.parametrize("exercise", supported_authored_exercises("100"))
+def test_two_sales_fill_two_rows_each_with_its_own_gain(exercise: int) -> None:
+    revision = _revision(exercise)
     sales = (
         _Sale("sale-a", {ActivityAssetDisposalRowField.GAIN: Decimal("100.00")}),
         _Sale("sale-b", {ActivityAssetDisposalRowField.GAIN: Decimal("250.00")}),
@@ -65,7 +69,7 @@ def test_two_sales_fill_two_rows_each_with_its_own_gain(revision_id: str) -> Non
 
 
 def test_a_column_a_sale_has_no_value_for_stays_off_its_row() -> None:
-    revision = _revision("2025")
+    revision = _revision(_NEWEST_EXERCISE)
     values, _identities = resolve_activity_asset_disposal_row_values(
         revision,
         (_Sale("sale-a", {ActivityAssetDisposalRowField.GAIN: Decimal("1.00")}),),
@@ -75,7 +79,7 @@ def test_a_column_a_sale_has_no_value_for_stays_off_its_row() -> None:
 
 
 def test_the_columns_move_no_scalar_total() -> None:
-    revision = _revision("2025")
+    revision = _revision(_NEWEST_EXERCISE)
     route_box = activity_asset_disposal_route_casillas(revision)
     assert ActivityAssetDisposalRoute.TRANSMISSION_GAIN_ELEMENT in route_box
 
@@ -93,9 +97,9 @@ def test_the_columns_move_no_scalar_total() -> None:
     assert Decimal("350.00") in totals.values()
 
 
-@pytest.mark.parametrize("revision_id", ["2022", "2023", "2024", "2025"])
-def test_application_row_consumers_match_the_disposal_columns_actually_resolved(revision_id: str) -> None:
-    revision = _revision(revision_id)
+@pytest.mark.parametrize("exercise", supported_authored_exercises("100"))
+def test_application_row_consumers_match_the_disposal_columns_actually_resolved(exercise: int) -> None:
+    revision = _revision(exercise)
     sales = (
         _Sale("sale-a", {field: Decimal("10") for field in ActivityAssetDisposalRowField}),
         _Sale("sale-b", {field: Decimal("20") for field in ActivityAssetDisposalRowField}),
@@ -116,7 +120,7 @@ def test_application_row_consumers_match_the_disposal_columns_actually_resolved(
 
 
 def test_a_disposal_column_without_a_field_earns_no_application_consumer() -> None:
-    revision = _revision("2025")
+    revision = _revision(_NEWEST_EXERCISE)
     column_id = activity_asset_disposal_row_binding_ids(revision)[0]
     column = next(binding for binding in revision.bindings if binding.id == column_id)
     malformed = column.model_copy(update={"provider": column.provider.model_copy(update={"row_field": None})})
