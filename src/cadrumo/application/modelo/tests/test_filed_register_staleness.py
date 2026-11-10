@@ -10,6 +10,7 @@ import pytest
 
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -39,25 +40,29 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 _BUCKET_ID = "28282828-2828-4828-8828-282828282828"
 _OTHER_BUCKET_ID = "39393939-3939-4939-8939-393939393939"
-_AT = datetime(2026, 4, 20, 12, 0, tzinfo=UTC)
+_AT = datetime(1980, 4, 20, 12, 0, tzinfo=UTC)
+_YEAR = newest_authored_edition("100")
+# The disposal fixture sells in June of the year after the asset enters service.
+_IN_SERVICE = date(_YEAR - 1, 1, 1)
+_DISPOSAL = date(_YEAR, 6, 30)
 
 
 def _work_unit(revision_id: str, *, bucket_id: str = _BUCKET_ID) -> WorkUnit:
-    period = Period.from_year_and_code(2025, "0A")
+    period = Period.from_year_and_code(_YEAR, "0A")
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=bucket_id,
             modelo="100",
-            filing_year=2025,
+            filing_year=_YEAR,
             period=period,
             revision_id=revision_id,
         ),
         bucket_id=bucket_id,
         modelo=ModeloCode("100"),
-        filing_year=2025,
+        filing_year=_YEAR,
         period=period,
         revision_id=revision_id,
-        name="100-2025-0A",
+        name=f"100-{_YEAR}-0A",
         created_at=_AT,
         updated_at=_AT,
     )
@@ -65,7 +70,7 @@ def _work_unit(revision_id: str, *, bucket_id: str = _BUCKET_ID) -> WorkUnit:
 
 def _filed(history: ActivityAssetHistory, *, state: CalculationRevisionState) -> tuple[WorkUnit, CalculationRevision]:
     """Calculate through the real resolver and seal what its provenance says."""
-    snapshot = published_snapshot("100", filing_year=2025, period="0A")
+    snapshot = published_snapshot("100", filing_year=_YEAR, period="0A")
     work_unit = _work_unit(snapshot.revision.id)
     provenance = calculation_source_provenance_refs(resolve_m100(history).provenance)
     revision = empty_borrador_revision(work_unit, snapshot.snapshot_ref, provenance, at=_AT)
@@ -194,9 +199,9 @@ def test_the_reader_answers_what_was_recorded_outside_this_profile_and_none_for_
 
 
 def test_a_claim_of_an_earlier_year_that_moves_a_filed_baja_makes_it_stale() -> None:
-    """The 2025 gain goes from 897.53 to 1,200.00 with no 2025 claim and no new baja revision."""
-    unclaimed = disposed_asset_history(in_service=date(2024, 1, 1))
-    claimed = disposed_asset_history(in_service=date(2024, 1, 1), prior_claim="1200.00")
+    """The gain of the disposal year goes from 897.53 to 1,200.00 with no claim of that year and no new baja revision."""
+    unclaimed = disposed_asset_history(in_service=_IN_SERVICE, on=_DISPOSAL)
+    claimed = disposed_asset_history(in_service=_IN_SERVICE, on=_DISPOSAL, prior_claim="1200.00")
     work_unit, filed = _filed(unclaimed, state=CalculationRevisionState.PRESENTADO)
 
     ((found, verdict),) = _stale(work_unit, filed, claimed)

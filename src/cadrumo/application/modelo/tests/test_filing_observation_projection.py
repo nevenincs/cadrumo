@@ -10,6 +10,7 @@ from pydantic import ValidationError
 
 from ....core.casilla_id import validated_casilla_id
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 from ...calculations.observations_repository import (
     ObservationEnvelopePayload,
     ObservationLayers,
@@ -24,7 +25,9 @@ from ..filing_record_view_operation import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 4, 10, 9, 0, tzinfo=UTC)
+_NOW = datetime(1980, 4, 10, 9, 0, tzinfo=UTC)
+_FILING_YEAR = newest_authored_edition("130")
+_REVISION_ID = str(revision_covering("130", _FILING_YEAR).id)
 
 
 def test_m130_layers_and_override_preserve_long_working_figure_identifiers() -> None:
@@ -38,7 +41,7 @@ def test_m130_layers_and_override_preserve_long_working_figure_identifiers() -> 
     )
     observation = RegistryModeloObservation(
         modelo="130",
-        filing_year=2026,
+        filing_year=_FILING_YEAR,
         period="1T",
         observations=tuple(
             CasillaObservation(
@@ -53,7 +56,7 @@ def test_m130_layers_and_override_preserve_long_working_figure_identifiers() -> 
     official = ObservationEnvelopePayload(
         source_kind=ObservationSourceKind.AEAT_CSV_REGISTER,
         captured_at=_NOW,
-        stamped_revision_id="2019-y-siguientes",
+        stamped_revision_id=_REVISION_ID,
         observation=observation,
     )
     override = ObservationOverride(
@@ -66,13 +69,13 @@ def test_m130_layers_and_override_preserve_long_working_figure_identifiers() -> 
     pending = ObservationEnvelopePayload(
         source_kind=ObservationSourceKind.OPERATOR_MANUAL,
         captured_at=_NOW,
-        stamped_revision_id="2019-y-siguientes",
+        stamped_revision_id=_REVISION_ID,
         observation=observation,
         override=override,
     )
 
     projection = ModeloFilingObservationLayersProjection.from_layers(
-        ObservationLayers(modelo="130", filing_year=2026, period="1T", official=official, pending_local=pending)
+        ObservationLayers(modelo="130", filing_year=_FILING_YEAR, period="1T", official=official, pending_local=pending)
     )
     restored = ModeloFilingObservationLayersProjection.model_validate_json(projection.model_dump_json())
 
@@ -103,7 +106,7 @@ def test_observation_projection_keys_follow_canonical_casilla_bounds(key: str, o
             source_kind=ObservationSourceKind.AEAT_CSV_REGISTER,
             official_evidence=True,
             captured_at=_NOW,
-            stamped_revision_id="2019-y-siguientes",
+            stamped_revision_id=_REVISION_ID,
             casilla_values=((key, "1.00"),),
         )
 
