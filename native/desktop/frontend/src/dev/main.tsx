@@ -130,6 +130,10 @@ function readParams() {
       params.get("engine_choices"),
       params.get("placement_choices"),
     ),
+    // The local engine the agent's stored record names at the start.
+    localEngine: (["llamacpp", "ollama"] as const).find(
+      (held) => held === params.get("engine"),
+    ),
     // The shape of the component setup.
     setup: SETUP_SHAPES.find((shape) => shape === params.get("setup")),
     // How the made-up ledger answers.
@@ -326,6 +330,7 @@ function Scenarios() {
       localModels: initial.localModels,
       engineHealth: initial.engineHealth,
       engineChoices: initial.engineChoices,
+      localEngine: initial.localEngine,
       setup: initial.setup,
       ledger: initial.ledger,
       modelo: initial.modelo,

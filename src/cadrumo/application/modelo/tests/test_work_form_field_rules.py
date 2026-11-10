@@ -17,17 +17,19 @@ from pydantic import ValidationError
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import validated_casilla_id
 from ..source_policy import SourceFamily, SourceOverridePolicy, SourcePolicyV1, SourceSurface
-from ..work_form_models import (
+from ..work_form_field_vocabulary import (
     ModeloFormBinding,
     ModeloFormBindingAddressV1,
     ModeloFormCasillaAddressV1,
     ModeloFormEditability,
-    ModeloFormField,
     ModeloFormOrigin,
     ModeloFormScalar,
     ModeloFormStanding,
     ModeloFormText,
     ModeloFormTextDisclosure,
+)
+from ..work_form_models import (
+    ModeloFormField,
     revised_field,
 )
 

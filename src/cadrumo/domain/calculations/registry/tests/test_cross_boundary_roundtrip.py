@@ -49,17 +49,20 @@ from ..bindings import (
 )
 from ..schema_live_verification import LiveCrossReferenceDecision
 from ..schema_references import RegistrySnapshotRef
+from .authored_editions import filing_year_envelope, revision_serving_period
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
+_YEAR = filing_year_envelope().horizon
+_REVISION_ID = str(revision_serving_period("303", _YEAR, "1T").id)
 _IVA_DEVENGADO_CASILLA: CasillaId = validated_casilla_id("iva.devengado")
 _IVA_DEDUCIBLE_CASILLA: CasillaId = validated_casilla_id("iva.deducible")
 _IVA_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.resultado-regimen-general")
 _IVA_RESULTADO_OPERANDS: tuple[CasillaId, CasillaId] = (_IVA_DEVENGADO_CASILLA, _IVA_DEDUCIBLE_CASILLA)
-_DRAFT_TIMESTAMP = datetime(2026, 5, 28, 10, 0, 0, tzinfo=UTC)
-_CALCULATION_REVISION_TIMESTAMP = datetime(2026, 5, 28, 10, 10, 0, tzinfo=UTC)
+_DRAFT_TIMESTAMP = datetime(1980, 5, 28, 10, 0, 0, tzinfo=UTC)
+_CALCULATION_REVISION_TIMESTAMP = datetime(1980, 5, 28, 10, 10, 0, tzinfo=UTC)
 
 
 class _ModeloDraftCommonKwargs(TypedDict):
@@ -123,7 +126,7 @@ def test_registry_filing_observation_preserves_observation_tuple() -> None:
 
     original = RegistryModeloObservation(
         modelo="303",
-        filing_year=2025,
+        filing_year=_YEAR,
         period="1T",
         observations=(
             CasillaObservation(
@@ -169,12 +172,12 @@ def test_registry_filing_observation_refuses_display_period_drift() -> None:
     # ``period`` is now typed ``FilingPeriodCode``, so a display-format string
     # ("YYYY code") is refused at the field boundary rather than reaching the
     # cross-field filing_period/period consistency check.
-    with pytest.raises(ValueError, match="invalid period code '2025 1T'"):
+    with pytest.raises(ValueError, match=f"invalid period code '{_YEAR} 1T'"):
         RegistryModeloObservation(
             modelo="303",
-            filing_year=2025,
-            filing_period=Period.from_year_and_code(2025, "1T"),
-            period="2025 1T",
+            filing_year=_YEAR,
+            filing_period=Period.from_year_and_code(_YEAR, "1T"),
+            period=f"{_YEAR} 1T",
             observations=(),
         )
 
@@ -184,8 +187,8 @@ def test_registry_filing_observation_refuses_mismatched_filing_period() -> None:
     with pytest.raises(ValueError, match="filing_period code must match period"):
         RegistryModeloObservation(
             modelo="303",
-            filing_year=2025,
-            filing_period=Period.from_year_and_code(2025, "1T"),
+            filing_year=_YEAR,
+            filing_period=Period.from_year_and_code(_YEAR, "1T"),
             period="2T",
             observations=(),
         )
@@ -195,8 +198,8 @@ def test_registry_filing_observation_refuses_bare_display_period_drift() -> None
     with pytest.raises(ValueError, match="observation period must be a bare registry period token"):
         RegistryModeloObservation(
             modelo="303",
-            filing_year=2025,
-            period="2025 1T",
+            filing_year=_YEAR,
+            period=f"{_YEAR} 1T",
             observations=(),
         )
 
@@ -276,14 +279,14 @@ def test_filing_draft_full_roundtrip() -> None:
 
     snapshot_ref = RegistrySnapshotRef(
         modelo="303",
-        revision_id="2025-y-siguientes",
-        modelo_year=2025,
+        revision_id=_REVISION_ID,
+        modelo_year=_YEAR,
         period="1T",
     )
     original = ModeloDraft(
         draft_id="f" * 64,
         modelo="303",
-        period=Period.from_year_and_code(2025, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
         profile_tax_id="12345678Z",
         subject_tax_id="12345678Z",
         snapshot_ref=snapshot_ref,
@@ -313,7 +316,7 @@ def test_filing_draft_full_roundtrip() -> None:
         findings=(),
         created_at=_DRAFT_TIMESTAMP,
         updated_at=_DRAFT_TIMESTAMP,
-        schema_version=registry_schema_version(modelo="303", revision_id="2025-y-siguientes"),
+        schema_version=registry_schema_version(modelo="303", revision_id=_REVISION_ID),
         notes="",
     )
 
@@ -329,16 +332,16 @@ def test_filing_draft_full_roundtrip() -> None:
 
 
 def _draft_common_kwargs() -> _ModeloDraftCommonKwargs:
-    """The Modelo 303 2025 1T draft fields every tax-id boundary test shares."""
+    """The Modelo 303 first-quarter draft fields every tax-id boundary test shares."""
     return {
         "draft_id": "f" * 64,
         "modelo": "303",
-        "period": Period.from_year_and_code(2025, "1T"),
+        "period": Period.from_year_and_code(_YEAR, "1T"),
         "profile_tax_id": "12345678Z",
         "snapshot_ref": RegistrySnapshotRef(
             modelo="303",
-            revision_id="2025-y-siguientes",
-            modelo_year=2025,
+            revision_id=_REVISION_ID,
+            modelo_year=_YEAR,
             period="1T",
         ),
         "status": ModeloDraftStatus.BORRADOR,
@@ -347,7 +350,7 @@ def _draft_common_kwargs() -> _ModeloDraftCommonKwargs:
         "findings": (),
         "created_at": _DRAFT_TIMESTAMP,
         "updated_at": _DRAFT_TIMESTAMP,
-        "schema_version": registry_schema_version(modelo="303", revision_id="2025-y-siguientes"),
+        "schema_version": registry_schema_version(modelo="303", revision_id=_REVISION_ID),
     }
 
 
@@ -409,14 +412,14 @@ def test_filing_draft_snapshot_ref_full_roundtrip() -> None:
 
     ref = RegistrySnapshotRef(
         modelo="303",
-        revision_id="2025-y-siguientes",
-        modelo_year=2025,
+        revision_id=_REVISION_ID,
+        modelo_year=_YEAR,
         period="1T",
     )
     original = ModeloDraft(
         draft_id="f" * 64,
         modelo="303",
-        period=Period.from_year_and_code(2025, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
         profile_tax_id="12345678Z",
         subject_tax_id="12345678Z",
         snapshot_ref=ref,
@@ -426,7 +429,7 @@ def test_filing_draft_snapshot_ref_full_roundtrip() -> None:
         findings=(),
         created_at=_DRAFT_TIMESTAMP,
         updated_at=_DRAFT_TIMESTAMP,
-        schema_version=registry_schema_version(modelo="303", revision_id="2025-y-siguientes"),
+        schema_version=registry_schema_version(modelo="303", revision_id=_REVISION_ID),
     )
 
     roundtripped = ModeloDraft.model_validate_json(original.model_dump_json())
@@ -523,7 +526,7 @@ def test_calculation_revision_carries_typed_observations() -> None:
     work_unit_id = "b" * 64
     registry_snapshot_ref = published_snapshot(
         "303",
-        filing_year=2025,
+        filing_year=_YEAR,
         period="1T",
     ).snapshot_ref
     casilla_values: dict[CasillaId, Decimal] = {_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA: Decimal("12345.67")}

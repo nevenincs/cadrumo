@@ -163,6 +163,11 @@ def _seed_ready_profile(bucket_id: str, objects: SecureObjectRepository | None =
         # The taxpayer pays an employee and rent with retencion, so the payer modelos 111, 115, 180 and 190 apply.
         UserProfileFact(path="withholding.has_employees", value=True),
         UserProfileFact(path="withholding.pays_rent_with_retencion", value=True),
+        # It also pays investment income with retencion, so Modelo 193 applies.
+        UserProfileFact(path="withholding.pays_capital_income_with_retencion", value=True),
+        # Stated, not defaulted: an unstated large-company condition selects
+        # neither Modelo 303 cadence.
+        UserProfileFact(path="censo.large_company", value=False),
         UserProfileFact(path="provenance.source", value="manual_cli"),
         UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
     ]

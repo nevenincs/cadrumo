@@ -19,6 +19,7 @@ from typing import Final
 from ...core.external_constants import OutputLanguage
 from ...domain.calculations.registry.schema_form_layouts import FormOutlineGroup
 from .work_form_counts import count_work_form_fields
+from .work_form_field_vocabulary import ModeloFormText
 from .work_form_localization import localized_heading
 from .work_form_models import (
     ModeloFormField,
@@ -26,7 +27,6 @@ from .work_form_models import (
     ModeloFormOutlineKind,
     ModeloFormPage,
     ModeloFormSection,
-    ModeloFormText,
     ModeloFormUnplacedField,
     section_fields,
 )

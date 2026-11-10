@@ -11,7 +11,7 @@ from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLangua
 from ....core.retencion_soportada import RetencionSoportadaClase
 from ....domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from ....domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
-from ..projection import UNRESOLVED_OPERAND_REASON
+from ..projection_unresolved import UNRESOLVED_OPERAND_REASON
 from ..projection_words import binding_source_words, unresolved_binding_words, unresolved_casilla_reason_words
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

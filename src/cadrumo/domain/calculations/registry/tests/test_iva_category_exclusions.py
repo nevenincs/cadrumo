@@ -27,10 +27,11 @@ from ..facts.payloads import MappingFactEntry, MappingFactPayload
 from ..facts.resolution import GovernedFactQuery, ResolvedGovernedFact, ResolvedMappingFact
 from ..iva_category_catalogue import IvaCategoryCatalogue, IvaCategoryExclusion, resolve_iva_category_catalogue
 from ..snapshot_globals import SupportedFilingYearsCatalogue
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_ON_DATE = date(2025, 12, 31)
+_ON_DATE = date(filing_year_envelope().horizon, 12, 31)
 _CATALOGUE_FACT_ID = "iva-category-component-catalogue"
 
 

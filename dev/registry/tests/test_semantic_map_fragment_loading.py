@@ -14,9 +14,11 @@ from cadrumo.core.filing_projection_ref import (
     M303ProrrataActivityProjectionRef,
     compile_filing_projection_ref,
 )
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_semantics import ExportComputedKey, ExportDraftAttribute
 from cadrumo.domain.calculations.registry.schema_exports import RecordDiscriminator
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..pipeline.semantic_map import (
     SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION,
@@ -26,6 +28,19 @@ from ..pipeline.semantic_map import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def _design_epoch(source_ref: str) -> str:
+    """Return the record-design epoch the published authority declares for one design source."""
+    with bundled_indexed_authority().operation() as operation:
+        epoch = operation.source_reference(source_ref).record_design_epoch
+    assert epoch is not None, f"design source {source_ref} declares no record-design epoch"
+    return str(epoch)
+
+
+_EPOCH = _design_epoch("aeat-dr-303-2026")
+# A design epoch other than the one above.
+_OTHER_EPOCH = str(filing_year_envelope().floor)
 
 
 _RECORD = """
@@ -108,7 +123,7 @@ def _fragment(
     *,
     fragment_id: str,
     body: str,
-    epoch: str = "2026",
+    epoch: str = _EPOCH,
     source_ref: str = "aeat-dr-303-2026",
     source_sha256: str = "a" * 64,
 ) -> str:
@@ -137,7 +152,7 @@ def test_loads_fragments_in_filename_order_independent_of_creation_order(tmp_pat
     semantic_map = load_semantic_map(root)
 
     assert semantic_map.modelo == "303"
-    assert semantic_map.design_epoch == "2026"
+    assert semantic_map.design_epoch == _EPOCH
     assert semantic_map.source_ref == "aeat-dr-303-2026"
     assert semantic_map.source_sha256 == "a" * 64
     assert tuple(record.export_record_id for record in semantic_map.records) == ("registro-tipo-1",)
@@ -475,7 +490,7 @@ def test_refuses_conflicting_design_identity(tmp_path: Path) -> None:
     root = tmp_path / "semantic-map"
     root.mkdir()
     _write(root / "0001-records.toml", _fragment(fragment_id="records", body=_RECORD))
-    _write(root / "0002-fields.toml", _fragment(fragment_id="fields", body=_ENTRY, epoch="2025"))
+    _write(root / "0002-fields.toml", _fragment(fragment_id="fields", body=_ENTRY, epoch=_OTHER_EPOCH))
 
     with pytest.raises(RegistryValidationError, match="conflicting modelo/design/source identities"):
         load_semantic_map(root)

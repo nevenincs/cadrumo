@@ -7,9 +7,11 @@ import ast
 import pytest
 
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision, split_exercise_revisions
 from dev.paths import REPO_ROOT
 
 from ..compiler.authority import compiled_bundled_authority
+from .authored_edition_support import authored_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -80,14 +82,21 @@ def _function_definitions(tree: ast.AST) -> set[str]:
 
 def test_m303_midyear_designs_are_canonically_selected_without_a_snapshot() -> None:
     """Static inspection follows temporal selection yet retains no filing context."""
-    early = compiled_bundled_authority().inspect_revision("303", filing_year=2024, period="2T")
-    late = compiled_bundled_authority().inspect_revision("303", filing_year=2024, period="3T")
+    early_revision, late_revision = split_exercise_revisions("303", early_period="2T", late_period="3T")
+    year = early_revision.valid_from.year
+    early = compiled_bundled_authority().inspect_revision("303", filing_year=year, period="2T")
+    late = compiled_bundled_authority().inspect_revision("303", filing_year=year, period="3T")
+    designs = {
+        str(revision.id): {str(ref) for ref in revision.source_refs if str(ref).startswith("aeat-dr-303-")}
+        for revision in authored_revisions("303")
+    }
 
     assert isinstance(early, RegistryRevisionInspection)
-    assert early.revision_id == "2024-hasta-08-y-2t"
-    assert late.revision_id == "2024-desde-09-y-3t"
-    assert "aeat-dr-303-2024-early" in early.revision_source_refs
-    assert "aeat-dr-303-2024-late" in late.revision_source_refs
+    assert early.revision_id == early_revision.id
+    assert late.revision_id == late_revision.id
+    assert designs[str(early_revision.id)] <= set(early.revision_source_refs)
+    assert designs[str(late_revision.id)] <= set(late.revision_source_refs)
+    assert designs[str(early_revision.id)] != designs[str(late_revision.id)]
     assert "filing_year" not in RegistryRevisionInspection.model_fields
     assert "period" not in RegistryRevisionInspection.model_fields
 
@@ -102,9 +111,10 @@ def test_m038_inspection_retains_exact_model_law_and_construct_evidence() -> Non
     by that move. This test asserted the pre-move values and had therefore never
     passed since; four of its seven assertions were stale together.
     """
-    inspection = compiled_bundled_authority().inspect_revision("038", filing_year=2025, period="01")
+    newest = open_ended_revision("038")
+    inspection = compiled_bundled_authority().inspect_revision("038", filing_year=newest.valid_from.year, period="01")
 
-    assert inspection.revision_id == "2025-y-siguientes"
+    assert inspection.revision_id == newest.id
     assert inspection.legal_ref_ids == frozenset(
         {
             "ley-58-2003:art-93",

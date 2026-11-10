@@ -166,7 +166,13 @@ def test_an_undeclared_cash_accounting_treatment_is_refused_not_settled_on_colle
 def test_an_undeclared_treatment_on_a_row_outside_the_calculation_does_not_block_it() -> None:
     """A personal row feeds no IVA, so its unusable treatment is not this calculation's finding."""
     personal = _stale(
-        _row("cash-personal", business=BusinessClassification.PERSONAL),
+        _row(
+            "cash-personal",
+            business=BusinessClassification.PERSONAL,
+            taxable_base=None,
+            iva_rate=None,
+            iva_amount=None,
+        ),
         cash_accounting_treatment=IvaCashAccountingTreatment("retired_regime"),
     )
 

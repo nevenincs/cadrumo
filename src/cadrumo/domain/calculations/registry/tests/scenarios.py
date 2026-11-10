@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field, model_validator
 from .....core.aggregation import BindingSourceKind
 from .....core.casilla_id import CasillaId
 from .....core.errors.hierarchy import pydantic_validation_boundary
+from .....core.filing_year import FilingYear
 from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.period import Period
 from ..authority import bundled_indexed_authority
@@ -120,7 +121,7 @@ class RegistryCalculationScenario(RegistryScenarioModel):
     modelo: str = Field(min_length=1)
     revision: str = Field(min_length=1)
     filing_period: Period | None = None
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     period: str = Field(min_length=1)
     inputs: dict[CasillaId, Decimal] = Field(default_factory=dict)
     binding_values: dict[BindingId, Decimal] = Field(default_factory=dict)

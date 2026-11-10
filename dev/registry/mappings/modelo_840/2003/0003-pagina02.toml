@@ -1196,7 +1196,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m840-2003.pagina02.f104"
 kind = "casilla"
-casilla_id = "notificacion.lugar"
+casilla_id = "notificacion.fecha"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -1208,7 +1208,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m840-2003.pagina02.f105"
 kind = "casilla"
-casilla_id = "notificacion.lugar"
+casilla_id = "notificacion.fecha"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -1220,7 +1220,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m840-2003.pagina02.f106"
 kind = "casilla"
-casilla_id = "notificacion.lugar"
+casilla_id = "notificacion.fecha"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -1232,7 +1232,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m840-2003.pagina02.f107"
 kind = "casilla"
-casilla_id = "notificacion.lugar"
+casilla_id = "notificacion.calidad"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]

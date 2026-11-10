@@ -6,6 +6,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.application.storage.calc_sheets.records import TabName
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ..workbook_demo import build_demonstration_plan
 from ..workbook_demo_cases import DemoCase
@@ -15,7 +16,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.
 
 
 def test_compiled_intracommunity_summary_and_correction_share_invoice_projection() -> None:
-    snapshot, plan = build_demonstration_plan(DemoCase("349", "2020-y-siguientes", None, None))
+    snapshot, plan = build_demonstration_plan(DemoCase("349", str(open_ended_revision("349").id), None, None))
     summary = intracommunity_summary(snapshot)
     expected = {
         "numero-operadores": Decimal("2"),
@@ -43,7 +44,9 @@ def test_compiled_intracommunity_summary_and_correction_share_invoice_projection
     assert "3T" in form_values
     assert Decimal("900") in form_values and Decimal("1000") in form_values
     year_cells = [
-        cell.address for cell in plan.value_cells if cell.address.tab is TabName.FORM and cell.value == Decimal("2025")
+        cell.address
+        for cell in plan.value_cells
+        if cell.address.tab is TabName.FORM and cell.value == Decimal(snapshot.filing_year)
     ]
     assert year_cells
     formats = {directive.address: directive.pattern for directive in plan.number_formats}

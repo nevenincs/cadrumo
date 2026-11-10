@@ -7,11 +7,19 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import write_standard_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+# Two consecutive exercises of the support envelope name the earlier edition and its successor.
+assert len(filing_year_envelope().years) >= 2, (
+    "the support envelope must span at least 2 exercises for these synthetic editions"
+)
+_Y1, _Y2 = filing_year_envelope().years[-2:]
+_I1, _I2 = str(_Y1), str(_Y2)
 
 _MODELO_ID = "999"
 _LEGAL_REF = "ley-58-2003:art-29"
@@ -59,29 +67,29 @@ def _two_edition_modelo(
     successor_grade: str | None,
     declare_predecessor: bool,
 ) -> Path:
-    """A three-row 2024 edition and a 2025 edition stating one new row."""
+    """A three-row edition and its successor stating one new row."""
     modelo_dir = root / _MODELO_ID
     modelo_dir.mkdir(parents=True)
     write_standard_manifest(modelo_dir, "Test")
     _write_edition(
         modelo_dir,
-        "2024",
-        year=2024,
+        _I1,
+        year=_Y1,
         grade=predecessor_grade,
         extra="",
         casillas=(
-            _casilla("2024", "0001", lineage="base-imponible")
-            + _casilla("2024", "0002", lineage="cuota-integra")
-            + _casilla("2024", "0003", lineage="cuota-diferencial")
+            _casilla(_I1, "0001", lineage="base-imponible")
+            + _casilla(_I1, "0002", lineage="cuota-integra")
+            + _casilla(_I1, "0003", lineage="cuota-diferencial")
         ),
     )
     _write_edition(
         modelo_dir,
-        "2025",
-        year=2025,
+        _I2,
+        year=_Y2,
         grade=successor_grade,
-        extra='predecessor = "2024"\n' if declare_predecessor else "",
-        casillas=_casilla("2025", "0004", lineage="recargo"),
+        extra=f'predecessor = "{_I1}"\n' if declare_predecessor else "",
+        casillas=_casilla(_I2, "0004", lineage="recargo"),
     )
     return modelo_dir
 
@@ -113,7 +121,7 @@ def test_a_successor_inherits_without_changing_its_declared_grade(
     )
 
     modelo = load_modelo_directory(modelo_dir)
-    successor = modelo.revisions["2025"]
+    successor = modelo.revisions[_I2]
 
     assert [casilla.id for casilla in successor.casillas] == ["0001", "0002", "0003", "0004"]
     assert successor.authority_grade is (None if successor_grade is None else RegistryAuthorityGrade(successor_grade))
@@ -129,5 +137,5 @@ def test_the_same_lower_graded_successor_loads_as_full_copy_without_the_declarat
 
     modelo = load_modelo_directory(modelo_dir)
 
-    assert [casilla.id for casilla in modelo.revisions["2025"].casillas] == ["0004"]
-    assert [casilla.id for casilla in modelo.revisions["2024"].casillas] == ["0001", "0002", "0003"]
+    assert [casilla.id for casilla in modelo.revisions[_I2].casillas] == ["0004"]
+    assert [casilla.id for casilla in modelo.revisions[_I1].casillas] == ["0001", "0002", "0003"]

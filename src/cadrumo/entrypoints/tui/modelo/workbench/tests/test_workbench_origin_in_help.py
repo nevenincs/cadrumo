@@ -18,12 +18,12 @@ from textual.widgets import Static
 
 from ......application.modelo.source_policy import SourceFamily
 from ......application.modelo.work_form_declaration_facts import ModeloFormAeatData
-from ......application.modelo.work_form_models import (
+from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormCasillaAddressV1,
     ModeloFormValueSource,
-    ModeloWorkForm,
     address_key,
 )
+from ......application.modelo.work_form_models import ModeloWorkForm
 from ......application.modelo.work_form_wording import aeat_imported_on, date_text
 from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings

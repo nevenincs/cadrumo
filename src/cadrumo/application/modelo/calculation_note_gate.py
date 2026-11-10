@@ -23,6 +23,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Final
@@ -189,26 +190,42 @@ def require_no_blocking_calculation_notes(
     if not blocking:
         return
     first = blocking[0]
+    raise ModeloCalculationBlockedError(
+        translated_message=what_locale_key(first.reason),
+        context=_blocked_context(revision, blocking, action=action, boxes=boxes, resolutions=resolutions),
+    )
+
+
+def _blocked_context(
+    revision: CalculationRevision,
+    blocking: Sequence[CalculationSourceIssue],
+    *,
+    action: str,
+    boxes: PrintedBoxes | None,
+    resolutions: SourceDisagreementResolutions,
+) -> dict[str, str]:
+    first = blocking[0]
     box = None if boxes is None or first.casilla_id is None else boxes.number(first.casilla_id)
     finding_ids = tuple(
         issue.disagreement.finding_key[:SOURCE_DISAGREEMENT_FINDING_ID_LENGTH]
         for issue in blocking
         if issue.disagreement is not None
     )
-    raise ModeloCalculationBlockedError(
-        translated_message=what_locale_key(first.reason),
-        context={
-            "action": action,
-            "calculation_revision_id": revision.calculation_revision_id,
-            "reason": first.reason,
-            "reasons": ",".join(sorted({issue.reason for issue in blocking})),
-            "blocking_count": str(len(blocking)),
-            **({} if box is None else {"box": box}),
-            **note_subject_facts(first),
-            **({} if not finding_ids else {"finding_ids": ",".join(finding_ids)}),
-            **({"resolutions_unreadable": "true"} if resolutions.unreadable and finding_ids else {}),
-        },
-    )
+    context = {
+        "action": action,
+        "calculation_revision_id": revision.calculation_revision_id,
+        "reason": first.reason,
+        "reasons": ",".join(sorted({issue.reason for issue in blocking})),
+        "blocking_count": str(len(blocking)),
+    }
+    if box is not None:
+        context["box"] = box
+    context.update(note_subject_facts(first))
+    if finding_ids:
+        context["finding_ids"] = ",".join(finding_ids)
+        if resolutions.unreadable:
+            context["resolutions_unreadable"] = "true"
+    return context
 
 
 _NOTE_SUBJECT_VALUES: Final[frozenset[str]] = frozenset({"row_date", "row_amount"})

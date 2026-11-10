@@ -26,6 +26,11 @@ from cadrumo.domain.calculations.registry.runtime_graph import (
 )
 from cadrumo.domain.calculations.registry.schema import FormulaDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    newest_authored_edition,
+    open_ended_revision,
+    revision_covering,
+)
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 from ..compiler.validate_formulas import validate_formula_dag
@@ -51,11 +56,13 @@ def _operator(op: str, *args: FormulaExpression) -> FormulaExpression:
     return FormulaExpression.model_validate({"op": op, "args": args})
 
 
-def _m210_2025_revision() -> ModeloRevision:
+def _m210_newest_revision() -> ModeloRevision:
     # Compile-only load (no full-registry validation) so the M210 formula-graph
     # shape assertions are independent of unrelated peer modelo churn.
     modelos, _catalogues = bundled_registry_tree()
-    return next(modelo for modelo in modelos if modelo.id == "210").revisions["2025"]
+    return next(modelo for modelo in modelos if modelo.id == "210").revisions[
+        str(revision_covering("210", newest_authored_edition("210")).id)
+    ]
 
 
 def _m210_rate_formula(revision: ModeloRevision) -> FormulaDefinition:
@@ -66,9 +73,9 @@ def _m210_rate_formula(revision: ModeloRevision) -> FormulaDefinition:
     )
 
 
-def _m130_2025_revision() -> ModeloRevision:
+def _m130_open_ended_revision() -> ModeloRevision:
     modelos, _catalogues = bundled_registry_tree()
-    return next(modelo for modelo in modelos if modelo.id == "130").revisions["2019-y-siguientes"]
+    return next(modelo for modelo in modelos if modelo.id == "130").revisions[str(open_ended_revision("130").id)]
 
 
 def test_expression_casilla_refs_returns_direct_leaf() -> None:
@@ -168,7 +175,7 @@ def test_expression_binding_refs_walks_nested_prefill_args() -> None:
 def test_formula_evaluation_order_preserves_the_committed_modelo_130_settlement_chain() -> None:
     """The official M130 settlement chain must evaluate inputs before its final result."""
 
-    order = formula_evaluation_order(_m130_2025_revision())
+    order = formula_evaluation_order(_m130_open_ended_revision())
 
     assert order.index("03") < order.index("04") < order.index("07") < order.index("12")
     assert order.index("12") < order.index("14") < order.index("17") < order.index("19")
@@ -177,7 +184,7 @@ def test_formula_evaluation_order_preserves_the_committed_modelo_130_settlement_
 def test_formula_dag_validation_refuses_a_cycle_through_the_canonical_order_builder() -> None:
     """A cycle injected into the real M130 settlement chain has no valid evaluation order."""
 
-    revision = _m130_2025_revision()
+    revision = _m130_open_ended_revision()
     formulas = tuple(
         formula.model_copy(update={"expression": FormulaExpression(casilla_id="19")})
         if formula.target_casilla_id == "03"
@@ -198,7 +205,7 @@ def test_formula_dag_validation_refuses_a_cycle_through_the_canonical_order_buil
 def test_enum_consumed_binding_ids_reads_current_irnr_resolve_tipo_gravamen_country_arg() -> None:
     """The committed M210 2025 five-arg rate formula routes country as an enum binding."""
 
-    revision = _m210_2025_revision()
+    revision = _m210_newest_revision()
     formula = _m210_rate_formula(revision)
     expression = formula.expression
     assert expression.op == "irnr_resolve_tipo_gravamen"
@@ -215,7 +222,7 @@ def test_enum_consumed_binding_ids_reads_current_irnr_resolve_tipo_gravamen_coun
 def test_enum_consumed_binding_ids_ignores_retired_irnr_six_arg_country_arg() -> None:
     """The retired six-arg (convenio-parameter) rate formula is not a current enum-dispatch shape."""
 
-    revision = _m210_2025_revision()
+    revision = _m210_newest_revision()
     formula = _m210_rate_formula(revision)
     # FormulaExpression.model_validate() now enforces op arity centrally
     # (require_formula_operator_arity, at construction), so this retired
@@ -241,7 +248,7 @@ def test_enum_consumed_binding_ids_ignores_retired_irnr_six_arg_country_arg() ->
 
 def test_text_comparison_routes_both_nested_binding_operands_without_routing_numeric_leaves() -> None:
     """A text comparison's bindings use strings while the amount branch stays decimal."""
-    revision = _m210_2025_revision()
+    revision = _m210_newest_revision()
     formula = _m210_rate_formula(revision)
     expression = FormulaExpression.model_validate(
         {

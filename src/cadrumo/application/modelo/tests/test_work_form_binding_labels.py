@@ -17,10 +17,12 @@ from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_form_layouts import FormLayoutDefinition
 from ....domain.modelos.codes import ModeloCode
 from ..work_form import build_modelo_work_form
-from ..work_form_models import (
+from ..work_form_field_vocabulary import (
     ModeloFormBindingAddressV1,
-    ModeloFormField,
     ModeloFormTextDisclosure,
+)
+from ..work_form_models import (
+    ModeloFormField,
     ModeloWorkForm,
 )
 from ..work_form_service import modelo_form_snapshot

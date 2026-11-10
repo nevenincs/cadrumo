@@ -14,7 +14,10 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..printed_boxes import snapshot_printed_boxes
-from ..projection import unresolved_binding_rows, unresolved_casilla_rows
+from ..projection_unresolved import (
+    unresolved_binding_rows,
+    unresolved_casilla_rows,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 

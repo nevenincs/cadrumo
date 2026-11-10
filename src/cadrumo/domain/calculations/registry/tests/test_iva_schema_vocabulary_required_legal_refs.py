@@ -17,10 +17,11 @@ from ..iva_legal_vocabulary import resolve_iva_art69_dos_service_catalogue, reso
 from ..m303_schema_vocabulary import resolve_m303_regime_composition_catalogue, resolve_m303_tax_territory_catalogue
 from ..schema_base import DateAxis
 from ..snapshot_globals import SupportedFilingYearsCatalogue
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_ON = date(2026, 3, 10)
+_ON = date(filing_year_envelope().horizon, 3, 10)
 
 
 class _Definition(Protocol):

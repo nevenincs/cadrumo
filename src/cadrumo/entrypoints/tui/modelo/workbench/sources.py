@@ -37,12 +37,14 @@ from textual.widgets import Footer, OptionList, Static
 from textual.widgets.option_list import Option
 
 from .....application.modelo.source_policy import SourceSurface
+from .....application.modelo.work_form_field_vocabulary import (
+    ModeloFormOrigin,
+    address_key,
+)
 from .....application.modelo.work_form_models import (
     ModeloFormField,
-    ModeloFormOrigin,
     ModeloFormSourceGroupKind,
     ModeloWorkForm,
-    address_key,
 )
 from .....application.modelo.work_form_source_groups import (
     FILED_GROUP_LOCALE_KEYS,

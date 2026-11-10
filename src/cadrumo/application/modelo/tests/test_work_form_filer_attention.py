@@ -51,6 +51,12 @@ from ...calculations.cross_period_models import (
 )
 from ..required_inputs import filer_required_casilla_ids
 from ..verification_cross_period import cross_period_clean_state_findings
+from ..work_form_field_vocabulary import (
+    ModeloFormCasillaAddressV1,
+    ModeloFormOrigin,
+    ModeloFormRateUnit,
+    ModeloFormStanding,
+)
 from ..work_form_findings import (
     FINDING_KIND_ACTION_LOCALE_KEYS,
     FINDING_MESSAGE_ACTION_LOCALE_KEYS,
@@ -59,13 +65,9 @@ from ..work_form_findings import (
     finding_action_locale_key,
 )
 from ..work_form_models import (
-    ModeloFormCasillaAddressV1,
     ModeloFormField,
     ModeloFormGridBlock,
     ModeloFormGridCell,
-    ModeloFormOrigin,
-    ModeloFormRateUnit,
-    ModeloFormStanding,
     ModeloWorkForm,
     section_fields,
 )

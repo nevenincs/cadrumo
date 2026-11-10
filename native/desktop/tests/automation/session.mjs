@@ -185,7 +185,7 @@ export function queuePickerSelection(run, kind, path) {
   return { kind, selected: chosen === null ? null : basename(chosen) };
 }
 
-export function hostEnvironment(source, run, packageRoot, port) {
+export function hostEnvironment(source, run, packageRoot, port, nonce) {
   const env = Object.fromEntries(
     Object.entries(source).filter(
       ([key]) =>
@@ -199,6 +199,7 @@ export function hostEnvironment(source, run, packageRoot, port) {
     CADRUMO_STORAGE_ROOT: resolve(run, "storage"),
     CADRUMO_DESKTOP_PACKAGE_ROOT: packageRoot,
     TAURI_WEBDRIVER_PORT: String(port),
+    ...(nonce === undefined ? {} : { [NONCE_VARIABLE]: nonce }),
     TMPDIR: resolve(run, "temporary"),
     TMP: resolve(run, "temporary"),
     TEMP: resolve(run, "temporary"),
@@ -226,7 +227,8 @@ export function readSession(path) {
     !Number.isInteger(state.port) ||
     state.port < 1 ||
     state.port > 65535 ||
-    typeof state.sessionId !== "string"
+    typeof state.sessionId !== "string" ||
+    !isNonce(state.nonce)
   )
     throw new Error("Invalid native automation session.");
   return state;
@@ -334,10 +336,18 @@ export function inspectProcess(
     : { status: 0, stdout: command, stderr: "" };
 }
 
-function refuseListener() {
-  throw new Error(
+// Each refusal names what was actually observed, so an absent listener is never
+// reported as somebody else's.
+const LISTENER_REFUSALS = {
+  host: "The native test host process cannot be confirmed by its PID and image.",
+  sockets:
+    "The listening sockets cannot be read to confirm the WebDriver listener.",
+  foreign:
     "The loopback WebDriver listener does not belong to this native test host.",
-  );
+};
+
+function refuseListener(reason) {
+  throw new Error(LISTENER_REFUSALS[reason]);
 }
 
 /**
@@ -347,25 +357,29 @@ function refuseListener() {
  */
 function verifyWindowsListener(state, run) {
   const process = inspectProcess(state.pid, "win32", run);
-  const sockets = run("netstat", ["-ano", "-p", "tcp"], { encoding: "utf8" });
   if (
     process.status !== 0 ||
-    !isHostCommand(process.stdout, state.executable, "win32") ||
-    sockets.status !== 0
+    !isHostCommand(process.stdout, state.executable, "win32")
   )
-    refuseListener();
+    refuseListener("host");
+  const sockets = run("netstat", ["-ano", "-p", "tcp"], { encoding: "utf8" });
+  if (sockets.status !== 0) refuseListener("sockets");
   const onPort = parseNetstatListeners(sockets.stdout || "").filter(
     (listener) => listener.port === state.port,
   );
+  // The socket table can be blind to loopback listeners on Windows, so an
+  // empty answer is not proof of absence; ownership is proven by the launch
+  // nonce over the connection instead. A listener the table does show must
+  // still be this host's own loopback one.
+  if (onPort.length === 0) return;
   if (
-    onPort.length === 0 ||
     !onPort.some(
       (listener) =>
         listener.pid === state.pid && listener.address === "127.0.0.1",
     ) ||
     onPort.some((listener) => listener.pid !== state.pid)
   )
-    refuseListener();
+    refuseListener("foreign");
 }
 
 function verifyUnixListener(state, run) {
@@ -391,7 +405,7 @@ function verifyUnixListener(state, run) {
     !records.includes(`p${state.pid}`) ||
     !records.includes(`n127.0.0.1:${state.port}`)
   )
-    refuseListener();
+    refuseListener("foreign");
 }
 
 export function verifyListener(
@@ -415,7 +429,43 @@ export async function connect(path) {
     capabilities: state.capabilities,
     logLevel: "silent",
   });
+  await proveOwnership(browser, state.nonce);
   return { state, browser };
+}
+
+const NONCE_VARIABLE = "CADRUMO_AUTOMATION_NONCE";
+
+function isNonce(value) {
+  return typeof value === "string" && /^[0-9a-f]{64}$/.test(value);
+}
+
+/** Equal strings, compared over every character. */
+function sameNonce(expected, presented) {
+  if (typeof presented !== "string" || presented.length !== expected.length)
+    return false;
+  let difference = 0;
+  for (let index = 0; index < expected.length; index += 1)
+    difference |= expected.charCodeAt(index) ^ presented.charCodeAt(index);
+  return difference === 0;
+}
+
+/**
+ * The page the endpoint drives must belong to the host this launch gave the
+ * nonce to; anything else, including no answer, refuses.
+ */
+export async function proveOwnership(browser, nonce) {
+  let presented;
+  try {
+    presented = await browser.execute(
+      () => window.__cadrumoAutomationNonce ?? null,
+    );
+  } catch {
+    presented = null;
+  }
+  if (!isNonce(nonce) || !sameNonce(nonce, presented))
+    throw new Error(
+      "The WebDriver endpoint did not answer this launch's nonce, so it is not this native test host.",
+    );
 }
 
 /** Resume only after the former host is gone, discarding its queued answer. */
@@ -485,6 +535,7 @@ export async function start(previousSession) {
   for (const member of ["storage", "temporary", "fixtures", "exports"])
     mkdirSync(resolve(run, member), { mode: 0o700, recursive: true });
   const port = await freePort();
+  const nonce = randomBytes(32).toString("hex");
   const stdout = openSync(
     resolve(run, "host.stdout.log"),
     previous ? "a" : "wx",
@@ -497,7 +548,7 @@ export async function start(previousSession) {
   );
   const child = spawn(host.executable, ["--gui"], {
     cwd: host.package,
-    env: hostEnvironment(process.env, run, host.package, port),
+    env: hostEnvironment(process.env, run, host.package, port, nonce),
     detached: true,
     stdio: ["ignore", stdout, stderr],
   });
@@ -516,6 +567,7 @@ export async function start(previousSession) {
       connectionRetryCount: 0,
       capabilities: {},
     });
+    await proveOwnership(browser, nonce);
     const state = {
       run,
       hostname: "127.0.0.1",
@@ -525,6 +577,7 @@ export async function start(previousSession) {
       pid: child.pid,
       executable: host.executable,
       package: host.package,
+      nonce,
     };
     writeFileSync(sessionFile, JSON.stringify(state, null, 2), {
       mode: 0o600,

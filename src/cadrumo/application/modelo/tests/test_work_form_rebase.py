@@ -16,10 +16,12 @@ import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..edit_models import ModeloEditHeldChangeV1, ModeloEditHeldKind
-from ..work_form_models import (
+from ..work_form_field_vocabulary import (
     ModeloFormEditability,
-    ModeloFormField,
     ModeloFormOrigin,
+)
+from ..work_form_models import (
+    ModeloFormField,
     revised_field,
 )
 from ..work_form_rebase import ModeloFormRebaseOutcome, held_change, rebase_outcome

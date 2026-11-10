@@ -19,6 +19,7 @@ from uuid import UUID
 
 from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.ine_provincia_catalogue import ine_provincia_names
 from ..entry_limits import ledger_entry_limits
 from ..entry_options_operation import ledger_entry_options
 from ..period_options import LedgerPeriodSpanRequest, LedgerPeriodsQuery, ledger_periods
@@ -31,7 +32,8 @@ _PROFILE: Final = UUID("31313131-3131-4131-8131-313131313131")
 NOTE: Final = (
     "The registry-served families of `ledger.entry-options`, in the shape `aeat app ledger entry-options --json` "
     "emits, read from the pinned authority through the operation's own projection. The country, currency and M210 "
-    "families are trimmed in the fixture instead."
+    "families are trimmed in the fixture instead. The provinces a counterparty can be stated in are the INE catalogue's, "
+    "in code order, as `ledger.counterparty` serves them."
 )
 
 
@@ -123,4 +125,7 @@ def recording(questions: PeriodQuestions, operation: PinnedAuthorityOperation) -
         "classifications": [item.model_dump(mode="json") for item in served.classifications],
         "limits": ledger_entry_limits().model_dump(mode="json"),
         "periods": recorded_periods(questions),
+        "counterparty_provincias": [
+            {"code": code, "name": name} for code, name in ine_provincia_names(authority=operation).items()
+        ],
     }

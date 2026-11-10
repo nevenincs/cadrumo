@@ -13,7 +13,11 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from .....application.modelo.casilla_help import ModeloCasillaHelpCardV1
-from .....application.modelo.work_form_models import ModeloFormAddressV1, ModeloFormField, ModeloFormScalar
+from .....application.modelo.work_form_field_vocabulary import (
+    ModeloFormAddressV1,
+    ModeloFormScalar,
+)
+from .....application.modelo.work_form_models import ModeloFormField
 from .....application.modelo.work_form_service import ModeloWorkFormLoadV1
 from .....core.casilla_id import CasillaId
 from .....core.external_constants import OutputLanguage

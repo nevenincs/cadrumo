@@ -48,9 +48,9 @@ from .....application.modelo.edit_review_wording import (
     operator_entries_unknown,
     review_findings,
 )
+from .....application.modelo.work_form_field_vocabulary import ModeloFormCasillaAddressV1
 from .....application.modelo.work_form_localization import same_work_form_facts
 from .....application.modelo.work_form_models import (
-    ModeloFormCasillaAddressV1,
     ModeloFormField,
     edit_address,
 )

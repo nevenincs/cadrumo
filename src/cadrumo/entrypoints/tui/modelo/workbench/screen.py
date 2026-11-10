@@ -44,10 +44,12 @@ from textual.screen import Screen
 from textual.widgets import Button, OptionList, Static
 
 from .....application.modelo.casilla_help import ModeloCasillaHelpCardV1
-from .....application.modelo.work_form_models import (
+from .....application.modelo.work_form_field_vocabulary import (
     ModeloFormCasillaAddressV1,
-    ModeloWorkForm,
     address_key,
+)
+from .....application.modelo.work_form_models import (
+    ModeloWorkForm,
     section_fields,
 )
 from .....application.modelo.work_form_next_step import ModeloFormNextAction, inapplicable_pages

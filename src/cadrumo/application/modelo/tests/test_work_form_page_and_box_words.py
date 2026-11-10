@@ -21,14 +21,16 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..value_presentation import format_casilla_value
 from ..work_form_declaration_facts import ModeloFormEditClosure
-from ..work_form_models import (
+from ..work_form_field_vocabulary import (
     ModeloFormCasillaAddressV1,
     ModeloFormEditability,
-    ModeloFormField,
     ModeloFormOrigin,
     ModeloFormStanding,
     ModeloFormText,
     ModeloFormTextDisclosure,
+)
+from ..work_form_models import (
+    ModeloFormField,
     revised_field,
 )
 from ..work_form_wording import does_not_apply_words, field_value_text, origin_words, worded_form

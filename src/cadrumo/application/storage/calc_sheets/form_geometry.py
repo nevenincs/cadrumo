@@ -13,7 +13,7 @@ from ....domain.calculations.registry.schema_form_layouts import (
 )
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...export.review_form_data import ReviewSavedForm
-from ...modelo.work_form_models import ModeloFormScalar
+from ...modelo.work_form_field_vocabulary import ModeloFormScalar
 from .errors import CalcSheetsEngineError
 from .records import (
     SheetCellAddress,

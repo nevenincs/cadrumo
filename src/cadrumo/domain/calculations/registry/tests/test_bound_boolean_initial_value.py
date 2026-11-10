@@ -10,12 +10,13 @@ from .....core.casilla_id import validated_casilla_id
 from ..authority import PinnedAuthorityOperation
 from ..formula_initial_values import initial_values
 from ..ids import BindingId
+from .authored_editions import newest_authored_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _BOX = validated_casilla_id("0169")
 _BINDING: BindingId = "renta-profile-activity-cash-criterion-0169"
-_YEAR = 2024
+_YEAR = newest_authored_edition("100")
 _PERIOD = "0A"
 
 

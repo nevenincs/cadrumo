@@ -288,6 +288,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.transactions.errors.TransactionFiguresWithoutBusinessError",
+        ErrorCode(
+            code="REFUSED_TRANSACTION_FIGURES_WITHOUT_BUSINESS",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.transaction_figures_without_business",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.transactions.errors.LedgerLinkError",
         ErrorCode(
             code="FAIL_LEDGER_LINK",

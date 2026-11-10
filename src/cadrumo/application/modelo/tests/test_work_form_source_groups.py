@@ -12,7 +12,11 @@ import pytest
 
 from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ..work_form_models import ModeloFormSourceGroupKind, ModeloFormSourceState, address_key
+from ..work_form_field_vocabulary import address_key
+from ..work_form_models import (
+    ModeloFormSourceGroupKind,
+    ModeloFormSourceState,
+)
 from ..work_form_source_groups import group_name, source_groups, worded_source_groups
 from .work_form_fixture import built_form
 

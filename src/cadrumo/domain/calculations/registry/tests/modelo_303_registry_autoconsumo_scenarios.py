@@ -19,7 +19,16 @@ from ..schema import ModeloDefinition, ModeloRevision
 from ..schema_catalogues import RegistryCatalogues
 from ..schema_verification import VerificationFindingKind
 from ..temporal import select_revision
+from .authored_editions import filing_year_envelope, revision_covering, split_exercise_revisions
 from .snapshot_support import build_snapshot
+
+# The exercise whose design the registry splits between its first quarter and the periods after it
+# (the official transport that retains casilla 112), the two designs of that split, and the exercise
+# before it, whose single design predates the split.
+_EARLY_DESIGN, _LATE_DESIGN = split_exercise_revisions("303", early_period="1T", late_period="2T")
+_SPLIT_EXERCISE = _EARLY_DESIGN.valid_from.year
+_PRIOR_EXERCISE = _SPLIT_EXERCISE - 1
+_FLOOR = filing_year_envelope().floor
 
 # The statutory rate of each régimen general row, from Ley 37/1992 itself and
 # not from the registry under test: art. 91.Dos 4 per cent (viviendas de
@@ -180,7 +189,7 @@ def check_modelo_303_workbook_parity_ref_anchors_record_design_layout(
     load_modelo_303: Callable[[], tuple[ModeloDefinition, RegistryCatalogues]],
 ) -> None:
     modelo, _ = load_modelo_303()
-    revision = modelo.revisions["2022"]
+    revision = modelo.revisions[str(revision_covering("303", _FLOOR).id)]
     parity = next(p for p in revision.workbook_parity_refs if p.id == "modelo-303-dr")
 
     assert parity.workbook_source == "aeat-dr-303-2022"
@@ -224,8 +233,8 @@ def check_early_2026_112_zero_preserves_prior_result_and_nonzero_is_refused(
 ) -> None:
     """Official 2026 transport retains112 while the early-period deduction is inapplicable."""
     modelo, _ = load_modelo_303()
-    revision = select_revision(modelo, filing_year=2026, period=period)
-    assert revision.id == "2026-hasta-01-y-1t"
+    revision = select_revision(modelo, filing_year=_SPLIT_EXERCISE, period=period)
+    assert revision.id == _EARLY_DESIGN.id
     assert len(revision.casillas) == 229
     actual = calculate(
         load_modelo_303,
@@ -260,8 +269,8 @@ def check_later_2026_112_payment_deduction_uses_current_result_formula(
 ) -> None:
     """The actual amended monthly/quarterly branches allow a positive112 payment."""
     modelo, _ = load_modelo_303()
-    revision = select_revision(modelo, filing_year=2026, period=period)
-    assert revision.id == "2026-y-siguientes"
+    revision = select_revision(modelo, filing_year=_SPLIT_EXERCISE, period=period)
+    assert revision.id == _LATE_DESIGN.id
     actual = calculate(
         load_modelo_303,
         revision,
@@ -278,8 +287,8 @@ def check_historical_2025_contract_keeps_its_prior_casillas_and_result(
     load_modelo_303: Callable[[], tuple[ModeloDefinition, RegistryCatalogues]],
 ) -> None:
     modelo, _ = load_modelo_303()
-    revision = select_revision(modelo, filing_year=2025, period="1T")
-    assert revision.id == "2025"
+    revision = select_revision(modelo, filing_year=_PRIOR_EXERCISE, period="1T")
+    assert revision.id == revision_covering("303", _PRIOR_EXERCISE).id
     assert len(revision.casillas) == 228
     assert not any(casilla.id == "112" for casilla in revision.casillas)
     actual = calculate(load_modelo_303, revision, profile_base=Decimal("0"), row_bases={}, period="1T")

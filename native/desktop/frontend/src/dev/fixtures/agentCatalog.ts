@@ -194,6 +194,38 @@ type Fixture = {
   proven?: AgentLaneCapability[];
 };
 
+/** What this fixture makes up for one engine's lane. */
+function engineLane(engine: string, name: string): Fixture {
+  return {
+    models: [
+      {
+        entry_id: `synthetic-${engine}:1`,
+        display_name: `Synthetic ${name} 1`,
+        efforts: [],
+        vision: false,
+      },
+      {
+        entry_id: `synthetic-${engine}-vision:1`,
+        display_name: `Synthetic ${name} Vision 1`,
+        efforts: [],
+        vision: true,
+        // Recommended, but not downloaded yet.
+        installed: false,
+        size_bytes: 3_435_973_837,
+        licence: {
+          spdx: null,
+          name: "Example community licence",
+          digest: `sha256:${"b".repeat(64)}`,
+        },
+      },
+    ],
+    recommendedFor: {
+      vision: `synthetic-${engine}-vision:1`,
+      text: `synthetic-${engine}:1`,
+    },
+  };
+}
+
 /** What this fixture makes up, by lane. A lane not listed has nothing made up
  * but a gateway's key, which is not set. */
 const FIXTURES: Record<string, Fixture> = {
@@ -293,28 +325,11 @@ const FIXTURES: Record<string, Fixture> = {
     ],
     recommendedFor: { vision: "synthetic-vision:1", text: "synthetic-text:1" },
   },
-  "ollama/api": {
-    models: [
-      {
-        entry_id: "synthetic-ollama:1",
-        display_name: "Synthetic Ollama 1",
-        efforts: [],
-        vision: false,
-      },
-    ],
-    recommendedFor: { text: "synthetic-ollama:1" },
-  },
-  "llamacpp/api": {
-    models: [
-      {
-        entry_id: "synthetic-llamacpp:1",
-        display_name: "Synthetic Llamacpp 1",
-        efforts: [],
-        vision: false,
-      },
-    ],
-    recommendedFor: { text: "synthetic-llamacpp:1" },
-  },
+  // Each engine's lane is made as the generic local lane is: a text model this
+  // computer holds and a recommended vision model it does not hold yet, so
+  // the two engines are told apart by their names alone.
+  "ollama/api": engineLane("ollama", "Ollama"),
+  "llamacpp/api": engineLane("llamacpp", "Llamacpp"),
 };
 
 const KEYED = new Set(["gateway/cli"]);
