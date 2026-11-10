@@ -127,11 +127,70 @@ def test_the_anchor_need_not_be_byte_identical_to_the_value() -> None:
         transcription=_transcription(_SPANISH_INVOICE_TEXT),
     )
 
-    # The anchor is on the page but does not parse to 21 as a whole token, so the
-    # honest outcome is CONTRADICTED rather than a silent pass: the reader must
-    # cite the token it actually parsed.
+    # The span is on the page and prints 21 among two figures. It neither
+    # contradicts the value nor says which figure was read, so the field stays
+    # unsettled with its anchor kept rather than passing or reading as contradicted.
+    assert evaluation.anchor_found is True
+    assert evaluation.outcome is FieldGroundingOutcome.UNANCHORED
+    assert evaluation.parsed_anchor is None
+
+
+def test_a_labelled_line_grounds_on_its_one_printed_figure() -> None:
+    """A reader citing the whole printed line is not contradicted by its label."""
+    evaluation = evaluate_anchor(
+        value=Decimal("2420.00"),
+        anchor="Base imponible 2.420,00 EUR",
+        transcription=_transcription(_SPANISH_INVOICE_TEXT),
+        currency_unit="EUR",
+    )
+
+    assert evaluation.outcome is FieldGroundingOutcome.ANCHORED
+    assert evaluation.parsed_anchor == Decimal("2420.00")
+    assert evaluation.parse_was_vacuous is False
+
+
+def test_a_labelled_rate_grounds_on_its_one_printed_figure() -> None:
+    evaluation = evaluate_anchor(
+        value=Decimal("15"),
+        anchor="Retención IRPF 15%",
+        transcription=_transcription(_SPANISH_INVOICE_TEXT),
+    )
+
+    assert evaluation.outcome is FieldGroundingOutcome.ANCHORED
+    assert evaluation.parsed_anchor == Decimal("15")
+
+
+def test_a_labelled_line_whose_one_figure_differs_is_contradicted() -> None:
+    evaluation = evaluate_anchor(
+        value=Decimal("2565.00"),
+        anchor="TOTAL FACTURA 2.565,20",
+        transcription=_transcription(_SPANISH_INVOICE_TEXT),
+    )
+
+    assert evaluation.outcome is FieldGroundingOutcome.CONTRADICTED
+    assert evaluation.parsed_anchor == Decimal("2565.20")
+
+
+def test_a_span_printing_none_of_the_value_among_several_figures_is_contradicted() -> None:
+    evaluation = evaluate_anchor(
+        value=Decimal("10"),
+        anchor="21% 508,20",
+        transcription=_transcription(_SPANISH_INVOICE_TEXT),
+    )
+
     assert evaluation.anchor_found is True
     assert evaluation.outcome is FieldGroundingOutcome.CONTRADICTED
+
+
+def test_a_labelled_line_absent_from_the_document_stays_unanchored() -> None:
+    evaluation = evaluate_anchor(
+        value=Decimal("2420.00"),
+        anchor="Base imponible 2.420,00",
+        transcription=_transcription("Base 2.420,00 EUR"),
+    )
+
+    assert evaluation.anchor_found is False
+    assert evaluation.outcome is FieldGroundingOutcome.UNANCHORED
 
 
 def test_a_percentage_anchor_citing_only_its_number_grounds() -> None:
@@ -664,15 +723,21 @@ def test_an_amount_anchor_carrying_the_documents_currency_grounds() -> None:
     assert evaluation.parsed_anchor == Decimal("2420.00")
 
 
-def test_an_amount_anchor_carrying_an_uncorroborated_code_is_still_contradicted() -> None:
-    """Without the document's own currency, a trailing code is not recognised as a unit."""
+def test_an_amount_anchor_carrying_an_uncorroborated_code_grounds_on_its_one_figure() -> None:
+    """Without the document's own currency, a trailing code is not a unit, only words.
+
+    The code is not stripped (the unit rule below still refuses it), so the anchor
+    is judged as a printed span: its one figure is the value, which is on the page.
+    """
     evaluation = evaluate_anchor(
         value=Decimal("2420.00"),
         anchor="2.420,00 EUR",
         transcription=_transcription(_SPANISH_INVOICE_TEXT),
     )
 
-    assert evaluation.outcome is FieldGroundingOutcome.CONTRADICTED
+    assert strip_printed_unit("2.420,00 EUR") == "2.420,00 EUR"
+    assert evaluation.outcome is FieldGroundingOutcome.ANCHORED
+    assert evaluation.parsed_anchor == Decimal("2420.00")
 
 
 def test_the_unit_rule_leaves_other_trailing_text_for_the_decimal_authority_to_refuse() -> None:

@@ -486,6 +486,14 @@ def evidence_extract_lines(
         f"provenance_fields\t{len(draft.provenance)}",
         f"discrepancies\t{len(draft.discrepancies)}",
         f"raw_text_length\t{draft.raw_text_length}",
+        # The findings themselves, not only their count: kind and field are
+        # stable tokens and the figures are their exact public spellings.
+        *(
+            f"discrepancy\t{finding.kind.value}\t{_display_text(finding.field)}"
+            f"\t{_display_optional(_decimal_text(finding.expected))}"
+            f"\t{_display_optional(_decimal_text(finding.observed))}"
+            for finding in draft.discrepancies
+        ),
     ]
 
 
