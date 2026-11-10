@@ -21,7 +21,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 
 def _supported_revisions(*modelos: str) -> list[tuple[str, str]]:
-    """Each named modelo's authored revisions that govern an exercise from the support floor up and reach calculation grade."""
+    """Each modelo's authored revisions that reach calculation grade and cover the support floor or later."""
     floor = filing_year_envelope().floor
     return [
         (modelo, str(revision.id))
