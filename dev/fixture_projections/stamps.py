@@ -21,7 +21,7 @@ import json
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Final
+from typing import Any, Final
 
 from cadrumo.core.hashing import sha256_file
 
@@ -171,6 +171,19 @@ def _changed_members(label: str, recorded: Mapping[str, str], current: Mapping[s
     return changes
 
 
+def _usable_stamp(family: FixtureFamily, path: Path) -> dict[str, Any] | FamilyStatus:
+    """The family's stamp document, or the unstamped status that explains why none is usable."""
+    try:
+        stamp = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return FamilyStatus(family.name, FixtureState.UNSTAMPED, ("no stamp",))
+    except (OSError, ValueError) as exc:
+        return FamilyStatus(family.name, FixtureState.UNSTAMPED, (f"unreadable stamp: {type(exc).__name__}",))
+    if not isinstance(stamp, dict) or stamp.get("format") != STAMP_FORMAT or stamp.get("family") != family.name:
+        return FamilyStatus(family.name, FixtureState.UNSTAMPED, ("stamp of another format or family",))
+    return stamp
+
+
 def family_status(
     family: FixtureFamily, root: Path, inputs: InputRecord, *, cache_directory: Path | None = None
 ) -> FamilyStatus:
@@ -183,14 +196,9 @@ def family_status(
         return FamilyStatus(family.name, FixtureState.MISSING, ("no outputs",))
     # Outputs with no usable stamp exist but are of unknown provenance: not
     # missing, and not fresh until a seed produces or adopts them.
-    try:
-        stamp = json.loads(path.read_text(encoding="utf-8"))
-    except FileNotFoundError:
-        return FamilyStatus(family.name, FixtureState.UNSTAMPED, ("no stamp",))
-    except (OSError, ValueError) as exc:
-        return FamilyStatus(family.name, FixtureState.UNSTAMPED, (f"unreadable stamp: {type(exc).__name__}",))
-    if not isinstance(stamp, dict) or stamp.get("format") != STAMP_FORMAT or stamp.get("family") != family.name:
-        return FamilyStatus(family.name, FixtureState.UNSTAMPED, ("stamp of another format or family",))
+    stamp = _usable_stamp(family, path)
+    if isinstance(stamp, FamilyStatus):
+        return stamp
     reasons: list[str] = []
     if stamp.get("producer_version") != declaration_digest(family):
         reasons.append("declaration changed")

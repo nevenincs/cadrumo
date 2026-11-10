@@ -287,50 +287,48 @@ def _run_requested_journey(
     return evidence
 
 
+def _reject_inconsistent_slices(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
+    if args.annual and args.slice_ids:
+        parser.error("--slice is periodic-only; use --annual-slice with --annual")
+    if not args.annual and args.annual_slice_ids:
+        parser.error("--annual-slice requires --annual")
+
+
+def _failure_receipt(
+    args: argparse.Namespace, error: RetencionesInstalledCliError, commands: tuple[CommandEvidence, ...] = ()
+) -> dict[str, object]:
+    is_annual = bool(args.annual)
+    return failure_evidence(
+        error=error,
+        executable=args.cli,
+        year=args.year,
+        source_identity=args.source_identity,
+        package_identity=args.package_identity,
+        storage_root=args.storage_root,
+        output_dir=args.output_dir,
+        commands=commands,
+        schema_version=ANNUAL_SCHEMA_VERSION if is_annual else SCHEMA_VERSION,
+        scenario=INSTALLED_ANNUAL_CLI_SCENARIO_VERSION if is_annual else INSTALLED_CLI_SCENARIO_VERSION,
+    ).to_dict()
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Run the installed acceptance journey and persist a sanitized receipt."""
     parser = _parser()
     args = parser.parse_args(argv)
     if args.as_of is None:
         args.as_of = date(args.year + 1, 9, 21)
-    if args.annual and args.slice_ids:
-        parser.error("--slice is periodic-only; use --annual-slice with --annual")
-    if not args.annual and args.annual_slice_ids:
-        parser.error("--annual-slice requires --annual")
-    is_annual = bool(args.annual)
-    failure_schema_version = ANNUAL_SCHEMA_VERSION if is_annual else SCHEMA_VERSION
-    failure_scenario = INSTALLED_ANNUAL_CLI_SCENARIO_VERSION if is_annual else INSTALLED_CLI_SCENARIO_VERSION
+    _reject_inconsistent_slices(parser, args)
     try:
-        evidence = _run_requested_journey(args, is_annual)
+        evidence = _run_requested_journey(args, bool(args.annual))
     except RetencionesInstalledCliError as exc:
-        rendered = failure_evidence(
-            error=exc,
-            executable=args.cli,
-            year=args.year,
-            source_identity=args.source_identity,
-            package_identity=args.package_identity,
-            storage_root=args.storage_root,
-            output_dir=args.output_dir,
-            commands=exc.commands,
-            schema_version=failure_schema_version,
-            scenario=failure_scenario,
-        ).to_dict()
+        rendered = _failure_receipt(args, exc, exc.commands)
         status = 2
     except Exception as exc:
-        rendered = failure_evidence(
-            error=RetencionesInstalledCliError(
-                stage="driver",
-                diagnostic_code=f"unexpected_{type(exc).__name__}",
-            ),
-            executable=args.cli,
-            year=args.year,
-            source_identity=args.source_identity,
-            package_identity=args.package_identity,
-            storage_root=args.storage_root,
-            output_dir=args.output_dir,
-            schema_version=failure_schema_version,
-            scenario=failure_scenario,
-        ).to_dict()
+        rendered = _failure_receipt(
+            args,
+            RetencionesInstalledCliError(stage="driver", diagnostic_code=f"unexpected_{type(exc).__name__}"),
+        )
         status = 2
     else:
         rendered = evidence.to_dict()
