@@ -53,6 +53,7 @@ use crate::{
     error::Error,
     filesystem,
     package::Readiness,
+    process::creation::{self, CreationFailure},
     provisioning::{
         failure::FailureCategory,
         items::{Destination, ItemId, Locations, PROGRAM_PART},
@@ -407,7 +408,10 @@ impl Server {
     /// announce that it listens, for llama-server then to answer ready, and then for it
     /// to answer with `version`. A program that exits, stays silent, unready or without
     /// a version answer past [`START_BUDGET`] or answers otherwise is ended and reads
-    /// `program_not_running`, with the [`ServerStartFailure`] that decided it.
+    /// `program_not_running`, with the [`ServerStartFailure`] that decided it. The start
+    /// budget begins once the process exists; its creation has its own bound,
+    /// [`creation::SPAWN_BUDGET`], past which the start reads a [`LaunchStep::Create`]
+    /// failure of kind `TimedOut`.
     pub(super) fn spawn(
         engine: LocalEngine,
         command: ServeCommand,
@@ -443,9 +447,17 @@ impl Server {
             group.map(|group| group.guard)
         };
         let loopback = Loopback::new(command.address)?;
+        let mut child = creation::spawn_within(creation::SPAWN_BUDGET, process).map_err(
+            |failure| match failure {
+                CreationFailure::Failed(error) => launch_failure(LaunchStep::Create, &error),
+                CreationFailure::TimedOut { .. } => {
+                    launch_failure(LaunchStep::Create, &io::ErrorKind::TimedOut.into())
+                }
+            },
+        )?;
+        // The start budget is the program's: creation waits for every other process
+        // holding the creation step and for the system's scan of the program.
         let started = Instant::now();
-        let mut child = crate::process::creation::run(|| process.spawn())
-            .map_err(|error| launch_failure(LaunchStep::Create, &error))?;
         let guard = match containment.contain(&child) {
             Ok(guard) => guard,
             Err(error) => {

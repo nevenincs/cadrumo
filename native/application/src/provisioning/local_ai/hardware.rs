@@ -202,7 +202,9 @@ fn run_query(program: &Path, arguments: &[&str]) -> Option<String> {
     }
     #[cfg(unix)]
     crate::process::group::place(&mut command).ok()?;
-    let mut child = crate::process::creation::run(|| command.spawn()).ok()?;
+    let mut child =
+        crate::process::creation::spawn_within(crate::process::creation::SPAWN_BUDGET, command)
+            .ok()?;
     let mut stdout = child.stdout.take()?;
     let (sender, receiver) = mpsc::channel();
     std::thread::Builder::new()
