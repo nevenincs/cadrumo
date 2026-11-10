@@ -1633,6 +1633,12 @@ fields = {externally_grounded_casilla_ids = ["iva.prorrata-porcentaje"]}
 sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [2, 0, 1]}
+[[revisions."2025".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-m349-reconciliation"}
+sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
 [[revisions."2025".family_removals]]
 family = "projection_endpoints"
 selector = {revision = "2024-desde-09-y-3t", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-dana-elegible.slot-1"}
