@@ -48,6 +48,7 @@ import { periodText } from "../ledgerWords";
 import { NO_FILTERS, readinessSets } from "../movements/movementsModel";
 import { ReadinessStrip } from "../movements/ReadinessStrip";
 import { PeriodSelector } from "../PeriodSelector";
+import { useVocabulary } from "../suggestions/SuggestionsProvider";
 import { useWritePause, WriteHold } from "../WritePause";
 import {
   INVOICE_TSV_COLUMNS,
@@ -56,8 +57,6 @@ import {
   movementsTsv,
 } from "./tsv";
 import { exportFileName } from "./transferWords";
-
-const FORMATS: readonly LedgerExportFormat[] = ["csv", "jsonl", "xlsx"];
 
 const samePeriod = (left: LedgerPeriod | null, right: LedgerPeriod | null) =>
   left === right ||
@@ -155,7 +154,13 @@ export function ExportDialog({
   const ids = useId();
   const heading = useRef<HTMLHeadingElement>(null);
   const count = (value: number) => formatCount(locale, value);
-  const [format, setFormatNow] = useState<LedgerExportFormat>(lastFormat);
+  // The formats are those the ledger serves; the last one chosen holds only
+  // while it is still served.
+  const formats = useVocabulary().exportFormats;
+  const [chosenFormat, setFormatNow] = useState<LedgerExportFormat>(lastFormat);
+  const format = formats.includes(chosenFormat)
+    ? chosenFormat
+    : (formats[0] ?? "");
   const [period, setPeriodNow] = useState<LedgerPeriod | null>(pagePeriod);
   usePeriods({ years: period ? [period.year] : [] });
   const [inactive, setInactive] = useState(false);
@@ -275,7 +280,7 @@ export function ExportDialog({
   );
 
   const choose = async () => {
-    if (sending.current || picking.current) return;
+    if (sending.current || picking.current || format === "") return;
     picking.current = true;
     const mine = generation.current;
     setChoosing(true);
@@ -517,7 +522,7 @@ export function ExportDialog({
                 value={format}
                 onValueChange={(next) => setFormat(next as LedgerExportFormat)}
               >
-                {FORMATS.map((value) => (
+                {formats.map((value) => (
                   <SegmentedControlItem key={value} value={value}>
                     {t(`desktop.ledger.export.format_${value}`)}
                   </SegmentedControlItem>
@@ -695,6 +700,7 @@ export function ExportDialog({
                   variant="outline"
                   size="sm"
                   pending={choosing}
+                  disabled={format === ""}
                   onClick={() => void choose()}
                 >
                   {t(
