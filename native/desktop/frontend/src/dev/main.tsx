@@ -59,6 +59,15 @@ function engineChoices(engines: string | null, placements: string | null) {
   };
 }
 
+/** The `<lane>:<model>` a scenario names as the served reading default. */
+function readingDefaultOf(
+  written: string | null,
+): { lane: string; model: string } | undefined {
+  const at = written?.indexOf(":") ?? -1;
+  if (!written || at <= 0 || at === written.length - 1) return undefined;
+  return { lane: written.slice(0, at), model: written.slice(at + 1) };
+}
+
 function readParams() {
   const params = new URLSearchParams(window.location.search);
   const language = params.get("lang");
@@ -130,6 +139,9 @@ function readParams() {
       params.get("engine_choices"),
       params.get("placement_choices"),
     ),
+    // The installed model the made-up service reads documents with while no
+    // choice is stored, written as `<lane>:<model>`.
+    readingDefault: readingDefaultOf(params.get("reading_default")),
     // The local engine the agent's stored record names at the start.
     localEngine: (["llamacpp", "ollama"] as const).find(
       (held) => held === params.get("engine"),
@@ -331,6 +343,7 @@ function Scenarios() {
       engineHealth: initial.engineHealth,
       engineChoices: initial.engineChoices,
       localEngine: initial.localEngine,
+      readingDefault: initial.readingDefault,
       setup: initial.setup,
       ledger: initial.ledger,
       modelo: initial.modelo,

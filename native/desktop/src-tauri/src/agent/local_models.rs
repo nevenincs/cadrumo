@@ -536,8 +536,12 @@ pub(crate) mod tests {
         let mut missing_reading = snapshot(false, none(), Value::Null, lanes());
         missing_reading.as_object_mut().unwrap().remove("reading");
         let mut missing_source = snapshot(false, none(), Value::Null, lanes());
-        missing_source.as_object_mut().unwrap().remove("reading_source");
-        let mut sourceless_reading = snapshot(false, none(), model("local_api", json!("m")), lanes());
+        missing_source
+            .as_object_mut()
+            .unwrap()
+            .remove("reading_source");
+        let mut sourceless_reading =
+            snapshot(false, none(), model("local_api", json!("m")), lanes());
         sourceless_reading["reading_source"] = json!("none");
         let mut unsourced_absence = snapshot(false, none(), Value::Null, lanes());
         unsourced_absence["reading_source"] = json!("default");
