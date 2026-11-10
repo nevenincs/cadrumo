@@ -22,6 +22,7 @@ from cadrumo.application.wizard import catalogue, persistence
 from cadrumo.core.aggregation import RetencionClave
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
 from cadrumo.domain.modelos.work_unit import WorkUnit
@@ -31,10 +32,11 @@ from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 from .cli_fixture_worlds import cli_world_provider, invoke_joined_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
 
+_YEAR = filing_year_envelope().horizon
 _WIZARD_REGISTRATION_MODULES = (catalogue, persistence)
 _M111_PROFESSIONAL_NIF = "B00015016"
 _M111_PROFESSIONAL_NAME = "Asesoria Profesional SL"
-_M111_PAID_ON = date(2025, 1, 15)
+_M111_PAID_ON = date(_YEAR, 1, 15)
 MODELO_OPERATOR_PROFILE_LABEL = "operator"
 #: The seeded profile's machine identity. A profile id is a UUID; the
 #: readable "operator" above is the operator-chosen LABEL, and the two are
@@ -133,9 +135,9 @@ def create_attribution_entity_intracom_profile() -> None:
 def create_m130_work_unit(*, period: str = "1T") -> str:
     return create_modelo_work_unit_via_cli(
         modelo="130",
-        filing_year=2025,
+        filing_year=_YEAR,
         period=period,
-        revision="2019-y-siguientes",
+        revision=open_ended_revision("130").id,
     )
 
 
@@ -144,20 +146,20 @@ def create_m303_work_unit() -> str:
     modelo = next(candidate for candidate in modelos if candidate.id == "303")
     return create_modelo_work_unit_via_cli(
         modelo="303",
-        filing_year=2025,
+        filing_year=_YEAR,
         period="1T",
-        revision=str(select_revision(modelo, filing_year=2025, period="1T").id),
+        revision=str(select_revision(modelo, filing_year=_YEAR, period="1T").id),
     )
 
 
 def m111_withholding_invoice_arguments(
-    *, paid_on: date = _M111_PAID_ON, invoice_number: str = "M111-PROF-2025-001"
+    *, paid_on: date = _M111_PAID_ON, invoice_number: str = f"M111-PROF-{_YEAR}-001"
 ) -> list[str]:
     """Return the ``ledger invoice add`` arguments for one Modelo 111 withholding invoice.
 
     The received professional invoice carries a 15% retención: 1000.00 base,
     150.00 withheld. Callers prepend their own global options. Defaults to the
-    canonical 2025 1T coordinate; a caller targeting a different quarter
+    newest supported year's 1T coordinate; a caller targeting a different quarter
     supplies its own ``paid_on`` and ``invoice_number``.
     """
     return [
@@ -177,7 +179,7 @@ def m111_withholding_invoice_arguments(
 def m111_withholding_aggregate_arguments(
     invoice_id: str,
     *,
-    filing_year: int = 2025,
+    filing_year: int = _YEAR,
     period: str = "1T",
     paid_on: date = _M111_PAID_ON,
     allocation_id: str = "m111-professional-allocation-1",
@@ -185,7 +187,7 @@ def m111_withholding_aggregate_arguments(
     """Return the ``modelo aggregate`` arguments recording the invoice's single paid allocation.
 
     The settlement is the invoice grand total (1000.00 + 21% IVA = 1210.00)
-    less the retención: 1060.00. Defaults to the canonical 2025 1T coordinate;
+    less the retención: 1060.00. Defaults to the newest supported year's 1T coordinate;
     a caller targeting a different quarter supplies its own ``filing_year``,
     ``period``, ``paid_on`` and ``allocation_id``.
     """
@@ -226,7 +228,7 @@ def m111_withholding_aggregate_arguments(
 
 def capture_m111_invoice_withholding(
     *,
-    filing_year: int = 2025,
+    filing_year: int = _YEAR,
     period: str = "1T",
     paid_on: date = _M111_PAID_ON,
 ) -> None:
@@ -236,13 +238,13 @@ def capture_m111_invoice_withholding(
     silent zero, so a calculable work unit needs one real percepción. The
     evidence enters through the public path only: ``ledger invoice add`` mints
     the invoice, then ``modelo aggregate --received-invoice-retencion`` records
-    its paid allocation. Defaults to the canonical 2025 1T coordinate; a
+    its paid allocation. Defaults to the newest supported year's 1T coordinate; a
     caller targeting a different quarter -- for example, one whose filing
     window has not opened yet -- supplies its own ``filing_year``, ``period``
     and ``paid_on``.
     """
-    canonical = (filing_year, period) == (2025, "1T")
-    invoice_number = "M111-PROF-2025-001" if canonical else f"M111-PROF-{filing_year}-{period}-001"
+    canonical = (filing_year, period) == (_YEAR, "1T")
+    invoice_number = f"M111-PROF-{_YEAR}-001" if canonical else f"M111-PROF-{filing_year}-{period}-001"
     allocation_id = (
         "m111-professional-allocation-1" if canonical else f"m111-professional-allocation-{filing_year}-{period}"
     )
@@ -271,11 +273,11 @@ def capture_m111_invoice_withholding(
 
 
 def create_calculable_modelo_work_unit(
-    *, filing_year: int = 2025, period: str = "1T", paid_on: date = _M111_PAID_ON
+    *, filing_year: int = _YEAR, period: str = "1T", paid_on: date = _M111_PAID_ON
 ) -> str:
     """Create a Modelo 111 work unit whose ``work calculate`` succeeds.
 
-    Defaults to the canonical 2025 1T coordinate; a caller targeting a
+    Defaults to the newest supported year's 1T coordinate; a caller targeting a
     different quarter supplies its own ``filing_year``, ``period`` and
     ``paid_on``.
     """
@@ -283,7 +285,7 @@ def create_calculable_modelo_work_unit(
         modelo="111",
         filing_year=filing_year,
         period=period,
-        revision="2019-y-siguientes",
+        revision=open_ended_revision("111").id,
     )
     capture_m111_invoice_withholding(filing_year=filing_year, period=period, paid_on=paid_on)
     return work_unit_id

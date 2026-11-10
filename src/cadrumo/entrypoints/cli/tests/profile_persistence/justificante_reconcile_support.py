@@ -18,6 +18,7 @@ from cadrumo.application.modelo.calculation_helpers import external_filing_obser
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -52,8 +53,9 @@ receipt total.
 
 _M111_EXPEDIENTE_ID = "11120260417EFGH5678IJKL9012"
 """The register expediente the 111 capture is observed under."""
+_YEAR = filing_year_envelope().horizon
 _EXP_130_1T = "13020260410ABCD1234EFGH5678"
-_WORK_UNIT_TIMESTAMP = datetime(2026, 4, 18, 8, 0, tzinfo=UTC)
+_WORK_UNIT_TIMESTAMP = datetime(_YEAR, 4, 18, 8, 0, tzinfo=UTC)
 
 
 @contextmanager
@@ -132,7 +134,7 @@ def persist_capture(
         csv=csv,
         pdf_bytes=pdf_bytes,
         pdf_sha256=hashlib.sha256(pdf_bytes).hexdigest(),
-        captured_at=datetime(2026, 4, 18, 10, 0, tzinfo=UTC),
+        captured_at=datetime(_YEAR, 4, 18, 10, 0, tzinfo=UTC),
     )
 
 
@@ -174,7 +176,7 @@ def seed_unverified_filing(
         source_provenance=(),
         filing_instance_evidence=None,
     )
-    filed_at = datetime(2026, 4, 18, 9, 0, tzinfo=UTC)
+    filed_at = datetime(_YEAR, 4, 18, 9, 0, tzinfo=UTC)
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
