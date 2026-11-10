@@ -30,7 +30,10 @@ from ....domain.transactions.errors import LedgerStorageError, StoredTransaction
 from ....domain.transactions.models import (
     Transaction,
     TransactionCatalogue,
+    require_no_figures_without_business,
     validate_authenticated_stored_transaction_json,
+    validate_stored_transaction_json,
+    withhold_figures_without_business,
 )
 from ....domain.transactions.repository import transaction_index_object_key, transaction_object_key
 from ..storage.errors import (
@@ -338,8 +341,9 @@ class TransactionCatalogueRepository:
                 },
                 translated_message="errors.integrity.integrity_storage_envelope_version",
             )
-        transaction = envelope.payload
-        return transaction
+        # A row stored before personal rows were refused business figures is
+        # read without them; its bytes stay as stored until its next write.
+        return withhold_figures_without_business(envelope.payload)
 
     def _decode_catalogue_row(self, payload: bytes, *, authenticated: bool) -> Envelope[Transaction]:
         """Decode one stored row, translating a validation failure into drift.
@@ -354,7 +358,7 @@ class TransactionCatalogueRepository:
             if authenticated:
                 envelope = validate_authenticated_stored_transaction_json(Envelope[Transaction], payload)
             else:
-                envelope = Envelope[Transaction].model_validate_json(payload)
+                envelope = validate_stored_transaction_json(Envelope[Transaction], payload)
             # A row that lost its D6 lifecycle timestamps is refused rather than
             # returned with the defaults the decode stamped on it.
             require_persisted_transaction_timestamps(envelope.payload)
@@ -596,7 +600,9 @@ class TransactionCatalogueRepository:
         )
         if len(records) != 1:
             raise LedgerPersistenceConflictError("opened transaction no longer exists")
-        stored = Envelope[Transaction].model_validate_json(records[0].payload).payload
+        stored = withhold_figures_without_business(
+            validate_stored_transaction_json(Envelope[Transaction], records[0].payload).payload
+        )
         if stored != current:
             raise LedgerPersistenceConflictError("transaction changed since it was opened")
         old_revision = str(records[0].revision_id)
@@ -921,8 +927,11 @@ class TransactionCatalogueRepository:
             if transaction_id is None:
                 continue
             envelope = self._decode_targeted_row(record.payload, read_context=read_context)
-            transaction = envelope.payload
+            transaction = withhold_figures_without_business(envelope.payload)
             self._assert_transaction_row_identity(transaction, expected_transaction_id=transaction_id)
+            # As for a catalogue read: an untouched row saved back is recognised
+            # as the stored row, so withholding a figure never rewrites it.
+            self._cache_serialized_hash(transaction, sha256_hex(record.payload))
             transactions_by_id[transaction_id] = transaction
             cache[transaction_id] = (str(record.revision_id), transaction)
         return [
@@ -941,7 +950,7 @@ class TransactionCatalogueRepository:
             if not inner_envelope_version_is_current(
                 envelope.schema_version, TRANSACTION_CATALOGUE_NAMESPACE.schema_version
             ):
-                envelope = Envelope[Transaction].model_validate_json(payload)
+                envelope = validate_stored_transaction_json(Envelope[Transaction], payload)
         except ValidationError as exc:
             _log.error(
                 "transaction row schema drift bucket_id=%s (%s)",
@@ -1246,6 +1255,9 @@ class TransactionCatalogueRepository:
         """
         from ..storage.envelope.contract import Envelope
 
+        # The write boundary: a row built through its constructor was refused
+        # already, and a copied row is refused here before any byte is written.
+        require_no_figures_without_business(transaction)
         envelope = Envelope[Transaction](
             schema_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
             written_at=transaction.modified_at,
