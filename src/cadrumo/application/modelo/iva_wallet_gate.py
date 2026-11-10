@@ -47,6 +47,9 @@ from typing import TYPE_CHECKING
 from ...core.casilla_id import CasillaId
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_PENDING_PRIOR_CASILLA,
+)
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ...domain.modelos.calculation_revision import CalculationRevision
@@ -57,7 +60,7 @@ from ..calculations.observations_repository import (
     IvaWalletDecisionRepositoryProtocol,
 )
 from ..user_profile.projections import profile_path_values_for_bucket
-from .iva_wallet_binding import M303_PRIOR_COMPENSATION_BINDING_ID, M303_PRIOR_COMPENSATION_CASILLA_ID
+from .iva_wallet_binding import M303_PRIOR_COMPENSATION_BINDING_ID
 from .iva_wallet_decision_authority import (
     decision_has_concrete_zero_authority,
     decision_is_first_period_zero,
@@ -314,7 +317,7 @@ def _supplied_prior_compensation_amounts(
 ) -> tuple[Decimal, ...]:
     """Return supplied Modelo 303 prior-compensation amounts from all input channels."""
     binding_id = M303_PRIOR_COMPENSATION_BINDING_ID
-    casilla_id = M303_PRIOR_COMPENSATION_CASILLA_ID
+    casilla_id = M303_COMPENSATION_PENDING_PRIOR_CASILLA
     values = (
         dict(binding_values or {}).get(binding_id),
         dict(backend_binding_values or {}).get(binding_id),
@@ -463,7 +466,7 @@ def _persisted_decision_matching_revision(
             translated_message="application.modelo.errors.iva_wallet_revision_amount_missing",
             evidence_values={
                 "binding_id": M303_PRIOR_COMPENSATION_BINDING_ID,
-                "casilla_id": M303_PRIOR_COMPENSATION_CASILLA_ID,
+                "casilla_id": M303_COMPENSATION_PENDING_PRIOR_CASILLA,
                 "revision_amount_present": False,
             },
             context={

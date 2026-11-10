@@ -18,7 +18,7 @@ from ...core.period import Period
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
-    M303_COMPENSATION_PENDING_PRIOR_CASILLA as M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
+    M303_COMPENSATION_PENDING_PRIOR_CASILLA,
 )
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
@@ -31,9 +31,6 @@ M303_PRIOR_COMPENSATION_ORIGIN_IDS: Final[frozenset[str]] = frozenset(
         "modelo-303-rel-self-compensacion-anteriores",
     },
 )
-
-
-M303_PRIOR_COMPENSATION_CASILLA_ID: Final[CasillaId] = M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA
 
 
 class _WalletBindingTarget(NamedTuple):
@@ -61,8 +58,8 @@ def _prior_compensation_inputs(
     return _PriorCompensationInputs(
         caller_binding_value=caller_binding_values.get(M303_PRIOR_COMPENSATION_BINDING_ID),
         backend_binding_value=backend_binding_values.get(M303_PRIOR_COMPENSATION_BINDING_ID),
-        caller_casilla_value=dict(casilla_inputs or {}).get(M303_PRIOR_COMPENSATION_CASILLA_ID),
-        backend_casilla_value=dict(backend_casilla_inputs or {}).get(M303_PRIOR_COMPENSATION_CASILLA_ID),
+        caller_casilla_value=dict(casilla_inputs or {}).get(M303_COMPENSATION_PENDING_PRIOR_CASILLA),
+        backend_casilla_value=dict(backend_casilla_inputs or {}).get(M303_COMPENSATION_PENDING_PRIOR_CASILLA),
     )
 
 
@@ -76,7 +73,7 @@ def _require_decision_for_supplied_inputs(inputs: _PriorCompensationInputs, *, c
         translated_message="application.modelo.errors.iva_wallet_not_seeded",
         evidence_values={
             "binding_id": M303_PRIOR_COMPENSATION_BINDING_ID,
-            "casilla_id": M303_PRIOR_COMPENSATION_CASILLA_ID,
+            "casilla_id": M303_COMPENSATION_PENDING_PRIOR_CASILLA,
             "supplied_value_count": len(supplied_values),
         },
         carry_period=carry_period,
@@ -173,7 +170,7 @@ def _require_inputs_match_decision(
             reason_code="caller_casilla_conflict",
             translated_message="application.modelo.errors.iva_wallet_caller_casilla_conflict",
             evidence_values={
-                "casilla_id": M303_PRIOR_COMPENSATION_CASILLA_ID,
+                "casilla_id": M303_COMPENSATION_PENDING_PRIOR_CASILLA,
                 "decision_amount": selected,
                 "supplied_amount": Decimal(inputs.caller_casilla_value),
             },
@@ -184,7 +181,7 @@ def _require_inputs_match_decision(
             reason_code="backend_casilla_conflict",
             translated_message="application.modelo.errors.iva_wallet_backend_casilla_conflict",
             evidence_values={
-                "casilla_id": M303_PRIOR_COMPENSATION_CASILLA_ID,
+                "casilla_id": M303_COMPENSATION_PENDING_PRIOR_CASILLA,
                 "decision_amount": selected,
                 "supplied_amount": Decimal(inputs.backend_casilla_value),
             },
