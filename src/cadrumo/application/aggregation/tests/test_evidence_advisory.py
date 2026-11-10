@@ -214,7 +214,13 @@ def test_advisory_silent_on_exempt_iva_category() -> None:
 
 def test_advisory_silent_on_personal_non_business_row() -> None:
     """A PERSONAL OUTGOING row with no evidence does not fire."""
-    tx = _tx("personal-expense", business_classification=BusinessClassification.PERSONAL)
+    tx = _tx(
+        "personal-expense",
+        business_classification=BusinessClassification.PERSONAL,
+        taxable_base=None,
+        iva_rate=None,
+        iva_amount=None,
+    )
     assert _observations([tx]) == ()
 
 
@@ -337,7 +343,13 @@ def test_advisory_fires_once_per_significant_row_in_a_mixed_batch() -> None:
         _tx("sig-income", direction=TransactionDirection.INCOMING),
         _tx("has-attachment", attachment_ids=("b" * 64,)),
         _tx("has-invoice", purchase_invoice_evidence_id="pinv-batch"),
-        _tx("personal", business_classification=BusinessClassification.PERSONAL),
+        _tx(
+            "personal",
+            business_classification=BusinessClassification.PERSONAL,
+            taxable_base=None,
+            iva_rate=None,
+            iva_amount=None,
+        ),
         _tx("exempt", iva_category=IvaCategory("domestic_exempt")),
     ]
     diagnostics = _observations(rows)

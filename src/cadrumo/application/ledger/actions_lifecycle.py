@@ -52,6 +52,7 @@ from .actions_common import (
     save_transaction_catalogue_invoices_and_events,
     transaction_catalogue_object_id,
     transaction_modelo_source_ids,
+    withheld_figures_event_payload,
 )
 from .models import (
     LedgerCatalogueResetReport,
@@ -286,6 +287,7 @@ def mark_transaction_reviewed_excluded(
             "previous_business_pct": format_decimal(current.business_pct, none_value=""),
             "business_classification": BusinessClassification.REVIEWED_EXCLUDED.value,
             "reason": reason.strip(),
+            **withheld_figures_event_payload(current),
         },
     )
     replacement = with_classification_origin(
@@ -858,6 +860,7 @@ def _transition_manual_transaction_lifecycle(
             "previous_lifecycle_state": current.lifecycle_state.value,
             "lifecycle_state": state.value,
             "reason": reason.strip(),
+            **withheld_figures_event_payload(current),
         },
     )
     lifecycle_entry = TransactionLifecycleLineageEntry(
