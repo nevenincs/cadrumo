@@ -37,6 +37,12 @@ import {
   type LandingCheck,
 } from "../WritePause";
 import { extractionLanding, recordLanding } from "./documentLanding";
+import { chordAria, chordMatches } from "@/shared/chords";
+import type { EvidenceReviewRow } from "../../../shell/ledgerDocumentOperations";
+import { ContextMenu, type MenuAnchor } from "../../ContextMenu";
+import { OVERVIEW_CHORD, OVERVIEW_CHORDS } from "../ledgerChords";
+import { EntryOverview } from "../overview/EntryOverview";
+import { documentOverview } from "../overview/documentOverviewModel";
 import {
   entrySpec,
   EVIDENCE_SHAPES,
@@ -423,6 +429,7 @@ export function EvidenceRecords({
   rows,
   inReview,
   pending,
+  readings = null,
   selected,
   onSelect,
   onWritten,
@@ -432,6 +439,9 @@ export function EvidenceRecords({
   port: LedgerPort;
   locale: string;
   records: EvidenceRecord[];
+  /** The readings waiting for review, for a record's overview; null where
+   * the queue could not be read. */
+  readings?: readonly EvidenceReviewRow[] | null;
   rows: LedgerRow[] | null;
   inReview: ReadonlySet<string>;
   /** When each reading waiting for review was drafted, by reference. */
@@ -453,6 +463,34 @@ export function EvidenceRecords({
   const unsettledKeys = useRef(new Map<string, string>());
   const record =
     records.find((found) => found.evidence_id === selected) ?? null;
+  // A record's overview, asked from its item in the list, which takes the
+  // focus back as it closes.
+  const list = useRef<HTMLUListElement>(null);
+  const [overview, setOverview] = useState<string | null>(null);
+  const [menu, setMenu] = useState<{ id: string; at: MenuAnchor } | null>(null);
+  const overviewRecord = overview
+    ? records.find((found) => found.evidence_id === overview)
+    : undefined;
+  const itemOf = (id: string) =>
+    list.current?.querySelector<HTMLElement>(
+      `[data-evidence="${CSS.escape(id)}"]`,
+    ) ?? null;
+  const attachmentOf = (id: string) => {
+    if (rows === null) return { kind: "unknown" } as const;
+    const row = rows.find(
+      (found) => found.transaction.purchase_invoice_evidence_id === id,
+    );
+    return row
+      ? ({ kind: "attached", row } as const)
+      : ({ kind: "not_found" } as const);
+  };
+  const readingOf = (id: string) => {
+    if (readings === null) return { kind: "unknown" } as const;
+    const row = readings.find((found) => found.evidence_reference === id);
+    return row
+      ? ({ kind: "waiting", row } as const)
+      : ({ kind: "none" } as const);
+  };
 
   async function add() {
     setAdding(true);
@@ -536,6 +574,7 @@ export function EvidenceRecords({
           </p>
         ) : (
           <ul
+            ref={list}
             className="ledger-record-list min-h-0 flex-1 overflow-y-auto"
             aria-label={t("desktop.ledger.documents.records")}
           >
@@ -545,7 +584,32 @@ export function EvidenceRecords({
                   type="button"
                   className="ledger-record-item grid w-full cursor-pointer gap-0.5 border-b border-border px-3 py-2 text-left hover-wash aria-[current=true]:bg-selected"
                   aria-current={found.evidence_id === selected || undefined}
+                  aria-keyshortcuts={chordAria(OVERVIEW_CHORD)}
+                  data-evidence={found.evidence_id}
                   onClick={() => onSelect(found.evidence_id)}
+                  onKeyDown={(event) => {
+                    if (OVERVIEW_CHORDS.some((c) => chordMatches(c, event))) {
+                      event.preventDefault();
+                      setOverview(found.evidence_id);
+                    } else if (
+                      (event.key === "ContextMenu" && !event.shiftKey) ||
+                      (event.key === "F10" && event.shiftKey)
+                    ) {
+                      event.preventDefault();
+                      const box = event.currentTarget.getBoundingClientRect();
+                      setMenu({
+                        id: found.evidence_id,
+                        at: { x: box.left, y: box.top, height: box.height },
+                      });
+                    }
+                  }}
+                  onContextMenu={(event) => {
+                    event.preventDefault();
+                    setMenu({
+                      id: found.evidence_id,
+                      at: { x: event.clientX, y: event.clientY },
+                    });
+                  }}
                 >
                   <span className="flex min-w-0 items-center gap-2">
                     <Icon
@@ -608,6 +672,53 @@ export function EvidenceRecords({
           />
         )}
       </div>
+      {menu && (
+        <ContextMenu
+          label={t("desktop.ledger.menu")}
+          items={[
+            {
+              id: "overview",
+              label: t("desktop.ledger.overview.show"),
+              icon: "eye",
+              chord: OVERVIEW_CHORD,
+              enabled: true,
+            },
+            {
+              id: "open",
+              label: t("desktop.ledger.overview.open_record"),
+              icon: "edit",
+              enabled: true,
+            },
+          ]}
+          at={menu.at}
+          choose={(id) => {
+            const chosen = menu.id;
+            setMenu(null);
+            if (id === "open") onSelect(chosen);
+            else if (id === "overview")
+              // Opened once the menu has handed the focus back to the list.
+              window.requestAnimationFrame(() => setOverview(chosen));
+          }}
+        />
+      )}
+      {overview && overviewRecord && (
+        <EntryOverview
+          model={documentOverview({
+            t,
+            locale,
+            record: overviewRecord,
+            reading: readingOf(overview),
+            attachment: attachmentOf(overview),
+          })}
+          action={{
+            label: t("desktop.ledger.overview.open_record"),
+            icon: "edit",
+            run: () => onSelect(overview),
+          }}
+          onClose={() => setOverview(null)}
+          onClosed={() => itemOf(overview)?.focus()}
+        />
+      )}
     </div>
   );
 }

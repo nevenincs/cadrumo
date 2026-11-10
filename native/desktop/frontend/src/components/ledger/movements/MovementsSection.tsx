@@ -117,6 +117,12 @@ import { RowRevealNotice, useRowReveal, type LinkedRow } from "../RowReveal";
 import { movementHiding, withoutHiding } from "./movementReveal";
 import type { MovementsView } from "./useMovementsView";
 import type { ImportedBatches } from "../../../shell/ledgerImports";
+import { chordMatches } from "@/shared/chords";
+import { actionRows } from "../../../shell/ledgerStage";
+import type { InspectorSection } from "../inspector/inspectorModel";
+import { typing } from "../overview/overviewKeys";
+import { OVERVIEW_CHORDS } from "../ledgerChords";
+import { MovementOverview } from "../overview/MovementOverview";
 
 const idOf = (row: LedgerRow) => row.transaction.transaction_id;
 
@@ -189,7 +195,7 @@ export function MovementsSection({
   onPeriod: (period: LedgerPeriod | null) => void;
   /** Opens the movement inspector on one of its sections, where the page
    * has one. */
-  onOpenInspector?: (section: "classify") => void;
+  onOpenInspector?: (section: InspectorSection | null) => void;
   /** Hands the inspector what the section draws and its commands. */
   onInspector?: Dispatch<SetStateAction<SectionInspectorContext | null>>;
   /** Hands the page's palette what the section offers. */
@@ -734,6 +740,12 @@ export function MovementsSection({
       stepIssue(event.shiftKey ? -1 : 1);
       return;
     }
+    if (OVERVIEW_CHORDS.some((chord) => chordMatches(chord, event))) {
+      const at = grid.current?.activeCell();
+      if (!at?.key || !byId.has(at.key) || typing(event.target)) return;
+      event.preventDefault();
+      setOverview({ key: at.key, column: at.column });
+    }
   };
 
   useClassifyChords((kind) => classifySelection(kind));
@@ -834,6 +846,13 @@ export function MovementsSection({
     items: MenuEntry[];
     run: (id: string) => void;
   } | null>(null);
+  // The overview of one stored movement, and the cell it was asked from,
+  // which takes the focus back as it closes.
+  const [overview, setOverview] = useState<{
+    key: string;
+    column: string | null;
+  } | null>(null);
+  const overviewRow = overview ? byId.get(overview.key) : undefined;
   const openMenu = (key: string, column: string | null, at: MenuAnchor) => {
     const group = groups?.find((entry) => entry.key === key);
     const ids = group ? group.rows.map(idOf) : null;
@@ -850,6 +869,7 @@ export function MovementsSection({
         cellStaged: () => column !== null && edit.cellStaged(key, column),
         duplicate: duplicates.has(key),
         makeRule: !!onMakeRule,
+        overview: byId.has(key),
         classifyEnabled: (kind) =>
           classifyAvailability(
             kind,
@@ -861,6 +881,9 @@ export function MovementsSection({
         if (chosen === "revert.cell" && column)
           edit.revertCell(key, column as ColumnId);
         else if (chosen === "revert.movement") edit.revertMovement(key);
+        else if (chosen === "overview")
+          // Opened once the menu has handed the focus back to the grid.
+          window.requestAnimationFrame(() => setOverview({ key, column }));
         else if (chosen === "fill" && column)
           edit.onFill({
             rows: drawnRows.filter((id) => id === key || selected.has(id)),
@@ -1174,6 +1197,42 @@ export function MovementsSection({
             setMenu(null);
             if (id) run(id);
           }}
+        />
+      )}
+      {overview && overviewRow && (
+        <MovementOverview
+          port={port}
+          row={overviewRow}
+          generation={periodWindow.generation}
+          issues={sets.checked ? (sets.issues.get(overview.key) ?? []) : null}
+          duplicate={duplicates.has(overview.key)}
+          accounts={accounts}
+          unsaved={
+            Object.keys(stage.content.rows[overview.key] ?? {}).length +
+            stage.content.actions.filter((action) =>
+              actionRows(action).includes(overview.key),
+            ).length
+          }
+          locale={locale}
+          action={
+            onOpenInspector
+              ? {
+                  label: t("desktop.ledger.overview.open_movement"),
+                  icon: "edit",
+                  run: () => {
+                    setSelection(new Set([overview.key]));
+                    onOpenInspector(null);
+                  },
+                }
+              : null
+          }
+          onClose={() => setOverview(null)}
+          onClosed={() =>
+            grid.current?.focusCell(
+              overview.key,
+              overview.column ?? "description",
+            )
+          }
         />
       )}
       {acting && (
