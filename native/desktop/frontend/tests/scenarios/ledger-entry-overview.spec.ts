@@ -45,8 +45,12 @@ const menuItem = (target: Page, key: string) =>
 
 // ---- Movements ---------------------------------------------------------------
 
+// The grid is found by its role attribute, not by role query: the open
+// overview is a modal dialog, which hides the page behind it from the
+// accessibility tree, and a role query skips what it hides. The facts are
+// read from the cells while the overview is open.
 const movementGrid = (target: Page) =>
-  target.locator(".ledger-page .ledger-movements").getByRole("grid");
+  target.locator(".ledger-page .ledger-movements [role=grid]");
 const movementRow = (target: Page) =>
   movementGrid(target)
     .locator("[data-kind=data]")
@@ -135,10 +139,10 @@ async function openInvoices(target: Page) {
     target.locator(".ledger-invoices").getByRole("grid"),
   ).toBeVisible();
 }
+// By role attribute for the reason the movement grid is (see above).
 const invoiceRow = (target: Page) =>
   target
-    .locator(".ledger-invoices")
-    .getByRole("grid")
+    .locator(".ledger-invoices [role=grid]")
     .locator("[data-kind=data]")
     .first();
 
