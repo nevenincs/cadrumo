@@ -871,8 +871,9 @@ export type LedgerPreflightResult = {
   ready: boolean;
 };
 
-export type LedgerProvider =
-  "auto" | "csv" | "ofx" | "qfx" | "xlsx" | "xls" | "pdf";
+/** A statement format as `ledger.entry-options` serves it; the ledger refuses
+ * one it does not parse. */
+export type LedgerProvider = string;
 
 /** A bank statement import. Preview with `dry_run`, then apply naming the
  * previewed files' digests in `expected_source_sha256`: a file that changed
@@ -959,7 +960,8 @@ export type LedgerImportResult = {
   source_digests: { file_index: number; sha256: string }[];
 };
 
-export type LedgerExportFormat = "csv" | "jsonl" | "xlsx";
+/** An export serialisation as `ledger.entry-options` serves it. */
+export type LedgerExportFormat = string;
 
 /** An export replaces the file the person chose in the save dialog, for
  * the same format. */
