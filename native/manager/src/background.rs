@@ -1077,6 +1077,12 @@ mod tests {
             let folder = self.package().join(crate::contract::LLAMA_SERVER);
             std::fs::create_dir_all(&folder).unwrap();
             let program = folder.join(EXECUTABLE);
+            // On Windows a script cannot stand in for a program: creating a process from a
+            // file that is no image is refused as a system error. This test program is one,
+            // and it ends at once on the server's arguments, which it does not know.
+            #[cfg(windows)]
+            std::fs::copy(std::env::current_exe().unwrap(), &program).unwrap();
+            #[cfg(not(windows))]
             std::fs::write(&program, b"#!/bin/sh\nexit 3\n").unwrap();
             #[cfg(unix)]
             {

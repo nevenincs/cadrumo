@@ -396,6 +396,8 @@ impl Containment for GroupContainment {
 mod tests {
     use super::*;
     use crate::local_engine::Recorded;
+    #[cfg(windows)]
+    use cadrumo_application::provisioning::local_ai::StartFailureKind;
     use cadrumo_application::provisioning::local_ai::program::{
         START_BUDGET, latest_start_failure,
     };
@@ -471,11 +473,17 @@ mod tests {
     const LLAMA_SERVER_EXECUTABLE: &str = "llama-server";
 
     /// A llama-server in the package that cannot get as far as listening: on Windows a
-    /// file no process can be created from, elsewhere a script that exits at once.
+    /// copy of this test program, which ends at once on the arguments it does not know,
+    /// elsewhere a script that exits at once.
     fn package_with_failing_llama_server(package: &Path) {
         let folder = package.join(LLAMA_SERVER);
         fs::create_dir_all(&folder).unwrap();
         let program = folder.join(LLAMA_SERVER_EXECUTABLE);
+        // A script is no program image on Windows, and creating a process from one is
+        // refused as a system error instead of failing like a server that cannot listen.
+        #[cfg(windows)]
+        fs::copy(std::env::current_exe().unwrap(), &program).unwrap();
+        #[cfg(not(windows))]
         fs::write(&program, b"#!/bin/sh\nexit 3\n").unwrap();
         #[cfg(unix)]
         {
@@ -584,6 +592,36 @@ mod tests {
         );
         assert!(!ollama_folder.join("server.json").exists());
         assert!(!ollama_folder.join("server-start-failure.json").exists());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn a_program_file_that_is_no_image_is_recorded_as_damaged_and_never_hangs_the_start() {
+        let root = Scratch::new("damaged");
+        let package = root.path().join("package");
+        package_with_pins(&package);
+        let folder = package.join(LLAMA_SERVER);
+        fs::create_dir_all(&folder).unwrap();
+        fs::write(folder.join(LLAMA_SERVER_EXECUTABLE), b"#!/bin/sh\nexit 3\n").unwrap();
+        let state = root.path().join("state");
+        let llama_folder = state.join("components").join("llama-server");
+        let host = start_host(&package, &state, LocalEngine::LlamaCpp, Placement::Auto)
+            .expect("the package carries llama-server");
+        // A creation held by an error dialog never returns, so nothing would publish.
+        let tried = host
+            .wait_until(WAIT, |published| {
+                matches!(
+                    published.state,
+                    ServerState::Restarting { .. } | ServerState::Failed
+                )
+            })
+            .expect("the supervision publishes within its bound");
+        assert_ne!(tried.state, ServerState::Running);
+        drop(host);
+        assert_eq!(
+            latest_start_failure(&llama_folder),
+            Some(StartFailureKind::ProgramDamaged)
+        );
     }
 
     #[test]

@@ -1072,6 +1072,26 @@ fn a_wait_that_runs_out_reports_the_latest_failed_start_of_the_server() {
         "a program that could not be launched reads apart from a slow start"
     );
 
+    // The program itself was refused by the system: the setup fails as a damaged program,
+    // keeping the cause, where a program that only could not be launched stays not running.
+    fs::write(
+        world.programs().join(START_FAILURE_RECORD),
+        br#"{"schema":1,"reason":"server_program_damaged"}"#,
+    )
+    .unwrap();
+    let (category, kept) = no_server_within(program.latest_start_failure())
+        .failure()
+        .expect("a wait that runs out is a failure");
+    assert_eq!(category, FailureCategory::DamagedDownload);
+    assert_eq!(
+        kept.and_then(|cause| cause.latest_start()),
+        Some(StartFailureKind::ProgramDamaged)
+    );
+    let launch = no_server_within(Some(StartFailureKind::Launch))
+        .failure()
+        .unwrap();
+    assert_eq!(launch.0, FailureCategory::ProgramNotRunning);
+
     // A record this build cannot read names no start.
     fs::write(
         world.programs().join(START_FAILURE_RECORD),

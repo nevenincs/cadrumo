@@ -669,10 +669,28 @@ impl Drop for Server {
 
 /// The failure of one step of launching the server, which the operating system refused.
 fn launch_failure(step: LaunchStep, error: &io::Error) -> LocalAiError {
+    if step == LaunchStep::Create && refused_as_program(error) {
+        return LocalAiError::NotRunning(NotRunningCause::Start(
+            ServerStartFailure::ProgramDamaged,
+        ));
+    }
     LocalAiError::NotRunning(NotRunningCause::Start(ServerStartFailure::Launch {
         step,
         kind: error.kind(),
     }))
+}
+
+/// Whether creating the process failed because the file is no valid program image for
+/// this computer: Windows' `ERROR_BAD_EXE_FORMAT` (193) or
+/// `ERROR_EXE_MACHINE_TYPE_MISMATCH` (216). Both engines' programs read the same.
+fn refused_as_program(error: &io::Error) -> bool {
+    const ERROR_BAD_EXE_FORMAT: i32 = 193;
+    const ERROR_EXE_MACHINE_TYPE_MISMATCH: i32 = 216;
+    cfg!(windows)
+        && matches!(
+            error.raw_os_error(),
+            Some(ERROR_BAD_EXE_FORMAT | ERROR_EXE_MACHINE_TYPE_MISMATCH)
+        )
 }
 
 /// The line `engine`'s program writes on standard error once it accepts connections.
@@ -843,7 +861,9 @@ impl Program {
         }
         match self.running_server() {
             Some(_) => Observation::Present,
-            None => Observation::Failed(FailureCategory::ProgramNotRunning),
+            None => Observation::Failed(StartFailureKind::category_after(
+                self.latest_start_failure(),
+            )),
         }
     }
 

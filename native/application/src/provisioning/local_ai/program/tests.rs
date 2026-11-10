@@ -657,6 +657,107 @@ fn a_server_the_system_cannot_create_says_which_step_failed_and_why() {
     assert_eq!(error.category(), FailureCategory::ProgramNotRunning);
 }
 
+#[cfg(windows)]
+#[test]
+fn a_creation_the_system_refuses_as_no_program_image_reads_as_a_damaged_program() {
+    // ERROR_BAD_EXE_FORMAT and ERROR_EXE_MACHINE_TYPE_MISMATCH.
+    for code in [193, 216] {
+        let error = launch_failure(LaunchStep::Create, &io::Error::from_raw_os_error(code));
+        assert!(
+            matches!(
+                error,
+                LocalAiError::NotRunning(NotRunningCause::Start(
+                    ServerStartFailure::ProgramDamaged
+                ))
+            ),
+            "{code}: {error}"
+        );
+        assert_eq!(error.category(), FailureCategory::DamagedDownload);
+    }
+    // Any other refusal, and the same code from another step, keeps its own account.
+    let denied = launch_failure(LaunchStep::Create, &io::Error::from_raw_os_error(5));
+    assert_eq!(denied.category(), FailureCategory::ProgramNotRunning);
+    let contained = launch_failure(LaunchStep::Contain, &io::Error::from_raw_os_error(216));
+    assert!(matches!(
+        contained,
+        LocalAiError::NotRunning(NotRunningCause::Start(ServerStartFailure::Launch {
+            step: LaunchStep::Contain,
+            ..
+        }))
+    ));
+}
+
+#[cfg(all(windows, feature = "platform"))]
+#[test]
+fn a_program_file_that_is_no_image_fails_the_start_as_damaged_and_never_hangs() {
+    use std::{sync::mpsc, time::Duration};
+    // Far above a refusal's milliseconds: past it, an error dialog is waiting.
+    const BOUND: Duration = Duration::from_secs(60);
+    let (sender, receiver) = mpsc::channel();
+    std::thread::spawn(move || {
+        let directory = tempfile::tempdir().unwrap();
+        let locations = Locations::under(directory.path());
+        let (program, _) = installed(&locations, "9.8.7");
+        let image = directory.path().join("damaged-server.exe");
+        fs::write(
+            &image,
+            b"#!/bin/sh
+exit 3
+",
+        )
+        .unwrap();
+        let error = spawn_through(&program, directory.path(), image, &Uncontained);
+        let damaged = matches!(
+            error,
+            LocalAiError::NotRunning(NotRunningCause::Start(ServerStartFailure::ProgramDamaged))
+        );
+        let _ = sender.send((damaged, error.category()));
+    });
+    let (damaged, category) = receiver
+        .recv_timeout(BOUND)
+        .expect("the start returned: an error dialog is not waiting");
+    assert!(damaged);
+    assert_eq!(category, FailureCategory::DamagedDownload);
+}
+
+#[test]
+fn a_damaged_program_is_recorded_and_reads_as_damaged_until_a_start_succeeds() {
+    let directory = tempfile::tempdir().unwrap();
+    let programs = directory.path();
+    record_start_failure(programs, &ServerStartFailure::ProgramDamaged);
+    let record: serde_json::Value =
+        serde_json::from_slice(&fs::read(programs.join(START_FAILURE_RECORD)).unwrap()).unwrap();
+    assert_eq!(
+        record,
+        serde_json::json!({"schema": 1, "reason": "server_program_damaged"})
+    );
+    let latest = latest_start_failure(programs);
+    assert_eq!(latest, Some(StartFailureKind::ProgramDamaged));
+    // A wait that runs out after such a start, and a quick look with no server running,
+    // read the program as damaged; any other kind, or none, reads as not running.
+    let waited = NotRunningCause::NoServerWithin {
+        budget: START_BUDGET,
+        latest_start: latest,
+    };
+    assert_eq!(waited.category(), FailureCategory::DamagedDownload);
+    assert_eq!(
+        StartFailureKind::category_after(latest),
+        FailureCategory::DamagedDownload
+    );
+    for other in [
+        None,
+        Some(StartFailureKind::Launch),
+        Some(StartFailureKind::Closed),
+    ] {
+        assert_eq!(
+            StartFailureKind::category_after(other),
+            FailureCategory::ProgramNotRunning
+        );
+    }
+    clear_start_failure(programs);
+    assert_eq!(latest_start_failure(programs), None);
+}
+
 struct Refusing;
 
 impl Containment for Refusing {

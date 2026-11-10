@@ -198,7 +198,8 @@ impl Outcome {
 /// What one command found and did. `rows` is every item's state after the command;
 /// `plan` is the plan a setup reports; `item` and `failure` name the item and the
 /// category a refusal or failure is for, `failure_cause` what ran out or broke when
-/// that category is `program_not_running`, and `download_failure` the facts of a
+/// the local AI server did not come up or answer (`program_not_running`, or
+/// `damaged_download` for a program the system refused), and `download_failure` the facts of a
 /// download that ended the item, both for diagnostics only; `items` are the items a
 /// removal removed, or the items another engine is changing.
 #[derive(Clone, Debug)]
@@ -352,7 +353,8 @@ struct Survey {
 enum Stop {
     Busy,
     Failed(FailureCategory),
-    /// Failed as `program_not_running`, for the cause it keeps.
+    /// Failed as the cause's category (`program_not_running`, or `damaged_download` for a
+    /// program the operating system refused), for the cause it keeps.
     NotRunning(NotRunningCause),
     /// A download failed, as its category, for the facts it keeps.
     Download(TransferFailure),
@@ -364,7 +366,7 @@ impl Stop {
         match self {
             Self::Busy => None,
             Self::Failed(category) => Some((category, None)),
-            Self::NotRunning(cause) => Some((FailureCategory::ProgramNotRunning, Some(cause))),
+            Self::NotRunning(cause) => Some((cause.category(), Some(cause))),
             Self::Download(failure) => Some((failure.category, None)),
         }
     }
@@ -1292,7 +1294,9 @@ impl Engine {
                 let program_observation = if running {
                     present
                 } else {
-                    Observation::Failed(FailureCategory::ProgramNotRunning)
+                    Observation::Failed(StartFailureKind::category_after(
+                        router.latest_start_failure(),
+                    ))
                 };
                 (
                     program_observation,
@@ -2078,7 +2082,7 @@ fn finish(writer: ItemWriter<'_>, outcome: Result<(), Stop>) -> Result<(), Stop>
             Err(Stop::Failed(category))
         }
         Err(Stop::NotRunning(cause)) => {
-            writer.failed(FailureCategory::ProgramNotRunning)?;
+            writer.failed(cause.category())?;
             Err(Stop::NotRunning(cause))
         }
         Err(Stop::Download(failure)) => {
