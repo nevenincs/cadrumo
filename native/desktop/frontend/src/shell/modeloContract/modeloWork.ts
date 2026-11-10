@@ -12,6 +12,8 @@ import type {
   AeatConfirmationState,
   BindingSourceKind,
   BindingValueOutcome,
+  BucketEventId,
+  BucketEventProjection,
   CalculationNoteFact,
   CalculationRevisionId,
   CalculationRevisionState,
@@ -30,14 +32,11 @@ import type {
   ModeloRegistrySnapshotCoordinates,
   ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
   OutputLanguage,
-  PaymentElection,
-  PriorDomiciliationElection,
   ProjectUnresolvedBindingProjection,
   ProjectUnresolvedCasillaProjection,
   PublicDecimal,
   PublicNamedScalar,
   PublicPeriod,
-  RefundElection,
   RevisionId,
   SourceDisagreementFact,
   SourceDisagreementRole,
@@ -294,6 +293,31 @@ export type CreditResolutionState = "active" | "revoked";
  */
 export type DeadlineHolidayCoverage =
   "national_only" | "not_shifted" | "calendar_unavailable";
+
+/**
+ * Sanitized lifecycle meanings accepted by the workspace projection.
+ *
+ * `VERIFICATION_REFUSED` exists because a refusal has nowhere else honest to
+ * go. Without it a surface reading the kind alone would either drop the event,
+ * which turns a refusal into an absence, or fold it into `VERIFIED`, which
+ * reports a refused verification as a passed one.
+ */
+export type DeclarationsLifecycleKind =
+  | "created"
+  | "renamed"
+  | "calculated"
+  | "edited"
+  | "verified"
+  | "verification_refused"
+  | "filed"
+  | "superseded"
+  | "amended"
+  | "discarded"
+  | "external_evidence_imported"
+  | "exported"
+  | "reconciled"
+  | "observation_overridden"
+  | "observation_override_cleared";
 
 /**
  * One typed evidence identity carried by immutable filing facts.
@@ -873,58 +897,6 @@ export type ModeloWorkDiscardRequest = {
 };
 
 /**
- * The exact verified revision an operator approved for local filing.
- *
- * Filing is a durable declaration of what the taxpayer intends to submit, so
- * approval names the revision AND the verification that justified it. A
- * revision re-verified since approval is a different fact, and filing it on
- * the strength of the older look would record an intent nobody formed.
- */
-export type ModeloWorkFileApproval = {
-  calculation_revision_id: string;
-  verification_report_id: string;
-};
-
-/**
- * The recorded local filing, as a caller outside this package may see it.
- *
- * `handoff_required` is always true and is part of the contract, not a
- * computed field: this operation records a filing locally and hands the
- * operator the artefacts to submit themselves. Nothing here reaches AEAT.
- *
- * `filing_timeliness` is the one fact `declaration_kind` cannot carry: an
- * `original` declaration says nothing about whether it was presented inside
- * its plazo voluntario, and a late one carries a Ley 58/2003 consequence whose
- * regime depends on the declaration. It repeats the posture the record kept at
- * filing time, normalised so a caller outside this package always reads a
- * value: a record that kept no posture reads `unknown`. It is a calendar
- * posture, and assesses nothing.
- */
-export type ModeloWorkFilePublicResultV2 = {
-  result_version: 2;
-  record: ModeloFilingRecordSnapshot;
-  advisories: ModeloLifecycleAdvisories;
-  published: boolean;
-  filing_timeliness: FilingTimeliness;
-  filing_record_id: string;
-  work_unit_id: string;
-  calculation_revision_id: string;
-  handoff_required: true;
-};
-
-/**
- * The approved revision and the operator's declared election choices.
- */
-export type ModeloWorkFileRequest = {
-  approval: ModeloWorkFileApproval;
-  refund_election?: RefundElection;
-  payment_election?: PaymentElection;
-  prior_domiciliation_election?: PriorDomiciliationElection;
-  notes?: string | null;
-  actor: string;
-};
-
-/**
  * The selected canonical filing and its exact owning work unit.
  */
 export type ModeloWorkFilingRecordProjection = {
@@ -940,6 +912,53 @@ export type ModeloWorkFilingRecordProjection = {
 export type ModeloWorkFilingRecordRequest = {
   profile_id: string;
   filing_record_id: FilingRecordId;
+};
+
+/**
+ * One recorded event of a declaration, said in the language asked for.
+ *
+ * `kind` is the event's lifecycle meaning, or `other` for an event that has
+ * none; `detail` adds what the words alone do not say, when there is something
+ * to add.
+ */
+export type ModeloWorkHistoryEntryV1 = {
+  event_id: BucketEventId;
+  kind: DeclarationsLifecycleKind | "other";
+  words: string;
+  detail: string | null;
+  occurred_at: string;
+};
+
+/**
+ * Retain canonical event constraints within an encrypted profile result.
+ *
+ * `entries` are the same events said in the request's language, newest first,
+ * each with its lifecycle kind, words and any detail.
+ */
+export type ModeloWorkHistoryProjection = {
+  result_version: 1;
+  profile_id: string;
+  history: ModeloWorkHistorySnapshot;
+  entries: ModeloWorkHistoryEntryV1[];
+};
+
+/**
+ * Address one full work identity in the authenticated profile, and the
+ * language its history is said in.
+ */
+export type ModeloWorkHistoryRequest = {
+  profile_id: string;
+  work_unit_id: WorkUnitId;
+  output_language: OutputLanguage;
+};
+
+/**
+ * Closed transport fields that reconstruct the canonical history losslessly.
+ */
+export type ModeloWorkHistorySnapshot = {
+  bucket_id: string;
+  work_unit_id: WorkUnitId;
+  events: BucketEventProjection[];
 };
 
 /**
