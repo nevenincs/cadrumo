@@ -4821,6 +4821,7 @@ desktop:
   setup:
     action:
       check_again: Volver a comprobar
+      reinstall_engine_program: Reinstalar el programa
       resume: Reanudar
       set_up: Configurar
       try_again: Volver a intentarlo
@@ -4843,8 +4844,11 @@ desktop:
       cancelled: Has cancelado la configuración.
       damaged_download: La descarga estaba dañada y no se ha podido usar.
       disk_full: No hay suficiente espacio libre en el disco.
+      engine_package_damaged: El programa de IA local que viene con Cadrumo está dañado
+        o es para otro tipo de ordenador. Repara o reinstala Cadrumo para solucionarlo.
       engine_program_unusable: 'No se ha podido iniciar el programa de IA local: está
-        dañado o no funciona en este ordenador. Reparar la IA local lo reinstala.'
+        dañado o no funciona en este ordenador. Reinstalarlo lo vuelve a configurar
+        y conserva tus modelos.'
       host_unreachable: No se ha podido contactar con el servidor de descarga. Comprueba
         tu conexión a internet y vuelve a intentarlo.
       interrupted: La configuración se interrumpió antes de terminar.
