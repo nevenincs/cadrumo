@@ -58,6 +58,18 @@ async function typeInto(target: Page, cell: Locator, value: string) {
   await target.keyboard.press("Enter");
 }
 
+/** Picks a served option in a choice cell, which opens a searchable list
+ * rather than the text editor. */
+async function chooseIn(target: Page, cell: Locator, option: string) {
+  await cell.click();
+  await target.keyboard.press("Enter");
+  const list = target.locator(".ledger-cell-choice");
+  await expect(list).toBeVisible();
+  await target.keyboard.type(option);
+  await list.getByRole("option", { name: option, exact: true }).click();
+  await expect(list).toHaveCount(0);
+}
+
 async function openReview(target: Page) {
   await tray(target).locator(".ledger-tray-review").click();
   await expect(review(target)).toBeVisible();
@@ -199,7 +211,7 @@ test("naming the IRPF category clears the refusal and the row saves", async ({
   await typeInto(target, cellOf(row, "taxable_base"), "2000,00");
   await typeInto(target, cellOf(row, "iva_rate"), "21");
   await typeInto(target, cellOf(row, "iva_amount"), "420,00");
-  await typeInto(
+  await chooseIn(
     target,
     cellOf(row, "irpf_category"),
     label("desktop.ledger.irpf_category.actividad_economica"),
@@ -247,7 +259,10 @@ test("the live region says what the grid holds now, not what it held before the 
   await cellOf(row, "taxable_base").click();
   await target.keyboard.press("ArrowDown");
   await target.keyboard.press("ArrowUp");
-  const spoken = grid(target).locator("[aria-live=polite]");
+  // The grid speaks beside its role=grid element, which may hold only rows.
+  const spoken = page(target).locator(
+    "[data-slot=data-grid] > [aria-live=polite]",
+  );
   await expect(spoken).toContainText(label("desktop.ledger.edit.row_unsaved"));
 
   await openReview(target);
