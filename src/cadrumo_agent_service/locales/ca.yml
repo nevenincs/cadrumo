@@ -109,6 +109,11 @@ desktop:
     effort_medium: Mitjà
     effort_ultra: Ultra
     effort_xhigh: Molt alt
+    engine_door_local_ai_setup: Repara la IA local
+    engine_not_running: El motor d'IA local no s'està executant.
+    engine_reason_answer_unreadable: Ha respost, però no com s'esperava.
+    engine_reason_no_answer_in_time: No ha respost a temps.
+    engine_reason_not_reachable: No s'hi pot accedir des d'aquest ordinador.
     files_summary: 'Fitxers: {count} · {size}'
     hide: Amaga l'agent
     history: Historial
@@ -331,6 +336,7 @@ desktop:
     local_model_download: Baixa
     local_model_installed: Baixat
     local_model_licence: 'Llicència: {licence}'
+    local_model_licence_named: '{name} ({spdx})'
     local_model_licence_unknown: 'Llicència: no indicada'
     local_model_remove: Treu
     local_model_remove_failed: Cadrumo no ha pogut treure el model. Torna-ho a provar.

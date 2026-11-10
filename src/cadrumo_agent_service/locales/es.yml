@@ -110,6 +110,11 @@ desktop:
     effort_medium: Medio
     effort_ultra: Ultra
     effort_xhigh: Muy alto
+    engine_door_local_ai_setup: Reparar la IA local
+    engine_not_running: El motor de IA local no está en marcha.
+    engine_reason_answer_unreadable: Ha respondido, pero no como se esperaba.
+    engine_reason_no_answer_in_time: No ha respondido a tiempo.
+    engine_reason_not_reachable: No se puede acceder a él en este ordenador.
     files_summary: 'Archivos: {count} · {size}'
     hide: Ocultar el agente
     history: Historial
@@ -335,6 +340,7 @@ desktop:
     local_model_download: Descargar
     local_model_installed: Descargado
     local_model_licence: 'Licencia: {licence}'
+    local_model_licence_named: '{name} ({spdx})'
     local_model_licence_unknown: 'Licencia: no indicada'
     local_model_remove: Quitar
     local_model_remove_failed: Cadrumo no ha podido quitar el modelo. Vuelve a intentarlo.

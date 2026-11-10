@@ -46,9 +46,14 @@ import {
 } from "../setup/ProvisioningRow";
 import { refusalWords } from "../setup/setupWords";
 
-const licenceWords = (licence: AgentModelLicenceFacts) =>
+/** A licence's name, with its SPDX identifier where that adds to it. The
+ * pairing is one catalogue sentence, so no punctuation is composed here. */
+const licenceWords = (t: Translate, licence: AgentModelLicenceFacts) =>
   licence.spdx && licence.spdx !== licence.name
-    ? `${licence.name} (${licence.spdx})`
+    ? t("desktop.providers.local_model_licence_named", {
+        name: licence.name,
+        spdx: licence.spdx,
+      })
     : licence.name;
 
 /** Why a model was not removed from this computer, in words. */
@@ -67,7 +72,7 @@ function ModelFacts({ model, locale }: { model: LaneModel; locale: string }) {
       <li data-fact="licence">
         {model.licence
           ? t("desktop.providers.local_model_licence", {
-              licence: licenceWords(model.licence),
+              licence: licenceWords(t, model.licence),
             })
           : t("desktop.providers.local_model_licence_unknown")}
       </li>
