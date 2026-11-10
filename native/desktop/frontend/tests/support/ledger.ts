@@ -70,6 +70,7 @@ export function movement(
     review_status: status,
     group_label: group,
     own_account_id: account,
+    withholding: [],
   };
 }
 

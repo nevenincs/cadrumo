@@ -510,6 +510,7 @@ export function movementActionOperations(ledger: FixtureLedger, tools: Tools) {
           sealed: false,
           llm_rejected: false,
           idempotency_key: null,
+          withholding: [],
         },
       );
     });

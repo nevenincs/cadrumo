@@ -52,6 +52,7 @@ export const row = (movement: FixtureMovement): LedgerRow => ({
   review_status: reviewStatus(movement.transaction.business_classification),
   group_label: movement.group_label,
   own_account_id: movement.own_account_id,
+  withholding: movement.withholding.map((entry) => ({ ...entry })),
 });
 
 /** The days of a period, from the recording of what the backend serves; null

@@ -9,13 +9,17 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { LedgerRow } from "../../../shell/ledger";
+import type {
+  LedgerMovementWithholding,
+  LedgerRow,
+} from "../../../shell/ledger";
 import { useStrings } from "../../../shell/strings";
 import {
   directionLabel,
   lifecycleLabel,
   statusLabel,
   statusWord,
+  withholdingTitle,
   type StatusWord,
 } from "./movementWords";
 import { formatAmount } from "../../../shared/numbers";
@@ -248,6 +252,42 @@ export const TextCell = memo(function TextCell({
     <DataGridText className={quiet ? "text-muted-foreground" : undefined}>
       {text}
     </DataGridText>
+  );
+});
+
+/**
+ * The retención the invoices a movement pays leave on it, as served: the
+ * euro amount recognised on this payment, or, where the invoice is held back
+ * from the declarations, that it is, with the reason as the tooltip. A
+ * movement paying no such invoice draws nothing: its retención is absent.
+ */
+export const RetencionCell = memo(function RetencionCell({
+  entries,
+  locale,
+}: {
+  entries: readonly LedgerMovementWithholding[];
+  locale: string;
+}) {
+  const t = useStrings();
+  if (entries.length === 0) return null;
+  const held = entries.every((entry) => entry.held_back !== null);
+  return (
+    <span
+      data-retencion={held ? "held-back" : "practised"}
+      title={entries.map((entry) => withholdingTitle(t, entry)).join(" ")}
+      className={cn(
+        "min-w-0 truncate tabular-nums",
+        held && "text-muted-foreground",
+      )}
+    >
+      {entries
+        .map((entry) =>
+          entry.retencion !== null
+            ? formatAmount(locale, entry.retencion)
+            : t("desktop.ledger.retencion.held_back"),
+        )
+        .join(" · ")}
+    </span>
   );
 });
 

@@ -478,6 +478,7 @@ export function entryOperations(
       issue: null,
       sealed: false,
       llm_rejected: false,
+      withholding: [],
       idempotency_key: key,
     });
     return result(facts, true);
