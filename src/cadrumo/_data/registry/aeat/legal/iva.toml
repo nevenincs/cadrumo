@@ -961,6 +961,22 @@ applies_to = 2025-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/390_2025.xlsx"
 review_status = "pending_review"
 
+# AEAT titles this edition "390 - Ejercicio 2026 y siguientes" on its current
+# 300-399 index and moves "Ejercicio 2025" to the historical index, so the 2025
+# design's close at its own ejercicio is the authority's own boundary.
+[sources."aeat-dr-390-2026"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2026"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_390/files/20-390-ejercicio-2026-y-siguientes-544-kb-xlsx.xlsx"
+sha256 = "5ce047995347c2b5ad6e5d4e407f126eeb9bd214602ed7c99e9f85175176ec15"
+bytes = 556940
+retrieved_at = 2026-11-10
+applies_from = 2026-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_26/dr390e2026.xlsx"
+review_status = "pending_review"
+
 # Historical Modelo 390 designs, pre-2022, predating the split into the
 # current disjoint 2022/2023/2024/2025 revisions. Already acquired and
 # manifested (2026-05-03) but previously unregistered -- registration, not

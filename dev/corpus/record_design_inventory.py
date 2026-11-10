@@ -1147,7 +1147,13 @@ REQUIRED = (
         "DR_300_399/archivos_24/dr390e2024.xlsx",
         "h300",
     ),
-    RequiredArtifact("390", "390 - Ejercicio 2025", "DR_300_399/archivos_25/dr390e2025.xlsx", "300"),
+    RequiredArtifact("390", "390 - Ejercicio 2025", "DR_300_399/archivos_25/dr390e2025.xlsx", "h300"),
+    RequiredArtifact(
+        "390",
+        "390 - Ejercicio 2026 y siguientes (544 KB - xlsx )",
+        "DR_300_399/archivos_26/dr390e2026.xlsx",
+        "300",
+    ),
     RequiredArtifact(
         "390",
         "390 - Ejercicio 2015 (103 KB - pdf )",
