@@ -1697,6 +1697,16 @@ cli:
           del Modelo 303 del último periodo del año (código de periodo 12 o 4T), e
           imprime su identificador y SHA-256 para `work calculate`. Los demás periodos
           no lo preguntan.
+        attest_prior_carries_confirm: Todavía no se ha declarado nada. Ejecuta `aeat
+          app modelo work attest-prior-carries %{work_unit_id} --yes` para declararlo.
+        attest_prior_carries_help: Indica que no te queda ningún importe pendiente
+          de ejercicios anteriores en una declaración (las bases liquidables generales
+          negativas de los cuatro ejercicios anteriores en un Modelo 100), para cada
+          importe al que su formulario ofrece la declaración. Muestra la declaración
+          y la comprobación del cambio; con --yes registra cada importe como un 0
+          que has declarado, distinto de una cifra escrita.
+        attest_prior_carries_yes_help: Confirma la declaración y regístrala en la
+          autoliquidación
         autoconsumo_promotor_base_help: 'Base imponible del autoconsumo del promotor
           inmobiliario (Art. 9.1.c + Art. 79.4 LISIVA): coste de construcción o rehabilitación
           de inmuebles afectados al patrimonio de arrendamiento. El asistente aplica

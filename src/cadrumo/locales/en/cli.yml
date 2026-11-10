@@ -1578,6 +1578,15 @@ cli:
           declaration for the last period of the year (period code 12 or 4T), and
           print its identifier and SHA-256 for `work calculate`. Other periods do
           not ask it.
+        attest_prior_carries_confirm: Nothing was stated yet. Run `aeat app modelo
+          work attest-prior-carries %{work_unit_id} --yes` to state it.
+        attest_prior_carries_help: State that no amount from earlier years is still
+          pending on a declaration (the negative general taxable bases of the four
+          previous years in a Modelo 100), for every carry its form offers the statement
+          for. Shows the statement and the check of the change; with --yes it records
+          each carry as a 0 you stated, apart from a figure you typed.
+        attest_prior_carries_yes_help: Confirm the statement and record it on the
+          declaration
         autoconsumo_promotor_base_help: 'Tax base for the real-estate developer self-supply
           (Art. 9.1.c + Art. 79.4 LISIVA): construction or renovation cost of properties
           converted to the rental estate. The assistant automatically applies 21%

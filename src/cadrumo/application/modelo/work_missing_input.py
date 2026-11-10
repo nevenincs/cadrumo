@@ -176,6 +176,7 @@ def prior_carry_absence_unstated(
             "boxes": ",".join(box_numbers),
         },
         provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        action_argument_values={"work_unit_id": work_unit.work_unit_id},
     )
     return ModeloPriorCarryAbsenceUnstatedError(
         missing,

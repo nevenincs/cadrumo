@@ -2453,6 +2453,10 @@ application:
         a(z) %{revision_id} változatban: a nyomtatványdefiníciók olyan értékforrást
         deklarálnak, amelyet egyetlen számítási feloldó sem kezel. Adj hozzá egy feloldót,
         vagy jelöld halasztottként a számítás előtt.'
+      prior_carries_nothing_open: 'A %{filing_year}. évi Modelo %{modelo} bevallásban
+        nincs olyan korábbi évekből származó összeg, amelyről kijelenthetnéd, hogy
+        nincs függőben: mindegyiknek van már értéke vagy kijelentésed, vagy a bevallás
+        nem visz át ilyet. Semmi sem változott.'
       prior_carries_unstated:
         renta_negative_general_bases_pending: 'A %{filing_year}. évi Modelo %{modelo}
           nem számítható ki: nem ismert, hogy maradt-e korábbi adóévekből még ki nem

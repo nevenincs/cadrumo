@@ -2495,6 +2495,10 @@ application:
         a la versió %{revision_id}: les definicions del model declaren un origen de
         valor que cap resolutor de càlcul gestiona. Afegeix un resolutor o marca''l
         com a ajornat abans de calcular.'
+      prior_carries_nothing_open: 'El Modelo %{modelo} de %{filing_year} no té cap
+        import d''exercicis anteriors que puguis declarar com a no pendent: cadascun
+        ja té un valor o la teva declaració, o la declaració no n''arrossega cap.
+        No s''ha canviat res.'
       prior_carries_unstated:
         renta_negative_general_bases_pending: 'No es pot calcular el Modelo %{modelo}
           de %{filing_year}: no consta si queden bases liquidables generals negatives
