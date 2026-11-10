@@ -19,7 +19,14 @@ from ...core.type_guards import is_object_tuple
 from ...domain.calculations.registry.modelo_localization import modelo_localization_source, resolve_modelo_localization
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from .printed_boxes import printed_box_number
-from .work_form_models import ModeloFormField, ModeloFormText, ModeloFormTextDisclosure, ModeloWorkForm
+from .work_form_field_vocabulary import (
+    ModeloFormText,
+    ModeloFormTextDisclosure,
+)
+from .work_form_models import (
+    ModeloFormField,
+    ModeloWorkForm,
+)
 
 _SPANISH: Final[str] = OutputLanguage.ES.value
 

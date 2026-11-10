@@ -62,8 +62,8 @@ from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryPr
 from ..modelo.action_errors import WorkUnitNotFoundError
 from ..modelo.calculation_note_gate import calculation_screen_outdated
 from ..modelo.printed_boxes import printed_box_number
+from ..modelo.work_form_field_vocabulary import ModeloFormText
 from ..modelo.work_form_localization import localized_text, unnamed_casilla_label
-from ..modelo.work_form_models import ModeloFormText
 from ..modelo.work_review import ModeloWorkReview, ModeloWorkReviewCasilla, build_modelo_work_review
 from ..operations.public_scalar import PublicDecimal
 from .borrador_100 import Borrador100PrintedObservation, Borrador100Snapshot, Borrador100SnapshotReading

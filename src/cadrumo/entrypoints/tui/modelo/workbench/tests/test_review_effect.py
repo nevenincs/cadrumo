@@ -12,16 +12,16 @@ import pytest
 from textual.widgets import Static
 
 from ......application.modelo.source_policy import SourceFamily
-from ......application.modelo.work_form_models import (
+from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormCasillaAddressV1,
     ModeloFormEarlierFiling,
     ModeloFormEditability,
-    ModeloFormField,
     ModeloFormOrigin,
     ModeloFormText,
     ModeloFormTextDisclosure,
     ModeloFormValueSource,
 )
+from ......application.modelo.work_form_models import ModeloFormField
 from ......application.modelo.work_form_typing_effect import TYPING_EFFECTS
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage

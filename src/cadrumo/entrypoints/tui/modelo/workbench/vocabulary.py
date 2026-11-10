@@ -40,13 +40,13 @@ from typing import Final
 from rich.text import Text
 
 from .....application.modelo.source_policy import SourceFamily
-from .....application.modelo.work_form_models import (
+from .....application.modelo.work_form_field_vocabulary import (
     ASKS_FOR_A_VALUE,
     ORIGIN_STANDINGS,
-    ModeloFormField,
     ModeloFormOrigin,
     ModeloFormStanding,
 )
+from .....application.modelo.work_form_models import ModeloFormField
 from .....application.modelo.work_form_wording import origin_words, origin_words_key, set_by_form
 from .....core.external_constants import OutputLanguage
 

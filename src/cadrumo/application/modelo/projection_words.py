@@ -16,7 +16,7 @@ from ...core.aggregation import BindingSourceKind
 from ...core.i18n.render import tr
 from ...domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from .calculation_notes import note_fact_text
-from .projection import UNRESOLVED_OPERAND_REASON
+from .projection_unresolved import UNRESOLVED_OPERAND_REASON
 from .source_policy import source_policy
 
 if TYPE_CHECKING:

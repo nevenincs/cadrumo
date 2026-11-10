@@ -31,14 +31,16 @@ from textual.widget import Widget
 from textual.widgets import OptionList, Static
 
 from ......application.modelo.finding_message_text import FINDING_FACT_KINDS, NO_PERIODS_FACT, FindingFactKind
-from ......application.modelo.work_form_findings import ModeloFormAttention, ModeloFormIssue
-from ......application.modelo.work_form_models import (
+from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormCasillaAddressV1,
     ModeloFormOrigin,
+    address_key,
+)
+from ......application.modelo.work_form_findings import ModeloFormAttention, ModeloFormIssue
+from ......application.modelo.work_form_models import (
     ModeloFormRepeatingBlock,
     ModeloFormSection,
     ModeloWorkForm,
-    address_key,
 )
 from ......application.modelo.work_form_next_step import missing_count
 from ......core.config import override_settings

@@ -26,8 +26,9 @@ from .calculation_notes import (
     note_attention,
 )
 from .work_form_declaration_facts import ModeloFormCalculationNote, ModeloFormResolutionAnswer
+from .work_form_field_vocabulary import ModeloFormCasillaAddressV1
 from .work_form_findings import ModeloFormAttention, ModeloFormIssue
-from .work_form_models import ModeloFormCasillaAddressV1, ModeloFormField
+from .work_form_models import ModeloFormField
 from .work_review import ModeloWorkReview
 
 _FINDINGS_OF_THE_SAME_CAUSE: Final[Mapping[str, frozenset[str]]] = {

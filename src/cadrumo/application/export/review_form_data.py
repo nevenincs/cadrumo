@@ -25,7 +25,8 @@ from ...domain.calculations.registry.schema_form_layouts import (
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_rendering import CalculationRenderingSnapshot
 from ..modelo.work_form_context_values import form_context_value
-from ..modelo.work_form_models import ModeloFormRepeatingRow, ModeloFormScalar
+from ..modelo.work_form_field_vocabulary import ModeloFormScalar
+from ..modelo.work_form_models import ModeloFormRepeatingRow
 from ..modelo.work_form_records import saved_form_records
 
 

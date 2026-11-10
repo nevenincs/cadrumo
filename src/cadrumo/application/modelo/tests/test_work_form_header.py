@@ -28,6 +28,7 @@ from ..work_form_declaration_facts import (
     ModeloFormExport,
     ModeloFormResultDirection,
 )
+from ..work_form_field_vocabulary import ModeloFormOrigin
 from ..work_form_findings import ModeloFormAttention
 from ..work_form_header import (
     ModeloFormDeadlineTone,
@@ -40,7 +41,12 @@ from ..work_form_header import (
     form_header,
     result_view,
 )
-from ..work_form_models import ModeloFormField, ModeloFormOrigin, ModeloWorkForm, map_form_fields, revised_field
+from ..work_form_models import (
+    ModeloFormField,
+    ModeloWorkForm,
+    map_form_fields,
+    revised_field,
+)
 from ..work_form_next_step import (
     ModeloFormNextAction,
     blocking_count,

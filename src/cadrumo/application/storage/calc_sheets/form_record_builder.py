@@ -15,7 +15,8 @@ from ....domain.calculations.registry.schema_form_layouts import (
     FormRepeatingGroupBlock,
 )
 from ...modelo.value_presentation import VALUE_FALSE_LOCALE_KEY, VALUE_TRUE_LOCALE_KEY
-from ...modelo.work_form_models import ModeloFormRepeatingRow, ModeloFormScalar
+from ...modelo.work_form_field_vocabulary import ModeloFormScalar
+from ...modelo.work_form_models import ModeloFormRepeatingRow
 from .errors import CalcSheetsEngineError
 from .form_grid_builder import FormGridBuilder
 from .records import (

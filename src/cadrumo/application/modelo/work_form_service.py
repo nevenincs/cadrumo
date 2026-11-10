@@ -88,14 +88,16 @@ from .taxation_comparison import revision_compares_taxation
 from .work_addressing import law_selected_revision_for_work_target
 from .work_form import build_modelo_work_form
 from .work_form_declaration_facts import ModeloFormDeadline, ModeloFormExport
-from .work_form_models import (
+from .work_form_field_vocabulary import (
     ModeloFormAddressV1,
-    ModeloFormField,
     ModeloFormOrigin,
     ModeloFormScalar,
     ModeloFormText,
-    ModeloWorkForm,
     address_key,
+)
+from .work_form_models import (
+    ModeloFormField,
+    ModeloWorkForm,
 )
 from .work_review import build_modelo_work_review
 

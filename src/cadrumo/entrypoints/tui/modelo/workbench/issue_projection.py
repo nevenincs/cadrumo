@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from .....application.modelo.work_form_field_vocabulary import address_key
 from .....application.modelo.work_form_issue_lines import ModeloFormIssueLine, form_issue_lines
-from .....application.modelo.work_form_models import ModeloWorkForm, address_key
+from .....application.modelo.work_form_models import ModeloWorkForm
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language
 from .issue_scale import IssueLine, attention_level

@@ -29,7 +29,14 @@ from ....domain.calculations.registry.tests.modelo_100_registry_support import n
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ..calculation_required_inputs import calculation_required_inputs
-from ..work_form_models import ModeloFormOrigin, ModeloFormStanding, ModeloWorkForm, section_fields
+from ..work_form_field_vocabulary import (
+    ModeloFormOrigin,
+    ModeloFormStanding,
+)
+from ..work_form_models import (
+    ModeloWorkForm,
+    section_fields,
+)
 from .work_form_fixture import built_form, form_casilla, form_snapshot
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]

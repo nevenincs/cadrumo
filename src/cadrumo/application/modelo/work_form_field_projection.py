@@ -30,6 +30,16 @@ from .work_form_field_state import (
     held_value_origin,
     summarize_bindings,
 )
+from .work_form_field_vocabulary import (
+    ModeloFormBinding,
+    ModeloFormBindingAddressV1,
+    ModeloFormBlocker,
+    ModeloFormCasillaAddressV1,
+    ModeloFormOrigin,
+    ModeloFormScalar,
+    ModeloFormText,
+    field_standing,
+)
 from .work_form_localization import (
     casilla_help,
     fed_box_label,
@@ -37,17 +47,7 @@ from .work_form_localization import (
     normalized_help_text,
     unnamed_casilla_label,
 )
-from .work_form_models import (
-    ModeloFormBinding,
-    ModeloFormBindingAddressV1,
-    ModeloFormBlocker,
-    ModeloFormCasillaAddressV1,
-    ModeloFormField,
-    ModeloFormOrigin,
-    ModeloFormScalar,
-    ModeloFormText,
-    field_standing,
-)
+from .work_form_models import ModeloFormField
 from .work_form_rates import parse_form_number
 from .work_form_sources import bound_value_source
 from .work_review import ModeloWorkReviewCasilla
