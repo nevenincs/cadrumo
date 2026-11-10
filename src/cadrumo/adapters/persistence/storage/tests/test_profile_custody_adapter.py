@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import base64
 import subprocess
+import threading
+import time
 from pathlib import Path
 from uuid import UUID
 
@@ -22,6 +24,7 @@ from ..custody.capsule_records import ProfileCustodyCapsuleLabel
 from ..custody.kdf_worker_supervision import SupervisedKdfWorker
 from ..custody.label_head_models import ProfileLabelHead
 from ..custody.label_head_repository import ProfileLabelHeadRepository
+from ..custody.records import ProfileCustodyKdfParameters
 from ..custody.tests.label_head_probe import begin_advance
 from ..errors import DecryptionError
 from ..profile_custody import build_profile_custody_port
@@ -225,3 +228,60 @@ def test_registration_wraps_in_a_child_prewarmed_for_this_mint_and_leaves_none_r
 
         unlocked = port.unlock_password(material, password=_SYNTHETIC_PHRASE)
     assert unlocked.dek == dek
+
+
+def test_no_child_launch_is_in_flight_while_a_timed_calibration_sample_derives(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A launch competing with a measured derivation could read its cost high and weaken the chosen KDF."""
+    lock = threading.Lock()
+    launch_intervals: list[tuple[float, float]] = []
+    sample_intervals: list[tuple[float, float]] = []
+    adopted: list[bool] = []
+    enter, calibrate, adopt = SupervisedKdfWorker.__enter__, SupervisedKdfWorker.calibrate, SupervisedKdfWorker.adopt
+
+    def observe_launch(worker: SupervisedKdfWorker) -> SupervisedKdfWorker:
+        started = time.monotonic()
+        try:
+            return enter(worker)
+        finally:
+            with lock:
+                launch_intervals.append((started, time.monotonic()))
+
+    def observe_sample(worker: SupervisedKdfWorker, parameters: ProfileCustodyKdfParameters) -> float:
+        started = time.monotonic()
+        try:
+            return calibrate(worker, parameters)
+        finally:
+            with lock:
+                sample_intervals.append((started, time.monotonic()))
+
+    def observe_adopt(
+        worker: SupervisedKdfWorker, *, deadline: float, cancellation: ProfileProofCancellation | None = None
+    ) -> bool:
+        verdict = adopt(worker, deadline=deadline, cancellation=cancellation)
+        adopted.append(verdict)
+        return verdict
+
+    monkeypatch.setattr(SupervisedKdfWorker, "__enter__", observe_launch)
+    monkeypatch.setattr(SupervisedKdfWorker, "calibrate", observe_sample)
+    monkeypatch.setattr(SupervisedKdfWorker, "adopt", observe_adopt)
+    with override_settings(cadrumo_storage_root=tmp_path, cadrumo_profile_kdf_measure_calibration=True):
+        build_profile_custody_port().create_registration_material(
+            profile_id=UUID("00000000-0000-4000-8000-0000000000a2"),
+            password=_SYNTHETIC_PHRASE,
+            dek=bytes(range(32)),
+            dek_epoch=base64.b64encode(b"e" * 16).decode("ascii"),
+            salt=b"t" * 16,
+            predecessor=None,
+        )
+
+    assert len(sample_intervals) >= 2, "calibration measured more than one sample"
+    assert any(adopted), "samples ran in prewarmed children, so the scenario exercised the prewarm"
+    overlapping = [
+        (launch, sample)
+        for launch in launch_intervals
+        for sample in sample_intervals
+        if launch[0] < sample[1] and sample[0] < launch[1]
+    ]
+    assert overlapping == [], "a child launch ran while a timed calibration sample derived"

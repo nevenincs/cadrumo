@@ -638,12 +638,12 @@ class _PersistenceProfileCustody:
         salt: bytes,
         predecessor: ProfileCustodyEnvelopePort | None,
     ) -> ProfileCustodyRegistrationMaterial:
-        # Each calibration sample and the wrap run in a fresh contained child; a
-        # spare scoped to this one mint launches the next while the current one
-        # derives, and is contained before the mint returns.
+        # Each calibration sample and the wrap run in a fresh contained child.
+        # A spare scoped to this one mint is launched between samples, never
+        # during a timed one, and is contained before the mint returns.
         with closing(ProfileKdfPrewarm()) as prewarm:
             prewarm.refill()
-            with prewarm.bound(overlap=True):
+            with prewarm.bound():
                 calibration = calibrate_profile_kdf(salt=salt)
             with prewarm.bound(refill=False):
                 envelope = create_profile_custody_password_envelope(

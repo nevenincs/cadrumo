@@ -80,10 +80,7 @@ _MEBIBYTE: Final = 1024 * 1024
 _KDF_LEASE_FILENAME: Final = "profile-kdf.v1.lock"
 KDF_THREAD_LEASE: Final = threading.BoundedSemaphore(value=1)
 KDF_THREAD_CAPACITY: Final = threading.Condition()
-#: The bound prewarm, and whether each operation under it launches its successor while it derives.
-_KDF_PREWARM: Final = contextvars.ContextVar["tuple[ProfileKdfPrewarm, bool] | None"](
-    "cadrumo_profile_kdf_prewarm", default=None
-)
+_KDF_PREWARM: Final = contextvars.ContextVar["ProfileKdfPrewarm | None"]("cadrumo_profile_kdf_prewarm", default=None)
 
 
 @dataclass(frozen=True, slots=True)
@@ -678,18 +675,23 @@ class ProfileKdfPrewarm:
                 break
             self._settled.wait(remaining)
 
+    def settle_launch(self, *, deadline: float) -> None:
+        """Wait until a launching spare has attested or failed, or until ``deadline``.
+
+        A timed calibration sample calls this before its clock starts, so no
+        launch is in flight while its derivation is measured.
+        """
+        with self._settled:
+            self._wait_for_launch(deadline=deadline, cancellation=None)
+
     @contextmanager
-    def bound(self, *, overlap: bool = False, refill: bool = True) -> Generator[None]:
+    def bound(self, *, refill: bool = True) -> Generator[None]:
         """Let supervised KDF work in this context use the spare, then prepare the next one.
 
-        With ``overlap``, each operation here starts launching the next spare
-        as soon as it holds its own child, so a back-to-back derivation's
-        launch overlaps this one's compute; an owner deriving once per human
-        attempt leaves it off so no launch competes with that derivation.
         Without ``refill`` the scope launches no spare on exit, for an owner
         whose last derivation runs here and would only contain it unused.
         """
-        token = _KDF_PREWARM.set((self, overlap))
+        token = _KDF_PREWARM.set(self)
         try:
             yield
         finally:
@@ -733,22 +735,14 @@ def supervised_kdf_worker(
     absolute_deadline: bool = False,
     cancellation: ProfileProofCancellation | None = None,
 ) -> Generator[SupervisedKdfWorker]:
-    """Run one operation in the bound prewarmed child when one is ready, else in a fresh one.
-
-    A prewarm bound with ``overlap`` starts launching the next spare once this
-    operation holds its child, never before: one child still serves exactly
-    one derivation, and only the next one's launch overlaps this compute.
-    """
-    bound = _KDF_PREWARM.get()
-    prewarm, overlap = bound if bound is not None else (None, False)
+    """Run one operation in the bound prewarmed child when one is ready, else in a fresh one."""
+    prewarm = _KDF_PREWARM.get()
     waited_from = time.monotonic()
     spare = prewarm.take(deadline=deadline, cancellation=cancellation) if prewarm is not None else None
     if spare is None:
         if not absolute_deadline:
             # No child served the wait, so the fresh one keeps the whole relative budget.
             deadline += time.monotonic() - waited_from
-        if prewarm is not None and overlap:
-            prewarm.refill()
         with SupervisedKdfWorker(
             deadline=deadline, settings=settings, absolute_deadline=absolute_deadline, cancellation=cancellation
         ) as worker:
@@ -756,8 +750,6 @@ def supervised_kdf_worker(
         return
     with ExitStack() as owned:
         owned.push(spare)
-        if prewarm is not None and overlap:
-            prewarm.refill()
         yield spare
 
 
@@ -789,19 +781,30 @@ def _measure_profile_kdf(
     The worker times only the Argon2 call, so the band measures derivation
     cost rather than interpreter start-up; the wall clock still bounds the
     whole sample, and a duration longer than the sample itself took is a lie
-    the parent refuses. A sample adopting a bound prewarmed child is charged
-    only for what remains of that child's launch when the sample begins.
+    the parent refuses.
+
+    Under a bound prewarm, no child launch may compete with a measured
+    derivation, which could read the cost high and select a weaker point. The
+    spare's launch therefore settles before the sample's clock starts, and the
+    next spare launches only once that clock has stopped.
     """
-    remaining = min(PROFILE_CUSTODY_KDF_SAMPLE_DEADLINE_SECONDS, deadline - time.monotonic())
-    if remaining <= 0:
-        raise TimeoutError("profile KDF calibration total deadline elapsed")
-    started = time.monotonic()
-    with (
-        profile_kdf_lease(settings=settings, deadline=deadline),
-        supervised_kdf_worker(deadline=time.monotonic() + remaining, settings=settings) as worker,
-    ):
-        derivation_seconds = worker.calibrate(parameters)
-    elapsed = time.monotonic() - started
+    prewarm = _KDF_PREWARM.get()
+    if prewarm is not None:
+        prewarm.settle_launch(deadline=deadline)
+    try:
+        remaining = min(PROFILE_CUSTODY_KDF_SAMPLE_DEADLINE_SECONDS, deadline - time.monotonic())
+        if remaining <= 0:
+            raise TimeoutError("profile KDF calibration total deadline elapsed")
+        started = time.monotonic()
+        with (
+            profile_kdf_lease(settings=settings, deadline=deadline),
+            supervised_kdf_worker(deadline=time.monotonic() + remaining, settings=settings) as worker,
+        ):
+            derivation_seconds = worker.calibrate(parameters)
+        elapsed = time.monotonic() - started
+    finally:
+        if prewarm is not None:
+            prewarm.refill()
     if elapsed > PROFILE_CUSTODY_KDF_SAMPLE_DEADLINE_SECONDS:
         raise TimeoutError("profile KDF calibration sample deadline elapsed")
     if derivation_seconds > elapsed:

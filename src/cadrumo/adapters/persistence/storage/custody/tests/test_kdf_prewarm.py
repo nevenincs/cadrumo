@@ -233,41 +233,34 @@ def adoptions(monkeypatch: pytest.MonkeyPatch) -> list[tuple[SupervisedKdfWorker
     return adopted
 
 
-def test_back_to_back_derivations_each_adopt_a_spare_launched_while_the_previous_one_held_its_child(
+def test_back_to_back_samples_each_adopt_a_spare_launched_between_them_and_the_last_derivation_launches_none(
     settings: Settings,
     launches: list[subprocess.Popen[bytes]],
     adoptions: list[tuple[SupervisedKdfWorker, bool]],
 ) -> None:
     prewarm = ProfileKdfPrewarm(settings=settings)
-    workers: list[SupervisedKdfWorker] = []
-    children: list[subprocess.Popen[bytes] | None] = []
     try:
         prewarm.refill()
-        with prewarm.bound(overlap=True):
+        with prewarm.bound():
             for _ in range(2):
-                with kdf_supervision.supervised_kdf_worker(deadline=time.monotonic() + 60, settings=settings) as worker:
-                    # The successor is already launching before this child derives.
-                    assert prewarm._launching or prewarm._spare is not None
-                    workers.append(worker)
-                    children.append(worker._process)
-                    assert worker.calibrate(_kdf()) > 0
+                assert (
+                    kdf_supervision._measure_profile_kdf(_kdf(), deadline=time.monotonic() + 60, settings=settings) > 0
+                )
+                # The next spare starts only once the sample's clock has stopped.
+                assert prewarm._launching or prewarm._spare is not None
         with (
             prewarm.bound(refill=False),
             kdf_supervision.supervised_kdf_worker(deadline=time.monotonic() + 60, settings=settings) as worker,
         ):
             assert not prewarm._launching and prewarm._spare is None, "the last derivation launches no successor"
-            workers.append(worker)
-            children.append(worker._process)
             assert worker.calibrate(_kdf()) > 0
         assert not prewarm._launching and prewarm._spare is None
     finally:
         prewarm.close()
 
-    assert [verdict for _, verdict in adoptions] == [True, True, True]
-    assert [worker for worker, _ in adoptions] == workers, "every derivation ran in an adopted spare"
+    assert [verdict for _, verdict in adoptions] == [True, True, True], "every derivation ran in an adopted spare"
     assert len(launches) == 3, "one child per derivation and none launched only to be contained"
     assert len({process.pid for process in launches}) == 3
-    assert children == launches
     assert all(process.returncode == 0 for process in launches), "each child performed one derivation and exited"
 
 
@@ -285,7 +278,7 @@ def test_a_spare_never_crosses_from_one_owner_to_another_and_is_contained_when_i
         assert first_child is not None
 
         with (
-            second.bound(overlap=True, refill=False),
+            second.bound(refill=False),
             kdf_supervision.supervised_kdf_worker(deadline=time.monotonic() + 60, settings=settings) as worker,
         ):
             assert worker is not first_spare
