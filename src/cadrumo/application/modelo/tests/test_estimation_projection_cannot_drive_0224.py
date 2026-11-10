@@ -41,7 +41,7 @@ from ..profile_binding import resolve_profile_sourced_bindings
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _PROFILE_ID = "10000000-0000-4000-8000-000000000224"
-_CLOCK = datetime(2026, 11, 6, 9, 0, 0, tzinfo=UTC)
+_CLOCK = datetime(1980, 1, 1, 9, 0, 0, tzinfo=UTC)
 _PERIOD = "0A"
 _TARGET = "0224"
 _DIRECT_BINDING = "renta-profile-estimacion-directa"

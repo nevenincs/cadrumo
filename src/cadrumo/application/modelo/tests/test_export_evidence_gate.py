@@ -19,6 +19,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -37,7 +38,8 @@ from ..verification_iva_evidence import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 6, 3, 16, 0, tzinfo=UTC)
+_NOW = datetime(1980, 6, 3, 16, 0, tzinfo=UTC)
+_FILING_YEAR = filing_year_envelope().horizon
 _TX_ID = "a" * 64
 _BASE_CASILLA: CasillaId = validated_casilla_id("base", surface="_BASE_CASILLA")
 _CUOTA_CASILLA: CasillaId = validated_casilla_id("cuota", surface="_CUOTA_CASILLA")
@@ -55,12 +57,12 @@ def _revision(
     work_unit_id = derive_work_unit_id(
         bucket_id="bucket-operator",
         modelo=modelo,
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, period),
+        filing_year=_FILING_YEAR,
+        period=Period.from_year_and_code(_FILING_YEAR, period),
         revision_id="gate",
     )
     filing_instance_evidence = general_m303_filing_evidence(
-        Period.from_year_and_code(2026, "1T"), reference="test:export-evidence-gate", operation=operation
+        Period.from_year_and_code(_FILING_YEAR, "1T"), reference="test:export-evidence-gate", operation=operation
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -78,7 +80,7 @@ def _revision(
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo=modelo,
             revision_id="gate",
-            modelo_year=2026,
+            modelo_year=_FILING_YEAR,
             period=period,
         ),
         state=CalculationRevisionState.VERIFICADO_COMPLETO,

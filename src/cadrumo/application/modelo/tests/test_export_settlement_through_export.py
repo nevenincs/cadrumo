@@ -28,6 +28,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.payment_instalment_split import first_instalment_share
 from ....domain.calculations.registry.result_casillas import derive_result_disposition
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.deadlines.models import RefundAccount
 from ....domain.filing.protocols import ModeloInputValue
 from ....domain.filing.schema import ModeloDraft
@@ -41,7 +42,7 @@ from ..export_settlement import SettlementRefusal, declared_settlement, settleme
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_YEAR = 2025
+_YEAR = newest_authored_edition("100")
 _PERIOD = Period.from_year_and_code(_YEAR, "0A")
 _SALARY = "0003"
 _RESULT: CasillaId = validated_casilla_id("0670")
