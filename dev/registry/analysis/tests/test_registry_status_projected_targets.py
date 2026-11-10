@@ -14,11 +14,11 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, open_ended_revision
 
 from ...compiler.authority import compiled_bundled_authority
-from ..registry_status import (
+from ..registry_status import project_target_states
+from ..registry_target_classification import (
     PROJECTED_FROM_NEAREST_EDITION,
-    _tree_bearing_revisions,
     classify_projected_target,
-    project_target_states,
+    tree_bearing_revisions,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -46,7 +46,7 @@ def _classify(authority: ValidatedRegistryAuthority, modelo_id: str, revision_id
         modelo,
         revision_id,
         authority.catalogues.sources,
-        tree_revisions=_tree_bearing_revisions(bundled_path("registry", "aeat"), modelo),
+        tree_revisions=tree_bearing_revisions(bundled_path("registry", "aeat"), modelo),
         support=authority.catalogues.require_supported_filing_years(),
     )
 

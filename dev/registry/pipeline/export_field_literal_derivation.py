@@ -209,24 +209,30 @@ def _resolve_literal_note_content(
     return official_content, note_literal
 
 
+def _leading_literal(folded_content: str) -> str | None:
+    """Read the unambiguous spellings that take precedence over every cell-position rule."""
+    match = OFFICIAL_LITERAL_RE.fullmatch(folded_content)
+    if match is not None:
+        return str(match.group("literal"))
+    if OFFICIAL_CRLF_CONSTANT_RE.fullmatch(folded_content) is not None:
+        return "\r\n"
+    if OFFICIAL_BARE_RECORD_TAG_RE.fullmatch(folded_content) is not None:
+        return folded_content
+    for pattern in (OFFICIAL_QUOTED_TOKEN_RE, OFFICIAL_UNQUOTED_LITERAL_RE):
+        matched = pattern.fullmatch(folded_content)
+        if matched is not None:
+            return str(matched.group("literal"))
+    return None
+
+
 def _parse_official_literal(joined_field: JoinedRecordDesignField, official_content: str) -> tuple[str, bool]:
     """Read one unambiguous literal spelling or retain the exact refusal."""
     if official_content == _OFFICIAL_BLANK_LITERAL_CONTENT:
         return "", True
     folded_content = official_content.translate(OFFICIAL_QUOTE_FOLD)
-    match = OFFICIAL_LITERAL_RE.fullmatch(folded_content)
-    if match is not None:
-        return str(match.group("literal")), False
-    if OFFICIAL_CRLF_CONSTANT_RE.fullmatch(folded_content) is not None:
-        return "\r\n", False
-    if OFFICIAL_BARE_RECORD_TAG_RE.fullmatch(folded_content) is not None:
-        return folded_content, False
-    quoted_token = OFFICIAL_QUOTED_TOKEN_RE.fullmatch(folded_content)
-    if quoted_token is not None:
-        return str(quoted_token.group("literal")), False
-    unquoted = OFFICIAL_UNQUOTED_LITERAL_RE.fullmatch(folded_content)
-    if unquoted is not None:
-        return str(unquoted.group("literal")), False
+    leading = _leading_literal(folded_content)
+    if leading is not None:
+        return leading, False
     parser_field = joined_field.parser_field
     if parser_field.content_in_contenido_column and OFFICIAL_BARE_CELL_LITERAL_RE.fullmatch(folded_content):
         return folded_content, False
