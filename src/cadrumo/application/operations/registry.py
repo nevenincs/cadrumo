@@ -115,6 +115,15 @@ class OperationPublicDefinitionContractV1(BaseModel):
             raise ValueError("operation definition contract digest does not reproduce")
         return self
 
+    def may_change_records(self) -> bool:
+        """Whether a run of this definition may leave records changed.
+
+        Every durable definition may settle with an unknown effect once its
+        owner is lost, reads included, so only a permitted updated or partial
+        effect marks a write.
+        """
+        return bool(self.permitted_effects & {OperationEffect.UPDATED, OperationEffect.PARTIAL})
+
 
 class OperationPublicDefinitionDescriptionV1(BaseModel):
     """A registered request schema bound to the current public contract digest."""
