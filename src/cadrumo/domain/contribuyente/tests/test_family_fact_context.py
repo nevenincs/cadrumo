@@ -10,13 +10,16 @@ from cadrumo.domain.calculations.registry.tests.published_authority import Publi
 
 from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.schema_base import DateAxis
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..family_fact_context import FamilyFactResolutionContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+EXERCISE = filing_year_envelope().horizon
+
 
 def _context() -> FamilyFactResolutionContext:
-    coordinate = date(2024, 12, 31)
+    coordinate = date(EXERCISE, 12, 31)
     return FamilyFactResolutionContext(
         authority=PublishedGovernedFactSource(),
         filing_period=coordinate,
@@ -29,7 +32,7 @@ def test_family_context_resolves_the_under_three_age_with_typed_provenance() -> 
 
     assert resolved.payload.value == 3
     assert resolved.date_axis is DateAxis.FILING_PERIOD
-    assert resolved.effective_date == date(2024, 12, 31)
+    assert resolved.effective_date == date(EXERCISE, 12, 31)
     assert resolved.legal_refs == ("ley-35-2006:art-58",)
     assert resolved.source_refs == ("boe-lirpf-statutory-facts",)
     assert resolved.authority_digest
