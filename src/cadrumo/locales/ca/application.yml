@@ -3644,6 +3644,10 @@ application:
     notices:
       censo_divergences_open: '{count} dada/es del perfil o del certificat encara
         difereixen del Certificat de Situació Censal i resten sense resoldre: {axes}.'
+      kdf_at_fallback: La contrasenya d'aquest perfil té la protecció mínima, perquè
+        aquest ordinador no va poder confirmar a temps una configuració més forta
+        quan es va crear el perfil. Canvia la contrasenya per reforçar-la; pots tornar
+        a introduir la mateixa.
   wizard:
     errors:
       command_input_invalid: 'Les dades del perfil no han superat la validació: %{details}'

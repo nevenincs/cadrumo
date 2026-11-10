@@ -38,6 +38,7 @@ import {
 import { useStrings } from "../../shell/strings";
 import {
   fieldValue,
+  PASSWORD_CHANGE_ACTION_ID,
   profileText,
   useUserProfile,
   type ProfileField,
@@ -955,6 +956,16 @@ export const UserProfilePage = memo(function UserProfilePage({
               <ProfileCompletionNotice
                 key={data.profile_id}
                 profile={profile.loading || profile.error ? null : data}
+                actions={
+                  changePassword
+                    ? {
+                        [PASSWORD_CHANGE_ACTION_ID]: {
+                          label: t("desktop.profile.password.title"),
+                          run: () => setPassword(true),
+                        },
+                      }
+                    : {}
+                }
               />
               <ProfileDetails
                 data={data}

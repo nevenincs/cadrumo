@@ -3597,6 +3597,10 @@ application:
     notices:
       censo_divergences_open: '{count} profil- vagy tanúsítványadat továbbra is eltér
         a Certificado de Situación Censal tanúsítványtól és megoldatlan: {axes}.'
+      kdf_at_fallback: A profil jelszava a legkisebb védelmet kapta, mert a számítógép
+        a profil létrehozásakor nem tudott időben erősebb beállítást megerősíteni.
+        Változtasd meg a jelszót a megerősítéséhez; ugyanazt a jelszót is megadhatod
+        újra.
   wizard:
     errors:
       command_input_invalid: 'A profiladatok érvényesítése sikertelen: %{details}'

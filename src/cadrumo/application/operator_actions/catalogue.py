@@ -308,6 +308,10 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             target_command_key="config.profile.list",
         ),
         ActionCatalogueEntry(
+            action_id="operator.profile.passphrase.change",
+            target_command_key="config.passphrase.change",
+        ),
+        ActionCatalogueEntry(
             action_id="operator.profile.status",
             target_command_key="config.profile.status",
         ),
