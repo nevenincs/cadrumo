@@ -12,8 +12,10 @@ starts so that they serve the runtime's root and never resolve a default of
 their own. It also tells the agent, in plain variables, what Cadrumo supplies:
 the programs the agent may run, the tool server it may mount with its
 arguments, the names it forwards, and the address of the local AI server the
-runtime manager supervises, which the agent's keyless local lane reaches. Skills and rules ship with the agent
-image; the service does not override their locations. The agent reads the
+runtime manager supervises, which the agent's keyless local lane reaches,
+and the local engine the profile runs, whose lane alone the agent serves.
+Skills and rules ship with the agent image; the service does not override
+their locations. The agent reads the
 supplied variables; Cadrumo keeps no list of the agent's providers or lanes,
 and the agent reads each tool's trust from the tool server's own declarations.
 In a package the agent image's host defines the rest of the gateway's
@@ -41,6 +43,8 @@ from cadrumo_mcp.mcp.surfaces import DEFAULT_MCP_SURFACE
 
 if TYPE_CHECKING:
     from uuid import UUID
+
+    from ..providers.domain.record import LocalEngine
 
 HOSTED_ROOT_VARIABLE: Final = "CADRUMO_AGENT_HOSTED_ROOT"
 GATEWAY_PORT_VARIABLE: Final = "CADRUMO_AGENT_PORT"
@@ -73,8 +77,11 @@ OLLAMA_BASE_URL: Final = f"http://{LOCAL_AI_SERVER_ADDRESS}"
 LLAMACPP_BASE_URL_VARIABLE: Final = "CADRUMO_AGENT_LLAMACPP_BASE_URL"
 """The loopback origin of the bundled llama-server the runtime manager supervises."""
 LLAMACPP_BASE_URL: Final = f"http://{LLAMA_SERVER_ADDRESS}"
+LOCAL_ENGINE_VARIABLE: Final = "CADRUMO_AGENT_LOCAL_ENGINE"
+"""The local engine the profile runs, whose keyless lane alone the agent's catalogue serves."""
 ADVERTISED_VARIABLES: Final = frozenset(
     {
+        LOCAL_ENGINE_VARIABLE,
         PROGRAM_AEAT_VARIABLE,
         PROGRAM_PYTHON_VARIABLE,
         TOOL_SERVER_VARIABLE,
@@ -272,6 +279,7 @@ def agent_launch_environment(
     aeat: Path | None,
     python: Path | None,
     received: Mapping[str, str],
+    local_engine: LocalEngine | None,
     sys_platform: str | None = None,
     profile_id: UUID | None = None,
 ) -> dict[str, str]:
@@ -285,7 +293,10 @@ def agent_launch_environment(
     the gateway, and the agent forwards it to the programs and tool servers it starts.
     ``profile_id`` is the profile the agent is started inside; the gateway and the
     tools it starts are told that profile's folder, derived here and forwarded
-    with the root, and never a folder of another profile.
+    with the root, and never a folder of another profile. ``local_engine`` is
+    the engine the profile runs, read from its engine record; ``None`` when that
+    record cannot be read, and then no engine is named, so the agent refuses to
+    start with ``local_engine_unset`` rather than serve either engine's lane.
     """
     platform = sys.platform if sys_platform is None else sys_platform
     base = system_environment(received, sys_platform=platform)
@@ -325,4 +336,6 @@ def agent_launch_environment(
     environment[FORWARD_VARIABLE] = ",".join(forwarded)
     environment[OLLAMA_BASE_URL_VARIABLE] = OLLAMA_BASE_URL
     environment[LLAMACPP_BASE_URL_VARIABLE] = LLAMACPP_BASE_URL
+    if local_engine is not None:
+        environment[LOCAL_ENGINE_VARIABLE] = local_engine.value
     return environment

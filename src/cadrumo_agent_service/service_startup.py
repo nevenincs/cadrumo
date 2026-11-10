@@ -415,6 +415,7 @@ class AgentServiceStartup(AgentServiceAdministration):
                     aeat=hosted_aeat(),
                     python=hosted_python(),
                     received=os.environ,
+                    local_engine=self._local_models.selected_engine(),
                     profile_id=lease.profile_id,
                 ),
             )

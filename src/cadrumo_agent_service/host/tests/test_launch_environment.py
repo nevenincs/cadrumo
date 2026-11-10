@@ -16,6 +16,7 @@ from cadrumo.core.storage_environment import STORAGE_ROOT, normalize_storage_pat
 from cadrumo_mcp.mcp.surfaces import DEFAULT_MCP_SURFACE
 
 from ...providers.domain.catalog import validate_loopback_http_base_url
+from ...providers.domain.record import LocalEngine
 from ..launch_environment import (
     ADVERTISED_VARIABLES,
     AGENT_LOG_LEVEL_VARIABLE,
@@ -26,6 +27,7 @@ from ..launch_environment import (
     GATEWAY_SLOTS,
     HOSTED_ROOT_VARIABLE,
     LLAMACPP_BASE_URL_VARIABLE,
+    LOCAL_ENGINE_VARIABLE,
     OLLAMA_BASE_URL_VARIABLE,
     PROGRAM_AEAT_VARIABLE,
     PROGRAM_PYTHON_VARIABLE,
@@ -80,6 +82,7 @@ def _launch_environment(
         aeat=None,
         python=python,
         received=received,
+        local_engine=LocalEngine.LLAMACPP,
         sys_platform=sys_platform,
     )
 
@@ -259,6 +262,7 @@ def test_only_allow_listed_system_values_the_pinned_root_and_the_hosted_root_rea
         aeat=tmp_path / "aeat.exe",
         python=tmp_path / "python.exe",
         received=_RECEIVED,
+        local_engine=LocalEngine.LLAMACPP,
         sys_platform="win32",
     )
     assert environment[HOSTED_ROOT_VARIABLE] == str(agent_root)
@@ -285,6 +289,7 @@ def test_posix_hosts_keep_only_their_own_allow_list(tmp_path: Path) -> None:
         aeat=tmp_path / "aeat",
         python=tmp_path / "python",
         received=received,
+        local_engine=LocalEngine.LLAMACPP,
         sys_platform="linux",
     )
     assert environment["HOME"] == "/home/person"
@@ -321,6 +326,7 @@ def test_the_runtime_fills_exactly_the_gateway_slots_and_advertises_exactly_what
         aeat=aeat,
         python=python,
         received=received,
+        local_engine=LocalEngine.LLAMACPP,
         sys_platform=platform,
         profile_id=UUID("6e4a0f5c-9b8d-4c7e-8f2a-1b0c9d8e7f6a"),
     )
@@ -352,6 +358,7 @@ def test_the_advertised_programs_tool_server_and_forwarded_names_are_plain_absol
         aeat=bin_directory / "aeat",
         python=bin_directory / "python",
         received={"PATH": "x"},
+        local_engine=LocalEngine.LLAMACPP,
         sys_platform=platform,
     )
     assert environment[PROGRAM_AEAT_VARIABLE] == str(bin_directory / "aeat")
@@ -386,6 +393,7 @@ def test_a_program_the_runtime_cannot_name_is_left_out_not_advertised_empty(tmp_
         aeat=None,
         python=None,
         received={"PATH": "x"},
+        local_engine=LocalEngine.LLAMACPP,
         sys_platform="linux",
     )
     assert PROGRAM_AEAT_VARIABLE not in environment
@@ -408,6 +416,7 @@ def test_the_search_path_reaches_the_agent_as_received(tmp_path: Path, platform:
         aeat=programs / "aeat.exe",
         python=programs / "python.exe",
         received={"PATH": search_path},
+        local_engine=LocalEngine.LLAMACPP,
         sys_platform=platform,
     )
     assert environment["PATH"] == search_path
@@ -422,6 +431,7 @@ def test_agent_diagnostic_capture_level(tmp_path: Path, override: str | None, ex
         aeat=None,
         python=None,
         received={} if override is None else {AGENT_LOG_LEVEL_VARIABLE: override},
+        local_engine=LocalEngine.LLAMACPP,
     )
     assert environment[AGENT_LOG_LEVEL_VARIABLE] == expected
 
@@ -444,3 +454,31 @@ def test_the_agent_reaches_the_supervised_local_ai_server_and_no_inherited_one(t
     for variable in (OLLAMA_BASE_URL_VARIABLE, LLAMACPP_BASE_URL_VARIABLE):
         assert validate_loopback_http_base_url(environment[variable]) == environment[variable]
     assert "OLLAMA_HOST" not in environment
+
+
+@pytest.mark.parametrize("engine", list(LocalEngine))
+def test_the_profiles_engine_reaches_the_agent_and_no_inherited_one(tmp_path: Path, engine: LocalEngine) -> None:
+    other = next(held for held in LocalEngine if held is not engine)
+    environment = agent_launch_environment(
+        storage_root=tmp_path / "storage",
+        agent_root=tmp_path / "agent",
+        relay=tmp_path / "relay",
+        aeat=None,
+        python=None,
+        received={LOCAL_ENGINE_VARIABLE: other.value},
+        local_engine=engine,
+    )
+    assert environment[LOCAL_ENGINE_VARIABLE] == engine.value
+
+
+def test_an_unreadable_engine_record_names_no_engine_so_the_agent_refuses_rather_than_guess(tmp_path: Path) -> None:
+    environment = agent_launch_environment(
+        storage_root=tmp_path / "storage",
+        agent_root=tmp_path / "agent",
+        relay=tmp_path / "relay",
+        aeat=None,
+        python=None,
+        received={LOCAL_ENGINE_VARIABLE: LocalEngine.OLLAMA.value},
+        local_engine=None,
+    )
+    assert LOCAL_ENGINE_VARIABLE not in environment

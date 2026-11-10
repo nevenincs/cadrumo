@@ -142,13 +142,14 @@ class AgentServiceAdministration(ABC):
         self._login_status = AgentProviderAuthStatusProbe(
             context=self._login_context, cancellation=self._read_cancellation
         )
+        self._local_models = LocalModelListService(
+            store=model_list, catalog_source=self._catalog, default_engine=local_engine_default
+        )
         self._providers = ProviderSettingsService(
             store=self._store,
             catalog_source=self._catalog,
+            selected_engine=self._local_models.selected_engine,
             cli_state_probe=self._login_status.probe,
-        )
-        self._local_models = LocalModelListService(
-            store=model_list, catalog_source=self._catalog, default_engine=local_engine_default
         )
         self._controller: AgentHostController | None = None
         self._auth_attempt: AuthAttempt | None = None
