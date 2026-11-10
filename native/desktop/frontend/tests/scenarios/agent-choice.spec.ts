@@ -5,6 +5,7 @@ import {
   openConversation,
   scenarioOnly,
 } from "../support/agent";
+import { connectionLabel } from "../support/connection";
 import { label } from "../support/strings";
 
 // The provider, way, model and effort the person last chose for the agent
@@ -57,11 +58,7 @@ async function expectChosen(target: Page, way: string) {
   const settings = await openSettings(target);
   const served = laneOf(way);
   await expect(providerBox(settings)).toHaveAccessibleName(
-    `${label("desktop.agent.provider")}: ${served.display_name}, ${label(
-      served.transport === "api"
-        ? "desktop.providers.connection_api"
-        : "desktop.providers.connection_app",
-    )}`,
+    `${label("desktop.agent.provider")}: ${served.display_name}, ${connectionLabel(served)}`,
   );
   await target.keyboard.press("Escape");
   await expect(settings).toBeHidden();

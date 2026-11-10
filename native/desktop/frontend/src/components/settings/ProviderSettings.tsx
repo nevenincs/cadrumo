@@ -16,6 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import iconArtwork from "virtual:desktop-provider-icons";
 import type { AgentEngineHealth } from "../../shell/agentSession";
 import { engineNotRunningWords } from "../../shell/engineHealth";
+import { connectionWords } from "../../shell/providerConnection";
 import { useStrings, type Translate } from "../../shell/strings";
 import { ProviderMark } from "../agent/ProviderMark";
 import { EngineDoor } from "../setup/EngineDoor";
@@ -131,19 +132,6 @@ function StatusMark({ status }: { status: ConnectionStatus }) {
       <span className="sr-only">{statusWords(t, status)}</span>
     </span>
   );
-}
-
-/** How a way is reached, in words. A way that takes no key is a server on
- * this computer, whatever its transport, and is not called a key connection. */
-function connectionWords(
-  t: Translate,
-  provider: Pick<ProviderStatus, "transport" | "authKind">,
-): string {
-  if (provider.authKind === "none")
-    return t("desktop.providers.connection_local");
-  return provider.transport === "api"
-    ? t("desktop.providers.connection_api")
-    : t("desktop.providers.connection_app");
 }
 
 /** Why a change was not made, in words where it is a refusal we know. */

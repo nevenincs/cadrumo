@@ -4,6 +4,7 @@ import {
   FIXTURE_SIGN_IN_PROVIDERS,
 } from "../../src/dev/providerSettingsFixture";
 import { SERVED_ENGINE } from "../support/servedLocalLanes";
+import { connectionLabel } from "../support/connection";
 import { label } from "../support/strings";
 
 // The agent's settings: the signed-in profile's model providers, one card
@@ -205,11 +206,7 @@ test("providers start collapsed and keep each connection separately accessible",
     const card = lane(target, declared.id);
     await expect(card).toHaveCount(1);
     await expect(card.getByRole("heading", { level: 5 })).toHaveText(
-      label(
-        declared.transport === "api"
-          ? "desktop.providers.connection_api"
-          : "desktop.providers.connection_app",
-      ),
+      connectionLabel(declared),
     );
     const mark = providerGroup(target, declared.provider).locator(
       "[data-slot=provider-mark]",
@@ -313,11 +310,7 @@ test("a connection is drawn only when ready or waiting on the person, and is qui
     expect(status, declared.id).toBeTruthy();
     await expect(statusMark(chip)).toHaveAttribute("data-status", status ?? "");
     await expect(chip).toHaveText(
-      label(
-        declared.transport === "api"
-          ? "desktop.providers.connection_api"
-          : "desktop.providers.connection_app",
-      ) + (await statusMark(chip).textContent()),
+      connectionLabel(declared) + (await statusMark(chip).textContent()),
     );
     await expect(chip.locator("[data-icon]")).toHaveCount(
       GLYPH[status as Status] ? 1 : 0,
@@ -366,7 +359,8 @@ test("settings search finds providers and agent keys", async ({
   for (const declared of FIXTURE_SETTINGS_LANES) {
     const connection = lane(target, declared.id);
     await expect(connection).toHaveCount(1);
-    if (declared.transport === "api") await expect(connection).toBeVisible();
+    if (connectionLabel(declared) === label("desktop.providers.connection_api"))
+      await expect(connection).toBeVisible();
     else await expect(connection).toBeHidden();
   }
 

@@ -4,7 +4,7 @@ import type {
   ProviderSettings,
   ProviderSettingsRecord,
 } from "../shell/providerSettings";
-import { FIXTURE_CATALOG } from "./fixtures/agentCatalog";
+import { FIXTURE_CATALOG, fixtureAuthKind } from "./fixtures/agentCatalog";
 
 // The scenario host's model providers: one lane per lane of the made-up
 // catalog the host serves, each in its own way of signing in, starting with
@@ -34,17 +34,6 @@ async function revisionOf(id: string, change: number): Promise<string> {
   ).join("");
 }
 
-/** How each made-up lane signs in; a lane not named here takes a key. */
-const AUTH: Record<string, ProviderSettingsRecord["auth_kind"]> = {
-  gamma_cli: "provider_sign_in_only",
-  beta_cli: "provider_sign_in_only",
-  gateway_cli: "api_key_with_base_url",
-  relay_cli: "api_key_with_base_url",
-  local_api: "none",
-  ollama_api: "none",
-  llamacpp_api: "none",
-};
-
 /** The address a gateway lane is reached at unless the person gives one. */
 const DEFAULT_BASE_URL: Record<string, string> = {
   gateway_cli: "https://gateway.example/v1",
@@ -65,7 +54,7 @@ export const FIXTURE_SETTINGS_LANES: readonly Seed[] = (
       provider: lane.provider_id,
       transport: lane.transport as "api" | "cli",
       display_name: lane.display_name,
-      auth_kind: AUTH[id] ?? "api_key",
+      auth_kind: fixtureAuthKind(lane.provider_id, lane.transport),
       ...(base ? { default_base_url: base } : {}),
       ...(lane.transport === "cli" ? { cli_state: "unknown" as const } : {}),
     };
