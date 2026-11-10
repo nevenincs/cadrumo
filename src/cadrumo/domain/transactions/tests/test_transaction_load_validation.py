@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
-from datetime import date, datetime
+from datetime import UTC, date, datetime, timedelta, timezone
 
 import pytest
 from pydantic import ValidationError
@@ -21,6 +21,7 @@ from ....core.time.clock import frozen_clock, today_madrid
 from ....core.type_adapters import STRICT_STR_KEYED_MAPPING_ADAPTER
 from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...calculations.registry.errors import RegistryValidationError
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..enums import TransactionDirection
 from ..errors import TransactionValidationError
 from ..models import Transaction
@@ -115,6 +116,11 @@ def test_rows_reload_unchanged_on_either_side_of_madrid_midnight(instant: dateti
     assert [row.model_dump(mode="json") for row in reloaded] == expected
 
 
+_INSTANT = datetime(filing_year_envelope().horizon, 1, 1, 12, tzinfo=UTC)
+_NAIVE_INSTANT = _INSTANT.replace(tzinfo=None).isoformat()
+_OFFSET_INSTANT = _INSTANT.replace(tzinfo=timezone(timedelta(hours=1))).isoformat()
+
+
 def test_the_midnight_instants_straddle_a_madrid_civil_date() -> None:
     """Each pair of instants is one microsecond apart and falls on two Madrid dates."""
     before_winter, after_winter, before_summer, after_summer = MADRID_MIDNIGHT_INSTANTS
@@ -123,7 +129,9 @@ def test_the_midnight_instants_straddle_a_madrid_civil_date() -> None:
         with frozen_clock(instant):
             observed.append(today_madrid())
 
-    assert observed == [date(2025, 12, 31), date(2026, 1, 1), date(2026, 6, 30), date(2026, 7, 1)]
+    year = filing_year_envelope().horizon
+    new_year = date(year, 12, 31) + timedelta(days=1)
+    assert observed == [date(year, 12, 31), new_year, date(year, 6, 30), date(year, 7, 1)]
     assert (after_winter - before_winter).total_seconds() == pytest.approx(1e-6)
     assert (after_summer - before_summer).total_seconds() == pytest.approx(1e-6)
 
@@ -302,8 +310,8 @@ def test_duplicate_collection_members_are_refused() -> None:
 @pytest.mark.parametrize(
     ("ingested_at", "message"),
     [
-        ("2026-01-01T12:00:00", "datetime must be timezone-aware UTC"),
-        ("2026-01-01T12:00:00+01:00", "datetime must be in UTC"),
+        (_NAIVE_INSTANT, "datetime must be timezone-aware UTC"),
+        (_OFFSET_INSTANT, "datetime must be in UTC"),
     ],
 )
 def test_a_raw_ingest_instant_outside_utc_is_refused(ingested_at: str, message: str) -> None:
@@ -323,8 +331,8 @@ def test_a_raw_ingest_instant_outside_utc_is_refused(ingested_at: str, message: 
 @pytest.mark.parametrize(
     ("ingested_at", "message"),
     [
-        ("2026-01-01T12:00:00", "datetime must be timezone-aware UTC"),
-        ("2026-01-01T12:00:00+01:00", "datetime must be in UTC"),
+        (_NAIVE_INSTANT, "datetime must be timezone-aware UTC"),
+        (_OFFSET_INSTANT, "datetime must be in UTC"),
     ],
 )
 def test_a_raw_provenance_instant_outside_utc_names_the_core_utc_rule(ingested_at: str, message: str) -> None:

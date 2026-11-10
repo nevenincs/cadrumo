@@ -23,7 +23,7 @@ __all__ = ["isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_SEEDED_PROGRESS_AT = datetime(2026, 3, 11, 7, 45, 13, tzinfo=UTC)
+_SEEDED_PROGRESS_AT = datetime(1980, 3, 11, 7, 45, 13, tzinfo=UTC)
 """A stamp no default construction produces, so the seeded row is distinguishable."""
 
 

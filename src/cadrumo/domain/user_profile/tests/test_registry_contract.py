@@ -12,6 +12,7 @@ from ....core.errors.severity import BaseSeverity
 from ...calculations.registry.manual_input_selector import ManualInputProvider
 from ...calculations.registry.profile_bindings import ProfileProvider
 from ...calculations.registry.schema import BindingDefinition
+from ...calculations.registry.tests.authored_editions import open_ended_revision
 from ...calculations.registry.tests.published_authority import published_profile_schema, published_revision_definitions
 from ..registry_contract import (
     UserProfileRegistryContractIssue,
@@ -26,14 +27,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 if TYPE_CHECKING:  # pragma: no cover
     from ..schema import ProfileSchemaDefinition
 
-_MODELO_100_ANUALIDADES_YEARS = (2021, 2022, 2023)
+_ANUALIDADES_PREFIX = "renta_family.anualidades_sin_minimo_descendientes_"
+
+_REVISION_ID = open_ended_revision("303").id
 
 
 def test_registry_contract_issue_uses_base_severity_but_refuses_info() -> None:
     issue = UserProfileRegistryContractIssue(
         severity=BaseSeverity.WARNING,
         modelo_id="303",
-        revision_id="2025",
+        revision_id=_REVISION_ID,
         surface="binding",
         construct_id="binding-iva-regime",
         selector="iva.regime",
@@ -46,7 +49,7 @@ def test_registry_contract_issue_uses_base_severity_but_refuses_info() -> None:
             {
                 "severity": BaseSeverity.INFO,
                 "modelo_id": "303",
-                "revision_id": "2025",
+                "revision_id": _REVISION_ID,
                 "surface": "binding",
                 "construct_id": "binding-iva-regime",
                 "selector": "iva.regime",
@@ -83,11 +86,10 @@ def test_anualidades_selector_still_resolves_through_its_derived_pattern() -> No
     modelo_100 = tuple(definition for definition in published_revision_definitions() if definition.id == "100")
     failures: list[str] = []
 
-    for year in _MODELO_100_ANUALIDADES_YEARS:
-        selector = f"renta_family.anualidades_sin_minimo_descendientes_{year}"
+    for selector in _anualidades_selectors():
         report = validate_user_profile_registry_contract(modelo_100, _schema_without_field(schema, selector))
         if not report.valid:
-            failures.append(f"{year}: {selector!r} should resolve through its derived pattern, got {report.errors!r}")
+            failures.append(f"{selector!r} should resolve through its derived pattern, got {report.errors!r}")
 
     assert not failures, "\n".join(failures)
 
@@ -102,15 +104,14 @@ def test_missing_modelo_100_anualidades_selector_is_rejected_for_each_year() -> 
     modelo_100 = tuple(definition for definition in published_revision_definitions() if definition.id == "100")
     failures: list[str] = []
 
-    for year in _MODELO_100_ANUALIDADES_YEARS:
-        selector = f"renta_family.anualidades_sin_minimo_descendientes_{year}"
+    for selector in _anualidades_selectors():
         broken_schema = _schema_without_derived_pattern(_schema_without_field(schema, selector), selector)
         report = validate_user_profile_registry_contract(modelo_100, broken_schema)
         if report.valid:
-            failures.append(f"{year}: removing {selector!r} unexpectedly left the report valid")
+            failures.append(f"removing {selector!r} unexpectedly left the report valid")
             continue
         if not any(issue.selector == selector for issue in report.errors):
-            failures.append(f"{year}: removing {selector!r} did not produce a matching error")
+            failures.append(f"removing {selector!r} did not produce a matching error")
 
     assert not failures, "\n".join(failures)
 
@@ -381,6 +382,15 @@ def _live_profile_binding_selectors() -> frozenset[str]:
                     continue
                 selectors.update(profile_binding_selectors(binding.provider))
     return frozenset(selectors)
+
+
+def _anualidades_selectors() -> tuple[str, ...]:
+    """Every per-year annuity selector the committed modelo 100 revisions bind, oldest first."""
+    selectors = tuple(
+        sorted(selector for selector in _live_profile_binding_selectors() if selector.startswith(_ANUALIDADES_PREFIX))
+    )
+    assert selectors, "the registry binds no per-year annuity selector"
+    return selectors
 
 
 def _derived_pattern_ending(schema: ProfileSchemaDefinition, suffix: str) -> ProfileDerivedSelectorDefinition:

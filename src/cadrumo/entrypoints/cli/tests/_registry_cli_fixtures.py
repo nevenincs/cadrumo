@@ -10,7 +10,7 @@ master key under and unlock the profile it created.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 from pathlib import Path
 
 import pytest
@@ -22,9 +22,8 @@ from ....adapters.persistence.storage.master_key.bucket_session import BucketSes
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....adapters.persistence.storage.tests.secure_sql import dev_test_database_password, isolated_runtime_profile
 from ....core.config import override_settings
+from ....core.time.clock import now
 from .registry_cli_support import BUCKET_ID, clear_cli_env, set_cli_env
-
-_SESSION_OPENED_AT = datetime(2099, 5, 28, 15, 55, tzinfo=UTC)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -63,11 +62,13 @@ def _isolated_secure_backend(tmp_path: Path) -> Iterator[None]:
 
 
 def _session() -> BucketSession:
+    # Deadlines are measured against the live clock, so the session opens now.
+    opened_at = now()
     return BucketSession.open_resumed(
         bucket_id=BUCKET_ID,
         dek=b"d" * 32,
         idle_minutes=15,
-        opened_at=_SESSION_OPENED_AT,
-        idle_deadline=_SESSION_OPENED_AT + timedelta(minutes=15),
-        absolute_deadline=_SESSION_OPENED_AT + timedelta(minutes=240),
+        opened_at=opened_at,
+        idle_deadline=opened_at + timedelta(minutes=15),
+        absolute_deadline=opened_at + timedelta(minutes=240),
     )

@@ -7,6 +7,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.schema import EUMemberState, IvaCategory
@@ -14,11 +15,13 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
+_YEAR = filing_year_envelope().horizon
+
 
 def ledger_raw_transaction(
     provider_id: str,
     *,
-    booked_date: date = date(2025, 2, 10),
+    booked_date: date = date(_YEAR, 2, 10),
     amount: Decimal,
 ) -> RawTransaction:
     return RawTransaction(
@@ -34,7 +37,7 @@ def ledger_raw_transaction(
             source_sha256="f" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2025, 2, 11, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 2, 11, 12, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": "ledger_transaction"},
@@ -76,7 +79,7 @@ def ledger_transaction(
         "taxable_base": taxable_base,
         "iva_rate": iva_rate,
         "iva_amount": iva_amount,
-        "classified_at": datetime(2025, 2, 11, 13, 0, tzinfo=UTC),
+        "classified_at": datetime(_YEAR, 2, 11, 13, 0, tzinfo=UTC),
         "classified_by": "manual",
     }
     if iva_category is not None:
@@ -103,7 +106,7 @@ def classified_rent_transaction() -> Transaction:
         {
             "raw": ledger_raw_transaction(
                 "rent-net-withholding",
-                booked_date=date(2026, 3, 15),
+                booked_date=date(_YEAR, 3, 15),
                 amount=Decimal("2754.00"),
             ),
             "direction": TransactionDirection.OUTGOING,
@@ -115,7 +118,7 @@ def classified_rent_transaction() -> Transaction:
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("567.00"),
             "irpf_category": "arrendamiento_local",
-            "classified_at": datetime(2026, 3, 15, 12, 0, tzinfo=UTC),
+            "classified_at": datetime(_YEAR, 3, 15, 12, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -126,7 +129,7 @@ def m100_activity_income_transaction() -> Transaction:
         {
             "raw": ledger_raw_transaction(
                 "m100-activity-income",
-                booked_date=date(2024, 3, 15),
+                booked_date=date(_YEAR, 3, 15),
                 amount=Decimal("12000.00"),
             ),
             "direction": TransactionDirection.INCOMING,
@@ -136,7 +139,7 @@ def m100_activity_income_transaction() -> Transaction:
             "taxable_base": Decimal("12000.00"),
             "iva_rate": Decimal("0"),
             "iva_amount": Decimal("0"),
-            "classified_at": datetime(2024, 3, 15, 12, 0, tzinfo=UTC),
+            "classified_at": datetime(_YEAR, 3, 15, 12, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -166,7 +169,7 @@ def m100_activity_expense_transaction(
             "taxable_base": taxable_base,
             "iva_rate": Decimal("0.21"),
             "iva_amount": iva_amount,
-            "classified_at": datetime(2024, 3, 15, 12, 0, tzinfo=UTC),
+            "classified_at": datetime(_YEAR, 3, 15, 12, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )

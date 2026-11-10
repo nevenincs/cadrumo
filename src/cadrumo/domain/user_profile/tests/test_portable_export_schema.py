@@ -13,6 +13,7 @@ from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.classification.policies import SensitivityClass
 from ....core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...calculations.registry.tests.published_authority import (
     leased_profile_create_context,
 )
@@ -29,7 +30,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 #: separately; until it exists, this constant pins the shape under test and
 #: claims nothing about what production stamps.
 _SHAPE_UNDER_TEST = 3
-_INSTANT = datetime(2026, 6, 30, 10, 0, 0, tzinfo=UTC)
+_INSTANT = datetime(1980, 6, 30, 10, 0, 0, tzinfo=UTC)
 _BUCKET_ID = "88888888-8888-4888-8888-888888888888"
 _OBJECT_KEY = "catalogue"
 _BINARY_PAYLOAD = b"\x00not-json\xffattachment-bytes"
@@ -79,8 +80,8 @@ def _campaign_record() -> UserProfileRecord:
                 path="censo.divergencia.0.axis",
                 value="activities.description",
                 source=PROVENANCE_SOURCE_CENSO_ARTEFACT,
-                valid_from=date(2026, 1, 1),
-                valid_to=date(2026, 12, 31),
+                valid_from=date(filing_year_envelope().horizon, 1, 1),
+                valid_to=date(filing_year_envelope().horizon, 12, 31),
             ),
             UserProfileFact(
                 path="censo.divergencia.0.artefact_value",
@@ -92,7 +93,7 @@ def _campaign_record() -> UserProfileRecord:
                 value=PROVENANCE_SOURCE_CENSO_ARTEFACT,
                 source=PROVENANCE_SOURCE_CENSO_ARTEFACT,
             ),
-            UserProfileFact(path="renta_family.descendiente.0.birth_date", value="2020-01-15"),
+            UserProfileFact(path="renta_family.descendiente.0.birth_date", value=date(1990, 1, 15).isoformat()),
             UserProfileFact(path="renta_family.descendiente.0.custodia_compartida", value="true"),
             UserProfileFact(path="renta_family.descendiente.0.discapacidad", value="65"),
         ),

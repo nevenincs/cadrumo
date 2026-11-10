@@ -1,4 +1,4 @@
-"""Secure ordinary-2025 Modelo 303 input helpers for real CLI tests.
+"""Secure ordinary Modelo 303 input helpers for real CLI tests.
 
 Every period asks the joint-return election; only the last settlement period of
 the year (4T or 12) asks the Modelo 390 exemption and so takes an attestation.
@@ -7,15 +7,19 @@ the year (4T or 12) asks the Modelo 390 exemption and so takes an attestation.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Literal
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
 from .cli_fixture_worlds import invoke_joined_cli
 
+_YEAR = filing_year_envelope().horizon
+_YEAR_END_OBSERVATION = datetime(_YEAR, 12, 31, 12, tzinfo=UTC).isoformat()
 _OBSERVED_AT_BY_LAST_PERIOD = {
-    "4T": "2025-12-31T12:00:00+00:00",
-    "12": "2025-12-31T12:00:00+00:00",
+    "4T": _YEAR_END_OBSERVATION,
+    "12": _YEAR_END_OBSERVATION,
 }
 
 
@@ -43,7 +47,7 @@ class OrdinaryM303SecureEvidence:
 
 
 def admit_ordinary_m303_secure_evidence(*, period: Literal["4T", "12"] = "4T") -> OrdinaryM303SecureEvidence:
-    """Admit one real 2025 last-period non-applicability attestation."""
+    """Admit one real last-period non-applicability attestation."""
     result = invoke_joined_cli(
         [
             "--format",
@@ -53,7 +57,7 @@ def admit_ordinary_m303_secure_evidence(*, period: Literal["4T", "12"] = "4T") -
             "work",
             "attest-m303-exonerado-390",
             "--year",
-            "2025",
+            str(_YEAR),
             "--period",
             period,
             "--observed-at",
