@@ -40,7 +40,7 @@ def _refusal_key(raw: str) -> object:
     [
         ("DISCAPACIDAD=0", "NACIMIENTO"),
         ("NACIMIENTO=", "NACIMIENTO"),
-        ("NACIMIENTO=2018-13-45", "NACIMIENTO"),
+        (f"NACIMIENTO={filing_year_envelope().horizon - 6}-13-45", "NACIMIENTO"),
         (f"{_BIRTH},DISCAPACIDAD=50", "DISCAPACIDAD"),
         (f"{_BIRTH},DISCAPACIDAD=bogus", "DISCAPACIDAD"),
         (f"{_BIRTH},RELACION=cuñado", "RELACION"),

@@ -88,10 +88,10 @@ def _prorrata_factor_cases() -> tuple[tuple[str, DescendantInfo, Decimal], ...]:
 
 
 _PARSE_CUSTODIA_CASES = (
-    ("true", "NACIMIENTO=2020-03-15,CUSTODIA=true", True),
-    ("false", "NACIMIENTO=2020-03-15,CUSTODIA=false", False),
-    ("absent", "NACIMIENTO=2020-03-15", False),
-    ("si", "NACIMIENTO=2020-03-15,CUSTODIA=si", True),
+    ("true", f"NACIMIENTO={date(FILING_YEAR - 4, 3, 15).isoformat()},CUSTODIA=true", True),
+    ("false", f"NACIMIENTO={date(FILING_YEAR - 4, 3, 15).isoformat()},CUSTODIA=false", False),
+    ("absent", f"NACIMIENTO={date(FILING_YEAR - 4, 3, 15).isoformat()}", False),
+    ("si", f"NACIMIENTO={date(FILING_YEAR - 4, 3, 15).isoformat()},CUSTODIA=si", True),
 )
 
 

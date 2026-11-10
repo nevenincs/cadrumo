@@ -137,17 +137,17 @@ class TestParseDescendienteFlagGastosGuarderia:
     """parse_descendiente_flag must accept GASTOS_GUARDERIA= and validate >= 0."""
 
     def test_gastos_accepted(self) -> None:
-        d = parse_descendiente_flag("NACIMIENTO=2022-06-01,GASTOS_GUARDERIA=1500")
+        d = parse_descendiente_flag(f"NACIMIENTO={date(EXERCISE - 2, 6, 1).isoformat()},GASTOS_GUARDERIA=1500")
         assert d.gastos_guarderia_euros == 1500
 
     def test_gastos_zero_accepted(self) -> None:
-        d = parse_descendiente_flag("NACIMIENTO=2022-06-01,GASTOS_GUARDERIA=0")
+        d = parse_descendiente_flag(f"NACIMIENTO={date(EXERCISE - 2, 6, 1).isoformat()},GASTOS_GUARDERIA=0")
         assert d.gastos_guarderia_euros == 0
 
     def test_gastos_absent_defaults_to_zero(self) -> None:
-        d = parse_descendiente_flag("NACIMIENTO=2022-06-01")
+        d = parse_descendiente_flag(f"NACIMIENTO={date(EXERCISE - 2, 6, 1).isoformat()}")
         assert d.gastos_guarderia_euros == 0
 
     def test_gastos_negative_raises(self) -> None:
         with pytest.raises(ProfileAnswerTypeError, match="GASTOS_GUARDERIA"):
-            parse_descendiente_flag("NACIMIENTO=2022-06-01,GASTOS_GUARDERIA=-1")
+            parse_descendiente_flag(f"NACIMIENTO={date(EXERCISE - 2, 6, 1).isoformat()},GASTOS_GUARDERIA=-1")

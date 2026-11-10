@@ -138,10 +138,10 @@ class TestParseDescendienteFlagMesesTrabajo:
 
     def test_meses_trabajo_parsed(self) -> None:
         cases = (
-            ("twelve", "NACIMIENTO=2022-06-01,MESES_TRABAJO=1-12", tuple(range(1, 13))),
-            ("six", "NACIMIENTO=2022-06-01,MESES_TRABAJO=1-6", (1, 2, 3, 4, 5, 6)),
-            ("scattered", "NACIMIENTO=2022-06-01,MESES_TRABAJO=3;7;11", (3, 7, 11)),
-            ("absent", "NACIMIENTO=2022-06-01", ()),
+            ("twelve", f"NACIMIENTO={date(EXERCISE - 2, 6, 1).isoformat()},MESES_TRABAJO=1-12", tuple(range(1, 13))),
+            ("six", f"NACIMIENTO={date(EXERCISE - 2, 6, 1).isoformat()},MESES_TRABAJO=1-6", (1, 2, 3, 4, 5, 6)),
+            ("scattered", f"NACIMIENTO={date(EXERCISE - 2, 6, 1).isoformat()},MESES_TRABAJO=3;7;11", (3, 7, 11)),
+            ("absent", f"NACIMIENTO={date(EXERCISE - 2, 6, 1).isoformat()}", ()),
         )
         for case_id, spec, expected in cases:
             d = parse_descendiente_flag(spec)
@@ -155,11 +155,11 @@ class TestParseDescendienteFlagMesesTrabajo:
         months qualify and not merely how many.
         """
         for case_id, spec in (
-            ("above-range", "NACIMIENTO=2022-06-01,MESES_TRABAJO=13"),
-            ("zero-month", "NACIMIENTO=2022-06-01,MESES_TRABAJO=0"),
-            ("inverted-range", "NACIMIENTO=2022-06-01,MESES_TRABAJO=8-5"),
-            ("repeated", "NACIMIENTO=2022-06-01,MESES_TRABAJO=3;3"),
-            ("not-a-number", "NACIMIENTO=2022-06-01,MESES_TRABAJO=abc"),
+            ("above-range", f"NACIMIENTO={date(EXERCISE - 2, 6, 1).isoformat()},MESES_TRABAJO=13"),
+            ("zero-month", f"NACIMIENTO={date(EXERCISE - 2, 6, 1).isoformat()},MESES_TRABAJO=0"),
+            ("inverted-range", f"NACIMIENTO={date(EXERCISE - 2, 6, 1).isoformat()},MESES_TRABAJO=8-5"),
+            ("repeated", f"NACIMIENTO={date(EXERCISE - 2, 6, 1).isoformat()},MESES_TRABAJO=3;3"),
+            ("not-a-number", f"NACIMIENTO={date(EXERCISE - 2, 6, 1).isoformat()},MESES_TRABAJO=abc"),
         ):
             try:
                 with pytest.raises(ProfileAnswerTypeError):
@@ -178,17 +178,22 @@ class TestAltaPosteriorNacimientoMes:
     """``alta_posterior_nacimiento_mes``: the operator-supplied completion month."""
 
     def test_parsed_from_the_descendiente_flag(self) -> None:
-        d = parse_descendiente_flag("NACIMIENTO=2022-06-01,MESES_TRABAJO=5-12,ALTA_POSTERIOR_MES=5")
+        d = parse_descendiente_flag(
+            f"NACIMIENTO={date(EXERCISE - 2, 6, 1).isoformat()},MESES_TRABAJO=5-12,ALTA_POSTERIOR_MES=5"
+        )
         assert d.alta_posterior_nacimiento_mes == 5
 
     def test_absent_from_the_flag_stays_none(self) -> None:
-        d = parse_descendiente_flag("NACIMIENTO=2022-06-01,MESES_TRABAJO=5-12")
+        d = parse_descendiente_flag(f"NACIMIENTO={date(EXERCISE - 2, 6, 1).isoformat()},MESES_TRABAJO=5-12")
         assert d.alta_posterior_nacimiento_mes is None
 
     def test_flag_out_of_range_raises(self) -> None:
         for case_id, spec in (
-            ("above-range", "NACIMIENTO=2022-06-01,MESES_TRABAJO=5-12,ALTA_POSTERIOR_MES=13"),
-            ("zero", "NACIMIENTO=2022-06-01,MESES_TRABAJO=5-12,ALTA_POSTERIOR_MES=0"),
+            (
+                "above-range",
+                f"NACIMIENTO={date(EXERCISE - 2, 6, 1).isoformat()},MESES_TRABAJO=5-12,ALTA_POSTERIOR_MES=13",
+            ),
+            ("zero", f"NACIMIENTO={date(EXERCISE - 2, 6, 1).isoformat()},MESES_TRABAJO=5-12,ALTA_POSTERIOR_MES=0"),
         ):
             try:
                 with pytest.raises(ProfileAnswerTypeError, match="ALTA_POSTERIOR_MES must be 1"):

@@ -69,12 +69,12 @@ _FALLECIMIENTO = registry_fallecimiento_amount(FILING_YEAR)
 def _art58_oracle_cases() -> tuple[tuple[str, tuple[DescendantInfo, ...], Decimal], ...]:
     return (
         (
-            "one-descendant-born-2023-jan-15",
+            "one-descendant-born-prior-year-jan-15",
             (DescendantInfo(birth_date=date(FILING_YEAR - 1, 1, 15)),),
             Decimal("5200"),
         ),
         (
-            "two-descendants-both-born-pre-2024",
+            "two-descendants-both-born-before-the-exercise",
             (
                 DescendantInfo(birth_date=date(FILING_YEAR - 6, 5, 1)),
                 DescendantInfo(birth_date=date(FILING_YEAR - 4, 8, 10)),
@@ -82,7 +82,7 @@ def _art58_oracle_cases() -> tuple[tuple[str, tuple[DescendantInfo, ...], Decima
             _MINIMO_1 + _MINIMO_2,
         ),
         (
-            "ines-shape-adopted-2024-05-12",
+            "ines-shape-adopted-in-exercise-05-12",
             (
                 DescendantInfo(
                     birth_date=date(FILING_YEAR - 2, 3, 1),
@@ -438,7 +438,7 @@ class TestParseDescendienteFlag:
 
     def test_missing_nacimiento_raises_value_error(self) -> None:
         with pytest.raises(ProfileAnswerTypeError, match="NACIMIENTO"):
-            parse_descendiente_flag("INSCRIPCION=2024-05-12")
+            parse_descendiente_flag(f"INSCRIPCION={date(FILING_YEAR, 5, 12).isoformat()}")
 
     def test_invalid_discapacidad_raises_value_error(self) -> None:
         with pytest.raises(ProfileAnswerTypeError, match="DISCAPACIDAD"):

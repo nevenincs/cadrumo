@@ -1,4 +1,4 @@
-"""Strict complete 2025 inventory projection tests."""
+"""Strict complete inventory projection tests."""
 
 from __future__ import annotations
 
@@ -130,7 +130,7 @@ def _authority(
         None
         if physical is None
         else PhysicalClosingObservation(
-            observation_id="physical-2025",
+            observation_id=f"physical-{EXERCISE}",
             observed_on=date(EXERCISE + 1, 1, 1),
             as_of_date=date(EXERCISE, 12, 31),
             actividad_id="retail",
@@ -153,7 +153,7 @@ def _authority(
     )
     return InventoryClosingAuthorityRecord(
         decision=InventoryClosingAuthorityDecision(
-            decision_id="decision-2025",
+            decision_id=f"decision-{EXERCISE}",
             actividad_id="retail",
             filing_year=EXERCISE,
             authority=InventoryClosingAuthority.PHYSICAL_OBSERVATION

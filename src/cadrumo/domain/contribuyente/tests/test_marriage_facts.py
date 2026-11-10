@@ -41,13 +41,13 @@ _MONTH_START_CASES = (
 )
 _ORACLE_CASES = (
     (
-        "sobrevenido-march-2024",
+        "sobrevenido-march-of-exercise",
         date(FILING_YEAR, 3, 22),
         False,
         3,
     ),
     (
-        "full-year-september-2023",
+        "full-year-september-of-prior-year",
         date(FILING_YEAR - 1, 9, 15),
         True,
         1,

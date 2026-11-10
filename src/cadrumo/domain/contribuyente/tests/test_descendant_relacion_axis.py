@@ -287,7 +287,7 @@ def test_the_flag_parser_refuses_a_relacion_outside_the_closed_set() -> None:
     distinction keeping the Art. 58.2 increase away from that carer.
     """
     with pytest.raises(ProfileAnswerTypeError):
-        parse_descendiente_flag("NACIMIENTO=2010-01-01,RELACION=acogimiento")
+        parse_descendiente_flag(f"NACIMIENTO={date(_YEAR - 14, 1, 1).isoformat()},RELACION=acogimiento")
 
 
 def test_the_flag_parser_carries_both_entry_dates_for_a_fostered_then_adopted_child() -> None:

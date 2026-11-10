@@ -58,7 +58,7 @@ def _evidence() -> tuple[PhysicalClosingEvidence, ...]:
 
 def _observation(**overrides: object) -> PhysicalClosingObservation:
     fields: dict[str, object] = {
-        "observation_id": "physical-2025",
+        "observation_id": f"physical-{EXERCISE}",
         "observed_on": date(EXERCISE + 1, 1, 2),
         "as_of_date": date(EXERCISE, 12, 31),
         "actividad_id": "retail",
@@ -78,7 +78,7 @@ def _decision(
     **overrides: object,
 ) -> InventoryClosingAuthorityDecision:
     fields: dict[str, object] = {
-        "decision_id": "decision-2025",
+        "decision_id": f"decision-{EXERCISE}",
         "actividad_id": "retail",
         "filing_year": EXERCISE,
         "authority": authority,
@@ -371,7 +371,7 @@ def test_supported_average_methods_keep_distinct_grounded_bases(
 
 def test_resolution_refuses_forged_missing_conflict_and_legacy_bare_closing_stock() -> None:
     provenance = {
-        "decision_id": "decision-2025",
+        "decision_id": f"decision-{EXERCISE}",
         "decision_fingerprint": "d" * 64,
         "prior_closing_link_fingerprint": "e" * 64,
     }
@@ -384,7 +384,7 @@ def test_resolution_refuses_forged_missing_conflict_and_legacy_bare_closing_stoc
             movement_derived_value=Decimal("100.00"),
             physical_observed_value=Decimal("130.00"),
             physical_observation_fingerprint="a" * 64,
-            physical_observation_id="physical-2025",
+            physical_observation_id=f"physical-{EXERCISE}",
             conflict=None,
             **provenance,
         )
@@ -445,7 +445,7 @@ def test_ledger_owned_authority_record_refuses_coordinate_and_fingerprint_tamper
 
 def test_inventory_schema_hard_cut_refuses_missing_authority_slot_and_version_two() -> None:
     provenance = {
-        "decision_id": "decision-2025",
+        "decision_id": f"decision-{EXERCISE}",
         "decision_fingerprint": "d" * 64,
         "prior_closing_link_fingerprint": "e" * 64,
     }
@@ -487,7 +487,7 @@ def test_inventory_schema_hard_cut_refuses_missing_authority_slot_and_version_tw
             movement_derived_value=Decimal("100.00"),
             physical_observed_value=Decimal("130.00"),
             physical_observation_fingerprint="a" * 64,
-            physical_observation_id="physical-2025",
+            physical_observation_id=f"physical-{EXERCISE}",
             conflict=InventoryClosingConflictDiagnostic(
                 actividad_id="retail",
                 filing_year=EXERCISE,

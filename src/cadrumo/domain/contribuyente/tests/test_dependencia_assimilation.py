@@ -249,7 +249,7 @@ def test_the_flag_parser_carries_the_dependency_answer(token: str, expected: boo
 
 
 def test_omitting_the_flag_key_leaves_the_answer_unset() -> None:
-    assert parse_descendiente_flag("NACIMIENTO=2012-01-01").dependencia_economica is None
+    assert parse_descendiente_flag(f"NACIMIENTO={date(_YEAR - 12, 1, 1).isoformat()}").dependencia_economica is None
 
 
 def test_an_unreadable_dependency_answer_refuses_rather_than_defaulting() -> None:
@@ -260,7 +260,7 @@ def test_an_unreadable_dependency_answer_refuses_rather_than_defaulting() -> Non
     ``True`` would grant one nobody asserted.
     """
     with pytest.raises((ProfileAnswerTypeError, ValidationError)):
-        parse_descendiente_flag("NACIMIENTO=2012-01-01,DEPENDENCIA=perhaps")
+        parse_descendiente_flag(f"NACIMIENTO={date(_YEAR - 12, 1, 1).isoformat()},DEPENDENCIA=perhaps")
 
 
 def test_the_profile_anualidades_figure_survives_a_strict_roundtrip() -> None:

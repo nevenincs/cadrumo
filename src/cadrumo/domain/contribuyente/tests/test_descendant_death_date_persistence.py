@@ -150,4 +150,6 @@ def test_entry_surface_ships_with_the_field() -> None:
 def test_entry_surface_refuses_a_death_before_the_birth() -> None:
     """The flag door inherits the record's ordering refusal rather than bypassing it."""
     with pytest.raises(ValueError, match="precedes birth_date"):
-        parse_descendiente_flag("NACIMIENTO=2012-03-04,FALLECIMIENTO=2010-01-01")
+        parse_descendiente_flag(
+            f"NACIMIENTO={date(EXERCISE - 12, 3, 4).isoformat()},FALLECIMIENTO={date(EXERCISE - 14, 1, 1).isoformat()}"
+        )
