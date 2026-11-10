@@ -1,3 +1,4 @@
+import type { ProviderAuthKind } from "@/components/settings/types";
 import type { CallPlan } from "./hostCall";
 import type {
   AgentLocalEngine,
@@ -165,6 +166,28 @@ export function parseEngineHealth(
   return "malformed";
 }
 
+const AUTH_KINDS: readonly string[] = [
+  "api_key",
+  "api_key_with_base_url",
+  "provider_sign_in_only",
+  "none",
+] satisfies ProviderAuthKind[];
+
+/**
+ * What a host supplies for `lane` to authenticate, as the service states it
+ * on every lane of its catalog: a closed set. A lane that states none, or one
+ * outside the set, is malformed: the window does not tell a keyless lane from
+ * a keyed one by its name or its transport.
+ */
+export function parseAuthKind(lane: {
+  auth_kind?: unknown;
+}): ProviderAuthKind | "malformed" {
+  const { auth_kind: served } = lane;
+  return typeof served === "string" && AUTH_KINDS.includes(served)
+    ? (served as ProviderAuthKind)
+    : "malformed";
+}
+
 /** How much reasoning a run asks its model for, lowest first. Which of these
  * a model accepts is the model's own, in its catalog entry. */
 export type AgentEffort = "low" | "medium" | "high" | "xhigh" | "max" | "ultra";
@@ -259,6 +282,9 @@ export type AgentProviderLane = {
   transport: AgentTransport;
   /** The provider's product name, the same on each of its lanes. */
   display_name: string;
+  /** What a host supplies for the lane to authenticate. Kept open at the wire
+   * boundary: `parseAuthKind` is what reads it. */
+  auth_kind?: string;
   execution_mode: string;
   executable: boolean;
   /** `catalog`: the lane lists its models and a run names one of them.
@@ -330,6 +356,9 @@ export type AgentDeclaredLane = {
   provider: string;
   transport: AgentTransport;
   display_name: string;
+  /** What a host supplies for the lane to authenticate; read by
+   * `parseAuthKind`. */
+  auth_kind?: string;
   recommended?: Partial<Record<AgentRecommendedCapability, string>>;
   models?: AgentDeclaredModel[];
 };
