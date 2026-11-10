@@ -336,7 +336,11 @@ def withhold_figures_without_business(transaction: Transaction) -> Transaction:
     held = figures_held_without_business(transaction)
     if not held:
         return transaction
-    read = transaction.model_copy(update=dict.fromkeys(held))
+    absent: dict[str, object] = {name: None for name in held}
+    if "cash_accounting_treatment" in held:
+        absent["cash_accounting_treatment"] = default_iva_cash_accounting_treatment()
+        absent["cash_accounting_payment_evidence"] = ()
+    read = transaction.model_copy(update=absent)
     _remember_withheld_figures(read, held)
     return read
 
@@ -349,7 +353,20 @@ def figures_held_without_business(transaction: Transaction) -> Mapping[str, obje
     """
     figures = refusable_figures_of(transaction.business_classification, transaction)
     present = figures_without_business(transaction.business_classification, figures)
-    return MappingProxyType({name: figures[name] for name in present})
+    held = {name: figures[name] for name in present}
+    if figures and _keeps_cash_accounting_timing(transaction):
+        # Criterio-de-caja timing settles a cuota the row's base and IVA carry; a row with
+        # no business component has neither, so its timing goes with them.
+        held["cash_accounting_treatment"] = transaction.cash_accounting_treatment
+        held["cash_accounting_payment_evidence"] = transaction.cash_accounting_payment_evidence
+    return MappingProxyType(held)
+
+
+def _keeps_cash_accounting_timing(transaction: Transaction) -> bool:
+    return (
+        bool(transaction.cash_accounting_payment_evidence)
+        or transaction.cash_accounting_treatment != default_iva_cash_accounting_treatment()
+    )
 
 
 _WITHHELD_FIGURES: dict[int, Mapping[str, object]] = {}

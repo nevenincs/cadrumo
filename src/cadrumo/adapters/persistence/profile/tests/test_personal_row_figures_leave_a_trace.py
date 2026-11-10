@@ -21,17 +21,19 @@ from pathlib import Path
 import pytest
 from pydantic import TypeAdapter
 
+from .....application.aggregation.tests.iva_cash_accounting_support import cash_accounting_transaction
 from .....application.ledger.manual_update import update_manual_transaction_fields
 from .....application.ledger.models import ManualLedgerTransactionPatch
 from .....domain.buckets.event import BucketEvent, BucketEventType
+from .....domain.iva.schema import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment
 from .....domain.transactions.classification_effects import fields_refused_by_classification
-from .....domain.transactions.enums import BusinessClassification
+from .....domain.transactions.enums import BusinessClassification, TransactionDirection
 from .....domain.transactions.models import TransactionCatalogue
 from .....domain.transactions.repository import transaction_object_key
 from ...storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
 from ...storage.sql.secure_object_records import SecureObjectRecord
 from ..transactions import TransactionCatalogueRepository
-from .classification_origin_support import BUCKET_ID, PERSON, Ledger, add_row, composed_ledger
+from .classification_origin_support import BUCKET_ID, NOW_DATE, PERSON, Ledger, add_row, composed_ledger
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("operation")]
 _JSON_OBJECT = TypeAdapter(dict[str, object])
@@ -202,3 +204,52 @@ def test_saving_an_untouched_legacy_row_through_another_instance_keeps_its_bytes
 
     assert _stored_envelope(ledger, transaction_id)[1].payload == before
     assert frozenset(ledger.events.load().events) == events_before
+
+
+def test_a_cash_accounting_personal_row_writes_without_its_figures_and_records_them(ledger: Ledger) -> None:
+    """Criterio-de-caja timing settles the base and IVA a personal row no longer carries, so it goes with them."""
+    cash = cash_accounting_transaction(
+        "legacy-cash-personal",
+        direction=TransactionDirection.OUTGOING,
+        booked_date=NOW_DATE,
+        taxable_base=Decimal("100.00"),
+        iva_amount=Decimal("21.00"),
+        cash_accounting_treatment=IvaCashAccountingTreatment("supplier_regime"),
+        operation_date=NOW_DATE,
+        cash_accounting_payment_evidence=(
+            IvaCashAccountingPaymentEvidence(
+                payment_date=NOW_DATE, taxable_base=Decimal("100.00"), iva_amount=Decimal("21.00")
+            ),
+        ),
+    )
+    ledger.transactions.save(TransactionCatalogue.from_transactions([cash]))
+    _relabel_as_personal(ledger, cash.transaction_id)
+
+    read = ledger.row(cash.transaction_id)
+    assert read.taxable_base is None
+    assert read.iva_amount is None
+    assert read.cash_accounting_payment_evidence == ()
+    result = update_manual_transaction_fields(
+        bucket_id=BUCKET_ID,
+        transaction_id=cash.transaction_id,
+        patch=ManualLedgerTransactionPatch.model_validate({"notes": "household purchase"}),
+        actor=PERSON,
+        source_command="aeat app ledger update",
+        ports=ledger.ports,
+    )
+
+    stored = _stored_row(ledger, result.ref.transaction_id)
+    assert stored["notes"] == "household purchase"
+    assert stored["taxable_base"] is None
+    assert stored["iva_amount"] is None
+    assert stored["cash_accounting_payment_evidence"] == []
+    assert stored["cash_accounting_treatment"] != "supplier_regime"
+    traced = _traced(_events_for(ledger, result.ref.transaction_id))
+    assert len(traced) == 1
+    assert Decimal(traced[0].payload["withheld_taxable_base"]) == Decimal("100.00")
+    assert Decimal(traced[0].payload["withheld_iva_amount"]) == Decimal("21.00")
+    assert traced[0].payload["withheld_cash_accounting_treatment"] == "supplier_regime"
+    assert {
+        "withheld_cash_accounting_payment_evidence",
+        "withheld_cash_accounting_payment_evidence_sha256",
+    } & set(traced[0].payload)
