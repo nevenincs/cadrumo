@@ -172,7 +172,9 @@ def test_unsupported_sign_in_is_refused_before_retirement_or_auth_work(
     service = _service(storage_root, events)
     store = _SignedInStore()
     resolver = ProviderCredentialResolver(store=store, catalog_source=service._catalog)
-    service._providers = ProviderSettingsService(store=store, catalog_source=service._catalog)
+    service._providers = ProviderSettingsService(
+        selected_engine=lambda: LocalEngine.LLAMACPP, store=store, catalog_source=service._catalog
+    )
     service._credentials = GatewayCredentials(
         ProviderSettingsAgentCredentialSource(store=store, resolver=resolver, catalog_source=service._catalog),
         bytearray(b"g" * 43),

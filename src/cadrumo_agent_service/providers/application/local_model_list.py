@@ -32,6 +32,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 from datetime import datetime
+from typing import Final
 
 from pydantic import TypeAdapter, ValidationError
 
@@ -72,9 +73,43 @@ from .ports import (
 )
 
 
-def local_lanes(catalog: ProviderCatalog) -> tuple[ProviderCatalogEntry, ...]:
-    """Return the catalogue's keyless lanes, the ones on this computer, in catalogue order."""
-    return tuple(entry for entry in catalog.providers if entry.auth_kind is ProviderAuthKind.NONE)
+def serves_engine_lane(provider: str, engine: LocalEngine | None) -> bool:
+    """Return whether a lane of the provider identity ``provider`` is served to a profile running ``engine``.
+
+    Each local engine runs its models behind a keyless lane of its own
+    identity. Only ``engine``'s lane is served; the other engine's is left out,
+    not held back. ``None`` is an engine setting that cannot be read, which
+    picks no engine: neither engine's lane is served. A lane of any other
+    identity is served whatever the engine. The picker, the provider settings
+    and the local model lists are all scoped by this one rule, so each lists
+    the same lanes.
+    """
+    if provider not in _ENGINE_PROVIDERS:
+        return True
+    return engine is not None and provider == engine.value
+
+
+_ENGINE_PROVIDERS: Final = frozenset(engine.value for engine in LocalEngine)
+"""The provider identities a local engine's keyless lane is served under: each engine's own."""
+
+
+def engine_lanes(
+    catalog: ProviderCatalog, engine: Callable[[], LocalEngine | None]
+) -> tuple[ProviderCatalogEntry, ...]:
+    """Return the catalogue's lanes a profile running ``engine()`` is served, in catalogue order.
+
+    ``engine`` is read once, and only when the catalogue reports a lane the
+    rule could leave out, so a catalogue with no engine lane reads no record.
+    """
+    if all(serves_engine_lane(entry.provider, held) for entry in catalog.providers for held in LocalEngine):
+        return catalog.providers
+    selected = engine()
+    return tuple(entry for entry in catalog.providers if serves_engine_lane(entry.provider, selected))
+
+
+def local_lanes(catalog: ProviderCatalog, engine: Callable[[], LocalEngine | None]) -> tuple[ProviderCatalogEntry, ...]:
+    """Return the keyless lanes, on this computer, a profile running ``engine()`` is served, in catalogue order."""
+    return tuple(entry for entry in engine_lanes(catalog, engine) if entry.auth_kind is ProviderAuthKind.NONE)
 
 
 def listed_models(entry: ProviderCatalogEntry, added: Iterable[str]) -> tuple[str, ...]:
@@ -122,7 +157,7 @@ class LocalModelListService:
         catalog = self._catalog()
         if isinstance(catalog, ProviderSettingsRefusal):
             return catalog
-        entry = next((held for held in local_lanes(catalog) if held.id == lane), None)
+        entry = next((held for held in local_lanes(catalog, self.selected_engine) if held.id == lane), None)
         if entry is None:
             return _refused(ProviderSettingsRefusalCode.UNKNOWN)
         current = self._current(expected_revision)
@@ -165,7 +200,7 @@ class LocalModelListService:
         catalog = self._catalog()
         if isinstance(catalog, ProviderSettingsRefusal):
             return catalog
-        if not any(entry.id == lane for entry in catalog.providers):
+        if not any(entry.id == lane for entry in engine_lanes(catalog, self.selected_engine)):
             return _refused(ProviderSettingsRefusalCode.UNKNOWN)
         current = self._current(expected_revision)
         if isinstance(current, ProviderSettingsRefusal):
@@ -218,12 +253,21 @@ class LocalModelListService:
             return _refused(ProviderSettingsRefusalCode.COMMITTED_READBACK_FAILED)
         return _list_status(read, self._local_lane_ids())
 
+    def selected_engine(self) -> LocalEngine | None:
+        """Return the engine the profile runs: the person's choice, else the default.
+
+        ``None`` when the record cannot be read or the store refuses: no engine
+        is picked for a setting nobody can read.
+        """
+        status = self.engine_status()
+        return status.engine if isinstance(status, LocalEngineStatus) else None
+
     def _local_lane_ids(self) -> tuple[str, ...]:
-        """Return the catalogue's local lane ids; none when the catalogue cannot be read."""
+        """Return the local lane ids the selected engine is served; none when the catalogue cannot be read."""
         catalog = self._catalog()
         if isinstance(catalog, ProviderSettingsRefusal):
             return ()
-        return tuple(entry.id for entry in local_lanes(catalog))
+        return tuple(entry.id for entry in local_lanes(catalog, self.selected_engine))
 
     def _catalog(self) -> ProviderCatalog | ProviderSettingsRefusal:
         try:
@@ -361,4 +405,4 @@ def _refused(code: ProviderSettingsRefusalCode) -> ProviderSettingsRefusal:
     return ProviderSettingsRefusal(code=code)
 
 
-__all__ = ["LocalModelListService", "listed_models", "local_lanes"]
+__all__ = ["LocalModelListService", "engine_lanes", "listed_models", "local_lanes", "serves_engine_lane"]

@@ -25,12 +25,13 @@ from .host.credential_frame import wipe
 from .providers.application.model_runs import ModelRunService
 from .providers.application.ports import ProviderCatalogUnavailableError, ProviderCatalogUnavailableReason
 from .providers.domain.catalog import MAX_CATALOG_LANES
+from .providers.domain.record import LocalEngine
 from .service_scheduling import AgentServiceScheduling
 from .service_support import (
     HOSTED_CERTIFICATION_CACHE_SECONDS,
     SERVED_CATALOG_READ_POLICY,
     controller_is_ready,
-    without_lanes,
+    picker_lanes,
 )
 
 
@@ -39,17 +40,21 @@ class AgentService(AgentServiceScheduling):
 
     @override
     def _picker_catalog(self, document: dict[str, Any]) -> dict[str, Any]:
-        """Drop the lanes the signed-in profile turned off, so the picker never offers them.
+        """Keep the lanes the picker offers: the selected engine's, and none the profile turned off.
 
-        Only stored settings are read; no provider program is probed. Without a
-        lease, or when the settings cannot be read, the catalog is returned
-        unchanged: an off lane still resolves no credential for the agent.
+        Only stored settings are read; no provider program is probed. Of the
+        two local engines' keyless lanes only the selected engine's is kept,
+        by the rule the provider settings and the local model lists share; an
+        engine setting that cannot be read, or no lease, keeps neither. When
+        the turned-off lanes cannot be read they are not dropped: an off lane
+        still resolves no credential for the agent.
         """
-        if self.client.lease is None:
-            return document
-        turned_off = self._providers.turned_off_lanes()
-        if turned_off is None or not turned_off:
-            return document
+        signed_in = self.client.lease is not None
+
+        def engine() -> LocalEngine | None:
+            return self._local_models.selected_engine() if signed_in else None
+
+        turned_off = (self._providers.turned_off_lanes() if signed_in else None) or frozenset()
         if document.get("kind") == DECLARED_CATALOG_KIND:
             declared: object = document.get("catalog")
             if not isinstance(declared, dict):
@@ -57,9 +62,11 @@ class AgentService(AgentServiceScheduling):
             # A declared lane names its provider identity ``provider``.
             return {
                 **document,
-                "catalog": without_lanes(cast(dict[str, object], declared), turned_off, provider_field="provider"),
+                "catalog": picker_lanes(
+                    cast(dict[str, object], declared), engine, turned_off, provider_field="provider"
+                ),
             }
-        return without_lanes(document, turned_off, provider_field="provider_id")
+        return picker_lanes(document, engine, turned_off, provider_field="provider_id")
 
     @override
     def _served_catalog(self, ready: AgentReady) -> dict[str, Any]:

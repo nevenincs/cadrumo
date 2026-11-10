@@ -28,6 +28,7 @@ from cadrumo_agent_service.providers.application.contracts import (
 from cadrumo_agent_service.providers.application.service import ProviderSettingsService
 from cadrumo_agent_service.providers.application.tests.synthetic_catalog import KEY_LANE, synthetic_document
 from cadrumo_agent_service.providers.domain.catalog import parse_provider_catalog
+from cadrumo_agent_service.providers.domain.record import LocalEngine
 from cadrumo_agent_service.providers.persistence.store import SecureProviderSettingsStore
 from cadrumo_client.contracts.service_access import ServiceConnected
 from cadrumo_runtime.host.tests.test_service_records import service_record_runtime
@@ -68,6 +69,7 @@ def test_the_service_runs_the_declared_agent_catalog_and_projects_its_status(tmp
         assert client.claim() is not None
         store = SecureProviderSettingsStore(client=client)
         settings = ProviderSettingsService(
+            selected_engine=lambda: LocalEngine.LLAMACPP,
             store=store,
             catalog_source=source,
         )
@@ -111,6 +113,7 @@ def test_a_service_without_a_declared_agent_returns_typed_catalog_unavailability
         assert isinstance(runtime.admit(client), ServiceConnected)
         assert client.claim() is not None
         status = ProviderSettingsService(
+            selected_engine=lambda: LocalEngine.LLAMACPP,
             store=SecureProviderSettingsStore(client=client),
             catalog_source=source,
         ).status()

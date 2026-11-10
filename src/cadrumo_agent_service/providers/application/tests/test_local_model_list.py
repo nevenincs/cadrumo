@@ -101,7 +101,7 @@ def _put(
 def test_the_local_lanes_are_the_keyless_ones_and_list_the_recommended_models_before_the_added_ones() -> None:
     catalog = synthetic_catalog()
 
-    (local,) = local_lanes(catalog)
+    (local,) = local_lanes(catalog, lambda: LocalEngine.LLAMACPP)
 
     assert local.id == KEYLESS_LANE
     assert listed_models(local, ()) == (KEYLESS_TEXT_MODEL, KEYLESS_VISION_MODEL)
