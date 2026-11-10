@@ -31,6 +31,7 @@ from ..registers_inventory import INVENTORY_TOOL_KEY, LedgerInventoryDoorV1, Led
 from ..registers_presentation import REGISTER_PAGE_SIZE
 from ..workspace_injection import LedgerWorkspaceInjection
 from .registers_fixtures import (
+    INVENTORY_YEAR,
     REGISTERS_PROFILE_ID,
     SYNTHETIC_AUTHORITY_PATH,
     SYNTHETIC_CLOSING_FACTS_PATH,
@@ -42,6 +43,9 @@ from .registers_fixtures import (
     synthetic_inventory_row,
 )
 from .workspace_fixtures import WorkspaceHostApp, ledger_context, ledger_projection, ledger_review_action
+
+_IMPOSSIBLE_DAY = date(INVENTORY_YEAR, 2, 28).isoformat()[:-2] + "30"
+"""A calendar-shaped text for a day February never has."""
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -93,16 +97,16 @@ async def test_create_add_a_movement_preview_and_record_a_closing_authority_each
 
             await _choose(pilot, screen, "inventory-action", "create")
             await _choose(pilot, screen, "inventory-method", "pmp")
-            _fill(screen, actividad="act-01", year="2026", opening="100.00")
+            _fill(screen, actividad="act-01", year=str(INVENTORY_YEAR), opening="100.00")
             await _review_and_confirm(pilot, screen)
             assert door.requests[1] == InventoryCreateRequest(
                 profile_id=REGISTERS_PROFILE_ID,
                 actividad_id="act-01",
-                year=2026,
+                year=INVENTORY_YEAR,
                 valuation_method="pmp",
                 opening_stock=PublicDecimal(decimal="100.00"),
             )
-            assert _keys(screen) == ["act-01|2026"]
+            assert _keys(screen) == [f"act-01|{INVENTORY_YEAR}"]
             assert tr("tui.ledger.registers.inventory.done.create") in _text(screen, "#register-result")
 
             await _choose(pilot, screen, "inventory-action", "movement_add")
@@ -112,7 +116,7 @@ async def test_create_add_a_movement_preview_and_record_a_closing_authority_each
             _fill(
                 screen,
                 movement_id="mv-01",
-                movement_date="2026-03-01",
+                movement_date=date(INVENTORY_YEAR, 3, 1).isoformat(),
                 quantity="5",
                 unit_cost="11.00",
                 taxable_base="55.00",
@@ -127,9 +131,9 @@ async def test_create_add_a_movement_preview_and_record_a_closing_authority_each
             assert movement == InventoryMovementAddRequest(
                 profile_id=REGISTERS_PROFILE_ID,
                 actividad_id="act-01",
-                year=2026,
+                year=INVENTORY_YEAR,
                 movement_id="mv-01",
-                movement_date=date(2026, 3, 1),
+                movement_date=date(INVENTORY_YEAR, 3, 1),
                 kind=MovementKind.PURCHASE,
                 quantity=PublicDecimal(decimal="5"),
                 unit_cost=PublicDecimal(decimal="11.00"),
@@ -145,7 +149,7 @@ async def test_create_add_a_movement_preview_and_record_a_closing_authority_each
             assert _text(screen, "#register-result") == tr(
                 "tui.ledger.registers.inventory.result.valuation",
                 actividad="act-01",
-                year=2026,
+                year=INVENTORY_YEAR,
                 method="pmp",
                 closing="155.00",
                 cogs="45.00",
@@ -158,9 +162,9 @@ async def test_create_add_a_movement_preview_and_record_a_closing_authority_each
             assert closing == InventoryClosingAuthorityRecordRequest(
                 profile_id=REGISTERS_PROFILE_ID,
                 actividad_id="act-01",
-                year=2026,
+                year=INVENTORY_YEAR,
                 authority_record=InventoryClosingAuthorityRecordInput.from_domain(
-                    synthetic_closing_authority("act-01", 2026)
+                    synthetic_closing_authority("act-01", INVENTORY_YEAR)
                 ),
             )
             result = _text(screen, "#register-result")
@@ -169,7 +173,7 @@ async def test_create_add_a_movement_preview_and_record_a_closing_authority_each
 
 @pytest.mark.asyncio
 async def test_retire_shows_the_state_and_a_second_retirement_shows_its_keyed_refusal() -> None:
-    door = MemoryInventoryDoor((synthetic_inventory_row("act-01", 2026),))
+    door = MemoryInventoryDoor((synthetic_inventory_row("act-01", INVENTORY_YEAR),))
     screen = _screen(door)
     with override_settings(cadrumo_output_language="en"):
         async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
@@ -177,7 +181,7 @@ async def test_retire_shows_the_state_and_a_second_retirement_shows_its_keyed_re
             await _choose(pilot, screen, "inventory-action", "retire")
             assert screen.query_one("#inventory-retirement-reason-field").display
             assert not screen.query_one("#inventory-correction-reason-field").display
-            _fill(screen, actividad="act-01", year="2026")
+            _fill(screen, actividad="act-01", year=str(INVENTORY_YEAR))
             await _review_and_confirm(pilot, screen)
 
             request = door.requests[1]
@@ -187,13 +191,13 @@ async def test_retire_shows_the_state_and_a_second_retirement_shows_its_keyed_re
             assert tr("application.inventory.workbench.done.applied") in result
             assert tr("application.inventory.workbench.state.retired") in result
 
-            _fill(screen, actividad="act-01", year="2026")
+            _fill(screen, actividad="act-01", year=str(INVENTORY_YEAR))
             await _review_and_confirm(pilot, screen)
             assert door.requests[-2:][0] != request
             assert tr(
                 "application.inventory.service.errors.inventory_already_retired",
                 actividad_id="act-01",
-                year="2026",
+                year=str(INVENTORY_YEAR),
             ) in _text(screen, "#ledger-refusal")
 
 
@@ -207,11 +211,16 @@ async def test_a_movement_for_an_absent_inventory_shows_the_registered_refusal()
             await _choose(pilot, screen, "inventory-action", "movement_add")
             await _choose(pilot, screen, "inventory-movement-kind", "count")
             _fill(
-                screen, actividad="act-09", year="2026", movement_id="mv-09", movement_date="2026-12-31", quantity="3"
+                screen,
+                actividad="act-09",
+                year=str(INVENTORY_YEAR),
+                movement_id="mv-09",
+                movement_date=date(INVENTORY_YEAR, 12, 31).isoformat(),
+                quantity="3",
             )
             await _review_and_confirm(pilot, screen)
             refusal = _text(screen, "#ledger-refusal")
-            assert tr("application.inventory.service.errors.activity_not_found", year="2026") in refusal
+            assert tr("application.inventory.service.errors.activity_not_found", year=str(INVENTORY_YEAR)) in refusal
             assert isinstance(screen.staged, InventoryMovementAddRequest)
             assert _keys(screen) == []
 
@@ -229,9 +238,9 @@ async def test_a_second_inventory_for_the_same_activity_and_year_is_refused() ->
             await pilot.press("enter")
             await settle(pilot)
             assert screen.query_one("#inventory-actividad", Input).value == "act-01"
-            assert screen.query_one("#inventory-year", Input).value == "2026"
+            assert screen.query_one("#inventory-year", Input).value == str(INVENTORY_YEAR)
             await _review_and_confirm(pilot, screen)
-            assert tr("application.inventory.service.errors.activity_conflict", year="2026") in _text(
+            assert tr("application.inventory.service.errors.activity_conflict", year=str(INVENTORY_YEAR)) in _text(
                 screen, "#ledger-refusal"
             )
             assert len(door.rows) == 1
@@ -245,7 +254,7 @@ async def test_an_unreadable_source_file_is_refused_before_anything_is_sent() ->
         async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             await _choose(pilot, screen, "inventory-action", "closing_authority")
-            _fill(screen, actividad="act-01", year="2026", authority_path="missing.json")
+            _fill(screen, actividad="act-01", year=str(INVENTORY_YEAR), authority_path="missing.json")
             await _press(pilot, screen, "register-review")
             assert screen.staged is None
             assert _text(screen, "#ledger-refusal") == "unreadable: missing.json"
@@ -266,13 +275,18 @@ async def test_an_impossible_movement_date_is_refused_before_anything_is_sent() 
             await settle(pilot)
             await _choose(pilot, screen, "inventory-action", "movement_add")
             _fill(
-                screen, actividad="act-01", year="2026", movement_id="mv-01", movement_date="2026-02-30", quantity="1"
+                screen,
+                actividad="act-01",
+                year=str(INVENTORY_YEAR),
+                movement_id="mv-01",
+                movement_date=_IMPOSSIBLE_DAY,
+                quantity="1",
             )
             await _press(pilot, screen, "register-review")
             assert screen.staged is None
             field = tr("tui.ledger.registers.inventory.field.movement_date")
             assert _text(screen, "#ledger-refusal") == tr(
-                "tui.ledger.registers.invalid_date", field=field, value="2026-02-30"
+                "tui.ledger.registers.invalid_date", field=field, value=_IMPOSSIBLE_DAY
             )
 
 
@@ -286,9 +300,9 @@ async def test_the_inventory_list_holds_one_page_of_a_thousand_rows_and_pages_bo
             table = screen.query_one("#inventory-list", DataTable)
             assert table.row_count == REGISTER_PAGE_SIZE
             await _press(pilot, screen, "inventory-list-next")
-            assert _keys(screen)[0] == f"act-{REGISTER_PAGE_SIZE:04d}|2026"
+            assert _keys(screen)[0] == f"act-{REGISTER_PAGE_SIZE:04d}|{INVENTORY_YEAR}"
             await _press(pilot, screen, "inventory-list-previous")
-            assert _keys(screen)[0] == "act-0000|2026"
+            assert _keys(screen)[0] == f"act-0000|{INVENTORY_YEAR}"
 
 
 def test_the_inventory_tool_attaches_to_the_overview() -> None:
@@ -327,10 +341,10 @@ async def test_a_closing_value_is_recorded_from_a_facts_file_with_no_fingerprint
         async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             await _choose(pilot, screen, "inventory-action", "closing_value")
-            _fill(screen, actividad="act-01", year="2026")
+            _fill(screen, actividad="act-01", year=str(INVENTORY_YEAR))
             screen.query_one("#inventory-closing-facts-path", Input).value = SYNTHETIC_CLOSING_FACTS_PATH
             await _review_and_confirm(pilot, screen)
             submitted = door.requests[-2]
             assert isinstance(submitted, InventoryClosingValueRecordRequest)
             assert submitted.facts == synthetic_closing_value_facts()
-            assert (submitted.actividad_id, submitted.year) == ("act-01", 2026)
+            assert (submitted.actividad_id, submitted.year) == ("act-01", INVENTORY_YEAR)

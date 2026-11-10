@@ -36,9 +36,11 @@ from .....application.review.filter import LedgerReviewStatus
 from .....core.confirmation_gate import ConfirmationBlockReason, ReviewAdvisoryKind
 from .....core.errors.hierarchy import CadrumoError
 from .....core.identity.transaction_ids import TransactionId
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 REVIEW_PROFILE_ID: Final = UUID("4dd00000-0000-4000-8000-0000000000d4")
-_DRAFTED_AT: Final = datetime(2026, 3, 14, 9, 30, tzinfo=UTC)
+_YEAR: Final = filing_year_envelope().horizon
+_DRAFTED_AT: Final = datetime(_YEAR, 3, 14, 9, 30, tzinfo=UTC)
 
 
 def synthetic_review_id(index: int) -> TransactionId:
@@ -52,7 +54,7 @@ def synthetic_review_row(
     """One synthetic review row: a dated, described amount awaiting review."""
     return LedgerReviewRowProjection(
         id=synthetic_review_id(index),
-        date=(datetime(2026, 1, 1, tzinfo=UTC) + timedelta(days=index % 365)).date().isoformat(),
+        date=(datetime(_YEAR, 1, 1, tzinfo=UTC) + timedelta(days=index % 365)).date().isoformat(),
         amount=f"{index + 1}.50",
         description=f"Compra sintética {index:05d}",
         status=status,

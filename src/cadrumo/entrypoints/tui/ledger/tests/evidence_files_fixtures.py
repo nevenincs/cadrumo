@@ -13,7 +13,7 @@ import asyncio
 import hashlib
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Final
 from uuid import UUID
 
@@ -90,6 +90,7 @@ from .....core.confirmation_gate import ConfirmationBlockReason
 from .....core.errors.hierarchy import CadrumoError, RecordedRegisteredError
 from .....core.operations import OperationEffect
 from .....domain.attachments.enums import AttachmentSource
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.iva.schema import InvoiceKind
 from ...account import AccountSessionExpiredError
 from ...tests.settling import settle
@@ -99,7 +100,8 @@ from .workspace_fixtures import LEDGER_TX_A, LEDGER_TX_B
 EVIDENCE_FILES_PROFILE_ID: Final = UUID("3ee00000-0000-4000-8000-0000000000e3")
 EVIDENCE_FILES_REFUSAL_CODE: Final = "REFUSED_LEDGER_EVIDENCE_NOT_FOUND"
 EVIDENCE_FILES_REFUSAL_KEY: Final = "errors.refused.refused_ledger_evidence_not_found"
-_AT: Final = datetime(2026, 3, 14, 9, 30, tzinfo=UTC)
+_YEAR: Final = filing_year_envelope().horizon
+_AT: Final = datetime(_YEAR, 3, 14, 9, 30, tzinfo=UTC)
 _EVENT_ID: Final = "e" * 64
 
 
@@ -124,8 +126,8 @@ def synthetic_record(index: int, profile_id: UUID = EVIDENCE_FILES_PROFILE_ID) -
         attachment_id=digest,
         media_kind=MediaKind.PDF,
         supplier="Suministros Delta SL",
-        invoice_number=f"F-2026-{index:04d}",
-        invoice_date="2026-03-14",
+        invoice_number=f"F-{_YEAR}-{index:04d}",
+        invoice_date=date(_YEAR, 3, 14).isoformat(),
         taxable_base="100",
         iva_rate="21",
         iva_amount="21",
@@ -174,8 +176,8 @@ def synthetic_review(
         drafted_at=_AT,
         draft=InvoiceDraftProjectionV1(
             supplier_name="Suministros Delta SL",
-            invoice_number="F-2026-0001",
-            invoice_date="2026-03-14",
+            invoice_number=f"F-{_YEAR}-0001",
+            invoice_date=date(_YEAR, 3, 14).isoformat(),
             taxable_base=PublicDecimal(decimal="100"),
             iva_rate=PublicDecimal(decimal="21"),
             iva_amount=PublicDecimal(decimal="21"),
@@ -201,8 +203,8 @@ def evidence_transaction(
     """Return the outgoing office-supplies row the evidence-files screens attach files to."""
     return ledger_transaction_projection(
         transaction_id=transaction_id,
-        date="2026-03-14",
-        booked_date="2026-03-14",
+        date=date(_YEAR, 3, 14).isoformat(),
+        booked_date=date(_YEAR, 3, 14).isoformat(),
         amount="1250.00",
         direction="outgoing",
         counterparty="Suministros Delta SL",

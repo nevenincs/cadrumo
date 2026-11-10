@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
 from textual.widgets import Button, Input, Static
 
 from .....core.config import override_settings
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...components.host import ScreenHostApp
 from ...tests.settling import settle
 from ..controller import LedgerWorkspaceController
@@ -15,6 +17,8 @@ from ..invoice_entry import LedgerInvoiceEntryScreen
 from ..models import LedgerFlowState, LedgerInvoiceAddResultV1, LedgerInvoiceEntryV1
 from ..workspace_injection import LedgerWorkspaceInjection
 from .workspace_fixtures import ledger_context, ledger_projection, ledger_review_action
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -47,7 +51,7 @@ async def test_the_entry_screen_shows_the_missing_rate_after_recording() -> None
             for name, value in {
                 "counterparty_name": "Proveedor Exterior SL",
                 "invoice_number": "FX-USD",
-                "invoice_date": "2026-03-16",
+                "invoice_date": date(_YEAR, 3, 16).isoformat(),
                 "taxable_base": "100.00",
                 "iva_rate": "21",
                 "currency": "USD",

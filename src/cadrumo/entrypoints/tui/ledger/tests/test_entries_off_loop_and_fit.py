@@ -9,6 +9,7 @@ is caught.
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import date
 from typing import cast, override
 
 import pytest
@@ -18,6 +19,7 @@ from textual.screen import Screen
 from textual.widgets import Button, Collapsible, DataTable, Input, Select
 
 from .....core.config import override_settings
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...components.dialogs import ConfirmScreen
 from ...tests.frame import geometry_band
 from ...tests.settling import settle
@@ -36,6 +38,8 @@ from .entries_door_fixtures import (
     synthetic_entry,
 )
 from .workspace_fixtures import WorkspaceHostApp
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -130,7 +134,7 @@ async def _drive_forms(ledger: _Reached, export_path: str) -> None:
     add = LedgerEntryAddScreen(entries_controller(), doors)
     async with WorkspaceHostApp(add).run_test(size=(120, 40)) as pilot:
         await settle(pilot)
-        add.query_one("#entries-add-booked-date", Input).value = "2026-03-14"
+        add.query_one("#entries-add-booked-date", Input).value = date(_YEAR, 3, 14).isoformat()
         add.query_one("#entries-add-amount", Input).value = "10.00"
         add.query_one("#entries-add-description", Input).value = "Synthetic"
         await _press(pilot, add, "entries-add-review")
@@ -144,7 +148,7 @@ async def _drive_forms(ledger: _Reached, export_path: str) -> None:
     health = LedgerHealthScreen(entries_controller(), doors)
     async with WorkspaceHostApp(health).run_test(size=(120, 40)) as pilot:
         await settle(pilot)
-        health.query_one("#entries-health-year", Input).value = "2026"
+        health.query_one("#entries-health-year", Input).value = str(_YEAR)
         cast("Select[str]", health.query_one("#entries-health-period", Select)).value = "1T"
         await _press(pilot, health, "entries-health-read")
     reset = LedgerResetScreen(entries_controller(), doors)
@@ -179,7 +183,7 @@ def _trace(controller: LedgerWorkspaceController, ledger: MemoryEntriesLedger) -
         controller,
         ledger.doors(),
         transaction_id=entry_id(0),
-        label="2026-01-01 · 100.00 EUR · Synthetic entry 0000",
+        label=f"{date(_YEAR, 1, 1).isoformat()} · 100.00 EUR · Synthetic entry 0000",
         back_to=lambda again: LedgerEntriesBrowseScreen(again, ledger.doors()),
     )
 
@@ -205,7 +209,7 @@ async def _fill(pilot: Pilot[None], screen: LedgerWorkspaceScreen) -> None:
     if isinstance(screen, LedgerEntryAddScreen):
         screen.query_one("#entries-add-optional", Collapsible).collapsed = False
     elif isinstance(screen, LedgerHealthScreen):
-        screen.query_one("#entries-health-year", Input).value = "2026"
+        screen.query_one("#entries-health-year", Input).value = str(_YEAR)
         cast("Select[str]", screen.query_one("#entries-health-period", Select)).value = "1T"
         await _press(pilot, screen, "entries-health-read")
     elif isinstance(screen, LedgerResetScreen):

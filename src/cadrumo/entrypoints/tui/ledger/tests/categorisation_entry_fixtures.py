@@ -11,6 +11,7 @@ from __future__ import annotations
 import csv
 import io
 from dataclasses import dataclass, field
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import cast
 
@@ -36,10 +37,12 @@ from .....application.ledger.transaction_projection import (
 from .....application.operations.public_period import PublicPeriod
 from .....application.review.filter import LedgerReviewStatus
 from .....core.identity.transaction_ids import TransactionId
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.transactions.enums import BusinessClassification
 from .categorisation_fixtures import CATEGORISATION_PROFILE_ID, synthetic_id
 
-_STAMP = "2026-03-01T09:00:00+00:00"
+_YEAR = filing_year_envelope().horizon
+_STAMP = datetime(_YEAR, 3, 1, 9, tzinfo=UTC).isoformat()
 
 
 def synthetic_transaction(
@@ -55,8 +58,8 @@ def synthetic_transaction(
     """One synthetic ledger entry as the list operation projects it."""
     return LedgerTransactionProjection(
         transaction_id=transaction_id,
-        date="2026-03-14",
-        booked_date="2026-03-14",
+        date=date(_YEAR, 3, 14).isoformat(),
+        booked_date=date(_YEAR, 3, 14).isoformat(),
         value_date=None,
         amount=amount,
         currency="EUR",
@@ -299,8 +302,8 @@ def synthetic_participation(index: int, *, modelo: str = "303") -> LedgerPartici
         calculation_revision_id=f"{index:064x}",
         work_unit_id=f"{index + 100:064x}",
         modelo=modelo,
-        filing_year=2026,
-        period=PublicPeriod(filing_year=2026, code="1T"),
+        filing_year=_YEAR,
+        period=PublicPeriod(filing_year=_YEAR, code="1T"),
         revision_state="PRESENTADO",
         filing_record_id=None,
         justificante_reference=None,
