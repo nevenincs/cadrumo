@@ -314,6 +314,7 @@
         "cadrumo.adapters.persistence.profile.transaction_iva_migration",
         "cadrumo.adapters.persistence.profile.transaction_revision_guards",
         "cadrumo.adapters.persistence.profile.transaction_row_contracts",
+        "cadrumo.adapters.persistence.profile.transaction_row_writes",
         "cadrumo.adapters.persistence.profile.transaction_storage_failures",
         "cadrumo.adapters.persistence.profile.transactions",
         "cadrumo.adapters.persistence.profile.translated_bucket_event_history",

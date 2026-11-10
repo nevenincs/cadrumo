@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
+from ....core.external_constants import UTF_8_ENCODING
+from ....core.hashing import sha256_hex
 from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.models import (
     Transaction,
@@ -55,3 +57,37 @@ def require_transaction_edit_link_identity(current: Transaction, replacement: Tr
         raise TransactionValidationError("invoice associations require the reciprocal link operation")
     if old_id != new_id and current.invoice_id is not None:
         raise TransactionValidationError("linked transaction identity cannot change without updating its invoice link")
+
+
+def catalogue_revision_and_assertions(
+    *,
+    index_key: str,
+    index_revision: str,
+    row_keys: Mapping[str, str],
+    row_revisions: Mapping[str, str],
+    include_assertions: bool,
+) -> tuple[str, tuple[SecureObjectRevisionAssertion, ...]]:
+    """Digest the index and row revisions in ``row_keys`` order, with in-batch assertions when asked."""
+    from ....core.secure_object_write import SecureObjectRevisionAssertion
+
+    lines = [f"index\t{index_revision}"]
+    lines.extend(f"{transaction_id}\t{row_revisions[transaction_id]}" for transaction_id in row_keys)
+    revision = sha256_hex("\n".join(lines).encode(UTF_8_ENCODING))
+    if not include_assertions:
+        return revision, ()
+    assertions = (
+        SecureObjectRevisionAssertion(
+            namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
+            object_key=index_key,
+            expected_revision_id=index_revision,
+        ),
+        *(
+            SecureObjectRevisionAssertion(
+                namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
+                object_key=object_key,
+                expected_revision_id=row_revisions[transaction_id],
+            )
+            for transaction_id, object_key in row_keys.items()
+        ),
+    )
+    return revision, assertions
