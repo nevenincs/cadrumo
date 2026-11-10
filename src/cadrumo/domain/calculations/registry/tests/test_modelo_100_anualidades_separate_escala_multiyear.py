@@ -53,7 +53,11 @@ from ..authority import PinnedAuthorityOperation
 from ..errors import FilingYearOutsideSupportEnvelopeError
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema import RegistrySnapshot
-from .authored_editions import authored_revisions_where
+from .authored_editions import (
+    authored_revisions_where,
+    filing_year_envelope,
+    single_exercise_editions,
+)
 from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .published_authority import (
     PublishedGovernedFactSource,
@@ -64,8 +68,14 @@ from .published_authority import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
+# The exercises the escala table below is grounded for; the authored exercises
+# below the support floor keep 0527 as a manual scalar.
 _SEPARATE_ESCALA_YEARS = (2022, 2023)
-_MANUAL_ANUALIDADES_YEARS = (2020, 2021)
+_MANUAL_ANUALIDADES_YEARS = tuple(
+    year for year in single_exercise_editions("100") if year < filing_year_envelope().floor
+)
+assert _SEPARATE_ESCALA_YEARS
+assert _MANUAL_ANUALIDADES_YEARS
 # The authored revisions below the support floor that declare 1741-1759 as Anexo C
 # pension fields; the retired sum formula wrongly read those fields into 0527.
 _ANEXO_C_PENSION_FIELD_IDS = ("1741", "1744", "1749", "1754", "1759")

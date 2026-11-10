@@ -26,10 +26,13 @@ import pytest
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
+from .authored_editions import filing_year_envelope, revision_covering
 from .published_authority import published_snapshot
 from .registry_tree import bundled_modelo_components
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_HORIZON = filing_year_envelope().horizon
 
 
 class _ModeloArithmeticCase(NamedTuple):
@@ -46,8 +49,8 @@ class _ModeloArithmeticCase(NamedTuple):
 _CASES = (
     _ModeloArithmeticCase(
         modelo_id="117",
-        revision_id="2019-y-siguientes",
-        filing_year=2025,
+        revision_id=str(revision_covering("117", _HORIZON).id),
+        filing_year=_HORIZON,
         period="1T",
         formula_ids=frozenset({"modelo-117-total-liquidacion", "modelo-117-resultado-ingresar"}),
         # 09 = [03] + [06] + [08]; 11 = [09] - [10].
@@ -61,12 +64,12 @@ _CASES = (
             validated_casilla_id("09", surface="test_modelo_117_126_128_136_registry"): Decimal("1500.00"),
             validated_casilla_id("11", surface="test_modelo_117_126_128_136_registry"): Decimal("1400.00"),
         },
-        filing_period=date(2025, 3, 31),
+        filing_period=date(_HORIZON, 3, 31),
     ),
     _ModeloArithmeticCase(
         modelo_id="126",
-        revision_id="2019-y-siguientes",
-        filing_year=2025,
+        revision_id=str(revision_covering("126", _HORIZON).id),
+        filing_year=_HORIZON,
         period="1T",
         formula_ids=frozenset({"modelo-126-total-liquidacion", "modelo-126-resultado-ingresar"}),
         # 10 = [02] + [06]; 12 = [10] - [11].
@@ -79,12 +82,12 @@ _CASES = (
             validated_casilla_id("10", surface="test_modelo_117_126_128_136_registry"): Decimal("1000.00"),
             validated_casilla_id("12", surface="test_modelo_117_126_128_136_registry"): Decimal("850.00"),
         },
-        filing_period=date(2025, 3, 31),
+        filing_period=date(_HORIZON, 3, 31),
     ),
     _ModeloArithmeticCase(
         modelo_id="128",
-        revision_id="2019-y-siguientes",
-        filing_year=2025,
+        revision_id=str(revision_covering("128", _HORIZON).id),
+        filing_year=_HORIZON,
         period="1T",
         formula_ids=frozenset({"modelo-128-resultado-ingresar"}),
         # 07 = [03] - [06].
@@ -93,12 +96,12 @@ _CASES = (
             validated_casilla_id("06", surface="test_modelo_117_126_128_136_registry"): Decimal("100.00"),
         },
         expected_values={validated_casilla_id("07", surface="test_modelo_117_126_128_136_registry"): Decimal("800.00")},
-        filing_period=date(2025, 3, 31),
+        filing_period=date(_HORIZON, 3, 31),
     ),
     _ModeloArithmeticCase(
         modelo_id="136",
-        revision_id="2026",
-        filing_year=2026,
+        revision_id=str(revision_covering("136", _HORIZON).id),
+        filing_year=_HORIZON,
         period="1T",
         formula_ids=frozenset(
             {
@@ -118,7 +121,7 @@ _CASES = (
             validated_casilla_id("05", surface="test_modelo_117_126_128_136_registry"): Decimal("12000.00"),
             validated_casilla_id("07", surface="test_modelo_117_126_128_136_registry"): Decimal("12000.00"),
         },
-        filing_period=date(2026, 3, 31),
+        filing_period=date(_HORIZON, 3, 31),
     ),
 )
 

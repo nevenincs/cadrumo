@@ -28,6 +28,7 @@ from ..form_codes import resolve_form_codes
 from ..m303_differentiated_deduction_projection import M303DifferentiatedDeductionRowProjection
 from ..m303_prorrata_activity_projection import M303ProrrataActivityRowProjection
 from ..m303_regimen_simplificado_projection import M303RegimenSimplificadoRecordProjection
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -97,11 +98,13 @@ def test_an_activity_result_with_more_modules_than_declared_is_refused() -> None
 
 def test_more_activities_of_a_kind_than_the_pages_hold_is_refused() -> None:
     activities = tuple(
-        ActividadNoAgricolaSimplificado.model_construct(ejercicio=2026, activity_id=f"a{index}", modulos=())
+        ActividadNoAgricolaSimplificado.model_construct(
+            ejercicio=filing_year_envelope().horizon, activity_id=f"a{index}", modulos=()
+        )
         for index in range(_declared("m303.dp30302.activities_per_kind") + 1)
     )
     with pytest.raises(ValidationError, match="activities of each kind"):
-        RegimenSimplificadoFilingRows(ejercicio=2026, activities=activities)
+        RegimenSimplificadoFilingRows(ejercicio=filing_year_envelope().horizon, activities=activities)
 
 
 def test_a_prorrata_register_row_past_the_declared_slots_is_refused() -> None:

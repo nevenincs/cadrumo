@@ -24,7 +24,7 @@ bounds) rather than recomputing the registry tranche.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
@@ -60,6 +60,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 # LIS DT 44ª (Ley 7/2024) sets its first transitional rates -- micro-empresa 21/22 % and
 # art. 101 ERD 24 % -- for the first exercise the published provision is in force.
 _DT44_FIRST_TRANSITIONAL_EXERCISE = published_legal_reference("ley-27-2014:dt-44").effective_from.year
+# The accounting period ending the day before DT 44ª first applies, and the one it first governs.
+_PERIOD_END_BEFORE_DT44 = date(_DT44_FIRST_TRANSITIONAL_EXERCISE, 1, 1) - timedelta(days=1)
+_PERIOD_END_FIRST_DT44 = date(_DT44_FIRST_TRANSITIONAL_EXERCISE, 12, 31)
 _FORM_BINDING = "modelo-200-profile-legal-entity-form"
 _NEW_ENTITY_BINDING = "modelo-200-profile-new-entity-flag"
 _INCN_BINDING = "modelo-200-profile-incn-prior-12-months"
@@ -71,7 +74,9 @@ _M200_CUOTA_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
 
 
 def _snapshot():
-    return published_snapshot("200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
+    return published_snapshot(
+        "200", filing_year=_DT44_FIRST_TRANSITIONAL_EXERCISE, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+    )
 
 
 def _cuota_for(
@@ -80,7 +85,7 @@ def _cuota_for(
     form: str,
     new_entity: Decimal,
     incn: Decimal,
-    filing_period: date = date(2024, 12, 31),
+    filing_period: date = _PERIOD_END_BEFORE_DT44,
 ) -> Decimal:
     result = calculate_registry_snapshot(
         _snapshot(),
@@ -210,7 +215,7 @@ def test_micro_empresa_cuota_is_less_than_general_cuota_at_same_base() -> None:
     rate"), not a recomputation of the tranche arithmetic.
     """
     base = Decimal("1000000")
-    filing_period_2025 = date(2025, 12, 31)
+    filing_period_2025 = _PERIOD_END_FIRST_DT44
     general = _cuota_for(
         base=base,
         form="sl",
@@ -259,7 +264,7 @@ def test_micro_empresa_lane_anchor_at_50000_eur_first_tranche_boundary() -> None
         form="sl",
         new_entity=Decimal("0"),
         incn=Decimal("500000"),
-        filing_period=date(2024, 12, 31),
+        filing_period=_PERIOD_END_BEFORE_DT44,
     )
     assert pyme_2024 == Decimal("11500.00"), (
         "cuota at the 50.000 € tranche for 2024 must equal the Ley 31/2022 "
@@ -271,7 +276,7 @@ def test_micro_empresa_lane_anchor_at_50000_eur_first_tranche_boundary() -> None
         form="sl",
         new_entity=Decimal("0"),
         incn=Decimal("500000"),
-        filing_period=date(2025, 12, 31),
+        filing_period=_PERIOD_END_FIRST_DT44,
     )
     assert pyme_2025 == Decimal("10500.00"), (
         "cuota at the 50.000 € tranche boundary for 2025 must equal the "
@@ -399,7 +404,9 @@ def test_modelo_202_modality_is_art_40_3_mandatory_above_threshold() -> None:
     fraccionado según la modalidad regulada en el artículo 40.3 LIS").
     Art. 40.2 is not offered for such a profile.
     """
-    verdict = derive_modelo_202_modality(_legal_entity_profile(Decimal("7000000")), effective_date=date(2025, 12, 31))
+    verdict = derive_modelo_202_modality(
+        _legal_entity_profile(Decimal("7000000")), effective_date=_PERIOD_END_FIRST_DT44
+    )
     assert verdict.modality is Modelo202Modality.ART_40_3_MANDATORY
     assert "ley-27-2014:art-40-3" in verdict.legal_refs
     assert verdict.threshold_fact is not None
@@ -410,10 +417,10 @@ def test_modelo_202_modality_is_art_40_3_mandatory_above_threshold() -> None:
 
 def test_modelo_202_threshold_resolver_retains_statutory_provenance() -> None:
     """The applicability comparison uses the temporal scalar fact, not a static default."""
-    threshold = resolve_modelo_202_art_40_3_incn_threshold(effective_date=date(2025, 12, 31))
+    threshold = resolve_modelo_202_art_40_3_incn_threshold(effective_date=_PERIOD_END_FIRST_DT44)
 
     assert threshold.fact_id == "lis-art-40-3-incn-threshold"
-    assert threshold.effective_date == date(2025, 12, 31)
+    assert threshold.effective_date == _PERIOD_END_FIRST_DT44
     assert threshold.payload.value == Decimal("6000000")
     assert "ley-27-2014:art-40-3" in threshold.legal_refs
 
@@ -428,9 +435,9 @@ def test_modelo_202_modality_is_art_40_2_optional_at_or_below_threshold() -> Non
     wording: Art. 40.3 mandates only when INCN "ha superado" the
     threshold — equality alone does not exceed it.
     """
-    below = derive_modelo_202_modality(_legal_entity_profile(Decimal("500000")), effective_date=date(2025, 12, 31))
+    below = derive_modelo_202_modality(_legal_entity_profile(Decimal("500000")), effective_date=_PERIOD_END_FIRST_DT44)
     at_threshold = derive_modelo_202_modality(
-        _legal_entity_profile(Decimal("6000000")), effective_date=date(2025, 12, 31)
+        _legal_entity_profile(Decimal("6000000")), effective_date=_PERIOD_END_FIRST_DT44
     )
     assert below.modality is Modelo202Modality.ART_40_2_OPTIONAL
     assert at_threshold.modality is Modelo202Modality.ART_40_2_OPTIONAL
@@ -445,7 +452,7 @@ def test_modelo_202_modality_is_incomplete_when_incn_undeclared() -> None:
     not known. The operator must declare the prior-12-months INCN
     first.
     """
-    verdict = derive_modelo_202_modality(_legal_entity_profile(None), effective_date=date(2025, 12, 31))
+    verdict = derive_modelo_202_modality(_legal_entity_profile(None), effective_date=_PERIOD_END_FIRST_DT44)
     assert verdict.modality is Modelo202Modality.INCOMPLETE
     # The verdict still carries the modality legal_refs so the operator
     # sees what they are being asked to ground their answer against.
@@ -466,7 +473,7 @@ def test_modelo_202_modality_is_incomplete_for_non_legal_entity() -> None:
         iva_regime=IVARegime("GENERAL"),
         incn_prior_12_months=Decimal("9000000"),
     )
-    verdict = derive_modelo_202_modality(natural_person, effective_date=date(2025, 12, 31))
+    verdict = derive_modelo_202_modality(natural_person, effective_date=_PERIOD_END_FIRST_DT44)
     assert verdict.modality is Modelo202Modality.INCOMPLETE
 
 
@@ -504,7 +511,7 @@ def _calculate_with_estado_percentage(estado_percentage: Decimal | None):
             "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
             "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
         },
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": _PERIOD_END_BEFORE_DT44},
     )
 
 

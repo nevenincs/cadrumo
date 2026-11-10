@@ -55,7 +55,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 # ── shared date contexts ──────────────────────────────────────────────────────
-_DATE_2024 = {"filing_period": date(2024, 12, 31)}
 # The newest Modelo 100 edition the registry authors.
 _REVIEWED_EDITION = newest_authored_edition("100")
 _DATE_REVIEWED_EDITION = {"filing_period": date(_REVIEWED_EDITION, 12, 31)}
@@ -130,7 +129,7 @@ def _run_2024(snapshot: RegistrySnapshot, inputs: dict[CasillaId, Decimal]) -> d
     result = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
-        date_context=_DATE_2024,
+        date_context={"filing_period": date(snapshot.filing_year, 12, 31)},
         enum_binding_values=_ENUM_BINDINGS_2024,
         binding_values=_BINDINGS_2024,
         relation_values=_RELATION_VALUES_2024,

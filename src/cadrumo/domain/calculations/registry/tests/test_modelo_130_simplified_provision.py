@@ -22,9 +22,12 @@ from .....core.period import Period
 from .....domain.period import calculation_filing_date
 from ..authority import PinnedAuthorityOperation
 from ..formula_runtime import calculate_registry_snapshot
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
+# A year with the ordinary 5 per cent provision.
+_YEAR = filing_year_envelope().horizon
 _MODALITY = "modelo-130-estimacion-directa-modalidad"
 _PRIOR_EXPENSES = "gastos-deducibles-previos"
 _PROVISION = "provisiones-gastos-dificil-justificacion"
@@ -96,7 +99,7 @@ def test_each_simplified_quarter_adds_the_provision_to_box_02(
 ) -> None:
     boxes = _boxes(
         operation,
-        year=2025,
+        year=_YEAR,
         period=period,
         income=income,
         expenses=expenses,
@@ -112,8 +115,8 @@ def test_each_simplified_quarter_adds_the_provision_to_box_02(
 
 def test_the_annual_cap_binds_the_cumulative_provision(*, operation: PinnedAuthorityOperation) -> None:
     """50.000 - 10.000 = 40.000 x 5 % = 2.000 exactly; 60.000 - 10.000 = 50.000 x 5 % = 2.500, held to 2.000."""
-    at_cap = _boxes(operation, year=2025, period="3T", income="50000", expenses="10000")
-    above_cap = _boxes(operation, year=2025, period="4T", income="60000", expenses="10000")
+    at_cap = _boxes(operation, year=_YEAR, period="3T", income="50000", expenses="10000")
+    above_cap = _boxes(operation, year=_YEAR, period="4T", income="60000", expenses="10000")
 
     assert at_cap[_PROVISION] == Decimal("2000.00"), at_cap
     assert above_cap[_PROVISION] == Decimal("2000.00"), above_cap
@@ -123,7 +126,7 @@ def test_the_annual_cap_binds_the_cumulative_provision(*, operation: PinnedAutho
 
 def test_a_negative_prior_net_income_has_no_provision(*, operation: PinnedAuthorityOperation) -> None:
     """1.000 - 3.000 = -2.000: there is no positive net income to take 5 per cent of."""
-    boxes = _boxes(operation, year=2025, period="1T", income="1000", expenses="3000")
+    boxes = _boxes(operation, year=_YEAR, period="1T", income="1000", expenses="3000")
 
     assert boxes[_PROVISION] == Decimal("0.00"), boxes
     assert boxes["02"] == Decimal("3000.00"), boxes
@@ -160,7 +163,7 @@ def test_the_2023_cap_is_still_two_thousand_euros(*, operation: PinnedAuthorityO
 
 def test_the_normal_modality_has_no_provision(*, operation: PinnedAuthorityOperation) -> None:
     """The normal modality deducts its expenses as they are: box 02 = 500, box 03 = 3.500, 20 % = 700."""
-    boxes = _boxes(operation, year=2025, period="1T", income="4000", expenses="500", modality=_NORMAL)
+    boxes = _boxes(operation, year=_YEAR, period="1T", income="4000", expenses="500", modality=_NORMAL)
 
     assert boxes[_PROVISION] == Decimal("0.00"), boxes
     assert boxes["02"] == Decimal("500.00"), boxes
@@ -179,7 +182,7 @@ def test_an_undeclared_modality_leaves_box_02_unresolved(
     """
     boxes: Mapping[str, Decimal] = _boxes(
         operation,
-        year=2025,
+        year=_YEAR,
         period="1T",
         income="4000",
         expenses="500",

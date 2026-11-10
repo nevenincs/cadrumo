@@ -37,15 +37,19 @@ from ..m347_threshold import (
     resolve_m347_threshold_buckets,
 )
 from ..snapshot_globals import SupportedFilingYearsCatalogue
+from .authored_editions import authored_revisions, revision_last_exercise
 from .m347_fixture import resolve_m347_counterparty_annual_threshold
 from .published_authority import published_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_FILING_2025 = date(2025, 12, 31)
-_FILING_2024 = date(2024, 12, 31)
-_REVISION_2025 = "2025-y-siguientes"
-_REVISION_2024 = "2011-2024"
+_REVISION_NEWEST_METADATA = authored_revisions("347")[-1]
+_REVISION_NEWEST = str(_REVISION_NEWEST_METADATA.id)
+_REVISION_PRIOR = str(authored_revisions("347")[-2].id)
+_YEAR_NEWEST = _REVISION_NEWEST_METADATA.valid_from.year
+_YEAR_PRIOR = revision_last_exercise("347", _REVISION_PRIOR)
+_FILING_NEWEST = date(_YEAR_NEWEST, 12, 31)
+_FILING_PRIOR = date(_YEAR_PRIOR, 12, 31)
 _BUCKET_FACT_ID = "m347-clave-threshold-buckets"
 _PARTY = "B11111112"
 _COUNT_BINDING = "modelo-347-declarante-numero-personas-entidades"
@@ -67,7 +71,7 @@ def _observation(
     *,
     party_tax_id: str = _PARTY,
     invoice_id: str | None = None,
-    transaction_date: date = date(2025, 3, 10),
+    transaction_date: date = date(_YEAR_NEWEST, 3, 10),
 ) -> InvoiceObservation:
     source_kind = (
         BindingSourceKind.COLLECTIBLE_INVOICE if clave in {"B", "F", "C"} else BindingSourceKind.PAYABLE_INVOICE
@@ -97,8 +101,8 @@ class _Declared:
 def _declare(
     observations: tuple[InvoiceObservation, ...],
     *,
-    revision_id: str = _REVISION_2025,
-    effective_date: date = _FILING_2025,
+    revision_id: str = _REVISION_NEWEST,
+    effective_date: date = _FILING_NEWEST,
 ) -> _Declared:
     revision = published_revision("347", revision_id)
     row_values = resolve_invoice_binding_row_values(revision, observations, effective_date=effective_date)
@@ -111,11 +115,11 @@ def _declare(
 
 
 def _general_floor() -> Decimal:
-    return m347_threshold_decimal(resolve_m347_counterparty_annual_threshold(effective_date=_FILING_2025))
+    return m347_threshold_decimal(resolve_m347_counterparty_annual_threshold(effective_date=_FILING_NEWEST))
 
 
 def _clave_c_floor() -> Decimal:
-    bucket = resolve_m347_threshold_buckets(effective_date=_FILING_2025).bucket_of("C")
+    bucket = resolve_m347_threshold_buckets(effective_date=_FILING_NEWEST).bucket_of("C")
     assert bucket.floor_fact is not None
     return m347_threshold_decimal(bucket.floor_fact)
 
@@ -200,14 +204,14 @@ def test_clave_e_below_the_general_floor_is_declared_for_2024_on_the_consolidate
     regulation and carries that conflict as an unsettled reading.
     """
     declared = _declare(
-        (_observation("E", "1000.00", transaction_date=date(2024, 3, 10)),),
-        revision_id=_REVISION_2024,
-        effective_date=_FILING_2024,
+        (_observation("E", "1000.00", transaction_date=date(_YEAR_PRIOR, 3, 10)),),
+        revision_id=_REVISION_PRIOR,
+        effective_date=_FILING_PRIOR,
     )
 
     assert declared.rows == frozenset({(_PARTY, "E")})
     assert declared.count == Decimal("1")
-    assert resolve_m347_threshold_buckets(effective_date=_FILING_2024).bucket_of("E").reading_unsettled
+    assert resolve_m347_threshold_buckets(effective_date=_FILING_PRIOR).bucket_of("E").reading_unsettled
 
 
 def test_the_floor_must_be_exceeded_not_reached() -> None:
@@ -215,7 +219,7 @@ def test_the_floor_must_be_exceeded_not_reached() -> None:
     floor = _general_floor()
     declarable = m347_declarable_party_buckets(
         {("B00010157", "B"): floor, ("B00015016", "B"): floor + Decimal("0.01")},
-        effective_date=_FILING_2025,
+        effective_date=_FILING_NEWEST,
     )
 
     assert not declarable.admits("B00010157", "B")
@@ -224,7 +228,7 @@ def test_the_floor_must_be_exceeded_not_reached() -> None:
 
 def test_the_published_buckets_partition_every_clave() -> None:
     """Every M347 clave sits in exactly one bucket, and each floor keeps its fact provenance."""
-    buckets = resolve_m347_threshold_buckets(effective_date=_FILING_2025)
+    buckets = resolve_m347_threshold_buckets(effective_date=_FILING_NEWEST)
     by_clave = {clave: bucket for bucket in buckets.buckets for clave in bucket.claves}
 
     assert set(by_clave) == {"A", "B", "C", "D", "E", "F", "G"}
@@ -289,7 +293,7 @@ _WELL_FORMED: tuple[tuple[str, str], ...] = (
 def _resolve_with(entries: tuple[tuple[str, str], ...]) -> M347ThresholdBuckets:
     with bundled_indexed_authority().operation() as operation:
         return resolve_m347_threshold_buckets(
-            effective_date=_FILING_2025,
+            effective_date=_FILING_NEWEST,
             authority=_BucketMappingSource(base=operation, entries=entries),
         )
 
@@ -320,7 +324,7 @@ def test_a_no_floor_bucket_records_the_parties_it_admits_on_a_nonpositive_total(
                 ("D33333335", "E"): Decimal("10.00"),
                 ("E44444441", "B"): Decimal("-50.00"),
             },
-            effective_date=_FILING_2025,
+            effective_date=_FILING_NEWEST,
             authority=_BucketMappingSource(base=operation, entries=_WELL_FORMED),
         )
 
@@ -344,7 +348,7 @@ def test_a_floored_bucket_leaves_out_a_nonpositive_total_and_says_which_it_left_
                 ("D33333335", "B"): Decimal("1000.00"),
                 ("E44444441", "B"): Decimal("4000.00"),
             },
-            effective_date=_FILING_2025,
+            effective_date=_FILING_NEWEST,
             authority=_BucketMappingSource(base=operation, entries=_WELL_FORMED),
         )
 
