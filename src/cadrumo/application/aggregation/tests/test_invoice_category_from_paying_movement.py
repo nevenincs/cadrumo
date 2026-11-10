@@ -37,6 +37,7 @@ from ....domain.calculations.registry.ledger_iva_bindings import (
     unrouted_ledger_iva_quantities,
 )
 from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.models import Invoice
 from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -48,15 +49,17 @@ from ...ledger.preflight import HeldTransactionCatalogue
 from ..invoice_iva_source import period_invoice_iva_side
 from ..iva_ledger_apportionment import resolve_iva_ledger_binding_values
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "29292929-2929-4929-8929-292929292929"
-_Q1_2025 = Period.from_year_and_code(2025, "1T")
+_Q1_2025 = Period.from_year_and_code(_YEAR, "1T")
 _CASILLA_07 = "modelo-303-iva-repercutido-general-base"
 _CASILLA_59 = "modelo-303-casilla-59-entregas-intracomunitarias-base"
 _SERVICE_BASE = Decimal("1500.00")
 _SERVICE = IvaCategory("intra_community_service_supply")
-_NOW = datetime(2025, 2, 1, 9, 0, tzinfo=UTC)
+_NOW = datetime(_YEAR, 2, 1, 9, 0, tzinfo=UTC)
 
 
 def _issued(
@@ -93,7 +96,7 @@ def _issued(
 def _eu_service(operation: PinnedAuthorityOperation) -> Invoice:
     return _issued(
         "2025-002",
-        on=date(2025, 1, 31),
+        on=date(_YEAR, 1, 31),
         nif="DE123456788",
         name="Kunde GmbH",
         country="DE",
@@ -108,7 +111,7 @@ def _withheld_domestic_sale(operation: PinnedAuthorityOperation) -> Invoice:
     """A 21 % sale to a Spanish company that withholds 15 % IRPF on the professional's fee."""
     return _issued(
         "2025-001",
-        on=date(2025, 1, 15),
+        on=date(_YEAR, 1, 15),
         nif="B81000010",
         name="Alfa SL",
         country="ES",
@@ -123,8 +126,8 @@ def _collection(provider_id: str, *, category: IvaCategory | None, amount: Decim
     """A bank collection of the German service, as the operator classified it."""
     raw = RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(2025, 2, 3),
-        value_date=date(2025, 2, 3),
+        booked_date=date(_YEAR, 2, 3),
+        value_date=date(_YEAR, 2, 3),
         amount=amount,
         currency="EUR",
         counterparty="Kunde GmbH",
@@ -184,7 +187,7 @@ def _observations(
 
 
 def _revision(operation: PinnedAuthorityOperation) -> ModeloRevision:
-    return operation.snapshot("303", filing_year=2025, period="1T").revision
+    return operation.snapshot("303", filing_year=_YEAR, period="1T").revision
 
 
 def _resolved(

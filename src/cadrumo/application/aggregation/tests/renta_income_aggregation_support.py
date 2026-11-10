@@ -13,6 +13,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.governed_fact_scope import GovernedFactSource
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_editions
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.transactions.date_partition import (
     LedgerDatePartition,
@@ -25,6 +26,8 @@ from ....domain.transactions.irpf_categories import has_activity_irpf_category, 
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
+
+_YEAR = newest_authored_editions("100", 2)[0]
 
 
 class _InvoiceCatalogueReader:
@@ -85,9 +88,9 @@ def renta_income_aggregation_period(year: int, code: str) -> Period:
     return Period.from_year_and_code(year, code)
 
 
-ANNUAL_2024 = renta_income_aggregation_period(2024, "0A")
-Q1_2024 = renta_income_aggregation_period(2024, "1T")
-Q2_2024 = renta_income_aggregation_period(2024, "2T")
+ANNUAL_2024 = renta_income_aggregation_period(_YEAR, "0A")
+Q1_2024 = renta_income_aggregation_period(_YEAR, "1T")
+Q2_2024 = renta_income_aggregation_period(_YEAR, "2T")
 
 
 M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
@@ -144,7 +147,7 @@ def raw_transaction(
             source_sha256="a" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2024, 4, 6, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(1980, 4, 6, 12, 0, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={"Concepto": provider_id},
@@ -181,7 +184,7 @@ def income_transaction(
             "iva_rate": None,
             "iva_amount": None,
             "lifecycle_state": lifecycle_state,
-            "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(1980, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -219,7 +222,7 @@ def actividad_transaction(
             "iva_amount": iva_amount,
             "irpf_category": irpf_category,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(1980, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -245,7 +248,7 @@ def actividad_transaction_with_source(
             "business_classification": BusinessClassification.BUSINESS,
             "irpf_category": "actividad_economica",
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(1980, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
             "source_jurisdiction": source_jurisdiction,
         },
@@ -267,7 +270,7 @@ def csv_income_raw(provider_id: str, *, amount: Decimal, value_date: date) -> Ra
             source_sha256="b" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2024, 4, 6, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(1980, 4, 6, 12, 0, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={"Concepto": provider_id},

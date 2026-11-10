@@ -24,6 +24,7 @@ from pydantic import ValidationError
 
 from ....core.hashing import content_hash_hex
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.codes import ModeloCode
 from ...auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ...live.tests.unopened_live_ports import unopened_browser_session_factory, unopened_censal_fetch
@@ -74,8 +75,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 BUCKET = "11111111-1111-4111-8111-111111111111"
 OTHER = "22222222-2222-4222-8222-222222222222"
 SUBJECT = "private-subject"
-T1 = datetime(2026, 1, 3, 10, tzinfo=UTC)
-T2 = datetime(2026, 1, 4, 11, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+T1 = datetime(_YEAR, 1, 3, 10, tzinfo=UTC)
+T2 = datetime(_YEAR, 1, 4, 11, tzinfo=UTC)
 SECRET_VALUES = (
     BUCKET,
     SUBJECT,
@@ -116,7 +118,7 @@ def _censal_operation_definition():
 
 
 def _period(modelo: str = "130") -> Period:
-    return Period.from_year_and_code(2026, "1T" if modelo != "303" else "2T")
+    return Period.from_year_and_code(_YEAR, "1T" if modelo != "303" else "2T")
 
 
 def _source(
@@ -196,7 +198,7 @@ def _filed(
 ) -> AeatSyncWorkspaceFiledDeclarationRowV1:
     return AeatSyncWorkspaceFiledDeclarationRowV1(
         modelo=ModeloCode(modelo),
-        filing_year=2026,
+        filing_year=_YEAR,
         period=_period(modelo),
         local_filing_state=local,
         local_filed_at=T1 if local is AeatSyncLocalFilingState.FILED else None,
@@ -211,8 +213,8 @@ def _filed(
 
 def _notification() -> AeatSyncWorkspaceNotificationRowV1:
     return AeatSyncWorkspaceNotificationRowV1(
-        issued_on=date(2026, 1, 2),
-        read_on=date(2026, 1, 3),
+        issued_on=date(_YEAR, 1, 2),
+        read_on=date(_YEAR, 1, 3),
         read_state=AeatSyncNotificationReadState.READ,
         category=AeatSyncNotificationCategory.FORMAL,
         document_custody_state=AeatSyncDocumentCustodyState.HELD,
@@ -223,7 +225,7 @@ def _notification() -> AeatSyncWorkspaceNotificationRowV1:
 def _comparison(modelo: str = "130") -> AeatSyncWorkspaceEvidenceComparisonRowV1:
     return AeatSyncWorkspaceEvidenceComparisonRowV1(
         modelo=ModeloCode(modelo),
-        filing_year=2026,
+        filing_year=_YEAR,
         period=_period(modelo),
         local_state=AeatSyncSourceState.PRESENT,
         aeat_state=AeatSyncSourceState.ABSENT,
@@ -237,7 +239,7 @@ def _comparison(modelo: str = "130") -> AeatSyncWorkspaceEvidenceComparisonRowV1
 def _reconciliation(*, no_action: bool = False) -> AeatSyncWorkspaceReconciliationRowV1:
     return AeatSyncWorkspaceReconciliationRowV1(
         modelo=ModeloCode("130"),
-        filing_year=2026,
+        filing_year=_YEAR,
         period=_period(),
         local_state=AeatSyncSourceState.PRESENT,
         aeat_state=AeatSyncSourceState.PRESENT if no_action else AeatSyncSourceState.ABSENT,
@@ -637,7 +639,7 @@ def test_a_comparison_zone_reports_no_count_until_both_sides_are_observed() -> N
     projection = read_local_aeat_sync_workspace_projection(
         bucket_id="bucket",
         subject_key="subject",
-        observed_at=datetime(2026, 9, 4, tzinfo=UTC),
+        observed_at=datetime(_YEAR, 9, 4, tzinfo=UTC),
         filings=(),
         operation_contracts=OperationPublicContractSetV1.build(
             (build_censal_operation_registration(_censal_operation_definition()).contract,)
@@ -684,7 +686,7 @@ def test_a_refused_local_source_names_whether_the_reader_is_missing_or_uncompose
     projection = read_local_aeat_sync_workspace_projection(
         bucket_id="bucket",
         subject_key="subject",
-        observed_at=datetime(2026, 9, 4, tzinfo=UTC),
+        observed_at=datetime(_YEAR, 9, 4, tzinfo=UTC),
         filings=(),
         operation_contracts=OperationPublicContractSetV1.build(
             (build_censal_operation_registration(_censal_operation_definition()).contract,)
@@ -738,7 +740,7 @@ def test_notification_custody_separates_an_unread_store_from_an_empty_one(
     projection = read_local_aeat_sync_workspace_projection(
         bucket_id="bucket",
         subject_key="subject",
-        observed_at=datetime(2026, 9, 5, tzinfo=UTC),
+        observed_at=datetime(_YEAR, 9, 5, tzinfo=UTC),
         filings=(),
         operation_contracts=OperationPublicContractSetV1.build(
             (build_censal_operation_registration(_censal_operation_definition()).contract,)
@@ -844,8 +846,8 @@ def test_a_two_sided_discrepancy_must_carry_the_values_it_compares() -> None:
     ) -> AeatSyncWorkspaceEvidenceComparisonRowV1:
         return AeatSyncWorkspaceEvidenceComparisonRowV1(
             modelo="303",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "3T"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "3T"),
             local_state=local,
             aeat_state=aeat,
             local_observed_at=T1,

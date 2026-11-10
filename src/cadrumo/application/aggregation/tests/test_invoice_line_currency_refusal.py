@@ -31,6 +31,7 @@ import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.currency.models import EurRateLookup, EurRateLookupStatus
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
@@ -42,6 +43,8 @@ from ..errors import AggregationValidationError
 from ..modelo_bindings_invoice_iva import screened_invoice_line_observations
 from ..oss_ioss_resolver import candidate_for_invoice_line
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
@@ -52,8 +55,8 @@ def _pinned_operation() -> PinnedAuthorityOperation:
     return scoped
 
 
-_DEVENGO = date(2025, 2, 10)
-_PERIOD_LAST_DAY = date(2025, 3, 31)
+_DEVENGO = date(_YEAR, 2, 10)
+_PERIOD_LAST_DAY = date(_YEAR, 3, 31)
 
 
 class _PeriodCloseQuote:

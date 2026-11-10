@@ -30,14 +30,17 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.iva.schema import IvaCategory
 
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .iva_authority_support import aggregate_iva_ledger_observations
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_PERIOD = Period.from_year_and_code(2026, "2T")
+_PERIOD = Period.from_year_and_code(_YEAR, "2T")
 
 #: Aggregation modules the sweep reads. The gate is scoped to the layer that
 #: owns the art. 25 decision; the domain models it reads from are covered by
@@ -58,8 +61,8 @@ _COUNTRY_SOURCES = frozenset(
 def _raw(provider_id: str) -> RawTransaction:
     return RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(2026, 4, 15),
-        value_date=date(2026, 4, 15),
+        booked_date=date(_YEAR, 4, 15),
+        value_date=date(_YEAR, 4, 15),
         amount=Decimal("4000.00"),
         currency="EUR",
         counterparty="Acquirer",
@@ -69,7 +72,7 @@ def _raw(provider_id: str) -> RawTransaction:
             source_sha256="e" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 4, 16, 9, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 4, 16, 9, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": "ledger_transaction"},

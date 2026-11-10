@@ -47,6 +47,7 @@ from ....domain.calculations.registry.ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
 )
 from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.retencion_facts import load_retencion_actividades_rates
@@ -62,6 +63,8 @@ from .renta_income_aggregation_support import (
     raw_transaction,
 )
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
@@ -74,8 +77,8 @@ _TOTAL = _BASE + _CUOTA
 _CASH = _TOTAL - _RETENCION
 
 _BUCKET = "cc3c6664-c25c-49c0-8f90-2d33f2b3dfa4"  # was 'bucket-cross-domain'
-_VALUE_DATE = date(2024, 2, 15)
-_PERIOD = Period.from_year_and_code(2024, "1T")
+_VALUE_DATE = date(_YEAR, 2, 15)
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 
 
 def test_the_scenario_figures_satisfy_the_canonical_invoice_identity() -> None:
@@ -137,7 +140,7 @@ def _invoice_transaction(
         "business_classification": BusinessClassification.BUSINESS,
         "irpf_category": "actividad_economica",
         "lifecycle_state": TransactionLifecycleState.ACTIVE,
-        "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
+        "classified_at": datetime(_YEAR, 4, 6, 13, 0, tzinfo=UTC),
         "classified_by": "manual",
     }
     if with_substrate:
@@ -471,7 +474,7 @@ def _modelo_130_revision() -> ModeloRevision:
     """
     return published_snapshot(
         Modelo("130").value,
-        filing_year=2024,
+        filing_year=_YEAR,
         period="1T",
     ).revision
 
@@ -545,7 +548,7 @@ def _modelo_303_revision() -> ModeloRevision:
     """
     return published_snapshot(
         Modelo("303").value,
-        filing_year=2024,
+        filing_year=_YEAR,
         period="1T",
     ).revision
 

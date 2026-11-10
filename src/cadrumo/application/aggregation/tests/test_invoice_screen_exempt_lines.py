@@ -39,9 +39,12 @@ from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 from cadrumo.domain.iva.schema import IvaCategory
 
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.components import category_components
 from ....domain.iva.invoice_classification import invoice_line_to_iva_observation
 from ....domain.iva.schema import InvoiceKind
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -80,7 +83,7 @@ def test_an_exempt_line_builds_a_declarable_observation() -> None:
         iva_rate = resolve_iva_rate_token("EXEMPT", date.today())
         observation = invoice_line_to_iva_observation(
             invoice_id="invoice:exempt-line-proof:0",
-            issued_at=date(2026, 2, 10),
+            issued_at=date(_YEAR, 2, 10),
             invoice_kind=InvoiceKind.ISSUED,
             iva_rate=iva_rate,
             base_amount=Decimal("1000.00"),

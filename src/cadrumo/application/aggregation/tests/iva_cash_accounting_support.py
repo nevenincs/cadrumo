@@ -30,7 +30,7 @@ def cash_accounting_raw(provider_id: str, *, booked_date: date, amount: Decimal)
             source_sha256="d" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 4, 1, 10, 0, tzinfo=UTC),
+            ingested_at=datetime(1980, 4, 1, 10, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": "ledger_transaction"},
@@ -72,7 +72,7 @@ def cash_accounting_transaction(
             "cash_accounting_treatment": cash_accounting_treatment,
             "operation_date": operation_date,
             "cash_accounting_payment_evidence": cash_accounting_payment_evidence,
-            "classified_at": datetime(2026, 4, 1, 10, 0, tzinfo=UTC),
+            "classified_at": datetime(1980, 4, 1, 10, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
