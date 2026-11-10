@@ -53,7 +53,8 @@ from cadrumo.domain.calculations.registry.tests.authored_editions import (
     revision_covering,
 )
 from cadrumo.domain.calculations.registry.tests.modelo_303_registry_constants import (
-    M303_RECORD_DESIGN_SOURCE_BY_REVISION,
+    M303_SUPPORTED_EDITION_IDS,
+    m303_record_design_source,
 )
 from cadrumo.domain.period import calculation_filing_date
 
@@ -67,7 +68,7 @@ pytestmark = [
     pytest.mark.usefixtures("governed_fact_scope"),
 ]
 
-_REVISIONS = tuple(M303_RECORD_DESIGN_SOURCE_BY_REVISION)
+_REVISIONS = M303_SUPPORTED_EDITION_IDS
 # The edition covering the support floor leaves the recargo tier free; the edition after it enumerates the tiers.
 _FLOOR_REVISION = str(revision_covering("303", filing_year_envelope().floor).id)
 _SECOND_REVISION = _REVISIONS[_REVISIONS.index(_FLOOR_REVISION) + 1]
@@ -106,7 +107,7 @@ def _revision(revision_id: str) -> ModeloRevision:
 
 
 def _design_text(revision_id: str) -> str:
-    source = compiled_bundled_authority().catalogues.sources[M303_RECORD_DESIGN_SOURCE_BY_REVISION[revision_id]]
+    source = compiled_bundled_authority().catalogues.sources[m303_record_design_source(revision_id)]
     return (bundled_path() / f"{source.corpus_path}.extracted.md").read_text(encoding="utf-8")
 
 

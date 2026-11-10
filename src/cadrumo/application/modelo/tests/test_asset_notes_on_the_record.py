@@ -20,6 +20,7 @@ from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLangua
 from ....core.i18n.render import lookup_translation
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.calculation_revision_sources import (
     CalculationNoteFact,
@@ -48,6 +49,8 @@ from .test_work_form_gate_agreement import checked_form, work_form_gate_agreemen
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = newest_authored_edition("100")
+
 
 @pytest.fixture(autouse=True)
 def _pinned_authority() -> Iterator[None]:
@@ -65,11 +68,12 @@ def _two_elements_without_claims() -> tuple[CalculationSourceDiagnostic, ...]:
                 register_asset("lathe", transaction_id="d" * 64, basis=Decimal("6000.00")),
             ),
         ),
+        year=_YEAR,
     ).diagnostics
 
 
 def _persisted(operation: PinnedAuthorityOperation) -> tuple[CalculationRevision, tuple[CalculationSourceIssue, ...]]:
-    snapshot = operation.snapshot("100", filing_year=2025, period="0A")
+    snapshot = operation.snapshot("100", filing_year=_YEAR, period="0A")
     issues = unrouted_source_issues(_two_elements_without_claims(), snapshot_printed_boxes(operation, snapshot))
     revision = work_form_gate_agreement_revision(operation, work_unit(operation), *issues)
     return CalculationRevision.model_validate_json(revision.model_dump_json()), issues
@@ -88,7 +92,7 @@ def test_a_fresh_store_knows_nothing_and_the_form_still_tells_two_elements_apart
 
     furniture, lathe = sorted(_gap_lines(operation, OutputLanguage.EN), key=lambda line: line.message)
 
-    assert "2025" in furniture.message
+    assert str(_YEAR) in furniture.message
     assert "1,200.00" in furniture.message
     assert "600.00" in lathe.message
     assert furniture.detail is not None
@@ -129,7 +133,7 @@ def test_two_notes_of_one_reason_are_two_calculations(operation: PinnedAuthority
 
 
 def test_a_long_technical_account_does_not_fail_the_calculation(operation: PinnedAuthorityOperation) -> None:
-    snapshot = operation.snapshot("100", filing_year=2025, period="0A")
+    snapshot = operation.snapshot("100", filing_year=_YEAR, period="0A")
     diagnostic = CalculationSourceDiagnostic(
         reason="register_acquisition_row_missing",
         source_kind="activity-asset",
@@ -160,13 +164,13 @@ def test_verify_and_export_carry_what_the_calculation_noted(
         work_unit_id="b" * 64,
         bucket_id="bucket-operator",
         modelo="100",
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "0A"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "0A"),
         output_path=tmp_path / "modelo-100.txt",
         byte_size=128,
         file_sha256="a" * 64,
         format="fichero-boe",
-        exported_at=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
+        exported_at=datetime(1980, 5, 21, 12, 0, tzinfo=UTC),
         actor="operator",
         bucket_event_id="event-1",
         calculation_notes=notes,

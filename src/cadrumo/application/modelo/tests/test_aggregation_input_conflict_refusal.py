@@ -14,6 +14,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.errors.error_codes import ErrorCategory, get_registered_error_code
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..action_errors import ModeloAggregationBindingError, ModeloAggregationInputConflictError
 from ..calculation_bucket_actions import _merge_bucket_bound_inputs
@@ -28,7 +29,7 @@ def test_an_input_conflict_is_registered_as_a_refusal() -> None:
 
 
 def test_a_figure_typed_over_a_computed_box_is_an_input_conflict() -> None:
-    revision = published_snapshot("303", filing_year=2025, period="1T").revision
+    revision = published_snapshot("303", filing_year=filing_year_envelope().horizon, period="1T").revision
     computed = next(casilla.id for casilla in revision.casillas if casilla.input_kind.value == "computed")
 
     with pytest.raises(ModeloAggregationInputConflictError) as refused:

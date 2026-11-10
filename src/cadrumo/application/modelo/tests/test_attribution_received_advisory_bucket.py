@@ -17,6 +17,7 @@ from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.modelo import Modelo
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context,
     published_snapshot,
@@ -32,8 +33,8 @@ if TYPE_CHECKING:
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _BUCKET = "20000000-0000-4000-8000-000000000184"
-_CLOCK = datetime(2026, 7, 9, tzinfo=UTC)
-_FILING_YEAR = 2024
+_CLOCK = datetime(1980, 7, 9, tzinfo=UTC)
+_FILING_YEAR = newest_authored_edition("100")
 
 
 def _work_unit() -> WorkUnit:
@@ -52,7 +53,7 @@ def _work_unit() -> WorkUnit:
         filing_year=_FILING_YEAR,
         period=period,
         revision_id=revision_id,
-        name="100-2024",
+        name=f"100-{_FILING_YEAR}",
         created_at=_CLOCK,
         updated_at=_CLOCK,
     )

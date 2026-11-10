@@ -63,7 +63,10 @@ def _service(
         emit=lambda _event: None,
     )
     service._providers = ProviderSettingsService(
-        store=store, catalog_source=StaticCatalogSource(), cli_state_probe=probe
+        selected_engine=lambda: LocalEngine.LLAMACPP,
+        store=store,
+        catalog_source=StaticCatalogSource(),
+        cli_state_probe=probe,
     )
     return service
 

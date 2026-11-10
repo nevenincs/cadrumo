@@ -37,6 +37,11 @@ from ....domain.calculations.registry.schema_base import CasillaDataType
 from ....domain.calculations.registry.schema_form_layouts import FormLayoutDefinition
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
+from ....domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    newest_authored_edition,
+    revision_covering,
+)
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
@@ -94,7 +99,10 @@ from .work_form_fixture import built_form, form_snapshot
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 9, 21, 10, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_M100_YEAR = newest_authored_edition("100")
+_M100_REVISION_ID = str(revision_covering("100", _M100_YEAR).id)
+_NOW = datetime(1980, 9, 21, 10, 0, tzinfo=UTC)
 _DIGEST = "a" * 64
 
 
@@ -159,7 +167,7 @@ def _modelo_100_snapshot(
     bindings: tuple[BindingDefinition, ...],
 ) -> RegistrySnapshot:
     revision = ModeloRevision.model_construct(
-        id="2025-y-siguientes",
+        id=_M100_REVISION_ID,
         casillas=casillas,
         bindings=bindings,
         completeness_manifest=None,
@@ -168,21 +176,21 @@ def _modelo_100_snapshot(
 
 
 def _work_unit(*, current_calculation_revision_id: str | None = None) -> WorkUnit:
-    period = Period.from_year_and_code(2025, "0A")
+    period = Period.from_year_and_code(_M100_YEAR, "0A")
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id="income-edit-bucket",
             modelo="100",
-            filing_year=2025,
+            filing_year=_M100_YEAR,
             period=period,
-            revision_id="2025-y-siguientes",
+            revision_id=_M100_REVISION_ID,
         ),
         bucket_id="income-edit-bucket",
         modelo="100",
-        filing_year=2025,
+        filing_year=_M100_YEAR,
         period=period,
-        revision_id="2025-y-siguientes",
-        name="Income 2025",
+        revision_id=_M100_REVISION_ID,
+        name=f"Income {_M100_YEAR}",
         created_at=_NOW,
         updated_at=_NOW,
         current_calculation_revision_id=current_calculation_revision_id,
@@ -279,7 +287,7 @@ def test_published_modelo_100_surface_size_is_admitted_without_dropping_entries(
 
 
 def _published_modelo_100_baseline() -> ModeloEditBaselineV1:
-    return _published_baseline("100", filing_year=2025, code="0A")
+    return _published_baseline("100", filing_year=_M100_YEAR, code="0A")
 
 
 def _read_entry(
@@ -319,7 +327,7 @@ _YES_NO_SOURCES = (
 def test_every_yes_or_no_on_a_published_declaration_reads_the_1_or_0_its_editor_sends(
     language: OutputLanguage, modelo: str, code: str, address_type: type[ModeloEditValueAddressV1]
 ) -> None:
-    baseline = _published_baseline(modelo, filing_year=2025, code=code)
+    baseline = _published_baseline(modelo, filing_year=_YEAR, code=code)
     addresses = [
         (address, grammar) for address, grammar in _writable_yes_no_addresses(baseline) if type(address) is address_type
     ]
@@ -376,7 +384,7 @@ def _published_baseline(modelo: str, *, filing_year: int, code: str) -> ModeloEd
     return outcome.baseline
 
 
-@pytest.mark.parametrize("filing_year", [2025, 2026])
+@pytest.mark.parametrize("filing_year", filing_year_envelope().years[-2:])
 def test_a_box_that_declares_a_blank_token_keeps_missing_blank_and_refused_apart(filing_year: int) -> None:
     baseline = _published_baseline("322", filing_year=filing_year, code="01")
     (grammar,) = (
@@ -402,7 +410,7 @@ def test_a_box_that_declares_a_blank_token_keeps_missing_blank_and_refused_apart
 
 
 def test_a_province_box_serves_every_province_with_the_key_of_its_word() -> None:
-    baseline = _published_baseline("714", filing_year=2025, code="0A")
+    baseline = _published_baseline("714", filing_year=_YEAR, code="0A")
     grammars = [
         entry.grammar
         for entry in baseline.permitted_surface
@@ -442,7 +450,7 @@ def test_choosing_the_same_yes_or_no_again_changes_nothing(authority_operation: 
     baseline = _published_modelo_100_baseline()
     on_form = {
         str(field.address.casilla_id): field
-        for field in built_form(authority_operation, "100", 2025, "0A").fields()
+        for field in built_form(authority_operation, "100", _M100_YEAR, "0A").fields()
         if isinstance(field.address, ModeloFormCasillaAddressV1)
     }
     address = next(
@@ -467,7 +475,7 @@ def test_choosing_the_same_yes_or_no_again_changes_nothing(authority_operation: 
 
 
 def test_a_date_or_year_box_the_filer_fills_is_refused_for_want_of_an_engine_channel() -> None:
-    revision = published_snapshot("100", filing_year=2025, period="0A").revision
+    revision = published_snapshot("100", filing_year=_M100_YEAR, period="0A").revision
     baseline = _published_modelo_100_baseline()
     templates = set(row_field_template_records_by_casilla(revision))
     filled_by_hand = {
@@ -486,7 +494,7 @@ def test_a_date_or_year_box_the_filer_fills_is_refused_for_want_of_an_engine_cha
     assert CasillaDataType.YEAR in filled_by_hand.values()
     for casilla_id in filled_by_hand:
         assert reasons[casilla_id] is ModeloEditNonWritableReason.VALUE_CHANNEL_UNAVAILABLE
-        read = _read_entry(baseline, ModeloEditScalarAddressV1(casilla_id=casilla_id), "2025", OutputLanguage.ES)
+        read = _read_entry(baseline, ModeloEditScalarAddressV1(casilla_id=casilla_id), str(_YEAR), OutputLanguage.ES)
         assert isinstance(read, ModeloEditRefusedV1)
         assert isinstance(read.refusal, ModeloEditParseRefusalV1)
         assert read.refusal.reason is ModeloEditParseReason.ADDRESS_NOT_WRITABLE
@@ -507,7 +515,7 @@ def test_admission_refuses_when_the_law_selected_revision_is_not_the_work_units_
     moved = _snapshot()
     snapshot = RegistrySnapshot.model_construct(
         modelo=moved.modelo,
-        revision=moved.revision.model_copy(update={"id": "2026-y-siguientes"}),
+        revision=moved.revision.model_copy(update={"id": "moved-revision"}),
     )
 
     outcome, _ = _admit(snapshot=snapshot)
@@ -524,12 +532,12 @@ def test_admission_re_resolves_the_work_and_pinned_authority_into_a_value_free_f
     baseline = outcome.baseline
     assert baseline.issued_at == _NOW
     assert baseline.expires_at == _NOW + timedelta(minutes=5)
-    assert baseline.law_selected_revision_id == "2025-y-siguientes"
+    assert baseline.law_selected_revision_id == _M100_REVISION_ID
     assert baseline.compatibility.operation_definition_id == "modelo.edit.apply"
     assert calls == [
         {
             "modelo_id": "100",
-            "filing_year": 2025,
+            "filing_year": _M100_YEAR,
             "period": "0A",
             "on": None,
             "revision_id": None,
@@ -702,8 +710,8 @@ _FOREIGN_ASSET_BASELINE = "modelo-720-prior-year-cuentas-valoracion-baseline"
 
 
 def test_an_override_the_form_serves_an_answer_for_is_admitted(authority_operation: PinnedAuthorityOperation) -> None:
-    baseline, catalogue = _served_baseline(authority_operation, "130", filing_year=2025, code="1T")
-    form = built_form(authority_operation, "130", 2025, "1T", permitted_surface=baseline.permitted_surface)
+    baseline, catalogue = _served_baseline(authority_operation, "130", filing_year=_YEAR, code="1T")
+    form = built_form(authority_operation, "130", _YEAR, "1T", permitted_surface=baseline.permitted_surface)
     address = ModeloEditBindingAddressV1(binding_id=_FIRST_QUARTER_ANSWER)
 
     assert isinstance(_binding_entry(baseline, _FIRST_QUARTER_ANSWER), ModeloEditWritableBindingOverrideSurfaceEntryV1)
@@ -720,9 +728,9 @@ def test_an_override_the_form_serves_an_answer_for_is_admitted(authority_operati
 @pytest.mark.parametrize(
     ("modelo", "filing_year", "code", "binding_id", "reason"),
     [
-        ("131", 2025, "3T", _QUARTERLY_ROW_FIELD, ModeloEditNonWritableReason.ROW_FIELD_TEMPLATE),
-        ("720", 2025, "0A", _FOREIGN_ASSET_ROW_FIELD, ModeloEditNonWritableReason.ROW_FIELD_TEMPLATE),
-        ("720", 2025, "0A", _FOREIGN_ASSET_BASELINE, ModeloEditNonWritableReason.NOT_READ_BY_CALCULATION),
+        ("131", _YEAR, "3T", _QUARTERLY_ROW_FIELD, ModeloEditNonWritableReason.ROW_FIELD_TEMPLATE),
+        ("720", _YEAR, "0A", _FOREIGN_ASSET_ROW_FIELD, ModeloEditNonWritableReason.ROW_FIELD_TEMPLATE),
+        ("720", _YEAR, "0A", _FOREIGN_ASSET_BASELINE, ModeloEditNonWritableReason.NOT_READ_BY_CALCULATION),
     ],
 )
 @pytest.mark.parametrize("language", list(OutputLanguage))
@@ -766,10 +774,10 @@ def test_the_surface_and_the_form_agree_on_every_published_override(
 ) -> None:
     admitted = 0
     for modelo, filing_year, code in (
-        ("100", 2025, "0A"),
-        ("130", 2025, "1T"),
-        ("131", 2025, "3T"),
-        ("720", 2025, "0A"),
+        ("100", _M100_YEAR, "0A"),
+        ("130", _YEAR, "1T"),
+        ("131", _YEAR, "3T"),
+        ("720", _YEAR, "0A"),
     ):
         baseline, _catalogue = _served_baseline(authority_operation, modelo, filing_year=filing_year, code=code)
         form = built_form(authority_operation, modelo, filing_year, code, permitted_surface=baseline.permitted_surface)

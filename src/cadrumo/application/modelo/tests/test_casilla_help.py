@@ -14,15 +14,17 @@ import pytest
 
 from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_grade_exercises, filing_year_envelope
 from ..casilla_help import ModeloCasillaHelpCardV1, build_casilla_help_card, legal_citation_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_ON = date(2026, 3, 31)
+_YEAR = filing_year_envelope().horizon
+_ON = date(_YEAR, 3, 31)
 
 
 def _card(operation: PinnedAuthorityOperation, casilla_id: str, language: OutputLanguage = OutputLanguage.EN):
-    snapshot = operation.snapshot("130", filing_year=2026, period="1T")
+    snapshot = operation.snapshot("130", filing_year=_YEAR, period="1T")
     return build_casilla_help_card(casilla_id, snapshot=snapshot, operation=operation, language=language, on=_ON)
 
 
@@ -64,7 +66,7 @@ def test_an_unfamiliar_identifier_falls_back_to_the_official_document_id(operati
 
 
 def test_a_citation_never_breaks_between_the_article_and_its_number(operation: PinnedAuthorityOperation) -> None:
-    snapshot = operation.snapshot("390", filing_year=2025, period="0A")
+    snapshot = operation.snapshot("390", filing_year=filing_grade_exercises("390")[-1], period="0A")
     cited = next(item for item in snapshot.revision.casillas if "rd-1624-1992:art-71" in map(str, item.legal_refs))
 
     card = build_casilla_help_card(cited.id, snapshot=snapshot, operation=operation, language=OutputLanguage.EN, on=_ON)
@@ -87,7 +89,7 @@ def test_a_bound_box_says_where_its_value_comes_from_and_what_uses_it(operation:
 
 def test_a_box_without_limits_states_none(operation: PinnedAuthorityOperation) -> None:
     """No sentence stands in for limits a box does not have: the card shows limits only where they exist."""
-    snapshot = operation.snapshot("130", filing_year=2026, period="1T")
+    snapshot = operation.snapshot("130", filing_year=_YEAR, period="1T")
     unconstrained = next(item for item in snapshot.revision.casillas if item.constraints is None)
 
     card = build_casilla_help_card(
@@ -140,7 +142,7 @@ def test_the_result_box_is_marked_and_has_no_chain(operation: PinnedAuthorityOpe
 
 
 def _card_303(operation: PinnedAuthorityOperation, casilla_id: str) -> ModeloCasillaHelpCardV1:
-    snapshot = operation.snapshot("303", filing_year=2026, period="1T")
+    snapshot = operation.snapshot("303", filing_year=_YEAR, period="1T")
     return build_casilla_help_card(
         casilla_id, snapshot=snapshot, operation=operation, language=OutputLanguage.EN, on=_ON
     )
@@ -170,7 +172,7 @@ def test_working_figures_on_the_way_are_left_out_of_the_chain(operation: PinnedA
 
 
 def test_a_modelo_that_names_no_result_gives_no_chain(operation: PinnedAuthorityOperation) -> None:
-    snapshot = operation.snapshot("349", filing_year=2026, period="1T")
+    snapshot = operation.snapshot("349", filing_year=_YEAR, period="1T")
     casilla = snapshot.revision.casillas[0]
 
     card = build_casilla_help_card(

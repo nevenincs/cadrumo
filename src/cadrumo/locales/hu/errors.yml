@@ -104,7 +104,8 @@ errors:
       vagy felülírt értéket, mert nem ennek a változatnak a képletmezői.
     formula_recalculation_binding_unrecorded: A javítás újraszámítása olyan képletmezőket
       ér el ({casilla_ids}), amelyek a(z) {binding_ids} értéktől függnek. A benyújtás
-      ezt sosem rögzítette; add meg kifejezett kötésfelülírásként a javításon.
+      ezt sosem rögzítette; add meg a javításon a --binding BINDING_ID=VALUE kapcsolóval
+      (aeat app modelo work amend).
     formula_recalculation_unresolved: 'A javítás újraszámítása után kötelező képletmezők
       maradtak feloldatlanul: {casilla_ids}.'
     lookup_dispatch_arg_count: A(z) {op} képletoperátor {expected} argumentumot vár.

@@ -42,16 +42,13 @@ from ...domain.transactions.classification_origin import (
 )
 from ...domain.transactions.enums import BusinessClassification, TransactionLifecycleState
 from ...domain.transactions.errors import TransactionValidationError
+from ...domain.transactions.import_fingerprints import derive_import_fingerprint
 from ...domain.transactions.lineage_models import (
     TransactionEditLineageEntry,
     TransactionEvidenceProvenanceEntry,
     TransactionLifecycleLineageEntry,
 )
-from ...domain.transactions.models import (
-    Transaction,
-    TransactionCatalogue,
-    derive_import_fingerprint,
-)
+from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..operations.execution_actor import actor_label_is_automation
 from .action_ports import LedgerActionPorts

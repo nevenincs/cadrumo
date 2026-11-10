@@ -20,6 +20,7 @@ from cadrumo.domain.user_profile.values import create_user_profile_record
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context,
     published_snapshot,
@@ -39,10 +40,10 @@ if TYPE_CHECKING:
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
-_CLOCK = datetime(2026, 7, 9, tzinfo=UTC)
+_CLOCK = datetime(1980, 7, 9, tzinfo=UTC)
 _CASILLA_1577 = "1577"
 _BASE = Decimal("58100.00")
-_FILING_YEAR = 2024
+_FILING_YEAR = newest_authored_edition("100")
 _M100_CODE = ModeloCode(Modelo("100").value)
 
 
@@ -159,9 +160,9 @@ def test_both_absent_is_silent(snapshot: RegistrySnapshot, operation: PinnedAuth
 
 
 def test_facts_for_other_year_do_not_count(snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation) -> None:
-    # Facts stamped for 2023 must not satisfy a 2024 verification: casilla empty +
-    # no 2024 facts is the clean "not a member this year" state, not an omission.
-    assert _run(snapshot, operation=operation, facts=_received_facts(year=2023), casilla_1577=None) == ()
+    # Facts stamped for the prior year must not satisfy this year's verification: casilla empty +
+    # no facts for this year is the clean "not a member this year" state, not an omission.
+    assert _run(snapshot, operation=operation, facts=_received_facts(year=_FILING_YEAR - 1), casilla_1577=None) == ()
 
 
 def test_non_m100_modelo_is_scoped_out(snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation) -> None:

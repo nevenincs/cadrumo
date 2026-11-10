@@ -20,6 +20,7 @@ import pytest
 from ....core.aggregation import BindingSourceKind
 from ....core.period import Period
 from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from .. import edit_execution, edit_models, edit_services, revision_persistence
 from ..edit_contract import ModeloEditCompatibilityTupleV1, ModeloEditMutationResultReceiptV1
@@ -33,7 +34,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _EDIT_CONTRACT_MODULES = (edit_models, edit_services, edit_execution, revision_persistence)
 
 _MODELO = "131"
-_FILING_YEAR = 2025
+_FILING_YEAR = filing_year_envelope().horizon
 _DIGEST = "a" * 64
 
 

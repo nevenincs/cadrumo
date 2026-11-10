@@ -11,6 +11,7 @@ from ....core.config import override_settings
 from ....core.period import Period
 from ....domain.calculations.registry import authority as authority_module
 from ....domain.calculations.registry.errors import AuthorityDescriptorUnavailableError
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..registry_helpers import absent_authority_file, reject_unknown_override_casillas
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -38,8 +39,8 @@ def test_override_guard_reports_the_absent_authority_rather_than_a_missing_root(
     ):
         reject_unknown_override_casillas(
             modelo="303",
-            filing_year=2024,
-            period=Period.from_year_and_code(2024, "1T"),
+            filing_year=filing_year_envelope().horizon,
+            period=Period.from_year_and_code(filing_year_envelope().horizon, "1T"),
             overrides={"01": Decimal("1")},
         )
     error = refusal.value

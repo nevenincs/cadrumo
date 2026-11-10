@@ -77,6 +77,7 @@ def test_the_fallback_serves_the_agents_declared_document_unchanged_in_its_envel
         emit=lambda _event: None,
     )
     service._providers = ProviderSettingsService(
+        selected_engine=lambda: LocalEngine.LLAMACPP,
         store=MemoryProviderSettingsStore(),
         catalog_source=StaticCatalogSource(),
     )

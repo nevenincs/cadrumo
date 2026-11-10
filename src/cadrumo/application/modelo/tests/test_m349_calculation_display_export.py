@@ -18,6 +18,7 @@ from ....domain.calculations.registry.bindings import resolve_available_bound_in
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_form_layouts import FormRepeatingGroupBlock
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.filing.schema import (
     ModeloCasillaProvenance,
@@ -47,7 +48,8 @@ from ..work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_wor
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_CLOCK = datetime(2026, 6, 29, 12, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_CLOCK = datetime(_YEAR, 6, 29, 12, 0, tzinfo=UTC)
 _BUCKET_ID = "9c4acfdc-abb7-4206-8755-1d8c027b6114"  # was 'm349-display-export-parity'
 _PROFILE_TAX_ID = "12345678Z"
 _DECL_NUMERO_OPERADORES: CasillaId = validated_casilla_id(
@@ -69,25 +71,25 @@ _DECL_IMPORTE_RECTIFICACIONES: CasillaId = validated_casilla_id(
 
 
 def _m349_snapshot(*, period: str) -> RegistrySnapshot:
-    return published_snapshot(Modelo("349").value, filing_year=2026, period=period)
+    return published_snapshot(Modelo("349").value, filing_year=_YEAR, period=period)
 
 
 def _work_unit(*, period: str, snapshot: RegistrySnapshot) -> WorkUnit:
-    filing_period = Period.from_year_and_code(2026, period)
+    filing_period = Period.from_year_and_code(_YEAR, period)
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,
             modelo="349",
-            filing_year=2026,
+            filing_year=_YEAR,
             period=filing_period,
             revision_id=snapshot.revision.id,
         ),
         bucket_id=_BUCKET_ID,
         modelo=ModeloCode("349"),
-        filing_year=2026,
+        filing_year=_YEAR,
         period=filing_period,
         revision_id=snapshot.revision.id,
-        name=f"349-2026-{period}",
+        name=f"349-{_YEAR}-{period}",
         created_at=_CLOCK,
         updated_at=_CLOCK,
     )
@@ -233,7 +235,7 @@ def _record_calculation() -> tuple[RegistrySnapshot, WorkUnit, CalculationRevisi
 
 
 def _operator_block(operation: PinnedAuthorityOperation) -> FormRepeatingGroupBlock:
-    layout = operation.form_layout("349", "2020-y-siguientes")
+    layout = operation.form_layout("349", str(open_ended_revision("349").id))
     assert layout is not None
     return next(
         block
@@ -290,7 +292,7 @@ def test_saved_detail_rows_populate_the_real_form_and_make_the_optional_page_app
         review=review,
         snapshot=snapshot,
         revision=revision,
-        layout=operation.form_layout("349", "2020-y-siguientes"),
+        layout=operation.form_layout("349", str(open_ended_revision("349").id)),
         permitted_surface=None,
         entered_casilla_ids=None,
         overridden_binding_ids=None,
@@ -504,7 +506,7 @@ def test_saved_projection_casillas_remain_visible_even_when_the_projection_owner
     operation: PinnedAuthorityOperation,
 ) -> None:
     _, _, revision = _record_calculation()
-    snapshot = operation.snapshot("303", filing_year=2026, period="1T")
+    snapshot = operation.snapshot("303", filing_year=_YEAR, period="1T")
     record = next(
         record
         for layout in snapshot.revision.export_layouts

@@ -92,7 +92,7 @@ def test_non_figure_values_are_shown_as_the_report_spells_them() -> None:
 
     assert shown(True) == "Sí"
     assert shown(False) == "No"
-    assert shown("2026-06-30") == "2026-06-30"
+    assert shown("1980-06-30") == "1980-06-30"
     assert shown("01A") == "01A"
     assert shown("1.2.3") == "1.2.3"
 

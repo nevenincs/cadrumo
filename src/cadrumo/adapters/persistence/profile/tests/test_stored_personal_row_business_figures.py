@@ -28,6 +28,7 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....domain.bienes_inversion.register import BienesInversionIvaRegister
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.transactions.classification_effects import fields_refused_by_classification
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection
 from .....domain.transactions.errors import TransactionFiguresWithoutBusinessError
@@ -46,7 +47,8 @@ _JSON_OBJECT = TypeAdapter(dict[str, object])
 _BUCKET_ID = "3c9e2f41-6a0b-4d7e-9f15-8b2a4c6d0e71"
 _PERSONAL = BusinessClassification.PERSONAL
 _M130_GASTOS: CasillaId = validated_casilla_id("02")
-_Q1_2025 = Period.from_year_and_code(2025, "1T")
+_EXERCISE = filing_year_envelope().horizon
+_Q1 = Period.from_year_and_code(_EXERCISE, "1T")
 
 
 @pytest.fixture
@@ -100,7 +102,7 @@ def _relabel_as_personal(objects: SecureObjectRepository, transaction_id: str) -
 def _activity_expense(provider_id: str, classification: BusinessClassification, base: str) -> Transaction:
     return gasto_transaction(
         provider_id,
-        value_date=date(2025, 2, 1),
+        value_date=date(_EXERCISE, 2, 1),
         amount=Decimal(base),
         taxable_base=Decimal(base),
         irpf_category="actividad_economica",
@@ -185,7 +187,7 @@ def test_a_copied_personal_row_with_a_business_figure_is_refused_before_any_byte
 def _m130_expenses(objects: SecureObjectRepository):
     return aggregate_renta_gasto_ledger_from_repositories(
         bucket_id=_BUCKET_ID,
-        period=_Q1_2025,
+        period=_Q1,
         modelo="130",
         target_casilla_id=_M130_GASTOS,
         accept_activity_marker=True,

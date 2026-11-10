@@ -12,6 +12,7 @@ import pytest
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.filing_record import (
     AeatConfirmationState,
     FilingDeclarationKind,
@@ -30,18 +31,19 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _REVISION_ID = "a" * 64
-_NOW = datetime(2026, 4, 10, 9, 0, tzinfo=UTC)
-_PERIOD = Period.from_year_and_code(2026, "1T")
+_NOW = datetime(1980, 4, 10, 9, 0, tzinfo=UTC)
+_FILING_YEAR = filing_year_envelope().horizon
+_PERIOD = Period.from_year_and_code(_FILING_YEAR, "1T")
 
 
 def _unit(*, bucket_id: str = str(_PROFILE)) -> WorkUnit:
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
-            bucket_id=bucket_id, modelo="303", filing_year=2026, period=_PERIOD, revision_id="test-revision"
+            bucket_id=bucket_id, modelo="303", filing_year=_FILING_YEAR, period=_PERIOD, revision_id="test-revision"
         ),
         bucket_id=bucket_id,
         modelo="303",
-        filing_year=2026,
+        filing_year=_FILING_YEAR,
         period=_PERIOD,
         revision_id="test-revision",
         name="First-quarter return",
@@ -62,7 +64,7 @@ def _record(*, bucket_id: str = str(_PROFILE), period: Period = _PERIOD) -> Mode
         calculation_revision_id=_REVISION_ID,
         bucket_id=bucket_id,
         modelo="303",
-        filing_year=2026,
+        filing_year=_FILING_YEAR,
         period=period,
         filed_at=_NOW,
         filed_by="gestoria source",
@@ -129,7 +131,10 @@ def test_the_profiles_record_returns_with_the_unit_it_was_filed_for() -> None:
             _bundle(units=SimpleNamespace(get=lambda work_unit_id: _unit(bucket_id=str(_OTHER_PROFILE)))),
             AccessDenialCode.PROFILE_MISMATCH,
         ),
-        (_bundle(record=_record(period=Period.from_year_and_code(2026, "2T"))), AccessDenialCode.PROFILE_MISMATCH),
+        (
+            _bundle(record=_record(period=Period.from_year_and_code(_FILING_YEAR, "2T"))),
+            AccessDenialCode.PROFILE_MISMATCH,
+        ),
         (_bundle(records=ModeloRecordCatalogue(records={})), AccessDenialCode.OPERATION_DENIED),
     ],
     ids=["filing-bucket", "work-bucket", "record-owner", "unit-owner", "record-period", "missing-record"],

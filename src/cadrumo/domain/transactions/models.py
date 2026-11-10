@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 import json
-import re
-import weakref
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from datetime import date, datetime
 from decimal import Decimal
 from types import MappingProxyType
-from typing import Annotated, Final, Self, override
+from typing import Annotated, Self, override
 
 from pydantic import (
     AfterValidator,
@@ -23,22 +21,19 @@ from pydantic_core import core_schema
 
 from ...core.concepto_ingreso import ConceptoIngreso
 from ...core.decimal.constants import ONE
-from ...core.decimal.formatting import format_decimal
 from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
-from ...core.external_constants import CLASSIFIED_BY_AUTO, DEFAULT_CURRENCY, UTF_8_ENCODING
-from ...core.hashing import content_hash_hex, sha256_hex
+from ...core.external_constants import CLASSIFIED_BY_AUTO, DEFAULT_CURRENCY
+from ...core.hashing import content_hash_hex
 from ...core.identity.bucket import BucketId
 from ...core.identity.transaction_ids import TransactionId
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.codes import normalise_iso_3166_alpha2_jurisdiction
 from ...core.prorrata_exclusions import Art104TresExclusion
-from ...core.text_fold import fold_diacritics
 from ...core.time.clock import now
 from ...core.tipos_actividad import TipoActividad
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ...core.type_guards import is_object_mapping
-from ..buckets.event import BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH
 from ..calculations.registry.concepto_ingreso import require_concepto_ingreso
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.eu_member_state_catalogue import (
@@ -79,7 +74,6 @@ from .lineage_models import (
 )
 from .m210_income_classification import M210IncomeClassification
 from .model_validation import (
-    figures_without_business,
     normalize_identifier_tuple,
     refusable_figures_of,
     require_aware_datetime,
@@ -137,90 +131,11 @@ def derive_transaction_id(raw: RawTransaction, *, own_account_id: str | None = N
     return content_hash_hex(payload)
 
 
-_REFERENCE_NOISE = re.compile(r"[^0-9a-z]+")
-
 #: Upper bound for an IVA rate held as a decimal fraction. This is the unit
 #: boundary of a fraction, not a regulatory rate -- the highest Spanish IVA rate
 #: is well below it -- so it stays a local constant rather than a registry lookup
 #: and cannot drift with a filing year.
 _MAX_IVA_RATE_FRACTION = ONE
-
-
-def normalise_movement_reference(value: str) -> str:
-    """Return a provider-agnostic normalised form of a transaction narrative.
-
-    OFX and CSV exports of the same bank movement describe it with
-    different verbatim narratives (an OFX ``MEMO`` versus a CSV
-    reference column), and a later manual edit may further reword the
-    description. Cross-format and post-edit deduplication therefore
-    cannot key on the raw narrative.
-
-    This collapses a narrative to a stable comparison token: Unicode
-    is NFKD-decomposed and combining accents are dropped (``Ó`` -> ``o``),
-    the result is lower-cased, and every run of non-alphanumeric
-    characters is squeezed out. Two narratives that differ only in
-    accents, casing, punctuation, or whitespace map to the same token.
-    """
-    stripped = fold_diacritics(value)
-    return _REFERENCE_NOISE.sub("", stripped.casefold())
-
-
-def derive_import_fingerprint(
-    raw: RawTransaction,
-    *,
-    direction: TransactionDirection | str | None = None,
-    own_account_id: str | None = None,
-) -> str:
-    """Return the stable cross-format import-dedup fingerprint for a raw row.
-
-    Unlike :func:`derive_transaction_id` — which keys on the provider
-    identifier and the verbatim narrative and therefore changes when a
-    transaction is edited or re-exported in a different file format —
-    this fingerprint keys only on the *movement identity* an operator
-    would recognise: the effective date, amount magnitude, currency,
-    direction, and the normalised narrative (see
-    :func:`normalise_movement_reference`).
-
-    The fingerprint is stamped onto :class:`Transaction` at import time
-    and carried verbatim through every later edit, so re-importing the
-    same statement (or the same movements exported as a different file
-    format) recognises the row as already present. Import callers that
-    have parsed flow direction must pass it; callers without a parse-boundary
-    direction receive an explicit ``UNSPECIFIED`` discriminator. A row bound to
-    an own account folds that account in, so identical movements on two own
-    accounts are not mistaken for a re-import; an unbound row's fingerprint is
-    unchanged.
-    """
-    effective_value_date = raw.value_date or raw.booked_date
-    if isinstance(direction, TransactionDirection):
-        direction_value = direction.value
-    elif direction is None:
-        direction_value = "UNSPECIFIED"
-    else:
-        direction_value = direction
-    payload: dict[str, str] = {
-        "amount": canonical_decimal_string(raw.amount),
-        "currency": raw.currency,
-        "direction": direction_value,
-        "reference": normalise_movement_reference(raw.description),
-        "value_date": effective_value_date.isoformat(),
-    }
-    if own_account_id is not None:
-        payload["own_account_id"] = own_account_id
-    return content_hash_hex(payload)
-
-
-def derive_movement_day_key(raw: RawTransaction) -> str:
-    """Return the coarse (effective date, amount) key for a raw row.
-
-    Two rows that share this key but not the full
-    :func:`derive_import_fingerprint` are *likely* — but not
-    confidently — the same movement: same day, same amount, divergent
-    narrative. The import path uses this to warn the operator about a
-    probable cross-format duplicate rather than silently importing it.
-    """
-    effective_value_date = raw.value_date or raw.booked_date
-    return f"{effective_value_date.isoformat()}:{canonical_decimal_string(raw.amount)}"
 
 
 def _derive_transaction_id_from_validated_data(data: dict[str, object]) -> str:
@@ -253,7 +168,7 @@ _FIGURES_WITHOUT_BUSINESS_CHECK = "figures_without_business"
 
 #: A row written before personal rows were refused business figures may still
 #: hold them. Reading it never refuses: the reader withholds those figures
-#: (:func:`withhold_figures_without_business`) and the row's next write drops
+#: (:func:`~.withheld_figures.withhold_figures_without_business`) and the row's next write drops
 #: them, so only a new write meets the refusal.
 _STORED_ROW = _StoredRow(frozenset({_FIGURES_WITHOUT_BUSINESS_CHECK}))
 
@@ -297,7 +212,7 @@ def validate_stored_transaction_json[ModelT: BaseModel](model: type[ModelT], pay
     Every admission check runs, including the derived-id re-hash, except the
     refusal of business figures on a personal row: a stored row may predate it,
     and reading it must not fail. A reader passes the decoded row through
-    :func:`withhold_figures_without_business` before anyone consumes it.
+    :func:`~.withheld_figures.withhold_figures_without_business` before anyone consumes it.
 
     Args:
         model: The model the stored bytes encode.
@@ -318,112 +233,6 @@ def require_no_figures_without_business(transaction: Transaction) -> None:
     validate_figures_without_business(
         transaction.business_classification, refusable_figures_of(transaction.business_classification, transaction)
     )
-
-
-def withhold_figures_without_business(transaction: Transaction) -> Transaction:
-    """Return ``transaction`` as a reader may see it: without business figures its classification refuses.
-
-    A stored personal row written before the refusal existed can still carry a
-    spending category, a taxable base or another business figure. Every reader
-    sees those as absent, so no projection, calculation or export counts them,
-    and the row's next write persists their absence. The stored bytes are not
-    rewritten by reading. An unaffected row is returned as the same instance.
-
-    The copy is not re-validated: the stored row already passed every other
-    admission check, and absent figures are what any write of its
-    classification would carry.
-    """
-    held = figures_held_without_business(transaction)
-    if not held:
-        return transaction
-    absent: dict[str, object] = {name: None for name in held}
-    if "cash_accounting_treatment" in held:
-        absent["cash_accounting_treatment"] = default_iva_cash_accounting_treatment()
-        absent["cash_accounting_payment_evidence"] = ()
-    read = transaction.model_copy(update=absent)
-    _remember_withheld_figures(read, held)
-    return read
-
-
-def figures_held_without_business(transaction: Transaction) -> Mapping[str, object]:
-    """Return the business figures ``transaction`` holds although its classification refuses them.
-
-    Empty for every row built or written since the refusal existed; a stored
-    row decoded through :func:`validate_stored_transaction_json` can hold some.
-    """
-    figures = refusable_figures_of(transaction.business_classification, transaction)
-    present = figures_without_business(transaction.business_classification, figures)
-    held = {name: figures[name] for name in present}
-    if figures and _keeps_cash_accounting_timing(transaction):
-        # Criterio-de-caja timing settles a cuota the row's base and IVA carry; a row with
-        # no business component has neither, so its timing goes with them.
-        held["cash_accounting_treatment"] = transaction.cash_accounting_treatment
-        held["cash_accounting_payment_evidence"] = transaction.cash_accounting_payment_evidence
-    return MappingProxyType(held)
-
-
-def _keeps_cash_accounting_timing(transaction: Transaction) -> bool:
-    return (
-        bool(transaction.cash_accounting_payment_evidence)
-        or transaction.cash_accounting_treatment != default_iva_cash_accounting_treatment()
-    )
-
-
-_WITHHELD_FIGURES: dict[int, Mapping[str, object]] = {}
-"""The figures each read row had withheld, keyed by the identity of that read instance.
-
-Identity, not content: only the instance a reader produced carries the fact
-that its stored row held more, and an entry leaves with its instance. A write
-that replaces the row asks :func:`withheld_figures` of the row it read, so its
-own history can name what the write stops storing.
-"""
-
-
-def _remember_withheld_figures(read: Transaction, figures: Mapping[str, object]) -> None:
-    key = id(read)
-    weakref.finalize(read, _WITHHELD_FIGURES.pop, key, None)
-    _WITHHELD_FIGURES[key] = MappingProxyType(dict(figures))
-
-
-def withheld_figures(transaction: Transaction) -> Mapping[str, object]:
-    """Return the business figures the stored row behind this read instance held and the read withheld.
-
-    Empty for a row that held none, and for any instance a reader did not
-    produce, such as a copy or a row built from a request.
-    """
-    return _WITHHELD_FIGURES.get(id(transaction), MappingProxyType({}))
-
-
-WITHHELD_FIGURE_COUNT_KEY: Final[str] = "withheld_figure_count"
-"""The event entry that marks an event as recording a row's withheld figures."""
-
-
-def withheld_figures_event_entries(figures: Mapping[str, object]) -> dict[str, str]:
-    """Return the bucket-event entries that record ``figures`` a write stops storing.
-
-    Each prior value is kept under ``withheld_<field>``, with their count under
-    ``withheld_figure_count``, so the event history still holds what the stored
-    row said. A value longer than an event value may be is kept as its digest,
-    under ``withheld_<field>_sha256``.
-    """
-    if not figures:
-        return {}
-    entries = {WITHHELD_FIGURE_COUNT_KEY: str(len(figures))}
-    for name, value in sorted(figures.items()):
-        text = _withheld_figure_text(value)
-        if len(text) > BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH:
-            entries[f"withheld_{name}_sha256"] = sha256_hex(text.encode(UTF_8_ENCODING))
-        else:
-            entries[f"withheld_{name}"] = text
-    return entries
-
-
-def _withheld_figure_text(value: object) -> str:
-    if isinstance(value, Decimal):
-        return format_decimal(value)
-    if isinstance(value, BaseModel):
-        return value.model_dump_json()
-    return str(value)
 
 
 def _effective_date_for_enum_projection(info: core_schema.ValidationInfo) -> date | None:
@@ -1219,28 +1028,6 @@ class BucketTransactionRef(BaseModel):
         if not trimmed:
             raise TransactionValidationError("bucket transaction reference fields must not be blank")
         return trimmed
-
-
-def existing_transaction_import_fingerprints(transaction: Transaction) -> frozenset[str]:
-    """Return every canonical re-import fingerprint for a stored transaction.
-
-    Imported rows carry their parse-boundary, direction-qualified fingerprint
-    verbatim. Older or hand-entered rows may not have that stamp, so their
-    current raw payload is projected once with the stored direction as a
-    deterministic fallback. Preview diagnostics and the persisting import path
-    must use this exact projection: a directionless fallback would incorrectly
-    collapse otherwise distinct incoming and outgoing movements.
-    """
-    fingerprints = {
-        derive_import_fingerprint(
-            transaction.raw,
-            direction=transaction.direction,
-            own_account_id=transaction.own_account_id,
-        )
-    }
-    if transaction.import_fingerprint is not None and transaction.import_fingerprint:
-        fingerprints.add(transaction.import_fingerprint)
-    return frozenset(fingerprints)
 
 
 def _json_catalogue_member(value: object) -> Transaction:

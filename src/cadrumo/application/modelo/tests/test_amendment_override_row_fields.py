@@ -9,13 +9,15 @@ import pytest
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.period import Period
 from ....domain.calculations.registry.casilla_membership import row_field_template_records_by_casilla
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..action_errors import AmendmentOverrideCasillaError
 from ..registry_helpers import reject_unknown_override_casillas
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_PERIOD = Period.from_year_and_code(2024, "0A")
+_YEAR = newest_authored_edition("180")
+_PERIOD = Period.from_year_and_code(_YEAR, "0A")
 _ROW_FIELD = "perc.base"
 _SCALAR = "decl.total-perceptores"
 
@@ -23,14 +25,14 @@ _SCALAR = "decl.total-perceptores"
 def test_an_override_of_a_row_field_casilla_is_refused_naming_its_records() -> None:
     """Modelo 180's perceptor base is filled once per perceptor row, so no single override replaces it."""
     revision = published_snapshot(
-        "180", filing_year=2024, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+        "180", filing_year=_YEAR, period="0A", grade=RegistryAuthorityGrade.CALCULATION
     ).revision
     records = row_field_template_records_by_casilla(revision)[_ROW_FIELD]
 
     with pytest.raises(AmendmentOverrideCasillaError) as refusal:
         reject_unknown_override_casillas(
             modelo="180",
-            filing_year=2024,
+            filing_year=_YEAR,
             period=_PERIOD,
             overrides={_ROW_FIELD: Decimal("100.00"), _SCALAR: Decimal("1")},
         )
@@ -43,7 +45,7 @@ def test_an_override_of_a_scalar_casilla_is_accepted() -> None:
     """Detector teeth: the refusal keys on row fields, not on every Modelo 180 override."""
     accepted = reject_unknown_override_casillas(
         modelo="180",
-        filing_year=2024,
+        filing_year=_YEAR,
         period=_PERIOD,
         overrides={_SCALAR: Decimal("1")},
     )

@@ -25,7 +25,7 @@ from .calculation_report_fixture import build_fixture_report
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_AT = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
+_AT = datetime(1980, 4, 2, 9, 0, tzinfo=UTC)
 _REASON = "Synthetic reason, with a comma:\nthe payer's copy states\tthis amount."
 
 

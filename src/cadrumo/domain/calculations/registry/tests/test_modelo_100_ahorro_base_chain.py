@@ -60,7 +60,7 @@ _REVIEWED_EDITION = newest_authored_edition("100")
 _DATE_REVIEWED_EDITION = {"filing_period": date(_REVIEWED_EDITION, 12, 31)}
 
 # ── minimal binding_values required by M100 2024/2025 bound casillas ─────────
-_BINDINGS_2024: dict[str, Decimal] = {
+_BINDINGS: dict[str, Decimal] = {
     "renta-profile-has-economic-activity": Decimal("1"),
     "renta-profile-estimacion-directa": Decimal("1"),
     "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
@@ -87,11 +87,11 @@ _BINDINGS_2024: dict[str, Decimal] = {
     "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
 }
 
-_ENUM_BINDINGS_2024 = {"renta-profile-tax-residence-ccaa": "madrid"}
+_ENUM_BINDINGS = {"renta-profile-tax-residence-ccaa": "madrid"}
 
 # RD 439/2007 Art. 110 pagos-fraccionados relations; zero in scenarios that
 # do not exercise M130/M131 cross-model integration.
-_RELATION_VALUES_2024: dict[str, Decimal] = {
+_RELATION_VALUES: dict[str, Decimal] = {
     "renta-modelo-130-pagos-fraccionados": Decimal("0"),
     "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }
@@ -125,14 +125,14 @@ _BASE_IMPONIBLE_AHORRO_CASILLA: CasillaId = validated_casilla_id(
 # ── helper ────────────────────────────────────────────────────────────────────
 
 
-def _run_2024(snapshot: RegistrySnapshot, inputs: dict[CasillaId, Decimal]) -> dict[CasillaId, Decimal]:
+def _run_second_newest(snapshot: RegistrySnapshot, inputs: dict[CasillaId, Decimal]) -> dict[CasillaId, Decimal]:
     result = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
         date_context={"filing_period": date(snapshot.filing_year, 12, 31)},
-        enum_binding_values=_ENUM_BINDINGS_2024,
-        binding_values=_BINDINGS_2024,
-        relation_values=_RELATION_VALUES_2024,
+        enum_binding_values=_ENUM_BINDINGS,
+        binding_values=_BINDINGS,
+        relation_values=_RELATION_VALUES,
         # Supply a representative birth date so that any age_at_year_end
         # formula in the mínimo personal chain can resolve.  The exact
         # birth date does not affect the capital-mobiliario / base-ahorro
@@ -145,7 +145,7 @@ def _run_2024(snapshot: RegistrySnapshot, inputs: dict[CasillaId, Decimal]) -> d
 # ── Sergio shape: 0029 = 20 000 EUR dividends ─────────────────────────────────
 
 
-def test_sergio_0029_dividends_20000_populates_0460(m100_2024_snapshot: RegistrySnapshot) -> None:
+def test_sergio_0029_dividends_20000_populates_0460(m100_second_newest_snapshot: RegistrySnapshot) -> None:
     """Sergio shape: casilla 0029 (dividendos) = 20 000 EUR.
 
     Oracle (Art. 49.1.a LIRPF): with no offsetting losses or prior-period
@@ -154,7 +154,7 @@ def test_sergio_0029_dividends_20000_populates_0460(m100_2024_snapshot: Registry
 
     Chain: 0029→0036→0038→0040→0041→0460.
     """
-    values = _run_2024(m100_2024_snapshot, {_CAPITAL_MOBILIARIO_DIVIDENDOS_CASILLA: Decimal("20000")})
+    values = _run_second_newest(m100_second_newest_snapshot, {_CAPITAL_MOBILIARIO_DIVIDENDOS_CASILLA: Decimal("20000")})
 
     # The chain must propagate through: 0036=20000, 0038=20000, 0040=20000, 0041=20000.
     assert values[_CAPITAL_MOBILIARIO_TOTAL_INGRESOS_CASILLA] == Decimal("20000"), (
@@ -176,14 +176,14 @@ def test_sergio_0029_dividends_20000_populates_0460(m100_2024_snapshot: Registry
     )
 
 
-def test_sergio_0460_equals_0029_when_no_losses_or_gp(m100_2024_snapshot: RegistrySnapshot) -> None:
+def test_sergio_0460_equals_0029_when_no_losses_or_gp(m100_second_newest_snapshot: RegistrySnapshot) -> None:
     """Art. 49.1 oracle: 0460 = 0041 when ganancias patrimoniales saldo = 0.
 
     With no ganancias-patrimoniales inputs (0422=0, 0423=0) the only base-ahorro
     component is 0041 (capital mobiliario).  Art. 49.1.a → 0460 = net rendimiento
     del capital mobiliario = 0029 (when 0037 and 0039 are zero).
     """
-    values = _run_2024(m100_2024_snapshot, {_CAPITAL_MOBILIARIO_DIVIDENDOS_CASILLA: Decimal("20000")})
+    values = _run_second_newest(m100_second_newest_snapshot, {_CAPITAL_MOBILIARIO_DIVIDENDOS_CASILLA: Decimal("20000")})
 
     expected = Decimal("20000")
     assert values[_BASE_IMPONIBLE_AHORRO_CASILLA] == expected, (
@@ -196,14 +196,14 @@ def test_sergio_0460_equals_0029_when_no_losses_or_gp(m100_2024_snapshot: Regist
 # ── Carla shape: 0027 = 1 200 EUR cuenta-corriente interest ──────────────────
 
 
-def test_carla_0027_intereses_1200_propagates_to_0460(m100_2024_snapshot: RegistrySnapshot) -> None:
+def test_carla_0027_intereses_1200_propagates_to_0460(m100_second_newest_snapshot: RegistrySnapshot) -> None:
     """Carla shape: casilla 0027 (intereses cuenta corriente) = 1 200 EUR.
 
     Oracle (Art. 49.1.a LIRPF): 0460 = 1 200 EUR when 0037 and 0039 are zero.
 
     Chain: 0027→0036→0038→0040→0041→0460.
     """
-    values = _run_2024(m100_2024_snapshot, {_CAPITAL_MOBILIARIO_INTERESES_CASILLA: Decimal("1200")})
+    values = _run_second_newest(m100_second_newest_snapshot, {_CAPITAL_MOBILIARIO_INTERESES_CASILLA: Decimal("1200")})
 
     assert values[_CAPITAL_MOBILIARIO_RENDIMIENTOS_REDUCIDOS_CASILLA] == Decimal("1200"), (
         f"0041 = {values[_CAPITAL_MOBILIARIO_RENDIMIENTOS_REDUCIDOS_CASILLA]!r}; "
@@ -220,12 +220,12 @@ def test_carla_0027_intereses_1200_propagates_to_0460(m100_2024_snapshot: Regist
 # ── Aitor shape: 0029 = 6 000 EUR dividends SAL ───────────────────────────────
 
 
-def test_aitor_0029_dividends_6000_populates_0460(m100_2024_snapshot: RegistrySnapshot) -> None:
+def test_aitor_0029_dividends_6000_populates_0460(m100_second_newest_snapshot: RegistrySnapshot) -> None:
     """Aitor shape: casilla 0029 (dividendos SAL) = 6 000 EUR.
 
     Oracle (Art. 49.1.a LIRPF): 0460 = 6 000 EUR.
     """
-    values = _run_2024(m100_2024_snapshot, {_CAPITAL_MOBILIARIO_DIVIDENDOS_CASILLA: Decimal("6000")})
+    values = _run_second_newest(m100_second_newest_snapshot, {_CAPITAL_MOBILIARIO_DIVIDENDOS_CASILLA: Decimal("6000")})
 
     assert values[_BASE_IMPONIBLE_AHORRO_CASILLA] == Decimal("6000"), (
         f"casilla 0460 = {values[_BASE_IMPONIBLE_AHORRO_CASILLA]!r}; expected 6000.  "
@@ -236,14 +236,18 @@ def test_aitor_0029_dividends_6000_populates_0460(m100_2024_snapshot: RegistrySn
 # ── Anti-tautology: proportional scaling ─────────────────────────────────────
 
 
-def test_0460_scales_proportionally_with_capital_mobiliario_input(m100_2024_snapshot: RegistrySnapshot) -> None:
+def test_0460_scales_proportionally_with_capital_mobiliario_input(
+    m100_second_newest_snapshot: RegistrySnapshot,
+) -> None:
     """Anti-tautology: doubling the dividends input must double 0460.
 
     This test cannot pass against a formula that always returns 0 or any
     constant — it verifies that 0460 is strictly coupled to 0029.
     """
-    v_small = _run_2024(m100_2024_snapshot, {_CAPITAL_MOBILIARIO_DIVIDENDOS_CASILLA: Decimal("5000")})
-    v_large = _run_2024(m100_2024_snapshot, {_CAPITAL_MOBILIARIO_DIVIDENDOS_CASILLA: Decimal("10000")})
+    v_small = _run_second_newest(m100_second_newest_snapshot, {_CAPITAL_MOBILIARIO_DIVIDENDOS_CASILLA: Decimal("5000")})
+    v_large = _run_second_newest(
+        m100_second_newest_snapshot, {_CAPITAL_MOBILIARIO_DIVIDENDOS_CASILLA: Decimal("10000")}
+    )
 
     small = v_small[_BASE_IMPONIBLE_AHORRO_CASILLA]
     large = v_large[_BASE_IMPONIBLE_AHORRO_CASILLA]

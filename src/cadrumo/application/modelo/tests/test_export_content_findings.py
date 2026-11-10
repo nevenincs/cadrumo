@@ -27,7 +27,7 @@ from .invoice_catalogue_fake import InvoiceCatalogueFake
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
+_T0 = datetime(1980, 1, 15, 12, 0, 0, tzinfo=UTC)
 _KEY_PREFIX = "application.modelo.findings.xml_"
 
 

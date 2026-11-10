@@ -50,23 +50,24 @@ def entry_options(ctx: typer.Context) -> None:
     result = LedgerEntryOptionsResult.model_validate(
         completed.projection.model_dump(mode="json", exclude={"profile_id"})
     )
+    options = (
+        f"{family.family}\t{option.value}"
+        + (f"\t{tr(option.label_key)}" if option.label_key is not None and option.label_key != "" else "")
+        for family in result.families
+        for option in family.options
+    )
+    classifications = (
+        f"classification\t{row.classification}\t{row.takes_business_share}\t{row.takes_usage_ratio}"
+        f"\t{row.carries_business_figures}\t{row.keeps_category}"
+        f"\t{row.rule_may_name_category}\t{row.split_part_requires_category}"
+        for row in result.classifications
+    )
+    limits = (f"limit\t{rule.rule}\t{rule.decimals}\t{rule.zero}" for rule in result.limits.decimal_rules)
     emit_envelope(
         ctx,
         command="ledger.entry-options",
         result=result,
-        lines=tuple(
-            f"{family.family}\t{option.value}"
-            + (f"\t{tr(option.label_key)}" if option.label_key is not None and option.label_key != "" else "")
-            for family in result.families
-            for option in family.options
-        )
-        + tuple(
-            f"classification\t{row.classification}\t{row.takes_business_share}\t{row.takes_usage_ratio}"
-            f"\t{row.carries_business_figures}\t{row.keeps_category}"
-            f"\t{row.rule_may_name_category}\t{row.split_part_requires_category}"
-            for row in result.classifications
-        )
-        + tuple(f"limit\t{rule.rule}\t{rule.decimals}\t{rule.zero}" for rule in result.limits.decimal_rules),
+        lines=(f"default_currency\t{result.default_currency}", *options, *classifications, *limits),
     )
 
 

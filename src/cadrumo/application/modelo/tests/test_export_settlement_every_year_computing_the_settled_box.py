@@ -1,6 +1,6 @@
 """Every supported Modelo 100 ejercicio that computes RESINGDEV (0700) settles from it, through the real export.
 
-The 2024 and 2025 dictionaries both state "Resultado a ingresar o a devolver
+The two newest dictionaries both state "Resultado a ingresar o a devolver
 (casilla [0670] o casilla [0695])" for 0700: the remainder 0695 once the spouse
 compensation suspends part of an amount to pay (0693), otherwise the result
 0670; a waived refund (0694) leaves it without a value. The years come from
@@ -28,7 +28,10 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.payment_instalment_split import first_instalment_share
 from ....domain.calculations.registry.result_casillas import derive_result_disposition
-from ....domain.calculations.registry.tests.authored_editions import supported_authored_exercises
+from ....domain.calculations.registry.tests.authored_editions import (
+    newest_authored_editions,
+    supported_authored_exercises,
+)
 from ....domain.deadlines.models import RefundAccount
 from ....domain.filing.protocols import ModeloInputValue
 from ....domain.filing.schema import ModeloDraft
@@ -133,11 +136,11 @@ def _exported_settlement(
     }
 
 
-def test_the_2024_revision_settles_from_its_computed_box(operation: PinnedAuthorityOperation) -> None:
-    """Guards the years below from running over nothing, and pins 2024 among them."""
+def test_the_two_newest_revisions_settle_from_their_computed_box(operation: PinnedAuthorityOperation) -> None:
+    """Guards the years below from running over nothing, and pins the two newest authored dictionaries among them."""
     years = _years_computing_the_settled_box(operation)
 
-    assert 2024 in years and 2025 in years
+    assert set(newest_authored_editions("100", 2)) <= set(years)
 
 
 def test_a_plain_amount_to_pay_is_paid_from_the_settled_box(

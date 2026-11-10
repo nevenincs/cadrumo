@@ -16,12 +16,14 @@ from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_base import CasillaDataType
 from ....domain.calculations.registry.schema_formula import FormulaExpression
 from ....domain.calculations.registry.schema_surfaces import CasillaConstraints
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..casilla_help import build_casilla_help_card
 from ..value_presentation import VALUE_ABSENT_LOCALE_KEY
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_ON = date(2026, 3, 31)
+_YEAR = filing_year_envelope().horizon
+_ON = date(_YEAR, 3, 31)
 
 
 def _calculated(
@@ -32,7 +34,7 @@ def _calculated(
     agrarian_base: str = "0",
     agrarian_withheld: str = "0",
 ):
-    snapshot = operation.snapshot("130", filing_year=2026, period="1T")
+    snapshot = operation.snapshot("130", filing_year=_YEAR, period="1T")
     result = calculate_registry_snapshot(
         snapshot,
         inputs={
@@ -98,11 +100,11 @@ def test_the_official_subtraction_shows_its_recorded_values_in_every_language(
 
 
 def test_a_zero_instalment_shows_the_negative_income_and_the_zero_floor(operation: PinnedAuthorityOperation) -> None:
-    snapshot, observations = _calculated(operation, "1000", "2000")
+    snapshot, observations = _calculated(operation, "1000", "1900")
 
     formula = _formula(operation, snapshot, observations["04"], "04")
 
-    assert formula.values_text == "max(0, 20 % of [03] −1,000.00\u00a0€) = 0.00\u00a0€"
+    assert formula.values_text == "max(0, 20 % of [03] −900.00\u00a0€) = 0.00\u00a0€"
 
 
 def test_a_held_zero_and_an_absent_operand_never_share_a_spelling(operation: PinnedAuthorityOperation) -> None:
@@ -165,7 +167,7 @@ def test_a_conditional_deduction_shows_its_saved_income_without_exposing_binding
     operation: PinnedAuthorityOperation,
     language: OutputLanguage,
 ) -> None:
-    snapshot, observations = _calculated(operation, "1000", "2000")
+    snapshot, observations = _calculated(operation, "1000", "1900")
 
     formula = _formula(operation, snapshot, observations["13"], "13", language)
 

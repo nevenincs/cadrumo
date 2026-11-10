@@ -1,6 +1,6 @@
 """A declaration whose revision declares less than filing grade reads its real state in the list.
 
-The published Modelo 390 for 2026 is selected by the law at applicability
+The published Modelo 390 for the horizon year is selected by the law at applicability
 grade. The list reads it at the grade the revision declares, as the form does,
 so an uncalculated 390 reads as a draft and its result box is read from the
 same revision the form shows, while
@@ -19,6 +19,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -34,7 +35,7 @@ from ..work_form_service import modelo_form_snapshot
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MODELO = "390"
-_YEAR = 2026
+_YEAR = filing_year_envelope().horizon
 _PERIOD = Period.from_year_and_code(_YEAR, "0A")
 
 
@@ -81,7 +82,7 @@ def test_a_refusal_of_the_calculation_gate_is_confined_to_its_row(operation: Pin
     """The gate asks for filing grade, which the registry refuses for this 390; the row reads as unreadable."""
     selected = operation.revision_for_context(_MODELO, filing_year=_YEAR, period=_PERIOD.registry_token)
     work_unit_id = "e" * 64
-    instant = datetime(2026, 3, 10, 12, tzinfo=UTC)
+    instant = datetime(1980, 3, 10, 12, tzinfo=UTC)
     head = CalculationRevision(
         calculation_revision_id=derive_calculation_revision_id(
             work_unit_id=work_unit_id,

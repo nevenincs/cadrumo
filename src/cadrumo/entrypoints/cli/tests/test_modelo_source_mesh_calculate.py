@@ -35,6 +35,7 @@ from cadrumo.core.redaction.rules import redact_for_cli_output
 from cadrumo.core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.categories.spending_category import SpendingCategory
@@ -48,6 +49,7 @@ from .cli_fixture_worlds import RegisteredCliProfile, cli_world_provider, invoke
 from .ordinary_m303_scenarios import joint_return_options
 from .source_mesh_calculate_transactions import (
     classified_rent_transaction,
+    ledger_raw_transaction,
     ledger_transaction,
     m100_activity_expense_transaction,
     m100_activity_income_transaction,
@@ -66,7 +68,10 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
 ]
 
-_IVA_WALLET_DECIDED_AT = datetime(2025, 4, 1, 16, 10, tzinfo=UTC)
+# Every seeded ledger row is booked on one day, so the operator's activity, its
+# Modelo 303 quarter and its withholding quarters open in that row's year.
+_ACTIVITY_YEAR = ledger_raw_transaction("activity-year", amount=Decimal("0")).booked_date.year
+_IVA_WALLET_DECIDED_AT = datetime(_ACTIVITY_YEAR, 4, 1, 16, 10, tzinfo=UTC)
 _PROFILE_LABEL = "operator"
 _OPERATOR_FACTS: dict[str, str] = {
     "identity.tax_id": "12345678Z",
@@ -75,7 +80,7 @@ _OPERATOR_FACTS: dict[str, str] = {
     "identity.surnames": "Operator",
     "activities.description": "design",
     "taxpayer_type.irpf_income_categories": "actividad_economica",
-    "censo.activity_start_date": "2025-01-01",
+    "censo.activity_start_date": date(_ACTIVITY_YEAR, 1, 1).isoformat(),
     "tax_residence.jurisdiction_scope": "common_regime",
     "iva.regime": "GENERAL",
     "iva.m303_regime_composition": "general",
@@ -91,11 +96,12 @@ _OPERATOR_FACTS: dict[str, str] = {
     "withholding.has_employees": "true",
     "withholding.pays_rent_with_retencion": "true",
 }
-# The renta facts a Modelo 100 2024 calculation reads from the profile.
+# The renta facts a Modelo 100 calculation reads from the profile.
 _M100_FACTS: dict[str, str] = {
     "tax_residence.ccaa": "madrid",
     "irpf.estimation_regime": "directa_normal",
-    "censo.activity_start_date": "2020-01-01",
+    # The activity began before any supported year, so no exercise is its first.
+    "censo.activity_start_date": date(filing_year_envelope().floor - 1, 1, 1).isoformat(),
     "renta_taxpayer.birth_date": "1980-03-15",
     "renta_taxpayer.sex": "H",
     "renta_taxpayer.marital_status": "1",
@@ -182,23 +188,23 @@ def _create_work_unit(profile: RegisteredCliProfile, *, modelo: str, year: int, 
 
 
 def _create_303_work_unit(profile: RegisteredCliProfile) -> dict[str, str]:
-    return _create_work_unit(profile, modelo="303", year=2025, period="1T")
+    return _create_work_unit(profile, modelo="303", year=_ACTIVITY_YEAR, period="1T")
 
 
-def _create_115_work_unit(profile: RegisteredCliProfile, *, year: int = 2026, period: str = "1T") -> dict[str, str]:
+def _create_115_work_unit(profile: RegisteredCliProfile, *, year: int, period: str = "1T") -> dict[str, str]:
     return _create_work_unit(profile, modelo="115", year=year, period=period)
 
 
 def _create_111_work_unit(profile: RegisteredCliProfile) -> dict[str, str]:
-    return _create_work_unit(profile, modelo="111", year=2025, period="2T")
+    return _create_work_unit(profile, modelo="111", year=_ACTIVITY_YEAR, period="2T")
 
 
 def _create_180_work_unit(profile: RegisteredCliProfile) -> dict[str, str]:
-    return _create_work_unit(profile, modelo="180", year=2026, period="0A")
+    return _create_work_unit(profile, modelo="180", year=filing_year_envelope().horizon, period="0A")
 
 
 def _capture_m115_invoice_withholding(profile: RegisteredCliProfile) -> None:
-    """Capture one received urban-rent invoice's retención as Modelo 115 2025 1T evidence.
+    """Capture one received urban-rent invoice's retención as first-quarter Modelo 115 evidence.
 
     ``ledger invoice add`` mints a received rent invoice (2700.00 base, 19%
     retención = 513.00), then ``modelo aggregate --received-invoice-retencion``
@@ -206,7 +212,7 @@ def _capture_m115_invoice_withholding(profile: RegisteredCliProfile) -> None:
     requires. The settlement is the invoice grand total (2700.00 + 21% IVA =
     3267.00) less the retención: 2754.00.
     """
-    paid_on = date(2025, 3, 15)
+    paid_on = date(_ACTIVITY_YEAR, 3, 15)
     created = _cli(
         profile,
         "--format", "json",
@@ -214,7 +220,7 @@ def _capture_m115_invoice_withholding(profile: RegisteredCliProfile) -> None:
         "--kind", "received",
         "--counterparty-name", "Arrendador Ejemplo SL",
         "--counterparty-nif", "B00015016",
-        "--invoice-number", "M115-RENT-2025-001",
+        "--invoice-number", f"M115-RENT-{paid_on.year}-001",
         "--invoice-date", paid_on.isoformat(),
         "--country-code", "ES",
         "--taxable-base", "2700.00", "--iva-rate", "21",
@@ -231,7 +237,7 @@ def _capture_m115_invoice_withholding(profile: RegisteredCliProfile) -> None:
         scheme="arrendamiento_urbano",
         recipient_tax_status=WithholdingRecipientTaxStatus.RESIDENT,
         recipient_tax_regime=WithholdingRecipientTaxRegime.IRPF,
-        payment_event_id="m115-rent-payment-2025-03-15",
+        payment_event_id=f"m115-rent-payment-{paid_on.isoformat()}",
         payment_occurred_on=paid_on,
         allocation_id="m115-rent-allocation-1",
         allocated_base=Decimal("2700.00"),
@@ -255,7 +261,7 @@ def _capture_m115_invoice_withholding(profile: RegisteredCliProfile) -> None:
             ),
             recipient_province_code="28",
             modality="1",
-            accrual_year=2025,
+            accrual_year=paid_on.year,
             withholding_percentage=Decimal("19.00"),
         ),
     )
@@ -263,24 +269,29 @@ def _capture_m115_invoice_withholding(profile: RegisteredCliProfile) -> None:
         profile,
         "--format", "json",
         "app", "modelo", "aggregate",
-        "--modelo", "115", "--year", "2025", "--period", "1T",
+        "--modelo", "115", "--year", str(paid_on.year), "--period", "1T",
         "--received-invoice-retencion", request.model_dump_json(),
     )  # fmt: skip
     assert captured.exit_code == 0, captured.output
 
 
-def _seed_prior_m100_zero_carry() -> None:
+def _m100_exercise() -> int:
+    """Return the Modelo 100 exercise the seeded activity income row is booked in."""
+    return m100_activity_income_transaction().raw.booked_date.year
+
+
+def _seed_prior_m100_zero_carry(exercise: int) -> None:
     from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 
     CalculationObservationRepository().save(
         CalculationObservationRepository().prepare_observation_envelope(
             RegistryModeloObservation(
                 modelo="100",
-                filing_year=2023,
+                filing_year=exercise - 1,
                 period="0A",
                 observations=registry_grounded_observations(
                     modelo="100",
-                    filing_year=2023,
+                    filing_year=exercise - 1,
                     period="0A",
                     casilla_values={
                         "0224": Decimal("0"),
@@ -296,8 +307,8 @@ def _seed_prior_m100_zero_carry() -> None:
                 ),
             ),
             source_kind="app_filing",
-            captured_at=datetime(2024, 6, 30, 12, 0, tzinfo=UTC),
-            stamped_revision_id=str(published_snapshot("100", filing_year=2023, period="0A").revision.id),
+            captured_at=datetime(exercise, 6, 30, 12, 0, tzinfo=UTC),
+            stamped_revision_id=str(published_snapshot("100", filing_year=exercise - 1, period="0A").revision.id),
         )
     )
 
@@ -306,7 +317,7 @@ def test_work_calculate_modelo_115_uses_retenciones_aggregation_observation(tmp_
     """M115 CLI calculation consumes persisted URBAN_RENTAL retención evidence."""
 
     with _operator_profile(tmp_path) as profile:
-        work_unit = _create_115_work_unit(profile, year=2025)
+        work_unit = _create_115_work_unit(profile, year=_ACTIVITY_YEAR)
         _capture_m115_invoice_withholding(profile)
 
         calculated = _cli(
@@ -332,7 +343,7 @@ def test_work_calculate_modelo_115_uses_retenciones_aggregation_observation(tmp_
 def test_reusing_a_verified_calculation_keeps_the_newer_draft_current(tmp_path: Path) -> None:
     """A real historical duplicate is readable without replacing the current draft."""
     with _operator_profile(tmp_path) as profile:
-        work_unit = _create_115_work_unit(profile, year=2025)
+        work_unit = _create_115_work_unit(profile, year=_ACTIVITY_YEAR)
         _capture_m115_invoice_withholding(profile)
         calculate = (
             "--format",
@@ -381,28 +392,29 @@ def test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses(
     tmp_path: Path, authority_operation: PinnedAuthorityOperation
 ) -> None:
     """An operator's public CLI M100 path carries ledger income through 0171/0180/0224."""
+    exercise = _m100_exercise()
     expense_rows = (
         m100_activity_expense_transaction(
             "m100-expense-office",
-            value_date=date(2024, 2, 20),
+            value_date=date(exercise, 2, 20),
             category=SpendingCategory.from_registry("material_oficina"),
             taxable_base=Decimal("500.00"),
         ),
         m100_activity_expense_transaction(
             "m100-expense-software",
-            value_date=date(2024, 5, 22),
+            value_date=date(exercise, 5, 22),
             category=SpendingCategory.from_registry("software_suscripcion"),
             taxable_base=Decimal("700.00"),
         ),
         m100_activity_expense_transaction(
             "m100-expense-phone",
-            value_date=date(2024, 8, 12),
+            value_date=date(exercise, 8, 12),
             category=SpendingCategory.from_registry("telefonia_movil"),
             taxable_base=Decimal("300.00"),
         ),
         m100_activity_expense_transaction(
             "m100-expense-advisory",
-            value_date=date(2024, 11, 8),
+            value_date=date(exercise, 11, 8),
             category=SpendingCategory.from_registry("asesoria_fiscal"),
             taxable_base=Decimal("900.00"),
         ),
@@ -419,16 +431,16 @@ def test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses(
             "--modelo",
             "100",
             "--year",
-            "2024",
+            str(exercise),
             "--period",
             "0A",
             "--revision",
-            "2024",
+            revision_covering("100", exercise).id,
         )
         assert work_unit.exit_code == 0, work_unit.output
         work_unit_payload = unwrap_schema_envelope(work_unit.output)
         with _opened_profile(profile, authority_operation) as bucket_id:
-            _seed_prior_m100_zero_carry()
+            _seed_prior_m100_zero_carry(exercise)
             TransactionCatalogueRepository(bucket_id=bucket_id).save(
                 TransactionCatalogue.from_transactions((m100_activity_income_transaction(), *expense_rows)),
             )
@@ -446,7 +458,7 @@ def test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses(
             "--irpf-activity-income-imputation-criterion",
             "cobros_y_pagos",
             "--irpf-activity-income-imputation-year",
-            "2024",
+            str(exercise),
             "--no-irpf-codigo-comercio-accounting",
         )
         assert imputation.exit_code == 0, imputation.output
@@ -492,7 +504,7 @@ def test_work_calculate_modelo_111_no_retenciones_quarter_names_profile_attestat
             "--modelo",
             "111",
             "--year",
-            "2025",
+            str(_ACTIVITY_YEAR),
             "--period",
             "2T",
             "--by",
@@ -506,7 +518,7 @@ def test_work_calculate_modelo_111_no_retenciones_quarter_names_profile_attestat
             _PROFILE_LABEL,
             "--quiet",
             "--modelo-111-no-retenciones-periods",
-            "2025:2T,2025:3T,2025:4T",
+            f"{_ACTIVITY_YEAR}:2T,{_ACTIVITY_YEAR}:3T,{_ACTIVITY_YEAR}:4T",
         )
         shown = _cli(profile, "config", "profile", "view", _PROFILE_LABEL)
 
@@ -518,7 +530,10 @@ def test_work_calculate_modelo_111_no_retenciones_quarter_names_profile_attestat
 
     assert attested.exit_code == 0, attested.output
     assert shown.exit_code == 0, shown.output
-    assert "withholding.modelo_111_no_retenciones_periods\t2025:2T,2025:3T,2025:4T" in shown.output
+    assert (
+        f"withholding.modelo_111_no_retenciones_periods\t{_ACTIVITY_YEAR}:2T,{_ACTIVITY_YEAR}:3T,{_ACTIVITY_YEAR}:4T"
+        in shown.output
+    )
 
 
 def test_work_calculate_modelo_115_explicit_no_relevant_payment_attestation_materialises_zero(
@@ -526,8 +541,8 @@ def test_work_calculate_modelo_115_explicit_no_relevant_payment_attestation_mate
 ) -> None:
     """Public Q3/Q4 profile evidence materialises local M115 zero history."""
     with _operator_profile(tmp_path) as profile:
-        q3_work_unit = _create_115_work_unit(profile, year=2025, period="3T")
-        q4_work_unit = _create_115_work_unit(profile, year=2025, period="4T")
+        q3_work_unit = _create_115_work_unit(profile, year=_ACTIVITY_YEAR, period="3T")
+        q4_work_unit = _create_115_work_unit(profile, year=_ACTIVITY_YEAR, period="4T")
 
         refused = _cli(
             profile,
@@ -550,12 +565,15 @@ def test_work_calculate_modelo_115_explicit_no_relevant_payment_attestation_mate
             _PROFILE_LABEL,
             "--quiet",
             "--modelo-115-no-relevant-payment-periods",
-            "2025:3T,2025:4T",
+            f"{_ACTIVITY_YEAR}:3T,{_ACTIVITY_YEAR}:4T",
         )
         assert attested.exit_code == 0, attested.output
         shown = _cli(profile, "config", "profile", "view", _PROFILE_LABEL)
         assert shown.exit_code == 0, shown.output
-        assert "withholding.modelo_115_no_relevant_payment_periods\t2025:3T,2025:4T" in shown.output
+        assert (
+            f"withholding.modelo_115_no_relevant_payment_periods\t{_ACTIVITY_YEAR}:3T,{_ACTIVITY_YEAR}:4T"
+            in shown.output
+        )
 
         for period, work_unit in (("3T", q3_work_unit), ("4T", q4_work_unit)):
             calculated = _cli(
@@ -583,7 +601,7 @@ def test_work_calculate_modelo_115_explicit_no_relevant_payment_attestation_mate
             assert isinstance(calculation_revision_id, str)
             verified = _cli(profile, "--format", "json", "app", "modelo", "work", "verify", calculation_revision_id)
             assert verified.exit_code == 0, verified.output
-            output = tmp_path / f"modelo-115-2025-{period}.boe"
+            output = tmp_path / f"modelo-115-{_ACTIVITY_YEAR}-{period}.boe"
             exported = _cli(
                 profile,
                 "--format",
@@ -608,11 +626,12 @@ def test_work_calculate_modelo_115_classified_rent_row_requires_perceptor_eviden
     tmp_path: Path, authority_operation: PinnedAuthorityOperation
 ) -> None:
     """A classified rent ledger row alone must hard-stop instead of producing zeros."""
+    rent = classified_rent_transaction()
     with _operator_profile(tmp_path) as profile:
-        work_unit = _create_115_work_unit(profile)
+        work_unit = _create_115_work_unit(profile, year=rent.raw.booked_date.year)
         with _opened_profile(profile, authority_operation) as bucket_id:
             TransactionCatalogueRepository(bucket_id=bucket_id).save(
-                TransactionCatalogue.from_transactions((classified_rent_transaction(),)),
+                TransactionCatalogue.from_transactions((rent,)),
             )
 
         calculated = _cli(
@@ -637,7 +656,7 @@ def test_work_calculate_modelo_115_classified_rent_row_requires_perceptor_eviden
 def test_work_calculate_refuses_invalid_supplied_input_before_an_empty_retenciones_window(tmp_path: Path) -> None:
     """A malformed supplied value is reported as such, not hidden behind the empty-window refusal."""
     with _operator_profile(tmp_path) as profile:
-        work_unit = _create_115_work_unit(profile)
+        work_unit = _create_115_work_unit(profile, year=_ACTIVITY_YEAR)
         calculated = _cli(
             profile,
             "--format",
@@ -726,10 +745,12 @@ def _seed_ledger_and_zero_wallet_decision(bucket_id, sale, purchase):
     )
     decision = IvaCompensationReconciliationDecision(
         taxpayer_nif="12345678Z",
-        target_year=2025,
-        target_period=Period.from_year_and_code(2025, "1T"),
-        target_registry_snapshot_ref=published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,
-        source_registry_snapshot_refs=(published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,),
+        target_year=_ACTIVITY_YEAR,
+        target_period=Period.from_year_and_code(_ACTIVITY_YEAR, "1T"),
+        target_registry_snapshot_ref=published_snapshot("303", filing_year=_ACTIVITY_YEAR, period="1T").snapshot_ref,
+        source_registry_snapshot_refs=(
+            published_snapshot("303", filing_year=_ACTIVITY_YEAR, period="1T").snapshot_ref,
+        ),
         selected_authority="local_recurrence",
         selected_amount=Decimal("0"),
         wallet_amount=None,
@@ -738,11 +759,13 @@ def _seed_ledger_and_zero_wallet_decision(bucket_id, sale, purchase):
             IvaCompensationAuthoritySource(
                 source_kind="local_recurrence",
                 amount=Decimal("0"),
-                source_locator="test:local-recurrence:2025:1T",
+                source_locator=f"test:local-recurrence:{_ACTIVITY_YEAR}:1T",
                 source_modelo="303",
-                source_filing_year=2025,
-                source_periods=(Period.from_year_and_code(2025, "1T"),),
-                registry_snapshot_refs=(published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,),
+                source_filing_year=_ACTIVITY_YEAR,
+                source_periods=(Period.from_year_and_code(_ACTIVITY_YEAR, "1T"),),
+                registry_snapshot_refs=(
+                    published_snapshot("303", filing_year=_ACTIVITY_YEAR, period="1T").snapshot_ref,
+                ),
             ),
         ),
         override_amount=None,
@@ -871,7 +894,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
             taxable_base=Decimal("50.00"),
             iva_amount=Decimal("10.50"),
             deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current"),
-            deduction_locator="invoice:purchase-general-2025-1T",
+            deduction_locator=f"invoice:purchase-general-{_ACTIVITY_YEAR}-1T",
         )
 
         # Seed ledger data and a zero-amount IVA wallet decision after password
@@ -956,10 +979,12 @@ def _seed_zero_iva_wallet_decision() -> None:
 
     decision = IvaCompensationReconciliationDecision(
         taxpayer_nif="12345678Z",
-        target_year=2025,
-        target_period=Period.from_year_and_code(2025, "1T"),
-        target_registry_snapshot_ref=published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,
-        source_registry_snapshot_refs=(published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,),
+        target_year=_ACTIVITY_YEAR,
+        target_period=Period.from_year_and_code(_ACTIVITY_YEAR, "1T"),
+        target_registry_snapshot_ref=published_snapshot("303", filing_year=_ACTIVITY_YEAR, period="1T").snapshot_ref,
+        source_registry_snapshot_refs=(
+            published_snapshot("303", filing_year=_ACTIVITY_YEAR, period="1T").snapshot_ref,
+        ),
         selected_authority="local_recurrence",
         selected_amount=Decimal("0"),
         wallet_amount=None,
@@ -968,11 +993,13 @@ def _seed_zero_iva_wallet_decision() -> None:
             IvaCompensationAuthoritySource(
                 source_kind="local_recurrence",
                 amount=Decimal("0"),
-                source_locator="test:local-recurrence:2025:1T",
+                source_locator=f"test:local-recurrence:{_ACTIVITY_YEAR}:1T",
                 source_modelo="303",
-                source_filing_year=2025,
-                source_periods=(Period.from_year_and_code(2025, "1T"),),
-                registry_snapshot_refs=(published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,),
+                source_filing_year=_ACTIVITY_YEAR,
+                source_periods=(Period.from_year_and_code(_ACTIVITY_YEAR, "1T"),),
+                registry_snapshot_refs=(
+                    published_snapshot("303", filing_year=_ACTIVITY_YEAR, period="1T").snapshot_ref,
+                ),
             ),
         ),
         override_amount=None,
@@ -1146,6 +1173,7 @@ _M303_ONLY_SHA256 = "a" * 64
 
 
 def _m100_work_unit(profile: RegisteredCliProfile) -> str:
+    exercise = _m100_exercise()
     result = _cli(
         profile,
         "--format",
@@ -1157,11 +1185,11 @@ def _m100_work_unit(profile: RegisteredCliProfile) -> str:
         "--modelo",
         "100",
         "--year",
-        "2024",
+        str(exercise),
         "--period",
         "0A",
         "--revision",
-        "2024",
+        revision_covering("100", exercise).id,
     )
     assert result.exit_code == 0, result.output
     return str(unwrap_schema_envelope(result.output)["work_unit_id"])
@@ -1195,7 +1223,16 @@ def test_work_calculate_refuses_a_modelo_303_option_on_modelo_100_at_the_boundar
         address = (
             (work_unit_id,)
             if address_by_work_unit_id
-            else ("--modelo", "100", "--year", "2024", "--period", "0A", "--revision", "2024")
+            else (
+                "--modelo",
+                "100",
+                "--year",
+                str(_m100_exercise()),
+                "--period",
+                "0A",
+                "--revision",
+                revision_covering("100", _m100_exercise()).id,
+            )
         )
         refused = _cli(profile, "--language", "en", "app", "modelo", "work", "calculate", *address, *option_arguments)
         head = _current_calculation_head(profile, work_unit_id)
@@ -1216,10 +1253,11 @@ def test_work_calculate_modelo_100_without_a_modelo_303_option_is_unaffected(
     tmp_path: Path, authority_operation: PinnedAuthorityOperation
 ) -> None:
     """Modelo 100 still calculates when none of the Modelo 303 options is supplied."""
+    exercise = _m100_exercise()
     with _operator_profile(tmp_path, _M100_FACTS) as profile:
         work_unit_id = _m100_work_unit(profile)
         with _opened_profile(profile, authority_operation) as bucket_id:
-            _seed_prior_m100_zero_carry()
+            _seed_prior_m100_zero_carry(exercise)
             TransactionCatalogueRepository(bucket_id=bucket_id).save(
                 TransactionCatalogue.from_transactions((m100_activity_income_transaction(),)),
             )
@@ -1234,7 +1272,7 @@ def test_work_calculate_modelo_100_without_a_modelo_303_option_is_unaffected(
             "--irpf-activity-income-imputation-criterion",
             "cobros_y_pagos",
             "--irpf-activity-income-imputation-year",
-            "2024",
+            str(exercise),
             "--no-irpf-codigo-comercio-accounting",
         )
         assert imputation.exit_code == 0, imputation.output

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import replace
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from types import SimpleNamespace
 from typing import cast
@@ -24,6 +24,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 
 from ....core.operations import OperationFrontendProjection
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...aggregation.invoice_retencion import (
     InvoiceRetencionProjectionDefect,
     InvoiceWithholdingCapture,
@@ -78,7 +79,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = UUID("21212121-2121-4121-8121-212121212121")
 _OTHER_PROFILE = UUID("33333333-3333-4333-8333-333333333333")
 _OPERAND_REF = "e" * 64
-_PERIOD = PublicPeriod(filing_year=2024, code="1T")
+_YEAR = filing_year_envelope().horizon
+_PERIOD = PublicPeriod(filing_year=_YEAR, code="1T")
 _SCOPE = WithholdingWindowScope(modelo="111", period=_PERIOD.to_period())
 _BASELINE = WithholdingWindowBaseline(scope_token=_SCOPE.token, generation_id="a" * 64)
 
@@ -237,7 +239,7 @@ def test_request_typed_operands_round_trip_canonically() -> None:
         ModeloInvoiceWithholdingCaptureRequest.model_validate(
             {
                 "profile_id": str(_PROFILE),
-                "command": {"modelo": "111", "period": {"filing_year": 2024, "code": "bad"}},
+                "command": {"modelo": "111", "period": {"filing_year": _YEAR, "code": "bad"}},
                 "evidence": payload.evidence.model_dump(mode="json"),
             }
         )
@@ -251,7 +253,7 @@ def test_request_typed_operands_round_trip_canonically() -> None:
         scheme=RetencionScheme("actividades_profesionales"),
         taxable_base=Decimal("100.00"),
         retencion_amount=Decimal("15.00"),
-        accrued_on="2024-01-15",
+        accrued_on=date(_YEAR, 1, 15).isoformat(),
     )
     with pytest.raises(ValueError, match="caller-authored observations"):
         ModeloInvoiceWithholdingCaptureRequest.from_inputs(
@@ -270,7 +272,7 @@ def test_typed_annual_detail_preserves_all_canonical_fields_under_pinned_authori
         detail = WithholdingObservation(
             source_id="invoice-source",
             perceptor_tax_id="00001500M",
-            transaction_date=datetime(2024, 6, 1, tzinfo=UTC).date(),
+            transaction_date=date(_YEAR, 6, 1),
             clave=RetencionClave.from_registry("G"),
             percibido_dinerario=Decimal("1000"),
             retencion_practicada=Decimal("190"),
@@ -328,7 +330,7 @@ class _WithholdingService(WithholdingWindowServiceFixture):
                 scheme=RetencionScheme("actividades_profesionales"),
                 taxable_base=Decimal("100.00"),
                 retencion_amount=Decimal("15.00"),
-                accrued_on="2024-01-15",
+                accrued_on=date(_YEAR, 1, 15).isoformat(),
             ),
         )
 

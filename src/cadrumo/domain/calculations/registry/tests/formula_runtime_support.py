@@ -39,7 +39,7 @@ def evaluate(
         values=dict(values or {}),
         binding_values={},
         parameters=dict(parameters or {}),
-        date_context={"filing_period": date(2025, 12, 31)},
+        date_context={"filing_period": date(_EXERCISE, 12, 31)},
         relation_values={},
         operand_refs=operand_refs,
         operand_casilla_refs=operand_casilla_refs,

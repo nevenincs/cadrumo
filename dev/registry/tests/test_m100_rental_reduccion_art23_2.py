@@ -1,4 +1,4 @@
-"""Modelo 100 2024 Art. 23.2 housing-rental reduction calculation tests."""
+"""Modelo 100 Art. 23.2 housing-rental reduction calculation tests, on the edition that declares the tier."""
 
 from __future__ import annotations
 
@@ -19,7 +19,6 @@ from cadrumo.domain.calculations.registry.rental_reduction import resolve_rental
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.domain.calculations.registry.tests import m100_rental_reduccion_art23_2_scenarios as scenarios
-from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions_where
 from cadrumo.domain.renta.rental_reduction import RentalReductionArt232Tier
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test,
@@ -34,19 +33,15 @@ from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ..compiler.authority import compiled_bundled_authority
 
-_TIER_DECLARED_ID = "renta-rental-reduccion-art-23-2-tier"
-# The one authored edition that declares the Art. 23.2 tier binding, so the exercise follows the registry.
-(_REVISION,) = authored_revisions_where(
-    "100", lambda revision: any(item.id == _TIER_DECLARED_ID for item in revision.bindings)
-)
-_REVISION_ID = str(_REVISION.id)
-_EXERCISE = _REVISION.valid_from.year
+_TIER_DECLARED_ID = scenarios.TIER_BINDING
+_REVISION_ID = scenarios.TIER_EDITION_ID
+_EXERCISE = scenarios.TIER_EDITION_EXERCISE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 @pytest.fixture(scope="module")
-def m100_2024_snapshot(registry_snapshot: Callable[..., RegistrySnapshot]) -> RegistrySnapshot:
+def m100_tier_edition_snapshot(registry_snapshot: Callable[..., RegistrySnapshot]) -> RegistrySnapshot:
     """A formula-runtime calculation claim, never a filing one."""
     return registry_snapshot(
         "100",
@@ -63,8 +58,8 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
         yield operation
 
 
-def test_tier_binding_is_layout_and_law_grounded(m100_2024_snapshot: RegistrySnapshot) -> None:
-    scenarios.check_tier_binding_is_layout_and_law_grounded(m100_2024_snapshot)
+def test_tier_binding_is_layout_and_law_grounded(m100_tier_edition_snapshot: RegistrySnapshot) -> None:
+    scenarios.check_tier_binding_is_layout_and_law_grounded(m100_tier_edition_snapshot)
 
 
 @pytest.mark.parametrize(
@@ -77,13 +72,15 @@ def test_tier_binding_is_layout_and_law_grounded(m100_2024_snapshot: RegistrySna
     ),
 )
 def test_0150_uses_operator_selected_art23_2_tier(
-    m100_2024_snapshot: RegistrySnapshot, tier: str, expected: Decimal
+    m100_tier_edition_snapshot: RegistrySnapshot, tier: str, expected: Decimal
 ) -> None:
-    scenarios.check_0150_uses_operator_selected_art23_2_tier(m100_2024_snapshot, tier, expected)
+    scenarios.check_0150_uses_operator_selected_art23_2_tier(m100_tier_edition_snapshot, tier, expected)
 
 
-def test_0150_unchecked_eligibility_does_not_require_or_apply_tier(m100_2024_snapshot: RegistrySnapshot) -> None:
-    scenarios.check_0150_unchecked_eligibility_does_not_require_or_apply_tier(m100_2024_snapshot)
+def test_0150_unchecked_eligibility_does_not_require_or_apply_tier(
+    m100_tier_edition_snapshot: RegistrySnapshot,
+) -> None:
+    scenarios.check_0150_unchecked_eligibility_does_not_require_or_apply_tier(m100_tier_edition_snapshot)
 
 
 @pytest.mark.parametrize(
@@ -94,17 +91,17 @@ def test_0150_unchecked_eligibility_does_not_require_or_apply_tier(m100_2024_sna
     ),
 )
 def test_0150_non_positive_0149_does_not_create_positive_reduction(
-    m100_2024_snapshot: RegistrySnapshot, inputs: dict[str, Decimal]
+    m100_tier_edition_snapshot: RegistrySnapshot, inputs: dict[str, Decimal]
 ) -> None:
-    scenarios.check_0150_non_positive_0149_does_not_create_positive_reduction(m100_2024_snapshot, inputs)
+    scenarios.check_0150_non_positive_0149_does_not_create_positive_reduction(m100_tier_edition_snapshot, inputs)
 
 
-def test_0150_positive_checked_rental_fails_closed_without_tier(m100_2024_snapshot: RegistrySnapshot) -> None:
-    scenarios.check_0150_positive_checked_rental_fails_closed_without_tier(m100_2024_snapshot)
+def test_0150_positive_checked_rental_fails_closed_without_tier(m100_tier_edition_snapshot: RegistrySnapshot) -> None:
+    scenarios.check_0150_positive_checked_rental_fails_closed_without_tier(m100_tier_edition_snapshot)
 
 
-def test_0150_rejects_unknown_tier_key(m100_2024_snapshot: RegistrySnapshot) -> None:
-    scenarios.check_0150_rejects_unknown_tier_key(m100_2024_snapshot)
+def test_0150_rejects_unknown_tier_key(m100_tier_edition_snapshot: RegistrySnapshot) -> None:
+    scenarios.check_0150_rejects_unknown_tier_key(m100_tier_edition_snapshot)
 
 
 _TIER_PROFILE_KEY = "renta_rental.reduccion_art_23_2_tier_2024"
@@ -112,7 +109,7 @@ _PROFILE_ID = "10010010-0100-4100-8100-100100100100"
 
 
 @pytest.fixture(scope="module")
-def m100_2024_compiled_snapshot() -> RegistrySnapshot:
+def m100_tier_edition_compiled_snapshot() -> RegistrySnapshot:
     """A snapshot over the authored declarations, not a published artifact."""
     return compiled_bundled_authority().snapshot(
         "100",
@@ -148,7 +145,7 @@ def _dispatch_keys(node: FormulaExpression) -> set[str]:
 
 
 def test_tier_binding_declares_the_closed_substrate_enum(
-    m100_2024_compiled_snapshot: RegistrySnapshot,
+    m100_tier_edition_compiled_snapshot: RegistrySnapshot,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """The tier is a closed-membership axis, and its value contract says so.
@@ -157,7 +154,9 @@ def test_tier_binding_declares_the_closed_substrate_enum(
     an amount, and the keys it may take are exactly the members of the owning
     substrate enum.
     """
-    binding = next(item for item in m100_2024_compiled_snapshot.revision.bindings if item.id == _TIER_DECLARED_ID)
+    binding = next(
+        item for item in m100_tier_edition_compiled_snapshot.revision.bindings if item.id == _TIER_DECLARED_ID
+    )
 
     assert binding.value.data_type is BindingDataType.ENUM
     assert binding.value.channel is BindingValueChannel.ENUM
@@ -165,7 +164,7 @@ def test_tier_binding_declares_the_closed_substrate_enum(
 
     formula = next(
         item
-        for item in m100_2024_compiled_snapshot.revision.formulas
+        for item in m100_tier_edition_compiled_snapshot.revision.formulas
         if item.id == "renta-capital-inmobiliario-reduccion-arrendamiento-vivienda-art-23-2"
     )
     catalogue = resolve_rental_reduction_art232_tier_catalogue(
@@ -176,7 +175,7 @@ def test_tier_binding_declares_the_closed_substrate_enum(
 
 
 def test_declared_tier_resolves_onto_the_enum_channel_through_the_profile_resolver(
-    m100_2024_compiled_snapshot: RegistrySnapshot,
+    m100_tier_edition_compiled_snapshot: RegistrySnapshot,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """Every tier member travels the live profile resolver onto the enum channel."""
@@ -186,7 +185,7 @@ def test_declared_tier_resolves_onto_the_enum_channel_through_the_profile_resolv
     )
     for tier in catalogue.all_tiers:
         resolution = ProfileSourceResolver(
-            registry_snapshot=m100_2024_compiled_snapshot,
+            registry_snapshot=m100_tier_edition_compiled_snapshot,
             profile_record=_tier_profile_record(tier),
             operation=authority_operation,
         ).resolve(
@@ -195,7 +194,7 @@ def test_declared_tier_resolves_onto_the_enum_channel_through_the_profile_resolv
                 modelo="100",
                 filing_year=_EXERCISE,
                 period=Period.from_year_and_code(_EXERCISE, "0A"),
-                revision=m100_2024_compiled_snapshot.revision,
+                revision=m100_tier_edition_compiled_snapshot.revision,
             ),
         )
 
