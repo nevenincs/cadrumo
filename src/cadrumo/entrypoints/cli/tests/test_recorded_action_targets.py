@@ -12,11 +12,14 @@ import pytest
 
 from cadrumo_client.contracts.command_program import CommandProgram
 
+from ....application.modelo.action_errors import ModeloProfileReadinessError
 from ....application.modelo.iva_wallet_refusal import (
     ModeloIvaWalletReconciliationBlockedError,
     raise_iva_wallet_precondition,
 )
 from ....application.modelo.preconditions import IVA_WALLET_OPENING_BALANCE_SCENARIOS
+from ....application.modelo.profile_readiness_gate import require_existing_profile_baseline_ready_for_modelo_work
+from ....application.modelo.work_profile import ModeloWorkProfile
 from ....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogueEntry, lookup_action
 from ....application.operator_actions.models import (
     ActionArgumentBinding,
@@ -31,10 +34,12 @@ from ....application.operator_surface.action_targets import (
     resolve_recorded_precondition_action,
 )
 from ....application.operator_surface.manifest import ReconciledOperatorLeaf
+from ....application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from ....core.operator_action_enums import ActionArgumentStatus, ActionConditionality, ActionEvidenceProvenance
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
+from ....domain.user_profile.values import ProfileSetupState, create_user_profile_record
 from ..common import resolve_cli_precondition_action
 from ..operator_surface_reconciliation import operator_surface_target_reconciliation
 
@@ -187,6 +192,41 @@ def test_each_real_opening_balance_refusal_records_an_action_that_resolves_to_th
         assert served.missing_argument_names == ("amount",)
         assert leaf.input_schema is not None
         assert set(bound) == set(leaf.input_schema.required_input_names)
+
+
+def test_a_real_missing_profile_facts_refusal_records_an_action_that_resolves_to_the_live_leaf(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    profile_id = "44444444-4444-4444-8444-444444444444"
+    record = create_user_profile_record(
+        context=operation.profile_create_context(),
+        profile_id=profile_id,
+        setup_state=ProfileSetupState.COMPLETE,
+        facts=persona_facts_beneath(without=("activities.",)),
+    )
+    period = Period.from_year_and_code(operation.supported_filing_years().horizon, "1T")
+    with pytest.raises(ModeloProfileReadinessError) as refused:
+        require_existing_profile_baseline_ready_for_modelo_work(
+            bucket_id=profile_id,
+            modelo="303",
+            filing_year=period.filing_year,
+            period=period,
+            enforce_applicability=False,
+            profile_decode_context=operation.profile_decode_context(),
+            operation=operation,
+            profile=ModeloWorkProfile(record=record, profile_decode_context=operation.profile_decode_context()),
+        )
+    verdict = refused.value.terminal_precondition_verdict
+    assert verdict is not None
+
+    served = resolve_recorded_precondition_action(verdict)
+
+    assert served.action is not None, "the refusal names no action"
+    assert served.action.action_id == "operator.profile.edit"
+    assert served.conditionality is ActionConditionality.REQUIRES_ARGUMENTS
+    (leaf,) = operator_surface_target_reconciliation(served.action.target_command_key).leaves
+    assert served.action.cli_path == (leaf.live_leaf.program.executable_name, *leaf.live_leaf.canonical_cli_path)
+    assert served == resolve_cli_precondition_action(verdict)
 
 
 def test_the_record_refuses_a_command_no_catalogue_action_targets() -> None:
