@@ -36,22 +36,31 @@ from cadrumo.domain.contribuyente.entity_type import EntityType
 from cadrumo.domain.deadlines.models import IVARegime
 
 from ....core.casilla_id import validated_casilla_id
+from ....domain.calculations.registry.tests.authored_editions import authored_revisions_where
 from ....domain.deadlines.models import TaxpayerProfile
 from ..verification_predicates import evaluate_predicate_expression
 from .retencion_predicate_support import declared_m100_predicate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-#: Every M100 revision declaring casilla 0597. Each was resolved from that
-#: revision's OWN casilla set through semantic_role rather than copied,
-#: because ids renumber across filing years even when they happen to agree
-#: here (verified independently against all six: 0036 and 0597 hold in
-#: every one).
-_REVISION_YEARS = (2020, 2021, 2022, 2023, 2024, 2025)
+_PREDICATE_SUFFIX = "retenciones-capital-mobiliario-declaradas-cuando-ingresos-integros-positivos"
+
+#: Every authored M100 revision declaring the advisory, read from the registry
+#: rather than listed: the casilla ids renumber across editions even when they
+#: happen to agree here, so each edition is checked against its own declaration.
+_REVISION_YEARS = tuple(
+    revision.valid_from.year
+    for revision in authored_revisions_where(
+        "100",
+        lambda revision: any(
+            predicate.predicate_id.endswith(_PREDICATE_SUFFIX) for predicate in revision.verification_predicates or ()
+        ),
+    )
+)
 
 
 def _predicate_id(year: int) -> str:
-    return f"modelo-100-{year}-retenciones-capital-mobiliario-declaradas-cuando-ingresos-integros-positivos"
+    return f"modelo-100-{year}-{_PREDICATE_SUFFIX}"
 
 
 _GROSS_CAPITAL_MOBILIARIO_AHORRO_INCOME = validated_casilla_id(

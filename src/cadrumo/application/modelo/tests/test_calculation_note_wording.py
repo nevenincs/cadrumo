@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from string import Formatter
 from typing import cast
@@ -26,6 +26,7 @@ from ....domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bin
     activity_asset_amortization_casillas,
 )
 from ....domain.calculations.registry.ledger_renta_income_bindings import renta_income_target_casilla
+from ....domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ....domain.modelos.source_disagreement import (
@@ -55,15 +56,17 @@ def _pinned_authority() -> Iterator[None]:
 
 _SUPPORT = published_supported_filing_years()
 assert _SUPPORT is not None, "the published authority declares no support envelope"
+_YEAR = _SUPPORT.horizon
+_M100_YEAR = filing_grade_exercises("100")[-1]
 
 _ASSET = "asset-" + "7f3a9c" * 6
 _ROW = "e" * 64
 _VALUES = {
-    "start": "2025-01-01",
-    "end": "2025-12-31",
-    "date": "2025-06-30",
-    "row_date": "2025-03-14",
-    "period_end": "2025-03-31",
+    "start": date(_YEAR, 1, 1).isoformat(),
+    "end": date(_YEAR, 12, 31).isoformat(),
+    "date": date(_YEAR, 6, 30).isoformat(),
+    "row_date": date(_YEAR, 3, 14).isoformat(),
+    "period_end": date(_YEAR, 3, 31).isoformat(),
     "amount": "1200.00",
     "cost": "1500.00",
     "paid": "1400.00",
@@ -77,7 +80,7 @@ _VALUES = {
     "box": "0208",
     "party": "Cloud Ejemplo SL (B00015016)",
     "modelo": "100",
-    "year": "2024",
+    "year": str(_YEAR - 1),
     "count": "2",
     "group": "renta_family.descendiente",
     "field": "irpf.estimation_regime",
@@ -197,12 +200,12 @@ def test_the_sentence_writes_dates_and_amounts_as_the_language_does() -> None:
     fact = CalculationNoteFact.of(
         CalculationNoteSentence.DISPOSAL_FIGURE_IN_BOX,
         elements=(_ASSET,),
-        date="2025-06-30",
+        date=date(_YEAR, 6, 30).isoformat(),
         amount="1200.00",
         box="1654",
     )
 
-    assert "30 jun 2025" in note_fact_text(fact, locale="es")
+    assert f"30 jun {_YEAR}" in note_fact_text(fact, locale="es")
     assert "1.200,00" in note_fact_text(fact, locale="es")
 
 
@@ -210,7 +213,7 @@ def _described(name: str) -> ActivityAssetHistory:
     return ActivityAssetHistory(revisions=(register_asset("furniture", transaction_id="c" * 64),)).describe(
         "furniture",
         ActivityAssetDescriptorFacts(name=name),
-        recorded_at=datetime(2026, 1, 1, tzinfo=UTC),
+        recorded_at=datetime(_YEAR, 1, 1, tzinfo=UTC),
     )
 
 
@@ -227,7 +230,7 @@ def test_a_rename_leaves_the_calculation_and_its_consumption_alone_and_the_sente
     unit = work_unit(operation)
     from ..bucket_unrouted_source_issues import unrouted_source_issues
 
-    boxes = snapshot_printed_boxes(operation, operation.snapshot("100", filing_year=2025, period="0A"))
+    boxes = snapshot_printed_boxes(operation, operation.snapshot("100", filing_year=_M100_YEAR, period="0A"))
     revision_before = work_form_gate_agreement_revision(
         operation, unit, *unrouted_source_issues(first.diagnostics, boxes)
     )
@@ -249,7 +252,7 @@ def test_a_rename_leaves_the_calculation_and_its_consumption_alone_and_the_sente
 def test_the_form_shows_the_current_name_from_the_read_it_was_given(operation: PinnedAuthorityOperation) -> None:
     from ..bucket_unrouted_source_issues import unrouted_source_issues
 
-    boxes = snapshot_printed_boxes(operation, operation.snapshot("100", filing_year=2025, period="0A"))
+    boxes = snapshot_printed_boxes(operation, operation.snapshot("100", filing_year=_M100_YEAR, period="0A"))
     diagnostics = resolve_m100(_described("Standing desk")).diagnostics
     revision = work_form_gate_agreement_revision(
         operation, work_unit(operation), *unrouted_source_issues(diagnostics, boxes)
@@ -277,7 +280,7 @@ def test_a_recorded_note_arrives_in_words_for_a_reader_that_only_draws_it(operat
         def load(self) -> ActivityAssetHistory:
             return _described("Standing desk")
 
-    boxes = snapshot_printed_boxes(operation, operation.snapshot("100", filing_year=2025, period="0A"))
+    boxes = snapshot_printed_boxes(operation, operation.snapshot("100", filing_year=_M100_YEAR, period="0A"))
     issues = unrouted_source_issues(resolve_m100(_described("Standing desk")).diagnostics, boxes)
 
     named = read_recorded_notes(issues, cast(ActivityAssetHistoryRepository, _Register()))

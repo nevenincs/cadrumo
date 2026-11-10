@@ -7,7 +7,7 @@ from the parser. The typed half is the same function the executor re-applies.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -19,6 +19,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_base import CasillaDataType, CasillaSignConstraint
 from ....domain.calculations.registry.tax_id_format import runtime_tax_id_format
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ....domain.filing.schema import ModeloScalar
 from ....domain.modelos.codes import ModeloCode
 from ...operations.schema_identity import OperationSchemaIdentityV1
@@ -49,6 +50,8 @@ from ..edit_value_grammar import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
 
 _DIGEST = "a" * 64
 
@@ -137,13 +140,13 @@ def baseline() -> ModeloEditBaselineV1:
         ),
         bucket_id="parse-bucket",
         modelo=ModeloCode(Modelo("130").value),
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "1T"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
         work_unit_id="b" * 64,
         work_unit_record_digest=_DIGEST,
         calculation_head_digest=_DIGEST,
         current_calculation_revision_id=None,
-        law_selected_revision_id="2019-y-siguientes",
+        law_selected_revision_id=str(open_ended_revision("130").id),
         schema_identity=ModeloEditSchemaIdentityV1(
             schema_id="modelo-130-schema", schema_fingerprint=_DIGEST, completeness_manifest_digest=_DIGEST
         ),
@@ -306,7 +309,7 @@ def test_the_request_never_dumps_or_shows_its_lexeme() -> None:
         ("04", "2,5", ModeloEditParseReason.NOT_AN_INTEGER),
         ("04", "13", ModeloEditParseReason.ABOVE_MAXIMUM),
         ("05", "quizá", ModeloEditParseReason.NOT_A_BOOLEAN),
-        ("06", "31/03/2025", ModeloEditParseReason.CHANNEL_UNAVAILABLE),
+        ("06", f"31/03/{_YEAR}", ModeloEditParseReason.CHANNEL_UNAVAILABLE),
         ("09", "tarjeta", ModeloEditParseReason.NOT_IN_CHOICES),
         ("10", "ABCDE", ModeloEditParseReason.TOO_LONG),
         ("10", "ab1", ModeloEditParseReason.PATTERN_MISMATCH),
@@ -408,7 +411,7 @@ def test_the_typed_half_reads_machine_canonical_values(
         (_MONEY, Decimal("0.125"), ModeloEditParseReason.TOO_MANY_DECIMALS),
         (_MONEY, True, ModeloEditParseReason.NOT_A_NUMBER),
         (_BOOLEAN, "2", ModeloEditParseReason.NOT_A_BOOLEAN),
-        (_DATE, "2025-03-31", ModeloEditParseReason.CHANNEL_UNAVAILABLE),
+        (_DATE, date(_YEAR, 3, 31).isoformat(), ModeloEditParseReason.CHANNEL_UNAVAILABLE),
         (_CHOICE, 7, ModeloEditParseReason.NOT_TEXT),
     ],
 )

@@ -14,17 +14,20 @@ import pytest
 
 from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..casilla_help import ModeloCasillaHelpCardV1, build_casilla_help_card
 from ..source_policy import SourceSurface
 from .work_form_fixture import form_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
+
 
 def _card(operation: PinnedAuthorityOperation, casilla_id: str) -> ModeloCasillaHelpCardV1:
-    snapshot = form_snapshot(operation, "303", 2026, "1T")
+    snapshot = form_snapshot(operation, "303", _YEAR, "1T")
     return build_casilla_help_card(
-        casilla_id, snapshot=snapshot, operation=operation, language=OutputLanguage.EN, on=date(2026, 3, 31)
+        casilla_id, snapshot=snapshot, operation=operation, language=OutputLanguage.EN, on=date(_YEAR, 3, 31)
     )
 
 

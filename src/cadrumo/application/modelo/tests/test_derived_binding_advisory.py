@@ -32,6 +32,7 @@ from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.authored_editions import authored_revisions_where
 from ....domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context,
     published_profile_schema,
@@ -47,7 +48,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 
 _BUCKET = "0de41ce4-0000-4000-8000-000000000512"
-_T0 = datetime(2026, 8, 4, 10, 0, tzinfo=UTC)
+_T0 = datetime(1980, 8, 4, 10, 0, tzinfo=UTC)
+# The edition that still binds the childcare increment as a derived profile path;
+# later editions drop it, so the full derived set below is edition specific.
+_YEAR = next(
+    revision.valid_from.year
+    for revision in authored_revisions_where(
+        "100", lambda revision: any(item.id == "renta-profile-incremento-guarderia" for item in revision.bindings)
+    )
+)
 _ADVISORY_REASON = "unresolved_derived_binding"
 
 
@@ -71,7 +80,7 @@ def _derived_advisories(
     record: UserProfileRecord,
     *,
     operation: PinnedAuthorityOperation,
-    year: int = 2024,
+    year: int = _YEAR,
 ) -> tuple[str, ...]:
     """Binding ids the derived-scoped advisory fired for, via the real resolver."""
     resolution = resolve_profile_sourced_bindings(
@@ -99,8 +108,8 @@ def test_descendants_without_childcare_spend_do_not_fire_the_advisory(
     aggregate emitted only when positive.
     """
     descendientes = (
-        DescendantInfo(birth_date=date(2023, 2, 10)),
-        DescendantInfo(birth_date=date(2015, 7, 4)),
+        DescendantInfo(birth_date=date(_YEAR - 1, 2, 10)),
+        DescendantInfo(birth_date=date(_YEAR - 9, 7, 4)),
     )
     record = _record(*(UserProfileFact(path=p, value=v) for p, v in descendant_facts_from_list(descendientes)))
 
@@ -139,7 +148,7 @@ def test_no_advisory_on_any_covered_filing_year(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """Every year the registry declares derived bindings for resolves them all."""
-    descendientes = (DescendantInfo(birth_date=date(2015, 7, 4)),)
+    descendientes = (DescendantInfo(birth_date=date(_YEAR - 9, 7, 4)),)
     record = _record(*(UserProfileFact(path=p, value=v) for p, v in descendant_facts_from_list(descendientes)))
 
     assert _derived_advisories(record, year=year, operation=authority_operation) == ()
@@ -155,7 +164,7 @@ def test_advisory_fires_when_a_selected_derived_binding_resolves_to_nothing() ->
 
     The real gap this guards -- an injector stopping short while the registry
     still binds the path -- is reached here by handing the advisory the real
-    M100 2024 profile bindings alongside a fact index in which the injectors
+    M100 profile bindings alongside a fact index in which the injectors
     wrote nothing. That is precisely the state a registry year with no
     injector coverage produces, and it drives the shipped predicate rather
     than re-stating it.
@@ -164,7 +173,7 @@ def test_advisory_fires_when_a_selected_derived_binding_resolves_to_nothing() ->
     well by an advisory that can never fire at all.
     """
     schema = published_profile_schema()
-    snapshot = _snapshot(2024)
+    snapshot = _snapshot(_YEAR)
     bindings = tuple(b for b in snapshot.revision.bindings if b.source == "profile")
 
     fired = derived_binding_diagnostics(bindings, {}, schema, bucket_id=_BUCKET)
@@ -199,10 +208,10 @@ def test_every_derived_binding_actually_resolves_for_an_ordinary_profile(
     them, so the silence above is resolution succeeding rather than the
     advisory being unreachable.
     """
-    descendientes = (DescendantInfo(birth_date=date(2023, 2, 10)),)
+    descendientes = (DescendantInfo(birth_date=date(_YEAR - 1, 2, 10)),)
     record = _record(*(UserProfileFact(path=p, value=v) for p, v in descendant_facts_from_list(descendientes)))
     resolution = resolve_profile_sourced_bindings(
-        _snapshot(2024),
+        _snapshot(_YEAR),
         bucket_id=_BUCKET,
         profile_record=record,
         operation=authority_operation,

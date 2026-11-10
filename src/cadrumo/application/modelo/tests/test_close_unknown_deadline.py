@@ -1,8 +1,8 @@
 """A projected window whose close is unknown bounds the deadline below and judges no lateness.
 
-Modelo 303 for 2028 has no authored window and the 2028 holiday calendar is not
-published. The nominal close of the first quarter, 20 April 2028 (RD 1624/1992
-art. 71.4), is a lower bound: before it the filer has at least the days to it;
+Modelo 303 for the first year past the support horizon whose holiday calendar is
+not published has no authored window. The nominal close of its first quarter,
+20 April (RD 1624/1992 art. 71.4), is a lower bound: before it the filer has at least the days to it;
 after it neither a remaining nor an overdue count can be stated.
 """
 
@@ -15,6 +15,7 @@ import pytest
 
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.effective_close import resolve_effective_filing_deadline
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.modelos.codes import ModeloCode
@@ -24,7 +25,21 @@ from ..work_plazo import modelo_work_deadline_posture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = 2028
+
+def _first_year_without_holiday_calendar() -> int:
+    """Scan the years past the horizon for the first whose national holiday calendar is unpublished."""
+    envelope = filing_year_envelope()
+    with bundled_indexed_authority().operation() as pinned:
+        for year in range(envelope.horizon + 1, envelope.horizon + 1 + len(envelope.years)):
+            deadline = resolve_effective_filing_deadline(
+                "303", year, Period.from_year_and_code(year, "1T"), operation=pinned
+            )
+            if deadline is not None and deadline.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE:
+                return year
+    raise AssertionError("no projected year past the horizon reaches an unpublished holiday calendar")
+
+
+_YEAR = _first_year_without_holiday_calendar()
 _PERIOD = Period.from_year_and_code(_YEAR, "1T")
 _NOMINAL_CLOSE = date(_YEAR, 4, 20)
 _BEFORE = date(_YEAR, 4, 10)

@@ -18,6 +18,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.errors import ModeloError
 from ....domain.modelos.row_models import (
@@ -34,25 +35,26 @@ from ..calculation_modelo_adjustments import require_detail_rows_declared_for_th
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_M210_EFFECTIVE_DATE = date(2025, 1, 1)
+_YEAR = filing_year_envelope().horizon
+_M210_EFFECTIVE_DATE = date(_YEAR, 1, 1)
 
 _BUCKET_ID = "detail-row-membership-bucket"
-_CLOCK = datetime(2026, 1, 10, tzinfo=UTC)
+_CLOCK = datetime(1980, 1, 10, tzinfo=UTC)
 _REVISION_ID = "a" * 64
 
 
 def _work_unit(*, modelo: str) -> WorkUnit:
-    period = Period.from_year_and_code(2025, "1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
-            bucket_id=_BUCKET_ID, modelo=modelo, filing_year=2025, period=period, revision_id=_REVISION_ID
+            bucket_id=_BUCKET_ID, modelo=modelo, filing_year=_YEAR, period=period, revision_id=_REVISION_ID
         ),
         bucket_id=_BUCKET_ID,
         modelo=ModeloCode(modelo),
-        filing_year=2025,
+        filing_year=_YEAR,
         period=period,
         revision_id=_REVISION_ID,
-        name=f"{modelo}-2025-1T",
+        name=f"{modelo}-{_YEAR}-1T",
         created_at=_CLOCK,
         updated_at=_CLOCK,
     )
@@ -90,7 +92,7 @@ def _m349_rectificacion_row() -> Modelo349RectificacionRow:
         nif_comunitario="DE123456789",
         razon_social="ALEMAN GMBH",
         clave_operacion="E",
-        ejercicio="2025",
+        ejercicio=str(_YEAR),
         periodo="2T",
         base_rectificada=Decimal("1100.00"),
         base_anterior=Decimal("1000.00"),
