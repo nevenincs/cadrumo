@@ -350,7 +350,7 @@ def test_a_form_built_without_a_profile_read_offers_only_what_is_certain(
 # law has not yet settled.
 
 _REDEME_UNSTATED_ROW_KEY = "workspace.modelo.header.result.redeme_unstated"
-_LIST_OBSERVED_AT = datetime(2025, 4, 30, 12, tzinfo=UTC)
+_LIST_OBSERVED_AT = datetime(1980, 4, 30, 12, tzinfo=UTC)
 _LIST_BUCKET_ID = "13000000-0000-4000-8000-000000000450"
 _RESULT_CASILLA: CasillaId = validated_casilla_id(_RESULT_BOX, surface="m303 refund election list row")
 

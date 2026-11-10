@@ -18,10 +18,12 @@ operator to route around it.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow
 from ..ledger_evidence_gate import ledger_evidence_row_missing_deductible_iva_evidence
 
@@ -30,7 +32,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 _DEDUCTIBLE_PURCHASE = {
     "transaction_id": "a" * 64,
     "fingerprint": "b" * 64,
-    "booked_date": "2026-02-15",
+    "booked_date": date(filing_year_envelope().horizon, 2, 15).isoformat(),
     "amount": Decimal("242.00"),
     "currency": "EUR",
     "direction": "OUTGOING",

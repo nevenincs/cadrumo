@@ -18,6 +18,7 @@ from pathlib import Path
 
 import pytest
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.date_partition import LedgerDatePartition
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -31,6 +32,7 @@ from ..m347_uninvoiced_expense_advisory import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _PERIOD = "0A"
+_YEAR = filing_year_envelope().horizon
 _BUCKET_ID = "cd7a6304-2000-4200-8200-000000000348"
 
 
@@ -81,8 +83,8 @@ def _transaction(
 ) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(2025, 6, 10),
-        value_date=date(2025, 6, 10),
+        booked_date=date(_YEAR, 6, 10),
+        value_date=date(_YEAR, 6, 10),
         amount=Decimal("4840.00"),
         currency="EUR",
         counterparty="PROVEEDOR SIN FACTURA SL",
@@ -92,7 +94,7 @@ def _transaction(
             source_sha256="e" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2025, 6, 11, 9, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 6, 11, 9, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": "ledger_transaction"},
@@ -121,7 +123,7 @@ def _diagnostics(
     return collect_m347_uninvoiced_expense_diagnostics(
         modelo=modelo,
         period_token=_PERIOD,
-        filing_year=2025,
+        filing_year=_YEAR,
         transaction_repository=repository,
     )
 
@@ -142,10 +144,10 @@ def test_uninvoiced_business_expenses_are_named_in_one_advisory() -> None:
     assert advisory.reason == "source_issue"
     assert advisory.source_kind == M347_UNINVOICED_EXPENSE_SOURCE_KIND
     assert advisory.asserted_legal_refs == ("rd-1065-2007:art-33", "rd-1065-2007:art-35")
-    assert advisory.message.startswith("2 business expenses of ejercicio 2025")
+    assert advisory.message.startswith(f"2 business expenses of ejercicio {_YEAR}")
     assert first.transaction_id in advisory.message
     assert second.transaction_id in advisory.message
-    assert repository.windows == [(date(2025, 1, 1), date(2025, 12, 31))]
+    assert repository.windows == [(date(_YEAR, 1, 1), date(_YEAR, 12, 31))]
 
 
 def test_invoiced_personal_incoming_baseless_and_archived_rows_do_not_fire() -> None:
