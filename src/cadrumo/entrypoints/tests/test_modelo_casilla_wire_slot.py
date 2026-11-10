@@ -18,7 +18,12 @@ from ...application.modelo.edit_models import (
     ModeloScalarEditIntentV1,
 )
 from ...application.modelo.revision_replay_inputs import revision_filing_replay_inputs
-from ...application.modelo.work_form_models import ModeloFormEditability, ModeloFormOrigin, ModeloWorkForm, address_key
+from ...application.modelo.work_form_field_vocabulary import (
+    ModeloFormEditability,
+    ModeloFormOrigin,
+    address_key,
+)
+from ...application.modelo.work_form_models import ModeloWorkForm
 from ...application.modelo.work_form_service import load_modelo_work_form
 from ...core.external_constants import OutputLanguage
 from ...domain.calculations.export_field_kind import CasillaFieldKind

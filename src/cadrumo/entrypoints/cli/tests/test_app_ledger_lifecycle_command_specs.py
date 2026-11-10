@@ -14,6 +14,7 @@ from .ledger_command_spec_matrix import (
     FALSE_DEFAULT,
     GROUP_INVOCATION_CONTRACT,
     NO_RESULT_SCHEMA_CONTRACT,
+    NON_BLANK_CONSTRAINT_CONTRACT,
     NONE_DEFAULT,
     TARGET,
     ExpectedCommand,
@@ -39,7 +40,7 @@ _EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[ExpectedCommand, ...]] = (
         "cadrumo.entrypoints.cli.ledger_lifecycle_cli:ledger_remove",
         expected_result_schema(TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerRemoveResult", "ledger.remove"),
         (
-            expected_argument("transaction_id", "cli.ledger.remove.id_help"),
+            expected_argument("transaction_id", "cli.ledger.remove.id_help", constraint=NON_BLANK_CONSTRAINT_CONTRACT),
             expected_option("reason", "--reason", "cli.ledger.remove.reason_help", default=EMPTY_DEFAULT),
             expected_option(
                 "dry_run",
@@ -104,7 +105,7 @@ _EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[ExpectedCommand, ...]] = (
         "cadrumo.entrypoints.cli.ledger_lifecycle_cli:ledger_restore",
         expected_result_schema(TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerRestoreResult", "ledger.restore"),
         (
-            expected_argument("transaction_id", "cli.ledger.restore.id_help"),
+            expected_argument("transaction_id", "cli.ledger.restore.id_help", constraint=NON_BLANK_CONSTRAINT_CONTRACT),
             expected_option("reason", "--reason", "cli.ledger.archive.reason_help", default=EMPTY_DEFAULT),
             expected_option(
                 "yes",
@@ -128,7 +129,12 @@ _EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[ExpectedCommand, ...]] = (
         "cadrumo.entrypoints.cli.ledger_review_commands:ledger_review",
         expected_result_schema(TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerReviewResult", "ledger.review"),
         (
-            expected_argument("record_id", "cli.ledger.view.transaction_id_help", default=NONE_DEFAULT),
+            expected_argument(
+                "record_id",
+                "cli.ledger.view.transaction_id_help",
+                default=NONE_DEFAULT,
+                constraint=NON_BLANK_CONSTRAINT_CONTRACT,
+            ),
             expected_option(
                 "filters", "--filter", "cli.ledger.review.filter_help", default=EMPTY_TUPLE_DEFAULT, multiple=True
             ),
@@ -164,7 +170,7 @@ _EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[ExpectedCommand, ...]] = (
         "cadrumo.entrypoints.cli.ledger_lifecycle_cli:ledger_split",
         expected_result_schema(TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerSplitResult", "ledger.split"),
         (
-            expected_argument("transaction_id", "cli.ledger.split.id_help"),
+            expected_argument("transaction_id", "cli.ledger.split.id_help", constraint=NON_BLANK_CONSTRAINT_CONTRACT),
             expected_option(
                 "child_amount",
                 "--child-amount",
@@ -229,7 +235,7 @@ _EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[ExpectedCommand, ...]] = (
         "cadrumo.entrypoints.cli.ledger_lifecycle_cli:ledger_stash",
         expected_result_schema(TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerStashResult", "ledger.stash"),
         (
-            expected_argument("transaction_id", "cli.ledger.stash.id_help"),
+            expected_argument("transaction_id", "cli.ledger.stash.id_help", constraint=NON_BLANK_CONSTRAINT_CONTRACT),
             expected_option("reason", "--reason", "cli.ledger.archive.reason_help", default=EMPTY_DEFAULT),
             expected_option(
                 "yes",
@@ -268,7 +274,11 @@ _EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[ExpectedCommand, ...]] = (
         expected_result_schema(
             TARGET, "cadrumo.entrypoints.cli.ledger_participation_results:LedgerTrackResult", "ledger.track"
         ),
-        (expected_argument("transaction_id", "cli.ledger.track.transaction_id_help"),),
+        (
+            expected_argument(
+                "transaction_id", "cli.ledger.track.transaction_id_help", constraint=NON_BLANK_CONSTRAINT_CONTRACT
+            ),
+        ),
     ),
     expected_command(
         "app_ledger_update",
@@ -280,7 +290,7 @@ _EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[ExpectedCommand, ...]] = (
         "cadrumo.entrypoints.cli.ledger_commands:ledger_update",
         expected_result_schema(TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerUpdateResult", "ledger.update"),
         (
-            expected_argument("transaction_id", "cli.ledger.update.id_help"),
+            expected_argument("transaction_id", "cli.ledger.update.id_help", constraint=NON_BLANK_CONSTRAINT_CONTRACT),
             expected_option("booked_date", "--date", "cli.ledger.update.date_help"),
             expected_option("value_date", "--value-date", "cli.ledger.update.value_date_help"),
             expected_option("operation_date", "--operation-date", "cli.ledger.update.operation_date_help"),
@@ -319,7 +329,11 @@ _EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[ExpectedCommand, ...]] = (
         "none",
         "cadrumo.entrypoints.cli.ledger_read_commands:ledger_view",
         expected_result_schema(TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerViewResult", "ledger.view"),
-        (expected_argument("transaction_id", "cli.ledger.view.transaction_id_help"),),
+        (
+            expected_argument(
+                "transaction_id", "cli.ledger.view.transaction_id_help", constraint=NON_BLANK_CONSTRAINT_CONTRACT
+            ),
+        ),
     ),
 )
 

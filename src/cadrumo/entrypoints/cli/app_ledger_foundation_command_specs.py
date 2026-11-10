@@ -196,7 +196,9 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 ("--purchase-invoice-evidence-id",),
                 "cli.ledger.add.purchase_invoice_evidence_help",
             ),
-            repeatable_text_option("attachment_ids", ("--attachment-id",), "cli.ledger.add.attachment_help"),
+            repeatable_text_option(
+                "attachment_ids", ("--attachment-id",), "cli.ledger.add.attachment_help", non_blank=True
+            ),
             blank_default_text_option("notes", ("--notes",), "cli.ledger.add.notes_help"),
             LEDGER_ACTOR_OPTION,
             optional_text_option("idempotency_key", ("--idempotency-key",), "cli.ledger.add.idempotency_key_help"),
@@ -222,7 +224,7 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(
-            required_text_argument("transaction_id", "cli.ledger.allocate.id_help"),
+            required_text_argument("transaction_id", "cli.ledger.allocate.id_help", non_blank=True),
             required_text_option("business_pct", ("--business-pct",), "cli.ledger.allocate.business_pct_help"),
             LEDGER_ADD_CATEGORY_ID_OPTION,
             LEDGER_USAGE_RATIO_ID_OPTION,
@@ -248,7 +250,7 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(
-            required_text_argument("transaction_id", "cli.ledger.archive.id_help"),
+            required_text_argument("transaction_id", "cli.ledger.archive.id_help", non_blank=True),
             ARCHIVE_REASON_OPTION,
             boolean_flag_option("yes", ("--yes",), "cli.ledger.archive.yes_help"),
             LEDGER_ACTOR_OPTION,
@@ -270,13 +272,15 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(
-            required_text_argument("transaction_id", "cli.ledger.attach.id_help"),
+            required_text_argument("transaction_id", "cli.ledger.attach.id_help", non_blank=True),
             optional_text_option(
                 "purchase_invoice_evidence_id",
                 ("--purchase-invoice-evidence-id",),
                 "cli.ledger.attach.purchase_invoice_evidence_help",
             ),
-            repeatable_text_option("attachment_ids", ("--attachment-id",), "cli.ledger.attach.attachment_help"),
+            repeatable_text_option(
+                "attachment_ids", ("--attachment-id",), "cli.ledger.attach.attachment_help", non_blank=True
+            ),
             LEDGER_ACTOR_OPTION,
         ),
         policy=POLICY_4,

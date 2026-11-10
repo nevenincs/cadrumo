@@ -77,6 +77,8 @@ from .ledger_support import (
 if TYPE_CHECKING:
     from datetime import date
 
+    from ...application.ledger.link_operation import LedgerLinkOperationResult
+
 __all__ = [
     "ledger_archive",
     "ledger_attach",
@@ -683,8 +685,17 @@ def ledger_allocate(
     )
 
 
-def _link_refusal(reason: str | None) -> typer.BadParameter:
+def _link_refusal(outcome: LedgerLinkOperationResult) -> typer.BadParameter:
     """Map the closed worker refusal reason to its existing operator message."""
+    reason = outcome.reason
+    if reason == "ambiguous_invoice":
+        return bad(
+            tr(
+                "application.invoices.lifecycle.errors.ambiguous_invoice_prefix",
+                invoice_id=outcome.invoice_id,
+                candidates=", ".join(outcome.candidate_invoice_ids),
+            )
+        )
     if reason == "cross_bucket_invoice":
         return bad(tr("cli.ledger.link.errors.cross_bucket_invoice"))
     if reason == "transaction_takes_no_invoice":
@@ -710,7 +721,7 @@ def ledger_link(
         actor=actor,
     )
     if outcome.outcome == "refused":
-        raise _link_refusal(outcome.reason)
+        raise _link_refusal(outcome)
     projection = outcome.projection
     if projection is None:
         raise invoice_link_error_bad_parameter()
@@ -748,10 +759,10 @@ def _refuse_needs_withholding_category(transaction_id: str) -> CliRefusedBoundar
     """
     from ...application.ledger.classify_validation import needs_withholding_category_verdict
     from ...application.ledger.staged_check_words import BLOCKER_FIX_LOCALE_KEYS
-    from ...domain.transactions.gross_validation import GROSS_NEEDS_WITHHOLDING_CATEGORY_MESSAGE_KEY
+    from ...domain.transactions.gross_validation import GROSS_NEEDS_WITHHOLDING_CATEGORY_LOCALE_KEY
     from .common import attach_cli_policy_verdict
 
-    refusal = tr(GROSS_NEEDS_WITHHOLDING_CATEGORY_MESSAGE_KEY)
+    refusal = tr(GROSS_NEEDS_WITHHOLDING_CATEGORY_LOCALE_KEY)
     fix = tr(BLOCKER_FIX_LOCALE_KEYS["needs_withholding_category"])
     details = f"{refusal} {fix}"
     return attach_cli_policy_verdict(

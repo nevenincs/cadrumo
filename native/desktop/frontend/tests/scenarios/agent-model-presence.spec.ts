@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FIXTURE_CATALOG } from "../../src/dev/fixtures/agentCatalog";
+import { catalogLanes } from "../../src/shell/localModelLanes";
 import {
   agentColumn as column,
   ask,
@@ -24,7 +25,14 @@ const LOCAL = "local/api";
 const servedLocal = (FIXTURE_CATALOG.providers ?? []).find(
   (lane) => `${lane.provider_id}/${lane.transport}` === LOCAL,
 )!;
-const servedModels = servedLocal.catalog.models ?? [];
+// The picker offers a local lane's list: the models the lane recommends, and
+// those the person added, none here.
+const recommended = catalogLanes(FIXTURE_CATALOG).find(
+  (lane) => lane.id === LOCAL.replace("/", "_"),
+)!.recommended;
+const servedModels = (servedLocal.catalog.models ?? []).filter((entry) =>
+  recommended.includes(entry.model),
+);
 const absent = servedModels.filter((entry) => entry.installed === false);
 const held = servedModels.filter((entry) => entry.installed !== false);
 

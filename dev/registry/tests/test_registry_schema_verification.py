@@ -23,10 +23,12 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_verification import (
     VerificationExpectationDefinition,
     VerificationPredicateDefinition,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ..conformance.registry_schema_support import (
     NUMERIC_CASILLA_01,
@@ -34,6 +36,22 @@ from ..conformance.registry_schema_support import (
     with_revision,
 )
 from .profile_schema_support import committed_registry_validator
+
+_M210_INMOBILIARIA_PREDICATE = "modelo-210-2025-inmobiliaria-implica-base-imponible"
+_M100_VIVIENDA_PREDICATE = "modelo-100-2024-deduccion-vivienda-habitual-requiere-adquisicion-anterior-2013"
+
+
+def _newest_revision(modelo: ModeloDefinition) -> ModeloRevision:
+    return max(modelo.revisions.values(), key=lambda revision: revision.valid_from)
+
+
+def _revision_declaring(modelo: ModeloDefinition, predicate_id: str) -> ModeloRevision:
+    return next(
+        revision
+        for revision in modelo.revisions.values()
+        if any(item.predicate_id == predicate_id for item in revision.verification_predicates)
+    )
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -170,7 +188,7 @@ def test_validator_rejects_text_operands_for_positive_application_stock_predicat
 ) -> None:
     """Both pair members must be Decimal casillas, not absent text projections."""
     modelo, catalogues = committed_modelo("210")
-    revision = modelo.revisions["2025"]
+    revision = _newest_revision(modelo)
     predicate = VerificationPredicateDefinition(
         id=f"positive-application-le-present-stock:text-{role}",
         predicate_id=f"modelo-210-positive-application-stock-text-{role}",
@@ -192,7 +210,7 @@ def test_validator_rejects_text_operands_for_positive_application_stock_predicat
 def test_validator_accepts_decimal_operands_for_positive_application_stock_predicate() -> None:
     """The proposed ordinary M200 amount pair passes the same authoring gate."""
     modelo, catalogues = committed_modelo("200")
-    revision = modelo.revisions["2024"]
+    revision = modelo.revisions[str(authored_revisions("200")[-2].id)]
     expression = 'positive_application_le_present_stock(["DP200014:00547", "00670"])'
     existing_index = next(
         index
@@ -213,7 +231,7 @@ def test_validator_accepts_decimal_operands_for_positive_application_stock_predi
     committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
 
-@pytest.mark.parametrize("revision_id", ("2024", "2025-y-siguientes"))
+@pytest.mark.parametrize("revision_id", [str(revision.id) for revision in authored_revisions("200")[-2:]])
 def test_committed_m200_materializes_stock_guard_and_preserves_statutory_cap(revision_id: str) -> None:
     """Both source revisions retain the stock guard and the statutory cap."""
     modelo, _catalogues = committed_modelo("200")
@@ -443,7 +461,7 @@ def test_validator_rejects_casilla_equals_implies_numeric_text_consequent(operat
     """The consequent must resolve through the Decimal casilla-values projection."""
 
     modelo, catalogues = committed_modelo("210")
-    revision = modelo.revisions["2025"]
+    revision = _newest_revision(modelo)
     predicate = VerificationPredicateDefinition(
         id="casilla-equals-implies-nonzero:casilla-equals-implies-nonzero-text-consequent",
         predicate_id="modelo-210-casilla-equals-implies-nonzero-text-consequent",
@@ -475,12 +493,8 @@ def test_validator_accepts_committed_m210_casilla_equals_implies_nonzero_predica
     """
 
     modelo, catalogues = committed_modelo("210")
-    revision = modelo.revisions["2025"]
-    predicate = next(
-        p
-        for p in revision.verification_predicates
-        if p.predicate_id == "modelo-210-2025-inmobiliaria-implica-base-imponible"
-    )
+    revision = _revision_declaring(modelo, _M210_INMOBILIARIA_PREDICATE)
+    predicate = next(p for p in revision.verification_predicates if p.predicate_id == _M210_INMOBILIARIA_PREDICATE)
     assert predicate.expression == 'casilla_equals_implies_nonzero(["tipo_renta", "inmobiliaria", "base_imponible"])'
     assert predicate.finding_kind == "ADVISORY"
 
@@ -548,8 +562,8 @@ def test_validator_accepts_committed_m100_deduccion_requires_adquisicion_before_
     modelo, catalogues = committed_modelo("100")
     predicate = next(
         p
-        for p in modelo.revisions["2024"].verification_predicates
-        if p.predicate_id == "modelo-100-2024-deduccion-vivienda-habitual-requiere-adquisicion-anterior-2013"
+        for p in _revision_declaring(modelo, _M100_VIVIENDA_PREDICATE).verification_predicates
+        if p.predicate_id == _M100_VIVIENDA_PREDICATE
     )
     assert predicate.expression == 'deduccion_requires_adquisicion_before(["0547", "0708", "0690", "2013-01-01"])'
     assert predicate.finding_kind == "ADVISORY"
@@ -603,8 +617,9 @@ def test_committed_m100_anualidades_advisory_retired_after_separate_escala_compu
     """
 
     modelo, catalogues = committed_modelo("100")
-    for year in ("2024", "2025"):
-        predicate_ids = {p.predicate_id for p in modelo.revisions[year].verification_predicates}
+    for authored in authored_revisions("100")[-2:]:
+        year = authored.valid_from.year
+        predicate_ids = {p.predicate_id for p in modelo.revisions[str(authored.id)].verification_predicates}
         assert f"modelo-100-{year}-anualidades-alimentos-hijos-revisar-cuota-escala-separada" not in predicate_ids, (
             f"the interim anualidades advisory must stay retired on the {year} revision now the compute has landed"
         )

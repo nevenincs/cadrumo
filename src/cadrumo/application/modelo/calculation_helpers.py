@@ -49,7 +49,7 @@ from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.observation_fold import fold_pagos_fraccionados_ingresados
 from ...domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ...domain.calculations.registry.result_casillas import canonical_result_amount, result_disposition_casilla_ids
-from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.schema import FormulaDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.identifiers import canonical_decimal_string
 from ...domain.modelos.calculation_binding_values import persisted_boolean_binding_value
@@ -390,105 +390,18 @@ def calculate_amendment(
             today's profile, so a binding the filing did not record stays unresolved
             unless it is named here.
     """
-    values = dict(source_revision.casilla_values)
-    for key, value in prior_paid_values.items():
-        if key in overrides and overrides[key] != value:
-            raise ValueError(f"amendment override conflicts with confirmed prior-paid value for {key!r}")
-    values.update(overrides)
-    values.update(prior_paid_values)
-    layer = source_revision.operator_layer
-    authored = dict(layer.decimal_casilla_inputs) if layer is not None else {}
-    formula_targets = {formula.target_casilla_id for formula in snapshot.revision.formulas}
-    if layer is None and source_revision.amendment_identity is not None:
-        # Older amendments retained the baseline replay map. A changed formula
-        # value whose lineage was removed records an explicit correction;
-        # an identical imported scalar remains an observation, not an override.
-        for observation in source_revision.observations:
-            if observation.formula_id is not None or observation.casilla_id not in formula_targets:
-                continue
-            raw = source_revision.input_values_by_casilla_id.get(observation.casilla_id)
-            if isinstance(observation.value, Decimal) and (raw is None or Decimal(raw) != observation.value):
-                authored[observation.casilla_id] = canonical_decimal_string(observation.value)
-    authored.update({key: canonical_decimal_string(value) for key, value in overrides.items()})
-    explicit = set(authored)
-    bindings = {**source_revision.binding_overrides, **(binding_overrides or {})}
-    for casilla in snapshot.revision.casillas:
-        binding_ids = bound_casilla_binding_ids(casilla)
-        if casilla.id in overrides and len(binding_ids) == 1:
-            bindings[binding_ids[0]] = canonical_decimal_string(overrides[casilla.id])
-    decimal_bindings, enum_bindings, date_bindings, boolean_bindings = _amendment_binding_channels(snapshot, bindings)
+    _reject_prior_paid_conflicts(overrides, prior_paid_values)
     formulas = {formula.target_casilla_id: formula for formula in snapshot.revision.formulas}
-    text_ids = text_family_casilla_ids(snapshot.revision.casillas)
-    inputs = {
-        key: Decimal(raw)
-        for key, raw in source_revision.input_values_by_casilla_id.items()
-        if key not in formulas and key not in text_ids
-    }
-    inputs.update(
-        {
-            key: value
-            for key, value in source_revision.casilla_values.items()
-            if key not in formulas and key not in text_ids
-        }
-    )
-    inputs.update({key: value for key, value in {**overrides, **prior_paid_values}.items() if key not in formulas})
-    text_inputs = {key: raw for key, raw in source_revision.input_values_by_casilla_id.items() if key in text_ids}
-    missing_binding_ids = tuple(
-        binding.id
-        for binding in snapshot.revision.bindings
-        if binding.id not in decimal_bindings
-        and binding.id not in enum_bindings
-        and binding.id not in date_bindings
-        and binding.id not in boolean_bindings
-    )
-    relation_ids = {
-        binding.id for binding, _ in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
-    }
-    formula_overrides = {
-        observation.casilla_id: observation
-        for observation in source_revision.observations
-        if observation.casilla_id in explicit and observation.casilla_id in formulas and observation.formula_id is None
-    }
-    for key, value in authored.items():
-        if key in formulas:
-            formula = formulas[key]
-            formula_overrides[key] = CasillaObservation(
-                casilla_id=key,
-                value=Decimal(value),
-                formula_id=formula.id,
-                op=formula.expression.op or "value",
-                legal_refs=formula.legal_refs,
-                source_refs=formula.source_refs,
-            )
-    result = calculate_registry_snapshot(
-        snapshot,
-        inputs=inputs,
-        date_context={},
-        binding_values=decimal_bindings,
-        enum_binding_values=enum_bindings,
-        date_binding_values=date_bindings,
-        boolean_binding_values=boolean_bindings,
-        relation_values={key: Decimal(raw) for key, raw in source_revision.relation_overrides.items()},
-        unresolved_binding_ids=missing_binding_ids,
-        unresolved_relation_ids=tuple(binding_id for binding_id in missing_binding_ids if binding_id in relation_ids),
-        unresolved_observation_backed_casilla_ids=frozenset(
-            casilla.id
-            for casilla in snapshot.revision.casillas
-            if casilla.id not in inputs and set(bound_casilla_binding_ids(casilla)).intersection(missing_binding_ids)
-        ),
-        text_inputs=text_inputs,
-        formula_overrides=formula_overrides,
-        retained_formula_observations={
-            observation.casilla_id: observation
-            for observation in source_revision.observations
-            if observation.casilla_id in formulas and observation.casilla_id not in formula_overrides
-        },
-        recalculate_from_casilla_ids=frozenset({*overrides, *prior_paid_values}),
-        recalculate_from_binding_ids=frozenset(
-            key
-            for key in set(bindings) | set(source_revision.binding_overrides)
-            if bindings.get(key) != source_revision.binding_overrides.get(key)
-        ),
+    authored = _amendment_authored_inputs(source_revision, formulas, overrides)
+    bindings = _amendment_bindings(source_revision, snapshot, overrides, binding_overrides)
+    result, inputs, text_inputs = _recalculate_amendment(
+        source_revision=source_revision,
+        snapshot=snapshot,
+        overrides=overrides,
+        prior_paid_values=prior_paid_values,
+        authored=authored,
+        bindings=bindings,
+        formulas=formulas,
     )
     recalculated = {observation.casilla_id: observation for observation in result.observations}
     values = {
@@ -502,18 +415,212 @@ def calculate_amendment(
     )
     replay_inputs = {key: canonical_decimal_string(value) for key, value in inputs.items()}
     replay_inputs.update(text_inputs)
-    operator_layer = CalculationOperatorLayer(
-        decimal_casilla_inputs=authored,
-        text_casilla_inputs=layer.text_casilla_inputs if layer is not None else {},
-        binding_overrides=layer.binding_overrides if layer is not None else {},
-        attested_binding_ids=layer.attested_binding_ids if layer is not None else (),
-    )
     return AmendmentCalculation(
         casilla_values=values,
         observations=tuple(recalculated.get(observation.casilla_id, observation) for observation in observations),
         input_values_by_casilla_id=replay_inputs,
         binding_overrides=bindings,
-        operator_layer=operator_layer,
+        operator_layer=_amendment_operator_layer(source_revision.operator_layer, authored),
+    )
+
+
+def _reject_prior_paid_conflicts(
+    overrides: Mapping[CasillaId, Decimal],
+    prior_paid_values: Mapping[CasillaId, Decimal],
+) -> None:
+    """Refuse an operator amount that contradicts a confirmed prior payment for the same casilla."""
+    for key, value in prior_paid_values.items():
+        if key in overrides and overrides[key] != value:
+            raise ValueError(f"amendment override conflicts with confirmed prior-paid value for {key!r}")
+
+
+def _amendment_authored_inputs(
+    source_revision: CalculationRevision,
+    formulas: Mapping[CasillaId, FormulaDefinition],
+    overrides: Mapping[CasillaId, Decimal],
+) -> dict[CasillaId, str]:
+    """Return the operator-authored casilla amounts the correction carries forward."""
+    layer = source_revision.operator_layer
+    authored = dict(layer.decimal_casilla_inputs) if layer is not None else {}
+    if layer is None and source_revision.amendment_identity is not None:
+        authored.update(_legacy_amendment_formula_corrections(source_revision, formulas))
+    authored.update({key: canonical_decimal_string(value) for key, value in overrides.items()})
+    return authored
+
+
+def _legacy_amendment_formula_corrections(
+    source_revision: CalculationRevision,
+    formulas: Mapping[CasillaId, FormulaDefinition],
+) -> dict[CasillaId, str]:
+    """Recover explicit formula corrections from an older amendment's baseline replay map.
+
+    Older amendments retained the baseline replay map. A changed formula value
+    whose lineage was removed records an explicit correction; an identical
+    imported scalar remains an observation, not an override.
+    """
+    corrections: dict[CasillaId, str] = {}
+    for observation in source_revision.observations:
+        if observation.formula_id is not None or observation.casilla_id not in formulas:
+            continue
+        raw = source_revision.input_values_by_casilla_id.get(observation.casilla_id)
+        if isinstance(observation.value, Decimal) and (raw is None or Decimal(raw) != observation.value):
+            corrections[observation.casilla_id] = canonical_decimal_string(observation.value)
+    return corrections
+
+
+def _amendment_bindings(
+    source_revision: CalculationRevision,
+    snapshot: RegistrySnapshot,
+    overrides: Mapping[CasillaId, Decimal],
+    binding_overrides: Mapping[BindingId, str] | None,
+) -> dict[BindingId, str]:
+    """Merge recorded and stated bindings; an overridden singly-bound casilla restates its binding."""
+    bindings: dict[BindingId, str] = {**source_revision.binding_overrides, **(binding_overrides or {})}
+    for casilla in snapshot.revision.casillas:
+        binding_ids = bound_casilla_binding_ids(casilla)
+        if casilla.id in overrides and len(binding_ids) == 1:
+            bindings[binding_ids[0]] = canonical_decimal_string(overrides[casilla.id])
+    return bindings
+
+
+def _recalculate_amendment(
+    *,
+    source_revision: CalculationRevision,
+    snapshot: RegistrySnapshot,
+    overrides: Mapping[CasillaId, Decimal],
+    prior_paid_values: Mapping[CasillaId, Decimal],
+    authored: Mapping[CasillaId, str],
+    bindings: Mapping[BindingId, str],
+    formulas: Mapping[CasillaId, FormulaDefinition],
+) -> tuple[RegistryCalculationResult, dict[CasillaId, Decimal], dict[CasillaId, str]]:
+    """Run the registry engine over the corrected inputs; return its result and the replayed inputs."""
+    decimal_bindings, enum_bindings, date_bindings, boolean_bindings = _amendment_binding_channels(snapshot, bindings)
+    text_ids = text_family_casilla_ids(snapshot.revision.casillas)
+    inputs = _amendment_numeric_inputs(source_revision, formulas, text_ids, {**overrides, **prior_paid_values})
+    text_inputs = {key: raw for key, raw in source_revision.input_values_by_casilla_id.items() if key in text_ids}
+    resolved_binding_ids = {*decimal_bindings, *enum_bindings, *date_bindings, *boolean_bindings}
+    missing_binding_ids = tuple(
+        binding.id for binding in snapshot.revision.bindings if binding.id not in resolved_binding_ids
+    )
+    relation_ids = {
+        binding.id for binding, _ in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
+    }
+    formula_overrides = _amendment_formula_overrides(source_revision, authored, formulas)
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs=inputs,
+        date_context={},
+        binding_values=decimal_bindings,
+        enum_binding_values=enum_bindings,
+        date_binding_values=date_bindings,
+        boolean_binding_values=boolean_bindings,
+        relation_values={key: Decimal(raw) for key, raw in source_revision.relation_overrides.items()},
+        unresolved_binding_ids=missing_binding_ids,
+        unresolved_relation_ids=tuple(binding_id for binding_id in missing_binding_ids if binding_id in relation_ids),
+        unresolved_observation_backed_casilla_ids=_unresolved_observation_backed_casilla_ids(
+            snapshot, inputs, missing_binding_ids
+        ),
+        text_inputs=text_inputs,
+        formula_overrides=formula_overrides,
+        retained_formula_observations=_retained_formula_observations(source_revision, formulas, formula_overrides),
+        recalculate_from_casilla_ids=frozenset({*overrides, *prior_paid_values}),
+        recalculate_from_binding_ids=_changed_binding_ids(bindings, source_revision.binding_overrides),
+    )
+    return result, inputs, text_inputs
+
+
+def _amendment_numeric_inputs(
+    source_revision: CalculationRevision,
+    formulas: Mapping[CasillaId, FormulaDefinition],
+    text_ids: frozenset[CasillaId],
+    corrected: Mapping[CasillaId, Decimal],
+) -> dict[CasillaId, Decimal]:
+    """Layer saved replay inputs, filed values and corrected amounts for each non-formula numeric casilla."""
+    inputs = {
+        key: Decimal(raw)
+        for key, raw in source_revision.input_values_by_casilla_id.items()
+        if key not in formulas and key not in text_ids
+    }
+    inputs.update(
+        {
+            key: value
+            for key, value in source_revision.casilla_values.items()
+            if key not in formulas and key not in text_ids
+        }
+    )
+    inputs.update({key: value for key, value in corrected.items() if key not in formulas})
+    return inputs
+
+
+def _amendment_formula_overrides(
+    source_revision: CalculationRevision,
+    authored: Mapping[CasillaId, str],
+    formulas: Mapping[CasillaId, FormulaDefinition],
+) -> dict[CasillaId, CasillaObservation]:
+    """Pin every explicitly authored formula target, keeping that formula's legal and source grounding."""
+    formula_overrides = {
+        observation.casilla_id: observation
+        for observation in source_revision.observations
+        if observation.casilla_id in authored and observation.casilla_id in formulas and observation.formula_id is None
+    }
+    for key, value in authored.items():
+        if key in formulas:
+            formula = formulas[key]
+            formula_overrides[key] = CasillaObservation(
+                casilla_id=key,
+                value=Decimal(value),
+                formula_id=formula.id,
+                op=formula.expression.op or "value",
+                legal_refs=formula.legal_refs,
+                source_refs=formula.source_refs,
+            )
+    return formula_overrides
+
+
+def _retained_formula_observations(
+    source_revision: CalculationRevision,
+    formulas: Mapping[CasillaId, FormulaDefinition],
+    formula_overrides: Mapping[CasillaId, CasillaObservation],
+) -> dict[CasillaId, CasillaObservation]:
+    """Return the saved formula observations the correction keeps unless a dependency changes."""
+    return {
+        observation.casilla_id: observation
+        for observation in source_revision.observations
+        if observation.casilla_id in formulas and observation.casilla_id not in formula_overrides
+    }
+
+
+def _unresolved_observation_backed_casilla_ids(
+    snapshot: RegistrySnapshot,
+    inputs: Mapping[CasillaId, Decimal],
+    missing_binding_ids: tuple[BindingId, ...],
+) -> frozenset[CasillaId]:
+    """Return the casillas without an input whose binding the correction cannot resolve."""
+    return frozenset(
+        casilla.id
+        for casilla in snapshot.revision.casillas
+        if casilla.id not in inputs and set(bound_casilla_binding_ids(casilla)).intersection(missing_binding_ids)
+    )
+
+
+def _changed_binding_ids(
+    bindings: Mapping[BindingId, str],
+    recorded: Mapping[BindingId, str],
+) -> frozenset[BindingId]:
+    """Return the bindings whose corrected value differs from the one the filing recorded."""
+    return frozenset(key for key in set(bindings) | set(recorded) if bindings.get(key) != recorded.get(key))
+
+
+def _amendment_operator_layer(
+    layer: CalculationOperatorLayer | None,
+    authored: Mapping[CasillaId, str],
+) -> CalculationOperatorLayer:
+    """Carry the correction's authored amounts beside the source's other operator-layer channels."""
+    return CalculationOperatorLayer(
+        decimal_casilla_inputs=dict(authored),
+        text_casilla_inputs=layer.text_casilla_inputs if layer is not None else {},
+        binding_overrides=layer.binding_overrides if layer is not None else {},
+        attested_binding_ids=layer.attested_binding_ids if layer is not None else (),
     )
 
 

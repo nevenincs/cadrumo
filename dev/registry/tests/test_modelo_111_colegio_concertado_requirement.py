@@ -66,7 +66,7 @@ _EPIGRAPH_PATH = "activities.iae_epigraph"
 #: A tax adviser's activity (IAE 849.7 group 849) and a reglada teaching one (931.1).
 _CONSULTANT_EPIGRAPH = "849.7"
 _TEACHING_EPIGRAPH = "931.1"
-_EFFECTIVE = date(2025, 3, 31)
+_EFFECTIVE = date(committed_supported_filing_years().horizon, 3, 31)
 
 
 def _schema() -> ProfileSchemaDefinition:
@@ -145,14 +145,8 @@ def test_the_current_design_source_carries_the_row_the_field_is_read_from() -> N
 
     assert source_text is not None
     assert normalise_corpus_text(_CURRENT_DESIGN_SOURCE_FRAGMENT) in source_text
-    extraction = bundled_path(
-        "corpus",
-        "aeat_official",
-        "disenos_registro",
-        "modelo_111",
-        "files",
-        "01-111-orden-eha-3127-2009-ejercicios-2019-y-siguientes-actualizado-mayo-2021-179-kb-xls.xls.extracted.md",
-    )
+    # The extraction sits beside the cited workbook, named after it.
+    extraction = bundled_path(*f"{catalogues.sources[_CURRENT_DESIGN_SOURCE].corpus_path}.extracted.md".split("/"))
     assert _CURRENT_DESIGN_LINE in extraction.read_text(encoding="utf-8")
 
 

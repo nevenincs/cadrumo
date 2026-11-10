@@ -28,17 +28,19 @@ from textual.widgets import Static
 from ......application.modelo.source_policy import SourceFamily
 from ......application.modelo.value_presentation import absent_value_text
 from ......application.modelo.work_form_declaration_facts import ModeloFormAeatData
-from ......application.modelo.work_form_models import (
+from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormEarlierFiling,
     ModeloFormEditability,
+    ModeloFormOrigin,
+    ModeloFormValueSource,
+    address_key,
+)
+from ......application.modelo.work_form_models import (
     ModeloFormField,
     ModeloFormFieldBlock,
-    ModeloFormOrigin,
     ModeloFormSourceGroupKind,
     ModeloFormSourceState,
-    ModeloFormValueSource,
     ModeloWorkForm,
-    address_key,
     revised_field,
 )
 from ......application.modelo.work_form_source_groups import reading_text, source_group_kind, source_groups

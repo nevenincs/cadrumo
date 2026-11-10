@@ -12,6 +12,7 @@ from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..bindings_previous_filing import previous_filing_binding_source_casilla_ids
 from ..schema import ModeloDefinition
 from ..schema_catalogues import RegistryCatalogues
+from .authored_editions import filing_year_envelope, revision_covering
 from .modelo_303_registry_constants import (
     M303_COMPENSACION_APLICADA_CASILLA,
     M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
@@ -23,12 +24,16 @@ from .modelo_303_registry_constants import (
 from .registry_observations import registry_grounded_modelo_observation
 from .snapshot_support import build_snapshot
 
+_FLOOR = filing_year_envelope().floor
+_YEAR = filing_year_envelope().horizon
+_PREVIOUS_YEAR = _YEAR - 1
+
 
 def check_modelo_303_compensation_chain_uses_current_record_design_casillas(
     load_modelo_303: Callable[[], tuple[ModeloDefinition, RegistryCatalogues]],
 ) -> None:
     modelo, _ = load_modelo_303()
-    revision = modelo.revisions["2022"]
+    revision = modelo.revisions[str(revision_covering("303", _FLOOR).id)]
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     binding = next(item for item in revision.bindings if item.id == "modelo-303-compensacion-pendiente-anteriores")
     provider = binding.provider
@@ -55,17 +60,17 @@ def check_modelo_303_previous_quarter_compensation_binding_resolves_from_source_
     )
 
     modelo, _ = load_modelo_303()
-    revision = modelo.revisions["2022"]
+    revision = modelo.revisions[str(revision_covering("303", _FLOOR).id)]
     observations = (
         registry_grounded_modelo_observation(
             modelo="303",
-            filing_year=2025,
+            filing_year=_YEAR,
             period="1T",
             casilla_values={M303_DISPONIBLE_CASILLA: Decimal("1200.00")},
         ),
     )
 
-    binding_requirements = previous_filing_observation_requirements(revision, filing_year=2025, period="2T")
+    binding_requirements = previous_filing_observation_requirements(revision, filing_year=_YEAR, period="2T")
     assert [(item.periods, item.source_casilla_ids) for item in binding_requirements] == [
         (("1T",), (M303_DISPONIBLE_CASILLA,)),
     ]
@@ -73,7 +78,7 @@ def check_modelo_303_previous_quarter_compensation_binding_resolves_from_source_
     assert resolve_previous_filing_binding_values(
         revision,
         observations,
-        filing_year=2025,
+        filing_year=_YEAR,
         period="2T",
     ) == {"modelo-303-compensacion-pendiente-anteriores": Decimal("1200.00")}
 
@@ -87,25 +92,25 @@ def check_modelo_303_first_quarter_compensation_resolves_from_previous_year_four
     )
 
     modelo, _ = load_modelo_303()
-    revision = modelo.revisions["2022"]
+    revision = modelo.revisions[str(revision_covering("303", _FLOOR).id)]
     observations = (
         registry_grounded_modelo_observation(
             modelo="303",
-            filing_year=2025,
+            filing_year=_PREVIOUS_YEAR,
             period="4T",
             casilla_values={M303_DISPONIBLE_CASILLA: Decimal("450.00")},
         ),
     )
 
-    binding_requirements = previous_filing_observation_requirements(revision, filing_year=2026, period="1T")
+    binding_requirements = previous_filing_observation_requirements(revision, filing_year=_YEAR, period="1T")
     assert [(item.filing_year, item.periods, item.source_casilla_ids) for item in binding_requirements] == [
-        (2025, ("4T",), (M303_DISPONIBLE_CASILLA,)),
+        (_PREVIOUS_YEAR, ("4T",), (M303_DISPONIBLE_CASILLA,)),
     ]
 
     assert resolve_previous_filing_binding_values(
         revision,
         observations,
-        filing_year=2026,
+        filing_year=_YEAR,
         period="1T",
     ) == {"modelo-303-compensacion-pendiente-anteriores": Decimal("450.00")}
 
@@ -116,7 +121,7 @@ def check_modelo_303_compensation_calculation_applies_available_balance_and_carr
     from ..formula_runtime import calculate_registry_snapshot
 
     modelo, catalogues = load_modelo_303()
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="2T")
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=_YEAR, period="2T")
 
     binding_values = {
         "modelo-303-iva-repercutido-general-cuota": Decimal("1000.00"),
@@ -160,7 +165,7 @@ def check_modelo_303_compensation_calculation_applies_available_balance_and_carr
         snapshot,
         inputs=bound_inputs,
         binding_values=binding_values,
-        date_context={"filing_period": date(2025, 6, 30)},
+        date_context={"filing_period": date(_YEAR, 6, 30)},
     )
 
     # Structural wiring: all compensation casillas must be present in the result.

@@ -126,7 +126,10 @@ from .work_selection import (
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.user_profile.values import UserProfileRecord
-    from .projection import ModeloProjectionUnresolvedBinding, ModeloProjectionUnresolvedCasilla
+    from .projection_unresolved import (
+        ModeloProjectionUnresolvedBinding,
+        ModeloProjectionUnresolvedCasilla,
+    )
 
 
 # Registry authority: selected calculate-input declarations are consumed through

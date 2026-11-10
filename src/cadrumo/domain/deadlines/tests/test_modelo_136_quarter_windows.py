@@ -16,6 +16,7 @@ from ....core.period import Period
 from ...calculations.registry.applicability import derive_modelo_applicability
 from ...calculations.registry.applicability_models import ApplicabilityVerdict
 from ...calculations.registry.irpf_income_categories import require_irpf_income_category
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ...contribuyente.entity_type import require_entity_type
 from ..engine import DeadlineEngine
@@ -24,7 +25,8 @@ from ..models import IVARegime, TaxpayerProfile
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _M136 = Modelo("136")
-_TODAY = date(2025, 1, 2)
+_YEAR = filing_year_envelope().horizon
+_TODAY = date(_YEAR, 1, 2)
 
 
 def _profile(**facts: object) -> TaxpayerProfile:
@@ -47,39 +49,39 @@ def _m136_periods(profile: TaxpayerProfile, year: int) -> list[Period]:
 def test_a_declared_quarter_opens_exactly_its_own_window() -> None:
     profile = _profile(
         premio_loteria_gravamen_especial_sin_retencion=True,
-        premio_loteria_gravamen_especial_trimestres=frozenset({"2025-1T"}),
+        premio_loteria_gravamen_especial_trimestres=frozenset({f"{_YEAR}-1T"}),
     )
 
-    assert _m136_periods(profile, 2025) == [Period.from_year_and_code(2025, "1T")]
+    assert _m136_periods(profile, _YEAR) == [Period.from_year_and_code(_YEAR, "1T")]
     assert derive_modelo_applicability(profile, "136", today=_TODAY).verdict is ApplicabilityVerdict.APPLICABLE
 
 
 def test_a_wrong_quarter_opens_no_row_for_the_undeclared_quarter() -> None:
     profile = _profile(
         premio_loteria_gravamen_especial_sin_retencion=True,
-        premio_loteria_gravamen_especial_trimestres=frozenset({"2025-2T"}),
+        premio_loteria_gravamen_especial_trimestres=frozenset({f"{_YEAR}-2T"}),
     )
 
-    periods = _m136_periods(profile, 2025)
+    periods = _m136_periods(profile, _YEAR)
 
-    assert Period.from_year_and_code(2025, "1T") not in periods
-    assert periods == [Period.from_year_and_code(2025, "2T")]
+    assert Period.from_year_and_code(_YEAR, "1T") not in periods
+    assert periods == [Period.from_year_and_code(_YEAR, "2T")]
 
 
 def test_a_quarter_of_another_year_opens_nothing_in_this_year() -> None:
     profile = _profile(
         premio_loteria_gravamen_especial_sin_retencion=True,
-        premio_loteria_gravamen_especial_trimestres=frozenset({"2024-4T"}),
+        premio_loteria_gravamen_especial_trimestres=frozenset({f"{_YEAR - 1}-4T"}),
     )
 
-    assert _m136_periods(profile, 2025) == []
-    assert _m136_periods(profile, 2024) == [Period.from_year_and_code(2024, "4T")]
+    assert _m136_periods(profile, _YEAR) == []
+    assert _m136_periods(profile, _YEAR - 1) == [Period.from_year_and_code(_YEAR - 1, "4T")]
 
 
 def test_yes_without_quarters_opens_no_row_and_stays_incomplete() -> None:
     profile = _profile(premio_loteria_gravamen_especial_sin_retencion=True)
 
-    assert _m136_periods(profile, 2025) == []
+    assert _m136_periods(profile, _YEAR) == []
     result = derive_modelo_applicability(profile, "136", today=_TODAY)
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert "Periodos sin declarar" in result.reason
@@ -88,14 +90,14 @@ def test_yes_without_quarters_opens_no_row_and_stays_incomplete() -> None:
 def test_no_is_not_applicable_and_opens_no_row() -> None:
     profile = _profile(premio_loteria_gravamen_especial_sin_retencion=False)
 
-    assert _m136_periods(profile, 2025) == []
+    assert _m136_periods(profile, _YEAR) == []
     assert derive_modelo_applicability(profile, "136", today=_TODAY).verdict is ApplicabilityVerdict.NOT_APPLICABLE
 
 
 def test_an_unanswered_profile_is_incomplete_and_opens_no_row() -> None:
     profile = _profile()
 
-    assert _m136_periods(profile, 2025) == []
+    assert _m136_periods(profile, _YEAR) == []
     assert derive_modelo_applicability(profile, "136", today=_TODAY).verdict is ApplicabilityVerdict.INCOMPLETE
 
 

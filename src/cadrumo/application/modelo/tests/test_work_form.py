@@ -50,18 +50,20 @@ from ..edit_models import (
 from ..edit_value_grammar import binding_value_grammar, casilla_value_grammar
 from ..work_form import build_modelo_work_form
 from ..work_form_errors import ModeloWorkFormLayoutError
-from ..work_form_models import (
+from ..work_form_field_vocabulary import (
     ModeloFormCasillaAddressV1,
-    ModeloFormContextFieldBlock,
     ModeloFormEditability,
+    ModeloFormOrigin,
+    ModeloFormTextDisclosure,
+    address_key,
+)
+from ..work_form_models import (
+    ModeloFormContextFieldBlock,
     ModeloFormField,
     ModeloFormGridBlock,
     ModeloFormInspectionReason,
     ModeloFormLayoutProvenance,
-    ModeloFormOrigin,
-    ModeloFormTextDisclosure,
     ModeloWorkForm,
-    address_key,
 )
 from ..work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_work_review_casillas
 

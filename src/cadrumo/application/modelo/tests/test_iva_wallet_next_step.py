@@ -25,6 +25,7 @@ from ....domain.calculations.registry.tests.published_authority import (
 from ...operations.error_detail import build_operation_error_detail
 from ...operations.next_step import OperationOpenIvaWalletOpeningBalanceStepV1, error_next_step
 from ..iva_wallet_gate import ModeloIvaWalletReconciliationBlocked, apply_iva_compensation_decision_binding
+from ..preconditions import IVA_WALLET_OPENING_BALANCE_SCENARIOS, MODELO_PRECONDITION_PROFILES
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
 
@@ -139,3 +140,31 @@ def test_a_refusal_the_opening_balance_would_not_settle_names_no_door() -> None:
 
     assert raised.value.translated_message == "application.modelo.errors.iva_wallet_unsupported_decision_type"
     assert error_next_step(raised.value, OutputLanguage.ES) is None
+
+
+def test_unseeded_carry_refusal_names_the_opening_balance_command_in_every_supported_year() -> None:
+    """Each supported year's refusal names the seed command with that year's own period."""
+    for filing_year in _supported_filing_years():
+        verdict = _refuse_unseeded_carry(filing_year).precondition_failure.verdict
+        assert verdict.action is not None, f"the {filing_year} refusal names no action"
+        assert verdict.action.action_id == "operator.modelo.iva_wallet.seed"
+        bound = {item.argument_name: item.value for item in verdict.argument_bindings if item.value is not None}
+        assert bound == {"filing_year": filing_year, "period": _PERIOD_CODE}
+        assert verdict.missing_argument_names == ("amount",)
+
+
+@pytest.mark.parametrize("leaf", ["modelo.work.calculate", "modelo.work.verify", "modelo.work.file", "modelo.export"])
+def test_every_refusal_the_opening_balance_settles_names_the_command_on_every_leaf(leaf: str) -> None:
+    """The declared profile of each opening-balance scenario carries the action; no other wallet scenario does."""
+    scenarios = {
+        profile.scenario_id.rsplit(".", 1)[-1]: profile
+        for profile in MODELO_PRECONDITION_PROFILES
+        if profile.condition_id == f"{leaf}.iva_wallet.ready"
+    }
+    assert set(IVA_WALLET_OPENING_BALANCE_SCENARIOS) <= set(scenarios)
+    for scenario, profile in scenarios.items():
+        if scenario in IVA_WALLET_OPENING_BALANCE_SCENARIOS:
+            assert profile.action is not None, f"{leaf} {scenario} names no action"
+            assert profile.action.action_id == "operator.modelo.iva_wallet.seed"
+        else:
+            assert profile.action is None, f"{leaf} {scenario} is not settled by the opening balance"

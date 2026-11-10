@@ -28,10 +28,12 @@ from .work_form_declaration_facts import (
 )
 from .work_form_field_projection import project_casilla_field
 from .work_form_field_state import casilla_field_role
-from .work_form_localization import localized_heading
-from .work_form_models import (
+from .work_form_field_vocabulary import (
     ModeloFormCasillaAddressV1,
     ModeloFormEditability,
+)
+from .work_form_localization import localized_heading
+from .work_form_models import (
     ModeloFormField,
     ModeloFormFieldBlock,
     ModeloFormInspectionReason,

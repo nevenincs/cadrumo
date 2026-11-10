@@ -60,16 +60,19 @@ from .disagreement_words import credit_resolution_lead_words
 from .finding_message_text import finding_message_text
 from .source_policy import SourceSurface
 from .work_form_declaration_facts import ModeloFormCalculationNote, ModeloFormResolutionAnswer
+from .work_form_field_vocabulary import (
+    ModeloFormAddressV1,
+    ModeloFormBindingAddressV1,
+    ModeloFormCasillaAddressV1,
+    ModeloFormOrigin,
+    ModeloFormTextDisclosure,
+    address_key,
+)
 from .work_form_findings import ModeloFormAttention, ModeloFormIssue
 from .work_form_models import (
-    ModeloFormAddressV1,
-    ModeloFormCasillaAddressV1,
     ModeloFormField,
-    ModeloFormOrigin,
     ModeloFormRepeatingBlock,
-    ModeloFormTextDisclosure,
     ModeloWorkForm,
-    address_key,
 )
 from .work_form_next_step import applicable_fields, failed_results
 
@@ -464,20 +467,38 @@ def _note_identifiers(
     return field, box_text, codes
 
 
+def _note_message_and_detail(note: ModeloFormCalculationNote, what: str, context: _Context) -> tuple[str, str | None]:
+    """What the note is about comes first, so it is read without opening anything; the kind explains it.
+
+    A note without facts keeps its catalogue sentence first, and the calculation's own account follows it:
+    that account is the resolver's, worded when the calculation ran.
+    """
+    if note.fact is None:
+        return what, note.message
+    return note_fact_text(note.fact, element_names=note.element_names, locale=context.language), what
+
+
+def _note_address(
+    note: ModeloFormCalculationNote, field: ModeloFormField | None, record: _RecordValue | None
+) -> ModeloFormCasillaAddressV1 | ModeloFormBindingAddressV1 | None:
+    if field is not None:
+        return field.address
+    if record is None or note.casilla_id is None:
+        return None
+    return ModeloFormCasillaAddressV1(casilla_id=note.casilla_id)
+
+
+def _note_answer_lead(note: ModeloFormCalculationNote, context: _Context) -> str | None:
+    return None if note.resolution_answer is None else _answer_lead(note.resolution_answer, context)
+
+
 def _note_line(note: ModeloFormCalculationNote, context: _Context) -> ModeloFormIssueLine:
     """One thing the latest calculation noticed, in the same parts as a finding."""
     field, box_text, codes = _note_identifiers(note, context)
     # A note about a value every record of a table carries leads to that table, named by its heading.
     record = None if field is not None or note.casilla_id is None else context.records.get(str(note.casilla_id))
     what = context.say(what_locale_key(note.reason), box=box_text)
-    # What this note is about comes first, so it is read without opening anything; the kind explains it.
-    # A note without facts keeps its catalogue sentence first, and the calculation's own account follows it:
-    # that account is the resolver's, worded when the calculation ran.
-    message, detail = (
-        (what, note.message)
-        if note.fact is None
-        else (note_fact_text(note.fact, element_names=note.element_names, locale=context.language), what)
-    )
+    message, detail = _note_message_and_detail(note, what, context)
     return ModeloFormIssueLine(
         # A note the filing gate refuses on is listed with what blocks filing, as the counts count it.
         level=ModeloFormAttention.BLOCKS if note.withholds_filing else note.attention,
@@ -492,19 +513,13 @@ def _note_line(note: ModeloFormCalculationNote, context: _Context) -> ModeloForm
         ),
         detail=detail,
         technical=f"{context.say(_TECHNICAL_LOCALE_KEY)}: {' · '.join(codes)}",
-        address=(
-            field.address
-            if field is not None
-            else None
-            if record is None or note.casilla_id is None
-            else ModeloFormCasillaAddressV1(casilla_id=note.casilla_id)
-        ),
+        address=_note_address(note, field, record),
         in_records=record is not None,
         surface=_note_surface(note, field),
         from_calculation=True,
         finding_id=note.finding_id,
         resolution_answer=note.resolution_answer,
-        answer_lead_words=None if note.resolution_answer is None else _answer_lead(note.resolution_answer, context),
+        answer_lead_words=_note_answer_lead(note, context),
         answer_lead_words_language=None if note.resolution_answer is None else context.language,
         # A revision the gate refuses before reading its notes is put right by calculating again.
         recalculates=note.reason in DERIVED_GATE_REASONS,

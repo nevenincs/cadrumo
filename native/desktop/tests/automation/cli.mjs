@@ -43,8 +43,8 @@ try {
     console.log(`Native exploratory automation (macOS: ps and lsof required; Windows: PowerShell and netstat required)
 Build: cmake --build --preset macos-arm64-debug --target bundle desktop-packaged-host
 Set CADRUMO_CMAKE_BINARY_DIR to the absolute build/macos-arm64 path and CADRUMO_BUILD_CONFIG=Debug.
-On Windows use the windows-x64 preset and build path; the host listener is confirmed by exact PID
-(netstat -ano) and the PID's image path, and refuses when either cannot be confirmed.
+On Windows use the windows-x64 preset and build path; the host is confirmed by exact PID
+and image path, and the WebDriver page must return the nonce this launch gave it; anything else refuses.
 The host starts without taking the foreground or focus on the desktop.
 Start: node native/desktop/tests/automation/cli.mjs start
 The result names a SESSION file. Keep it for subsequent commands:

@@ -21,15 +21,17 @@ from rich.console import Console
 from textual.widgets import OptionList, Static
 
 from ......application.modelo.source_policy import SourceFamily, SourceSurface, source_policy
-from ......application.modelo.work_form_models import (
+from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormEarlierFiling,
     ModeloFormEditability,
     ModeloFormOrigin,
+    ModeloFormValueSource,
+    address_key,
+)
+from ......application.modelo.work_form_models import (
     ModeloFormSourceGroupKind,
     ModeloFormSourceState,
-    ModeloFormValueSource,
     ModeloWorkForm,
-    address_key,
 )
 from ......application.modelo.work_form_source_groups import SourceGroup, group_boxes, group_summary, source_groups
 from ......core.aggregation import BindingSourceKind

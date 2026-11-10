@@ -11,6 +11,7 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, open_ended_revision
 
 from ...compiler.authority import compiled_bundled_authority
 from ..registry_status import (
@@ -21,6 +22,17 @@ from ..registry_status import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+# Modelo 296 authors editions of which the newest ships no record-design tree, so the
+# newest is projected forward from the one before it and the oldest backward is
+# projected to by an edition older than every tree. Modelo 185 authors a span that
+# begins below the floor, and modelo 036 an edition citing its own record design.
+_NEWEST_296 = str(open_ended_revision("296").id)
+_TREE_BEARING_296 = str(authored_revisions("296")[-2].id)
+_OLDEST_296 = str(authored_revisions("296")[0].id)
+_OLDEST_036 = str(authored_revisions("036")[0].id)
+_SPAN_BELOW_FLOOR_185 = str(authored_revisions("185")[0].id)
+_NEWEST_185 = str(open_ended_revision("185").id)
 
 
 @pytest.fixture(scope="module")
@@ -42,27 +54,27 @@ def _classify(authority: ValidatedRegistryAuthority, modelo_id: str, revision_id
 def test_a_newer_edition_without_a_design_is_projected_forward_from_the_nearest_tree(
     authority: ValidatedRegistryAuthority,
 ) -> None:
-    reason = _classify(authority, "296", "2026-y-siguientes")
+    reason = _classify(authority, "296", _NEWEST_296)
     assert reason is not None
     assert reason.startswith(PROJECTED_FROM_NEAREST_EDITION)
-    assert "2024-2025" in reason
+    assert _TREE_BEARING_296 in reason
     assert "forward" in reason
 
 
 def test_an_older_edition_without_a_design_is_projected_backward_from_the_oldest_tree(
     authority: ValidatedRegistryAuthority,
 ) -> None:
-    reason = _classify(authority, "296", "2022")
+    reason = _classify(authority, "296", _OLDEST_296)
     assert reason is not None
     assert "backward" in reason
 
 
 def test_an_edition_citing_its_own_record_design_stays_a_gap(authority: ValidatedRegistryAuthority) -> None:
-    assert _classify(authority, "036", "2022-hasta-2023-04-24") is None
+    assert _classify(authority, "036", _OLDEST_036) is None
 
 
 def test_an_edition_already_shipping_a_tree_is_never_projected(authority: ValidatedRegistryAuthority) -> None:
-    assert _classify(authority, "296", "2024-2025") is None
+    assert _classify(authority, "296", _TREE_BEARING_296) is None
 
 
 def test_a_projected_target_is_counted_apart_from_unreadable_ones() -> None:
@@ -83,6 +95,6 @@ def test_a_projected_target_is_counted_apart_from_unreadable_ones() -> None:
 def test_a_span_beginning_below_the_floor_is_projected_from_its_last_declared_year(
     authority: ValidatedRegistryAuthority,
 ) -> None:
-    reason = _classify(authority, "185", "2003-2025")
+    reason = _classify(authority, "185", _SPAN_BELOW_FLOOR_185)
     assert reason is not None
-    assert "2025-y-siguientes" in reason
+    assert _NEWEST_185 in reason

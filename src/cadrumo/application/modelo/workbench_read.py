@@ -24,10 +24,13 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from ...core.casilla_id import CasillaId
 from ...core.external_constants import OutputLanguage
 from ...core.identity.documents import SpanishTaxIdFormat
+from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.bindings_previous_filing import PreviousFilingProvider
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
+from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.verification_report import VerificationReport
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.user_profile.labels import profile_field_label
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
@@ -268,12 +271,7 @@ def read_modelo_workbench_form(
     )
     form = loaded.form
     head_id = form.calculation_revision_id
-    head = None if head_id is None else ports.calculations.load(operation=operation).get(head_id)
-    report = (
-        None
-        if head_id is None
-        else granting_verification_report(ports.verifications.load(operation=operation), head_id)
-    )
+    head, report = _head_and_report(head_id, ports=ports, operation=operation)
     is_m303 = str(unit.modelo) == form_for_role("iva.periodic")
     load_profile = ports.profile
     profile = None if load_profile is None else load_profile()
@@ -308,6 +306,17 @@ def read_modelo_workbench_form(
             else reconciliation_source_requirements(ports.reconciliation_sources(unit, snapshot), language)
         ),
     )
+
+
+def _head_and_report(
+    head_id: CalculationRevisionId | None, *, ports: ModeloWorkbenchReadPorts, operation: PinnedAuthorityOperation
+) -> tuple[CalculationRevision | None, VerificationReport | None]:
+    """The form's calculation head and the verification report granting it, both absent without a head."""
+    if head_id is None:
+        return None, None
+    head = ports.calculations.load(operation=operation).get(head_id)
+    report = granting_verification_report(ports.verifications.load(operation=operation), head_id)
+    return head, report
 
 
 def _ledger_hold(

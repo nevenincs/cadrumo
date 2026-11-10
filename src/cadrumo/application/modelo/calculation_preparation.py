@@ -29,6 +29,7 @@ from ...core.casilla_id import CasillaId
 from ...core.external_constants import DEFAULT_CURRENCY, OutputLanguage
 from ...core.i18n.render import tr
 from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...core.period import Period
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import (
     BindingId,
@@ -89,6 +90,7 @@ from .work_profile import ModeloWorkProfile
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ..ledger.preflight import LedgerPreflightIssue
     from ..live.borrador_100 import Borrador100SnapshotRepository
 
 _apply_iva_compensation_decision_binding = apply_iva_compensation_decision_binding
@@ -430,6 +432,34 @@ class LedgerPreflightHold:
     context: Mapping[str, str]
 
 
+def _first_blocking_issue(
+    issues: Sequence[LedgerPreflightIssue], ledger_preflight_sources: frozenset[str]
+) -> LedgerPreflightIssue | None:
+    return next(
+        (
+            issue
+            for issue in issues
+            if _preflight_issue_blocks_revision(
+                reason=str(issue.reason.value),
+                ledger_preflight_sources=ledger_preflight_sources,
+            )
+        ),
+        None,
+    )
+
+
+def _hold_context(
+    reason: str, period: Period, movement: Transaction | None, language: OutputLanguage
+) -> dict[str, str]:
+    context = {
+        "need": tr(f"{_LEDGER_PREFLIGHT_NEED_KEY}.{reason}", locale=language.value),
+        "period": period_words(period, language),
+    }
+    if movement is not None:
+        context.update(_movement_words(movement, language))
+    return context
+
+
 def ledger_preflight_hold(
     *,
     work_unit: WorkUnit,
@@ -466,17 +496,7 @@ def ledger_preflight_hold(
     )
     if report.ready:
         return None
-    first_issue = next(
-        (
-            issue
-            for issue in report.issues
-            if _preflight_issue_blocks_revision(
-                reason=str(issue.reason.value),
-                ledger_preflight_sources=ledger_preflight_sources,
-            )
-        ),
-        None,
-    )
+    first_issue = _first_blocking_issue(report.issues, ledger_preflight_sources)
     if first_issue is None:
         return None
     movement = (
@@ -484,12 +504,7 @@ def ledger_preflight_hold(
         if first_issue.transaction_id == "__period__"
         else transaction_repository.load_by_ids({first_issue.transaction_id}).get(first_issue.transaction_id)
     )
-    context = {
-        "need": tr(f"{_LEDGER_PREFLIGHT_NEED_KEY}.{first_issue.reason.value}", locale=language.value),
-        "period": period_words(report.period, language),
-    }
-    if movement is not None:
-        context.update(_movement_words(movement, language))
+    context = _hold_context(first_issue.reason.value, report.period, movement, language)
     return LedgerPreflightHold(
         reason=first_issue.reason.value,
         issue_transaction_id=first_issue.transaction_id,

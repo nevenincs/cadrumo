@@ -368,7 +368,12 @@ class RuntimeLedgerLinkSubmitterV1:
             if not _link_result_names_request(result, request):
                 raise _invalid()
             if result.outcome == "refused":
-                if not _refused_with(condition, terminal, LEDGER_LINK_VALIDATION_REFUSAL_CODE) or result.reason is None:
+                # The TUI submits one exact invoice id, which no prefix selection can make ambiguous.
+                if (
+                    not _refused_with(condition, terminal, LEDGER_LINK_VALIDATION_REFUSAL_CODE)
+                    or result.reason is None
+                    or result.reason == "ambiguous_invoice"
+                ):
                     raise _invalid()
                 raise LedgerLinkValidationRefusedError(translated_message=_LINK_REFUSAL_KEYS[result.reason], context={})
             projection = result.projection

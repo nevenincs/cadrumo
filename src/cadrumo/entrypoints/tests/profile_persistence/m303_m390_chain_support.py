@@ -39,7 +39,10 @@ from cadrumo.application.modelo.filing_action_ports import FilingActionPorts
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
-from cadrumo.application.modelo.work_form_models import ModeloFormOrigin, address_key
+from cadrumo.application.modelo.work_form_field_vocabulary import (
+    ModeloFormOrigin,
+    address_key,
+)
 from cadrumo.application.modelo.work_form_service import load_modelo_work_form
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts

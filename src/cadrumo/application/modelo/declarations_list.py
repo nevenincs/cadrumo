@@ -11,7 +11,7 @@ step it cannot perform is simply not offered there.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -651,17 +651,24 @@ def starting_creation_targets(
     eligible = {(target.modelo, target.period): target for target in targets if not target.profile_requirements}
     starting: dict[str, DeclarationTarget] = {}
     for row in sorted((row for row in rows if row.state == "not_started"), key=lambda row: row.deadline or date.max):
-        if row.period is not None and (target := eligible.get((row.modelo, row.period))) is not None:
+        target = eligible.get((row.modelo, row.period)) if row.period is not None else None
+        if target is not None:
             starting.setdefault(row.modelo, target)
-    by_modelo: dict[str, list[DeclarationTarget]] = {}
-    for target in eligible.values():
-        by_modelo.setdefault(target.modelo, []).append(target)
-    for modelo, own in by_modelo.items():
-        if modelo in starting:
-            continue
-        ended = [target for target in own if target.period.has_date_span() and target.period.end_date < as_of]
-        starting[modelo] = max(ended, key=lambda target: target.period.end_date) if ended else own[0]
+    for modelo, own in _targets_by_modelo(eligible.values()).items():
+        starting.setdefault(modelo, _latest_ended_or_first(own, as_of))
     return frozenset(starting.values())
+
+
+def _targets_by_modelo(targets: Iterable[DeclarationTarget]) -> dict[str, list[DeclarationTarget]]:
+    by_modelo: dict[str, list[DeclarationTarget]] = {}
+    for target in targets:
+        by_modelo.setdefault(target.modelo, []).append(target)
+    return by_modelo
+
+
+def _latest_ended_or_first(own: list[DeclarationTarget], as_of: date) -> DeclarationTarget:
+    ended = [target for target in own if target.period.has_date_span() and target.period.end_date < as_of]
+    return max(ended, key=lambda target: target.period.end_date) if ended else own[0]
 
 
 def existing_declaration(

@@ -18,6 +18,7 @@ from ....domain.iva.oss import OssIossRegime
 from ....domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
 from ....domain.iva.schema import InvoiceKind as InvoiceKind
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
+from ....domain.transactions.classification_effects import fields_refused_by_classification
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ..iva_ledger import (
@@ -543,7 +544,12 @@ def test_iva_source_mesh_resolver_summarizes_out_of_period_personal_source_diagn
         taxable_base=Decimal("100.00"),
         iva_amount=Decimal("21.00"),
         booked_date=date(2026, 4, 10),
-    ).model_copy(update={"business_classification": BusinessClassification.PERSONAL})
+    ).model_copy(
+        update={
+            "business_classification": BusinessClassification.PERSONAL,
+            **dict.fromkeys(fields_refused_by_classification(BusinessClassification.PERSONAL)),
+        }
+    )
     catalogue = TransactionCatalogue.from_transactions((personal_q2,))
     tx_repo.save(catalogue)
 

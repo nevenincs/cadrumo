@@ -27,6 +27,7 @@ from ...domain.transactions.models import (
     BucketTransactionRef,
     Transaction,
     TransactionCatalogue,
+    withhold_figures_without_business,
 )
 from ..aggregation.currency_predicates import effective_eur_amount, is_non_eur_without_conversion
 from ..review.filter import LedgerReviewStatus
@@ -181,7 +182,12 @@ def _optional_ledger_enum_value(value: IvaCategory | EUMemberState | None) -> st
 
 
 def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPayload:
-    """Return the :class:`~cadrumo.application.ledger.models.LedgerTransactionPayload` for one ledger transaction."""
+    """Return the :class:`~cadrumo.application.ledger.models.LedgerTransactionPayload` for one ledger transaction.
+
+    A personal row is served without the business figures its classification
+    refuses, whichever path produced the row.
+    """
+    transaction = withhold_figures_without_business(transaction)
     raw = transaction.raw
     return LedgerTransactionPayload(
         transaction_id=transaction.transaction_id,

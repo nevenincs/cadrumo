@@ -36,6 +36,7 @@ from cadrumo.domain.calculations.registry.schema_verification import (
     VerificationExpectationDefinition,
     VerificationPredicateDefinition,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.validator import RegistryValidator
 from .profile_schema_support import load_user_profile_schema
@@ -356,7 +357,11 @@ def test_dangling_parameter_source_refs() -> None:
         id="test.param",
         data_type="decimal",
         unit="EUR",
-        values=(DatedValue(value=Decimal("0"), date_axis="filing_period", valid_from=date(2020, 1, 1)),),
+        values=(
+            DatedValue(
+                value=Decimal("0"), date_axis="filing_period", valid_from=date(filing_year_envelope().floor, 1, 1)
+            ),
+        ),
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID, _extra),
     )

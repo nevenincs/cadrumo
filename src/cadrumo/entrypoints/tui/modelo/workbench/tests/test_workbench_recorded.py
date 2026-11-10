@@ -14,8 +14,12 @@ from decimal import Decimal
 import pytest
 from textual.widgets import Input, OptionList, Static
 
+from ......application.modelo.work_form_field_vocabulary import (
+    ModeloFormBlocker,
+    ModeloFormText,
+    ModeloFormTextDisclosure,
+)
 from ......application.modelo.work_form_localization import same_work_form_facts
-from ......application.modelo.work_form_models import ModeloFormBlocker, ModeloFormText, ModeloFormTextDisclosure
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import lookup_translation, tr
