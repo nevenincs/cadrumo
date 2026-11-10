@@ -52,18 +52,16 @@ import sys
 import threading
 import time
 import traceback
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Mapping
 from contextlib import ExitStack, suppress
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from functools import partial
 from pathlib import Path
 from typing import Any, Final
-from uuid import UUID
 
 import httpx
 
-from cadrumo.adapters.persistence.storage.custody.acceleration_keychain import PROFILE_SESSION_KEYCHAIN_SERVICE
 from cadrumo_runtime.application.development_root import mark_development_root
 
 from ..runtime_lifecycle.caller_owned_root import (
@@ -83,6 +81,7 @@ from .desktop_processes import person_environment, require_no_desktop
 from .lane import attached, devtools_endpoint, free_port, lane_desktop, status_until
 from .lane_errors import UnavailableError
 from .lane_stage import TESTING, TestHost, require_current, snapshot_report, stage_package, test_host
+from .stored_sign_in import delete_windows_credential, remove_profile_credentials, windows_credentials
 
 ROOT_PREFIX: Final = "cadrumo-e2e-"
 """The name every disposable root starts with; removal refuses any other."""
@@ -103,8 +102,6 @@ _HOLD_SECONDS: Final = 0.5
 _LOG_LEVEL_VARIABLE: Final = "CADRUMO_LOG_LEVEL"
 PROFILE_RECORD: Final = "profile.json"
 """The run's results file naming the profile's opaque id, so its stored sign-in keys can be attributed."""
-_GENERIC_CREDENTIAL: Final = 1
-_NO_CREDENTIALS: Final = 1168
 
 CliRunner = Callable[..., tuple[int, dict[str, Any]]]
 """Runs one JSON ``aeat`` command: its arguments, and a secret for standard input only."""
@@ -198,20 +195,25 @@ def _remove_tree(directory: Path, left: list[str]) -> None:
         left.append(f"{directory}: {error.strerror or error}")
         return
     for path in entries:
-        try:
-            if is_link(path):
-                _remove_link(path)
-            elif path.is_dir():
-                _remove_tree(path, left)
-            else:
-                _remove_file(path)
-        except OSError as error:
-            left.append(f"{path}: {error.strerror or error}")
+        _remove_entry(path, left)
     if len(left) == before:
         try:
             directory.rmdir()
         except OSError as error:
             left.append(f"{directory}: {error.strerror or error}")
+
+
+def _remove_entry(path: Path, left: list[str]) -> None:
+    """Remove one entry of a root: a link itself, a directory's contents, or a file; record what stays."""
+    try:
+        if is_link(path):
+            _remove_link(path)
+        elif path.is_dir():
+            _remove_tree(path, left)
+        else:
+            _remove_file(path)
+    except OSError as error:
+        left.append(f"{path}: {error.strerror or error}")
 
 
 def _remove_link(path: Path) -> None:
@@ -473,58 +475,6 @@ def record_profile(results: Path, profile: Profile) -> Path:
     return record
 
 
-def profile_credentials(stored: Iterable[Mapping[str, Any]], profile_id: UUID) -> list[str]:
-    """Target names of the generic credentials holding exactly this profile's stored sign-in keys."""
-    prefix = f"{profile_id}:"
-    service = PROFILE_SESSION_KEYCHAIN_SERVICE
-    return sorted(
-        credential["TargetName"]
-        for credential in stored
-        if credential.get("Type") == _GENERIC_CREDENTIAL
-        and (account := credential.get("UserName") or "").startswith(prefix)
-        and credential.get("TargetName") in {service, f"{account}@{service}"}
-    )
-
-
-def remove_profile_credentials(
-    profile_id: UUID,
-    enumerate_stored: Callable[[], Iterable[Mapping[str, Any]]],
-    delete: Callable[[str], None],
-) -> list[str]:
-    """Delete this profile's stored sign-in keys; return a failure for each one that stays."""
-    failures = []
-    targets = profile_credentials(enumerate_stored(), profile_id)
-    for target in targets:
-        try:
-            delete(target)
-        except OSError as error:
-            failures.append(f"a stored sign-in key of profile {profile_id} was not deleted: {error}")
-    print(json.dumps({"step": "credentials_removed", "count": len(targets) - len(failures)}), flush=True)
-    return failures
-
-
-def _windows_credentials() -> list[Mapping[str, Any]]:
-    import pywintypes
-    import win32cred
-
-    try:
-        return list(win32cred.CredEnumerate(None, 0) or [])
-    except pywintypes.error as error:
-        if error.winerror == _NO_CREDENTIALS:
-            return []
-        raise OSError(error.winerror, error.strerror) from error
-
-
-def _delete_windows_credential(target: str) -> None:
-    import pywintypes
-    import win32cred
-
-    try:
-        win32cred.CredDelete(target, _GENERIC_CREDENTIAL, 0)
-    except pywintypes.error as error:
-        raise OSError(error.winerror, error.strerror) from error
-
-
 def sign_out(programs: Programs, root: Path, results: Path) -> list[str]:
     """Sign the profile out through a fresh caller-owned runtime; return what did not hold."""
     environment = consumer_environment(root)
@@ -678,7 +628,7 @@ def _teardown(root: Path, parent: Path, results: Path, created: list[Profile]) -
         if profile.profile_id is not None:
             try:
                 failures.extend(
-                    remove_profile_credentials(profile.profile_id, _windows_credentials, _delete_windows_credential)
+                    remove_profile_credentials(profile.profile_id, windows_credentials, delete_windows_credential)
                 )
             except OSError as error:
                 failures.append(f"the credential store could not be read to remove the run's sign-in keys: {error}")
