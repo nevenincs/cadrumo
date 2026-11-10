@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import json
+from datetime import date
 from pathlib import Path
 
 import click
@@ -12,6 +13,7 @@ from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.inventory import REPO_ROOT, leaf_name
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import cadrumo_click_command, invoke_cached_cli
 
@@ -77,7 +79,7 @@ def test_modelo_bindings_help_uses_accepted_period_examples() -> None:
         assert "alta" in flat and "modificacion" in flat and "baja" in flat, surface
         # The composed YYYY-prefixed forms are no longer advertised on
         # surfaces that compose --year and --period separately.
-        assert "2026Q1" not in flat, surface
+        assert f"{filing_year_envelope().horizon}Q1" not in flat, surface
 
 
 @pytest.mark.usefixtures("isolated_profile_storage")
@@ -128,9 +130,9 @@ class TestOverviewCalendarRequiresProfileCreate:
                 "overview",
                 "calendar",
                 "--from",
-                "2026-01-01",
+                date(filing_year_envelope().horizon, 1, 1).isoformat(),
                 "--to",
-                "2026-12-31",
+                date(filing_year_envelope().horizon, 12, 31).isoformat(),
                 "--allow-incomplete",
             ],
         )

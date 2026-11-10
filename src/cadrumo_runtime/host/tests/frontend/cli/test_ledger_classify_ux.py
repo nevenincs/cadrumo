@@ -5,14 +5,19 @@ from __future__ import annotations
 import json
 import sys
 from collections.abc import Iterator, Sequence
+from datetime import date
 from pathlib import Path
 
 import pytest
 from click.testing import Result
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from ...native_profile_facts import native_general_iva_facts
 from .ledger_ux_support import imported_transaction_id_exact_profile, invoke_exact_profile
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -52,7 +57,7 @@ def test_add_with_business_pct_on_a_business_row_surfaces_the_real_cause(
             "ledger",
             "add",
             "--date",
-            "2026-04-15",
+            date(_YEAR, 4, 15).isoformat(),
             "--amount",
             "121.00",
             "--direction",
@@ -88,7 +93,7 @@ def test_add_business_row_without_business_pct_succeeds(ledger_ux_profile: Nativ
             "ledger",
             "add",
             "--date",
-            "2026-04-15",
+            date(_YEAR, 4, 15).isoformat(),
             "--amount",
             "121.00",
             "--direction",

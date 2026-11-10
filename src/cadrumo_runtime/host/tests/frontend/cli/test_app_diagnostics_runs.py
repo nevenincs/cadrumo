@@ -89,9 +89,9 @@ def test_runs_since_until_scopes_by_date(diagnostics_native_profile: NativeCliPr
             "diagnostics",
             "runs",
             "--since",
-            "2026-04-01",
+            "1980-04-01",
             "--until",
-            "2026-04-01",
+            "1980-04-01",
         ],
         diagnostics_native_profile,
     )
@@ -119,7 +119,7 @@ def test_runs_limit_caps_the_most_recent_rows(diagnostics_native_profile: Native
 def test_runs_rejects_malformed_date(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """A malformed ``--since`` value is refused instructively with a non-zero exit."""
     result = invoke_diagnostics(
-        ["--format", "json", "app", "diagnostics", "runs", "--since", "01/04/2026"],
+        ["--format", "json", "app", "diagnostics", "runs", "--since", "01/04/1980"],
         diagnostics_native_profile,
     )
     assert result.exit_code != 0

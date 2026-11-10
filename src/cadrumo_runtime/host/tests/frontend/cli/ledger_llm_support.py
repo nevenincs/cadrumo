@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator, Sequence
+from datetime import date
 from pathlib import Path
 
 import pytest
 from click.testing import Result
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.cli_envelope import unwrap_cli_result
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
@@ -18,7 +20,7 @@ PROFILE_FACTS = {
     "identity.name": "Native",
     "identity.surnames": "Ledger Review",
     "activities.description": "design",
-    "censo.activity_start_date": "2025-01-02",
+    "censo.activity_start_date": date(filing_year_envelope().floor, 1, 2).isoformat(),
 }
 
 
@@ -49,7 +51,7 @@ def import_one_transaction(
     """
     csv_content = (
         "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
-        f"2026-04-01,{payee},{reference},{amount},EUR,{marker}\n"
+        f"{date(filing_year_envelope().horizon, 4, 1).isoformat()},{payee},{reference},{amount},EUR,{marker}\n"
     )
     csv_path = tmp_path / "import.csv"
     csv_path.write_text(csv_content, encoding="utf-8", newline="\n")

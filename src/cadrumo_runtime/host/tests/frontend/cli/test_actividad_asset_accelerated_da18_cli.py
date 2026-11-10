@@ -26,6 +26,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.errors.error_codes import ErrorCategory, get_error_exit_code
 from cadrumo.core.i18n.render import tr
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context,
 )
@@ -59,7 +60,7 @@ from .runtime_profile_backend import runtime_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
-_T0 = datetime(2026, 2, 1, 9, 0, tzinfo=UTC)
+_T0 = datetime(1980, 2, 1, 9, 0, tzinfo=UTC)
 BASIS = Decimal("30000.00")
 _ACCELERATED_CODE = "REFUSED_ACTIVIDAD_ASSET_ACCELERATED_DA18_DEPRECIATION_NOT_COMPUTED"
 _ACCELERATED_MESSAGE_KEY = "errors.refused.refused_actividad_asset_accelerated_da18_depreciation_not_computed"
@@ -82,7 +83,7 @@ def seed_direct_normal_profile(root: Path, profile_id: str, *, residence: str = 
                         path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
                         value=False,
                     ),
-                    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+                    UserProfileFact(path="censo.activity_start_date", value=date(filing_year_envelope().floor, 1, 1)),
                     UserProfileFact(path="renta_filing.declaration_type", value="1"),
                     UserProfileFact(path="renta_taxpayer.sex", value="M"),
                     UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
