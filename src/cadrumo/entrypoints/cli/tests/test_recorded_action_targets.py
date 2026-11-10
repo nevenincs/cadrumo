@@ -12,7 +12,7 @@ import pytest
 
 from cadrumo_client.contracts.command_program import CommandProgram
 
-from ....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogueEntry
+from ....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogueEntry, lookup_action
 from ....application.operator_actions.models import (
     ActionArgumentBinding,
     ActionReference,
@@ -130,6 +130,18 @@ def test_the_recorded_resolver_prints_the_action_the_command_line_prints_for_eve
             entry.action_id
         )
         assert recorded.action.target_command_key == entry.target_command_key
+
+
+def test_the_opening_balance_action_resolves_to_the_live_leaf_with_its_required_inputs() -> None:
+    entry = lookup_action("operator.modelo.iva_wallet.seed")
+    served = resolve_recorded_precondition_action(_verdict(entry))
+    (leaf,) = operator_surface_target_reconciliation(entry.target_command_key).leaves
+
+    assert served.action is not None
+    assert served.action.target_command_key == "modelo.iva_wallet.seed"
+    assert served.action.cli_path == (leaf.live_leaf.program.executable_name, *leaf.live_leaf.canonical_cli_path)
+    assert leaf.input_schema is not None
+    assert set(served.missing_argument_names) == set(leaf.input_schema.required_input_names)
 
 
 def test_the_record_refuses_a_command_no_catalogue_action_targets() -> None:

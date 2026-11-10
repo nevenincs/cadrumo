@@ -2,9 +2,9 @@
 
 The refusal settles REFUSED with no effect and no new revision. Its recorded
 error detail, which another process reads, carries both the window's step to
-the IVA balance and the catalogue action every command-line and window consumer
-resolves against the live command tree, so neither is left with a refusal that
-names no way out.
+the IVA balance and the catalogue action, so neither is left with a refusal that
+names no way out. The live command leaf the action resolves to is asserted with
+the command-line tests.
 """
 
 from __future__ import annotations
@@ -31,7 +31,6 @@ from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.tests.cross_period_seeding import resolved_revision
 from ..adapter_composition_work_ports import build_work_lifecycle_ports
-from ..cli.operator_surface_reconciliation import operator_surface_target_reconciliation
 from .modelo_operation_test_support import MODELO_OPERATION_TEST_ACTOR
 from .profile_persistence.iva_wallet_engine_support import TARGET_YEAR
 from .registered_executor_case_support import OperationRuntimeCloseWitness, conformance_operation_runtime
@@ -122,9 +121,3 @@ def test_an_unseeded_wallet_refusal_names_the_opening_balance_command_to_every_c
     assert bound["period"].value == _PERIOD_CODE
     assert bound["amount"].status is ActionArgumentStatus.MISSING
     assert served.missing_argument_names == ("amount",)
-
-    # The action is a live command: the reconciled command tree owns that leaf at the served path.
-    (leaf,) = operator_surface_target_reconciliation(_OPENING_BALANCE_COMMAND_KEY).leaves
-    assert served.action.cli_path == (leaf.live_leaf.program.executable_name, *leaf.live_leaf.canonical_cli_path)
-    assert leaf.input_schema is not None
-    assert set(bound) == set(leaf.input_schema.required_input_names)
