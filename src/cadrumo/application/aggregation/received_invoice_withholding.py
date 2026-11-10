@@ -251,6 +251,10 @@ def received_invoice_withholding(
     ``captured_invoice_ids`` names invoices the per-perceptor store already holds
     an allocation of; their stored rows stand and they are not read again.
     Findings are those that concern ``modelo`` or whose modelo cannot be known.
+
+    Core types:
+    :class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`,
+    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
     live = _live(transactions)
     received = tuple(

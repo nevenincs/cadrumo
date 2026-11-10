@@ -98,7 +98,8 @@ def read_ledger_check(
         The verdict, the periods it covers, and the findings behind it.
 
     Core types:
-    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
+    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`,
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
     """
     link_inconsistencies = tuple(verify_invoice_repository_links(ports=ports, transactions=transactions))
     invoices = tuple(ports.invoice_reader.load())

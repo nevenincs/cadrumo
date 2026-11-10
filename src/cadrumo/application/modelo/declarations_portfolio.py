@@ -49,6 +49,9 @@ def project_declarations_portfolio(
     its calculation, amount and filing history never become trusted facts.
     ``profile`` narrows the new-declaration choices to the filing schedules
     its facts select.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
     """
     empty = project_declarations_workspace(
         operation=operation,

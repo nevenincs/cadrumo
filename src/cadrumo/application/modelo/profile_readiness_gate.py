@@ -223,6 +223,9 @@ def modelo_work_profile_baseline_paths(
     required decides what it marks, and which are missing decides what it
     counts. Deriving the mark from the missing set alone would unmark a field
     the moment it was filled in.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
     """
     return _modelo_work_baseline_paths(record, modelo=modelo)
 
@@ -473,6 +476,9 @@ def taxpayer_projection_missing_paths(
     Applicability is judged on that projection, so while any is unanswered
     applicability is unknown: a readiness surface reports the questions as
     missing and claims no applicability verdict either way.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
     """
     values = record_to_path_values(record)
     with _governed_facts_scope(operation):
@@ -494,6 +500,9 @@ def require_taxpayer_projection_facts_declared(
     are missing rather than guess either answer. A missing answer is the
     operator's to give, so it is refused here as a readiness gap whose door
     opens that question, before any projection or effect.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
     """
     missing_paths = taxpayer_projection_missing_paths(record, operation=operation)
     if not missing_paths:

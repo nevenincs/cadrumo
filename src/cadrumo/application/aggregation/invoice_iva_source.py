@@ -125,6 +125,9 @@ def partition_invoice_payments(
     A movement classified as a bien de inversión acquisition keeps carrying its
     own observation, and the invoices it pays leave the invoice source, because
     the bienes de inversión register pairs each record with that movement.
+
+    Core types:
+    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
     bucket_invoices = tuple(invoice for invoice in invoices if invoice.bucket_id in (None, bucket_id))
     movements = {movement.transaction_id: movement for movement in linked_movements.values()}
@@ -211,6 +214,9 @@ def linked_movements_for_period(
     The window's own linked rows are already decrypted. An invoice accruing in
     the period may be paid outside it, so its movements are read by id: their
     recorded deduction classification is that invoice's authority.
+
+    Core types:
+    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
     named = {transaction_id for invoice in invoices for transaction_id in invoice.linked_transaction_ids}
     in_window = [transaction for transaction in window if transaction.transaction_id in named]
@@ -226,6 +232,9 @@ def with_movement_side_links(invoices: Sequence[Invoice], *, window: Transaction
     A link is one fact stored on both records; a record written before the two
     were kept together can hold it on the movement alone. Reading either side
     keeps such a movement from carrying its own IVA beside its invoice's.
+
+    Core types:
+    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
     named: dict[str, set[str]] = {}
     for movement in window:
@@ -262,6 +271,9 @@ def invoices_missing_source_document(
     typed from the Libro de facturas is not that document. It is held when a
     stored document belongs to the invoice, or when a movement paying it carries
     registered purchase-invoice evidence.
+
+    Core types:
+    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
     linked = with_movement_side_links(invoices, window=window)
     missing: list[Invoice] = []
@@ -303,6 +315,9 @@ def period_invoice_iva_side(
     The one check calculation and ledger readiness share: the ledger says a
     period is ready only when calculation would find the same invoices, the
     same paying movements and the same findings.
+
+    Core types:
+    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
     invoices = with_movement_side_links(invoices, window=window)
     payments = partition_invoice_payments(
@@ -411,7 +426,11 @@ def invoice_iva_source(
 
 
 def cash_accounting_enrolled(record: UserProfileRecord | None, *, as_of: date) -> bool:
-    """Whether the profile declares the criterio de caja in force on ``as_of``."""
+    """Whether the profile declares the criterio de caja in force on ``as_of``.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+    """
     if record is None:
         return False
     from ..user_profile.projections import record_to_path_values
