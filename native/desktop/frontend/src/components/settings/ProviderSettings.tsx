@@ -40,8 +40,8 @@ type ConnectionStatus =
   | "off";
 
 /** Describe what is set, without claiming more than the reading says. A
- * keyless lane whose local engine the service measured as not running says
- * so, once it is otherwise usable. */
+ * keyless lane says what the service measured of its local engine, once it
+ * is otherwise usable. */
 function connectionStatus(
   provider: ProviderStatus,
   engine: AgentEngineHealth | null = null,
@@ -51,9 +51,11 @@ function connectionStatus(
   if (provider.readiness === "unusable") return "setup_needed";
   // An app connection needs its app, whatever it signs in with.
   if (provider.cliState === "not_installed") return "setup_needed";
-  // A connection with no key and no sign-in has nothing to set up.
+  // A connection with no key and no sign-in has nothing to set up. Where the
+  // service measured its engine, that measurement is its status.
   if (provider.authKind === "none") {
     if (engine?.state === "not_running") return "engine_not_running";
+    if (engine?.state === "running") return "ready";
     return provider.readiness === "ready" ? "ready" : "not_checked";
   }
   if (provider.authKind === "provider_sign_in_only") {

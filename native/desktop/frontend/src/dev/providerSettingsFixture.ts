@@ -101,11 +101,13 @@ export type ProviderSignInFixtureDetail = {
   status_cause?: string;
 };
 
-/** What a lane's app says of its state when the probe could not confirm it. */
+/** What a lane says of its state when the probe could not confirm it: its
+ * app's state and why, or that nothing has verified the lane. */
 export type ProviderLaneFixtureState = Pick<
   ProviderSettingsRecord,
   "cli_state" | "cli_state_cause" | "next_step"
->;
+> &
+  Partial<Pick<ProviderSettingsRecord, "readiness">>;
 
 /** The console command the made-up service serves, as the real one does. */
 const CONSOLE_SIGN_IN_COMMAND =
