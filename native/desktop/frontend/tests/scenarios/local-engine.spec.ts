@@ -1,11 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
 import { scenarioOnly } from "../support/agent";
+import { servedLocalLanes } from "../support/servedLocalLanes";
 import { label } from "../support/strings";
 
-// The local engine and placement choice in the agent's settings: Ollama is
-// the default and shows its lane alone; choosing llama.cpp stores the choice
-// at the revision read and shows its lane instead. The scenario host stands
-// in for the agent service.
+// The local engine and placement choice in the agent's settings: the bundled
+// llama.cpp is the default and shows its lane alone; choosing Ollama stores
+// the choice at the revision read and shows its lane instead. The scenario
+// host stands in for the agent service.
 
 test.beforeEach(() => {
   scenarioOnly("The scenario host stands in for the agent service.");
@@ -45,6 +46,10 @@ const modelRows = (target: Page, provider: string) =>
   );
 const calls = (target: Page) =>
   target.evaluate(() => window.__scenarioHostCalls ?? []);
+/** How many models the host lists on an engine's lane. */
+const listed = (engine: "llamacpp" | "ollama") =>
+  servedLocalLanes(engine).find((lane) => lane.id === `${engine}_api`)!
+    .recommended.length;
 
 test("the bundled llama.cpp is the default and shows its lane alone", async ({
   page: target,
@@ -61,7 +66,7 @@ test("the bundled llama.cpp is the default and shows its lane alone", async ({
       name: label("desktop.providers.local_placement_auto"),
     }),
   ).toBeChecked();
-  await expect(modelRows(target, "llamacpp")).toHaveCount(1);
+  await expect(modelRows(target, "llamacpp")).toHaveCount(listed("llamacpp"));
   await expect(modelRows(target, "ollama")).toHaveCount(0);
   await expect(
     settings(target).getByText(
@@ -84,7 +89,7 @@ test("choosing Ollama stores it at the revision read and shows its lane", async 
       name: label("desktop.providers.local_engine_ollama"),
     })
     .click();
-  await expect(modelRows(target, "ollama")).toHaveCount(1);
+  await expect(modelRows(target, "ollama")).toHaveCount(listed("ollama"));
   await expect(modelRows(target, "llamacpp")).toHaveCount(0);
   expect(await calls(target)).toContain(
     `agentLocalEngineChoose ollama auto ${read}`,
