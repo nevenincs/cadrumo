@@ -19,6 +19,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
 
@@ -26,8 +27,9 @@ from ...core.errors.hierarchy import CoreValidationError
 from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL
 from ...core.time.utc import parse_iso_datetime, validate_utc_aware
 from ...core.unit_proportion import is_unit_proportion
+from .classification_effects import fields_refused_by_classification
 from .enums import BusinessClassification, takes_business_share
-from .errors import TransactionValidationError
+from .errors import TransactionFiguresWithoutBusinessError, TransactionValidationError
 
 _NON_NEGATIVE_DECIMAL_HINTS = {
     "taxable_base": (
@@ -138,6 +140,42 @@ def validate_business_pct_coupling(
         return
     if pct is not None:
         raise TransactionValidationError("business_pct must be None unless classification is MIXED")
+
+
+def figures_without_business(state: BusinessClassification, values: Mapping[str, object]) -> tuple[str, ...]:
+    """Return, sorted, the fields ``values`` carries that a row classified ``state`` may not.
+
+    WHICH fields a classification refuses is
+    :func:`~domain.transactions.classification_effects.fields_refused_by_classification`,
+    read here rather than listed, so the write paths that drop them and the
+    check that refuses them name one set.
+    """
+    return tuple(sorted(name for name in fields_refused_by_classification(state) if values.get(name) is not None))
+
+
+def refusable_figures_of(state: BusinessClassification, row: object) -> dict[str, object]:
+    """Return ``row``'s value for every field a row classified ``state`` may refuse.
+
+    ``row`` is a transaction or a command that writes one; both name these
+    fields alike.
+    """
+    return {name: getattr(row, name) for name in fields_refused_by_classification(state)}
+
+
+def validate_figures_without_business(state: BusinessClassification, values: Mapping[str, object]) -> None:
+    """Refuse business figures on a row decided to have no business component.
+
+    A personal row is wholly outside the business, so a spending category, a
+    taxable base, IVA or any other business figure on it states something the
+    classification denies. A write that changes the classification drops them;
+    a write that would keep or add one is refused here.
+    """
+    refused = figures_without_business(state, values)
+    if refused:
+        raise TransactionFiguresWithoutBusinessError(
+            f"a {state} row carries no business figures; refused: {', '.join(refused)}",
+            context={"business_classification": str(state), "fields": ",".join(refused)},
+        )
 
 
 def normalize_identifier_tuple(value: tuple[str, ...]) -> tuple[str, ...]:

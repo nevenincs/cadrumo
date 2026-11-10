@@ -21,6 +21,7 @@ from ....domain.bienes_inversion.register import (
 )
 from ....domain.bienes_inversion.vocabulary import BienInversionKind
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.transactions.classification_effects import fields_refused_by_classification
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ...ledger.preflight import HeldTransactionCatalogue, LedgerPreflightIssueReason, preflight_transaction_catalogue
@@ -91,8 +92,12 @@ def _investment_claim(row: Transaction) -> Transaction:
         {
             "direction": TransactionDirection.INTERNAL_TRANSFER,
             "business_classification": BusinessClassification.PERSONAL,
+            **dict.fromkeys(fields_refused_by_classification(BusinessClassification.PERSONAL)),
         },
-        {"business_classification": BusinessClassification.PERSONAL},
+        {
+            "business_classification": BusinessClassification.PERSONAL,
+            **dict.fromkeys(fields_refused_by_classification(BusinessClassification.PERSONAL)),
+        },
     ],
 )
 def test_a_row_with_no_operation_does_not_prove_an_asset_from_another_period(

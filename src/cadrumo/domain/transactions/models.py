@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+import weakref
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from datetime import date, datetime
 from decimal import Decimal
@@ -76,11 +77,14 @@ from .lineage_models import (
 )
 from .m210_income_classification import M210IncomeClassification
 from .model_validation import (
+    figures_without_business,
     normalize_identifier_tuple,
+    refusable_figures_of,
     require_aware_datetime,
     validate_business_pct_coupling,
     validate_classified_by_shape,
     validate_confidence_range,
+    validate_figures_without_business,
     validate_non_negative_decimal,
 )
 from .own_accounts import OwnAccountId
@@ -225,13 +229,14 @@ def _derive_transaction_id_from_validated_data(data: dict[str, object]) -> str:
     return derive_transaction_id(raw, own_account_id=own_account_id if isinstance(own_account_id, str) else None)
 
 
-class _AuthenticatedStoredRow:
-    """Validation context for a row the secure store authenticated in the same call.
+class _StoredRow:
+    """Validation context for a row read back from the secure store.
 
     It names the admission checks such a row may skip. Validators recognise the
     context by identity of this private class, so no dictionary, flag or
-    ambient state reaches it: the single instance below is passed only by
-    :func:`validate_authenticated_stored_transaction_json`.
+    ambient state reaches it: the instances below are passed only by
+    :func:`validate_authenticated_stored_transaction_json` and
+    :func:`validate_stored_transaction_json`.
     """
 
     __slots__ = ("skipped_checks",)
@@ -242,17 +247,25 @@ class _AuthenticatedStoredRow:
 
 _DERIVED_TRANSACTION_ID_CHECK = "derived_transaction_id"
 
+_FIGURES_WITHOUT_BUSINESS_CHECK = "figures_without_business"
+
+#: A row written before personal rows were refused business figures may still
+#: hold them. Reading it never refuses: the reader withholds those figures
+#: (:func:`withhold_figures_without_business`) and the row's next write drops
+#: them, so only a new write meets the refusal.
+_STORED_ROW = _StoredRow(frozenset({_FIGURES_WITHOUT_BUSINESS_CHECK}))
+
 #: The derived-id re-hash re-proves what the store's binding already proves:
 #: the transaction id is the object key the AEAD authenticates, and the
 #: repository asserts the decoded id equals the addressed key. Every dated
 #: registry rule stays, because a stored row does not record the authority
 #: generation it was admitted under.
-_AUTHENTICATED_STORED_ROW = _AuthenticatedStoredRow(frozenset({_DERIVED_TRANSACTION_ID_CHECK}))
+_AUTHENTICATED_STORED_ROW = _StoredRow(frozenset({_DERIVED_TRANSACTION_ID_CHECK, _FIGURES_WITHOUT_BUSINESS_CHECK}))
 
 
 def _skips_admission_check(info: core_schema.ValidationInfo, check: str) -> bool:
     context = info.context
-    return isinstance(context, _AuthenticatedStoredRow) and check in context.skipped_checks
+    return isinstance(context, _StoredRow) and check in context.skipped_checks
 
 
 def validate_authenticated_stored_transaction_json[ModelT: BaseModel](model: type[ModelT], payload: bytes) -> ModelT:
@@ -274,6 +287,82 @@ def validate_authenticated_stored_transaction_json[ModelT: BaseModel](model: typ
         The validated model.
     """
     return model.model_validate_json(payload, context=_AUTHENTICATED_STORED_ROW)
+
+
+def validate_stored_transaction_json[ModelT: BaseModel](model: type[ModelT], payload: bytes) -> ModelT:
+    """Validate one stored transaction row in full, as a row the store holds rather than a new write.
+
+    Every admission check runs, including the derived-id re-hash, except the
+    refusal of business figures on a personal row: a stored row may predate it,
+    and reading it must not fail. A reader passes the decoded row through
+    :func:`withhold_figures_without_business` before anyone consumes it.
+
+    Args:
+        model: The model the stored bytes encode.
+        payload: The stored plaintext row bytes.
+
+    Returns:
+        The validated model.
+    """
+    return model.model_validate_json(payload, context=_STORED_ROW)
+
+
+def require_no_figures_without_business(transaction: Transaction) -> None:
+    """Refuse to write ``transaction`` when its classification refuses a figure it carries.
+
+    The row's own validation refuses the same thing when it is built; this is
+    the write boundary's check, for a row copied rather than built.
+    """
+    validate_figures_without_business(
+        transaction.business_classification, refusable_figures_of(transaction.business_classification, transaction)
+    )
+
+
+def withhold_figures_without_business(transaction: Transaction) -> Transaction:
+    """Return ``transaction`` as a reader may see it: without business figures its classification refuses.
+
+    A stored personal row written before the refusal existed can still carry a
+    spending category, a taxable base or another business figure. Every reader
+    sees those as absent, so no projection, calculation or export counts them,
+    and the row's next write persists their absence. The stored bytes are not
+    rewritten by reading. An unaffected row is returned as the same instance.
+
+    The copy is not re-validated: the stored row already passed every other
+    admission check, and absent figures are what any write of its
+    classification would carry.
+    """
+    figures = refusable_figures_of(transaction.business_classification, transaction)
+    present = figures_without_business(transaction.business_classification, figures)
+    if not present:
+        return transaction
+    read = transaction.model_copy(update=dict.fromkeys(present))
+    _remember_withheld_figures(read, {name: figures[name] for name in present})
+    return read
+
+
+_WITHHELD_FIGURES: dict[int, Mapping[str, object]] = {}
+"""The figures each read row had withheld, keyed by the identity of that read instance.
+
+Identity, not content: only the instance a reader produced carries the fact
+that its stored row held more, and an entry leaves with its instance. A write
+that replaces the row asks :func:`withheld_figures` of the row it read, so its
+own history can name what the write stops storing.
+"""
+
+
+def _remember_withheld_figures(read: Transaction, figures: Mapping[str, object]) -> None:
+    key = id(read)
+    weakref.finalize(read, _WITHHELD_FIGURES.pop, key, None)
+    _WITHHELD_FIGURES[key] = MappingProxyType(dict(figures))
+
+
+def withheld_figures(transaction: Transaction) -> Mapping[str, object]:
+    """Return the business figures the stored row behind this read instance held and the read withheld.
+
+    Empty for a row that held none, and for any instance a reader did not
+    produce, such as a copy or a row built from a request.
+    """
+    return _WITHHELD_FIGURES.get(id(transaction), MappingProxyType({}))
 
 
 def _effective_date_for_enum_projection(info: core_schema.ValidationInfo) -> date | None:
@@ -875,6 +964,8 @@ class Transaction(BaseModel):
         if not _skips_admission_check(info, _DERIVED_TRANSACTION_ID_CHECK):
             self._enforce_derived_transaction_id()
         self._enforce_business_pct()
+        if not _skips_admission_check(info, _FIGURES_WITHOUT_BUSINESS_CHECK):
+            self._enforce_figures_without_business()
         self._enforce_exemption_article_category()
         self._enforce_art_104_tres_exclusion_is_operator_declared()
         self._enforce_cash_accounting_axis()
@@ -895,6 +986,11 @@ class Transaction(BaseModel):
     def _enforce_business_pct(self) -> Self:
         """Enforce the classification/business percentage coupling."""
         validate_business_pct_coupling(self.business_classification, self.business_pct)
+        return self
+
+    def _enforce_figures_without_business(self) -> Self:
+        """Refuse business figures on a row decided to have no business component."""
+        require_no_figures_without_business(self)
         return self
 
     def _enforce_exemption_article_category(self) -> Self:

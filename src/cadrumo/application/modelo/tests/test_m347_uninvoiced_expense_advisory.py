@@ -152,7 +152,7 @@ def test_invoiced_personal_incoming_baseless_and_archived_rows_do_not_fire() -> 
     repository = _EjercicioCatalogue(
         (
             _transaction("invoiced", invoice_id="inv-0001"),
-            _transaction("personal", business_classification=BusinessClassification.PERSONAL),
+            _transaction("personal", business_classification=BusinessClassification.PERSONAL, taxable_base=None),
             _transaction("income", direction=TransactionDirection.INCOMING),
             _transaction("no-base", taxable_base=None),
             _transaction("zero-base", taxable_base=Decimal("0")),
