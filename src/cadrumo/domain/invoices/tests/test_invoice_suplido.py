@@ -23,12 +23,15 @@ import pytest
 from pydantic import ValidationError
 
 from ...calculations.registry.authority import bundled_indexed_authority
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...iva.schema import InvoiceKind, IvaCategory
 from ..decomposition import decompose_invoice
 from ..enums import IvaRate, PaymentStatus
 from ..models import Invoice, InvoiceLine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 
 @pytest.fixture(autouse=True)
@@ -72,7 +75,7 @@ def _invoice(**overrides: Any) -> Invoice:
     payload: dict[str, Any] = {
         "kind": InvoiceKind.ISSUED,
         "invoice_number": "2026/SU-1",
-        "issued_at": date(2026, 3, 15),
+        "issued_at": date(_YEAR, 3, 15),
         "counterparty_name": "Cliente SL",
         "counterparty_tax_id": "B00015016",
         "counterparty_country": "ES",
@@ -197,7 +200,7 @@ def test_the_suplido_converts_to_euro_with_the_rest_of_the_invoice() -> None:
     invoice = _invoice(
         currency="USD",
         fx_rate=Decimal("0.90"),
-        fx_rate_date=date(2026, 3, 15),
+        fx_rate_date=date(_YEAR, 3, 15),
         fx_rate_source=_FX_RATE_SOURCE_ID,
     )
 

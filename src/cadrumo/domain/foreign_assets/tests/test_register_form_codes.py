@@ -17,6 +17,9 @@ from ..register import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
+#: A holding start long before any ejercicio under test.
+_LONG_HELD = date(1980, 1, 1)
+
 _IDENTIFIER_BY_CLASS = {
     M720AssetClassCode.CUENTA: M720AssetIdentifier(scheme=M720IdentifierScheme.IBAN, value="DE89370400440532013000"),
     M720AssetClassCode.VALOR: M720AssetIdentifier(scheme=M720IdentifierScheme.ISIN, value="US0378331005"),
@@ -37,7 +40,7 @@ def _admitted(asset_class: M720AssetClassCode, subclave: int | None) -> bool:
             country_code="DE",
             identifier=_IDENTIFIER_BY_CLASS[asset_class],
             description="synthetic asset",
-            held_since=date(2015, 1, 1),
+            held_since=_LONG_HELD,
         )
     except pydantic.ValidationError:
         return False

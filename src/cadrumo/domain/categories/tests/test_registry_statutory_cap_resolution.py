@@ -19,6 +19,7 @@ from ...calculations.registry.facts.payloads import MappingFactEntry, MappingFac
 from ...calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...calculations.registry.facts.variants import FactSelector
 from ...calculations.registry.schema_base import DateAxis
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..errors import CategoryValidationError
 from ..registry import CATEGORY_PROFILE_FACT_ID, profile_from_authority_fact, resolve_category_profiles
@@ -26,6 +27,8 @@ from ..spending_category import SpendingCategory
 from ..spending_category_catalogue import require_spending_category
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 _SUPPORTED_YEARS = PublishedGovernedFactSource().supported_filing_years().years
 
@@ -80,22 +83,22 @@ def test_year_referenced_cap_below_the_supported_floor_is_refused(operation: Pin
 
 
 def test_unknown_cap_variant_field_is_refused_not_dropped(operation: PinnedAuthorityOperation) -> None:
-    fact = _resolved_profile_fact(require_spending_category("manutencion_dietas_nacional"), 2026, operation)
+    fact = _resolved_profile_fact(require_spending_category("manutencion_dietas_nacional"), _YEAR, operation)
     tampered = _with_entries(
         fact,
         (*fact.payload.entries, MappingFactEntry(key="statutory_cap_variant.sin-pernocta.eur_per_week", value="1")),
     )
 
     with pytest.raises(CategoryValidationError, match="unknown cap variant entry"):
-        profile_from_authority_fact(tampered, operation=operation, year=2026)
+        profile_from_authority_fact(tampered, operation=operation, year=_YEAR)
 
 
 def test_cap_variant_without_an_amount_is_refused(operation: PinnedAuthorityOperation) -> None:
-    fact = _resolved_profile_fact(require_spending_category("manutencion_dietas_nacional"), 2026, operation)
+    fact = _resolved_profile_fact(require_spending_category("manutencion_dietas_nacional"), _YEAR, operation)
     stripped = _with_entries(
         fact,
         tuple(e for e in fact.payload.entries if e.key != "statutory_cap_variant.con-pernocta.eur_per_day"),
     )
 
     with pytest.raises(CategoryValidationError, match="declares no amount"):
-        profile_from_authority_fact(stripped, operation=operation, year=2026)
+        profile_from_authority_fact(stripped, operation=operation, year=_YEAR)
