@@ -42,6 +42,14 @@ async function find(target: Page, words: string) {
   await expect(dataRows(target).first()).toBeVisible();
 }
 
+/** Searches every period: the received fee is dated outside the quarter the
+ * page opens on, so the search offers it under "more in other periods". */
+async function findInAnyPeriod(target: Page, words: string) {
+  await search(target).fill(words);
+  await page(target).locator(".ledger-elsewhere").getByRole("button").click();
+  await expect(dataRows(target).first()).toBeVisible();
+}
+
 async function typeInto(target: Page, cell: Locator, value: string) {
   await cell.click();
   await target.keyboard.press("Enter");
@@ -136,7 +144,7 @@ test("the IVA preset's save refusal names the IRPF category and its door reveals
 }) => {
   await openLedger(target);
   await usePreset(target, "iva");
-  await find(target, "estudio garcia");
+  await findInAnyPeriod(target, "estudio garcia");
   const row = rowOf(target, "ESTUDIO GARCIA").first();
   // A received invoice settled net of the IRPF withheld on it: the cash is
   // below the base plus the cuota, and only the IRPF category says why.
@@ -186,7 +194,7 @@ test("naming the IRPF category clears the refusal and the row saves", async ({
 }) => {
   await openLedger(target);
   await usePreset(target, "everything");
-  await find(target, "estudio garcia");
+  await findInAnyPeriod(target, "estudio garcia");
   const row = rowOf(target, "ESTUDIO GARCIA").first();
   await typeInto(target, cellOf(row, "taxable_base"), "2000,00");
   await typeInto(target, cellOf(row, "iva_rate"), "21");
@@ -208,7 +216,7 @@ test("an IVA deduction kind is reviewed by its served word, never by its stored 
 }) => {
   const kind = "application.ledger.entry_options.deduction_fact_kind";
   await openLedger(target);
-  await find(target, "estudio garcia");
+  await findInAnyPeriod(target, "estudio garcia");
   const row = rowOf(target, "ESTUDIO GARCIA").first();
   await row.locator("[data-column=status]").click();
   const panel = target.locator("aside.ledger-panel");
@@ -232,7 +240,7 @@ test("the live region says what the grid holds now, not what it held before the 
 }) => {
   await openLedger(target);
   await usePreset(target, "iva");
-  await find(target, "estudio garcia");
+  await findInAnyPeriod(target, "estudio garcia");
   const row = rowOf(target, "ESTUDIO GARCIA").first();
   await typeInto(target, cellOf(row, "taxable_base"), "1000,00");
   // A keyboard move over the staged cell says it is unsaved.
