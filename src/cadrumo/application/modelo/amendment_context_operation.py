@@ -22,6 +22,7 @@ from ...domain.calculations.registry.amendment_regime_policy import permitted_am
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.query_reports import ModeloCasillaRow
+from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_amendment import (
     AMENDMENT_DECLARATION_KINDS,
     m303_rectificativa_motive_is_applicable,
@@ -139,12 +140,10 @@ def _filing_unit(
     return load_profile_filing_record(bundle, profile_id=payload.profile_id, filing_record_id=payload.filing_record_id)
 
 
-def _capture(
-    payload: ModeloWorkAmendmentContextRequest,
-    bundle: VerificationRepositoryBundle,
-    context: OperationExecutorContext,
-) -> ModeloWorkAmendmentContextProjection:
-    record, unit = _filing_unit(payload, bundle)
+def _saved_revision(
+    record: ModeloRecord, unit: WorkUnit, bundle: VerificationRepositoryBundle, context: OperationExecutorContext
+) -> CalculationRevision:
+    """The calculation revision the filing record kept, refused unless it belongs to the unit's own scope."""
     revision = bundle.calculation.load(operation=context.authority_operation).get(record.calculation_revision_id)
     if revision is None:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
@@ -158,23 +157,45 @@ def _capture(
         or saved_scope.revision_id != unit.revision_id
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-    snapshot = modelo_form_snapshot(
-        context.authority_operation, unit.modelo, unit.filing_year, unit.period, saved_scope.revision_id
-    )
+    return revision
+
+
+def _rectificativa_motive_applicable(
+    revision: CalculationRevision, unit: WorkUnit, context: OperationExecutorContext
+) -> bool:
     evidence = revision.filing_instance_evidence
-    motive_applicable = False
-    if evidence is not None and str(unit.modelo) == form_for_role("iva.periodic"):
-        regimen = evidence.m303.regimen_simplificado.regimen_snapshot
-        motive_applicable = m303_rectificativa_motive_is_applicable(
-            registry_revision_id=regimen.registry_revision_id,
-            record_design=regimen.record_design,
-            operation=context.authority_operation,
-        )
+    if evidence is None or str(unit.modelo) != form_for_role("iva.periodic"):
+        return False
+    regimen = evidence.m303.regimen_simplificado.regimen_snapshot
+    return m303_rectificativa_motive_is_applicable(
+        registry_revision_id=regimen.registry_revision_id,
+        record_design=regimen.record_design,
+        operation=context.authority_operation,
+    )
+
+
+def _permitted_kinds(unit: WorkUnit, context: OperationExecutorContext) -> tuple[FilingDeclarationKind, ...]:
     with validating_governed_facts(context.authority_operation):
         permitted_values = permitted_amendment_kind_values_for_period(str(unit.modelo), unit.period)
     permitted_kinds = tuple(kind for kind in AMENDMENT_DECLARATION_KINDS if kind.value in permitted_values)
     if frozenset(kind.value for kind in permitted_kinds) != permitted_values:
         raise ValueError("amendment context contains an unknown permitted kind")
+    return permitted_kinds
+
+
+def _capture(
+    payload: ModeloWorkAmendmentContextRequest,
+    bundle: VerificationRepositoryBundle,
+    context: OperationExecutorContext,
+) -> ModeloWorkAmendmentContextProjection:
+    record, unit = _filing_unit(payload, bundle)
+    revision = _saved_revision(record, unit, bundle, context)
+    saved_scope = revision.registry_snapshot_ref
+    snapshot = modelo_form_snapshot(
+        context.authority_operation, unit.modelo, unit.filing_year, unit.period, saved_scope.revision_id
+    )
+    motive_applicable = _rectificativa_motive_applicable(revision, unit, context)
+    permitted_kinds = _permitted_kinds(unit, context)
     calculation = ModeloCalculationSnapshot.from_revision(
         revision, work_unit=unit, operation=context.authority_operation
     )

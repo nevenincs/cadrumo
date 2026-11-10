@@ -79,18 +79,30 @@ class ModeloWorkFilePublicResultV2(BaseModel):
 
     @model_validator(mode="after")
     def _record_summary(self) -> Self:
-        if (
-            self.filing_record_id != self.record.filing_record_id
-            or self.work_unit_id != self.record.work_unit_id
-            or self.calculation_revision_id != self.record.calculation_revision_id
-            or self.advisories.calculation_revision_id != self.calculation_revision_id
-            or self.advisories.work_unit_id != self.work_unit_id
-            or self.advisories.modelo != self.record.modelo
-            or self.advisories.filing_year != self.record.filing_year
-            or self.advisories.period != self.record.period.to_period().registry_token
-        ):
+        if not (_matches_record(self) and _advisories_match(self)):
             raise ValueError("filing summary does not match its committed record")
         kept = self.record.filing_timeliness
         if self.filing_timeliness is not (kept if kept is not None else FilingTimeliness.UNKNOWN):
             raise ValueError("filing timeliness does not match the posture the record kept")
         return self
+
+
+def _matches_record(result: ModeloWorkFilePublicResultV2) -> bool:
+    record = result.record
+    return (
+        result.filing_record_id == record.filing_record_id
+        and result.work_unit_id == record.work_unit_id
+        and result.calculation_revision_id == record.calculation_revision_id
+    )
+
+
+def _advisories_match(result: ModeloWorkFilePublicResultV2) -> bool:
+    advisories = result.advisories
+    record = result.record
+    return (
+        advisories.calculation_revision_id == result.calculation_revision_id
+        and advisories.work_unit_id == result.work_unit_id
+        and advisories.modelo == record.modelo
+        and advisories.filing_year == record.filing_year
+        and advisories.period == record.period.to_period().registry_token
+    )
