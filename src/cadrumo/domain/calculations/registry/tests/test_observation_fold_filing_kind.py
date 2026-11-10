@@ -32,13 +32,14 @@ from ..observation_fold import (
     gather_observed_requirement_values,
 )
 from ..relations import RegistryFoldRequirement, relation_source_requirements
+from .authored_editions import newest_authored_edition
 from .published_authority import published_revision, published_selected_revision_id, published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _C18 = validated_casilla_id("18", surface="test_observation_fold_filing_kind.casilla")
 _C19 = validated_casilla_id("19", surface="test_observation_fold_filing_kind.casilla")
-_YEAR = 2025
+_YEAR = newest_authored_edition("100")
 _ORIGINAL = observed_filing_kind_for_local_revision(FilingDeclarationKind.ORIGINAL, source_locator="local-filing:q")
 _COMPLEMENTARIA = observed_filing_kind_for_local_revision(
     FilingDeclarationKind.COMPLEMENTARIA, source_locator="local-filing:q"

@@ -14,24 +14,25 @@ from cadrumo.domain.calculations.registry.schema_formula import FormulaExpressio
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..conformance.registry_schema_support import committed_modelo
+from .authored_edition_support import authored_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _modelo_revision(
+def _newest_revision(
     modelo_id: str,
-    revision_id: str,
     *,
     grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
 ):
+    newest = authored_revisions(modelo_id)[-1]
     modelo, catalogues = committed_modelo(modelo_id)
     return build_snapshot(
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=newest.valid_from.year,
         period="0A",
-        revision_id=revision_id,
+        revision_id=str(newest.id),
         grade=grade,
     ).revision
 
@@ -39,7 +40,7 @@ def _modelo_revision(
 def test_natural_person_route_has_irpf_tarifa_bracket_schedules() -> None:
     """Modelo 100 carries the IRPF bracket tables for a natural person."""
 
-    revision = _modelo_revision("100", "2025")
+    revision = _newest_revision("100")
     parameters = {parameter.id: parameter for parameter in revision.parameters}
 
     expected = {
@@ -96,15 +97,10 @@ def test_natural_person_route_has_irpf_tarifa_bracket_schedules() -> None:
 def test_legal_entity_route_has_is_rate_schedule_by_entity_form() -> None:
     """Modelo 200 carries the LIS Art. 29 rate schedule for legal entities."""
 
-    # The helper asks for filing year 2025, which the 2024/2025 split made a
-    # coordinate the 2024 revision no longer covers -- and a revision_id narrows
-    # the law-determined pick rather than selecting it, so naming the earlier
-    # era here refuses instead of quietly answering from the wrong year.
-    revision = _modelo_revision(
-        "200",
-        "2025-y-siguientes",
-        grade=RegistryAuthorityGrade.CALCULATION,
-    )
+    # A revision_id narrows the law-determined pick rather than selecting it, so
+    # the filing year must be one the named revision covers: the helper asks for
+    # the newest edition's own first exercise, never an earlier era's.
+    revision = _newest_revision("200", grade=RegistryAuthorityGrade.CALCULATION)
     parameters = {parameter.id: parameter for parameter in revision.parameters}
 
     scalar_rates = {

@@ -24,6 +24,7 @@ from ...domain.user_profile.errors import UserProfileNotFoundError
 from ...domain.user_profile.labels import profile_field_label
 from ...domain.user_profile.schema import ProfileFieldDefinition, ProfileSchemaDefinition
 from ...domain.user_profile.values import UserProfileRecord, section_field_key
+from ..modelo.casilla_help import legal_ref_id_citation
 from .commands import (
     ProfilePreflightReport,
     ProfilePreflightRequirement,
@@ -204,7 +205,8 @@ def format_profile_preflight_requirement(requirement: ProfilePreflightRequiremen
     citation when none is declared.
     """
     if requirement.legal_refs:
-        return f"{requirement.label} ({', '.join(requirement.legal_refs)})"
+        citations = ", ".join(legal_ref_id_citation(ref) for ref in requirement.legal_refs)
+        return f"{requirement.label} ({citations})"
     return requirement.label
 
 

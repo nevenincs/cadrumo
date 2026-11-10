@@ -97,12 +97,12 @@ _AGGREGATION_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         AggregationPreconditionCondition.PER_MODELO_MODELO_SUPPORTED,
         (("modelo", "modelo"), ("supported_modelos", "'|'.join(supported)")),
     ),
-    "modelo_bindings_retenciones:_empty_window_refusal:1": _contract(
+    "modelo_bindings_retenciones:_refusal_with_words:1": _contract(
         AggregationPreconditionCondition.RETENCIONES_OBSERVATIONS_PRESENT,
         (
-            ("modelo", "str(context.modelo)"),
-            ("filing_year", "str(context.filing_year)"),
-            ("period", "context.period.registry_token"),
+            ("modelo", "str(source.modelo)"),
+            ("filing_year", "str(source.filing_year)"),
+            ("period", "source.period.registry_token"),
             ("source_kind", "'retenciones_aggregation'"),
         ),
     ),

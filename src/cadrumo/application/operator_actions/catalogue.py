@@ -336,6 +336,22 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             target_command_key="ledger.classify",
         ),
         ActionCatalogueEntry(
+            action_id="operator.ledger.classify.irpf_category",
+            target_command_key="ledger.classify",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="irpf_category",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="irpf_category",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="transaction_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="transaction_id",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.ledger.review",
             target_command_key="ledger.review",
         ),
@@ -420,6 +436,27 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
                     argument_name="year",
                     source=ActionArgumentSource.VERDICT_CONTEXT,
                     source_key="year",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.modelo.iva_wallet.seed",
+            target_command_key="modelo.iva_wallet.seed",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="amount",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="amount",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="filing_year",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="filing_year",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="period",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="period",
                 ),
             ),
         ),

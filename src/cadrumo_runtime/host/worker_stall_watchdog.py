@@ -11,9 +11,14 @@ The dump is frames only: thread ids, file paths, function names and line
 numbers, never a local or an argument. It goes to a file named for the worker's
 process id in the diagnostic log directory, created owner-only (``0600`` where
 the platform has modes; on Windows the log directory's own access list applies,
-as it does to the log file). A worker that never stalls leaves no file. The
-file stops being armed once it holds ``MAX_DUMP_BYTES``, and a new watchdog
-keeps at most ``RETAINED_DUMP_FILES`` dump files in the directory.
+as it does to the log file). ``faulthandler``'s native thread writes through a
+descriptor that must exist before the stall, since nothing in a stalled worker
+can create one, so the file is opened when the timer is armed and given one header line, so
+that a file without a stack says why. A worker
+that never stalls leaves no file: a clean exit removes it, and a new watchdog
+removes the header-only file of a worker that no longer runs. The file stops being
+armed once it holds ``MAX_DUMP_BYTES``, and a new watchdog keeps at most
+``RETAINED_DUMP_FILES`` dump files in the directory.
 
 ``faulthandler`` has one such timer per process, so this is the only user of it
 in a worker.
@@ -29,12 +34,14 @@ import sys
 import time
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager, suppress
+from datetime import UTC, datetime
 from io import FileIO
 from pathlib import Path
 from typing import Final
 
 from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from cadrumo.core.logging import default_log_file_path, get_logger
+from cadrumo.core.pid_liveness import pid_is_alive
 
 _LOGGER = get_logger(__name__)
 
@@ -48,6 +55,29 @@ RETAINED_DUMP_FILES: Final = 8
 """Dump files, this worker's included, kept in the log directory."""
 DUMP_NAME_PREFIX: Final = "profile-worker-stall-"
 DUMP_NAME_SUFFIX: Final = ".txt"
+HEADER_PREFIX: Final = "armed "
+HEADER_NOTE: Final = "; a stack follows only if the worker stalled"
+"""The first line written when the timer arms; a file holding only this line records no stall."""
+_HEADER_LIMIT: Final = 256
+
+
+def _header_line() -> bytes:
+    stamp = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return f"{HEADER_PREFIX}{stamp} pid {os.getpid()}{HEADER_NOTE}\n".encode("ascii")
+
+
+def _header_only(path: Path) -> bool:
+    """Whether the file is empty or holds nothing but the arming header line."""
+    with path.open("rb") as handle:
+        data = handle.read(_HEADER_LIMIT + 1)
+    if not data:
+        return True
+    return (
+        len(data) <= _HEADER_LIMIT
+        and data.startswith(HEADER_PREFIX.encode("ascii"))
+        and data.endswith(b"\n")
+        and data.count(b"\n") == 1
+    )
 
 
 class _StallWatchdog:
@@ -69,7 +99,8 @@ class _StallWatchdog:
         self._stall_seconds = stall_seconds
         self._tick_seconds = tick_seconds
         self._max_bytes = max_bytes
-        self._size = 0
+        self._header_size = os.fstat(stream.fileno()).st_size
+        self._size = self._header_size
         self._ticked = time.monotonic()
         self._next: asyncio.TimerHandle | None = None
 
@@ -89,10 +120,10 @@ class _StallWatchdog:
         faulthandler.cancel_dump_traceback_later()
         with suppress(OSError):
             self._report_new_dump()
-        size = self._size
+        stalled = self._size > self._header_size
         with suppress(OSError):
             self._stream.close()
-        if size == 0:
+        if not stalled:
             with suppress(OSError):
                 self._path.unlink()
 
@@ -142,11 +173,27 @@ class _StallWatchdog:
 def _open_dump(path: Path) -> FileIO:
     flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_APPEND
     flags |= os.O_BINARY if sys.platform == "win32" else os.O_NOFOLLOW | os.O_CLOEXEC
-    return FileIO(os.open(path, flags, 0o600), "a")
+    stream = FileIO(os.open(path, flags, 0o600), "a")
+    try:
+        stream.write(_header_line())
+    except BaseException:
+        stream.close()
+        raise
+    return stream
+
+
+def _owner_has_gone(name: str) -> bool:
+    """Whether the process named by a dump file's name no longer runs."""
+    digits = name.removeprefix(DUMP_NAME_PREFIX).removesuffix(DUMP_NAME_SUFFIX)
+    return digits.isdecimal() and not pid_is_alive(int(digits))
 
 
 def _prune(directory: Path, keep: Path) -> None:
-    """Remove the oldest dump files so that with ``keep`` at most ``RETAINED_DUMP_FILES`` remain."""
+    """Remove stale dump files so that with ``keep`` at most ``RETAINED_DUMP_FILES`` remain.
+
+    A file holding only the header (or nothing) whose worker has gone never held a stall, so it is removed
+    whatever its age; the rest are removed oldest first.
+    """
     found: list[tuple[float, Path]] = []
     with suppress(OSError), os.scandir(directory) as entries:
         for entry in entries:
@@ -154,7 +201,11 @@ def _prune(directory: Path, keep: Path) -> None:
                 path = Path(entry.path)
                 if path != keep:
                     with suppress(OSError):
-                        found.append((entry.stat().st_mtime, path))
+                        status = entry.stat()
+                        if _owner_has_gone(entry.name) and (status.st_size == 0 or _header_only(path)):
+                            path.unlink()
+                        else:
+                            found.append((status.st_mtime, path))
     found.sort(reverse=True)
     # A file another worker still holds open cannot be removed on Windows; the refusal is not an error here.
     for _, path in found[RETAINED_DUMP_FILES - 1 :]:

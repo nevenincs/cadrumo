@@ -58,6 +58,7 @@ from .persistence.journal import (
 from .refusal_evidence import OperationExecutorResult, OperationRefusalEvidence
 from .registry import OperationReconciliationPolicy, OperationRegistry
 from .secret_submission import BoundEphemeralSecretAccess, OperationSecretRequirement, zeroize_secret_buffer
+from .settlement_snapshot import settlement_log_level
 from .supervisor_host import SupervisorHost
 from .supervisor_refusal import validated_refusal_receipt
 from .typed_financial_operand_context import BoundTypedFinancialOperandAccess
@@ -423,7 +424,8 @@ class SupervisorExecutionMixin(SupervisorHost):
         )
         if registered is not None and registered.category is ErrorCategory.REFUSED:
             # Log only registered lifecycle facts; the exception may carry private operands.
-            _log.warning(
+            _log.log(
+                settlement_log_level(OperationTerminalCondition.REFUSED, snapshot.effect),
                 "operation refused definition=%s operation=%s code=%s raising_frame=%s",
                 snapshot.identity.definition_id,
                 snapshot.identity.operation_id,

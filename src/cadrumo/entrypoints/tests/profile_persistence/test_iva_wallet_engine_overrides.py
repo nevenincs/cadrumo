@@ -23,7 +23,7 @@ from cadrumo.application.calculations.observations_repository import Calculation
 from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from cadrumo.application.modelo.iva_wallet_refusal import ModeloIvaWalletReconciliationBlocked
 from cadrumo.application.modelo.iva_wallet_seed import (
     ModeloIvaWalletOverrideFreshWalletError,
     ModeloIvaWalletOverrideSealedError,

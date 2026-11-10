@@ -347,21 +347,6 @@
           },
           {
             "action": null,
-            "code": "modelo.work.calculate.source_advisory",
-            "context": {
-              "binding_source": "ledger_iva_aggregation",
-              "detail": "2 ledger row(s) were placed in this period on their bank movement date because no operation date is recorded: c866d7043d51, fcd9d7ce87ab. LIVA art. 75 fixes the devengo by the operation, not the collection, so a sale near a period end can belong to the previous one",
-              "level": "check",
-              "reason": "iva_row_placed_on_movement_date",
-              "remedy": "Record the operation date on each row. For a pago anticipado, art. 75.Dos dates the amount received at its collection, so record the collection date",
-              "resolver_id": "ledger_iva_aggregation",
-              "source_kind": "ledger_iva_aggregation"
-            },
-            "message": "Some ledger rows have no operation date, so their bank date chose the IVA period. IVA falls due when the operation takes place, not when the money moves.",
-            "severity": "warning"
-          },
-          {
-            "action": null,
             "code": "config.login.session_not_persisted",
             "context": null,
             "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
@@ -422,7 +407,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491",
+          "calculation_revision_id": "c21c66281fbc7c81345f4bea7f14d97afc29dffc4c0adce54d7d80642cdab61e",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -989,7 +974,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision c21c66281fbc7c81345f4bea7f14d97afc29dffc4c0adce54d7d80642cdab61e (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -1000,7 +985,7 @@
               "parent_source_ref": null,
               "resolved_binding_source": "ledger_iva_aggregation",
               "resolver_id": "ledger_iva_aggregation",
-              "source_ref": "transaction:c866d7043d518f43f8d261b5c7d6437f1363d6dc16be0d68184bc64e5b0a9860"
+              "source_ref": "<object-key>"
             },
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -1011,7 +996,7 @@
               "parent_source_ref": null,
               "resolved_binding_source": "ledger_iva_aggregation",
               "resolver_id": "ledger_iva_aggregation",
-              "source_ref": "transaction:fcd9d7ce87ab885ff0fdb3b1f1041c2640b0c4e2927f43b79da5d9d4fcd36990"
+              "source_ref": "<object-key>"
             },
             {
               "contributor_binding_source": "prorrata_regularizacion",
@@ -1095,21 +1080,6 @@
           },
           {
             "action": null,
-            "code": "modelo.work.verify.finding.advisory",
-            "context": {
-              "binding_id": "fcd9d7ce87ab885ff0fdb3b1f1041c2640b0c4e2927f43b79da5d9d4fcd36990",
-              "diagnostic_reason_code": "missing_transaction_evidence",
-              "kind": "advisory",
-              "legal_refs": "ley-37-1992:art-97, rd-1619-2012:art-2",
-              "severity": "warning",
-              "source_kind_code": "output_iva_evidence",
-              "source_refs": "aeat-modelo-303-procedure, boe-modelo-303-2008-form, aeat-dr-303-2026, aeat-dr-303-2024-early, aeat-dr-303-2024-late, boe-modelo-303-2024-form-pdf"
-            },
-            "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
-            "severity": "warning"
-          },
-          {
-            "action": null,
             "code": "config.login.session_not_persisted",
             "context": null,
             "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
@@ -1117,7 +1087,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491",
+          "calculation_revision_id": "c21c66281fbc7c81345f4bea7f14d97afc29dffc4c0adce54d7d80642cdab61e",
           "completeness_status": "complete",
           "findings": [
             {
@@ -1135,26 +1105,6 @@
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ]
-            },
-            {
-              "action": null,
-              "casilla_id": null,
-              "expectation_id": null,
-              "kind": "advisory",
-              "legal_refs": [
-                "ley-37-1992:art-97",
-                "rd-1619-2012:art-2"
-              ],
-              "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
-              "severity": "warning",
-              "source_refs": [
-                "aeat-modelo-303-procedure",
-                "boe-modelo-303-2008-form",
-                "aeat-dr-303-2026",
-                "aeat-dr-303-2024-early",
-                "aeat-dr-303-2024-late",
-                "boe-modelo-303-2024-form-pdf"
-              ]
             }
           ],
           "granted_verificado_completo": true,
@@ -1168,7 +1118,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "b617c4e32d514330bf02f4f146204bd9c46b162f6075720ea82428541c244ca8",
+          "verification_report_id": "5afec6a0cb24f91228321aed3331b246df11fdadec1d4d49cb1a5aec7867cab6",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -1200,7 +1150,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.file\nfiling_record_id\t564a96d267f4add8b38e4b5710ff181605f782ad64ebc59990fd931081c6b3cd\nwork_unit_id\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\ncalculation_revision_id\tc30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491\nbucket_id\t<bucket-id>\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nfiled_at\t2026-04-01T09:00:00+00:00\nfiled_by\tdocs-sequence-sandbox\nstatus\tvigente\norigin\tlocal\nconfirmation\tpendiente\ndeclaration_kind\toriginal\naeat_accepted\tfalse\nkind\tinternal_filing\nlive_submission\tfalse\nfiling_timeliness\ten_plazo\nfiling_disambiguation\tThis filing is internal only and is not submitted to the AEAT.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "operation\tmodelo.work.file\nfiling_record_id\t5c5cfbc0f4bc4e89118793da44778f46f2622d1285565544d36849ac638930a2\nwork_unit_id\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\ncalculation_revision_id\tc21c66281fbc7c81345f4bea7f14d97afc29dffc4c0adce54d7d80642cdab61e\nbucket_id\t<bucket-id>\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nfiled_at\t2026-04-01T09:00:00+00:00\nfiled_by\tdocs-sequence-sandbox\nstatus\tvigente\norigin\tlocal\nconfirmation\tpendiente\ndeclaration_kind\toriginal\naeat_accepted\tfalse\nkind\tinternal_filing\nlive_submission\tfalse\nfiling_timeliness\ten_plazo\nfiling_disambiguation\tThis filing is internal only and is not submitted to the AEAT.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -1257,10 +1207,10 @@
           }
         ],
         "result": {
-          "bucket_event_id": "f03d599d1b5b5764718f2bc8cf9746fb7e71d6e20461e6dd5d9ce61d0ca8b682",
+          "bucket_event_id": "8b9fa365a62bb6c0ad77f0bd15d22c97562456c0626e9ec8fe7caa90119e72de",
           "bucket_id": "<bucket-id>",
           "byte_size": 2948,
-          "calculation_revision_id": "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491",
+          "calculation_revision_id": "c21c66281fbc7c81345f4bea7f14d97afc29dffc4c0adce54d7d80642cdab61e",
           "file_sha256": "99bf280fa20103b0a13b53129ca4fc7563f4226b9a4a0fe5ae6b5e64c26666e0",
           "filing_year": 2026,
           "format": "fichero-boe",

@@ -114,7 +114,7 @@ def test_registry_formula_runtime_calculates_committed_modelo_in_dependency_orde
     result = calculate_registry_snapshot(
         committed_modelo_130_snapshot,
         inputs=_ordinary_quarter_inputs(),
-        date_context={"filing_period": date(2026, 3, 31)},
+        date_context={"filing_period": date(committed_modelo_130_snapshot.filing_year, 3, 31)},
         enum_binding_values=M130_NORMAL_MODALITY,
         binding_values={
             PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
@@ -155,7 +155,7 @@ def test_registry_formula_runtime_rejects_inputs_for_computed_casillas(
         calculate_registry_snapshot(
             committed_modelo_130_snapshot,
             inputs={M130_PAGO_FRACCIONADO_CASILLA: Decimal("6000")},
-            date_context={"filing_period": date(2026, 3, 31)},
+            date_context={"filing_period": date(committed_modelo_130_snapshot.filing_year, 3, 31)},
             enum_binding_values=M130_NORMAL_MODALITY,
             binding_values={PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000")},
         )
@@ -238,7 +238,7 @@ def test_registry_formula_runtime_preserves_signed_intermediate_results_from_off
             M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
             M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
         },
-        date_context={"filing_period": date(2026, 3, 31)},
+        date_context={"filing_period": date(committed_modelo_130_snapshot.filing_year, 3, 31)},
         enum_binding_values=M130_NORMAL_MODALITY,
         binding_values={
             PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
@@ -257,7 +257,7 @@ def test_registry_formula_runtime_calculates_income_reduction_from_previous_year
     result = calculate_registry_snapshot(
         committed_modelo_130_snapshot,
         inputs=_ordinary_quarter_inputs(),
-        date_context={"filing_period": date(2026, 3, 31)},
+        date_context={"filing_period": date(committed_modelo_130_snapshot.filing_year, 3, 31)},
         enum_binding_values=M130_NORMAL_MODALITY,
         binding_values={
             PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("9500"),

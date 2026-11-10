@@ -39,9 +39,11 @@ from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Input
 from textual.worker import WorkerCancelled
 
-from cadrumo.application.modelo.work_form_models import (
+from cadrumo.application.modelo.work_form_field_vocabulary import (
     TYPED_EDITABILITIES,
     ModeloFormOrigin,
+)
+from cadrumo.application.modelo.work_form_models import (
     ModeloWorkForm,
     confirmable,
 )

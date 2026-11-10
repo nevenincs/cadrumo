@@ -6,6 +6,7 @@ from typing import Final
 
 from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
 from cadrumo_client.commands.shared_contracts import (
+    NON_BLANK_CONSTRAINT,
     DeferredTarget,
     LazyBinding,
     ParameterConstraint,
@@ -40,7 +41,7 @@ REQUIRED_INVOICE_ID_ARGUMENT: Final[ArgumentSpec] = ArgumentSpec(
     default=ParameterDefault.required(),
     help_key=TranslationKey("cli.app.ledger.invoice.invoice_id_help"),
     metavar=None,
-    constraint=ParameterConstraint(),
+    constraint=NON_BLANK_CONSTRAINT,
     show_default=True,
     hidden=False,
 )
@@ -137,7 +138,7 @@ LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 multiple=False,
                 count=False,
                 eager=False,
-                constraint=ParameterConstraint(),
+                constraint=NON_BLANK_CONSTRAINT,
                 show_default=True,
                 hidden=False,
             ),
@@ -153,7 +154,7 @@ LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 multiple=False,
                 count=False,
                 eager=False,
-                constraint=ParameterConstraint(),
+                constraint=NON_BLANK_CONSTRAINT,
                 show_default=True,
                 hidden=False,
             ),

@@ -10,7 +10,7 @@ from cadrumo.application.storage.calc_sheets.records import (
 )
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
-from .workbook_demo_cases import DemoCase, has_differentiated_sectors, newest_edition_id, oldest_edition_id
+from .workbook_demo_cases import DemoCase, demonstrates_sector_deductions, newest_edition_id, oldest_edition_id
 from .workbook_demo_formula_graph import scenario_leaves
 
 InputValues = dict[str, Decimal | str | bool | None]
@@ -59,7 +59,7 @@ def _seed_303(
 def _seed_390(
     snapshot: RegistrySnapshot, case: DemoCase, values: InputValues, bindings: dict[str, Decimal], binding_ids: set[str]
 ) -> None:
-    if has_differentiated_sectors(case.modelo, case.revision):
+    if demonstrates_sector_deductions(case):
         for group in range(1, 4):
             target = f"iva.anual.sector-diferenciado-{group}.suma-deducciones"
             group_leaves, group_bindings = scenario_leaves(snapshot, target)

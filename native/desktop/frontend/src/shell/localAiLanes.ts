@@ -182,8 +182,13 @@ export function useLocalAiLanes(
       const atRead = published.current;
       let catalog;
       try {
+        // Each busy read the lanes follow is part of the wait they expect;
+        // the one they give up on is the failure.
         catalog = await session.providerCatalog(
-          catalogReadRetry(() => current() && attempts < CATALOG_BUSY_RETRIES),
+          catalogReadRetry(
+            () => current() && attempts < CATALOG_BUSY_RETRIES,
+            () => true,
+          ),
         );
       } catch (error) {
         const code = failureCode(error);

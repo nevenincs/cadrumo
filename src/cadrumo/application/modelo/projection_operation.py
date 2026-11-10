@@ -41,13 +41,15 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .calculation_action_ports import CalculationActionPorts, CalculationActionPortsFactory
 from .projection import (
-    ModeloProjectionUnresolvedBinding,
-    ModeloProjectionUnresolvedCasilla,
     ModeloProjectServiceResult,
     project_modelo_100_from_m130,
 )
 from .projection_compare import ModeloCompareServiceResult, compare_modelo_years
 from .projection_migration_ports import ProjectionMigrationPlan, ProjectionMigrationPort
+from .projection_unresolved import (
+    ModeloProjectionUnresolvedBinding,
+    ModeloProjectionUnresolvedCasilla,
+)
 from .projection_words import (
     binding_source_words,
     m100_figure_words,

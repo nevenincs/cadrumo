@@ -5,11 +5,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from .....application.modelo.casilla_help import ModeloCasillaHelpCardV1
-from .....application.modelo.work_form_models import (
+from .....application.modelo.work_form_field_vocabulary import (
     ModeloFormCasillaAddressV1,
-    ModeloFormField,
     ModeloFormTextDisclosure,
 )
+from .....application.modelo.work_form_models import ModeloFormField
 from .....application.modelo.work_form_next_step import is_result_field
 from .....application.modelo.work_form_wording import (
     SOURCE_WORDED_ORIGINS,

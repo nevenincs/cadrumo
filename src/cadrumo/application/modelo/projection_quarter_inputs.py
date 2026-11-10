@@ -18,7 +18,10 @@ from typing import TYPE_CHECKING
 
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
-from .work_form_models import ModeloFormOrigin, address_key
+from .work_form_field_vocabulary import (
+    ModeloFormOrigin,
+    address_key,
+)
 from .work_form_next_step import applicable_fields
 from .work_form_service import load_modelo_work_form
 

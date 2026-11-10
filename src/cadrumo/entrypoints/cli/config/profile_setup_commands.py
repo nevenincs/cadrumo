@@ -6,8 +6,10 @@ from uuid import UUID
 
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.profile_binding import require_profile_client
 
+from ....application.operator_actions.preconditions import profile_required_facts_missing_verdict
 from ....application.user_profile.profile_operation_contracts import (
     ProfileCompleteSetupOperationProjection,
     ProfileCompleteSetupOperationRequest,
@@ -15,8 +17,9 @@ from ....application.user_profile.profile_operation_contracts import (
 from ....application.user_profile.view_operation import ProfileViewMissingItem, ProfileViewPageKind
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.i18n.render import tr
+from ....domain.user_profile.labels import profile_field_label_key
 from ....domain.user_profile.values import ProfileSetupState
-from ..common import bad, emit_envelope, no_active_profile_refusal
+from ..common import attach_cli_policy_verdict, emit_envelope, no_active_profile_refusal
 from .profile_mutation import execute_profile_mutation, mutation_deadline, read_mutation_baseline
 from .profile_setup_results import ProfileCompleteSetupResult
 
@@ -35,7 +38,11 @@ def profile_complete_setup(ctx: typer.Context) -> None:
         item.path for item in baseline.items(ProfileViewPageKind.OVERVIEW) if isinstance(item, ProfileViewMissingItem)
     )
     if baseline.setup_state is ProfileSetupState.INCOMPLETE and missing:
-        raise bad(tr("cli.config.profile.complete_setup.incomplete", paths=", ".join(missing)))
+        labels = ", ".join(tr(profile_field_label_key(*path.partition(".")[::2])) for path in missing)
+        raise attach_cli_policy_verdict(
+            CliRefusedBoundaryError(tr("cli.config.profile.complete_setup.incomplete", paths=labels)),
+            verdict=profile_required_facts_missing_verdict(modelo=None, field_paths=missing),
+        )
 
     completed, current = execute_profile_mutation(
         client,

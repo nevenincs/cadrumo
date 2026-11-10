@@ -55,6 +55,9 @@ _TAX_AXIS_PLACEHOLDERS: Mapping[str, UserProfileFactValue] = {
     "taxpayer_type.entity_type": "natural_person",
     "taxpayer_type.irpf_income_categories": "actividad_economica",
     "irpf.estimation_regime": "directa_normal",
+    # Stated, not defaulted: an unstated large-company condition selects
+    # neither Modelo 303 cadence, so readiness refuses the quarterly return.
+    "censo.large_company": False,
 }
 # The domain layer cannot read a persona, and these only fill the schema's required axes for an unrelated test.
 

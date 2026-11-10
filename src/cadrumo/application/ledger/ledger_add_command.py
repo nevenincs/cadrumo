@@ -30,6 +30,7 @@ from ...domain.iva.vehicle_use import require_iva_vehicle_use
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, is_classified
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.irpf_categories import require_ledger_irpf_category
+from ...domain.transactions.model_validation import validate_figures_without_business
 from ..prorrata_register.ports import ProrrataRegisterRepositoryFactory
 from ..prorrata_register.service import ProrrataRegisterService
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -71,13 +72,14 @@ def prepare_ledger_add_command(
     ``actor`` is the label the executing operation settled for this entry.
     """
     booked_date, value_date, amount = _resolve_ledger_add_dates(payload)
+    classification, direction = resolve_ledger_add_flow(payload)
+    _refuse_figures_without_business(payload, classification)
     category_id, business_pct = _resolve_ledger_add_business_share(
         payload,
         operation=operation,
         booked_date=booked_date,
     )
     source_jurisdiction = _resolve_ledger_add_jurisdiction(payload, operation=operation)
-    classification, direction = resolve_ledger_add_flow(payload)
     registry_facts = _resolve_ledger_add_registry_facts(payload, booked_date=booked_date, operation=operation)
     return ManualLedgerTransactionCommand(
         bucket_id=str(payload.profile_id),
@@ -207,6 +209,21 @@ def _resolve_ledger_add_jurisdiction(
             "source jurisdiction must be supplied for non-resident IRNR profiles",
         )
     return jurisdiction.jurisdiction
+
+
+def _refuse_figures_without_business(payload: LedgerAddRequest, classification: BusinessClassification) -> None:
+    """Refuse a new row whose classification denies a business figure the person typed.
+
+    Dropping the figure would write something other than what was asked, so the
+    add is refused with the registered sentence before any fact is resolved. A
+    blank text figure is no figure, as everywhere else in this request.
+    """
+    stated = {
+        name: value
+        for name, value in payload.model_dump().items()
+        if value is not None and not (isinstance(value, str) and not value.strip())
+    }
+    validate_figures_without_business(classification, stated)
 
 
 def resolve_ledger_add_flow(payload: LedgerAddRequest) -> tuple[BusinessClassification, TransactionDirection]:

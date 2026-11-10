@@ -38,6 +38,7 @@ from cadrumo.domain.calculations.registry.form_context import resolve_form_conte
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.schema_exports import ExportRecordRepeat
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormContextFieldBlock
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.modelos.filing_record import FilingDeclarationKind
 
 from ..compiler import form_layout_integrity
@@ -78,15 +79,18 @@ def _producer(*, modelo: str = "111", complementaria: bool = False) -> FilingPro
     )
 
 
+_YEAR = filing_year_envelope().horizon
+
+
 @pytest.fixture(scope="module")
 def snapshot():
     authority = compiled_bundled_authority()
     return authority.snapshot(
         "111",
-        filing_year=2025,
+        filing_year=_YEAR,
         period="1T",
-        on=date(2025, 3, 31),
-        revision_id="2019-y-siguientes",
+        on=date(_YEAR, 3, 31),
+        revision_id=str(open_ended_revision("111").id),
         grade=RegistryAuthorityGrade.CALCULATION,
     )
 
@@ -133,7 +137,7 @@ def test_real_111_context_selects_exact_eight_export_semantics(snapshot):
 
 def test_absent_producer_leaves_identity_unknown_but_keeps_snapshot_coordinate(snapshot):
     values = {name: form_context_value(snapshot, block) for name, block in _blocks(snapshot).items()}
-    assert values.pop("ejercicio") == 2025
+    assert values.pop("ejercicio") == _YEAR
     assert values.pop("periodo") == "1T"
     assert all(value is None for value in values.values())
 
@@ -148,7 +152,7 @@ def test_typed_producer_selects_identity_and_amendment_without_presenter_leak(sn
         "nif": "12345678Z",
         "apellidos": "Prueba",
         "nombre": "Ana",
-        "ejercicio": 2025,
+        "ejercicio": _YEAR,
         "periodo": "1T",
         "iban": None,
         "declaracion-complementaria": True,
@@ -262,7 +266,7 @@ def test_real_workbook_shows_only_selected_context_and_known_coordinate(snapshot
         assert len(rows) == 1
         shown = cells[rows[0], 9]
         if name == "ejercicio":
-            assert shown == Decimal(2025)
+            assert shown == Decimal(_YEAR)
         elif name == "periodo":
             assert shown == "1T"
         elif not include_producer or name == "iban":

@@ -326,12 +326,16 @@ def test_preflight_modelo_111_requires_an_explicit_colegio_concertado_declaratio
     schema: ProfileSchemaDefinition,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """Both boolean declarations are complete; absence remains a refusal."""
+    """A teaching employer owes the attestation: both boolean declarations are complete, absence is a refusal."""
     service = ProfilePreflightService(schema=schema)
+    payroll_at_a_school = (
+        UserProfileFact(path="withholding.has_employees", value=True),
+        UserProfileFact(path="activities.iae_epigraph", value="931.1"),
+    )
     period = Period.from_year_and_code(2026, "1T")
 
     missing = service.report(
-        record=_record(schema, operation),
+        record=_record(schema, operation, facts=payroll_at_a_school),
         modelo=Modelo("111").value,
         revision_id="2019-y-siguientes",
         period=period,
@@ -348,7 +352,7 @@ def test_preflight_modelo_111_requires_an_explicit_colegio_concertado_declaratio
             record=_record(
                 schema,
                 operation,
-                facts=(UserProfileFact(path="withholding.colegio_concertado", value=declared),),
+                facts=(*payroll_at_a_school, UserProfileFact(path="withholding.colegio_concertado", value=declared)),
             ),
             modelo=Modelo("111").value,
             revision_id="2019-y-siguientes",

@@ -34,6 +34,7 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
 )
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.loader import load_modelo_directory
@@ -44,9 +45,9 @@ _LEGAL_REF = "ley-58-2003:art-29"
 _SOURCE_REF = "aeat-manual"
 _LABEL = ModeloLocalizationFieldKind.LABEL
 _YEAR_EDITION = re.compile(r"^\d{4}$")
-#: Editions no corpus modelo declares, so their occurrence keys have no catalogue entry.
-_SUCCESSOR = "2091"
-_SECOND_SUCCESSOR = "2092"
+#: Editions past the horizon, which no corpus modelo declares, so their occurrence keys have no catalogue entry.
+_SUCCESSOR = str(filing_year_envelope().horizon + 1)
+_SECOND_SUCCESSOR = str(filing_year_envelope().horizon + 2)
 #: A casilla id no catalogue entry names under any edition.
 _UNLABELLED_CASILLA = "zz-sin-etiqueta"
 _LINEAGE = "linaje-heredado"

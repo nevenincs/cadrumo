@@ -542,7 +542,13 @@ def test_prorrata_reference_on_output_iva_row_is_reported_but_output_observation
 
 
 def test_personal_transaction_is_reported_without_iva_observation() -> None:
-    transaction = _transaction("row-personal", business_classification=BusinessClassification.PERSONAL)
+    transaction = _transaction(
+        "row-personal",
+        business_classification=BusinessClassification.PERSONAL,
+        taxable_base=None,
+        iva_rate=None,
+        iva_amount=None,
+    )
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),

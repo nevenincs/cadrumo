@@ -135,6 +135,11 @@ pub fn run(
     let token = ShellToken::mint()?;
     let origins = shell::origins(context.config(), window);
     let script = token.script(&origins)?;
+    #[cfg(feature = "native-automation")]
+    let script = match shell::automation_nonce::current()? {
+        Some(nonce) => format!("{nonce}{script}"),
+        None => script,
+    };
     let modules = vec![
         terminal::commands(),
         docs::commands(),
@@ -206,7 +211,13 @@ pub fn run(
             loading.height = 300.0;
             loading.min_width = Some(380.0);
             loading.min_height = Some(240.0);
-            let loading = tauri::WebviewWindowBuilder::from_config(app.handle(), &loading)?
+            let loading = tauri::WebviewWindowBuilder::from_config(app.handle(), &loading)?;
+            let loading = if crate::launch::ShowMode::current().activates() {
+                loading
+            } else {
+                loading.focused(false)
+            };
+            let loading = loading
                 .center()
                 .incognito(true)
                 .initialization_script(script)
@@ -652,13 +663,25 @@ pub(crate) async fn assemble<R: Runtime>(
             .title_bar_style(tauri::TitleBarStyle::Overlay)
             .hidden_title(true)
             .traffic_light_position(placement.position);
-        let builder = builder.visible(false);
+        // The automation host shows at creation without activation: the page-load
+        // `show` below would activate the window (the toolkit only honours
+        // `focused(false)` for the show that creates the window).
+        let builder = if crate::launch::ShowMode::current().activates() {
+            builder.visible(false)
+        } else {
+            builder.visible(true).focused(false)
+        };
         builder
             .initialization_script(startup.script.clone())
             .on_navigation(move |url| shell::navigation::allowed(&origins, url))
             .on_page_load(|window, payload| {
                 if matches!(payload.event(), tauri::webview::PageLoadEvent::Finished) {
-                    if let Err(error) = window.show() {
+                    let shown = if crate::launch::ShowMode::current().activates() {
+                        window.show()
+                    } else {
+                        Ok(())
+                    };
+                    if let Err(error) = shown {
                         window
                             .state::<Arc<TerminalState>>()
                             .launch

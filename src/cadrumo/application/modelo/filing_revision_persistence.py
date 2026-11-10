@@ -793,6 +793,39 @@ def _prepare_filing_catalogues_and_writes(
     )
 
 
+def _prepare_filed_observation_and_settlement(
+    *,
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    new_filing_id: str,
+    now: datetime,
+    calculation_observation_repository: CalculationObservationRepositoryProtocol,
+    iva_compensation_history_repository: IvaCompensationHistoryRepositoryProtocol,
+    result_disposition: ResultDisposition | None,
+    prior_domiciliation_election: PriorDomiciliationElectionProjection | None,
+    taxpayer_nif: str | None,
+) -> tuple[PreparedFiledRevisionObservation, IvaSettlementSnapshot | None]:
+    """Prepare the filed revision's observation and the local M303 settlement it derives, writing nothing."""
+    prepared_observation = prepare_filed_revision_observation(
+        revision=target,
+        work_unit=work_unit,
+        repository=calculation_observation_repository,
+        iva_compensation_history_repository=iva_compensation_history_repository,
+        captured_at=now,
+        result_disposition=result_disposition,
+        prior_domiciliation_election=prior_domiciliation_election,
+        taxpayer_nif=taxpayer_nif,
+        filing_record_id=new_filing_id,
+    )
+    settlement = _new_local_m303_settlement_snapshot(
+        target=target,
+        work_unit=work_unit,
+        prepared_observation=prepared_observation,
+        result_disposition=result_disposition,
+    )
+    return prepared_observation, settlement
+
+
 def persist_filed_revision(
     *,
     target: CalculationRevision,
@@ -852,22 +885,16 @@ def persist_filed_revision(
         filed_by=actor.strip(),
     )
     # Validate carry and evidence displacement before the co-commit.
-    prepared_observation = prepare_filed_revision_observation(
-        revision=target,
+    prepared_observation, settlement = _prepare_filed_observation_and_settlement(
+        target=target,
         work_unit=work_unit,
-        repository=calculation_observation_repository,
+        new_filing_id=new_filing_id,
+        now=now,
+        calculation_observation_repository=calculation_observation_repository,
         iva_compensation_history_repository=iva_compensation_history_repository,
-        captured_at=now,
         result_disposition=result_disposition,
         prior_domiciliation_election=prior_domiciliation_election,
         taxpayer_nif=taxpayer_nif,
-        filing_record_id=new_filing_id,
-    )
-    settlement = _new_local_m303_settlement_snapshot(
-        target=target,
-        work_unit=work_unit,
-        prepared_observation=prepared_observation,
-        result_disposition=result_disposition,
     )
 
     (

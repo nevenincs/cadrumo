@@ -8,17 +8,15 @@ from decimal import Decimal
 
 from ....iva.prorrata import ProrrataInputs, ProrrataKind, compute_prorrata_general
 from ..schema import RegistrySnapshot
+from .authored_editions import supported_authored_exercises
 from .prorrata_porcentaje_grounding_support import snapshot_prorrata_percentage
 
-#: 2022 resolves to the `2022` revision, 2024 to its early-period epoch. Both
-#: windows sit entirely inside the unamended art. 102.Uno / art. 104.Uno text, so
-#: both are bound by the same reading.
-#:
-#: This named 2020, which resolved while the earliest revision was the open
-#: 2009-2022 span. That span was retired when the revision was renamed to
-#: `2022`, so 2020 now resolves to no revision at all and every case here died
-#: on resolution rather than on the zero-volume grounding it asserts.
-LIVE_FILING_YEARS = (2022, 2024)
+#: Every supported exercise an authored modelo 303 revision governs, each once.
+#: All of their windows sit inside the unamended art. 102.Uno / art. 104.Uno
+#: text, so the same reading binds them. A year no revision governs would die on
+#: resolution rather than on the zero-volume grounding it asserts, so the
+#: exercises are read off the authored editions instead of being named.
+LIVE_FILING_YEARS = tuple(dict.fromkeys(supported_authored_exercises("303")))
 
 
 #: The percentage a full right to deduct carries. Read off arts. 92/94 (the

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 from types import MappingProxyType
+from typing import Final
 
 from pydantic import BaseModel, model_validator
 
@@ -110,6 +111,27 @@ _IVA_WALLET_REVISION_SCENARIOS = (
 )
 
 
+IVA_WALLET_OPENING_BALANCE_SCENARIOS: Final[frozenset[str]] = frozenset(
+    {
+        "first_period_zero_ungrounded",
+        "local_evidence_unreadable",
+        "no_usable_authority",
+        "not_seeded",
+    },
+)
+"""The wallet refusals the period's opening balance is the way out of.
+
+Each says the period's carry has no usable recorded authority, which is exactly
+what declaring the opening balance supplies. A stale wallet, a divergence, or a
+reason that asks for an override or correction names a different wallet entry,
+so it keeps no action here rather than naming a command that would not settle
+it. The wallet gate's served step and these profiles' action read this one set.
+"""
+
+IVA_WALLET_OPENING_BALANCE_ACTION_ID: Final[str] = "operator.modelo.iva_wallet.seed"
+"""The catalogue action that declares the opening balance of a period's carry."""
+
+
 def _iva_wallet_profiles(
     subject_leaf_key: str,
     scenario_codes: tuple[str, ...],
@@ -119,6 +141,9 @@ def _iva_wallet_profiles(
             subject_leaf_key,
             f"{subject_leaf_key}.iva_wallet.ready",
             f"{subject_leaf_key}.iva_wallet.{scenario_code}",
+            action_id=IVA_WALLET_OPENING_BALANCE_ACTION_ID
+            if scenario_code in IVA_WALLET_OPENING_BALANCE_SCENARIOS
+            else None,
         )
         for scenario_code in scenario_codes
     )
@@ -327,6 +352,14 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.calculate",
         "modelo.work.calculate.ledger_preflight.ready",
         "modelo.work.calculate.ledger_preflight.blocked",
+    ),
+    # No catalogue action: the statement that no earlier-ejercicio carry is
+    # pending is made on the declaration's own form, which the command line
+    # does not reach; the refusal serves the step that opens that form.
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.prior_carries.stated",
+        "modelo.work.calculate.prior_carries.renta_negative_general_bases_pending_unstated",
     ),
     _profile(
         "modelo.work.calculate",
@@ -635,6 +668,44 @@ if len(MODELO_PRECONDITION_PROFILE_REGISTRY) != len(MODELO_PRECONDITION_PROFILES
     raise ValueError("modelo precondition profile identities must be unique")
 
 
+def _action_argument_bindings(
+    declared_action_id: str | None,
+    action_argument_values: Mapping[str, str | int | bool | Decimal] | None,
+    missing_action_arguments: tuple[str, ...],
+) -> tuple[ActionArgumentBinding, ...]:
+    """Bind resolved and missing arguments, requiring exact coverage of the catalogue declaration."""
+    if declared_action_id is None:
+        if missing_action_arguments:
+            raise ValueError("modelo precondition failure without an action cannot name missing arguments")
+        return ()
+    declaration = lookup_action(declared_action_id)
+    values = action_argument_values or {}
+    missing = set(missing_action_arguments)
+    declared_names = {item.argument_name for item in declaration.argument_specifications}
+    if (
+        len(missing) != len(missing_action_arguments)
+        or missing & set(values)
+        or set(values) | missing != declared_names
+    ):
+        raise ValueError("modelo action argument values must exactly match the catalogue declaration")
+    return (
+        *(
+            ActionArgumentBinding(
+                argument_name=name,
+                status=ActionArgumentStatus.RESOLVED,
+                value=value,
+                source=ActionArgumentSource.VERDICT_CONTEXT,
+                source_key=name,
+            )
+            for name, value in values.items()
+        ),
+        *(
+            ActionArgumentBinding(argument_name=name, status=ActionArgumentStatus.MISSING)
+            for name in missing_action_arguments
+        ),
+    )
+
+
 def build_modelo_precondition_failure(
     *,
     subject_leaf_key: str,
@@ -667,36 +738,7 @@ def build_modelo_precondition_failure(
         provenance=provenance,
         values=evidence_values,
     )
-    bindings: tuple[ActionArgumentBinding, ...] = ()
-    if declared_action_id is None and missing_action_arguments:
-        raise ValueError("modelo precondition failure without an action cannot name missing arguments")
-    if declared_action_id is not None:
-        declaration = lookup_action(declared_action_id)
-        values = action_argument_values or {}
-        missing = set(missing_action_arguments)
-        declared_names = {item.argument_name for item in declaration.argument_specifications}
-        if (
-            len(missing) != len(missing_action_arguments)
-            or missing & set(values)
-            or set(values) | missing != declared_names
-        ):
-            raise ValueError("modelo action argument values must exactly match the catalogue declaration")
-        bindings = (
-            *(
-                ActionArgumentBinding(
-                    argument_name=name,
-                    status=ActionArgumentStatus.RESOLVED,
-                    value=value,
-                    source=ActionArgumentSource.VERDICT_CONTEXT,
-                    source_key=name,
-                )
-                for name, value in values.items()
-            ),
-            *(
-                ActionArgumentBinding(argument_name=name, status=ActionArgumentStatus.MISSING)
-                for name in missing_action_arguments
-            ),
-        )
+    bindings = _action_argument_bindings(declared_action_id, action_argument_values, missing_action_arguments)
     if declared_action_id is None:
         conditionality = ActionConditionality.NOT_APPLICABLE
     elif missing_action_arguments:
@@ -782,6 +824,8 @@ def build_modelo_work_file_unverified_revision_failure(
 
 
 __all__ = [
+    "IVA_WALLET_OPENING_BALANCE_ACTION_ID",
+    "IVA_WALLET_OPENING_BALANCE_SCENARIOS",
     "MODELO_PRECONDITION_PROFILES",
     "MODELO_PRECONDITION_PROFILE_REGISTRY",
     "ModeloPreconditionFailure",

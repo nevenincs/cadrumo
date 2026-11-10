@@ -65,8 +65,10 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=LEAF_INVOCATION,
         parameters=(
-            required_text_argument("transaction_id", "cli.ledger.detach.id_help"),
-            repeatable_text_option("attachment_ids", ("--attachment-id",), "cli.ledger.detach.attachment_help"),
+            required_text_argument("transaction_id", "cli.ledger.detach.id_help", non_blank=True),
+            repeatable_text_option(
+                "attachment_ids", ("--attachment-id",), "cli.ledger.detach.attachment_help", non_blank=True
+            ),
             optional_text_option("actor", ("--actor",), "cli.ledger.detach.actor_help"),
         ),
         policy=POLICY_4,
@@ -180,7 +182,7 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=LEAF_INVOCATION,
         parameters=(
-            required_text_argument("transaction_id", "cli.ledger.history.id_help"),
+            required_text_argument("transaction_id", "cli.ledger.history.id_help", non_blank=True),
             boolean_flag_option(
                 "include_split_siblings",
                 ("--include-split-siblings",),

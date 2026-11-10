@@ -602,6 +602,9 @@ def test_modelo_349_readiness_uses_applicability_for_attribution_entity(state_pr
             "taxpayer_type.irpf_income_categories": "",
             "irpf.estimation_regime": "",
             "iva.does_intracomunitario": "true",
+            # Stated, not defaulted: the 50,000 EUR threshold selects the
+            # Modelo 349 cadence, so an unstated answer leaves the profile unready.
+            "iva.intracommunity_operations_exceed_50000_eur": "false",
         },
     )
 

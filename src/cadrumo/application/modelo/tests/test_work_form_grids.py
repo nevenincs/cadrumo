@@ -31,14 +31,16 @@ from ....domain.calculations.registry.schema_form_layouts import (
 )
 from ....domain.modelos.codes import ModeloCode
 from ..work_form import build_modelo_work_form
-from ..work_form_models import (
+from ..work_form_field_vocabulary import (
     ModeloFormBindingAddressV1,
     ModeloFormCasillaAddressV1,
     ModeloFormEditability,
+    ModeloFormTextDisclosure,
+)
+from ..work_form_models import (
     ModeloFormField,
     ModeloFormGridBlock,
     ModeloFormRepeatingBlock,
-    ModeloFormTextDisclosure,
     ModeloWorkForm,
     section_fields,
 )

@@ -22,7 +22,7 @@ from typing import Final
 
 from rich.text import Text
 
-from .....application.modelo.work_form_models import ModeloFormOrigin
+from .....application.modelo.work_form_field_vocabulary import ModeloFormOrigin
 from .....core.i18n.render import tr
 from .vocabulary import (
     ATTENTION_MARKS,

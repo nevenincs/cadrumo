@@ -31,6 +31,7 @@ from ..schema_verification import (
     VerificationExpectationDefinition,
     VerificationRoundingCode,
 )
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
@@ -283,7 +284,7 @@ def test_relation_prefill_provider_rejects_absolute_source_coordinates() -> None
                     "kind": "filing_year_offset",
                     "years": -1,
                     "source_periods": ["0A"],
-                    "year": 2024,
+                    "year": filing_year_envelope().horizon,
                 },
             },
         )

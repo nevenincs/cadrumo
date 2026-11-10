@@ -12,6 +12,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ..analysis.type_convention_notes import KINDS, revision_findings, screen_authority, types_named_in
 from ..compiler.authority import compiled_bundled_authority
@@ -70,7 +71,7 @@ def test_the_screen_finds_the_conventions_modelo_202_states(
     counts, because the labels are the design's numbering and would change on a
     re-transcription without the property changing.
     """
-    findings = revision_findings(authority, modelo="202", revision="2025-y-siguientes")
+    findings = revision_findings(authority, modelo="202", revision=str(open_ended_revision("202").id))
     assert findings, "the design that motivated this screen reports nothing"
     named = {code for item in findings for code in item.types}
     assert {"An", "Num"} <= named

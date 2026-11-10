@@ -34,6 +34,7 @@ from cadrumo.domain.calculations.registry.revision_order import (
 )
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.loader import load_modelo_directory
 from ..compiler.validate_cross_revision import declared_cross_revision_continuity_semantic_linkage_failures
@@ -55,8 +56,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 __all__ = ["synthetic_locale_scope"]
 
 CENSUS_PERIODS = ("alta", "modificacion", "baja")
-EARLIER_REVISION = "2023-hasta-2025-02-02"
-LATER_REVISION = "2025-02-03-y-siguientes"
+# Four consecutive exercises of the support envelope place the synthetic windows.
+assert len(filing_year_envelope().years) >= 4, (
+    "the support envelope must span at least 4 exercises for these synthetic editions"
+)
+_A, _B, _C, _D = filing_year_envelope().years[-4:]
+# A date later than every exercise the envelope supports.
+_BEYOND = filing_year_envelope().horizon + 1
+EARLIER_REVISION = f"{_A}-hasta-{_C}-02-02"
+LATER_REVISION = f"{_C}-02-03-y-siguientes"
 
 
 def _revision(
@@ -85,16 +93,16 @@ class TestRevisionsCoexistPredicate:
     def test_meeting_windows_with_identical_tokens_do_not_coexist(self) -> None:
         """The 036 shape: identical census tokens, windows meeting at 02-02/02-03."""
         earlier = _revision(
-            revision_id="test-2023-hasta-2025-02-02",
-            valid_from=date(2023, 1, 1),
-            valid_to=date(2025, 2, 2),
-            period_selector=PeriodSelector(year_from=2023, year_to=2025, periods=CENSUS_PERIODS),
+            revision_id="test-census-earlier",
+            valid_from=date(_A, 1, 1),
+            valid_to=date(_C, 2, 2),
+            period_selector=PeriodSelector(year_from=_A, year_to=_C, periods=CENSUS_PERIODS),
         )
         later = _revision(
-            revision_id="test-2025-02-03-y-siguientes",
-            valid_from=date(2025, 2, 3),
+            revision_id="test-census-later",
+            valid_from=date(_C, 2, 3),
             valid_to=None,
-            period_selector=PeriodSelector(year_from=2025, periods=CENSUS_PERIODS),
+            period_selector=PeriodSelector(year_from=_C, periods=CENSUS_PERIODS),
         )
         assert revisions_overlap(earlier, later), (
             "the planted selectors no longer share a period token; this gate is vacuous"
@@ -104,16 +112,16 @@ class TestRevisionsCoexistPredicate:
     def test_meeting_windows_with_shared_tokens_do_not_coexist(self) -> None:
         """Consecutive editions sharing their quarter tokens, windows meeting 06-30/07-01."""
         earlier = _revision(
-            revision_id="test-2009-2011-junio",
-            valid_from=date(2009, 1, 1),
-            valid_to=date(2011, 6, 30),
-            period_selector=PeriodSelector(year_from=2009, year_to=2011, periods=("1T", "2T", "3T", "4T")),
+            revision_id="test-quarterly-earlier",
+            valid_from=date(_A, 1, 1),
+            valid_to=date(_B, 6, 30),
+            period_selector=PeriodSelector(year_from=_A, year_to=_B, periods=("1T", "2T", "3T", "4T")),
         )
         later = _revision(
-            revision_id="test-2011-julio-2015",
-            valid_from=date(2011, 7, 1),
-            valid_to=date(2015, 12, 31),
-            period_selector=PeriodSelector(year_from=2011, year_to=2015, periods=("1T", "2T", "3T", "4T")),
+            revision_id="test-quarterly-later",
+            valid_from=date(_B, 7, 1),
+            valid_to=date(_C, 12, 31),
+            period_selector=PeriodSelector(year_from=_B, year_to=_C, periods=("1T", "2T", "3T", "4T")),
         )
         assert revisions_overlap(earlier, later)
         assert not revisions_coexist(earlier, later)
@@ -122,15 +130,15 @@ class TestRevisionsCoexistPredicate:
         """Variant schemas sharing a window are alternative shapes of one period."""
         left = _revision(
             revision_id="test-variant-a",
-            valid_from=date(2024, 1, 1),
-            valid_to=date(2024, 12, 31),
-            period_selector=PeriodSelector(years=(2024,), periods=CENSUS_PERIODS),
+            valid_from=date(_B, 1, 1),
+            valid_to=date(_B, 12, 31),
+            period_selector=PeriodSelector(years=(_B,), periods=CENSUS_PERIODS),
         )
         right = _revision(
             revision_id="test-variant-b",
-            valid_from=date(2024, 6, 1),
-            valid_to=date(2025, 6, 30),
-            period_selector=PeriodSelector(year_from=2024, year_to=2025, periods=CENSUS_PERIODS),
+            valid_from=date(_B, 6, 1),
+            valid_to=date(_C, 6, 30),
+            period_selector=PeriodSelector(year_from=_B, year_to=_C, periods=CENSUS_PERIODS),
         )
         assert revisions_coexist(left, right)
 
@@ -138,15 +146,15 @@ class TestRevisionsCoexistPredicate:
         """Bounds are inclusive on both sides: one shared day is coexistence."""
         left = _revision(
             revision_id="test-touch-a",
-            valid_from=date(2024, 1, 1),
-            valid_to=date(2024, 6, 30),
-            period_selector=PeriodSelector(years=(2024,), periods=CENSUS_PERIODS),
+            valid_from=date(_B, 1, 1),
+            valid_to=date(_B, 6, 30),
+            period_selector=PeriodSelector(years=(_B,), periods=CENSUS_PERIODS),
         )
         right = _revision(
             revision_id="test-touch-b",
-            valid_from=date(2024, 6, 30),
-            valid_to=date(2024, 12, 31),
-            period_selector=PeriodSelector(years=(2024,), periods=CENSUS_PERIODS),
+            valid_from=date(_B, 6, 30),
+            valid_to=date(_B, 12, 31),
+            period_selector=PeriodSelector(years=(_B,), periods=CENSUS_PERIODS),
         )
         assert revisions_coexist(left, right)
 
@@ -154,15 +162,15 @@ class TestRevisionsCoexistPredicate:
         """Windows may intersect fully; disjoint period tokens still decide it."""
         left = _revision(
             revision_id="test-disjoint-a",
-            valid_from=date(2024, 1, 1),
-            valid_to=date(2024, 12, 31),
-            period_selector=PeriodSelector(years=(2024,), periods=("alta",)),
+            valid_from=date(_B, 1, 1),
+            valid_to=date(_B, 12, 31),
+            period_selector=PeriodSelector(years=(_B,), periods=("alta",)),
         )
         right = _revision(
             revision_id="test-disjoint-b",
-            valid_from=date(2024, 1, 1),
-            valid_to=date(2024, 12, 31),
-            period_selector=PeriodSelector(years=(2024,), periods=("baja",)),
+            valid_from=date(_B, 1, 1),
+            valid_to=date(_B, 12, 31),
+            period_selector=PeriodSelector(years=(_B,), periods=("baja",)),
         )
         assert not revisions_overlap(left, right)
         assert not revisions_coexist(left, right)
@@ -171,15 +179,15 @@ class TestRevisionsCoexistPredicate:
         """``valid_to`` of ``None`` is open-ended, not an empty window."""
         open_ended = _revision(
             revision_id="test-open",
-            valid_from=date(2023, 1, 1),
+            valid_from=date(_A, 1, 1),
             valid_to=None,
-            period_selector=PeriodSelector(year_from=2023, periods=CENSUS_PERIODS),
+            period_selector=PeriodSelector(year_from=_A, periods=CENSUS_PERIODS),
         )
         later = _revision(
             revision_id="test-later",
-            valid_from=date(2030, 1, 1),
-            valid_to=date(2030, 12, 31),
-            period_selector=PeriodSelector(years=(2030,), periods=CENSUS_PERIODS),
+            valid_from=date(_BEYOND, 1, 1),
+            valid_to=date(_BEYOND, 12, 31),
+            period_selector=PeriodSelector(years=(_BEYOND,), periods=CENSUS_PERIODS),
         )
         assert revisions_coexist(open_ended, later)
 
@@ -187,15 +195,15 @@ class TestRevisionsCoexistPredicate:
         """An open end extends forward only; an earlier closed window is disjoint."""
         earlier = _revision(
             revision_id="test-earlier",
-            valid_from=date(2020, 1, 1),
-            valid_to=date(2020, 12, 31),
-            period_selector=PeriodSelector(year_from=2020, year_to=2030, periods=CENSUS_PERIODS),
+            valid_from=date(_A, 1, 1),
+            valid_to=date(_A, 12, 31),
+            period_selector=PeriodSelector(year_from=_A, year_to=_BEYOND, periods=CENSUS_PERIODS),
         )
         open_ended = _revision(
             revision_id="test-open",
-            valid_from=date(2023, 1, 1),
+            valid_from=date(_B, 1, 1),
             valid_to=None,
-            period_selector=PeriodSelector(year_from=2023, periods=CENSUS_PERIODS),
+            period_selector=PeriodSelector(year_from=_B, periods=CENSUS_PERIODS),
         )
         assert revisions_overlap(earlier, open_ended)
         assert not revisions_coexist(earlier, open_ended)
@@ -203,30 +211,30 @@ class TestRevisionsCoexistPredicate:
     def test_both_open_ended_windows_always_intersect(self) -> None:
         earlier = _revision(
             revision_id="test-open-a",
-            valid_from=date(2020, 1, 1),
+            valid_from=date(_A, 1, 1),
             valid_to=None,
-            period_selector=PeriodSelector(year_from=2020, periods=CENSUS_PERIODS),
+            period_selector=PeriodSelector(year_from=_A, periods=CENSUS_PERIODS),
         )
         later = _revision(
             revision_id="test-open-b",
-            valid_from=date(2025, 1, 1),
+            valid_from=date(_C, 1, 1),
             valid_to=None,
-            period_selector=PeriodSelector(year_from=2025, periods=CENSUS_PERIODS),
+            period_selector=PeriodSelector(year_from=_C, periods=CENSUS_PERIODS),
         )
         assert revisions_coexist(earlier, later)
 
     def test_coexistence_is_symmetric(self) -> None:
         earlier = _revision(
             revision_id="test-sym-a",
-            valid_from=date(2023, 1, 1),
-            valid_to=date(2025, 2, 2),
-            period_selector=PeriodSelector(year_from=2023, year_to=2025, periods=CENSUS_PERIODS),
+            valid_from=date(_A, 1, 1),
+            valid_to=date(_C, 2, 2),
+            period_selector=PeriodSelector(year_from=_A, year_to=_C, periods=CENSUS_PERIODS),
         )
         later = _revision(
             revision_id="test-sym-b",
-            valid_from=date(2025, 2, 3),
+            valid_from=date(_C, 2, 3),
             valid_to=None,
-            period_selector=PeriodSelector(year_from=2025, periods=CENSUS_PERIODS),
+            period_selector=PeriodSelector(year_from=_C, periods=CENSUS_PERIODS),
         )
         assert revisions_coexist(earlier, later) == revisions_coexist(later, earlier)
 
@@ -244,17 +252,17 @@ class TestRevisionWindowsIntersectPredicate:
 
     def test_meeting_windows_do_not_intersect_but_overlapping_windows_do(self) -> None:
         """Inclusive bounds: end-to-start is disjoint, a shared day is not."""
-        selector = PeriodSelector(year_from=2023, periods=CENSUS_PERIODS)
+        selector = PeriodSelector(year_from=_A, periods=CENSUS_PERIODS)
         earlier = _revision(
             revision_id="test-meet-earlier",
-            valid_from=date(2023, 1, 1),
-            valid_to=date(2025, 2, 2),
+            valid_from=date(_A, 1, 1),
+            valid_to=date(_C, 2, 2),
             period_selector=selector,
         )
         meeting_later = _revision(
             revision_id="test-meet-later",
-            valid_from=date(2025, 2, 3),
-            valid_to=date(2026, 12, 31),
+            valid_from=date(_C, 2, 3),
+            valid_to=date(_D, 12, 31),
             period_selector=selector,
         )
         assert not revision_windows_intersect(earlier, meeting_later)
@@ -262,8 +270,8 @@ class TestRevisionWindowsIntersectPredicate:
 
         overlapping_later = _revision(
             revision_id="test-overlap-later",
-            valid_from=date(2025, 2, 2),
-            valid_to=date(2026, 12, 31),
+            valid_from=date(_C, 2, 2),
+            valid_to=date(_D, 12, 31),
             period_selector=selector,
         )
         assert revision_windows_intersect(earlier, overlapping_later)
@@ -271,17 +279,17 @@ class TestRevisionWindowsIntersectPredicate:
 
     def test_open_ended_valid_to_intersects_every_later_window(self) -> None:
         """An open end has no closing date, so nothing starting after it is disjoint."""
-        selector = PeriodSelector(year_from=2023, periods=CENSUS_PERIODS)
+        selector = PeriodSelector(year_from=_A, periods=CENSUS_PERIODS)
         open_ended = _revision(
             revision_id="test-intersect-open",
-            valid_from=date(2023, 1, 1),
+            valid_from=date(_A, 1, 1),
             valid_to=None,
             period_selector=selector,
         )
         for valid_from, valid_to in (
-            (date(2023, 1, 1), date(2023, 1, 1)),
-            (date(2025, 2, 3), date(2026, 12, 31)),
-            (date(2099, 12, 31), None),
+            (date(_A, 1, 1), date(_A, 1, 1)),
+            (date(_C, 2, 3), date(_D, 12, 31)),
+            (date(_BEYOND, 12, 31), None),
         ):
             later = _revision(
                 revision_id="test-intersect-later",
@@ -371,14 +379,14 @@ source_refs = ["aeat-manual"]
     _write_census_revision(
         revisions_dir,
         revision_id=EARLIER_REVISION,
-        window="valid_from = 2023-01-01\nvalid_to = 2025-02-02",
-        selector='{ year_from = 2023, year_to = 2025, periods = ["alta", "modificacion", "baja"] }',
+        window=f"valid_from = {_A}-01-01\nvalid_to = {_C}-02-02",
+        selector=f'{{ year_from = {_A}, year_to = {_C}, periods = ["alta", "modificacion", "baja"] }}',
     )
     _write_census_revision(
         revisions_dir,
         revision_id=LATER_REVISION,
-        window="valid_from = 2025-02-03",
-        selector='{ year_from = 2025, periods = ["alta", "modificacion", "baja"] }',
+        window=f"valid_from = {_C}-02-03",
+        selector=f'{{ year_from = {_C}, periods = ["alta", "modificacion", "baja"] }}',
     )
     write_test_label("Census casilla")
     for revision_id in (EARLIER_REVISION, LATER_REVISION):

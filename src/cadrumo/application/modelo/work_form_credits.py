@@ -25,7 +25,11 @@ from ...core.i18n.render import tr
 from ...domain.calculations.registry.runtime_graph import expression_binding_refs, expression_casilla_refs
 from ...domain.calculations.registry.schema import ModeloRevision
 from .source_policy import SourceSurface
-from .work_form_models import ModeloFormCasillaAddressV1, ModeloFormCredit, ModeloFormField
+from .work_form_field_vocabulary import ModeloFormCasillaAddressV1
+from .work_form_models import (
+    ModeloFormCredit,
+    ModeloFormField,
+)
 
 
 def _formula_readers(revision: ModeloRevision) -> Mapping[str, frozenset[str]] | None:
@@ -59,6 +63,35 @@ def _reached(seeds: Iterable[str], readers: Mapping[str, frozenset[str]]) -> fro
     return frozenset(found)
 
 
+def _numbered_dependent_addresses(
+    fields: tuple[ModeloFormField, ...], credits: list[ModeloFormField]
+) -> list[ModeloFormCasillaAddressV1]:
+    """The addresses of numbered boxes among ``fields`` that are not themselves credits."""
+    credit_casillas = {
+        str(field.address.casilla_id) for field in credits if isinstance(field.address, ModeloFormCasillaAddressV1)
+    }
+    return [
+        field.address
+        for field in fields
+        if isinstance(field.address, ModeloFormCasillaAddressV1)
+        and field.box is not None
+        and str(field.address.casilla_id) not in credit_casillas
+    ]
+
+
+def _serve_credit(
+    field: ModeloFormField,
+    numbered: list[ModeloFormCasillaAddressV1],
+    readers: Mapping[str, frozenset[str]] | None,
+) -> ModeloFormCredit:
+    if readers is None:
+        return ModeloFormCredit(address=field.address, dependents=None)
+    own = (str(field.address.casilla_id),) if isinstance(field.address, ModeloFormCasillaAddressV1) else ()
+    reached = _reached((*own, *_register_bindings(field)), readers)
+    dependents = tuple(address for address in numbered if str(address.casilla_id) in reached)
+    return ModeloFormCredit(address=field.address, dependents=dependents)
+
+
 def withholding_credits(fields: tuple[ModeloFormField, ...], revision: ModeloRevision) -> tuple[ModeloFormCredit, ...]:
     """The credits among ``fields``, in their order, each with the numbered boxes of ``fields`` worked out from it.
 
@@ -69,26 +102,8 @@ def withholding_credits(fields: tuple[ModeloFormField, ...], revision: ModeloRev
     if not credits:
         return ()
     readers = _formula_readers(revision)
-    credit_casillas = {
-        str(field.address.casilla_id) for field in credits if isinstance(field.address, ModeloFormCasillaAddressV1)
-    }
-    numbered = [
-        field.address
-        for field in fields
-        if isinstance(field.address, ModeloFormCasillaAddressV1)
-        and field.box is not None
-        and str(field.address.casilla_id) not in credit_casillas
-    ]
-    served: list[ModeloFormCredit] = []
-    for field in credits:
-        if readers is None:
-            served.append(ModeloFormCredit(address=field.address, dependents=None))
-            continue
-        own = (str(field.address.casilla_id),) if isinstance(field.address, ModeloFormCasillaAddressV1) else ()
-        reached = _reached((*own, *_register_bindings(field)), readers)
-        dependents = tuple(address for address in numbered if str(address.casilla_id) in reached)
-        served.append(ModeloFormCredit(address=field.address, dependents=dependents))
-    return tuple(served)
+    numbered = _numbered_dependent_addresses(fields, credits)
+    return tuple(_serve_credit(field, numbered, readers) for field in credits)
 
 
 _SUFFERED_HEADING_LOCALE_KEY = "application.modelo.work_form.credits_heading.suffered"

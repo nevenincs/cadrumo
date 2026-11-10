@@ -34,10 +34,12 @@ from ..withholding_bindings import (
     WithholdingProvider,
     resolve_withholding_binding_values,
 )
+from .authored_editions import filing_year_envelope
 from .withholding_observation_defaults import zero_incapacity_and_foral_fields
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_YEAR = filing_year_envelope().horizon
 _PERCEPCION_BINDING_ID = "modelo-190-percepciones-anual"
 _M190_WITHHOLDING_LEGAL_REFS = (
     "ley-35-2006:art-99",
@@ -58,10 +60,10 @@ _M190_WITHHOLDING_SOURCE_REFS = (
 
 def _revision_with(binding: BindingDefinition) -> ModeloRevision:
     return ModeloRevision(
-        id="2024-y-siguientes",
-        localization_key="test.schema.revision.2024-y-siguientes.label",
-        valid_from=date(2024, 1, 1),
-        period_selector=PeriodSelector(year_from=2024, periods=("0A",)),
+        id=f"{_YEAR}-y-siguientes",
+        localization_key=f"test.schema.revision.{_YEAR}-y-siguientes.label",
+        valid_from=date(_YEAR, 1, 1),
+        period_selector=PeriodSelector(year_from=_YEAR, periods=("0A",)),
         legal_refs=_M190_WITHHOLDING_LEGAL_REFS,
         source_refs=_M190_WITHHOLDING_SOURCE_REFS,
         bindings=(binding,),
@@ -83,7 +85,7 @@ def _obs(nif: str, clave: str, subclave: str = "") -> WithholdingObservation:
     return WithholdingObservation(
         source_id=f"{nif}:{clave}:{subclave or '-'}",
         perceptor_tax_id=nif,
-        transaction_date=date(2024, 6, 1),
+        transaction_date=date(_YEAR, 6, 1),
         clave=RetencionClave.from_registry(clave),
         subclave=subclave,
         percibido_dinerario=Decimal("1000"),

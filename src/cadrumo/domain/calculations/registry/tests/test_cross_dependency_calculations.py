@@ -60,7 +60,13 @@ from ..runtime_graph import expression_binding_refs
 from ..schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
 from ..schema_catalogues import RegistryCatalogues
 from ..withholding_bindings import WithholdingObservation, resolve_withholding_binding_values
-from .authored_editions import authored_revisions_where
+from .authored_editions import (
+    authored_revisions,
+    authored_revisions_where,
+    filing_year_envelope,
+    newest_authored_edition,
+    revision_covering,
+)
 from .cross_dependency_calculation_support import (
     casilla_inputs,
     grounded_observations,
@@ -179,10 +185,12 @@ _M190_RETENCIONES_PROBE_QUARTERS: tuple[Decimal, Decimal, Decimal, Decimal] = (
 #: exercised against more than one (perceptor, clave) pair. "A" is trabajo
 #: (empleados) against the fixture perceptor's "G" actividades profesionales.
 _M190_SECOND_CLAVE = "A"
-# The first exercise whose Modelo 190 totals route through the Modelo 111
-# relation prefills: they rest on the 2025 instrucciones, and the 2024 edition
-# totals its own type-2 records as its design states.
-_M190_RELATION_YEAR = 2025
+# The first exercise of the newest Modelo 190 edition, whose totals route through the
+# Modelo 111 relation prefills: they rest on that edition's instrucciones, while the
+# closed editions before it total their own type-2 records as their design states.
+_M190_RELATION_YEAR = newest_authored_edition("190")
+# The newest Modelo 100 edition the registry authors, which is filing grade.
+_M100_YEAR = newest_authored_edition("100")
 _M190_REL_111_ACTIVIDADES_DINERARIO = "modelo-190-111-actividades-dinerario-importe-anual"
 _M190_REL_111_RETENCIONES = "modelo-190-111-retenciones-anual"
 _M190_EXPECTED_RELATION_IDS = frozenset(
@@ -222,8 +230,15 @@ _EXPECTED_FIXTURE_ROLE: dict[str, str] = {
 
 
 @cache
-def _fixture_pdf_text(modelo: str, fixture_stem: str = "2024-0A") -> str:
-    pdf_path = FIXTURES_DIR / "justificantes" / modelo / f"{fixture_stem}.pdf"
+def _fixture_stem(modelo: str) -> str:
+    """The stem of the one justificante fixture committed for ``modelo``."""
+    (pdf_path,) = sorted((FIXTURES_DIR / "justificantes" / modelo).glob("*.pdf"))
+    return pdf_path.stem
+
+
+@cache
+def _fixture_pdf_text(modelo: str, fixture_stem: str | None = None) -> str:
+    pdf_path = FIXTURES_DIR / "justificantes" / modelo / f"{fixture_stem or _fixture_stem(modelo)}.pdf"
     sidecar = json.loads(pdf_path.with_suffix(".json").read_text(encoding="utf-8"))
     assert sidecar.get("provenance") in {"real_corpus", "synthetic_generated"}, (
         f"{pdf_path} fixture sidecar must declare real or synthetic provenance"
@@ -241,7 +256,7 @@ def _fixture_pdf_text(modelo: str, fixture_stem: str = "2024-0A") -> str:
 
 
 @cache
-def _annual_summary_fixture_values(modelo: str, fixture_stem: str = "2024-0A") -> dict[CasillaId, Decimal]:
+def _annual_summary_fixture_values(modelo: str, fixture_stem: str | None = None) -> dict[CasillaId, Decimal]:
     """Read the resumen-anual amounts a justificante fixture PRINTS.
 
     These are printed values, not AEAT-authoritative figures: the M190 fixture
@@ -250,6 +265,7 @@ def _annual_summary_fixture_values(modelo: str, fixture_stem: str = "2024-0A") -
     use them as a self-consistent reference to close the fold arithmetic
     against — see the module docstring for what that does and does not prove.
     """
+    fixture_stem = fixture_stem or _fixture_stem(modelo)
     text = _fixture_pdf_text(modelo, fixture_stem)
     values: dict[CasillaId, Decimal] = {}
     for casilla_id, pattern in _ANNUAL_SUMMARY_FIXTURE_PATTERNS[modelo].items():
@@ -442,58 +458,45 @@ def _m193_relation_source_values() -> dict[CasillaId, tuple[Decimal, ...]]:
     return _M193_RELATION_SOURCE_VALUES
 
 
-_ANNUAL_SUMMARY_RELATION_CASES = (
-    pytest.param(
-        "180",
-        2022,
-        "2019-2022",
+def _annual_summary_relation_cases() -> tuple[object, ...]:
+    """Modelo 180 across its closed edition, the current one and a projected year, and Modelo 193's closed edition."""
+    envelope = filing_year_envelope()
+    m180_closed, m180_current = authored_revisions("180")[-2:]
+    assert m180_closed.valid_to is not None, "the Modelo 180 edition before the newest must be closed"
+    historical_year = m180_closed.valid_to.year
+    assert historical_year >= envelope.floor, "the closed Modelo 180 edition must reach the support floor"
+    assert str(revision_covering("180", envelope.horizon).id) == str(m180_current.id)
+    # The closed edition just before the newest Modelo 193 edition is the last whose annual totals
+    # resolve from the quarterly modelo 123 filings (its perceptor count already counts the type-2
+    # records); the newest edition also sums the type-2 records and keeps 123 as a reconciliation
+    # check. This value is ASSERTED against the law-determined pick, never injected into resolution.
+    m193_closed = authored_revisions("193")[-2]
+    m180_relations = (
         _m180_fixture_relation_source_values,
         "modelo-180-115-perceptores-anual",
         frozenset({"modelo-180-115-base-anual", "modelo-180-115-retenciones-anual"}),
         "modelo-180-115-base-anual",
         "modelo-180-115-retenciones-anual",
-        id="modelo-180-historical",
-    ),
-    pytest.param(
-        "180",
-        2026,
-        "2023-y-siguientes",
-        _m180_fixture_relation_source_values,
-        "modelo-180-115-perceptores-anual",
-        frozenset({"modelo-180-115-base-anual", "modelo-180-115-retenciones-anual"}),
-        "modelo-180-115-base-anual",
-        "modelo-180-115-retenciones-anual",
-        id="modelo-180-current",
-    ),
-    pytest.param(
-        "180",
-        2027,
-        "2023-y-siguientes",
-        _m180_fixture_relation_source_values,
-        "modelo-180-115-perceptores-anual",
-        frozenset({"modelo-180-115-base-anual", "modelo-180-115-retenciones-anual"}),
-        "modelo-180-115-base-anual",
-        "modelo-180-115-retenciones-anual",
-        id="modelo-180-future",
-    ),
-    pytest.param(
-        "193",
-        2024,
-        # The closed `2024` edition is the last whose annual totals resolve from
-        # the quarterly modelo 123 filings (its perceptor count already counts the
-        # type-2 records); from `2025-y-siguientes` the design also sums the
-        # type-2 records and keeps 123 as a reconciliation
-        # check. This value is ASSERTED against the law-determined pick, never
-        # injected into resolution.
-        "2024",
-        _m193_relation_source_values,
-        "modelo-193-perceptores-anual",
-        frozenset({"modelo-193-123-base-anual", "modelo-193-123-retenciones-anual"}),
-        "modelo-193-123-base-anual",
-        "modelo-193-123-retenciones-anual",
-        id="modelo-193-quarterly-aggregate-edition",
-    ),
-)
+    )
+    return (
+        pytest.param("180", historical_year, str(m180_closed.id), *m180_relations, id="modelo-180-historical"),
+        pytest.param("180", envelope.horizon, str(m180_current.id), *m180_relations, id="modelo-180-current"),
+        pytest.param("180", envelope.horizon + 1, str(m180_current.id), *m180_relations, id="modelo-180-future"),
+        pytest.param(
+            "193",
+            m193_closed.valid_from.year,
+            str(m193_closed.id),
+            _m193_relation_source_values,
+            "modelo-193-perceptores-anual",
+            frozenset({"modelo-193-123-base-anual", "modelo-193-123-retenciones-anual"}),
+            "modelo-193-123-base-anual",
+            "modelo-193-123-retenciones-anual",
+            id="modelo-193-quarterly-aggregate-edition",
+        ),
+    )
+
+
+_ANNUAL_SUMMARY_RELATION_CASES = _annual_summary_relation_cases()
 
 
 @pytest.mark.parametrize(
@@ -692,20 +695,20 @@ def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings(
 def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual_observations(
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
-    snapshot = registry_snapshot("100", 2025, "0A")
-    requirements = relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
+    snapshot = registry_snapshot("100", _M100_YEAR, "0A")
+    requirements = relation_source_requirements(snapshot.revision, filing_year=_M100_YEAR, period="0A")
     observations = observations_from_requirements(requirements, _renta_relation_observed_value)
 
     relation_values = resolve_relation_values_from_observations(
         snapshot.revision,
         observations,
-        filing_year=2025,
+        filing_year=_M100_YEAR,
         period="0A",
     )
     result = calculate_registry_snapshot(
         snapshot,
         inputs={},
-        date_context={"filing_period": registry_filing_date(2025, "0A")},
+        date_context={"filing_period": registry_filing_date(_M100_YEAR, "0A")},
         relation_values=relation_values,
         binding_values={
             # Production profile resolver supplies this predicate as 1/0 from
@@ -757,7 +760,7 @@ def test_a_filed_modelo_184_does_not_fill_the_member_share_casilla_1577(
 ) -> None:
     """Casilla 1577 is the member's share, which no Modelo 184 total supplies (LIRPF art. 89).
 
-    The 2025 manual's comunidad de bienes example has comunero Y declare a
+    The newest manual's comunidad de bienes example has comunero Y declare a
     rendimiento neto atribuido of 15.000, half the entity's 30.000. Modelo 184
     files the entity's type-2 attribution records for every member and income
     class, and a relation prefill sums them with no member or class filter, so a
@@ -767,18 +770,18 @@ def test_a_filed_modelo_184_does_not_fill_the_member_share_casilla_1577(
     """
     member_share = Decimal("15000")
     casilla_1577 = validated_casilla_id("1577", surface="modelo-100 member attributed activity yield")
-    snapshot = registry_snapshot("100", 2025, "0A")
+    snapshot = registry_snapshot("100", _M100_YEAR, "0A")
 
-    requirements = relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
+    requirements = relation_source_requirements(snapshot.revision, filing_year=_M100_YEAR, period="0A")
     assert all(requirement.source_modelo != "184" for requirement in requirements)
     observations = observations_from_requirements(requirements, _renta_relation_observed_value)
     m184_entity_filing = RegistryModeloObservation(
         modelo="184",
-        filing_year=2025,
+        filing_year=_M100_YEAR,
         period="0A",
         observations=grounded_observations(
             modelo="184",
-            filing_year=2025,
+            filing_year=_M100_YEAR,
             period="0A",
             casilla_values={
                 validated_casilla_id("tipo2.renta-atribuible-importe", surface="modelo-184 entity total"): Decimal(
@@ -790,14 +793,14 @@ def test_a_filed_modelo_184_does_not_fill_the_member_share_casilla_1577(
     relation_values = resolve_relation_values_from_observations(
         snapshot.revision,
         observations,
-        filing_year=2025,
+        filing_year=_M100_YEAR,
         period="0A",
     )
     assert (
         resolve_relation_values_from_observations(
             snapshot.revision,
             (*observations, m184_entity_filing),
-            filing_year=2025,
+            filing_year=_M100_YEAR,
             period="0A",
         )
         == relation_values
@@ -806,7 +809,7 @@ def test_a_filed_modelo_184_does_not_fill_the_member_share_casilla_1577(
     result = calculate_registry_snapshot(
         snapshot,
         inputs={casilla_1577: member_share},
-        date_context={"filing_period": registry_filing_date(2025, "0A")},
+        date_context={"filing_period": registry_filing_date(_M100_YEAR, "0A")},
         relation_values=relation_values,
         binding_values={
             # Production profile resolver supplies this predicate as 1/0 from
@@ -846,7 +849,7 @@ def test_a_filed_modelo_184_does_not_fill_the_member_share_casilla_1577(
 def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_registry_results(
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
-    filing_year = 2025
+    filing_year = _M100_YEAR
     modelo_130_results = {}
     # Casilla 05 ("Pagos fraccionados anteriores") is now a bound carry, so the
     # cumulative prior-payment figure per quarter is supplied through the carry

@@ -10,6 +10,7 @@ from cadrumo_client.commands.secret_contracts import (
 )
 from cadrumo_client.commands.secret_parameters import MACHINE_SECRET_FD_OPTION, MACHINE_SECRET_STDIN_OPTION
 from cadrumo_client.commands.shared_contracts import (
+    NON_BLANK_CONSTRAINT,
     DeferredTarget,
     LazyBinding,
     ParameterConstraint,
@@ -84,7 +85,7 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.ledger.link.id_help"),
                 metavar=None,
-                constraint=ParameterConstraint(),
+                constraint=NON_BLANK_CONSTRAINT,
                 show_default=True,
                 hidden=False,
             ),
@@ -100,7 +101,7 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 multiple=False,
                 count=False,
                 eager=False,
-                constraint=ParameterConstraint(),
+                constraint=NON_BLANK_CONSTRAINT,
                 show_default=True,
                 hidden=False,
             ),
@@ -437,7 +438,7 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=LEAF_INVOCATION,
         parameters=(
-            required_text_argument("transaction_id", "cli.ledger.split_check_id_help"),
+            required_text_argument("transaction_id", "cli.ledger.split_check_id_help", non_blank=True),
             MACHINE_SECRET_STDIN_OPTION,
             MACHINE_SECRET_FD_OPTION,
         ),
@@ -526,7 +527,7 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.ledger.participation.transaction_id_help"),
                 metavar=None,
-                constraint=ParameterConstraint(),
+                constraint=NON_BLANK_CONSTRAINT,
                 show_default=True,
                 hidden=False,
             ),

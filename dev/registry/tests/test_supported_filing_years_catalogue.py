@@ -5,7 +5,7 @@ from __future__ import annotations
 import tomllib
 from datetime import date
 from pathlib import Path
-from typing import TypedDict
+from typing import Final, TypedDict
 
 import pytest
 from pydantic import ValidationError
@@ -19,10 +19,14 @@ from cadrumo.domain.calculations.registry.schema_catalogues import (
     SociedadesAnnualManualCoverageStatus,
 )
 from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.loader import load_registry_tree, load_shared_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_FLOOR: Final = filing_year_envelope().floor
+_HORIZON: Final = filing_year_envelope().horizon
 
 
 class _SociedadesCoverageFixtureOverrides(TypedDict, total=False):
@@ -63,11 +67,11 @@ def test_bundled_tree_declares_one_ordered_supported_year_catalogue() -> None:
 @pytest.mark.parametrize(
     "bounds",
     [
-        pytest.param({"floor": 2026, "horizon": 2022}, id="horizon-precedes-floor"),
-        pytest.param({"floor": FOUR_DIGIT_YEAR_FIRST - 1, "horizon": 2026}, id="floor-below-range"),
-        pytest.param({"floor": 2022, "horizon": FOUR_DIGIT_YEAR_LAST + 1}, id="horizon-above-range"),
-        pytest.param({"floor": 2022, "horizon": 2026, "hard_ceiling": 2024}, id="ceiling-below-horizon"),
-        pytest.param({"years": (2022, 2023)}, id="retired-enumerated-key"),
+        pytest.param({"floor": _HORIZON, "horizon": _FLOOR}, id="horizon-precedes-floor"),
+        pytest.param({"floor": FOUR_DIGIT_YEAR_FIRST - 1, "horizon": _HORIZON}, id="floor-below-range"),
+        pytest.param({"floor": _FLOOR, "horizon": FOUR_DIGIT_YEAR_LAST + 1}, id="horizon-above-range"),
+        pytest.param({"floor": _FLOOR, "horizon": _HORIZON, "hard_ceiling": _HORIZON - 1}, id="ceiling-below-horizon"),
+        pytest.param({"years": filing_year_envelope().years}, id="retired-enumerated-key"),
     ],
 )
 def test_supported_year_declaration_refuses_noncanonical_bounds(bounds: dict[str, object]) -> None:
@@ -82,39 +86,45 @@ def test_supported_year_declaration_refuses_noncanonical_bounds(bounds: dict[str
 
 
 def test_supported_year_declaration_derives_its_span_from_its_bounds() -> None:
-    catalogue = SupportedFilingYearsCatalogue(floor=2022, horizon=2026)
+    catalogue = SupportedFilingYearsCatalogue(floor=_FLOOR, horizon=_HORIZON)
 
-    assert catalogue.years == (2022, 2023, 2024, 2025, 2026)
-    assert not catalogue.admits_filing_year(2021), "below the floor is outside what the product claims"
-    assert catalogue.admits_filing_year(2022)
-    assert catalogue.admits_filing_year(2027), (
+    assert catalogue.years == tuple(range(_FLOOR, _HORIZON + 1))
+    assert not catalogue.admits_filing_year(_FLOOR - 1), "below the floor is outside what the product claims"
+    assert catalogue.admits_filing_year(_FLOOR)
+    assert catalogue.admits_filing_year(_HORIZON + 1), (
         "an absent hard ceiling leaves the span open above the horizon, because the newest "
         "declared revision carries forward into a year no revision names"
     )
 
 
 def test_a_declared_hard_ceiling_closes_the_span_above_the_horizon() -> None:
-    catalogue = SupportedFilingYearsCatalogue(floor=2022, horizon=2026, hard_ceiling=2028)
+    ceiling = _HORIZON + 2
+    catalogue = SupportedFilingYearsCatalogue(floor=_FLOOR, horizon=_HORIZON, hard_ceiling=ceiling)
 
-    assert catalogue.years == (2022, 2023, 2024, 2025, 2026), "the ceiling does not widen authored coverage"
-    assert catalogue.admits_filing_year(2028)
-    assert not catalogue.admits_filing_year(2029)
+    assert catalogue.years == tuple(range(_FLOOR, _HORIZON + 1)), "the ceiling does not widen authored coverage"
+    assert catalogue.admits_filing_year(ceiling)
+    assert not catalogue.admits_filing_year(ceiling + 1)
 
 
 def test_a_hard_ceiling_at_the_horizon_disables_forward_projection() -> None:
-    catalogue = SupportedFilingYearsCatalogue(floor=2022, horizon=2026, hard_ceiling=2026)
+    catalogue = SupportedFilingYearsCatalogue(floor=_FLOOR, horizon=_HORIZON, hard_ceiling=_HORIZON)
 
-    assert catalogue.admits_filing_year(2026)
-    assert not catalogue.admits_filing_year(2027)
-    assert catalogue.projection_coordinate(2026) == 2026
-    assert catalogue.projection_coordinate(2027) is None
+    assert catalogue.admits_filing_year(_HORIZON)
+    assert not catalogue.admits_filing_year(_HORIZON + 1)
+    assert catalogue.projection_coordinate(_HORIZON) == _HORIZON
+    assert catalogue.projection_coordinate(_HORIZON + 1) is None
 
 
 @pytest.mark.parametrize(
     ("status", "source_ref", "acquisition_condition_key", "message"),
     [
         (SociedadesAnnualManualCoverageStatus.AVAILABLE, None, None, "requires source_ref"),
-        (SociedadesAnnualManualCoverageStatus.UNACQUIRED, "manual-2022", "acquire it", "must not declare source_ref"),
+        (
+            SociedadesAnnualManualCoverageStatus.UNACQUIRED,
+            f"manual-{_FLOOR}",
+            "acquire it",
+            "must not declare source_ref",
+        ),
         (SociedadesAnnualManualCoverageStatus.UNPUBLISHED, None, None, "requires acquisition_condition"),
     ],
 )
@@ -126,11 +136,11 @@ def test_sociedades_manual_coverage_disposition_refuses_ambiguous_states(
 ) -> None:
     with pytest.raises(ValidationError, match=message):
         SociedadesAnnualManualCoverageDisposition(
-            year=2026,
+            year=_HORIZON,
             status=status,
             source_ref=source_ref,
             official_locator="https://example.com/aeat/manuals",
-            observed_at=date(2026, 9, 10),
+            observed_at=date(_HORIZON, 9, 10),
             acquisition_condition_key=acquisition_condition_key,
         )
 
@@ -164,7 +174,7 @@ def test_shared_catalogue_refuses_missing_sociedades_annual_manual_coverage(tmp_
     legal_dir = tmp_path / "legal"
     legal_dir.mkdir()
     (legal_dir / "supported-filing-years.toml").write_text(
-        "[supported_filing_years]\nfloor = 2025\nhorizon = 2025\n",
+        _single_year_declaration(),
         encoding="utf-8",
     )
 
@@ -173,7 +183,7 @@ def test_shared_catalogue_refuses_missing_sociedades_annual_manual_coverage(tmp_
 
 
 def test_shared_catalogue_refuses_duplicate_supported_year_declarations(tmp_path: Path) -> None:
-    declaration = "[supported_filing_years]\nfloor = 2025\nhorizon = 2025\n"
+    declaration = _single_year_declaration()
     legal_dir = tmp_path / "legal"
     legal_dir.mkdir()
     (legal_dir / "first.toml").write_text(declaration, encoding="utf-8")
@@ -183,22 +193,32 @@ def test_shared_catalogue_refuses_duplicate_supported_year_declarations(tmp_path
         load_shared_catalogues(tmp_path)
 
 
+def _single_year_declaration() -> str:
+    """A supported-year declaration whose span is the horizon alone."""
+    return f"[supported_filing_years]\nfloor = {_HORIZON}\nhorizon = {_HORIZON}\n"
+
+
 def _write_sociedades_coverage_fixture(
     tmp_path: Path,
     *,
-    coverage_year: int = 2025,
-    source_ref: str = "manual-2025",
+    coverage_year: int | None = None,
+    source_ref: str | None = None,
     declared_source_ref: str | None = None,
     source_kind: str = "manual_pdf",
     source_authority: str = "aeat",
-    corpus_path: str = "corpus/manuals/sociedades/2025/source.pdf",
-    applies_from: str = "2025-01-01",
-    applies_to: str = "2025-12-31",
+    corpus_path: str | None = None,
+    applies_from: str | None = None,
+    applies_to: str | None = None,
 ) -> None:
+    coverage_year = _HORIZON if coverage_year is None else coverage_year
+    source_ref = f"manual-{_HORIZON}" if source_ref is None else source_ref
+    corpus_path = f"corpus/manuals/sociedades/{_HORIZON}/source.pdf" if corpus_path is None else corpus_path
+    applies_from = date(_HORIZON, 1, 1).isoformat() if applies_from is None else applies_from
+    applies_to = date(_HORIZON, 12, 31).isoformat() if applies_to is None else applies_to
     legal_dir = tmp_path / "legal"
     legal_dir.mkdir()
     (legal_dir / "supported-filing-years.toml").write_text(
-        "[supported_filing_years]\nfloor = 2025\nhorizon = 2025\n",
+        _single_year_declaration(),
         encoding="utf-8",
     )
     (legal_dir / "coverage.toml").write_text(
@@ -235,7 +255,7 @@ def test_shared_catalogue_refuses_duplicate_sociedades_annual_manual_coverage(tm
     (tmp_path / "legal" / "duplicate-coverage.toml").write_text(
         "[sociedades_annual_manual_coverage]\n\n"
         "[[sociedades_annual_manual_coverage.dispositions]]\n"
-        "year = 2025\n"
+        f"year = {_HORIZON}\n"
         'status = "unpublished"\n'
         'official_locator = "https://example.com/aeat/manuals"\n'
         "observed_at = 2026-09-10\n"
@@ -250,12 +270,15 @@ def test_shared_catalogue_refuses_duplicate_sociedades_annual_manual_coverage(tm
 @pytest.mark.parametrize(
     ("kwargs", "message"),
     [
-        ({"coverage_year": 2024}, "must declare exactly the supported filing years"),
-        ({"source_ref": "unknown-manual", "declared_source_ref": "manual-2025"}, "references unknown source"),
+        ({"coverage_year": _HORIZON - 1}, "must declare exactly the supported filing years"),
+        (
+            {"source_ref": "unknown-manual", "declared_source_ref": f"manual-{_HORIZON}"},
+            "references unknown source",
+        ),
         ({"source_kind": "instructions"}, "must be kind='manual_pdf'"),
         ({"source_authority": "boe"}, "must be published by AEAT"),
-        ({"corpus_path": "corpus/manuals/renta/2025/source.pdf"}, "must use corpus path"),
-        ({"applies_to": "2026-01-01"}, "must have the exact annual applicability interval"),
+        ({"corpus_path": f"corpus/manuals/renta/{_HORIZON}/source.pdf"}, "must use corpus path"),
+        ({"applies_to": date(_HORIZON + 1, 1, 1).isoformat()}, "must have the exact annual applicability interval"),
     ],
 )
 def test_shared_catalogue_refuses_invalid_sociedades_annual_manual_source(

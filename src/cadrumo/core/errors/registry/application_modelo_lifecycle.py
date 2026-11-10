@@ -218,6 +218,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.work_missing_input.ModeloPriorCarryAbsenceUnstatedError",
+        ErrorCode(
+            code="REFUSED_MODELO_PRIOR_CARRY_ABSENCE_UNSTATED",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.prior_carries_unstated.renta_negative_general_bases_pending",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.work_missing_input.ModeloWorkMissingInputError",
         ErrorCode(
             code="ERROR_MODELO_WORK_INPUT_REQUIRED",
@@ -568,7 +578,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.iva_wallet_gate.ModeloIvaWalletReconciliationBlockedError",
+        "cadrumo.application.modelo.iva_wallet_refusal.ModeloIvaWalletReconciliationBlockedError",
         ErrorCode(
             code="REFUSED_MODELO_IVA_WALLET_RECONCILIATION_BLOCKED",
             category=ErrorCategory.REFUSED,
@@ -578,7 +588,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.iva_wallet_gate.ModeloIvaWalletAuthorityUnavailableError",
+        "cadrumo.application.modelo.iva_wallet_refusal.ModeloIvaWalletAuthorityUnavailableError",
         ErrorCode(
             code="ERROR_MODELO_IVA_WALLET_AUTHORITY_UNAVAILABLE",
             category=ErrorCategory.ERROR,

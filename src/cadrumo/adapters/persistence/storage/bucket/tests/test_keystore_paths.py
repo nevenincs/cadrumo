@@ -24,6 +24,7 @@ from pathlib import Path
 import pytest
 
 from ......core.errors.error_codes import build_error_envelope
+from ..directory_layout import bucket_paths
 from ..errors import BucketValidationError
 from ..keystore_paths import (
     keystore_path,
@@ -106,9 +107,8 @@ def test_separation_resolves_the_keystore_once_for_both_parents(
     validate_keystore_separation(tmp_path, "alpha")
 
     assert resolved.count(target) == 1
-    assert sorted(map(str, resolved)) == sorted(
-        map(str, (target, tmp_path / "buckets" / "alpha" / "db", tmp_path / "buckets"))
-    )
+    paths = bucket_paths(tmp_path, "alpha")
+    assert sorted(map(str, resolved)) == sorted(map(str, (target, paths.db_dir, paths.bucket_dir.parent)))
 
 
 def _link_directory(target: Path, link: Path) -> None:

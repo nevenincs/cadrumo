@@ -198,7 +198,7 @@ def test_modelo_347_record_design_pdf_keeps_distinct_type_two_layouts() -> None:
 
 
 def test_modelo_347_positional_chart_pdf_extracts_reviewable_record_data() -> None:
-    sheets = official_record_design_sheets(record_design_pdf("modelo_347", "2008-y-2009"))
+    sheets = official_record_design_sheets(record_design_pdf("modelo_347", "/02-347-"))
 
     assert [sheet.name for sheet in sheets] == [
         "Tipo 1 - Registro De Declarante",

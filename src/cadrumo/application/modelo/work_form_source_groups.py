@@ -35,11 +35,13 @@ from ...core.aggregation import BindingSourceKind
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language, tr
 from .source_policy import SourceFamily, SourcePolicyV1
-from .work_form_models import (
+from .work_form_field_vocabulary import (
     ModeloFormEarlierFiling,
     ModeloFormEditability,
-    ModeloFormField,
     ModeloFormOrigin,
+)
+from .work_form_models import (
+    ModeloFormField,
     ModeloFormSourceGroup,
     ModeloFormSourceGroupKind,
     ModeloFormSourceReading,

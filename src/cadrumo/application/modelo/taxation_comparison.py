@@ -61,15 +61,16 @@ from ...domain.calculations.registry.binding_selector_utils import selector_as_d
 from ...domain.calculations.registry.binding_targets import casillas_by_binding
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.runtime_graph import expression_binding_refs, expression_casilla_refs
-from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
+from ...domain.calculations.registry.schema import FormulaDefinition, ModeloRevision, RegistrySnapshot
 from ...domain.contribuyente.renta_codes import RentaDeclaracionType
 from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_semantic_role
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.modelos.work_unit import WorkUnit
     from .calculation_action_ports import CalculationActionPorts
     from .calculation_actions import TrustedMeshEvaluation
-    from .caller_context import CallerContextCalculationInputs
+    from .caller_context import CalculationCallerContext, CallerContextCalculationInputs
     from .work_profile import ModeloWorkProfile
 
 MATERIALITY_THRESHOLD: Final = Decimal(1)
@@ -245,6 +246,18 @@ def _unique_role(snapshot: RegistrySnapshot, role: str) -> CasillaId | None:
         return None
 
 
+def _declaration_binding(snapshot: RegistrySnapshot, declaration_casilla: CasillaId) -> tuple[BindingId, str] | None:
+    """The profile-sourced binding behind the declaration-type box and the profile key it reads."""
+    declaration = next(casilla for casilla in snapshot.revision.casillas if casilla.id == declaration_casilla)
+    binding = next((item for item in snapshot.revision.bindings if item.id == declaration.binding), None)
+    if binding is None:
+        return None
+    profile_key = selector_as_dict(binding).get("profile_key")
+    if not isinstance(profile_key, str) or not profile_key:
+        return None
+    return binding.id, profile_key
+
+
 def taxation_comparison_basis(snapshot: RegistrySnapshot) -> TaxationComparisonBasis | None:
     """Return what ``snapshot`` declares for the comparison, or ``None`` when it cannot be compared.
 
@@ -260,15 +273,12 @@ def taxation_comparison_basis(snapshot: RegistrySnapshot) -> TaxationComparisonB
     resultado_casilla = _unique_role(snapshot, _RESULTADO_ROLE)
     if declaration_casilla is None or cuota_casilla is None or resultado_casilla is None:
         return None
-    declaration = next(casilla for casilla in snapshot.revision.casillas if casilla.id == declaration_casilla)
-    binding = next((item for item in snapshot.revision.bindings if item.id == declaration.binding), None)
-    if binding is None:
+    declared = _declaration_binding(snapshot, declaration_casilla)
+    if declared is None:
         return None
-    profile_key = selector_as_dict(binding).get("profile_key")
-    if not isinstance(profile_key, str) or not profile_key:
-        return None
+    binding_id, profile_key = declared
     return TaxationComparisonBasis(
-        declaration_binding=binding.id,
+        declaration_binding=binding_id,
         declaration_profile_key=profile_key,
         declaration_casilla=declaration_casilla,
         cuota_casilla=cuota_casilla,
@@ -340,6 +350,28 @@ def _boxes_reading_binding(revision: ModeloRevision, binding_id: BindingId) -> t
     )
 
 
+def _formula_box_gaps(
+    revision: ModeloRevision,
+    casilla_id: CasillaId,
+    formula: FormulaDefinition,
+    values: Mapping[CasillaId, Decimal],
+    unresolved_binding_ids: frozenset[BindingId],
+) -> tuple[set[CasillaId], list[CasillaId]]:
+    """The boxes one formula box names, and the operand boxes without a value the walk descends into.
+
+    Boxes filled by an unresolved binding the formula reads are named; the formula box itself is named when
+    nothing else explains why it has no value.
+    """
+    operand_boxes = [ref for ref in expression_casilla_refs(formula.expression) if ref not in values]
+    gaps = [ref for ref in expression_binding_refs(formula.expression) if ref in unresolved_binding_ids]
+    named: set[CasillaId] = set()
+    for binding_id in gaps:
+        named.update(_boxes_reading_binding(revision, binding_id))
+    if not operand_boxes and not gaps:
+        named.add(casilla_id)
+    return named, operand_boxes
+
+
 def unresolved_result_boxes(
     revision: ModeloRevision,
     *,
@@ -371,12 +403,8 @@ def unresolved_result_boxes(
         if formula is None:
             named.add(casilla_id)
             continue
-        operand_boxes = [ref for ref in expression_casilla_refs(formula.expression) if ref not in values]
-        gaps = [ref for ref in expression_binding_refs(formula.expression) if ref in unresolved_binding_ids]
-        for binding_id in gaps:
-            named.update(_boxes_reading_binding(revision, binding_id))
-        if not operand_boxes and not gaps:
-            named.add(casilla_id)
+        names, operand_boxes = _formula_box_gaps(revision, casilla_id, formula, values, unresolved_binding_ids)
+        named.update(names)
         pending.extend(operand_boxes)
     return tuple(sorted(named))
 
@@ -509,6 +537,58 @@ def _require_settled_results(
         raise TaxationComparisonError(TaxationComparisonRefusal.UNRESOLVED_BOXES, casilla_ids=tuple(sorted(named)))
 
 
+def _selected_work_unit(work_unit_id: str, *, bucket_id: str, ports: CalculationActionPorts) -> WorkUnit:
+    """The work unit of ``bucket_id`` named by ``work_unit_id``; absent is refused."""
+    from .action_errors import WorkUnitNotFoundError
+    from .work_selection import ModeloWorkSelectorRequest, ModeloWorkSelectorState, select_modelo_work_resolution
+
+    selection = select_modelo_work_resolution(
+        ModeloWorkSelectorRequest(work_unit_id=work_unit_id, bucket_id=bucket_id),
+        catalogue=ports.work_unit_repository.load(),
+        bucket_id=bucket_id,
+    )
+    if selection.state is ModeloWorkSelectorState.ABSENT or selection.work_unit is None:
+        raise WorkUnitNotFoundError(
+            translated_message="application.modelo.errors.work_unit_not_found",
+            context={"work_unit_id": work_unit_id},
+        )
+    return selection.work_unit
+
+
+def _comparable_snapshot(
+    work_unit: WorkUnit, *, operation: PinnedAuthorityOperation
+) -> tuple[RegistrySnapshot, TaxationComparisonBasis]:
+    """The work unit's pinned snapshot and its comparison basis; an undeclared or outdated revision is refused."""
+    from ...domain.calculations.registry.errors import RegistrySnapshotError
+
+    try:
+        snapshot = operation.reading_snapshot(
+            str(work_unit.modelo), filing_year=work_unit.filing_year, period=work_unit.period.registry_token
+        )
+    except (FileNotFoundError, RegistrySnapshotError) as exc:
+        raise TaxationComparisonError(TaxationComparisonRefusal.NOT_DECLARED) from exc
+    basis = taxation_comparison_basis(snapshot)
+    if basis is None:
+        raise TaxationComparisonError(TaxationComparisonRefusal.NOT_DECLARED)
+    if snapshot.revision.id != work_unit.revision_id:
+        raise TaxationComparisonError(TaxationComparisonRefusal.REVISION_OUTDATED)
+    return snapshot, basis
+
+
+def _head_caller_context(work_unit: WorkUnit, *, ports: CalculationActionPorts) -> CalculationCallerContext:
+    """The caller context of the work unit's current calculation head; no head or unknown entries are refused."""
+    from .caller_context import caller_context_of
+
+    head_id = work_unit.current_calculation_revision_id
+    head = None if head_id is None else ports.calculation_repository.load(operation=ports.operation).get(head_id)
+    if head is None:
+        raise TaxationComparisonError(TaxationComparisonRefusal.NOT_CALCULATED)
+    context = caller_context_of(head)
+    if not context.operator_layer_known:
+        raise TaxationComparisonError(TaxationComparisonRefusal.ENTRIES_UNKNOWN)
+    return context
+
+
 def compare_taxation_for_work_unit(
     work_unit_id: str,
     *,
@@ -525,43 +605,14 @@ def compare_taxation_for_work_unit(
     :class:`~cadrumo.application.modelo.action_errors.WorkUnitNotFoundError`
     when ``work_unit_id`` is not a work unit of ``bucket_id``.
     """
-    from ...domain.calculations.registry.errors import RegistrySnapshotError
     from ...domain.period import calculation_filing_date
-    from .action_errors import WorkUnitNotFoundError
-    from .caller_context import caller_context_calculation_inputs, caller_context_of
+    from .caller_context import caller_context_calculation_inputs
     from .profile_readiness_gate import load_modelo_work_profile
-    from .work_selection import ModeloWorkSelectorRequest, ModeloWorkSelectorState, select_modelo_work_resolution
 
     operation = ports.operation
-    selection = select_modelo_work_resolution(
-        ModeloWorkSelectorRequest(work_unit_id=work_unit_id, bucket_id=bucket_id),
-        catalogue=ports.work_unit_repository.load(),
-        bucket_id=bucket_id,
-    )
-    if selection.state is ModeloWorkSelectorState.ABSENT or selection.work_unit is None:
-        raise WorkUnitNotFoundError(
-            translated_message="application.modelo.errors.work_unit_not_found",
-            context={"work_unit_id": work_unit_id},
-        )
-    work_unit = selection.work_unit
-    try:
-        snapshot = operation.reading_snapshot(
-            str(work_unit.modelo), filing_year=work_unit.filing_year, period=work_unit.period.registry_token
-        )
-    except (FileNotFoundError, RegistrySnapshotError) as exc:
-        raise TaxationComparisonError(TaxationComparisonRefusal.NOT_DECLARED) from exc
-    basis = taxation_comparison_basis(snapshot)
-    if basis is None:
-        raise TaxationComparisonError(TaxationComparisonRefusal.NOT_DECLARED)
-    if snapshot.revision.id != work_unit.revision_id:
-        raise TaxationComparisonError(TaxationComparisonRefusal.REVISION_OUTDATED)
-    head_id = work_unit.current_calculation_revision_id
-    head = None if head_id is None else ports.calculation_repository.load(operation=operation).get(head_id)
-    if head is None:
-        raise TaxationComparisonError(TaxationComparisonRefusal.NOT_CALCULATED)
-    context = caller_context_of(head)
-    if not context.operator_layer_known:
-        raise TaxationComparisonError(TaxationComparisonRefusal.ENTRIES_UNKNOWN)
+    work_unit = _selected_work_unit(work_unit_id, bucket_id=bucket_id, ports=ports)
+    snapshot, basis = _comparable_snapshot(work_unit, operation=operation)
+    context = _head_caller_context(work_unit, ports=ports)
     profile = load_modelo_work_profile(bucket_id=bucket_id, profile_decode_context=operation.profile_decode_context())
     if profile is None:
         raise TaxationComparisonError(TaxationComparisonRefusal.FAMILY_SITUATION_UNSTATED)

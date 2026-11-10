@@ -9,6 +9,7 @@ import pytest
 from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.export import resolve_export_layout
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from .authored_edition_support import source_first_exercise, source_with_sha256
 from .record_design_support import (
@@ -48,8 +49,8 @@ _LA_PALMA_LEGAL_REF_CASES = (
     (2024, _WORKBOOK_2024, "real-decreto-ley-4-2024:art-3"),
     (2025, _WORKBOOK_2025, "real-decreto-ley-13-2025:art-2"),
 )
-_EXPORT_BINDING_YEARS = (2024, 2025, 2026)
-_SUBMITTED_FILE_PROFILE_YEARS = (2023, 2024, 2025, 2026)
+_EXPORT_BINDING_YEARS = tuple(filing_year_envelope().years)
+_SUBMITTED_FILE_PROFILE_YEARS = tuple(filing_year_envelope().years)
 
 
 @lru_cache

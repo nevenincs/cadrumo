@@ -13,7 +13,7 @@ from ....domain.calculations.registry.schema_form_layouts import (
     FormGridRow,
     FormRepeatingColumn,
 )
-from ...modelo.work_form_models import ModeloFormScalar
+from ...modelo.work_form_field_vocabulary import ModeloFormScalar
 from .errors import CalcSheetsEngineError
 from .form_scalar_builder import FormScalarBuilder
 from .number_formats import numeric_format

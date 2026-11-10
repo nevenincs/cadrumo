@@ -32,6 +32,7 @@ from .ledger_command_spec_matrix import (
     FALSE_DEFAULT,
     GROUP_INVOCATION_CONTRACT,
     NO_RESULT_SCHEMA_CONTRACT,
+    NON_BLANK_CONSTRAINT_CONTRACT,
     NONE_DEFAULT,
     REQUIRED_DEFAULT,
     TARGET,
@@ -110,13 +111,14 @@ _EXPECTED_COMMANDS: Final[tuple[ExpectedCommand, ...]] = (
         "cadrumo.entrypoints.cli.ledger_lifecycle_cli:ledger_detach",
         expected_result_schema(TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerDetachResult", "ledger.detach"),
         (
-            expected_argument("transaction_id", "cli.ledger.detach.id_help"),
+            expected_argument("transaction_id", "cli.ledger.detach.id_help", constraint=NON_BLANK_CONSTRAINT_CONTRACT),
             expected_option(
                 "attachment_ids",
                 "--attachment-id",
                 "cli.ledger.detach.attachment_help",
                 default=EMPTY_TUPLE_DEFAULT,
                 multiple=True,
+                constraint=NON_BLANK_CONSTRAINT_CONTRACT,
             ),
             expected_option("actor", "--actor", "cli.ledger.detach.actor_help"),
         ),
@@ -142,7 +144,9 @@ _EXPECTED_COMMANDS: Final[tuple[ExpectedCommand, ...]] = (
         "cadrumo.entrypoints.cli.ledger_lifecycle_cli:ledger_exclude",
         expected_result_schema(TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerExcludeResult", "ledger.exclude"),
         (
-            expected_argument("transaction_id", "cli.app.ledger.evidence.pull_id_help"),
+            expected_argument(
+                "transaction_id", "cli.app.ledger.evidence.pull_id_help", constraint=NON_BLANK_CONSTRAINT_CONTRACT
+            ),
             expected_option("reason", "--reason", "cli.ledger.exclude.reason_help", default=EMPTY_DEFAULT),
             expected_option(
                 "yes",
@@ -207,7 +211,7 @@ _EXPECTED_COMMANDS: Final[tuple[ExpectedCommand, ...]] = (
         "cadrumo.entrypoints.cli.ledger_read_commands:ledger_history",
         expected_result_schema(TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerHistoryResult", "ledger.history"),
         (
-            expected_argument("transaction_id", "cli.ledger.history.id_help"),
+            expected_argument("transaction_id", "cli.ledger.history.id_help", constraint=NON_BLANK_CONSTRAINT_CONTRACT),
             expected_option(
                 "include_split_siblings",
                 "--include-split-siblings",
@@ -319,8 +323,14 @@ _EXPECTED_COMMANDS: Final[tuple[ExpectedCommand, ...]] = (
         "cadrumo.entrypoints.cli.ledger_commands:ledger_link",
         expected_result_schema(TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerLinkResult", "ledger.link"),
         (
-            expected_argument("transaction_id", "cli.ledger.link.id_help"),
-            expected_option("invoice_id", "--invoice-id", "cli.ledger.link.invoice_id_help", default=REQUIRED_DEFAULT),
+            expected_argument("transaction_id", "cli.ledger.link.id_help", constraint=NON_BLANK_CONSTRAINT_CONTRACT),
+            expected_option(
+                "invoice_id",
+                "--invoice-id",
+                "cli.ledger.link.invoice_id_help",
+                default=REQUIRED_DEFAULT,
+                constraint=NON_BLANK_CONSTRAINT_CONTRACT,
+            ),
             expected_option("actor", "--by", "cli.ledger.link.actor_help"),
         ),
     ),
@@ -464,7 +474,9 @@ _EXPECTED_COMMANDS: Final[tuple[ExpectedCommand, ...]] = (
             TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerSplitCheckEnvelope", "ledger.split-check"
         ),
         parameters=(
-            expected_argument("transaction_id", "cli.ledger.split_check_id_help"),
+            expected_argument(
+                "transaction_id", "cli.ledger.split_check_id_help", constraint=NON_BLANK_CONSTRAINT_CONTRACT
+            ),
             expected_option(
                 "secrets_stdin",
                 "--secrets-stdin",
@@ -537,7 +549,14 @@ _EXPECTED_COMMANDS: Final[tuple[ExpectedCommand, ...]] = (
             "cadrumo.entrypoints.cli.ledger_participation_results:LedgerTransactionParticipationPayload",
             "ledger.participation",
         ),
-        (expected_argument("transaction_id", "cli.ledger.participation.transaction_id_help", default=NONE_DEFAULT),),
+        (
+            expected_argument(
+                "transaction_id",
+                "cli.ledger.participation.transaction_id_help",
+                default=NONE_DEFAULT,
+                constraint=NON_BLANK_CONSTRAINT_CONTRACT,
+            ),
+        ),
         invocation=_PARTICIPATION_INVOCATION_CONTRACT,
     ),
     expected_command(
@@ -584,7 +603,12 @@ _EXPECTED_COMMANDS: Final[tuple[ExpectedCommand, ...]] = (
 
 
 _EXPECTED_SHARED_PARAMETERS: Final[tuple[tuple[str, tuple[object, ...]], ...]] = (
-    ("evidence_transaction_id", expected_argument("transaction_id", "cli.app.ledger.evidence.pull_id_help")),
+    (
+        "evidence_transaction_id",
+        expected_argument(
+            "transaction_id", "cli.app.ledger.evidence.pull_id_help", constraint=NON_BLANK_CONSTRAINT_CONTRACT
+        ),
+    ),
     ("evidence_actor", expected_option("actor", "--actor", "cli.app.ledger.evidence.pull_actor_help")),
     ("ledger_actor", expected_option("actor", "--actor", "cli.ledger.add.actor_help")),
     ("merge_reason", expected_option("reason", "--reason", "cli.ledger.merge.reason_help", default=EMPTY_DEFAULT)),

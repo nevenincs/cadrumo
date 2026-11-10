@@ -9,7 +9,7 @@ from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..edit_prerequisite_wording import form_prerequisite_words, prerequisite_words
-from ..work_form_models import ModeloFormCasillaAddressV1
+from ..work_form_field_vocabulary import ModeloFormCasillaAddressV1
 from ..work_form_source_groups import earlier_filing_text
 from .work_form_fixture import built_form
 

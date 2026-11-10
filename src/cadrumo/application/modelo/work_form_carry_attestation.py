@@ -12,7 +12,7 @@ as a zero the filer stated, apart from a zero typed.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from types import MappingProxyType
 from typing import Final
 
@@ -20,7 +20,11 @@ from ...core.errors.hierarchy import InternalInvariantError
 from ...core.i18n.render import tr
 from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ...domain.calculations.registry.ids import BindingId
-from .edit_models import ModeloEditBindingIntentKind, ModeloEditWritableBindingOverrideSurfaceEntryV1
+from .edit_models import (
+    ModeloEditBindingIntentKind,
+    ModeloEditPermittedSurfaceEntryV1,
+    ModeloEditWritableBindingOverrideSurfaceEntryV1,
+)
 from .work_form_context import WorkFormContext
 from .work_form_models import ModeloFormCarryAttestation
 
@@ -51,20 +55,15 @@ for _family_words in (_ACTION_LOCALE_KEYS, _STATEMENT_LOCALE_KEYS, _EFFECT_LOCAL
         raise InternalInvariantError("every statement family the registry can declare needs its words")
 
 
-def form_carry_attestations(context: WorkFormContext) -> tuple[ModeloFormCarryAttestation, ...]:
-    """One statement per declared family with a carry that holds no value; none on a form that admits no edit.
-
-    A carry holds a value when the current calculation resolved one for it from
-    any source, a stored earlier return included, or the filer entered or
-    stated one.
-    """
-    if context.surface is None:
-        return ()
+def _open_carries_by_family(
+    context: WorkFormContext, entries: Iterable[ModeloEditPermittedSurfaceEntryV1]
+) -> dict[AbsenceAttestationFamily, list[BindingId]]:
+    """The carries that hold no value, grouped by the family whose statement can absent them."""
     revision = context.revision
     held = frozenset(()) if revision is None else frozenset(revision.binding_overrides)
     entered = context.overridden or frozenset(())
     open_by_family: dict[AbsenceAttestationFamily, list[BindingId]] = {}
-    for entry in context.surface.values():
+    for entry in entries:
         if not (
             isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1)
             and ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT in entry.allowed_intents
@@ -75,6 +74,19 @@ def form_carry_attestations(context: WorkFormContext) -> tuple[ModeloFormCarryAt
         binding = context.bindings.get(entry.binding_id)
         if binding is not None and binding.absence_attestation is not None:
             open_by_family.setdefault(binding.absence_attestation, []).append(entry.binding_id)
+    return open_by_family
+
+
+def form_carry_attestations(context: WorkFormContext) -> tuple[ModeloFormCarryAttestation, ...]:
+    """One statement per declared family with a carry that holds no value; none on a form that admits no edit.
+
+    A carry holds a value when the current calculation resolved one for it from
+    any source, a stored earlier return included, or the filer entered or
+    stated one.
+    """
+    if context.surface is None:
+        return ()
+    open_by_family = _open_carries_by_family(context, context.surface.values())
     locale = context.language.value
     return tuple(
         ModeloFormCarryAttestation(

@@ -15,7 +15,7 @@ submits and the cross-period carry the next period reads can never disagree (a
 period requested as devolución is excluded from compensación carry - never
 both). It reuses the per-modelo result→code derivation
 (:func:`~derive_result_disposition`) and the REDEME/last-period
-eligibility gate (:func:`~domain.iva.refund_eligibility.refund_disposition_available`); it does
+eligibility gate (:func:`~domain.iva.refund_eligibility.resolve_refund_eligibility`); it does
 not duplicate either.
 
 Before resolving the result, the persisted :class:`CalculationRevision` value map
@@ -30,7 +30,7 @@ See Also:
     :func:`derive_result_disposition`
         Diseño-grounded result-to-code derivation used before Modelo 303 refund
         election handling.
-    :func:`domain.iva.refund_eligibility.refund_disposition_available`
+    :func:`domain.iva.refund_eligibility.resolve_refund_eligibility`
         Law-determined REDEME/last-period eligibility gate layered on a carried
         Modelo 303 credit.
     :func:`application.modelo.filing_actions.file_modelo_revision`
@@ -112,7 +112,7 @@ def resolve_modelo_result_disposition(
     monthly-devolución disposition policy; a non-REDEME taxpayer who explicitly
     elects ``DEVOLVER`` requests devolución for the negative *last* period of the
     year (Ley 37/1992 art. 116). The eligibility gate
-    (:func:`~domain.iva.refund_eligibility.refund_disposition_available`) confirms the refund is
+    (:func:`~domain.iva.refund_eligibility.resolve_refund_eligibility`) confirms the refund is
     lawful for the period. Every other disposition is returned unchanged.
 
     ``refund_election`` is the operator's per-filing opt-in (default

@@ -29,7 +29,10 @@ from ...domain.calculations.registry.m303_regimen_simplificado_annual_summary_bi
 from ...domain.calculations.registry.relation_prefill_bindings import RelationPrefillProvider
 from ...domain.calculations.registry.schema import BindingDefinition
 from .source_policy import SourceFamily, source_policy
-from .work_form_models import ModeloFormEarlierFiling, ModeloFormValueSource
+from .work_form_field_vocabulary import (
+    ModeloFormEarlierFiling,
+    ModeloFormValueSource,
+)
 
 
 def earlier_filings(binding: BindingDefinition, *, target: Period) -> tuple[ModeloFormEarlierFiling, ...]:

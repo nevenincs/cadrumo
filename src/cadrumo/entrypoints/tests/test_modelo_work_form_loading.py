@@ -50,16 +50,18 @@ from ...application.modelo.operation_shared import (
 from ...application.modelo.source_policy import SourceFamily
 from ...application.modelo.work_form import build_modelo_work_form
 from ...application.modelo.work_form_declaration_facts import ModeloFormEditClosure, ModeloFormResultDirection
-from ...application.modelo.work_form_issue_lines import form_issue_lines
-from ...application.modelo.work_form_models import (
+from ...application.modelo.work_form_field_vocabulary import (
     ModeloFormBindingAddressV1,
     ModeloFormCasillaAddressV1,
     ModeloFormEditability,
+    ModeloFormOrigin,
+    address_key,
+)
+from ...application.modelo.work_form_issue_lines import form_issue_lines
+from ...application.modelo.work_form_models import (
     ModeloFormField,
     ModeloFormLayoutProvenance,
-    ModeloFormOrigin,
     ModeloWorkForm,
-    address_key,
 )
 from ...application.modelo.work_form_service import ModeloWorkFormLoadV1, load_modelo_work_form, modelo_form_snapshot
 from ...application.modelo.work_review import ModeloWorkReview, build_modelo_work_review

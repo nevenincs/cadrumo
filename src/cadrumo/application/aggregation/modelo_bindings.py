@@ -323,16 +323,14 @@ class LedgerRentaIncomeAggregationSourceResolver:
             try:
                 if context.modelo == form_for_role("renta.annual"):
                     rental = _rental_activity_screen(context, aggregation_period, operation)
-                    aggregation = aggregate_renta_m100_income_ledger_from_repositories(
-                        bucket_id=context.bucket_id,
-                        period=aggregation_period,
-                        modelo=context.modelo,
-                        target_casilla_id=target_casilla_id,
+                    aggregation = self._aggregate_annual(
+                        context,
+                        aggregation_period,
+                        target_casilla_id,
+                        criteria,
+                        rental=rental,
                         activity_category_matcher=activity_category_matcher,
                         employment_category_matcher=employment_category_matcher,
-                        ports=self._ports,
-                        criteria=criteria,
-                        rental=rental,
                     )
                     payment_year_values = self._payment_year_withholding(
                         context,
@@ -345,63 +343,24 @@ class LedgerRentaIncomeAggregationSourceResolver:
                     )
                     instalment_basis_values = self._instalment_basis_withholding(context, aggregation)
                 elif context.modelo == form_for_role("renta.objective_instalment"):
-                    agrarian_activity_codes = frozenset(
-                        TipoActividad(code)
-                        for code in tipo_actividad_code_set(
-                            _M131_AGRARIAN_ACTIVITY_SELECTOR,
-                            effective_date=aggregation_period.end_date,
-                            authority=operation,
-                        )
-                    )
-                    aggregation = aggregate_renta_m131_agrario_income_ledger_from_repositories(
-                        bucket_id=context.bucket_id,
-                        period=aggregation_period,
-                        modelo=context.modelo,
-                        target_casilla_id=target_casilla_id,
-                        agrarian_activity_codes=agrarian_activity_codes,
+                    aggregation = self._aggregate_objective_instalment(
+                        context,
+                        aggregation_period,
+                        target_casilla_id,
+                        operation=operation,
                         activity_category_matcher=activity_category_matcher,
                         employment_category_matcher=employment_category_matcher,
-                        ports=self._ports,
-                        operation=operation,
                     )
                 else:
-                    agrarian_target = _agrarian_quarter_target_casilla(context)
-                    agrarian_codes = frozenset[TipoActividad]()
-                    if agrarian_target is not None:
-                        agrarian_codes = agrarian_instalment_activity_codes(
-                            effective_date=aggregation_period.end_date,
-                            authority=operation,
-                        )
-                    aggregation = aggregate_renta_income_ledger_from_repositories(
-                        bucket_id=context.bucket_id,
-                        period=aggregation_period,
-                        modelo=context.modelo,
-                        target_casilla_id=target_casilla_id,
+                    aggregation = self._aggregate_quarter(
+                        context,
+                        aggregation_period,
+                        target_casilla_id,
+                        criteria,
+                        operation=operation,
                         activity_category_matcher=activity_category_matcher,
                         employment_category_matcher=employment_category_matcher,
-                        ports=self._ports,
-                        criteria=criteria,
-                        excluded_activity_codes=agrarian_codes,
                     )
-                    if agrarian_target is not None:
-                        agrarian = aggregate_renta_m131_agrario_income_ledger_from_repositories(
-                            bucket_id=context.bucket_id,
-                            period=aggregation_period,
-                            modelo=context.modelo,
-                            target_casilla_id=agrarian_target,
-                            agrarian_activity_codes=agrarian_codes,
-                            activity_category_matcher=activity_category_matcher,
-                            employment_category_matcher=employment_category_matcher,
-                            ports=self._ports,
-                            operation=operation,
-                            criteria=criteria,
-                        )
-                        aggregation = aggregation.model_copy(
-                            update={
-                                "observations": (*aggregation.observations, *agrarian.observations),
-                                "issues": (*aggregation.issues, *agrarian.issues),
-                            }
-                        )
                 disposal_excess = (
                     ()
                     if context.modelo == form_for_role("renta.annual")
@@ -426,6 +385,112 @@ class LedgerRentaIncomeAggregationSourceResolver:
             update={
                 "payment_year_binding_values": payment_year_values,
                 "instalment_basis_binding_values": instalment_basis_values,
+            }
+        )
+
+    def _aggregate_annual(
+        self,
+        context: CalculationSourceContext,
+        period: Period,
+        target_casilla_id: CasillaId,
+        criteria: ImputationCriteria,
+        *,
+        rental: RentalActivityScreen,
+        activity_category_matcher: Callable[[Transaction], bool],
+        employment_category_matcher: Callable[[Transaction], bool],
+    ) -> RentaIncomeLedgerAggregation:
+        """Aggregate the Modelo 100 activity income over the full ejercicio."""
+        return aggregate_renta_m100_income_ledger_from_repositories(
+            bucket_id=context.bucket_id,
+            period=period,
+            modelo=context.modelo,
+            target_casilla_id=target_casilla_id,
+            activity_category_matcher=activity_category_matcher,
+            employment_category_matcher=employment_category_matcher,
+            ports=self._ports,
+            criteria=criteria,
+            rental=rental,
+        )
+
+    def _aggregate_objective_instalment(
+        self,
+        context: CalculationSourceContext,
+        period: Period,
+        target_casilla_id: CasillaId,
+        *,
+        operation: PinnedAuthorityOperation,
+        activity_category_matcher: Callable[[Transaction], bool],
+        employment_category_matcher: Callable[[Transaction], bool],
+    ) -> RentaIncomeLedgerAggregation:
+        """Aggregate the Modelo 131 quarter, narrowed to the agrarian activity set."""
+        agrarian_activity_codes = frozenset(
+            TipoActividad(code)
+            for code in tipo_actividad_code_set(
+                _M131_AGRARIAN_ACTIVITY_SELECTOR,
+                effective_date=period.end_date,
+                authority=operation,
+            )
+        )
+        return aggregate_renta_m131_agrario_income_ledger_from_repositories(
+            bucket_id=context.bucket_id,
+            period=period,
+            modelo=context.modelo,
+            target_casilla_id=target_casilla_id,
+            agrarian_activity_codes=agrarian_activity_codes,
+            activity_category_matcher=activity_category_matcher,
+            employment_category_matcher=employment_category_matcher,
+            ports=self._ports,
+            operation=operation,
+        )
+
+    def _aggregate_quarter(
+        self,
+        context: CalculationSourceContext,
+        period: Period,
+        target_casilla_id: CasillaId,
+        criteria: ImputationCriteria,
+        *,
+        operation: PinnedAuthorityOperation,
+        activity_category_matcher: Callable[[Transaction], bool],
+        employment_category_matcher: Callable[[Transaction], bool],
+    ) -> RentaIncomeLedgerAggregation:
+        """Aggregate the cumulative-quarter income, adding the agrarian rows its own box takes."""
+        agrarian_target = _agrarian_quarter_target_casilla(context)
+        agrarian_codes = frozenset[TipoActividad]()
+        if agrarian_target is not None:
+            agrarian_codes = agrarian_instalment_activity_codes(
+                effective_date=period.end_date,
+                authority=operation,
+            )
+        aggregation = aggregate_renta_income_ledger_from_repositories(
+            bucket_id=context.bucket_id,
+            period=period,
+            modelo=context.modelo,
+            target_casilla_id=target_casilla_id,
+            activity_category_matcher=activity_category_matcher,
+            employment_category_matcher=employment_category_matcher,
+            ports=self._ports,
+            criteria=criteria,
+            excluded_activity_codes=agrarian_codes,
+        )
+        if agrarian_target is None:
+            return aggregation
+        agrarian = aggregate_renta_m131_agrario_income_ledger_from_repositories(
+            bucket_id=context.bucket_id,
+            period=period,
+            modelo=context.modelo,
+            target_casilla_id=agrarian_target,
+            agrarian_activity_codes=agrarian_codes,
+            activity_category_matcher=activity_category_matcher,
+            employment_category_matcher=employment_category_matcher,
+            ports=self._ports,
+            operation=operation,
+            criteria=criteria,
+        )
+        return aggregation.model_copy(
+            update={
+                "observations": (*aggregation.observations, *agrarian.observations),
+                "issues": (*aggregation.issues, *agrarian.issues),
             }
         )
 

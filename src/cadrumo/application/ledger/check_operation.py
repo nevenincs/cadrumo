@@ -1,4 +1,7 @@
-"""Registered encrypted ledger check under whole-profile read authority."""
+"""Registered encrypted ledger check under whole-profile read authority.
+
+Core types: :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+"""
 
 from __future__ import annotations
 

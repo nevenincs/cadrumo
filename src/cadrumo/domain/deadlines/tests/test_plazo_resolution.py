@@ -13,12 +13,13 @@ from ....core.result_disposition import ResultDisposition
 from ...calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_projection
 from ...calculations.registry.schema_deadlines import DeadlineWindowDefinition
 from ...calculations.registry.temporal import RevisionSelectionMetadata
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..errors import DeadlineValidationError
 from ..plazo import resolve_filing_window, resolve_projected_filing_window
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
-_YEAR = 2025
+_YEAR = filing_year_envelope().horizon - 1
 _PERIOD = Period.from_year_and_code(_YEAR, "0A")
 _PROVENANCE = cast(RevisionSelectionMetadata, object())
 
@@ -35,8 +36,8 @@ def _window(
             "filing_year": period.filing_year,
             "period": period,
             "period_kind": "annual",
-            "opens_on": date(2026, 1, 1),
-            "closes_on": date(2026, 1, 20),
+            "opens_on": date(_YEAR + 1, 1, 1),
+            "closes_on": date(_YEAR + 1, 1, 20),
             "legal_refs": ("legal.test",),
             "source_refs": ("source-test",),
             **qualifiers,

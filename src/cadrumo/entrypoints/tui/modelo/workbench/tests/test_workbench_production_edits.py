@@ -28,14 +28,14 @@ import pytest
 from ......application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from ......application.modelo.work_form_models import (
+from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormBindingAddressV1,
     ModeloFormCasillaAddressV1,
     ModeloFormEditability,
-    ModeloFormField,
     ModeloFormOrigin,
     address_key,
 )
+from ......application.modelo.work_form_models import ModeloFormField
 from ......core.casilla_id import validated_casilla_id
 from ......core.external_constants import OutputLanguage
 from .....tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work

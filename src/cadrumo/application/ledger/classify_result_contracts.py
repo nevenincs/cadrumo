@@ -27,7 +27,9 @@ LedgerClassifyValidationMessages = Annotated[
     tuple[_ValidationMessage, ...], Field(max_length=LEDGER_CLASSIFY_MAX_VALIDATION_MESSAGES)
 ]
 
-LedgerClassifyValidationKind = Literal["none", "input", "m210_incoming_only", "m210_required_options"]
+LedgerClassifyValidationKind = Literal[
+    "none", "input", "m210_incoming_only", "m210_required_options", "needs_withholding_category"
+]
 
 
 def _classified_result_is_complete(result: LedgerClassifyOperationResult) -> None:

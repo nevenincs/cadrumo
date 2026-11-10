@@ -12,6 +12,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.iva.schema import IvaRateKind
 
 from ....calculations.registry.eu_member_state_catalogue import require_eu_member_state
+from ....calculations.registry.tests.authored_editions import filing_year_envelope
 from ....filing_evidence import FilingEvidenceReference
 from ....iva.lookup import lookup_rate
 from ..closing_foundations import InventoryValidationError
@@ -30,6 +31,8 @@ from ..records import (
 from ..valuation import compute_inventory_valuation, inventory_acquisition_fingerprint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
+
+EXERCISE = filing_year_envelope().horizon
 
 _DIGEST_A = "a" * 64
 _DIGEST_B = "b" * 64
@@ -95,7 +98,7 @@ def _acquisition(**overrides: object) -> InventoryAcquisitionCost:
 def _purchase(**overrides: object) -> MovementRecord:
     fields: dict[str, object] = {
         "movement_id": "purchase-1",
-        "movement_date": date(2025, 2, 1),
+        "movement_date": date(EXERCISE, 2, 1),
         "kind": MovementKind.PURCHASE,
         "quantity": Decimal("2"),
         "unit_cost": Decimal("50.00"),
@@ -111,7 +114,7 @@ def _purchase(**overrides: object) -> MovementRecord:
 
 def test_omitted_inventory_rate_resolves_general_iva_on_movement_devengo() -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        movement_date = date(2025, 2, 1)
+        movement_date = date(EXERCISE, 2, 1)
         movement = MovementRecord(
             movement_id="opening-implicit-rate",
             movement_date=movement_date,
@@ -135,7 +138,7 @@ def test_complete_acquisition_is_the_sole_fifo_and_pmp_cost_authority() -> None:
     purchase = _purchase()
     sale = MovementRecord(
         movement_id="sale-1",
-        movement_date=date(2025, 3, 1),
+        movement_date=date(EXERCISE, 3, 1),
         kind=MovementKind.COGS,
         quantity=Decimal("1"),
     )
@@ -144,7 +147,7 @@ def test_complete_acquisition_is_the_sole_fifo_and_pmp_cost_authority() -> None:
         result = compute_inventory_valuation(
             InventoryLedger(
                 actividad_id="retail",
-                year=2025,
+                year=EXERCISE,
                 valuation_method=method,
                 opening_stock=Decimal("0.00"),
                 closing_authority_record=None,
@@ -175,7 +178,7 @@ def test_purchase_factory_preserves_every_iva_recoverability_boundary(
     )
     movement = MovementRecord.from_purchase_acquisition(
         movement_id="purchase-ratio",
-        movement_date=date(2025, 2, 1),
+        movement_date=date(EXERCISE, 2, 1),
         quantity=Decimal("2"),
         acquisition_cost=acquisition,
     )
@@ -196,7 +199,7 @@ def test_purchase_factory_uses_zero_rate_for_zero_consideration() -> None:
     )
     movement = MovementRecord.from_purchase_acquisition(
         movement_id="free-purchase",
-        movement_date=date(2025, 2, 1),
+        movement_date=date(EXERCISE, 2, 1),
         quantity=Decimal("1"),
         acquisition_cost=acquisition,
     )
@@ -226,7 +229,7 @@ def test_pmp_repeating_unit_cost_layers_reconcile_to_exact_closing_value() -> No
     result = compute_inventory_valuation(
         InventoryLedger(
             actividad_id="retail",
-            year=2025,
+            year=EXERCISE,
             valuation_method=ValuationMethod.PMP,
             opening_stock=Decimal("0.00"),
             closing_authority_record=None,
@@ -237,7 +240,7 @@ def test_pmp_repeating_unit_cost_layers_reconcile_to_exact_closing_value() -> No
     assert result.closing_value == Decimal("100.00")
     next_year = InventoryLedger(
         actividad_id="retail",
-        year=2026,
+        year=EXERCISE + 1,
         valuation_method=ValuationMethod.PMP,
         opening_stock=result.closing_value,
         closing_authority_record=None,
@@ -317,7 +320,7 @@ def test_purchase_requires_complete_cost_and_other_kinds_forbid_it() -> None:
     with pytest.raises(ValidationError, match="permitted only for purchase"):
         MovementRecord(
             movement_id="opening-1",
-            movement_date=date(2025, 1, 1),
+            movement_date=date(EXERCISE, 1, 1),
             kind=MovementKind.OPENING,
             quantity=Decimal("1"),
             unit_cost=Decimal("100.00"),
@@ -388,7 +391,7 @@ def test_fingerprint_refuses_non_purchase_movements() -> None:
         inventory_acquisition_fingerprint(
             MovementRecord(
                 movement_id="sale-1",
-                movement_date=date(2025, 3, 1),
+                movement_date=date(EXERCISE, 3, 1),
                 kind=MovementKind.COGS,
                 quantity=Decimal("1"),
             ),

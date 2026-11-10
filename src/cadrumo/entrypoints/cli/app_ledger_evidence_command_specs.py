@@ -118,7 +118,9 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         help_key=TranslationKey("cli.app.ledger.evidence.attachment_view_help"),
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
-        parameters=(required_text_argument("attachment_id", "cli.app.ledger.evidence.attachment_id_help"),),
+        parameters=(
+            required_text_argument("attachment_id", "cli.app.ledger.evidence.attachment_id_help", non_blank=True),
+        ),
         policy=POLICY_5,
         handler=LazyBinding.available(DeferredTarget(".ledger_evidence_commands", "attachment_view", __package__)),
         result_schema=ResultSchemaSpec(
@@ -188,9 +190,14 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(
             option_from_application_contract(INVOICE_KIND_INPUT, "cli.app.ledger.invoice.kind_help"),
-            optional_text_option("evidence_id", ("--evidence-id",), "cli.app.ledger.evidence.extract_evidence_id_help"),
             optional_text_option(
-                "attachment_id", ("--attachment-id",), "cli.app.ledger.evidence.extract_attachment_id_help"
+                "evidence_id", ("--evidence-id",), "cli.app.ledger.evidence.extract_evidence_id_help", non_blank=True
+            ),
+            optional_text_option(
+                "attachment_id",
+                ("--attachment-id",),
+                "cli.app.ledger.evidence.extract_attachment_id_help",
+                non_blank=True,
             ),
             required_text_option(
                 "expected_source_sha256",
@@ -302,9 +309,14 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(
-            optional_text_option("evidence_id", ("--evidence-id",), "cli.app.ledger.evidence.extract_evidence_id_help"),
             optional_text_option(
-                "attachment_id", ("--attachment-id",), "cli.app.ledger.evidence.extract_attachment_id_help"
+                "evidence_id", ("--evidence-id",), "cli.app.ledger.evidence.extract_evidence_id_help", non_blank=True
+            ),
+            optional_text_option(
+                "attachment_id",
+                ("--attachment-id",),
+                "cli.app.ledger.evidence.extract_attachment_id_help",
+                non_blank=True,
             ),
             OptionSpec(
                 name="off_host_provider",
@@ -381,8 +393,12 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 transport_shape=TransportShape.FILE,
                 transport_role=TransportRole.PRIMARY,
             ),
-            optional_text_option("evidence_id", ("--evidence-id",), "cli.app.ledger.evidence.evidence_id_help"),
-            optional_text_option("attachment_id", ("--attachment-id",), "cli.app.ledger.evidence.attachment_id_help"),
+            optional_text_option(
+                "evidence_id", ("--evidence-id",), "cli.app.ledger.evidence.evidence_id_help", non_blank=True
+            ),
+            optional_text_option(
+                "attachment_id", ("--attachment-id",), "cli.app.ledger.evidence.attachment_id_help", non_blank=True
+            ),
             OptionSpec(
                 name="page",
                 declarations=("--page",),
@@ -433,7 +449,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(
-            required_text_argument("evidence_id", "cli.app.ledger.evidence.evidence_id_help"),
+            required_text_argument("evidence_id", "cli.app.ledger.evidence.evidence_id_help", non_blank=True),
             boolean_flag_option("yes", ("--yes",), "cli.app.ledger.evidence.yes_help"),
         ),
         policy=POLICY_9,
@@ -466,7 +482,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(
-            required_text_argument("evidence_id", "cli.app.ledger.evidence.evidence_id_help"),
+            required_text_argument("evidence_id", "cli.app.ledger.evidence.evidence_id_help", non_blank=True),
             OptionSpec(
                 name="supplier",
                 declarations=("--supplier",),
@@ -566,7 +582,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         help_key=TranslationKey("cli.app.ledger.evidence.view_help"),
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
-        parameters=(required_text_argument("evidence_id", "cli.app.ledger.evidence.evidence_id_help"),),
+        parameters=(required_text_argument("evidence_id", "cli.app.ledger.evidence.evidence_id_help", non_blank=True),),
         policy=POLICY_5,
         handler=LazyBinding.available(DeferredTarget(".ledger_evidence_commands", "evidence_view", __package__)),
         result_schema=ResultSchemaSpec(
