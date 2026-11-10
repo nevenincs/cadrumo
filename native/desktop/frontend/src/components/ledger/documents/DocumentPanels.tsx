@@ -22,8 +22,10 @@ import type {
   EvidenceRecord,
 } from "../../../shell/ledgerDocumentOperations";
 import {
+  servedNextStep,
   servedRefusalWords,
   type FilePick,
+  type LedgerNextStep,
   type LedgerPort,
   type PickedFile,
 } from "../../../shell/ledger";
@@ -39,6 +41,7 @@ import { write } from "../invoices/invoiceWrites";
 import { landingSettle, useWritePause, WriteHold } from "../WritePause";
 import { batchStatusLabel, sourceLabel } from "./documentWords";
 import { extractionLanding } from "./documentLanding";
+import { ServedStep } from "./ServedStep";
 import { fileName } from "./documentsModel";
 import type { Read } from "./useLedgerRead";
 
@@ -145,6 +148,8 @@ export function AttachmentQueue({
     recovery: string | null;
     /** The sentence the backend served for a refusal, if any. */
     words: string | null;
+    /** The step the backend served for putting it right, if any. */
+    step: LedgerNextStep | null;
   } | null>(null);
   if (read.phase === "failed")
     return <Failed t={t} read={read} onRetry={onRetry} />;
@@ -183,6 +188,7 @@ export function AttachmentQueue({
         recovery:
           sent.kind === "refused" ? provisionActionOf(sent.detail) : null,
         words: sent.kind === "refused" ? servedRefusalWords(sent.detail) : null,
+        step: sent.kind === "refused" ? servedNextStep(sent.detail) : null,
       });
   }
   if (rows.length === 0)
@@ -269,6 +275,9 @@ export function AttachmentQueue({
               )}
               {failed?.id === item.attachment_id && (
                 <SetupOffer action={failed.recovery} className="mt-1" />
+              )}
+              {failed?.id === item.attachment_id && (
+                <ServedStep step={failed.step} className="mt-1" />
               )}
             </td>
             <td className={cell}>

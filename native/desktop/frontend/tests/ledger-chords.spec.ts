@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 import {
   INSPECTOR_CHORD,
+  OVERVIEW_CHORD,
+  OVERVIEW_CHORDS,
   REDO_CHORDS,
   REVIEW_CHORD,
   REVIEW_CHORDS,
@@ -151,6 +153,37 @@ test("the inspector chord is Alt with the I key, whatever the layout types", () 
     ),
   ).toBe(false);
   expect(chordText(INSPECTOR_CHORD)).toBe(IS_MAC ? "⌥I" : "Alt+I");
+});
+
+test("the overview runs on Alt+Enter, on either Enter key, and on no other chord's press", () => {
+  expect(any(OVERVIEW_CHORDS, press("Enter", "Enter", { altKey: true }))).toBe(
+    true,
+  );
+  expect(
+    any(OVERVIEW_CHORDS, press("NumpadEnter", "Enter", { altKey: true })),
+  ).toBe(true);
+  expect(any(OVERVIEW_CHORDS, press("Enter", "Enter"))).toBe(false);
+  expect(
+    any(OVERVIEW_CHORDS, press("Enter", "Enter", { ...PRIMARY, altKey: true })),
+  ).toBe(false);
+  expect(
+    any(
+      OVERVIEW_CHORDS,
+      press("Enter", "Enter", { altKey: true, shiftKey: true }),
+    ),
+  ).toBe(false);
+  expect(OVERVIEW_CHORDS[0]).toBe(OVERVIEW_CHORD);
+  for (const chord of OVERVIEW_CHORDS)
+    expect(chordText(chord)).toBe(chordText(OVERVIEW_CHORD));
+  expect(chordText(OVERVIEW_CHORD)).toBe(IS_MAC ? "⌥Enter" : "Alt+Enter");
+  // Plain Enter opens the cell editor, primary+Enter the review, Alt+I the
+  // inspector: no press runs the overview and any of them.
+  for (const at of PRESSES) {
+    const overview = any(OVERVIEW_CHORDS, at);
+    expect(overview && any(REVIEW_CHORDS, at), JSON.stringify(at)).toBe(false);
+    expect(overview && chordMatches(INSPECTOR_CHORD, at)).toBe(false);
+    expect(overview && at.key === "Enter" && exactly(at)).toBe(false);
+  }
 });
 
 // The listeners matched these keys by hand before they read the declared

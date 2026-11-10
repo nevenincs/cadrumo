@@ -144,6 +144,8 @@ const ASKS: [LedgerDefinitionId, JsonObject][] = [
   ],
   ["ledger.counterparty", { action: "view", tax_identifier: TAX }],
   ["ledger.counterparty", { action: "withdraw", tax_identifier: TAX }],
+  ["ledger.list", { output_language: "en" }],
+  ["ledger.list", { output_language: "hu", limit: 5 }],
   ["ledger.rule.list", {}],
   ["ledger.ratios.validate", {}],
   ["ledger.participation.rebuild", {}],

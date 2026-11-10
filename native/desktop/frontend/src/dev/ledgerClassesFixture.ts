@@ -46,6 +46,7 @@ export const LEDGER_WRITES: readonly string[] = [
   "ledger.inventory.retire",
   "ledger.inventory.valuation.preview",
   "ledger.invoice.add",
+  "ledger.invoice.attach_document",
   "ledger.invoice.import",
   "ledger.invoice.remove",
   "ledger.invoice.update",

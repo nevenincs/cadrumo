@@ -255,15 +255,18 @@ test("the live region says what the grid holds now, not what it held before the 
   await findInAnyPeriod(target, "estudio garcia");
   const row = rowOf(target, "ESTUDIO GARCIA").first();
   await typeInto(target, cellOf(row, "taxable_base"), "1000,00");
-  // A keyboard move over the staged cell says it is unsaved.
+  // A keyboard move over the staged cell says it is unsaved. The search
+  // leaves one row, so the move stays in it: up from it is the header.
   await cellOf(row, "taxable_base").click();
-  await target.keyboard.press("ArrowDown");
-  await target.keyboard.press("ArrowUp");
+  await target.keyboard.press("ArrowRight");
+  await target.keyboard.press("ArrowLeft");
   // The grid speaks beside its role=grid element, which may hold only rows.
   const spoken = page(target).locator(
     "[data-slot=data-grid] > [aria-live=polite]",
   );
-  await expect(spoken).toContainText(label("desktop.ledger.edit.row_unsaved"));
+  await expect(spoken).toContainText(
+    label("desktop.ledger.edit.row_changes", { count: 1 }),
+  );
 
   await openReview(target);
   await review(target).locator(".ledger-apply-save").click();

@@ -120,6 +120,7 @@ from .invoice_draft_records import (
 )
 from .invoice_label_reader import LabelReading, merge_label_reading_with_model_draft, read_invoice_fields_by_labels
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
+from .reading_model_refusal import model_run_refusal_code, reader_refusal_locale_key, reader_refusal_next_step
 from .withheld_tax_findings import withheld_tax_findings
 
 if TYPE_CHECKING:
@@ -371,9 +372,11 @@ def _refuse_with_reader_verdict(verdict: PreconditionVerdict, *, cause: Exceptio
     """
     if isinstance(cause, PurchaseInvoiceEvidenceReaderError) and cause.terminal_precondition_verdict == verdict:
         raise cause
+    refusal_code = model_run_refusal_code(verdict)
     raise PurchaseInvoiceEvidenceReaderError(
-        translated_message=EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY,
+        translated_message=reader_refusal_locale_key(refusal_code),
         precondition_verdict=verdict,
+        next_step=reader_refusal_next_step(refusal_code),
     ) from cause
 
 
@@ -480,6 +483,7 @@ def _label_read_after_reader_unavailable(
         cause=LabelReadingFallbackCause.READER_UNAVAILABLE,
         reader_error=error.cause,
         failed_condition_id=None if verdict is None else verdict.failed_condition_id,
+        refusal_code=model_run_refusal_code(verdict),
     )
 
 
@@ -650,6 +654,7 @@ def _label_reading_fallback(
     cause: LabelReadingFallbackCause,
     reader_error: Exception,
     failed_condition_id: str | None,
+    refusal_code: str | None = None,
 ) -> LabelReadingFallback:
     """Record that a partial label reading stands because its model fill did not run.
 
@@ -668,6 +673,7 @@ def _label_reading_fallback(
         unread_fields=unread_fields,
         reader_error_type=type(reader_error).__name__,
         failed_condition_id=failed_condition_id,
+        refusal_code=refusal_code,
     )
 
 

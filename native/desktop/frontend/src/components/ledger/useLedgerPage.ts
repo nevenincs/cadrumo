@@ -12,6 +12,7 @@ import type { IconName } from "@/components/ui/icon";
 import { localDay } from "../../shared/dates";
 import type { Action } from "../../shell/actions";
 import { LEDGER_SECTIONS, type LedgerSection } from "../../shell/layout";
+import type { OutputLanguage } from "../../shell/ledger";
 import type { OpenRuleFromSelection } from "../../shell/ledgerCommands";
 import type { LedgerPeriod } from "../../shell/ledgerGrammar";
 import {
@@ -144,7 +145,7 @@ export function useLedgerPage({
     reader,
     period,
     movementsShown && periodResolved,
-    windowScope(period === null, movements),
+    windowScope(period === null, movements, locale as OutputLanguage),
   );
   // What is staged lives here, with the page, so it stays while a section
   // is put away and goes with the profile.

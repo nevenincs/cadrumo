@@ -860,7 +860,16 @@ def test_the_review_summary_declares_only_the_fields_read_for_document_text() ->
             }
         ),
         "LabelReadingFallbackProjectionV1": frozenset(
-            {"cause", "unread_fields", "reader_error_type", "failed_condition_id"}
+            {
+                "cause",
+                "unread_fields",
+                "reader_error_type",
+                "failed_condition_id",
+                "refusal_code",
+                "refusal_words",
+                "refusal_words_language",
+                "next_step",
+            }
         ),
         "PartyAttributionAdvisoryProjection": frozenset({"parties"}),
         "PartyAttributionWarningProjection": frozenset({"role", "fields", "scope_if_attributed"}),

@@ -11,8 +11,10 @@ import type {
   LedgerReviewStatus,
   LedgerRow,
   LedgerSortField,
+  OutputLanguage,
   PublicPeriod,
 } from "../shell/ledger";
+import servedWords from "@fixtures/ledger-served-words/ledgerServedWords.json" with { type: "json" };
 import {
   type FixtureLedger,
   type FixtureMovement,
@@ -47,11 +49,56 @@ export const KNOWN_ONLY = {
   reference: "EXPEDIENTE-2019/4",
 } as const;
 
-export const row = (movement: FixtureMovement): LedgerRow => ({
+/** The reason's words as the list serves them: the person's own stay in the
+ * transaction, and a command's name is served as a word in the language asked
+ * (the one recorded from the backend), with the name itself still stored. */
+function reasonOf(
+  reason: string,
+  language: OutputLanguage,
+): Pick<
+  LedgerRow,
+  | "classification_reason_source"
+  | "classification_reason_words"
+  | "classification_reason_words_language"
+> {
+  if (reason.trim() === "")
+    return {
+      classification_reason_source: "none",
+      classification_reason_words: "",
+      classification_reason_words_language: null,
+    };
+  if (!reason.startsWith(COMMAND_REASON_PREFIX))
+    return {
+      classification_reason_source: "stated",
+      classification_reason_words: "",
+      classification_reason_words_language: null,
+    };
+  return {
+    classification_reason_source: "command",
+    classification_reason_words:
+      servedWords.classification_reason.command[language],
+    classification_reason_words_language: language,
+  };
+}
+const COMMAND_REASON_PREFIX = "aeat app ledger";
+
+/** The language a list is asked in, which the product refuses to guess at. */
+function outputLanguage(asked: JsonValue | undefined): OutputLanguage {
+  if (asked === undefined) return "es";
+  if (asked === "es" || asked === "en" || asked === "ca" || asked === "hu")
+    return asked;
+  return invalid();
+}
+
+export const row = (
+  movement: FixtureMovement,
+  language: OutputLanguage = "es",
+): LedgerRow => ({
   transaction: { ...movement.transaction },
   review_status: reviewStatus(movement.transaction.business_classification),
   group_label: movement.group_label,
   own_account_id: movement.own_account_id,
+  ...reasonOf(movement.transaction.classification_reason, language),
   withholding: movement.withholding.map((entry) => ({ ...entry })),
 });
 
@@ -213,6 +260,7 @@ export function knownValues(
 
 export function list(ledger: FixtureLedger, request: JsonObject): JsonObject {
   const keep = filterOf(request.filters);
+  const language = outputLanguage(request.output_language);
   const sortBy = request.sort_by ?? null;
   const order = request.sort_order ?? "asc";
   const limit = request.limit ?? null;
@@ -292,7 +340,9 @@ export function list(ledger: FixtureLedger, request: JsonObject): JsonObject {
     limit === null ? total : Math.min(offset + (limit as number), total);
   return {
     profile_id: LEDGER_FIXTURE_PROFILE_ID,
-    rows: rows.slice(offset, end).map(row) as unknown as JsonValue,
+    rows: rows
+      .slice(offset, end)
+      .map((movement) => row(movement, language)) as unknown as JsonValue,
     total,
     truncated: offset > 0 || end < total,
     offset,

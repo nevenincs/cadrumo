@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { captureUnrecordedQuestions } from "../support/stagedCheckCapture";
 import { label } from "../support/strings";
 import { fixtureYear } from "../../src/dev/fixtureDates";
 
@@ -54,6 +55,7 @@ const ledgerControls = {
 };
 
 async function openLedger(target: Page) {
+  await captureUnrecordedQuestions(target);
   await target.goto("/scenarios.html?scenario=ledger&latency=0&bar=off");
   await target.locator("[data-rail=ledger]").click();
   await expect(grid(target)).toBeVisible();
@@ -618,6 +620,7 @@ test("selected movements remain unread until their seal reads answer", async ({
 test("a changed selection can read without spending the old queue's budget", async ({
   page: target,
 }) => {
+  await captureUnrecordedQuestions(target);
   await target.goto(
     "/scenarios.html?scenario=ledger&latency=0&bar=off&ledgerRows=1200",
   );
@@ -712,6 +715,7 @@ test("the review reads the lock of every staged movement before it saves, the sa
 }) => {
   // Twelve hundred locks are read one movement at a time.
   test.setTimeout(120_000);
+  await captureUnrecordedQuestions(target);
   await target.goto(
     "/scenarios.html?scenario=ledger&latency=0&bar=off&ledgerRows=1200",
   );

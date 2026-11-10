@@ -32,3 +32,18 @@ export const REVIEW_CHORDS: readonly ChordKeys[] = [
 /** Show, focus or hide the inspector: the Ledger page runs it, the
  * inspector's close button shows it. */
 export const INSPECTOR_CHORD: ChordKeys = { code: "KeyI", key: "I", alt: true };
+
+/** Show the overview of the entry the focus is on: the movements, invoices
+ * and documents run it, their menus show it. Alt+Enter, as Properties is on
+ * Windows: plain Enter opens a cell's editor, and Space selects a row. */
+export const OVERVIEW_CHORD: ChordKeys = {
+  code: "Enter",
+  key: "Enter",
+  alt: true,
+};
+
+/** The overview chord on either Enter key. */
+export const OVERVIEW_CHORDS: readonly ChordKeys[] = [
+  OVERVIEW_CHORD,
+  { ...OVERVIEW_CHORD, code: "NumpadEnter" },
+];

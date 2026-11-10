@@ -3,7 +3,12 @@
 // pages. Field names are the registered Python contracts' own; a request omits
 // the profile, which the host fills.
 
-import type { FileToken, JsonObject, PublicDecimal } from "./ledger";
+import type {
+  FileToken,
+  JsonObject,
+  LedgerNextStep,
+  PublicDecimal,
+} from "./ledger";
 import type { EvidenceUpdateField } from "./ledgerContract";
 import type { CatalogueInvoice, InvoiceKind } from "./ledgerInvoiceOperations";
 
@@ -226,6 +231,15 @@ export type LabelReadingFallback = {
   cause: "reader_unavailable" | "load_headroom_refused";
   unread_fields: string[];
   reader_error_type: string;
+  failed_condition_id?: string | null;
+  /** The agent service's own refusal code, such as `no_selection` for a
+   * role with no picked model. */
+  refusal_code?: string | null;
+  /** The sentence the backend served for that refusal, and its language. */
+  refusal_words?: string | null;
+  refusal_words_language?: string | null;
+  /** The step the backend served for putting it right, where it names one. */
+  next_step?: LedgerNextStep | null;
 };
 
 export type ConfirmationBlockReason =

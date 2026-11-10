@@ -437,6 +437,10 @@ class LabelReadingFallback(BaseModel):
             one; the agent's load refusal names the precondition it failed,
             and an unavailable reader names what the reader probe found
             missing, such as an unanswering runtime or an uninstalled model.
+        refusal_code: The agent service's own refusal code when it stated one,
+            such as ``no_selection`` for a role with no picked model. The
+            surfaces word and route that refusal from the code, so they do not
+            infer it from the cause.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -445,6 +449,7 @@ class LabelReadingFallback(BaseModel):
     unread_fields: tuple[str, ...] = Field(min_length=1)
     reader_error_type: str = Field(min_length=1)
     failed_condition_id: str | None = None
+    refusal_code: str | None = None
 
 
 class InvoiceDraftIdentityDocumentFields(BaseModel):

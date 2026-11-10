@@ -9,6 +9,7 @@ from pydantic import BaseModel, NonNegativeInt, PositiveInt, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.transactions.models import Transaction
@@ -39,6 +40,8 @@ from .transaction_projection import (
     LedgerMovementWithholdingProjection,
     LedgerTransactionProjection,
     LedgerTransactionReviewProjection,
+    classification_reason_source,
+    classification_reason_words,
 )
 
 
@@ -55,18 +58,26 @@ def _withholding_projection(withholding: MovementWithholding) -> LedgerMovementW
 
 
 def ledger_list_row(
-    transaction: Transaction, withholding: tuple[MovementWithholding, ...] = ()
+    transaction: Transaction,
+    *,
+    withholding: tuple[MovementWithholding, ...] = (),
+    language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE,
 ) -> LedgerTransactionReviewProjection:
-    """One listed row: the canonical payload plus the list's own facts.
+    """One listed row: the canonical payload plus the list's own facts, its reason's words said in ``language``.
 
     ``withholding`` is what the invoices this movement pays leave on it, as the
     declarations read it; empty when it pays none that states a retención.
     """
+    source = classification_reason_source(transaction.classification_reason)
+    words = classification_reason_words(source, language)
     return LedgerTransactionReviewProjection(
         transaction=LedgerTransactionProjection.from_payload(ledger_transaction_payload(transaction)),
         review_status=ledger_transaction_review_status(transaction),
         group_label=transaction.group_label,
         own_account_id=transaction.own_account_id,
+        classification_reason_source=source,
+        classification_reason_words=words,
+        classification_reason_words_language=language if words else None,
         withholding=tuple(_withholding_projection(item) for item in withholding),
     )
 
@@ -105,6 +116,7 @@ class LedgerListRequest(BaseModel):
     sort_by: LedgerSortField | None = None
     sort_order: LedgerSortOrder = LedgerSortOrder.ASC
     exclude_llm_rejected: bool = False
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
     def filter_spec(self) -> LedgerReviewFilterSpec:
         """Resolve scope and execution through the same canonical grammar."""
@@ -191,7 +203,11 @@ class LedgerListExecutor:
             return LedgerListProjection(
                 profile_id=payload.profile_id,
                 rows=tuple(
-                    ledger_list_row(item.transaction, withholding.get(item.transaction.transaction_id, ()))
+                    ledger_list_row(
+                        item.transaction,
+                        withholding=withholding.get(item.transaction.transaction_id, ()),
+                        language=payload.output_language,
+                    )
                     for item in page.results
                 ),
                 total=page.total,
