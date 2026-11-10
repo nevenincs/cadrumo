@@ -9,15 +9,15 @@ from textual.widgets import Input, Static
 
 from ......application.modelo.source_policy import SourceFamily
 from ......application.modelo.value_presentation import format_casilla_value
-from ......application.modelo.work_form_models import (
+from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormEarlierFiling,
     ModeloFormEditability,
     ModeloFormOrigin,
     ModeloFormScalar,
     ModeloFormValueSource,
     address_key,
-    revised_field,
 )
+from ......application.modelo.work_form_models import revised_field
 from ......application.modelo.work_form_next_step import ModeloFormNextAction
 from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings

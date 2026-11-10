@@ -48,6 +48,7 @@ from ..schema_surfaces import (
 )
 from ..schema_verification import VerificationExpectationDefinition, WorkbookParityReference
 from ..snapshot import build_validated_snapshot
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -108,6 +109,9 @@ def _snapshot_for_revision(
     )
 
 
+# Review, retrieval and in-force stamps of the synthetic references: epoch-era, so no filing year hides in them.
+_FIXTURE_STAMP = date(1980, 1, 1)
+_FIXTURE_EXERCISE = filing_year_envelope().floor
 _REFERENCE_LEGAL_ID = "ley-35-2006:art-1"
 
 _REFERENCE_SOURCE_ID = "aeat-dr-130-2019-v12"
@@ -125,9 +129,9 @@ def _minimal_legal_ref() -> LegalReference:
         corpus_ref="boe/lirpf#art-1",
         document_id="BOE-A-2006-20764",
         permalink="https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
-        effective_from=date(2006, 11, 30),
+        effective_from=_FIXTURE_STAMP,
         review_status="operator_reviewed",
-        reviewed_at=date(2026, 7, 1),
+        reviewed_at=_FIXTURE_STAMP,
         reviewed_by="codex test fixture",
         required_text=("art-1",),
     )
@@ -142,7 +146,7 @@ def _minimal_source_ref() -> SourceReference:
         corpus_path="registry/aeat/sources/aeat-dr-130-2019-v12.pdf",
         sha256="a" * 64,
         bytes=1024,
-        retrieved_at=date(2024, 1, 1),
+        retrieved_at=_FIXTURE_STAMP,
         source_url=f"{Settings.external_constants().aeat.domains.legacy_www}/",
         review_status="pending_review",
     )
@@ -255,7 +259,7 @@ def _minimal_revision(
         # first, so the assertions the tests exist for never run.
         review_status="agent_reviewed",
         reviewed_by="codex test fixture",
-        reviewed_at=date(2026, 7, 1),
+        reviewed_at=_FIXTURE_STAMP,
         # Same reasoning one rung further: an undeclared authority_grade is itself
         # a refusal now, and it lands before the referential assertions too. These
         # fixtures are built to carry casilla and binding REFERENCES, not to
@@ -263,8 +267,8 @@ def _minimal_revision(
         # intended to support rather than a reading of what they contain.
         authority_grade="applicability",
         localization_key="test.schema.revision.test-revision.label",
-        valid_from=date(2024, 1, 1),
-        period_selector=PeriodSelector(year_from=2024, periods=("0A",)),
+        valid_from=date(_FIXTURE_EXERCISE, 1, 1),
+        period_selector=PeriodSelector(year_from=_FIXTURE_EXERCISE, periods=("0A",)),
         legal_refs=(_REFERENCE_LEGAL_ID,),
         source_refs=(_REFERENCE_SOURCE_ID,),
         orden_aplicabilidad=(_REFERENCE_LEGAL_ID,),

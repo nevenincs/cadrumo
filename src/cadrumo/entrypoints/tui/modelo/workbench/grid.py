@@ -17,11 +17,11 @@ from typing import Final
 
 from rich.cells import cell_len
 
-from .....application.modelo.work_form_models import (
+from .....application.modelo.work_form_field_vocabulary import (
     ModeloFormPrintedRate,
     ModeloFormRate,
-    ModeloFormRepeatingRow,
 )
+from .....application.modelo.work_form_models import ModeloFormRepeatingRow
 from ...components.cell_text import longest_word, wrap_words
 
 type GridKey = tuple[str, str]

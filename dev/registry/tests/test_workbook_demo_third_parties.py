@@ -4,16 +4,28 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.calculation_revision import derive_calculation_revision_id
 
 from ..workbook_demo import demonstration_snapshot
 from ..workbook_demo_cases import DemoCase
 from ..workbook_demo_third_parties import third_party_observations, third_party_records, third_party_summary
+from .authored_edition_support import authored_revisions
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("governed_fact_scope")]
 
 
-@pytest.mark.parametrize("year,era", [(2024, "2011-2024"), (2025, "2025-y-siguientes")])
+def _eras() -> list[tuple[int, str]]:
+    """Each authored era that governs an exercise from the support floor up, with an exercise it governs."""
+    floor = filing_year_envelope().floor
+    return [
+        (revision.valid_to.year if revision.valid_to is not None else revision.valid_from.year, str(revision.id))
+        for revision in authored_revisions("347")
+        if revision.valid_to is None or revision.valid_to.year >= floor
+    ]
+
+
+@pytest.mark.parametrize("year,era", _eras())
 def test_third_party_invoice_projection(year: int, era: str) -> None:
     snapshot = demonstration_snapshot(DemoCase("347", era, None, None, filing_year=year, period="0A"))
     summary = third_party_summary(snapshot)

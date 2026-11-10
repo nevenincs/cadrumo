@@ -31,8 +31,12 @@ from ......application.modelo.edit_models import (
     ModeloEditBindingIntentKind,
 )
 from ......application.modelo.verification_actions import verify_modelo_revision_with_preconditions
+from ......application.modelo.work_form_field_vocabulary import (
+    ModeloFormBindingAddressV1,
+    ModeloFormOrigin,
+)
 from ......application.modelo.work_form_findings import ModeloFormAttention
-from ......application.modelo.work_form_models import ModeloFormBindingAddressV1, ModeloFormOrigin, ModeloWorkForm
+from ......application.modelo.work_form_models import ModeloWorkForm
 from ......application.modelo.work_form_next_step import ModeloFormNextAction
 from ......application.modelo.work_form_service import ModeloWorkFormLoadV1
 from ......application.tests.operator_scope_fakes import (

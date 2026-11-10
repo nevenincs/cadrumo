@@ -7,7 +7,11 @@ from functools import partial
 from typing import TYPE_CHECKING
 
 from .....application.modelo.edit_prerequisite_wording import prerequisite_words
-from .....application.modelo.work_form_models import ModeloFormField, ModeloWorkForm, address_key
+from .....application.modelo.work_form_field_vocabulary import address_key
+from .....application.modelo.work_form_models import (
+    ModeloFormField,
+    ModeloWorkForm,
+)
 from .....application.modelo.work_form_next_step import (
     ModeloFormNextAction,
     ModeloFormNextStep,

@@ -8,11 +8,13 @@ from typing import TYPE_CHECKING
 from .....application.modelo.casilla_help import ModeloCasillaHelpCardV1
 from .....application.modelo.casilla_help_reach import ModeloHelpBoxV1, ModeloHelpReachV1
 from .....application.modelo.source_policy import SourceFamily, source_policy
-from .....application.modelo.work_form_models import (
+from .....application.modelo.work_form_field_vocabulary import (
     ModeloFormCasillaAddressV1,
-    ModeloFormField,
     ModeloFormOrigin,
     ModeloFormValueSource,
+)
+from .....application.modelo.work_form_models import (
+    ModeloFormField,
     ModeloWorkForm,
 )
 from .....application.modelo.work_form_wording import (

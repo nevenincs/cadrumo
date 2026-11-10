@@ -15,10 +15,10 @@ from pathlib import Path
 
 import pytest
 
+from ......application.modelo.work_form_field_vocabulary import ModeloFormTextDisclosure
 from ......application.modelo.work_form_models import (
     ModeloFormRepeatingBlock,
     ModeloFormSection,
-    ModeloFormTextDisclosure,
     ModeloWorkForm,
 )
 from ......core.config import override_settings

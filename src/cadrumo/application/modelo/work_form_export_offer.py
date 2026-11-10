@@ -68,8 +68,12 @@ from .export_settlement import SettlementRefusal, declared_settlement
 from .settlement_casilla import declaration_settlement_casilla_id
 from .value_presentation import format_casilla_value
 from .work_form_declaration_facts import ModeloFormResult, ModeloFormResultDirection
+from .work_form_field_vocabulary import (
+    ModeloFormCasillaAddressV1,
+    ModeloFormOrigin,
+)
 from .work_form_header import ModeloFormExportHoldReason, export_hold, form_recorded
-from .work_form_models import ModeloFormCasillaAddressV1, ModeloFormOrigin, ModeloWorkForm
+from .work_form_models import ModeloWorkForm
 from .work_form_wording import day_text
 
 if TYPE_CHECKING:

@@ -200,8 +200,8 @@ def test_personal_outgoing_is_skipped_silently() -> None:
     tx = gasto_transaction(
         "personal",
         value_date=date(2025, 2, 1),
-        taxable_base=Decimal("75.00"),
         business_classification=BusinessClassification.PERSONAL,
+        category_id=None,
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 

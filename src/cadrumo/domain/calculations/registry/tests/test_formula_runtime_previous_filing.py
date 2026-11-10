@@ -18,6 +18,7 @@ from ..bindings_previous_filing import (
 )
 from ..relations import RegistryFoldRequirement, relation_source_requirements
 from ..schema import RegistrySnapshot
+from .authored_editions import filing_year_envelope
 from .formula_runtime_support import (
     M100_PAGOS_FRACCIONADOS_CASILLA,
     M100_RENDIMIENTO_NETO_ACTIVIDADES_CASILLA,
@@ -35,6 +36,9 @@ from .relation_fixture import resolve_relation_values_from_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
+_YEAR = filing_year_envelope().horizon
+_PREVIOUS_YEAR = _YEAR - 1
+
 
 def test_previous_filing_binding_resolves_from_observed_irpf_casillas(
     committed_modelo_130_snapshot: RegistrySnapshot,
@@ -49,13 +53,13 @@ def test_previous_filing_binding_resolves_from_observed_irpf_casillas(
         (
             registry_grounded_modelo_observation(
                 modelo=source_reference.source_modelo,
-                filing_year=2025,
+                filing_year=_PREVIOUS_YEAR,
                 period=source_reference.required_periods[0],
                 casilla_values=observed_values,
                 grade=RegistryAuthorityGrade.CALCULATION,
             ),
         ),
-        filing_year=2026,
+        filing_year=_YEAR,
         period="1T",
     )
 
@@ -71,14 +75,14 @@ def test_previous_filing_requirements_are_declaredfrom_registry_binding_selector
 
     requirements = previous_filing_observation_requirements(
         committed_modelo_130_snapshot.revision,
-        filing_year=2026,
+        filing_year=_YEAR,
         period="1T",
     )
 
     assert len(requirements) == 1
     requirement = requirements[0]
     assert requirement.source_modelo == source_reference.source_modelo
-    assert requirement.filing_year == 2025
+    assert requirement.filing_year == _PREVIOUS_YEAR
     assert requirement.periods == (source_reference.required_periods[0],)
     assert requirement.binding_ids == (PREVIOUS_YEAR_NET_INCOME_BINDING,)
     assert requirement.source_casilla_ids == tuple(sorted(source_reference.source_casilla_ids))
@@ -97,7 +101,7 @@ def test_relation_requirements_cover_all_source_periods_for_annual_summary(
     # previous-filing one (which now skips relation_prefill slots by design).
     requirements = relation_source_requirements(
         committed_modelo_180_snapshot.revision,
-        filing_year=2026,
+        filing_year=_YEAR,
         period="0A",
     )
 
@@ -106,7 +110,7 @@ def test_relation_requirements_cover_all_source_periods_for_annual_summary(
     # four quarters and the relation source modelo/year are correct. The perceptor
     # count is a retenciones_aggregation binding, not a relation.
     assert {requirement.source_modelo for requirement in requirements} == {"115"}
-    assert {requirement.filing_year for requirement in requirements} == {2026}
+    assert {requirement.filing_year for requirement in requirements} == {_YEAR}
     assert all(tuple(requirement.periods) == ("1T", "2T", "3T", "4T") for requirement in requirements)
     target_bindings = {tb for requirement in requirements for tb in requirement.target_bindings}
     assert target_bindings == {
@@ -144,7 +148,7 @@ def test_relation_resolves_annual_summary_from_all_source_periods(
     observations = tuple(
         registry_grounded_modelo_observation(
             modelo="115",
-            filing_year=2026,
+            filing_year=_YEAR,
             period=period,
             casilla_values={
                 M115_PERCEPTORES_CASILLA: Decimal("1"),
@@ -164,7 +168,7 @@ def test_relation_resolves_annual_summary_from_all_source_periods(
     result = resolve_relation_values_from_observations(
         committed_modelo_180_snapshot.revision,
         observations,
-        filing_year=2026,
+        filing_year=_YEAR,
         period="0A",
     )
 
@@ -188,13 +192,13 @@ def test_previous_filing_binding_resolves_from_any_registry_declared_applicable_
         (
             registry_grounded_modelo_observation(
                 modelo=source_reference.source_modelo,
-                filing_year=2025,
+                filing_year=_PREVIOUS_YEAR,
                 period=source_reference.required_periods[0],
                 casilla_values={source_casilla_ids[0]: Decimal("1")},
                 grade=RegistryAuthorityGrade.CALCULATION,
             ),
         ),
-        filing_year=2026,
+        filing_year=_YEAR,
         period="1T",
     )
 
@@ -204,8 +208,12 @@ def test_previous_filing_binding_resolves_from_any_registry_declared_applicable_
 def test_previous_filing_requirements_max_year_delta_unset_preserves_unbounded_anchors(
     committed_modelo_130_snapshot: RegistrySnapshot,
 ) -> None:
-    assert _previous_filing_offset_year_periods(committed_modelo_130_snapshot, target_period="1T") == ((2025, ("4T",)),)
-    assert _previous_filing_offset_year_periods(committed_modelo_130_snapshot, target_period="2T") == ((2026, ("1T",)),)
+    assert _previous_filing_offset_year_periods(committed_modelo_130_snapshot, target_period="1T") == (
+        (_PREVIOUS_YEAR, ("4T",)),
+    )
+    assert _previous_filing_offset_year_periods(committed_modelo_130_snapshot, target_period="2T") == (
+        (_YEAR, ("1T",)),
+    )
 
 
 def test_previous_filing_requirements_max_year_delta_zero_drops_cross_ejercicio_offset_anchor(
@@ -228,17 +236,17 @@ def test_previous_filing_requirements_max_year_delta_zero_admits_same_ejercicio_
         committed_modelo_130_snapshot,
         target_period="2T",
         max_year_delta=0,
-    ) == ((2026, ("1T",)),)
+    ) == ((_YEAR, ("1T",)),)
     assert _previous_filing_offset_year_periods(
         committed_modelo_130_snapshot,
         target_period="3T",
         max_year_delta=0,
-    ) == ((2026, ("2T",)),)
+    ) == ((_YEAR, ("2T",)),)
     assert _previous_filing_offset_year_periods(
         committed_modelo_130_snapshot,
         target_period="4T",
         max_year_delta=0,
-    ) == ((2026, ("3T",)),)
+    ) == ((_YEAR, ("3T",)),)
 
 
 def test_previous_filing_requirements_max_year_delta_one_admits_one_year_cross_ejercicio_anchor(
@@ -248,12 +256,12 @@ def test_previous_filing_requirements_max_year_delta_one_admits_one_year_cross_e
         committed_modelo_130_snapshot,
         target_period="1T",
         max_year_delta=1,
-    ) == ((2025, ("4T",)),)
+    ) == ((_PREVIOUS_YEAR, ("4T",)),)
     assert _previous_filing_offset_year_periods(
         committed_modelo_130_snapshot,
         target_period="2T",
         max_year_delta=1,
-    ) == ((2026, ("1T",)),)
+    ) == ((_YEAR, ("1T",)),)
 
 
 def test_previous_filing_requirements_max_year_delta_rejects_negative_values(
@@ -305,7 +313,7 @@ def _previous_filing_offset_requirements(
         },
     )
     revision = snapshot.revision.model_copy(update={"bindings": (binding,)})
-    return previous_filing_observation_requirements(revision, filing_year=2026, period=target_period)
+    return previous_filing_observation_requirements(revision, filing_year=_YEAR, period=target_period)
 
 
 def test_previous_filing_requirements_walker_skips_cap_suppressed_binding(
@@ -325,7 +333,7 @@ def test_previous_filing_requirements_walker_skips_cap_suppressed_binding(
 
     requirements_first_period = previous_filing_observation_requirements(
         extended_revision,
-        filing_year=2026,
+        filing_year=_YEAR,
         period="1T",
     )
     assert all(
@@ -334,7 +342,7 @@ def test_previous_filing_requirements_walker_skips_cap_suppressed_binding(
 
     requirements_second_period = previous_filing_observation_requirements(
         extended_revision,
-        filing_year=2026,
+        filing_year=_YEAR,
         period="2T",
     )
     matching = [
@@ -344,7 +352,7 @@ def test_previous_filing_requirements_walker_skips_cap_suppressed_binding(
     ]
     assert len(matching) == 1
     assert matching[0].source_modelo == "130"
-    assert matching[0].filing_year == 2026
+    assert matching[0].filing_year == _YEAR
     assert matching[0].periods == ("1T",)
 
 
@@ -365,7 +373,7 @@ def test_previous_filing_resolver_skips_cap_suppressed_binding(
 
     m100_observation = registry_grounded_modelo_observation(
         modelo="100",
-        filing_year=2025,
+        filing_year=_PREVIOUS_YEAR,
         period="0A",
         casilla_values={
             M100_RENDIMIENTO_NETO_ACTIVIDADES_CASILLA: Decimal("1"),
@@ -379,7 +387,7 @@ def test_previous_filing_resolver_skips_cap_suppressed_binding(
     resolved = resolve_previous_filing_binding_values(
         extended_revision,
         observations=(m100_observation,),
-        filing_year=2026,
+        filing_year=_YEAR,
         period="1T",
     )
 

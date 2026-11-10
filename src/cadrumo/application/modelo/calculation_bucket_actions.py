@@ -69,7 +69,7 @@ from .m349_ledger_guard import (
 from .operator_override_advisory import collect_operator_override_divergence_diagnostics
 from .printed_boxes import snapshot_printed_boxes
 from .profile_export_binding import profile_text_casilla_gap_diagnostics, profile_text_fact_index
-from .projection import (
+from .projection_unresolved import (
     ModeloProjectionUnresolvedBinding,
     ModeloProjectionUnresolvedCasilla,
     unresolved_binding_rows,

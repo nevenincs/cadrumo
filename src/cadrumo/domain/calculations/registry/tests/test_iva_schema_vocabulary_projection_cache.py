@@ -17,10 +17,11 @@ from ..iva_schema_vocabulary_source import (
 )
 from ..schema_base import DateAxis
 from ..snapshot_globals import SupportedFilingYearsCatalogue
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_ON = date(2026, 3, 10)
+_ON = date(filing_year_envelope().horizon, 3, 10)
 
 
 @dataclass
@@ -102,9 +103,9 @@ def test_the_same_authority_is_asked_again_for_another_date(operation: PinnedAut
     authority = _FixedFact(_vocabulary(operation), operation.supported_filing_years())
     resolve_iva_cash_accounting_catalogue(effective_date=_ON, authority=authority)
     resolve_iva_cash_accounting_catalogue(effective_date=_ON, authority=authority)
-    resolve_iva_cash_accounting_catalogue(effective_date=date(2025, 6, 1), authority=authority)
+    resolve_iva_cash_accounting_catalogue(effective_date=date(_ON.year, 6, 1), authority=authority)
 
-    assert [query.effective_date for query in authority.queries] == [_ON, date(2025, 6, 1)]
+    assert [query.effective_date for query in authority.queries] == [_ON, date(_ON.year, 6, 1)]
 
 
 def test_a_collected_authority_releases_its_coordinates(operation: PinnedAuthorityOperation) -> None:

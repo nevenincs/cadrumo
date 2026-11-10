@@ -37,6 +37,7 @@ from ...domain.modelos.calculation_revision_sources import (
     RecordedCalculationNote,
 )
 from ...domain.modelos.credit_resolution import CreditResolutionRecord
+from ...domain.modelos.source_disagreement import SourceDisagreementFact
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
 from .calculation_note_gate import SOURCE_DISAGREEMENT_FINDING_ID_LENGTH, SourceDisagreementResolutions
@@ -237,15 +238,19 @@ def stale_resolution_issues(
         fact = issue.disagreement
         if fact is None or issue.reason not in DISAGREEMENT_REASONS or fact.finding_key in seen:
             continue
-        accepted_here = [
-            record
-            for record in active
-            if record.disagreement.key == fact.key and record.disagreement.value_channel == fact.value_channel
-        ]
-        if accepted_here and all(record.finding_key != fact.finding_key for record in accepted_here):
+        if _accepted_only_elsewhere(active, fact):
             seen.add(fact.finding_key)
             stale.append(_stale_issue(issue))
     return tuple(stale)
+
+
+def _accepted_only_elsewhere(active: Iterable[CreditResolutionRecord], fact: SourceDisagreementFact) -> bool:
+    accepted_here = [
+        record
+        for record in active
+        if record.disagreement.key == fact.key and record.disagreement.value_channel == fact.value_channel
+    ]
+    return bool(accepted_here) and all(record.finding_key != fact.finding_key for record in accepted_here)
 
 
 def _stale_issue(disagreement: CalculationSourceIssue) -> CalculationSourceIssue:

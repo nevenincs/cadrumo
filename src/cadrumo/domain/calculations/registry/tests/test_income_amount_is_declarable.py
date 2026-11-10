@@ -9,6 +9,7 @@ import pytest
 from ..ledger_impatriado_bindings import unsupported_ledger_impatriado_income_observations
 from ..ledger_renta_income_bindings import unsupported_ledger_renta_income_observations
 from . import unrouted_renta_quantity_screen_scenarios as scenarios
+from .authored_editions import filing_year_envelope
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -40,7 +41,7 @@ class _ImpatriadoRow:
 def test_the_renta_screen_keeps_only_a_row_that_declares_something(
     gross: str, base: str | None, declarable: bool
 ) -> None:
-    revision = published_snapshot("130", filing_year=2026, period="1T").revision
+    revision = published_snapshot("130", filing_year=filing_year_envelope().horizon, period="1T").revision
     row = scenarios.Row(gross=gross, withheld="0", base=base)
     row.target_casilla_id = _UNTARGETED_CASILLA
 
@@ -51,7 +52,7 @@ def test_the_renta_screen_keeps_only_a_row_that_declares_something(
 def test_the_impatriado_screen_keeps_only_a_row_that_declares_something(
     gross: str, base: str | None, declarable: bool
 ) -> None:
-    revision = published_snapshot("130", filing_year=2026, period="1T").revision
+    revision = published_snapshot("130", filing_year=filing_year_envelope().horizon, period="1T").revision
     row = _ImpatriadoRow(gross, base)
 
     assert (unsupported_ledger_impatriado_income_observations(revision, [row]) == (row,)) is declarable

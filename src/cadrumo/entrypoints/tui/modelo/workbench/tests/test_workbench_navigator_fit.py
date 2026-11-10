@@ -5,7 +5,10 @@ from __future__ import annotations
 import pytest
 from rich.cells import cell_len
 
-from ......application.modelo.work_form_models import ModeloFormText, ModeloFormTextDisclosure
+from ......application.modelo.work_form_field_vocabulary import (
+    ModeloFormText,
+    ModeloFormTextDisclosure,
+)
 from ..navigator import NavigatorState, navigator_rows
 from ..page_items import WorkbenchPage
 

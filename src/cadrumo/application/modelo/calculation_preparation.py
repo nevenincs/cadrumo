@@ -12,7 +12,9 @@ See Also:
     :func:`~application.modelo.calculation_resolution.resolve_calculation_binding_channels`:
         Merges caller, backend, borrador, enum, and date binding channels.
     :mod:`~application.modelo.iva_wallet_gate`:
-        Applies the persisted Modelo 303 IVA-wallet authority during preparation.
+        Resolves the persisted Modelo 303 IVA-wallet authority during preparation.
+    :mod:`~application.modelo.iva_wallet_binding`:
+        Applies that authority to the prior-compensation binding.
 """
 
 from __future__ import annotations
@@ -66,12 +68,10 @@ from ..user_profile.projections import record_to_path_values
 from .action_errors import ModeloAggregationInputConflictError, ModeloLedgerPreflightBlockedError
 from .calculation_helpers import load_work_unit_for_calculation, resolve_registry_snapshot_for_work_unit
 from .calculation_resolution import ResolvedCalculationChannels, resolve_calculation_binding_channels
-from .iva_wallet_gate import (
-    apply_iva_compensation_decision_binding,
-    iva_wallet_door,
-    resolve_iva_compensation_decision_for_calculation,
-)
+from .iva_wallet_binding import apply_iva_compensation_decision_binding
+from .iva_wallet_gate import resolve_iva_compensation_decision_for_calculation
 from .iva_wallet_prior_period import CataloguePriorModeloCalculations
+from .iva_wallet_refusal import iva_wallet_door
 from .iva_wallet_values import taxpayer_nif_from_path_values
 from .lifecycle_clock_gate import (
     ModeloLifecycleClockOperation,

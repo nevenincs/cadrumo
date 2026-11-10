@@ -26,7 +26,11 @@ from textual.widgets import Static
 from ......application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from ......application.modelo.work_form_models import ModeloFormCasillaAddressV1, ModeloFormField, ModeloFormOrigin
+from ......application.modelo.work_form_field_vocabulary import (
+    ModeloFormCasillaAddressV1,
+    ModeloFormOrigin,
+)
+from ......application.modelo.work_form_models import ModeloFormField
 from ......application.modelo.work_form_wording import origin_words
 from ......core.casilla_id import validated_casilla_id
 from ......core.config import override_settings

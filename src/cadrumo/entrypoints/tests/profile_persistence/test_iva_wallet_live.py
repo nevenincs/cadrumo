@@ -22,10 +22,8 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts,
 )
 from ....application.live.iva_remote_state import capture_iva_compensation_wallet
-from ....application.modelo.iva_wallet_gate import (
-    ModeloIvaWalletReconciliationBlocked,
-    apply_iva_compensation_decision_binding,
-)
+from ....application.modelo.iva_wallet_binding import apply_iva_compensation_decision_binding
+from ....application.modelo.iva_wallet_refusal import ModeloIvaWalletReconciliationBlocked
 from ....application.user_profile.profile_record_repository import ProfileRecordRepository
 from ....application.user_profile.projections import record_to_path_values
 from ....core.bucket_pointer import require_active_bucket_id

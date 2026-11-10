@@ -460,7 +460,12 @@ def test_a_non_resident_declarado_carries_provincia_99_and_a_spanish_one_is_disc
 
     provincia = {str(row[_NAME]): row[_PROVINCIA] for row in _declarado_rows(resolution)}
     assert provincia == {"CUSTOMER INC": "99", "CLIENTE NACIONAL SL": ""}
-    advisory = next(item for item in resolution.diagnostics if item.source_ref == "m347-record:provincia-not-recorded")
+    # One note per Spanish declarado whose provincia is unstated, opening at its
+    # invoice; the non-resident's 99 needs none.
+    (advisory,) = (
+        item for item in resolution.diagnostics if item.source_ref.startswith("m347-record:provincia-not-stated:")
+    )
+    assert advisory.reason == "m347_declarado_provincia_unrecorded"
     assert "C0001502D" in advisory.message
     assert "US000000001" not in advisory.message
 

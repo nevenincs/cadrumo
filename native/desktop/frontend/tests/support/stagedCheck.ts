@@ -1,4 +1,5 @@
 import { appendFileSync } from "node:fs";
+import { windowLanguage } from "./strings";
 import type { LedgerRow } from "../../src/shell/ledger";
 import { answerStagedCheck } from "../../src/dev/ledgerStagedCheckFixture";
 import recorded from "@fixtures/ledger-staged-check/ledgerStagedCheck.json" with { type: "json" };
@@ -58,6 +59,18 @@ export function servedBlocker(kind: string, fields?: readonly string[]) {
     fixWords: said.fix_words,
     wordsLanguage: "es",
   };
+}
+
+/** The sentences the backend said for a blocker kind, as recorded, in the
+ * language the window under test speaks: what the review shows the person. */
+export function servedBlockerSentences(kind: string) {
+  const said = (
+    recorded.words.blockers as Record<
+      string,
+      Record<string, { words: string; fix_words: string }>
+    >
+  )[kind]![windowLanguage]!;
+  return { words: said.words, fixWords: said.fix_words };
 }
 
 /** `planApply` with the recorded answer for exactly `content` over the

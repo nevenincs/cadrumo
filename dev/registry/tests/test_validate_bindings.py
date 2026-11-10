@@ -18,6 +18,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.binding_targets import BindingConsumerKind, binding_consumers
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ..compiler.loader import load_modelo_directory
 from ..compiler.validate_bindings import (
@@ -32,7 +33,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _MODELOS_ROOT = Path(__file__).resolve().parents[3] / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
 
-_M151_REVISION = "2025-y-siguientes"
+_M151_REVISION = str(open_ended_revision("151").id)
 _M151_BINDING_ID = "modelo-151-impatriado-base-liquidable-general"
 
 _M151_PROVIDER_LINE = (
@@ -141,7 +142,7 @@ def test_a_deferred_provider_kind_cannot_feed_a_bound_casilla(tmp_path: Path) ->
     failures = _failures(tree, _M151_REVISION)
 
     assert [f for f in failures if "deferred provider kind 'gasto193_contributor'" in f and _M151_BINDING_ID in f]
-    assert all("modelo 151 revision 2025-y-siguientes" in failure for failure in failures)
+    assert all(f"modelo 151 revision {_M151_REVISION}" in failure for failure in failures)
 
 
 def test_a_value_channel_the_provider_cannot_produce_is_refused(tmp_path: Path) -> None:
@@ -192,7 +193,7 @@ def test_a_rows_aggregation_on_a_scalar_channel_is_refused(tmp_path: Path) -> No
         'data_type = "text" }\nvalue = { data_type = "money", channel = "decimal" }',
     )
 
-    failures = _failures(tree, "2024")
+    failures = _failures(tree, str(open_ended_revision("190").id))
 
     assert [
         f
@@ -255,7 +256,7 @@ def test_a_binding_no_consumer_names_earns_an_unreferenced_failure(tmp_path: Pat
     _append_binding_row(tree, "modelo-151-impatriado-orphan")
 
     revision = _revision(tree, _M151_REVISION)
-    failures = unreferenced_binding_failures(prefix="modelo 151 revision 2025-y-siguientes", revision=revision)
+    failures = unreferenced_binding_failures(prefix=f"modelo 151 revision {_M151_REVISION}", revision=revision)
 
     assert [f for f in failures if "modelo-151-impatriado-orphan" in f and "named by no casilla" in f]
     assert not [f for f in failures if _M151_BINDING_ID in f and "orphan" not in f]

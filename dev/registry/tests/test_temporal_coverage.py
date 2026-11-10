@@ -9,6 +9,7 @@ from pydantic import ValidationError
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.authority import compiled_bundled_authority
 from ..maintenance_support import (
@@ -25,6 +26,12 @@ from ..temporal_coverage import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+#: Coordinates of the directly-constructed rows: a revision id and exercise that need exist nowhere
+#: else, and a second revision id on a different exercise for the mismatch branches.
+_EXERCISE = filing_year_envelope().horizon
+_REVISION = f"{_EXERCISE}-02-03-y-siguientes"
+_OTHER_REVISION = f"{filing_year_envelope().floor}-01-01-a-{filing_year_envelope().floor}-12-31"
 
 
 def test_temporal_coverage_reselects_every_registered_revision_and_checks_its_declared_grade() -> None:
@@ -281,10 +288,10 @@ def test_temporal_revision_summary_refuses_duplicate_or_cross_revision_cells() -
     """The revision-facing projection cannot re-hide matrix cells during aggregation."""
     row = TemporalRevisionCoverage(
         modelo="036",
-        revision="2025-02-03-y-siguientes",
-        filing_year=2025,
+        revision=_REVISION,
+        filing_year=_EXERCISE,
         period="alta",
-        selected_revision="2025-02-03-y-siguientes",
+        selected_revision=_REVISION,
         declared_authority_grade=RegistryAuthorityGrade.APPLICABILITY,
         status="validated",
     )
@@ -298,7 +305,7 @@ def test_temporal_revision_summary_refuses_duplicate_or_cross_revision_cells() -
     with pytest.raises(ValidationError, match="must match its summary revision"):
         TemporalRevisionCoverageSummary(
             modelo=row.modelo,
-            revision="2024-01-01-a-2024-12-31",
+            revision=_OTHER_REVISION,
             declared_authority_grade=row.declared_authority_grade,
             coordinates=(row,),
         )
@@ -308,10 +315,10 @@ def test_temporal_coverage_row_refuses_a_claim_without_its_required_evidence() -
     with pytest.raises(ValidationError, match="declared authority grade"):
         TemporalRevisionCoverage(
             modelo="036",
-            revision="2025-02-03-y-siguientes",
-            filing_year=2025,
+            revision=_REVISION,
+            filing_year=_EXERCISE,
             period="alta",
-            selected_revision="2025-02-03-y-siguientes",
+            selected_revision=_REVISION,
             status="validated",
         )
 
@@ -320,16 +327,16 @@ def test_temporal_coverage_row_refuses_a_claim_without_its_required_evidence() -
     ("failure_code", "selected_revision", "declared_authority_grade"),
     [
         ("law_selection_refused", None, RegistryAuthorityGrade.APPLICABILITY),
-        ("selected_revision_mismatch", "2024-01-01-a-2024-12-31", None),
-        ("undeclared_authority_grade", "2025-02-03-y-siguientes", None),
+        ("selected_revision_mismatch", _OTHER_REVISION, None),
+        ("undeclared_authority_grade", _REVISION, None),
         (
             "declared_grade_snapshot_refused",
-            "2025-02-03-y-siguientes",
+            _REVISION,
             RegistryAuthorityGrade.APPLICABILITY,
         ),
         (
             "snapshot_revision_mismatch",
-            "2024-01-01-a-2024-12-31",
+            _OTHER_REVISION,
             RegistryAuthorityGrade.APPLICABILITY,
         ),
     ],
@@ -404,7 +411,7 @@ def test_undeclared_grade_refusal_rejects_every_non_null_grade_at_construction(
     [
         (
             "law_selection_refused",
-            {"selected_revision": "2025-02-03-y-siguientes"},
+            {"selected_revision": _REVISION},
             "law-selection refusal cannot retain",
         ),
         (
@@ -424,7 +431,7 @@ def test_undeclared_grade_refusal_rejects_every_non_null_grade_at_construction(
         ),
         (
             "snapshot_revision_mismatch",
-            {"selected_revision": "2025-02-03-y-siguientes"},
+            {"selected_revision": _REVISION},
             "snapshot-revision mismatch requires",
         ),
     ],
@@ -472,10 +479,10 @@ def test_temporal_coverage_row_refuses_fabricated_registry_coordinates(
 ) -> None:
     payload = {
         "modelo": "036",
-        "revision": "2025-02-03-y-siguientes",
-        "filing_year": 2025,
+        "revision": _REVISION,
+        "filing_year": _EXERCISE,
         "period": "alta",
-        "selected_revision": "2025-02-03-y-siguientes",
+        "selected_revision": _REVISION,
         "declared_authority_grade": RegistryAuthorityGrade.APPLICABILITY,
         "status": "validated",
     }
@@ -663,19 +670,19 @@ def _temporal_refusal_payload(
     declared_authority_grade: RegistryAuthorityGrade | None = RegistryAuthorityGrade.APPLICABILITY,
 ) -> dict[str, int | str | RegistryAuthorityGrade | None]:
     """Return one direct-construction payload shaped like a composer refusal branch."""
-    revision = "2025-02-03-y-siguientes"
+    revision = _REVISION
     if failure_code == "selected_revision_mismatch":
-        selected_revision = "2024-01-01-a-2024-12-31" if selected_revision is None else selected_revision
+        selected_revision = _OTHER_REVISION if selected_revision is None else selected_revision
     elif failure_code in {"undeclared_authority_grade", "declared_grade_snapshot_refused"}:
         selected_revision = revision if selected_revision is None else selected_revision
     elif failure_code == "snapshot_revision_mismatch":
-        selected_revision = "2024-01-01-a-2024-12-31" if selected_revision is None else selected_revision
+        selected_revision = _OTHER_REVISION if selected_revision is None else selected_revision
     if failure_code == "undeclared_authority_grade":
         declared_authority_grade = None
     return {
         "modelo": "036",
         "revision": revision,
-        "filing_year": 2025,
+        "filing_year": _EXERCISE,
         "period": "alta",
         "selected_revision": selected_revision,
         "declared_authority_grade": declared_authority_grade,

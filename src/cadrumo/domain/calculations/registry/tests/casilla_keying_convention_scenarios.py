@@ -45,7 +45,7 @@ def check_runtime_accepts_canonical_casilla_id_for_semantic_input(_m303_2025_1t_
         snapshot,
         inputs={casilla.id: Decimal("1")},
         binding_values={M303_PREVIOUS_COMPENSATION_BINDING: Decimal("0")},
-        date_context={"filing_period": date(2025, 3, 31)},
+        date_context={"filing_period": date(snapshot.filing_year, 3, 31)},
     )
 
     assert result.values[casilla.id] == Decimal("1")
@@ -61,7 +61,7 @@ def check_runtime_rejects_casilla_number_for_semantic_input(_m303_2025_1t_snapsh
             snapshot,
             inputs={casilla.number: Decimal("1")},
             binding_values={M303_PREVIOUS_COMPENSATION_BINDING: Decimal("0")},
-            date_context={"filing_period": date(2025, 3, 31)},
+            date_context={"filing_period": date(snapshot.filing_year, 3, 31)},
         )
 
     assert exc_info.value.context == {"casilla_ids": casilla.number}

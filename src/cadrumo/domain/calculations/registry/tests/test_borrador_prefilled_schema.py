@@ -9,6 +9,7 @@ import pytest
 from ..binding_borrador_participation import BorradorParticipation
 from ..ids import BindingId
 from ..schema import BindingDefinition
+from .authored_editions import newest_authored_edition
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -16,7 +17,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 @cache
 def _modelo_100_bindings() -> dict[BindingId, BindingDefinition]:
-    snapshot = published_snapshot("100", filing_year=2025, period="0A")
+    snapshot = published_snapshot("100", filing_year=newest_authored_edition("100"), period="0A")
     return {binding.id: binding for binding in snapshot.revision.bindings}
 
 

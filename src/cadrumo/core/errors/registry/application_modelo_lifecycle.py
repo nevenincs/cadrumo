@@ -568,7 +568,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.iva_wallet_gate.ModeloIvaWalletReconciliationBlockedError",
+        "cadrumo.application.modelo.iva_wallet_refusal.ModeloIvaWalletReconciliationBlockedError",
         ErrorCode(
             code="REFUSED_MODELO_IVA_WALLET_RECONCILIATION_BLOCKED",
             category=ErrorCategory.REFUSED,
@@ -578,7 +578,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.iva_wallet_gate.ModeloIvaWalletAuthorityUnavailableError",
+        "cadrumo.application.modelo.iva_wallet_refusal.ModeloIvaWalletAuthorityUnavailableError",
         ErrorCode(
             code="ERROR_MODELO_IVA_WALLET_AUTHORITY_UNAVAILABLE",
             category=ErrorCategory.ERROR,

@@ -20,8 +20,8 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.modelo_localization import resolve_modelo_localization
 from ....tests.locales_root_fixture import locales_root_scope
 from ..work_form import build_modelo_work_form
+from ..work_form_field_vocabulary import ModeloFormCasillaAddressV1
 from ..work_form_localization import names_only_its_box, render_box_locator_patterns
-from ..work_form_models import ModeloFormCasillaAddressV1
 from .work_form_fixture import uncalculated_review
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -22,7 +22,6 @@ from ...core.operations import (
 )
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.form_codes import form_for_role
 from ..operations.access_port import OperationAccessResolver
 from ..operations.capabilities import (
     RECORDED_COOPERATIVE_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_UPDATE_CAPABILITIES,
@@ -43,7 +42,7 @@ from .calculation_action_ports import CalculationActionPortsFactory
 from .calculation_advisory_projection import ModeloCalculationAdvisories
 from .calculation_bucket_actions import refuse_blocked_ledger_preflight, refuse_empty_retenciones_window
 from .calculation_projection import ModeloCalculationSnapshot
-from .m303_filing_evidence import m303_filing_evidence_failure
+from .m303_filing_evidence import m303_filing_evidence_failure, m303_filing_evidence_modelo
 from .m303_ordinary_filing_evidence_authoring import author_ordinary_m303_evidence_for_work
 from .metadata_projection import ModeloWorkMetadataSnapshot
 from .projection_operation import ProjectUnresolvedBindingProjection, ProjectUnresolvedCasillaProjection
@@ -288,7 +287,7 @@ def _ordinary_m303_filing_instance_evidence(
     declaration. Only when neither exists is the evidence missing.
     """
     supplied = payload.ordinary_m303_filing_evidence
-    if work_unit.modelo != form_for_role("iva.periodic"):
+    if work_unit.modelo != m303_filing_evidence_modelo():
         if supplied is None:
             return None
         raise M303FilingEvidenceError(

@@ -13,6 +13,7 @@ from cadrumo.domain.iva.schema import IvaCategory
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.loader import load_registry_tree
+from .authored_edition_support import authored_revisions
 from .gate_support import mutate_declaration, scratch_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -23,7 +24,16 @@ _INTRA_COMMUNITY_SUPPLY_BASE_BINDING = "modelo-303-casilla-59-entregas-intracomu
 def test_mutation_stripping_the_intra_community_supply_binding_reds_the_negative_control(tmp_path: Path) -> None:
     """A source mutation must change the compiler-derived structural result."""
     scratch_root = scratch_registry_tree(tmp_path, "303")
-    revision_id = compiled_bundled_authority().snapshot("303", filing_year=2025, period="1T").revision.id
+    whole_year = [
+        revision
+        for revision in authored_revisions("303")
+        if revision.valid_to is not None
+        and (revision.valid_from.month, revision.valid_from.day) == (1, 1)
+        and (revision.valid_to.month, revision.valid_to.day) == (12, 31)
+    ][-1]
+    revision_id = (
+        compiled_bundled_authority().snapshot("303", filing_year=whole_year.valid_from.year, period="1T").revision.id
+    )
     # The binding is addressed by its declared id, never by a fragment
     # filename: the edition under test carries no bindings directory of its
     # own, and the baseline holding it states every binding in one fragment.

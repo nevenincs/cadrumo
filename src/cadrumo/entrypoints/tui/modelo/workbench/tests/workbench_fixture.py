@@ -21,11 +21,17 @@ from ......application.modelo.casilla_help_formula import ModeloHelpFormulaV1
 from ......application.modelo.source_policy import source_policy
 from ......application.modelo.work_form import build_modelo_work_form
 from ......application.modelo.work_form_declaration_facts import ModeloFormYearProjection
-from ......application.modelo.work_form_models import (
+from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormBinding,
     ModeloFormCasillaAddressV1,
-    ModeloFormCounts,
     ModeloFormEditability,
+    ModeloFormOrigin,
+    ModeloFormStanding,
+    ModeloFormText,
+    ModeloFormTextDisclosure,
+)
+from ......application.modelo.work_form_models import (
+    ModeloFormCounts,
     ModeloFormField,
     ModeloFormFieldBlock,
     ModeloFormGridBlock,
@@ -33,12 +39,8 @@ from ......application.modelo.work_form_models import (
     ModeloFormGridColumn,
     ModeloFormGridRow,
     ModeloFormLayoutProvenance,
-    ModeloFormOrigin,
     ModeloFormPage,
     ModeloFormSection,
-    ModeloFormStanding,
-    ModeloFormText,
-    ModeloFormTextDisclosure,
     ModeloWorkForm,
 )
 from ......application.modelo.work_form_outline import form_outline

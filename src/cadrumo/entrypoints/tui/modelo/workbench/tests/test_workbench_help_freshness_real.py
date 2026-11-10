@@ -21,7 +21,7 @@ from ......application.modelo.edit_models import (
     ModeloEditScalarIntentKind,
     ModeloScalarEditIntentV1,
 )
-from ......application.modelo.work_form_models import ModeloFormCasillaAddressV1
+from ......application.modelo.work_form_field_vocabulary import ModeloFormCasillaAddressV1
 from ......core.casilla_id import CasillaId
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage

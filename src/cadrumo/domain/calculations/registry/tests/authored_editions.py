@@ -280,6 +280,22 @@ def revision_covering(modelo_id: str, exercise: int) -> RevisionSelectionMetadat
     return revision
 
 
+def revision_serving_period(modelo_id: str, exercise: int, period: str) -> RevisionSelectionMetadata:
+    """Return the one authored revision that serves ``period`` of ``exercise``.
+
+    An exercise one design does not cover whole is split between revisions at a
+    period boundary; ``revision_covering`` is ambiguous there and this is not.
+    """
+    (revision,) = (
+        revision
+        for revision in authored_revisions(modelo_id)
+        if revision.valid_from.year <= exercise
+        and (revision.valid_to is None or exercise <= revision.valid_to.year)
+        and period in revision.period_selector.periods_for_year(exercise)
+    )
+    return revision
+
+
 def revision_before_first_declaring(modelo_id: str, casilla_id: str) -> RevisionSelectionMetadata:
     """Return the authored revision right before the first one that declares ``casilla_id``."""
     revisions = authored_revisions(modelo_id)

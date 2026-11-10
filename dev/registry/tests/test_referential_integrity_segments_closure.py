@@ -281,7 +281,7 @@ _AGRARIAN_REDUCED_NET_YIELD_CASILLA = "1550"
 
 
 def _formula_operand_casillas(expression: FormulaExpression) -> frozenset[str]:
-    operands = {str(expression.casilla_id)} if expression.casilla_id is not None else set()
+    operands: set[str] = {str(expression.casilla_id)} if expression.casilla_id is not None else set()
     for argument in expression.args:
         operands |= _formula_operand_casillas(argument)
     return frozenset(operands)

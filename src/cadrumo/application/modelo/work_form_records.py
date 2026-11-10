@@ -30,7 +30,8 @@ from ...domain.calculations.registry.schema_scalars import registry_scalar_value
 from ...domain.filing.protocols import ModeloInputScalar
 from ...domain.modelos.calculation_revision import CalculationRevision
 from .revision_replay_inputs import revision_detail_record_binding_inputs
-from .work_form_models import ModeloFormRepeatingRow, ModeloFormScalar
+from .work_form_field_vocabulary import ModeloFormScalar
+from .work_form_models import ModeloFormRepeatingRow
 from .work_form_projection_records import saved_projection_form_records
 
 

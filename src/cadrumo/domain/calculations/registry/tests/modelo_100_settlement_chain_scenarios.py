@@ -159,7 +159,7 @@ def check_0587_cuota_liquida_total_is_computed(m100_2024_snapshot: RegistrySnaps
         # 0003 is the leaf manual trabajo casilla; with all reductions zero the
         # chain produces 0500 = 0505 = 55500 (same technique as contract tests).
         inputs=casilla_inputs(),
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": date(m100_2024_snapshot.filing_year, 12, 31)},
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         binding_values=binding_values(),
         relation_values=RELATION_VALUES_2024,
@@ -194,7 +194,7 @@ def check_0609_total_pagos_a_cuenta_computed_from_0598(m100_2024_snapshot: Regis
     result = calculate_registry_snapshot(
         m100_2024_snapshot,
         inputs=casilla_inputs(),
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": date(m100_2024_snapshot.filing_year, 12, 31)},
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         binding_values=binding_values(),
         relation_values=RELATION_VALUES_2024,
@@ -225,7 +225,7 @@ def check_0610_cuota_diferencial_computed(m100_2024_snapshot: RegistrySnapshot) 
     result = calculate_registry_snapshot(
         m100_2024_snapshot,
         inputs=casilla_inputs(),
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": date(m100_2024_snapshot.filing_year, 12, 31)},
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         binding_values=binding_values(),
         relation_values=RELATION_VALUES_2024,
@@ -252,7 +252,7 @@ def check_0670_resultado_declaracion_computed(m100_2024_snapshot: RegistrySnapsh
     result = calculate_registry_snapshot(
         m100_2024_snapshot,
         inputs=casilla_inputs(),
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": date(m100_2024_snapshot.filing_year, 12, 31)},
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         binding_values=binding_values(),
         relation_values=RELATION_VALUES_2024,
@@ -277,7 +277,7 @@ def check_settlement_chain_not_zero_for_non_zero_base(m100_2024_snapshot: Regist
     result = calculate_registry_snapshot(
         m100_2024_snapshot,
         inputs=casilla_inputs(),
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": date(m100_2024_snapshot.filing_year, 12, 31)},
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         binding_values=binding_values(),
         relation_values=RELATION_VALUES_2024,
@@ -312,7 +312,7 @@ def check_anti_tautology_retenciones_change_affects_chain(m100_2024_snapshot: Re
     result_low = calculate_registry_snapshot(
         m100_2024_snapshot,
         inputs=casilla_inputs(),
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": date(m100_2024_snapshot.filing_year, 12, 31)},
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         binding_values=binding_values(),
         relation_values=RELATION_VALUES_2024,
@@ -322,7 +322,7 @@ def check_anti_tautology_retenciones_change_affects_chain(m100_2024_snapshot: Re
     result_high = calculate_registry_snapshot(
         m100_2024_snapshot,
         inputs=casilla_inputs(retenciones=_higher_retenciones),
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": date(m100_2024_snapshot.filing_year, 12, 31)},
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         binding_values=binding_values(),
         relation_values=RELATION_VALUES_2024,
