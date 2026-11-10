@@ -17,6 +17,7 @@ import pytest
 from click.testing import Result
 
 from cadrumo.core.config import override_settings
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.user_profile.values import UserProfileRecord
 
 from ...cli_runner import invoke_cached_cli
@@ -35,6 +36,8 @@ _CRITERION_PATH = "irpf.activity_income_imputation_criterion"
 _ACCOUNTING_PATH = "irpf.codigo_comercio_accounting"
 _CRITERION_FLAG = "--irpf-activity-income-imputation-criterion"
 _YEAR_FLAG = "--irpf-activity-income-imputation-year"
+_EARLY = filing_year_envelope().floor
+_LATE = filing_year_envelope().horizon
 
 
 def _dated(record: UserProfileRecord, path: str) -> list[tuple[date | None, date | None, object]]:
@@ -83,7 +86,7 @@ def test_create_stores_the_election_dated_to_its_ejercicio(tmp_path: Path, monke
                 _CRITERION_FLAG,
                 "cobros_y_pagos",
                 _YEAR_FLAG,
-                "2026",
+                str(_LATE),
                 "--no-irpf-codigo-comercio-accounting",
             ),
             input=json.dumps({"passphrase": CREDENTIAL_INPUT, "passphrase_confirmation": CREDENTIAL_INPUT}),
@@ -93,8 +96,8 @@ def test_create_stores_the_election_dated_to_its_ejercicio(tmp_path: Path, monke
 
         record = profile_persisted_record()
 
-    assert _dated(record, _CRITERION_PATH) == [(*_ejercicio(2026), "cobros_y_pagos")]
-    assert _dated(record, _ACCOUNTING_PATH) == [(*_ejercicio(2026), False)]
+    assert _dated(record, _CRITERION_PATH) == [(*_ejercicio(_LATE), "cobros_y_pagos")]
+    assert _dated(record, _ACCOUNTING_PATH) == [(*_ejercicio(_LATE), False)]
 
 
 def test_create_refuses_a_criterion_without_its_ejercicio_and_creates_nothing(tmp_path: Path) -> None:
@@ -126,14 +129,15 @@ def test_create_refuses_a_criterion_without_its_ejercicio_and_creates_nothing(tm
 @pytest.mark.usefixtures("native_cli_profile_view")
 def test_edit_states_one_ejercicio_and_keeps_the_others_and_the_omitted_answers() -> None:
     assert (
-        _status(_edit(_CRITERION_FLAG, "devengo", _YEAR_FLAG, "2025", "--irpf-codigo-comercio-accounting")) == "updated"
+        _status(_edit(_CRITERION_FLAG, "devengo", _YEAR_FLAG, str(_EARLY), "--irpf-codigo-comercio-accounting"))
+        == "updated"
     )
-    assert _status(_edit(_CRITERION_FLAG, "cobros_y_pagos", _YEAR_FLAG, "2026")) == "updated"
+    assert _status(_edit(_CRITERION_FLAG, "cobros_y_pagos", _YEAR_FLAG, str(_LATE))) == "updated"
 
     record = profile_persisted_record()
-    assert _dated(record, _CRITERION_PATH) == [(*_ejercicio(2025), "devengo"), (*_ejercicio(2026), "cobros_y_pagos")]
-    # The 2026 run named no accounting answer, so 2025's is left as stored and none is stated for 2026.
-    assert _dated(record, _ACCOUNTING_PATH) == [(*_ejercicio(2025), True)]
+    assert _dated(record, _CRITERION_PATH) == [(*_ejercicio(_EARLY), "devengo"), (*_ejercicio(_LATE), "cobros_y_pagos")]
+    # The later run named no accounting answer, so the earlier one is left as stored and none is stated for the later.
+    assert _dated(record, _ACCOUNTING_PATH) == [(*_ejercicio(_EARLY), True)]
 
     # An edit naming none of the election flags leaves every dated election fact as stored.
     assert _status(_edit("--legal-name", "Elector")) == "updated"
@@ -146,7 +150,7 @@ def test_edit_states_one_ejercicio_and_keeps_the_others_and_the_omitted_answers(
 def test_edit_refuses_a_criterion_outside_the_schema_vocabulary_and_writes_nothing() -> None:
     before = profile_persisted_record()
 
-    refused = _edit(_CRITERION_FLAG, "mixto", _YEAR_FLAG, "2026")
+    refused = _edit(_CRITERION_FLAG, "mixto", _YEAR_FLAG, str(_LATE))
 
     assert _refusal_code(refused) == "REFUSED_WIZARD_VALIDATION"
     # The accepted tokens are the profile schema's own vocabulary for the field.

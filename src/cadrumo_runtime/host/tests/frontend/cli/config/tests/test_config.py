@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -21,6 +22,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.i18n.render import tr
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.cli.config.errors import ConfigBoundaryError
 
 from ...cli_runner import invoke_cached_cli
@@ -41,7 +43,7 @@ def _create_profile(name: str = "test-operator") -> None:
             "identity.surnames": "Operator",
             "identity.tax_id": "00000000T",
             "activities.description": "Servicios",
-            "censo.activity_start_date": "2026-01-01",
+            "censo.activity_start_date": date(filing_year_envelope().horizon, 1, 1).isoformat(),
             "taxpayer_type.irpf_income_categories": "actividad_economica",
             "irpf.estimation_regime": "directa_normal",
             "tax_residence.ccaa": "madrid",
