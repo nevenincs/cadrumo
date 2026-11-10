@@ -20,6 +20,7 @@ from ....core.operations import OperationEffect, OperationFrontendProjection, pr
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -60,11 +61,13 @@ _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _REVISION_ID = "a" * 64
 _REPORT_ID = "b" * 64
+_YEAR = filing_year_envelope().horizon
+_CAPTURE_REVISION = str(revision_serving_period("303", _YEAR, "2T").id)
 
 
 @pytest.mark.parametrize(
     "coordinates",
-    [{}, {"modelo": "130"}, {"modelo": "130", "period": {"filing_year": 2026, "code": "1T"}}],
+    [{}, {"modelo": "130"}, {"modelo": "130", "period": {"filing_year": _YEAR, "code": "1T"}}],
 )
 def test_incomplete_saved_return_address_explains_how_to_read_it(coordinates: dict[str, object]) -> None:
     with pytest.raises(ValidationError, match=r"period\.filing_year does not replace year"):
@@ -76,7 +79,7 @@ def test_incomplete_saved_return_address_explains_how_to_read_it(coordinates: di
     [
         {"work_unit_id": "a" * 64},
         {"calculation_revision_id": "b" * 64},
-        {"modelo": "130", "year": 2026, "period": {"filing_year": 2026, "code": "1T"}},
+        {"modelo": "130", "year": _YEAR, "period": {"filing_year": _YEAR, "code": "1T"}},
     ],
 )
 def test_saved_return_address_accepts_existing_exact_and_natural_routes(coordinates: dict[str, object]) -> None:
@@ -84,15 +87,15 @@ def test_saved_return_address_accepts_existing_exact_and_natural_routes(coordina
 
 
 def _unit() -> WorkUnit:
-    period = Period.from_year_and_code(2026, "1T")
-    instant = datetime(2026, 3, 10, 12, tzinfo=UTC)
+    period = Period.from_year_and_code(_YEAR, "1T")
+    instant = datetime(_YEAR, 3, 10, 12, tzinfo=UTC)
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
-            bucket_id=str(_PROFILE), modelo="303", filing_year=2026, period=period, revision_id="test-revision"
+            bucket_id=str(_PROFILE), modelo="303", filing_year=_YEAR, period=period, revision_id="test-revision"
         ),
         bucket_id=str(_PROFILE),
         modelo="303",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
         revision_id="test-revision",
         name="First-quarter return",
@@ -119,7 +122,7 @@ def test_external_import_revision_requires_matching_confirmed_filing_receipt(
 ) -> None:
     """A report-free verified revision is accepted only with its own AEAT receipt."""
     unit = _unit()
-    instant = datetime(2026, 3, 10, 12, tzinfo=UTC)
+    instant = datetime(_YEAR, 3, 10, 12, tzinfo=UTC)
     revision_id = derive_calculation_revision_id(
         work_unit_id=unit.work_unit_id,
         input_values_by_casilla_id={},
@@ -522,23 +525,23 @@ def test_revision_capture_passes_one_authority_pin_through_every_catalogue_read(
     *,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    period = Period.from_year_and_code(2026, "2T")
+    period = Period.from_year_and_code(_YEAR, "2T")
     unit = WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=str(_PROFILE),
             modelo="303",
-            filing_year=2026,
+            filing_year=_YEAR,
             period=period,
-            revision_id="2026-y-siguientes",
+            revision_id=_CAPTURE_REVISION,
         ),
         bucket_id=str(_PROFILE),
         modelo="303",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
-        revision_id="2026-y-siguientes",
+        revision_id=_CAPTURE_REVISION,
         name="First-quarter return",
-        created_at=datetime(2026, 3, 10, 12, tzinfo=UTC),
-        updated_at=datetime(2026, 3, 10, 12, tzinfo=UTC),
+        created_at=datetime(_YEAR, 3, 10, 12, tzinfo=UTC),
+        updated_at=datetime(_YEAR, 3, 10, 12, tzinfo=UTC),
         state=WorkUnitState.BORRADOR,
         current_calculation_revision_id=_REVISION_ID,
     )

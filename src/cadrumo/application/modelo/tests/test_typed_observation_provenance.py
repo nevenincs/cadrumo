@@ -30,6 +30,11 @@ from ....domain.calculations.registry.formula_runtime import RegistryCalculation
 from ....domain.calculations.registry.runtime_graph import expression_casilla_refs
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    newest_authored_edition,
+    revision_covering,
+)
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -45,7 +50,7 @@ from ..calculation_helpers import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _ORPHAN_CASILLA: CasillaId = validated_casilla_id("9999999", surface="_ORPHAN_CASILLA")
 
-_YEAR = 2025
+_YEAR = newest_authored_edition("100")
 _PERIOD = "0A"
 
 
@@ -157,13 +162,13 @@ def _baseline_revision(
         filing_instance_evidence=None,
         source_provenance=(),
     )
-    moment = datetime(2026, 1, 1, tzinfo=UTC)
+    moment = datetime(filing_year_envelope().horizon, 1, 1, tzinfo=UTC)
     return CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="100",
-            revision_id="2025",
+            revision_id=str(revision_covering("100", _YEAR).id),
             modelo_year=_YEAR,
             period=_PERIOD,
         ),

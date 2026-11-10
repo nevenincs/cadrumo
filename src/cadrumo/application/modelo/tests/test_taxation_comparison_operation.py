@@ -21,6 +21,7 @@ from ....core.external_constants import OutputLanguage
 from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
@@ -51,8 +52,9 @@ pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, 
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
-_NOW = datetime(2026, 4, 10, 9, 0, tzinfo=UTC)
-_REVISION = "renta-test-2025"
+_YEAR = newest_authored_edition("100")
+_NOW = datetime(filing_year_envelope().horizon, 4, 10, 9, 0, tzinfo=UTC)
+_REVISION = f"renta-test-{_YEAR}"
 _AUTHORITY = cast(PinnedAuthorityOperation, object())
 _CALCULATION_PORTS = cast(CalculationActionPorts, object())
 
@@ -74,14 +76,14 @@ def _unit(
     revision: str = _REVISION,
     modelo: str = "100",
 ) -> WorkUnit:
-    period = Period.from_year_and_code(2025, "0A")
+    period = Period.from_year_and_code(_YEAR, "0A")
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
-            bucket_id=str(profile_id), modelo=modelo, filing_year=2025, period=period, revision_id=revision
+            bucket_id=str(profile_id), modelo=modelo, filing_year=_YEAR, period=period, revision_id=revision
         ),
         bucket_id=str(profile_id),
         modelo=modelo,
-        filing_year=2025,
+        filing_year=_YEAR,
         period=period,
         revision_id=revision,
         name="Annual declaration",
@@ -149,7 +151,7 @@ def _access_context(
 
 def _comparison(*, revision: str = _REVISION) -> TaxationComparisonResult:
     return TaxationComparisonResult(
-        filing_year=2025,
+        filing_year=_YEAR,
         modelo="100",
         revision=revision,
         conjunta_cuota_resultante=Decimal("1250.00"),
@@ -491,7 +493,7 @@ def _comparison_ports(unit: WorkUnit, authority: object) -> CalculationActionPor
 
 
 def test_work_unit_revision_must_equal_the_pinned_registry_selection() -> None:
-    selected = published_snapshot("100", filing_year=2025, period="0A")
+    selected = published_snapshot("100", filing_year=_YEAR, period="0A")
     stale_unit = _unit(revision="stale-revision")
     selections: list[tuple[str, int, str]] = []
 
@@ -506,11 +508,11 @@ def test_work_unit_revision_must_equal_the_pinned_registry_selection() -> None:
             ports=_comparison_ports(stale_unit, SimpleNamespace(reading_snapshot=snapshot)),
         )
     assert refused.value.refusal is TaxationComparisonRefusal.REVISION_OUTDATED
-    assert selections == [("100", 2025, "0A")]
+    assert selections == [("100", _YEAR, "0A")]
 
 
 def test_work_unit_without_a_calculation_refuses_before_any_run() -> None:
-    selected = published_snapshot("100", filing_year=2025, period="0A")
+    selected = published_snapshot("100", filing_year=_YEAR, period="0A")
     unit = _unit(revision=selected.revision.id)
     authority = SimpleNamespace(reading_snapshot=lambda _modelo, **_coordinates: selected)
 
@@ -522,7 +524,7 @@ def test_work_unit_without_a_calculation_refuses_before_any_run() -> None:
 
 
 def test_revision_without_a_filing_mode_refuses_as_not_declared() -> None:
-    selected = published_snapshot("303", filing_year=2025, period="3T")
+    selected = published_snapshot("303", filing_year=_YEAR, period="3T")
     unit = _unit(revision=selected.revision.id, modelo="303")
     authority = SimpleNamespace(reading_snapshot=lambda _modelo, **_coordinates: selected)
 

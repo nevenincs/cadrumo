@@ -44,7 +44,10 @@ from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaConstraints
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+_YEAR = filing_year_envelope().horizon
 
 _PROFILE = UUID("11111111-1111-4111-8111-111111111111")
 
@@ -65,10 +68,10 @@ def test_typed_query_schemas_bind_and_human_projections_stay_separate() -> None:
 
 def test_typed_binding_value_preserves_accepted_exact_input_and_rejects_invalid_without_echo() -> None:
     with bundled_indexed_authority().operation() as operation:
-        snapshot = operation.snapshot("303", filing_year=2025, period="1T")
+        snapshot = operation.snapshot("303", filing_year=_YEAR, period="1T")
         binding = next(row for row in snapshot.revision.bindings if row.value.channel is BindingValueChannel.DECIMAL)
         value = validate_typed_binding_value(
-            binding, "0.75", snapshot, operation=operation, effective_date=date(2025, 3, 31)
+            binding, "0.75", snapshot, operation=operation, effective_date=date(_YEAR, 3, 31)
         )
         assert value.binding_id == binding.id
         assert value.value == "0.75"
@@ -76,14 +79,14 @@ def test_typed_binding_value_preserves_accepted_exact_input_and_rejects_invalid_
         rejected = "not-a-decimal-secret-value"
         with pytest.raises(ModeloBindingValueInvalidError) as raised:
             validate_typed_binding_value(
-                binding, rejected, snapshot, operation=operation, effective_date=date(2025, 3, 31)
+                binding, rejected, snapshot, operation=operation, effective_date=date(_YEAR, 3, 31)
             )
         assert rejected not in str(raised.value)
 
 
 def test_missing_official_text_grammar_refuses_without_treating_arbitrary_text_as_typed() -> None:
     with bundled_indexed_authority().operation() as operation:
-        snapshot = operation.snapshot("303", filing_year=2025, period="1T")
+        snapshot = operation.snapshot("303", filing_year=_YEAR, period="1T")
         binding = snapshot.revision.bindings[0].model_copy(
             update={
                 "id": "synthetic-unbound-text",
@@ -93,14 +96,14 @@ def test_missing_official_text_grammar_refuses_without_treating_arbitrary_text_a
         rejected = "free-form-private-value"
         with pytest.raises(ModeloBindingValueContractUnsupportedError) as raised:
             validate_typed_binding_value(
-                binding, rejected, snapshot, operation=operation, effective_date=date(2025, 3, 31)
+                binding, rejected, snapshot, operation=operation, effective_date=date(_YEAR, 3, 31)
             )
         assert rejected not in str(raised.value)
 
 
 def test_declared_enum_rejects_outside_member_even_when_target_text_pattern_accepts_it() -> None:
     with bundled_indexed_authority().operation() as operation:
-        snapshot = operation.snapshot("303", filing_year=2025, period="1T")
+        snapshot = operation.snapshot("303", filing_year=_YEAR, period="1T")
         binding_id = "synthetic-censo-event"
         binding = snapshot.revision.bindings[0].model_copy(
             update={
@@ -122,7 +125,7 @@ def test_declared_enum_rejects_outside_member_even_when_target_text_pattern_acce
         revision = snapshot.revision.model_copy(update={"casillas": (target,)})
         selected = snapshot.model_copy(update={"revision": revision})
         accepted = validate_typed_binding_value(
-            binding, "alta", selected, operation=operation, effective_date=date(2025, 3, 31)
+            binding, "alta", selected, operation=operation, effective_date=date(_YEAR, 3, 31)
         )
         assert accepted.value == "alta"
         rejected = "rogue"
@@ -130,19 +133,19 @@ def test_declared_enum_rejects_outside_member_even_when_target_text_pattern_acce
         assert target.constraints.violates_text(rejected) is None
         with pytest.raises(ModeloBindingValueInvalidError):
             validate_typed_binding_value(
-                binding, rejected, selected, operation=operation, effective_date=date(2025, 3, 31)
+                binding, rejected, selected, operation=operation, effective_date=date(_YEAR, 3, 31)
             )
 
 
 def test_readiness_summary_preserves_axes_and_typed_cause_without_diagnostic_detail(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    period = Period.from_year_and_code(2025, "1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
     raw = ProjectionModeloReadiness(
         profile_id=str(_PROFILE),
         modelo="303",
-        revision_id="2025",
-        filing_year=2025,
+        revision_id=str(revision_serving_period("303", _YEAR, "1T").id),
+        filing_year=_YEAR,
         period=period,
         profile_ready=False,
         per_operation_requirements_assessed=True,
@@ -167,7 +170,7 @@ def test_readiness_summary_preserves_axes_and_typed_cause_without_diagnostic_det
     request = ModeloReadinessOperationRequest(
         profile_id=_PROFILE,
         modelo="303",
-        filing_year=2025,
+        filing_year=_YEAR,
         period=PublicPeriod.from_period(period),
         language=OutputLanguage.ES,
     )
@@ -187,14 +190,14 @@ def test_every_frontend_resolves_the_typed_readiness_summary_to_the_same_access(
     definition = build_modelo_readiness_summary_definition(_unused_ports)
     registration = build_modelo_readiness_summary_registration(definition)
     registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
-    period = Period.from_year_and_code(2025, "1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
     request = OperationRequest[BaseModel](
         definition_id=definition.definition_id,
         subject_ref=profile_operation_subject(str(_PROFILE)),
         payload=ModeloReadinessOperationRequest(
             profile_id=_PROFILE,
             modelo="303",
-            filing_year=2025,
+            filing_year=_YEAR,
             period=PublicPeriod.from_period(period),
             language=OutputLanguage.ES,
         ),

@@ -11,6 +11,11 @@ from ....core.period import Period
 from ....core.secure_object_write import SecureObjectWrite, SecureObjectWriteUnit
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    revision_covering,
+    revision_serving_period,
+)
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -32,7 +37,9 @@ from ..selectors import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = "5aa00000-0000-4000-8000-0000000000aa"
-_INSTANT = datetime(2026, 3, 10, 12, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_REVISION = str(revision_serving_period("303", _YEAR, "2T").id)
+_INSTANT = datetime(_YEAR, 3, 10, 12, tzinfo=UTC)
 
 
 class _ReadRepository(CalculationRevisionCatalogueRepositoryProtocol):
@@ -88,9 +95,9 @@ class _ReadRepository(CalculationRevisionCatalogueRepositoryProtocol):
 def _facts(
     *, state: CalculationRevisionState = CalculationRevisionState.BORRADOR, profile: str = _PROFILE
 ) -> tuple[WorkUnit, CalculationRevision, CalculationRevisionCatalogue]:
-    period = Period.from_year_and_code(2026, "2T")
+    period = Period.from_year_and_code(_YEAR, "2T")
     work_id = derive_work_unit_id(
-        bucket_id=profile, modelo="303", filing_year=2026, period=period, revision_id="2026-y-siguientes"
+        bucket_id=profile, modelo="303", filing_year=_YEAR, period=period, revision_id=_REVISION
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_id,
@@ -104,9 +111,9 @@ def _facts(
         work_unit_id=work_id,
         bucket_id=profile,
         modelo="303",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
-        revision_id="2026-y-siguientes",
+        revision_id=_REVISION,
         name="Quarterly return",
         created_at=_INSTANT,
         updated_at=_INSTANT,
@@ -117,7 +124,7 @@ def _facts(
         calculation_revision_id=revision_id,
         work_unit_id=work_id,
         registry_snapshot_ref=RegistrySnapshotRef(
-            modelo="303", revision_id=unit.revision_id, modelo_year=2026, period="2T"
+            modelo="303", revision_id=unit.revision_id, modelo_year=_YEAR, period="2T"
         ),
         state=state,
         created_at=_INSTANT,
@@ -225,7 +232,10 @@ def test_reused_capture_catalogue_still_checks_revision_coordinates(
     stale = revision.model_copy(
         update={
             "registry_snapshot_ref": RegistrySnapshotRef(
-                modelo="303", revision_id="2022", modelo_year=2026, period="1T"
+                modelo="303",
+                revision_id=str(revision_covering("303", filing_year_envelope().floor).id),
+                modelo_year=_YEAR,
+                period="1T",
             )
         }
     )

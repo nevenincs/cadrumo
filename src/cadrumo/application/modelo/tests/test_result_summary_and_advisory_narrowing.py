@@ -21,6 +21,7 @@ from ....core.errors.hierarchy import CadrumoError
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.schema_verification import VerificationPredicateOperator
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -38,26 +39,27 @@ from ..verification_predicates import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _WORK_UNIT_BUCKET = "result-summary-narrowing-test"
-_WORK_UNIT_REVISION = "2026-y-siguientes"
-_WORK_UNIT_NOW = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_WORK_UNIT_REVISION = str(revision_serving_period("303", _YEAR, "2T").id)
+_WORK_UNIT_NOW = datetime(_YEAR, 1, 10, 10, 0, tzinfo=UTC)
 
 
 def _work_unit() -> WorkUnit:
-    period = Period.from_year_and_code(2026, "2T")
+    period = Period.from_year_and_code(_YEAR, "2T")
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_WORK_UNIT_BUCKET,
             modelo="303",
-            filing_year=2026,
+            filing_year=_YEAR,
             period=period,
             revision_id=_WORK_UNIT_REVISION,
         ),
         bucket_id=_WORK_UNIT_BUCKET,
         modelo=ModeloCode("303"),
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
         revision_id=_WORK_UNIT_REVISION,
-        name="303-2026-2T",
+        name=f"303-{_YEAR}-2T",
         created_at=_WORK_UNIT_NOW,
         updated_at=_WORK_UNIT_NOW,
     )
@@ -131,15 +133,15 @@ class TestResultSummaryNarrowing:
             work_unit_id=work_unit_id,
             registry_snapshot_ref=RegistrySnapshotRef(
                 modelo="303",
-                revision_id="2026-y-siguientes",
-                modelo_year=2026,
+                revision_id=_WORK_UNIT_REVISION,
+                modelo_year=_YEAR,
                 period="2T",
             ),
             state=CalculationRevisionState.BORRADOR,
             input_values_by_casilla_id={},
             casilla_values={},
-            created_at=datetime(2026, 1, 10, 10, 0, tzinfo=UTC),
-            updated_at=datetime(2026, 1, 10, 10, 0, tzinfo=UTC),
+            created_at=_WORK_UNIT_NOW,
+            updated_at=_WORK_UNIT_NOW,
             filing_instance_evidence=None,
             source_provenance=(),
         )

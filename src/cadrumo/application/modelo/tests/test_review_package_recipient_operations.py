@@ -24,6 +24,7 @@ from ....core.operations import (
     profile_operation_subject,
 )
 from ....domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...bucket_event_repository import BucketEventHistoryRepositoryFactory
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
@@ -44,7 +45,7 @@ from ..review_package_recipient_registry_ports import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
-_NOW = datetime(2026, 4, 10, 9, 0, tzinfo=UTC)
+_NOW = datetime(filing_year_envelope().horizon, 4, 10, 9, 0, tzinfo=UTC)
 
 
 class _Registry:

@@ -10,20 +10,22 @@ from pydantic import ValidationError
 
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.calculation_revision import derive_calculation_revision_id
 from ....domain.modelos.work_unit import derive_work_unit_id
 from ..review_package_feedback import build_feedback_package
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 7, 4, 12, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_NOW = datetime(_YEAR, 7, 4, 12, 0, tzinfo=UTC)
 _BASE_CASILLA = validated_casilla_id("base", surface="test_review_package_feedback")
 _CUOTA_CASILLA = validated_casilla_id("cuota", surface="test_review_package_feedback")
 _PLACEHOLDER_WORK_UNIT_ID = derive_work_unit_id(
     bucket_id="originator-bucket",
     modelo="303",
-    filing_year=2026,
-    period=Period.from_year_and_code(2026, "1T"),
+    filing_year=_YEAR,
+    period=Period.from_year_and_code(_YEAR, "1T"),
     revision_id="feedback-placeholder-revision",
 )
 _PLACEHOLDER_REVISION_ID = derive_calculation_revision_id(
@@ -40,8 +42,8 @@ _PLACEHOLDER_REVISION_ID = derive_calculation_revision_id(
 @pytest.mark.parametrize(
     "submitted_at",
     (
-        pytest.param(datetime(2026, 7, 3, 12, 0), id="naive"),
-        pytest.param(datetime(2026, 7, 3, 14, 0, tzinfo=timezone(timedelta(hours=2))), id="non-utc"),
+        pytest.param(datetime(_YEAR, 7, 3, 12, 0), id="naive"),
+        pytest.param(datetime(_YEAR, 7, 3, 14, 0, tzinfo=timezone(timedelta(hours=2))), id="non-utc"),
     ),
 )
 def test_build_feedback_package_refuses_a_naive_or_non_utc_submitted_at(submitted_at: datetime) -> None:

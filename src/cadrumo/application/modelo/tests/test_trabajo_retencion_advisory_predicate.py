@@ -27,6 +27,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.casilla_id import validated_casilla_id
+from ....domain.calculations.registry.tests.authored_editions import single_exercise_editions
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ..verification_predicates import evaluate_predicate_expression
@@ -37,7 +38,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 #: Every M100 revision declaring casilla 0596. Each was resolved from that
 #: revision's OWN casilla set through semantic_role rather than copied, because
 #: ids renumber across filing years even when they happen to agree here.
-_REVISION_YEARS = (2020, 2021, 2022, 2023, 2024, 2025)
+_REVISION_YEARS = single_exercise_editions("100")
 
 
 def _predicate_id(year: int) -> str:
