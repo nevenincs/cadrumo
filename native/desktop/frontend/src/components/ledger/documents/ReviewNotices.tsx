@@ -2,22 +2,26 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { listed } from "../../../shell/compose";
+import { servedNextStep, type LedgerNextStep } from "../../../shell/ledger";
 import type { LabelReadingFallback } from "../../../shell/ledgerDocumentOperations";
 import { provisionActionOf } from "../../../shell/provisioningRecovery";
 import { useStrings } from "../../../shell/strings";
 import { SetupOffer } from "../../setup/SetupOffer";
 import { fieldLabel } from "./documentWords";
+import { ServedStep } from "./ServedStep";
 
 /** How the last reading or confirmation went, when it needs saying. */
 export type ReviewNotice =
   | { kind: "changed" }
   /** `recovery` is the setup action the refusal names, if any; `words`
-   * the sentence the backend served for it, if any. */
+   * the sentence the backend served for it, if any; `step` the step it
+   * served for putting it right, if any. */
   | {
       kind: "refused";
       code: string;
       recovery: string | null;
       words: string | null;
+      step: LedgerNextStep | null;
     }
   | { kind: "unknown" }
   | { kind: "failed"; code: string }
@@ -59,6 +63,7 @@ export function ReviewNotices({
             {notice.kind === "refused" && (
               <SetupOffer action={notice.recovery} />
             )}
+            {notice.kind === "refused" && <ServedStep step={notice.step} />}
           </AlertDescription>
         </Alert>
       )}
@@ -100,8 +105,17 @@ export function ReviewNotices({
                 fallback.unread_fields.map((field) => fieldLabel(t, field)),
               )}
             </span>
+            {fallback.refusal_words && (
+              <span className="ledger-draft-unread-refusal">
+                {fallback.refusal_words}
+              </span>
+            )}
             <SetupOffer
               action={provisionActionOf(fallback)}
+              className="justify-self-start"
+            />
+            <ServedStep
+              step={servedNextStep(fallback)}
               className="justify-self-start"
             />
           </AlertDescription>

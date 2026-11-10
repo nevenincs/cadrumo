@@ -470,7 +470,16 @@ export type LedgerNextStep =
       filing_year: number;
       period_code: string;
       words: string;
-    };
+    }
+  /** Opens the model picker of the agent column, where the person picks the
+   * model documents are read with. */
+  | { kind: "choose_reading_model"; words: string };
+
+/** The step the agent column's model picker answers. */
+export type LedgerReadingModelStep = Extract<
+  LedgerNextStep,
+  { kind: "choose_reading_model" }
+>;
 
 /** The steps the profile page answers, the two a readiness refusal serves. */
 export type LedgerProfileStep = Extract<
@@ -572,6 +581,8 @@ export function servedNextStep(detail: unknown): LedgerNextStep | null {
   }
   if (served.kind === "complete_profile_setup")
     return { kind: "complete_profile_setup", words };
+  if (served.kind === "choose_reading_model")
+    return { kind: "choose_reading_model", words };
   return null;
 }
 

@@ -14,7 +14,9 @@ import type {
   EvidenceUpdateRequest,
 } from "../../../shell/ledgerDocumentOperations";
 import {
+  servedNextStep,
   servedRefusalWords,
+  type LedgerNextStep,
   type LedgerPort,
   type LedgerRow,
 } from "../../../shell/ledger";
@@ -37,6 +39,7 @@ import {
   type LandingCheck,
 } from "../WritePause";
 import { extractionLanding, recordLanding } from "./documentLanding";
+import { ServedStep } from "./ServedStep";
 import {
   entrySpec,
   EVIDENCE_SHAPES,
@@ -51,7 +54,12 @@ import {
 type Notice =
   | { kind: "saved" }
   /** `words` is the sentence the backend served for the refusal, if any. */
-  | { kind: "refused"; code: string; words: string | null }
+  | {
+      kind: "refused";
+      code: string;
+      words: string | null;
+      step: LedgerNextStep | null;
+    }
   | { kind: "unknown"; asked: "update" | "remove" | "read" }
   | { kind: "checked"; saved: boolean };
 
@@ -143,6 +151,7 @@ function RecordDetail({
         kind: "refused",
         code: sent.kind === "refused" ? (sent.reason ?? "refused") : sent.code,
         words: sent.kind === "refused" ? servedRefusalWords(sent.detail) : null,
+        step: sent.kind === "refused" ? servedNextStep(sent.detail) : null,
       });
   }
   async function remove() {
@@ -164,6 +173,7 @@ function RecordDetail({
         kind: "refused",
         code: sent.kind === "refused" ? (sent.reason ?? "refused") : sent.code,
         words: sent.kind === "refused" ? servedRefusalWords(sent.detail) : null,
+        step: sent.kind === "refused" ? servedNextStep(sent.detail) : null,
       });
   }
   async function readIt() {
@@ -185,6 +195,7 @@ function RecordDetail({
         kind: "refused",
         code: sent.kind === "refused" ? (sent.reason ?? "refused") : sent.code,
         words: sent.kind === "refused" ? servedRefusalWords(sent.detail) : null,
+        step: sent.kind === "refused" ? servedNextStep(sent.detail) : null,
       });
   }
   /** Learns what an unseen outcome came to by reading the record back. */
@@ -265,6 +276,7 @@ function RecordDetail({
               {notice.words}
             </AlertDescription>
           )}
+          <ServedStep step={notice.step} className="mt-1" />
         </Alert>
       )}
       {notice?.kind === "unknown" && (

@@ -5,7 +5,7 @@ import {
   routeCensoRefusals,
   routeProvisioningRefusals,
 } from "../src/shell/provisioningRecovery";
-import type { LedgerPort } from "../src/shell/ledger";
+import { servedNextStep, type LedgerPort } from "../src/shell/ledger";
 import { setupTargetOf } from "../src/shell/setup";
 import type { SetupRow } from "../src/ipc/componentSetup";
 
@@ -74,6 +74,34 @@ test("the setup action is found in every plain shape of a refusal", () => {
   expect(provisionActionOf("operator.provision.setup")).toBe(
     "operator.provision.setup",
   );
+});
+
+test("a refusal that serves its own step is inferred no setup", () => {
+  const step = {
+    kind: "choose_reading_model",
+    words: "Choose a reading model",
+  };
+  // The same registered code and cause that stand for the local AI's setup
+  // when nothing else is served.
+  expect(
+    provisionActionOf({
+      ...detail("REFUSED_LEDGER_EVIDENCE_READER"),
+      next_step: step,
+    }),
+  ).toBeNull();
+  expect(
+    provisionActionOf({
+      cause: "reader_unavailable",
+      unread_fields: ["grand_total"],
+      reader_error_type: "InvoiceDraftReaderUnavailableError",
+      refusal_code: "no_selection",
+      next_step: step,
+    }),
+  ).toBeNull();
+  expect(servedNextStep({ next_step: step })).toEqual(step);
+  expect(
+    servedNextStep({ next_step: { kind: "choose_reading_model", words: "" } }),
+  ).toBeNull();
 });
 
 test("a refusal that stands for no component, or names it malformed, has none", () => {

@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/tooltip";
 import { facts } from "../../../shell/compose";
 import {
+  servedNextStep,
   servedRefusalWords,
   type LedgerPort,
   type LedgerRow,
@@ -296,6 +297,7 @@ export function DraftReview({
                 code: sent.reason ?? "refused",
                 recovery: provisionActionOf(sent.detail),
                 words: servedRefusalWords(sent.detail),
+                step: servedNextStep(sent.detail),
               }
             : { kind: "failed", code: sent.code },
       );
@@ -427,6 +429,7 @@ export function DraftReview({
             code: sent.reason ?? "refused",
             recovery: provisionActionOf(sent.detail),
             words: servedRefusalWords(sent.detail),
+            step: servedNextStep(sent.detail),
           }
         : { kind: "failed", code: sent.code },
     );

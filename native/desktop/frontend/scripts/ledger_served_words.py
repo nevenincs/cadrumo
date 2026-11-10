@@ -168,6 +168,26 @@ def _off_host_consent() -> dict[str, dict[str, str]]:
     return _worded(("mint_refused",), word)
 
 
+def _reading_model() -> dict[str, dict[str, str]]:
+    """The refusal sentence and the step words served for a role with no picked reading model."""
+    from cadrumo.application.ledger.reading_model_refusal import served_reading_model_refusal
+    from cadrumo.core.config import override_settings
+    from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
+
+    words: dict[str, dict[str, str]] = {"refusal": {}, "step": {}}
+    for language in LANGUAGES:
+        with override_settings(cadrumo_output_language=language):
+            served = served_reading_model_refusal(ModelRunRefusalCode.NO_SELECTION.value)
+        if served is None:
+            raise SystemExit("a role with no picked model serves no refusal")
+        sentence, served_language, step = served
+        if served_language.value != language:
+            raise SystemExit(f"the reading-model refusal was worded in {served_language.value}, not {language}")
+        words["refusal"][language] = sentence
+        words["step"][language] = step.words
+    return words
+
+
 def _served(worded: tuple[str, object], names: tuple[str, ...] = ()) -> tuple[str, str]:
     """A served sentence and its language's token, its sentinels turned into placeholders."""
     sentence, language = worded
@@ -182,6 +202,7 @@ def render_fixture() -> str:
         "inventory": _inventory(),
         "confirmation_block": _confirmation_block(),
         "off_host_consent": _off_host_consent(),
+        "reading_model": _reading_model(),
     }
     return json.dumps(words, ensure_ascii=False, indent=2) + "\n"
 

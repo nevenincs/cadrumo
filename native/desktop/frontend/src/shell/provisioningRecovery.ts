@@ -46,6 +46,10 @@ function search(value: unknown, depth: number): string | null {
   const held = value as Record<string, unknown>;
   const named = provisionAction(held.recovery_action_id);
   if (named !== null) return named;
+  // A refusal that serves its own step says what puts it right; no setup is
+  // inferred from its code or cause beside it.
+  if (typeof held.next_step === "object" && held.next_step !== null)
+    return null;
   const code = held.error_code ?? held.code;
   const item = typeof code === "string" ? REFUSED_FOR.get(code) : undefined;
   if (item !== undefined) return setupActionOf(item);
