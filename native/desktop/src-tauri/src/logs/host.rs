@@ -235,6 +235,7 @@ pub(super) fn entry(event: &Event) -> Entry {
                 "delayMs" => "delay_ms",
                 "prepareMs" => "prepare_ms",
                 "spawnMs" => "spawn_ms",
+                "elapsedMs" => "elapsed_ms",
                 "packageAbi" => "package_abi",
                 "logLevel" => "log_level",
                 "logLevelOverridden" => "log_level_overridden",
@@ -284,6 +285,18 @@ pub(super) fn entry(event: &Event) -> Entry {
         {
             message.push_str(&format!(
                 ": preparation {prepare_ms} ms, process launch {spawn_ms} ms"
+            ));
+        }
+        if let cadrumo_application::diagnostics::service::ServiceFact::SetupAdmissionRead {
+            read,
+            outcome,
+            elapsed_ms,
+        } = fact
+        {
+            message.push_str(&format!(
+                ": {} read {} in {elapsed_ms} ms",
+                token(read),
+                token(outcome)
             ));
         }
     }
@@ -833,6 +846,32 @@ mod tests {
         );
         assert_eq!(entries[0].context["service_prepare_ms"], 2400);
         assert_eq!(entries[0].context["service_spawn_ms"], 350);
+    }
+
+    #[test]
+    fn setup_admission_read_times_are_visible_and_project_as_closed_scalars() {
+        use cadrumo_application::diagnostics::service::{
+            AdmissionRead, AdmissionReadOutcome, ServiceFact,
+        };
+        let diagnostics = Diagnostics::default();
+        diagnostics.service(
+            None,
+            ServiceFact::SetupAdmissionRead {
+                read: AdmissionRead::LocalModels,
+                outcome: AdmissionReadOutcome::Unanswered,
+                elapsed_ms: 21_000,
+            },
+        );
+        let entries = HostEvents::default().poll(&diagnostics);
+        assert_eq!(entries.len(), 1);
+        assert_eq!(
+            entries[0].message,
+            "setup_admission_read: local_models read unanswered in 21000 ms"
+        );
+        assert_eq!(entries[0].level, Some(Level::Info));
+        assert_eq!(entries[0].context["service_read"], "local_models");
+        assert_eq!(entries[0].context["service_outcome"], "unanswered");
+        assert_eq!(entries[0].context["service_elapsed_ms"], 21_000);
     }
 
     #[test]
