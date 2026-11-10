@@ -4,19 +4,21 @@ from __future__ import annotations
 
 import asyncio
 import re
+import subprocess
 import time
-from collections.abc import AsyncGenerator, Coroutine
+from collections.abc import AsyncGenerator, Coroutine, Iterator
 from contextlib import asynccontextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Final, cast
+from typing import IO, Final, cast
 from uuid import UUID
 
 import pytest
 from pydantic import BaseModel
 
+from ....core import pattern_search
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.classification_rule import RULE_PATTERN_ENTRY_MAX_LENGTH, LedgerClassificationRule
@@ -198,8 +200,58 @@ def _context(definition_id: str) -> tuple[OperationExecutorContext, list[Operati
     return context, effects, operands
 
 
-def _run_watching_the_loop[T](work: Coroutine[object, object, T]) -> tuple[T, float, float]:
-    """Run ``work`` on one loop beside a heartbeat, and say the longest the heartbeat waited."""
+class _ChildStarts:
+    """When each pattern-search child was launched and when it could first take its request.
+
+    The product's budget begins once a child is ready, since starting one is the
+    host's cost; the time a test may hold the product to leaves the same start out.
+    """
+
+    def __init__(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        self.windows: list[list[float]] = []
+        by_stream: dict[int, list[float]] = {}
+        launch = pattern_search._launch
+
+        def launched(neutral_root: Path) -> subprocess.Popen[bytes]:
+            window = [time.monotonic()]
+            process = launch(neutral_root)
+            self.windows.append(window)
+            by_stream[id(process.stdout)] = window
+            return process
+
+        def stamped(stream: IO[bytes], window: list[float]) -> Iterator[bytes]:
+            for line in stream:
+                if len(window) == 1:
+                    window.append(time.monotonic())
+                yield line
+
+        class StampedLines(pattern_search._ChildLines):
+            def __init__(self, stream: IO[bytes]) -> None:
+                super().__init__(cast(IO[bytes], stamped(stream, by_stream[id(stream)])))
+
+        monkeypatch.setattr(pattern_search, "_launch", launched)
+        monkeypatch.setattr(pattern_search, "_ChildLines", StampedLines)
+
+    def starting_seconds(self) -> float:
+        """The time during which some child was starting, overlapping starts counted once."""
+        total, reached = 0.0, float("-inf")
+        for launched, ready in sorted((window[0], window[1]) for window in self.windows if len(window) == 2):
+            begin = max(launched, reached)
+            if ready > begin:
+                total += ready - begin
+            reached = max(reached, ready)
+        return total
+
+
+def _run_watching_the_loop[T](
+    monkeypatch: pytest.MonkeyPatch, work: Coroutine[object, object, T]
+) -> tuple[T, float, float]:
+    """Run ``work`` on one loop beside a heartbeat.
+
+    Answer its result, the time it took less the children's start, which the
+    product's budget leaves out, and the longest the heartbeat waited.
+    """
+    starts = _ChildStarts(monkeypatch)
 
     async def main() -> tuple[T, float, float]:
         longest = 0.0
@@ -220,7 +272,9 @@ def _run_watching_the_loop[T](work: Coroutine[object, object, T]) -> tuple[T, fl
         beating.cancel()
         return result, elapsed, longest
 
-    return asyncio.run(main())
+    result, elapsed, longest = asyncio.run(main())
+    assert starts.windows, "no pattern-search child was started, so no budget was measured"
+    return result, elapsed - starts.starting_seconds(), longest
 
 
 def _apply(
@@ -243,7 +297,7 @@ def _apply(
         payload=LedgerRuleApplyRequest(profile_id=_PROFILE, dry_run=dry_run),
     )
     result, elapsed, longest = _run_watching_the_loop(
-        LedgerRuleApplyExecutor(ports_factory, repository_factory).execute(request, context)
+        monkeypatch, LedgerRuleApplyExecutor(ports_factory, repository_factory).execute(request, context)
     )
     return result, elapsed, longest, effects, operands
 
@@ -286,7 +340,7 @@ def test_an_overrunning_trial_is_a_typed_answer_while_the_loop_runs(monkeypatch:
         ),
     )
 
-    result, elapsed, longest = _run_watching_the_loop(LedgerRuleTrialExecutor().execute(request, context))
+    result, elapsed, longest = _run_watching_the_loop(monkeypatch, LedgerRuleTrialExecutor().execute(request, context))
 
     assert result == _RESULT_REF
     answer = cast(LedgerRuleTrialExecutionResult, operands[0]).result
@@ -406,7 +460,7 @@ def test_adding_a_pattern_that_overruns_the_ledger_refuses_typed_and_saves_nothi
         ),
     )
     result, elapsed, longest = _run_watching_the_loop(
-        LedgerRuleAddExecutor(lambda *, bucket_id: rules).execute(request, context)
+        monkeypatch, LedgerRuleAddExecutor(lambda *, bucket_id: rules).execute(request, context)
     )
 
     assert isinstance(result, OperationRefusalEvidence)
