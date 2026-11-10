@@ -229,6 +229,7 @@ pub enum Failure {
     MemoryBusy,
     ProgramMissing,
     ProgramNotRunning,
+    EngineProgramUnusable,
     Interrupted,
     NeedsSignIn,
     NotInThisBuild,
