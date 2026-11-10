@@ -13,7 +13,7 @@ import {
 import { Icon, type IconName } from "@/components/ui/icon";
 import { formatTime } from "../../../shared/dateFormats";
 import type { ModeloAmendmentCorrectionContextV1 } from "../../../shell/modeloContract/modeloWorkAmendmentContext";
-import type { ModeloWorkHistoryEntryV1 } from "../../../shell/modeloContract/modeloWorkHistory";
+import type { ModeloWorkHistoryEntryV1 } from "../../../shell/modeloContract/modeloWork";
 import { useStrings } from "../../../shell/strings";
 import { Heading } from "./CheckView";
 import { ScopedWriteHoldNotice } from "../WriteScope";

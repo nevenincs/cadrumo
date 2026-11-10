@@ -30,7 +30,10 @@ import type {
   ProjectUnresolvedBindingProjection,
   ProjectUnresolvedCasillaProjection,
 } from "../../../shell/modeloContract/modelo";
-import type { ModeloWorkMetadataSnapshot } from "../../../shell/modeloContract/modeloWork";
+import type {
+  ModeloWorkHistoryEntryV1,
+  ModeloWorkMetadataSnapshot,
+} from "../../../shell/modeloContract/modeloWork";
 import type { ModeloAmendmentCorrectionContextV1 } from "../../../shell/modeloContract/modeloWorkAmendmentContext";
 import type {
   ModeloFormIssueLine,
@@ -38,7 +41,6 @@ import type {
   ModeloWorkbenchFormProjectionV1,
   OperationNextStepV1,
 } from "../../../shell/modeloContract/modeloWorkForm";
-import type { ModeloWorkHistoryEntryV1 } from "../../../shell/modeloContract/modeloWorkHistory";
 import { useStrings, type Translate } from "../../../shell/strings";
 import type { LeaveGuard } from "../../ledger/editing/LedgerEditing";
 import { Details, type OpenableSurface } from "../details/Details";
