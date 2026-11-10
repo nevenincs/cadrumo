@@ -60,12 +60,7 @@ def _complete_registry_value(value: object) -> object:
         # These types own the authored wire form accepted by their discriminator.
         return _complete_registry_value(value.model_dump(mode="python"))
     if isinstance(value, BaseModel):
-        return {
-            name: _complete_registry_value(item)
-            for name, field in type(value).model_fields.items()
-            for item in (getattr(value, name),)
-            if not (field.exclude_if is absent_when_none and absent_when_none(item))
-        }
+        return _complete_model_fields(value)
     if isinstance(value, Mapping):
         mapping = _OBJECT_MAPPING_ADAPTER.validate_python(value)
         return {key: _complete_registry_value(item) for key, item in mapping.items()}
@@ -75,25 +70,41 @@ def _complete_registry_value(value: object) -> object:
     return value
 
 
+def _complete_model_fields(value: BaseModel) -> dict[str, object]:
+    completed: dict[str, object] = {}
+    for name, model_field in type(value).model_fields.items():
+        item = getattr(value, name)
+        if model_field.exclude_if is absent_when_none and absent_when_none(item):
+            continue
+        completed[name] = _complete_registry_value(item)
+    return completed
+
+
 def retain_registry_schema_fields(value: object, *, predecessor: bool = False) -> None:
     """Retain every declared field in a private copy of the registry serialization schema."""
     if is_object_dict(value):
-        if value.get("type") == "model":
-            model = value.get("cls")
-            predecessor = model is DeclaredPredecessor or model is NoPredecessor
-            if not predecessor:
-                value.pop("serialization", None)
-        if value.get("type") == "model-field" and not predecessor:
-            value.pop("serialization_exclude", None)
-            # A field added after snapshots were saved stays out while absent,
-            # so an earlier snapshot's complete payload is unchanged.
-            if value.get("serialization_exclude_if") is not absent_when_none:
-                value.pop("serialization_exclude_if", None)
+        predecessor = _retain_schema_node_fields(value, predecessor=predecessor)
         for item in value.values():
             retain_registry_schema_fields(item, predecessor=predecessor)
     elif is_object_list_or_tuple(value):
         for item in value:
             retain_registry_schema_fields(item, predecessor=predecessor)
+
+
+def _retain_schema_node_fields(node: dict[object, object], *, predecessor: bool) -> bool:
+    """Drop one schema node's field exclusions and return the predecessor scope for its children."""
+    if node.get("type") == "model":
+        model = node.get("cls")
+        predecessor = model is DeclaredPredecessor or model is NoPredecessor
+        if not predecessor:
+            node.pop("serialization", None)
+    if node.get("type") == "model-field" and not predecessor:
+        node.pop("serialization_exclude", None)
+        # A field added after snapshots were saved stays out while absent,
+        # so an earlier snapshot's complete payload is unchanged.
+        if node.get("serialization_exclude_if") is not absent_when_none:
+            node.pop("serialization_exclude_if", None)
+    return predecessor
 
 
 def write_absent_fields_as_null(value: object) -> None:

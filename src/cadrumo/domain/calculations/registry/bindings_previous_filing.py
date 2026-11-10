@@ -326,24 +326,42 @@ def _observed_casilla_values(
     required_period: str,
 ) -> list[Decimal] | _UnobservedCasillas:
     source_ids = _previous_filing_source_ids(selector)
+    unobserved_ids = _refusing_unobserved_casilla_ids(selector, match, source_ids)
+    if unobserved_ids:
+        return _UnobservedCasillas(
+            binding_id=binding.id,
+            source_key=(selector.source_modelo, expected_year, required_period),
+            casilla_ids=unobserved_ids,
+        )
+    return [_observed_or_zero(match, casilla_id) for casilla_id in source_ids]
+
+
+def _refusing_unobserved_casilla_ids(
+    selector: PreviousFilingProvider,
+    match: _RegistryModeloObservationLike,
+    source_ids: tuple[CasillaId, ...],
+) -> tuple[CasillaId, ...]:
+    """Return the unshown boxes that refuse the match, or ``()`` when it resolves.
+
+    A missing required box refuses; so does a match showing none of the boxes.
+    """
     required_ids = (
         frozenset(source_ids)
         if selector.required_source_casilla_ids is None
         else frozenset(selector.required_source_casilla_ids)
     )
-    values: list[Decimal] = []
     unobserved = tuple(casilla_id for casilla_id in source_ids if match.casilla_values.get(casilla_id) is None)
     missing_required = tuple(casilla_id for casilla_id in unobserved if casilla_id in required_ids)
-    if missing_required or (source_ids and len(unobserved) == len(source_ids)):
-        return _UnobservedCasillas(
-            binding_id=binding.id,
-            source_key=(selector.source_modelo, expected_year, required_period),
-            casilla_ids=missing_required or unobserved,
-        )
-    for casilla_id in source_ids:
-        casilla_value = match.casilla_values.get(casilla_id)
-        values.append(Decimal("0") if casilla_value is None else casilla_value)
-    return values
+    if missing_required:
+        return missing_required
+    if source_ids and len(unobserved) == len(source_ids):
+        return unobserved
+    return ()
+
+
+def _observed_or_zero(match: _RegistryModeloObservationLike, casilla_id: CasillaId) -> Decimal:
+    casilla_value = match.casilla_values.get(casilla_id)
+    return Decimal("0") if casilla_value is None else casilla_value
 
 
 @dataclass(frozen=True)
@@ -397,18 +415,13 @@ def _resolve_anchor_values(
         and observation.period == required_period
     )
     if selector.grouping == "per_grupo_member":
-        if not matches:
-            raise PreviousFilingObservationAbsentError(
-                f"binding {binding.id!r} (per_grupo_member) has no observed filing "
-                f"{selector.source_modelo!r}/{expected_year}/{required_period!r}",
-            )
-        values: list[Decimal] = []
-        for member_match in matches:
-            member_values = _observed_casilla_values(binding, selector, member_match, expected_year, required_period)
-            if isinstance(member_values, _UnobservedCasillas):
-                return member_values
-            values.extend(member_values)
-        return values
+        return _per_grupo_member_values(
+            binding,
+            selector,
+            matches,
+            expected_year=expected_year,
+            required_period=required_period,
+        )
     if not matches:
         raise PreviousFilingObservationAbsentError(
             f"binding {binding.id!r} has no observed filing "
@@ -421,6 +434,28 @@ def _resolve_anchor_values(
         )
     single_match = next(iter(matches))
     return _observed_casilla_values(binding, selector, single_match, expected_year, required_period)
+
+
+def _per_grupo_member_values(
+    binding: BindingDefinition,
+    selector: PreviousFilingProvider,
+    matches: tuple[_RegistryModeloObservationLike, ...],
+    *,
+    expected_year: int,
+    required_period: str,
+) -> list[Decimal] | _UnobservedCasillas:
+    if not matches:
+        raise PreviousFilingObservationAbsentError(
+            f"binding {binding.id!r} (per_grupo_member) has no observed filing "
+            f"{selector.source_modelo!r}/{expected_year}/{required_period!r}",
+        )
+    values: list[Decimal] = []
+    for member_match in matches:
+        member_values = _observed_casilla_values(binding, selector, member_match, expected_year, required_period)
+        if isinstance(member_values, _UnobservedCasillas):
+            return member_values
+        values.extend(member_values)
+    return values
 
 
 def _resolve_binding_values(
@@ -497,11 +532,7 @@ def resolve_previous_filing_binding_values(
     excluded = excluded_binding_ids or frozenset()
     unobserved: list[_UnobservedCasillas] = []
     for binding in revision.bindings:
-        if binding.id in excluded:
-            continue
-        if binding.source != BindingSourceKind.PREVIOUS_FILING:
-            continue
-        if not is_direct_previous_filing_binding(binding):
+        if not _is_resolvable_direct_binding(binding, excluded):
             continue
         values = _resolve_binding_values(
             binding,
@@ -522,16 +553,29 @@ def resolve_previous_filing_binding_values(
             source_casilla_ids=_previous_filing_source_ids(_previous_filing_selector(binding)),
         )
     if unobserved:
-        source_modelo, source_filing_year, source_period = unobserved[0].source_key
-        same_filing = tuple(signal for signal in unobserved if signal.source_key == unobserved[0].source_key)
-        raise RegistryValidationError.for_previous_filing_casillas_unobserved(
-            source_modelo=source_modelo,
-            source_filing_year=source_filing_year,
-            source_period=source_period,
-            casilla_ids=tuple(casilla_id for signal in same_filing for casilla_id in signal.casilla_ids),
-            binding_ids=tuple(signal.binding_id for signal in same_filing),
-        )
+        raise _unobserved_casillas_error(unobserved)
     return resolved
+
+
+def _is_resolvable_direct_binding(binding: BindingDefinition, excluded: frozenset[BindingId]) -> bool:
+    return (
+        binding.id not in excluded
+        and binding.source == BindingSourceKind.PREVIOUS_FILING
+        and is_direct_previous_filing_binding(binding)
+    )
+
+
+def _unobserved_casillas_error(unobserved: list[_UnobservedCasillas]) -> RegistryValidationError:
+    """Name every unshown box of the first unobserved source filing in one refusal."""
+    source_modelo, source_filing_year, source_period = unobserved[0].source_key
+    same_filing = tuple(signal for signal in unobserved if signal.source_key == unobserved[0].source_key)
+    return RegistryValidationError.for_previous_filing_casillas_unobserved(
+        source_modelo=source_modelo,
+        source_filing_year=source_filing_year,
+        source_period=source_period,
+        casilla_ids=tuple(casilla_id for signal in same_filing for casilla_id in signal.casilla_ids),
+        binding_ids=tuple(signal.binding_id for signal in same_filing),
+    )
 
 
 def _anchor_strictly_before_activity_start(

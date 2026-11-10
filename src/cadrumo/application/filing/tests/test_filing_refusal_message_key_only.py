@@ -113,6 +113,10 @@ _UNSWEPT_MODULE_RATIONALES: dict[str, str] = {
         "XML scalar wire-type and formatting invariants feed export_xml_dictionary.py, "
         "then export.py's public export/verification boundary."
     ),
+    "export_xml_dictionary_xsd.py": (
+        "XSD source, structure and version invariants feed export_xml_dictionary.py, "
+        "then export.py's public export/verification boundary."
+    ),
     "projection.py": (
         "Projection-plan and value-address invariants are consumed by export.py's render-request boundary."
     ),
