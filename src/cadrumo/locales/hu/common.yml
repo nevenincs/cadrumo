@@ -4807,6 +4807,8 @@ desktop:
       cancelled: Leállítottad a beállítást.
       damaged_download: A letöltés sérült volt, ezért nem használható.
       disk_full: Nincs elég szabad hely a lemezen.
+      engine_program_unusable: 'A helyi MI-program nem tudott elindulni: sérült, vagy
+        nem működik ezen a számítógépen. A helyi MI javítása újratelepíti.'
       host_unreachable: A letöltési kiszolgáló nem érhető el. Ellenőrizd az internetkapcsolatodat,
         majd próbáld újra.
       interrupted: A beállítás a befejezés előtt megszakadt.

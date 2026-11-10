@@ -7,6 +7,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 from .providers.domain.catalog import ProviderId
+from .providers.domain.record import LocalEngine
 
 
 class HostedCertificationStatus(BaseModel):
@@ -34,7 +35,7 @@ class ServiceStartupFrame(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True, frozen=True, hide_input_in_errors=True)
     bearer: Annotated[str, Field(min_length=32, max_length=4096, pattern=r"^[A-Za-z0-9_-]+$")]
     gateway_bearer: Annotated[str, Field(min_length=32, max_length=4096, pattern=r"^[A-Za-z0-9_-]+$")]
-    local_engine_default: Literal["llamacpp", "ollama"]
+    local_engine_default: LocalEngine
     """The engine a profile that chose none runs: the desktop derives it from what the package carries."""
 
     @model_validator(mode="after")
