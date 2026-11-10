@@ -240,14 +240,13 @@ def test_back_to_back_samples_each_adopt_a_spare_launched_between_them_and_the_l
 ) -> None:
     prewarm = ProfileKdfPrewarm(settings=settings)
     try:
-        prewarm.refill()
+        clock = kdf_supervision._CalibrationClock(deadline=time.monotonic() + 60, launch_budget_seconds=60)
         with prewarm.bound():
             for _ in range(2):
-                assert (
-                    kdf_supervision._measure_profile_kdf(_kdf(), deadline=time.monotonic() + 60, settings=settings) > 0
-                )
-                # The next spare starts only once the sample's clock has stopped.
-                assert prewarm._launching or prewarm._spare is not None
+                assert kdf_supervision._measure_profile_kdf(_kdf(), prewarm=prewarm, clock=clock, settings=settings) > 0
+                # Each sample launches and settles its own spare before its clock starts.
+                assert not prewarm._launching and prewarm._spare is None
+        # The scope's exit prepared the spare the following derivation adopts.
         with (
             prewarm.bound(refill=False),
             kdf_supervision.supervised_kdf_worker(deadline=time.monotonic() + 60, settings=settings) as worker,
