@@ -126,7 +126,7 @@ from .printed_boxes import snapshot_printed_boxes
 from .profile_export_binding import profile_text_fact_index, resolve_profile_text_casilla_inputs
 from .reconciliation_sources import ReconciliationSourceNeed, reconciliation_source_needs
 from .revision_persistence import persist_calculation_revision
-from .work_missing_input import ModeloWorkMissingInputError
+from .work_missing_input import ModeloWorkMissingInputError, prior_carry_absence_unstated
 from .work_profile import ModeloWorkProfile
 
 if TYPE_CHECKING:
@@ -858,9 +858,18 @@ def _evaluate_prepared_calculation(
         missing = ModeloWorkMissingInputError.from_registry_error(error)
         if missing is None:
             raise
+        # A carry the filer can state holds nothing is refused as that open
+        # statement, naming every carry of its family the sources left open.
+        unstated = prior_carry_absence_unstated(
+            missing,
+            work_unit=work_unit,
+            snapshot=snapshot,
+            boxes=snapshot_printed_boxes(ports.operation, snapshot),
+            unresolved_binding_ids=frozenset(unresolved_binding_ids).difference(prepared.channels.bindings),
+        )
         # This boundary precedes revision publication. Earlier migrations may
         # already have written state; later advisory failures never enter it.
-        raise missing from error
+        raise (missing if unstated is None else unstated) from error
 
     replay_payloads = build_calculation_replay_payloads(
         resolved_inputs=resolved_inputs,
