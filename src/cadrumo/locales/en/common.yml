@@ -3546,13 +3546,11 @@ desktop:
         origin: Origin
         reading: Reading
         recorded: What the record states
-        tax: IVA and IRPF
       kind:
         document: Document
         invoice: Invoice
         movement: Movement
       no_reading: No reading waiting for review
-      no_tax_facts: No IVA or IRPF facts recorded
       not_attached_here: Not attached to a movement in this period
       not_linked: Not linked
       nothing_to_fix: Nothing found to fix
@@ -3561,7 +3559,6 @@ desktop:
       read_only: Read only. Open it to change anything.
       reading_waiting: Read on {date}, waiting for review
       reason: Reason
-      settlement: Settles for
       show: Overview
       state: State
       used_in: Used in

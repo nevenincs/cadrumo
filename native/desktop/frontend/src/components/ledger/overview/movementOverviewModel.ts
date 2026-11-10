@@ -190,7 +190,11 @@ function classificationGroup(input: MovementOverviewInput): OverviewGroup {
 function taxGroup(input: MovementOverviewInput): OverviewGroup {
   const { t, locale, row } = input;
   const tx = row.transaction;
-  const heading = t("desktop.ledger.overview.group.tax");
+  // The grid's own names for its IVA and IRPF column sets.
+  const heading = listed(t, [
+    t("desktop.ledger.columns.preset.iva"),
+    t("desktop.ledger.columns.preset.irpf"),
+  ]);
   const held = TAX_FIELDS.filter((field) => tx[field] !== null);
   // None stored: one line says so, rather than six that each say not set.
   if (held.length === 0)
@@ -198,9 +202,7 @@ function taxGroup(input: MovementOverviewInput): OverviewGroup {
       id: "tax",
       heading,
       facts: [],
-      notes: [
-        { text: t("desktop.ledger.overview.no_tax_facts"), tone: "neutral" },
-      ],
+      notes: [{ text: t("desktop.ledger.inspector.not_set"), tone: "neutral" }],
     };
   return {
     id: "tax",

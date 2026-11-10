@@ -3606,13 +3606,11 @@ desktop:
         origin: Origen
         reading: Lectura
         recorded: El que indica el registre
-        tax: IVA i IRPF
       kind:
         document: Document
         invoice: Factura
         movement: Moviment
       no_reading: Cap lectura pendent de revisió
-      no_tax_facts: No hi ha dades d'IVA ni d'IRPF registrades
       not_attached_here: No adjuntat a cap moviment d'aquest període
       not_linked: Sense vincular
       nothing_to_fix: No hi ha res a corregir
@@ -3621,7 +3619,6 @@ desktop:
       read_only: Només lectura. Obre'l per canviar qualsevol cosa.
       reading_waiting: Llegit el {date}, pendent de revisió
       reason: Motiu
-      settlement: Import a liquidar
       show: Resum
       state: Estat
       used_in: Usat a

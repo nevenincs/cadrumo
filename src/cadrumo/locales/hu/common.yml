@@ -3579,13 +3579,11 @@ desktop:
         origin: Eredet
         reading: Beolvasás
         recorded: Amit a nyilvántartás rögzít
-        tax: IVA és IRPF
       kind:
         document: Dokumentum
         invoice: Számla
         movement: Tétel
       no_reading: Nincs ellenőrzésre váró beolvasás
-      no_tax_facts: Nincs rögzített IVA- vagy IRPF-adat
       not_attached_here: Nincs csatolva ennek az időszaknak egyik tételéhez sem
       not_linked: Nincs összekapcsolva
       nothing_to_fix: Nincs javítanivaló
@@ -3594,7 +3592,6 @@ desktop:
       read_only: Csak olvasható. Nyisd meg, ha módosítanál rajta.
       reading_waiting: 'Beolvasva: {date}, ellenőrzésre vár'
       reason: Indok
-      settlement: Kiegyenlítendő összeg
       show: Áttekintés
       state: Állapot
       used_in: Felhasználva

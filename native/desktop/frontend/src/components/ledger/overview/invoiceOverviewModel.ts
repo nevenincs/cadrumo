@@ -9,6 +9,7 @@ import type { Translate } from "../../../shell/strings";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount, formatPercent } from "../../../shared/numbers";
 import { seriesAndNumber } from "../invoices/invoiceModel";
+import { settlesText } from "../matching/matchingWords";
 import { classLabel, kindLabel, paymentLabel } from "../invoices/invoiceWords";
 import { ivaCategoryLabel } from "../movements/movementWords";
 import {
@@ -125,18 +126,11 @@ export function invoiceOverview(
                 : undefined,
             }),
     });
-  amounts.push(
-    {
-      id: "grand_total",
-      label: t("desktop.ledger.invoices.column.total"),
-      value: money(locale, invoice.grand_total, notSet),
-    },
-    {
-      id: "settlement_amount",
-      label: t("desktop.ledger.overview.settlement"),
-      value: money(locale, invoice.settlement_amount, notSet),
-    },
-  );
+  amounts.push({
+    id: "grand_total",
+    label: t("desktop.ledger.invoices.column.total"),
+    value: money(locale, invoice.grand_total, notSet),
+  });
 
   const classification: OverviewFact[] = [
     {
@@ -206,6 +200,18 @@ export function invoiceOverview(
         id: "amounts",
         heading: t("desktop.ledger.overview.group.amounts"),
         facts: amounts,
+        // What it settles, in the words the matching queue says it with.
+        notes: [
+          {
+            text: settlesText(
+              t,
+              locale,
+              invoice,
+              invoice.settlement_amount.decimal,
+            ),
+            tone: "neutral",
+          },
+        ],
       },
       {
         id: "classification",

@@ -372,6 +372,23 @@ export const OpenReadAndClose: StoryObj<{ locale: string }> = {
     await expect(
       dialog.querySelector('[data-fact="grand_total"]')?.textContent,
     ).toBeTruthy();
+    // The focus stays inside while it is open, forwards and backwards, and
+    // reaches both the action and the close button on the way.
+    const reached = new Set<Element>();
+    for (const keys of ["{Tab}", "{Tab}", "{Tab}", "{Shift>}{Tab}{/Shift}"]) {
+      for (let step = 0; step < 3; step += 1) {
+        await userEvent.keyboard(keys);
+        const focused = document.activeElement;
+        await expect(focused && dialog.contains(focused)).toBe(true);
+        if (focused) reached.add(focused);
+      }
+    }
+    await expect(
+      [...reached].some((found) =>
+        found.classList.contains("ledger-overview-action"),
+      ),
+    ).toBe(true);
+    await expect(reached.size).toBeGreaterThan(1);
     await userEvent.keyboard("{Escape}");
     await waitFor(() =>
       expect(
