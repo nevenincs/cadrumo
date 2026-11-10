@@ -89,7 +89,12 @@ from ..user_profile.projections import profile_path_values_for_bucket
 from .action_errors import ModeloPreconditionErrorMixin
 from .iva_wallet_prior_period import PriorModeloCalculations, prior_period_carry_evidence
 from .iva_wallet_values import revision_iva_compensation_amount, taxpayer_nif_from_path_values
-from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure
+from .preconditions import (
+    IVA_WALLET_OPENING_BALANCE_ACTION_ID,
+    IVA_WALLET_OPENING_BALANCE_SCENARIOS,
+    ModeloPreconditionFailure,
+    build_modelo_precondition_failure,
+)
 from .work_form_wording import modelo_number, period_words
 
 if TYPE_CHECKING:
@@ -288,23 +293,6 @@ def _blocked_refusal(decision: IvaCompensationReconciliationDecision) -> tuple[s
 
 _OPEN_OPENING_BALANCE_LOCALE_KEY: Final[str] = "application.modelo.iva_wallet.next_step.open_opening_balance"
 
-_OPENING_BALANCE_DOOR_REASON_CODES: Final[frozenset[str]] = frozenset(
-    {
-        "not_seeded",
-        "no_usable_authority",
-        "local_evidence_unreadable",
-        "first_period_zero_ungrounded",
-    },
-)
-"""The refusal reasons the wallet's opening-balance entry is the way out of.
-
-Each of these says the period's carry has no usable recorded authority, which
-is exactly what declaring the opening balance supplies. A stale wallet, a
-divergence, or a reason that asks for an override names a different wallet
-entry, so it keeps no step here rather than offering a door that would not
-settle it.
-"""
-
 
 def open_iva_wallet_opening_balance_step(*, modelo: str, period: Period) -> OperationNextStepWording:
     """Offer recording the opening IVA balance ``period``'s carry reads."""
@@ -327,7 +315,7 @@ def open_iva_wallet_opening_balance_step(*, modelo: str, period: Period) -> Oper
 
 def _opening_balance_door(reason_code: str, carry_period: Period | None) -> OperationNextStepWording | None:
     """The opening-balance entry for ``carry_period``, where ``reason_code`` is one it settles."""
-    if carry_period is None or reason_code not in _OPENING_BALANCE_DOOR_REASON_CODES:
+    if carry_period is None or reason_code not in IVA_WALLET_OPENING_BALANCE_SCENARIOS:
         return None
     return open_iva_wallet_opening_balance_step(modelo=form_for_role("iva.periodic"), period=carry_period)
 
@@ -347,8 +335,23 @@ def _raise_iva_wallet_precondition(
 
     ``carry_period`` is the Modelo 303 period whose carry the gate was settling.
     Where the reason is one the wallet's opening balance settles, the refusal
-    carries the step that opens that entry; nothing is written either way.
+    carries the step that opens that entry and names the catalogue action that
+    declares it, so every frontend is offered the same remedy; a refusal for
+    such a reason that does not name the period is an invariant breach. Nothing
+    is written either way.
     """
+    action_id: str | None = None
+    action_argument_values: Mapping[str, str | int | bool | Decimal] | None = None
+    missing_action_arguments: tuple[str, ...] = ()
+    if reason_code in IVA_WALLET_OPENING_BALANCE_SCENARIOS:
+        if carry_period is None:
+            raise InternalInvariantError(
+                f"iva wallet refusal {reason_code} is settled by the opening balance of a period it did not name",
+            )
+        # The amount is the filer's own figure, so the action names it as still to supply.
+        action_id = IVA_WALLET_OPENING_BALANCE_ACTION_ID
+        action_argument_values = {"filing_year": carry_period.filing_year, "period": carry_period.registry_token}
+        missing_action_arguments = ("amount",)
     error = error_type(
         translated_message=translated_message,
         context=context,
@@ -359,6 +362,9 @@ def _raise_iva_wallet_precondition(
             evidence_id=f"{subject_leaf_key}.iva_wallet",
             evidence_values=evidence_values,
             provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+            action_id=action_id,
+            action_argument_values=action_argument_values,
+            missing_action_arguments=missing_action_arguments,
         ),
         next_step=_opening_balance_door(reason_code, carry_period),
     )

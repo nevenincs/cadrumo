@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -26,7 +27,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.u
 def test_m303_fresh_profile_binding_override_is_a_terminal_typed_refusal(
     tmp_path: Path,
 ) -> None:
-    """No seed inference is made when a compensation record is absent."""
+    """A supplied binding with no wallet record is refused, naming the opening-balance command and inferring no amount."""
     with runtime_cli_profile(tmp_path=tmp_path) as profile:
         seed_full_autonomo_profile_for_guidance(profile.bucket_id)
         work_unit_result = invoke_cached_cli(
@@ -51,6 +52,8 @@ def test_m303_fresh_profile_binding_override_is_a_terminal_typed_refusal(
 
         result = invoke_cached_cli(
             [
+                "--format",
+                "json",
                 "app",
                 "modelo",
                 "work",
@@ -64,17 +67,13 @@ def test_m303_fresh_profile_binding_override_is_a_terminal_typed_refusal(
         )
 
     assert result.exit_code != 0, "Expected non-zero exit when compensation binding is supplied without a seeded wallet"
-    assert "iva-wallet seed" not in result.output, f"Refusal must not infer a seed command; got:\n{result.output}"
-    assert 'action.failed_condition_id: "modelo.work.calculate.iva_wallet.ready"' in result.output, result.output
-    assert "action.action: null" in result.output, result.output
-    assert 'action.no_recovery_outcome: "operator_decision"' in result.output, result.output
-    assert "NOTICE:" not in result.output, result.output
+    _assert_names_the_opening_balance_command(result.output, filing_year=2025, period_code="2T")
 
 
 def test_m303_in_scope_missing_wallet_surfaces_typed_terminal_refusal(
     tmp_path: Path,
 ) -> None:
-    """In-scope missing authority preserves its terminal operator-decision verdict."""
+    """In-scope missing authority is refused with the command that records the opening balance."""
     filing_year = 2025
     period_code = "2T"
     with runtime_cli_profile(tmp_path=tmp_path) as profile:
@@ -101,6 +100,8 @@ def test_m303_in_scope_missing_wallet_surfaces_typed_terminal_refusal(
 
         result = invoke_cached_cli(
             [
+                "--format",
+                "json",
                 "app",
                 "modelo",
                 "work",
@@ -112,18 +113,7 @@ def test_m303_in_scope_missing_wallet_surfaces_typed_terminal_refusal(
         )
 
     assert result.exit_code != 0, "Expected non-zero exit when in-scope prior IVA authority is missing"
-    assert 'action.failed_condition_id: "modelo.work.calculate.iva_wallet.ready"' in result.output, result.output
-    assert "action.action: null" in result.output, result.output
-    assert 'action.no_recovery_outcome: "operator_decision"' in result.output, result.output
-    assert "iva-wallet override" not in result.output, (
-        f"A recovery command needs taxpayer-supplied evidence and cannot be inferred:\n{result.output}"
-    )
-    assert "--amount 0" not in result.output, (
-        f"Missing authority cannot be replaced with an invented zero carry:\n{result.output}"
-    )
-    assert "iva-wallet seed" not in result.output, (
-        f"Blocked decisions must not send the operator back to seed; got:\n{result.output}"
-    )
+    _assert_names_the_opening_balance_command(result.output, filing_year=filing_year, period_code=period_code)
 
 
 def test_m303_fresh_profile_calculate_without_binding_override_does_not_raise_wallet_error(
@@ -172,3 +162,21 @@ def test_m303_fresh_profile_calculate_without_binding_override_does_not_raise_wa
         "Wallet-seed guidance must not appear without a compensation binding conflict; "
         f"got exit_code={result.exit_code}:\n{result.output}"
     )
+
+
+def _assert_names_the_opening_balance_command(output: str, *, filing_year: int, period_code: str) -> None:
+    """Require the refusal envelope to serve the command that records the period's opening balance."""
+    error = json.loads(output)["error"]
+    action = error["action"]
+    assert action["failed_condition_id"] == "modelo.work.calculate.iva_wallet.ready", output
+    assert action["action"] is not None, f"the wallet refusal names no action: {output}"
+    assert action["action"]["action_id"] == "operator.modelo.iva_wallet.seed", output
+    assert action["action"]["target_command_key"] == "modelo.iva_wallet.seed", output
+    assert action["action"]["cli_path"] == ["aeat", "app", "modelo", "iva-wallet", "seed"], output
+    assert action["conditionality"] == "requires_arguments", output
+    assert action["no_recovery_outcome"] is None, output
+    assert action["missing_argument_names"] == ["amount"], output
+    bound = {
+        item["argument_name"]: item["value"] for item in action["argument_bindings"] if item["status"] == "resolved"
+    }
+    assert bound == {"filing_year": filing_year, "period": period_code}, output
