@@ -170,8 +170,16 @@ test("the review opens on the chord the tray shows, from either Enter key, and n
   );
   await cellOf(row, "description").click();
   await target.keyboard.press("Control+Shift+Enter");
-  await target.keyboard.press("Alt+Enter");
   await expect(review(target)).toHaveCount(0);
+  // Alt+Enter is the entry overview's chord: it opens that, never the review.
+  await target.keyboard.press("Alt+Enter");
+  const overview = target
+    .getByRole("dialog")
+    .and(target.locator(".ledger-overview"));
+  await expect(overview).toBeVisible();
+  await expect(review(target)).toHaveCount(0);
+  await target.keyboard.press("Escape");
+  await expect(overview).toHaveCount(0);
   await target.keyboard.press("Control+Enter");
   await expect(review(target)).toBeVisible();
   await target.keyboard.press("Escape");
@@ -371,6 +379,8 @@ test("undoing a change to Personal restores the category and share it cleared", 
     label("desktop.ledger.classification.personal"),
   );
   await expect(cellOf(row, "category").locator("[data-staged]")).toHaveCount(1);
+  // The chord needs the focus in the grid, which a pick by the pointer leaves.
+  await cellOf(row, "description").click();
   await target.keyboard.press("Control+KeyZ");
   await expect(cellOf(row, "category").locator("[data-staged]")).toHaveCount(0);
   await expect(
@@ -1171,8 +1181,11 @@ test("Copy and Paste on the keys go through the host clipboard and stage one cel
   page: target,
 }) => {
   await openLedger(target);
-  const source = rowOf(target, "PAPELERIA TRAZO");
-  const destination = rowOf(target, "PARKING CENTRO MUNICIPAL");
+  // Outgoing Business movements near the top of the opening period, so both
+  // stay drawn: the source holds a category, the destination holds none and
+  // takes one.
+  const source = rowOf(target, "COMISION MANTENIMIENTO CUENTA");
+  const destination = rowOf(target, "CUOTA AUTONOMOS TGSS");
   const category = (await cellOf(source, "category").innerText()).trim();
   expect(category).not.toBe("");
   await cellOf(source, "category").click();
@@ -1195,13 +1208,10 @@ test("a single copied value pasted on several selected rows fills that column of
   page: target,
 }) => {
   await openLedger(target);
-  const source = rowOf(target, "PAPELERIA TRAZO");
-  const names = [
-    "COMISION MANTENIMIENTO CUENTA",
-    "PARKING CENTRO MUNICIPAL",
-    "TREN ALTA VELOCIDAD BILLETE",
-  ];
+  const source = rowOf(target, "COMISION MANTENIMIENTO CUENTA");
+  const names = ["CUOTA AUTONOMOS TGSS", "FIBRA HOGAR ALBOR"];
   const category = (await cellOf(source, "category").innerText()).trim();
+  expect(category).not.toBe("");
   await cellOf(source, "category").click();
   await target.keyboard.press(`${primary}+c`);
   await expect
@@ -1234,7 +1244,7 @@ test("Cut copies the cell, stages its clearing, and what it took can be pasted",
 }) => {
   await openLedger(target);
   const source = rowOf(target, "COMISION MANTENIMIENTO CUENTA");
-  const destination = rowOf(target, "PARKING CENTRO MUNICIPAL");
+  const destination = rowOf(target, "CUOTA AUTONOMOS TGSS");
   const category = (await cellOf(source, "category").innerText()).trim();
   expect(category).not.toBe("");
   await cellOf(source, "category").click();

@@ -19,6 +19,15 @@ const rowOf = (target: Page, text: string) =>
     has: target.locator("[data-column=description]", { hasText: text }),
   });
 
+/** Searches the shown period: the grid draws only the rows in view, so a row
+ * of a whole year's movements is found by its words, not by scrolling. */
+async function find(target: Page, words: string) {
+  await page(target)
+    .getByRole("searchbox", { name: label("desktop.ledger.search.label") })
+    .fill(words);
+  await expect(dataRows(target).first()).toBeVisible();
+}
+
 async function openLedger(target: Page) {
   await target.goto(
     "/scenarios.html?scenario=ledger&latency=0&bar=off&ledger=withholding",
@@ -73,6 +82,7 @@ test("the 318.00 payment of a professional's invoice lists the 45.00 retención 
       exact: true,
     }),
   ).toHaveCount(1);
+  await find(target, "pedro gestor ejemplo");
   const payment = rowOf(target, "PEDRO GESTOR EJEMPLO");
   await expect(payment).toHaveCount(1);
   await expect(payment.locator("[data-column=amount]")).toContainText("318.00");
@@ -94,7 +104,12 @@ test("a payment of no invoice that states a retención shows an empty retención
 }) => {
   await openLedger(target);
   await chooseWholeYear(target);
+  await find(target, "estudio garcia asesores");
   const payment = rowOf(target, "ESTUDIO GARCIA ASESORES");
   await expect(payment).toHaveCount(1);
-  await expect(payment.locator("[data-column=retencion]")).toBeEmpty();
+  // The cell keeps a hidden provenance note beside the others, so it is the
+  // shown text that is empty, and no retención element is drawn in it.
+  const cell = payment.locator("[data-column=retencion]");
+  await expect(cell).toHaveText("", { useInnerText: true });
+  await expect(cell.locator("[data-retencion]")).toHaveCount(0);
 });
