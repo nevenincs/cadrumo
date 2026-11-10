@@ -27,16 +27,17 @@ import pytest
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...calculations.registry.tests.authored_editions import filing_year_envelope, supported_authored_exercises
 from ...contribuyente.entity_type import EntityType
 from ...contribuyente.renta_codes import FiscalResidency
 from ..effective_close import resolve_effective_filing_deadline
 from ..engine import DeadlineEngine, indexed_deadline_window_year
+from ..errors import DeadlineValidationError
 from ..festivos import (
     CALENDAR_UNAVAILABLE_SHIFT_REASON,
     DeadlineHolidayCoverage,
-    Holiday,
     HolidayCalendar,
-    HolidayJurisdiction,
+    holiday_calendar_from_authority,
 )
 from ..filing_window_projection import (
     AuthoredFilingWindow,
@@ -56,6 +57,8 @@ from ..models import (
     TaxpayerProfile,
 )
 from ..plazo import resolve_filing_window
+from .calendar_shapes import first_year_where, statutory_national_calendar
+from .effective_close_scan import first_unpublished_calendar_year
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -87,23 +90,21 @@ def project_filing_window(
     return project_scheduled_window(operation, modelo=modelo, period=period, schedule=schedule, calendars=calendars)
 
 
-def _national(year: int, *days: tuple[int, int]) -> HolidayCalendar:
-    return HolidayCalendar(
-        year=year,
-        boe_ref=f"test-national-{year}",
-        national=tuple(
-            Holiday(holiday_date=date(year, month, day), jurisdiction=HolidayJurisdiction.NATIONAL, name="fiesta")
-            for month, day in days
-        ),
-    )
+with bundled_indexed_authority().operation() as _published:
+    _FIRST_UNPUBLISHED_YEAR = first_unpublished_calendar_year(_published)
 
 
-# Fiestas laborales de ámbito nacional for the years the authority does not
-# publish. 2022: BOE-A-2021-17113; 2023: BOE-A-2022-17112.
-_SUPPLIED_CALENDARS = (
-    _national(2022, (1, 1), (1, 6), (4, 15), (8, 15), (10, 12), (11, 1), (12, 6), (12, 8)),
-    _national(2023, (1, 6), (4, 7), (5, 1), (8, 15), (10, 12), (11, 1), (12, 6), (12, 8), (12, 25)),
-)
+@pytest.fixture(scope="module")
+def supplied_calendars(operation: PinnedAuthorityOperation) -> tuple[HolidayCalendar, ...]:
+    """Fiestas laborales de ámbito nacional for each supported year the authority publishes no calendar for."""
+    unpublished: list[int] = []
+    for year in filing_year_envelope().years:
+        try:
+            holiday_calendar_from_authority(year, operation=operation)
+        except DeadlineValidationError:
+            unpublished.append(year)
+    return tuple(statutory_national_calendar(year) for year in unpublished)
+
 
 # ---------------------------------------------------------------------------
 # Independent oracle, written from the articles' text.
@@ -143,10 +144,13 @@ def test_a_clause_crosses_the_year_and_resolves_the_month_end_of_a_leap_february
         opening=FilingWindowOpening.DAY_AFTER_PERIOD_END, deadline_month_offset=1, filing_last_day=30
     )
 
-    assert month_end.nominal_close(date(2028, 1, 31)) == date(2028, 2, 29)
-    assert month_end.nominal_close(date(2027, 1, 31)) == date(2027, 2, 28)
-    assert thirtieth.nominal_close(date(2027, 12, 31)) == date(2028, 1, 30)
-    assert thirtieth.opens_on(date(2027, 12, 31)) == date(2028, 1, 1)
+    leap_year = first_year_where(_calendar.isleap)
+    common_year = leap_year + 1
+
+    assert month_end.nominal_close(date(leap_year, 1, 31)) == date(leap_year, 2, 29)
+    assert month_end.nominal_close(date(common_year, 1, 31)) == date(common_year, 2, 28)
+    assert thirtieth.nominal_close(date(common_year, 12, 31)) == date(common_year + 1, 1, 30)
+    assert thirtieth.opens_on(date(common_year, 12, 31)) == date(common_year + 1, 1, 1)
 
 
 # ---------------------------------------------------------------------------
@@ -166,7 +170,9 @@ def _authored_rows(operation: PinnedAuthorityOperation) -> list[tuple[str, Perio
     return rows
 
 
-def test_every_authored_303_and_390_window_agrees_with_the_rule(operation: PinnedAuthorityOperation) -> None:
+def test_every_authored_303_and_390_window_agrees_with_the_rule(
+    operation: PinnedAuthorityOperation, supplied_calendars: tuple[HolidayCalendar, ...]
+) -> None:
     rows = _authored_rows(operation)
     support = operation.supported_filing_years()
     # Sixteen Modelo 303 periods and one Modelo 390 summary per authored year.
@@ -174,7 +180,7 @@ def test_every_authored_303_and_390_window_agrees_with_the_rule(operation: Pinne
 
     disagreements: set[tuple[str, int, str]] = set()
     for modelo, period, opens_on, closes_on in rows:
-        projected = project_filing_window(operation, modelo=modelo, period=period, calendars=_SUPPLIED_CALENDARS)
+        projected = project_filing_window(operation, modelo=modelo, period=period, calendars=supplied_calendars)
         assert isinstance(projected, ProjectedFilingWindow), (modelo, period, projected)
         assert projected.opens_on == opens_on, (modelo, period)
         if projected.closes_on != closes_on:
@@ -189,7 +195,9 @@ def test_every_authored_303_and_390_window_agrees_with_the_rule(operation: Pinne
 _RIRPF_SCHEDULED_MODELOS = ("111", "115", "123", "130", "131")
 
 
-def test_every_authored_rirpf_window_agrees_with_the_rule(operation: PinnedAuthorityOperation) -> None:
+def test_every_authored_rirpf_window_agrees_with_the_rule(
+    operation: PinnedAuthorityOperation, supplied_calendars: tuple[HolidayCalendar, ...]
+) -> None:
     support = operation.supported_filing_years()
     checked: set[str] = set()
     disagreements: set[tuple[str, int, str]] = set()
@@ -199,7 +207,7 @@ def test_every_authored_rirpf_window_agrees_with_the_rule(operation: PinnedAutho
             if modelo not in _RIRPF_SCHEDULED_MODELOS or window.id in index.projected:
                 continue
             projected = project_filing_window(
-                operation, modelo=modelo, period=window.period, calendars=_SUPPLIED_CALENDARS
+                operation, modelo=modelo, period=window.period, calendars=supplied_calendars
             )
             assert isinstance(projected, ProjectedFilingWindow), (modelo, window.period, projected)
             assert projected.opens_on == window.opens_on, (modelo, window.period)
@@ -211,16 +219,22 @@ def test_every_authored_rirpf_window_agrees_with_the_rule(operation: PinnedAutho
     assert disagreements == set(), sorted(disagreements)
 
 
-def test_the_390_2026_authored_close_is_the_weekend_shifted_monday(operation: PinnedAuthorityOperation) -> None:
-    period = Period.from_year_and_code(2026, "0A")
-    authored = resolve_filing_window("390", 2026, period, authority=operation)
-    projected = project_filing_window(operation, modelo="390", period=period, calendars=_SUPPLIED_CALENDARS)
+@pytest.mark.parametrize("year", supported_authored_exercises("390"))
+def test_the_390_authored_close_is_the_30_january_moved_past_a_weekend(
+    year: int, operation: PinnedAuthorityOperation, supplied_calendars: tuple[HolidayCalendar, ...]
+) -> None:
+    period = Period.from_year_and_code(year, "0A")
+    authored = resolve_filing_window("390", year, period, authority=operation)
+    projected = project_filing_window(operation, modelo="390", period=period, calendars=supplied_calendars)
+    nominal = date(year + 1, 1, 30)
+    # A Saturday or Sunday nominal close moves to the Monday by art. 30.5.
+    expected = nominal + timedelta(days=7 - nominal.weekday() if nominal.weekday() >= 5 else 0)
 
     assert isinstance(authored, AuthoredFilingWindow)
-    assert authored.closes_on == date(2027, 2, 1)  # nominal Saturday 30 January moved by art. 30.5
+    assert authored.closes_on == expected
     assert isinstance(projected, ProjectedFilingWindow)
-    assert projected.nominal_closes_on == date(2027, 1, 30)
-    assert projected.closes_on == date(2027, 2, 1)
+    assert projected.nominal_closes_on == nominal
+    assert projected.closes_on == expected
 
 
 # ---------------------------------------------------------------------------
@@ -229,31 +243,42 @@ def test_the_390_2026_authored_close_is_the_weekend_shifted_monday(operation: Pi
 
 
 def test_an_authored_window_wins_over_a_differing_projection(operation: PinnedAuthorityOperation) -> None:
-    # 1T 2024: 20 April is a Saturday, so AEAT published Monday 22 April. A
-    # calendar that also marks the 22nd inhábil moves the projection to the
-    # 23rd, while the resolver keeps the authored date.
-    period = Period.from_year_and_code(2024, "1T")
-    marked_2024 = _national(2024, (1, 1), (1, 6), (3, 29), (4, 22), (5, 1), (8, 15), (10, 12), (11, 1))
+    # An authored first quarter whose 20 April is a weekend day: AEAT published the
+    # Monday after. A calendar that also marks that Monday inhábil moves the
+    # projection to the Tuesday, while the resolver keeps the authored date.
+    year = next(candidate for candidate in supported_authored_exercises("303") if date(candidate, 4, 20).weekday() >= 5)
+    nominal = date(year, 4, 20)
+    monday = nominal + timedelta(days=7 - nominal.weekday())
+    period = Period.from_year_and_code(year, "1T")
+    marked = statutory_national_calendar(year, (monday.month, monday.day))
 
-    projected = project_filing_window(operation, modelo="303", period=period, calendars=(marked_2024,))
-    resolved = resolve_filing_window("303", 2024, period, authority=operation)
+    projected = project_filing_window(operation, modelo="303", period=period, calendars=(marked,))
+    resolved = resolve_filing_window("303", year, period, authority=operation)
 
     assert isinstance(projected, ProjectedFilingWindow)
-    assert projected.closes_on == date(2024, 4, 23)
+    assert projected.closes_on == monday + timedelta(days=1)
     assert isinstance(resolved, AuthoredFilingWindow)
-    assert resolved.closes_on == date(2024, 4, 22)
+    assert resolved.closes_on == monday
 
 
 # ---------------------------------------------------------------------------
 # Future years.
 # ---------------------------------------------------------------------------
 
-# Synthetic calendars for 2028 and 2029. The statutory fixed national holidays
-# are joined by a holiday placed on Thursday 20 April 2028, so a weekday close
-# is moved by a holiday and not only by a weekend.
+# The first year the authority publishes no holiday calendar for in which 20 April is
+# a Thursday of a leap year. That fixes the whole year's weekdays: 20 July a Thursday,
+# 29 February a Tuesday, 30 September and 30 December Saturdays, and 30 January of the
+# next year a Tuesday.
+_FUTURE_YEAR = first_year_where(
+    lambda candidate: _calendar.isleap(candidate) and date(candidate, 4, 20).weekday() == 3,
+    start=_FIRST_UNPUBLISHED_YEAR,
+)
+# Synthetic calendars for that year and the next. The statutory fixed national holidays
+# are joined by a holiday placed on its Thursday 20 April, so a weekday close is moved
+# by a holiday and not only by a weekend.
 _FUTURE_CALENDARS = (
-    _national(2028, (1, 1), (1, 6), (4, 14), (4, 20), (5, 1), (8, 15), (10, 12), (11, 1), (12, 6), (12, 8), (12, 25)),
-    _national(2029, (1, 1), (1, 6)),
+    statutory_national_calendar(_FUTURE_YEAR, (4, 20)),
+    statutory_national_calendar(_FUTURE_YEAR + 1),
 )
 _FUTURE_HOLIDAYS = frozenset(holiday.holiday_date for cal in _FUTURE_CALENDARS for holiday in cal.national)
 _303_PERIODS = ("1T", "2T", "3T", "4T", *(f"{month:02d}" for month in range(1, 13)))
@@ -265,7 +290,7 @@ def test_a_future_year_projects_the_rule_with_the_national_shift(
     code: str,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    period = Period.from_year_and_code(2028, code)
+    period = Period.from_year_and_code(_FUTURE_YEAR, code)
 
     projected = project_filing_window(operation, modelo=modelo, period=period, calendars=_FUTURE_CALENDARS)
 
@@ -280,20 +305,21 @@ def test_a_future_year_projects_the_rule_with_the_national_shift(
     assert "ley-39-2015:art-30.5" in projected.window.legal_refs
 
 
-def test_the_oracle_matches_hand_worked_2028_closes() -> None:
-    # From a perpetual calendar: 20 April 2028 is a Thursday (the synthetic
-    # holiday moves it to Friday 21); 20 July a Thursday; 29 February 2028 a
-    # Tuesday; 30 September 2028 a Saturday (Monday 2 October); 30 January 2029
-    # a Tuesday.
-    def close(modelo: str, code: str) -> date:
-        return _oracle_close(modelo, Period.from_year_and_code(2028, code), _FUTURE_HOLIDAYS)
+def test_the_oracle_matches_hand_worked_future_closes() -> None:
+    # Worked by hand from the year's shape: 20 April is a Thursday (the synthetic
+    # holiday moves it to Friday 21); 20 July a Thursday; 29 February a Tuesday;
+    # 30 September a Saturday (Monday 2 October); 30 January of the next year a Tuesday.
+    year = _FUTURE_YEAR
 
-    assert close("303", "1T") == date(2028, 4, 21)
-    assert close("303", "2T") == date(2028, 7, 20)
-    assert close("303", "01") == date(2028, 2, 29)
-    assert close("303", "08") == date(2028, 10, 2)
-    assert close("303", "4T") == date(2029, 1, 30)
-    assert close("390", "0A") == date(2029, 1, 30)
+    def close(modelo: str, code: str) -> date:
+        return _oracle_close(modelo, Period.from_year_and_code(year, code), _FUTURE_HOLIDAYS)
+
+    assert close("303", "1T") == date(year, 4, 21)
+    assert close("303", "2T") == date(year, 7, 20)
+    assert close("303", "01") == date(year, 2, 29)
+    assert close("303", "08") == date(year, 10, 2)
+    assert close("303", "4T") == date(year + 1, 1, 30)
+    assert close("390", "0A") == date(year + 1, 1, 30)
 
 
 # ---------------------------------------------------------------------------
@@ -302,52 +328,61 @@ def test_the_oracle_matches_hand_worked_2028_closes() -> None:
 
 
 def test_a_year_without_a_published_calendar_has_an_unknown_close(operation: PinnedAuthorityOperation) -> None:
-    period = Period.from_year_and_code(2028, "1T")
+    period = Period.from_year_and_code(_FUTURE_YEAR, "1T")
 
-    resolved = resolve_filing_window("303", 2028, period, authority=operation)
+    resolved = resolve_filing_window("303", _FUTURE_YEAR, period, authority=operation)
 
     assert isinstance(resolved, ProjectedFilingWindow)
     assert resolved.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
     assert resolved.shift_reason == CALENDAR_UNAVAILABLE_SHIFT_REASON
-    assert resolved.opens_on == date(2028, 4, 1)
-    assert resolved.nominal_closes_on == date(2028, 4, 20)
+    assert resolved.opens_on == date(_FUTURE_YEAR, 4, 1)
+    assert resolved.nominal_closes_on == date(_FUTURE_YEAR, 4, 20)
     assert resolved.closes_on == resolved.nominal_closes_on, "an unknown close keeps only its nominal date"
-    effective = resolve_effective_filing_deadline("303", 2028, period, operation=operation)
+    effective = resolve_effective_filing_deadline("303", _FUTURE_YEAR, period, operation=operation)
     assert effective is not None
     assert effective.close_known is False
 
 
-def test_a_2027_window_resolves_against_the_published_2027_calendar(operation: PinnedAuthorityOperation) -> None:
-    # 20 April 2027 is a Tuesday and 30 December 2027 a Thursday, and neither is
-    # a national inhábil day, so each nominal close stands.
-    quarter = resolve_filing_window("303", 2027, Period.from_year_and_code(2027, "1T"), authority=operation)
-    month = resolve_filing_window("303", 2027, Period.from_year_and_code(2027, "11"), authority=operation)
+@pytest.mark.parametrize("code", ("1T", "10"))
+def test_a_window_past_the_authored_horizon_resolves_against_the_published_calendar(
+    code: str, operation: PinnedAuthorityOperation
+) -> None:
+    # The last year before the first unpublished calendar is published yet past the
+    # authored horizon, so its windows are projected and shifted by that calendar's
+    # national holidays.
+    year = _FIRST_UNPUBLISHED_YEAR - 1
+    assert year > filing_year_envelope().horizon, "no published calendar lies past the authored horizon"
+    period = Period.from_year_and_code(year, code)
+    published = holiday_calendar_from_authority(year, operation=operation)
+    holidays = frozenset(holiday.holiday_date for holiday in published.national)
 
-    assert isinstance(quarter, ProjectedFilingWindow)
-    assert quarter.nominal_closes_on == date(2027, 4, 20)
-    assert quarter.closes_on == date(2027, 4, 20)
-    assert isinstance(month, ProjectedFilingWindow)
-    assert month.closes_on == date(2027, 12, 30)
+    window = resolve_filing_window("303", year, period, authority=operation)
+
+    assert isinstance(window, ProjectedFilingWindow)
+    assert window.nominal_closes_on == _oracle_nominal_close("303", period)
+    assert window.closes_on == _oracle_close("303", period, holidays)
 
 
 def test_a_walk_into_an_unpublished_year_has_an_unknown_close(operation: PinnedAuthorityOperation) -> None:
-    # Monthly 11 of 2028 closes Saturday 30 December 2028; the walk enters 2029,
-    # which this case leaves unpublished, so the close cannot be classified.
-    period = Period.from_year_and_code(2028, "11")
+    # Monthly 11 of the future year closes Saturday 30 December; the walk enters the
+    # next year, which this case leaves unpublished, so the close cannot be classified.
+    period = Period.from_year_and_code(_FUTURE_YEAR, "11")
 
     projected = project_filing_window(operation, modelo="303", period=period, calendars=_FUTURE_CALENDARS[:1])
 
     assert isinstance(projected, ProjectedFilingWindow)
     assert projected.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
-    assert projected.nominal_closes_on == date(2028, 12, 30)
+    assert projected.nominal_closes_on == date(_FUTURE_YEAR, 12, 30)
     assert projected.closes_on == projected.nominal_closes_on
 
 
-def test_a_year_below_the_floor_projects_nothing(operation: PinnedAuthorityOperation) -> None:
+def test_a_year_below_the_floor_projects_nothing(
+    operation: PinnedAuthorityOperation, supplied_calendars: tuple[HolidayCalendar, ...]
+) -> None:
     below = operation.supported_filing_years().floor - 1
     period = Period.from_year_and_code(below, "1T")
 
-    assert project_filing_window(operation, modelo="303", period=period, calendars=_SUPPLIED_CALENDARS) is None
+    assert project_filing_window(operation, modelo="303", period=period, calendars=supplied_calendars) is None
 
 
 def _iva_profile() -> TaxpayerProfile:
@@ -372,20 +407,20 @@ def _iva_profile() -> TaxpayerProfile:
 def test_the_engine_reports_an_unknown_close_as_unknown_and_never_overdue(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    # A reference date past every nominal close of 2028.
-    schedule = DeadlineEngine().compute(_iva_profile(), 2028, today=date(2029, 12, 31))
+    # A reference date past every nominal close of the future year.
+    schedule = DeadlineEngine().compute(_iva_profile(), _FUTURE_YEAR, today=date(_FUTURE_YEAR + 1, 12, 31))
 
     rows = {(item.modelo, item.period.registry_token): item for item in schedule.obligations}
     first_quarter = rows[(Modelo("303"), "1T")]
     assert first_quarter.status is ObligationStatus.UNKNOWN
     assert first_quarter.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
-    assert first_quarter.opens_on == date(2028, 4, 1)
-    assert first_quarter.closes_on == date(2028, 4, 20)
+    assert first_quarter.opens_on == date(_FUTURE_YEAR, 4, 1)
+    assert first_quarter.closes_on == date(_FUTURE_YEAR, 4, 20)
     assert first_quarter.adjusted_closes_on == first_quarter.closes_on
     assert first_quarter.payment_cutoff_on is None
     assert first_quarter.recovery is None
     unshifted = [item for item in schedule.obligations if item.modelo in _MODELOS]
-    assert unshifted, "the 2028 Modelo 303 and 390 windows are dated obligations"
+    assert unshifted, "the future year's Modelo 303 and 390 windows are dated obligations"
     assert all(item.status is ObligationStatus.UNKNOWN for item in unshifted), (
-        "a 2028 Modelo 303 or 390 window has no known close, so none is due or overdue"
+        "a future-year Modelo 303 or 390 window has no known close, so none is due or overdue"
     )
