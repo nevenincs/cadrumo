@@ -91,6 +91,7 @@ const FAILURE_SENTENCE: Readonly<Record<SetupFailureCategory, Key>> = {
   memory_busy: "desktop.setup.failure.memory_busy",
   program_missing: "desktop.setup.failure.program_missing",
   program_not_running: "desktop.setup.failure.program_not_running",
+  engine_program_unusable: "desktop.setup.failure.engine_program_unusable",
   interrupted: "desktop.setup.failure.interrupted",
   needs_sign_in: "desktop.setup.failure.needs_sign_in",
   not_in_this_build: "desktop.setup.failure.not_in_this_build",
