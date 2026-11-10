@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { captureUnrecordedQuestions } from "../support/stagedCheckCapture";
 import { label } from "../support/strings";
 
 // Batch editing on the Ledger page over the scenario's ledger: several
@@ -20,6 +21,7 @@ const rowOf = (target: Page, text: string) =>
 const categoryOf = (row: Locator) => row.locator("[data-column=category]");
 
 async function openLedger(target: Page) {
+  await captureUnrecordedQuestions(target);
   await target.goto("/scenarios.html?scenario=ledger&latency=0&bar=off");
   await target.locator("[data-rail=ledger]").click();
   await expect(grid(target)).toBeVisible();
@@ -63,11 +65,16 @@ async function save(target: Page) {
   await review(target).locator(".ledger-apply-done").click();
 }
 
+// Outgoing Business and Mixed movements near the top of the opening period,
+// each the only row with its description: a category can be asked for them,
+// and the grid keeps all of them drawn while they are selected. None of them
+// holds the category the test asks for.
 const MOVEMENTS = [
-  "PAPELERIA TRAZO",
-  "PARKING CENTRO MUNICIPAL",
-  "TREN ALTA VELOCIDAD BILLETE",
+  "CUOTA AUTONOMOS TGSS",
+  "COMISION MANTENIMIENTO CUENTA",
+  "FIBRA HOGAR ALBOR",
 ] as const;
+const CHOSEN = "desktop.ledger.category.material_oficina";
 
 test("one category is asked for the selected movements, reviewed as one change, saved on all of them, and removed from two", async ({
   page: target,
@@ -95,7 +102,7 @@ test("one category is asked for the selected movements, reviewed as one change, 
     label("desktop.ledger.classify.title_category", { count: 3 }),
   );
   await dialog.locator(".ledger-classify-category").click();
-  await target.keyboard.type(label("desktop.ledger.category.gastos_bancarios"));
+  await target.keyboard.type(label(CHOSEN));
   await target.keyboard.press("Enter");
   await expect(target.locator("[data-slot=combobox]")).toBeHidden();
   await dialog.locator(".ledger-classify-stage").click();
@@ -104,32 +111,28 @@ test("one category is asked for the selected movements, reviewed as one change, 
   // All three are staged at once, and the page says so.
   await expect(toast(target)).toHaveText(
     label("desktop.ledger.classify.staged_category", {
-      category: label("desktop.ledger.category.gastos_bancarios"),
+      category: label(CHOSEN),
       count: 3,
     }),
   );
   for (const name of MOVEMENTS)
     await expect(
       categoryOf(rowOf(target, name)).locator("[data-staged]"),
-    ).toContainText(label("desktop.ledger.category.gastos_bancarios"));
+    ).toContainText(label(CHOSEN));
 
   // The review holds one category change, over three movements.
   await openReview(target);
   const summary = review(target).locator(".ledger-summary tbody tr");
   await expect(summary).toHaveCount(3);
   for (const change of await summary.all())
-    await expect(change).toContainText(
-      label("desktop.ledger.category.gastos_bancarios"),
-    );
+    await expect(change).toContainText(label(CHOSEN));
   await expect(review(target).locator(".ledger-review-rows-toggle")).toHaveText(
     `${label("desktop.ledger.apply.summary_movements")} · 3`,
   );
   await save(target);
 
   for (const name of MOVEMENTS)
-    await expect(categoryOf(rowOf(target, name))).toContainText(
-      label("desktop.ledger.category.gastos_bancarios"),
-    );
+    await expect(categoryOf(rowOf(target, name))).toContainText(label(CHOSEN));
   await expect(tray(target)).toHaveCount(0);
 
   // The category is removed from two of them in one step.
@@ -149,10 +152,10 @@ test("one category is asked for the selected movements, reviewed as one change, 
   await save(target);
   for (const name of MOVEMENTS.slice(0, 2))
     await expect(categoryOf(rowOf(target, name))).not.toContainText(
-      label("desktop.ledger.category.gastos_bancarios"),
+      label(CHOSEN),
     );
   await expect(categoryOf(rowOf(target, MOVEMENTS[2]))).toContainText(
-    label("desktop.ledger.category.gastos_bancarios"),
+    label(CHOSEN),
   );
 });
 
@@ -160,7 +163,10 @@ test("a personal movement in the selection is reported, never given a category",
   page: target,
 }) => {
   await openLedger(target);
-  await selectMovements(target, ["PAPELERIA TRAZO", "SUPERMERCADO HOJA VERDE"]);
+  await selectMovements(target, [
+    "CUOTA AUTONOMOS TGSS",
+    "RESTAURANTE LA ALACENA",
+  ]);
   await openSelectionActions(target, 2);
   await target
     .getByRole("menu")

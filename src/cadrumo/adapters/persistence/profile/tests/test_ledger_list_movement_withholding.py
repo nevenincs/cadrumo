@@ -79,7 +79,9 @@ def _listed(
         listed: tuple[Transaction, ...] = tuple(item.transaction for item in page.results)
         withholding = listed_movement_withholding(listed, bucket_id=_BUCKET_ID, ports=ports)
     return {
-        transaction.transaction_id: ledger_list_row(transaction, withholding.get(transaction.transaction_id, ()))
+        transaction.transaction_id: ledger_list_row(
+            transaction, withholding=withholding.get(transaction.transaction_id, ())
+        )
         for transaction in listed
     }
 

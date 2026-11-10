@@ -1035,8 +1035,13 @@ application:
           and this confirmation differs on: %{divergent_fields}. Correct or remove
           the stored invoice instead of confirming the same document twice.'
       label_reading:
+        no_model_selected: 'No model is picked to read with, so the %{count} field(s)
+          the labels did not cover stay empty: %{fields}. Pick a model, then read
+          the document again, or fill them in yourself.'
         reader_unavailable: 'The automatic reader could not run, so the %{count} field(s)
           the labels did not cover stay empty: %{fields}. Fill them in yourself.'
+      next_step:
+        choose_reading_model: Choose a reading model
     periods:
       served:
         annual: Year
@@ -1053,6 +1058,9 @@ application:
         november: November
         october: October
         september: September
+    reason:
+      served:
+        command: Recorded by a command, with no reason stated
     staged_check:
       served:
         blocker:

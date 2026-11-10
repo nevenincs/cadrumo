@@ -10,10 +10,12 @@ Core types:
 
 from __future__ import annotations
 
+from ...core.external_constants import OutputLanguage
 from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.json_contract import OutputSchema
 from ...core.operations import OperationEffect
+from ..operations.next_step import OperationNextStepV1
 from .invoice_draft_records import InvoiceDraftIdentityDocumentFields, LabelReadingFallbackCause
 from .structured_invoice_ports import StructuredInvoiceClassificationKind
 
@@ -89,6 +91,10 @@ class EvidenceLabelReadingFallbackPayload(OutputSchema):
     unread_fields: list[str]
     reader_error_type: str
     failed_condition_id: str | None = None
+    refusal_code: str | None = None
+    refusal_words: str | None = None
+    refusal_words_language: OutputLanguage | None = None
+    next_step: OperationNextStepV1 | None = None
 
 
 class EvidenceExtractResult(InvoiceDraftIdentityDocumentFields, OutputSchema):

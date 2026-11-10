@@ -470,7 +470,16 @@ export type LedgerNextStep =
       filing_year: number;
       period_code: string;
       words: string;
-    };
+    }
+  /** Opens the model picker of the agent column, where the person picks the
+   * model documents are read with. */
+  | { kind: "choose_reading_model"; words: string };
+
+/** The step the agent column's model picker answers. */
+export type LedgerReadingModelStep = Extract<
+  LedgerNextStep,
+  { kind: "choose_reading_model" }
+>;
 
 /** The steps the profile page answers, the two a readiness refusal serves. */
 export type LedgerProfileStep = Extract<
@@ -572,6 +581,8 @@ export function servedNextStep(detail: unknown): LedgerNextStep | null {
   }
   if (served.kind === "complete_profile_setup")
     return { kind: "complete_profile_setup", words };
+  if (served.kind === "choose_reading_model")
+    return { kind: "choose_reading_model", words };
   return null;
 }
 
@@ -744,12 +755,23 @@ export type LedgerTransaction = {
   modified_at: string;
 };
 
+/** Whose words a row's classification reason is: nobody's (none is stored),
+ * the person's own, or the name of the command that wrote the row. */
+export type LedgerReasonSource = "none" | "stated" | "command";
+
 export type LedgerRow = {
   transaction: LedgerTransaction;
   review_status: LedgerReviewStatus;
   group_label: string | null;
   /** The own account's register id, never its number; null for none. */
   own_account_id: string | null;
+  /** Whether `transaction.classification_reason` is the person's own words
+   * (shown as stored) or a command's name (not shown: its word is served). */
+  classification_reason_source: LedgerReasonSource;
+  /** The word served for a command's name, in the language asked; empty
+   * unless the source is a command. */
+  classification_reason_words: string;
+  classification_reason_words_language: OutputLanguage | null;
   /** What the invoices this movement pays leave on it; empty where it pays
    * none that states a retención, which is absent, not zero. */
   withholding: LedgerMovementWithholding[];
@@ -766,6 +788,8 @@ export type LedgerListRequest = {
   sort_by?: LedgerSortField | null;
   sort_order?: LedgerSortOrder;
   exclude_llm_rejected?: boolean;
+  /** The language the rows' reason words are said in. */
+  output_language?: OutputLanguage;
 };
 
 export type LedgerListResult = {

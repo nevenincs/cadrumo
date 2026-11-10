@@ -81,6 +81,8 @@ type Tools = {
   seed: boolean;
   /** Whether the local AI is missing on this computer. */
   readerMissing: boolean;
+  /** Whether the local AI is there but no model is picked to read with. */
+  noReadingModel: boolean;
   /** The language the backend words a reason in. */
   language: string;
 };
@@ -112,6 +114,54 @@ const withoutReader = (unread: string[]): LabelReadingFallback => ({
   unread_fields: unread,
   reader_error_type: "InvoiceDraftReaderUnavailableError",
 });
+
+/** What the backend serves for a role with no picked reading model: the
+ * refusal's sentence and the step that leads to the choice, in `language`. */
+const noReadingModel = (language: string) => {
+  const sentences: Record<string, string> = servedWords.reading_model.refusal;
+  const steps: Record<string, string> = servedWords.reading_model.step;
+  const served = sentences[language] ? language : "en";
+  return {
+    words: sentences[served]!,
+    language: served,
+    step: { kind: "choose_reading_model" as const, words: steps[served]! },
+  };
+};
+
+/** A label reading that stood because no model is picked to fill the rest. */
+const withoutModel = (
+  unread: string[],
+  language: string,
+): LabelReadingFallback => {
+  const served = noReadingModel(language);
+  return {
+    cause: "reader_unavailable",
+    unread_fields: unread,
+    reader_error_type: "InvoiceDraftReaderUnavailableError",
+    failed_condition_id: "llm.agent.model_run_completed",
+    refusal_code: "no_selection",
+    refusal_words: served.words,
+    refusal_words_language: served.language,
+    next_step: served.step,
+  };
+};
+
+/** The registered refusal of a read that needed a model no one has picked. */
+const noModelRefusal = (language: string) => {
+  const served = noReadingModel(language);
+  return new InvoiceStopped("REFUSED_LEDGER_EVIDENCE_READER", {
+    detail_version: 1,
+    kind: "registered_error",
+    error_code: "REFUSED_LEDGER_EVIDENCE_READER",
+    message_key: "errors.refused.refused_llm_no_model_selected",
+    context: [],
+    context_entries_omitted: 0,
+    precondition_verdict_json: null,
+    refusal_words: served.words,
+    refusal_words_language: served.language,
+    next_step: served.step,
+  });
+};
 
 /** The registered refusal of a read that needed the missing local AI. */
 const readerRefusal = () =>
@@ -298,7 +348,12 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
           }
         : tools.readerMissing
           ? withoutReader(["retencion_rate", "retencion_amount"])
-          : null,
+          : tools.noReadingModel
+            ? withoutModel(
+                ["retencion_rate", "retencion_amount"],
+                tools.language,
+              )
+            : null,
       extractor: image ? "text_rules" : "text_layer",
       drafted_at: now(),
       confirmed: false,
@@ -396,6 +451,11 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
           "retencion_rate",
           "retencion_amount",
         ]);
+      else if (tools.noReadingModel && spec.media === "pdf")
+        reading.fallback = withoutModel(
+          ["retencion_rate", "retencion_amount"],
+          tools.language,
+        );
       readings.set(record.evidence_id, reading);
     }
     ATTACHMENTS.forEach((attachment, at) => {
@@ -725,6 +785,12 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
       source.record?.media_kind === "image"
     )
       throw readerRefusal();
+    if (
+      tools.noReadingModel &&
+      provider === null &&
+      source.record?.media_kind === "image"
+    )
+      throw noModelRefusal(tools.language);
     let reading = readingOf(source.reference);
     if (!reading) {
       // An attachment read for the first time.

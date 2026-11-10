@@ -428,4 +428,7 @@ def test_a_listed_row_names_the_own_account_it_is_bound_to_and_never_its_number(
             review_status=bound.review_status,
             group_label=None,
             own_account_id="ES9121000418450200051332",
+            classification_reason_source=bound.classification_reason_source,
+            classification_reason_words=bound.classification_reason_words,
+            classification_reason_words_language=bound.classification_reason_words_language,
         )

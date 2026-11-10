@@ -908,6 +908,19 @@ export type OperationCalculateWorkStepV1 = {
 };
 
 /**
+ * Choose the model documents are read with, where the window keeps that
+ * choice.
+ *
+ * The refusal it accompanies is a reader that had no model picked for the
+ * role. Putting it right is the person's choice of a model, which this
+ * product's window offers beside the agent; no command line verb makes it.
+ */
+export type OperationChooseReadingModelStepV1 = {
+  kind: "choose_reading_model";
+  words: string;
+};
+
+/**
  * Declare the profile setup complete, which every filing-grade verb re-checks.
  */
 export type OperationCompleteProfileSetupStepV1 = {
@@ -935,7 +948,8 @@ export type OperationNextStepV1 =
   | OperationCompleteProfileSetupStepV1
   | OperationOpenMovementStepV1
   | OperationOpenIvaWalletStepV1
-  | OperationOpenIvaWalletOpeningBalanceStepV1;
+  | OperationOpenIvaWalletOpeningBalanceStepV1
+  | OperationChooseReadingModelStepV1;
 
 /**
  * Record the opening IVA balance the period's carry reads, in the IVA balance
