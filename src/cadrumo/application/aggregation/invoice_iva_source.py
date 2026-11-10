@@ -289,6 +289,47 @@ def invoices_missing_source_document(
     return tuple(sorted(missing, key=lambda invoice: invoice.invoice_id))
 
 
+def issued_invoices_missing_source_document(
+    invoices: Sequence[Invoice],
+    *,
+    documented: frozenset[str],
+    window: TransactionCatalogue,
+) -> tuple[Invoice, ...]:
+    """The issued invoices charging a cuota whose copy the records do not hold.
+
+    RD 1619/2012 art. 2 obliges the issuer to issue the factura, and the output
+    side keeps the visibility standard the movement-side advisory applied before
+    the invoice became the IVA source: any stored document belonging to the
+    invoice, or any document attached to a movement paying it, holds it.
+
+    Core types:
+    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
+    """
+    linked = with_movement_side_links(invoices, window=window)
+    missing = (
+        invoice
+        for invoice in linked
+        if _charges_output_cuota(invoice)
+        and invoice.invoice_id not in documented
+        and not _paid_by_documented_movement(invoice, window=window)
+    )
+    return tuple(sorted(missing, key=lambda invoice: invoice.invoice_id))
+
+
+def _charges_output_cuota(invoice: Invoice) -> bool:
+    """Whether ``invoice`` is an issued invoice whose lines charge a cuota."""
+    return invoice.kind is InvoiceKind.ISSUED and any(line.iva_amount > 0 for line in invoice.lines)
+
+
+def _paid_by_documented_movement(invoice: Invoice, *, window: TransactionCatalogue) -> bool:
+    """Whether a movement paying ``invoice`` carries an attachment or registered invoice evidence."""
+    paying = (window.get(transaction_id) for transaction_id in invoice.linked_transaction_ids)
+    return any(
+        movement is not None and (movement.purchase_invoice_evidence_id is not None or bool(movement.attachment_ids))
+        for movement in paying
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class PeriodInvoiceIvaSide:
     """The invoice side of one period, as calculation and ledger readiness both read it."""
@@ -491,6 +532,7 @@ __all__ = [
     "invoice_iva_finding_diagnostics",
     "invoice_iva_source",
     "invoices_missing_source_document",
+    "issued_invoices_missing_source_document",
     "linked_movements_for_period",
     "partition_invoice_payments",
     "period_invoice_iva_findings",
