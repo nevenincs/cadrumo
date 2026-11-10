@@ -18,7 +18,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 #: The retired revision id. It is absent from the registry, so no authority read can
 #: name it; the scan below skips this module, the one place the id is spelled.
-_RETIRED_IDENTIFIER = f"{2023}-y-siguientes"
+_RETIRED_IDENTIFIER = "2023-y-siguientes"
 
 
 def _cutover_surface_files() -> tuple[Path, ...]:
