@@ -22,6 +22,7 @@ from ......application.modelo.work_form_findings import ModeloFormIssue
 from ......application.modelo.work_form_models import ModeloWorkForm
 from ......core.result_disposition import ResultDisposition
 from ......domain.deadlines.festivos import DeadlineHolidayCoverage
+from ......domain.iva.refund_eligibility import RefundEligibility, RefundEligibilityBasis, RefundEligibilityOutcome
 from ......domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -48,6 +49,15 @@ def with_result(
     casilla_id: str = "19",
 ) -> ModeloWorkForm:
     """The form with a settlement box, its value and the direction the read model states."""
+    eligibility = (
+        RefundEligibility(
+            outcome=RefundEligibilityOutcome.REFUND_ALLOWED,
+            basis=RefundEligibilityBasis.FINAL_PERIOD,
+            legal_refs=(),
+        )
+        if election
+        else None
+    )
     result = ModeloFormResult(
         casilla_id=casilla_id,
         box=casilla_id,
@@ -55,6 +65,7 @@ def with_result(
         direction=direction,
         disposition=disposition,
         election_may_change=election,
+        refund_eligibility=eligibility,
     )
     return form.model_copy(update={"result": result})
 

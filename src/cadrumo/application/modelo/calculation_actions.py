@@ -740,6 +740,9 @@ def calculation_reconciliation_source_needs(
     """Where each source declaration of the snapshot's reconciliation stands, read from the calculation's ports.
 
     A revision that declares no reconciliation relation needs nothing, so no store is read for it.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
     """
     if not reconciliation_relation_targets(snapshot):
         return ()

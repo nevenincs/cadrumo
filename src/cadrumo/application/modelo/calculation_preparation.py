@@ -475,6 +475,9 @@ def ledger_preflight_hold(
 
     Calculation refuses on it and the workbench's to-do list names it, so the
     person is told before calculating exactly what calculating would refuse.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     ledger_preflight_sources = frozenset(
         str(binding.source) for binding in revision.bindings if binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES

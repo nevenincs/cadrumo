@@ -342,6 +342,10 @@ def invoice_source_document_findings(
     Only a return that deducts input IVA is held: a revision whose registry
     declares no deductible IVA binding (a Modelo 347 reads invoices for its
     counterpart totals) claims no deduction the factura must grant.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     fingerprint = target.invoice_fingerprint
     if fingerprint is None or not fingerprint.rows or not _declares_iva_deduction(registry_revision):

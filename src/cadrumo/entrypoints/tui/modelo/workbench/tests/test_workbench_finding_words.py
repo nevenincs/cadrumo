@@ -82,9 +82,12 @@ _REPRESENTATIVE: Final[Mapping[FindingFactKind, tuple[str | int | Decimal, ...]]
     FindingFactKind.NUMBER: (Decimal("0.75"),),
     FindingFactKind.COUNT: (3,),
     FindingFactKind.OFFICIAL_CODE: ("FR",),
+    FindingFactKind.DOCUMENT_NUMBER: ("A-2025/0017",),
     FindingFactKind.TECHNICAL: ("modelo-303.page_1.sujeto-pasivo", "ab12" * 16),
 }
 """Values of the shapes the producers store, several per kind so every way of writing one is rendered."""
+_INVOICE_ID: Final[str] = "ab12" * 16
+"""An invoice id is a content digest, so the finding that names one to open must carry that shape."""
 _VARIANTS: Final[int] = max(len(values) for values in _REPRESENTATIVE.values())
 
 _TOKENS: Final[Mapping[str, re.Pattern[str]]] = {
@@ -319,6 +322,8 @@ def _finding(producer: _Producer, variant: int) -> ModeloVerificationFinding:
         for name in sorted(producer.facts)
         if (kind := FINDING_FACT_KINDS.get(name)) is not None
     }
+    if "invoice_id" in facts:
+        facts["invoice_id"] = _INVOICE_ID
     return ModeloVerificationFinding(
         kind=producer.kind,
         severity=producer.severity,

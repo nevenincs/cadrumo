@@ -1,4 +1,7 @@
-"""Prior-period IVA compensation evidence for the wallet gate."""
+"""Prior-period IVA compensation evidence for the wallet gate.
+
+Core types: :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
+"""
 
 from __future__ import annotations
 
