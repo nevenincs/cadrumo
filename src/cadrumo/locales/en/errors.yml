@@ -707,16 +707,15 @@ errors:
     cli_outbound_payload_boundary: Cadrumo built an internal record that failed its
       own validation. Your command was correct; this is a defect in Cadrumo. Report
       it with the command you ran.
-    internal_active_profile_pointer_transaction: 'Internal error: active-profile pointer
-      transaction ownership is invalid.'
+    internal_active_profile_pointer_transaction: Active-profile pointer transaction
+      ownership is invalid.
     internal_cli_unexpected_boundary: The command failed due to an unexpected internal
       error, not a stored-data problem. Inspect the diagnostic logs to see what failed.
-    internal_domiciliation_calendar_gap: 'Internal error: a year of the calendar could
-      not classify its days.'
-    internal_flow_copy_resolution: 'Internal error: the guided flow could not resolve
-      its display copy.'
-    internal_flow_validator_registry: 'Internal error: the guided flow validator registry
-      rejected the operation.'
+    internal_domiciliation_calendar_gap: A year of the calendar could not classify
+      its days.
+    internal_flow_copy_resolution: The guided flow could not resolve its display copy.
+    internal_flow_validator_registry: The guided flow validator registry rejected
+      the operation.
     internal_modelo_help_catalogue_gap: A help text for this box is missing from the
       catalogue.
     internal_modelo_source_kind_unclassified: A value source has no declared family,
@@ -727,23 +726,18 @@ errors:
       rule.
     internal_modelo_work_form_layout: This modelo's form layout does not match its
       revision.
-    internal_operation_declaration_breach: 'Internal error: an operation executor
-      claimed a phase, effect, resource, or interaction its definition does not declare.'
-    internal_operation_executor_returned_no_result: 'Internal error: the operation
-      stopped without a result and without waiting for anything, so it was closed
-      as failed. Nothing further will happen to it; check the diagnostic logs for
-      the cause.'
-    internal_operation_unsettled: 'Internal error: the operation stopped before its
-      result could be recorded. It stays open and is closed automatically when its
-      owner lock expires; check the diagnostic logs for the cause.'
-    internal_output_rendering: 'Internal error: the command output could not be rendered
-      safely.'
-    internal_wipe_type: 'Internal error: the wipe operation received a value it cannot
-      overwrite.'
-    internal_workflow_abort_signal: 'Internal error: a workflow stage raised an abort
-      signal.'
-    internal_workflow_unhandled: 'Internal error: a workflow stage raised an unhandled
-      exception.'
+    internal_operation_declaration_breach: An operation executor claimed a phase,
+      effect, resource, or interaction its definition does not declare.
+    internal_operation_executor_returned_no_result: The operation stopped without
+      a result and without waiting for anything, so it was closed as failed. Nothing
+      further will happen to it; check the diagnostic logs for the cause.
+    internal_operation_unsettled: The operation stopped before its result could be
+      recorded. It stays open and is closed automatically when its owner lock expires;
+      check the diagnostic logs for the cause.
+    internal_output_rendering: The command output could not be rendered safely.
+    internal_wipe_type: The wipe operation received a value it cannot overwrite.
+    internal_workflow_abort_signal: A workflow stage raised an abort signal.
+    internal_workflow_unhandled: A workflow stage raised an unhandled exception.
   iva:
     rate_member_state_unregistered: The IVA rate registry carries no rates for the
       requested member state.
@@ -1043,8 +1037,7 @@ errors:
       registered.
     refused_auth_configure_dangling_active_profile: The active-profile pointer does
       not resolve to a registered bucket.
-    refused_auth_diagnostic_payload: 'Refused: authentication diagnostic payload is
-      invalid.'
+    refused_auth_diagnostic_payload: Authentication diagnostic payload is invalid.
     refused_auth_diagnostic_phone_state: The phone state value provided is not recognised.
       Use one of the valid operator phone-state values.
     refused_auth_login_live_tests_disabled: Live authentication tests are disabled.
@@ -1129,10 +1122,10 @@ errors:
     refused_invoice_retention_figures: The stated retention contradicts itself or
       the invoice's taxable base. Restate the rate and the amount so that the amount
       equals the base times the rate.
-    refused_iva_compensation_decimal_parse: 'Refused: IVA compensation amount could
-      not be parsed as a decimal.'
-    refused_iva_compensation_year_range: 'Refused: IVA compensation year is outside
-      the accepted range.'
+    refused_iva_compensation_decimal_parse: IVA compensation amount could not be parsed
+      as a decimal.
+    refused_iva_compensation_year_range: IVA compensation year is outside the accepted
+      range.
     refused_iva_prorrata_especial_margin_ungrounded: The mandatory prorrata especial
       margin cannot be grounded for that ejercicio.
     refused_iva_wallet_reconciliation_invariant: The IVA wallet reconciliation inputs
@@ -1361,7 +1354,7 @@ errors:
       been made. Do not repeat it yet: once access returns, check the operation, or
       what it changes, first.'
     refused_runtime_frontend: The profile runtime refused this request.
-    refused_source_mesh_invariant: 'Refused: source mesh invariant violation.'
+    refused_source_mesh_invariant: Source mesh invariant violation.
     refused_storage_bucket_already_present: A bucket with that identifier already
       exists.
     refused_storage_master_key_no_active_session: Encryption requires an active session.

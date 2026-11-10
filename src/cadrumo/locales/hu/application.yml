@@ -2491,7 +2491,7 @@ application:
         X25519 nyilvános kulcs.
       recipient_registry_already_exists: A(z) %{recipient_id} címzett már regisztrálva
         van.
-      recipient_registry_generic: Hiba történt a címzetti ujjlenyomatok listájában.
+      recipient_registry_generic: A címzetti ujjlenyomatok listájában hiba történt.
       recipient_registry_invalid_public_key: A megadott nyilvános kulcs nem egy érvényes
         32 bájtos X25519 kulcs (%{length} bájt érkezett).
       recipient_registry_load_failed: Nem sikerült betölteni a címzetti ujjlenyomatok
@@ -2508,7 +2508,7 @@ application:
         bevallásnál visszatérítés (devolver) lett kiválasztva, de visszatérítés csak
         az év utolsó bevallási időszakában kérhető. Vidd át a jóváírást (compensar),
         vagy válaszd a visszatérítést az utolsó időszakban.
-      review_package_generic: Hiba történt az áttekintő csomag összeállítása közben.
+      review_package_generic: Az áttekintő csomag összeállítása közben hiba történt.
       review_package_integrity: 'A(z) %{package_path} áttekintő csomag nem felelt
         meg az ellenőrzőösszeg-ellenőrzésnek: %{detail}.'
       review_package_revision_state: 'A(z) %{calculation_revision_id} számítási revízió
