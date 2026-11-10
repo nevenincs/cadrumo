@@ -126,10 +126,7 @@ const outgoing = (movement: FixtureMovement) =>
 
 export const MovementBusiness = movementStory(
   "A business movement",
-  (m) =>
-    outgoing(m) &&
-    m.transaction.business_classification === "BUSINESS" &&
-    m.transaction.invoice_id !== null,
+  (m) => outgoing(m) && m.transaction.business_classification === "BUSINESS",
 );
 export const MovementMixed = movementStory(
   "A mixed movement",
