@@ -6,19 +6,15 @@ Its pinned edition lookup returns the :class:`ModeloRevision` used by each tax-y
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping
-from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Self
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
 
 from ...core.casilla_id import CasillaId
-from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.money.rounding import round_to_cents
 from ...core.period import Period, StandardPeriodCode
 from ...core.tipos_actividad import TipoActividad
 from ...domain.calculations.registry.actividad_asset_bindings import (
@@ -38,7 +34,6 @@ from ...domain.renta.actividad_asset.claims import (
     ClaimProjection,
     asset_schedule_history,
     claims_through_year,
-    current_revisions,
     effective_claims,
     equal_figures_claim,
     project_m100,
@@ -64,7 +59,6 @@ from ...domain.renta.actividad_asset.register_records import ActivityAssetDescri
 from ...domain.renta.actividad_asset.schedule import (
     ScheduleAuthority,
     ScheduledAmortizationCharge,
-    last_day_covered,
     require_method_continuity,
 )
 from .acquisition_candidates import acquisition_candidates
@@ -75,22 +69,25 @@ from .activity_asset_read_models import (
     ActivityAssetEdition,
     ActivityAssetElectionLimits,
     ActivityAssetFormOptionsView,
-    ActivityAssetHandoffLeftOut,
-    ActivityAssetHandoffLeftOutReason,
     ActivityAssetListRow,
     ActivityAssetNotTableBoundReason,
     ActivityAssetPlanAdvisory,
     ActivityAssetPlanAdvisoryKind,
     ActivityAssetPlanRow,
     ActivityAssetTimelineEvent,
-    ServedWords,
     activity_asset_label_key,
     project_reason_facts,
-    text_in_meaning,
 )
 from .baja_claims import baja_supersessions, require_profile_modality
 from .disposal_calculation import calculate_element_disposal
 from .filing_box_names import BoxNameReader, box_name_for_kind
+from .filing_handoff import (
+    ActivityAssetFilingHandoff,
+    asset_names,
+    left_out_of_handoff,
+    m100_gap_projections,
+    m130_projection,
+)
 from .form_options_view import form_options_view
 from .history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from .legal_citations import resolve_legal_citations
@@ -110,119 +107,10 @@ from .register_reads import (
 )
 from .register_timeline import element_timeline
 from .schedule_walk import (
-    M100ClaimGap,
-    M100GapKind,
-    M130ElementAccrual,
-    M130ElementOutcome,
     error_reason_facts,
-    m100_claim_gaps,
-    m100_unbound_box_gap,
     m130_register_accruals,
 )
-from .served_words import left_out_entry, m100_gap_words, partial_words
 from .service import ActivityAssetHistoryService
-
-
-class M130Contribution(BaseModel):
-    """One amount behind Modelo 130 casilla 02, resting on one claim or on one schedule."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    asset_id: str = Field(min_length=1, max_length=128)
-    amount: Decimal
-    claim_id: str | None = None
-    schedule_fingerprint: str | None = None
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _one_source(self) -> Self:
-        if (self.claim_id is None) == (self.schedule_fingerprint is None):
-            raise ValueError("a Modelo 130 contribution rests on exactly one claim or one schedule")
-        return self
-
-
-class M130AccrualProjection(BaseModel):
-    """What one asset kind accrued in the year through the period's end.
-
-    ``unavailable_asset_ids`` names elements whose schedule could not be worked
-    out, ``free_gap_asset_ids`` those whose method leaves an unrecorded amount to
-    the taxpayer, and ``agrarian_excluded_asset_ids`` those of an agrarian activity,
-    which pays a share of income, so an amount that leaves them out says so.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    target_casilla_id: CasillaId
-    box_name: str | None = None
-    """What the box is called in the filer's words, with the asset kind that tells it from the other kind's row."""
-    tax_year: int
-    amount: Decimal
-    contributions: tuple[M130Contribution, ...] = ()
-    unavailable_asset_ids: tuple[str, ...] = ()
-    free_gap_asset_ids: tuple[str, ...] = ()
-    agrarian_excluded_asset_ids: tuple[str, ...] = ()
-    partial_words: ServedWords | None = None
-    """The sentence saying the amount leaves out the elements that could not be worked out."""
-    words_language: OutputLanguage | None = None
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _words_name_their_language(self) -> Self:
-        if self.partial_words is not None and self.words_language is None:
-            raise ValueError("served words name the language they are in")
-        return self
-
-
-class M100ClaimGapProjection(BaseModel):
-    """An interval of the year Modelo 100 leaves out of an element, and what it would have accrued."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    asset_id: str = Field(min_length=1)
-    kind: M100GapKind
-    covered_from: date
-    covered_until: date
-    accrued: Decimal | None = None
-    words: ServedWords | None = None
-    """The interval said whole, by the name the register holds for the element."""
-    words_language: OutputLanguage | None = None
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _words_name_their_language(self) -> Self:
-        if self.words is not None and self.words_language is None:
-            raise ValueError("served words name the language they are in")
-        return self
-
-
-class ActivityAssetFilingHandoff(BaseModel):
-    """Non-consuming projections for both supported IRPF filing destinations.
-
-    ``m100_gaps`` says what the Modelo 100 boxes leave out because no claim records it, or because
-    the edition binds no box for the element's kind.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    material_m100: ClaimProjection | None
-    intangible_m100: ClaimProjection | None
-    """Absent for a kind the edition binds no Modelo 100 box for; ``m100_gaps`` then names its elements."""
-    m100_gaps: tuple[M100ClaimGapProjection, ...] = ()
-    material_m100_box_name: str | None = None
-    intangible_m100_box_name: str | None = None
-    """What each Modelo 100 box is called in the filer's words; the two boxes are different casillas."""
-    material_m130: M130AccrualProjection | None = None
-    intangible_m130: M130AccrualProjection | None = None
-    """Both set for a Modelo 130 period, and both absent when the handoff states Modelo 100 alone."""
-    left_out: tuple[ActivityAssetHandoffLeftOut, ...] = ()
-    """What the Modelo 130 amounts leave out, one entry per reason across both asset kinds."""
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _m130_together(self) -> Self:
-        if (self.material_m130 is None) != (self.intangible_m130 is None):
-            raise ValueError("a filing handoff states the Modelo 130 accrual of both asset kinds or of neither")
-        return self
 
 
 class SupersedingClaimRequest(BaseModel):
@@ -295,78 +183,6 @@ class ActivityAssetRegisterAuthority:
     m100_amortization_casillas: Callable[[int], Mapping[AssetKind, CasillaId]]
 
 
-def _m130_projection(
-    asset_kind: AssetKind,
-    accruals: tuple[M130ElementAccrual, ...],
-    m130_box: CasillaId,
-    tax_year: int,
-    box_name: str,
-    language: OutputLanguage,
-) -> M130AccrualProjection:
-    selected = tuple(accrual for accrual in accruals if accrual.revision.asset_kind is asset_kind)
-    contributions = _m130_contributions(selected)
-    unavailable = tuple(
-        accrual.revision.asset_id for accrual in selected if accrual.outcome is M130ElementOutcome.UNAVAILABLE
-    )
-    return M130AccrualProjection(
-        target_casilla_id=m130_box,
-        box_name=box_name,
-        tax_year=tax_year,
-        amount=round_to_cents(sum((item.amount for item in contributions), Decimal("0"))),
-        contributions=contributions,
-        unavailable_asset_ids=unavailable,
-        free_gap_asset_ids=tuple(
-            accrual.revision.asset_id for accrual in selected if accrual.outcome is M130ElementOutcome.FREE_GAP
-        ),
-        agrarian_excluded_asset_ids=tuple(
-            accrual.revision.asset_id for accrual in selected if accrual.outcome is M130ElementOutcome.AGRARIAN_EXCLUDED
-        ),
-        partial_words=partial_words(len(unavailable), language) if unavailable else None,
-        words_language=language if unavailable else None,
-    )
-
-
-def _left_out(
-    projections: tuple[M130AccrualProjection, ...], names: Mapping[str, str], language: OutputLanguage
-) -> tuple[ActivityAssetHandoffLeftOut, ...]:
-    """Say what the Modelo 130 amounts leave out, one entry per reason across the asset kinds."""
-    by_reason = (
-        (ActivityAssetHandoffLeftOutReason.FREE_GAP, "free_gap_asset_ids"),
-        (ActivityAssetHandoffLeftOutReason.AGRARIAN_EXCLUDED, "agrarian_excluded_asset_ids"),
-        (ActivityAssetHandoffLeftOutReason.UNAVAILABLE, "unavailable_asset_ids"),
-    )
-    entries: list[ActivityAssetHandoffLeftOut] = []
-    for reason, attribute in by_reason:
-        ids = tuple(dict.fromkeys(asset_id for item in projections for asset_id in getattr(item, attribute)))
-        if ids:
-            entries.append(left_out_entry(reason, ids, names, language))
-    return tuple(entries)
-
-
-def _asset_names(history: ActivityAssetHistory) -> dict[str, str]:
-    """The name the register holds for each element that has one."""
-    names: dict[str, str] = {}
-    for asset_id in {revision.asset_id for revision in history.revisions}:
-        descriptor = history.current_descriptor(asset_id)
-        name = None if descriptor is None else text_in_meaning(descriptor.facts.name)
-        if name is not None:
-            names[asset_id] = name
-    return names
-
-
-def _m130_contributions(selected: tuple[M130ElementAccrual, ...]) -> tuple[M130Contribution, ...]:
-    return tuple(
-        M130Contribution(
-            asset_id=item.asset_id,
-            amount=item.amount,
-            claim_id=item.claim_id,
-            schedule_fingerprint=item.schedule_fingerprint,
-        )
-        for accrual in selected
-        for item in accrual.contributions
-    )
-
-
 def _forecast_revision(history: ActivityAssetHistory, forecast: ScheduledAmortizationCharge) -> ActivityAssetRevision:
     revision = max(
         (item for item in history.revisions if item.asset_id == forecast.asset_id),
@@ -380,43 +196,6 @@ def _forecast_revision(history: ActivityAssetHistory, forecast: ScheduledAmortiz
             translated_message="ledger.actividad_asset.errors.forecast_not_current_revision"
         )
     return revision
-
-
-def _m100_gaps(
-    history: ActivityAssetHistory,
-    forecast: ActivityAssetForecastOperation,
-    tax_year: int,
-    bound_kinds: AbstractSet[AssetKind],
-    *,
-    names: Mapping[str, str],
-    language: OutputLanguage,
-) -> tuple[M100ClaimGapProjection, ...]:
-    def gaps_of(revision: ActivityAssetRevision) -> tuple[M100ClaimGap, ...]:
-        if revision.asset_kind in bound_kinds:
-            return m100_claim_gaps(revision, history, forecast=forecast, tax_year=tax_year)
-        unbound = m100_unbound_box_gap(revision, tax_year=tax_year)
-        return () if unbound is None else (unbound,)
-
-    return tuple(
-        M100ClaimGapProjection(
-            asset_id=gap.revision.asset_id,
-            kind=gap.kind,
-            covered_from=gap.covered_from,
-            covered_until=gap.covered_until,
-            accrued=gap.accrued,
-            words=m100_gap_words(
-                gap.kind,
-                name=names.get(gap.revision.asset_id),
-                covered_from=gap.covered_from,
-                covered_through=last_day_covered(gap.covered_until),
-                accrued=gap.accrued,
-                language=language,
-            ),
-            words_language=language,
-        )
-        for revision in current_revisions(history.revisions).values()
-        for gap in gaps_of(revision)
-    )
 
 
 def _year_end(tax_year: int) -> date:
@@ -854,8 +633,8 @@ class ActivityAssetOperations:
 
         material_m100 = m100(AssetKind.MATERIAL)
         intangible_m100 = m100(AssetKind.INTANGIBLE)
-        names = _asset_names(history)
-        m100_gaps = _m100_gaps(
+        names = asset_names(history)
+        m100_gaps = m100_gap_projections(
             history, self._forecast_operation, tax_year, frozenset(m100_boxes), names=names, language=language
         )
 
@@ -900,7 +679,7 @@ class ActivityAssetOperations:
             language,
         )
 
-        material_m130 = _m130_projection(
+        material_m130 = m130_projection(
             AssetKind.MATERIAL,
             accruals,
             m130_box,
@@ -908,7 +687,7 @@ class ActivityAssetOperations:
             box_name_for_kind(m130_name, AssetKind.MATERIAL, language),
             language,
         )
-        intangible_m130 = _m130_projection(
+        intangible_m130 = m130_projection(
             AssetKind.INTANGIBLE,
             accruals,
             m130_box,
@@ -924,7 +703,7 @@ class ActivityAssetOperations:
             intangible_m100_box_name=m100_name(intangible_m100),
             material_m130=material_m130,
             intangible_m130=intangible_m130,
-            left_out=_left_out((material_m130, intangible_m130), names, language),
+            left_out=left_out_of_handoff((material_m130, intangible_m130), names, language),
         )
 
     def _require_common_territory(self, period_end: date) -> None:
@@ -1057,11 +836,7 @@ class ActivityAssetOperations:
 
 
 __all__ = [
-    "ActivityAssetFilingHandoff",
     "ActivityAssetOperations",
     "ActivityAssetRegisterAuthority",
-    "M100ClaimGapProjection",
-    "M130AccrualProjection",
-    "M130Contribution",
     "SupersedingClaimRequest",
 ]

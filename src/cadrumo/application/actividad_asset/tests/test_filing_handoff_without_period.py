@@ -15,8 +15,9 @@ from pydantic import ValidationError
 from cadrumo.application.actividad_asset.activity_asset_contracts import ActivityAssetFilingHandoffRequest
 from cadrumo.application.actividad_asset.activity_asset_projections import ActivityAssetFilingHandoffProjection
 from cadrumo.application.actividad_asset.activity_asset_results import ActivityAssetFilingHandoffResult
+from cadrumo.application.actividad_asset.filing_handoff import ActivityAssetFilingHandoff
 from cadrumo.application.actividad_asset.operation_dtos import ActivityAssetFilingHandoffSnapshot
-from cadrumo.application.actividad_asset.operations import ActivityAssetFilingHandoff, ActivityAssetOperations
+from cadrumo.application.actividad_asset.operations import ActivityAssetOperations
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.period import Period
 from cadrumo.domain.contribuyente.tax_residence import ResidenceTerritory

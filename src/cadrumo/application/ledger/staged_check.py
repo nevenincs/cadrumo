@@ -464,6 +464,38 @@ def _staged_state(row: LedgerStagedRow, transaction: Transaction) -> _StagedStat
     )
 
 
+def _amount_blockers(
+    amount: str | None,
+    *,
+    gross_fields: dict[str, str | None],
+    recargo_amount: Decimal | None,
+    direction: TransactionDirection | None,
+    operation: PinnedAuthorityOperation | None,
+    check_gross: bool,
+) -> list[_Blocked]:
+    """The amount's own refusal: a signed cell, else the gross check where it is asked for."""
+    signed = _signed_amount_blocker(amount)
+    if signed is not None:
+        return [signed]
+    if not check_gross:
+        return []
+    gross = _gross_blocker(gross_fields, recargo_amount=recargo_amount, direction=direction, operation=operation)
+    return [] if gross is None else [gross]
+
+
+def _sends_classification(row: LedgerStagedRow, state: _StagedState, routed: set[WriteRoute | None]) -> bool:
+    """Whether saving the row's staged work writes a classification, and so resends its share."""
+    return bool(routed & {"bulk", "classify"}) or (row.m210_staged and state.classified)
+
+
+def _stored_transfer_blockers(row: LedgerStagedRow, transaction: Transaction, state: _StagedState) -> list[_Blocked]:
+    """The transfer refusal of a row staged as an internal transfer, else nothing."""
+    if state.direction is not TransactionDirection.INTERNAL_TRANSFER:
+        return []
+    blocker = _transfer_blocker(row, transaction, state.classification, state.after)
+    return [] if blocker is None else [blocker]
+
+
 def _row_findings(
     row: LedgerStagedRow,
     transaction: Transaction,
@@ -481,32 +513,28 @@ def _row_findings(
 
     # A classification write resends the share, so a missing one refuses the whole row.
     routed: set[WriteRoute | None] = {route.route for route in routes}
-    sends_classification = bool(routed & {"bulk", "classify"}) or (row.m210_staged and state.classified)
-    share_blockers, notes = _share_findings(row, state.classification, state.after, routed, sends_classification)
+    share_blockers, notes = _share_findings(
+        row, state.classification, state.after, routed, _sends_classification(row, state, routed)
+    )
     blockers.extend(share_blockers)
 
     # Notes keep the order of the share notes, then the new identity.
-    transfer = state.direction is TransactionDirection.INTERNAL_TRANSFER
-    transfer_blocker = _transfer_blocker(row, transaction, state.classification, state.after) if transfer else None
-    if transfer_blocker is not None:
-        blockers.append(transfer_blocker)
+    blockers.extend(_stored_transfer_blockers(row, transaction, state))
 
     # A signed amount is read from the STAGED cell, never from the stored
     # facts: what a store holds is the writer's business, and a row already
     # kept there is not held back by a cell nobody touched.
     staged_amount = next((cell.value for cell in row.cells if cell.field == "amount"), None)
-    signed = _signed_amount_blocker(staged_amount)
-    if signed is not None:
-        blockers.append(signed)
-    elif row.cells:
-        gross = _gross_blocker(
-            state.after,
+    blockers.extend(
+        _amount_blockers(
+            staged_amount,
+            gross_fields=state.after,
             recargo_amount=transaction.recargo_amount,
             direction=state.direction,
             operation=operation,
+            check_gross=bool(row.cells),
         )
-        if gross is not None:
-            blockers.append(gross)
+    )
 
     identity = staged_identity_fields(row, state.before, state.after)
     if identity:
@@ -611,18 +639,16 @@ def check_draft(
         transfer_blocker = _draft_transfer_blocker(fields, classification)
         if transfer_blocker is not None:
             blockers.append(transfer_blocker)
-    signed = _signed_amount_blocker(fields.get("amount"))
-    if signed is not None:
-        blockers.append(signed)
-    else:
-        gross = _gross_blocker(
-            fields,
+    blockers.extend(
+        _amount_blockers(
+            fields.get("amount"),
+            gross_fields=fields,
             recargo_amount=_decimal(fields.get("recargo_amount")),
             direction=direction,
             operation=operation,
+            check_gross=True,
         )
-        if gross is not None:
-            blockers.append(gross)
+    )
     return LedgerStagedDraftAnswer(
         key=draft.key,
         takes_expense_category=direction is not None and takes_expense_category(direction, has_purchase_evidence=False),
