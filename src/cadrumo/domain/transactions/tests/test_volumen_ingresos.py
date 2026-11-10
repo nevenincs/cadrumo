@@ -16,6 +16,7 @@ from ....core.tipos_actividad import TipoActividad
 from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.facts.payloads import EntitySetFactPayload
 from ...calculations.registry.governed_fact_scope import GovernedFactSource
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..errors import TransactionValidationError
 from ..tipo_actividad_partitions import tipo_actividad_code_set
@@ -56,7 +57,12 @@ def test_the_predicate_splits_where_the_instrucciones_split(
     because the interesting pair is precisely the one a sample would be tempted to
     treat as interchangeable.
     """
-    assert counts_toward_volumen_de_ingresos(concepto, effective_date=date(2026, 4, 1), authority=authority) is counts
+    assert (
+        counts_toward_volumen_de_ingresos(
+            concepto, effective_date=date(filing_year_envelope().horizon, 4, 1), authority=authority
+        )
+        is counts
+    )
 
 
 def test_the_two_subvencion_members_land_on_opposite_sides(authority: GovernedFactSource) -> None:
@@ -68,10 +74,14 @@ def test_the_two_subvencion_members_land_on_opposite_sides(authority: GovernedFa
     volume. Stated as its own test so the failure names the reason.
     """
     assert counts_toward_volumen_de_ingresos(
-        ConceptoIngreso.from_registry("subvencion_corriente"), effective_date=date(2026, 4, 1), authority=authority
+        ConceptoIngreso.from_registry("subvencion_corriente"),
+        effective_date=date(filing_year_envelope().horizon, 4, 1),
+        authority=authority,
     )
     assert not counts_toward_volumen_de_ingresos(
-        ConceptoIngreso.from_registry("subvencion_capital"), effective_date=date(2026, 4, 1), authority=authority
+        ConceptoIngreso.from_registry("subvencion_capital"),
+        effective_date=date(filing_year_envelope().horizon, 4, 1),
+        authority=authority,
     )
 
 
@@ -82,7 +92,7 @@ def test_an_undeclared_concept_is_included_rather_than_dropped() -> None:
     volume -- the silent under-declaration this project treats as its worst failure
     mode. The cost, an unmarked capital subsidy over-declaring, is the tolerable side.
     """
-    assert counts_toward_volumen_de_ingresos(None, effective_date=date(2026, 4, 1)) is True
+    assert counts_toward_volumen_de_ingresos(None, effective_date=date(filing_year_envelope().horizon, 4, 1)) is True
 
 
 def test_the_registry_exclusion_set_agrees_with_the_typed_one() -> None:
@@ -110,10 +120,12 @@ def test_the_modelo_131_activity_selector_is_not_the_art_95_one(authority: Gover
     art. 95's agricultural/livestock set has no forestry code. Reusing it for a
     Modelo 131 casilla would therefore drop a forestry filer's quarterly volume.
     """
-    m131 = tipo_actividad_code_set(_ACTIVITY_FACT_ID, effective_date=date(2026, 4, 1), authority=authority)
+    m131 = tipo_actividad_code_set(
+        _ACTIVITY_FACT_ID, effective_date=date(filing_year_envelope().horizon, 4, 1), authority=authority
+    )
     art_95_agrarian = tipo_actividad_code_set(
         "rirpf-art-95:selector-m036-actividades-agricolas-ganaderas",
-        effective_date=date(2026, 4, 1),
+        effective_date=date(filing_year_envelope().horizon, 4, 1),
         authority=authority,
     )
 
@@ -138,7 +150,9 @@ def test_pesquera_is_absent_because_the_form_is_narrower_than_article_110(
     modelling an activity this form cannot present -- and would then face the
     ``B04`` mejillón question that the current set deliberately never raises.
     """
-    declared = tipo_actividad_code_set(_ACTIVITY_FACT_ID, effective_date=date(2026, 4, 1), authority=authority)
+    declared = tipo_actividad_code_set(
+        _ACTIVITY_FACT_ID, effective_date=date(filing_year_envelope().horizon, 4, 1), authority=authority
+    )
 
     assert TipoActividad.B05_PESQUERA not in declared
     assert TipoActividad.B04_PRODUCCION_DE_MEJILLON not in declared
@@ -157,7 +171,7 @@ def test_a_concept_the_vocabulary_does_not_declare_is_refused_not_counted(
     retired = ConceptoIngreso.from_registry("retired_concept")
 
     with pytest.raises(TransactionValidationError) as refusal:
-        predicate(retired, effective_date=date(2026, 4, 1), authority=authority)
+        predicate(retired, effective_date=date(filing_year_envelope().horizon, 4, 1), authority=authority)
 
     assert "concepto_ingreso" in str(refusal.value)
     assert "retired_concept" in str(refusal.value)
