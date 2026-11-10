@@ -14,8 +14,8 @@ import pytest
 from textual.pilot import Pilot
 from textual.widgets import Static
 
+from ......application.modelo.work_form_field_vocabulary import ModeloFormEditability
 from ......application.modelo.work_form_models import (
-    ModeloFormEditability,
     ModeloFormField,
     ModeloFormFieldBlock,
     ModeloWorkForm,

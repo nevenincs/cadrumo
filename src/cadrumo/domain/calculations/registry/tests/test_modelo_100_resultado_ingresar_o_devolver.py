@@ -1,4 +1,4 @@
-"""Box 0700 of the 2025 Modelo 100 is the declared amount payable or refundable, derived from 0670 or 0695.
+"""Box 0700 of the newest authored Modelo 100 is the declared amount payable or refundable, derived from 0670 or 0695.
 
 The official record design names the element RESINGDEV "Resultado a ingresar o
 a devolver (casilla [0670] o casilla [0695] de la declaración)". The box is the
@@ -26,11 +26,12 @@ from ..formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from ..ids import BindingId
 from ..schema import RegistrySnapshot
 from ..schema_input_kind import InputKind
+from .authored_editions import newest_authored_edition
 from .modelo_100_registry_support import neutral_binding_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_YEAR = 2025
+_YEAR = newest_authored_edition("100")
 _SALARY: CasillaId = validated_casilla_id("0003", surface="_SALARY")
 _RESULT_OF_THE_RETURN: CasillaId = validated_casilla_id("0670", surface="_RESULT_OF_THE_RETURN")
 _SUSPENDED_PAYABLE: CasillaId = validated_casilla_id("0693", surface="_SUSPENDED_PAYABLE")
@@ -42,7 +43,7 @@ _WITHHELD_ON_EMPLOYMENT: BindingId = "renta-retencion-soportada-trabajo"
 
 @pytest.fixture
 def snapshot(registry_snapshot: Callable[..., RegistrySnapshot]) -> RegistrySnapshot:
-    """The 2025 edition at calculation grade: these tests assert the derivation, never filing eligibility."""
+    """The newest authored edition at calculation grade: these tests assert the derivation, never filing eligibility."""
     return registry_snapshot("100", _YEAR, "0A", grade=RegistryAuthorityGrade.CALCULATION)
 
 

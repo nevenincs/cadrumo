@@ -31,9 +31,9 @@ from textual.content import Content
 from textual.screen import ModalScreen
 from textual.widgets import Button, Checkbox, Static
 
+from .....application.modelo.work_form_field_vocabulary import ModeloFormOrigin
 from .....application.modelo.work_form_models import (
     ModeloFormField,
-    ModeloFormOrigin,
     confirmable,
     typed_by_the_filer,
 )

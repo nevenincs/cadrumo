@@ -753,7 +753,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m840-2003.pagina01.f064"
 kind = "casilla"
-casilla_id = "act.nota-agrupacion-1"
+casilla_id = "act.nota-agrupacion-2"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -765,7 +765,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m840-2003.pagina01.f065"
 kind = "casilla"
-casilla_id = "act.nota-agrupacion-1"
+casilla_id = "act.nota-agrupacion-3"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -789,7 +789,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m840-2003.pagina01.f067"
 kind = "casilla"
-casilla_id = "act.nota-grupo-1"
+casilla_id = "act.nota-grupo-2"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -801,7 +801,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m840-2003.pagina01.f068"
 kind = "casilla"
-casilla_id = "act.nota-grupo-1"
+casilla_id = "act.nota-grupo-3"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -825,7 +825,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m840-2003.pagina01.f070"
 kind = "casilla"
-casilla_id = "act.nota-epigrafe-1"
+casilla_id = "act.nota-epigrafe-2"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -837,7 +837,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m840-2003.pagina01.f071"
 kind = "casilla"
-casilla_id = "act.nota-epigrafe-1"
+casilla_id = "act.nota-epigrafe-3"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -980,7 +980,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m840-2003.pagina01.f083"
 kind = "casilla"
-casilla_id = "act.causa-baja"
+casilla_id = "act.causa-variacion"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]

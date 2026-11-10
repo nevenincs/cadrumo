@@ -501,7 +501,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "ley"
-corpus_ref = "corpus/normatives/html/ley-19-1991-art-37.html#art-37"
+corpus_ref = "corpus/normatives/html/ley-19-1991-art-37.html#a37"
 document_id = "BOE-A-1991-14392"
 article = "37"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1991-14392#a37"

@@ -20,6 +20,12 @@ locale key both come from
 same authority the in-handler guard consults. The in-handler guard stays --- it
 is the one that fires once a profile IS active, and it is reached through paths
 that do not pass this gate.
+
+The same seam keeps a calculate option on the modelo that declares it. The
+Modelo 303 filing-evidence options (the joint-return election and the Modelo 390
+attestation pair) have no meaning on another modelo's calculation; refusing them
+here, and again once the handler has read the work unit's own modelo, ends the
+command before any calculation is submitted.
 """
 
 from __future__ import annotations
@@ -34,6 +40,12 @@ if TYPE_CHECKING:
 #: Schema identity of the verb whose modelo argument is decidable on its own.
 _WORK_CREATE_IDENTITY = "modelo.work.create"
 
+#: Schema identity of the calculation verb that carries modelo-specific options.
+_WORK_CALCULATE_IDENTITY = "modelo.work.calculate"
+
+#: Locale key of the refusal for a filing-evidence option supplied to another modelo.
+_FILING_EVIDENCE_OPTION_SCOPE_LOCALE_KEY = "cli.app.modelo.work.filing_evidence_option_other_modelo"
+
 #: Parameter carrying the requested modelo code on that verb.
 _MODELO_PARAMETER = "modelo"
 
@@ -44,6 +56,43 @@ _MODELO_PARAMETER = "modelo"
 #: handler already establishes this precedence by parsing the region first, and
 #: this seam preserves it rather than inverting it.
 _CAUSANTE_CCAA_PARAMETER = "causante_ccaa_raw"
+
+
+def refuse_filing_evidence_options_for_other_modelo(modelo: str, arguments: Mapping[str, object]) -> None:
+    """Refuse the Modelo 303 filing-evidence options on a calculation of any other modelo.
+
+    The option names are the fields of the evidence request the calculation
+    carries, and the modelo they belong to is the one that evidence's owner
+    admits it for, so neither is restated here. A supplied option is one the
+    operator typed: an unsupplied option is ``None``.
+
+    Args:
+        modelo: The modelo the calculation targets.
+        arguments: The parsed arguments for this invocation.
+
+    Raises:
+        CliRefusedBoundaryError: When an option is supplied for another modelo.
+    """
+    from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
+    from ...application.modelo.m303_filing_evidence import m303_filing_evidence_modelo
+    from ...application.modelo.work_calculation_contracts import ModeloWorkCalculateOrdinaryM303EvidenceRequestV2
+
+    supplied = tuple(
+        f"--{name.replace('_', '-')}"
+        for name in ModeloWorkCalculateOrdinaryM303EvidenceRequestV2.model_fields
+        if arguments.get(name) is not None
+    )
+    if not supplied:
+        return
+    owner = m303_filing_evidence_modelo()
+    requested = modelo.strip()
+    if requested == owner:
+        return
+    raise CliRefusedBoundaryError(
+        translated_message=_FILING_EVIDENCE_OPTION_SCOPE_LOCALE_KEY,
+        context={"modelo": requested, "applies_to": owner, "options": ", ".join(supplied)},
+    )
 
 
 def refuse_on_arguments_alone(spec: CommandSpec, arguments: Mapping[str, object]) -> None:
@@ -60,7 +109,13 @@ def refuse_on_arguments_alone(spec: CommandSpec, arguments: Mapping[str, object]
 
     from ...application.modelo.work_create_policy import modelo_work_create_refusal_locale_key
 
-    if (spec.result_schema.identity or spec.key) != _WORK_CREATE_IDENTITY:
+    identity = spec.result_schema.identity or spec.key
+    if identity == _WORK_CALCULATE_IDENTITY:
+        calculated = arguments.get(_MODELO_PARAMETER)
+        if isinstance(calculated, str):
+            refuse_filing_evidence_options_for_other_modelo(calculated, arguments)
+        return
+    if identity != _WORK_CREATE_IDENTITY:
         return
     causante_ccaa = arguments.get(_CAUSANTE_CCAA_PARAMETER)
     if isinstance(causante_ccaa, str):
@@ -78,4 +133,4 @@ def refuse_on_arguments_alone(spec: CommandSpec, arguments: Mapping[str, object]
     raise CliRefusedBoundaryError(translated_message=locale_key, context={"modelo": modelo_code})
 
 
-__all__ = ["refuse_on_arguments_alone"]
+__all__ = ["refuse_filing_evidence_options_for_other_modelo", "refuse_on_arguments_alone"]

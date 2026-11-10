@@ -48,8 +48,12 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.iva.refund_eligibility import RefundEligibility, RefundEligibilityOutcome
 from .value_presentation import format_casilla_value
 from .work_form_declaration_facts import AMOUNTLESS_RESULT_DIRECTIONS, ModeloFormResultDirection
+from .work_form_field_vocabulary import ModeloFormOrigin
 from .work_form_findings import ModeloFormAttention
-from .work_form_models import ModeloFormField, ModeloFormOrigin, ModeloWorkForm
+from .work_form_models import (
+    ModeloFormField,
+    ModeloWorkForm,
+)
 from .work_form_next_step import (
     blocking_count,
     check_count,

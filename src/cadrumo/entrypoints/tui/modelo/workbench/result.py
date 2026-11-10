@@ -22,13 +22,15 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, DataTable, Static
 
-from .....application.modelo.work_form_models import (
+from .....application.modelo.work_form_field_vocabulary import (
     FED_BY_A_SOURCE,
-    ModeloFormField,
     ModeloFormOrigin,
     ModeloFormScalar,
-    ModeloWorkForm,
     address_key,
+)
+from .....application.modelo.work_form_models import (
+    ModeloFormField,
+    ModeloWorkForm,
 )
 from .....application.modelo.work_form_service import ModeloFormValueChangeV1
 from .....core.external_constants import OutputLanguage

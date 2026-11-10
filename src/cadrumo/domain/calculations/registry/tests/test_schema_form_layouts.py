@@ -33,6 +33,7 @@ from ..schema_form_layouts import (
     FormSectionDefinition,
     FormUnplacedReason,
 )
+from .authored_editions import authored_revisions, filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -63,7 +64,7 @@ def _layout(**overrides: object) -> FormLayoutDefinition:
     )
     payload: dict[str, object] = {
         "id": "form-layout",
-        "revision_id": "2025",
+        "revision_id": str(authored_revisions("303")[-1].id),
         "seed_source": "export_record_design",
         "generator_version": 1,
         "source_state_digest": _DIGEST,
@@ -217,7 +218,11 @@ def test_page_conditions_carry_exactly_their_declared_operand() -> None:
 
 
 def test_review_state_binds_a_reviewer_to_a_review_claim() -> None:
-    reviewed = FormLayoutReview(state=FormLayoutReviewState.REVIEWED, reviewer="reviewer", reviewed_at=date(2026, 9, 1))
+    reviewed = FormLayoutReview(
+        state=FormLayoutReviewState.REVIEWED,
+        reviewer="reviewer",
+        reviewed_at=date(filing_year_envelope().horizon, 9, 1),
+    )
     assert reviewed.reviewer == "reviewer"
     with pytest.raises(ValidationError, match="names its reviewer"):
         FormLayoutReview(state=FormLayoutReviewState.REVIEWED, reviewer="reviewer")

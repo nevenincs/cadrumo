@@ -4,8 +4,11 @@ import pytest
 
 from ..errors import RegistryValidationError
 from ..lineage_attestation import LineageAttestation, validate_lineage_attestations
+from .authored_editions import authored_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_FROM, _TO = (str(revision.id) for revision in authored_revisions("100")[-2:])
 
 
 def _claim() -> LineageAttestation:
@@ -13,8 +16,8 @@ def _claim() -> LineageAttestation:
         {
             "family": "casillas",
             "continuidad_id": "test-chain",
-            "from_revision": "2024",
-            "to_revision": "2025",
+            "from_revision": _FROM,
+            "to_revision": _TO,
             "origin": "grounded",
             "evidence": "Official fixture, page 1",
             "legal_refs": ("ley-58-2003:art-29",),
@@ -23,29 +26,29 @@ def _claim() -> LineageAttestation:
     )
 
 
-@pytest.mark.parametrize("ambiguous_revision", ["2024", "2025"])
+@pytest.mark.parametrize("ambiguous_revision", [_FROM, _TO])
 def test_ambiguous_attestation_target_is_refused(ambiguous_revision: str) -> None:
     members: dict[str, dict[str, tuple[str, ...]]] = {
-        "2024": {"casillas": ("test-chain",)},
-        "2025": {"casillas": ("test-chain",)},
+        _FROM: {"casillas": ("test-chain",)},
+        _TO: {"casillas": ("test-chain",)},
     }
     members[ambiguous_revision]["casillas"] = ("test-chain", "test-chain")
 
     with pytest.raises(RegistryValidationError, match=rf"2 targets in .* revision {ambiguous_revision!r}"):
         validate_lineage_attestations(
             (_claim(),),
-            predecessors={"2025": "2024"},
+            predecessors={_TO: _FROM},
             members_by_revision=members,
         )
 
 
 def test_dangling_attestation_target_is_refused() -> None:
-    with pytest.raises(RegistryValidationError, match="0 targets in target revision '2025'"):
+    with pytest.raises(RegistryValidationError, match=f"0 targets in target revision {_TO!r}"):
         validate_lineage_attestations(
             (_claim(),),
-            predecessors={"2025": "2024"},
+            predecessors={_TO: _FROM},
             members_by_revision={
-                "2024": {"casillas": ("test-chain",)},
-                "2025": {"casillas": ()},
+                _FROM: {"casillas": ("test-chain",)},
+                _TO: {"casillas": ()},
             },
         )

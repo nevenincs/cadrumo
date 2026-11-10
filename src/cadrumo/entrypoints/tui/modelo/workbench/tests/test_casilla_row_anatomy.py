@@ -15,17 +15,17 @@ import pytest
 from textual.app import App, ComposeResult
 
 from ......application.modelo.source_policy import SourceFamily
-from ......application.modelo.work_form_models import (
+from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormBlocker,
     ModeloFormCasillaAddressV1,
     ModeloFormEarlierFiling,
     ModeloFormEditability,
-    ModeloFormField,
     ModeloFormOrigin,
     ModeloFormText,
     ModeloFormTextDisclosure,
     ModeloFormValueSource,
 )
+from ......application.modelo.work_form_models import ModeloFormField
 from ......application.modelo.work_form_wording import origin_words
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage

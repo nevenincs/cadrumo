@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import pytest
 
+from .authored_editions import authored_revisions, open_ended_revision
 from .registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -100,11 +101,13 @@ def test_an_all_informational_casilla_set_is_not_a_parser_fingerprint() -> None:
         if revision.casillas and all(str(getattr(c, "input_kind", "")) == "informational" for c in revision.casillas)
     }
 
-    assert "840/2003-y-siguientes" in all_informational, sorted(all_informational)
-    assert "390/2021" in all_informational, sorted(all_informational)
+    open_ended_840 = str(open_ended_revision("840").id)
+    oldest_390 = str(authored_revisions("390")[0].id)
+    assert f"840/{open_ended_840}" in all_informational, sorted(all_informational)
+    assert f"390/{oldest_390}" in all_informational, sorted(all_informational)
 
     modelo_840 = next(m for m in bundled_registry_tree()[0] if m.id == "840")
-    revision = modelo_840.revisions["2003-y-siguientes"]
+    revision = modelo_840.revisions[open_ended_840]
 
     assert revision.export_layouts, "modelo 840 lost its layout, so it no longer shows an all-informational set files"
     # 94 once the rows the design reserves for the Administracion became fillers.

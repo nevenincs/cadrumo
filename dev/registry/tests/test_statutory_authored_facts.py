@@ -17,6 +17,7 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
     resolve_governed_fact,
 )
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.fact_loader import load_governed_facts
 from ..compiler.fact_providers import compile_registered_fact_providers
@@ -86,15 +87,29 @@ def test_authored_statutory_facts_enroll_every_retired_declaration() -> None:
     assert sum(fact.family is GovernedFactFamily.SCALAR for fact in statutory_facts.values()) == 30
 
 
+#: The reduced multiple-payer limit as the authored table states it, oldest year first:
+#: the oracle is the ordered sequence of annual amounts, whatever calendar years the table spans.
+_REDUCED_LIMIT_AMOUNTS = (
+    *(Decimal("14000"),) * 4,
+    Decimal("15000"),
+    *(Decimal("15876"),) * 3,
+)
+
+
+def _schedule_by_year(resolved: ResolvedMappingFact) -> tuple[tuple[int, Decimal], ...]:
+    return tuple(sorted((entry.key, entry.value) for entry in resolved.payload.entries))
+
+
 def test_authored_statutory_facts_preserve_values_and_provenance() -> None:
     catalogue = _catalogue()
+    effective = date(filing_year_envelope().floor, 12, 31)
 
     threshold = resolve_governed_fact(
         catalogue,
         ScalarFactQuery(
             fact_id="m347-counterparty-declaration-threshold",
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date(2025, 12, 31),
+            effective_date=effective,
         ),
         authority_digest="a" * 64,
         support=committed_supported_filing_years(),
@@ -104,7 +119,7 @@ def test_authored_statutory_facts_preserve_values_and_provenance() -> None:
         MappingFactQuery(
             fact_id="lirpf-work-income-multiple-pagadores-reduced-limit",
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date(2025, 12, 31),
+            effective_date=effective,
         ),
         authority_digest="b" * 64,
         support=committed_supported_filing_years(),
@@ -115,16 +130,10 @@ def test_authored_statutory_facts_preserve_values_and_provenance() -> None:
     assert threshold.payload.value == Decimal("3005.06")
     assert threshold.legal_refs == ("rd-1065-2007:art-33",)
     assert threshold.source_refs == ("boe-rd-1065-2007-statutory-facts",)
-    assert dict((entry.key, entry.value) for entry in schedule.payload.entries) == {
-        2019: Decimal("14000"),
-        2020: Decimal("14000"),
-        2021: Decimal("14000"),
-        2022: Decimal("14000"),
-        2023: Decimal("15000"),
-        2024: Decimal("15876"),
-        2025: Decimal("15876"),
-        2026: Decimal("15876"),
-    }
+    by_year = _schedule_by_year(schedule)
+    years = tuple(year for year, _ in by_year)
+    assert years == tuple(range(years[0], years[0] + len(_REDUCED_LIMIT_AMOUNTS)))
+    assert tuple(amount for _, amount in by_year) == _REDUCED_LIMIT_AMOUNTS
 
 
 def test_authored_statutory_facts_retain_fact_specific_evidence_and_temporal_axes() -> None:
@@ -139,12 +148,25 @@ def test_authored_statutory_facts_retain_fact_specific_evidence_and_temporal_axe
 
 
 def test_authored_reduced_multiple_payer_limit_projects_forward_after_last_grounded_year() -> None:
+    fact_id = "lirpf-work-income-multiple-pagadores-reduced-limit"
+    grounded = resolve_governed_fact(
+        _catalogue(),
+        MappingFactQuery(
+            fact_id=fact_id,
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=date(filing_year_envelope().floor, 12, 31),
+        ),
+        authority_digest="c" * 64,
+        support=committed_supported_filing_years(),
+    )
+    assert isinstance(grounded, ResolvedMappingFact)
+    first_year, last_year = (_schedule_by_year(grounded)[index][0] for index in (0, -1))
     resolved = resolve_governed_fact(
         _catalogue(),
         MappingFactQuery(
-            fact_id="lirpf-work-income-multiple-pagadores-reduced-limit",
+            fact_id=fact_id,
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date(2027, 1, 1),
+            effective_date=date(last_year + 1, 1, 1),
         ),
         authority_digest="c" * 64,
         support=committed_supported_filing_years(),
@@ -152,19 +174,10 @@ def test_authored_reduced_multiple_payer_limit_projects_forward_after_last_groun
 
     assert isinstance(resolved, ResolvedMappingFact)
     assert resolved.projection_direction == "forward"
-    assert resolved.projected_from_date == date(2026, 12, 31)
-    assert resolved.variant_id.endswith("2019-2026")
+    assert resolved.projected_from_date == date(last_year, 12, 31)
+    assert resolved.variant_id.endswith(f"{first_year}-{last_year}")
     assert resolved.source_refs == ("boe-lirpf-statutory-facts",)
-    assert dict((entry.key, entry.value) for entry in resolved.payload.entries) == {
-        2019: Decimal("14000"),
-        2020: Decimal("14000"),
-        2021: Decimal("14000"),
-        2022: Decimal("14000"),
-        2023: Decimal("15000"),
-        2024: Decimal("15876"),
-        2025: Decimal("15876"),
-        2026: Decimal("15876"),
-    }
+    assert tuple(amount for _, amount in _schedule_by_year(resolved)) == _REDUCED_LIMIT_AMOUNTS
 
 
 def test_spanish_tax_id_person_checks_remain_bound_to_official_algorithm_evidence() -> None:

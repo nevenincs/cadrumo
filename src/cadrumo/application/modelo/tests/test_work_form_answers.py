@@ -31,14 +31,16 @@ from ..edit_admission import permitted_binding_entry
 from ..edit_models import ModeloEditWritableBindingOverrideSurfaceEntryV1
 from ..row_filled_bindings import row_filled_binding_ids
 from ..work_form import build_modelo_work_form
-from ..work_form_models import (
+from ..work_form_field_vocabulary import (
     ModeloFormBindingAddressV1,
     ModeloFormEditability,
-    ModeloFormField,
     ModeloFormOrigin,
-    ModeloFormOutlineKind,
     ModeloFormStanding,
     ModeloFormTextDisclosure,
+)
+from ..work_form_models import (
+    ModeloFormField,
+    ModeloFormOutlineKind,
     ModeloWorkForm,
 )
 from ..work_form_service import modelo_form_snapshot

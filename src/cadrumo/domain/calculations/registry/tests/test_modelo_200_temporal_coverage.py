@@ -60,7 +60,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 # The last exercise before LIS DT 44ª (Ley 7/2024) replaced the art. 29 flat 23 % pyme
 # rate with its tranche scale; its window is the historical back-fill under test.
-_PRE_TRANCHE_PYME_EXERCISE = published_legal_reference("ley-27-2014:dt-44").effective_from.year - 1
+_FIRST_TRANCHE_EXERCISE = published_legal_reference("ley-27-2014:dt-44").effective_from.year
+_PRE_TRANCHE_PYME_EXERCISE = _FIRST_TRANCHE_EXERCISE - 1
 _DISPATCH_BINDING = "modelo-200-profile-legal-entity-form"
 _M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id(
     "DP200012:00501", surface="_M200_RESULTADO_CONTABLE_CASILLA"
@@ -92,7 +93,9 @@ def _base_inputs(base: Decimal) -> dict[CasillaId, Decimal]:
 
 
 def _snapshot_2024():
-    return published_snapshot("200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
+    return published_snapshot(
+        "200", filing_year=_FIRST_TRANCHE_EXERCISE, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -239,7 +242,7 @@ def test_cuota_integra_is_emitted_by_engine_without_user_input() -> None:
             "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
             "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
         },
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": date(_PRE_TRANCHE_PYME_EXERCISE, 12, 31)},
     )
     assert _M200_CUOTA_INTEGRA_CASILLA in result.values, (
         "formula engine must emit DP200014:00562 in result.values; "

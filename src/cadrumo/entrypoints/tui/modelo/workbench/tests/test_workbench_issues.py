@@ -24,19 +24,21 @@ from textual.content import Content
 from textual.widgets import OptionList, Static
 
 from ......application.modelo.work_form_declaration_facts import ModeloFormCalculationNote
+from ......application.modelo.work_form_field_vocabulary import (
+    ModeloFormCasillaAddressV1,
+    ModeloFormOrigin,
+    ModeloFormText,
+    ModeloFormTextDisclosure,
+    address_key,
+)
 from ......application.modelo.work_form_findings import ModeloFormAttention, ModeloFormIssue
 from ......application.modelo.work_form_models import (
-    ModeloFormCasillaAddressV1,
     ModeloFormCounts,
     ModeloFormField,
     ModeloFormFieldBlock,
-    ModeloFormOrigin,
     ModeloFormPage,
     ModeloFormSection,
-    ModeloFormText,
-    ModeloFormTextDisclosure,
     ModeloWorkForm,
-    address_key,
     section_fields,
 )
 from ......core.config import override_settings

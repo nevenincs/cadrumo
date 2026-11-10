@@ -15,8 +15,9 @@ from decimal import Decimal
 import pytest
 
 from ......application.modelo.source_policy import SourceSurface
+from ......application.modelo.work_form_field_vocabulary import ModeloFormOrigin
 from ......application.modelo.work_form_findings import ModeloFormIssue
-from ......application.modelo.work_form_models import ModeloFormOrigin, ModeloWorkForm
+from ......application.modelo.work_form_models import ModeloWorkForm
 from ......core.config import override_settings
 from ......domain.modelos.verification_report import (
     ModeloVerificationFinding,

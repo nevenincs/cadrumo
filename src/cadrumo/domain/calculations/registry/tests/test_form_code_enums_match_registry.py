@@ -19,6 +19,7 @@ from .....core.result_disposition import ResultDisposition
 from ..authority import PinnedAuthorityOperation
 from ..form_codes import resolve_form_codes
 from ..m347_threshold import resolve_counterpart_operation_claves
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -42,7 +43,7 @@ def test_an_enum_holds_exactly_the_codes_its_fact_declares(
     assert {member.value for member in vocabulary} == resolve_form_codes(_FACT).codes(key)
 
 
-@pytest.mark.parametrize("day", [date(2025, 6, 30), date(2026, 6, 30)])
+@pytest.mark.parametrize("day", [date(year, 6, 30) for year in filing_year_envelope().years])
 def test_the_modelo_349_enum_holds_exactly_the_claves_the_calculation_admits(
     registry_authority: PinnedAuthorityOperation,
     day: date,

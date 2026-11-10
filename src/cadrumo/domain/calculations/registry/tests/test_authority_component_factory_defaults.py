@@ -11,8 +11,11 @@ from pydantic import BaseModel, Field
 from ..actividad_asset_disposal_bindings import ActivityAssetDisposalProvider
 from ..authority_artifact import ModeloRevisionComponentQuery
 from ..authority_component_codec import encode_authority_component
+from .authored_editions import newest_authored_edition, revision_covering
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+_REVISION_ID = str(revision_covering("100", newest_authored_edition("100")).id)
 
 
 def test_factory_backed_values_are_encoded_without_calling_the_factory() -> None:
@@ -30,7 +33,7 @@ def test_factory_backed_values_are_encoded_without_calling_the_factory() -> None
         unchanged: str = "default"
 
     component = Component.model_construct(resolved="100", items=[])
-    query = ModeloRevisionComponentQuery("100", "2025")
+    query = ModeloRevisionComponentQuery("100", _REVISION_ID)
     encoded = encode_authority_component(query, component)
     payload = json.loads(encoded)["payload"]
     assert payload == {"kind": "example", "resolved": "100", "items": []}
@@ -43,5 +46,5 @@ def test_governed_role_default_is_not_recomputed_during_publication() -> None:
     # The compiler has already materialized this value under its fact scope;
     # publishing the component does not itself borrow that scope.
     provider = ActivityAssetDisposalProvider.model_construct(modelo="100", target_casilla_id="0224")
-    encoded = encode_authority_component(ModeloRevisionComponentQuery("100", "2025"), provider)
+    encoded = encode_authority_component(ModeloRevisionComponentQuery("100", _REVISION_ID), provider)
     assert json.loads(encoded)["payload"]["modelo"] == "100"

@@ -21,7 +21,8 @@ from decimal import Decimal
 import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.transactions.enums import TransactionDirection
+from ....domain.transactions.classification_effects import fields_refused_by_classification
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.usage_ratios.model import UsageRatioProfile
 from ..action_ports import LedgerActionPorts
@@ -152,7 +153,12 @@ def test_the_count_reports_only_rows_the_roll_up_would_otherwise_have_taken(
     personal_foreign = _foreign(
         _eur_income("fx-personal", base=Decimal("5000.00")),
         currency="USD",
-    ).model_copy(update={"business_classification": "PERSONAL"})
+    ).model_copy(
+        update={
+            "business_classification": BusinessClassification.PERSONAL,
+            **dict.fromkeys(fields_refused_by_classification(BusinessClassification.PERSONAL)),
+        }
+    )
 
     report = _summarise(personal_foreign, operation=authority_operation)
 

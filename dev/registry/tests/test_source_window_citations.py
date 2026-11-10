@@ -31,6 +31,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..analysis.source_window_citations import (
     ROLES,
@@ -48,6 +49,24 @@ from ..conformance.loader_directory_mode_support import write_standard_manifest
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _LEGAL_REF: Final = "ley-58-2003:art-29"
+
+#: Four consecutive synthetic exercises the planted registries are written over.
+Y1: Final = filing_year_envelope().floor
+Y2: Final = Y1 + 1
+Y3: Final = Y2 + 1
+Y4: Final = Y3 + 1
+
+
+def _jan_1(year: int) -> str:
+    return date(year, 1, 1).isoformat()
+
+
+def _dec_31(year: int) -> str:
+    return date(year, 12, 31).isoformat()
+
+
+#: When an orden published after the third exercise took effect.
+_EFFECTIVE_AFTER_Y3: Final = date(Y4, 7, 1).isoformat()
 
 #: ``(applies_from, applies_to)`` per planted source; ``None`` leaves that side open.
 type SourceWindows = dict[str, tuple[str | None, str | None]]
@@ -174,9 +193,9 @@ class TestOneToothPerRole:
     """Each role is planted on its own and must classify as itself."""
 
     def test_a_governing_citation_outside_its_window_is_flagged(self, tmp_path: Path, modelo_dir: Path) -> None:
-        catalogues = build_catalogue(tmp_path / "legal", {"planted-base-order": ("2023-01-01", None)})
+        catalogues = build_catalogue(tmp_path / "legal", {"planted-base-order": (_jan_1(Y2), None)})
         write_revision(
-            modelo_dir, "2022", valid_from="2022-01-01", valid_to="2022-12-31", source_refs=["planted-base-order"]
+            modelo_dir, str(Y1), valid_from=_jan_1(Y1), valid_to=_dec_31(Y1), source_refs=["planted-base-order"]
         )
         findings, revisions, citations = scan([hydrate(modelo_dir)], catalogues)
         assert revisions == 1
@@ -205,13 +224,13 @@ class TestOneToothPerRole:
     def test_a_deadline_window_citing_the_filing_year_calendar_is_not_a_defect(
         self, tmp_path: Path, modelo_dir: Path
     ) -> None:
-        catalogues = build_catalogue(tmp_path / "legal", {"planted-calendario-2023": ("2023-01-01", "2023-12-31")})
+        catalogues = build_catalogue(tmp_path / "legal", {f"planted-calendario-{Y2}": (_jan_1(Y2), _dec_31(Y2))})
         write_revision(
             modelo_dir,
-            "2022",
-            valid_from="2022-01-01",
-            valid_to="2022-12-31",
-            deadline_source_refs=["planted-calendario-2023"],
+            str(Y1),
+            valid_from=_jan_1(Y1),
+            valid_to=_dec_31(Y1),
+            deadline_source_refs=[f"planted-calendario-{Y2}"],
         )
         findings, _, _ = scan([hydrate(modelo_dir)], catalogues)
         assert [f["role"] for f in findings] == ["presentation_calendar"]
@@ -224,12 +243,12 @@ class TestGoverningWins:
     def test_a_source_cited_both_in_a_deadline_window_and_in_a_casilla_is_governing(
         self, tmp_path: Path, modelo_dir: Path
     ) -> None:
-        catalogues = build_catalogue(tmp_path / "legal", {"planted-dr": ("2024-01-01", "2024-12-31")})
+        catalogues = build_catalogue(tmp_path / "legal", {"planted-dr": (_jan_1(Y3), _dec_31(Y3))})
         write_revision(
             modelo_dir,
-            "2023",
-            valid_from="2023-01-01",
-            valid_to="2023-12-31",
+            str(Y2),
+            valid_from=_jan_1(Y2),
+            valid_to=_dec_31(Y2),
             deadline_source_refs=["planted-dr"],
             casilla_source_refs=["planted-dr"],
         )
@@ -248,8 +267,8 @@ class TestNoFalsePositives:
     """A window that covers its citing revision produces nothing."""
 
     def test_an_overlapping_window_is_silent(self, tmp_path: Path, modelo_dir: Path) -> None:
-        catalogues = build_catalogue(tmp_path / "legal", {"planted-ok": ("2022-01-01", None)})
-        write_revision(modelo_dir, "2022", valid_from="2022-01-01", valid_to="2022-12-31", source_refs=["planted-ok"])
+        catalogues = build_catalogue(tmp_path / "legal", {"planted-ok": (_jan_1(Y1), None)})
+        write_revision(modelo_dir, str(Y1), valid_from=_jan_1(Y1), valid_to=_dec_31(Y1), source_refs=["planted-ok"])
         findings, _, citations = scan([hydrate(modelo_dir)], catalogues)
         assert citations == 1
         assert findings == []
@@ -257,15 +276,15 @@ class TestNoFalsePositives:
     def test_an_undeclared_window_makes_no_claim_to_contradict(self, tmp_path: Path, modelo_dir: Path) -> None:
         catalogues = build_catalogue(tmp_path / "legal", {"planted-unwindowed": (None, None)})
         write_revision(
-            modelo_dir, "2022", valid_from="2022-01-01", valid_to="2022-12-31", source_refs=["planted-unwindowed"]
+            modelo_dir, str(Y1), valid_from=_jan_1(Y1), valid_to=_dec_31(Y1), source_refs=["planted-unwindowed"]
         )
         findings, _, citations = scan([hydrate(modelo_dir)], catalogues)
         assert citations == 0, "a source with no window must not be counted as checked"
         assert findings == []
 
     def test_an_open_ended_revision_is_covered_by_an_open_ended_source(self, tmp_path: Path, modelo_dir: Path) -> None:
-        catalogues = build_catalogue(tmp_path / "legal", {"planted-open": ("2020-01-01", None)})
-        write_revision(modelo_dir, "2025", valid_from="2025-01-01", valid_to=None, source_refs=["planted-open"])
+        catalogues = build_catalogue(tmp_path / "legal", {"planted-open": (_jan_1(Y1), None)})
+        write_revision(modelo_dir, str(Y4), valid_from=_jan_1(Y4), valid_to=None, source_refs=["planted-open"])
         findings, _, _ = scan([hydrate(modelo_dir)], catalogues)
         assert findings == []
 
@@ -278,36 +297,36 @@ class TestInheritedCitations:
     ) -> None:
         # The base cites a design that covers 2024 and the successor's files say
         # nothing: it inherits the casilla, and with it the citation.
-        catalogues = build_catalogue(tmp_path / "legal", {"planted-design-2024": ("2024-01-01", "2024-12-31")})
+        catalogues = build_catalogue(tmp_path / "legal", {f"planted-design-{Y3}": (_jan_1(Y3), _dec_31(Y3))})
         write_revision(
             modelo_dir,
-            "2024",
-            valid_from="2024-01-01",
-            valid_to="2024-12-31",
-            casilla_source_refs=["planted-design-2024"],
+            str(Y3),
+            valid_from=_jan_1(Y3),
+            valid_to=_dec_31(Y3),
+            casilla_source_refs=[f"planted-design-{Y3}"],
         )
-        write_revision(modelo_dir, "2025", valid_from="2025-01-01", valid_to="2025-12-31", predecessor="2024")
+        write_revision(modelo_dir, str(Y4), valid_from=_jan_1(Y4), valid_to=_dec_31(Y4), predecessor=str(Y3))
         modelo = hydrate(modelo_dir)
-        assert modelo.revisions["2025"].casillas[0].source_refs == ("planted-design-2024",)
+        assert modelo.revisions[str(Y4)].casillas[0].source_refs == (f"planted-design-{Y3}",)
 
         findings, revisions, citations = scan([modelo], catalogues)
 
         assert revisions == 2
         assert citations == 2, "the base's own citation and the successor's inherited one are both measured"
         assert [(f["revision"], f["source"], f["role"]) for f in findings] == [
-            ("2025", "planted-design-2024", "governing_non_overlap")
+            (str(Y4), f"planted-design-{Y3}", "governing_non_overlap")
         ]
-        assert findings[0]["revision_span"] == ["2025-01-01", "2025-12-31"]
+        assert findings[0]["revision_span"] == [_jan_1(Y4), _dec_31(Y4)]
         assert findings[0]["cited_in"] == ["casillas#source_refs"]
 
     def test_an_inherited_citation_whose_window_covers_the_inheritor_is_silent(
         self, tmp_path: Path, modelo_dir: Path
     ) -> None:
-        catalogues = build_catalogue(tmp_path / "legal", {"planted-design": ("2024-01-01", None)})
+        catalogues = build_catalogue(tmp_path / "legal", {"planted-design": (_jan_1(Y3), None)})
         write_revision(
-            modelo_dir, "2024", valid_from="2024-01-01", valid_to="2024-12-31", casilla_source_refs=["planted-design"]
+            modelo_dir, str(Y3), valid_from=_jan_1(Y3), valid_to=_dec_31(Y3), casilla_source_refs=["planted-design"]
         )
-        write_revision(modelo_dir, "2025", valid_from="2025-01-01", valid_to="2025-12-31", predecessor="2024")
+        write_revision(modelo_dir, str(Y4), valid_from=_jan_1(Y4), valid_to=_dec_31(Y4), predecessor=str(Y3))
 
         findings, revisions, citations = scan([hydrate(modelo_dir)], catalogues)
 
@@ -321,35 +340,35 @@ class TestInheritedCitations:
         # has its own span to cover, so each is reported once; a source also
         # cited from a second family in one edition is still one finding there,
         # listing both families.
-        catalogues = build_catalogue(tmp_path / "legal", {"planted-design-2022": ("2022-01-01", "2022-12-31")})
+        catalogues = build_catalogue(tmp_path / "legal", {f"planted-design-{Y1}": (_jan_1(Y1), _dec_31(Y1))})
         write_revision(
             modelo_dir,
-            "2022",
-            valid_from="2022-01-01",
-            valid_to="2022-12-31",
-            casilla_source_refs=["planted-design-2022"],
+            str(Y1),
+            valid_from=_jan_1(Y1),
+            valid_to=_dec_31(Y1),
+            casilla_source_refs=[f"planted-design-{Y1}"],
         )
         write_revision(
             modelo_dir,
-            "2023",
-            valid_from="2023-01-01",
-            valid_to="2023-12-31",
-            predecessor="2022",
-            formula_source_refs=["planted-design-2022"],
+            str(Y2),
+            valid_from=_jan_1(Y2),
+            valid_to=_dec_31(Y2),
+            predecessor=str(Y1),
+            formula_source_refs=[f"planted-design-{Y1}"],
         )
-        write_revision(modelo_dir, "2024", valid_from="2024-01-01", valid_to="2024-12-31", predecessor="2023")
+        write_revision(modelo_dir, str(Y3), valid_from=_jan_1(Y3), valid_to=_dec_31(Y3), predecessor=str(Y2))
 
         findings, _, _ = scan([hydrate(modelo_dir)], catalogues)
 
-        assert [f["revision"] for f in findings] == ["2023", "2024"]
+        assert [f["revision"] for f in findings] == [str(Y2), str(Y3)]
         by_revision = {f["revision"]: sorted(f["cited_in"]) for f in findings}
-        assert by_revision["2023"] == ["casillas#source_refs", "formulas#source_refs"]
-        assert by_revision["2024"] == ["casillas#source_refs", "formulas#source_refs"]
+        assert by_revision[str(Y2)] == ["casillas#source_refs", "formulas#source_refs"]
+        assert by_revision[str(Y3)] == ["casillas#source_refs", "formulas#source_refs"]
 
     def test_only_modelo_selects_by_modelo_id(self, tmp_path: Path, modelo_dir: Path) -> None:
-        catalogues = build_catalogue(tmp_path / "legal", {"planted-base-order": ("2023-01-01", None)})
+        catalogues = build_catalogue(tmp_path / "legal", {"planted-base-order": (_jan_1(Y2), None)})
         write_revision(
-            modelo_dir, "2022", valid_from="2022-01-01", valid_to="2022-12-31", source_refs=["planted-base-order"]
+            modelo_dir, str(Y1), valid_from=_jan_1(Y1), valid_to=_dec_31(Y1), source_refs=["planted-base-order"]
         )
         modelo = hydrate(modelo_dir)
         assert scan([modelo], catalogues, only_modelo="123")[1:] == (0, 0)
@@ -371,15 +390,15 @@ class TestScreenLine:
         catalogues = build_catalogue(
             tmp_path / "legal",
             {
-                "planted-governing": ("2024-01-01", None),
-                "planted-calendar": ("2023-01-01", "2023-12-31"),
+                "planted-governing": (_jan_1(Y3), None),
+                "planted-calendar": (_jan_1(Y2), _dec_31(Y2)),
             },
         )
         write_revision(
             modelo_dir,
-            "2022",
-            valid_from="2022-01-01",
-            valid_to="2022-12-31",
+            str(Y1),
+            valid_from=_jan_1(Y1),
+            valid_to=_dec_31(Y1),
             source_refs=["planted-governing"],
             deadline_source_refs=["planted-calendar"],
         )
@@ -406,31 +425,31 @@ class TestSupersededAlongsideCurrent:
     ) -> None:
         catalogues = build_catalogue(
             tmp_path / "legal",
-            {"aeat-dr-190-2024": ("2024-01-01", "2024-12-31"), "aeat-dr-190-2025": ("2025-01-01", None)},
+            {f"aeat-dr-190-{Y3}": (_jan_1(Y3), _dec_31(Y3)), f"aeat-dr-190-{Y4}": (_jan_1(Y4), None)},
         )
         write_revision(
             modelo_dir,
-            "2025",
-            valid_from="2025-01-01",
+            str(Y4),
+            valid_from=_jan_1(Y4),
             valid_to=None,
-            source_refs=["aeat-dr-190-2024", "aeat-dr-190-2025"],
+            source_refs=[f"aeat-dr-190-{Y3}", f"aeat-dr-190-{Y4}"],
         )
         findings, _, _ = scan([hydrate(modelo_dir)], catalogues)
         assert [f["role"] for f in findings] == ["superseded_alongside_current"]
 
     def test_an_earlier_design_cited_alone_stays_a_governing_defect(self, tmp_path: Path, modelo_dir: Path) -> None:
-        catalogues = build_catalogue(tmp_path / "legal", {"aeat-dr-190-2024": ("2024-01-01", "2024-12-31")})
-        write_revision(modelo_dir, "2025", valid_from="2025-01-01", valid_to=None, source_refs=["aeat-dr-190-2024"])
+        catalogues = build_catalogue(tmp_path / "legal", {f"aeat-dr-190-{Y3}": (_jan_1(Y3), _dec_31(Y3))})
+        write_revision(modelo_dir, str(Y4), valid_from=_jan_1(Y4), valid_to=None, source_refs=[f"aeat-dr-190-{Y3}"])
         findings, _, _ = scan([hydrate(modelo_dir)], catalogues)
         assert [f["role"] for f in findings] == ["governing_non_overlap"], (
             "with no covering sibling the revision really does rest on a stale design"
         )
 
     def test_a_different_family_is_not_treated_as_a_sibling(self) -> None:
-        assert family_stem("aeat-dr-190-2024") == family_stem("aeat-dr-190-2025")
-        assert family_stem("aeat-dr-190-2024") != family_stem("aeat-dr-193-2024")
-        assert not has_current_sibling("aeat-dr-190-2024", {"aeat-dr-193-2025"})
-        assert has_current_sibling("aeat-dr-190-2024", {"aeat-dr-190-2025"})
+        assert family_stem(f"aeat-dr-190-{Y3}") == family_stem(f"aeat-dr-190-{Y4}")
+        assert family_stem(f"aeat-dr-190-{Y3}") != family_stem(f"aeat-dr-193-{Y3}")
+        assert not has_current_sibling(f"aeat-dr-190-{Y3}", {f"aeat-dr-193-{Y4}"})
+        assert has_current_sibling(f"aeat-dr-190-{Y3}", {f"aeat-dr-190-{Y4}"})
 
 
 class TestSupersessionHasADirection:
@@ -446,49 +465,49 @@ class TestSupersessionHasADirection:
         catalogues = build_catalogue(
             tmp_path / "legal",
             {
-                "aeat-calendario-contribuyente-2023": ("2023-01-01", "2023-12-31"),
-                "aeat-calendario-contribuyente-2024": ("2024-01-01", "2024-12-31"),
-                "aeat-calendario-contribuyente-2025": ("2025-01-01", "2025-12-31"),
+                f"aeat-calendario-contribuyente-{Y2}": (_jan_1(Y2), _dec_31(Y2)),
+                f"aeat-calendario-contribuyente-{Y3}": (_jan_1(Y3), _dec_31(Y3)),
+                f"aeat-calendario-contribuyente-{Y4}": (_jan_1(Y4), _dec_31(Y4)),
             },
         )
         write_revision(
             modelo_dir,
-            "2022",
-            valid_from="2022-01-01",
-            valid_to="2024-12-31",
+            str(Y1),
+            valid_from=_jan_1(Y1),
+            valid_to=_dec_31(Y3),
             deadline_source_refs=[
-                "aeat-calendario-contribuyente-2023",
-                "aeat-calendario-contribuyente-2024",
-                "aeat-calendario-contribuyente-2025",
+                f"aeat-calendario-contribuyente-{Y2}",
+                f"aeat-calendario-contribuyente-{Y3}",
+                f"aeat-calendario-contribuyente-{Y4}",
             ],
         )
         findings, _, _ = scan([hydrate(modelo_dir)], catalogues)
         assert [f["role"] for f in findings] == ["presentation_calendar"]
-        assert findings[0]["source"] == "aeat-calendario-contribuyente-2025"
+        assert findings[0]["source"] == f"aeat-calendario-contribuyente-{Y4}"
 
     def test_an_earlier_sibling_beside_a_covering_later_one_still_is(self) -> None:
-        assert has_current_sibling("aeat-dr-190-2024", {"aeat-dr-190-2025"})
-        assert not has_current_sibling("aeat-dr-190-2025", {"aeat-dr-190-2024"})
+        assert has_current_sibling(f"aeat-dr-190-{Y3}", {f"aeat-dr-190-{Y4}"})
+        assert not has_current_sibling(f"aeat-dr-190-{Y4}", {f"aeat-dr-190-{Y3}"})
 
     def test_a_family_with_no_trailing_year_is_left_to_the_role_logic(self) -> None:
-        assert trailing_year("aeat-dr-190-2024") == 2024
+        assert trailing_year(f"aeat-dr-190-{Y3}") == Y3
         assert trailing_year("aeat-modelo-190-procedure") is None
 
 
 class TestLegalWindowRole:
     """Legal references carry a period window too, and it was never checked."""
 
-    _GOVERNS_2024: Final = {"effective_from": "2025-07-01", "governs_periods_from": "2024-01-01"}
+    _GOVERNS_Y3: Final = {"effective_from": _EFFECTIVE_AFTER_Y3, "governs_periods_from": _jan_1(Y3)}
 
     def test_a_legal_ref_governing_other_periods_is_flagged(self, tmp_path: Path, modelo_dir: Path) -> None:
         catalogues = build_catalogue(
             tmp_path / "legal",
-            legal={"orden-planted:art-1": {**self._GOVERNS_2024, "governs_periods_to": "2024-12-31"}},
+            legal={"orden-planted:art-1": {**self._GOVERNS_Y3, "governs_periods_to": _dec_31(Y3)}},
         )
-        write_revision(modelo_dir, "2025", valid_from="2025-01-01", valid_to=None, legal_refs=["orden-planted:art-1"])
+        write_revision(modelo_dir, str(Y4), valid_from=_jan_1(Y4), valid_to=None, legal_refs=["orden-planted:art-1"])
         findings, _, _ = scan([hydrate(modelo_dir)], catalogues)
         assert [f["role"] for f in findings] == ["legal_window_non_overlap"]
-        assert findings[0]["source_window"] == ["2024-01-01", "2024-12-31"]
+        assert findings[0]["source_window"] == [_jan_1(Y3), _dec_31(Y3)]
 
     def test_an_entry_declaring_only_effectiveness_makes_no_period_claim(
         self, tmp_path: Path, modelo_dir: Path
@@ -497,10 +516,10 @@ class TestLegalWindowRole:
         # came into force; an orden published after the ejercicio it governs is
         # effective LATER than the periods it reaches.
         catalogues = build_catalogue(
-            tmp_path / "legal", legal={"orden-planted:art-1": {"effective_from": "2025-07-01"}}
+            tmp_path / "legal", legal={"orden-planted:art-1": {"effective_from": _EFFECTIVE_AFTER_Y3}}
         )
         write_revision(
-            modelo_dir, "2024", valid_from="2024-01-01", valid_to="2024-12-31", legal_refs=["orden-planted:art-1"]
+            modelo_dir, str(Y3), valid_from=_jan_1(Y3), valid_to=_dec_31(Y3), legal_refs=["orden-planted:art-1"]
         )
         findings, _, citations = scan([hydrate(modelo_dir)], catalogues)
         assert findings == []
@@ -509,10 +528,10 @@ class TestLegalWindowRole:
     def test_a_legal_ref_whose_periods_cover_the_revision_is_silent(self, tmp_path: Path, modelo_dir: Path) -> None:
         catalogues = build_catalogue(
             tmp_path / "legal",
-            legal={"orden-planted:art-1": {**self._GOVERNS_2024, "governs_periods_to": "2024-12-31"}},
+            legal={"orden-planted:art-1": {**self._GOVERNS_Y3, "governs_periods_to": _dec_31(Y3)}},
         )
         write_revision(
-            modelo_dir, "2024", valid_from="2024-01-01", valid_to="2024-12-31", legal_refs=["orden-planted:art-1"]
+            modelo_dir, str(Y3), valid_from=_jan_1(Y3), valid_to=_dec_31(Y3), legal_refs=["orden-planted:art-1"]
         )
         findings, _, _ = scan([hydrate(modelo_dir)], catalogues)
         assert findings == []
@@ -523,22 +542,22 @@ class TestLegalWindowRole:
         # family cites it.
         catalogues = build_catalogue(
             tmp_path / "legal",
-            legal={"orden-planted:art-1": {**self._GOVERNS_2024, "governs_periods_to": "2024-12-31"}},
+            legal={"orden-planted:art-1": {**self._GOVERNS_Y3, "governs_periods_to": _dec_31(Y3)}},
         )
         write_revision(
             modelo_dir,
-            "2025",
-            valid_from="2025-01-01",
-            valid_to="2025-12-31",
+            str(Y4),
+            valid_from=_jan_1(Y4),
+            valid_to=_dec_31(Y4),
             deadline_legal_refs=["orden-planted:art-1"],
         )
         findings, _, _ = scan([hydrate(modelo_dir)], catalogues)
         assert [f["role"] for f in findings] == ["legal_window_non_overlap"]
 
     def test_the_governed_window_comes_from_the_hydrated_catalogue_entry(self, tmp_path: Path) -> None:
-        catalogues = build_catalogue(tmp_path / "legal", legal={"orden-planted:art-1": {**self._GOVERNS_2024}})
+        catalogues = build_catalogue(tmp_path / "legal", legal={"orden-planted:art-1": {**self._GOVERNS_Y3}})
         entry = catalogues.legal["orden-planted:art-1"]
-        assert (entry.governs_periods_from, entry.governs_periods_to) == (date(2024, 1, 1), None)
+        assert (entry.governs_periods_from, entry.governs_periods_to) == (date(Y3, 1, 1), None)
 
 
 class TestConstructsNeedCalendarCorroboration:

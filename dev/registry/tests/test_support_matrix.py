@@ -35,6 +35,7 @@ from cadrumo.domain.calculations.registry.revision_order import ordered_revision
 from cadrumo.domain.calculations.registry.support_matrix import ModeloEntry, build_support_matrix
 
 from ..compiler.authority import compiled_bundled_authority
+from .authored_edition_support import authored_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -114,8 +115,9 @@ def test_row_reports_latest_revision_by_valid_from() -> None:
     entry = _entries()["100"]
 
     assert entry.revision_count >= 6
-    assert entry.latest_revision_id == "2025"
-    assert entry.supported_revision_ids[-1] == "2025"
+    latest = str(authored_revisions("100")[-1].id)
+    assert entry.latest_revision_id == latest
+    assert entry.supported_revision_ids[-1] == latest
     assert entry.supported_revision_ids == tuple(sorted(entry.supported_revision_ids))
 
 
@@ -127,17 +129,17 @@ def test_parallel_revisions_opening_together_are_resolved_by_id_not_declaration_
 
 
 def test_modelo_100_latest_revision_carries_declared_renames() -> None:
-    """Ground truth: Modelo 100's 2025 revision declares casilla continuity evolutions.
+    """Ground truth: Modelo 100's latest revision declares casilla continuity evolutions.
 
     Re-derives the expected count directly from the loaded revision's
     ``casilla_continuidad_evolutions`` rather than trusting the entry, so the
     projection cannot silently drop or fabricate rename records.
     """
     authority = compiled_bundled_authority()
-    revision = authority.modelo("100").revisions["2025"]
+    revision = authority.modelo("100").revisions[str(authored_revisions("100")[-1].id)]
     entry = _entries()["100"]
 
-    assert revision.casilla_continuidad_evolutions, "fixture drift: modelo 100 2025 should declare renames on disk"
+    assert revision.casilla_continuidad_evolutions, "fixture drift: modelo 100 latest should declare renames on disk"
     assert len(entry.renames) == len(revision.casilla_continuidad_evolutions)
     expected = {
         (evolution.continuidad_id, evolution.from_revision, evolution.to_revision, evolution.evolution_kind)
@@ -151,12 +153,12 @@ def test_modelo_100_latest_revision_carries_declared_renames() -> None:
 
 
 def test_modelo_100_latest_revision_carries_declared_portal_compatibility_refs() -> None:
-    """Ground truth: Modelo 100's 2025 revision declares a live AEAT-portal cross-reference."""
+    """Ground truth: Modelo 100's latest revision declares a live AEAT-portal cross-reference."""
     authority = compiled_bundled_authority()
-    revision = authority.modelo("100").revisions["2025"]
+    revision = authority.modelo("100").revisions[str(authored_revisions("100")[-1].id)]
     entry = _entries()["100"]
 
-    assert revision.live_cross_references, "fixture drift: modelo 100 2025 should declare a live cross-reference"
+    assert revision.live_cross_references, "fixture drift: modelo 100 latest should declare a live cross-reference"
     assert len(entry.portal_compatibility_refs) == len(revision.live_cross_references)
     expected = {(decision.id, decision.surface, decision.evidence_tier) for decision in revision.live_cross_references}
     actual = {(ref.id, ref.surface, ref.evidence_tier) for ref in entry.portal_compatibility_refs}

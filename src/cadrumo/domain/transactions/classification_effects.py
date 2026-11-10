@@ -17,6 +17,7 @@ from .enums import (
     TransactionDirection,
     TransactionLifecycleState,
     carries_business_figures,
+    is_classified,
     takes_business_share,
 )
 
@@ -54,6 +55,19 @@ def fields_cleared_by_classification(classification: BusinessClassification) -> 
     if not carries_business_figures(classification):
         cleared |= BUSINESS_DEPENDENT_FIELDS
     return cleared
+
+
+def fields_refused_by_classification(classification: BusinessClassification) -> frozenset[str]:
+    """Return the values a row of ``classification`` may never carry, on any write.
+
+    A row decided to have no business component -- classified, yet not
+    business-bearing -- carries none of the values a write of that
+    classification drops. A row nobody has decided yet may still hold figures
+    staged ahead of its classification; the write that decides it drops them.
+    """
+    if is_classified(classification) and not carries_business_figures(classification):
+        return fields_cleared_by_classification(classification)
+    return frozenset[str]()
 
 
 def keeps_category(classification: BusinessClassification) -> bool:
@@ -165,6 +179,7 @@ __all__ = [
     "advises_purchase_evidence",
     "awaits_invoice",
     "fields_cleared_by_classification",
+    "fields_refused_by_classification",
     "keeps_category",
     "lifecycle_actions_taken",
     "takes_capital_good_acquisition",

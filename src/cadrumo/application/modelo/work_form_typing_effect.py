@@ -18,12 +18,14 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language, tr
 from ...core.models import STRICT_FROZEN_CONFIG
 from .source_policy import SourceFamily
-from .work_form_models import (
+from .work_form_field_vocabulary import (
     ModeloFormAddressV1,
-    ModeloFormField,
     ModeloFormOrigin,
-    ModeloWorkForm,
     address_key,
+)
+from .work_form_models import (
+    ModeloFormField,
+    ModeloWorkForm,
 )
 from .work_form_wording import period_words
 

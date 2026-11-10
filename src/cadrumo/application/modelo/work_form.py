@@ -91,6 +91,10 @@ from .work_form_credits import withholding_credits, withholding_credits_heading
 from .work_form_declaration_facts import ModeloFormDeadline, ModeloFormEditClosure, year_projection
 from .work_form_errors import ModeloWorkFormLayoutError
 from .work_form_field_projection import project_casilla_field
+from .work_form_field_vocabulary import (
+    ModeloFormCasillaAddressV1,
+    ModeloFormScalar,
+)
 from .work_form_inspection import (
     build_inspection_only_form,
     project_aeat_data,
@@ -100,12 +104,10 @@ from .work_form_inspection import (
 )
 from .work_form_layout import LayoutWalker
 from .work_form_models import (
-    ModeloFormCasillaAddressV1,
     ModeloFormField,
     ModeloFormInspectionReason,
     ModeloFormLayoutProvenance,
     ModeloFormPage,
-    ModeloFormScalar,
     ModeloFormUnplacedField,
     ModeloWorkForm,
     section_fields,

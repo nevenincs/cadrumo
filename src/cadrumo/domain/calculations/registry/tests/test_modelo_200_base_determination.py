@@ -39,6 +39,7 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema_input_kind import InputKind
+from .authored_editions import filing_year_envelope
 from .modelo_200_casilla_ids import (
     M200_BIN_APLICADA_CASILLA,
     M200_CORRECCIONES_AUMENTO_CASILLA,
@@ -66,7 +67,9 @@ _M200_BASE_NIVELACION_CASILLA: CasillaId = validated_casilla_id(
 
 
 def _snapshot_2024():
-    return published_snapshot("200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
+    return published_snapshot(
+        "200", filing_year=filing_year_envelope().horizon, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+    )
 
 
 def _calculate(inputs: dict[CasillaId, Decimal]):
@@ -86,7 +89,7 @@ def _calculate(inputs: dict[CasillaId, Decimal]):
             "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
             "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
         },
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": date(filing_year_envelope().horizon, 12, 31)},
     )
 
 

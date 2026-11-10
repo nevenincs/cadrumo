@@ -2453,6 +2453,12 @@ application:
         a(z) %{revision_id} változatban: a nyomtatványdefiníciók olyan értékforrást
         deklarálnak, amelyet egyetlen számítási feloldó sem kezel. Adj hozzá egy feloldót,
         vagy jelöld halasztottként a számítás előtt.'
+      prior_carries_unstated:
+        renta_negative_general_bases_pending: 'A %{filing_year}. évi Modelo %{modelo}
+          nem számítható ki: nem ismert, hogy maradt-e korábbi adóévekből még ki nem
+          egyenlített negatív általános adóalap (%{boxes}. mező). Mentsd el az előző
+          évi bevallást, vagy jelezd a bevallásban, hogy nincs függőben lévő összeg.
+          Semmi sem lett mentve.'
       profile_readiness_missing: 'A profil hiányos a Modelo %{modelo} (%{period} %{filing_year})
         bevalláshoz; előbb töltsd ki ezeket a profiladatokat: %{profile_requirements}.'
       profile_readiness_not_applicable: 'A Modelo %{modelo} nem alkalmazható az aktív

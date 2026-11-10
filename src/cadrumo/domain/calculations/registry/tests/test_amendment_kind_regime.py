@@ -35,6 +35,11 @@ from .....core.amendment_kind_regime import (
 from .....core.modelo import Modelo
 from .....core.period import Period
 from ..amendment_regime_policy import resolve_amendment_regime_policy_for_period
+from .authored_editions import (
+    filing_year_envelope,
+    revision_before_first_declaring,
+    split_exercise_revisions,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
@@ -44,31 +49,47 @@ _RECTIFICATIVA = "rectificativa"
 _RectificativaBoundaryCase = tuple[str, str, int, str, bool]
 _LiabilityDirectionCase = tuple[str, Decimal, Decimal, AmendmentLiabilityDirection]
 
+_HORIZON = filing_year_envelope().horizon
+
+
+def _exercise_after_revision(modelo: str, casilla_id: str) -> int:
+    before = revision_before_first_declaring(modelo, casilla_id)
+    if before.valid_to is None:
+        raise LookupError(f"modelo {modelo}: the design before casilla {casilla_id} is open-ended")
+    return before.valid_to.year + 1
+
+
+# The M303 diseño splits one exercise between the periods 2T/08 and 3T/09; the M100 and M200 designs
+# adopt the rectificativa casillas (0669, 01578) in the exercise their older design lacks them.
+_M303_BOUNDARY_EXERCISE = split_exercise_revisions("303", early_period="2T", late_period="3T")[0].valid_from.year
+_M100_BOUNDARY_EXERCISE = _exercise_after_revision("100", "0669")
+_M200_BOUNDARY_EXERCISE = _exercise_after_revision("200", "01578")
+
 _RECTIFICATIVA_BOUNDARY_CASES: tuple[_RectificativaBoundaryCase, ...] = (
-    # M303: 2T 2024 predates the diseño's rectificativa fichero fields.
-    ("m303-2t-2024-pre-boundary", Modelo("303"), 2024, "2T", False),
+    # M303: 2T of the boundary exercise predates the diseño's rectificativa fichero fields.
+    ("m303-2t-boundary-exercise-pre-boundary", Modelo("303"), _M303_BOUNDARY_EXERCISE, "2T", False),
     # M303: period 08 (August, monthly) is the last pre-boundary month.
-    ("m303-08-2024-pre-boundary", Modelo("303"), 2024, "08", False),
-    # M303: 3T 2024 is the diseño's stated boundary quarter.
-    ("m303-3t-2024-post-boundary", Modelo("303"), 2024, "3T", True),
+    ("m303-08-boundary-exercise-pre-boundary", Modelo("303"), _M303_BOUNDARY_EXERCISE, "08", False),
+    # M303: 3T of the boundary exercise is the diseño's stated boundary quarter.
+    ("m303-3t-boundary-exercise-post-boundary", Modelo("303"), _M303_BOUNDARY_EXERCISE, "3T", True),
     # M303: period 09 (September, monthly) is the diseño's stated boundary month.
-    ("m303-09-2024-post-boundary", Modelo("303"), 2024, "09", True),
+    ("m303-09-boundary-exercise-post-boundary", Modelo("303"), _M303_BOUNDARY_EXERCISE, "09", True),
     # M303: every later period stays post-boundary.
-    ("m303-1t-2026-post-boundary", Modelo("303"), 2026, "1T", True),
+    ("m303-1t-horizon-post-boundary", Modelo("303"), _HORIZON, "1T", True),
     # M303: an earlier filing year is pre-boundary.
-    ("m303-4t-2023-pre-boundary", Modelo("303"), 2023, "4T", False),
-    # M100: annual period; 2023 is pre-boundary, 2024 onward is post.
-    ("m100-0a-2023-pre-boundary", Modelo("100"), 2023, "0A", False),
-    ("m100-0a-2024-post-boundary", Modelo("100"), 2024, "0A", True),
-    ("m100-0a-2026-post-boundary", Modelo("100"), 2026, "0A", True),
-    # M200: annual period; 2023 is pre-boundary, 2024 onward is post.
-    ("m200-0a-2023-pre-boundary", Modelo("200"), 2023, "0A", False),
-    ("m200-0a-2024-post-boundary", Modelo("200"), 2024, "0A", True),
+    ("m303-4t-before-boundary-exercise-pre-boundary", Modelo("303"), _M303_BOUNDARY_EXERCISE - 1, "4T", False),
+    # M100: annual period; the exercise before adoption is pre-boundary, adoption onward is post.
+    ("m100-0a-before-adoption-pre-boundary", Modelo("100"), _M100_BOUNDARY_EXERCISE - 1, "0A", False),
+    ("m100-0a-adoption-post-boundary", Modelo("100"), _M100_BOUNDARY_EXERCISE, "0A", True),
+    ("m100-0a-horizon-post-boundary", Modelo("100"), _HORIZON, "0A", True),
+    # M200: annual period; the exercise before adoption is pre-boundary, adoption onward is post.
+    ("m200-0a-before-adoption-pre-boundary", Modelo("200"), _M200_BOUNDARY_EXERCISE - 1, "0A", False),
+    ("m200-0a-adoption-post-boundary", Modelo("200"), _M200_BOUNDARY_EXERCISE, "0A", True),
     # M130: no bundled rectificativa grounding at any period.
-    ("m130-1t-2026-no-codified-regime", Modelo("130"), 2026, "1T", False),
-    ("m130-4t-2030-no-codified-regime", Modelo("130"), 2030, "4T", False),
+    ("m130-1t-horizon-no-codified-regime", Modelo("130"), _HORIZON, "1T", False),
+    ("m130-4t-past-horizon-no-codified-regime", Modelo("130"), _HORIZON + 1, "4T", False),
     # M131: same conservative scoping as M130.
-    ("m131-1t-2026-no-codified-regime", Modelo("131"), 2026, "1T", False),
+    ("m131-1t-horizon-no-codified-regime", Modelo("131"), _HORIZON, "1T", False),
 )
 
 _LIABILITY_DIRECTION_CASES: tuple[_LiabilityDirectionCase, ...] = (
@@ -96,7 +117,7 @@ def test_rectificativa_effective_boundary() -> None:
 
 
 def test_pre_rectificativa_permits_only_complementaria_and_sustitutiva() -> None:
-    period = Period.from_year_and_code(2024, "2T")
+    period = Period.from_year_and_code(_M303_BOUNDARY_EXERCISE, "2T")
     permitted = resolve_amendment_kind_regime(Modelo("303"), period, policy=_policy(period)).permitted_kinds
     assert permitted == frozenset({_COMPLEMENTARIA, _SUSTITUTIVA})
     assert _RECTIFICATIVA not in permitted
@@ -104,14 +125,14 @@ def test_pre_rectificativa_permits_only_complementaria_and_sustitutiva() -> None
 
 def test_post_rectificativa_permits_only_the_rectificativa() -> None:
     """The 2025 IVA manual makes the autoliquidación rectificativa the one route from the 2024 third quarter."""
-    period = Period.from_year_and_code(2024, "3T")
+    period = Period.from_year_and_code(_M303_BOUNDARY_EXERCISE, "3T")
     permitted = resolve_amendment_kind_regime(Modelo("303"), period, policy=_policy(period)).permitted_kinds
     assert permitted == frozenset({_RECTIFICATIVA})
 
 
 def test_modelo_130_only_permits_the_evidenced_complementaria() -> None:
     """The 2019-onward instructions and designs admit only complementaria corrections."""
-    for year, code in ((2024, "1T"), (2026, "4T"), (2030, "0A")):
+    for year, code in ((filing_year_envelope().floor, "1T"), (_HORIZON, "4T"), (_HORIZON + 1, "0A")):
         period = Period.from_year_and_code(year, code)
         permitted = resolve_amendment_kind_regime(Modelo("130"), period, policy=_policy(period)).permitted_kinds
         assert _RECTIFICATIVA not in permitted, f"{year} {code}"
@@ -120,7 +141,7 @@ def test_modelo_130_only_permits_the_evidenced_complementaria() -> None:
 
 def test_uncodified_modelo_defaults_to_pre_rectificativa_never_asserted() -> None:
     """A modelo entirely absent from the table (M390) is never asserted rectificativa-effective."""
-    period = Period.from_year_and_code(2026, "0A")
+    period = Period.from_year_and_code(_HORIZON, "0A")
     regime = resolve_amendment_kind_regime(Modelo("390"), period, policy=_policy(period))
     assert regime.rectificativa_effective is False
     assert regime.permitted_kinds == frozenset({_COMPLEMENTARIA, _SUSTITUTIVA})

@@ -6,7 +6,10 @@ import pytest
 
 from ....application.modelo.calculate_input import calculate_modelo_work_revision
 from ....application.modelo.calculation_request_fields import ModeloCalculationInputFieldsV1, ModeloCalculationOverride
-from ....application.modelo.work_form_models import ModeloFormOrigin, address_key
+from ....application.modelo.work_form_field_vocabulary import (
+    ModeloFormOrigin,
+    address_key,
+)
 from ....application.modelo.work_form_service import load_modelo_work_form
 from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation

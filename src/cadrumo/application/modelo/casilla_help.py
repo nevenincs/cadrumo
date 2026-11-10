@@ -181,8 +181,19 @@ def _phrase(language: OutputLanguage, name: str, /, **values: object) -> str:
 
 def legal_citation_text(reference: LegalReference) -> str:
     """Cite one legal reference from its own identifier, falling back to the official document id."""
-    document, _, locator = reference.id.partition(":")
-    title = reference.document_id
+    return legal_ref_id_citation(reference.id, fallback_title=reference.document_id)
+
+
+def legal_ref_id_citation(ref_id: str, *, fallback_title: str | None = None) -> str:
+    """Cite a legal reference identifier as the readable ``Ley 37/1992, art. 30``.
+
+    The identifier alone carries the instrument and provision, so a surface that
+    holds only the identifier cites it here rather than showing the token.
+    ``fallback_title`` names an instrument the identifier does not spell out;
+    without one the identifier's own document part stands.
+    """
+    document, _, locator = ref_id.partition(":")
+    title = fallback_title if fallback_title is not None else document
     law = _LAW_ID.match(document)
     order = _ORDER_ID.match(document)
     if law is not None:
@@ -390,4 +401,5 @@ __all__ = [
     "ModeloHelpOutsideFigureV1",
     "build_casilla_help_card",
     "legal_citation_text",
+    "legal_ref_id_citation",
 ]

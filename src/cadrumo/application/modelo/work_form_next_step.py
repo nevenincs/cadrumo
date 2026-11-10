@@ -46,12 +46,14 @@ from .edit_models import (
     ModeloEditRefusalCode,
     ModeloEditRefusedV1,
 )
+from .work_form_field_vocabulary import (
+    ModeloFormCasillaAddressV1,
+    ModeloFormOrigin,
+)
 from .work_form_findings import ModeloFormAttention, ModeloFormIssue
 from .work_form_models import (
-    ModeloFormCasillaAddressV1,
     ModeloFormCounts,
     ModeloFormField,
-    ModeloFormOrigin,
     ModeloFormRepeatingBlock,
     ModeloWorkForm,
     section_fields,

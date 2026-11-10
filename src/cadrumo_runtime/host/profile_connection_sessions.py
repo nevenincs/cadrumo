@@ -349,14 +349,20 @@ class ProfileConnectionSessionMixin:
             if request.action == "session_refresh":
                 return self._refresh_session(connection, host, context, request)
             if request.action == "session_activity":
-                renewed = host.authority.note_human_activity(
-                    connection_id=context.connection_id,
-                    session_id=request.session_id,
-                    idle_window=timedelta(minutes=load_settings().cadrumo_bucket_default_idle_lock_minutes),
-                )
+                renewed = self._note_person_activity(host, context.connection_id, request.session_id)
                 if isinstance(renewed, AccessDenied):
                     return renewed
             return self._status(connection, host, request.request_id, request.session_id)
+
+    def _note_person_activity(
+        self: RuntimeProfileConnections, host: RuntimeProfileHost, connection_id: UUID, session_id: UUID
+    ) -> AccessSession | AccessDenied:
+        """Renew one live human session by the idle window for the person's input, under the caller's profile guard."""
+        return host.authority.note_human_activity(
+            connection_id=connection_id,
+            session_id=session_id,
+            idle_window=timedelta(minutes=load_settings().cadrumo_bucket_default_idle_lock_minutes),
+        )
 
     def _disclosure_page(
         self: RuntimeProfileConnections, context: ConnectionContext, request: ProfileDisclosurePageRequest

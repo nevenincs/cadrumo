@@ -1,5 +1,6 @@
 """Historical human workbooks come from the exact source and shared form renderer."""
 
+from datetime import date
 from decimal import Decimal
 from io import BytesIO
 
@@ -8,20 +9,35 @@ from openpyxl import load_workbook
 
 from cadrumo.adapters.outbound.workbook.calc_sheets_xlsx import materialize_export_plan
 from cadrumo.application.storage.calc_sheets.records import OperatorInput, OperatorInputs, SheetGuideContent, TabName
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ..workbook_template_preview import build_fictional_template_workbook
 from ..workbook_template_source import load_workbook_template_source
+from .authored_edition_support import authored_revisions
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+
+_M130 = open_ended_revision("130")
+_M130_DESIGN = next(
+    str(ref)
+    for revision in authored_revisions("130")
+    if revision.id == _M130.id
+    for ref in revision.source_refs
+    if str(ref).startswith("aeat-dr-130-")
+)
+_M232_BASE = authored_revisions("232")[0]
+assert _M232_BASE.valid_to is not None
+_M232_YEAR = _M232_BASE.valid_to.year
+_M232_DESIGN = next(str(ref) for ref in _M232_BASE.source_refs if str(ref).startswith("aeat-dr-232-"))
 
 
 @pytest.mark.parametrize(("casilla_id", "message"), [("invented", "absent"), ("19", "calculated")])
 def test_fictional_inputs_cannot_invent_or_replace_calculated_casillas(casilla_id: str, message: str) -> None:
     source = load_workbook_template_source(
         "130",
-        revision_id="2019-y-siguientes",
-        source_ref="aeat-dr-130-2019-v12",
-        preview_year=2020,
+        revision_id=str(_M130.id),
+        source_ref=_M130_DESIGN,
+        preview_year=_M130.valid_from.year,
         preview_period="4T",
     )
     with pytest.raises(ValueError, match=message):
@@ -34,10 +50,14 @@ def test_fictional_inputs_cannot_invent_or_replace_calculated_casillas(casilla_i
 
 def test_historical_232_human_form_retains_independent_amounts_and_unknowns() -> None:
     source = load_workbook_template_source(
-        "232", revision_id="2016-2017", source_ref="aeat-dr-232-2016", preview_year=2017, preview_period="0A"
+        "232",
+        revision_id=str(_M232_BASE.id),
+        source_ref=_M232_DESIGN,
+        preview_year=_M232_YEAR,
+        preview_period="0A",
     )
     figures = {
-        "decl.ejercicio": Decimal(2017),
+        "decl.ejercicio": Decimal(_M232_YEAR),
         "vinculada-1-nif": "B00010082",
         "vinculada-1-razon-social": "Entidad vinculada ficticia A",
         "vinculada-1-fjo": "J",
@@ -64,7 +84,7 @@ def test_historical_232_human_form_retains_independent_amounts_and_unknowns() ->
     assert mirrors["vinculada-1-importe"].address.row != mirrors["vinculada-2-importe"].address.row
     text = "\n".join(str(cell.value) for cell in plan.value_cells)
     assert "EJEMPLO FICTICIO" in text
-    assert "2017-01-01" in text and "2017-12-31" in text
+    assert date(_M232_YEAR, 1, 1).isoformat() in text and date(_M232_YEAR, 12, 31).isoformat() in text
     assert "Importe sin IVA" in text
     assert source.template_digest not in text
     assert "dr23201" not in text

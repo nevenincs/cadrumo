@@ -29,13 +29,15 @@ from dataclasses import dataclass, replace
 from enum import StrEnum
 
 from .....application.modelo.edit_models import ModeloEditHeldChangeV1, ModeloEditHeldKind
-from .....application.modelo.work_form_models import (
+from .....application.modelo.work_form_field_vocabulary import (
     ModeloFormEditability,
-    ModeloFormField,
     ModeloFormOrigin,
     ModeloFormScalar,
-    ModeloWorkForm,
     address_key,
+)
+from .....application.modelo.work_form_models import (
+    ModeloFormField,
+    ModeloWorkForm,
     confirmable,
     edit_address,
 )

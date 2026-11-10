@@ -289,11 +289,14 @@ async def test_context_creation_cancellation_reaps_browser_after_real_launch() -
 
     loop.set_exception_handler(capture_unhandled)
     try:
-        session = await create_browser_session(Settings(), _profile("context-cancel"))
+        settings = Settings()
+        session = await create_browser_session(settings, _profile("context-cancel"))
         driver_pid = playwright_driver_pid(session._playwright)
         create_task = asyncio.create_task(session.create_context())
         try:
-            deadline = time.monotonic() + 10
+            # A real Chromium launch can outlast a fixed budget on a loaded host, so the
+            # boundary is awaited for as long as the product allows a navigation to take.
+            deadline = time.monotonic() + settings.cadrumo_browser_navigation_timeout_ms / 1000 + 5.0
             # Yield one loop turn at a time: bundled Chromium can finish context
             # creation within a timed sleep, which would skip the boundary.
             while session.session._browser is None and not create_task.done():
