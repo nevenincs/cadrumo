@@ -17,6 +17,7 @@ from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvena
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from cadrumo.domain.modelos.work_unit import WorkUnitCatalogue
@@ -52,7 +53,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("21212121-2121-4121-8121-212121212121")
 _OTHER_PROFILE = UUID("33333333-3333-4333-8333-333333333333")
-_PERIOD = PublicPeriod(filing_year=2024, code="4T")
+_PERIOD = PublicPeriod(filing_year=filing_year_envelope().horizon, code="4T")
 _AUTHORITY = object()
 
 
@@ -104,7 +105,7 @@ def _history_state(
             modelo="303", revision_id="synthetic-revision", modelo_year=_PERIOD.filing_year, period=_PERIOD.code
         ),
         provenance=provenance,
-        presented_at=datetime(2026, 9, 29, 10, 0, tzinfo=UTC),
+        presented_at=datetime(1980, 9, 29, 10, 0, tzinfo=UTC),
         generated_amount=Decimal("0"),
         available_end_amount=amount,
         source_observation_key="synthetic-correction-history",
@@ -292,7 +293,7 @@ def test_executor_uses_exact_bucket_pinned_authority_and_commit_receipt(
         revision=3,
         condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.UPDATED,
-        settled_at=datetime(2026, 9, 29, 10, 0, tzinfo=UTC),
+        settled_at=datetime(1980, 9, 29, 10, 0, tzinfo=UTC),
         result_ref=result_ref,
     )
     assert project_modelo_iva_wallet_correction_result(report, receipt) == projection

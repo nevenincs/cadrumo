@@ -16,11 +16,12 @@ from cadrumo.application.modelo.iva_wallet_seed import (
 from cadrumo.application.modelo.iva_wallet_seed_ports import ModeloIvaWalletSeedPorts
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "00000000-0000-4000-8000-000000000303"
-_SEED_FILING_PERIOD = Period.from_year_and_code(2024, "4T")
+_SEED_FILING_PERIOD = Period.from_year_and_code(filing_year_envelope().horizon, "4T")
 
 
 class _NeverReachedWalletPorts:

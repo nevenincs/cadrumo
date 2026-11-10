@@ -21,6 +21,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.capabilities import OperationRequestStoragePolicy, OperationSensitiveInputPolicy
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
@@ -66,7 +67,7 @@ def _pinned_authority() -> Iterator[None]:
 
 _PROFILE = UUID("21212121-2121-4121-8121-212121212121")
 _OTHER_PROFILE = UUID("33333333-3333-4333-8333-333333333333")
-_PERIOD = PublicPeriod(filing_year=2024, code="4T")
+_PERIOD = PublicPeriod(filing_year=filing_year_envelope().horizon, code="4T")
 _AUTHORITY = object()
 
 
@@ -130,7 +131,7 @@ def _override_request(*, profile_id: UUID = _PROFILE) -> OperationRequest[Modelo
             period=_PERIOD,
             amount="1200.50",
             reason="operator asserts the prior balance",
-            evidence_locator="local:m303-2023-filed-return",
+            evidence_locator=f"local:m303-{_PERIOD.filing_year - 1}-filed-return",
         ),
     )
 
@@ -257,7 +258,7 @@ def test_seed_and_override_definitions_keep_confidential_inputs_and_closed_resul
             taxpayer_nif="12345678Z",
             amount="1200.50",
             reason="operator asserts the prior balance",
-            evidence_locator="local:m303-2023-filed-return",
+            evidence_locator=f"local:m303-{_PERIOD.filing_year - 1}-filed-return",
             selected_authority="aeat_wallet",
             divergence="match",
         )
@@ -319,7 +320,7 @@ def test_seed_executor_uses_pinned_authority_and_refuses_ungrounded_state(monkey
     result_ref = asyncio.run(executor.execute(_seed_request(), context))
 
     assert result_ref == "result-reference"
-    assert authority.coordinates == [("303", 2024, "4T")]
+    assert authority.coordinates == [("303", _PERIOD.filing_year, "4T")]
     assert factory.requested == [str(_PROFILE)]
     assert factory.operations == [authority]
     assert seen[0]["bucket_id"] == str(_PROFILE)
@@ -340,7 +341,7 @@ def test_seed_executor_uses_pinned_authority_and_refuses_ungrounded_state(monkey
         revision=3,
         condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.UPDATED,
-        settled_at=datetime(2026, 9, 29, 10, 0, tzinfo=UTC),
+        settled_at=datetime(1980, 9, 29, 10, 0, tzinfo=UTC),
         result_ref=result_ref,
     )
     assert project_modelo_iva_wallet_seed_result(report, receipt) == report.projection
@@ -459,7 +460,7 @@ def test_override_executor_uses_pinned_authority_and_refuses_ungrounded_decision
     result_ref = asyncio.run(executor.execute(_override_request(), context))
 
     assert result_ref == "result-reference"
-    assert authority.coordinates == [("303", 2024, "4T")]
+    assert authority.coordinates == [("303", _PERIOD.filing_year, "4T")]
     assert factory.requested == [str(_PROFILE)]
     assert factory.operations == [authority]
     assert seen[0]["bucket_id"] == str(_PROFILE)
@@ -480,7 +481,7 @@ def test_override_executor_uses_pinned_authority_and_refuses_ungrounded_decision
         revision=3,
         condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.UPDATED,
-        settled_at=datetime(2026, 9, 29, 10, 0, tzinfo=UTC),
+        settled_at=datetime(1980, 9, 29, 10, 0, tzinfo=UTC),
         result_ref=result_ref,
     )
     assert project_modelo_iva_wallet_override_result(report, receipt) == report.projection
