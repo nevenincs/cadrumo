@@ -34,6 +34,7 @@ from ...calculations.registry.descendant_relacion_catalogue import (
     descendant_relacion_entitling_tokens,
     descendant_relacion_tokens,
 )
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..descendant import DescendantInfo
 from ..descendant_facts import (
     descendant_facts_from_list,
@@ -45,13 +46,14 @@ from ..family_fact_context import FamilyFactResolutionContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+
 #: A filing year comfortably after every entry event used below.
-_YEAR = 2024
+_YEAR = filing_year_envelope().horizon
 
 #: Born long before the filing year, so the ordinary under-three limb is dead
 #: and only the age-independent entry-event limb can grant the increase. Every
 #: entitlement assertion below is therefore about the limb under test.
-_OLD_BIRTH = date(2010, 1, 1)
+_OLD_BIRTH = date(_YEAR - 14, 1, 1)
 
 
 @cache
@@ -140,9 +142,9 @@ def test_the_increase_is_age_independent_for_an_entitling_relacion() -> None:
     the entry-event limb closes.
     """
     teenager = DescendantInfo(
-        birth_date=date(2010, 1, 1),
+        birth_date=date(_YEAR - 14, 1, 1),
         relacion=DescendantRelacion.from_registry("adoptado"),
-        inscripcion_registro_civil_date=date(2024, 6, 1),
+        inscripcion_registro_civil_date=date(_YEAR, 6, 1),
     )
 
     assert teenager.age_at_year_end(_YEAR) == 14
@@ -198,12 +200,12 @@ def test_the_madrid_window_anchors_on_the_adoption_while_art_58_2_anchors_earlie
     child = DescendantInfo(
         birth_date=_OLD_BIRTH,
         relacion=DescendantRelacion.from_registry("adoptado"),
-        acogimiento_resolucion_date=date(2019, 5, 1),
-        inscripcion_registro_civil_date=date(2022, 6, 1),
+        acogimiento_resolucion_date=date(_YEAR - 5, 5, 1),
+        inscripcion_registro_civil_date=date(_YEAR - 2, 6, 1),
     )
 
-    assert child.entry_year() == 2022
-    assert child.art_58_2_entry_date() == date(2019, 5, 1)
+    assert child.entry_year() == (_YEAR - 2)
+    assert child.art_58_2_entry_date() == date(_YEAR - 5, 5, 1)
 
 
 # ── coherence: refuse the excluded case, allow the incomplete one ────────────
@@ -232,7 +234,7 @@ def test_an_entry_date_under_an_excluded_relacion_refuses(
     record the statute excludes -- and any consumer reading the date without
     re-checking the relación would grant the increase.
     """
-    anchor = date(2020, 1, 1)
+    anchor = date(_YEAR - 4, 1, 1)
     with pytest.raises(ValidationError):
         if field == "inscripcion_registro_civil_date":
             DescendantInfo(birth_date=_OLD_BIRTH, relacion=relacion, inscripcion_registro_civil_date=anchor)
@@ -249,7 +251,7 @@ def test_an_unstated_relacion_with_an_inscription_reads_as_adoptado() -> None:
     which is why the acogimiento date, compatible with two members the statute
     treats oppositely, gets no equivalent.
     """
-    child = DescendantInfo(birth_date=_OLD_BIRTH, inscripcion_registro_civil_date=date(2024, 2, 1))
+    child = DescendantInfo(birth_date=_OLD_BIRTH, inscripcion_registro_civil_date=date(_YEAR, 2, 1))
 
     assert child.relacion == DescendantRelacion.from_registry("adoptado")
     assert child.is_eligible_minimo_incremento_menor_tres(_YEAR, context=_FACT_CONTEXT) is True
@@ -291,10 +293,11 @@ def test_the_flag_parser_refuses_a_relacion_outside_the_closed_set() -> None:
 def test_the_flag_parser_carries_both_entry_dates_for_a_fostered_then_adopted_child() -> None:
     """The cap shape has to be expressible non-interactively, not only in the wizard."""
     parsed = parse_descendiente_flag(
-        "NACIMIENTO=2010-01-01,RELACION=adoptado,ACOGIMIENTO=2019-05-01,INSCRIPCION=2022-06-01",
+        f"NACIMIENTO={_OLD_BIRTH.isoformat()},RELACION=adoptado,"
+        f"ACOGIMIENTO={date(_YEAR - 5, 5, 1).isoformat()},INSCRIPCION={date(_YEAR - 2, 6, 1).isoformat()}",
     )
 
-    assert parsed.art_58_2_entry_date() == date(2019, 5, 1)
+    assert parsed.art_58_2_entry_date() == date(_YEAR - 5, 5, 1)
 
 
 # ── persistence boundary ────────────────────────────────────────────────────
@@ -335,20 +338,20 @@ def _maximal_descendants() -> tuple[DescendantInfo, ...]:
         )
 
     return (
-        _member(birth_date=date(2011, 2, 3), relacion=DescendantRelacion.from_registry("descendiente")),
+        _member(birth_date=date(_YEAR - 13, 2, 3), relacion=DescendantRelacion.from_registry("descendiente")),
         _member(
-            birth_date=date(2012, 3, 4),
+            birth_date=date(_YEAR - 12, 3, 4),
             relacion=DescendantRelacion.from_registry("adoptado"),
-            acogimiento_resolucion_date=date(2018, 4, 5),
-            inscripcion_registro_civil_date=date(2020, 5, 6),
+            acogimiento_resolucion_date=date(_YEAR - 6, 4, 5),
+            inscripcion_registro_civil_date=date(_YEAR - 4, 5, 6),
         ),
         _member(
-            birth_date=date(2013, 4, 5),
+            birth_date=date(_YEAR - 11, 4, 5),
             relacion=DescendantRelacion.from_registry("acogimiento_preadoptivo_o_permanente"),
-            acogimiento_resolucion_date=date(2019, 6, 7),
+            acogimiento_resolucion_date=date(_YEAR - 5, 6, 7),
         ),
-        _member(birth_date=date(2014, 5, 6), relacion=DescendantRelacion.from_registry("acogimiento_temporal")),
-        _member(birth_date=date(2015, 6, 7), relacion=DescendantRelacion.from_registry("tutela")),
+        _member(birth_date=date(_YEAR - 10, 5, 6), relacion=DescendantRelacion.from_registry("acogimiento_temporal")),
+        _member(birth_date=date(_YEAR - 9, 6, 7), relacion=DescendantRelacion.from_registry("tutela")),
     )
 
 
@@ -463,7 +466,7 @@ class TestGuardaYCustodiaJudicial:
         restatement of it.
         """
         with pytest.raises(ValidationError):
-            self._child(acogimiento_resolucion_date=date(2020, 1, 1))
+            self._child(acogimiento_resolucion_date=date(_YEAR - 4, 1, 1))
 
     def test_it_is_excluded_from_the_art_81_1_maternidad_population(self) -> None:
         """Excluded by NAME, not merely by absence from the admitted set.

@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ....calculations.registry.tests.authored_editions import filing_year_envelope
 from ....filing_evidence import FilingEvidenceReference
 from ..anexo_d_records import resolve_inventory_authoritative_closing
 from ..closing_authority_records import (
@@ -33,6 +34,8 @@ from ..records import InventoryLedger, InventoryLedgerDocument, ValuationMethod
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
+EXERCISE = filing_year_envelope().horizon
+
 
 def _ref(value: str) -> FilingEvidenceReference:
     return FilingEvidenceReference(reference=value)
@@ -56,10 +59,10 @@ def _evidence() -> tuple[PhysicalClosingEvidence, ...]:
 def _observation(**overrides: object) -> PhysicalClosingObservation:
     fields: dict[str, object] = {
         "observation_id": "physical-2025",
-        "observed_on": date(2026, 1, 2),
-        "as_of_date": date(2025, 12, 31),
+        "observed_on": date(EXERCISE + 1, 1, 2),
+        "as_of_date": date(EXERCISE, 12, 31),
         "actividad_id": "retail",
-        "filing_year": 2025,
+        "filing_year": EXERCISE,
         "closing_value": Decimal("130.00"),
         "valuation_basis": InventoryClosingValuationBasis.FIFO_ACQUISITION_PRICE,
         "evidence": _evidence(),
@@ -77,14 +80,14 @@ def _decision(
     fields: dict[str, object] = {
         "decision_id": "decision-2025",
         "actividad_id": "retail",
-        "filing_year": 2025,
+        "filing_year": EXERCISE,
         "authority": authority,
         "physical_observation_id": observation.observation_id if observation else None,
         "physical_observation_fingerprint": observation.fingerprint if observation else None,
         "reason": "Year-end physical count adjudicated against movement-derived valuation.",
         "actor": "inventory-reviewer",
         "source_command": "inventory.closing.authority.decide",
-        "decided_at": datetime(2026, 1, 3, tzinfo=UTC),
+        "decided_at": datetime(EXERCISE + 1, 1, 3, tzinfo=UTC),
         "evidence": (
             InventoryClosingDecisionEvidence(
                 reference=_ref("decision-evidence"),
@@ -106,8 +109,8 @@ def _continuity(**overrides: object) -> PriorAuthoritativeClosingLink:
     )
     fields: dict[str, object] = {
         "actividad_id": "retail",
-        "current_filing_year": 2025,
-        "prior_filing_year": 2024,
+        "current_filing_year": EXERCISE,
+        "prior_filing_year": EXERCISE - 1,
         "prior_authoritative_closing_value": Decimal("100.00"),
         "current_opening_value": Decimal("100.00"),
         "prior_authoritative_source_fingerprint": "c" * 64,
@@ -142,7 +145,7 @@ def _continuity(**overrides: object) -> PriorAuthoritativeClosingLink:
 def _ledger(method: ValuationMethod = ValuationMethod.FIFO) -> InventoryLedger:
     return InventoryLedger(
         actividad_id="retail",
-        year=2025,
+        year=EXERCISE,
         valuation_method=method,
         opening_stock=Decimal("100.00"),
         closing_authority_record=None,
@@ -165,8 +168,8 @@ def test_physical_observation_fingerprint_is_order_stable_and_mutation_sensitive
 @pytest.mark.parametrize(
     "mutation",
     [
-        {"as_of_date": date(2025, 12, 30)},
-        {"observed_on": date(2025, 12, 30)},
+        {"as_of_date": date(EXERCISE, 12, 30)},
+        {"observed_on": date(EXERCISE, 12, 30)},
         {"closing_value": Decimal("100.001")},
         {"evidence": (_evidence()[0],)},
         {"evidence": (_evidence()[0], _evidence()[0])},
@@ -194,7 +197,7 @@ def test_authority_decision_requires_closed_observation_identity_and_evidence() 
             physical_observation_id=observation.observation_id,
         )
     with pytest.raises(ValidationError, match="timezone-aware"):
-        _decision(authority=InventoryClosingAuthority.MOVEMENT_DERIVED, decided_at=datetime(2026, 1, 3))
+        _decision(authority=InventoryClosingAuthority.MOVEMENT_DERIVED, decided_at=datetime(EXERCISE + 1, 1, 3))
 
 
 def test_authority_decision_fingerprint_is_mutation_sensitive() -> None:
@@ -204,7 +207,7 @@ def test_authority_decision_fingerprint_is_mutation_sensitive() -> None:
     )
     assert _decision(authority=decision.authority, actor="other-reviewer").fingerprint != decision.fingerprint
     assert (
-        _decision(authority=decision.authority, decided_at=datetime(2026, 1, 4, tzinfo=UTC)).fingerprint
+        _decision(authority=decision.authority, decided_at=datetime(EXERCISE + 1, 1, 4, tzinfo=UTC)).fingerprint
         != decision.fingerprint
     )
     changed_evidence = decision.evidence[0].model_copy(update={"content_digest": "d" * 64})
@@ -214,7 +217,7 @@ def test_authority_decision_fingerprint_is_mutation_sensitive() -> None:
 @pytest.mark.parametrize(
     "mutation",
     [
-        {"prior_filing_year": 2023},
+        {"prior_filing_year": EXERCISE - 2},
         {"prior_authoritative_closing_value": Decimal("99.99")},
         {"current_opening_value": Decimal("100.001")},
         {"prior_authoritative_source_fingerprint": "not-a-digest"},
@@ -311,7 +314,7 @@ def test_resolution_refuses_decision_that_predates_named_physical_observation(
     decision = _decision(
         authority=authority,
         observation=observation,
-        decided_at=datetime(2026, 1, 1, 23, 59, tzinfo=UTC),
+        decided_at=datetime(EXERCISE + 1, 1, 1, 23, 59, tzinfo=UTC),
     )
 
     with pytest.raises(InventoryValidationError, match="cannot predate"):
@@ -375,7 +378,7 @@ def test_resolution_refuses_forged_missing_conflict_and_legacy_bare_closing_stoc
     with pytest.raises(ValidationError, match="conflict diagnostic"):
         InventoryClosingResolution(
             actividad_id="retail",
-            filing_year=2025,
+            filing_year=EXERCISE,
             authority=InventoryClosingAuthority.PHYSICAL_OBSERVATION,
             authoritative_value=Decimal("130.00"),
             movement_derived_value=Decimal("100.00"),
@@ -423,7 +426,7 @@ def test_ledger_owned_authority_record_refuses_coordinate_and_fingerprint_tamper
         InventoryLedger.model_validate(
             {
                 "actividad_id": "retail",
-                "year": 2025,
+                "year": EXERCISE,
                 "valuation_method": ValuationMethod.FIFO,
                 "opening_stock": Decimal("100.00"),
                 "closing_authority_record": payload,
@@ -433,7 +436,7 @@ def test_ledger_owned_authority_record_refuses_coordinate_and_fingerprint_tamper
     with pytest.raises(ValidationError, match="must match the inventory ledger coordinate"):
         InventoryLedger(
             actividad_id="other-activity",
-            year=2025,
+            year=EXERCISE,
             valuation_method=ValuationMethod.FIFO,
             opening_stock=Decimal("100.00"),
             closing_authority_record=record,
@@ -450,7 +453,7 @@ def test_inventory_schema_hard_cut_refuses_missing_authority_slot_and_version_tw
         InventoryLedger.model_validate(
             {
                 "actividad_id": "retail",
-                "year": 2025,
+                "year": EXERCISE,
                 "valuation_method": ValuationMethod.FIFO,
                 "opening_stock": Decimal("100.00"),
             },
@@ -458,7 +461,7 @@ def test_inventory_schema_hard_cut_refuses_missing_authority_slot_and_version_tw
     with pytest.raises(ValidationError, match="unsupported InventoryLedger schema_version '2'"):
         InventoryLedger(
             actividad_id="retail",
-            year=2025,
+            year=EXERCISE,
             valuation_method=ValuationMethod.FIFO,
             opening_stock=Decimal("100.00"),
             closing_authority_record=None,
@@ -469,7 +472,7 @@ def test_inventory_schema_hard_cut_refuses_missing_authority_slot_and_version_tw
     with pytest.raises(ValidationError, match="movement-derived authority value"):
         InventoryClosingResolution(
             actividad_id="retail",
-            filing_year=2025,
+            filing_year=EXERCISE,
             authority=InventoryClosingAuthority.MOVEMENT_DERIVED,
             authoritative_value=Decimal("101.00"),
             movement_derived_value=Decimal("100.00"),
@@ -478,7 +481,7 @@ def test_inventory_schema_hard_cut_refuses_missing_authority_slot_and_version_tw
     with pytest.raises(ValidationError, match="conflict diagnostic does not match"):
         InventoryClosingResolution(
             actividad_id="retail",
-            filing_year=2025,
+            filing_year=EXERCISE,
             authority=InventoryClosingAuthority.PHYSICAL_OBSERVATION,
             authoritative_value=Decimal("130.00"),
             movement_derived_value=Decimal("100.00"),
@@ -487,7 +490,7 @@ def test_inventory_schema_hard_cut_refuses_missing_authority_slot_and_version_tw
             physical_observation_id="physical-2025",
             conflict=InventoryClosingConflictDiagnostic(
                 actividad_id="retail",
-                filing_year=2025,
+                filing_year=EXERCISE,
                 movement_derived_value=Decimal("100.00"),
                 physical_observed_value=Decimal("131.00"),
                 physical_observation_fingerprint="a" * 64,
@@ -497,7 +500,7 @@ def test_inventory_schema_hard_cut_refuses_missing_authority_slot_and_version_tw
     with pytest.raises(ValidationError, match="quantised to cents"):
         InventoryClosingResolution(
             actividad_id="retail",
-            filing_year=2025,
+            filing_year=EXERCISE,
             authority=InventoryClosingAuthority.MOVEMENT_DERIVED,
             authoritative_value=Decimal("100.001"),
             movement_derived_value=Decimal("100.001"),
@@ -507,7 +510,7 @@ def test_inventory_schema_hard_cut_refuses_missing_authority_slot_and_version_tw
         InventoryLedger.model_validate(
             {
                 "actividad_id": "retail",
-                "year": 2025,
+                "year": EXERCISE,
                 "valuation_method": "fifo",
                 "opening_stock": "100.00",
                 "closing_stock": "130.00",

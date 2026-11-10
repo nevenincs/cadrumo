@@ -18,6 +18,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..descendant import DescendantInfo
 from ..descendant_facts import (
     descendant_facts_from_list,
@@ -34,7 +35,8 @@ from .registry_thresholds import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-FILING_YEAR = 2024
+
+FILING_YEAR = filing_year_envelope().horizon
 _CONTEXT = FamilyFactResolutionContext(
     PublishedGovernedFactSource(),
     date(FILING_YEAR, 12, 31),
@@ -51,24 +53,32 @@ _CUSTODIA_FACT_KEY = "renta_family.descendiente.0.custodia_compartida"
 
 def _custodia_field_cases() -> tuple[tuple[str, DescendantInfo, bool], ...]:
     return (
-        ("default", DescendantInfo(birth_date=date(2020, 3, 15)), False),
-        ("explicit-true", DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True), True),
+        ("default", DescendantInfo(birth_date=date(FILING_YEAR - 4, 3, 15)), False),
+        ("explicit-true", DescendantInfo(birth_date=date(FILING_YEAR - 4, 3, 15), custodia_compartida=True), True),
     )
 
 
 def _custodia_count_cases() -> tuple[tuple[str, tuple[DescendantInfo, ...], int], ...]:
     return (
         ("no-descendants", (), 0),
-        ("none-flagged", (DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=False),), 0),
-        ("one-eligible", (DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True),), 1),
+        ("none-flagged", (DescendantInfo(birth_date=date(FILING_YEAR - 4, 3, 15), custodia_compartida=False),), 0),
+        ("one-eligible", (DescendantInfo(birth_date=date(FILING_YEAR - 4, 3, 15), custodia_compartida=True),), 1),
         ("ineligible", (DescendantInfo(birth_date=date(1998, 1, 1), custodia_compartida=True),), 0),
     )
 
 
 def _prorrata_factor_cases() -> tuple[tuple[str, DescendantInfo, Decimal], ...]:
     return (
-        ("custodia-eligible", DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True), Decimal("0.5")),
-        ("no-custodia", DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=False), Decimal("1")),
+        (
+            "custodia-eligible",
+            DescendantInfo(birth_date=date(FILING_YEAR - 4, 3, 15), custodia_compartida=True),
+            Decimal("0.5"),
+        ),
+        (
+            "no-custodia",
+            DescendantInfo(birth_date=date(FILING_YEAR - 4, 3, 15), custodia_compartida=False),
+            Decimal("1"),
+        ),
         ("ineligible-custodia", DescendantInfo(birth_date=date(1998, 1, 1), custodia_compartida=True), Decimal("1")),
     )
 
@@ -132,11 +142,11 @@ def test_two_progenitors_each_get_50_pct_minimo() -> None:
     receives €1,200 (50 % of €2,400) as their mínimo primer hijo contribution.
     """
     # Progenitor A (the child lives with both; custodia_compartida=True)
-    child_a = DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True)
+    child_a = DescendantInfo(birth_date=date(FILING_YEAR - 4, 3, 15), custodia_compartida=True)
     family_a = RentaFamilyProfile(descendientes=(child_a,))
 
     # Progenitor B — same child, same flag
-    child_b = DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True)
+    child_b = DescendantInfo(birth_date=date(FILING_YEAR - 4, 3, 15), custodia_compartida=True)
     family_b = RentaFamilyProfile(descendientes=(child_b,))
 
     minimo_a = _mínimo_primer_hijo_with_prorrata(family_a, FILING_YEAR)
@@ -151,7 +161,7 @@ def test_two_progenitors_each_get_50_pct_minimo() -> None:
 # Anti-tautology: without custodia_compartida, full mínimo applies.
 def test_antitautology_without_custodia_full_minimo() -> None:
     """Without custodia_compartida=True the prorrata factor is 1 (full mínimo)."""
-    child = DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=False)
+    child = DescendantInfo(birth_date=date(FILING_YEAR - 4, 3, 15), custodia_compartida=False)
     family = RentaFamilyProfile(descendientes=(child,))
     minimo = _mínimo_primer_hijo_with_prorrata(family, FILING_YEAR)
     assert minimo == _MINIMO_1  # €2,400, not €1,200
@@ -169,21 +179,21 @@ def test_antitautology_without_custodia_full_minimo() -> None:
 
 class TestCustodiaCompartidaRoundtrip:
     def test_cases(self) -> None:
-        d = DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True)
+        d = DescendantInfo(birth_date=date(FILING_YEAR - 4, 3, 15), custodia_compartida=True)
         facts = dict(descendant_facts_from_list((d,)))
         reloaded = descendant_list_from_facts(facts)
         assert len(reloaded) == 1
         assert reloaded[0].custodia_compartida is True
 
         # When False, no fact key is written (the absent key defaults to False on reload).
-        d = DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=False)
+        d = DescendantInfo(birth_date=date(FILING_YEAR - 4, 3, 15), custodia_compartida=False)
         facts = dict(descendant_facts_from_list((d,)))
         assert _CUSTODIA_FACT_KEY not in facts
 
         reloaded = descendant_list_from_facts(facts)
         assert reloaded[0].custodia_compartida is False
 
-        d = DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True)
+        d = DescendantInfo(birth_date=date(FILING_YEAR - 4, 3, 15), custodia_compartida=True)
         facts = dict(descendant_facts_from_list((d,)))
         facts.pop(_CUSTODIA_FACT_KEY)
         reloaded = descendant_list_from_facts(facts)

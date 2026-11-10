@@ -29,6 +29,7 @@ from pydantic import ValidationError
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
 from ....core.errors.hierarchy import ProfileAnswerTypeError
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..descendant import DescendantInfo
 from ..descendant_facts import (
     descendant_facts_from_list,
@@ -42,7 +43,8 @@ from .family_counts import descendientes_eligible_minimum
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
-_YEAR = 2024
+
+_YEAR = filing_year_envelope().horizon
 _FACT_CONTEXT = FamilyFactResolutionContext(
     PublishedGovernedFactSource(),
     date(_YEAR, 12, 31),
@@ -66,7 +68,7 @@ def _child(
     dependencia_economica: bool | None = None,
 ) -> DescendantInfo:
     return DescendantInfo(
-        birth_date=date(2012, 1, 1),
+        birth_date=date(_YEAR - 12, 1, 1),
         convive_con_contribuyente=convive_con_contribuyente,
         dependencia_economica=dependencia_economica,
     )
@@ -187,7 +189,7 @@ def test_the_suppression_reaches_every_descendant_not_only_the_paid_one() -> Non
         descendientes=(
             _child(convive_con_contribuyente=False, dependencia_economica=True),
             DescendantInfo(
-                birth_date=date(2014, 6, 1),
+                birth_date=date(_YEAR - 10, 6, 1),
                 convive_con_contribuyente=False,
                 dependencia_economica=True,
             ),
@@ -266,7 +268,7 @@ def test_the_profile_anualidades_figure_survives_a_strict_roundtrip() -> None:
     original = RentaFamilyProfile(
         descendientes=(
             DescendantInfo(
-                birth_date=date(2012, 1, 1),
+                birth_date=date(_YEAR - 12, 1, 1),
                 convive_con_contribuyente=False,
                 dependencia_economica=True,
                 custodia_compartida=True,

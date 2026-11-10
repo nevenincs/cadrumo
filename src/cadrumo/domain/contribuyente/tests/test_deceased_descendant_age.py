@@ -24,9 +24,12 @@ from datetime import date
 
 import pytest
 
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..descendant import DescendantInfo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+EXERCISE = filing_year_envelope().horizon
 
 
 def _descendant(*, birth: date, death: date | None) -> DescendantInfo:
@@ -40,9 +43,9 @@ def test_a_descendant_who_died_before_their_birthday_is_aged_at_death() -> None:
     twenty-five, fail the age limb, and the flat cuantía is never reached --
     the whole mínimo is lost for the bereaved filer.
     """
-    died = _descendant(birth=date(1999, 5, 10), death=date(2024, 3, 1))
+    died = _descendant(birth=date(EXERCISE - 25, 5, 10), death=date(EXERCISE, 3, 1))
 
-    assert died.age_at_year_end(2024) == 24
+    assert died.age_at_year_end(EXERCISE) == 24
 
 
 def test_a_toddler_who_died_before_turning_three_is_aged_at_death() -> None:
@@ -52,9 +55,9 @@ def test_a_toddler_who_died_before_turning_three_is_aged_at_death() -> None:
     and lose the increment the aggregate's own docstring cites the AEAT manual
     as granting to a descendant who died during the period.
     """
-    died = _descendant(birth=date(2021, 9, 10), death=date(2024, 2, 1))
+    died = _descendant(birth=date(EXERCISE - 3, 9, 10), death=date(EXERCISE, 2, 1))
 
-    assert died.age_at_year_end(2024) == 2
+    assert died.age_at_year_end(EXERCISE) == 2
 
 
 def test_a_death_after_the_birthday_ages_identically_to_year_end() -> None:
@@ -63,9 +66,9 @@ def test_a_death_after_the_birthday_ages_identically_to_year_end() -> None:
     Without this, both assertions above are equally consistent with "any death
     lowers the age by one", which would be a different and wrong rule.
     """
-    died = _descendant(birth=date(2000, 1, 10), death=date(2024, 3, 1))
+    died = _descendant(birth=date(EXERCISE - 24, 1, 10), death=date(EXERCISE, 3, 1))
 
-    assert died.age_at_year_end(2024) == 24
+    assert died.age_at_year_end(EXERCISE) == 24
 
 
 def test_a_living_descendant_is_still_aged_at_year_end() -> None:
@@ -74,9 +77,9 @@ def test_a_living_descendant_is_still_aged_at_year_end() -> None:
     Same birth date as the first case. A living descendant reaches their
     birthday, so 31 December remains the correct reference.
     """
-    alive = _descendant(birth=date(1999, 5, 10), death=None)
+    alive = _descendant(birth=date(EXERCISE - 25, 5, 10), death=None)
 
-    assert alive.age_at_year_end(2024) == 25
+    assert alive.age_at_year_end(EXERCISE) == 25
 
 
 def test_a_death_in_a_prior_year_does_not_move_the_reference() -> None:
@@ -87,6 +90,6 @@ def test_a_death_in_a_prior_year_does_not_move_the_reference() -> None:
     reach back into a closed period and answer a question the caller never asks
     -- and would read as intentional to the next reader.
     """
-    long_dead = _descendant(birth=date(1999, 5, 10), death=date(2020, 3, 1))
+    long_dead = _descendant(birth=date(EXERCISE - 25, 5, 10), death=date(EXERCISE - 4, 3, 1))
 
-    assert long_dead.age_at_year_end(2024) == 25
+    assert long_dead.age_at_year_end(EXERCISE) == 25

@@ -20,6 +20,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.descendant_relacion import DescendantRelacion
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..descendant import DescendantInfo
 from ..descendant_facts import (
     descendant_facts_from_list,
@@ -28,6 +29,8 @@ from ..descendant_facts import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+EXERCISE = filing_year_envelope().horizon
 
 _DEATH_FACT_PATH = "renta_family.descendiente.0.fallecimiento"
 
@@ -40,11 +43,11 @@ def _fully_populated() -> DescendantInfo:
     was dropped and re-defaulted on load.
     """
     return DescendantInfo(
-        birth_date=date(2012, 3, 4),
+        birth_date=date(EXERCISE - 12, 3, 4),
         relacion=DescendantRelacion.from_registry("adoptado"),
-        inscripcion_registro_civil_date=date(2013, 5, 6),
-        acogimiento_resolucion_date=date(2012, 9, 9),
-        death_date=date(2024, 7, 8),
+        inscripcion_registro_civil_date=date(EXERCISE - 11, 5, 6),
+        acogimiento_resolucion_date=date(EXERCISE - 12, 9, 9),
+        death_date=date(EXERCISE, 7, 8),
         discapacidad_grado=65,
         convive_con_contribuyente=False,
         dependencia_economica=True,
@@ -75,7 +78,7 @@ def test_death_date_is_actually_written_as_a_fact() -> None:
     roundtrip cannot see it.
     """
     facts = dict(descendant_facts_from_list((_fully_populated(),)))
-    assert facts[_DEATH_FACT_PATH] == "2024-07-08"
+    assert facts[_DEATH_FACT_PATH] == date(EXERCISE, 7, 8).isoformat()
 
 
 def test_anti_tautology_deleting_the_persisted_death_date_surfaces_inequality() -> None:
@@ -125,7 +128,7 @@ def test_absent_death_date_roundtrips_as_absent() -> None:
     empty death fact for every living descendant would make every existing
     profile look re-declared.
     """
-    original = (DescendantInfo(birth_date=date(2012, 3, 4)),)
+    original = (DescendantInfo(birth_date=date(EXERCISE - 12, 3, 4)),)
     facts = dict(descendant_facts_from_list(original))
     assert _DEATH_FACT_PATH not in facts
     assert descendant_list_from_facts(facts) == original
@@ -138,8 +141,10 @@ def test_entry_surface_ships_with_the_field() -> None:
     door exists and lands the value on the canonical record, so the field cannot
     ship write-only.
     """
-    parsed = parse_descendiente_flag("NACIMIENTO=2012-03-04,FALLECIMIENTO=2024-07-08")
-    assert parsed.death_date == date(2024, 7, 8)
+    parsed = parse_descendiente_flag(
+        f"NACIMIENTO={date(EXERCISE - 12, 3, 4).isoformat()},FALLECIMIENTO={date(EXERCISE, 7, 8).isoformat()}"
+    )
+    assert parsed.death_date == date(EXERCISE, 7, 8)
 
 
 def test_entry_surface_refuses_a_death_before_the_birth() -> None:
