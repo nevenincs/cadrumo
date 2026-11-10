@@ -11,6 +11,7 @@ from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from .....core.period import Period
 from .....domain.calculations.registry.authority import bundled_indexed_authority
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...components.host import ScreenHostApp
 from ...tests.frame import geometry_band
 from ...tests.settling import settle
@@ -18,13 +19,15 @@ from ..picker import NewDeclarationPicker
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+_YEAR = filing_year_envelope().horizon
+
 
 def _assert_picker_confirmation_state(picker, selected, app, create, hint, table, size):
     assert picker.selected == selected
     assert app.focused is create
     assert not create.disabled
     assert not hint.display
-    assert "2025" in str(picker.query_one("#declaration-picker-selection", Static).render())
+    assert str(_YEAR) in str(picker.query_one("#declaration-picker-selection", Static).render())
     rendered = "\n".join(str(item.render()) for item in picker.query(Static))
     assert "tui." not in rendered
     assert geometry_band(app, size[0]) == []
@@ -39,8 +42,8 @@ def _assert_picker_period_selection(picker, table, create):
     hint = picker.query_one("#declaration-picker-hint", Static)
     assert hint.display and str(hint.render()) == tr("tui.declarations.list.new.period_selection_hint")
     assert picker.region.contains_region(hint.region) and hint.region.bottom <= table.region.y
-    assert "2025" in str(table.get_row_at(0)[0])
-    assert "2025" in str(table.get_row_at(1)[0])
+    assert str(_YEAR) in str(table.get_row_at(0)[0])
+    assert str(_YEAR) in str(table.get_row_at(1)[0])
     return hint
 
 
@@ -72,11 +75,11 @@ async def test_picker_requires_modelo_period_and_confirmation_in_every_locale_an
 ) -> None:
     with bundled_indexed_authority().operation() as operation:
         admitted = declaration_targets(operation, profile=None)
-    selected = DeclarationTarget("111", Period.from_year_and_code(2025, "2T"))
+    selected = DeclarationTarget("111", Period.from_year_and_code(_YEAR, "2T"))
     targets = (
-        DeclarationTarget("111", Period.from_year_and_code(2025, "1T")),
+        DeclarationTarget("111", Period.from_year_and_code(_YEAR, "1T")),
         selected,
-        DeclarationTarget("130", Period.from_year_and_code(2025, "1T")),
+        DeclarationTarget("130", Period.from_year_and_code(_YEAR, "1T")),
     )
     assert all(target in admitted for target in targets)
     with override_settings(cadrumo_output_language=locale.value):
@@ -114,7 +117,7 @@ async def test_picker_requires_modelo_period_and_confirmation_in_every_locale_an
 
 @pytest.mark.asyncio
 async def test_cancel_and_escape_never_create_an_unselected_declaration() -> None:
-    target = DeclarationTarget("130", Period.from_year_and_code(2026, "1T"))
+    target = DeclarationTarget("130", Period.from_year_and_code(_YEAR, "1T"))
     picker = NewDeclarationPicker((target,), frozenset({"130"}))
     app = ScreenHostApp(picker)
     async with app.run_test(size=(80, 24)) as pilot:

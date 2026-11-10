@@ -37,6 +37,7 @@ from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from .....core.period import Period
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -83,15 +84,17 @@ from .portfolio_fixtures import portfolio_projection
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_NOW = datetime(2026, 9, 3, 10, tzinfo=UTC)
-_PERIOD = Period.from_year_and_code(2026, "1T")
+_YEAR = filing_year_envelope().horizon
+_PRIOR_YEAR = filing_year_envelope().floor
+_NOW = datetime(_YEAR, 9, 3, 10, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 _BUCKET = "11111111-1111-4111-8111-111111111111"
 _CASILLA = validated_casilla_id("01")
 _FILED_ON = {
-    OutputLanguage.EN: "Sep 3, 2026 10:00 UTC",
-    OutputLanguage.ES: "3 sept 2026 10:00 UTC",
-    OutputLanguage.CA: "3 de set. 2026 10:00 UTC",
-    OutputLanguage.HU: "2026. szept. 3. 10:00 UTC",
+    OutputLanguage.EN: f"Sep 3, {_YEAR} 10:00 UTC",
+    OutputLanguage.ES: f"3 sept {_YEAR} 10:00 UTC",
+    OutputLanguage.CA: f"3 de set. {_YEAR} 10:00 UTC",
+    OutputLanguage.HU: f"{_YEAR}. szept. 3. 10:00 UTC",
 }
 _EXPECTED = {
     OutputLanguage.ES: (
@@ -128,7 +131,7 @@ _EXPECTED = {
 def _projection(
     operation: PinnedAuthorityOperation, *, unavailable: DeclarationsWorkspaceZone | None = None, empty: bool = False
 ) -> DeclarationsWorkspaceProjectionV1:
-    registry_snapshot_ref = operation.snapshot("130", filing_year=2026, period="1T").snapshot_ref
+    registry_snapshot_ref = operation.snapshot("130", filing_year=_YEAR, period="1T").snapshot_ref
     observations = tuple(
         DeclarationsWorkspaceZoneObservationV1(
             zone=zone,
@@ -155,7 +158,7 @@ def _projection(
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET,
         modelo="130",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=_PERIOD,
         revision_id=registry_snapshot_ref.revision_id,
     )
@@ -193,7 +196,7 @@ def _projection(
         work_unit_id=work_unit_id,
         bucket_id=_BUCKET,
         modelo="130",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=_PERIOD,
         revision_id=registry_snapshot_ref.revision_id,
         name="private label",
@@ -249,7 +252,7 @@ def _projection(
         calculation_revision_id=filed_revision_id,
         bucket_id=_BUCKET,
         modelo="130",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=_PERIOD,
         member_nif="12345678Z",
         filed_at=_NOW,
@@ -404,7 +407,7 @@ async def test_declarations_create_selects_only_supported_targets_and_reopens_ex
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     targets = declaration_targets(authority_operation, profile=None)
-    target = DeclarationTarget("111", Period.from_year_and_code(2025, "2T"))
+    target = DeclarationTarget("111", Period.from_year_and_code(_PRIOR_YEAR, "2T"))
     assert target in targets
     calls: list[tuple[str, int, Period]] = []
 
@@ -434,10 +437,10 @@ async def test_declarations_create_selects_only_supported_targets_and_reopens_ex
         for _ in range(2):
             await _select_creation(pilot, target.modelo, target.period)
             await settle(pilot)
-        assert calls == [("111", 2025, target.period)] * 2
+        assert calls == [("111", _PRIOR_YEAR, target.period)] * 2
         notice = str(screen.query_one("#declarations-work-create-notice", Static).render())
         assert "Modelo 111" in notice
-        assert "2025" in notice
+        assert str(_PRIOR_YEAR) in notice
         assert tr("workspace.declarations.work_create.reused", address="")[:10] in notice
 
 
@@ -463,7 +466,7 @@ async def test_declarations_create_keeps_the_submitted_address_and_refuses_a_sec
     async with ScreenHostApp(screen).run_test(size=(100, 42)) as pilot:
         await settle(pilot)
         try:
-            await _select_creation(pilot, "111", Period.from_year_and_code(2025, "2T"))
+            await _select_creation(pilot, "111", Period.from_year_and_code(_PRIOR_YEAR, "2T"))
             await settle_until(pilot, lambda: bool(calls), "the creation to reach its door", workers=False)
             assert len(calls) == 1
             await pilot.press("plus")
@@ -476,7 +479,7 @@ async def test_declarations_create_keeps_the_submitted_address_and_refuses_a_sec
             release.set()
         await settle(pilot)
         notice = str(screen.query_one("#declarations-work-create-notice", Static).render())
-    assert calls == [("111", 2025, Period.from_year_and_code(2025, "2T"))]
+    assert calls == [("111", _PRIOR_YEAR, Period.from_year_and_code(_PRIOR_YEAR, "2T"))]
     assert "Modelo 111" in notice
     assert "Modelo 115" not in notice
 
@@ -500,7 +503,7 @@ async def test_declarations_create_shows_the_application_refusal_as_itself(
     )
     async with ScreenHostApp(screen).run_test(size=(100, 42)) as pilot:
         await settle(pilot)
-        await _select_creation(pilot, "200", Period.from_year_and_code(2025, "0A"))
+        await _select_creation(pilot, "200", Period.from_year_and_code(_PRIOR_YEAR, "0A"))
         await settle(pilot)
         notice = str(screen.query_one("#declarations-work-create-notice", Static).render())
     assert notice == tr(
@@ -736,7 +739,7 @@ async def test_revision_and_filing_rows_render_exact_chronology_and_independent_
         assert table.row_count == 3
         rows = tuple(tuple(str(cell) for cell in table.get_row_at(index)) for index in range(3))
         assert len(set(rows)) == 3
-        assert all("3 sept 2026" in row[1] and "UTC" in row[1] for row in rows)
+        assert all(f"3 sept {_YEAR}" in row[1] and "UTC" in row[1] for row in rows)
         assert {row[-2:] for row in rows} == {
             (tr("workspace.declarations.value.yes"), tr("workspace.declarations.value.yes")),
             (tr("workspace.declarations.value.no"), tr("workspace.declarations.value.no")),
@@ -744,7 +747,7 @@ async def test_revision_and_filing_rows_render_exact_chronology_and_independent_
         drafts = tuple(row for row in projection.calculation_revisions if not row.is_current and not row.is_filed)
         assert len(drafts) == 2
         displayed_draft_times = tuple(str(table.get_row(row.calculation_revision_id)[1]) for row in drafts)
-        assert displayed_draft_times == ("3 sept 2026 09:15 UTC", "3 sept 2026 09:45 UTC")
+        assert displayed_draft_times == (f"3 sept {_YEAR} 09:15 UTC", f"3 sept {_YEAR} 09:45 UTC")
         selected_revision = drafts[-1]
         selected_index = next(
             index
@@ -764,7 +767,7 @@ async def test_revision_and_filing_rows_render_exact_chronology_and_independent_
         table = filings.query_one("#declarations-filings", DataTable)
         filing_key = f"filing:{projection.filings[0].filing_record_id}"
         row = tuple(str(cell) for cell in table.get_row(filing_key))
-        assert row[1] == "3 sept 2026 10:00 UTC"
+        assert row[1] == f"3 sept {_YEAR} 10:00 UTC"
         assert row[2] == tr("workspace.declarations.filing_state.vigente")
         assert row[3] == tr("workspace.declarations.confirmation.confirmada")
         assert row[4] == tr("workspace.declarations.evidence.aeat_justificante_pdf")
@@ -979,7 +982,7 @@ async def test_creation_result_opens_the_exact_new_declaration_and_refreshes_sem
     created = original.declarations[0].model_copy(
         update={
             "work_unit_id": "e" * 64,
-            "period": Period.from_year_and_code(2026, "2T"),
+            "period": Period.from_year_and_code(_YEAR, "2T"),
             "has_current_calculation": False,
             "has_current_filing": False,
             "summary": DeclarationSummary(state=DeclarationSummaryState.DRAFT),
@@ -992,7 +995,7 @@ async def test_creation_result_opens_the_exact_new_declaration_and_refreshes_sem
 
     def create(modelo: str, year: int, period: Period) -> ModeloWorkCreateResultV1:
         nonlocal created_now
-        assert (modelo, year, period) == ("130", 2026, created.period)
+        assert (modelo, year, period) == ("130", _YEAR, created.period)
         created_now = True
         return ModeloWorkCreateResultV1(reused=False, declaration=created)
 
