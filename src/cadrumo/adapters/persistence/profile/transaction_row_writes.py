@@ -13,14 +13,13 @@ from typing import TYPE_CHECKING
 
 from ....domain.buckets.event import BucketEventHistoryCatalogue, BucketEventObjectType, BucketEventType
 from ....domain.buckets.event_repository import append_bucket_event, build_bucket_event
-from ....domain.transactions.models import (
+from ....domain.transactions.models import Transaction, validate_stored_transaction_json
+from ....domain.transactions.repository import transaction_index_object_key, transaction_object_key
+from ....domain.transactions.withheld_figures import (
     WITHHELD_FIGURE_COUNT_KEY,
-    Transaction,
     figures_held_without_business,
-    validate_stored_transaction_json,
     withheld_figures_event_entries,
 )
-from ....domain.transactions.repository import transaction_index_object_key, transaction_object_key
 from ..storage.secure_object_namespaces import BUCKET_EVENT_HISTORY_NAMESPACE, TRANSACTION_CATALOGUE_NAMESPACE
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard

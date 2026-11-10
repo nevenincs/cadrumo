@@ -33,10 +33,10 @@ from ..models import (
     require_no_figures_without_business,
     validate_authenticated_stored_transaction_json,
     validate_stored_transaction_json,
-    withhold_figures_without_business,
 )
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..service import set_classification
+from ..withheld_figures import withhold_figures_without_business
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("authority_operation")]
 

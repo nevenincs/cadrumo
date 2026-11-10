@@ -30,13 +30,12 @@ from ....domain.transactions.errors import LedgerStorageError, StoredTransaction
 from ....domain.transactions.models import (
     Transaction,
     TransactionCatalogue,
-    figures_held_without_business,
     require_no_figures_without_business,
     validate_authenticated_stored_transaction_json,
     validate_stored_transaction_json,
-    withhold_figures_without_business,
 )
 from ....domain.transactions.repository import transaction_index_object_key, transaction_object_key
+from ....domain.transactions.withheld_figures import figures_held_without_business, withhold_figures_without_business
 from ..storage.errors import (
     ClassificationError,
     EnvelopeVersionError,
