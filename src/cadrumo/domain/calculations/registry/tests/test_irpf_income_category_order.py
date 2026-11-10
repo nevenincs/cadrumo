@@ -13,10 +13,11 @@ from ..facts.resolution import GovernedFactQuery, MappingFactQuery, ResolvedGove
 from ..irpf_income_categories import resolve_irpf_income_category_catalogue
 from ..schema_base import DateAxis
 from ..snapshot_globals import SupportedFilingYearsCatalogue
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_ON = date(2026, 3, 10)
+_ON = date(filing_year_envelope().horizon, 3, 10)
 _ORDER_KEY = "irpf_income_category.order"
 
 

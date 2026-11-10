@@ -9,8 +9,11 @@ from ..errors import RegistryValidationError
 from ..formula_expression import evaluate_expression
 from ..formula_runtime_ops import RegistryUnresolvedOutcomeReason, UnresolvedFormulaOutcomeError
 from ..schema_formula import FormulaExpression
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 _REASON = RegistryUnresolvedOutcomeReason.WAIVED_REFUND_RESULT_UNSUPPORTED
 
@@ -39,7 +42,7 @@ def _evaluate(expression: FormulaExpression, *, supported: Decimal) -> Decimal:
         operand_refs=[],
         operand_casilla_refs=[],
         operand_values=[],
-        filing_year=2025,
+        filing_year=_YEAR,
     )
 
 
@@ -48,7 +51,7 @@ def test_the_branch_carries_its_typed_reason_and_the_other_branch_still_resolves
     with pytest.raises(UnresolvedFormulaOutcomeError) as unresolved:
         _evaluate(_branching(_REASON.value), supported=Decimal(0))
     assert unresolved.value.reason is _REASON
-    assert unresolved.value.context == {"filing_year": "2025"}
+    assert unresolved.value.context == {"filing_year": str(_YEAR)}
 
 
 def test_a_reason_outside_the_closed_catalogue_is_refused_and_never_an_unresolved_outcome() -> None:

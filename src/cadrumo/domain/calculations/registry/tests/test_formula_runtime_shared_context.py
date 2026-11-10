@@ -36,10 +36,13 @@ from ..ids import BindingId, RelationId
 from ..schema import ModeloDefinition
 from ..schema_catalogues import RegistryCatalogues
 from ..schema_formula import FormulaExpression
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_FILING_PERIOD_DATE_CONTEXT = {"filing_period": date(2025, 12, 31)}
+_YEAR = filing_year_envelope().horizon
+
+_FILING_PERIOD_DATE_CONTEXT = {"filing_period": date(_YEAR, 12, 31)}
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -242,7 +245,7 @@ def test_recursive_reentry_matches_the_loose_argument_entry_point(
             operand_values=operand_values,
             enum_binding_values={},
             date_binding_values={},
-            filing_year=2025,
+            filing_year=_YEAR,
         )
         value = evaluate_with_context(case.expression, ctx)
 
@@ -277,7 +280,7 @@ def test_eval_context_is_frozen_and_slotted() -> None:
         operand_values=[],
         enum_binding_values={},
         date_binding_values={},
-        filing_year=2025,
+        filing_year=_YEAR,
     )
     assert not hasattr(ctx, "__dict__")
     with pytest.raises(dataclasses.FrozenInstanceError):

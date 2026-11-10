@@ -21,9 +21,13 @@ from .formula_runtime_support import evaluate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+# The fixture parameters hold from long before any exercise and never lapse, so
+# no support year decides which row the dispatch under test resolves.
+_SINCE = date(1980, 1, 1)
+
 
 def _madrid_bracket_param() -> ParameterDefinition:
-    """Return a synthetic Madrid 2025 autonomic bracket parameter for tests."""
+    """Return a synthetic Madrid autonomic bracket parameter for tests."""
     return ParameterDefinition.model_validate(
         {
             "id": "renta-escala-autonomica-madrid-base-general",
@@ -38,16 +42,14 @@ def _madrid_bracket_param() -> ParameterDefinition:
                     upper_bound=Decimal("12450"),
                     fixed_addition=Decimal("0"),
                     marginal_rate=Decimal("0.085"),
-                    valid_from=date(2025, 1, 1),
-                    valid_to=date(2025, 12, 31),
+                    valid_from=_SINCE,
                 ),
                 BracketEntry(
                     lower_bound=Decimal("12450"),
                     upper_bound=None,
                     fixed_addition=Decimal("1058.25"),
                     marginal_rate=Decimal("0.103"),
-                    valid_from=date(2025, 1, 1),
-                    valid_to=date(2025, 12, 31),
+                    valid_from=_SINCE,
                 ),
             ),
         },
@@ -70,16 +72,14 @@ def _cataluna_bracket_param() -> ParameterDefinition:
                     upper_bound=Decimal("12450"),
                     fixed_addition=Decimal("0"),
                     marginal_rate=Decimal("0.105"),
-                    valid_from=date(2025, 1, 1),
-                    valid_to=date(2025, 12, 31),
+                    valid_from=_SINCE,
                 ),
                 BracketEntry(
                     lower_bound=Decimal("12450"),
                     upper_bound=None,
                     fixed_addition=Decimal("1307.25"),
                     marginal_rate=Decimal("0.12"),
-                    valid_from=date(2025, 1, 1),
-                    valid_to=date(2025, 12, 31),
+                    valid_from=_SINCE,
                 ),
             ),
         },
@@ -276,21 +276,21 @@ def test_lookup_bracket_by_ccaa_raises_when_dispatched_parameter_is_not_bracket_
             "args": (
                 {"literal": Decimal("20000")},
                 {"binding": "renta-profile-tax-residence-ccaa"},
-                {"dispatch_table": {"madrid": "renta-2025-some-rate-parameter"}},
+                {"dispatch_table": {"madrid": "renta-some-rate-parameter"}},
             ),
         },
     )
     parameters = {
-        "renta-2025-some-rate-parameter": ParameterDefinition.model_validate(
+        "renta-some-rate-parameter": ParameterDefinition.model_validate(
             {
-                "id": "renta-2025-some-rate-parameter",
+                "id": "renta-some-rate-parameter",
                 "data_type": "ratio",
                 "unit": "ratio",
                 "values": (
                     {
                         "value": Decimal("0.21"),
                         "date_axis": "filing_period",
-                        "valid_from": date(2025, 1, 1),
+                        "valid_from": _SINCE,
                     },
                 ),
                 "legal_refs": ("ley-35-2006:art-74",),

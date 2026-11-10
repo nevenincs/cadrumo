@@ -32,6 +32,7 @@ import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..authority import PinnedAuthorityOperation
+from .authored_editions import newest_authored_edition, revision_covering
 from .scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -39,14 +40,17 @@ from .scenarios import (
     run_registry_calculation_scenario,
 )
 
+_YEAR = newest_authored_edition("100")
+_REVISION = str(revision_covering("100", _YEAR).id)
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _CASILLA_1039: CasillaId = validated_casilla_id("1039", surface="_CASILLA_1039")
 _LEGAL_REFS = ("ley-35-2006:art-77", "madrid-dl-1-2010:art-4", "madrid-dl-1-2010:art-18")
 _SOURCE_REFS = (
-    "aeat-renta-2025-manual-deducciones-autonomicas",
-    "boe-modelo-100-2025-form",
-    "aeat-dr-100-2025-dictionary",
+    f"aeat-renta-{_YEAR}-manual-deducciones-autonomicas",
+    f"boe-modelo-100-{_YEAR}-form",
+    f"aeat-dr-100-{_YEAR}-dictionary",
 )
 
 _BASE_BINDINGS = {
@@ -83,8 +87,8 @@ def _scenario(
     return RegistryCalculationScenario(
         id=scenario_id,
         modelo="100",
-        revision="2025",
-        filing_year=2025,
+        revision=_REVISION,
+        filing_year=_YEAR,
         period="0A",
         inputs={},
         binding_values={
@@ -95,7 +99,7 @@ def _scenario(
         },
         enum_binding_values={"renta-profile-tax-residence-ccaa": ccaa},
         relation_values=_REL,
-        date_context={"filing_period": date(2025, 12, 31)},
+        date_context={"filing_period": date(_YEAR, 12, 31)},
         date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 6, 15)},
         expected_outputs=(
             RegistryScenarioExpectedOutput(
@@ -207,7 +211,7 @@ def test_cuantia_parameter_is_721_70_grounded_in_the_madrid_law(
     against that bundled authoritative manual.
     """
     authority = registry_authority
-    snapshot = authority.snapshot("100", filing_year=2025, period="0A")
+    snapshot = authority.snapshot("100", filing_year=_YEAR, period="0A")
     revision = snapshot.revision
 
     cuantia = next(
@@ -220,7 +224,7 @@ def test_cuantia_parameter_is_721_70_grounded_in_the_madrid_law(
     assert "madrid-dl-1-2010:art-4" in cuantia.legal_refs
 
     art_4 = snapshot.legal["madrid-dl-1-2010:art-4"]
-    assert art_4.corpus_ref.startswith("corpus/manuals/renta/2025/part2-deducciones-autonomicas/")
+    assert art_4.corpus_ref.startswith(f"corpus/manuals/renta/{_YEAR}/part2-deducciones-autonomicas/")
     assert any("721,70 euros por cada hijo nacido o adoptado" in text for text in art_4.required_text)
 
     art_18 = snapshot.legal["madrid-dl-1-2010:art-18"]
