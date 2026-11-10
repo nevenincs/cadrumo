@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Annotated, Literal, Self
 
-from pydantic import BaseModel, Field, StringConstraints, model_validator
+from pydantic import BaseModel, Field, StringConstraints, computed_field, model_validator
 
 from cadrumo.core.errors.hierarchy import pydantic_validation_boundary
 from cadrumo.core.hex import is_hex64
@@ -270,6 +270,13 @@ class LocalModelListStatus(OutputSchema):
 type LocalModelListResult = LocalModelListStatus | ProviderSettingsRefusal
 
 
+class LocalEngineChoices(OutputSchema):
+    """The tokens a person may choose for the local engine setting, each in the order its enum declares them."""
+
+    engine: tuple[LocalEngine, ...]
+    placement: tuple[LocalPlacement, ...]
+
+
 class LocalEngineStatus(OutputSchema):
     """The local engine setting: the engine that runs models on this computer and where it runs them.
 
@@ -280,6 +287,9 @@ class LocalEngineStatus(OutputSchema):
     which the default never overrules. ``unreadable`` means the stored record
     cannot be read: then no engine or placement is known and none is
     assumed, and ``revision`` guards the reset that removes the record.
+    ``choices`` is the closed list a frontend renders its pickers from. It
+    is computed from the enums every request is validated against, so a
+    frontend never holds a copy and a status cannot carry a different list.
     """
 
     unreadable: bool
@@ -297,12 +307,19 @@ class LocalEngineStatus(OutputSchema):
             raise ValueError("an unreadable record holds no choice")
         return self
 
+    @computed_field
+    @property
+    def choices(self) -> LocalEngineChoices:
+        """The engines and placements that can be chosen, in declared order."""
+        return LocalEngineChoices(engine=tuple(LocalEngine), placement=tuple(LocalPlacement))
+
 
 type LocalEngineResult = LocalEngineStatus | ProviderSettingsRefusal
 
 
 __all__ = [
     "CliState",
+    "LocalEngineChoices",
     "LocalEngineResult",
     "LocalEngineStatus",
     "LocalModelListEntry",

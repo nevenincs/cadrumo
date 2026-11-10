@@ -227,6 +227,10 @@ def test_administration_answers_busy_while_lifecycle_work_holds_the_tree_instead
     assert not _alive(grandchild, within=5)
 
 
+_SERVED_CHOICES = {"engine": ["llamacpp", "ollama"], "placement": ["auto", "cpu_only"]}
+"""The tokens the declared enums serve, in declared order, written out independently of them."""
+
+
 def _with_memory_model_list(service: AgentService) -> MemoryLocalModelListStore:
     """Back the service's local engine setting with an in-memory record, as the real store would hold it."""
     store = MemoryLocalModelListStore()
@@ -275,6 +279,7 @@ def test_choosing_the_local_engine_retires_the_running_agent_and_schedules_its_r
             "engine": "llamacpp",
             "placement": "auto",
             "revision": ABSENT_SECURE_OBJECT_REVISION_ID,
+            "choices": _SERVED_CHOICES,
         }
         assert service.observe() is True
 
@@ -292,6 +297,7 @@ def test_choosing_the_local_engine_retires_the_running_agent_and_schedules_its_r
             "engine": "llamacpp",
             "placement": "cpu_only",
             "revision": store.stored.revision,
+            "choices": _SERVED_CHOICES,
         }
         thread = service._start_thread
         assert thread is not None

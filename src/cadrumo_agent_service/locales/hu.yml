@@ -108,6 +108,11 @@ desktop:
     effort_medium: Közepes
     effort_ultra: Ultra
     effort_xhigh: Nagyon magas
+    engine_door_local_ai_setup: Helyi MI javítása
+    engine_not_running: A helyi MI motorja nem fut.
+    engine_reason_answer_unreadable: Válaszolt, de nem a várt módon.
+    engine_reason_no_answer_in_time: Nem válaszolt időben.
+    engine_reason_not_reachable: Ezen a számítógépen nem érhető el.
     files_summary: 'Fájlok: {count} · {size}'
     hide: Ügynök elrejtése
     history: Előzmények
@@ -330,6 +335,7 @@ desktop:
     local_model_download: Letöltés
     local_model_installed: Letöltve
     local_model_licence: 'Licenc: {licence}'
+    local_model_licence_named: '{name} ({spdx})'
     local_model_licence_unknown: 'Licenc: nincs megadva'
     local_model_remove: Eltávolítás
     local_model_remove_failed: A Cadrumo nem tudta eltávolítani a modellt. Próbáld

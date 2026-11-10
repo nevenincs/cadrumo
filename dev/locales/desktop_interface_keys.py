@@ -4,7 +4,22 @@ from typing import Final
 
 from .desktop_profile_interface_keys import DESKTOP_PROFILE_INTERFACE_KEYS
 
-DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = DESKTOP_PROFILE_INTERFACE_KEYS | frozenset(
+#: The words for the local AI engine's health, said when the engine is not
+#: running: the state, why, and the one door that repairs it. The agent
+#: service serves them and the shell translates them as they come.
+DESKTOP_AGENT_ENGINE_HEALTH_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        "desktop.agent.engine_door_local_ai_setup",
+        "desktop.agent.engine_not_running",
+        "desktop.agent.engine_reason_answer_unreadable",
+        "desktop.agent.engine_reason_no_answer_in_time",
+        "desktop.agent.engine_reason_not_reachable",
+    }
+)
+
+_PROFILE_AND_ENGINE_KEYS: Final[frozenset[str]] = DESKTOP_PROFILE_INTERFACE_KEYS | DESKTOP_AGENT_ENGINE_HEALTH_KEYS
+
+DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = _PROFILE_AND_ENGINE_KEYS | frozenset(
     {
         "desktop.dock.arrange",
         "desktop.dock.expand",
@@ -907,6 +922,7 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = DESKTOP_PROFILE_INTERFACE_KEYS |
         "desktop.providers.local_model_download",
         "desktop.providers.local_model_installed",
         "desktop.providers.local_model_licence",
+        "desktop.providers.local_model_licence_named",
         "desktop.providers.local_model_licence_unknown",
         "desktop.providers.local_model_remove",
         "desktop.providers.local_model_remove_failed",
