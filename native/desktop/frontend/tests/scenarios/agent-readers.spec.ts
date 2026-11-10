@@ -32,7 +32,9 @@ for (const outcome of ["success", "failure"] as const)
       const answer = (revision: string, chosen = false): AgentLocalModels => ({
         state: "readable",
         models: [],
-        reading: chosen ? wanted : null,
+        ...(chosen
+          ? { reading: wanted, reading_source: "chosen" as const }
+          : { reading: null, reading_source: "none" as const }),
         local_lanes: [],
         revision,
       });

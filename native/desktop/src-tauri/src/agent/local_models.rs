@@ -30,16 +30,29 @@ pub struct ListedModel {
     pub model: String,
 }
 
-/// Every added model and the selected reading model with the guard a change
-/// sends back, or a record nobody can read, which lists and selects no model
-/// and carries the guard of its reset. Either names the catalogue's local
-/// lanes, whose models the picker offers from their lists.
+/// Where the model documents are read with comes from, as the service serves it:
+/// the person's stored choice, the installed default that stands in for a
+/// missing or unusable one, or none when no model reads documents.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ReadingSource {
+    Chosen,
+    Default,
+    None,
+}
+
+/// Every added model and the model documents are read with now, and where it
+/// comes from, with the guard a change sends back, or a record nobody can read,
+/// which lists and selects no model and carries the guard of its reset. Either
+/// names the catalogue's local lanes, whose models the picker offers from their
+/// lists.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 #[serde(tag = "state", rename_all = "snake_case")]
 pub enum LocalModels {
     Readable {
         models: Vec<ListedModel>,
         reading: Option<ListedModel>,
+        reading_source: ReadingSource,
         local_lanes: Vec<String>,
         revision: String,
     },
@@ -100,11 +113,21 @@ pub fn change_refusal(answer: &Value) -> Option<&'static str> {
 /// The snapshot in `answer`, or `None` when it breaks the contract.
 pub fn parse(answer: &Value) -> Option<LocalModels> {
     let object = answer.as_object()?;
-    if object.len() != 5 {
+    if object.len() != 6 {
         return None;
     }
     let models = object.get("models")?.as_array()?;
     let reading = object.get("reading")?;
+    let reading_source = match object.get("reading_source")?.as_str()? {
+        "chosen" => ReadingSource::Chosen,
+        "default" => ReadingSource::Default,
+        "none" => ReadingSource::None,
+        _ => return None,
+    };
+    // A reading names where it comes from, and only no reading comes from none.
+    if reading.is_null() != (reading_source == ReadingSource::None) {
+        return None;
+    }
     let revision = object
         .get("revision")?
         .as_str()
@@ -138,6 +161,7 @@ pub fn parse(answer: &Value) -> Option<LocalModels> {
     Some(LocalModels::Readable {
         models,
         reading,
+        reading_source,
         local_lanes,
         revision,
     })
@@ -431,6 +455,7 @@ pub(crate) mod tests {
                 {"lane": "spare_api", "model": "synthetic-text:1"},
             ],
             "reading": {"lane": "keyed_api", "model": "synthetic-hosted:1"},
+            "reading_source": "chosen",
             "local_lanes": ["local_api"],
             "revision": revision(),
         });
@@ -444,6 +469,7 @@ pub(crate) mod tests {
                     entry("spare_api", "synthetic-text:1"),
                 ],
                 reading: Some(entry("keyed_api", "synthetic-hosted:1")),
+                reading_source: ReadingSource::Chosen,
                 local_lanes: local(),
                 revision: revision(),
             }
@@ -454,13 +480,14 @@ pub(crate) mod tests {
         );
         assert_eq!(refusal(&answer), None);
         let empty = json!({
-            "unreadable": false, "models": [], "reading": null, "local_lanes": [], "revision": revision(),
+            "unreadable": false, "models": [], "reading": null, "reading_source": "none", "local_lanes": [], "revision": revision(),
         });
         assert_eq!(
             parse(&empty),
             Some(LocalModels::Readable {
                 models: vec![],
                 reading: None,
+                reading_source: ReadingSource::None,
                 local_lanes: vec![],
                 revision: revision()
             })
@@ -470,7 +497,7 @@ pub(crate) mod tests {
     #[test]
     fn an_unreadable_record_lists_no_model_and_keeps_its_reset_guard() {
         let answer = json!({
-            "unreadable": true, "models": [], "reading": null, "local_lanes": ["local_api"], "revision": revision(),
+            "unreadable": true, "models": [], "reading": null, "reading_source": "none", "local_lanes": ["local_api"], "revision": revision(),
         });
         let parsed = parse(&answer).unwrap();
         assert_eq!(
@@ -493,6 +520,7 @@ pub(crate) mod tests {
             json!({
                 "unreadable": unreadable,
                 "models": models,
+                "reading_source": if reading.is_null() { "none" } else { "chosen" },
                 "reading": reading,
                 "local_lanes": lanes,
                 "revision": revision(),
@@ -507,6 +535,14 @@ pub(crate) mod tests {
         extra["extra"] = json!(1);
         let mut missing_reading = snapshot(false, none(), Value::Null, lanes());
         missing_reading.as_object_mut().unwrap().remove("reading");
+        let mut missing_source = snapshot(false, none(), Value::Null, lanes());
+        missing_source.as_object_mut().unwrap().remove("reading_source");
+        let mut sourceless_reading = snapshot(false, none(), model("local_api", json!("m")), lanes());
+        sourceless_reading["reading_source"] = json!("none");
+        let mut unsourced_absence = snapshot(false, none(), Value::Null, lanes());
+        unsourced_absence["reading_source"] = json!("default");
+        let mut unknown_source = snapshot(false, none(), model("local_api", json!("m")), lanes());
+        unknown_source["reading_source"] = json!("guessed");
         let mut null_revision = snapshot(false, none(), Value::Null, lanes());
         null_revision["revision"] = Value::Null;
         for answer in [
@@ -570,6 +606,10 @@ pub(crate) mod tests {
             snapshot(false, none(), Value::Null, json!(many_lanes)),
             extra,
             missing_reading,
+            missing_source,
+            sourceless_reading,
+            unsourced_absence,
+            unknown_source,
             snapshot(
                 false,
                 json!([{"lane": "local_api", "model": "m", "role": "x"}]),
@@ -626,7 +666,7 @@ pub(crate) mod tests {
             );
         }
         let snapshot = json!({
-            "unreadable": false, "models": [], "reading": null, "local_lanes": [], "revision": revision(),
+            "unreadable": false, "models": [], "reading": null, "reading_source": "none", "local_lanes": [], "revision": revision(),
         });
         assert_eq!(change_refusal(&snapshot), None);
     }

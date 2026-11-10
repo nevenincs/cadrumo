@@ -9,6 +9,7 @@ import {
   catalogChoices,
   laneEngines,
   ranSelection,
+  readingSelection,
   restoredSelection,
   selectionRecord,
 } from "../../shell/agentCatalog";
@@ -249,15 +250,24 @@ export function useAgentCatalog({
         ? { lane: wantedLane, model: wantedModel }
         : null,
     );
-  const selection = offer
-    ? restoredSelection(offer, [
-        chosen,
-        ranWith && catalog.kind === "ready"
-          ? ranSelection(catalog.value, ranWith)
-          : null,
-        remembered,
-      ])
-    : null;
+  // The model the service reads documents with stands in for a choice the
+  // person has not made, so the picker shows what a reading runs with. Where
+  // the service serves none, the picker keeps no default of its own.
+  const served = stored?.state === "readable" ? stored : null;
+  const servedReading =
+    served?.reading && catalog.kind === "ready"
+      ? readingSelection(catalog.value, served.reading)
+      : null;
+  const ran =
+    ranWith && catalog.kind === "ready"
+      ? ranSelection(catalog.value, ranWith)
+      : null;
+  const held = [chosen, ran, remembered, servedReading];
+  const selection = !offer
+    ? null
+    : served?.reading_source === "none" && !held.some(Boolean)
+      ? null
+      : restoredSelection(offer, held);
   return {
     catalog,
     catalogBusy,
