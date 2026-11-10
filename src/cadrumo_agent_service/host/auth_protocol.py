@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Literal
+import contextlib
+from queue import Empty, Full, Queue
+from typing import BinaryIO, Literal
 from urllib.parse import SplitResult, parse_qsl, urlsplit
 from uuid import UUID
 
@@ -170,3 +172,32 @@ def _validate_authorization_query(raw_query: str) -> None:
     # Some authorization pages use a boolean flow flag, never a returned code.
     if codes and codes != ["true"]:
         raise ValueError
+
+
+def read_event_lines(stream: BinaryIO, queue: Queue[bytes | None]) -> None:
+    """Queue the helper's output lines; an end, overlong or unterminated line ends the read with ``None``."""
+    try:
+        while True:
+            line = stream.readline(MAX_AUTH_LINE + 1)
+            queue.put_nowait(line or None)
+            if not line or len(line) > MAX_AUTH_LINE or not line.endswith(b"\n"):
+                return
+    except (OSError, ValueError, Full):
+        with contextlib.suppress(Empty):
+            queue.get_nowait()
+        with contextlib.suppress(Full):
+            queue.put_nowait(None)
+    finally:
+        with contextlib.suppress(OSError, ValueError):
+            stream.close()
+
+
+def append_auth_code(line: bytearray, code: bytearray) -> None:
+    """Escape the code into the action line in place, so no copy of it outlives the caller's wipe."""
+    for byte in code:
+        if byte in (34, 92):
+            line.append(92)
+        line.append(byte)
+    line.extend(b'"}\n')
+    if len(line) > 4096:
+        raise ValueError("invalid_request")

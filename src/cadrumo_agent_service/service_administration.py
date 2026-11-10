@@ -372,6 +372,16 @@ class AgentServiceAdministration(ABC):
             return self._connect(provider, expected_revision=expected_revision, method=method)
         return self._change_provider(action, provider, expected_revision, base_url, choice, secret)
 
+    def _admin_refusal(self) -> dict[str, str] | None:
+        """Refuse a tree or provider change while stopping, signed out or during a sign-in attempt."""
+        if self._closing.is_set():
+            return {"kind": "refused", "code": "service_stopping"}
+        if self.client.lease is None:
+            return {"kind": "refused", "code": "signed_out"}
+        if self._auth_attempt is not None and self._auth_attempt.active:
+            return {"kind": "refused", "code": "busy"}
+        return None
+
     def _admin(
         self,
         action: str,
@@ -387,12 +397,9 @@ class AgentServiceAdministration(ABC):
         engine: str | None = None,
         placement: str | None = None,
     ) -> Any:
-        if self._closing.is_set():
-            return {"kind": "refused", "code": "service_stopping"}
-        if self.client.lease is None:
-            return {"kind": "refused", "code": "signed_out"}
-        if self._auth_attempt is not None and self._auth_attempt.active:
-            return {"kind": "refused", "code": "busy"}
+        refusal = self._admin_refusal()
+        if refusal is not None:
+            return refusal
         if action == "start":
             if not self._schedule_start():
                 return {"kind": "refused", "code": "service_stopping"}
