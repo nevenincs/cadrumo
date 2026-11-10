@@ -134,12 +134,10 @@ test("a command's name is not shown as the reason: the overview says the word th
 }) => {
   await open(target);
   // A classified row: the scenario's rows written by a command store its name
-  // as their reason, and the ledger serves a word for it.
+  // as their reason, and the ledger serves a word for it. Any Business row
+  // will do; the seeded ledger leaves some of each description unprocessed.
   const classified = movementGrid(target)
     .locator("[data-kind=data]")
-    .filter({
-      has: target.locator("[data-column=description]", { hasText: MOVEMENT }),
-    })
     .filter({
       has: target.locator("[data-column=classification]", {
         hasText: label("desktop.ledger.classification.business"),
