@@ -20,6 +20,7 @@ import pytest
 from .....core.aggregation import RetencionClave
 from ..withholding_bindings import WithholdingObservation
 from ..withholding_clave_breakdown import WithholdingClaveBreakdown, aggregate_withholding_by_clave
+from .authored_editions import filing_year_envelope
 from .withholding_observation_defaults import zero_incapacity_and_foral_fields
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -39,7 +40,7 @@ def _obs(
     return WithholdingObservation(
         source_id=source_id,
         perceptor_tax_id=nif,
-        transaction_date=date(2025, 6, 1),
+        transaction_date=date(filing_year_envelope().horizon, 6, 1),
         clave=RetencionClave.from_registry(clave),
         subclave=subclave,
         percibido_dinerario=Decimal(percibido_dinerario),

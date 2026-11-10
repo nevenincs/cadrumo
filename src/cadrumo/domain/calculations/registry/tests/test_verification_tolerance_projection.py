@@ -7,6 +7,7 @@ from decimal import Decimal
 import pytest
 
 from ..verification_tolerance import verification_tolerance_or_exact
+from .authored_editions import filing_year_envelope
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -21,9 +22,9 @@ def test_the_projection_uses_each_real_modelos_published_policy_or_exact_fallbac
     observably wrong.
     """
 
-    modelo_130 = published_snapshot("130", filing_year=2026, period="1T")
-    modelo_303 = published_snapshot("303", filing_year=2025, period="1T")
-    modelo_349 = published_snapshot("349", filing_year=2025, period="1T")
+    modelo_130 = published_snapshot("130", filing_year=filing_year_envelope().horizon, period="1T")
+    modelo_303 = published_snapshot("303", filing_year=filing_year_envelope().horizon, period="1T")
+    modelo_349 = published_snapshot("349", filing_year=filing_year_envelope().horizon, period="1T")
 
     assert verification_tolerance_or_exact(modelo_130) == Decimal("0.01")
     assert verification_tolerance_or_exact(modelo_303) == Decimal("0.00")

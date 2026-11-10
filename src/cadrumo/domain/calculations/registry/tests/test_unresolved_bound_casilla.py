@@ -32,10 +32,12 @@ from ..formula_runtime import RegistryCalculationResult, calculate_registry_snap
 from ..ids import BindingId
 from ..schema import RegistrySnapshot
 from ..schema_input_kind import InputKind
+from .authored_editions import filing_grade_exercises
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_YEAR = 2025
+# Modelo 390 is the narrower of the two subjects, so the exercise is its newest filing-grade edition.
+_YEAR = filing_grade_exercises("390")[-1]
 _PRORRATA_44_BINDING: BindingId = "modelo-303-prorrata-regularizacion-casilla-44"
 _SOPORTADO_INTERIORES_BINDING: BindingId = "modelo-303-iva-soportado-interiores-cuota"
 _STATE_RATIO_BINDING: BindingId = "modelo-303-profile-state-attribution-ratio"

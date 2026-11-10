@@ -26,8 +26,11 @@ from .....core.errors.hierarchy import CoreValidationError
 from .....core.period import Period
 from .....core.result_disposition import ResultDisposition, result_disposition_declares
 from ..result_casillas import canonical_result_amount, derive_result_disposition, result_disposition_casilla_ids
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
+
+_YEAR: Final[int] = filing_year_envelope().horizon
 
 
 _M303_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id("71", surface="test result-disposition casilla id")
@@ -49,7 +52,7 @@ _M210_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id(
 )
 
 
-_Q2: Final[Period] = Period.from_year_and_code(2025, "2T")
+_Q2: Final[Period] = Period.from_year_and_code(_YEAR, "2T")
 """A quarter, not the year's last, for modelos whose code does not depend on it."""
 
 
@@ -172,13 +175,13 @@ def test_an_instalment_result_is_a_deducir_in_quarters_one_to_three_and_negativa
     deducted from later instalments of the year; a negative 4th-quarter result,
     like a zero one in any quarter, is "Negativa"; a positive one is paid.
     """
-    period = Period.from_year_and_code(2025, quarter)
+    period = Period.from_year_and_code(_YEAR, quarter)
 
     assert derive_result_disposition(modelo, _values(result_casilla, amount), period=period) is expected
 
 
 def test_the_fourth_quarter_changes_no_other_modelos_code() -> None:
-    q4 = Period.from_year_and_code(2025, "4T")
+    q4 = Period.from_year_and_code(_YEAR, "4T")
 
     assert derive_result_disposition("303", _values(_M303_RESULT_CASILLA, "-210.00"), period=q4) is (
         ResultDisposition.COMPENSACION

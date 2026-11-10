@@ -18,6 +18,8 @@ import pytest
 # Importing the renta package registers the first-slice routing cross-domain
 # snapshot check required by Modelo 100 parity scenarios run via scenarios.
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from .authored_editions import revision_covering, source_exercise
+from .published_authority import published_source_reference
 from .registry_tree import bundled_modelo_components
 from .scenarios import (
     RegistryCalculationScenario,
@@ -28,6 +30,10 @@ from .scenarios import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+# The oracle values below are derived from one AEAT manual edition, so the exercise
+# is the one that edition governs, not the newest the registry authors.
+_EXERCISE = source_exercise(published_source_reference("aeat-renta-2025-manual-parte1"))
+_REVISION = str(revision_covering("100", _EXERCISE).id)
 
 _C0003 = validated_casilla_id("0003", surface="test_renta_chain_behaviour casilla id")
 _C0426 = validated_casilla_id("0426", surface="test_renta_chain_behaviour casilla id")
@@ -88,7 +94,7 @@ _RELATION_ZERO_VALUES_2025 = {
 @lru_cache(maxsize=1)
 def _m100_2025_refs_by_target() -> dict[CasillaId, tuple[tuple[str, ...], tuple[str, ...]]]:
     modelo, _catalogues = bundled_modelo_components("100")
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[_REVISION]
     refs: dict[CasillaId, tuple[tuple[str, ...], tuple[str, ...]]] = {
         casilla.id: (
             tuple(str(ref) for ref in casilla.legal_refs),
@@ -188,8 +194,8 @@ def _scenario_2025(
     return RegistryCalculationScenario(
         id=scenario_id,
         modelo="100",
-        revision="2025",
-        filing_year=2025,
+        revision=_REVISION,
+        filing_year=_EXERCISE,
         period="0A",
         inputs=inputs,
         binding_values={
@@ -230,7 +236,7 @@ def test_minimo_personal_y_familiar_aggregates_all_four_components_estatal() -> 
     """
 
     modelo, _catalogues = bundled_modelo_components("100")
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[_REVISION]
     formula = next(f for f in revision.formulas if f.target_casilla_id == _C0519)
     expression = formula.expression.model_dump(exclude_none=True)
     assert expression.get("op") == "sum"
@@ -335,8 +341,8 @@ def test_base_liquidable_general_applies_reductions() -> None:
     scenario = RegistryCalculationScenario(
         id="base-liquidable-with-reductions",
         modelo="100",
-        revision="2025",
-        filing_year=2025,
+        revision=_REVISION,
+        filing_year=_EXERCISE,
         period="0A",
         inputs=base_inputs,
         binding_values={
