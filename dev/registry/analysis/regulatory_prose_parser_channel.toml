@@ -180,6 +180,16 @@ corpus = "Locale catalogue command and file syntax"
 reason = "Recognises the casilla_code, value observation-file header quoted in translated CLI help so the spelling audit treats it as file syntax rather than translated words. The detector matches casilla in that header; this module reads no official prose and derives no regulatory value."
 
 [[parser]]
-module = "dev/quality/year_literals.py"
+module = "dev/quality/year_literal_casilla_ids.py"
 corpus = "First-party Python source"
-reason = "Recognises year-named identifiers and year-shaped literals in first-party source for the year gate. The detector matches ejercicio in its year-word pattern; the module reads no official prose and derives no regulatory value."
+reason = "Recognises where first-party Python code places a string as a casilla id, so the year gate admits a box numbered like a year. The detector matches casilla in its name-word pattern; the module reads no official prose and derives no regulatory value."
+
+[[parser]]
+module = "dev/quality/year_literal_python_rules.py"
+corpus = "First-party Python source"
+reason = "Recognises year-named identifiers and year-shaped literals in first-party Python source for the year gate. The detector matches ejercicio in its year-word pattern; the module reads no official prose and derives no regulatory value."
+
+[[parser]]
+module = "dev/quality/year_literal_typescript.py"
+corpus = "First-party TypeScript source"
+reason = "Recognises year-named bindings and year-shaped literals in first-party TypeScript source for the year gate. The detector matches ejercicio in its year-binding pattern; the module reads no official prose and derives no regulatory value."
