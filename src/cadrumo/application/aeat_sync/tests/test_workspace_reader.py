@@ -16,6 +16,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.filing_record import ModeloRecord
 from ....tests.aeat_literal_fixtures import (
     CENSO_SOURCE_URL_FIXTURE,
@@ -79,7 +80,8 @@ _BUCKET = "00000000-0000-4000-8000-000000000001"
 _SUBJECT = "00001005Q"
 _SUBJECT_AS_TYPED = f"{_SUBJECT[:-1]}-{_SUBJECT[-1].lower()}"
 """The subject as an operator may type it, with a separator and a lowercase letter."""
-_NOW = datetime(2026, 9, 4, 10, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_NOW = datetime(_YEAR, 9, 4, 10, 0, tzinfo=UTC)
 _CERTIFICATE_SECRET_BACKEND_FACTORY = InMemoryCertificateSecretBackendFactory()
 
 
@@ -458,7 +460,7 @@ def test_saved_census_is_available_and_compares_only_observed_facts(observed_nif
 
 
 _FILED_SUBJECT = "X0001500M"
-_CAPTURED_AT = datetime(2025, 4, 16, 8, 0, tzinfo=UTC)
+_CAPTURED_AT = datetime(_YEAR, 4, 16, 8, 0, tzinfo=UTC)
 
 
 def _filed_evidence(
@@ -553,7 +555,7 @@ def test_captured_filings_reach_filed_declarations_with_receipt_and_submission_a
     first = filed_declaration_observation(artefacts=(filed_declaration_artefact(),))
     second = replace(
         filed_declaration_observation(artefacts=(), expediente_id="22222222222222222222"),
-        _period=Period.from_year_and_code(2025, "2T"),
+        _period=Period.from_year_and_code(modelo_record().filing_year, "2T"),
     )
     projection = _filed_projection(_filed_evidence((first, second), verified=True), filings=(modelo_record(),))
 
