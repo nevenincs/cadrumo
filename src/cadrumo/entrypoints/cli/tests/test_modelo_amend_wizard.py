@@ -809,18 +809,16 @@ def test_amend_wizard_scripted_inputs_match_hand_built_work_amend(
             runtime_profile=_operator_profile,
         ).output,
     )  # fmt: skip
-    assert (
-        wizard_revision["casilla_values"]["07"]
-        == hand_built_revision["casilla_values"]["07"]
-        == str(_M303_CORRECTED_BASE_GENERAL)
-    )
+    assert wizard_revision["casilla_values"]["07"] == hand_built_revision["casilla_values"]["07"]
+    assert Decimal(wizard_revision["casilla_values"]["07"]) == _M303_CORRECTED_BASE_GENERAL
 
     # The corrected casilla carries identical legal grounding through both
     # surfaces -- the persisted observation is where that grounding actually
     # has to survive (``aeat-calculation-grounding``).
     wizard_obs = _casilla_observation(wizard_revision, "07")
     hand_built_obs = _casilla_observation(hand_built_revision, "07")
-    assert wizard_obs["value"] == hand_built_obs["value"] == str(_M303_CORRECTED_BASE_GENERAL)
+    assert wizard_obs["value"] == hand_built_obs["value"]
+    assert Decimal(wizard_obs["value"]) == _M303_CORRECTED_BASE_GENERAL
     assert wizard_obs["legal_refs"], "corrected casilla must carry legal_refs"
     assert wizard_obs["legal_refs"] == hand_built_obs["legal_refs"]
     assert wizard_obs["source_refs"] == hand_built_obs["source_refs"]
