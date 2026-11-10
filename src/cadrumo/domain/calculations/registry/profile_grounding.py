@@ -18,7 +18,7 @@ gated key's legal basis; it is deliberately excluded.
 from __future__ import annotations
 
 import threading
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 
 from pydantic import BaseModel, Field, ValidationError
@@ -215,6 +215,34 @@ def _never_abandoned() -> bool:
     return False
 
 
+def _walk_abandoned(
+    abandoned: Callable[[], bool] | None,
+    pause: Callable[[Callable[[], bool]], None] | None,
+) -> bool:
+    """Wait at the revision boundary while ``pause`` holds, then report whether the walk was abandoned."""
+    if pause is not None:
+        pause(abandoned or _never_abandoned)
+    return abandoned is not None and abandoned()
+
+
+def _fold_profile_bindings(
+    bindings: Iterable[BindingDefinition],
+    modelo_id: str,
+    *,
+    modelos: dict[str, set[str]],
+    legal_refs: dict[str, set[str]],
+    source_refs: dict[str, set[str]],
+) -> None:
+    """Add one revision's profile bindings to the per-key modelo, legal and source sets."""
+    for binding in bindings:
+        if binding.source is not BindingSourceKind.PROFILE:
+            continue
+        for key in binding_profile_keys(binding):
+            modelos.setdefault(key, set()).add(modelo_id)
+            legal_refs.setdefault(key, set()).update(binding.legal_refs)
+            source_refs.setdefault(key, set()).update(binding.source_refs)
+
+
 def _compute_profile_grounding_index(
     operation: PinnedAuthorityOperation,
     *,
@@ -231,18 +259,15 @@ def _compute_profile_grounding_index(
     source_refs: dict[str, set[str]] = {}
 
     for modelo_id, revision_id in operation.revision_ids():
-        if pause is not None:
-            pause(abandoned or _never_abandoned)
-        if abandoned is not None and abandoned():
+        if _walk_abandoned(abandoned, pause):
             return None
-        revision = operation.revision(modelo_id, revision_id)
-        for binding in revision.bindings:
-            if binding.source is not BindingSourceKind.PROFILE:
-                continue
-            for key in binding_profile_keys(binding):
-                modelos.setdefault(key, set()).add(modelo_id)
-                legal_refs.setdefault(key, set()).update(binding.legal_refs)
-                source_refs.setdefault(key, set()).update(binding.source_refs)
+        _fold_profile_bindings(
+            operation.revision(modelo_id, revision_id).bindings,
+            modelo_id,
+            modelos=modelos,
+            legal_refs=legal_refs,
+            source_refs=source_refs,
+        )
 
     return {
         key: ProfileKeyGrounding(
