@@ -14,11 +14,15 @@ export function ProfileCompletionNotice({
   profile,
   warnings = [],
   onNavigate,
+  actions = {},
   className,
 }: {
   profile: UserProfile | null;
   warnings?: CalendarWarning[];
   onNavigate?: (url: string) => void;
+  /** Doors this surface can open, keyed by the catalogue action a served
+   * notice names; a notice whose action has no door here shows text only. */
+  actions?: Partial<Record<string, { label: string; run: () => void }>>;
   className?: string;
 }) {
   const t = useStrings();
@@ -40,6 +44,16 @@ export function ProfileCompletionNotice({
       ...warnings.map((warning) => warning.message),
     ]),
   ];
+  const offered = [
+    ...new Set(
+      (profile?.notices ?? []).flatMap((notice) =>
+        notice.action ? [notice.action.action_id] : [],
+      ),
+    ),
+  ].flatMap((id) => {
+    const door = actions[id];
+    return door ? [{ id, ...door }] : [];
+  });
   if (!incomplete && !attention && messages.length === 0) return null;
   const hasDetails = labels.length > 0 || messages.length > 0;
   const href = formatViewLink(NAVIGATION, "profile");
@@ -70,6 +84,16 @@ export function ProfileCompletionNotice({
             )}
           </Button>
         )}
+        {offered.map((door) => (
+          <Button
+            key={door.id}
+            variant="link"
+            className="min-h-control-xs"
+            onClick={door.run}
+          >
+            {door.label}
+          </Button>
+        ))}
         {onNavigate && (
           <Button variant="link" className="min-h-control-xs" asChild>
             <a

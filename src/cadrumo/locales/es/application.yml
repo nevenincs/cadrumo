@@ -3646,6 +3646,9 @@ application:
     notices:
       censo_divergences_open: '{count} dato(s) del perfil o del certificado siguen
         difiriendo del Certificado de Situación Censal y quedan sin resolver: {axes}.'
+      kdf_at_fallback: La contraseña de este perfil tiene la protección mínima, porque
+        este equipo no pudo confirmar a tiempo un ajuste más fuerte al crear el perfil.
+        Cambia la contraseña para reforzarla; puedes volver a introducir la misma.
   wizard:
     errors:
       command_input_invalid: 'Los datos del perfil no superaron la validación: %{details}'

@@ -3472,6 +3472,10 @@ application:
     notices:
       censo_divergences_open: '{count} profile or certificate field(s) still diverge
         from the Certificado de Situación Censal and remain unresolved: {axes}.'
+      kdf_at_fallback: This profile's password has the minimum protection, because
+        this computer could not confirm a stronger setting in time when the profile
+        was created. Change the password to strengthen it; you can enter the same
+        password again.
   wizard:
     errors:
       command_input_invalid: 'The profile details are invalid: %{details}'

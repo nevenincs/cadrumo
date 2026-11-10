@@ -49,10 +49,19 @@ pub struct Section {
     repeatable: bool,
     fields: Vec<Field>,
 }
+/// The catalogue action a served notice offers; the window maps it to a door it already has.
+#[derive(Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct NoticeAction {
+    action_id: String,
+    target_command_key: String,
+}
 #[derive(Serialize)]
 pub struct Notice {
     severity: String,
+    code: String,
     message: String,
+    action: Option<NoticeAction>,
 }
 #[derive(Serialize)]
 pub struct Overview {
@@ -84,7 +93,10 @@ enum Item {
     },
     Notice {
         severity: String,
+        code: String,
         message: String,
+        #[serde(default)]
+        action: Option<NoticeAction>,
     },
 }
 /// One page of a `user-profile.view` stream, as the product serves it.
@@ -308,9 +320,19 @@ impl Pages {
                     self.trailing = true;
                     self.overview.missing_required.push(path);
                 }
-                Item::Notice { severity, message } => {
+                Item::Notice {
+                    severity,
+                    code,
+                    message,
+                    action,
+                } => {
                     self.trailing = true;
-                    self.overview.notices.push(Notice { severity, message });
+                    self.overview.notices.push(Notice {
+                        severity,
+                        code,
+                        message,
+                        action,
+                    });
                 }
                 _ => return Err(protocol()),
             }
