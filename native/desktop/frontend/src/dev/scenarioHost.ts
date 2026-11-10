@@ -9,6 +9,7 @@
 
 import type { DocsLanguage, DesktopLanguage } from "../ipc/environment";
 import type {
+  AgentLocalEngineToken,
   HostFailure,
   LogBatch,
   LogLevel,
@@ -79,6 +80,7 @@ import {
   fixtureModelPresence,
   type FixtureModelPresence,
 } from "./fixtures/agentCatalog";
+import { fixtureEngineRecord } from "./fixtures/localEngineRecord";
 import { openFixtureTerminal } from "./fixtures/terminal";
 import { setupFixture, type SetupShape } from "./setupFixture";
 import { SCENARIO_HOST_MARKER } from "./marker";
@@ -125,6 +127,9 @@ export type ScenarioHostOptions = {
   /** Which of the local lane's models the made-up computer holds, where not
    * as the fixture catalog writes it. */
   localModels?: FixtureLocalModels;
+  /** The local engine the made-up service's record selects at first; the
+   * default engine where left out. */
+  localEngine?: AgentLocalEngineToken;
   /** The shape of the made-up computer's component setup; where neither
    * this nor the scenario names one, the host offers no setup. */
   setup?: SetupShape | null;
@@ -580,10 +585,14 @@ export function scenarioHost(
   // them, and the agent's catalog reports them.
   const modelPresence = fixtureModelPresence();
   window.__scenarioModelPresence = modelPresence;
+  // The one engine record the made-up service scopes its catalog, its
+  // provider settings and its local model lists by.
+  const engineRecord = fixtureEngineRecord(options.localEngine);
   const providerFixture = providerSettingsFixture({
     say,
     wait: () => wait(options.latencyMs),
     readable,
+    engineRecord,
   });
 
   // The agent goes with the profile's views: offered, empty, refused or not
@@ -609,6 +618,7 @@ export function scenarioHost(
     skills: options.agentSkills ?? "bundled",
     catalog: options.agentCatalog ?? "served",
     ...(options.localModels ? { localModels: options.localModels } : {}),
+    engineRecord,
   });
   // Every host this page made publishes, as one service would for each.
   const publishedBefore = window.__scenarioAgentPublishStatus;

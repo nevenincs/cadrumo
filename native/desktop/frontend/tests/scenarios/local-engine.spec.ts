@@ -2,10 +2,11 @@ import { expect, test, type Page } from "@playwright/test";
 import { scenarioOnly } from "../support/agent";
 import { label } from "../support/strings";
 
-// The local engine and placement choice in the agent's settings: Ollama is
-// the default and shows its lane alone; choosing llama.cpp stores the choice
-// at the revision read and shows its lane instead. The scenario host stands
-// in for the agent service.
+// The local engine and placement choice in the agent's settings: the
+// bundled llama.cpp is the default and its lane alone is served; choosing
+// Ollama stores the choice at the revision read, and the service then serves
+// Ollama's lane instead, which the settings show once read again. The
+// scenario host stands in for the agent service.
 
 test.beforeEach(() => {
   scenarioOnly("The scenario host stands in for the agent service.");
@@ -33,6 +34,14 @@ async function openSettings(target: Page) {
       nodes.forEach((node) => ((node as HTMLDetailsElement).open = true)),
     );
   return settings(target);
+}
+
+async function closeSettings(target: Page) {
+  await target
+    .locator(".pane-agent")
+    .getByRole("button", { name: label("desktop.agent.settings") })
+    .click();
+  await expect(settings(target)).toBeHidden();
 }
 
 const engineGroup = (target: Page) =>
@@ -84,11 +93,15 @@ test("choosing Ollama stores it at the revision read and shows its lane", async 
       name: label("desktop.providers.local_engine_ollama"),
     })
     .click();
-  await expect(modelRows(target, "ollama")).toHaveCount(1);
-  await expect(modelRows(target, "llamacpp")).toHaveCount(0);
   expect(await calls(target)).toContain(
     `agentLocalEngineChoose ollama auto ${read}`,
   );
+  // The settings are read again when opened again: the lanes served now are
+  // the new engine's.
+  await closeSettings(target);
+  await openSettings(target);
+  await expect(modelRows(target, "ollama")).toHaveCount(1);
+  await expect(modelRows(target, "llamacpp")).toHaveCount(0);
   await expect(
     engineGroup(target).getByRole("radio", {
       name: label("desktop.providers.local_engine_ollama"),

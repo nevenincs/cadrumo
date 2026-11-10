@@ -1,10 +1,11 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { FIXTURE_CATALOG } from "../../src/dev/fixtures/agentCatalog";
+import { servedCatalogFor } from "../../src/dev/fixtures/agentCatalog";
 import {
   agentColumn as column,
   openConversation,
   scenarioOnly,
 } from "../support/agent";
+import { SERVED_ENGINE } from "../support/servedLocalLanes";
 import { label } from "../support/strings";
 
 // The provider, way, model and effort the person last chose for the agent
@@ -15,7 +16,8 @@ import { label } from "../support/strings";
 
 const STORE = "cadrumo-agent-choice";
 
-const lanes = FIXTURE_CATALOG.providers ?? [];
+// The catalog the host serves under its default engine.
+const lanes = servedCatalogFor(SERVED_ENGINE).providers ?? [];
 const wayOf = (served: { provider_id: string; transport: string }) =>
   `${served.provider_id}/${served.transport}`;
 const laneOf = (way: string) => {

@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { FIXTURE_CATALOG } from "../../src/dev/fixtures/agentCatalog";
+import { servedCatalogFor } from "../../src/dev/fixtures/agentCatalog";
+import { SERVED_ENGINE } from "../support/servedLocalLanes";
 import {
   agentColumn as column,
   agentTurns,
@@ -884,9 +885,10 @@ test("an agent that cannot serve says why, and nothing can be sent", async ({
   ).toBeVisible();
 });
 
-// What the fixture catalog holds, read straight from it: the checks below
-// compare the column with this, and none restates a provider.
-const lanes = FIXTURE_CATALOG.providers ?? [];
+// What the fixture catalog serves under the host's default engine, read
+// straight from it: the checks below compare the column with this, and none
+// restates a provider.
+const lanes = servedCatalogFor(SERVED_ENGINE).providers ?? [];
 const nameOf = (id: string) =>
   lanes.find((lane) => lane.provider_id === id)?.display_name ?? id;
 

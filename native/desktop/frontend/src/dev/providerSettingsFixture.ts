@@ -5,6 +5,11 @@ import type {
   ProviderSettingsRecord,
 } from "../shell/providerSettings";
 import { FIXTURE_CATALOG } from "./fixtures/agentCatalog";
+import {
+  fixtureEngineRecord,
+  servesEngineLane,
+  type FixtureEngineRecord,
+} from "./fixtures/localEngineRecord";
 
 // The scenario host's model providers: one lane per lane of the made-up
 // catalog the host serves, each in its own way of signing in, starting with
@@ -241,11 +246,15 @@ export function providerSettingsFixture({
   say,
   wait,
   readable,
+  engineRecord = fixtureEngineRecord(),
 }: {
   say: (call: string) => void;
   wait: () => Promise<void>;
   /** A profile is signed in whose providers these are. */
   readable: () => boolean;
+  /** The engine record the service scopes the lanes by: the keyless lane
+   * of an engine that is not selected is neither listed nor changed. */
+  engineRecord?: FixtureEngineRecord;
 }): ProviderSettingsFixture {
   // React StrictMode may construct more than one host fixture. Mutable
   // sign-in state is shared so the exposed controls reach the mounted host.
@@ -264,13 +273,20 @@ export function providerSettingsFixture({
   // What each lane held before it was turned off, by lane id.
   const turnedOff = new Map<string, ProviderSettingsRecord>();
   const seedOf = (id: string) => SEEDS.find((seed) => seed.id === id)!;
+  /** Whether the service serves the lane under the engine selected now. */
+  const served = (record: ProviderSettingsRecord) =>
+    servesEngineLane(record.provider, engineRecord.read().engine);
   // Any lane can be turned off and on; only a lane that takes a key has one
   // to set or forget.
   const take = async (provider: string, revision: string, anyLane = false) => {
     await wait();
     if (!readable()) throw coded("not_signed_in");
     const record = records.get(provider);
-    if (!record || (!anyLane && record.auth_kind === "provider_sign_in_only"))
+    if (
+      !record ||
+      !served(record) ||
+      (!anyLane && record.auth_kind === "provider_sign_in_only")
+    )
       throw coded("unknown");
     if (record.revision !== revision) throw coded("revision_conflict");
     return record;
@@ -538,7 +554,7 @@ export function providerSettingsFixture({
       if (!readable()) throw coded("not_signed_in");
       say("providerStatusResolved");
       return {
-        providers: [...records.values()],
+        providers: [...records.values()].filter(served),
         sign_in_providers: [...FIXTURE_SIGN_IN_PROVIDERS],
         sign_in_methods: Object.fromEntries(
           FIXTURE_SIGN_IN_PROVIDERS.map((provider) => [

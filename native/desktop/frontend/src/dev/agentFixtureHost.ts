@@ -25,17 +25,18 @@ import {
   type AgentToolStatus,
   type AgentViews,
 } from "../shell/agentViews";
-import type {
-  AgentLocalEngine,
-  AgentLocalEngineToken,
-  AgentLocalModels,
-  AgentLocalPlacement,
-} from "../ipc/contract";
+import type { AgentLocalEngine, AgentLocalModels } from "../ipc/contract";
 import {
   FIXTURE_CATALOG,
-  FIXTURE_DECLARED_CATALOG,
+  declaredCatalogFor,
+  servedCatalogFor,
   type FixtureModelPresence,
 } from "./fixtures/agentCatalog";
+import {
+  fixtureEngineRecord,
+  type FixtureEngineRecord,
+} from "./fixtures/localEngineRecord";
+import { FIXTURE_SETTINGS_LANES } from "./providerSettingsFixture";
 import {
   FIXTURE_SKILLS,
   MANY_FIXTURE_SKILLS,
@@ -135,10 +136,21 @@ export type FixtureCatalog =
  * back take, shorter than the window's first pause. */
 const BUSY_PAST_READY_MS = 1_000;
 
-/** The lane whose model list the made-up service keeps: its one keyless
- * lane, and the most models the lists hold. */
+/** How long the agent takes to start again under a newly chosen engine. */
+const ENGINE_RESTART_MS = 200;
+
+/** The keyless lane that is no engine's, which a `local-only` catalog
+ * serves alone, and the most models the lists hold. */
 const FIXTURE_LOCAL_LANE = "local_api";
 const FIXTURE_LIST_LIMIT = 64;
+
+/** The keyless lanes of the made-up catalog: the lanes the service keeps a
+ * model list for, where the engine record serves them. */
+const KEYLESS_LANES: ReadonlySet<string> = new Set(
+  FIXTURE_SETTINGS_LANES.filter((seed) => seed.auth_kind === "none").map(
+    (seed) => seed.id,
+  ),
+);
 
 const revisionOf = (count: number) => count.toString(16).padStart(64, "0");
 
@@ -230,6 +242,7 @@ export function fixtureAgent({
   catalog = "served",
   models,
   localModels,
+  engineRecord = fixtureEngineRecord(),
 }: {
   say: (call: string) => void;
   wait: () => Promise<void>;
@@ -254,6 +267,9 @@ export function fixtureAgent({
   /** The local lane holds none of its models yet, as before any setup, or
    * all of them, as after every download; where left out, as written. */
   localModels?: FixtureLocalModels;
+  /** The engine record the service scopes its catalogue and lists by,
+   * shared with its provider settings. */
+  engineRecord?: FixtureEngineRecord;
 }): {
   agent: AgentViews;
   session: AgentSession;
@@ -277,21 +293,25 @@ export function fixtureAgent({
   let reading: { lane: string; model: string } | null = null;
   let committed = 0;
   // The engine record shares the lists' revision, as one stored record
-  // holds both. Ollama stays the default engine.
-  let engine: {
-    engine: AgentLocalEngineToken;
-    placement: AgentLocalPlacement;
-  } = { engine: "llamacpp", placement: "auto" };
+  // holds both.
   const engineSnapshot = (): AgentLocalEngine => ({
     state: "readable",
-    ...engine,
+    ...engineRecord.read(),
     revision: revisionOf(committed),
   });
+  /** The catalogs as the service serves them under the engine selected now. */
+  const servedNow = () => servedCatalogFor(engineRecord.read().engine);
+  const declaredNow = () => declaredCatalogFor(engineRecord.read().engine);
+  /** The keyless lanes the service serves under the engine selected now. */
+  const localLanes = () =>
+    (servedNow().providers ?? [])
+      .map((lane) => `${lane.provider_id}_${lane.transport}`)
+      .filter((id) => KEYLESS_LANES.has(id));
   const listSnapshot = (): AgentLocalModels => ({
     state: "readable",
     models: added.map((entry) => ({ ...entry })),
     reading: reading ? { ...reading } : null,
-    local_lanes: [FIXTURE_LOCAL_LANE],
+    local_lanes: localLanes(),
     revision: revisionOf(committed),
   });
   const guarded = async (expectedRevision: string) => {
@@ -299,12 +319,11 @@ export function fixtureAgent({
     if (expectedRevision !== revisionOf(committed))
       throw coded("agent_local_models_revision_conflict");
   };
-  /** The models the catalog recommends for the local lane. */
-  const recommendedLocal = (): string[] =>
+  /** The models the catalog recommends for a lane on this computer. */
+  const recommendedLocal = (laneId: string): string[] =>
     Object.values(
-      (FIXTURE_CATALOG.providers ?? []).find(
-        (held) =>
-          `${held.provider_id}_${held.transport}` === FIXTURE_LOCAL_LANE,
+      (servedNow().providers ?? []).find(
+        (held) => `${held.provider_id}_${held.transport}` === laneId,
       )?.catalog.recommended ?? {},
     );
   // The local lane's program holds none of its models, or all of them.
@@ -318,14 +337,14 @@ export function fixtureAgent({
   const laneModels = (laneId: string) => {
     if (turnedOff().has(laneId)) return undefined;
     if (catalogDeclared)
-      return FIXTURE_DECLARED_CATALOG.catalog.providers
-        ?.find((held) => held.id === laneId)
+      return declaredNow()
+        .catalog.providers?.find((held) => held.id === laneId)
         ?.models?.map((model) => ({
           id: model.id,
           vision: model.vision ?? null,
           licence: model.licence ?? null,
         }));
-    return (FIXTURE_CATALOG.providers ?? [])
+    return (servedNow().providers ?? [])
       .find((held) => `${held.provider_id}_${held.transport}` === laneId)
       ?.catalog.models?.map((entry) => ({
         id: entry.model,
@@ -928,21 +947,25 @@ export function fixtureAgent({
       if (catalogBusy) throw coded("agent_service_busy");
       say("agentProviderCatalogResolved");
       // A lane turned off in the settings is not offered, as the service
-      // leaves it out of the catalog it serves.
+      // leaves it out of the catalog it serves; nor is the keyless lane of
+      // an engine that is not selected.
       const off = turnedOff();
-      if (catalogDeclared)
+      if (catalogDeclared) {
+        const declared = declaredNow();
         return {
-          ...FIXTURE_DECLARED_CATALOG,
+          ...declared,
           catalog: {
-            ...FIXTURE_DECLARED_CATALOG.catalog,
-            providers: (
-              FIXTURE_DECLARED_CATALOG.catalog.providers ?? []
-            ).filter((lane) => !off.has(lane.id)),
+            ...declared.catalog,
+            providers: (declared.catalog.providers ?? []).filter(
+              (lane) => !off.has(lane.id),
+            ),
           },
         };
+      }
+      const scoped = servedNow();
       const served = {
-        ...FIXTURE_CATALOG,
-        providers: (FIXTURE_CATALOG.providers ?? []).filter((lane) => {
+        ...scoped,
+        providers: (scoped.providers ?? []).filter((lane) => {
           const id = `${lane.provider_id}_${lane.transport}`;
           return (
             !off.has(id) &&
@@ -961,11 +984,11 @@ export function fixtureAgent({
     async addLocalModel(lane, model, expectedRevision) {
       say(`agentLocalModelAdd ${model}`);
       await guarded(expectedRevision);
-      // Only the keyless lane on this computer keeps a list.
-      if (lane !== FIXTURE_LOCAL_LANE || !laneModels(lane))
+      // Only a keyless lane the service serves keeps a list.
+      if (!localLanes().includes(lane) || !laneModels(lane))
         throw coded("agent_local_models_unknown");
       const listed =
-        recommendedLocal().includes(model) ||
+        recommendedLocal(lane).includes(model) ||
         added.some((entry) => entry.lane === lane && entry.model === model);
       if (listed) return listSnapshot();
       if (added.length >= FIXTURE_LIST_LIMIT)
@@ -1001,17 +1024,19 @@ export function fixtureAgent({
     async chooseLocalEngine(chosen, placement, expectedRevision) {
       say(`agentLocalEngineChoose ${chosen} ${placement} ${expectedRevision}`);
       await guarded(expectedRevision);
+      const engine = engineRecord.read();
       if (engine.engine === chosen && engine.placement === placement)
         return engineSnapshot();
-      engine = { engine: chosen, placement };
+      engineRecord.write({ engine: chosen, placement });
       committed += 1;
+      restartUnderEngine();
       return engineSnapshot();
     },
     async chooseReadingModel(lane, model, expectedRevision) {
       say(`agentReadingModelChoose ${lane} ${model}`);
       await guarded(expectedRevision);
-      // Any lane the catalogue reports, local or not.
-      const reported = (FIXTURE_CATALOG.providers ?? []).some(
+      // Any lane the catalogue serves, local or not.
+      const reported = (servedNow().providers ?? []).some(
         (held) => `${held.provider_id}_${held.transport}` === lane,
       );
       if (!reported) throw coded("agent_local_models_unknown");
@@ -1414,6 +1439,15 @@ export function fixtureAgent({
     if (ready) catalogDeclared = false;
     statusListener?.(status());
   };
+  /** The service replaces a running agent once the engine it runs under
+   * changes: it reports the agent starting, then ready, and what the agent
+   * serves after is served for the new engine. An agent not yet ready
+   * starts under the new engine as it is. */
+  function restartUnderEngine() {
+    if (status().state !== "ready") return;
+    publishStatus({ state: "starting", lane: "development" });
+    window.setTimeout(() => publishStatus(), ENGINE_RESTART_MS);
+  }
   /** Commits a change to the list as another window would, so the
    * revision this one read is out of date. */
   const changeListElsewhere = () => {

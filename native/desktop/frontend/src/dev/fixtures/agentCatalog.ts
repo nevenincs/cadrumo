@@ -9,7 +9,9 @@ import type {
   AgentProviderLane,
   AgentRecommendedCapability,
 } from "../../shell/agentSession";
+import type { AgentLocalEngineToken } from "../../ipc/contract";
 import { fixtureInstant } from "@/dev/fixtureDates";
+import { servesEngineLane } from "./localEngineRecord";
 
 // A provider catalog in the shape cadrumo-agent serves it, for the scenario
 // host. Cadrumo keeps no list of the agent's providers: every provider, lane
@@ -82,7 +84,7 @@ const DECLARED_LANES: readonly DeclaredLane[] = [
   declare("theta", "cli", "declared"),
   // A lane run on this computer, with no key: its models state what they are.
   declare("local", "api", "catalog"),
-  // The two engines' keyless lanes: the engine setting shows one of them.
+  // The two engines' keyless lanes: the service serves the selected one's.
   declare("ollama", "api", "catalog"),
   declare("llamacpp", "api", "catalog"),
 ];
@@ -437,3 +439,33 @@ export const FIXTURE_DECLARED_CATALOG: AgentDeclaredCatalog = {
     })),
   },
 };
+
+/** The made-up agent's catalog as the service serves it while `engine` is
+ * selected: the other engine's keyless lane is absent, every other lane as
+ * written. */
+export function servedCatalogFor(
+  engine: AgentLocalEngineToken,
+): AgentProviderCatalog {
+  return {
+    ...FIXTURE_CATALOG,
+    providers: (FIXTURE_CATALOG.providers ?? []).filter((lane) =>
+      servesEngineLane(lane.provider_id, engine),
+    ),
+  };
+}
+
+/** The declared catalog as the service answers it while `engine` is
+ * selected, scoped as the served one is. */
+export function declaredCatalogFor(
+  engine: AgentLocalEngineToken,
+): AgentDeclaredCatalog {
+  return {
+    ...FIXTURE_DECLARED_CATALOG,
+    catalog: {
+      ...FIXTURE_DECLARED_CATALOG.catalog,
+      providers: (FIXTURE_DECLARED_CATALOG.catalog.providers ?? []).filter(
+        (lane) => servesEngineLane(lane.provider, engine),
+      ),
+    },
+  };
+}

@@ -1,15 +1,17 @@
-import { FIXTURE_CATALOG } from "../../src/dev/fixtures/agentCatalog";
+import type { AgentLocalEngineToken } from "../../src/ipc/contract";
+import { servedCatalogFor } from "../../src/dev/fixtures/agentCatalog";
+import { FIXTURE_DEFAULT_ENGINE } from "../../src/dev/fixtures/localEngineRecord";
 import { FIXTURE_SETTINGS_LANES } from "../../src/dev/providerSettingsFixture";
 
-// The keyless lanes of this computer that the scenario host serves, written
-// from the host's own declarations. A lane named for a local engine is served
-// only while that engine is the one the engine setting selects.
-const ENGINES = ["llamacpp", "ollama"] as const;
+// The keyless lanes of this computer that the scenario host serves, read from
+// the catalogue the host serves for the engine its record selects: the host,
+// as the service does, leaves out the lane of an engine that is not selected,
+// so nothing here decides which lanes an engine has.
 
-export type ServedEngine = (typeof ENGINES)[number];
+export type ServedEngine = AgentLocalEngineToken;
 
 /** The scenario host's default engine setting. */
-export const SERVED_ENGINE: ServedEngine = "llamacpp";
+export const SERVED_ENGINE: ServedEngine = FIXTURE_DEFAULT_ENGINE;
 
 export type ServedLocalLane = {
   id: string;
@@ -26,12 +28,9 @@ export function servedLocalLanes(
       (seed) => seed.id,
     ),
   );
-  return (FIXTURE_CATALOG.providers ?? []).flatMap((lane) => {
+  return (servedCatalogFor(engine).providers ?? []).flatMap((lane) => {
     const id = `${lane.provider_id}_${lane.transport}`;
-    const held = (ENGINES as readonly string[]).includes(lane.provider_id)
-      ? lane.provider_id !== engine
-      : false;
-    if (!keyless.has(id) || held) return [];
+    if (!keyless.has(id)) return [];
     return [
       {
         id,

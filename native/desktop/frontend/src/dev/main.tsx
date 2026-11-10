@@ -23,6 +23,7 @@ import { LEDGER_SHAPES } from "./ledgerFixture";
 import { modeloShape } from "./modeloFixture";
 import { findScenario, type Scenario } from "./scenarios";
 import { SETUP_SHAPES } from "./setupFixture";
+import { FIXTURE_ENGINES } from "./fixtures/localEngineRecord";
 
 import "virtual:desktop-palette.css";
 
@@ -107,6 +108,10 @@ function readParams() {
     // Which of the local lane's models the made-up computer holds.
     localModels: (["none", "all"] as const).find(
       (held) => held === params.get("models"),
+    ),
+    // The local engine the made-up service's record selects at first.
+    localEngine: FIXTURE_ENGINES.find(
+      (engine) => engine === params.get("engine"),
     ),
     // The shape of the component setup.
     setup: SETUP_SHAPES.find((shape) => shape === params.get("setup")),
@@ -302,6 +307,7 @@ function Scenarios() {
       agentSkills: initial.agentSkills,
       agentCatalog: initial.agentCatalog,
       localModels: initial.localModels,
+      localEngine: initial.localEngine,
       setup: initial.setup,
       ledger: initial.ledger,
       modelo: initial.modelo,
