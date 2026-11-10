@@ -188,35 +188,39 @@ def descendant_flag(persona: Persona, member: HouseholdMember, envelope: YearEnv
     return ",".join(parts)
 
 
+_NO_DESCENDANTS = MissingRoute(
+    "household.descendants",
+    "`config profile descendiente add` takes at least one row; no command states that the taxpayer has no "
+    "descendants, which the descendant replacement records as a member count of zero",
+)
+_NO_ASCENDANTS = MissingRoute(
+    "household.ascendants",
+    "no command submits the user-profile.ascendants operation (it is listed among the operations no command submits)",
+)
+
+
+def _descendant_arguments(
+    persona: Persona, envelope: YearEnvelope
+) -> tuple[tuple[tuple[str, ...], ...], tuple[MissingRoute, ...]]:
+    if not persona.descendants:
+        return (), (_NO_DESCENDANTS,)
+    flags = [descendant_flag(persona, member, envelope) for member in persona.descendants]
+    missing = tuple(flag for flag in flags if isinstance(flag, MissingRoute))
+    rendered = [item for flag in flags if isinstance(flag, str) for item in ("--descendiente", flag)]
+    return ((*DESCENDANT_ADD, *rendered),) if rendered else (), missing
+
+
 def household_arguments(
     persona: Persona, envelope: YearEnvelope
 ) -> tuple[tuple[tuple[str, ...], ...], tuple[MissingRoute, ...]]:
     """The household commands for the families the persona states, and the facts no command takes."""
-    commands: list[tuple[str, ...]] = []
-    missing: list[MissingRoute] = []
+    commands: tuple[tuple[str, ...], ...] = ()
+    missing: tuple[MissingRoute, ...] = ()
     if "descendants" in persona.household_families:
-        flags = [descendant_flag(persona, member, envelope) for member in persona.descendants]
-        missing.extend(flag for flag in flags if isinstance(flag, MissingRoute))
-        rendered = [flag for flag in flags if isinstance(flag, str)]
-        if rendered:
-            commands.append((*DESCENDANT_ADD, *(item for flag in rendered for item in ("--descendiente", flag))))
-        elif not persona.descendants:
-            missing.append(
-                MissingRoute(
-                    "household.descendants",
-                    "`config profile descendiente add` takes at least one row; no command states that the taxpayer "
-                    "has no descendants, which the descendant replacement records as a member count of zero",
-                )
-            )
+        commands, missing = _descendant_arguments(persona, envelope)
     if "ascendants" in persona.household_families:
-        missing.append(
-            MissingRoute(
-                "household.ascendants",
-                "no command submits the user-profile.ascendants operation (it is listed among the operations no "
-                "command submits)",
-            )
-        )
-    return tuple(commands), tuple(missing)
+        missing = (*missing, _NO_ASCENDANTS)
+    return commands, missing
 
 
 # -- ledger ------------------------------------------------------------------------------------------------------------
@@ -265,16 +269,27 @@ def invoice_arguments(persona: Persona, row: LedgerRow, envelope: YearEnvelope) 
         "--currency",
         row.currency,
     ]
-    optional: tuple[tuple[str, str | None], ...] = (
-        ("--taxable-base", None if row.taxable_base is None else _decimal(row.taxable_base)),
-        ("--iva-rate", None if row.iva_rate is None else _percentage(row.iva_rate)),
-        ("--iva-category", row.iva_category),
-        ("--retention-rate", None if row.retencion_rate is None else _decimal(row.retencion_rate)),
-        ("--retention-amount", None if row.retencion_amount is None else _decimal(row.retencion_amount)),
-        ("--recargo", None if row.recargo_amount is None else _decimal(row.recargo_amount)),
-    )
-    arguments.extend(item for option, value in optional if value is not None for item in (option, value))
+    arguments.extend(_invoice_amounts(row))
     return tuple(arguments)
+
+
+def _invoice_amounts(row: LedgerRow) -> tuple[str, ...]:
+    """The invoice's stated amounts as options: its IVA rate as a percentage, the rest as the row states them."""
+    rate = None if row.iva_rate is None else _percentage(row.iva_rate)
+    optional: tuple[tuple[str, Decimal | str | None], ...] = (
+        ("--taxable-base", row.taxable_base),
+        ("--iva-rate", rate),
+        ("--iva-category", row.iva_category),
+        ("--retention-rate", row.retencion_rate),
+        ("--retention-amount", row.retencion_amount),
+        ("--recargo", row.recargo_amount),
+    )
+    return tuple(
+        item
+        for option, value in optional
+        if value is not None
+        for item in (option, _decimal(value) if isinstance(value, Decimal) else value)
+    )
 
 
 def statement_key(row: LedgerRow, envelope: YearEnvelope) -> tuple[str, Decimal, str, str]:
