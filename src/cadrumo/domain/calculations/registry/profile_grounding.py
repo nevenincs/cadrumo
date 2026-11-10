@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import threading
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from pydantic import BaseModel, Field, ValidationError
 
@@ -55,10 +55,22 @@ class ProfileKeyGrounding(BaseModel):
 
 
 _GROUNDING_INDEX_CACHE_MAXSIZE = 4
+# How often a deferred warm-up asks again whether it may continue.
+_DEFERRED_POLL_SECONDS = 0.05
+
+
+@dataclass(frozen=True, slots=True)
+class _Flight:
+    """One walk under way: ``done`` once it ends, ``joined`` once a read waits for it."""
+
+    done: threading.Event = field(default_factory=threading.Event)
+    joined: threading.Event = field(default_factory=threading.Event)
+
+
 _grounding_index_cache: dict[str, Mapping[str, ProfileKeyGrounding]] = {}
 # The one walk under way per generation. A flight exists only while its owner
 # is computing, so a caller that waits on one waits on work already begun.
-_grounding_index_flights: dict[str, threading.Event] = {}
+_grounding_index_flights: dict[str, _Flight] = {}
 _grounding_index_cache_lock = threading.Lock()
 
 
@@ -91,12 +103,14 @@ def build_profile_grounding_index(
         if isinstance(claim, _CachedGrounding):
             return claim.index
         if isinstance(claim, _WalkUnderWay):
-            # The owner sets its flight whether it cached, failed or was
-            # abandoned; without a cache entry this caller claims the next walk.
-            claim.flight.wait()
+            # A deferred warm-up stops deferring once a read waits for it. The
+            # owner ends its flight whether it cached, failed or was abandoned;
+            # without a cache entry this caller claims the next walk.
+            claim.flight.joined.set()
+            claim.flight.done.wait()
             continue
-        # This walk polls no abandonment, so it returns an index or raises.
-        index = _walk_and_cache(operation, claim, abandoned=None)
+        # This walk polls no abandonment and never defers, so it returns an index or raises.
+        index = _walk_and_cache(operation, claim, abandoned=None, deferred=None)
         if index is not None:
             return index
 
@@ -105,13 +119,20 @@ def warm_profile_grounding_index(
     operation: PinnedAuthorityOperation,
     *,
     abandoned: Callable[[], bool],
+    deferred: Callable[[], bool] | None = None,
 ) -> bool:
     """Compute and cache the operation generation's index ahead of the first reader.
 
-    Never waits: when the index is already cached, or another thread is
-    already walking this generation, it returns at once. ``abandoned`` is
-    polled between revisions; once it answers true the walk stops, nothing is
+    Never waits on another walk: when the index is already cached, or another
+    thread is already walking this generation, it returns at once. ``abandoned``
+    is polled between revisions; once it answers true the walk stops, nothing is
     cached, and any reader that joined the walk computes the index itself.
+
+    ``deferred`` is also polled between revisions. While it answers true the
+    walk pauses before its next revision, so foreground work does not share the
+    interpreter with a registry-wide decode it is not waiting for. A read that
+    joins the walk ends the pause at once: that read waits for this walk, so
+    the walk never defers to the work that needs it.
 
     Returns:
         Whether this call computed and cached the index.
@@ -119,7 +140,7 @@ def warm_profile_grounding_index(
     claim = _claim_grounding_walk(operation.generation.logical_generation)
     if not isinstance(claim, _OwnedWalk):
         return False
-    return _walk_and_cache(operation, claim, abandoned=abandoned) is not None
+    return _walk_and_cache(operation, claim, abandoned=abandoned, deferred=deferred) is not None
 
 
 @dataclass(frozen=True, slots=True)
@@ -129,13 +150,13 @@ class _CachedGrounding:
 
 @dataclass(frozen=True, slots=True)
 class _WalkUnderWay:
-    flight: threading.Event
+    flight: _Flight
 
 
 @dataclass(frozen=True, slots=True)
 class _OwnedWalk:
     cache_key: str
-    flight: threading.Event
+    flight: _Flight
 
 
 def _claim_grounding_walk(cache_key: str) -> _CachedGrounding | _WalkUnderWay | _OwnedWalk:
@@ -147,7 +168,7 @@ def _claim_grounding_walk(cache_key: str) -> _CachedGrounding | _WalkUnderWay | 
         flight = _grounding_index_flights.get(cache_key)
         if flight is not None:
             return _WalkUnderWay(flight)
-        flight = threading.Event()
+        flight = _Flight()
         _grounding_index_flights[cache_key] = flight
         return _OwnedWalk(cache_key, flight)
 
@@ -157,13 +178,15 @@ def _walk_and_cache(
     claim: _OwnedWalk,
     *,
     abandoned: Callable[[], bool] | None,
+    deferred: Callable[[], bool] | None,
 ) -> Mapping[str, ProfileKeyGrounding] | None:
     """Run the claimed walk, cache a completed index and always release the claim.
 
     Returns ``None``, caching nothing, when ``abandoned`` stopped the walk.
     """
     try:
-        index = _compute_profile_grounding_index(operation, abandoned=abandoned)
+        pause = None if deferred is None else _deferral(deferred, claim.flight.joined)
+        index = _compute_profile_grounding_index(operation, abandoned=abandoned, pause=pause)
         if index is None:
             return None
         with _grounding_index_cache_lock:
@@ -175,23 +198,41 @@ def _walk_and_cache(
     finally:
         with _grounding_index_cache_lock:
             del _grounding_index_flights[claim.cache_key]
-        claim.flight.set()
+        claim.flight.done.set()
+
+
+def _deferral(deferred: Callable[[], bool], joined: threading.Event) -> Callable[[Callable[[], bool]], None]:
+    """Build the between-revision pause of a deferred walk; a joined read ends it."""
+
+    def pause(abandoned: Callable[[], bool]) -> None:
+        while not joined.is_set() and not abandoned() and deferred():
+            joined.wait(_DEFERRED_POLL_SECONDS)
+
+    return pause
+
+
+def _never_abandoned() -> bool:
+    return False
 
 
 def _compute_profile_grounding_index(
     operation: PinnedAuthorityOperation,
     *,
     abandoned: Callable[[], bool] | None = None,
+    pause: Callable[[Callable[[], bool]], None] | None = None,
 ) -> Mapping[str, ProfileKeyGrounding] | None:
     """Perform the uncached registry walk :func:`build_profile_grounding_index` memoises.
 
     Returns ``None`` once ``abandoned`` answers true between revisions.
+    ``pause`` runs before each revision and returns once the walk may go on.
     """
     modelos: dict[str, set[str]] = {}
     legal_refs: dict[str, set[str]] = {}
     source_refs: dict[str, set[str]] = {}
 
     for modelo_id, revision_id in operation.revision_ids():
+        if pause is not None:
+            pause(abandoned or _never_abandoned)
         if abandoned is not None and abandoned():
             return None
         revision = operation.revision(modelo_id, revision_id)

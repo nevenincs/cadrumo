@@ -4,8 +4,9 @@ A background warm-up and an interactive read may both want the index of one
 pinned generation. Each case runs the real registry-wide walk over the bundled
 authority; the walk is only observed (counted and, where a case needs a walk to
 be under way, held at its entry), never replaced. A read joins a walk already
-under way rather than repeating it, a warm-up never waits on anyone, and an
-abandoned warm-up leaves the read to walk itself.
+under way rather than repeating it, a warm-up never waits on another walk, and
+an abandoned warm-up leaves the read to walk itself. A deferred warm-up decodes
+nothing while it is told to defer, and a read that joins it ends the deferral.
 """
 
 from __future__ import annotations
@@ -139,3 +140,86 @@ def test_an_abandoned_warm_up_caches_nothing_and_its_waiting_read_walks_itself(
     assert walks.count == 2, "the waiting read did not walk after the warm-up was abandoned"
     assert "censo.status" in read[0]
     assert build_profile_grounding_index(operation) is read[0]
+
+
+@dataclass
+class _CountedDecodes:
+    """Count real revision decodes without replacing them."""
+
+    count: int = 0
+    _lock: threading.Lock = field(default_factory=threading.Lock)
+
+    def wrap(self, decode: Callable[..., object]) -> Callable[..., object]:
+        def observed(*args: object, **kwargs: object) -> object:
+            with self._lock:
+                self.count += 1
+            return decode(*args, **kwargs)
+
+        return observed
+
+
+@pytest.fixture
+def decodes(monkeypatch: pytest.MonkeyPatch) -> _CountedDecodes:
+    counted = _CountedDecodes()
+    monkeypatch.setattr(PinnedAuthorityOperation, "revision", counted.wrap(PinnedAuthorityOperation.revision))
+    return counted
+
+
+def test_a_deferred_warm_up_decodes_nothing_until_it_may_go_on(
+    operation: PinnedAuthorityOperation, walks: _ObservedWalks, decodes: _CountedDecodes
+) -> None:
+    walks.release.set()
+    busy = threading.Event()
+    busy.set()
+    warming, warmed = _in_thread(
+        lambda: warm_profile_grounding_index(operation, abandoned=lambda: False, deferred=busy.is_set)
+    )
+    assert walks.entered.wait(_WAIT_SECONDS)
+    warming.join(timeout=0.3)
+    assert warming.is_alive(), "the warm-up finished while it was told to defer"
+    assert decodes.count == 0
+    assert profile_grounding._grounding_index_cache == {}
+
+    busy.clear()
+    warming.join(timeout=_WAIT_SECONDS)
+    assert warmed == [True]
+    assert decodes.count == len(operation.revision_ids())
+    assert "censo.status" in build_profile_grounding_index(operation)
+
+
+def test_a_read_joining_a_deferred_warm_up_ends_the_deferral(
+    operation: PinnedAuthorityOperation, walks: _ObservedWalks
+) -> None:
+    walks.release.set()
+    # Deferring forever: only the read that joins can let this walk go on.
+    warming, warmed = _in_thread(
+        lambda: warm_profile_grounding_index(operation, abandoned=lambda: False, deferred=lambda: True)
+    )
+    assert walks.entered.wait(_WAIT_SECONDS)
+
+    reading, read = _in_thread(lambda: build_profile_grounding_index(operation))
+    reading.join(timeout=_WAIT_SECONDS)
+    warming.join(timeout=_WAIT_SECONDS)
+
+    assert not reading.is_alive(), "the read waited on a walk that kept deferring to it"
+    assert warmed == [True]
+    assert walks.count == 1, "the read walked again instead of joining the deferred walk"
+    assert "censo.status" in read[0]
+
+
+def test_an_abandoned_deferred_warm_up_stops_without_decoding_or_caching(
+    operation: PinnedAuthorityOperation, walks: _ObservedWalks, decodes: _CountedDecodes
+) -> None:
+    walks.release.set()
+    closing = threading.Event()
+    warming, warmed = _in_thread(
+        lambda: warm_profile_grounding_index(operation, abandoned=closing.is_set, deferred=lambda: True)
+    )
+    assert walks.entered.wait(_WAIT_SECONDS)
+    closing.set()
+    warming.join(timeout=_WAIT_SECONDS)
+
+    assert warmed == [False]
+    assert decodes.count == 0
+    assert profile_grounding._grounding_index_cache == {}
+    assert profile_grounding._grounding_index_flights == {}
