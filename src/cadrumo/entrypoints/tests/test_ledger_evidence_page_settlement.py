@@ -59,12 +59,15 @@ from ...core.operations import OperationEffect, OperationTerminalCondition, prof
 from ...domain.attachments.enums import AttachmentKind, AttachmentSource
 from ...domain.attachments.models import Attachment
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...tests.pdf_fixtures import multi_page_text_pdf_bytes
 from ..adapter_composition_work_ports import build_ledger_evidence_ports
 from ..evidence_page_operation_composition import build_ledger_evidence_page_operation_ports
 from .dependency_operation_gating_support import supervisor_with_projections
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 _PROFILE = UUID("3c1d5e7f-9a2b-4c4d-8e6f-1a2b3c4d5e6f")
 _PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
@@ -120,7 +123,7 @@ def _attachment(profile: TestRuntimeProfile, data: bytes, *, mime_type: str, sou
             sha256=hashlib.sha256(data).hexdigest(),
             mime_type=mime_type,
             bytes_size=len(data),
-            captured_at=datetime(2026, 10, 24, 9, 0, tzinfo=UTC),
+            captured_at=datetime(_YEAR, 10, 24, 9, 0, tzinfo=UTC),
             bucket_id=str(_PROFILE),
             captured_by="operator",
             source_command="aeat app ledger attach",

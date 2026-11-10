@@ -64,6 +64,7 @@ from cadrumo.core.operations import (
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .supervised_operation_rig import (
     assert_foreign_profile_refused,
     build_supervised_operation,
@@ -74,7 +75,9 @@ from .supervised_operation_rig import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 8, 24, 20, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+
+_NOW = datetime(_YEAR, 8, 24, 20, tzinfo=UTC)
 
 
 class _NeverQuery:

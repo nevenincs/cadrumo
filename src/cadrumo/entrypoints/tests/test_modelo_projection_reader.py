@@ -36,13 +36,16 @@ from ...domain.calculations.registry.authority import (
     RegistryAuthorityCurrentCoordinate,
     bundled_indexed_authority,
 )
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ..workbench_generation_composition import MODELO_WORKSPACE_READ_ATTEMPTS, modelo_workspace_projection_reader
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+_YEAR = filing_year_envelope().horizon
+
 _PROFILE_ID = "13000000-0000-4000-8000-000000000231"
-_T0 = datetime(2026, 6, 5, 9, 0, 0, tzinfo=UTC)
+_T0 = datetime(_YEAR, 6, 5, 9, 0, 0, tzinfo=UTC)
 _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = persona_facts_beneath(
     (
         UserProfileFact(path="identity.tax_id", value="00000000T"),
@@ -72,14 +75,14 @@ def bucket_and_repository(tmp_path: Path) -> Iterator[tuple[str, WorkUnitCatalog
             ),
         )
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
-        period = Period.from_year_and_code(2026, "1T")
+        period = Period.from_year_and_code(_YEAR, "1T")
         create_work_unit(
             bucket_id=profile.bucket_id,
             modelo="130",
-            filing_year=2026,
+            filing_year=_YEAR,
             period=period,
             revision_id=law_selected_revision_for_work_target(
-                modelo="130", filing_year=2026, period=period, operation=operation
+                modelo="130", filing_year=_YEAR, period=period, operation=operation
             ),
             ports=WorkLifecyclePorts(
                 work_unit_repository=repository,

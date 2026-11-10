@@ -62,15 +62,18 @@ from ...core.errors.hierarchy import SiteHealthState
 from ...core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ...domain.buckets.event import BucketEventType
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..diagnostics_repair_composition import DiagnosticsRepairOperations, build_diagnostics_repair_operations
 from .supervised_operation_rig import operation_access_context
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+_YEAR = filing_year_envelope().horizon
+
 _PROFILE = UUID("93939393-9393-4393-8393-939393939393")
 _SOUND_NAMESPACE = TEST_SESSION_LIFECYCLE_NAMESPACE.namespace
 _TORN_NAMESPACE = TEST_RUNTIME_PROFILE_NAMESPACE.namespace
-_SEEDED_PROGRESS_AT = datetime(2026, 4, 2, 9, 30, 11, tzinfo=UTC)
+_SEEDED_PROGRESS_AT = datetime(_YEAR, 4, 2, 9, 30, 11, tzinfo=UTC)
 _AUTOMATION_CLIENT = UUID("a4a4a4a4-a4a4-44a4-84a4-a4a4a4a4a4a4")
 _OBSERVED = SiteHealthStatus(
     state=SiteHealthState.MANTENIMIENTO,
@@ -80,7 +83,7 @@ _OBSERVED = SiteHealthStatus(
         html_fragment="<html>synthetic maintenance page</html>",
         detected_markers=("mantenimiento", "retry-after:120"),
     ),
-    observed_at=datetime(2026, 4, 2, 9, 31, 0, tzinfo=UTC),
+    observed_at=datetime(_YEAR, 4, 2, 9, 31, 0, tzinfo=UTC),
     retry_after_seconds=120,
 )
 

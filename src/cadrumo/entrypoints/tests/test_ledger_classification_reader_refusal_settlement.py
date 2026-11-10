@@ -56,6 +56,7 @@ from ...core.errors.error_codes import get_registered_error_code
 from ...core.model_roles import ModelRole
 from ...core.operations import OperationEffect, OperationTerminalCondition
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -68,6 +69,8 @@ from .dependency_operation_gating_support import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 _PROFILE = UUID("8e3f5a7b-9c2d-4e4f-8a6b-7c8d9e0f1a2b")
 _REGISTERED = get_registered_error_code(PurchaseInvoiceEvidenceReaderError)
@@ -87,7 +90,7 @@ def _stored_row(repository: TransactionCatalogueRepository) -> Transaction:
         {
             "raw": RawTransaction(
                 provider_transaction_id="reader-refusal-row",
-                booked_date=date(2026, 10, 20),
+                booked_date=date(_YEAR, 10, 20),
                 amount=Decimal("121.00"),
                 currency="EUR",
                 description=_PRIVATE_DESCRIPTION,
@@ -96,7 +99,7 @@ def _stored_row(repository: TransactionCatalogueRepository) -> Transaction:
                     source_sha256="d" * 64,
                     source_row_index=1,
                     source_format=SourceFormat.CSV,
-                    ingested_at=datetime(2026, 10, 20, tzinfo=UTC),
+                    ingested_at=datetime(_YEAR, 10, 20, tzinfo=UTC),
                     provider_name="csv",
                 ),
                 raw_fields={},

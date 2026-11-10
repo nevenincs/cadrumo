@@ -59,11 +59,14 @@ from cadrumo.domain.notifications.sancion import SancionLiquidacion
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, DisclosureCategory
 
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .supervised_operation_rig import build_supervised_operation, operation_access_context, run_to_terminal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 9, 1, 12, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+
+_NOW = datetime(_YEAR, 9, 1, 12, tzinfo=UTC)
 _CERTIFICADO = "2699101808461"
 _OTHER_CERTIFICADO = "2596230606502"
 _DIGEST = "a" * 64
