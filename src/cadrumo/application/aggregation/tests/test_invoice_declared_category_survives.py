@@ -40,6 +40,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.models import Invoice
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
@@ -63,6 +64,8 @@ from ..modelo_bindings_invoice_iva import (
 )
 from .ledger_source_mesh_support import machine_acquisition_transaction
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
@@ -74,7 +77,7 @@ def _pinned_operation() -> PinnedAuthorityOperation:
 
 
 _BASE = Decimal("2000.00")
-_DAY = date(2026, 3, 15)
+_DAY = date(_YEAR, 3, 15)
 _DEFAULT_INVOICE_RATE = IvaRate.from_registry("EXEMPT")
 
 
@@ -187,7 +190,7 @@ def test_the_preserved_category_does_not_by_itself_declare_the_cuota(
     """
     observation = _observation_for(_received_reverse_charge())
     assert observation is not None
-    revision = published_snapshot("303", filing_year=2026, period="2T").revision
+    revision = published_snapshot("303", filing_year=_YEAR, period="2T").revision
 
     resolved = {
         str(k): v
@@ -514,7 +517,7 @@ def test_a_cuota_bearing_intra_eu_invoice_keeps_its_declared_self_assessment(
     assert observation.category == _INTRA_EU_SERVICE
     assert observation.flow_direction == IvaFlowDirection.from_registry("inversion_sujeto_pasivo")
     assert observation.deduction_provenance == authority.deduction_provenance
-    revision = published_snapshot("303", filing_year=2025, period="1T").revision
+    revision = published_snapshot("303", filing_year=_YEAR, period="1T").revision
     from_invoice = resolve_iva_ledger_binding_values(revision, (observation,), operation=authority_operation)
     from_ledger = resolve_iva_ledger_binding_values(revision, (authority,), operation=authority_operation)
     assert any(from_ledger.values())

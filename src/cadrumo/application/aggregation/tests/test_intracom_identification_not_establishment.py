@@ -33,6 +33,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 from ....core.period import Period
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.schema import EUMemberState, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -40,15 +41,17 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ..iva_ledger import IvaLedgerAggregation, IvaLedgerAggregationIssueReason
 from .iva_authority_support import aggregate_iva_ledger_observations
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_PERIOD = Period.from_year_and_code(2026, "2T")
+_PERIOD = Period.from_year_and_code(_YEAR, "2T")
 _CASILLA_59_BASE: BindingId = "modelo-303-casilla-59-entregas-intracomunitarias-base"
 
 
 @cache
 def _modelo_303_revision():
-    return published_snapshot("303", filing_year=2025, period="1T").revision
+    return published_snapshot("303", filing_year=_YEAR, period="1T").revision
 
 
 def _casilla_59(aggregation: IvaLedgerAggregation) -> Decimal:
@@ -59,8 +62,8 @@ def _casilla_59(aggregation: IvaLedgerAggregation) -> Decimal:
 def _raw(provider_id: str) -> RawTransaction:
     return RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(2026, 4, 15),
-        value_date=date(2026, 4, 15),
+        booked_date=date(_YEAR, 4, 15),
+        value_date=date(_YEAR, 4, 15),
         amount=Decimal("5000.00"),
         currency="EUR",
         counterparty="Acquirer",
@@ -70,7 +73,7 @@ def _raw(provider_id: str) -> RawTransaction:
             source_sha256="d" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 4, 16, 9, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 4, 16, 9, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": "ledger_transaction"},
