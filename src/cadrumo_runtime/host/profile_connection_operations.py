@@ -2,18 +2,20 @@
 
 from __future__ import annotations
 
+import logging
 import time
 from collections.abc import Generator
 from contextlib import ExitStack, contextmanager
 from datetime import datetime
 from importlib.metadata import version
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 from uuid import UUID
 
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.person_acts import operation_is_persons_act
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from cadrumo.core.logging import get_logger
 from cadrumo.core.operations import OperationEffect, OperationFrontendProjection, OperationLifecycle
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
@@ -37,6 +39,7 @@ from cadrumo_client.contracts.operation_access import (
     OperationSecret,
     OperationSubmit,
     OperationSubmitPayload,
+    OperationSubmitted,
 )
 from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileStatus, SecretReady
 from cadrumo_client.contracts.session_events import OperationChanged, ProfileRecordsChanged
@@ -66,6 +69,20 @@ _log = get_logger(__name__)
 
 # Operations one connection may wait on at once; the oldest watch gives way.
 _OPERATION_WATCHES_PER_CONNECTION = 64
+
+# A person's submitted changes not yet observed settled; the oldest gives way.
+_PERSON_WRITES_PENDING = 256
+
+_PERSON_WRITE_FRONTENDS: Final = frozenset({OperationFrontendProjection.TUI, OperationFrontendProjection.DESKTOP})
+"""The person's frontends whose own submitted change counts as the person's input.
+
+Each is driven by a person's keyboard and pointer. A command line invocation
+reports its attended input once, at admission; an unattended one is a script and
+never keeps a sign-in alive. Every other frontend is an automation's.
+"""
+
+_SAVED_EFFECTS: Final = frozenset({OperationEffect.UPDATED, OperationEffect.PARTIAL})
+"""Settled effects that saved a change; an unknown effect is no evidence that anything saved."""
 
 if TYPE_CHECKING:
     from .profile_connections import RuntimeProfileConnections
@@ -361,6 +378,15 @@ class ProfileConnectionOperationMixin:
             # Write errors propagate: a partially written frame is never retried
             # as a refusal. No private payload escapes the scope of its fence.
             write_document(channel, reply, deadline=deadline)
+        if served_by is None:
+            return
+        # Every fence of this request is released. A connection's requests are
+        # served in order, so a submission is remembered before its own
+        # connection can observe it.
+        if isinstance(request, OperationObserve):
+            self._renew_after_person_write(served_by, context, request, reply)
+        else:
+            self._note_person_write(served_by, context, channel, request, reply)
 
     def _observe_and_watch_operation(
         self: RuntimeProfileConnections,
@@ -424,6 +450,88 @@ class ProfileConnectionOperationMixin:
                     del watches[next(iter(watches))]
             elif not watches:
                 del self._operation_watches[connection.context.connection_id]
+
+    def _note_person_write(
+        self: RuntimeProfileConnections,
+        host: RuntimeProfileHost,
+        context: ConnectionContext,
+        channel: ByteChannel,
+        request: OperationRequest,
+        reply: OperationReply | AccessRefusal,
+    ) -> None:
+        """Remember a change the person submitted on their own frontend, to renew their session once it saves.
+
+        A read, and anything an automation's process submits, is never
+        remembered. The renewal itself still requires the live human session
+        that submitted the change.
+        """
+        if not isinstance(request, OperationSubmit | OperationSubmitPayload) or not isinstance(
+            reply, OperationSubmitted
+        ):
+            return
+        with self._guard:
+            connection = self._connections.get(context.connection_id)
+        if (
+            connection is None
+            or connection.frontend not in _PERSON_WRITE_FRONTENDS
+            or not host.may_change_records(request.definition_id)
+        ):
+            return
+        try:
+            automation = self._nonhuman_peer(context, channel)
+        except (AutomationCustodyError, RefusalError, ProfileAccessRefusedError):
+            # The submission was answered; an unverifiable peer is never taken for the person.
+            return
+        if automation:
+            return
+        operation_id = reply.receipt.operation_id
+        with self._guard:
+            writes = self._person_writes
+            writes.pop(operation_id, None)
+            writes[operation_id] = (context.connection_id, request.session_id)
+            while len(writes) > _PERSON_WRITES_PENDING:
+                del writes[next(iter(writes))]
+
+    def _renew_after_person_write(
+        self: RuntimeProfileConnections,
+        host: RuntimeProfileHost,
+        context: ConnectionContext,
+        request: OperationObserve,
+        reply: OperationReply | AccessRefusal,
+    ) -> None:
+        """Renew the person's session once the same session observes its remembered change settled as saved.
+
+        The settled effect is the worker's own projection, released to this
+        session under its current authority, not the frontend's claim. A change
+        that saved nothing, or settled with an unknown effect, is forgotten
+        unrenewed.
+        """
+        if not isinstance(reply, OperationObserved) or not isinstance(reply.observation, OperationObservationSuccessV1):
+            return
+        projection = reply.observation.projection
+        if projection.lifecycle is not OperationLifecycle.TERMINAL:
+            return
+        operation_id = request.observation.operation_id
+        with self._guard:
+            if self._person_writes.get(operation_id) != (context.connection_id, request.session_id):
+                return
+            del self._person_writes[operation_id]
+        if projection.effect not in _SAVED_EFFECTS:
+            return
+        with host.guard:
+            if not self._admitting():
+                return
+            try:
+                # An expired or retired session is refused here and stays ended.
+                self._note_person_activity(host, context.connection_id, request.session_id)
+            except (AutomationCustodyError, RefusalError, ProfileAccessRefusedError) as error:
+                # The change stands and its reply was sent; only this renewal is lost.
+                diagnostic_event(
+                    _log,
+                    "person_write_renewal_failed",
+                    fields=diagnostic_error_fields(error),
+                    level=logging.WARNING,
+                )
 
     def _operations_advanced(
         self: RuntimeProfileConnections,

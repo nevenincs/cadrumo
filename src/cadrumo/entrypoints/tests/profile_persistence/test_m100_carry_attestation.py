@@ -28,9 +28,12 @@ from ....application.modelo.edit_models import (
 )
 from ....application.modelo.work_form_models import ModeloFormField, ModeloWorkForm
 from ....application.modelo.work_form_service import load_modelo_work_form
+from ....application.modelo.work_missing_input import ModeloPriorCarryAbsenceUnstatedError, ModeloWorkMissingInputError
+from ....application.operations.next_step import OperationOpenWorkStepV1, error_next_step
 from ....core.aggregation import BindingSourceKind
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.errors.error_codes import ErrorCategory, get_registered_error_code, resolve_error_message
 from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
@@ -81,6 +84,10 @@ def _renta_years_with_a_prior_return() -> tuple[int, ...]:
     """The admitted Modelo 100 years whose previous year the envelope admits too, so its return can be stored."""
     years = _renta_years()
     return tuple(year for year in years if year - 1 in years)
+
+
+#: The boxes the form prints for the four carries, in the order of ``_PENDING_CARRIES``.
+_CARRY_BOXES = ("1388", "1385", "1382", "1380")
 
 
 def _attest(binding_id: BindingId) -> ModeloBindingEditIntentV1:
@@ -282,3 +289,49 @@ def test_a_declaration_whose_registry_declares_no_statement_of_absence_offers_no
     ):
         assert _attestable(work) == frozenset()
         assert _form(work, OutputLanguage.EN).carry_attestations == ()
+
+
+@pytest.mark.parametrize("year", _renta_years())
+def test_an_unstated_carry_with_no_earlier_return_is_refused_naming_every_open_carry_then_the_statement_settles_it(
+    tmp_path: Path, year: int
+) -> None:
+    with (
+        profile_adapter_composition(),
+        seeded_operator_work(tmp_path, modelo="100", filing_year=year, period_code="0A", extra_facts=_FACTS) as renta,
+    ):
+        with pytest.raises(ModeloPriorCarryAbsenceUnstatedError) as refused:
+            renta.recalculate()
+        # Nothing was published, and the wizard's and the comparison's catches still see a missing input.
+        assert renta.head() is None
+        error = refused.value
+        assert isinstance(error, ModeloWorkMissingInputError)
+        assert error.family is AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING
+        assert error.open_carry_ids == tuple(sorted(_PENDING_CARRIES))
+        code = get_registered_error_code(error)
+        assert code.category is ErrorCategory.REFUSED
+        assert code.code == "REFUSED_MODELO_PRIOR_CARRY_ABSENCE_UNSTATED"
+        for locale in ("es", "en", "ca", "hu"):
+            message = resolve_error_message(error, locale=locale)
+            assert str(year) in message
+            assert all(box in message for box in _CARRY_BOXES), message
+            assert not any(binding_id in message for binding_id in _PENDING_CARRIES), message
+        verdict = error.terminal_precondition_verdict
+        assert verdict is not None
+        assert verdict.failed_condition_id == "modelo.work.calculate.prior_carries.stated"
+        assert verdict.action is None
+        (evidence,) = verdict.evidence
+        assert evidence.values["open_carries"] == ",".join(sorted(_PENDING_CARRIES))
+        assert evidence.values["filing_year"] == year
+        # The way on is the declaration's own form, which serves the statement.
+        step = error_next_step(error, OutputLanguage.ES)
+        assert isinstance(step, OperationOpenWorkStepV1)
+        assert step.work_unit_id == renta.work_unit_id
+
+        assert renta.apply(binding=tuple(_attest(binding_id) for binding_id in _PENDING_CARRIES)).refusal is None
+        head = renta.recalculate()
+
+    # The calculation now stands, and box 1380 holds the filer's statement, not a zero nobody gave.
+    assert head.casilla_values[validated_casilla_id("1380", surface="test")] == Decimal("0")
+    layer = head.operator_layer
+    assert layer is not None
+    assert layer.attested_binding_ids == _PENDING_CARRIES

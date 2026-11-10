@@ -5,13 +5,16 @@ import pytest
 from ..errors import RegistryValidationError
 from ..export_parse import parse_field_value
 from ..fixed_width_codec import render_fixed_width_export_field
+from .authored_editions import filing_year_envelope
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _marker_fields():
-    snapshot = published_snapshot("369", filing_year=2026, period="EXT-1T", revision_id="esquema-exterior")
+    snapshot = published_snapshot(
+        "369", filing_year=filing_year_envelope().horizon, period="EXT-1T", revision_id="esquema-exterior"
+    )
     fields = [
         field
         for layout in snapshot.revision.export_layouts

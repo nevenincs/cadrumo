@@ -22,6 +22,7 @@ from ..withholding_bindings import (
     resolve_withholding_binding_row_values,
     resolve_withholding_binding_values,
 )
+from .authored_editions import filing_year_envelope
 from .withholding_observation_defaults import zero_incapacity_and_foral_fields
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
@@ -181,7 +182,7 @@ def test_financial_asset_values_do_not_silently_merge_different_transactions() -
         WithholdingObservation.model_validate(
             {**observation.model_dump(), "source_id": f"asset-{i}", "financial_asset_acquisition_value": Decimal(value)}
         )
-        for i, value in enumerate(("1000", "2000"))
+        for i, value in enumerate(("1000", "1500"))
     )
     with pytest.raises(RegistryValidationError, match="conflicting non-additive detail"):
         resolve_withholding_binding_row_values(revision, observations)
@@ -197,6 +198,7 @@ def test_financial_asset_classifications_reject_unknown_codes(field: str, value:
         WithholdingObservation.model_validate({**observation.model_dump(), field: value})
 
 
+_YEAR = filing_year_envelope().horizon
 _LEGAL_REFS = (
     "ley-35-2006:art-99",
     "orden-eha-3127-2009:art-1",
@@ -204,7 +206,7 @@ _LEGAL_REFS = (
 )
 
 
-@pytest.mark.parametrize("second_value", ["1000", "2000"])
+@pytest.mark.parametrize("second_value", ["1000", "1500"])
 def test_transaction_grouping_preserves_securities_operations_and_order(second_value: str) -> None:
     binding = _row_binding(
         "asset-value", "financial_asset_acquisition_value", BindingDataType.MONEY, "per_source_allocation"
@@ -293,10 +295,10 @@ def _scalar_binding(
 
 def _revision_with(*bindings: BindingDefinition) -> ModeloRevision:
     return ModeloRevision(
-        id="2025-y-siguientes",
-        localization_key="test.schema.revision.2025-y-siguientes.label",
-        valid_from=date(2025, 1, 1),
-        period_selector=PeriodSelector(year_from=2025, periods=("0A",)),
+        id=f"{_YEAR}-y-siguientes",
+        localization_key=f"test.schema.revision.{_YEAR}-y-siguientes.label",
+        valid_from=date(_YEAR, 1, 1),
+        period_selector=PeriodSelector(year_from=_YEAR, periods=("0A",)),
         legal_refs=_LEGAL_REFS,
         source_refs=_SOURCE_REFS,
         bindings=bindings,
@@ -315,7 +317,7 @@ def _observation(
         source_id=source_id,
         perceptor_tax_id="00001500M",
         perceptor_legal_name="PERCEPTOR SINTETICO",
-        transaction_date=date(2025, 6, 1),
+        transaction_date=date(_YEAR, 6, 1),
         clave=RetencionClave.from_registry("G"),
         subclave=subclave,
         percibido_dinerario=Decimal(amount),

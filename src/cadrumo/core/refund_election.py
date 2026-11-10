@@ -14,7 +14,7 @@ the operator-input sibling of :class:`~core.result_disposition.ResultDisposition
 result-disposition codes): the election is what the operator *chooses*, while
 :func:`~application.modelo.result_disposition_resolution.resolve_modelo_result_disposition` derives the
 filed disposition from that choice plus the
-:func:`~domain.iva.refund_eligibility.refund_disposition_available` eligibility gate.
+:func:`~domain.iva.refund_eligibility.resolve_refund_eligibility` eligibility gate.
 
 The enum is threaded by :class:`~application.modelo.export_contracts.ModeloExportCommand`
 and :func:`~application.modelo.filing_actions.file_modelo_revision` into the same
@@ -51,7 +51,7 @@ class RefundElection(StrEnum):
             carry-forward disposition.
         DEVOLVER: Request devolución (``D``) through the shared Modelo 303
             resolver. The resolver honours it only when
-            :func:`domain.iva.refund_eligibility.refund_disposition_available` says the period
+            :func:`domain.iva.refund_eligibility.resolve_refund_eligibility` says the period
             can lawfully refund; otherwise it raises the application-level
             refund-election refusal.
     """

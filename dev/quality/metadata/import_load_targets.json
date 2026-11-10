@@ -4974,6 +4974,7 @@
         "dev.prettier_json",
         "dev.product_environment",
         "dev.quality",
+        "dev.quality.branch_gate_delta",
         "dev.quality.cyclic_gc",
         "dev.quality.data_files",
         "dev.quality.docstring_reference_targets",

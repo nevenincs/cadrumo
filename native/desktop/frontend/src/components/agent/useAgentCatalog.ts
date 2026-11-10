@@ -7,6 +7,7 @@ import {
 } from "../../shell/catalogReadPolicy";
 import {
   catalogChoices,
+  laneEngines,
   ranSelection,
   restoredSelection,
   selectionRecord,
@@ -147,6 +148,12 @@ export function useAgentCatalog({
     () => (catalog.kind === "ready" ? catalogLanes(catalog.value) : []),
     [catalog],
   );
+  // Whether each local engine's lane has its engine running, as the catalog
+  // states it, which the lane's provider settings say.
+  const engines = useMemo(
+    () => (catalog.kind === "ready" ? laneEngines(catalog.value) : {}),
+    [catalog],
+  );
   // A service still busy starting the agent, or still busy just after it
   // became ready, answers the catalog late. The column says the agent is
   // still starting and asks again: at once when the service published a
@@ -255,6 +262,7 @@ export function useAgentCatalog({
     catalog,
     catalogBusy,
     localLanes,
+    engines,
     offer,
     selection,
     remember,

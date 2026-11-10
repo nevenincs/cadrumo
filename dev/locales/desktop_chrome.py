@@ -52,11 +52,7 @@ from .desktop_entry_option_keys import (
     ENTRY_TOKEN_WORD_FAMILIES,
     ENTRY_TOKEN_WORD_KEYS,
 )
-from .desktop_interface_keys import (
-    DESKTOP_AGENT_ENGINE_HEALTH_KEYS,
-    DESKTOP_INTERFACE_KEYS,
-    DESKTOP_LOCAL_LANE_WORD_KEYS,
-)
+from .desktop_interface_keys import DESKTOP_INTERFACE_KEYS
 from .desktop_ledger_catalogue_keys import DESKTOP_LEDGER_CATALOGUE_KEYS
 from .desktop_ledger_document_keys import DESKTOP_LEDGER_DOCUMENT_KEYS
 from .desktop_ledger_workflow_keys import DESKTOP_LEDGER_WORKFLOW_KEYS
@@ -813,12 +809,7 @@ DESKTOP_CHROME_AWAITING_CONSUMER: Final[frozenset[str]] = frozenset({"desktop.si
 #: come, so its source never names them. Their declaration reads the same
 #: shape that serves them, and generation refuses until each word is authored.
 DESKTOP_CHROME_SERVED_KEYS: Final[frozenset[str]] = (
-    MODELO_CHOICE_KEYS
-    | FINDING_KEYS
-    | RULE_FINDING_KEYS
-    | RATE_SLOT_KEYS
-    | DESKTOP_AGENT_ENGINE_HEALTH_KEYS
-    | DESKTOP_LOCAL_LANE_WORD_KEYS
+    MODELO_CHOICE_KEYS | FINDING_KEYS | RULE_FINDING_KEYS | RATE_SLOT_KEYS
 )
 
 #: A whole key in quotes, or the fixed head of a template literal up to ``${``.

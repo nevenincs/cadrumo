@@ -1,4 +1,4 @@
-"""Strict complete 2025 inventory projection tests."""
+"""Strict complete inventory projection tests."""
 
 from __future__ import annotations
 
@@ -9,6 +9,9 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
+from ....calculations.registry.inventory_anexo_d_applicability import resolve_inventory_anexo_d_first_filing_year
+from ....calculations.registry.tests.authored_editions import filing_year_envelope
+from ....calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ....filing_evidence import FilingEvidenceReference
 from ..anexo_d_records import InventoryAnexoDResult
 from ..closing_authority_records import (
@@ -43,6 +46,12 @@ from ..records import (
 from ..valuation import compute_inventory_anexo_d_projection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
+
+EXERCISE = filing_year_envelope().horizon
+#: The last supported exercise the registry's governed first-filing-year fact leaves outside Anexo D.
+_YEAR_BEFORE_ANEXO_D = (
+    resolve_inventory_anexo_d_first_filing_year(filing_year=EXERCISE, authority=PublishedGovernedFactSource()) - 1
+)
 
 
 def _ref(value: str) -> FilingEvidenceReference:
@@ -98,7 +107,7 @@ def _acquisition() -> InventoryAcquisitionCost:
     )
 
 
-def _purchase(movement_id: str = "purchase-1", movement_date: date = date(2025, 2, 1)) -> MovementRecord:
+def _purchase(movement_id: str = "purchase-1", movement_date: date = date(EXERCISE, 2, 1)) -> MovementRecord:
     return MovementRecord(
         movement_id=movement_id,
         movement_date=movement_date,
@@ -121,11 +130,11 @@ def _authority(
         None
         if physical is None
         else PhysicalClosingObservation(
-            observation_id="physical-2025",
-            observed_on=date(2026, 1, 1),
-            as_of_date=date(2025, 12, 31),
+            observation_id=f"physical-{EXERCISE}",
+            observed_on=date(EXERCISE + 1, 1, 1),
+            as_of_date=date(EXERCISE, 12, 31),
             actividad_id="retail",
-            filing_year=2025,
+            filing_year=EXERCISE,
             closing_value=physical,
             valuation_basis=InventoryClosingValuationBasis.FIFO_ACQUISITION_PRICE,
             evidence=(
@@ -144,9 +153,9 @@ def _authority(
     )
     return InventoryClosingAuthorityRecord(
         decision=InventoryClosingAuthorityDecision(
-            decision_id="decision-2025",
+            decision_id=f"decision-{EXERCISE}",
             actividad_id="retail",
-            filing_year=2025,
+            filing_year=EXERCISE,
             authority=InventoryClosingAuthority.PHYSICAL_OBSERVATION
             if select_physical
             else InventoryClosingAuthority.MOVEMENT_DERIVED,
@@ -155,7 +164,7 @@ def _authority(
             reason="Reviewed annual inventory authority.",
             actor="reviewer",
             source_command="inventory.closing.authority.decide",
-            decided_at=datetime(2026, 1, 2, tzinfo=UTC),
+            decided_at=datetime(EXERCISE + 1, 1, 2, tzinfo=UTC),
             evidence=(
                 InventoryClosingDecisionEvidence(
                     reference=_ref("decision-evidence"),
@@ -167,14 +176,14 @@ def _authority(
         physical_observation=observation,
         prior_closing_link=PriorAuthoritativeClosingLink(
             actividad_id="retail",
-            current_filing_year=2025,
-            prior_filing_year=2024,
+            current_filing_year=EXERCISE,
+            prior_filing_year=EXERCISE - 1,
             prior_authoritative_closing_value=opening,
             current_opening_value=opening,
             prior_authoritative_source_fingerprint="3" * 64,
             prior_authoritative_closing_fingerprint=fingerprint_prior_authoritative_closing(
                 actividad_id="retail",
-                filing_year=2024,
+                filing_year=EXERCISE - 1,
                 authoritative_closing_value=opening,
                 authoritative_source_fingerprint="3" * 64,
                 evidence=continuity,
@@ -194,7 +203,7 @@ def _ledger(
     value = Decimal(opening)
     return InventoryLedger(
         actividad_id="retail",
-        year=2025,
+        year=EXERCISE,
         valuation_method=ValuationMethod.FIFO,
         opening_stock=value,
         period_movements=movements,
@@ -223,7 +232,7 @@ def test_equal_and_decrease_split() -> None:
     equal = compute_inventory_anexo_d_projection(_ledger())
     assert (equal.variation_increase_value, equal.variation_decrease_value) == (Decimal("0.00"), Decimal("0.00"))
     sale = MovementRecord(
-        movement_id="sale", movement_date=date(2025, 3, 1), kind=MovementKind.COGS, quantity=Decimal("0.25")
+        movement_id="sale", movement_date=date(EXERCISE, 3, 1), kind=MovementKind.COGS, quantity=Decimal("0.25")
     )
     decrease = compute_inventory_anexo_d_projection(_ledger(movements=(sale,)))
     assert (decrease.variation_increase_value, decrease.variation_decrease_value) == (
@@ -250,8 +259,8 @@ def test_missing_unreadable_wrong_year_and_out_of_period_refuse() -> None:
             _ledger(movements=(_purchase(),)).model_copy(update={"period_movements": (tampered_purchase,)})
         )
     with pytest.raises(InventoryLedgerError, match="not applicable for the filing year"):
-        compute_inventory_anexo_d_projection(_ledger().model_copy(update={"year": 2024}))
-    out_of_period = _purchase().model_copy(update={"movement_date": date(2024, 12, 31)})
+        compute_inventory_anexo_d_projection(_ledger().model_copy(update={"year": _YEAR_BEFORE_ANEXO_D}))
+    out_of_period = _purchase().model_copy(update={"movement_date": date(EXERCISE - 1, 12, 31)})
     with pytest.raises(InventoryLedgerError, match="outside its filing year"):
         compute_inventory_anexo_d_projection(_ledger(movements=(out_of_period,)))
     ledger = _ledger()
@@ -265,7 +274,7 @@ def test_missing_unreadable_wrong_year_and_out_of_period_refuse() -> None:
 
 
 def test_purchase_fingerprints_are_reorder_invariant() -> None:
-    first, second = _purchase("b", date(2025, 3, 1)), _purchase("a", date(2025, 2, 1))
+    first, second = _purchase("b", date(EXERCISE, 3, 1)), _purchase("a", date(EXERCISE, 2, 1))
     forward = compute_inventory_anexo_d_projection(_ledger(movements=(first, second)))
     reversed_result = compute_inventory_anexo_d_projection(_ledger(movements=(second, first)))
     assert forward.acquisition_fingerprints == reversed_result.acquisition_fingerprints
@@ -287,7 +296,7 @@ def test_purchase_fingerprints_are_reorder_invariant() -> None:
     )
     scaled_result = compute_inventory_anexo_d_projection(_ledger(movements=(scale_equivalent, second)))
     assert scaled_result.projection_fingerprint == forward.projection_fingerprint
-    duplicate = _purchase("a", date(2025, 2, 1)).model_copy(update={"sku": "other"})
+    duplicate = _purchase("a", date(EXERCISE, 2, 1)).model_copy(update={"sku": "other"})
     with pytest.raises(ValidationError, match="movement_id values must be unique"):
         _ledger(movements=(first.model_copy(update={"movement_id": "a"}), duplicate))
 

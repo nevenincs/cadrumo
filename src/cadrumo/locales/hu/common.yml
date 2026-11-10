@@ -2032,12 +2032,14 @@ desktop:
       category: Kategória
       category_needs_classification: Előbb sorold be őket üzletiként vagy vegyesként
       choose_category: Válassz kategóriát
+      cleared_category: Kategória törölve · {count} még nincs mentve
       expense_category: Kiadási kategória · {count}
       inactive_only: Csak az aktív tételek módosíthatók
       income_no_category: Bevétel {count} · kategória nélkül
       no_category_match: Nincs egyező kategória
       not_saved: Még nincs mentve
       nothing: Előbb jelölj ki tételeket
+      nothing_to_clear: A kijelölt tételek egyikének sincs törölhető kategóriája.
       overwritten: 'korábban más besorolással: {count}'
       partial: csak a betöltött sorok
       range_differs: 'Kijelölve: {selected} · tartomány: {range}'
@@ -3926,8 +3928,9 @@ desktop:
       shown: Jelöld ki a látható tételeket · Ctrl+kattintás hozzáadja őket
     selected: '{count} kijelölve'
     selection:
-      actions: Kijelölés műveletei
+      actions_count: Műveletek · {count} kijelölve
       all_shown: 'Minden látható ki van jelölve: {count}.'
+      clear_category: Kategória törlése
       hidden: 'Rejtett: {hidden} a(z) {selected} kijelöltből'
       keep_visible: Csak a láthatók maradjanak
       select_all: 'Mind a {count} kijelölése: {period}'
@@ -4807,6 +4810,8 @@ desktop:
       cancelled: Leállítottad a beállítást.
       damaged_download: A letöltés sérült volt, ezért nem használható.
       disk_full: Nincs elég szabad hely a lemezen.
+      engine_program_unusable: 'A helyi MI-program nem tudott elindulni: sérült, vagy
+        nem működik ezen a számítógépen. A helyi MI javítása újratelepíti.'
       host_unreachable: A letöltési kiszolgáló nem érhető el. Ellenőrizd az internetkapcsolatodat,
         majd próbáld újra.
       interrupted: A beállítás a befejezés előtt megszakadt.

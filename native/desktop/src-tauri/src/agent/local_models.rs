@@ -144,13 +144,16 @@ pub fn parse(answer: &Value) -> Option<LocalModels> {
 }
 
 /// The local engine and placement with the guard a change sends back, or a record
-/// nobody can read, which names neither and carries the guard of its reset.
+/// nobody can read, which names neither and carries the guard of its reset. Either
+/// carries the engines and placements the service offers, which do not depend on the
+/// record being readable.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 #[serde(tag = "state", rename_all = "snake_case")]
 pub enum LocalEngineSetting {
     Readable {
         engine: LocalEngine,
         placement: Placement,
+        choices: Choices,
         revision: String,
         /// Whether the person stored this setting. An unchosen one is the defaults the
         /// package derives, which the window shows as they are and which the runtime
@@ -159,8 +162,16 @@ pub enum LocalEngineSetting {
         chosen: bool,
     },
     Unreadable {
+        choices: Choices,
         revision: String,
     },
+}
+
+/// The engines and the placements the service offers, each in its order.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct Choices {
+    pub engine: Vec<LocalEngine>,
+    pub placement: Vec<Placement>,
 }
 
 /// What the runtime manager's selection record is made to hold for a setting.
@@ -191,13 +202,23 @@ impl LocalEngineSetting {
 }
 
 /// The local engine setting in `answer`, or `None` when it breaks the contract: exactly
-/// the five members, a revision digest, an engine and placement named exactly when the
-/// record is readable, and a choice only of a readable record.
+/// the six members, a revision digest, an engine and placement named exactly when the
+/// record is readable, a choice only of a readable record, and `choices`: an object of
+/// exactly an `engine` and a `placement` list, each non-empty, of known tokens, without
+/// a repeat.
 pub fn parse_engine(answer: &Value) -> Option<LocalEngineSetting> {
     let object = answer.as_object()?;
-    if object.len() != 5 {
+    if object.len() != 6 {
         return None;
     }
+    let lists = object.get("choices")?.as_object()?;
+    if lists.len() != 2 {
+        return None;
+    }
+    let choices = Choices {
+        engine: offered(lists.get("engine")?, engine_token)?,
+        placement: offered(lists.get("placement")?, placement_token)?,
+    };
     let revision = object
         .get("revision")?
         .as_str()
@@ -208,14 +229,29 @@ pub fn parse_engine(answer: &Value) -> Option<LocalEngineSetting> {
     let chosen = object.get("chosen")?.as_bool()?;
     if object.get("unreadable")?.as_bool()? {
         return (engine.is_null() && placement.is_null() && !chosen)
-            .then_some(LocalEngineSetting::Unreadable { revision });
+            .then_some(LocalEngineSetting::Unreadable { choices, revision });
     }
     Some(LocalEngineSetting::Readable {
         engine: engine_token(engine.as_str()?)?,
         placement: placement_token(placement.as_str()?)?,
+        choices,
         revision,
         chosen,
     })
+}
+
+/// The values a service's list of offered tokens names, or `None` unless it is a
+/// non-empty array of tokens `token` knows, none named twice.
+fn offered<T: PartialEq>(list: &Value, token: fn(&str) -> Option<T>) -> Option<Vec<T>> {
+    let mut offered: Vec<T> = Vec::new();
+    for entry in list.as_array()? {
+        let value = token(entry.as_str()?)?;
+        if offered.contains(&value) {
+            return None;
+        }
+        offered.push(value);
+    }
+    (!offered.is_empty()).then_some(offered)
 }
 
 /// Why a choice of `engine` is refused before it reaches the service: llama.cpp on a
@@ -620,8 +656,20 @@ pub(crate) mod tests {
             "chosen": !unreadable,
             "engine": engine,
             "placement": placement,
+            "choices": {
+                "engine": ["llamacpp", "ollama"],
+                "placement": ["auto", "cpu_only"],
+            },
             "revision": revision(),
         })
+    }
+
+    /// Every engine and placement offered, as the service lists them.
+    fn served_choices() -> Choices {
+        Choices {
+            engine: vec![LocalEngine::LlamaCpp, LocalEngine::Ollama],
+            placement: vec![Placement::Auto, Placement::CpuOnly],
+        }
     }
 
     #[test]
@@ -632,6 +680,7 @@ pub(crate) mod tests {
             Some(LocalEngineSetting::Readable {
                 engine: LocalEngine::LlamaCpp,
                 placement: Placement::CpuOnly,
+                choices: served_choices(),
                 revision: revision(),
                 chosen: true,
             })
@@ -643,12 +692,12 @@ pub(crate) mod tests {
         );
         assert_eq!(
             serde_json::to_value(&parsed).unwrap(),
-            json!({"state": "readable", "engine": "llamacpp", "placement": "cpu_only", "revision": revision()})
+            json!({"state": "readable", "engine": "llamacpp", "placement": "cpu_only", "choices": {"engine": ["llamacpp", "ollama"], "placement": ["auto", "cpu_only"]}, "revision": revision()})
         );
         let ollama = parse_engine(&engine_answer(false, json!("ollama"), json!("auto"))).unwrap();
         assert_eq!(
             serde_json::to_value(&ollama).unwrap(),
-            json!({"state": "readable", "engine": "ollama", "placement": "auto", "revision": revision()})
+            json!({"state": "readable", "engine": "ollama", "placement": "auto", "choices": {"engine": ["llamacpp", "ollama"], "placement": ["auto", "cpu_only"]}, "revision": revision()})
         );
         assert_eq!(
             refusal(&engine_answer(false, json!("ollama"), json!("auto"))),
@@ -662,13 +711,14 @@ pub(crate) mod tests {
         assert_eq!(
             parsed,
             LocalEngineSetting::Unreadable {
+                choices: served_choices(),
                 revision: revision()
             }
         );
         assert_eq!(parsed.record_sync(), RecordSync::Leave);
         assert_eq!(
             serde_json::to_value(&parsed).unwrap(),
-            json!({"state": "unreadable", "revision": revision()})
+            json!({"state": "unreadable", "choices": {"engine": ["llamacpp", "ollama"], "placement": ["auto", "cpu_only"]}, "revision": revision()})
         );
     }
 
@@ -682,6 +732,7 @@ pub(crate) mod tests {
             LocalEngineSetting::Readable {
                 engine: LocalEngine::LlamaCpp,
                 placement: Placement::Auto,
+                choices: served_choices(),
                 revision: revision(),
                 chosen: false,
             }
@@ -690,8 +741,101 @@ pub(crate) mod tests {
         // The window reads the same setting whether or not it was chosen.
         assert_eq!(
             serde_json::to_value(&parsed).unwrap(),
-            json!({"state": "readable", "engine": "llamacpp", "placement": "auto", "revision": revision()})
+            json!({"state": "readable", "engine": "llamacpp", "placement": "auto", "choices": {"engine": ["llamacpp", "ollama"], "placement": ["auto", "cpu_only"]}, "revision": revision()})
         );
+    }
+
+    #[test]
+    fn the_offered_engines_and_placements_cross_in_the_services_order() {
+        let mut answer = engine_answer(false, json!("ollama"), json!("auto"));
+        answer["choices"] = json!({"engine": ["ollama"], "placement": ["cpu_only", "auto"]});
+        let parsed = parse_engine(&answer).unwrap();
+        assert_eq!(
+            serde_json::to_value(&parsed).unwrap(),
+            json!({
+                "state": "readable", "engine": "ollama", "placement": "auto",
+                "choices": {"engine": ["ollama"], "placement": ["cpu_only", "auto"]},
+                "revision": revision(),
+            })
+        );
+        // An unreadable record offers the same lists.
+        let mut unreadable = engine_answer(true, Value::Null, Value::Null);
+        unreadable["choices"] = json!({"engine": ["llamacpp"], "placement": ["auto"]});
+        assert_eq!(
+            parse_engine(&unreadable),
+            Some(LocalEngineSetting::Unreadable {
+                choices: Choices {
+                    engine: vec![LocalEngine::LlamaCpp],
+                    placement: vec![Placement::Auto],
+                },
+                revision: revision(),
+            })
+        );
+    }
+
+    #[test]
+    fn an_offered_list_outside_the_contract_refuses_the_whole_answer() {
+        for member in ["engine", "placement"] {
+            let (known, other) = if member == "engine" {
+                ("ollama", "llamacpp")
+            } else {
+                ("auto", "cpu_only")
+            };
+            for list in [
+                json!([]),
+                json!([known, known]),
+                json!([known, other, known]),
+                json!([known, "vllm"]),
+                json!([known, "Auto"]),
+                json!([known, 1]),
+                json!([known, null]),
+                json!([[known]]),
+                json!(known),
+                json!({"engine": true}),
+                Value::Null,
+            ] {
+                for unreadable in [false, true] {
+                    let mut answer = if unreadable {
+                        engine_answer(true, Value::Null, Value::Null)
+                    } else {
+                        engine_answer(false, json!("ollama"), json!("auto"))
+                    };
+                    answer["choices"][member] = list.clone();
+                    assert_eq!(parse_engine(&answer), None, "{member} {list} {answer}");
+                }
+            }
+            // A list that is missing from `choices`.
+            let mut missing = engine_answer(false, json!("ollama"), json!("auto"));
+            missing["choices"].as_object_mut().unwrap().remove(member);
+            assert_eq!(parse_engine(&missing), None, "{member} missing");
+        }
+        // `choices` is exactly the two lists, as an object.
+        let readable = || engine_answer(false, json!("ollama"), json!("auto"));
+        let mut extra_list = readable();
+        extra_list["choices"]["third"] = json!(["auto"]);
+        let mut misnamed = readable();
+        misnamed["choices"] = json!({"engine": ["ollama"], "placements": ["auto"]});
+        let mut flat = readable();
+        flat["choices"] = json!(["ollama"]);
+        let mut absent = readable();
+        absent.as_object_mut().unwrap().remove("choices");
+        let mut null_choices = readable();
+        null_choices["choices"] = Value::Null;
+        // The seven-member answer with the flat lists beside it is no answer.
+        let mut flat_members = readable();
+        flat_members.as_object_mut().unwrap().remove("choices");
+        flat_members["choices"] = json!(["ollama"]);
+        flat_members["placement_choices"] = json!(["auto"]);
+        for answer in [
+            extra_list,
+            misnamed,
+            flat,
+            absent,
+            null_choices,
+            flat_members,
+        ] {
+            assert_eq!(parse_engine(&answer), None, "{answer}");
+        }
     }
 
     #[test]
@@ -924,6 +1068,7 @@ pub(crate) mod tests {
         let setting = |chosen: bool| LocalEngineSetting::Readable {
             engine: LocalEngine::LlamaCpp,
             placement: Placement::CpuOnly,
+            choices: served_choices(),
             revision: revision(),
             chosen,
         };
@@ -931,6 +1076,7 @@ pub(crate) mod tests {
         assert_eq!(setting(false).record_sync(), RecordSync::Clear);
         assert_eq!(
             LocalEngineSetting::Unreadable {
+                choices: served_choices(),
                 revision: revision()
             }
             .record_sync(),

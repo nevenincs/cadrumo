@@ -580,29 +580,8 @@ def classify_gasto_transaction(
     ``invoices`` is a :class:`InvoiceCatalogue`.
     """
     transaction_id = transaction.transaction_id
-
-    # Other INCOMING rows belong to the income pipeline; this expense pass skips
-    # them without recording an issue so the operator is not shown a spurious gasto
-    # advisory for every receipt.
     refunded = is_supplier_refund(transaction)
-    if transaction.direction is not TransactionDirection.OUTGOING and not refunded:
-        return None
-
-    if transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED:
-        # Operator reviewed and deliberately excluded this row from filing. Keep
-        # that final disposition stronger than the actividad category tag.
-        return None
-
-    # PERSONAL / unclassified OUTGOING rows are not deductible gastos unless an
-    # explicit activity category marks the row as part of the selected activity
-    # set. Only rows that should be deductible but are dropped
-    # by a downstream gate (currency / period / missing taxable_base) surface an
-    # issue, so the operator sees a genuinely lost gasto rather than advisory
-    # noise on every personal line.
-    proportion = _gasto_business_proportion(
-        transaction,
-        accept_activity_marker=accept_activity_marker,
-    )
+    proportion = _owned_gasto_proportion(transaction, refunded=refunded, accept_activity_marker=accept_activity_marker)
     if proportion is None:
         return None
 
@@ -633,14 +612,8 @@ def classify_gasto_transaction(
     if gate_issue is not None:
         return gate_issue
 
-    evaluated = _category_rule_deductible_amount(
-        transaction,
-        eur_base=_eur_taxable_base_after_gate(transaction) if refund is None else refund.taxable_base,
-        eur_iva_amount=effective_eur_iva_amount(transaction) if refund is None else refund.iva_amount,
-        proportion=proportion,
-        rules=rules,
-        refund=refund,
-        linked_cuotas=None if refund is not None else linked_invoice_cuotas(transaction, invoices),
+    evaluated = _evaluated_gasto_deduction(
+        transaction, refund=refund, proportion=proportion, rules=rules, invoices=invoices
     )
     if isinstance(evaluated, RentaGastoLedgerAggregationIssue):
         return evaluated
@@ -650,6 +623,46 @@ def classify_gasto_transaction(
         deductible_amount=evaluated,
         filing_date=filing_date,
         category_id=transaction.category_id,
+    )
+
+
+def _owned_gasto_proportion(
+    transaction: Transaction, *, refunded: bool, accept_activity_marker: bool
+) -> Decimal | None:
+    """Return the business proportion of a row this expense pass owns, or ``None`` when it skips the row.
+
+    Other INCOMING rows belong to the income pipeline; this pass skips them without
+    recording an issue so the operator is not shown a spurious gasto advisory for every
+    receipt. A row the operator reviewed and deliberately excluded stays excluded, a
+    stronger disposition than the actividad category tag. PERSONAL and unclassified
+    OUTGOING rows are not deductible gastos unless an explicit activity category marks
+    them as part of the selected activity set, so the operator sees a genuinely lost
+    gasto from a downstream gate rather than advisory noise on every personal line.
+    """
+    if transaction.direction is not TransactionDirection.OUTGOING and not refunded:
+        return None
+    if transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED:
+        return None
+    return _gasto_business_proportion(transaction, accept_activity_marker=accept_activity_marker)
+
+
+def _evaluated_gasto_deduction(
+    transaction: Transaction,
+    *,
+    refund: _RefundFigures | None,
+    proportion: Decimal,
+    rules: RentaCategoryDeductionRules,
+    invoices: InvoiceCatalogue | None,
+) -> Decimal | RentaGastoLedgerAggregationIssue:
+    """Run the row through its category rule on the figures its invoice refund, or the row itself, states."""
+    return _category_rule_deductible_amount(
+        transaction,
+        eur_base=_eur_taxable_base_after_gate(transaction) if refund is None else refund.taxable_base,
+        eur_iva_amount=effective_eur_iva_amount(transaction) if refund is None else refund.iva_amount,
+        proportion=proportion,
+        rules=rules,
+        refund=refund,
+        linked_cuotas=None if refund is not None else linked_invoice_cuotas(transaction, invoices),
     )
 
 
@@ -801,20 +814,14 @@ def _category_rule_deductible_amount(
     if linked_cuotas is not None:
         eur_iva_amount, eur_recargo = linked_cuotas.iva_amount, linked_cuotas.recargo_amount
     try:
-        fact = RentaDeductibleExpenseFact(
-            transaction_id=transaction_id,
-            invoice_id=None if refund is None else refund.invoice_id,
-            catalogue_id="ledger",
-            operation_date=transaction.raw.value_date or transaction.raw.booked_date,
-            invoice_issue_date=None if refund is None else refund.invoice_issue_date,
-            posting_date=transaction.raw.booked_date,
-            gross_amount=effective_eur_amount(transaction) * scaling,
-            taxable_base=eur_base * scaling,
-            iva_amount=eur_iva_amount * scaling if eur_iva_amount is not None else None,
-            recargo_amount=(None if eur_recargo is None else eur_recargo * scaling),
-            direction=RentaExpenseDirection.OUTGOING_EXPENSE if refund is None else RentaExpenseDirection.REFUND,
+        fact = _deductible_expense_fact(
+            transaction,
             category=category,
-            exclusive_business_use=exclusive_business_use(transaction),
+            scaling=scaling,
+            eur_base=eur_base,
+            eur_iva_amount=eur_iva_amount,
+            eur_recargo=eur_recargo,
+            refund=refund,
         )
     except ValueError as exc:
         return RentaGastoLedgerAggregationIssue(
@@ -830,6 +837,34 @@ def _category_rule_deductible_amount(
             detail=result.reason,
         )
     return result.deductible_amount
+
+
+def _deductible_expense_fact(
+    transaction: Transaction,
+    *,
+    category: SpendingCategory,
+    scaling: Decimal,
+    eur_base: Decimal,
+    eur_iva_amount: Decimal | None,
+    eur_recargo: Decimal | None,
+    refund: _RefundFigures | None,
+) -> RentaDeductibleExpenseFact:
+    """Build the expense fact one categorised row states, scaled by its business proportion."""
+    return RentaDeductibleExpenseFact(
+        transaction_id=transaction.transaction_id,
+        invoice_id=None if refund is None else refund.invoice_id,
+        catalogue_id="ledger",
+        operation_date=transaction.raw.value_date or transaction.raw.booked_date,
+        invoice_issue_date=None if refund is None else refund.invoice_issue_date,
+        posting_date=transaction.raw.booked_date,
+        gross_amount=effective_eur_amount(transaction) * scaling,
+        taxable_base=eur_base * scaling,
+        iva_amount=eur_iva_amount * scaling if eur_iva_amount is not None else None,
+        recargo_amount=(None if eur_recargo is None else eur_recargo * scaling),
+        direction=RentaExpenseDirection.OUTGOING_EXPENSE if refund is None else RentaExpenseDirection.REFUND,
+        category=category,
+        exclusive_business_use=exclusive_business_use(transaction),
+    )
 
 
 def _apply_statutory_cap_trims(

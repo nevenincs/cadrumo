@@ -166,6 +166,7 @@ export type ModeloFormAeatData = {
 export type ModeloFormArtefactOption = {
   artefact: ModeloExportArtefact;
   words: string;
+  save_format: string | null;
   availability: ModeloFormAvailability;
 };
 

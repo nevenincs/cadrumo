@@ -32,6 +32,9 @@ export type ProviderWay = {
   /** The way lists a model the catalog says this computer does not hold
    * yet, which is downloaded from the local AI's settings. */
   modelsToDownload?: boolean;
+  /** Present where the way's local engine does not run: that and why, already
+   * worded, with the door the service names for the way on. */
+  engineNotRunning?: { words: string; door: string };
 };
 
 /** A model provider the person can choose, or see and not choose. It is one

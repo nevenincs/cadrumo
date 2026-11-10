@@ -16,11 +16,12 @@ from ..authority_artifact import AuthorityComponentQuery, AuthorityGenerationPin
 from ..authority_location import bundled_authority_descriptor_path
 from ..authority_store import SQLiteAuthorityReader
 from ..schema import RegistrySnapshot
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _MODELO = "303"
-_YEAR = 2025
+_YEAR = filing_year_envelope().horizon
 _PERIOD = "4T"
 
 
@@ -98,10 +99,10 @@ def test_grade_and_reference_date_are_part_of_the_shared_coordinate(reader: SQLi
 def test_a_new_madrid_date_revalidates_rather_than_reusing_the_previous_day(reader: SQLiteAuthorityReader) -> None:
     operation = PinnedAuthorityOperation(reader, reader.pin())
 
-    with frozen_clock(datetime(2026, 3, 10, 12, tzinfo=UTC)):
+    with frozen_clock(datetime(_YEAR, 3, 10, 12, tzinfo=UTC)):
         first_day = _snapshot(operation)
         assert _snapshot(operation) is first_day
-    with frozen_clock(datetime(2026, 3, 11, 12, tzinfo=UTC)):
+    with frozen_clock(datetime(_YEAR, 3, 11, 12, tzinfo=UTC)):
         next_day = _snapshot(operation)
 
     assert next_day is not first_day

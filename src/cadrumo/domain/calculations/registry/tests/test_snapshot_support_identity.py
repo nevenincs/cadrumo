@@ -13,6 +13,7 @@ from ..schema import ModeloDefinition
 from ..schema_base import DateAxis
 from ..schema_catalogues import RegistryCatalogues
 from .artifact_runtime_support import minimal_catalogues, minimal_modelo, minimal_revision
+from .authored_editions import filing_year_envelope
 from .snapshot_support import (
     build_validated_snapshot,
     fixture_authority,
@@ -54,7 +55,7 @@ def test_fixture_identity_is_accepted_by_governed_fact_resolution() -> None:
         MappingFactQuery(
             fact_id="spanish-tax-identifier-format",
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date(2024, 1, 1),
+            effective_date=date(filing_year_envelope().horizon, 1, 1),
         )
     )
 
@@ -67,4 +68,4 @@ def test_fixture_authority_does_not_upgrade_an_unsupported_filing_grade() -> Non
     catalogues = minimal_catalogues()
 
     with pytest.raises(RegistryValidationError, match=r"declares 'calculation' authority grade.*requested 'filing'"):
-        build_validated_snapshot(modelo, catalogues, filing_year=2024, period="0A")
+        build_validated_snapshot(modelo, catalogues, filing_year=filing_year_envelope().horizon, period="0A")

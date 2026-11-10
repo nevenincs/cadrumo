@@ -82,6 +82,89 @@ export type AgentCatalogStatus =
 export type AgentAdmissionState =
   "admitted" | "unproven" | "not_admitted" | "unknown";
 
+/** Why a local engine does not answer, as the service names it. */
+export type AgentEngineReason =
+  "no_answer_in_time" | "not_reachable" | "answer_unreadable";
+
+/** What the service measured of a local engine, as it serves it. Kept open at
+ * the wire boundary: `parseEngineHealth` is what reads it. */
+export type AgentEngineWire = {
+  engine: string;
+  state: string;
+  reason: string | null;
+  /** The way on the service names, which the window opens where it knows it. */
+  door: string | null;
+};
+
+/** Whether a keyless local lane's engine answers. A running engine names no
+ * reason and no door; one that does not run names both. */
+export type AgentEngineHealth =
+  | {
+      engine: AgentLocalEngineToken;
+      state: "running";
+      reason: null;
+      door: null;
+    }
+  | {
+      engine: AgentLocalEngineToken;
+      state: "not_running";
+      reason: AgentEngineReason;
+      door: string;
+    };
+
+const ENGINE_TOKENS: readonly string[] = [
+  "llamacpp",
+  "ollama",
+] satisfies AgentLocalEngineToken[];
+const ENGINE_REASONS: readonly string[] = [
+  "no_answer_in_time",
+  "not_reachable",
+  "answer_unreadable",
+] satisfies AgentEngineReason[];
+
+/**
+ * The engine health of `lane`: the measured state, null where the service
+ * measured none (the lane has no local engine, or it was not measured), or
+ * `"malformed"` for an answer outside the contract. The contract: only the
+ * API lane of an engine states one, naming that engine; a running engine has
+ * no reason or door and one that does not run has a known reason and a door.
+ * A door the window does not know is kept as served and opens nothing.
+ */
+export function parseEngineHealth(
+  lane: Pick<AgentProviderLane, "provider_id" | "transport" | "health">,
+): AgentEngineHealth | null | "malformed" {
+  const served: unknown = lane.health.engine;
+  if (served === undefined || served === null) return null;
+  if (typeof served !== "object" || Array.isArray(served)) return "malformed";
+  const { engine, state, reason, door } = served as Record<string, unknown>;
+  if (
+    typeof engine !== "string" ||
+    !ENGINE_TOKENS.includes(engine) ||
+    engine !== lane.provider_id ||
+    lane.transport !== "api"
+  )
+    return "malformed";
+  const token = engine as AgentLocalEngineToken;
+  if (state === "running")
+    return reason === null && door === null
+      ? { engine: token, state, reason, door }
+      : "malformed";
+  if (
+    state === "not_running" &&
+    typeof reason === "string" &&
+    ENGINE_REASONS.includes(reason) &&
+    typeof door === "string" &&
+    door !== ""
+  )
+    return {
+      engine: token,
+      state,
+      reason: reason as AgentEngineReason,
+      door,
+    };
+  return "malformed";
+}
+
 /** How much reasoning a run asks its model for, lowest first. Which of these
  * a model accepts is the model's own, in its catalog entry. */
 export type AgentEffort = "low" | "medium" | "high" | "xhigh" | "max" | "ultra";
@@ -190,6 +273,9 @@ export type AgentProviderLane = {
     selectable: boolean;
     reasons?: string[];
     checked_at: string;
+    /** Whether the lane's local engine answers: stated only by the API lanes
+     * of the local engines, and null elsewhere and where it was not measured. */
+    engine?: AgentEngineWire | null;
   };
   catalog: {
     schema_version?: number;
