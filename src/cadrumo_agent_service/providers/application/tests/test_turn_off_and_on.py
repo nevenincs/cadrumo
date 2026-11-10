@@ -10,7 +10,7 @@ from pydantic import SecretStr
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 
 from ...domain.catalog import ProviderConsumer
-from ...domain.record import AssistantAuth, CredentialState, ProviderSettingsRecord
+from ...domain.record import AssistantAuth, CredentialState, LocalEngine, ProviderSettingsRecord
 from ..contracts import (
     ProviderReadiness,
     ProviderSettingsActionAccepted,
@@ -40,7 +40,9 @@ _KEY = "synthetic-profile-key"
 
 
 def _service(store: MemoryProviderSettingsStore) -> ProviderSettingsService:
-    return ProviderSettingsService(store=store, catalog_source=StaticCatalogSource())
+    return ProviderSettingsService(
+        selected_engine=lambda: LocalEngine.LLAMACPP, store=store, catalog_source=StaticCatalogSource()
+    )
 
 
 def _resolve(store: MemoryProviderSettingsStore, lane: str) -> object:
