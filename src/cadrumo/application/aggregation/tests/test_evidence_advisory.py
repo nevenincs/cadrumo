@@ -30,6 +30,7 @@ from pathlib import Path
 
 import pytest
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction
@@ -40,6 +41,8 @@ from ..evidence_advisory import (
     missing_evidence_advisory_observations,
 )
 from ..source_mesh import CalculationSourceDiagnostic
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 _DEFAULT_IVA_CATEGORY = IvaCategory("domestic_general")
@@ -57,8 +60,8 @@ def _observations(
 def _raw(provider_id: str, *, amount: Decimal) -> RawTransaction:
     return RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(2026, 4, 15),
-        value_date=date(2026, 4, 15),
+        booked_date=date(_YEAR, 4, 15),
+        value_date=date(_YEAR, 4, 15),
         amount=amount,
         currency="EUR",
         counterparty="ACME SL",
@@ -68,7 +71,7 @@ def _raw(provider_id: str, *, amount: Decimal) -> RawTransaction:
             source_sha256="d" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 4, 16, 9, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 4, 16, 9, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": "ledger_transaction"},

@@ -14,13 +14,16 @@ from __future__ import annotations
 import pytest
 
 from ....core.period import Period, StandardPeriodCode
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..errors import AggregationValidationError
 from ..modelo_bindings import aggregation_period_for_modelo
 from .renta_income_aggregation_support import renta_income_aggregation_period
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_FILING_YEAR = 2025
+_FILING_YEAR = _YEAR
 
 # The span-shaped canonical members the ledger filters by. Instalment claves
 # (``1P``-``4P``) carry no date span, so they are not ledger-filterable spans
@@ -61,7 +64,7 @@ _DELETED_ALIASES = (
 )
 
 
-def _period(code: str, *, year: int = 2025) -> Period:
+def _period(code: str, *, year: int = _YEAR) -> Period:
     """Delegate to the canonical builder, keeping this module's code-first convention."""
     return renta_income_aggregation_period(year, code)
 
@@ -76,11 +79,11 @@ def test_canonical_span_token_maps_to_typed_period() -> None:
 
 def test_canonical_tokens_map_to_expected_typed_periods() -> None:
     """The three canonical shapes resolve to their typed aggregation periods."""
-    assert aggregation_period_for_modelo(filing_year=2025, code="1T") == _period("1T")
-    assert aggregation_period_for_modelo(filing_year=2025, code="4T") == _period("4T")
-    assert aggregation_period_for_modelo(filing_year=2025, code="0A") == _period("0A")
-    assert aggregation_period_for_modelo(filing_year=2025, code="03") == _period("03")
-    assert aggregation_period_for_modelo(filing_year=2025, code="12") == _period("12")
+    assert aggregation_period_for_modelo(filing_year=_YEAR, code="1T") == _period("1T")
+    assert aggregation_period_for_modelo(filing_year=_YEAR, code="4T") == _period("4T")
+    assert aggregation_period_for_modelo(filing_year=_YEAR, code="0A") == _period("0A")
+    assert aggregation_period_for_modelo(filing_year=_YEAR, code="03") == _period("03")
+    assert aggregation_period_for_modelo(filing_year=_YEAR, code="12") == _period("12")
 
 
 def test_deleted_alias_tokens_now_raise() -> None:
@@ -92,5 +95,5 @@ def test_deleted_alias_tokens_now_raise() -> None:
 
 def test_lowercase_canonical_token_is_normalised_not_an_alias() -> None:
     """A lowercase canonical token still resolves (case-fold), not via an alias branch."""
-    assert aggregation_period_for_modelo(filing_year=2025, code="1t") == _period("1T")
-    assert aggregation_period_for_modelo(filing_year=2025, code="0a") == _period("0A")
+    assert aggregation_period_for_modelo(filing_year=_YEAR, code="1t") == _period("1T")
+    assert aggregation_period_for_modelo(filing_year=_YEAR, code="0a") == _period("0A")

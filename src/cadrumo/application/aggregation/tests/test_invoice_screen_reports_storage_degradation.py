@@ -26,6 +26,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 
 from ....core.period import Period
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ...invoices.catalogue_reads_ports import (
     InvoiceCatalogueReader,
@@ -40,9 +41,11 @@ from .ledger_source_mesh_support import (
     empty_prorrata_repository,
 )
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_YEAR = 2026
+_YEAR = _YEAR
 _PERIOD_CODE = "2T"
 
 

@@ -47,6 +47,7 @@ from cadrumo.domain.iva.schema import IvaCategory
 
 from ....core.aggregation import LedgerWithholdingDerivation
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.retencion_facts import (
@@ -68,6 +69,8 @@ from .renta_income_aggregation_support import (
     m130_employment_category_matcher,
 )
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 #: Every scenario invoices the same 2.000,00 EUR base at 21 % IVA, so the rows
@@ -76,7 +79,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 _BASE = Decimal("2000.00")
 _IVA = Decimal("420.00")
 _GROSS = _BASE + _IVA
-_EFFECTIVE_DATE = date(2024, 3, 15)
+_EFFECTIVE_DATE = date(_YEAR, 3, 15)
 _DEFAULT_IVA_CATEGORY = IvaCategory("domestic_general")
 
 
@@ -100,7 +103,7 @@ def _income_row(
             "iva_category": iva_category,
             "irpf_category": "actividad_economica",
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(_YEAR, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -116,7 +119,7 @@ def _observations(*rows: Transaction) -> tuple[RentaIncomeObservation, ...]:
     aggregation = aggregate_renta_income_ledger(
         TransactionCatalogue.from_transactions(rows),
         bucket_id="test",
-        period=Period.from_year_and_code(2024, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
         modelo=M130_MODELO,
         target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=m130_activity_category_matcher,
