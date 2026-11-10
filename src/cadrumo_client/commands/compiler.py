@@ -69,6 +69,26 @@ class _PydanticStringParamType(TyParamType):
             self.fail(str(exc), param, ctx)
 
 
+class _NonBlankTextParamType(TyParamType):
+    """Refuse an empty or blank text value at the parse boundary and normalise the rest.
+
+    Click's ``BadParameter`` names the failing option or argument, so an operator
+    who passes ``--invoice-id ""`` is told which parameter was empty instead of
+    the value reaching a request model that rejects it as an internal fault. The
+    surrounding whitespace of an accepted value is stripped, so every downstream
+    comparison sees the same selector the operator meant.
+    """
+
+    name = "text"
+
+    @override
+    def convert(self, value: Any, param: TyParameter | None, ctx: TyContext | None) -> str:
+        text = str(value).strip()
+        if not text:
+            self.fail(tr("cli.common.errors.blank_value"), param, ctx)
+        return text
+
+
 @cache
 def _group_class(
     graph: CommandSpecGraph,
@@ -174,6 +194,10 @@ def _parameter_value_projection(
         else resolver(spec.value.click_type)
     )
     click_type = _materialize_projected_click_type(click_type, annotation)
+    if spec.constraint.non_blank:
+        if annotation not in (str, GenericAlias(list, (str,))) or click_type is not None or parser is not None:
+            raise TypeError(f"non-blank constraint needs a plain text parameter: {spec.name!r}")
+        click_type = _NonBlankTextParamType()
     choice_metavar = None if not spec.value.choices else f"<{'|'.join(spec.value.choices)}>"
     return annotation, parser, click_type, choice_metavar
 

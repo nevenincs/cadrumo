@@ -2160,6 +2160,7 @@ cli:
     still_missing: '{field} még hiányzik.'
   common:
     errors:
+      blank_value: Az érték nem lehet üres vagy csak szóközökből álló.
       invalid_iso_date: 'Érvénytelen dátumformátum a(z) %{label} mezőhöz: %{raw}.
         ISO 8601 (ÉÉÉÉ-HH-NN) szükséges.'
       parse_invalid_choice: 'Érvénytelen érték: ''{value}''. Válassz ezek közül: {accepted}.'

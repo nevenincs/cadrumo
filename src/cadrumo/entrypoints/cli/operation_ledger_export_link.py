@@ -97,7 +97,7 @@ def link_ledger_invoice_for_cli(
     if (
         result.profile_id != client.profile_id
         or result.transaction_id != transaction_id
-        or result.invoice_id != invoice_id
+        or _link_invoice_selector_invalid(result, invoice_id)
     ):
         raise invalid_completion_error(completed)
 
@@ -106,7 +106,9 @@ def link_ledger_invoice_for_cli(
         return result
 
     projection = result.projection
-    _require_ledger_link_success(completed, projection, client.profile_id, transaction_id, invoice_id, actor_label)
+    _require_ledger_link_success(
+        completed, projection, client.profile_id, transaction_id, result.invoice_id, actor_label
+    )
     return result
 
 
@@ -151,10 +153,21 @@ def _require_ledger_link_refusal(
         completed.terminal_condition is not OperationTerminalCondition.REFUSED
         or completed.effect is not OperationEffect.NONE
         or completed.refusal_code != LEDGER_LINK_VALIDATION_REFUSAL_CODE
-        or (result.reason not in {"missing_invoice", "cross_bucket_invoice", "transaction_takes_no_invoice"})
+        or (
+            result.reason
+            not in {"missing_invoice", "ambiguous_invoice", "cross_bucket_invoice", "transaction_takes_no_invoice"}
+        )
+        or any(not candidate.startswith(result.invoice_id) for candidate in result.candidate_invoice_ids)
         or (result.projection is not None)
     ):
         raise invalid_completion_error(completed)
+
+
+def _link_invoice_selector_invalid(result: LedgerLinkOperationResult, selector: str) -> bool:
+    """Require the result to name the selector, or the one invoice that selector resolved to."""
+    if result.outcome == "refused":
+        return result.invoice_id != selector
+    return not result.invoice_id.startswith(selector)
 
 
 def _ledger_link_terminal_invalid(completed: RegisteredOperationCompletion[LedgerLinkOperationResult]) -> bool:
