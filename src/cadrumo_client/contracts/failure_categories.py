@@ -21,6 +21,7 @@ class DependencyFailureCategory(StrEnum):
     PROGRAM_MISSING = "program_missing"
     PROGRAM_NOT_RUNNING = "program_not_running"
     ENGINE_PROGRAM_UNUSABLE = "engine_program_unusable"
+    ENGINE_PACKAGE_DAMAGED = "engine_package_damaged"
     INTERRUPTED = "interrupted"
     NEEDS_SIGN_IN = "needs_sign_in"
     NOT_IN_THIS_BUILD = "not_in_this_build"
