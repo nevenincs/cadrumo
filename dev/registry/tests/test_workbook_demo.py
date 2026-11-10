@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import calendar
 from datetime import date
 from decimal import Decimal
 from io import BytesIO
@@ -29,6 +30,13 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormPageCondition,
     FormRepeatingGroupBlock,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_grade_exercises,
+    filing_year_envelope,
+    open_ended_revision,
+    revision_covering,
+    split_exercise_revisions,
+)
 
 from .. import workbook_demo, workbook_demo_formula_inputs
 from ..compiler.authority import compiled_bundled_authority
@@ -44,9 +52,13 @@ from ..workbook_demo_records import (
     financial_asset_records,
     member_attribution_records,
 )
+from .authored_edition_support import newest_authored_edition
 from .workbook_demo_oracle_support import expected_result, numeric_inputs
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+
+#: The exercises modelo 390 authors a filing-grade edition of from the support floor up; each is its own edition.
+_M390_YEARS = filing_grade_exercises("390")
 
 
 def test_390_demo_preserves_live_annual_totals_and_unknown_detail() -> None:
@@ -73,9 +85,11 @@ def test_390_demo_preserves_live_annual_totals_and_unknown_detail() -> None:
     assert "iva.anual.deducible.interiores-corrientes.tipo-21.base" not in values
 
 
-@pytest.mark.parametrize("year", (2024, 2025))
+@pytest.mark.parametrize("year", _M390_YEARS)
 def test_390_identity_page_uses_year_and_keeps_unprovided_identity_unknown(year: int) -> None:
-    snapshot, plan = build_demonstration_plan(DemoCase("390", str(year), None, None, filing_year=year, period="0A"))
+    snapshot, plan = build_demonstration_plan(
+        DemoCase("390", str(revision_covering("390", year).id), None, None, filing_year=year, period="0A")
+    )
     page = next(page for page in snapshot.revision.form_layouts[0].pages if page.id == "pag-1")
     fields = {
         block.id: block
@@ -95,11 +109,11 @@ def test_390_identity_page_uses_year_and_keeps_unprovided_identity_unknown(year:
     assert not any(value == "12345678Z" for value in values)
 
 
-@pytest.mark.parametrize("year", (2024, 2025))
+@pytest.mark.parametrize("year", _M390_YEARS)
 @pytest.mark.parametrize("section_id", ("3-activities", "4-representante-personas-juridicas"))
 def test_390_first_page_grids_preserve_independent_live_cells(year: int, section_id: str) -> None:
     snapshot = workbook_demo.demonstration_snapshot(
-        DemoCase("390", str(year), None, None, filing_year=year, period="0A")
+        DemoCase("390", str(revision_covering("390", year).id), None, None, filing_year=year, period="0A")
     )
     page = next(page for page in snapshot.revision.form_layouts[0].pages if page.id == "pag-1")
     grid = next(section for section in page.sections if section.id == section_id).blocks[0]
@@ -166,10 +180,10 @@ def test_390_first_page_grids_preserve_independent_live_cells(year: int, section
         )
 
 
-@pytest.mark.parametrize("year", (2024, 2025))
+@pytest.mark.parametrize("year", _M390_YEARS)
 def test_390_prorrata_keeps_each_description_with_its_five_live_fields(year: int) -> None:
     snapshot = workbook_demo.demonstration_snapshot(
-        DemoCase("390", str(year), None, None, filing_year=year, period="0A")
+        DemoCase("390", str(revision_covering("390", year).id), None, None, filing_year=year, period="0A")
     )
     page = next(page for page in snapshot.revision.form_layouts[0].pages if page.id == "pag-7")
     section = next(s for s in page.sections if s.id == "12-prorratas")
@@ -225,7 +239,8 @@ def test_390_prorrata_keeps_each_description_with_its_five_live_fields(year: int
 
 
 def test_303_early_2024_demo_omits_year_end_facts_and_pages() -> None:
-    case = next(case for case in DEMO_CASES if case.modelo == "303" and case.revision == "2024-hasta-08-y-2t")
+    early, _late = split_exercise_revisions("303", early_period="2T", late_period="3T")
+    case = next(case for case in DEMO_CASES if case.modelo == "303" and case.revision == early.id)
     snapshot, plan = build_demonstration_plan(case)
     assert snapshot.period == "2T"
     saved, _ = m303_demonstration_facts(snapshot)
@@ -233,7 +248,7 @@ def test_303_early_2024_demo_omits_year_end_facts_and_pages() -> None:
     assert saved.filing_instance_evidence.m303 is not None
     assert saved.filing_instance_evidence.m303.exonerado_390 is None
     assert saved.filing_instance_evidence.m303.annual_volume_nonzero is None
-    assert saved.created_at.date() == date(2024, 6, 30)
+    assert saved.created_at.date() == date(early.valid_from.year, 6, 30)
     inputs, bindings = demonstration_inputs(snapshot, case)
     values = numeric_inputs(inputs)
     assert "80" not in values
@@ -245,7 +260,7 @@ def test_303_early_2024_demo_omits_year_end_facts_and_pages() -> None:
     assert "8612" not in form_values
 
 
-@pytest.mark.parametrize("year", [2022, 2023, 2024, 2025, 2026])
+@pytest.mark.parametrize("year", filing_year_envelope().years)
 def test_303_demo_renders_saved_facts_and_live_registry_totals(year: int) -> None:
     case = next(
         case for case in DEMO_CASES if case.modelo == "303" and case.filing_year == year and case.period == "4T"
@@ -270,14 +285,7 @@ def test_303_demo_renders_saved_facts_and_live_registry_totals(year: int) -> Non
 
 @pytest.mark.parametrize(
     ("revision", "year", "period"),
-    [
-        ("2022", 2022, "4T"),
-        ("2023", 2023, "4T"),
-        ("2024-hasta-08-y-2t", 2024, "2T"),
-        ("2024-desde-09-y-3t", 2024, "4T"),
-        ("2025", 2025, "4T"),
-        ("2026-y-siguientes", 2026, "4T"),
-    ],
+    [(case.revision, case.filing_year, case.period) for case in DEMO_CASES if case.modelo == "303"],
 )
 def test_303_annual_volume_matches_every_printed_addition_and_deduction(revision: str, year: int, period: str) -> None:
     snapshot = workbook_demo.demonstration_snapshot(
@@ -545,7 +553,7 @@ def test_188_empty_annuity_identifier_keeps_its_24_character_limit_in_xlsx() -> 
 def test_185_three_months_keep_independent_sources_and_affiliation_zeros() -> None:
     case = next(case for case in DEMO_CASES if case.modelo == "185")
     snapshot, plan = build_demonstration_plan(case)
-    assert snapshot.filing_year == 2026 and not snapshot.revision.formulas
+    assert snapshot.filing_year == filing_year_envelope().horizon and not snapshot.revision.formulas
     inputs = {c.casilla_id: c for c in plan.value_cells if c.address.tab is TabName.ENTRADAS}
     mirrors = {c.casilla_id: c for c in plan.formula_cells if c.address.tab is TabName.FORM}
     for suffix, days in (("", "31"), ("-1", "28"), ("-2", "15")):
@@ -697,7 +705,10 @@ def test_demonstration_does_not_promote_calculation_authority_to_filing(modelo: 
 
 def test_authored_131_activity_table_has_live_readable_bound_cells() -> None:
     authority = compiled_bundled_authority()
-    snapshot = authority.snapshot("131", filing_year=2023, period="4T", revision_id="2019-2023")
+    historical = revision_covering("131", filing_year_envelope().floor)
+    assert historical.valid_to is not None
+    year = historical.valid_to.year
+    snapshot = authority.snapshot("131", filing_year=year, period="4T", revision_id=str(historical.id))
     fictional_values = {
         "epigrafe": "659.4",
         "rendimiento-neto": Decimal("20000"),
@@ -706,7 +717,7 @@ def test_authored_131_activity_table_has_live_readable_bound_cells() -> None:
     }
     with override_settings(cadrumo_output_language="es"), validating_governed_facts(authority):
         plan = build_export_plan(snapshot)
-        layout = plan_layout(snapshot.revision, bracket_filter_date=date(2023, 12, 31))
+        layout = plan_layout(snapshot.revision, bracket_filter_date=date(year, 12, 31))
         supplied = {
             layout.binding_cells[f"modelo-131.page1.actividad-1-{key}"]: value
             for key, value in fictional_values.items()
@@ -788,21 +799,26 @@ def test_232_populated_related_parties_remain_separate_rows() -> None:
         assert workbook[source.address.tab.value].cell(source.address.row, source.address.column).value == expected
 
 
+_M232_YEAR = filing_year_envelope().floor
+
+
 @pytest.mark.parametrize(
     "code,expected",
     [
-        ("0A", (date(2024, 1, 1), date(2024, 12, 31))),
-        ("4T", (date(2024, 10, 1), date(2024, 12, 31))),
-        ("02", (date(2024, 2, 1), date(2024, 2, 29))),
+        ("0A", (date(_M232_YEAR, 1, 1), date(_M232_YEAR, 12, 31))),
+        ("4T", (date(_M232_YEAR, 10, 1), date(_M232_YEAR, 12, 31))),
+        ("02", (date(_M232_YEAR, 2, 1), date(_M232_YEAR, 2, calendar.monthrange(_M232_YEAR, 2)[1]))),
         ("1P", (None, None)),
         (None, (None, None)),
     ],
 )
 def test_232_date_context_uses_bound_period_and_never_guesses_event_dates(code, expected) -> None:
-    snapshot = compiled_bundled_authority().snapshot("232", filing_year=2024, period="0A")
+    snapshot = compiled_bundled_authority().snapshot("232", filing_year=_M232_YEAR, period="0A")
     # Exercise the shared date resolver with synthetic alternate periods;
     # this does not admit those periods for a Modelo 232 filing.
-    snapshot = snapshot.model_copy(update={"filing_period": Period.from_year_and_code(2024, code) if code else None})
+    snapshot = snapshot.model_copy(
+        update={"filing_period": Period.from_year_and_code(_M232_YEAR, code) if code else None}
+    )
     fields = {
         block.id: block
         for page in snapshot.revision.form_layouts[0].pages
@@ -970,7 +986,9 @@ def test_222_preserves_pre_group_adjustments_in_live_result_formulas() -> None:
 
 
 @pytest.mark.parametrize(
-    "case", [c for c in DEMO_CASES if c.modelo == "222" and c.filing_year < 2025], ids=lambda c: c.revision
+    "case",
+    [c for c in DEMO_CASES if c.modelo == "222" and c.filing_year < newest_authored_edition("222")],
+    ids=lambda c: c.revision,
 )
 def test_historical_222_keeps_its_year_rates_and_group_adjustments(case: DemoCase) -> None:
     snapshot, plan = build_demonstration_plan(case)
@@ -1007,7 +1025,9 @@ def test_202_regime_details_do_not_invent_unavailable_profile_values(case: DemoC
 
 
 @pytest.mark.parametrize(
-    "case", [c for c in DEMO_CASES if c.modelo == "202" and c.revision != "2025-y-siguientes"], ids=lambda c: c.revision
+    "case",
+    [c for c in DEMO_CASES if c.modelo == "202" and c.revision != str(open_ended_revision("202").id)],
+    ids=lambda c: c.revision,
 )
 def test_202_historical_rate_rows_do_not_import_later_rates(case: DemoCase) -> None:
     snapshot, plan = build_demonstration_plan(case)
@@ -1095,7 +1115,7 @@ def test_fictional_form_projects_only_declared_identity_facts(case: DemoCase) ->
     _, plan = build_demonstration_plan(case)
     form_values = [cell.value for cell in plan.value_cells if cell.address.tab is TabName.FORM]
     assert "12345678Z" in form_values
-    if case.modelo in {"123", "216"} and case.revision == "2024-y-siguientes":
+    if case.modelo in {"123", "216"} and case.revision == str(open_ended_revision(case.modelo).id):
         assert "Ana Ejemplo" in form_values
     else:
         assert "Ana" in form_values
