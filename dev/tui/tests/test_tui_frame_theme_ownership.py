@@ -101,7 +101,7 @@ def test_an_appearance_nothing_was_rendered_under_is_refused_on_every_record() -
 def test_a_manifest_read_back_from_disk_carries_the_theme_refusal() -> None:
     """The join must survive serialisation, which is where a manifest arrives."""
     coherent = Manifest(
-        generated_at="2026-01-01T00:00:00+00:00",
+        generated_at="1980-01-01T00:00:00+00:00",
         source_revision="a" * 64,
         source_revision_at_end="a" * 64,
         cell_height=22,

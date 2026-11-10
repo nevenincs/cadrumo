@@ -13,6 +13,7 @@ from pydantic import ValidationError
 from cadrumo.application.overview.calendar_models import OverviewPeriodState
 from cadrumo.application.overview.home import HomeAvailability, HomeDeclarationState, HomeSessionPosture
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.tui.tests.home_fixtures import (
     HOME_FIXTURE_SCENARIOS,
     HomeFixtureScenario,
@@ -105,8 +106,8 @@ def test_populated_actions_cover_declaration_addressed_and_cross_cutting_tasks(
 
     addressed = projection.actions[0]
     assert addressed.modelo == "303"
-    assert addressed.filing_year == 2026
-    assert addressed.period == Period.from_year_and_code(2026, "3T")
+    assert addressed.filing_year in filing_year_envelope().years
+    assert addressed.period == Period.from_year_and_code(addressed.filing_year, "3T")
     addressless = [
         item for item in projection.actions if (item.modelo, item.filing_year, item.period) == (None, None, None)
     ]

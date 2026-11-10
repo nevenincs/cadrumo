@@ -115,11 +115,11 @@ def test_metadata_change_preserves_unaffected_icon(tmp_path: Path, monkeypatch: 
     png = io.BytesIO()
     Image.new("RGBA", (256, 256), "blue").save(png, format="PNG")
     monkeypatch.setitem(sys.modules, "resvg_py", SimpleNamespace(svg_to_bytes=lambda **kwargs: png.getvalue()))
-    generate_metadata(tmp_path, BuildStamp("2026100701", 1, "2026-10-07T00:00:00Z"), tmp_path, target="windows-x86-64")
+    generate_metadata(tmp_path, BuildStamp("2026100701", 1, "1980-10-07T00:00:00Z"), tmp_path, target="windows-x86-64")
     baseline = _freeze_outputs(tmp_path)
-    generate_metadata(tmp_path, BuildStamp("2026100701", 1, "2026-10-07T00:00:00Z"), tmp_path, target="windows-x86-64")
+    generate_metadata(tmp_path, BuildStamp("2026100701", 1, "1980-10-07T00:00:00Z"), tmp_path, target="windows-x86-64")
     assert _outputs(tmp_path) == baseline
-    generate_metadata(tmp_path, BuildStamp("2026100702", 2, "2026-10-07T00:00:00Z"), tmp_path, target="windows-x86-64")
+    generate_metadata(tmp_path, BuildStamp("2026100702", 2, "1980-10-07T00:00:00Z"), tmp_path, target="windows-x86-64")
     after = _outputs(tmp_path)
     assert after["cadrumo.ico"] == baseline["cadrumo.ico"]
     assert after["interpreter.rc"][0] != baseline["interpreter.rc"][0]

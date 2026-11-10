@@ -86,11 +86,11 @@ def test_the_shipped_accessor_reads_the_shipped_ledger_through_the_same_reader()
 @pytest.mark.parametrize(
     ("payload", "fragment"),
     [
-        pytest.param({"burned": [{"burned_on": "2026-07-27", "reason": "x" * 50}]}, "missing", id="no-version"),
+        pytest.param({"burned": [{"burned_on": "1980-07-27", "reason": "x" * 50}]}, "missing", id="no-version"),
         pytest.param({"burned": [{"version": "1.0.0", "reason": "x" * 50}]}, "missing", id="no-date"),
-        pytest.param({"burned": [{"version": "1.0.0", "burned_on": "2026-07-27"}]}, "missing", id="no-reason"),
+        pytest.param({"burned": [{"version": "1.0.0", "burned_on": "1980-07-27"}]}, "missing", id="no-reason"),
         pytest.param(
-            {"burned": [{"version": " ", "burned_on": "2026-07-27", "reason": "x" * 50}]},
+            {"burned": [{"version": " ", "burned_on": "1980-07-27", "reason": "x" * 50}]},
             "empty version",
             id="blank-version",
         ),
@@ -121,7 +121,7 @@ def test_reader_refuses_every_under_specified_shape(
 
 def test_a_duplicated_version_refuses(tmp_path: Path) -> None:
     """Two burns claiming one version have conflicting evidence; refuse both."""
-    entry = {"version": "2.0.0", "burned_on": "2026-07-27", "reason": "y" * 50}
+    entry = {"version": "2.0.0", "burned_on": "1980-07-27", "reason": "y" * 50}
     ledger = tmp_path / "burned_versions.json"
     ledger.write_text(json.dumps({"burned": [entry, {**entry, "reason": "z" * 50}]}), encoding="utf-8")
     with pytest.raises(BurnedVersionLedgerError, match="more than once"):
@@ -191,8 +191,8 @@ def test_two_spellings_of_one_number_are_one_burn_not_two(tmp_path: Path, respel
         json.dumps(
             {
                 "burned": [
-                    {"version": "0.2.1", "burned_on": "2026-07-27", "reason": "y" * 50},
-                    {"version": respelling, "burned_on": "2026-07-28", "reason": "z" * 50},
+                    {"version": "0.2.1", "burned_on": "1980-07-27", "reason": "y" * 50},
+                    {"version": respelling, "burned_on": "1980-07-28", "reason": "z" * 50},
                 ]
             }
         ),
@@ -206,7 +206,7 @@ def test_an_unparseable_entry_version_refuses(tmp_path: Path) -> None:
     """An entry whose version is not a version burns nothing and must not parse."""
     ledger = tmp_path / "burned_versions.json"
     ledger.write_text(
-        json.dumps({"burned": [{"version": "latest", "burned_on": "2026-07-27", "reason": "y" * 50}]}),
+        json.dumps({"burned": [{"version": "latest", "burned_on": "1980-07-27", "reason": "y" * 50}]}),
         encoding="utf-8",
     )
     with pytest.raises(BurnedVersionLedgerError, match="unparseable version"):
@@ -231,8 +231,8 @@ def test_a_well_formed_ledger_parses_every_entry(tmp_path: Path) -> None:
         json.dumps(
             {
                 "burned": [
-                    {"version": "3.0.0", "burned_on": "2026-07-27", "reason": "q" * 50},
-                    {"version": "3.1.0", "burned_on": "2026-07-28", "reason": "r" * 50},
+                    {"version": "3.0.0", "burned_on": "1980-07-27", "reason": "q" * 50},
+                    {"version": "3.1.0", "burned_on": "1980-07-28", "reason": "r" * 50},
                 ]
             }
         ),
@@ -242,4 +242,4 @@ def test_a_well_formed_ledger_parses_every_entry(tmp_path: Path) -> None:
     entries = read_ledger(ledger)
 
     assert [entry.version for entry in entries] == ["3.0.0", "3.1.0"]
-    assert entries[1].burned_on == date(2026, 7, 28)
+    assert entries[1].burned_on == date(1980, 7, 28)

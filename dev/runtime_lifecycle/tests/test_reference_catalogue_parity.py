@@ -9,6 +9,7 @@ the same words.
 
 from __future__ import annotations
 
+from datetime import date
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -19,6 +20,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
 )
 from cadrumo.application.modelo.work_create_policy import ceded_autonomic_modelo_locale_key
 from cadrumo.core.i18n.render import tr
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.portals.registry import PORTAL_REGISTRY
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.cli_envelope import require_schema_envelope
@@ -29,18 +31,21 @@ __all__ = ["isolated_cli_backend"]
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _FIRST_PORTAL = next(iter(PORTAL_REGISTRY.values())).portal.value
-_SCOPE = ["--year", "2025", "--period", "1T"]
-_SCOPE_ARGS = {"filing_year": 2025, "period": "1T"}
+_YEAR = filing_year_envelope().horizon
+_YEAR_TEXT = str(_YEAR)
+_AS_OF = date(_YEAR, 6, 30).isoformat()
+_SCOPE = ["--year", _YEAR_TEXT, "--period", "1T"]
+_SCOPE_ARGS = {"filing_year": _YEAR, "period": "1T"}
 
 # (label, command line, tool arguments)
 _QUESTIONS: tuple[tuple[str, list[str], dict[str, Any]], ...] = (
     ("modelos", ["app", "modelo", "list"], {"query": "modelos"}),
-    ("modelos-year", ["app", "modelo", "list", "--year", "2025"], {"query": "modelos", "filing_year": 2025}),
+    ("modelos-year", ["app", "modelo", "list", "--year", _YEAR_TEXT], {"query": "modelos", "filing_year": _YEAR}),
     ("modelos-domain", ["app", "modelo", "list", "--domain", "iva"], {"query": "modelos", "domain": "iva"}),
     (
         "modelos-domain-year",
-        ["app", "modelo", "list", "--domain", "irpf", "--year", "2025"],
-        {"query": "modelos", "domain": "irpf", "filing_year": 2025},
+        ["app", "modelo", "list", "--domain", "irpf", "--year", _YEAR_TEXT],
+        {"query": "modelos", "domain": "irpf", "filing_year": _YEAR},
     ),
     ("support", ["app", "modelo", "support-matrix"], {"query": "support"}),
     (
@@ -50,8 +55,8 @@ _QUESTIONS: tuple[tuple[str, list[str], dict[str, Any]], ...] = (
     ),
     (
         "describe-scoped-as-of",
-        ["app", "modelo", "describe", "130", *_SCOPE, "--as-of", "2025-06-30"],
-        {"query": "describe", "modelo": "130", **_SCOPE_ARGS, "as_of": "2025-06-30"},
+        ["app", "modelo", "describe", "130", *_SCOPE, "--as-of", _AS_OF],
+        {"query": "describe", "modelo": "130", **_SCOPE_ARGS, "as_of": _AS_OF},
     ),
     (
         "describe-period-only",
@@ -235,16 +240,16 @@ async def test_a_ceded_autonomic_tax_is_redirected_by_both(query: str, modelo: s
     ("command_line", "arguments"),
     [
         (
-            ["app", "modelo", "describe", "130", "--year", "2025", "--period", "ZZ"],
-            {"query": "describe", "modelo": "130", "filing_year": 2025, "period": "ZZ"},
+            ["app", "modelo", "describe", "130", "--year", _YEAR_TEXT, "--period", "ZZ"],
+            {"query": "describe", "modelo": "130", "filing_year": _YEAR, "period": "ZZ"},
         ),
         (
-            ["app", "modelo", "casillas", "130", "--year", "2025", "--period", "2025"],
-            {"query": "casillas", "modelo": "130", "filing_year": 2025, "period": "2025"},
+            ["app", "modelo", "casillas", "130", "--year", _YEAR_TEXT, "--period", _YEAR_TEXT],
+            {"query": "casillas", "modelo": "130", "filing_year": _YEAR, "period": _YEAR_TEXT},
         ),
         (
-            ["app", "modelo", "formulas", "130", "--year", "2025", "--period", "QQ"],
-            {"query": "formulas", "modelo": "130", "filing_year": 2025, "period": "QQ"},
+            ["app", "modelo", "formulas", "130", "--year", _YEAR_TEXT, "--period", "QQ"],
+            {"query": "formulas", "modelo": "130", "filing_year": _YEAR, "period": "QQ"},
         ),
     ],
     ids=["describe", "casillas", "formulas"],
@@ -267,16 +272,16 @@ async def test_an_invalid_period_token_is_refused_by_both_with_the_declared_toke
     ("command_line", "arguments"),
     [
         (
-            ["app", "modelo", "describe", "130", "--year", "2025"],
-            {"query": "describe", "modelo": "130", "filing_year": 2025},
+            ["app", "modelo", "describe", "130", "--year", _YEAR_TEXT],
+            {"query": "describe", "modelo": "130", "filing_year": _YEAR},
         ),
         (
-            ["app", "modelo", "casilla", "130", "03", "--year", "2025"],
-            {"query": "casilla", "modelo": "130", "casilla": "03", "filing_year": 2025},
+            ["app", "modelo", "casilla", "130", "03", "--year", _YEAR_TEXT],
+            {"query": "casilla", "modelo": "130", "casilla": "03", "filing_year": _YEAR},
         ),
         (
-            ["app", "modelo", "describe", "130", "--period", "1T", "--as-of", "2025-06-30"],
-            {"query": "describe", "modelo": "130", "period": "1T", "as_of": "2025-06-30"},
+            ["app", "modelo", "describe", "130", "--period", "1T", "--as-of", _AS_OF],
+            {"query": "describe", "modelo": "130", "period": "1T", "as_of": _AS_OF},
         ),
     ],
     ids=["year-without-period", "casilla-year-without-period", "as-of-without-year"],
