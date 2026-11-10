@@ -2044,6 +2044,7 @@ cli:
     still_missing: '{field} is still missing.'
   common:
     errors:
+      blank_value: The value cannot be empty or blank.
       invalid_iso_date: 'Invalid date format for %{label}: %{raw}. ISO 8601 (YYYY-MM-DD)
         is required.'
       parse_invalid_choice: 'Invalid value ''{value}''. Choose from: {accepted}.'

@@ -2163,6 +2163,7 @@ cli:
     still_missing: Encara falta {field}.
   common:
     errors:
+      blank_value: El valor no pot estar buit ni en blanc.
       invalid_iso_date: 'Format de data invàlid per a %{label}: %{raw}. Es requereix
         ISO 8601 (AAAA-MM-DD).'
       parse_invalid_choice: 'Valor no vàlid ''{value}''. Tria entre: {accepted}.'

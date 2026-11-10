@@ -178,6 +178,8 @@ class ParameterConstraint:
     readable: bool = True
     resolve_path: bool = False
     allow_dash: bool = False
+    non_blank: bool = False
+    """Refuse an empty or whitespace-only text value and strip the surrounding whitespace of any other."""
 
     def __post_init__(self) -> None:
         """Validate the scalar bound and path-constraint invariants, or raise."""
@@ -219,6 +221,10 @@ class ResultSchemaSpec:
 #: duplicate definition rather than a convenience: eighteen modules each
 #: declared their own `_STR` / `_INT` / `_BOOL` before these were centralised.
 TEXT_VALUE: Final[ValueContract] = ValueContract(DeferredTarget("builtins", "str"))
+
+
+NON_BLANK_CONSTRAINT: Final[ParameterConstraint] = ParameterConstraint(non_blank=True)
+"""Constraint for an identifier or selector parameter that must name something."""
 
 
 WHOLE_NUMBER_VALUE: Final[ValueContract] = ValueContract(DeferredTarget("builtins", "int"))

@@ -77,6 +77,8 @@ from .ledger_support import (
 if TYPE_CHECKING:
     from datetime import date
 
+    from ...application.ledger.link_operation import LedgerLinkOperationResult
+
 __all__ = [
     "ledger_archive",
     "ledger_attach",
@@ -683,8 +685,17 @@ def ledger_allocate(
     )
 
 
-def _link_refusal(reason: str | None) -> typer.BadParameter:
+def _link_refusal(outcome: LedgerLinkOperationResult) -> typer.BadParameter:
     """Map the closed worker refusal reason to its existing operator message."""
+    reason = outcome.reason
+    if reason == "ambiguous_invoice":
+        return bad(
+            tr(
+                "application.invoices.lifecycle.errors.ambiguous_invoice_prefix",
+                invoice_id=outcome.invoice_id,
+                candidates=", ".join(outcome.candidate_invoice_ids),
+            )
+        )
     if reason == "cross_bucket_invoice":
         return bad(tr("cli.ledger.link.errors.cross_bucket_invoice"))
     if reason == "transaction_takes_no_invoice":
@@ -710,7 +721,7 @@ def ledger_link(
         actor=actor,
     )
     if outcome.outcome == "refused":
-        raise _link_refusal(outcome.reason)
+        raise _link_refusal(outcome)
     projection = outcome.projection
     if projection is None:
         raise invoice_link_error_bad_parameter()
