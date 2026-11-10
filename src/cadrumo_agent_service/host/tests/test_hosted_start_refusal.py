@@ -33,6 +33,8 @@ from ..controller import (
 from ..launch_environment import (
     GATEWAY_PORT_VARIABLE,
     HOSTED_ROOT_VARIABLE,
+    LOCAL_ENGINE_VARIABLE,
+    NO_LOCAL_ENGINE,
     WORKER_PORT_VARIABLE,
     system_environment,
 )
@@ -57,7 +59,10 @@ def test_a_start_whose_setup_fails_before_ready_is_a_refused_event_with_the_reas
     interpreter = checkout_interpreter(agent_checkout())
     root = outside_git_path / "profile"
     root.mkdir()
-    environment = system_environment(os.environ) | {HOSTED_ROOT_VARIABLE: str(root)}
+    environment = system_environment(os.environ) | {
+        HOSTED_ROOT_VARIABLE: str(root),
+        LOCAL_ENGINE_VARIABLE: NO_LOCAL_ENGINE,
+    }
     setup = WindowsAgentInvocationRunner().run(
         executable=interpreter,
         arguments=(*AGENT_COMMAND_LINE, "setup"),
