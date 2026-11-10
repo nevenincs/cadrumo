@@ -4754,6 +4754,8 @@ desktop:
       cancelled: You cancelled the setup.
       damaged_download: The download was damaged and could not be used.
       disk_full: There is not enough free disk space.
+      engine_program_unusable: 'The local AI program couldn''t start: it''s damaged
+        or doesn''t work on this computer. Repairing local AI reinstalls it.'
       host_unreachable: The download server could not be reached. Check your internet
         connection, then try again.
       interrupted: Setup was interrupted before it finished.

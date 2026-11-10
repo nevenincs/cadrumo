@@ -4836,6 +4836,8 @@ desktop:
       cancelled: Has cancel·lat la configuració.
       damaged_download: La baixada estava malmesa i no s'ha pogut fer servir.
       disk_full: No hi ha prou espai lliure al disc.
+      engine_program_unusable: 'No s''ha pogut iniciar el programa d''IA local: està
+        malmès o no funciona en aquest ordinador. Reparar la IA local el reinstal·la.'
       host_unreachable: No s'ha pogut contactar amb el servidor de baixada. Comprova
         la teva connexió a internet i torna-ho a provar.
       interrupted: La configuració es va interrompre abans d'acabar.
