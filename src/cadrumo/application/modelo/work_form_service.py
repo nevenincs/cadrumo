@@ -297,15 +297,18 @@ def _needed_profile_bindings(
 ) -> set[BindingId]:
     """Profile-sourced bindings the layout's context fields read that the revision has no saved answer for."""
     profiles = {binding.id for binding in snapshot.revision.bindings if binding.source is BindingSourceKind.PROFILE}
-    return {
-        field.binding
-        for page in layout.pages
-        for section in page.sections
-        for block in section.blocks
-        if isinstance(block, FormContextFieldBlock)
-        and (field := resolve_form_context_field(snapshot.revision, block)).binding in profiles
-        and (revision is None or field.binding not in revision.binding_overrides)
-    }
+    needed: set[BindingId] = set()
+    for page in layout.pages:
+        for section in page.sections:
+            for block in section.blocks:
+                if not isinstance(block, FormContextFieldBlock):
+                    continue
+                binding = resolve_form_context_field(snapshot.revision, block).binding
+                if binding is None or binding not in profiles:
+                    continue
+                if revision is None or binding not in revision.binding_overrides:
+                    needed.add(binding)
+    return needed
 
 
 def _profile_binding_context_values(

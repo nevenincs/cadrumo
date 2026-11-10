@@ -9,6 +9,7 @@ from .....core.estado_casilla_oficial import EstadoCasillaOficial
 from ...export_field_kind import CasillaFieldKind
 from .. import export as owner
 from ..export import clasificar_casillas_oficiales
+from .authored_editions import filing_year_envelope, open_ended_revision
 from .published_authority import published_snapshot
 from .registry_tree import bundled_modelo_components, bundled_registry_tree
 
@@ -20,7 +21,7 @@ def test_classifier_is_the_public_registry_identity() -> None:
 
 
 def test_m720_binding_derived_design_distinguishes_declared_binding_representation() -> None:
-    revision = bundled_modelo_components("720")[0].revisions["2013-y-siguientes"]
+    revision = bundled_modelo_components("720")[0].revisions[str(open_ended_revision("720").id)]
 
     # Generated records materialize the reviewed bindings alongside literal
     # record/model markers, draft headers, and reserved trailing padding.
@@ -60,7 +61,7 @@ def test_m720_binding_derived_design_distinguishes_declared_binding_representati
 
 
 def test_m349_binding_derived_rows_address_casillas_without_export_refs() -> None:
-    revision = published_snapshot("349", filing_year=2026, period="1T").revision
+    revision = published_snapshot("349", filing_year=filing_year_envelope().horizon, period="1T").revision
 
     statuses = clasificar_casillas_oficiales(revision)
 
@@ -119,7 +120,7 @@ def test_revision_with_a_layout_addresses_at_least_one_casilla() -> None:
     other direction on a revision that HAS a layout, so classification stays
     covered no matter how far the authoring gets.
     """
-    revision = published_snapshot("130", filing_year=2026, period="1T").revision
+    revision = published_snapshot("130", filing_year=filing_year_envelope().horizon, period="1T").revision
 
     statuses = clasificar_casillas_oficiales(revision)
 

@@ -187,6 +187,28 @@ def _resolution_answer(finding_key: str | None, context: WorkFormContext) -> Mod
     )
 
 
+def _projected_note(
+    source: NoteSource, message: str | None, context: WorkFormContext, boxes: dict[CasillaId, str | None]
+) -> ModeloFormCalculationNote:
+    """One note source on the filer's scale, with the box it prints in and whether it withholds filing."""
+    reason, casilla_id, binding_source, fact, outcome, _worded, finding_key = source
+    box = None if casilla_id is None else boxes.get(casilla_id)
+    return ModeloFormCalculationNote(
+        reason=reason,
+        attention=note_attention(reason, box=box, outcome=outcome, accepted=context.resolutions.covers(finding_key)),
+        casilla_id=casilla_id,
+        box=box,
+        withholds_filing=gate_refuses(
+            reason, binding_source, outcome, finding_key=finding_key, resolutions=context.resolutions
+        ),
+        finding_id=None if finding_key is None else finding_key[:SOURCE_DISAGREEMENT_FINDING_ID_LENGTH],
+        resolution_answer=_resolution_answer(finding_key, context),
+        fact=fact,
+        element_names=element_names_of(fact, context.element_names),
+        message=message,
+    )
+
+
 def project_calculation_notes(
     context: WorkFormContext, sources: tuple[NoteSource, ...], fields: Iterable[ModeloFormField]
 ) -> tuple[ModeloFormCalculationNote, ...]:
@@ -205,7 +227,8 @@ def project_calculation_notes(
     checked = context.review.verification_outcome is not None
     boxes = _boxes_by_casilla(fields)
     notes: dict[tuple[str, str | None, tuple[str, ...], str], ModeloFormCalculationNote] = {}
-    for reason, casilla_id, binding_source, fact, outcome, worded, finding_key in sources:
+    for source in sources:
+        reason, casilla_id, _binding_source, fact, _outcome, worded, finding_key = source
         message = _message_in_language(worded, context.language)
         key = (
             reason,
@@ -217,22 +240,7 @@ def project_calculation_notes(
             continue
         if checked and reason in CHECK_REFUSED_REASONS:
             continue
-        box = None if casilla_id is None else boxes.get(casilla_id)
-        attention = note_attention(reason, box=box, outcome=outcome, accepted=context.resolutions.covers(finding_key))
-        notes[key] = ModeloFormCalculationNote(
-            reason=reason,
-            attention=attention,
-            casilla_id=casilla_id,
-            box=box,
-            withholds_filing=gate_refuses(
-                reason, binding_source, outcome, finding_key=finding_key, resolutions=context.resolutions
-            ),
-            finding_id=None if finding_key is None else finding_key[:SOURCE_DISAGREEMENT_FINDING_ID_LENGTH],
-            resolution_answer=_resolution_answer(finding_key, context),
-            fact=fact,
-            element_names=element_names_of(fact, context.element_names),
-            message=message,
-        )
+        notes[key] = _projected_note(source, message, context, boxes)
     return tuple(sorted(notes.values(), key=lambda note: _ATTENTION_ORDER.index(note.attention)))
 
 

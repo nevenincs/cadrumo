@@ -79,9 +79,14 @@ def _renta_campaign(legal_ref: str, cutoff_month: int, cutoff_day: int) -> tuple
 
 # Each IRPF campaign's plazo general, read from its Orden's own article: Orden
 # HAC/277/2026 art. 7 and Orden HAC/265/2024 art. 8.
-_RENTA_CAMPAIGNS = (
-    pytest.param(*_renta_campaign("orden-hac-277-2026:art-7", 6, 25), id="orden-hac-277-art-7"),
-    pytest.param(*_renta_campaign("orden-hac-265-2024:art-8", 6, 26), id="orden-hac-265-art-8"),
+_RENTA_CAMPAIGN_ROWS = (
+    _renta_campaign("orden-hac-277-2026:art-7", 6, 25),
+    _renta_campaign("orden-hac-265-2024:art-8", 6, 26),
+)
+_RENTA_CAMPAIGN_IDS = ("orden-hac-277-art-7", "orden-hac-265-art-8")
+_RENTA_CAMPAIGNS = tuple(
+    pytest.param(*row, id=campaign_id)
+    for row, campaign_id in zip(_RENTA_CAMPAIGN_ROWS, _RENTA_CAMPAIGN_IDS, strict=True)
 )
 
 
@@ -629,8 +634,8 @@ class TestAnnualFilingWindows:
 
     def test_modelo_100_explain_no_longer_errors(self) -> None:
         engine = _engine()
-        for campaign in _RENTA_CAMPAIGNS:
-            assert engine.explain(_profile(), "100", year=campaign.values[0])
+        for filing_year, *_ in _RENTA_CAMPAIGN_ROWS:
+            assert engine.explain(_profile(), "100", year=filing_year)
 
     def test_modelo_303_quarterly_windows_resolve(self) -> None:
         for year in _SUPPORTED_YEARS:

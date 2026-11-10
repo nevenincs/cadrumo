@@ -196,6 +196,14 @@ def test_modelo_303_lifecycle_gate_requires_persisted_wallet_authority(
         assert step.filing_year == work_unit.filing_year
         assert step.period_code == str(work_unit.period.code)
         assert step.words.strip() != ""
+        # The refusal's verdict names the command that records it, for the revision leaves
+        # (verify, file, export) as it does for the calculation.
+        verdict = exc_info.value.precondition_failure.verdict
+        assert verdict.action is not None
+        assert verdict.action.action_id == "operator.modelo.iva_wallet.seed"
+        bound = {item.argument_name: item.value for item in verdict.argument_bindings if item.value is not None}
+        assert bound == {"filing_year": work_unit.filing_year, "period": work_unit.period.registry_token}
+        assert verdict.missing_argument_names == ("amount",)
 
 
 def test_modelo_303_lifecycle_gate_rejects_wallet_authority_amount_drift(

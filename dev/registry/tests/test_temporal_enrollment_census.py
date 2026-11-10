@@ -64,12 +64,22 @@ def test_live_registry_tests_name_only_revisions_the_registry_declares(
     revisions that split inside one year - so the demand refused ten honest
     subsets and found no drift. What holds for a collection this sweep did not
     author is that the identities it names still exist.
+
+    The registry tests now take every edition from the authority, so the live
+    tree holds no literal enumeration at all, and one appearing is itself the
+    regression: a test naming editions by hand stops following the registry.
+    That the scanner still recognises such a collection is proven against
+    isolated sources by the mutation tests below, so an empty sweep here is a
+    measured absence rather than a blind one.
     """
     assert law_selectable_revision_subjects(authority), "the law-selectable denominator is empty"
     audit = audit_registry_test_enrollment_literals(authority)
 
-    assert audit.declarations, "no literal revision enumeration was detected, so the sweep proves nothing"
     assert audit.clean, "\n".join(finding.detail for finding in audit.findings)
+    assert audit.declarations == (), (
+        "a registry test enumerates revisions in a literal collection; derive them from the authority instead: "
+        + ", ".join(f"{declaration.path}:{declaration.symbol}" for declaration in audit.declarations)
+    )
 
 
 def test_a_retired_revision_identity_is_reported_against_the_live_registry(

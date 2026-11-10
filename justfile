@@ -1725,8 +1725,8 @@ report-registry-aeip:
 # Regenerate committed CLI-sequence goldens through their owning runner.
 [doc('Generate committed CLI-sequence goldens through the owning sequence generator; review the resulting diff.')]
 [group('docs')]
-docs-generate-sequences:
-    uv run --no-sync python -m dev.docs.sequences refresh
+docs-generate-sequences *ARGS:
+    uv run --no-sync python -m dev.docs.sequences refresh {{ARGS}}
 
 # Regenerate committed documentation gettext catalogues through the i18n owner.
 [doc('Generate documentation gettext catalogues through the owning i18n generator; writes committed catalogue state.')]
