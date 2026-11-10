@@ -57,6 +57,7 @@ def _startup(**fields: object) -> ServiceStartupFrame:
     [
         "catalog",
         "status",
+        "provider_lanes",
         "set",
         "remove",
         "turn_on",
@@ -220,3 +221,40 @@ def test_the_local_engine_is_chosen_by_every_declared_engine_and_placement(
 def test_an_unknown_engine_or_placement_token_is_refused_at_ingress(engine: str, placement: str) -> None:
     with pytest.raises(ValidationError):
         _engine_request(engine, placement)
+
+
+def _lanes_request(**fields: object) -> bytes:
+    return json.dumps({"version": 1, "request_id": str(uuid4()), "action": "provider_lanes", **fields}).encode()
+
+
+@pytest.mark.parametrize(
+    "fields",
+    [
+        {"unheard_of": 1},
+        {"provider": "synthetic", "unheard_of": "x"},
+        {"secret_bytes": 4, "unheard_of": None},
+    ],
+)
+def test_the_lanes_read_refuses_a_field_the_request_does_not_declare(fields: dict[str, object]) -> None:
+    with pytest.raises(ValidationError):
+        AdminRequest.model_validate_json(_lanes_request(**fields))
+
+
+def test_the_lanes_read_is_refused_a_secret_and_dispatches_nothing() -> None:
+    parent = bytearray(b"a" * 64)
+    target = _AdminRecorder()
+    server = AdminServer(target, bearer=parent)
+    request = json.loads(_lanes_request(secret_bytes=4))
+    try:
+        with socket.create_connection(("127.0.0.1", server.port), timeout=5) as stream:
+            send_frame(stream, parent)
+            send_frame(stream, json.dumps(request).encode())
+            assert read_frame(stream) == {
+                "version": 1,
+                "request_id": request["request_id"],
+                "result": {"kind": "refused", "code": "invalid_request"},
+            }
+        assert target.actions == []
+    finally:
+        server.close()
+        wipe(parent)
