@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -47,26 +48,28 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 _BUCKET_ID = "28282828-2828-4828-8828-282828282828"
 
-_DRIFT_AT = datetime(2026, 4, 20, 12, 0, tzinfo=UTC)
+_YEAR = newest_authored_edition("100")
+"""The exercise the shared register fixtures are built for: the newest Modelo 100 edition."""
+_DRIFT_AT = datetime(1980, 4, 20, 12, 0, tzinfo=UTC)
 _ASSET_DRIFT_KEY = "application.modelo.findings.activity_asset_register_drift"
 
 
 def _drift_work_unit(modelo: str, period_code: str, revision_id: str) -> WorkUnit:
-    period = Period.from_year_and_code(2025, period_code)
+    period = Period.from_year_and_code(_YEAR, period_code)
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,
             modelo=modelo,
-            filing_year=2025,
+            filing_year=_YEAR,
             period=period,
             revision_id=revision_id,
         ),
         bucket_id=_BUCKET_ID,
         modelo=ModeloCode(modelo),
-        filing_year=2025,
+        filing_year=_YEAR,
         period=period,
         revision_id=revision_id,
-        name=f"{modelo}-2025-{period_code}",
+        name=f"{modelo}-{_YEAR}-{period_code}",
         created_at=_DRIFT_AT,
         updated_at=_DRIFT_AT,
     )
@@ -80,7 +83,7 @@ def _calculated_draft(
 ) -> tuple[WorkUnit, CalculationRevision]:
     """Calculate through the real resolver and persist what its provenance says."""
     resolution = resolve_m100(history) if modelo == "100" else resolve_m130(history, period_code)
-    snapshot = published_snapshot(modelo, filing_year=2025, period=period_code)
+    snapshot = published_snapshot(modelo, filing_year=_YEAR, period=period_code)
     work_unit = _drift_work_unit(modelo, period_code, snapshot.revision.id)
     provenance = calculation_source_provenance_refs(resolution.provenance)
     revision_id = derive_calculation_revision_id(
@@ -176,7 +179,7 @@ def test_superseding_a_consumed_claim_makes_the_year_stale() -> None:
 
 def test_modelo_130_goes_stale_when_the_schedule_fingerprint_it_consumed_changes() -> None:
     original = register_asset("furniture", transaction_id="c" * 64)
-    moved = register_asset("furniture", transaction_id="c" * 64, in_service=date(2025, 1, 15))
+    moved = register_asset("furniture", transaction_id="c" * 64, in_service=date(_YEAR, 1, 15))
     draft = _calculated_draft(ActivityAssetHistory(revisions=(original,)), modelo="130", period_code="1T")
     (recorded,) = draft[1].activity_asset_consumption.schedule_fingerprints
 
@@ -213,9 +216,9 @@ def _prior_year_claim(asset: ActivityAssetRevision, amount: str) -> Amortization
         asset_id=asset.asset_id,
         asset_revision_id=asset.revision_id,
         asset_kind=asset.asset_kind,
-        tax_year=2024,
-        covered_from=date(2024, 1, 1),
-        covered_until=date(2025, 1, 1),
+        tax_year=_YEAR - 1,
+        covered_from=date(_YEAR - 1, 1, 1),
+        covered_until=date(_YEAR, 1, 1),
         amount=Decimal(amount),
         schedule_fingerprint="7" * 64,
         authority_generation="published-test-generation",
@@ -248,11 +251,11 @@ def _filed_stale(
 
 
 def _constant_asset() -> ActivityAssetRevision:
-    """12,000.00 from 1 January 2024 at the maquinaria maximum of 12%, weighted 2.5 for its 8.33-year period: 30%."""
+    """12,000.00 from 1 January of the prior year at the maquinaria maximum of 12%, weighted 2.5 for its 8.33-year period: 30%."""
     return register_asset(
         "press",
         transaction_id="c" * 64,
-        in_service=date(2024, 1, 1),
+        in_service=date(_YEAR - 1, 1, 1),
         election=ActivityAssetAmortizationElection(
             regime=DirectEstimationRegime.NORMAL,
             method=AmortizationMethod.CONSTANT_PERCENTAGE,
@@ -267,7 +270,7 @@ def test_a_prior_year_claim_that_moves_a_constant_percentage_box_makes_the_model
     after = ActivityAssetHistory(revisions=(asset,), claims=(_prior_year_claim(asset, "3000.00"),))
     draft = _calculated_draft(before, modelo="130", period_code="4T")
 
-    # 30% of the 12,000.00 pending, then of the 9,000.00 left by the 2024 claim.
+    # 30% of the 12,000.00 pending, then of the 9,000.00 left by the prior-year claim.
     assert m130_box(resolve_m130(before, "4T")) == Decimal("3600.00")
     assert m130_box(resolve_m130(after, "4T")) == Decimal("2700.00")
     facts = _asset_facts(_asset_drift(draft, after, modelo="130", period_code="4T"))
@@ -280,9 +283,9 @@ def test_a_prior_year_claim_that_moves_a_constant_percentage_box_makes_the_model
 
 
 def test_a_prior_year_claim_leaves_a_linear_modelo_130_current_while_its_figure_holds() -> None:
-    asset = register_asset("furniture", transaction_id="c" * 64, in_service=date(2024, 1, 1))
+    asset = register_asset("furniture", transaction_id="c" * 64, in_service=date(_YEAR - 1, 1, 1))
     before = ActivityAssetHistory(revisions=(asset,))
-    # 12,000.00 at 10% charges 1,200.00 a year, and 3,000.00 claimed in 2024 leaves that figure whole.
+    # 12,000.00 at 10% charges 1,200.00 a year, and 3,000.00 claimed in the prior year leaves that figure whole.
     after = ActivityAssetHistory(revisions=(asset,), claims=(_prior_year_claim(asset, "3000.00"),))
     draft = _calculated_draft(before, modelo="130", period_code="4T")
 
@@ -291,7 +294,7 @@ def test_a_prior_year_claim_leaves_a_linear_modelo_130_current_while_its_figure_
 
 
 def test_a_prior_year_claim_that_caps_a_linear_modelo_130_makes_it_stale() -> None:
-    asset = register_asset("furniture", transaction_id="c" * 64, in_service=date(2024, 1, 1))
+    asset = register_asset("furniture", transaction_id="c" * 64, in_service=date(_YEAR - 1, 1, 1))
     before = ActivityAssetHistory(revisions=(asset,))
     # Only 1,000.00 of the 12,000.00 remains, below the 1,200.00 a year charges.
     after = ActivityAssetHistory(revisions=(asset,), claims=(_prior_year_claim(asset, "11000.00"),))
@@ -315,7 +318,7 @@ def _sale_on(day: date) -> ActivityAssetDisposal:
 def test_a_later_baja_with_the_same_figure_leaves_the_modelo_130_current() -> None:
     asset = register_asset("furniture", transaction_id="c" * 64)
     draft = _calculated_draft(ActivityAssetHistory(revisions=(asset,)), modelo="130", period_code="1T")
-    disposed = ActivityAssetHistory(revisions=(asset, asset.with_disposal(_sale_on(date(2026, 6, 30)))))
+    disposed = ActivityAssetHistory(revisions=(asset, asset.with_disposal(_sale_on(date(_YEAR + 1, 6, 30)))))
 
     assert _asset_drift(draft, disposed, modelo="130", period_code="1T") == []
     assert _filed_stale(draft, disposed, period_code="1T") == ()
@@ -324,7 +327,7 @@ def test_a_later_baja_with_the_same_figure_leaves_the_modelo_130_current() -> No
 def test_a_baja_inside_the_period_moves_the_figure_and_makes_the_modelo_130_stale() -> None:
     asset = register_asset("furniture", transaction_id="c" * 64)
     draft = _calculated_draft(ActivityAssetHistory(revisions=(asset,)), modelo="130", period_code="1T")
-    disposed = ActivityAssetHistory(revisions=(asset, asset.with_disposal(_sale_on(date(2025, 2, 15)))))
+    disposed = ActivityAssetHistory(revisions=(asset, asset.with_disposal(_sale_on(date(_YEAR, 2, 15)))))
 
     facts = _asset_facts(_asset_drift(draft, disposed, modelo="130", period_code="1T"))
 

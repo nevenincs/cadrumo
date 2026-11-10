@@ -19,6 +19,7 @@ from ....core.concepto_ingreso import ConceptoIngreso
 from ....core.period import Period
 from ....core.tipos_actividad import TipoActividad
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.irpf_categories import ledger_irpf_category_catalogue
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -35,8 +36,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _ART_109_EXEMPT = "rd-439-2007-art-109:selector-m036-actividades-exencion-pago-fraccionado"
 _ART_109_NET_BASE = "rd-439-2007-art-109:selector-m036-actividades-base-neta-de-subvenciones"
-_PERIOD = Period.from_year_and_code(2025, "1T")
-_IN_WINDOW = datetime(2025, 2, 10, 12, 0, tzinfo=UTC).date()
+_YEAR = filing_year_envelope().horizon
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
+_IN_WINDOW = datetime(_YEAR, 2, 10, 12, 0, tzinfo=UTC).date()
 _RETIRED = ConceptoIngreso.from_registry("retired_concept")
 
 
@@ -74,7 +76,7 @@ def _withheld_receipt(provider_id: str, *, tipo_actividad: TipoActividad, concep
             "taxable_base": amount,
             "iva_amount": Decimal("0.00"),
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(2025, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(_YEAR, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
             "tipo_actividad": tipo_actividad,
             "concepto_ingreso": ConceptoIngreso.from_registry(concepto_ingreso),

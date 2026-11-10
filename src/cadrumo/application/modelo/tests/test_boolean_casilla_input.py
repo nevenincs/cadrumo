@@ -24,13 +24,14 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
-from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
+from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.tests.authored_editions import authored_revisions_where
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..registry_helpers import validate_casilla_input_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = 2024
 _PERIOD = "0A"
 # The art. 23.2 reducción flag ("Marque con una X si el arrendamiento tiene
 # derecho a reducción") and the rendimiento íntegro that feeds its base.
@@ -39,6 +40,17 @@ _REDUCCION_TARGET: CasillaId = validated_casilla_id("0150", surface="_REDUCCION_
 _RENDIMIENTO_INTEGRO: CasillaId = validated_casilla_id("0102", surface="_RENDIMIENTO_INTEGRO")
 _TEXT_CASILLA: CasillaId = validated_casilla_id("0001", surface="_TEXT_CASILLA")
 _NUMERIC_CASILLA: CasillaId = validated_casilla_id("0003", surface="_NUMERIC_CASILLA")
+
+
+def _computes_the_reduccion(revision: ModeloRevision) -> bool:
+    """Whether the edition derives casilla 0150 from the flag rather than taking it as an input."""
+    return next(casilla for casilla in revision.casillas if casilla.id == _REDUCCION_TARGET).input_kind is (
+        InputKind.COMPUTED
+    )
+
+
+_YEAR = authored_revisions_where("100", _computes_the_reduccion)[-1].valid_from.year
+"""The newest Modelo 100 edition whose flag gates a computed reducción, the wiring these tests pin."""
 
 
 def _snapshot() -> RegistrySnapshot:

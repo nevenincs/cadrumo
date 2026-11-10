@@ -35,6 +35,11 @@ from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_references import PeriodSelector, RegistrySnapshotRef
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+from ....domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    newest_authored_edition,
+    revision_covering,
+)
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.iva_compensation.reconciliation import IvaCompensationDivergence, IvaCompensationReconciliationDecision
@@ -71,7 +76,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 # Helpers
 # ---------------------------------------------------------------------------
 
-_T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+_FILING_YEAR = filing_year_envelope().horizon
+_M100_YEAR = newest_authored_edition("100")
+_T0 = datetime(_FILING_YEAR, 1, 10, 10, 0, tzinfo=UTC)
 _TEST_LEGAL_REF = "test-actions:legal"
 _TEST_SOURCE_REF = "test-actions-source"
 _BUCKET_ID = "ac42089b-a822-458e-99e6-333861181de7"
@@ -101,8 +108,8 @@ _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = validated_casilla_id("
 def _modelo_fact_context(authority: PinnedAuthorityOperation) -> ModeloFactResolutionContext:
     return ModeloFactResolutionContext(
         authority=authority,
-        filing_period=date(2025, 12, 31),
-        devengo_date=date(2025, 12, 31),
+        filing_period=date(_FILING_YEAR, 12, 31),
+        devengo_date=date(_FILING_YEAR, 12, 31),
     )
 
 
@@ -141,8 +148,8 @@ def _test_revision(
     return ModeloRevision(
         id="test-actions-revision",
         localization_key="test.schema.revision.test-actions-revision.label",
-        valid_from=date(2026, 1, 1),
-        period_selector=PeriodSelector(years=(2026,), periods=("0A", "1T")),
+        valid_from=date(_FILING_YEAR, 1, 1),
+        period_selector=PeriodSelector(years=(_FILING_YEAR,), periods=("0A", "1T")),
         legal_refs=(_TEST_LEGAL_REF,),
         source_refs=(_TEST_SOURCE_REF,),
         casillas=casillas,
@@ -275,9 +282,9 @@ def _blocked_wallet_decision(
 ) -> IvaCompensationReconciliationDecision:
     return IvaCompensationReconciliationDecision(
         taxpayer_nif="12345678Z",
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, "1T"),
-        target_registry_snapshot_ref=published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,
+        target_year=_FILING_YEAR,
+        target_period=Period.from_year_and_code(_FILING_YEAR, "1T"),
+        target_registry_snapshot_ref=published_snapshot("303", filing_year=_FILING_YEAR, period="1T").snapshot_ref,
         source_registry_snapshot_refs=(),
         selected_authority="missing",
         selected_amount=None,
@@ -290,7 +297,7 @@ def _blocked_wallet_decision(
 
 
 def _m130_casilla_definition(casilla_id: CasillaId) -> CasillaDefinition:
-    snapshot = published_snapshot("130", filing_year=2026, period="1T")
+    snapshot = published_snapshot("130", filing_year=_FILING_YEAR, period="1T")
     return next(item for item in snapshot.revision.casillas if item.id == casilla_id)
 
 
@@ -308,7 +315,7 @@ def _resident_profile() -> TaxpayerProfile:
 def _minimal_work_unit(
     modelo: str = "999",
     period: str = "0A",
-    filing_year: int = 2026,
+    filing_year: int = _FILING_YEAR,
     revision_id: str = "r" + "0" * 63,
 ) -> WorkUnit:
     bucket_id = "test-bucket"
@@ -386,9 +393,9 @@ def test_iva_ledger_exempt_regime_membership_matches_contract(regime_token: str,
     ),
 )
 def test_workflow_period_resolves_quarterfrom_registry_deadline_shape(modelo: str) -> None:
-    work_unit = _minimal_work_unit(modelo=modelo, period="1T", filing_year=2026)
+    work_unit = _minimal_work_unit(modelo=modelo, period="1T", filing_year=_FILING_YEAR)
 
-    assert workflow_period_for_work_unit(work_unit) == Period.from_year_and_code(2026, "1T")
+    assert workflow_period_for_work_unit(work_unit) == Period.from_year_and_code(_FILING_YEAR, "1T")
 
 
 @pytest.mark.parametrize(
@@ -400,7 +407,7 @@ def test_workflow_period_resolves_quarterfrom_registry_deadline_shape(modelo: st
     ),
 )
 def test_workflow_period_does_not_reinterpret_nonquarter_periods(period: str) -> None:
-    work_unit = _minimal_work_unit(modelo="369", period=period, filing_year=2026)
+    work_unit = _minimal_work_unit(modelo="369", period=period, filing_year=_FILING_YEAR)
 
     assert workflow_period_for_work_unit(work_unit) == work_unit.period
 
@@ -453,7 +460,7 @@ def test_registry_snapshot_unresolved_finding_is_locale_neutral() -> None:
     contract.
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        work_unit = _minimal_work_unit(modelo="999", period="0A", filing_year=2026)
+        work_unit = _minimal_work_unit(modelo="999", period="0A", filing_year=_FILING_YEAR)
         target = _minimal_calculation_revision(work_unit)
 
         findings, _resolved, _missing, failures_by_finding_id = collect_revision_verification_findings(
@@ -468,7 +475,7 @@ def test_registry_snapshot_unresolved_finding_is_locale_neutral() -> None:
         assert len(findings) == 1
         finding = findings[0]
         assert finding.message_locale_key == "application.modelo.findings.registry_snapshot_unresolved"
-        assert dict(finding.message_facts) == {"modelo": "999", "filing_year": 2026, "period": "0A"}
+        assert dict(finding.message_facts) == {"modelo": "999", "filing_year": _FILING_YEAR, "period": "0A"}
         failure = failures_by_finding_id[id(finding)]
         assert failure.identity == (
             "modelo.work.verify",
@@ -850,8 +857,8 @@ def test_iva_wallet_blocked_exception_carries_translated_message_key(
     with pytest.raises(ModeloIvaWalletReconciliationBlocked) as raised:
         apply_iva_compensation_decision_binding(
             "303",
-            2026,
-            Period.from_year_and_code(2026, "1T"),
+            _FILING_YEAR,
+            Period.from_year_and_code(_FILING_YEAR, "1T"),
             bucket_id=_BUCKET_ID,
             revision=_test_revision(),
             taxpayer_nif="12345678Z",
@@ -881,8 +888,8 @@ def test_iva_wallet_unsupported_decision_type_is_localised() -> None:
     with pytest.raises(ModeloIvaWalletReconciliationBlocked) as raised:
         apply_iva_compensation_decision_binding(
             "303",
-            2026,
-            Period.from_year_and_code(2026, "1T"),
+            _FILING_YEAR,
+            Period.from_year_and_code(_FILING_YEAR, "1T"),
             bucket_id=_BUCKET_ID,
             revision=_test_revision(),
             taxpayer_nif="12345678Z",
@@ -998,14 +1005,14 @@ class TestWorkflowInputMismatchError:
         with pytest.raises(WorkflowInputMismatchError) as exc_info:
             provider.load_inputs(
                 modelo="303",
-                period=Period.from_year_and_code(2026, "2T"),
+                period=Period.from_year_and_code(_FILING_YEAR, "2T"),
                 profile=self._resident_profile(),
             )
 
         exc = exc_info.value
         assert exc.context is not None
-        assert exc.context["expected_period"] == "2026 1T"
-        assert exc.context["requested_period"] == "2026 2T"
+        assert exc.context["expected_period"] == f"{_FILING_YEAR} 1T"
+        assert exc.context["requested_period"] == f"{_FILING_YEAR} 2T"
 
     def test_error_is_registered_without_builtin_ancestry(self) -> None:
         """WorkflowInputMismatchError stays registered without builtin ancestry."""
@@ -1025,7 +1032,7 @@ class TestWorkflowInputMismatchError:
         try:
             provider.load_inputs(
                 modelo="999",
-                period=Period.from_year_and_code(2026, "0A"),
+                period=Period.from_year_and_code(_FILING_YEAR, "0A"),
                 profile=self._resident_profile(),
             )
         except WorkflowInputMismatchError as exc:
@@ -1037,9 +1044,13 @@ class TestWorkflowInputMismatchError:
 
 def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() -> None:
     """Verify-time draft replay must not feed M100 0224 back as an operator input."""
-    work_unit = _minimal_work_unit(modelo="100", period="0A", filing_year=2024, revision_id="2024")
-    snapshot = published_snapshot("100", filing_year=2024, period="0A", revision_id="2024")
-    binding_values: dict[BindingId, Decimal] = {
+    work_unit = _minimal_work_unit(
+        modelo="100", period="0A", filing_year=_M100_YEAR, revision_id=str(revision_covering("100", _M100_YEAR).id)
+    )
+    snapshot = published_snapshot(
+        "100", filing_year=_M100_YEAR, period="0A", revision_id=revision_covering("100", _M100_YEAR).id
+    )
+    candidate_binding_values: dict[BindingId, Decimal] = {
         "renta-profile-has-economic-activity": Decimal("1"),
         "renta-profile-estimacion-directa": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
@@ -1058,6 +1069,19 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
         "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
         "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
         "renta-profile-deduccion-maternidad": Decimal("0"),
+        "renta-maritime-path-rebeca": Decimal("0"),
+        "renta-maritime-gross-navigation-income": Decimal("0"),
+        "renta-maritime-annual-salary": Decimal("0"),
+        "renta-maritime-qualifying-days": Decimal("0"),
+        "renta-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
+        "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
+    }
+    # Editions differ in which profile bindings they declare; supply only the ones this edition has.
+    declared_binding_ids = {binding.id for binding in snapshot.revision.bindings}
+    binding_values = {
+        binding_id: value
+        for binding_id, value in candidate_binding_values.items()
+        if binding_id in declared_binding_ids
     }
     relation_values = {
         "renta-modelo-130-pagos-fraccionados": Decimal("0"),
@@ -1068,7 +1092,7 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
     result = calculate_registry_snapshot(
         snapshot,
         inputs={_M100_ACTIVIDAD_ECONOMICA_INCOME_CASILLA: Decimal("10000")},
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": date(_M100_YEAR, 12, 31)},
         binding_values=binding_values,
         enum_binding_values=enum_binding_values,
         relation_values=relation_values,
@@ -1079,7 +1103,7 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
         calculate_registry_snapshot(
             snapshot,
             inputs={_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: Decimal("10000")},
-            date_context={"filing_period": date(2024, 12, 31)},
+            date_context={"filing_period": date(_M100_YEAR, 12, 31)},
             binding_values=binding_values,
             enum_binding_values=enum_binding_values,
             relation_values=relation_values,

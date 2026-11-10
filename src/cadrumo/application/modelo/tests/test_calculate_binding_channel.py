@@ -10,7 +10,7 @@ Decimal, so a malformed amount REFUSES instead of silently reclassifying. An
 unknown binding id refuses with the accepted set.
 
 These tests exercise the real registry authority (no mocks): the Modelo 200
-``2024`` revision declares both an enum-channel binding
+newest revision declares both an enum-channel binding
 (``modelo-200-profile-legal-entity-form``, an ``args[1]`` enum-key argument
 of a dispatch op) and decimal-channel bindings (e.g.
 ``modelo-200-pagos-fraccionados-anuales``), so the channel discriminator is
@@ -26,6 +26,7 @@ from ....core.errors.hierarchy import CadrumoError
 from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 from ....domain.calculations.registry.tests.published_authority import (
     published_revision,
     published_snapshot,
@@ -36,7 +37,7 @@ from ..calculate_input_validation import ModeloCalculateBindingInputError, valid
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MODELO = "200"
-_REVISION = "2024"
+_REVISION = str(revision_covering(_MODELO, newest_authored_edition(_MODELO)).id)
 _ENUM_BINDING: BindingId = "modelo-200-profile-legal-entity-form"
 _DECIMAL_BINDING: BindingId = "modelo-200-pagos-fraccionados-anuales"
 
@@ -108,7 +109,7 @@ def test_date_sourced_binding_is_detected_as_a_date_channel() -> None:
     date binding in the live registry, so a regression that stops detecting it
     fails here rather than passing vacuously.
     """
-    snapshot = published_snapshot("100", filing_year=2024, period="0A")
+    snapshot = published_snapshot("100", filing_year=newest_authored_edition("100"), period="0A")
     revision = snapshot.revision
     date_ids = revision_date_binding_ids(revision)
     assert _M100_DATE_BINDING in date_ids

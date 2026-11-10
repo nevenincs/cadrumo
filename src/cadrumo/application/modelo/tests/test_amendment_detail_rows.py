@@ -23,6 +23,7 @@ from decimal import Decimal
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.calculation_revision import derive_calculation_revision_id
 from ....domain.modelos.row_models import Modelo232VinculadaRow, ModeloDetailRow
 from ..action_errors import AmendmentDetailRowsRequiredError
@@ -31,7 +32,7 @@ from ..calculation_modelo_adjustments import detail_row_declaration_modelos
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_FILING_YEAR = 2025
+_FILING_YEAR = filing_year_envelope().horizon
 _EFFECTIVE_DATE = date(_FILING_YEAR, 12, 31)
 
 # Parametrization is fixed at collection, so the row-bearing membership is
