@@ -70,10 +70,8 @@ from ..calculations.cross_period_models import (
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from .imputation_filings import imputation_filings_from_repositories
 from .invoice_drift_gate import invoice_drift_findings
-from .iva_wallet_gate import (
-    ModeloIvaWalletReconciliationBlocked,
-    require_persisted_iva_compensation_decision_matches_revision,
-)
+from .iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
+from .iva_wallet_refusal import ModeloIvaWalletReconciliationBlocked
 from .ledger_drift_gate import ledger_drift_findings, undetermined_mixed_use_contributor_finding
 from .preconditions import ModeloPreconditionFailure
 from .verification_cross_period import (
