@@ -18,13 +18,15 @@ from ..calendar_models import (
     OverviewLocalFilingState,
     OverviewPeriodState,
 )
-from .calendar_test_support import filed_declaration_observation, profile
+from .calendar_test_support import PERIOD_2025_1T, filed_declaration_observation, profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_PERIOD = Period.from_year_and_code(2025, "1T")
-_RANGE = OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30))
-_AS_OF = date(2025, 4, 30)
+# The observation fixture is stamped with this period; the range and the day are its April.
+_PERIOD = PERIOD_2025_1T
+_YEAR = _PERIOD.filing_year
+_RANGE = OverviewCalendarRange(from_date=date(_YEAR, 4, 1), to_date=date(_YEAR, 4, 30))
+_AS_OF = date(_YEAR, 4, 30)
 
 
 def _row(operation: PinnedAuthorityOperation, observations, *, coordinate_change: dict[str, object] | None = None):
@@ -60,7 +62,7 @@ def test_an_exact_alta_is_filed_without_local_link_or_overdue_recovery(operation
     [
         {"authenticated_identity": "Y0001503E"},
         {"status": "BAJA"},
-        {"period": Period.from_year_and_code(2025, "2T")},
+        {"period": Period.from_year_and_code(_YEAR, "2T")},
         {"modelo": "130"},
     ],
 )
