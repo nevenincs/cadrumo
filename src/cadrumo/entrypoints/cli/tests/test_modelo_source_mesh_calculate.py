@@ -31,7 +31,8 @@ from cadrumo.application.user_profile.login_session import authenticate_profile_
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
 from cadrumo.core.period import Period
-from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from cadrumo.core.redaction.rules import redact_for_cli_output
+from cadrumo.core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
@@ -522,20 +523,10 @@ def test_work_calculate_modelo_111_no_retenciones_quarter_names_profile_attestat
         shown = _cli(profile, "config", "profile", "view", _PROFILE_LABEL)
 
     assert calculated.exit_code != 0, calculated.output
-    envelope = json.loads(calculated.output)
-    assert envelope["error"]["code"] == "ERROR_FINANCIAL_AGGREGATION_VALIDATION"
-    assert envelope["error"]["context"]["modelo"] == "111"
-    assert envelope["error"]["context"]["period"] == "2T"
-    assert envelope["error"]["context"]["source_kind"] == "retenciones_aggregation"
-    # The free-text ``suggestion`` field is gone -- ``suggestion`` is a reserved
-    # action-context key. The attestation steer now rides the localised message,
-    # following the Modelo 180 precedent, because the wizard setup command
-    # projects no inputs for the typed action channel to bind against.
-    message = envelope["error"]["message"]
-    assert "--received-invoice-retencion" in message
-    assert "--ledger-payment-withholding" in message
-    assert "Do not file a blank Modelo 111" in message
-    assert f"--modelo-111-no-retenciones-periods {_ACTIVITY_YEAR}:2T" in message
+    error = json.loads(calculated.output)["error"]
+    _assert_empty_retenciones_window_refusal(error, modelo="111", period="2T")
+    # The words offer the profile answer rather than naming a command.
+    assert "--" not in error["message"]
 
     assert attested.exit_code == 0, attested.output
     assert shown.exit_code == 0, shown.output
@@ -564,7 +555,7 @@ def test_work_calculate_modelo_115_explicit_no_relevant_payment_attestation_mate
             str(q3_work_unit["work_unit_id"]),
         )
         assert refused.exit_code != 0, refused.output
-        assert json.loads(refused.output)["error"]["context"]["period"] == "3T"
+        _assert_empty_retenciones_window_refusal(json.loads(refused.output)["error"], modelo="115", period="3T")
 
         attested = _cli(
             profile,
@@ -657,20 +648,51 @@ def test_work_calculate_modelo_115_classified_rent_row_requires_perceptor_eviden
         )
 
     assert calculated.exit_code != 0, calculated.output
-    envelope = json.loads(calculated.output)
-    assert envelope["error"]["code"] == "ERROR_FINANCIAL_AGGREGATION_VALIDATION"
-    assert envelope["error"]["context"]["modelo"] == "115"
-    assert envelope["error"]["context"]["period"] == "1T"
-    assert envelope["error"]["context"]["source_kind"] == "retenciones_aggregation"
-    # The free-text ``suggestion`` field is gone: ``suggestion`` is a reserved
-    # action-context key, and guidance now rides the typed action projection.
-    # Assert that projection rather than prose -- it names the failed condition
-    # exactly, and records that no mechanical recovery exists for it.
-    action = envelope["error"]["action"]
+    # A ledger rent row is not a retención: without the perceptor's evidence the
+    # window holds none, so it is refused rather than calculated as zero.
+    _assert_empty_retenciones_window_refusal(json.loads(calculated.output)["error"], modelo="115", period="1T")
+
+
+def test_work_calculate_refuses_invalid_supplied_input_before_an_empty_retenciones_window(tmp_path: Path) -> None:
+    """A malformed supplied value is reported as such, not hidden behind the empty-window refusal."""
+    with _operator_profile(tmp_path) as profile:
+        work_unit = _create_115_work_unit(profile, year=_ACTIVITY_YEAR)
+        calculated = _cli(
+            profile,
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            str(work_unit["work_unit_id"]),
+            "--casilla",
+            "99=1",
+        )
+
+    assert calculated.exit_code != 0, calculated.output
+    error = json.loads(calculated.output)["error"]
+    assert error["code"] == "REFUSED_MODELO_CALCULATE_CASILLA_INPUT", error
+    assert error["context"]["effect"] == "none"
+
+
+def _assert_empty_retenciones_window_refusal(error: dict[str, object], *, modelo: str, period: str) -> None:
+    """Assert the typed refusal of a withholding period that holds no retención."""
+    assert error["code"] == "REFUSED_RETENCIONES_WINDOW_EMPTY", error
+    assert error["category"] == "REFUSED"
+    context = STR_KEYED_MAPPING_ADAPTER.validate_python(error["context"])
+    assert context["modelo"] == modelo
+    assert context["effect"] == "none"
+    action = STR_KEYED_MAPPING_ADAPTER.validate_python(error["action"])
     assert action["failed_condition_id"] == "aggregation.retenciones.observations.present"
     assert action["no_recovery_outcome"] == "operator_decision"
     assert action["action"] is None
-    assert "115" in envelope["error"]["message"]
+    (evidence,) = OBJECT_TUPLE_ADAPTER.validate_python(action["evidence"])
+    values = STR_KEYED_MAPPING_ADAPTER.validate_python(STR_KEYED_MAPPING_ADAPTER.validate_python(evidence)["values"])
+    assert values["modelo"] == modelo
+    assert values["period"] == period
+    assert values["source_kind"] == "retenciones_aggregation"
+    assert modelo in str(error["message"])
 
 
 def test_work_calculate_modelo_180_refuses_a_perceptor_row_field_before_parsing_its_value(tmp_path: Path) -> None:
@@ -759,8 +781,10 @@ def _seed_ledger_and_zero_wallet_decision(bucket_id, sale, purchase):
 def _assert_calculated_source_mesh(payload, persisted, sale, purchase):
     payload_provenance = payload["source_provenance"]
     assert payload_provenance, "calculate JSON must carry the persisted source-mesh trace"
+    # CLI output carries the profile id as its paste-safe placeholder, so the
+    # persisted refs are compared as that output renders them.
     assert {row["source_ref"] for row in payload_provenance} == {
-        source.source_ref for source in persisted.source_provenance
+        redact_for_cli_output(source.source_ref) for source in persisted.source_provenance
     }
     assert persisted.source_transaction_ids == tuple(sorted((sale.transaction_id, purchase.transaction_id)))
     assert Decimal(persisted.binding_overrides["modelo-303-iva-repercutido-general-cuota"]) == sale.iva_amount
@@ -845,7 +869,7 @@ def _assert_wizard_emits_source_mesh_provenance(capsys, native_profile, operatio
     wizard_payload = unwrap_schema_envelope(capsys.readouterr().out)
     assert wizard_payload["source_provenance"], "wizard JSON must carry the persisted source-mesh trace"
     assert {row["source_ref"] for row in wizard_payload["source_provenance"]} == {
-        source.source_ref for source in persisted.source_provenance
+        redact_for_cli_output(source.source_ref) for source in persisted.source_provenance
     }
 
 
