@@ -99,8 +99,8 @@ pub enum RefusedFeature {
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AdmissionRead {
-    /// The provider status that names each lane's kind.
-    Status,
+    /// The lanes the profile lists, with the kind of access each takes.
+    ProviderLanes,
     /// cadrumo-agent's model catalogue.
     Catalog,
     /// The models the person added to their lanes' lists.

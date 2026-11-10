@@ -42,7 +42,7 @@ fn an_admission_read_persists_only_its_closed_name_outcome_and_milliseconds() {
 #[test]
 fn every_admission_read_and_outcome_has_its_own_token() {
     for (read, token) in [
-        (AdmissionRead::Status, "status"),
+        (AdmissionRead::ProviderLanes, "provider_lanes"),
         (AdmissionRead::Catalog, "catalog"),
         (AdmissionRead::LocalModels, "local_models"),
     ] {
@@ -61,7 +61,7 @@ fn every_admission_read_and_outcome_has_its_own_token() {
 #[test]
 fn an_admission_read_record_admits_no_field_beyond_its_own() {
     let fact = ServiceFact::SetupAdmissionRead {
-        read: AdmissionRead::Status,
+        read: AdmissionRead::ProviderLanes,
         outcome: AdmissionReadOutcome::Answered,
         elapsed_ms: 5,
     };

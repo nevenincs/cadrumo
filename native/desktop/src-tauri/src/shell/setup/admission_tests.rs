@@ -36,7 +36,7 @@ impl Replies {
     /// `added` on the local lane's list.
     pub fn serving(recommended: &[&str], added: &[&str], cards: &[Card]) -> Self {
         Self::default()
-            .answering("status", status())
+            .answering("provider_lanes", status())
             .answering("catalog", served(recommended, cards))
             .answering("local_models", list(added))
     }
@@ -258,7 +258,10 @@ fn admission_collects_busy_catalogue_and_local_model_reads() {
         admission.download(&requested(LOCAL, TEXT)).unwrap(),
         admitted(TEXT, Some(GB))
     );
-    assert_eq!(service.replies.asked(), ["status", "catalog", "catalog"]);
+    assert_eq!(
+        service.replies.asked(),
+        ["provider_lanes", "catalog", "catalog"]
+    );
 
     let (admission, service) = scripted("local_models", vec![busy(), Ok(list(&[ADDED]))]);
     let listed = admission.listed().unwrap();
@@ -270,7 +273,7 @@ fn admission_collects_busy_catalogue_and_local_model_reads() {
     );
     assert_eq!(
         service.replies.asked(),
-        ["status", "catalog", "local_models", "local_models"]
+        ["provider_lanes", "catalog", "local_models", "local_models"]
     );
 }
 
@@ -353,7 +356,7 @@ fn admission_does_not_retry_sign_out_transport_failure_or_an_untyped_busy_code()
     );
     assert_eq!(
         service.replies.asked(),
-        ["status", "catalog", "local_models"]
+        ["provider_lanes", "catalog", "local_models"]
     );
 }
 
@@ -396,7 +399,7 @@ fn pending_download_stops_at_its_deadline_and_keeps_busy() {
     assert!(
         matches!(first_link(&error), Cause::Child(refusal) if refusal.code.as_deref() == Some("busy"))
     );
-    assert_eq!(service.replies.asked(), ["status", "catalog"]);
+    assert_eq!(service.replies.asked(), ["provider_lanes", "catalog"]);
 }
 
 /// A service that answers one action busy every time it is asked, and the rest as served.
@@ -418,9 +421,9 @@ impl Agent for BusyForever {
 }
 
 #[test]
-fn a_download_start_budget_covers_a_cold_status_read_and_is_far_below_the_orchestration_wait() {
-    assert!(ADMISSION_BUDGET > STATUS_EXCHANGE + EXCHANGE);
-    assert_eq!(ADMISSION_BUDGET, STATUS_EXCHANGE + EXCHANGE + EXCHANGE);
+fn a_download_start_budget_is_one_ordinary_exchange_per_read_and_far_below_the_orchestration_wait()
+{
+    assert_eq!(ADMISSION_BUDGET, 3 * EXCHANGE);
     assert!(
         ADMISSION_BUDGET
             < Duration::from_secs(cadrumo_platform::DEFAULT_ORCHESTRATION_TIMEOUT_SECONDS)
@@ -430,7 +433,7 @@ fn a_download_start_budget_covers_a_cold_status_read_and_is_far_below_the_orches
 #[test]
 fn a_service_busy_past_the_budget_settles_the_download_start_as_unavailable() {
     for (action, reason) in [
-        ("status", "setup_provider_status_refused"),
+        ("provider_lanes", "setup_provider_status_refused"),
         ("catalog", "setup_catalogue_refused"),
         ("local_models", "setup_local_models_refused"),
     ] {
@@ -482,10 +485,10 @@ fn pending_download_collects_added_models_and_stops_on_other_answers() {
     );
     assert_eq!(
         service.replies.asked(),
-        ["status", "catalog", "local_models", "local_models"]
+        ["provider_lanes", "catalog", "local_models", "local_models"]
     );
 
-    for action in ["status", "catalog", "local_models"] {
+    for action in ["provider_lanes", "catalog", "local_models"] {
         let (admission, service) = scripted(
             action,
             vec![busy(), Ok(json!({"kind":"refused", "code":"signed_out"}))],
@@ -545,7 +548,7 @@ fn pending_download_collects_added_models_and_stops_on_other_answers() {
     );
     assert_eq!(
         service.replies.asked(),
-        ["status", "catalog", "local_models"]
+        ["provider_lanes", "catalog", "local_models"]
     );
 }
 
@@ -563,7 +566,7 @@ impl Agent for HeldCatalog {
     fn exchange(&self, request: Value) -> Result<Value, ApplicationError> {
         let action = request["action"].as_str().unwrap().to_owned();
         self.asked.lock().unwrap().push(action.clone());
-        if action == "status" {
+        if action == "provider_lanes" {
             return Ok(status());
         }
         self.started.send(()).unwrap();
@@ -608,7 +611,10 @@ fn pending_download_discards_a_reply_after_cancellation_or_service_replacement()
         assert!(
             matches!(first_link(&error), Cause::Application { reason: Some(reason), .. } if reason == if cancel { "setup_admission_cancelled" } else { "agent_admin_generation_changed" })
         );
-        assert_eq!(*service.asked.lock().unwrap(), ["status", "catalog"]);
+        assert_eq!(
+            *service.asked.lock().unwrap(),
+            ["provider_lanes", "catalog"]
+        );
     }
     let (admission, service) = scripted("catalog", vec![]);
     let cancellation = Cancellation::default();
@@ -639,7 +645,7 @@ fn a_recommended_model_is_admitted_with_the_size_its_catalogue_entry_states() {
             admitted(VISION, Some(3 * GB))
         );
         // A recommended model is on the list without the person adding it.
-        assert_eq!(replies.asked(), ["status", "catalog"]);
+        assert_eq!(replies.asked(), ["provider_lanes", "catalog"]);
     }
 }
 
@@ -652,7 +658,10 @@ fn an_added_model_is_admitted_with_its_stated_size_or_an_unknown_one() {
             admission.download(&requested(LOCAL, ADDED)).unwrap(),
             admitted(ADDED, None)
         );
-        assert_eq!(replies.asked(), ["status", "catalog", "local_models"]);
+        assert_eq!(
+            replies.asked(),
+            ["provider_lanes", "catalog", "local_models"]
+        );
     }
     // A size the catalogue states for an added model is used; a zero one says nothing.
     for (stated, expected) in [(Some(GB), Some(GB)), (Some(0), None), (None, None)] {
@@ -681,7 +690,7 @@ fn a_download_off_a_local_lanes_list_is_refused() {
         ("a model added to another lane", status(), LOCAL, elsewhere),
     ] {
         let replies = Replies::serving(&[TEXT], &[ADDED], &cards)
-            .answering("status", lanes)
+            .answering("provider_lanes", lanes)
             .answering(
                 "local_models",
                 json!({"unreadable": false, "models": [
@@ -790,14 +799,14 @@ fn a_service_that_does_not_answer_or_refuses_is_unavailable_and_names_what_it_di
         ),
         (
             "no catalogue reply",
-            Replies::default().answering("status", status()),
+            Replies::default().answering("provider_lanes", status()),
             "setup_catalogue_unanswered",
             unanswered("agent_admin_unavailable"),
         ),
         (
             "no list reply",
             Replies::default()
-                .answering("status", status())
+                .answering("provider_lanes", status())
                 .answering("catalog", served(&[], &[])),
             "setup_local_models_unanswered",
             unanswered("agent_admin_unavailable"),
@@ -805,7 +814,7 @@ fn a_service_that_does_not_answer_or_refuses_is_unavailable_and_names_what_it_di
         (
             "a provider status the service refused",
             reachable().answering(
-                "status",
+                "provider_lanes",
                 json!({"kind": "refused", "code": "service_stopping"}),
             ),
             "setup_provider_status_refused",
@@ -877,8 +886,8 @@ fn a_profile_that_is_signed_out_is_told_so() {
     let signed_out = || json!({"kind": "refused", "code": "signed_out"});
     let cases = [
         (
-            "status",
-            Replies::serving(&[], &[ADDED], &[]).answering("status", signed_out()),
+            "provider_lanes",
+            Replies::serving(&[], &[ADDED], &[]).answering("provider_lanes", signed_out()),
         ),
         (
             "catalogue",
@@ -1132,7 +1141,7 @@ fn each_read_of_a_download_start_and_a_removal_is_timed_once_without_naming_what
     assert_eq!(
         timed_reads(&diagnostics),
         [
-            read("status", "answered"),
+            read("provider_lanes", "answered"),
             read("catalog", "answered"),
             read("local_models", "answered"),
         ]
@@ -1154,10 +1163,16 @@ fn a_recommended_model_needs_no_list_read_and_a_busy_read_is_timed_as_one() {
     });
     let (admission, diagnostics) = measured(agent.clone());
     admission.download(&requested(LOCAL, TEXT)).unwrap();
-    assert_eq!(agent.replies.asked(), ["status", "catalog", "catalog"]);
+    assert_eq!(
+        agent.replies.asked(),
+        ["provider_lanes", "catalog", "catalog"]
+    );
     assert_eq!(
         timed_reads(&diagnostics),
-        [read("status", "answered"), read("catalog", "answered")]
+        [
+            read("provider_lanes", "answered"),
+            read("catalog", "answered")
+        ]
     );
 }
 
@@ -1170,12 +1185,12 @@ fn a_read_is_timed_whatever_ends_it_and_the_reads_after_it_are_not_made() {
         (
             "no status reply",
             Replies::default(),
-            vec![read("status", "unanswered")],
+            vec![read("provider_lanes", "unanswered")],
         ),
         (
             "a signed-out status",
-            Replies::serving(&[], &[ADDED], &[]).answering("status", signed_out),
-            vec![read("status", "refused")],
+            Replies::serving(&[], &[ADDED], &[]).answering("provider_lanes", signed_out),
+            vec![read("provider_lanes", "refused")],
         ),
         (
             "a refused catalogue",
@@ -1183,13 +1198,16 @@ fn a_read_is_timed_whatever_ends_it_and_the_reads_after_it_are_not_made() {
                 "catalog",
                 json!({"kind": "refused", "code": "catalog_unavailable"}),
             ),
-            vec![read("status", "answered"), read("catalog", "unanswered")],
+            vec![
+                read("provider_lanes", "answered"),
+                read("catalog", "unanswered"),
+            ],
         ),
         (
             "a list outside the contract",
             invalid_list,
             vec![
-                read("status", "answered"),
+                read("provider_lanes", "answered"),
                 read("catalog", "answered"),
                 read("local_models", "invalid"),
             ],
