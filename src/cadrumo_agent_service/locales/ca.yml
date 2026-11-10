@@ -109,6 +109,11 @@ desktop:
     effort_medium: Mitjà
     effort_ultra: Ultra
     effort_xhigh: Molt alt
+    engine_door_local_ai_setup: Repara la IA local
+    engine_not_running: El motor d'IA local no s'està executant.
+    engine_reason_answer_unreadable: Ha respost, però no com s'esperava.
+    engine_reason_no_answer_in_time: No ha respost a temps.
+    engine_reason_not_reachable: No s'hi pot accedir des d'aquest ordinador.
     files_summary: 'Fitxers: {count} · {size}'
     hide: Amaga l'agent
     history: Historial
@@ -133,6 +138,9 @@ desktop:
     message_label: Missatge
     message_placeholder: Pregunta per un model, un termini o els teus registres
     model: Model
+    model_does_not_fit_refused: Aquest model no cap en els recursos que aquest
+      ordinador pot donar-li ara mateix. Tria un model més petit o canvia on
+      s'executen els models als ajustos de la IA local.
     model_not_installed: '{name} (sense baixar)'
     model_not_installed_refused: El model triat no és en aquest ordinador. Baixa'l
       o tria'n un altre.
@@ -302,6 +310,7 @@ desktop:
     change_failed: No s’ha pogut desar. Actualitza i torna-ho a provar.
     connection_api: Clau API
     connection_app: Aplicació instal·lada
+    connection_local: En aquest ordinador
     console_command_label: 'Executa aquesta ordre en un terminal:'
     detail_app_missing: Instal·la l'aplicació de {provider} i després inicia la sessió.
     detail_off: 'Desactivat: l''agent no l''ofereix ni el fa servir.'
@@ -331,6 +340,7 @@ desktop:
     local_model_download: Baixa
     local_model_installed: Baixat
     local_model_licence: 'Llicència: {licence}'
+    local_model_licence_named: '{name} ({spdx})'
     local_model_licence_unknown: 'Llicència: no indicada'
     local_model_remove: Treu
     local_model_remove_failed: Cadrumo no ha pogut treure el model. Torna-ho a provar.

@@ -110,6 +110,11 @@ desktop:
     effort_medium: Medio
     effort_ultra: Ultra
     effort_xhigh: Muy alto
+    engine_door_local_ai_setup: Reparar la IA local
+    engine_not_running: El motor de IA local no está en marcha.
+    engine_reason_answer_unreadable: Ha respondido, pero no como se esperaba.
+    engine_reason_no_answer_in_time: No ha respondido a tiempo.
+    engine_reason_not_reachable: No se puede acceder a él en este ordenador.
     files_summary: 'Archivos: {count} · {size}'
     hide: Ocultar el agente
     history: Historial
@@ -134,6 +139,9 @@ desktop:
     message_label: Mensaje
     message_placeholder: Pregunta por un modelo, un plazo o tus registros
     model: Modelo
+    model_does_not_fit_refused: Este modelo no cabe en lo que este ordenador
+      puede darle ahora mismo. Elige un modelo más pequeño o cambia dónde se
+      ejecutan los modelos en los ajustes de la IA local.
     model_not_installed: '{name} (sin descargar)'
     model_not_installed_refused: El modelo elegido no está en este equipo. Descárgalo
       o elige otro modelo.
@@ -305,6 +313,7 @@ desktop:
     change_failed: No se ha podido guardar. Actualiza y vuelve a intentarlo.
     connection_api: Clave API
     connection_app: Aplicación instalada
+    connection_local: En este ordenador
     console_command_label: 'Ejecuta este comando en una terminal:'
     detail_app_missing: Instala la aplicación de {provider} y luego inicia sesión.
     detail_off: 'Desactivado: el agente no lo ofrece ni lo usa.'
@@ -335,6 +344,7 @@ desktop:
     local_model_download: Descargar
     local_model_installed: Descargado
     local_model_licence: 'Licencia: {licence}'
+    local_model_licence_named: '{name} ({spdx})'
     local_model_licence_unknown: 'Licencia: no indicada'
     local_model_remove: Quitar
     local_model_remove_failed: Cadrumo no ha podido quitar el modelo. Vuelve a intentarlo.

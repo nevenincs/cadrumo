@@ -561,3 +561,49 @@ def test_an_engine_status_names_an_engine_and_placement_exactly_when_the_record_
         LocalEngineStatus(unreadable=False, chosen=False, engine=LocalEngine.OLLAMA, placement=None, revision=revision)
     with pytest.raises(ValueError, match="choice"):
         LocalEngineStatus(unreadable=True, chosen=True, engine=None, placement=None, revision=revision)
+
+
+def test_every_engine_status_serves_the_declared_engines_and_placements_in_declared_order() -> None:
+    unreadable_store = MemoryLocalModelListStore()
+    unreadable_store.unreadable = "d" * 64
+    fresh = _engine(_service(MemoryLocalModelListStore()).engine_status())
+    unreadable = _engine(_service(unreadable_store).engine_status())
+
+    for status in (fresh, unreadable):
+        answer = status.model_dump(mode="json")
+        assert answer["choices"] == {
+            "engine": [engine.value for engine in LocalEngine],
+            "placement": [placement.value for placement in LocalPlacement],
+        }
+    assert fresh.model_dump(mode="json")["choices"] == {
+        "engine": ["llamacpp", "ollama"],
+        "placement": ["auto", "cpu_only"],
+    }
+
+
+def test_the_served_choices_follow_the_chosen_setting_and_every_one_of_them_can_be_chosen() -> None:
+    store = MemoryLocalModelListStore()
+    service = _service(store)
+    served = _engine(service.engine_status()).choices
+    revision = ABSENT_SECURE_OBJECT_REVISION_ID
+
+    for engine in served.engine:
+        for placement in served.placement:
+            chosen = _engine(service.choose_engine(engine, placement, expected_revision=revision))
+            assert (chosen.chosen, chosen.engine, chosen.placement) == (True, engine, placement)
+            assert chosen.choices == served
+            revision = chosen.revision
+
+
+def test_a_status_cannot_be_given_a_choice_list_of_its_own() -> None:
+    with pytest.raises(ValueError, match="choices"):
+        LocalEngineStatus.model_validate(
+            {
+                "unreadable": False,
+                "chosen": False,
+                "engine": LocalEngine.OLLAMA,
+                "placement": LocalPlacement.AUTO,
+                "revision": ABSENT_SECURE_OBJECT_REVISION_ID,
+                "choices": {"engine": [LocalEngine.OLLAMA], "placement": [LocalPlacement.AUTO]},
+            }
+        )

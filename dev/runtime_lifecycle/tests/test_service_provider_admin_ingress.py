@@ -23,7 +23,7 @@ from cadrumo_agent_service.providers.application.tests.synthetic_catalog import 
     KEYLESS_LANE,
     synthetic_document,
 )
-from cadrumo_agent_service.providers.domain.record import LocalEngine
+from cadrumo_agent_service.providers.domain.record import LocalEngine, LocalPlacement
 from cadrumo_agent_service.providers.persistence.store import (
     LOCAL_MODEL_LIST_CAPABILITY,
     LOCAL_MODEL_LIST_KEY,
@@ -71,8 +71,8 @@ class _AdminRecorder:
         scope: Literal["once", "session", "remember"] | None = None,
         grant_id: str | None = None,
         conversation_id: str | None = None,
-        engine: Literal["llamacpp", "ollama"] | None = None,
-        placement: Literal["auto", "cpu_only"] | None = None,
+        engine: LocalEngine | None = None,
+        placement: LocalPlacement | None = None,
     ) -> dict[str, JsonValue]:
         values: dict[str, str | bytearray | None] = {
             "provider": provider,
@@ -183,7 +183,7 @@ def test_actual_service_provider_actions_require_parent_authority_and_live_encry
         )
         server = AdminServer(service, bearer=admin)
         try:
-            for action in ("status", "set", "remove", "reset", "auth"):
+            for action in ("status", "provider_lanes", "set", "remove", "reset", "auth"):
                 for unauthorized in (b"wrong-admin-authority", bytes(gateway)):
                     assert _exchange(server.port, unauthorized, _provider_request(action), unauthorized=True) == {
                         "kind": "refused",
@@ -208,6 +208,10 @@ def test_actual_service_provider_actions_require_parent_authority_and_live_encry
             assert isinstance(available, bool)
             assert initial["mode"] == "unset" and not available
             revision = _entry_revision(initial)
+            # The lanes read is a plain store read that runs no supplier check; an api lane is whole in it.
+            lanes = _exchange(server.port, bytes(admin), _request("provider_lanes"))["result"]
+            assert isinstance(lanes, dict) and set(lanes) == {"providers"}
+            assert _provider_entry(lanes) == initial
             for action, expected_mode in (("set", "key"), ("auth", "key"), ("remove", "disabled"), ("reset", "unset")):
                 reply = _exchange(
                     server.port,

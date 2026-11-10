@@ -1,11 +1,15 @@
 import type {
   GoogleAccount,
+  SetupBlockedReason,
   SetupFailureCategory,
   SetupItemId,
+  SetupItemKind,
   SetupOutcome,
   SetupRecovery,
   SetupRetry,
   SetupRow,
+  SetupStaleReason,
+  SetupState,
   SetupStep,
 } from "../../ipc/componentSetup";
 import type { Translate } from "../../shell/strings";
@@ -17,10 +21,87 @@ import type { Translate } from "../../shell/strings";
 // a step, an outcome, a refusal and the Google account.
 // A row's sentence is the one place its state is said. No closed value is
 // ever shown as it is.
+//
+// Every key is written whole, in a table keyed by the closed value's type, so
+// the compiler requires a key for each member and the shell's key check sees
+// each one. A value the host sends that the table lacks is a newer host's:
+// it is said by the general sentence beside its table, never as a raw key.
 
-/** An item's plain name, such as "Local AI", keyed by the row's item. */
+/** One catalogue key, written whole. */
+type Key = string;
+
+/** The words for `value`, or those for the general case when the table does
+ * not hold it. The own-property test keeps an inherited name such as
+ * `constructor` from reading as a member. */
+function wordsFor<Member extends string>(
+  t: Translate,
+  table: Readonly<Record<Member, Key>>,
+  value: string,
+  general: Key,
+): string {
+  return t(Object.hasOwn(table, value) ? table[value as Member] : general);
+}
+
+const ITEM_NAME: Readonly<Record<SetupItemKind, Key>> = {
+  browser: "desktop.setup.item.browser",
+  local_ai: "desktop.setup.item.local_ai",
+};
+
+const STATE_SENTENCE: Readonly<Record<SetupState, Key>> = {
+  absent: "desktop.setup.state.absent",
+  provisioning: "desktop.setup.state.provisioning",
+  verifying: "desktop.setup.state.verifying",
+  ready: "desktop.setup.state.ready",
+  stale: "desktop.setup.state.stale",
+  failed: "desktop.setup.state.failed",
+  blocked: "desktop.setup.state.blocked",
+  unknown: "desktop.setup.state.unknown",
+};
+
+const STALE_SENTENCE: Readonly<Record<SetupStaleReason, Key>> = {
+  older_revision: "desktop.setup.stale.older_revision",
+  program_too_old: "desktop.setup.stale.program_too_old",
+};
+
+const BLOCKED_SENTENCE: Readonly<Record<SetupBlockedReason, Key>> = {
+  offline: "desktop.setup.blocked.offline",
+  needs_person: "desktop.setup.blocked.needs_person",
+  hardware: "desktop.setup.blocked.hardware",
+  not_in_this_build: "desktop.setup.blocked.not_in_this_build",
+};
+
+const ACTION_WORDS: Readonly<Record<SetupRecovery, Key>> = {
+  set_up: "desktop.setup.action.set_up",
+  update: "desktop.setup.action.update",
+  try_again: "desktop.setup.action.try_again",
+  resume: "desktop.setup.action.resume",
+  check_again: "desktop.setup.action.check_again",
+};
+
+const FAILURE_SENTENCE: Readonly<Record<SetupFailureCategory, Key>> = {
+  offline: "desktop.setup.failure.offline",
+  host_unreachable: "desktop.setup.failure.host_unreachable",
+  server_error: "desktop.setup.failure.server_error",
+  secure_connection_failed: "desktop.setup.failure.secure_connection_failed",
+  blocked_by_network: "desktop.setup.failure.blocked_by_network",
+  disk_full: "desktop.setup.failure.disk_full",
+  no_permission: "desktop.setup.failure.no_permission",
+  damaged_download: "desktop.setup.failure.damaged_download",
+  not_enough_memory: "desktop.setup.failure.not_enough_memory",
+  memory_busy: "desktop.setup.failure.memory_busy",
+  program_missing: "desktop.setup.failure.program_missing",
+  program_not_running: "desktop.setup.failure.program_not_running",
+  interrupted: "desktop.setup.failure.interrupted",
+  needs_sign_in: "desktop.setup.failure.needs_sign_in",
+  not_in_this_build: "desktop.setup.failure.not_in_this_build",
+  cancelled: "desktop.setup.failure.cancelled",
+  unexpected: "desktop.setup.failure.unexpected",
+};
+
+/** An item's plain name, such as "Local AI", keyed by the row's item. An
+ * item this window does not know is named by the setup's own title. */
 export function itemName(t: Translate, item: SetupItemId): string {
-  return t(`desktop.setup.item.${item}`);
+  return wordsFor(t, ITEM_NAME, item, "desktop.setup.title");
 }
 
 /** A row's download size as the engine states it: unknown until the
@@ -35,31 +116,42 @@ export function rowSizeWords(
   return bytes === 0 ? t("desktop.setup.plan_nothing") : format(bytes);
 }
 
-/** The one sentence stating a row's state and its reason. */
+/** The one sentence stating a row's state and its reason. A reason this
+ * window does not know leaves the state's own sentence, and a state it does
+ * not know says the state is unknown. */
 export function rowSentence(t: Translate, row: SetupRow): string {
   if (row.state === "stale" && row.stale_reason)
-    return t(`desktop.setup.stale.${row.stale_reason}`);
+    return wordsFor(t, STALE_SENTENCE, row.stale_reason, STATE_SENTENCE.stale);
   if (row.state === "blocked" && row.blocked_reason)
-    return t(`desktop.setup.blocked.${row.blocked_reason}`);
+    return wordsFor(
+      t,
+      BLOCKED_SENTENCE,
+      row.blocked_reason,
+      STATE_SENTENCE.blocked,
+    );
   if (row.state === "failed" && row.failure)
     return failureWords(t, row.failure);
-  return t(`desktop.setup.state.${row.state}`);
+  return wordsFor(t, STATE_SENTENCE, row.state, STATE_SENTENCE.unknown);
 }
 
-/** The words of a row's one button; null when it offers none. */
+/** The words of a row's one button; null when it offers none, which is also
+ * what a button this window has no words for gets. */
 export function actionWords(
   t: Translate,
   recovery: SetupRecovery | null,
 ): string | null {
-  return recovery === null ? null : t(`desktop.setup.action.${recovery}`);
+  return recovery !== null && Object.hasOwn(ACTION_WORDS, recovery)
+    ? t(ACTION_WORDS[recovery])
+    : null;
 }
 
-/** The one sentence a failure is told by. */
+/** The one sentence a failure is told by; a failure this window does not
+ * know is told as an unexpected one. */
 export function failureWords(
   t: Translate,
   failure: SetupFailureCategory,
 ): string {
-  return t(`desktop.setup.failure.${failure}`);
+  return wordsFor(t, FAILURE_SENTENCE, failure, FAILURE_SENTENCE.unexpected);
 }
 
 /** The notice shown before a retry's wait. */

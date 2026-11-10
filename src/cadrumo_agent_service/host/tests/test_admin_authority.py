@@ -15,6 +15,7 @@ from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 from ...admin import AdminRequest, AdminServer
 from ...contracts import ServiceStartupFrame
 from ...gateway_credentials import GatewayCredentials
+from ...providers.domain.record import LocalEngine, LocalPlacement
 from ..controller import AgentGenerations, ResolvedAgentCredentials
 from ..credential_frame import build_credential_frame, wipe
 from .admin_wire_support import read_frame, send_frame
@@ -45,11 +46,18 @@ class _AdminRecorder:
         return {"kind": "served", "action": action}
 
 
+def _startup(**fields: object) -> ServiceStartupFrame:
+    """Parse a startup document the way the service does: from the JSON line the desktop writes to stdin."""
+    document = {"bearer": "a" * 64, "gateway_bearer": "b" * 64, **fields}
+    return ServiceStartupFrame.model_validate_json(json.dumps(document))
+
+
 @pytest.mark.parametrize(
     "action",
     [
         "catalog",
         "status",
+        "provider_lanes",
         "set",
         "remove",
         "turn_on",
@@ -72,7 +80,7 @@ class _AdminRecorder:
     ],
 )
 def test_gateway_frame_secret_is_refused_and_parent_admin_secret_dispatches(action: str) -> None:
-    startup = ServiceStartupFrame(bearer="a" * 64, gateway_bearer="b" * 64, local_engine_default="llamacpp")
+    startup = _startup(local_engine_default="llamacpp")
     parent = bytearray(startup.bearer, "ascii")
     gateway = bytearray(startup.gateway_bearer, "ascii")
     host_token = bytearray(b"c" * 43)
@@ -121,8 +129,8 @@ def test_gateway_frame_secret_is_refused_and_parent_admin_secret_dispatches(acti
             }
         assert target.actions == [action]
         if action == "local_engine_choose":
-            assert target.metadata["engine"] == "llamacpp"
-            assert target.metadata["placement"] == "cpu_only"
+            assert target.metadata["engine"] is LocalEngine.LLAMACPP
+            assert target.metadata["placement"] is LocalPlacement.CPU_ONLY
             assert target.metadata["expected_revision"] == "0" * 64
         if action in {"set", "connect_submit_code"}:
             assert target.secret == bytearray()
@@ -145,28 +153,23 @@ def test_gateway_frame_secret_is_refused_and_parent_admin_secret_dispatches(acti
 )
 def test_startup_refuses_missing_or_shared_authority(document: dict[str, str]) -> None:
     with pytest.raises(ValidationError):
-        ServiceStartupFrame.model_validate(document)
+        ServiceStartupFrame.model_validate_json(json.dumps(document))
 
 
 def test_startup_refuses_a_frame_that_names_no_default_engine() -> None:
     with pytest.raises(ValidationError):
-        ServiceStartupFrame.model_validate({"bearer": "a" * 64, "gateway_bearer": "b" * 64})
+        ServiceStartupFrame.model_validate_json(json.dumps({"bearer": "a" * 64, "gateway_bearer": "b" * 64}))
 
 
 @pytest.mark.parametrize("engine", ["vllm", "", "LLAMACPP", None])
 def test_startup_refuses_an_unknown_default_engine(engine: object) -> None:
     with pytest.raises(ValidationError):
-        ServiceStartupFrame.model_validate(
-            {"bearer": "a" * 64, "gateway_bearer": "b" * 64, "local_engine_default": engine}
-        )
+        _startup(local_engine_default=engine)
 
 
-@pytest.mark.parametrize("engine", ["llamacpp", "ollama"])
-def test_startup_accepts_each_supported_default_engine(engine: str) -> None:
-    frame = ServiceStartupFrame.model_validate(
-        {"bearer": "a" * 64, "gateway_bearer": "b" * 64, "local_engine_default": engine}
-    )
-    assert frame.local_engine_default == engine
+@pytest.mark.parametrize("engine", list(LocalEngine))
+def test_startup_accepts_each_declared_default_engine(engine: LocalEngine) -> None:
+    assert _startup(local_engine_default=engine.value).local_engine_default is engine
 
 
 @pytest.mark.parametrize("model", ["synthetic-vision:1", "synthetic vision/1", "m" * 512, "é" * 512])
@@ -181,22 +184,34 @@ def test_a_model_id_outside_the_shared_rule_is_refused(model: str) -> None:
         AdminRequest(version=1, request_id=uuid4(), action="local_model_add", model=model)
 
 
-def _engine_request(engine: str, placement: str) -> dict[str, object]:
-    return {
-        "version": 1,
-        "request_id": uuid4(),
-        "action": "local_engine_choose",
-        "engine": engine,
-        "placement": placement,
-        "expected_revision": "0" * 64,
-    }
+def _engine_request(engine: str, placement: str) -> AdminRequest:
+    """Parse a choose request from its wire JSON, the one path the admin server validates by."""
+    return AdminRequest.model_validate_json(
+        json.dumps(
+            {
+                "version": 1,
+                "request_id": str(uuid4()),
+                "action": "local_engine_choose",
+                "engine": engine,
+                "placement": placement,
+                "expected_revision": "0" * 64,
+            }
+        )
+    )
 
 
-@pytest.mark.parametrize(("engine", "placement"), [("llamacpp", "cpu_only"), ("ollama", "auto")])
-def test_the_local_engine_is_chosen_by_a_known_engine_and_placement(engine: str, placement: str) -> None:
-    request = AdminRequest.model_validate(_engine_request(engine, placement))
+@pytest.mark.parametrize(
+    ("engine", "placement"),
+    [(engine, placement) for engine in LocalEngine for placement in LocalPlacement],
+)
+def test_the_local_engine_is_chosen_by_every_declared_engine_and_placement(
+    engine: LocalEngine, placement: LocalPlacement
+) -> None:
+    request = _engine_request(engine.value, placement.value)
 
     assert (request.engine, request.placement) == (engine, placement)
+    assert isinstance(request.engine, LocalEngine)
+    assert isinstance(request.placement, LocalPlacement)
 
 
 @pytest.mark.parametrize(
@@ -205,4 +220,41 @@ def test_the_local_engine_is_chosen_by_a_known_engine_and_placement(engine: str,
 )
 def test_an_unknown_engine_or_placement_token_is_refused_at_ingress(engine: str, placement: str) -> None:
     with pytest.raises(ValidationError):
-        AdminRequest.model_validate(_engine_request(engine, placement))
+        _engine_request(engine, placement)
+
+
+def _lanes_request(**fields: object) -> bytes:
+    return json.dumps({"version": 1, "request_id": str(uuid4()), "action": "provider_lanes", **fields}).encode()
+
+
+@pytest.mark.parametrize(
+    "fields",
+    [
+        {"unheard_of": 1},
+        {"provider": "synthetic", "unheard_of": "x"},
+        {"secret_bytes": 4, "unheard_of": None},
+    ],
+)
+def test_the_lanes_read_refuses_a_field_the_request_does_not_declare(fields: dict[str, object]) -> None:
+    with pytest.raises(ValidationError):
+        AdminRequest.model_validate_json(_lanes_request(**fields))
+
+
+def test_the_lanes_read_is_refused_a_secret_and_dispatches_nothing() -> None:
+    parent = bytearray(b"a" * 64)
+    target = _AdminRecorder()
+    server = AdminServer(target, bearer=parent)
+    request = json.loads(_lanes_request(secret_bytes=4))
+    try:
+        with socket.create_connection(("127.0.0.1", server.port), timeout=5) as stream:
+            send_frame(stream, parent)
+            send_frame(stream, json.dumps(request).encode())
+            assert read_frame(stream) == {
+                "version": 1,
+                "request_id": request["request_id"],
+                "result": {"kind": "refused", "code": "invalid_request"},
+            }
+        assert target.actions == []
+    finally:
+        server.close()
+        wipe(parent)

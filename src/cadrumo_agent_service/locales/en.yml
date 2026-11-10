@@ -106,6 +106,11 @@ desktop:
     effort_medium: Medium
     effort_ultra: Ultra
     effort_xhigh: Extra high
+    engine_door_local_ai_setup: Repair local AI
+    engine_not_running: The local AI engine isn't running.
+    engine_reason_answer_unreadable: It answered, but not as expected.
+    engine_reason_no_answer_in_time: It didn't answer in time.
+    engine_reason_not_reachable: It can't be reached on this computer.
     files_summary: 'Files: {count} · {size}'
     hide: Hide the agent
     history: History
@@ -129,6 +134,9 @@ desktop:
     message_label: Message
     message_placeholder: Ask about a modelo, a deadline or your records
     model: Model
+    model_does_not_fit_refused: This model doesn't fit in what this computer can
+      give it right now. Choose a smaller model or change where models run in
+      the local AI settings.
     model_not_installed: '{name} (not downloaded)'
     model_not_installed_refused: The chosen model isn't on this computer. Download
       it, or choose another model.
@@ -296,6 +304,7 @@ desktop:
     change_failed: Could not save. Refresh and try again.
     connection_api: API key
     connection_app: Installed app
+    connection_local: On this computer
     console_command_label: 'Run this command in a terminal:'
     detail_app_missing: Install the {provider} app, then sign in.
     detail_off: 'Off: the agent doesn''t offer or use it.'
@@ -325,6 +334,7 @@ desktop:
     local_model_download: Download
     local_model_installed: Downloaded
     local_model_licence: 'Licence: {licence}'
+    local_model_licence_named: '{name} ({spdx})'
     local_model_licence_unknown: 'Licence: not stated'
     local_model_remove: Remove
     local_model_remove_failed: Cadrumo couldn't remove the model. Try again.
