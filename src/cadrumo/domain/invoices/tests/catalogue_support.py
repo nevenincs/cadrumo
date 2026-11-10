@@ -6,10 +6,13 @@ from collections.abc import Iterable, Mapping
 from datetime import date
 from decimal import Decimal
 
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...iva.schema import InvoiceKind
 from ..catalogue import InvoiceCatalogue
 from ..enums import IvaRate, PaymentStatus
 from ..models import Invoice, InvoiceLine
+
+_YEAR = filing_year_envelope().horizon
 
 
 def build_invoice_catalogue(invoices: Iterable[Invoice | Mapping[str, object]]) -> InvoiceCatalogue:
@@ -21,7 +24,7 @@ def consulting_invoice(
     *,
     payment_status: PaymentStatus,
     invoice_number: str = "INV-001",
-    issued_at: date = date(2026, 4, 1),
+    issued_at: date = date(_YEAR, 4, 1),
     kind: InvoiceKind = InvoiceKind.ISSUED,
     linked_transaction_ids: tuple[str, ...] = (),
 ) -> Invoice:

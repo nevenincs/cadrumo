@@ -30,11 +30,14 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.invoices.enums import InvoiceLegalMention, resolve_iva_rate_token
 
 from ....core.resources.bundled_data import bundled_path
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...iva.schema import InvoiceKind
 from ..enums import PaymentStatus
 from ..models import Invoice, InvoiceLine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 
 @pytest.fixture(autouse=True)
@@ -65,7 +68,7 @@ def _invoice(**overrides: Any) -> Invoice:
     payload: dict[str, Any] = {
         "kind": InvoiceKind.ISSUED,
         "invoice_number": "2026/CT-1",
-        "issued_at": date(2026, 4, 15),
+        "issued_at": date(_YEAR, 4, 15),
         "counterparty_name": "Cliente SL",
         "counterparty_tax_id": "B00015016",
         "counterparty_country": "ES",

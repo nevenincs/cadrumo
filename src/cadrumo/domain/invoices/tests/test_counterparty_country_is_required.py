@@ -26,6 +26,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 
 from ....core.identity.documents import IdentityError
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...iva.schema import InvoiceKind
 from ..enums import PaymentStatus
 from ..errors import InvoiceValidationError
@@ -33,6 +34,8 @@ from ..models import Invoice, InvoiceLine
 from ..normalization import normalise_invoice_counterparty
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 
 @pytest.fixture(autouse=True)
@@ -57,7 +60,7 @@ def _valid_payload() -> dict[str, object]:
     return {
         "kind": InvoiceKind.RECEIVED,
         "invoice_number": "COUNTRY-REQUIRED-001",
-        "issued_at": date(2026, 5, 1),
+        "issued_at": date(_YEAR, 5, 1),
         "counterparty_name": "Papeleria Sol SL",
         "counterparty_tax_id": "B00010157",
         "counterparty_country": "ES",
