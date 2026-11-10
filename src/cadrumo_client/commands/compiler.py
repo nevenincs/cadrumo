@@ -186,20 +186,31 @@ def _parameter_value_projection(
     if isinstance(spec, OptionSpec) and spec.multiple:
         annotation = GenericAlias(list, (annotation,))
     parser = None if spec.value.parser is None else resolver(spec.value.parser)
-    click_type = (
-        TyperChoice(spec.value.choices, case_sensitive=spec.constraint.case_sensitive)
-        if spec.value.choices
-        else None
-        if spec.value.click_type is None
-        else resolver(spec.value.click_type)
-    )
-    click_type = _materialize_projected_click_type(click_type, annotation)
+    click_type = _materialize_projected_click_type(_declared_click_type(spec, resolver), annotation)
     if spec.constraint.non_blank:
-        if annotation not in (str, GenericAlias(list, (str,))) or click_type is not None or parser is not None:
-            raise TypeError(f"non-blank constraint needs a plain text parameter: {spec.name!r}")
-        click_type = _NonBlankTextParamType()
+        click_type = _non_blank_click_type(spec, annotation=annotation, click_type=click_type, parser=parser)
     choice_metavar = None if not spec.value.choices else f"<{'|'.join(spec.value.choices)}>"
     return annotation, parser, click_type, choice_metavar
+
+
+def _declared_click_type(spec: ArgumentSpec | OptionSpec, resolver: TargetResolver) -> object | None:
+    """The Click type a spec declares: a choice set, a resolved custom type, or none."""
+    if spec.value.choices:
+        return TyperChoice(spec.value.choices, case_sensitive=spec.constraint.case_sensitive)
+    return None if spec.value.click_type is None else resolver(spec.value.click_type)
+
+
+def _non_blank_click_type(
+    spec: ArgumentSpec | OptionSpec,
+    *,
+    annotation: object,
+    click_type: object | None,
+    parser: object | None,
+) -> _NonBlankTextParamType:
+    """The non-blank text type, refusing a parameter that is not plain text."""
+    if annotation not in (str, GenericAlias(list, (str,))) or click_type is not None or parser is not None:
+        raise TypeError(f"non-blank constraint needs a plain text parameter: {spec.name!r}")
+    return _NonBlankTextParamType()
 
 
 def _argument_parameter(

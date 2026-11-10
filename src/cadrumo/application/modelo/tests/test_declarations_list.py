@@ -10,6 +10,7 @@ import pytest
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.modelos.work_unit import WorkUnitState
@@ -60,9 +61,11 @@ from ..work_form_header import ModeloFormDeadlineTone
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_AS_OF = date(2025, 4, 30)
-_NOW = datetime(2025, 4, 30, 12, tzinfo=UTC)
-_PERIOD = Period.from_year_and_code(2025, "1T")
+_YEAR = filing_year_envelope().horizon
+
+_AS_OF = date(_YEAR, 4, 30)
+_NOW = datetime(_YEAR, 4, 30, 12, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 
 
 def worded_declaration_list(
@@ -98,7 +101,7 @@ def _local(state: DeclarationSummaryState, *, work: str = "a" * 64):
     return DeclarationsWorkspaceDeclarationRefV1(
         work_unit_id=work,
         modelo="303",
-        filing_year=2025,
+        filing_year=_YEAR,
         period=_PERIOD,
         state=WorkUnitState.BORRADOR,
         has_current_calculation=state is not DeclarationSummaryState.DRAFT,
@@ -107,13 +110,13 @@ def _local(state: DeclarationSummaryState, *, work: str = "a" * 64):
     )
 
 
-def _entry(*, external: bool, conflicted: bool = False, period: Period = _PERIOD, close: date = date(2025, 4, 21)):
+def _entry(*, external: bool, conflicted: bool = False, period: Period = _PERIOD, close: date = date(_YEAR, 4, 21)):
     filed = external and not conflicted
     return DeclarationsCalendarEntryRefV1(
         modelo="303",
-        filing_year=2025,
+        filing_year=_YEAR,
         period=period,
-        opens_on=date(2025, 4, 1),
+        opens_on=date(_YEAR, 4, 1),
         closes_on=close,
         adjusted_closes_on=close,
         shift_reason="unchanged",
@@ -136,7 +139,7 @@ def _entry(*, external: bool, conflicted: bool = False, period: Period = _PERIOD
         else OverviewAeatSubmissionState.NOT_OBSERVED,
         justificante_verified=False,
         evidence_conflicted=conflicted,
-        aeat_submitted_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC) if external else None,
+        aeat_submitted_at=datetime(_YEAR, 4, 15, 9, 30, tzinfo=UTC) if external else None,
         source=OverviewCalendarEntrySource.REGISTRY_DEADLINE,
     )
 
@@ -145,7 +148,7 @@ def _calendar(*entries: DeclarationsCalendarEntryRefV1, advised: tuple[AdvisedOb
     return DeclarationsCalendarProjectionV1(
         as_of=_AS_OF,
         generated_at=_NOW,
-        query_range=OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 12, 31)),
+        query_range=OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 12, 31)),
         sources=tuple(
             DeclarationsCalendarSourceStateV1(
                 source=source,
@@ -169,8 +172,8 @@ def test_an_unlinked_external_filing_is_a_completed_row_with_its_own_date() -> N
     row = rows[0]
     assert row.group is DeclarationListGroup.AEAT_UNLINKED and row.state == "aeat_unlinked"
     assert row.declaration is None and row.calendar is calendar
-    assert row.calendar.aeat_submitted_at == datetime(2025, 4, 15, 9, 30, tzinfo=UTC)
-    assert row.deadline == date(2025, 4, 21)
+    assert row.calendar.aeat_submitted_at == datetime(_YEAR, 4, 15, 9, 30, tzinfo=UTC)
+    assert row.deadline == date(_YEAR, 4, 21)
 
 
 def test_a_local_draft_stays_in_progress_when_that_period_is_already_filed_at_aeat() -> None:
@@ -246,7 +249,7 @@ def test_an_overdue_unstarted_period_and_a_conflicted_submission_both_need_atten
 
 
 def test_a_later_period_is_not_hidden_by_this_periods_local_draft() -> None:
-    later = _entry(external=False, period=Period.from_year_and_code(2025, "2T"), close=date(2025, 7, 21))
+    later = _entry(external=False, period=Period.from_year_and_code(_YEAR, "2T"), close=date(_YEAR, 7, 21))
 
     rows = declaration_list_rows(_workspace(_local(DeclarationSummaryState.DRAFT)), _calendar(later))
 
@@ -273,10 +276,10 @@ def test_each_row_names_its_step_and_keeps_the_aeats_facts_beside_its_own() -> N
         update={"summary": DeclarationSummary(state=DeclarationSummaryState.BLOCKED, blocking_count=2)}
     )
     checked = _local(DeclarationSummaryState.CHECKED, work="b" * 64).model_copy(
-        update={"period": Period.from_year_and_code(2025, "2T")}
+        update={"period": Period.from_year_and_code(_YEAR, "2T")}
     )
-    later = _entry(external=False, period=Period.from_year_and_code(2025, "3T"), close=date(2025, 10, 20))
-    filed_elsewhere = _entry(external=True, period=Period.from_year_and_code(2025, "4T"), close=date(2026, 1, 30))
+    later = _entry(external=False, period=Period.from_year_and_code(_YEAR, "3T"), close=date(_YEAR, 10, 20))
+    filed_elsewhere = _entry(external=True, period=Period.from_year_and_code(_YEAR, "4T"), close=date(_YEAR + 1, 1, 30))
 
     rows = {
         row.key: row
@@ -297,12 +300,12 @@ def test_each_row_names_its_step_and_keeps_the_aeats_facts_beside_its_own() -> N
     )
     due = next(row for row in rows.values() if row.key.startswith("due:"))
     assert (due.next_step, due.opens_local_work, due.work_unit_id) == (DeclarationListNextStep.START, False, None)
-    assert due.deadline == date(2025, 10, 20)
+    assert due.deadline == date(_YEAR, 10, 20)
     unlinked = next(row for row in rows.values() if row.key.startswith("aeat:"))
     # A return the AEAT holds with no local work shows the AEAT's date, never a deadline or a local result.
     assert (unlinked.deadline, unlinked.result_words, unlinked.next_step) == (None, None, None)
     assert unlinked.aeat_submission_state is OverviewAeatSubmissionState.SUBMITTED_OBSERVED
-    assert unlinked.aeat_submitted_at == datetime(2025, 4, 15, 9, 30, tzinfo=UTC)
+    assert unlinked.aeat_submitted_at == datetime(_YEAR, 4, 15, 9, 30, tzinfo=UTC)
     assert all(row.modelo_title.startswith("Modelo 303") for row in rows.values())
 
 
@@ -312,7 +315,7 @@ def test_rows_are_said_in_the_language_asked_for() -> None:
         worded_declaration_list(workspace, None, language)[0] for language in (OutputLanguage.EN, OutputLanguage.ES)
     )
 
-    assert (english.period_words, spanish.period_words) == ("1st quarter 2025", "1.er trimestre 2025")
+    assert (english.period_words, spanish.period_words) == (f"1st quarter {_YEAR}", f"1.er trimestre {_YEAR}")
     assert english.state_words != spanish.state_words
     assert english.next_step is spanish.next_step is DeclarationListNextStep.CONTINUE
 
@@ -333,11 +336,11 @@ def _zone_stale(workspace: DeclarationsWorkspaceProjectionV1) -> DeclarationsWor
 
 
 def test_an_open_deadline_counts_its_days_at_the_headers_thresholds_and_a_closed_row_has_none() -> None:
-    soon = _entry(external=False, period=Period.from_year_and_code(2025, "2T"), close=date(2025, 5, 5))
+    soon = _entry(external=False, period=Period.from_year_and_code(_YEAR, "2T"), close=date(_YEAR, 5, 5))
     overdue = _entry(external=False)
-    third = Period.from_year_and_code(2025, "3T")
+    third = Period.from_year_and_code(_YEAR, "3T")
     recorded = _local(DeclarationSummaryState.RECORDED, work="c" * 64).model_copy(update={"period": third})
-    recorded_deadline = _entry(external=False, period=third, close=date(2025, 5, 2))
+    recorded_deadline = _entry(external=False, period=third, close=date(_YEAR, 5, 2))
 
     rows = {
         row.key: row
@@ -348,7 +351,7 @@ def test_an_open_deadline_counts_its_days_at_the_headers_thresholds_and_a_closed
 
     due_soon = next(row for row in rows.values() if row.period_code == "2T")
     assert (due_soon.days_remaining, due_soon.days_overdue, due_soon.due_tone) == (5, None, ModeloFormDeadlineTone.SOON)
-    assert due_soon.due_words == tr("workspace.modelo.header.deadline", date="May 5, 2025", days=5, locale="en")
+    assert due_soon.due_words == tr("workspace.modelo.header.deadline", date=f"May 5, {_YEAR}", days=5, locale="en")
     late = next(row for row in rows.values() if row.key.startswith("due:") and row.period_code == "1T")
     assert (late.days_remaining, late.days_overdue, late.due_tone) == (None, 9, ModeloFormDeadlineTone.URGENT)
     closed = rows["c" * 64]
@@ -374,12 +377,12 @@ def test_every_row_names_its_group_and_a_row_with_no_step_says_why() -> None:
 
 def test_the_new_declaration_dialog_offers_the_admitted_addresses_with_the_due_one_first() -> None:
     draft = _local(DeclarationSummaryState.DRAFT)
-    later = _entry(external=False, period=Period.from_year_and_code(2025, "2T"), close=date(2025, 7, 21))
+    later = _entry(external=False, period=Period.from_year_and_code(_YEAR, "2T"), close=date(_YEAR, 7, 21))
     rows = declaration_list_rows(_workspace(draft), _calendar(later))
     admitted = (
         DeclarationTarget("303", _PERIOD),
         DeclarationTarget("303", later.period),
-        DeclarationTarget("390", Period.from_year_and_code(2025, "0A")),
+        DeclarationTarget("390", Period.from_year_and_code(_YEAR, "0A")),
     )
 
     targets = {
@@ -392,7 +395,7 @@ def test_the_new_declaration_dialog_offers_the_admitted_addresses_with_the_due_o
     assert existing is not None and existing.work_unit_id == "a" * 64 and existing.state_words
     suggested = targets["303", "2T"]
     assert suggested.suggested and suggested.expected and suggested.existing is None
-    assert suggested.deadline == date(2025, 7, 21) and suggested.deadline_text == "Jul 21, 2025"
+    assert suggested.deadline == date(_YEAR, 7, 21) and suggested.deadline_text == f"Jul 21, {_YEAR}"
     assert not targets["390", "0A"].expected
     assert [target.suggested for target in targets.values()].count(True) == len({modelo for modelo, _ in targets})
     # With nothing admitted, the returns due are what the dialog offers.
@@ -403,13 +406,16 @@ def test_the_new_declaration_dialog_offers_the_admitted_addresses_with_the_due_o
 
 
 def test_each_modelo_starts_on_its_return_due_else_its_latest_ended_period() -> None:
-    due = _entry(external=False, period=Period.from_year_and_code(2025, "2T"), close=date(2025, 7, 21))
+    due = _entry(external=False, period=Period.from_year_and_code(_YEAR, "2T"), close=date(_YEAR, 7, 21))
     rows = declaration_list_rows(_workspace(), _calendar(due))
-    # The dialog was opened on 30 April 2025: ejercicio 2025 has not ended, 2024 has.
+    # The dialog was opened on 30 April of the horizon year: its ejercicio has not ended, the one before has.
     admitted = (
         DeclarationTarget("303", _PERIOD),
         DeclarationTarget("303", due.period),
-        *(DeclarationTarget("390", Period.from_year_and_code(year, "0A")) for year in (2023, 2024, 2025)),
+        *(
+            DeclarationTarget("390", Period.from_year_and_code(year, "0A"))
+            for year in filing_year_envelope().years[-3:]
+        ),
     )
 
     suggested = {
@@ -418,7 +424,7 @@ def test_each_modelo_starts_on_its_return_due_else_its_latest_ended_period() -> 
         if target.suggested
     }
 
-    assert suggested == {("303", 2025, "2T"), ("390", 2024, "0A")}
+    assert suggested == {("303", _YEAR, "2T"), ("390", _YEAR - 1, "0A")}
 
 
 def test_the_list_says_what_it_could_read_and_never_passes_a_partial_read_for_everything() -> None:
@@ -454,7 +460,7 @@ def test_the_list_says_what_it_could_read_and_never_passes_a_partial_read_for_ev
     assert aeat.observed_at is None and tr("workspace.declarations.calendar.never_observed", locale="en") in aeat.words
     assert notices == (aeat.words, tr("workspace.declarations.refusal.source", locale="en"))
     schedule = next(source for source in sources if source.source is DeclarationsCalendarSource.SCHEDULE)
-    assert "Apr 30, 2025 12:00 UTC" in schedule.words, schedule.words
+    assert f"Apr 30, {_YEAR} 12:00 UTC" in schedule.words, schedule.words
     fresh = calendar_sources(calendar, OutputLanguage.EN)
     aeat_read = next(item.words for item in fresh if item.source is DeclarationsCalendarSource.AEAT_EVIDENCE)
     assert source_notices(_workspace(), calendar, OutputLanguage.EN) == (aeat_read,)
@@ -474,7 +480,7 @@ def test_a_deadline_without_its_holiday_calendar_is_noted_and_a_national_one_is_
 
 def test_the_public_list_carries_what_it_could_read_and_the_dialogs_addresses_and_round_trips() -> None:
     workspace = _zone_stale(_workspace(_local(DeclarationSummaryState.DRAFT))).model_copy(
-        update={"creation_targets": (DeclarationTarget("303", Period.from_year_and_code(2025, "2T")),)}
+        update={"creation_targets": (DeclarationTarget("303", Period.from_year_and_code(_YEAR, "2T")),)}
     )
     request = ModeloDeclarationsListRequest(
         profile_id=UUID("13000000-0000-4000-8000-000000000450"), output_language=OutputLanguage.EN
@@ -499,7 +505,7 @@ def test_a_return_the_aeat_holds_opens_its_notes_in_the_rows_language_and_no_oth
     request = ModeloDeclarationsListRequest(
         profile_id=UUID("13000000-0000-4000-8000-000000000450"), output_language=OutputLanguage.ES
     )
-    later = _entry(external=False, period=Period.from_year_and_code(2025, "2T"), close=date(2025, 7, 21))
+    later = _entry(external=False, period=Period.from_year_and_code(_YEAR, "2T"), close=date(_YEAR, 7, 21))
 
     projection = project_declarations_list(
         request, _workspace(_local(DeclarationSummaryState.DRAFT)), _calendar(_entry(external=True), later)

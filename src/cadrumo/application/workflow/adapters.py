@@ -12,8 +12,9 @@ from __future__ import annotations
 
 from datetime import date
 
+from ...core.period import Period
 from ...domain.deadlines.engine import DeadlineEngine
-from ...domain.deadlines.models import Schedule, TaxpayerProfile
+from ...domain.deadlines.models import ModeloDeadline, Schedule, TaxpayerProfile
 
 
 class DeadlineEngineAdapter:
@@ -35,6 +36,17 @@ class DeadlineEngineAdapter:
         Returns a :class:`Schedule`.
         """
         return self._engine.compute(profile, year, today=today)
+
+    def target_obligation(
+        self,
+        profile: TaxpayerProfile,
+        *,
+        modelo: str,
+        period: Period,
+        today: date | None = None,
+    ) -> ModeloDeadline | None:
+        """Delegate to :meth:`DeadlineEngine.target_obligation` for one exact target."""
+        return self._engine.target_obligation(profile, modelo=modelo, period=period, today=today)
 
 
 __all__ = ["DeadlineEngineAdapter"]

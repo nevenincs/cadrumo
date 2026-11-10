@@ -65,13 +65,38 @@ class _Case(NamedTuple):
     coverage: DeadlineHolidayCoverage
 
 
-_WEEKEND = _Case("136", 2025, "1T", date(2025, 4, 20), date(2025, 4, 21), DeadlineHolidayCoverage.NATIONAL_ONLY)
-_NATIONAL_HOLIDAY = _Case(
-    "185", 2026, "09", date(2026, 10, 10), date(2026, 10, 13), DeadlineHolidayCoverage.NATIONAL_ONLY
+# Each case sits in the exercise whose published calendar of días inhábiles it
+# is about, so the exercise is read from that publication's in-force window.
+_CALENDAR_OF_SUNDAY_CLOSE = legal_effective_to("resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo").year
+_CALENDAR_OF_FIESTA_NACIONAL_MONDAY = legal_effective_to("resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo").year
+_CALENDAR_OF_NEXT_EXERCISE = legal_effective_to("resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo").year
+
+_WEEKEND = _Case(
+    "136",
+    _CALENDAR_OF_SUNDAY_CLOSE,
+    "1T",
+    date(_CALENDAR_OF_SUNDAY_CLOSE, 4, 20),
+    date(_CALENDAR_OF_SUNDAY_CLOSE, 4, 21),
+    DeadlineHolidayCoverage.NATIONAL_ONLY,
 )
-_PUBLISHED_2027 = _Case("303", 2026, "4T", date(2027, 2, 1), date(2027, 2, 1), DeadlineHolidayCoverage.NATIONAL_ONLY)
-_CASES = (_WEEKEND, _NATIONAL_HOLIDAY, _PUBLISHED_2027)
-_UNCOVERED_YEAR = 2028
+_NATIONAL_HOLIDAY = _Case(
+    "185",
+    _CALENDAR_OF_FIESTA_NACIONAL_MONDAY,
+    "09",
+    date(_CALENDAR_OF_FIESTA_NACIONAL_MONDAY, 10, 10),
+    date(_CALENDAR_OF_FIESTA_NACIONAL_MONDAY, 10, 13),
+    DeadlineHolidayCoverage.NATIONAL_ONLY,
+)
+_PUBLISHED_NEXT_EXERCISE = _Case(
+    "303",
+    _CALENDAR_OF_NEXT_EXERCISE - 1,
+    "4T",
+    date(_CALENDAR_OF_NEXT_EXERCISE, 2, 1),
+    date(_CALENDAR_OF_NEXT_EXERCISE, 2, 1),
+    DeadlineHolidayCoverage.NATIONAL_ONLY,
+)
+_CASES = (_WEEKEND, _NATIONAL_HOLIDAY, _PUBLISHED_NEXT_EXERCISE)
+_UNCOVERED_YEAR = _CALENDAR_OF_NEXT_EXERCISE + 1
 
 
 class _Posture(NamedTuple):
@@ -154,7 +179,7 @@ def _calendar_posture(case: _Case, reference_on: date, operation: PinnedAuthorit
     return _Posture(row.closes_on, row.adjusted_closes_on, row.holiday_coverage, remaining, row.days_overdue)
 
 
-@pytest.mark.parametrize("case", _CASES, ids=["weekend", "national-holiday", "published-2027"])
+@pytest.mark.parametrize("case", _CASES, ids=["weekend", "national-holiday", "published-next-exercise"])
 def test_every_surface_reads_the_same_nominal_and_effective_deadline(
     case: _Case, operation: PinnedAuthorityOperation
 ) -> None:

@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.schema_base import CasillaDataType
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from ....domain.modelos.codes import ModeloCode
 from ...operations.schema_identity import OperationSchemaIdentityV1
 from ..edit_contract import ModeloEditCompatibilityTupleV1, ModeloEditMutationFamily, ModeloEditMutationResultReceiptV1
@@ -44,6 +45,8 @@ from ..edit_value_grammar import ModeloEditValueChannel, ModeloEditValueFamily, 
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
+
 _DIGEST = "a" * 64
 _WORK_UNIT_ID = "b" * 64
 _CALC_REVISION_ID = "c" * 64
@@ -51,7 +54,7 @@ _BASELINE_ID = "d" * 64
 _RECEIPT_ID = "e" * 64
 _BUCKET_EVENT_ID = "f" * 64
 _OPERATION_ID = "0" * 64
-_REVISION_ID = "2025-y-siguientes"
+_REVISION_ID = str(revision_covering("130", _YEAR).id)
 
 
 def _schema_identity() -> OperationSchemaIdentityV1:
@@ -108,8 +111,8 @@ def edit_models_baseline(
         compatibility=_compatibility(),
         bucket_id="edit-bucket",
         modelo=ModeloCode(Modelo("130").value),
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "1T"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
         work_unit_id=_WORK_UNIT_ID,
         work_unit_record_digest=_DIGEST,
         calculation_head_digest=_DIGEST,

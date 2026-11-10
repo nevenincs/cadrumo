@@ -1639,6 +1639,9 @@ cli:
           registra este comando, así que indica un nombre corto para ti.
         allow_not_applicable_help: Crear la declaración aunque el modelo no aplique
           al tipo de contribuyente del perfil activo.
+        amend_binding_help: Valor de una fuente de casilla que la corrección declara
+          cuando la presentación no lo registró, con sintaxis BINDING_ID=VALUE (repetible);
+          una rectificación rechazada nombra los que necesita.
         amend_help: Construir una corrección de una declaración presentada fuera de
           Cadrumo. Requiere un registro de presentación con evidencia de la AEAT importada
         amend_missing_options: 'Una rectificación requiere todas estas opciones: %{missing}.'
@@ -1807,8 +1810,8 @@ cli:
           existente sin cambios.'
         file_internal_disambiguation: Esta presentación es solo interna y no se envía
           a la AEAT.
-        filing_evidence_option_other_modelo: 'Rechazado. El Modelo %{modelo} no admite
-          ninguna de estas opciones: %{options}. Son exclusivas del Modelo %{applies_to}.
+        filing_evidence_option_other_modelo: 'El Modelo %{modelo} no admite ninguna
+          de estas opciones: %{options}. Son exclusivas del Modelo %{applies_to}.
           Quítalas y vuelve a calcular; no se ha calculado nada.'
         formula_operation_calculation: cálculo
         formula_operation_clamp: límite

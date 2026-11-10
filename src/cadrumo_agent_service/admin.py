@@ -39,6 +39,7 @@ _AGENT_IDENTIFIER_PATTERN = r"^[A-Za-z0-9_.-]{1,128}$"
 type AdminAction = Literal[
     "catalog",
     "status",
+    "provider_lanes",
     "set",
     "remove",
     "turn_on",

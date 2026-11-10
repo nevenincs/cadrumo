@@ -30,7 +30,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
@@ -40,6 +40,7 @@ from cadrumo.application.user_profile.projections import profile_fact_index
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....domain.user_profile.values import (
     ProfileSetupState,
@@ -57,9 +58,9 @@ from ..profile_derived_facts import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "cd7a6304-2000-4200-8200-000000000596"
-_YEAR = 2025
+_YEAR = newest_authored_edition("100")
 _PERIOD = "0A"
-_CLOCK = datetime(2026, 7, 4, 9, 0, 0, tzinfo=UTC)
+_CLOCK = datetime(1980, 7, 4, 9, 0, 0, tzinfo=UTC)
 _CASILLA_1039: CasillaId = validated_casilla_id("1039", surface="test_autonomic_deduccion_advisory")
 _FACT_INDEXES: dict[str, dict[str, UserProfileFactValue] | None] = {}
 
@@ -72,8 +73,8 @@ def modelo_operation() -> Iterator[PinnedAuthorityOperation]:
 
 
 @pytest.fixture(scope="module")
-def m100_2025_snapshot(modelo_operation: PinnedAuthorityOperation) -> RegistrySnapshot:
-    """Real bundled M100 2025 snapshot carrying the casilla-1039 semantic role."""
+def m100_snapshot(modelo_operation: PinnedAuthorityOperation) -> RegistrySnapshot:
+    """Real bundled M100 snapshot carrying the casilla-1039 semantic role."""
     return modelo_operation.snapshot("100", filing_year=_YEAR, period=_PERIOD)
 
 
@@ -82,7 +83,7 @@ def _base_facts(**overrides: str) -> tuple[UserProfileFact, ...]:
         "tax_residence.ccaa": "madrid",
         "renta_filing.declaration_type": "1",
         "renta_taxpayer.marital_status": "1",
-        "renta_family.descendiente.0.birth_date": "2024-06-01",
+        "renta_family.descendiente.0.birth_date": date(_YEAR - 1, 6, 1).isoformat(),
         "renta_family.descendiente.0.convivencia": "true",
     }
     base.update(overrides)
@@ -113,7 +114,7 @@ def _seed(bucket_id: str, facts: tuple[UserProfileFact, ...], *, operation: Pinn
 
 
 def test_advisory_fires_for_indeterminate_conjunta_unit_with_eligible_descendant(
-    m100_2025_snapshot: RegistrySnapshot,
+    m100_snapshot: RegistrySnapshot,
     modelo_operation: PinnedAuthorityOperation,
     seeded_bucket: str,
 ) -> None:
@@ -121,7 +122,7 @@ def test_advisory_fires_for_indeterminate_conjunta_unit_with_eligible_descendant
     _seed(seeded_bucket, _base_facts(**{"renta_filing.declaration_type": "2"}), operation=modelo_operation)
 
     finding = madrid_nacimiento_adopcion_eligibility_advisory_finding(
-        m100_2025_snapshot,
+        m100_snapshot,
         {_CASILLA_1039: Decimal("0")},
         bucket_id=seeded_bucket,
         operation=modelo_operation,
@@ -138,7 +139,7 @@ def test_advisory_fires_for_indeterminate_conjunta_unit_with_eligible_descendant
 
 
 def test_advisory_fires_for_married_filer_with_eligible_descendant(
-    m100_2025_snapshot: RegistrySnapshot,
+    m100_snapshot: RegistrySnapshot,
     modelo_operation: PinnedAuthorityOperation,
     seeded_bucket: str,
 ) -> None:
@@ -146,7 +147,7 @@ def test_advisory_fires_for_married_filer_with_eligible_descendant(
     _seed(seeded_bucket, _base_facts(**{"renta_taxpayer.marital_status": "2"}), operation=modelo_operation)
 
     finding = madrid_nacimiento_adopcion_eligibility_advisory_finding(
-        m100_2025_snapshot,
+        m100_snapshot,
         {_CASILLA_1039: Decimal("0")},
         bucket_id=seeded_bucket,
         operation=modelo_operation,
@@ -157,7 +158,7 @@ def test_advisory_fires_for_married_filer_with_eligible_descendant(
 
 
 def test_advisory_silent_for_determinate_single_filer(
-    m100_2025_snapshot: RegistrySnapshot,
+    m100_snapshot: RegistrySnapshot,
     modelo_operation: PinnedAuthorityOperation,
     seeded_bucket: str,
 ) -> None:
@@ -171,7 +172,7 @@ def test_advisory_silent_for_determinate_single_filer(
     _seed(seeded_bucket, _base_facts(), operation=modelo_operation)
 
     finding = madrid_nacimiento_adopcion_eligibility_advisory_finding(
-        m100_2025_snapshot,
+        m100_snapshot,
         {_CASILLA_1039: Decimal("0")},
         bucket_id=seeded_bucket,
         operation=modelo_operation,
@@ -181,7 +182,7 @@ def test_advisory_silent_for_determinate_single_filer(
 
 
 def test_advisory_silent_when_casilla_already_populated(
-    m100_2025_snapshot: RegistrySnapshot,
+    m100_snapshot: RegistrySnapshot,
     modelo_operation: PinnedAuthorityOperation,
     seeded_bucket: str,
 ) -> None:
@@ -189,7 +190,7 @@ def test_advisory_silent_when_casilla_already_populated(
     _seed(seeded_bucket, _base_facts(**{"renta_filing.declaration_type": "2"}), operation=modelo_operation)
 
     finding = madrid_nacimiento_adopcion_eligibility_advisory_finding(
-        m100_2025_snapshot,
+        m100_snapshot,
         {_CASILLA_1039: Decimal("721.70")},
         bucket_id=seeded_bucket,
         operation=modelo_operation,
@@ -199,7 +200,7 @@ def test_advisory_silent_when_casilla_already_populated(
 
 
 def test_advisory_silent_for_non_madrid_indeterminate_unit(
-    m100_2025_snapshot: RegistrySnapshot,
+    m100_snapshot: RegistrySnapshot,
     modelo_operation: PinnedAuthorityOperation,
     seeded_bucket: str,
 ) -> None:
@@ -211,7 +212,7 @@ def test_advisory_silent_for_non_madrid_indeterminate_unit(
     )
 
     finding = madrid_nacimiento_adopcion_eligibility_advisory_finding(
-        m100_2025_snapshot,
+        m100_snapshot,
         {_CASILLA_1039: Decimal("0")},
         bucket_id=seeded_bucket,
         operation=modelo_operation,
@@ -221,7 +222,7 @@ def test_advisory_silent_for_non_madrid_indeterminate_unit(
 
 
 def test_advisory_silent_for_indeterminate_unit_with_no_eligible_descendant(
-    m100_2025_snapshot: RegistrySnapshot,
+    m100_snapshot: RegistrySnapshot,
     modelo_operation: PinnedAuthorityOperation,
     seeded_bucket: str,
 ) -> None:
@@ -231,14 +232,14 @@ def test_advisory_silent_for_indeterminate_unit_with_no_eligible_descendant(
         _base_facts(
             **{
                 "renta_filing.declaration_type": "2",
-                "renta_family.descendiente.0.birth_date": "2019-01-01",
+                "renta_family.descendiente.0.birth_date": date(_YEAR - 6, 1, 1).isoformat(),
             },
         ),
         operation=modelo_operation,
     )
 
     finding = madrid_nacimiento_adopcion_eligibility_advisory_finding(
-        m100_2025_snapshot,
+        m100_snapshot,
         {_CASILLA_1039: Decimal("0")},
         bucket_id=seeded_bucket,
         operation=modelo_operation,
@@ -248,13 +249,13 @@ def test_advisory_silent_for_indeterminate_unit_with_no_eligible_descendant(
 
 
 def test_advisory_silent_when_no_profile_record_exists(
-    m100_2025_snapshot: RegistrySnapshot,
+    m100_snapshot: RegistrySnapshot,
     modelo_operation: PinnedAuthorityOperation,
     seeded_bucket: str,
 ) -> None:
     """No profile record at all yields no advisory (no eligibility signal to read)."""
     finding = madrid_nacimiento_adopcion_eligibility_advisory_finding(
-        m100_2025_snapshot,
+        m100_snapshot,
         {_CASILLA_1039: Decimal("0")},
         bucket_id=seeded_bucket,
         operation=modelo_operation,

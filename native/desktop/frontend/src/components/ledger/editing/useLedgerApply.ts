@@ -168,6 +168,7 @@ async function readMissing(
           read.get(id)?.classification_reason_words ?? "",
         classification_reason_words_language:
           read.get(id)?.classification_reason_words_language ?? null,
+        withholding: read.get(id)?.withholding ?? [],
       });
     } catch (error) {
       return readFailure(error);

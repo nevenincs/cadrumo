@@ -110,7 +110,9 @@ def test_a_catalog_read_right_after_ready_is_served_while_the_starting_read_ends
             emit=lambda _event: None,
         )
         service._providers = ProviderSettingsService(
-            store=MemoryProviderSettingsStore(), catalog_source=StaticCatalogSource()
+            selected_engine=lambda: LocalEngine.LLAMACPP,
+            store=MemoryProviderSettingsStore(),
+            catalog_source=StaticCatalogSource(),
         )
         controller = _Controller(
             AgentReady(AgentGenerations("synthetic-session", "synthetic-settings"), port, "synthetic-agent", 1)

@@ -26,7 +26,7 @@ from ....application.actividad_asset.activity_asset_read_models import (
     ActivityAssetTimelineEvent,
     activity_asset_label_key,
 )
-from ....application.actividad_asset.operations import M100ClaimGapProjection
+from ....application.actividad_asset.filing_handoff import M100ClaimGapProjection
 from ....application.modelo.value_presentation import format_casilla_value
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import lookup_translation, output_language, tr

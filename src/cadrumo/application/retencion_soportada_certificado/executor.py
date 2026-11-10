@@ -166,10 +166,11 @@ def _build_record(
         return _CertificateRefusal("validation")
 
 
-def _record_certificate(
+def _prepare_record(
     request: RetencionSoportadaRecordRequest,
     ports: RetencionSoportadaCertificadoPorts,
-) -> tuple[RetencionSoportadaRowProjection, int] | _CertificateRefusal:
+) -> tuple[str, _CertificateFile | None, RetencionSoportadaRecord] | _CertificateRefusal:
+    """Settle the taxpayer, the certificate file and the record to write, or name why none can be."""
     taxpayer_tax_id = ports.taxpayer_tax_id()
     if taxpayer_tax_id is None or not tax_id_identity_token(taxpayer_tax_id):
         return _CertificateRefusal("taxpayer_tax_id_unknown")
@@ -183,6 +184,32 @@ def _record_certificate(
     )
     if isinstance(record, _CertificateRefusal):
         return record
+    return taxpayer_tax_id, certificate, record
+
+
+def _stored_projection(
+    record: RetencionSoportadaRecord,
+    request: RetencionSoportadaRecordRequest,
+    ports: RetencionSoportadaCertificadoPorts,
+) -> tuple[RetencionSoportadaRowProjection, int]:
+    """Read back the record just written, with the count of the year's records."""
+    stored, revision_id = ports.repository.load_revisioned(record.identity)
+    if stored is None:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    return (
+        RetencionSoportadaRowProjection.from_record(stored, revision_id=revision_id),
+        len(ports.repository.list_revisioned(request.ejercicio)),
+    )
+
+
+def _record_certificate(
+    request: RetencionSoportadaRecordRequest,
+    ports: RetencionSoportadaCertificadoPorts,
+) -> tuple[RetencionSoportadaRowProjection, int] | _CertificateRefusal:
+    prepared = _prepare_record(request, ports)
+    if isinstance(prepared, _CertificateRefusal):
+        return prepared
+    taxpayer_tax_id, certificate, record = prepared
     expected_revision_id = request.expected_revision_id or ABSENT_SECURE_OBJECT_REVISION_ID
     stored_bytes = False
     try:
@@ -215,13 +242,7 @@ def _record_certificate(
         return _CertificateRefusal(exc.reason, bytes_stored=stored_bytes)
     except RetencionSoportadaRevisionConflictError:
         return _CertificateRefusal("stale_revision", bytes_stored=stored_bytes)
-    stored, revision_id = ports.repository.load_revisioned(record.identity)
-    if stored is None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return (
-        RetencionSoportadaRowProjection.from_record(stored, revision_id=revision_id),
-        len(ports.repository.list_revisioned(request.ejercicio)),
-    )
+    return _stored_projection(record, request, ports)
 
 
 def _remove_certificate(

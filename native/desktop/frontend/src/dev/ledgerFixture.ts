@@ -141,6 +141,8 @@ export const LEDGER_SHAPES = [
   "slow",
   "large",
   "documents",
+  // The ledger with a professional fee paid net of its retención.
+  "withholding",
   // The `documents` ledger on a computer whose local AI is not set up.
   "reader_missing",
 ] as const;
@@ -228,7 +230,7 @@ export function ledgerFixture(options: Options): LedgerPort {
         ? ledgerOfRows(rows)
         : shape === "large"
           ? largeLedger()
-          : fixtureLedger();
+          : fixtureLedger({ practisedRetencion: shape === "withholding" });
   let clock = 0;
   const now = () => {
     clock += 1;

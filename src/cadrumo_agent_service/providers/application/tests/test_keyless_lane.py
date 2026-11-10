@@ -65,7 +65,9 @@ _UNKNOWN = ProviderSettingsRefusal(code=ProviderSettingsRefusalCode.UNKNOWN)
 
 
 def _service(store: MemoryProviderSettingsStore) -> ProviderSettingsService:
-    return ProviderSettingsService(store=store, catalog_source=StaticCatalogSource())
+    return ProviderSettingsService(
+        selected_engine=lambda: LocalEngine.LLAMACPP, store=store, catalog_source=StaticCatalogSource()
+    )
 
 
 def _resolve(store: MemoryProviderSettingsStore) -> ProviderCredentialResolution:

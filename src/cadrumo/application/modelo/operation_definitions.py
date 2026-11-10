@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.errors.hierarchy import CadrumoError
+from ...core.filing_timeliness import FilingTimeliness
 from ...core.operations import (
     EFFECTS_WITHOUT_PARTIAL_COMMIT,
     OperationCancellation,
@@ -21,7 +22,7 @@ from ...core.operations import (
     OperationEffect,
     OperationInteractionKind,
 )
-from ...core.time.clock import now
+from ...core.time.clock import MADRID_TZ, now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ..operations.access_port import OperationAccessResolver
@@ -50,6 +51,7 @@ from .amendment_action_ports import AmendmentActionPortsFactory
 from .amendment_actions import amend_modelo_revision
 from .amendment_projection import ModeloWorkAmendPublicResultV2
 from .calculation_action_ports import CalculationActionPortsFactory
+from .calculation_advisory_projection import ModeloWorkDeadlinePostureSnapshot, pinned_fallback_recargo_legal_ref
 from .calculation_operation import build_modelo_work_calculate_definition, build_modelo_work_calculate_registration
 from .edit_operation import build_modelo_edit_apply_definition, build_modelo_edit_apply_registration
 from .edit_receipt_ports import ModeloEditReceiptRepositoryFactory
@@ -89,6 +91,7 @@ from .work_change_contracts import (
 from .work_filing_contracts import ModeloWorkFilePublicResultV2, ModeloWorkFileRequest
 from .work_lifecycle import discard_work_unit, get_work_unit, rename_work_unit
 from .work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
+from .work_plazo import modelo_deadline_posture
 from .work_verification_contracts import ModeloWorkVerifyPublicResultV2, ModeloWorkVerifyRequest
 
 if TYPE_CHECKING:
@@ -652,12 +655,20 @@ class ModeloWorkFileExecutor:
                 await context.events.effect(
                     OperationEffect.UPDATED if outcome.published or writes.began else OperationEffect.NONE
                 )
+                deadline, fallback_legal_ref = await asyncio.to_thread(
+                    _served_filing_lateness,
+                    record,
+                    outcome.filing_timeliness,
+                    operation=context.authority_operation,
+                )
                 return await context.operands.put(
                     ModeloWorkFilePublicResultV2(
                         record=ModeloFilingRecordSnapshot.from_record(record),
                         advisories=advisories,
                         published=outcome.published,
                         filing_timeliness=outcome.filing_timeliness,
+                        deadline=deadline,
+                        fallback_recargo_legal_ref=fallback_legal_ref,
                         filing_record_id=record.filing_record_id,
                         work_unit_id=record.work_unit_id,
                         calculation_revision_id=record.calculation_revision_id,
@@ -666,6 +677,34 @@ class ModeloWorkFileExecutor:
                 )
 
         return await await_cancellation_complete(publish(), task_name="modelo-work-file-publication")
+
+
+def _served_filing_lateness(
+    record: ModeloRecord,
+    timeliness: FilingTimeliness,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[ModeloWorkDeadlinePostureSnapshot | None, str | None]:
+    """Read an extemporánea filing's lateness on its own presentation date.
+
+    The record kept its timeliness from the Europe/Madrid date it was filed
+    on; the served plazo close, days overdue and Art. 27.2 rate preview are
+    read on that same date, so they describe the filing rather than today.
+    """
+    if timeliness is not FilingTimeliness.EXTEMPORANEA:
+        return None, None
+    posture = modelo_deadline_posture(
+        modelo=str(record.modelo),
+        filing_year=record.filing_year,
+        period=record.period,
+        reference_on=record.filed_at.astimezone(MADRID_TZ).date(),
+        operation=operation,
+    )
+    if posture is None or posture.days_overdue is None:
+        return None, None
+    return ModeloWorkDeadlinePostureSnapshot.from_posture(posture), pinned_fallback_recargo_legal_ref(
+        posture, operation
+    )
 
 
 def build_modelo_work_file_definition(
@@ -806,6 +845,7 @@ class ModeloWorkAmendExecutor:
                         bucket_id=require_active_bucket_id(), operation=context.authority_operation
                     ),
                     operation=context.authority_operation,
+                    binding_overrides={item.key: item.value for item in payload.binding_overrides},
                 )
 
         async def publish() -> str:

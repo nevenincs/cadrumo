@@ -102,7 +102,8 @@ errors:
       un valor conservado o sustituido porque no son casillas de fórmula de esta revisión.
     formula_recalculation_binding_unrecorded: El recálculo de la rectificación alcanza
       casillas de fórmula ({casilla_ids}) que dependen de {binding_ids}. La presentación
-      nunca lo registró; indícalo como sustitución explícita de enlace en la rectificación.
+      nunca lo registró; indícalo en la rectificación con --binding BINDING_ID=VALUE
+      (aeat app modelo work amend).
     formula_recalculation_unresolved: 'El recálculo de la rectificación dejó sin resolver
       casillas de fórmula obligatorias: {casilla_ids}.'
     lookup_dispatch_arg_count: El operador {op} de la fórmula espera {expected} argumentos.
@@ -417,8 +418,8 @@ errors:
     canonical_auth_diagnostic_persistence: No se pudieron guardar los diagnósticos
       de autenticación.
     canonical_catalogue_invoice_persistence: No se pudo guardar el catálogo de facturas.
-    canonical_catalogue_invoice_rate: Falló la consulta del tipo de cambio para el
-      catálogo de facturas.
+    canonical_catalogue_invoice_rate: La consulta del tipo de cambio para el catálogo
+      de facturas no se completó.
     canonical_counterparty_establishment_persistence: No se pudo guardar el registro
       de establecimiento de la contraparte.
     canonical_credit_resolution_persistence: No se pudieron leer ni guardar las discrepancias
@@ -443,8 +444,8 @@ errors:
       del Modelo.
     canonical_operator_scope_session: No se pudo leer la sesión de custodia activa
       del operador.
-    canonical_operator_scope_storage: Falló la operación de almacenamiento de la autenticación
-      del operador.
+    canonical_operator_scope_storage: La operación de almacenamiento de la autenticación
+      del operador no se completó.
     canonical_percepcion_observation_persistence: No se pudieron guardar las observaciones
       de percepciones.
     canonical_persistence_degradation: La capacidad de persistencia no pudo proporcionar
@@ -471,7 +472,7 @@ errors:
     canonical_workflow_gate_persistence: No se pudo guardar el control de acceso del
       flujo de trabajo.
     censo_sync: La sincronización del censo del Modelo 036 falló.
-    currency_error: Falló la normalización de la moneda.
+    currency_error: La normalización de la moneda no se completó.
     declaration_parse: No se pudo interpretar la exportación de la declaración presentada
       para la conciliación.
     exchange_rate_provider: El proveedor de tipos de cambio no respondió.
@@ -1122,8 +1123,8 @@ errors:
       está registrado.
     refused_auth_configure_dangling_active_profile: El puntero de perfil activo no
       resuelve a un bucket registrado.
-    refused_auth_diagnostic_payload: 'Rechazado: la carga de diagnóstico de autenticación
-      no es válida.'
+    refused_auth_diagnostic_payload: La carga de diagnóstico de autenticación no es
+      válida.
     refused_auth_diagnostic_phone_state: El valor de estado del teléfono proporcionado
       no se reconoce. Utiliza uno de los valores válidos de estado de teléfono del
       operador.
@@ -1147,8 +1148,7 @@ errors:
       confirmó. Vuelve a ejecutar el comando confirmando la operación.
     refused_corpus_search_input: No se pudo satisfacer la solicitud de búsqueda en
       el corpus.
-    refused_diagnostic_model_invariant: 'Rechazado: invariante del modelo de diagnóstico
-      incumplida.'
+    refused_diagnostic_model_invariant: Invariante del modelo de diagnóstico incumplida.
     refused_einvoice_xml_parse: No se ha podido leer el XML de la factura electrónica
       y se ha rechazado en lugar de interpretarlo parcialmente.
     refused_evidence_bundle_ambiguous: El prefijo del identificador del paquete de
@@ -1220,10 +1220,10 @@ errors:
     refused_invoice_retention_figures: La retención indicada se contradice o no encaja
       con la base imponible de la factura. Indica de nuevo el tipo y el importe de
       modo que el importe sea la base por el tipo.
-    refused_iva_compensation_decimal_parse: 'Rechazado: el importe de compensación
-      de IVA no se pudo interpretar como decimal.'
-    refused_iva_compensation_year_range: 'Rechazado: el ejercicio de compensación
-      de IVA esta fuera del rango aceptado.'
+    refused_iva_compensation_decimal_parse: El importe de compensación de IVA no se
+      pudo interpretar como decimal.
+    refused_iva_compensation_year_range: El ejercicio de compensación de IVA está
+      fuera del rango aceptado.
     refused_iva_prorrata_especial_margin_ungrounded: El margen de prorrata especial
       obligatoria no puede fundamentarse para ese ejercicio.
     refused_iva_wallet_reconciliation_invariant: Las entradas de conciliación de la
@@ -1430,7 +1430,7 @@ errors:
       bienes en el extranjero del modelo 720 no superó la validación.
     refused_profile_inventory_validation: Un libro de inventario del perfil no superó
       la validación.
-    refused_profile_label_ambiguous: 'Rechazado: la etiqueta del perfil es ambigua.'
+    refused_profile_label_ambiguous: La etiqueta del perfil es ambigua.
     refused_profile_lifo_forbidden: La valoración de existencias por el método LIFO
       no está admitida fiscalmente. Usa FIFO, precio medio ponderado o coste medio.
     refused_profile_login_throttled: El inicio de sesión se pausa tras un intento
@@ -1466,7 +1466,7 @@ errors:
       ya. No lo repitas todavía: cuando vuelva el acceso, comprueba primero la operación
       o lo que cambia.'
     refused_runtime_frontend: El entorno de ejecución del perfil rechazó esta solicitud.
-    refused_source_mesh_invariant: 'Rechazado: invariante de la malla de fuentes incumplida.'
+    refused_source_mesh_invariant: Invariante de la malla de fuentes incumplida.
     refused_storage_bucket_already_present: Ya existe un bucket con ese identificador.
     refused_storage_master_key_no_active_session: El cifrado requiere una sesión activa.
       Ejecuta `aeat config login NAME` y vuelve a intentarlo.

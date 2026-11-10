@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....application.ledger.entry_limits import ledger_entry_limits
+from ....core.external_constants import DEFAULT_CURRENCY
 from ....domain.transactions.classification_effects import keeps_category, takes_usage_ratio
 from ....domain.transactions.enums import (
     BusinessClassification,
@@ -42,6 +43,14 @@ def test_entry_options_serves_what_each_classification_takes_and_validates_again
         assert row.rule_may_name_category is rule_names_category(classification)
         assert row.split_part_requires_category is split_part_requires_category(classification)
     assert served.limits.payment_id_pattern == ledger_entry_limits().payment_id_pattern
+    _assert_default_currency_is_served(served)
+
+
+def _assert_default_currency_is_served(served: LedgerEntryOptionsResult) -> None:
+    """The functional currency a new movement is offered is one the currency family serves."""
+    assert served.default_currency == DEFAULT_CURRENCY
+    currencies = next(family for family in served.families if family.family == "currency")
+    assert served.default_currency in {option.value for option in currencies.options}
 
 
 @pytest.mark.usefixtures("authority_operation")
@@ -55,3 +64,4 @@ def test_entry_options_text_output_lists_each_classification() -> None:
     assert [line.split("\t")[1] for line in lines] == [item.value for item in BusinessClassification]
     mixed = next(line for line in lines if line.split("\t")[1] == BusinessClassification.MIXED.value)
     assert mixed.split("\t")[2:] == ["True", "True", "True", "True", "False", "False"]
+    assert f"default_currency\t{DEFAULT_CURRENCY}" in result.output.splitlines()

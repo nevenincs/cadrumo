@@ -17,6 +17,7 @@ import pytest
 
 from ....core.errors.error_codes import ErrorCategory, get_registered_error_code
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.iva_compensation.reconciliation import (
     IvaCompensationAuthoritySource,
@@ -33,17 +34,19 @@ from ..iva_wallet_refusal import (
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
+
 _BUCKET_ID = "34343434-3434-4343-8343-343434343434"
 _WORK_UNIT_ID = "b" * 64
 _TAXPAYER_REF = "taxpayeralpha"
 
 
 def _blocked_decision() -> IvaCompensationReconciliationDecision:
-    snapshot_ref = published_snapshot("303", filing_year=2026, period="2T").snapshot_ref
+    snapshot_ref = published_snapshot("303", filing_year=_YEAR, period="2T").snapshot_ref
     return IvaCompensationReconciliationDecision(
         taxpayer_nif=_TAXPAYER_REF,
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, "2T"),
+        target_year=_YEAR,
+        target_period=Period.from_year_and_code(_YEAR, "2T"),
         target_registry_snapshot_ref=snapshot_ref,
         source_registry_snapshot_refs=(snapshot_ref,),
         selected_authority="missing",
@@ -54,10 +57,10 @@ def _blocked_decision() -> IvaCompensationReconciliationDecision:
             IvaCompensationAuthoritySource(
                 source_kind="local_recurrence",
                 amount=Decimal("800"),
-                source_locator="test:local-recurrence:2026:2T",
+                source_locator=f"test:local-recurrence:{_YEAR}:2T",
                 source_modelo="303",
-                source_filing_year=2026,
-                source_periods=(Period.from_year_and_code(2026, "2T"),),
+                source_filing_year=_YEAR,
+                source_periods=(Period.from_year_and_code(_YEAR, "2T"),),
                 registry_snapshot_refs=(snapshot_ref,),
             ),
         ),
@@ -66,8 +69,8 @@ def _blocked_decision() -> IvaCompensationReconciliationDecision:
         blocked=True,
         stale_wallet=False,
         reason_identity="wallet_local_recurrence_divergence",
-        wallet_captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
-        decided_at=datetime(2026, 5, 19, 12, 1, 0, tzinfo=UTC),
+        wallet_captured_at=datetime(1980, 5, 19, 12, 0, 0, tzinfo=UTC),
+        decided_at=datetime(1980, 5, 19, 12, 1, 0, tzinfo=UTC),
     )
 
 
@@ -75,10 +78,10 @@ def _refused_through_the_door() -> ModeloIvaWalletReconciliationBlockedError:
     with pytest.raises(ModeloIvaWalletReconciliationBlockedError) as raised, iva_wallet_door(_WORK_UNIT_ID):
         apply_iva_compensation_decision_binding(
             "303",
-            2026,
-            Period.from_year_and_code(2026, "2T"),
+            _YEAR,
+            Period.from_year_and_code(_YEAR, "2T"),
             bucket_id=_BUCKET_ID,
-            revision=published_snapshot("303", filing_year=2026, period="2T").revision,
+            revision=published_snapshot("303", filing_year=_YEAR, period="2T").revision,
             taxpayer_nif=_TAXPAYER_REF,
             casilla_inputs={},
             backend_casilla_inputs={},

@@ -13,13 +13,14 @@ path that decides none -- reads as ``unknown``. Unknown is not timely.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from pydantic import ValidationError
 
 from ....core.filing_timeliness import FilingTimeliness
 from ....core.period import Period
+from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.modelos.filing_record import (
     AeatConfirmationState,
     FilingDeclarationKind,
@@ -27,6 +28,7 @@ from ....domain.modelos.filing_record import (
     ModeloRecord,
     derive_filing_record_id,
 )
+from ..calculation_advisory_projection import ModeloWorkDeadlinePostureSnapshot, ModeloWorkRecargoPreviewSnapshot
 from ..filing_projection import ModeloFilingRecordSnapshot
 from ..lifecycle_advisories import ModeloLifecycleAdvisories
 from ..work_filing_contracts import ModeloWorkFilePublicResultV2
@@ -37,6 +39,9 @@ _WORK_UNIT_ID = "b" * 64
 _REVISION_ID = "a" * 64
 _BUCKET_ID = "91fb7268-c9d4-4309-879c-d44fa7970f9d"
 _FILED_AT = datetime(2026, 4, 15, 10, 0, tzinfo=UTC)
+_DAYS_OVERDUE = 10
+_CLOSES_ON = _FILED_AT.date() - timedelta(days=_DAYS_OVERDUE)
+"""A plazo that closed ten days before the filing instant."""
 
 
 def _record(kept: FilingTimeliness | None) -> ModeloRecord:
@@ -108,3 +113,49 @@ def test_the_result_cannot_contradict_the_posture_its_record_kept() -> None:
         _result(_record(FilingTimeliness.EN_PLAZO), FilingTimeliness.EXTEMPORANEA)
     with pytest.raises(ValidationError, match="posture the record kept"):
         _result(_record(FilingTimeliness.EXTEMPORANEA), FilingTimeliness.EN_PLAZO)
+
+
+def _late_deadline(*, with_preview: bool) -> ModeloWorkDeadlinePostureSnapshot:
+    return ModeloWorkDeadlinePostureSnapshot(
+        closes_on=_CLOSES_ON,
+        nominal_closes_on=_CLOSES_ON,
+        holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
+        days_overdue=_DAYS_OVERDUE,
+        conditional_recargo_preview=(
+            ModeloWorkRecargoPreviewSnapshot(
+                band_id="completed_months_0",
+                surcharge_pct="1.00",
+                interest_applies=False,
+                legal_ref="ley-58-2003:art-27.2",
+                rate_reference_on=_FILED_AT.date(),
+            )
+            if with_preview
+            else None
+        ),
+    )
+
+
+def test_only_an_extemporanea_filing_serves_a_deadline_posture() -> None:
+    """Lateness is served beside a late posture and never beside a timely or unknown one."""
+    late = _record(FilingTimeliness.EXTEMPORANEA)
+    served = _result(late, FilingTimeliness.EXTEMPORANEA).model_copy(
+        update={"deadline": _late_deadline(with_preview=True)}
+    )
+    assert ModeloWorkFilePublicResultV2.model_validate(served.model_dump()).deadline == served.deadline
+
+    for kept in (FilingTimeliness.EN_PLAZO, FilingTimeliness.UNKNOWN):
+        payload = _result(_record(kept), kept).model_dump() | {"deadline": _late_deadline(with_preview=True)}
+        with pytest.raises(ValidationError, match="only to an extemporánea filing"):
+            ModeloWorkFilePublicResultV2.model_validate(payload)
+
+
+def test_a_late_posture_without_a_band_cites_its_pinned_reference() -> None:
+    """An overdue posture whose band did not resolve still names the Art. 27 reference it rests on."""
+    base = _result(_record(FilingTimeliness.EXTEMPORANEA), FilingTimeliness.EXTEMPORANEA).model_dump()
+    unbanded = base | {"deadline": _late_deadline(with_preview=False)}
+    with pytest.raises(ValidationError, match="fallback legal reference"):
+        ModeloWorkFilePublicResultV2.model_validate(unbanded)
+    cited = ModeloWorkFilePublicResultV2.model_validate(unbanded | {"fallback_recargo_legal_ref": "ley-58-2003:art-27"})
+    assert cited.fallback_recargo_legal_ref == "ley-58-2003:art-27"
+    with pytest.raises(ValidationError, match="fallback legal reference"):
+        ModeloWorkFilePublicResultV2.model_validate(base | {"fallback_recargo_legal_ref": "ley-58-2003:art-27"})

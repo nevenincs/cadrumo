@@ -44,7 +44,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .modelo_100_eo_agraria_support import calculate_neutral_modelo_100_2025
+from .modelo_100_eo_agraria_support import calculate_neutral_newest_modelo_100
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -75,7 +75,7 @@ def _run_calculation(
     }
     if amortizacion is not None:
         inputs[_CASILLA_1538_AMORTIZACION] = amortizacion
-    return calculate_neutral_modelo_100_2025(inputs).values
+    return calculate_neutral_newest_modelo_100(inputs).values
 
 
 class TestRaicesTuberculosFrutosNoCitricosManualWorkedExample:

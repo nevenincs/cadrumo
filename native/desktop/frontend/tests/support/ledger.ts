@@ -75,6 +75,7 @@ export function movement(
       transaction.classification_reason === "" ? "none" : "stated",
     classification_reason_words: "",
     classification_reason_words_language: null,
+    withholding: [],
   };
 }
 

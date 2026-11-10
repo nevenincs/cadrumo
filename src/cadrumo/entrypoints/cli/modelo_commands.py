@@ -21,6 +21,7 @@ from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 from ...application.modelo.amendment_projection import ModeloWorkAmendPublicResultV2
+from ...application.modelo.calculation_request_fields import ModeloCalculationOverride
 from ...application.modelo.edit_apply_row_contracts import ModeloDetailRowWireV1
 from ...application.modelo.filing_selection_operation import (
     ModeloWorkFilingRecordProjection,
@@ -42,6 +43,8 @@ from ...domain.modelos.calculation_revision_amendment import M303RectificativaMo
 from ...domain.modelos.filing_record import FilingDeclarationKind
 from .common import no_active_profile_refusal
 from .modelo_cli_support import (
+    calculation_overrides,
+    parse_binding_override,
     parse_calculation_wire_row_spec,
     parse_kv_spec,
     resolve_actor_option,
@@ -319,6 +322,17 @@ def resolve_amendment_detail_rows(
     return tuple(parse_calculation_wire_row_spec(spec) for spec in row_specs)
 
 
+def resolve_amendment_binding_overrides(binding_specs: tuple[str, ...]) -> tuple[ModeloCalculationOverride, ...]:
+    """Parse ``--binding`` with calculation's own grammar into the request's override tokens.
+
+    The key must be a well-formed binding id; whether the baseline's revision
+    declares it, and whether its value fits its channel, is the authority's
+    decision against the pinned revision. A repeated key keeps its last value,
+    as ``work calculate`` does.
+    """
+    return calculation_overrides(dict(parse_binding_override(spec) for spec in binding_specs))
+
+
 def _parse_amendment_overrides(set_overrides: tuple[str, ...]) -> dict[CasillaId, Decimal]:
     """Parse ``--set`` values into validated ``CasillaId`` decimal overrides."""
     overrides: dict[CasillaId, Decimal] = {}
@@ -340,6 +354,7 @@ def work_amend(
     set_overrides: list[str] | None = None,
     row: list[str] | None = None,
     no_detail_rows: bool = False,
+    binding: list[str] | None = None,
 ) -> None:
     """Record an amendment to the selected filing through worker custody.
 
@@ -349,7 +364,9 @@ def work_amend(
     refusal instead of forcing the operator to rediscover them one
     invocation at a time. The command then parses the requested
     :class:`FilingDeclarationKind`, validates each override as a
-    ``CasillaId`` decimal, delegates to the profile-bound registered
+    ``CasillaId`` decimal, parses each ``--binding`` with the calculation
+    grammar (the authority admits it against the pinned revision),
+    delegates to the profile-bound registered
     amendment operation, and emits a
     :class:`WorkAmendResult`.
 
@@ -365,6 +382,7 @@ def work_amend(
     )
     overrides = _parse_amendment_overrides(set_specs)
     detail_rows = resolve_amendment_detail_rows(tuple(row or ()), declared_none=no_detail_rows)
+    binding_overrides = resolve_amendment_binding_overrides(tuple(binding or ()))
     target = resolve_active_bucket_id()
     if target is None:
         raise no_active_profile_refusal()
@@ -385,6 +403,7 @@ def work_amend(
         reason=reason,
         m303_rectificativa_motive=m303_rectificativa_motive,
         detail_rows=detail_rows,
+        binding_overrides=binding_overrides,
         actor=resolve_actor_option(actor),
     )
     amended = run_modelo_work_amendment(client, request, work_unit_id=selected.unit.work_unit_id).projection

@@ -15,6 +15,7 @@ import pytest
 
 from ....core.aggregation import BindingSourceKind
 from ....core.external_constants import OutputLanguage
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from ....domain.modelos.verification_report import ModeloVerificationFinding
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -27,7 +28,7 @@ from .test_unrecordable_deduction_documents import Transactions, work_and_target
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_ON = date(2026, 2, 15)
+_ON = date(filing_year_envelope().horizon, 2, 15)
 _KEY = "application.modelo.findings.iva_cuota_disagrees_with_rate"
 
 

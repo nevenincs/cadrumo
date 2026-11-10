@@ -59,6 +59,7 @@ from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.deadlines.effective_close import decide_filing_timeliness
+from ...domain.identifiers import canonical_decimal_string
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -110,6 +111,7 @@ from .amendment_kind_resolution import (
     assert_amendment_kind_permitted,
     assert_complementaria_liability_direction_permitted,
 )
+from .calculate_input import resolve_binding_overrides
 from .calculation_helpers import (
     AmendmentCalculation,
     amendment_prior_paid_values,
@@ -545,7 +547,7 @@ def amend_modelo_revision[CasillaKey](
             amendment_kind=amendment_kind,
         ),
         snapshot=registry_snapshot,
-        binding_overrides=binding_overrides,
+        binding_overrides=_stated_amendment_bindings(binding_overrides, registry_snapshot, work_unit),
     )
     corrected_values = calculation.casilla_values
 
@@ -614,6 +616,27 @@ def amend_modelo_revision[CasillaKey](
         work_units=work_units,
         canonical_overrides=canonical_overrides,
     )
+
+
+def _stated_amendment_bindings(
+    binding_overrides: Mapping[BindingId, str] | None,
+    snapshot: RegistrySnapshot,
+    work_unit: WorkUnit,
+) -> dict[BindingId, str]:
+    """Admit stated bindings by calculation's own rules and carry each as its canonical token.
+
+    An amendment states a binding through the same channel a first calculation
+    does, so an unknown id, a date- or profile-derived value, or malformed
+    numeric text refuses here exactly as it refuses there, before any
+    recalculation reads it.
+    """
+    if binding_overrides is None or not binding_overrides:
+        return {}
+    decimal_values, enum_values = resolve_binding_overrides(binding_overrides, snapshot.revision, work_unit=work_unit)
+    return {
+        key: canonical_decimal_string(decimal_values[key]) if key in decimal_values else enum_values[key]
+        for key in binding_overrides
+    }
 
 
 def _finalize_amendment(

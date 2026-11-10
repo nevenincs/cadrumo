@@ -478,6 +478,13 @@ mod tests {
             ItemState::Failed(FailureCategory::DamagedDownload)
         );
         assert_eq!(failed.recovery, Some(RecoveryAction::TryAgain));
+        // A program the system refused offers the same one button as any failure.
+        let unusable = row(
+            Observation::Absent,
+            Activity::Idle,
+            Some(FailureCategory::EngineProgramUnusable),
+        );
+        assert_eq!(unusable.recovery, Some(RecoveryAction::TryAgain));
         let absent = row(Observation::Absent, Activity::Idle, None);
         assert_eq!(
             (absent.state, absent.recovery),

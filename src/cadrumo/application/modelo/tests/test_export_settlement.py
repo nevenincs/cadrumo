@@ -17,6 +17,7 @@ from ....core.payment_instalment_election import PaymentInstalmentElection
 from ....core.resources.bundled_data import resolve_corpus_binary
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.export_xml_dictionary import xml_dictionary_entries
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 from ....domain.calculations.registry.tests.published_authority import published_revision, published_source_reference
 from ....domain.deadlines.models import ChargeAccount, RefundAccount
 from ....domain.modelos.errors import ModeloExportError
@@ -35,8 +36,10 @@ def _settled(amount: str) -> DeclaredSettlement:
 
 
 def _settlement_paths() -> dict[str, str]:
-    """The 2025 dictionary's settlement rows, by field id, with the record path each is written at."""
-    layout = published_revision("100", "2025").export_layouts[0]
+    """The newest authored dictionary's settlement rows, by field id, with the record path each is written at."""
+    layout = published_revision("100", str(revision_covering("100", newest_authored_edition("100")).id)).export_layouts[
+        0
+    ]
     assert layout.dictionary_source_ref is not None
     source = published_source_reference(str(layout.dictionary_source_ref))
     path = resolve_corpus_binary(*source.corpus_path.split("/"))

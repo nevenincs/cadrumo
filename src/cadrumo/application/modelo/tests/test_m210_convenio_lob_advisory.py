@@ -51,7 +51,6 @@ from ..m210_convenio_lob_advisory import m210_convenio_lob_advisory_finding
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _TIPO_RENTA = validated_casilla_id("tipo_renta", surface="test_m210_convenio_lob_advisory")
-_DEVENGO_DATE = date(2025, 12, 31)
 
 
 def _m210_convenio_lob_advisory_finding(
@@ -64,7 +63,7 @@ def _m210_convenio_lob_advisory_finding(
         snapshot,
         profile,
         input_values_by_casilla_id,
-        devengo_date=_DEVENGO_DATE,
+        devengo_date=date(snapshot.filing_year, 12, 31),
     )
 
 

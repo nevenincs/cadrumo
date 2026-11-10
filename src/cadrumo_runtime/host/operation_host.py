@@ -15,8 +15,8 @@ Core types: :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator
-from contextlib import AbstractContextManager, ExitStack, asynccontextmanager
+from collections.abc import AsyncGenerator, Generator
+from contextlib import AbstractContextManager, ExitStack, asynccontextmanager, contextmanager
 from dataclasses import dataclass
 from datetime import timedelta
 from importlib import import_module
@@ -101,6 +101,51 @@ _PROJECTION_DOCUMENT = TypeAdapter(dict[str, JsonValue])
 _PAGED_PROJECTION_DOCUMENT = TypeAdapter(dict[str, Any])
 _log = get_logger(__name__)
 _PRIVATE_RESULT_RELEASE_ACTIONS = frozenset({AccessAction.RESULT, AccessAction.REVIEW})
+# How long worker requests must stay quiet before the grounding warm-up
+# decodes its next revision. A frontend's burst of requests after sign-in has
+# short gaps between round trips; the warm-up must not fill them.
+_GROUNDING_WARMUP_QUIET_SECONDS = 0.75
+
+
+class _WorkerRequestActivity:
+    """The worker requests this process is serving, and when the last one ended.
+
+    Process-wide because the contention it avoids is: the grounding warm-up
+    and every request share one interpreter. Written only on the service
+    loop; the warm-up thread only reads it.
+    """
+
+    def __init__(self) -> None:
+        self.serving = 0
+        self.quiet_since = monotonic()
+
+
+_REQUEST_ACTIVITY = _WorkerRequestActivity()
+
+
+@contextmanager
+def worker_request_served() -> Generator[None]:
+    """Mark one worker request as being served, so the grounding warm-up defers to it.
+
+    The warm-up is a registry-wide decode that holds the interpreter. Run
+    beside a person's first operations it slowed each of them several
+    fold, though none of them waits for the index it builds.
+    """
+    _REQUEST_ACTIVITY.serving += 1
+    try:
+        yield
+    finally:
+        _REQUEST_ACTIVITY.serving -= 1
+        _REQUEST_ACTIVITY.quiet_since = monotonic()
+
+
+def _grounding_deferred() -> bool:
+    """Answer whether a request is being served or requests have not yet been quiet long enough."""
+    return (
+        _REQUEST_ACTIVITY.serving > 0 or monotonic() - _REQUEST_ACTIVITY.quiet_since < _GROUNDING_WARMUP_QUIET_SECONDS
+    )
+
+
 # What the first composition imports: its own entry points, the persistence and
 # supervisor modules it binds, and the profile operations a session reads first.
 _COMPOSITION_MODULES = (
@@ -308,6 +353,8 @@ class ProfileWorkerOperationHost:
         """
         if self.closed or self._grounding_warmup is not None:
             return
+        # The first view usually follows the sign-in reply at once: give it the quiet window first.
+        _REQUEST_ACTIVITY.quiet_since = monotonic()
         self._grounding_warmup = asyncio.create_task(
             asyncio.to_thread(self._warm_profile_grounding), name="profile-grounding-warmup"
         )
@@ -321,7 +368,9 @@ class ProfileWorkerOperationHost:
         started = monotonic()
         try:
             with self.governed():
-                computed = warm_profile_grounding_index(self.pinned(), abandoned=lambda: self.closed)
+                computed = warm_profile_grounding_index(
+                    self.pinned(), abandoned=lambda: self.closed, deferred=_grounding_deferred
+                )
         except Exception as error:
             # Only the error's type and frame identity are recorded; the read
             # that next needs the index walks it again and reports any failure.

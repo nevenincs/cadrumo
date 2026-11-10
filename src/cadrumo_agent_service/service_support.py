@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any, cast
 
 from cadrumo.core.logging import get_logger
@@ -11,6 +12,8 @@ from cadrumo_client.contracts.deadline_budget import OrchestrationTimeoutError, 
 from .adapters.agent_programs import AgentProgramRefusalError
 from .host.controller import AgentHostController, AgentHostError, AgentHostState
 from .host.launcher_protocol import launcher_refusal_for, runtime_launcher_refusal_for
+from .providers.application.local_model_list import serves_engine_lane
+from .providers.domain.record import LocalEngine
 
 _LOGGER = get_logger("cadrumo_agent_service.service")
 
@@ -71,19 +74,34 @@ def controller_is_ready(controller: AgentHostController) -> bool:
     return controller.state is AgentHostState.READY
 
 
-def _lane_is_off(lane: object, turned_off: frozenset[tuple[str, str]], provider_field: str) -> bool:
-    if not isinstance(lane, dict):
-        return False
-    fields = cast(dict[str, object], lane)
-    return (fields.get(provider_field), fields.get("transport")) in turned_off
-
-
-def without_lanes(
-    document: dict[str, Any], turned_off: frozenset[tuple[str, str]], *, provider_field: str
+def picker_lanes(
+    document: dict[str, Any],
+    engine: Callable[[], LocalEngine | None],
+    turned_off: frozenset[tuple[str, str]],
+    *,
+    provider_field: str,
 ) -> dict[str, Any]:
-    """Return ``document`` without the lanes whose provider and transport are in ``turned_off``."""
+    """Return ``document`` with the lanes a profile running ``engine()`` is served, less those in ``turned_off``.
+
+    The engine rule is the one the provider settings and the local model lists
+    are scoped by, so the picker offers the lanes they list. ``engine`` is read
+    once, and only when the document lists a lane the rule could leave out.
+    """
     lanes: object = document.get("providers")
     if not isinstance(lanes, list):
         return document
-    kept = [lane for lane in cast(list[object], lanes) if not _lane_is_off(lane, turned_off, provider_field)]
-    return {**document, "providers": kept}
+    selected: list[LocalEngine | None] = []
+
+    def kept(lane: object) -> bool:
+        if not isinstance(lane, dict):
+            return True
+        fields = cast(dict[str, object], lane)
+        provider = fields.get(provider_field)
+        if isinstance(provider, str) and not all(serves_engine_lane(provider, held) for held in LocalEngine):
+            if not selected:
+                selected.append(engine())
+            if not serves_engine_lane(provider, selected[0]):
+                return False
+        return (provider, fields.get("transport")) not in turned_off
+
+    return {**document, "providers": [lane for lane in cast(list[object], lanes) if kept(lane)]}

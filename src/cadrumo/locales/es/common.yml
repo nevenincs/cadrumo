@@ -2109,6 +2109,7 @@ desktop:
       lifecycle: Situación
       modified: Modificado
       notes: Notas
+      retencion: Retención
       select: Selección
       status: Estado
       taxable_base: Base imponible
@@ -3881,6 +3882,24 @@ desktop:
         prorrata: Prorrata
         withholding: Retenciones
       areas: Apartados de registros
+    retencion:
+      held_back: Retenida
+      practised: Retención practicada en la factura {invoice}, declarada en el modelo
+        {modelo}
+    retencion_held_back:
+      received_invoice_entity_professional_fee: 'No se declara: quien emite es una
+        sociedad, y los honorarios profesionales de una sociedad no llevan retención.
+        Corrige la factura.'
+      received_invoice_income_kind_undeclared: 'Aún no se declara: elige la categoría
+        IRPF de este pago para que su retención llegue a un modelo.'
+      received_invoice_invoice_incomplete: 'Aún no se declara: a la factura le faltan
+        el NIF de quien emite o sus importes en euros.'
+      received_invoice_non_resident: 'No se declara en este modelo: quien emite no
+        es residente en España.'
+      received_invoice_rate_unrecognised: 'Aún no se declara: la retención de la factura
+        no coincide con ningún tipo de retención de actividades.'
+      received_invoice_recipient_unknown: 'Aún no se declara: el NIF de quien emite
+        no muestra si tributa por IRPF o por el Impuesto sobre Sociedades.'
     retry: Reintentar
     reveal:
       dismiss: Descartar el aviso

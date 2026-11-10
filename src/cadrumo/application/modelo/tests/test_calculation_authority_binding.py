@@ -9,6 +9,7 @@ import pytest
 
 from ....core.period import Period
 from ....domain.calculations.registry.authority import IndexedRegistryAuthority, PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.values import (
@@ -21,26 +22,27 @@ from ..calculate_input import modelo_202_modality_for_record
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE_ID = "f377f194-801d-47c2-986e-4f2137a457e4"
+_YEAR = filing_year_envelope().horizon
 
 
 def test_modelo_202_summary_uses_supplied_operation_without_bundled_fallback(
     operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """The corporate modality derives from a real record and pinned schema."""
-    period = Period.from_year_and_code(2025, "1P")
-    revision_id = operation.snapshot("202", filing_year=2025, period="1P").snapshot_ref.revision_id
+    period = Period.from_year_and_code(_YEAR, "1P")
+    revision_id = operation.snapshot("202", filing_year=_YEAR, period="1P").snapshot_ref.revision_id
     work_unit = WorkUnit(
         work_unit_id=derive_work_unit_id(
-            bucket_id=_PROFILE_ID, modelo="202", filing_year=2025, period=period, revision_id=revision_id
+            bucket_id=_PROFILE_ID, modelo="202", filing_year=_YEAR, period=period, revision_id=revision_id
         ),
         bucket_id=_PROFILE_ID,
         modelo=ModeloCode("202"),
-        filing_year=2025,
+        filing_year=_YEAR,
         period=period,
         revision_id=revision_id,
         name="202 first quarter",
-        created_at=datetime(2026, 1, 10, tzinfo=UTC),
-        updated_at=datetime(2026, 1, 10, tzinfo=UTC),
+        created_at=datetime(1980, 1, 10, tzinfo=UTC),
+        updated_at=datetime(1980, 1, 10, tzinfo=UTC),
     )
     record = create_user_profile_record(
         context=operation.profile_create_context(),
@@ -53,8 +55,8 @@ def test_modelo_202_summary_uses_supplied_operation_without_bundled_fallback(
             UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
             UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),
         ),
-        created_at=datetime(2026, 1, 10, tzinfo=UTC),
-        updated_at=datetime(2026, 1, 10, tzinfo=UTC),
+        created_at=datetime(1980, 1, 10, tzinfo=UTC),
+        updated_at=datetime(1980, 1, 10, tzinfo=UTC),
     )
 
     def unexpected_authority(_authority: IndexedRegistryAuthority) -> None:

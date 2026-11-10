@@ -142,13 +142,14 @@ class AgentServiceAdministration(ABC):
         self._login_status = AgentProviderAuthStatusProbe(
             context=self._login_context, cancellation=self._read_cancellation
         )
+        self._local_models = LocalModelListService(
+            store=model_list, catalog_source=self._catalog, default_engine=local_engine_default
+        )
         self._providers = ProviderSettingsService(
             store=self._store,
             catalog_source=self._catalog,
+            selected_engine=self._local_models.selected_engine,
             cli_state_probe=self._login_status.probe,
-        )
-        self._local_models = LocalModelListService(
-            store=model_list, catalog_source=self._catalog, default_engine=local_engine_default
         )
         self._controller: AgentHostController | None = None
         self._auth_attempt: AuthAttempt | None = None
@@ -228,6 +229,8 @@ class AgentServiceAdministration(ABC):
             return self._submit_sign_in_code(attempt_id, secret)
         if action in {"connect_status", "connect_cancel"}:
             return self._observe_sign_in(attempt_id, cancel=action == "connect_cancel")
+        if action == "provider_lanes":
+            return self._provider_lanes()
         if action == "local_models":
             return self._local_model_list()
         if action == "local_engine":
@@ -401,6 +404,22 @@ class AgentServiceAdministration(ABC):
         if provider is None or expected_revision is None:
             return {"kind": "refused", "code": "invalid_request"}
         return self._provider_admin(action, provider, expected_revision, base_url, choice, method, secret)
+
+    def _provider_lanes(self) -> dict[str, Any]:
+        """Read the lanes without the supplier check; a plain store read that never waits on the agent tree.
+
+        It answers the ``providers`` part of ``status`` and runs no command-line probe, so a cli
+        lane's program state is ``unknown``.
+        """
+        if self._closing.is_set():
+            return {"kind": "refused", "code": "service_stopping"}
+        lease = self.client.lease
+        if lease is None:
+            return {"kind": "refused", "code": "signed_out"}
+        observed = self._providers.lanes().model_dump(mode="json")
+        if self.client.lease != lease:
+            return {"kind": "refused", "code": "signed_out"}
+        return observed
 
     def _local_model_list(self) -> dict[str, Any]:
         """Read the models added to the local model lists; a plain store read that never waits on the agent tree."""

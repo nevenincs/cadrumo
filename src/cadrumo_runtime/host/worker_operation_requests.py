@@ -66,7 +66,7 @@ from cadrumo_runtime.contracts.profile_worker import (
 
 from ..adapters.worker_lease_transfer import read_worker_lease
 from ..adapters.worker_transport import WorkerChannel
-from .operation_host import ProfileWorkerOperationHost
+from .operation_host import ProfileWorkerOperationHost, worker_request_served
 from .worker_submission_staging import StagedSubmission, WorkerSubmissionStaging
 
 _LOGGER = get_logger(__name__)
@@ -204,7 +204,8 @@ async def operate(
             started = time.monotonic()
             outcome = "raised"
             try:
-                await dispatch_request(channel, operations, request, uploads)
+                with worker_request_served():
+                    await dispatch_request(channel, operations, request, uploads)
                 expiry_needed = _needs_upload_expiry(request, uploads)
                 outcome = "completed"
             except (AutomationCustodyError, ProfileAccessRefusedError, ValidationError) as refusal:

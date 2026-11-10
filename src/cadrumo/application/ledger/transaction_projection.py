@@ -5,7 +5,7 @@ from __future__ import annotations
 from decimal import Decimal, InvalidOperation
 from typing import Final, Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import OutputLanguage
@@ -132,6 +132,33 @@ class LedgerTransactionProjection(BaseModel):
         return cls.model_validate_json(payload.model_dump_json())
 
 
+class LedgerMovementWithholdingProjection(BaseModel):
+    """The retención a received invoice leaves on the movement that pays it.
+
+    ``retencion`` is the euro amount the invoice recognises on this payment, as
+    Modelo 111 and 115 count it; ``held_back`` names why it reaches no
+    declaration, so a payment the declaration waits on is not read as a payment
+    without retención. Exactly one of the two is set.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    invoice_id: str
+    invoice_number: str
+    modelo: str | None
+    scheme: str | None
+    retencion: str | None
+    recognised_on: str | None
+    held_back: str | None
+
+    @model_validator(mode="after")
+    def retencion_xor_held_back(self) -> LedgerMovementWithholdingProjection:
+        """Refuse a row that is both a recognised retención and held back, or neither."""
+        if (self.retencion is None) == (self.held_back is None):
+            raise ValueError("a movement's withholding is either recognised or held back")
+        return self
+
+
 class LedgerTransactionReviewProjection(BaseModel):
     """A reviewed transaction with the group used by canonical list ordering.
 
@@ -140,6 +167,9 @@ class LedgerTransactionReviewProjection(BaseModel):
     The reason's source says whether ``transaction.classification_reason`` is
     the person's own words; for a machine source the reason is a command's name
     and the served word, in the language named, stands for it.
+
+    ``withholding`` is empty for a movement that pays no invoice stating a
+    retención: its retención is absent, never zero.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -151,3 +181,4 @@ class LedgerTransactionReviewProjection(BaseModel):
     classification_reason_source: LedgerReasonSource
     classification_reason_words: str
     classification_reason_words_language: OutputLanguage | None
+    withholding: tuple[LedgerMovementWithholdingProjection, ...] = ()

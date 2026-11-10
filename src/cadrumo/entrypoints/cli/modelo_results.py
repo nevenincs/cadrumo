@@ -894,9 +894,14 @@ class WorkFileResult(ModeloRecordPayload):
     on the declaration. This command always populates it, with ``unknown``
     where the filing kept no posture; the backend decided it at filing time and
     no frontend computes it.
+
+    ``deadline`` serves an extemporánea filing's lateness, read on its own
+    presentation date: the effective plazo close, the days overdue and the
+    unassessed Art. 27.2 rate preview. It is ``None`` for any other timeliness.
     """
 
     operation: str = "modelo.work.file"
+    deadline: WorkDeadlinePosturePayload | None = None
 
 
 class WorkAmendResult(ModeloRecordPayload):

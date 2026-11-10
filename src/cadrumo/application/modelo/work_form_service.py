@@ -31,7 +31,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from datetime import date, datetime
 from typing import TYPE_CHECKING
 
@@ -300,17 +300,22 @@ def _needed_profile_bindings(
     """Profile-sourced bindings the layout's context fields read that the revision has no saved answer for."""
     profiles = {binding.id for binding in snapshot.revision.bindings if binding.source is BindingSourceKind.PROFILE}
     needed: set[BindingId] = set()
+    for block in _context_field_blocks(layout):
+        binding = resolve_form_context_field(snapshot.revision, block).binding
+        if binding is None or binding not in profiles:
+            continue
+        if revision is None or binding not in revision.binding_overrides:
+            needed.add(binding)
+    return needed
+
+
+def _context_field_blocks(layout: FormLayoutDefinition) -> Iterator[FormContextFieldBlock]:
+    """The layout's context field blocks in page, section and block order."""
     for page in layout.pages:
         for section in page.sections:
             for block in section.blocks:
-                if not isinstance(block, FormContextFieldBlock):
-                    continue
-                binding = resolve_form_context_field(snapshot.revision, block).binding
-                if binding is None or binding not in profiles:
-                    continue
-                if revision is None or binding not in revision.binding_overrides:
-                    needed.add(binding)
-    return needed
+                if isinstance(block, FormContextFieldBlock):
+                    yield block
 
 
 def _profile_binding_context_values(

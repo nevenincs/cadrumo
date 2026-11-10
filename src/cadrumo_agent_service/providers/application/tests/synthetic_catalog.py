@@ -12,6 +12,7 @@ from typing import Any, Final, override
 from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 
 from ...domain.catalog import LiveCatalogModel, ProviderCatalog, parse_provider_catalog
+from ...domain.record import LocalEngine
 from ..ports import (
     LiveCatalogModels,
     LiveLaneBackground,
@@ -152,6 +153,27 @@ def synthetic_document() -> str:
         _lane("third", "cli", "api_key", credential_id="third", cli_programs=("third",)),
     ]
     return json.dumps({"schema_version": 6, "providers": lanes, "icon_attribution": {}})
+
+
+def engine_document() -> str:
+    """Return the synthetic document with a keyless lane for each local engine besides its own keyless lane.
+
+    An engine's lane is the synthetic keyless lane under that engine's identity,
+    taken from the engine setting's own values, so no engine is named here.
+    """
+    document = json.loads(synthetic_document())
+    (keyless,) = (lane for lane in document["providers"] if lane["auth_kind"] == "none")
+    engines = [
+        keyless | {"id": f"{engine.value}_api", "provider": engine.value, "display_name": engine.value.capitalize()}
+        for engine in LocalEngine
+    ]
+    document["providers"] = [*document["providers"], *engines]
+    return json.dumps(document)
+
+
+def engine_catalog() -> ProviderCatalog:
+    """Return :func:`engine_document` through the real strict parser."""
+    return parse_provider_catalog(engine_document())
 
 
 def synthetic_catalog() -> ProviderCatalog:

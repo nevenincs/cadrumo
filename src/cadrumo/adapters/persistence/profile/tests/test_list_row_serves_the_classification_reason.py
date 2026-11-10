@@ -60,7 +60,7 @@ def _stored_row(
 
 
 def test_a_stated_reason_is_served_as_the_persons_own_words(ledger: Ledger) -> None:
-    row = ledger_list_row(ledger.row(_stored_row(ledger, notes=_STATED)), OutputLanguage.ES)
+    row = ledger_list_row(ledger.row(_stored_row(ledger, notes=_STATED)), language=OutputLanguage.ES)
 
     assert row.transaction.classification_reason == _STATED
     assert row.classification_reason_source == "stated"
@@ -70,7 +70,7 @@ def test_a_stated_reason_is_served_as_the_persons_own_words(ledger: Ledger) -> N
 
 @pytest.mark.parametrize("language", list(OutputLanguage))
 def test_a_command_fallback_is_served_as_a_word_in_the_asked_language(ledger: Ledger, language: OutputLanguage) -> None:
-    row = ledger_list_row(ledger.row(_stored_row(ledger)), language)
+    row = ledger_list_row(ledger.row(_stored_row(ledger)), language=language)
 
     assert row.transaction.classification_reason == _COMMAND
     assert row.classification_reason_source == "command"
@@ -83,7 +83,9 @@ def test_a_command_fallback_is_served_as_a_word_in_the_asked_language(ledger: Le
 def test_every_language_says_the_command_word_in_its_own_words(ledger: Ledger) -> None:
     stored = ledger.row(_stored_row(ledger))
 
-    said = {language: ledger_list_row(stored, language).classification_reason_words for language in OutputLanguage}
+    said = {
+        language: ledger_list_row(stored, language=language).classification_reason_words for language in OutputLanguage
+    }
 
     assert len(set(said.values())) == len(OutputLanguage)
 

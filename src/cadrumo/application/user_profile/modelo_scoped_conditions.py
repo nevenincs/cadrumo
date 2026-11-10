@@ -80,6 +80,51 @@ def field_is_conditionally_modelo_scoped(field: ProfileFieldDefinition) -> bool:
     )
 
 
+def _payer_fact_conditions(
+    field: ProfileFieldDefinition,
+    *,
+    profile: TaxpayerProfile,
+    schema: ProfileSchemaDefinition,
+    effective_date: date,
+) -> tuple[bool, list[str]]:
+    """Read the payer-fact conditions: whether one is positively denied, and the unanswered paths."""
+    unanswered: list[str] = []
+    absent = False
+    for token in field.required_for_modelos_when_payer_facts:
+        fact = resolve_payer_fact(token, effective_date=effective_date)
+        declaration = payer_fact_declaration(profile, fact)
+        if declaration is PayerFactDeclaration.DECLARED_NO:
+            absent = True
+        elif declaration is not PayerFactDeclaration.DECLARED_YES:
+            unanswered.extend(
+                path for key in payer_fact_profile_keys(fact) for path in _schema_paths_for_selector(schema, key)
+            )
+    return absent, unanswered
+
+
+def _activity_group_condition(
+    field: ProfileFieldDefinition,
+    *,
+    profile: TaxpayerProfile,
+    effective_date: date,
+) -> tuple[bool, list[str]]:
+    """Read the IAE-group condition: whether it is positively denied, and the unanswered paths."""
+    groups_fact = field.required_for_modelos_when_activity_iae_groups_fact
+    epigraph_path = field.required_for_modelos_when_activity_iae_epigraph_path
+    if groups_fact is None or epigraph_path is None:
+        return False, []
+    membership = activity_group_membership(
+        profile.activity_iae_epigraphs,
+        fact_id=groups_fact,
+        effective_date=effective_date,
+    )
+    if membership is ActivityGroupMembership.DECLARED_ABSENT:
+        return True, []
+    if membership is ActivityGroupMembership.UNKNOWN:
+        return False, [epigraph_path]
+    return False, []
+
+
 def modelo_scoped_requirement(
     field: ProfileFieldDefinition,
     *,
@@ -105,29 +150,12 @@ def modelo_scoped_requirement(
     Returns:
         The :class:`ModeloScopedRequirement` for this field and profile.
     """
-    unanswered: list[str] = []
-    absent = False
-    for token in field.required_for_modelos_when_payer_facts:
-        fact = resolve_payer_fact(token, effective_date=effective_date)
-        declaration = payer_fact_declaration(profile, fact)
-        if declaration is PayerFactDeclaration.DECLARED_NO:
-            absent = True
-        elif declaration is not PayerFactDeclaration.DECLARED_YES:
-            unanswered.extend(
-                path for key in payer_fact_profile_keys(fact) for path in _schema_paths_for_selector(schema, key)
-            )
-    groups_fact = field.required_for_modelos_when_activity_iae_groups_fact
-    epigraph_path = field.required_for_modelos_when_activity_iae_epigraph_path
-    if groups_fact is not None and epigraph_path is not None:
-        membership = activity_group_membership(
-            profile.activity_iae_epigraphs,
-            fact_id=groups_fact,
-            effective_date=effective_date,
-        )
-        if membership is ActivityGroupMembership.DECLARED_ABSENT:
-            absent = True
-        elif membership is ActivityGroupMembership.UNKNOWN:
-            unanswered.append(epigraph_path)
+    payer_absent, unanswered = _payer_fact_conditions(
+        field, profile=profile, schema=schema, effective_date=effective_date
+    )
+    group_absent, group_unanswered = _activity_group_condition(field, profile=profile, effective_date=effective_date)
+    unanswered.extend(group_unanswered)
+    absent = payer_absent or group_absent
     if absent:
         return ModeloScopedRequirement(ModeloScopedRequirementState.DERIVED_ABSENT)
     if unanswered:

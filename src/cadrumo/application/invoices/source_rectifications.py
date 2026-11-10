@@ -18,6 +18,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
+from typing import TypeGuard
 
 from ...core.decimal.constants import ZERO
 from ...domain.calculations.registry.form_codes import form_for_role
@@ -217,6 +218,27 @@ def _net_same_period_records(
     return kept, refusals
 
 
+def _group_by_filed_record(
+    corrections: Sequence[_EarlierCorrection],
+    *,
+    declarations: tuple[M349FiledDeclaration, ...],
+    resolver_id: str,
+) -> tuple[
+    dict[tuple[_M349RecordKey, M349FiledDeclaration], list[_EarlierCorrection]],
+    list[CalculationSourceDiagnostic],
+]:
+    """Group each correction under its record and the filed declaration of its period, refusing the unfiled."""
+    groups: dict[tuple[_M349RecordKey, M349FiledDeclaration], list[_EarlierCorrection]] = {}
+    refusals: list[CalculationSourceDiagnostic] = []
+    for correction in corrections:
+        filed = next((item for item in declarations if item.period.contains(correction.rectified.issued_at)), None)
+        if filed is None:
+            refusals.append(_not_filed_refusal(correction, resolver_id=resolver_id))
+            continue
+        groups.setdefault((_record_key(correction.observation), filed), []).append(correction)
+    return groups, refusals
+
+
 def _m349_rectification_observations(
     corrections: Sequence[_EarlierCorrection],
     *,
@@ -233,14 +255,7 @@ def _m349_rectification_observations(
     the first of a record carries its base and the declared base, and each later
     one only moves the base.
     """
-    groups: dict[tuple[_M349RecordKey, M349FiledDeclaration], list[_EarlierCorrection]] = {}
-    refusals: list[CalculationSourceDiagnostic] = []
-    for correction in corrections:
-        filed = next((item for item in declarations if item.period.contains(correction.rectified.issued_at)), None)
-        if filed is None:
-            refusals.append(_not_filed_refusal(correction, resolver_id=resolver_id))
-            continue
-        groups.setdefault((_record_key(correction.observation), filed), []).append(correction)
+    groups, refusals = _group_by_filed_record(corrections, declarations=declarations, resolver_id=resolver_id)
     placed: list[ObservedInvoice] = []
     for (key, filed), members in groups.items():
         previous = _declared_base(key, filed=filed, declarations=declarations, context=context)
@@ -306,6 +321,11 @@ def _rectification_items(
         )
 
 
+def _is_operator_row(row: object, *, nif: str, clave: str) -> TypeGuard[Modelo349OperadorRow]:
+    """Whether ``row`` declares the operator and clave."""
+    return isinstance(row, Modelo349OperadorRow) and row.nif_comunitario == nif and row.clave_operacion == clave
+
+
 def _declared_base(
     key: _M349RecordKey,
     *,
@@ -321,26 +341,33 @@ def _declared_base(
     """
     country, party, clave = key
     nif = _m349_prefixed_nif(party, country)
-    operator_rows = [
-        row
-        for row in filed.rows
-        if isinstance(row, Modelo349OperadorRow) and row.nif_comunitario == nif and row.clave_operacion == clave
-    ]
+    operator_rows = [row for row in filed.rows if _is_operator_row(row, nif=nif, clave=clave)]
     if not operator_rows:
         return None
     base = sum((row.importe for row in operator_rows), ZERO)
     earlier = (item for item in declarations if item.period.end_date < context.period.end_date)
     for declaration in sorted(earlier, key=lambda item: item.period.end_date):
         for row in declaration.rows:
-            if (
-                isinstance(row, Modelo349RectificacionRow)
-                and row.nif_comunitario == nif
-                and row.clave_operacion == clave
-                and row.ejercicio == str(filed.period.filing_year)
-                and row.periodo == filed.period.registry_token
-            ):
+            if _rectifies_filed_period(row, nif=nif, clave=clave, filed=filed):
                 base = row.base_rectificada
     return base
+
+
+def _rectifies_filed_period(
+    row: object,
+    *,
+    nif: str,
+    clave: str,
+    filed: M349FiledDeclaration,
+) -> TypeGuard[Modelo349RectificacionRow]:
+    """Whether ``row`` rectifies the operator and clave for ``filed``'s own period."""
+    return (
+        isinstance(row, Modelo349RectificacionRow)
+        and row.nif_comunitario == nif
+        and row.clave_operacion == clave
+        and row.ejercicio == str(filed.period.filing_year)
+        and row.periodo == filed.period.registry_token
+    )
 
 
 def _m349_prefixed_nif(party_tax_id: str, country_code: str) -> str:

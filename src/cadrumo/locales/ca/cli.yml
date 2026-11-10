@@ -1624,6 +1624,9 @@ cli:
           que registra aquesta ordre, així que indica un nom curt per a tu.
         allow_not_applicable_help: Crea la declaració encara que el model no s'apliqui
           al tipus de contribuent del perfil actiu.
+        amend_binding_help: Valor d'una font de casella que la correcció declara quan
+          la presentació no el va registrar, amb sintaxi BINDING_ID=VALUE (repetible);
+          una rectificació rebutjada indica els que necessita.
         amend_help: Construir una correcció d'una declaració presentada fora de Cadrumo.
           Requereix un registre de presentació amb evidència de l'AEAT importada
         amend_missing_options: 'Una esmena requereix totes aquestes opcions: %{missing}.'
@@ -1793,9 +1796,9 @@ cli:
           existent sense canvis.'
         file_internal_disambiguation: Aquesta presentació és només interna i no s'envia
           a l'AEAT.
-        filing_evidence_option_other_modelo: 'Rebutjat. El model %{modelo} no admet
-          cap d''aquestes opcions: %{options}. Són exclusives del model %{applies_to}.
-          Treu-les i torna a calcular; no s''ha calculat res.'
+        filing_evidence_option_other_modelo: 'El model %{modelo} no admet cap d''aquestes
+          opcions: %{options}. Són exclusives del model %{applies_to}. Treu-les i
+          torna a calcular; no s''ha calculat res.'
         formula_operation_calculation: càlcul
         formula_operation_clamp: límit
         formula_operation_conditional: condicional

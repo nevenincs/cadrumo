@@ -26,6 +26,7 @@ import {
   DirectionCell,
   EuroCell,
   MatchCell,
+  RetencionCell,
   SelectShownBox,
   StatusCell,
   TextCell,
@@ -237,6 +238,9 @@ function movementColumns(
         <TextCell text={irpfCategoryLabel(t, category)} />
       ) : null;
     },
+    retencion: (row) => (
+      <RetencionCell entries={row.withholding} locale={locale} />
+    ),
     invoice: (row) => (
       <MatchCell
         linked={row.transaction.invoice_id !== null}

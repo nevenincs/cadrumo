@@ -58,3 +58,24 @@ def test_another_modelo_without_any_option_is_not_refused() -> None:
     """A calculation that supplies none of the options is not this refusal's business."""
     refuse_filing_evidence_options_for_other_modelo("100", {"joint_return_elected": None})
     refuse_filing_evidence_options_for_other_modelo("100", {})
+
+
+@pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])
+def test_the_refusal_renders_the_category_prefix_exactly_once_in_every_locale(locale: str) -> None:
+    """The renderer owns the category prefix, so the message must not restate it."""
+    from ....core.config import override_settings
+    from ....core.errors.error_codes import ErrorCategory, get_registered_error_code, render_error_text
+    from ....core.i18n.render import lookup_translation
+
+    owner = m303_filing_evidence_modelo()
+    other = next(code for code in ("100", "115", "111") if code != owner)
+    with override_settings(cadrumo_output_language=locale):
+        with pytest.raises(CliRefusedBoundaryError) as raised:
+            refuse_filing_evidence_options_for_other_modelo(other, {"joint_return_elected": True})
+        assert get_registered_error_code(raised.value).category is ErrorCategory.REFUSED
+        prefix = lookup_translation("errors.prefix.refused", locale=locale)
+        assert prefix is not None and prefix != ""
+        rendered = render_error_text(raised.value)
+    first_line = rendered.splitlines()[0]
+    assert first_line.startswith(f"{prefix} ")
+    assert rendered.casefold().count(prefix.rstrip(".").casefold()) == 1

@@ -10,10 +10,13 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 
 from ....core.period import Period
 from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....tests.log_records import delivered_records
 from ..binding_readiness import profile_resolvable_binding_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def test_unresolvable_registry_scope_is_logged_as_conservative_unresolved(caplog: pytest.LogCaptureFixture) -> None:
@@ -24,7 +27,7 @@ def test_unresolvable_registry_scope_is_logged_as_conservative_unresolved(caplog
         resolved = profile_resolvable_binding_ids(
             modelo="999",
             bucket_id="operator",
-            filing_year=2026,
+            filing_year=_YEAR,
             period=None,
             operation=_authority_operation_for_test,
         )
@@ -47,8 +50,8 @@ def test_unresolvable_typed_period_scope_is_logged_as_conservative_unresolved(
         resolved = profile_resolvable_binding_ids(
             modelo="999",
             bucket_id="operator",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
             operation=_authority_operation_for_test,
         )
 
@@ -68,7 +71,7 @@ def test_typed_period_scope_must_match_filing_year() -> None:
         profile_resolvable_binding_ids(
             modelo="303",
             bucket_id="operator",
-            filing_year=2025,
-            period=Period.from_year_and_code(2026, "1T"),
+            filing_year=_YEAR - 1,
+            period=Period.from_year_and_code(_YEAR, "1T"),
             operation=_authority_operation_for_test,
         )

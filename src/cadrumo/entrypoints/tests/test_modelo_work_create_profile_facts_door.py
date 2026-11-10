@@ -2,8 +2,9 @@
 
 The refusal settles REFUSED with no effect. Its recorded error detail carries the
 facts as the schema's own labels with their legal citations in readable form,
-never a digest-stamped identifier, and the catalogue action every consumer
-resolves against the live command tree.
+never a digest-stamped identifier, and the catalogue action that opens the
+profile questions. That the action resolves to the live command leaf is the
+command line's own assertion, held in its recorded action target tests.
 """
 
 from __future__ import annotations
@@ -29,7 +30,6 @@ from ...core.operator_action_enums import ActionConditionality
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from ..cli.operator_surface_reconciliation import operator_surface_target_reconciliation
 from .modelo_operation_test_support import MODELO_OPERATION_TEST_ACTOR
 from .registered_executor_case_support import OperationRuntimeCloseWitness, conformance_operation_runtime
 
@@ -109,7 +109,5 @@ def test_a_missing_profile_facts_refusal_speaks_in_words_and_names_the_profile_q
     assert served.action is not None, "the refusal names no action"
     assert served.action.action_id == "operator.profile.edit"
     assert served.conditionality is ActionConditionality.REQUIRES_ARGUMENTS
-    (leaf,) = operator_surface_target_reconciliation(served.action.target_command_key).leaves
-    assert served.action.cli_path == (leaf.live_leaf.program.executable_name, *leaf.live_leaf.canonical_cli_path)
     missing = str(verdict.evidence[0].values["missing_fields"]).split(", ")
     assert "activities.description" in missing

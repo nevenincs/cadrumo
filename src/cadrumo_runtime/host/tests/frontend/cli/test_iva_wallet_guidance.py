@@ -10,6 +10,7 @@ import pytest
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import joint_return_options
 from cadrumo.tests.cli_envelope import require_schema_envelope
 
@@ -22,6 +23,9 @@ from .runtime_profile_backend import runtime_cli_profile
 __all__ = ["isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
+
+# A supported exercise after the seeded profile's activity start, so every quarter has a prior one.
+_FILING_YEAR = filing_year_envelope().horizon
 
 
 def test_m303_fresh_profile_binding_override_is_a_terminal_typed_refusal(
@@ -41,7 +45,7 @@ def test_m303_fresh_profile_binding_override_is_a_terminal_typed_refusal(
                 "--modelo",
                 "303",
                 "--year",
-                "2025",
+                str(_FILING_YEAR),
                 "--period",
                 "2T",
             ],
@@ -67,14 +71,14 @@ def test_m303_fresh_profile_binding_override_is_a_terminal_typed_refusal(
         )
 
     assert result.exit_code != 0, "Expected non-zero exit when compensation binding is supplied without a seeded wallet"
-    _assert_names_the_opening_balance_command(result.output, filing_year=2025, period_code="2T")
+    _assert_names_the_opening_balance_command(result.output, filing_year=_FILING_YEAR, period_code="2T")
 
 
 def test_m303_in_scope_missing_wallet_surfaces_typed_terminal_refusal(
     tmp_path: Path,
 ) -> None:
     """In-scope missing authority is refused with the command that records the opening balance."""
-    filing_year = 2025
+    filing_year = _FILING_YEAR
     period_code = "2T"
     with runtime_cli_profile(tmp_path=tmp_path) as profile:
         seed_full_autonomo_profile_for_guidance(profile.bucket_id)
@@ -134,7 +138,7 @@ def test_m303_fresh_profile_calculate_without_binding_override_does_not_raise_wa
                 "--modelo",
                 "303",
                 "--year",
-                "2025",
+                str(_FILING_YEAR),
                 "--period",
                 "1T",
             ],

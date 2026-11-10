@@ -10,11 +10,18 @@ import pytest
 from ..errors import RegistryValidationError
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..schema import RegistrySnapshot
+from .authored_editions import authored_revisions_where
 from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 
-FILING_DATE = date(2024, 12, 31)
-
 TIER_BINDING = "renta-rental-reduccion-art-23-2-tier"
+
+# The one authored edition that declares the Art. 23.2 tier binding, so the exercise follows the registry.
+(_TIER_EDITION,) = authored_revisions_where(
+    "100", lambda revision: any(binding.id == TIER_BINDING for binding in revision.bindings)
+)
+TIER_EDITION_ID = str(_TIER_EDITION.id)
+TIER_EDITION_EXERCISE = _TIER_EDITION.valid_from.year
+FILING_DATE = date(TIER_EDITION_EXERCISE, 12, 31)
 
 FORMULA_ID = "renta-capital-inmobiliario-reduccion-arrendamiento-vivienda-art-23-2"
 
@@ -61,15 +68,15 @@ def calculate(
     )
 
 
-def check_tier_binding_is_layout_and_law_grounded(m100_2024_snapshot: RegistrySnapshot) -> None:
-    binding = next(binding for binding in m100_2024_snapshot.revision.bindings if binding.id == TIER_BINDING)
+def check_tier_binding_is_layout_and_law_grounded(snapshot: RegistrySnapshot) -> None:
+    binding = next(binding for binding in snapshot.revision.bindings if binding.id == TIER_BINDING)
 
     assert binding.source_refs == (
         "aeat-dr-100-2024-dictionary",
         "aeat-renta-2024-manual-parte1",
         "lirpf-cuota-chain-authority",
     )
-    assert m100_2024_snapshot.sources["aeat-dr-100-2024-dictionary"].evidence_tier == "layout_authority"
+    assert snapshot.sources["aeat-dr-100-2024-dictionary"].evidence_tier == "layout_authority"
 
     citations = {citation.source_ref: citation.required_text for citation in binding.source_citations}
     assert set(citations["aeat-renta-2024-manual-parte1"]) == {
@@ -81,12 +88,12 @@ def check_tier_binding_is_layout_and_law_grounded(m100_2024_snapshot: RegistrySn
 
 
 def check_0150_uses_operator_selected_art23_2_tier(
-    m100_2024_snapshot: RegistrySnapshot,
+    snapshot: RegistrySnapshot,
     tier: str,
     expected: Decimal,
 ) -> None:
     result = calculate(
-        m100_2024_snapshot,
+        snapshot,
         inputs={"0100": Decimal("1"), "0102": Decimal("10000.00")},
         tier=tier,
     )
@@ -104,10 +111,10 @@ def check_0150_uses_operator_selected_art23_2_tier(
 
 
 def check_0150_unchecked_eligibility_does_not_require_or_apply_tier(
-    m100_2024_snapshot: RegistrySnapshot,
+    snapshot: RegistrySnapshot,
 ) -> None:
     result = calculate(
-        m100_2024_snapshot,
+        snapshot,
         inputs={"0100": Decimal("0"), "0102": Decimal("10000.00")},
     )
 
@@ -119,29 +126,29 @@ def check_0150_unchecked_eligibility_does_not_require_or_apply_tier(
 
 
 def check_0150_non_positive_0149_does_not_create_positive_reduction(
-    m100_2024_snapshot: RegistrySnapshot,
+    snapshot: RegistrySnapshot,
     inputs: dict[str, Decimal],
 ) -> None:
-    result = calculate(m100_2024_snapshot, inputs=inputs)
+    result = calculate(snapshot, inputs=inputs)
 
     assert result.values["0149"] <= Decimal("0")
     assert result.values["0150"] == Decimal("0.00")
 
 
 def check_0150_positive_checked_rental_fails_closed_without_tier(
-    m100_2024_snapshot: RegistrySnapshot,
+    snapshot: RegistrySnapshot,
 ) -> None:
     with pytest.raises(RegistryValidationError, match="has no supplied value"):
         calculate(
-            m100_2024_snapshot,
+            snapshot,
             inputs={"0100": Decimal("1"), "0102": Decimal("10000.00")},
         )
 
 
-def check_0150_rejects_unknown_tier_key(m100_2024_snapshot: RegistrySnapshot) -> None:
+def check_0150_rejects_unknown_tier_key(snapshot: RegistrySnapshot) -> None:
     with pytest.raises(RegistryValidationError, match="dispatch_table is missing key"):
         calculate(
-            m100_2024_snapshot,
+            snapshot,
             inputs={"0100": Decimal("1"), "0102": Decimal("10000.00")},
             tier="tier-65",
         )

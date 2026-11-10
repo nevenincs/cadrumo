@@ -124,6 +124,19 @@ _BASELINE_INGRESOS = Decimal("1000.00")
 _BASELINE_GASTOS = Decimal("250.00")
 _CORRECTED_INGRESOS = Decimal("1100.00")
 
+# That baseline records casilla values only. Correcting casilla 01 reaches casilla 02
+# and every figure after it, whose formulas read box sources the imported filing never
+# recorded and a historical correction never reads from today's profile or ledger, so
+# the correction states each of them. The normal modality carries no RIRPF art. 30.2.4a
+# provision, so the restated accumulated expenses keep casilla 02 at the filed amount.
+_M130_UNRECORDED_BINDINGS = {
+    "modelo-130-estimacion-directa-modalidad": "directa_normal",
+    "modelo-130-actividad-economica-gastos-cumulative": str(_BASELINE_GASTOS),
+    "modelo-130-retenciones-agrarias": "0",
+    "modelo-130-volumen-ingresos-agrario": "0",
+    "irpf.previous_year_economic_activity_net_income": "20000.00",
+}
+
 # M303 casilla 07 is the régimen-general 21% base imponible; the authority-selected
 # revision declares no required-manual casillas, so a baseline carrying 07 alone is
 # a legitimate amendable AEAT-attested filing. The correction LOWERS the declared
@@ -479,11 +492,14 @@ def _amend_via_shared_path(
     runtime_profile: HumanProbeSession,
     motive: str | None = None,
     reason: str,
+    bindings: dict[str, str] | None = None,
 ):
     """Invoke ``work amend`` -- the shared composition path the wizard delegates to."""
     set_flags: list[str] = []
     for casilla_id, value in overrides.items():
         set_flags += ["--set", f"{casilla_id}={value}"]
+    for binding_id, value in (bindings or {}).items():
+        set_flags += ["--binding", f"{binding_id}={value}"]
     motive_flags = ["--m303-rectificativa-motive", motive] if motive is not None else []
     return _invoke(
         [
@@ -570,6 +586,7 @@ def test_amend_wizard_scripted_sequence_files_m130_complementaria(
         motive=motive,
         reason=reason,
         runtime_profile=_operator_profile,
+        bindings=_M130_UNRECORDED_BINDINGS,
     )
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
@@ -590,6 +607,58 @@ def test_amend_wizard_scripted_sequence_files_m130_complementaria(
         ).output,
     )
     assert Decimal(revision["casilla_values"]["01"]) == _CORRECTED_INGRESOS
+    assert Decimal(revision["casilla_values"]["02"]) == _BASELINE_GASTOS
+
+
+def test_amend_m130_without_stated_bindings_refuses_naming_each_unrecorded_one(
+    _operator_profile: HumanProbeSession,
+) -> None:
+    """Without the box sources the filing never recorded, the correction refuses and names them.
+
+    The refusal is the recalculation's own: it lists every unrecorded binding the
+    reached formulas read and points at the option that states them. Stating only
+    some of them leaves the rest named, so a partial statement is no way around it.
+    """
+    work_unit_id = create_m130_work_unit()
+    baseline_filing_id = _import_external_baseline(work_unit_id)
+    partial = dict(list(_M130_UNRECORDED_BINDINGS.items())[:2])
+    for bindings, expected_missing in (
+        (None, set(_M130_UNRECORDED_BINDINGS)),
+        (partial, set(_M130_UNRECORDED_BINDINGS) - set(partial)),
+    ):
+        result = _amend_via_shared_path(
+            from_filing_record_id=baseline_filing_id,
+            overrides={"01": str(_CORRECTED_INGRESOS)},
+            kind="complementaria",
+            reason="under-reported turnover",
+            runtime_profile=_operator_profile,
+            bindings=bindings,
+        )
+        assert result.exit_code != 0, result.output
+        error = json.loads(result.output)["error"]
+        assert error["code"] == "ERROR_CALCULATIONS_REGISTRY_VALIDATION"
+        assert set(error["context"]["binding_ids"].split(", ")) == expected_missing
+        assert "--binding" in error["message"]
+
+
+def test_amend_m130_refuses_an_unknown_stated_binding(
+    _operator_profile: HumanProbeSession,
+) -> None:
+    """A stated binding the pinned revision does not declare refuses as it does on calculate."""
+    work_unit_id = create_m130_work_unit()
+    baseline_filing_id = _import_external_baseline(work_unit_id)
+    result = _amend_via_shared_path(
+        from_filing_record_id=baseline_filing_id,
+        overrides={"01": str(_CORRECTED_INGRESOS)},
+        kind="complementaria",
+        reason="under-reported turnover",
+        runtime_profile=_operator_profile,
+        bindings={**_M130_UNRECORDED_BINDINGS, "modelo-130-no-such-binding": "1"},
+    )
+    assert result.exit_code != 0, result.output
+    error = json.loads(result.output)["error"]
+    assert error["code"] == "REFUSED_MODELO_CALCULATE_BINDING_INPUT"
+    assert error["context"]["key"] == "modelo-130-no-such-binding"
 
 
 def test_amend_wizard_scripted_sequence_files_m303_rectificativa(
@@ -809,18 +878,16 @@ def test_amend_wizard_scripted_inputs_match_hand_built_work_amend(
             runtime_profile=_operator_profile,
         ).output,
     )  # fmt: skip
-    assert (
-        wizard_revision["casilla_values"]["07"]
-        == hand_built_revision["casilla_values"]["07"]
-        == str(_M303_CORRECTED_BASE_GENERAL)
-    )
+    assert wizard_revision["casilla_values"]["07"] == hand_built_revision["casilla_values"]["07"]
+    assert Decimal(wizard_revision["casilla_values"]["07"]) == _M303_CORRECTED_BASE_GENERAL
 
     # The corrected casilla carries identical legal grounding through both
     # surfaces -- the persisted observation is where that grounding actually
     # has to survive (``aeat-calculation-grounding``).
     wizard_obs = _casilla_observation(wizard_revision, "07")
     hand_built_obs = _casilla_observation(hand_built_revision, "07")
-    assert wizard_obs["value"] == hand_built_obs["value"] == str(_M303_CORRECTED_BASE_GENERAL)
+    assert wizard_obs["value"] == hand_built_obs["value"]
+    assert Decimal(wizard_obs["value"]) == _M303_CORRECTED_BASE_GENERAL
     assert wizard_obs["legal_refs"], "corrected casilla must carry legal_refs"
     assert wizard_obs["legal_refs"] == hand_built_obs["legal_refs"]
     assert wizard_obs["source_refs"] == hand_built_obs["source_refs"]

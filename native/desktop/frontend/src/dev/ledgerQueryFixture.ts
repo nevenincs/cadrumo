@@ -99,6 +99,7 @@ export const row = (
   group_label: movement.group_label,
   own_account_id: movement.own_account_id,
   ...reasonOf(movement.transaction.classification_reason, language),
+  withholding: movement.withholding.map((entry) => ({ ...entry })),
 });
 
 /** The days of a period, from the recording of what the backend serves; null

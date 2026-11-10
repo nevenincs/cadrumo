@@ -1099,6 +1099,7 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = _PROFILE_AND_ENGINE_KEYS | froze
         "desktop.setup.failure.cancelled",
         "desktop.setup.failure.damaged_download",
         "desktop.setup.failure.disk_full",
+        "desktop.setup.failure.engine_program_unusable",
         "desktop.setup.failure.host_unreachable",
         "desktop.setup.failure.interrupted",
         "desktop.setup.failure.memory_busy",

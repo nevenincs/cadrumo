@@ -34,6 +34,7 @@ from ..domain.record import (
     AssistantAuth,
     CredentialKind,
     CredentialState,
+    LocalEngine,
     ProviderCredential,
     ProviderSettingsRecord,
     credential_secret_refusal,
@@ -51,6 +52,7 @@ from .contracts import (
     ProviderStatusEntry,
     is_provider_settings_revision,
 )
+from .local_model_list import engine_lanes
 from .ports import (
     ProviderCatalogSource,
     ProviderCatalogUnavailableError,
@@ -86,27 +88,47 @@ class ProviderSettingsService:
         *,
         store: ProviderSettingsStore,
         catalog_source: ProviderCatalogSource,
+        selected_engine: Callable[[], LocalEngine | None],
         clock: Callable[[], datetime] = now,
         cli_state_probe: Callable[[ProviderCatalogEntry], CliObservation] | None = None,
     ) -> None:
-        """Bind the service to one profile's store and its catalog."""
+        """Bind the service to one profile's store and its catalog.
+
+        ``selected_engine`` reads the local engine the profile runs, ``None``
+        when its setting cannot be read; the status lists only that engine's
+        keyless lane, by the rule the picker and the local model lists share.
+        """
         self._store = store
         self._catalog_source = catalog_source
+        self._selected_engine = selected_engine
         self._clock = clock
         self._cli_state_probe = cli_state_probe
 
     def status(self) -> ProviderSettingsStatus | ProviderSettingsRefusal:
-        """Return masked status of every catalogued provider, or a typed refusal."""
+        """Return masked status of every catalogued provider the selected engine is served, or a typed refusal."""
+        return self._status(observe_cli=True)
+
+    def lanes(self) -> ProviderSettingsStatus | ProviderSettingsRefusal:
+        """Return every lane as ``status`` does, without probing a provider's command-line app.
+
+        A cli lane's program state is ``unknown``, as it is where no probe is supplied; every
+        other fact is the one ``status`` reports.
+        """
+        return self._status(observe_cli=False)
+
+    def _status(self, *, observe_cli: bool) -> ProviderSettingsStatus | ProviderSettingsRefusal:
         try:
             catalog = self._catalog_source.catalog()
         except ProviderCatalogUnavailableError:
             return _refused(ProviderSettingsRefusalCode.CATALOG_UNAVAILABLE)
-        reads = self._store.read(catalog.provider_ids)
+        entries = engine_lanes(catalog, self._selected_engine)
+        reads = self._store.read(tuple(entry.id for entry in entries))
         if isinstance(reads, StoreRefusal):
             return _refusal_for_store(reads.code)
         return ProviderSettingsStatus(
             providers=tuple(
-                self._status_entry(entry, read) for entry, read in zip(catalog.providers, reads, strict=True)
+                self._status_entry(entry, read, observe_cli=observe_cli)
+                for entry, read in zip(entries, reads, strict=True)
             ),
         )
 
@@ -341,8 +363,10 @@ class ProviderSettingsService:
             return _refused(ProviderSettingsRefusalCode.COMMITTED_READBACK_FAILED)
         return self._accepted(entry, read)
 
-    def _status_entry(self, entry: ProviderCatalogEntry, read: ProviderRecordRead) -> ProviderStatusEntry:
-        observed = self._cli_observation(entry)
+    def _status_entry(
+        self, entry: ProviderCatalogEntry, read: ProviderRecordRead, *, observe_cli: bool = True
+    ) -> ProviderStatusEntry:
+        observed = self._cli_observation(entry, observe=observe_cli)
         return status_entry(
             entry,
             read,
@@ -350,11 +374,11 @@ class ProviderSettingsService:
             cli_state_cause=None if observed is None else observed.cause,
         )
 
-    def _cli_observation(self, entry: ProviderCatalogEntry) -> CliObservation | None:
+    def _cli_observation(self, entry: ProviderCatalogEntry, *, observe: bool = True) -> CliObservation | None:
         """Return a cli lane's program state; ``unknown`` until a safe probe is supplied."""
         if not entry.cli_programs:
             return None
-        if self._cli_state_probe is None:
+        if not observe or self._cli_state_probe is None:
             return CliObservation(CliState.UNKNOWN)
         # The lane's primary program is the first the agent lists.
         return self._cli_state_probe(entry)

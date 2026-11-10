@@ -8,6 +8,7 @@ import pytest
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..action_errors import ModeloLocalObservationError
 from ..local_observation_actions import canonical_casilla_values
@@ -34,7 +35,7 @@ def _casillas_printing(revision: ModeloRevision, number: str) -> tuple[CasillaId
 
 
 def test_local_observation_refuses_ambiguous_printed_number_with_canonical_candidates() -> None:
-    snapshot = published_snapshot("200", filing_year=2025, period="0A")
+    snapshot = published_snapshot("200", filing_year=newest_authored_edition("200"), period="0A")
 
     with pytest.raises(ModeloLocalObservationError) as exc_info:
         canonical_casilla_values(

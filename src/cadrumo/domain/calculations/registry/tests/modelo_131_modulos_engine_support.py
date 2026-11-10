@@ -21,7 +21,10 @@ from decimal import Decimal
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.money.rounding import round_to_cents
 from ..formula_runtime import calculate_registry_snapshot
-from .published_authority import published_snapshot
+from .published_authority import published_legal_reference, published_snapshot
+
+#: The exercise whose módulos the Orden HAC/1347/2024 tables below govern, read from its entry into force.
+_ORDEN_HAC_1347_2024_EXERCISE = published_legal_reference("orden-hac-1347-2024:art-4").effective_from.year
 
 # Rendimiento anual por unidad antes de amortización (Orden HAC/1347/2024
 # Anexo II, filing year 2025), independently transcribed for cross-check —
@@ -546,7 +549,9 @@ def run_modulos_engine(
     indice_temporada: Decimal = Decimal("0"),
     indice_inicio_actividad: Decimal = Decimal("0"),
 ) -> tuple[Decimal, Decimal, Decimal, Decimal]:
-    snapshot = published_snapshot("131", filing_year=2025, period="1T", grade=RegistryAuthorityGrade.CALCULATION)
+    snapshot = published_snapshot(
+        "131", filing_year=_ORDEN_HAC_1347_2024_EXERCISE, period="1T", grade=RegistryAuthorityGrade.CALCULATION
+    )
     assert snapshot.filing_period is not None
     text_inputs = {"modulos-epigrafe": epigrafe} if (epigrafe is not None and epigrafe) else {}
     result = calculate_registry_snapshot(

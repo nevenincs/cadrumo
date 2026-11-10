@@ -1024,6 +1024,7 @@ export function draftRow(draft: Draft): LedgerRow {
     classification_reason_source: "none",
     classification_reason_words: "",
     classification_reason_words_language: null,
+    withholding: [],
   };
 }
 

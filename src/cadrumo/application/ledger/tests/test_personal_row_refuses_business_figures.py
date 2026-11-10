@@ -16,6 +16,7 @@ from pydantic import ValidationError
 
 from ....core.errors.error_codes import resolve_error_message
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.vehicle_use import IvaVehicleUse
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.errors import TransactionFiguresWithoutBusinessError
@@ -33,13 +34,14 @@ from .ledger_input_rule_support import PROFILE
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET = str(PROFILE)
+_BOOKED = date(filing_year_envelope().horizon, 4, 15)
 
 
 def _add_request(**values: str) -> LedgerAddRequest:
     return LedgerAddRequest.model_validate(
         {
             "profile_id": PROFILE,
-            "booked_date": "2026-04-15",
+            "booked_date": _BOOKED.isoformat(),
             "amount": "121.00",
             "direction": "OUTGOING",
             "description": "Supermarket",
@@ -52,12 +54,12 @@ def _add_request(**values: str) -> LedgerAddRequest:
 def _row(classification: BusinessClassification, **fields: object) -> Transaction:
     return Transaction.model_validate(
         {
-            "raw": ledger_raw_transaction("personal-figures", booked_date=date(2026, 4, 15), amount=Decimal("121.00")),
+            "raw": ledger_raw_transaction("personal-figures", booked_date=_BOOKED, amount=Decimal("121.00")),
             "direction": TransactionDirection.OUTGOING,
             "group_label": None,
             "source_jurisdiction": "ES",
             "business_classification": classification,
-            "classified_at": datetime(2026, 4, 16, 9, 0, tzinfo=UTC),
+            "classified_at": datetime(_BOOKED.year, 4, 16, 9, 0, tzinfo=UTC),
             "classified_by": "manual",
             **fields,
         }

@@ -20,6 +20,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ....core.operations import OperationFrontendProjection
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.capabilities import OperationRequestStoragePolicy
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
@@ -41,6 +42,8 @@ from ..iva_wallet_seed_ports import ModeloIvaWalletSeedPortsFactory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
+_NEXT_EXPIRY_YEAR = _YEAR + 4
 _PROFILE = UUID("21212121-2121-4121-8121-212121212121")
 _OTHER_PROFILE = UUID("33333333-3333-4333-8333-333333333333")
 _AUTHORITY = object()
@@ -74,7 +77,7 @@ class _Factory:
         )
 
 
-def _request(*, profile_id: UUID = _PROFILE, year: int = 2024):
+def _request(*, profile_id: UUID = _PROFILE, year: int = _YEAR):
     return OperationRequest[ModeloIvaWalletBalanceRequest](
         definition_id=MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(profile_id)),
@@ -107,7 +110,7 @@ def test_operation_has_credential_free_request_and_closed_result() -> None:
     with pytest.raises(ValidationError):
         ModeloIvaWalletBalanceProjection(
             profile_id=_PROFILE,
-            as_of_year=2024,
+            as_of_year=_YEAR,
             total_balance="-1",
             active_balance="0",
             expired_balance="0",
@@ -119,7 +122,7 @@ def test_operation_has_credential_free_request_and_closed_result() -> None:
 
 def test_access_is_bound_to_exact_profile_and_whole_history() -> None:
     _definition, registration = _definition_and_registration()
-    request = _request(year=2028)
+    request = _request(year=_NEXT_EXPIRY_YEAR)
     context = OperationAccessContext(
         profile_id=_PROFILE,
         destination_id=uuid4(),
@@ -201,27 +204,27 @@ def test_executor_reads_exact_profile_and_year_inside_pinned_fact_scope(
             active_balance=Decimal("500.00"),
             expired_balance=Decimal("0.00"),
             lot_count=1,
-            next_expiry_year=2028,
+            next_expiry_year=_NEXT_EXPIRY_YEAR,
             unallocated_applied_amount=Decimal("0.00"),
         )
 
     monkeypatch.setattr("cadrumo.application.modelo.iva_wallet_balance_operation.query_iva_wallet_balance", query)
     executor = ModeloIvaWalletBalanceExecutor(cast(ModeloIvaWalletSeedPortsFactory, factory))
 
-    result_ref = asyncio.run(executor.execute(_request(year=2024), _executor_context(events, operands)))
+    result_ref = asyncio.run(executor.execute(_request(year=_YEAR), _executor_context(events, operands)))
 
     assert result_ref == "balance-reference"
     assert factory.requested == [str(_PROFILE)]
     assert factory.operations == [_AUTHORITY]
-    assert seen == [(2024, repository, _AUTHORITY)]
+    assert seen == [(_YEAR, repository, _AUTHORITY)]
     assert events.phases == [f"{MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID}.read"]
     assert events.effects == [OperationEffect.NONE]
     report = cast(ModeloIvaWalletBalanceOperationReport, operands.values[0])
     projection = report.projection
     assert projection.profile_id == _PROFILE
-    assert projection.as_of_year == 2024
+    assert projection.as_of_year == _YEAR
     assert projection.total_balance == "500.00"
-    assert projection.next_expiry_year == 2028
+    assert projection.next_expiry_year == _NEXT_EXPIRY_YEAR
 
     receipt = OperationTerminalReceipt(
         identity=OperationIdentity(
@@ -232,7 +235,7 @@ def test_executor_reads_exact_profile_and_year_inside_pinned_fact_scope(
         revision=3,
         condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.NONE,
-        settled_at=datetime(2026, 9, 29, 10, 0, tzinfo=UTC),
+        settled_at=datetime(1980, 9, 29, 10, 0, tzinfo=UTC),
         result_ref=result_ref,
     )
     assert project_modelo_iva_wallet_balance_result(report, receipt) == projection

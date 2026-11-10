@@ -1521,6 +1521,9 @@ cli:
           give a short name for yourself.
         allow_not_applicable_help: Create the declaration even when the modelo does
           not apply to the active profile's taxpayer type.
+        amend_binding_help: Box-source value the correction states where the filed
+          return never recorded it, as BINDING_ID=VALUE (repeatable); a refused amendment
+          names the ones it needs.
         amend_help: Build a correction of a return filed outside Cadrumo. Requires
           a filing record with imported AEAT evidence
         amend_missing_options: 'An amendment requires every one of these options:
@@ -1684,9 +1687,9 @@ cli:
           changes.'
         file_internal_disambiguation: This filing is internal only and is not submitted
           to the AEAT.
-        filing_evidence_option_other_modelo: 'Refused. Modelo %{modelo} takes none
-          of these options: %{options}. They belong to Modelo %{applies_to} only.
-          Remove them and run the calculation again; nothing was calculated.'
+        filing_evidence_option_other_modelo: 'Modelo %{modelo} takes none of these
+          options: %{options}. They belong to Modelo %{applies_to} only. Remove them
+          and run the calculation again; nothing was calculated.'
         formula_operation_calculation: calculation
         formula_operation_clamp: limit
         formula_operation_conditional: conditional
